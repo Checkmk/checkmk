@@ -1,0 +1,14 @@
+Title: WATO makes host tag and group information available for NagVis
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416390031
+Class: feature
+
+NagVis can now (till version 1.8rc1) handle Check_MK's host tag and tag group information.
+These information can be added to the hover menus of the NagVis objects.
+
+WATO exports the host tag and tag group definitions to a PHP file which is then read by
+NagVis to gather the needed information. The PHP file is located at var/check_mk/wato/php-api/hosttags.php
+in OMD environments.

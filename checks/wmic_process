@@ -45,8 +45,8 @@ def check_wmic_process(item, params, info):
 
     mem_mb = mem / 1048576.0
     page_mb = page / 1048576.0
-    timedif, user_per_sec = get_counter("wmic_process.user.%s.%d" % (name, count), time.time(), userc)
-    timedif, kernel_per_sec = get_counter("wmic_process.kernel.%s.%d" % (name, count), time.time(), kernelc)
+    user_per_sec = get_rate("wmic_process.user.%s.%d" % (name, count), time.time(), userc)
+    kernel_per_sec = get_rate("wmic_process.kernel.%s.%d" % (name, count), time.time(), kernelc)
     user_perc = user_per_sec / 100000.0 / cpucores
     kernel_perc = kernel_per_sec / 100000.0 / cpucores
     cpu_perc = user_perc + kernel_perc
@@ -91,7 +91,7 @@ def check_wmic_process(item, params, info):
 
 check_info["wmic_process"] = {
     'check_function':          check_wmic_process,
-    'service_description':     'proc_%s',
+    'service_description':     'Process %s',
     'has_perfdata':            True,
     'group':                   'wmic_process'
 }

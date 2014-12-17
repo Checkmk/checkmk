@@ -317,14 +317,14 @@ if mkeventd_enabled:
         "title"   : _("ID of the event"),
         "short"   : _("ID"),
         "columns" : ["event_id"],
-        "paint"   : lambda row: ("number", row["event_id"]),
+        "paint"   : lambda row: ("number", str(row["event_id"])),
     }
 
     multisite_painters["event_count"] = {
         "title"   : _("Count (number of recent occurrances)"),
         "short"   : _("Cnt."),
         "columns" : ["event_count"],
-        "paint"   : lambda row: ("number", row["event_count"]),
+        "paint"   : lambda row: ("number", str(row["event_count"])),
     }
 
     multisite_painters["event_text"] = {
@@ -332,6 +332,23 @@ if mkeventd_enabled:
         "short"   : _("Message"),
         "columns" : ["event_text"],
         "paint"   : lambda row: ("", row["event_text"].replace("\x01","<br>")),
+    }
+
+    def paint_ec_match_groups(row):
+        groups = row["event_match_groups"]
+        if groups:
+            code = ""
+            for text in groups:
+                code += '<span>%s</span>' % text
+            return "matchgroups", code
+        else:
+            return "", ""
+
+    multisite_painters["event_match_groups"] = {
+        "title"   : _("Match Groups"),
+        "short"   : _("Match"),
+        "columns" : ["event_match_groups"],
+        "paint"   : paint_ec_match_groups,
     }
 
     multisite_painters["event_first"] = {
@@ -361,7 +378,7 @@ if mkeventd_enabled:
         try:
             return "", dict(config.mkeventd_service_levels)[row["event_sl"]]
         except:
-            return "", row["event_sl"]
+            return "", str(row["event_sl"])
 
     multisite_painters["event_sl"] = {
         "title"   : _("Service-Level"),
@@ -843,7 +860,7 @@ if mkeventd_enabled:
             'event_sl_max',
         ],
         'hide_filters': [
-            'site',
+            'siteopt',
             'host',
         ],
     })
@@ -882,7 +899,7 @@ if mkeventd_enabled:
             'event_sl_max',
         ],
         'hide_filters': [
-            'site',
+            'siteopt',
             'event_host',
         ],
     })
@@ -906,6 +923,7 @@ if mkeventd_enabled:
             ('host_contacts', None, ''),
             ('host_icons', None, ''),
             ('event_text', None, ''),
+            ('event_match_groups', None, ''),
             ('event_comment', None, ''),
             ('event_owner', None, ''),
             ('event_first', None, ''),
@@ -1002,6 +1020,7 @@ if mkeventd_enabled:
             ('event_state', None, ''),
             ('event_host', 'ec_history_of_host', ''),
             ('event_text', None, ''),
+            ('event_match_groups', None, ''),
             ('event_comment', None, ''),
             ('event_owner', None, ''),
             ('event_first', None, ''),

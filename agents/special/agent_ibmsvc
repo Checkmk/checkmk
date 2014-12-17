@@ -177,7 +177,7 @@ cmd = "ssh -o ConnectTimeout=%s %s %s@%s '" % (opt_timeout, opt_any_hostkey, use
 for module in command_options.keys():
     if command_options[module]["active"] == True:
         cmd += "echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
-        cmd += "%s;" % command_options[module]["command"]
+        cmd += "%s || true;" % command_options[module]["command"]
 cmd += "'"
 
 if opt_debug:
@@ -189,7 +189,7 @@ stdout, stderr = result.communicate()
 exit_code = result.wait()
 
 if exit_code not in  [ 0, 1 ]:
-    sys.stderr.write("Error connecting via ssh")
+    sys.stderr.write("Error connecting via ssh: %s\n" % stderr)
     sys.exit(2)
 
 lines = stdout.split('\n')
@@ -219,4 +219,3 @@ def output_profile():
 
 if g_profile:
     output_profile()
-

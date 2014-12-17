@@ -9,7 +9,7 @@ description:
  It uses the state reported by SNMP and prints the current power usage and
  serial number reported of each PSU.
 
- Each PSU which is present while the Check_MK inventory will result in an
+ Each PSU which is present while the Check_MK service discovery will result in an
  own service. If the PSU is not available anymore this service will be shown
  as CRITICAL service.
 

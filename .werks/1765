@@ -1,0 +1,12 @@
+Title: Fixed bug when generating nagvis backends while having sites with livestatus proxy configured
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418727715
+
+An exception occured everytime a site was saved when having at least one site configured
+which uses a connection via livestatus proxy daemon.
+

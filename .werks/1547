@@ -1,0 +1,10 @@
+Title: win_cpuinfo: fix case where NumberOfCores is missing (Windows 2003)
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416824823
+Class: fix
+
+Assume 1 Core or 1 Core per CPU in that case.
+

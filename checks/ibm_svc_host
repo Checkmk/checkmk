@@ -31,17 +31,27 @@
 # 2:host105:2:2:online
 # 3:host106:2:2:online
 
+factory_settings['ibm_svc_host_default_levels'] = {
+    'always_ok'  : False
+}
 
 def inventory_ibm_svc_host(info):
     return [(None, None)]
 
-def check_ibm_svc_host(item, _no_params, info):
-    degraded=0
-    offline=0
-    active=0
-    inactive=0
-    other=0
-    status=0
+
+def check_ibm_svc_host_state(state, aw_ok):
+    if aw_ok:
+        return 0
+    else:
+        return state
+
+def check_ibm_svc_host(item, params, info):
+    degraded = 0
+    offline  = 0
+    active   = 0
+    inactive = 0
+    other    = 0
+    status   = 0
     for line in info:
         if line[4] == 'degraded':
             degraded += 1
@@ -60,24 +70,23 @@ def check_ibm_svc_host(item, _no_params, info):
                  ("offline",  offline),
                  ("other",    other),
                ]
-    message = "%s hosts active, %s inactive" % (active, inactive)
+    yield 0, "%s hosts active, %s inactive" % (active, inactive), perfdata
 
+    aw_ok = params['always_ok'] # Needed in function check_ibm_svc_host_state
     if degraded > 0:
-        message += ", %s degraded(!)" % degraded
-        status = 1
+        yield check_ibm_svc_host_state(1, aw_ok), "%s degraded" % degraded
     if offline > 0:
-        message += ", %s offline(!!)" % offline
-        status = 2
+        yield check_ibm_svc_host_state(2, aw_ok), "%s offline" % offline
     if other > 0:
-        message += ", %s in an unidentified state(!)" % other
-        status = max(status, 1)
+        yield check_ibm_svc_host_state(1, aw_ok),  "%s in an unidentified state(!)" % other
 
-    return status, message, perfdata
 
 check_info["ibm_svc_host"] = {
     "check_function"        : check_ibm_svc_host,
     "inventory_function"    : inventory_ibm_svc_host,
-    "service_description"   : "IBM SVC Hosts",
+    "service_description"   : "Hosts",
     "has_perfdata"          : True,
+    "default_levels_variable": "ibm_svc_host_default_levels",
+    "group"                 : "ibm_svc_host",
 }
 

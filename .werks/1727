@@ -1,0 +1,9 @@
+Title: cisco_secure: Fixed inventory exception when port security is not enabled
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418114616
+Class: fix
+
+

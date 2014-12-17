@@ -27,10 +27,10 @@
 # Rules for configuring parameters of checks (services)
 
 register_rulegroup("checkparams", _("Parameters for Inventorized Checks"),
-    _("Levels and other parameters for checks found by the Check_MK inventory.\n"
+    _("Levels and other parameters for checks found by the Check_MK service discovery.\n"
       "Use these rules in order to define parameters like filesystem levels, "
       "levels for CPU load and other things for services that have been found "
-      "by the automatic service detection (inventory) of Check_MK."))
+      "by the automatic service discovery of Check_MK."))
 group = "checkparams"
 
 subgroup_networking =   _("Networking")
@@ -340,15 +340,18 @@ register_rule(group + '/' + subgroup_inventory,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_processes_rules",
-    title     = _('Process Inventory'),
-    help      = _("Keep in mind that all configuration parameters in this rule are only applied during the hosts inventory. "
-                  "Any changes later on require a host re-inventory"),
+    title     = _('Process Discovery'),
+    help      = _("This ruleset defines criteria for automatically creating checks for running processes "
+                  "based upon what is running when the service discovery is done. These services will be "
+                  "created with default parameters. They will get critical when no process is running and "
+                  "OK otherwise. You can parameterize the check with the ruleset <i>State and count of processes</i>."),
     valuespec = Dictionary(
         elements = [
             ('descr', TextAscii(
-                title = _('Service Description'),
+                title = _('Process Name'),
+                style = "dropdown",
                 allow_empty = False,
-                help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
+                help  = _('<p>The process name may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
                           'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
                           'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '
                           'matching the pattern, it will substitute all such groups with the actual values when creating the check. That way one '
@@ -362,14 +365,17 @@ register_rule(group + '/' + subgroup_inventory,
             )),
             ('match', Alternative(
                 title = _("Process Matching"),
+                style = "dropdown",
                 elements = [
                     TextAscii(
                         title = _("Exact name of the process without argments"),
+                        label = _("Executable:"),
                         size = 50,
                     ),
                     Transform(
                         RegExp(size = 50),
                         title = _("Regular expression matching command line"),
+                        label = _("Command line:"),
                         help = _("This regex must match the <i>beginning</i> of the complete "
                                  "command line of the process including arguments"),
                         forth = lambda x: x[1:],   # remove ~
@@ -386,6 +392,7 @@ register_rule(group + '/' + subgroup_inventory,
             )),
             ('user', Alternative(
                 title = _('Name of the User'),
+                style = "dropdown",
                 elements = [
                     FixedValue(
                         None,
@@ -394,6 +401,7 @@ register_rule(group + '/' + subgroup_inventory,
                     ),
                     TextAscii(
                         title = _('Exact name of the user'),
+                        label = _("User:"),
                     ),
                     FixedValue(
                         False,
@@ -410,93 +418,96 @@ register_rule(group + '/' + subgroup_inventory,
                          'create duplicate services with the same description otherwise.</p><p>Windows users are specified by the namespace followed by '
                          'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\Administrator".</p>'),
             )),
-            ('perfdata', Checkbox(
-                title = _('Performance Data'),
-                label = _('Collect count of processes, memory and cpu usage'),
-            )),
-            ('levels', Tuple(
-                title = _('Levels'),
-                help = _("Please note that if you specify and also if you modify levels here, the change is activated "
-                         "only during an inventory.  Saving this rule is not enough. This is due to the nature of inventory rules."),
-                elements = [
-                    Integer(
-                        title = _("Critical below"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                    Integer(
-                        title = _("Warning below"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                    Integer(
-                        title = _("Warning above"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                    Integer(
-                        title = _("Critical above"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                ],
-            )),
-            ( "cpulevels",
-              Tuple(
-                title = _("Levels on CPU utilization"),
-                elements = [
-                   Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
-                   Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
-                ],
-            )),
-            ( "cpu_average",
-             Integer(
-                 title = _("CPU Averaging"),
-                 help = _("By activating averaging, Check_MK will compute the average of "
-                          "the CPU utilization over a given interval. If you have defined "
-                          "alerting levels then these will automatically be applied on the "
-                          "averaged value. This helps to mask out short peaks. "),
-                 unit = _("minutes"),
-                 minvalue = 1,
-                 default_value = 15,
-             )
-           ),
-           ( "virtual_levels",
-              Tuple(
-                title = _("Virtual memory usage"),
-                elements = [
-                    Filesize(title = _("Warning at")),
-                    Filesize(title = _("Critical at")),
-                ],
-           )),
-           ( "resident_levels",
-              Tuple(
-                title = _("Physical memory usage"),
-                elements = [
-                    Filesize(title = _("Warning at")),
-                    Filesize(title = _("Critical at")),
-                ],
-           )),
-            ('handle_count', Tuple(
-                title = _('Handle Count (Windows only)'),
-                help  = _("The number of object handles in the processes object table. This includes open handles to "
-                          "threads, files and other resources like registry keys."),
-                elements = [
-                    Integer(
-                        title = _("Warning above"),
-                        unit = _("handles"),
-                    ),
-                    Integer(
-                        title = _("Critical above"),
-                        unit = _("handles"),
-                    ),
-                ],
-            )),
         ],
-        optional_keys = ['handle_count', 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels'],
+        required_keys = [ "descr" ],
+
+        # Some keys have moved into a check parameter ruleset
+        ignored_keys  = [ 'levels', 'perfdata', 'handle_count', 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels'],
     ),
     match = 'all',
 )
+
+process_level_elements = [
+    ('levels', Tuple(
+        title = _('Levels for process count'),
+        help = _("Please note that if you specify and also if you modify levels here, the change is activated "
+                 "only during an inventory.  Saving this rule is not enough. This is due to the nature of inventory rules."),
+        elements = [
+            Integer(
+                title = _("Critical below"),
+                unit = _("processes"),
+                default_value = 1,
+            ),
+            Integer(
+                title = _("Warning below"),
+                unit = _("processes"),
+                default_value = 1,
+            ),
+            Integer(
+                title = _("Warning above"),
+                unit = _("processes"),
+                default_value = 99999,
+            ),
+            Integer(
+                title = _("Critical above"),
+                unit = _("processes"),
+                default_value = 99999,
+            ),
+        ],
+    )),
+    ( "cpulevels",
+      Tuple(
+        title = _("Levels on CPU utilization"),
+        elements = [
+           Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
+           Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
+        ],
+    )),
+    ( "cpu_average",
+     Integer(
+         title = _("CPU Averaging"),
+         help = _("By activating averaging, Check_MK will compute the average of "
+                  "the CPU utilization over a given interval. If you have defined "
+                  "alerting levels then these will automatically be applied on the "
+                  "averaged value. This helps to mask out short peaks. "),
+         unit = _("minutes"),
+         minvalue = 1,
+         default_value = 15,
+     )
+   ),
+   ( "virtual_levels",
+      Tuple(
+        title = _("Virtual memory usage"),
+        elements = [
+            Filesize(title = _("Warning at")),
+            Filesize(title = _("Critical at")),
+        ],
+   )),
+   ( "resident_levels",
+      Tuple(
+        title = _("Physical memory usage"),
+        elements = [
+            Filesize(title = _("Warning at")),
+            Filesize(title = _("Critical at")),
+        ],
+   )),
+    ('handle_count', Tuple(
+        title = _('Handle Count (Windows only)'),
+        help  = _("The number of object handles in the processes object table. This includes open handles to "
+                  "threads, files and other resources like registry keys."),
+        elements = [
+            Integer(
+                title = _("Warning above"),
+                unit = _("handles"),
+            ),
+            Integer(
+                title = _("Critical above"),
+                unit = _("handles"),
+            ),
+        ],
+    )),
+]
+
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inv_domino_tasks_rules",
@@ -1402,7 +1413,7 @@ register_check_parameters(
                            default_difference = (0.5, 1.0)
                        )
                    ],
-                   default_value = (50.0, 70.0))
+                   default_value = (80.0, 90.0))
             ),
             ("average",
                 Integer (
@@ -1586,25 +1597,29 @@ register_check_parameters(
                       title = ("VPN Tunnel Endpoints"),
                       elements = [
                       IPv4Address(
-                          title = _("IP-Address of Tunnel Endpoint"),
+                          title = _("IP-Address or Name of Tunnel Endpoint"),
+                          help = _("The configured value must match a tunnel reported by the monitored "
+                                   "device."),
                           allow_empty = False,
-                          ),
-                      TextAscii(
-                          title = _("Name of Tunnel"),
-                          ),
+                      ),
+                      TextUnicode(
+                          title = _("Tunnel Alias"),
+                          help = _("You can configure an individual alias here for the tunnel matching "
+                                   "the IP-Address or Name configured in the field above."),
+                      ),
                       MonitoringState(
                           default_value = 2,
-                          title = _("State if this tunnel is not found"),
+                          title = _("State if tunnel is not found"),
                           )]),
-                  add_label = _("Add another Tunnel"),
+                  add_label = _("Add tunnel"),
                   movable = False,
-                  title = _("VPN Tunnel"),
+                  title = _("VPN tunnel specific configuration"),
                   )),
             ( "state",
               MonitoringState(
-                  title = _("Default state if inventorized, unregistered tunnel is not found"),
-                  help = _("Default state if a tunnel, which was inventorized but is not listed in this rule, "
-                      "is not longer present in the snmp data"),
+                  title = _("Default state to report when tunnel can not be found anymore"),
+                  help = _("Default state if a tunnel, which is not listed above in this rule, "
+                           "can no longer be found."),
                   ),
             ),
         ],
@@ -3924,9 +3939,69 @@ register_check_parameters(
             ),
             ( "ssl_conns",
                 Levels(
-                     title = _("Max. number of connections"),
+                     title = _("Max. number of SSL connections"),
                      default_value = None,
                      default_levels = (25000, 30000)
+                )
+            ),
+        ]),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "checkpoint_connections",
+    _("Checkpoint Firewall Connections"),
+    Tuple(
+       help = _("This rule sets limits to the current number of connections through "
+                "a Checkpoint firewall."),
+       title = _("Maximum number of firewall connections"),
+       elements = [
+           Integer( title = _("Warning if above"), default_value = 40000),
+           Integer( title = _("Critical if above"), default_value = 50000),
+       ],
+    ),
+    None,
+    None
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "checkpoint_packets",
+    _("Checkpoint Firewall Packet Rates"),
+    Dictionary(
+        elements = [
+            ( "accepted",
+                Levels(
+                     title = _("Maximum Rate of Accepted Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
+                )
+            ),
+            ( "rejected",
+                Levels(
+                     title = _("Maximum Rate of Rejected Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
+                )
+            ),
+            ( "dropped",
+                Levels(
+                     title = _("Maximum Rate of Dropped Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
+                )
+            ),
+            ( "logged",
+                Levels(
+                     title = _("Maximum Rate of Logged Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
                 )
             ),
         ]),
@@ -4145,8 +4220,8 @@ register_check_parameters(
           help = _("The count of remaining entries in the DHCP pool represents "
                    "the number of IP addresses left which can be assigned in the network"),
           elements = [
-              Percentage(title = _("Warning if more than"), unit = _("pool entries")),
-              Percentage(title = _("Critical if more than"), unit = _("pool entries")),
+              Percentage(title = _("Warning if less than"), unit = _("% free pool entries")),
+              Percentage(title = _("Critical if less than"), unit = _("% free pool entries")),
               ]),
     TextAscii(
         title = _("Service descriptions"),
@@ -4164,6 +4239,18 @@ register_check_parameters(
           elements = [
               Integer(title = _("Warning if above"), unit = _("threads"), default_value = 1000),
               Integer(title = _("Critical if above"), unit = _("threads"), default_value = 2000)]),
+    None, None
+)
+
+register_check_parameters(
+    subgroup_os,
+    "logins",
+    _("Number of Logins on System"),
+    Tuple(
+          help = _("This rule defines upper limits for the number of logins on a system."),
+          elements = [
+              Integer(title = _("Warning at"), unit = _("users"), default_value = 20),
+              Integer(title = _("Critical at"), unit = _("users"), default_value = 30)]),
     None, None
 )
 
@@ -4231,6 +4318,29 @@ register_check_parameters(
                   ],
         title = _("Disk/Drive type"),
         help = _("Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here.")),
+    "first"
+)
+
+
+register_check_parameters(
+    subgroup_storage,
+    "ibm_svc_host",
+    _("IBM SVC: Options for SVC Hosts Check "),
+    Dictionary(
+        elements = [
+            ( "always_ok",
+             DropdownChoice(
+                  choices = [
+                    ( False, _("Check show Errors in Case of degraded or offline hosts")),
+                    ( True, _("Check always is in a OK State") )
+                  ],
+                  title = _("Overwrite Service State"),
+                  )
+            )
+        ],
+        optional_keys = None,
+    ),
+    None,
     "first"
 )
 
@@ -4646,6 +4756,113 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_storage,
+    "netapp_disks",
+    _("NetApp Broken/Spare Disk Ratio"),
+    Dictionary(
+        help = _("You can set level of the broken to spare disk ratio. "
+                 "The ratio is calculated with <i>broken / (broken + spare)</i>."),
+        elements = [
+            ( "broken_spare_ratio",
+            Tuple(
+                title = _("Broken to spare ratio"),
+                elements = [
+                    Percentage(title = _("Warning at or above")),
+                    Percentage(title = _("Critical at or above")),
+                ]
+            )),
+        ],
+        optional_keys = False
+    ),
+    None,
+    "match"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "netapp_volumes",
+    _("NetApp Volumes"),
+    Dictionary(
+        elements = [
+             ("levels",
+                Alternative(
+                    title = _("Levels for volume"),
+                    show_alternative_title = True,
+                    default_value = (80.0, 90.0),
+                    match = match_dual_level_type,
+                    elements = [
+                           get_free_used_dynamic_valuespec("used", "volume"),
+                           Transform(
+                                    get_free_used_dynamic_valuespec("free", "volume", default_value = (20.0, 10.0)),
+                                    allow_empty = False,
+                                    forth = transform_filesystem_free,
+                                    back  = transform_filesystem_free
+                           )
+                    ]
+                 )
+            ),
+            ("perfdata",
+                ListChoice(
+                    title = _("Performance data for protocols"),
+                    help = _("Specify for which protocol performance data should get recorded."),
+                    choices = [
+                       ( "", _("Summarized data of all protocols") ),
+                       ( "nfs",    _("NFS") ),
+                       ( "cifs",   _("CIFS") ),
+                       ( "san",    _("SAN") ),
+                       ( "fcp",    _("FCP") ),
+                       ( "iscsi",  _("ISCSI") ),
+                    ],
+                )),
+            (  "trend_range",
+               Optional(
+                   Integer(
+                       title = _("Time Range for filesystem trend computation"),
+                       default_value = 24,
+                       minvalue = 1,
+                       unit= _("hours")),
+                   title = _("Trend computation"),
+                   label = _("Enable trend computation"))),
+            (  "trend_mb",
+               Tuple(
+                   title = _("Levels on trends in MB per time range"),
+                   elements = [
+                       Integer(title = _("Warning if above"), unit = _("MB / range"), default_value = 100),
+                       Integer(title = _("Critical if above"), unit = _("MB / range"), default_value = 200)
+                   ])),
+            (  "trend_perc",
+               Tuple(
+                   title = _("Levels for the percentual growth per time range"),
+                   elements = [
+                       Percentage(title = _("Warning if above"), unit = _("% / range"), default_value = 5,),
+                       Percentage(title = _("Critical if above"), unit = _("% / range"), default_value = 10,),
+                   ])),
+            (  "trend_timeleft",
+               Tuple(
+                   title = _("Levels on the time left until the filesystem gets full"),
+                   elements = [
+                       Integer(title = _("Warning if below"), unit = _("hours"), default_value = 12,),
+                       Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
+                    ])),
+            ( "trend_showtimeleft",
+                    Checkbox( title = _("Display time left in check output"), label = _("Enable"),
+                               help = _("Normally, the time left until the disk is full is only displayed when "
+                                        "the configured levels have been breached. If you set this option "
+                                        "the check always reports this information"))
+            ),
+            ( "trend_perfdata",
+              Checkbox(
+                  title = _("Trend performance data"),
+                  label = _("Enable generation of performance data from trends"))),
+
+
+        ]
+    ),
+    TextAscii(title = _("Volume name")),
+    "match"
+)
+
+register_check_parameters(
     subgroup_applications,
     "services",
     _("Windows Services"),
@@ -4808,6 +5025,79 @@ register_check_parameters(
      None
 )
 
+
+# New temperature rule for modern temperature checks that have the
+# sensor type (e.g. "CPU", "Chassis", etc.) as the beginning of their
+# item (e.g. "CPU 1", "Chassis 17/11"). This will replace all other
+# temperature rulesets in future. Note: those few temperature checks
+# that do *not* use an item, need to be converted to use one single
+# item (other than None).
+register_check_parameters(
+    subgroup_environment,
+    "temperature",
+    _("Temperature"),
+    Transform(
+        Dictionary(
+            elements = [
+                ( "levels",
+                  Tuple(
+                      title = _("Upper Temperature Levels"),
+                      elements = [
+                          Integer(title = _("warning at"), unit = u"°C", default_value = 26),
+                          Integer(title = _("critical at"), unit = u"°C", default_value = 30),
+                      ]
+                )),
+                ( "levels_lower",
+                  Tuple(
+                      title = _("Lower Temperature Levels"),
+                      elements = [
+                          Integer(title = _("warning at"), unit = u"°C", default_value = 0),
+                          Integer(title = _("critical at"), unit = u"°C", default_value = -10),
+                      ]
+                )),
+                ( "output_unit",
+                  DropdownChoice(
+                      title = _("Display values in "),
+                      choices = [
+                        ( "c", _("Celsius") ),
+                        ( "f", _("Fahrenheit") ),
+                        ( "k", _("Kelvin") ),
+                      ]
+                )),
+                ## ( "input_unit",
+                ##   DropdownChoice(
+                ##       title = _("Override unit of sensor"),
+                ##       help = _("In some rare cases the unit that is signalled by the sensor "
+                ##                "is wrong and e.g. the sensor sends values in Fahrenheit while "
+                ##                "they are misinterpreted as Celsius. With this setting you can "
+                ##                "force the reading of the sensor to be interpreted as customized. "),
+                ##       choices = [
+                ##         ( "c", _("Celsius") ),
+                ##         ( "f", _("Fahrenheit") ),
+                ##         ( "k", _("Kelvin") ),
+                ##       ]
+                ## )),
+                ## ( "sensor_levels",
+                ##   DropdownChoice(
+                ##       title = _("Interpretation of Sensor's own temperature status"),
+                ##       choices = [
+                ##           ( "ignore", _("Ignore sensor's own levels") ),
+                ##           ( "sensor", _("Only use sensor's levels, ignore yours" ) ),
+                ##           ( "best", _("Use least critical of your and sensor's levels") ),
+                ##           ( "worst", _("Use most critical of your and sensor's levels") ),
+                ##       ]
+                ## )),
+
+            ]
+        ),
+        forth = lambda v: type(v) == tuple and { "levels" : v } or v,
+    ),
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identifier of the thermal sensor.")),
+    "dict",
+)
+
 register_check_parameters(
     subgroup_environment,
     "room_temperature",
@@ -4822,7 +5112,7 @@ register_check_parameters(
         ]),
     TextAscii(
         title = _("Sensor ID"),
-        help = _("The identifier of the themal sensor.")),
+        help = _("The identifier of the thermal sensor.")),
     "first"
 )
 
@@ -4991,7 +5281,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_environment,
     "ups_outphase",
-    _("Parameters for output phases of UPSs"),
+    _("Parameters for output phases of UPSs and PDUs"),
     Dictionary(
         elements = [
             ( "voltage",
@@ -5009,6 +5299,52 @@ register_check_parameters(
                       Integer(title = _("critical at"), unit = u"%", default_value = 90),
                   ])),
             ]),
+    TextAscii(
+        title = _("Phase Number"),
+        help = _("The number of the phase (usually <tt>1</tt>,<tt>2</tt>,<tt>3</tt>).")),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "el_inphase",
+    _("Parameters for input phases of UPSs and PDUs"),
+    Dictionary(
+        elements = [
+            ( "voltage",
+              Tuple(
+                  title = _("Voltage"),
+                  elements = [
+                      Integer(title = _("warning if below"), unit = u"V", default_value = 210),
+                      Integer(title = _("critical if below"), unit = u"V", default_value = 200),
+                  ],
+            )),
+            ( "power",
+              Tuple(
+                  title = _("Power"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"W", default_value = 1000),
+                      Integer(title = _("critical at"), unit = u"W", default_value = 1200),
+                  ],
+            )),
+            ( "appower",
+              Tuple(
+                  title = _("Apparent Power"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"VA", default_value = 1100),
+                      Integer(title = _("critical at"), unit = u"VA", default_value = 1300),
+                  ],
+            )),
+            ( "current",
+              Tuple(
+                  title = _("Current"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"A", default_value = 5),
+                      Integer(title = _("critical at"), unit = u"A", default_value = 10),
+                  ],
+            )),
+        ]
+    ),
     TextAscii(
         title = _("Phase Number"),
         help = _("The number of the phase (usually <tt>1</tt>,<tt>2</tt>,<tt>3</tt>).")),
@@ -5484,7 +5820,7 @@ register_check_parameters(
     _("JVM threads"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number of threads "
-                 "running in a JVM."),
+                 "running in a JVM. Other keywords for this rule: Tomcat, Jolokia, JMX."),
         elements = [
             Integer(
                 title = _("Warning if above"),
@@ -5511,7 +5847,8 @@ register_check_parameters(
         "jvm_uptime",
         _("JVM uptime (since last reboot)"),
         Dictionary(
-            help = _("This rule sets the warn and crit levels for the uptime of a JVM. "),
+            help = _("This rule sets the warn and crit levels for the uptime of a JVM. "
+                     "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
             elements = [
             ( "min",
               Tuple(
@@ -5545,7 +5882,8 @@ register_check_parameters(
     _("JVM session count"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number of current "
-                 "connections to a JVM application on the servlet level."),
+                 "connections to a JVM application on the servlet level. "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             Integer(
                 title = _("Warning if below"),
@@ -5583,7 +5921,8 @@ register_check_parameters(
     _("JVM request count"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number "
-                 "of incoming requests to a JVM application server"),
+                 "of incoming requests to a JVM application server "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             Integer(
                 title = _("Warning if below"),
@@ -5623,7 +5962,8 @@ register_check_parameters(
         help = _("The BEA application servers have 'Execute Queues' "
                  "in which requests are processed. This rule allows to set "
                  "warn and crit levels for the number of requests that are "
-                 "being queued for processing."),
+                 "being queued for processing. "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             Integer(
                 title = _("Warning if above"),
@@ -5652,7 +5992,8 @@ register_check_parameters(
     _("JVM memory levels"),
     Dictionary(
         help = _("This rule allows to set the warn and crit levels of the heap / "
-                 "non-heap and total memory area usage on web application servers."),
+                 "non-heap and total memory area usage on web application servers. "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             ( "totalheap",
                Alternative(
@@ -6056,7 +6397,43 @@ def ps_convert_from_tuple(params):
             params["user"] = user
     return params
 
+# Next step in conversion: introduce "levels"
+def ps_convert_from_singlekeys(old_params):
+    params = {}
+    params.update(ps_convert_from_tuple(old_params))
+    if "warnmin" in params:
+        params["levels"] = (
+            params.get("warnmin",     1),
+            params.get("okmin",       1),
+            params.get("warnmax", 99999),
+            params.get("okmax",   99999),
+        )
+        for key in [ "warnmin", "warnmax", "okmin", "okmax" ]:
+            if key in params:
+                del params[key]
+    return params
 
+
+# Rule for disovered process checks
+register_check_parameters(
+    subgroup_applications,
+    "ps",
+    _("State and count of processes"),
+    Transform(
+        Dictionary(
+            elements = process_level_elements,
+        ),
+        forth = ps_convert_from_singlekeys,
+    ),
+    TextAscii(
+        title = _("Process name as defined at discovery"),
+    ),
+    "dict",
+    has_inventory = True,
+    register_static_check = False,
+)
+
+# Rule for static process checks
 register_check_parameters(
     subgroup_applications,
     "ps",
@@ -6065,7 +6442,7 @@ register_check_parameters(
         Dictionary(
             elements = [
                 ( "process", Alternative(
-                    title = _("Name of the process"),
+                    title = _("Process Matching"),
                     style = "dropdown",
                     elements = [
                         TextAscii(
@@ -6088,28 +6465,12 @@ register_check_parameters(
                     ],
                     match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
                 )),
-                ( "warnmin", Integer(
-                    title = _("Minimum number of matched process for WARNING state"),
-                    default_value = 1,
-                )),
-                ( "okmin", Integer(
-                    title = _("Minimum number of matched process for OK state"),
-                    default_value = 1,
-                )),
-                ( "okmax", Integer(
-                    title = _("Maximum number of matched process for OK state"),
-                    default_value = 1,
-                )),
-                ( "warnmax", Integer(
-                    title = _("Maximum number of matched process for WARNING state"),
-                    default_value = 1,
-                )),
                 ( "user", Alternative(
                     title = _("Name of operating system user"),
                     style = "dropdown",
                     elements = [
                         TextAscii(
-                            title = _("Exact name of the oeprating system user")
+                            title = _("Exact name of the operating system user")
                         ),
                         Transform(
                             RegExp(size = 50),
@@ -6129,71 +6490,21 @@ register_check_parameters(
                     match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
 
                 )),
-                ( "cpulevels",
-                  Tuple(
-                    title = _("Levels on CPU utilization"),
-                    elements = [
-                       Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
-                       Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
-                    ],
-                )),
-                ( "cpu_average",
-                 Integer(
-                     title = _("CPU Averaging"),
-                     help = _("By activating averaging, Check_MK will compute the average of "
-                              "the CPU utilization over a given interval. If you have defined "
-                              "alerting levels then these will automatically be applied on the "
-                              "averaged value. This helps to mask out short peaks."),
-                     unit = _("minutes"),
-                     minvalue = 1,
-                     default_value = 15,
-                 )
-               ),
-               ( "virtual_levels",
-                  Tuple(
-                    title = _("Virtual memory usage"),
-                    elements = [
-                        Filesize(title = _("Warning at")),
-                        Filesize(title = _("Critical at")),
-                    ],
-               )),
-               ( "resident_levels",
-                  Tuple(
-                    title = _("Physical memory usage"),
-                    elements = [
-                        Filesize(title = _("Warning at")),
-                        Filesize(title = _("Critical at")),
-                    ],
-               )),
-               ('handle_count', Tuple(
-                   title = _('Handle Count (Windows only)'),
-                   help  = _("The number of object handles in the process's object table. This includes open handles to "
-                             "threads, files and other resources like registry keys."),
-                   elements = [
-                       Integer(
-                           title = _("Warning above"),
-                           unit = _("handles"),
-                       ),
-                       Integer(
-                           title = _("Critical above"),
-                           unit = _("handles"),
-                       ),
-                   ],
-               )),
-
-            ],
-            optional_keys = [ "user", "cpulevels", "cpu_average", "virtual_levels", "resident_levels", "handle_count" ]),
-        forth = ps_convert_from_tuple,
+            ] + process_level_elements,
+            # required_keys = [ "process" ],
+        ),
+        forth = ps_convert_from_singlekeys,
     ),
     TextAscii(
-        title = _("Name of service"),
+        title = _("Process Name"),
         help = _("This name will be used in the description of the service"),
         allow_empty = False,
         regex = "^[a-zA-Z_0-9 _.-]*$",
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
                         "dot and hyphon for your service description"),
     ),
-    "first", False
+    "dict",
+    has_inventory = False,
 )
 
 register_check_parameters(
@@ -6728,6 +7039,7 @@ register_check_parameters(
     "jvm_gc",
     _("JVM garbage collection levels"),
     Dictionary(
+        help = _("Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             ( "CollectionTime",
                Alternative(
@@ -6771,6 +7083,7 @@ register_check_parameters(
     "jvm_tp",
     _("JVM tomcat threadpool levels"),
     Dictionary(
+        help = _("Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             ( "currentThreadCount",
                Alternative(
@@ -6913,11 +7226,11 @@ register_check_parameters(
             )),
             ( "okmax", Integer(
                 title = _("Maximum number of matched tasks for OK state"),
-                default_value = 1,
+                default_value = 99999,
             )),
             ( "warnmax", Integer(
                 title = _("Maximum number of matched tasks for WARNING state"),
-                default_value = 1,
+                default_value = 99999,
             )),
         ],
         required_keys = [ 'warnmin', 'okmin', 'okmax', 'warnmax', 'process' ],

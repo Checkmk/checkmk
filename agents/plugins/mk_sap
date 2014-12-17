@@ -38,7 +38,7 @@
 #
 # During development the "CCMS_Doku.pdf" was really helpful.
 
-import os, sys
+import os, sys, fcntl
 import time, datetime
 
 # sapnwrfc needs to know where the libs are located. During
@@ -108,7 +108,11 @@ SKIP_MTCLASSES = [
     MTE_LONG_TXT,
 ]
 
-STATE_FILE = '/etc/check_mk/sap.state'
+MK_CONFDIR = os.getenv("MK_CONFDIR") or "/etc/check_mk"
+MK_VARDIR = os.getenv("MK_VARDIR") or "/var/lib/check_mk_agent"
+
+STATE_FILE = MK_VARDIR + '/sap.state'
+state_file_changed = False
 
 # #############################################################################
 
@@ -136,11 +140,10 @@ local_cfg = {
 # The * matches the whole following string and does not end on next "/".
 # For examples, take a look at the default config file (/etc/check_mk/sap.cfg).
 monitor_paths = [
-#    'SAP CCMS Monitor Templates/Dialog Overview/*',
+    'SAP CCMS Monitor Templates/Dialog Overview/*',
 ]
 monitor_types = []
-# henri
-config_file = os.getenv('MK_CONFDIR', '/etc/check_mk') + '/sap.cfg'
+config_file = MK_CONFDIR + '/sap.cfg'
 
 cfg = {}
 if os.path.exists(config_file):
@@ -155,6 +158,10 @@ try:
     states = eval(file(STATE_FILE).read())
 except IOError:
     states = {}
+
+# index of all logfiles which have been found in a run. This is used to
+# remove logfiles which are not available anymore from the states dict.
+logfiles = []
 
 # #############################################################################
 
@@ -221,7 +228,7 @@ def logout():
         'INTERFACE':  'XAL',
     })
 
-def mon_list( cfg ):
+def mon_list(cfg):
     f = query("BAPI_SYSTEM_MON_GETLIST", {
         'EXTERNAL_USER_NAME': cfg['user'],
     })
@@ -322,6 +329,8 @@ def alert_details(cfg, alert):
     return state, msg
 
 def process_alerts(cfg, logs, ms_name, mon_name, node, alerts):
+    global state_file_changed
+
     sid     = node["MTSYSID"].strip() or 'Other'
     context = node["MTMCNAME"].strip() or 'Other'
     path    = node["PATH"]
@@ -329,6 +338,8 @@ def process_alerts(cfg, logs, ms_name, mon_name, node, alerts):
     # Use the sid as hostname for the logs
     hostname = sid
     logfile  = context + "/" + path
+
+    logfiles.append((hostname, logfile))
 
     logs.setdefault(sid, {})
     logs[hostname][logfile] = []
@@ -350,26 +361,21 @@ def process_alerts(cfg, logs, ms_name, mon_name, node, alerts):
     if newest_log_dt:
         # Write newest log age to cache to prevent double processing of logs
         states[(hostname, logfile)] = newest_log_dt
-        file(STATE_FILE, 'w').write(repr(states))
+        state_file_changed = True
     return logs
 
 
 
-def connect(cfg):
+def check(cfg):
     global conn
-    try:
-        conn = sapnwrfc.base.rfc_connect(cfg)
-    except sapnwrfc.RFCCommunicationError, e:
-        sys.stderr.write('ERROR: Unable to connect (%s)\n' % e)
-        return
-
+    conn = sapnwrfc.base.rfc_connect(cfg)
     login()
 
     logs     = {}
     sap_data = {}
 
     # This loop is used to collect all information from SAP
-    for ms_name, mon_name in mon_list( cfg ):
+    for ms_name, mon_name in mon_list(cfg):
         path = ms_name + SEPARATOR + mon_name
         if not to_be_monitored(path, True):
             continue
@@ -455,10 +461,39 @@ def connect(cfg):
     logout()
     conn.close()
 
-for entry in cfg:
-    try:
-        connect(entry)
-    except:
-        pass # Make sure that other entries are executed anyway
+# It is possible to configure multiple SAP instances to monitor. Loop them all, but
+# do not terminate when one connection failed
+processed_all = True
+try:
+    for entry in cfg:
+        try:
+            check(entry)
+        except sapnwrfc.RFCCommunicationError, e:
+            sys.stderr.write('ERROR: Unable to connect (%s)\n' % e)
+            processed_all = False
+        except Exception, e:
+            sys.stderr.write('ERROR: Unhandled exception (%s)\n' % e)
+            processed_all = False
+
+    # Now check whether or not an old logfile needs to be removed. This can only
+    # be done this way, when all hosts have been reached. Otherwise the cleanup
+    # is skipped.
+    if processed_all:
+        for key in states.keys():
+            if key not in logfiles:
+                state_file_changed = True
+                del states[key]
+
+    # Only write the state file once per run. And only when it has been changed
+    if state_file_changed:
+        new_file = STATE_FILE + '.new'
+        fd = os.open(new_file, os.O_WRONLY | os.O_CREAT)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        os.write(fd, repr(states))
+        os.close(fd)
+        os.rename(STATE_FILE+'.new', STATE_FILE)
+
+except Exception, e:
+    sys.stderr.write('ERROR: Unhandled exception (%s)\n' % e)
 
 sys.exit(0)

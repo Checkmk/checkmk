@@ -75,10 +75,10 @@ class BITextFilter(Filter):
         html.text_input(self.htmlvars[0])
 
     def heading_info(self):
-        return html.var(self.htmlvars[0])
+        return html.var_utf8(self.htmlvars[0])
 
     def filter_table(self, rows):
-        val = html.var(self.htmlvars[0])
+        val = html.var_utf8(self.htmlvars[0])
         if not val:
             return rows
         if self.how == "regex":
@@ -95,7 +95,7 @@ declare_filter(121, BITextFilter("output"))
 class BIHostFilter(Filter):
     def __init__(self):
         self.column = "aggr_hosts"
-        Filter.__init__(self, self.column, _("Affected hosts contain"), "aggr", ["site", "host"], [])
+        Filter.__init__(self, self.column, _("Affected hosts contain"), "aggr", ["aggr_host_site", "aggr_host_host"], [])
 
     def display(self):
         html.text_input(self.htmlvars[1])
@@ -111,7 +111,7 @@ class BIHostFilter(Filter):
 
     # Used for linking
     def variable_settings(self, row):
-        return [ ("host", row["host_name"]), ("site", row["site"]) ]
+        return [ ("aggr_host_host", row["host_name"]), ("aggr_host_site", row["site"]) ]
 
     def filter_table(self, rows):
         val = html.var(self.htmlvars[1])
@@ -123,22 +123,23 @@ declare_filter(130, BIHostFilter(), _("Filter for all aggregations that base on 
 
 class BIServiceFilter(Filter):
     def __init__(self):
-        Filter.__init__(self, "aggr_service", _("Affected by service"), "aggr", ["site", "host", "service"], [])
+        Filter.__init__(self, "aggr_service", _("Affected by service"), "aggr", ["aggr_service_site", "aggr_service_host", "aggr_service_service"], [])
 
     def double_height(self):
         return True
 
     def display(self):
         html.write(_("Host") + ": ")
-        html.text_input("host")
+        html.text_input(self.htmlvars[1])
         html.write(_("Service") + ": ")
-        html.text_input("service")
+        html.text_input(self.htmlvars[2])
 
     def heading_info(self):
-        return html.var_utf8("host") + " / " + html.var_utf8("service")
+        return html.var_utf8(self.htmlvars[1]) + " / " + html.var_utf8(self.htmlvars[2])
 
     def service_spec(self):
-        return html.var_utf8("site"), html.var_utf8("host"), html.var_utf8("service")
+        if html.has_var(self.htmlvars[2]):
+            return html.var_utf8(self.htmlvars[0]), html.var_utf8(self.htmlvars[1]), html.var_utf8(self.htmlvars[2])
 
     # Used for linking
     def variable_settings(self, row):

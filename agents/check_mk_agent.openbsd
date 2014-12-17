@@ -59,7 +59,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.5i7
+echo Version: 1.2.7i1
 echo AgentOS: openbsd
 
 osver="$(uname -r)"
@@ -78,7 +78,29 @@ echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ process
 echo '<<<uptime>>>'
 echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' '` | bc
 
-echo '<<<netctr>>>'
+echo "<<<mem>>>"
+MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
+MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
+MEM_TOTAL=$(echo $MEM_TOTAL/1024 | bc)
+
+SWAPCTL_OUTPUT=$(swapctl -k -s)
+SWAP_FREE=$(echo $SWAPCTL_OUTPUT | awk '{ print $7 }')
+SWAP_TOTAL=$(echo $SWAPCTL_OUTPUT | awk '{ print $2 }')
+
+# if there is no swap space swap values are 0
+if [ -z "$SWAPCTL_OUTPUT" ]
+        then
+        SWAP_FREE=0
+        SWAP_TOTAL=0
+fi
+
+echo "MemTotal:\t" $MEM_TOTAL kB
+echo "MemFree:\t" $MEM_FREE kB
+echo "SwapTotal:\t" $SWAP_TOTAL kB
+echo "SwapFree:\t" $SWAP_FREE kB
+
+echo '<<<lnx_if:sep(58)>>>'
+# MC= MAC address
 # BI= Bytes in
 # PI= Packets in
 # EI= Errors in
@@ -86,32 +108,102 @@ echo '<<<netctr>>>'
 # BO= Bytes out
 # PO= Packets out
 # CO= Colls
-# NI= number of interfaces
+# NI= Number of interfaces
+# INTERFACES= Array of interfaces
 
-Z1=1
-Z2=p
-NI=$(netstat -in | grep 'Link' | wc -l)
+set -A INTERFACES
+set -A MC
+set -A BI
+set -A BO
+set -A PI
+set -A PO
+set -A EI
+set -A EO
+set -A CO
+
+NI=0
+# special (lo/pfsync/pflog/enc) and inactive (*) interfaces are not needed
+NETSTAT_OUTPUT=$(netstat -in | grep '<Link>' | egrep -v "\*|lo|pfsync|enc")
+NETSTAT_OUTPUT_BYTES=$(netstat -inb | grep '<Link>' | egrep -v "\*|lo|pfsync|enc")
+
+# adjust internal field separator to get lines from netstat and backup it before
+OFS=$IFS
+IFS='
+'
+# collect netstat values and interface number
+for NS in $NETSTAT_OUTPUT
+    do
+    NI=$(($NI+1))
+    INTERFACES[$NI]=$(echo $NS | awk '{print $1}')
+    MC[$NI]=$(echo $NS | awk '{print $4}')
+    PI[$NI]=$(echo $NS | awk '{print $5}')
+    EI[$NI]=$(echo $NS | awk '{print $6}')
+    PO[$NI]=$(echo $NS | awk '{print $7}')
+    EO[$NI]=$(echo $NS | awk '{print $8}')
+    CO[$NI]=$(echo $NS | awk '{print $9}')
+done
+
+# need NIC counter again for byte values - reset it
+NI=0
+for NS in $NETSTAT_OUTPUT_BYTES
+    do
+    NI=$(($NI+1))
+    BI[$NI]=$(echo $NS | awk '{print $5}')
+    BO[$NI]=$(echo $NS | awk '{print $6}')
+done
+
+# what is this for?
 [ "${NI}" -ge 1 ] || NI=15
 
-
-date +%s
-while [ $Z1 -lt $NI ]
-  do
-  BI=$( netstat -inb | egrep -v Name | grep Link | awk '{print $1" "$5}' | sed -ne $Z1$Z2 )
-  PI=$( netstat -in | egrep -v Name | grep Link | awk '{print $5}' | sed -ne $Z1$Z2 )
-  EI=$( netstat -in | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
-  FF1="0 0 0 0 0"
-  BO=$( netstat -inb | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
-  PO=$( netstat -in | egrep -v Name | grep Link | awk '{print $7}' | sed -ne $Z1$Z2 )
-  EO=$( netstat -in | egrep -v Name | grep Link | awk '{print $8}' | sed -ne $Z1$Z2 )
-  CO=$( netstat -in | egrep -v Name | grep Link | awk '{print $9}' | sed -ne $Z1$Z2 )
-  FF2="0 0"
-    if [ "$(echo ${PI} | cut -c 1-3)" -gt 0 ]
-      then
-	echo $BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2
-    fi
-  Z1=$(($Z1+1))
+# jot is OpenBSD "range"
+for i in $(jot $NI)
+    do
+    echo "${INTERFACES[$i]}:${BI[$i]} ${PI[$i]} ${EI[$i]} 0 0 0 0 0 ${BO[$i]} ${PO[$i]} ${EO[$i]} 0 0 ${CO[$i]} 0 0"
 done
+
+for IF in $(jot $NI)
+	do
+	echo \[${INTERFACES[$IF]}\]
+
+	IFCONFIG_OUTPUT=$(ifconfig ${INTERFACES[$IF]})
+	for IO in $IFCONFIG_OUTPUT
+		do
+		# Speed
+		SP=$(echo "$IO" | egrep "media:.*base" | cut -d\( -f2 | cut -db -f1)
+		if [ "$SP" ]
+			then
+			echo "\tSpeed: "$SP"Mb/s"
+		fi
+		# Detect duplexity - in reality only available for physical devices but
+		# virtual ones like CARP devices will get at least a half duplex
+		if [ "$(echo "$IO" | egrep "media:.*full-duplex")" ]
+			then
+			echo "\tDuplex: Full"
+		elif [ "$(echo "$IO" | grep "media:" | grep -v "full-duplex")" ]
+			then
+			echo "\tDuplex: Half"
+		fi
+		# Auto-negotiation
+		if [ "$(echo "$IO" | egrep "media:.*autoselect")" ]
+			then
+			echo "\tAuto-negotiation: on"
+		elif [ "$(echo "$IO" | grep "media:" | grep -v "autoselect")" ]
+			then
+			echo "\tAuto-negotiation: off"
+		fi
+		# Detect detected link
+		if [ "$(echo "$IO" | grep "status:" | egrep "active|backup|master")" ]
+			then
+			echo "\tLink detected: yes"
+		fi
+	done
+
+	echo "\tAddress: "${MC[$IF]}
+
+done
+
+# reset IFS to default
+IFW=$OFS
 
 # IPMI-Data (Fans, CPU, temperature, etc)
 # needs the sysutils/ipmitool and kldload ipmi.ko

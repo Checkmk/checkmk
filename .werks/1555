@@ -1,0 +1,10 @@
+Title: Improved validation on timeperiod references of non existing periods
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417431125
+Class: fix
+
+configured notification, check etc. periods were not validated for their
+existance correctly.

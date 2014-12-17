@@ -1,0 +1,10 @@
+Title: omd_status: Fix totally missing section in Linux agent
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418045381
+Class: fix
+
+Reason was an invalid call to <tt>run_cached</tt>. As a result the agent section
+<tt>omd_status</tt> was always empty. This has been fixed.

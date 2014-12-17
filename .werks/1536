@@ -1,0 +1,10 @@
+Title: fritz!Box special agent now deals with new URLs (firmware >= 6.0) correctly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416999028
+
+

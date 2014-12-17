@@ -1,0 +1,10 @@
+Title: cups_queues: fix outputting of current printer jobs if printer daemon is CUPS
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418044064
+Class: fix
+
+The fix is in <tt>check_mk_agent.linux</tt> so you need to update the agent if you
+want to deploy that fix. Thanks to Gerald Schroll.

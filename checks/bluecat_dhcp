@@ -32,7 +32,10 @@ factory_settings["bluecat_dhcp"] = {
 }
 
 def inventory_bluecat_dhcp(info):
-    return [(None, None)]
+    # Check if DHCP is not stopped on at least one host
+    for node, oper_state, leases in info:
+        if oper_state != '2':
+            return [(None, None)]
 
 def check_bluecat_dhcp(item, params, info):
     oper_states = {
@@ -42,20 +45,41 @@ def check_bluecat_dhcp(item, params, info):
         4 : "currently stopping",
         5 : "fault"
     }
-
-    if not info:
-        return
-
-    for line in info:
-        oper_state, leases_sec = map(int, line)
+    
+    ok_on_node = False
+    states = {}
+    state = 0
+    
+    # Collect  states of nodes
+    for node, oper_state, leases in info:
+        oper_state, leases_sec = map(int, (oper_state, leases))
+        temp_state = 0
         if oper_state in params['oper_states']['warning']:
-            state = 1
+            state = max(state, 1)
+            temp_state = 1
         elif oper_state in params['oper_states']['critical']:
             state = 2
+            temp_state = 2
         else:
-            state = 0
-            break
+            # If node one ok, the total check is ok
+            ok_on_node = node
+        # Only needed in cluster:
+        states[node] = {'oper_state' : oper_states[oper_state], 'leases_sec' : leases_sec, 'state' : temp_state }
+   
+    # Are we in a Cluster?
+    if len(info) > 1:
+        if ok_on_node:
+            node = ok_on_node
+            # One Node is OK:
+            yield 0, "DHCP is %s on %s" % (states[node]['oper_state'], node)
+            yield 0, '%s Leases per second' % (states[node]['leases_sec']), [ ('leases', states[node]['leases_sec']) ]
+        else:
+            # None of the nodes is ok:
+            for node, data in states.items():
+                yield data['state'], "%s on %s" % (data['oper_state'], node)
+        return
 
+    # Default behavior without Cluster
     yield state, "DHCP is %s" % oper_states[oper_state]
     yield 0, '%s Leases per second' % leases_sec, [ ('leases', leases_sec ) ]
 
@@ -63,6 +87,7 @@ def check_bluecat_dhcp(item, params, info):
 check_info["bluecat_dhcp"] =     {
     "check_function"            : check_bluecat_dhcp,
     "inventory_function"        : inventory_bluecat_dhcp,
+    "node_info"                 : True,
     "service_description"       : "DHCP",
     "has_perfdata"              : True,
     "default_levels_variable"   : "bluecat_dhcp",

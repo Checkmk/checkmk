@@ -78,8 +78,11 @@ Get-WmiObject Win32_Product -ComputerName $name | foreach-object { write-host -s
 write-host "<<<win_reg_uninstall:sep(124):persist($until)>>>"
 $paths = @("HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall")
 foreach ($path in $paths) {
-    Get-ChildItem $path -Recurse | foreach-object { $path2 = $path+"\"+$_.PSChildName; get-ItemProperty -path $path2 |
-        foreach-object { write-host -separator $separator $_.DisplayName, $_.Publisher, $_.InstallLocation, $_.PSChildName, $_.DisplayVersion, $_.EstimatedSize, $_.InstallDate }}
+    Get-ChildItem $path -Recurse | foreach-object {  $path2 = $path+"\"+$_.PSChildName; get-ItemProperty -path $path2 |
+
+        foreach-object {
+        $Publisher = $_.Publisher -replace "`0", ""
+        write-host -separator $separator $_.DisplayName, $Publisher , $_.InstallLocation, $_.PSChildName, $_.DisplayVersion, $_.EstimatedSize, $_.InstallDate }}
 }
 
 # Search exes
@@ -89,7 +92,7 @@ foreach ($item in $paths)
 {
     if ((Test-Path $item -pathType container))
     {
-        Get-ChildItem -Path $item -include *.exe -Recurse | foreach-object { write-host -separator $separator $_.Fullname, $_.LastWriteTime, $_.Length, $_.VersionInfo.FileDescription, $_.VersionInfo.ProductVersion, $_.VersionInfo.ProductName }
+        Get-ChildItem -Path $item -include *.exe -Recurse | foreach-object { write-host -separator $separator $_.Fullname, $_.LastWriteTime, $_.Length, $_.VersionInfo.FileDescription, $_.VersionInfo.ProduktVersion, $_.VersionInfo.ProduktName }
     }
 }
 

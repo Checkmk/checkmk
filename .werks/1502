@@ -1,0 +1,10 @@
+Title: Fixed removing elements from ListOf choices during complain phase
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416315651
+
+

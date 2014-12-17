@@ -70,6 +70,36 @@ check_icmp_params = [
        )),
 ]
 
+register_rule(group,
+    "active_checks:ssh",
+    Dictionary(
+        title = _("Check SSH service"),
+        help = _("This rulset allow you to configure a SSH check for a host"),
+        elements = [
+            ("port",
+               Integer(
+                    title = _("Port number to be used"),
+                    default_value = 22),
+            ),
+            ("timeout",
+                Integer(
+                    title = _("Connection timeout"),
+                    help = _("Seconds before connection times out"),
+                    default_value = 10),
+            ),
+            ("remote_version",
+               TextAscii(
+                    title = _("Remote Version"),
+                    help = _("Warn if string doesn't match expected server version (ex: OpenSSH_3.9p1)"),
+               )),
+            ("remote_protocol",
+                TextAscii(
+                    title = _("Remote Protocol"),
+                    help = _("Warn if protocol doesn't match expected protocol version (ex: 2.0)"),
+                )),
+        ]
+    ),
+    match="all")
 
 register_rule(group,
     "active_checks:icmp",
@@ -256,10 +286,11 @@ register_rule(group,
                DropdownChoice(
                    title = _("Type of Database"),
                    choices = [
-                      ( "mysql",    _("MySQL") ),
-                      ( "postgres", _("PostgreSQL") ),
-                      ( "mssql", _("MSSQL") ),
-                      ( "oracle",   _("Oracle") ),
+                      ("mysql",    _("MySQL")),
+                      ("postgres", _("PostgreSQL")),
+                      ("mssql",    _("MSSQL")),
+                      ("oracle",   _("Oracle")),
+                      ("db2",      _("DB2")),
                    ],
                    default_value = "postgres",
                ),
@@ -935,14 +966,18 @@ register_rule(group,
                          help = _("You can specify a hostname or IP address different from the IP address "
                                   "of the host as configured in your host properties."))),
                    ( "port",
-                     TextAscii(
-                         title = _("TCP Port to connect to"),
-                         help = _("The TCP Port the SMTP server is listening on. "
-                                  "The default is <tt>25</tt>."),
-                         size = 5,
-                         allow_empty = False,
-                         default_value = "25",
-                     )
+                     Transform(
+                         Integer(
+                             title = _("TCP Port to connect to"),
+                             help = _("The TCP Port the SMTP server is listening on. "
+                                      "The default is <tt>25</tt>."),
+                             size = 5,
+                             minvalue = 1,
+                             maxvalue = 65535,
+                             default_value = "25",
+                         ),
+                         forth = int,
+                      )
                    ),
                    ( "ip_version",
                      Alternative(
@@ -1387,7 +1422,7 @@ register_rule(group,
                  "log file of your monitoring core."),
         elements = [
             TextUnicode(
-                title = _("Name"),
+                title = _("Service Description"),
                 help = _("The name that will be used in the service description"),
                 allow_empty = False
             ),

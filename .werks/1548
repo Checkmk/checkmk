@@ -1,0 +1,10 @@
+Title: bluecat_ntp: do not inventorized devices where NTP information is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416912842
+
+

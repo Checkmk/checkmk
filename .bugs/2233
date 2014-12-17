@@ -1,0 +1,9 @@
+Title: Simulation Mode in Multisite anzeigen
+Component: multisite
+State: open
+Date: 2014-12-16 13:28:41
+Targetversion: future
+Class: nastiness
+
+when a site is in simulation mode, this should be clearly noted in the
+multisite gui

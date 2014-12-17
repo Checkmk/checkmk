@@ -1,0 +1,11 @@
+Title: AIX Agent: Fixed broken filesystem checks when having PowerHA installed
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417712407
+Class: fix
+
+When installing PowerHA, a new filesystem is /aha is created and reported by
+the Check_MK agent. This line seems useless and causes trouble duing checking.
+We excluded this line now in the agent.

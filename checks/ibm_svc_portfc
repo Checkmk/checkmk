@@ -74,7 +74,7 @@ def check_ibm_svc_portfc(item, _no_params, info):
 check_info["ibm_svc_portfc"] = {
     "check_function"        : check_ibm_svc_portfc,
     "inventory_function"    : inventory_ibm_svc_portfc,
-    "service_description"   : "IBM SVC FC Port %s",
+    "service_description"   : "FC Port %s",
     "has_perfdata"          : False,
 }
 

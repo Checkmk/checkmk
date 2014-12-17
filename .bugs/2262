@@ -1,0 +1,9 @@
+Title: A user without permissions for changing the sidebar (guest) should not be allowd to fold
+Component: multisite
+State: open
+Date: 2014-12-01 14:53:36
+Targetversion: 1.2.5i1
+Class: nastiness
+
+Reason: the folding state is not persisted. Therefore the snapins will fold back
+when the sidebar is reloaded.

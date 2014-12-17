@@ -1,0 +1,12 @@
+Title: agent_vsphere: no longer crashes when decommissioned vms report no hardware information
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418034002
+Class: fix
+
+When a virtual machine gets decommissioned its hardware information (<tt>config.hardware.device</tt>) is
+no longer reported. This caused the agent_vsphere to crash, unless all configuration files of this virtual
+machine were removed.
+

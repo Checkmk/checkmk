@@ -1,0 +1,9 @@
+Title: dell_powerconnect_cpu: Fixed exception during inventory for incompatible devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418120926
+Class: fix
+
+

@@ -1,0 +1,12 @@
+Title: The get_average() function from now on only returns one argument: the average
+Level: 2
+Component: core
+Compatible: incomp
+Version: 1.2.6b1
+Date: 1418121056
+Class: feature
+
+Note to all developers of checks that use <tt>get_average()</tt>: In order to simplify
+the check API the function <tt>get_average()</tt> from now on does not return
+the additional <tt>timedif</tt> value anymore - just the rate. Please check your checks
+for the usage of this function.

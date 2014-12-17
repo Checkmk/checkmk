@@ -77,9 +77,33 @@ def check_zpool_status(_no_item, _no_params, info):
     warning_pools = {}
     pool_messages = {}
     state = 0
+    message = []
+
     for line in info:
         if line[0] == "pool:":
             last_pool = line[1]
+
+        if line[0] == "state:":
+            if   line[1] == "ONLINE":
+                 state = 0
+            elif line[1] == "DEGRADED":
+                 state = 1
+                 message.append("DEGRADED State")
+            elif line[1] == "FAULTED":
+                 state = 2
+                 message.append("FAULTED State")
+            elif line[1] == "UNAVIL":
+                 state = 2
+                 message.append("UNAVIL State")
+            elif line[1] == "REMOVED":
+                 state = 2
+                 message.append("REMOVED State")
+            elif line[1] == "OFFLINE":
+                 state = 0
+            else:
+                 message.append("Unknown State")
+                 state = 1
+            continue
 
         if line[0] == "NAME":
             start_pool = True
@@ -92,7 +116,7 @@ def check_zpool_status(_no_item, _no_params, info):
                 pool_messages[last_pool] = msg
             continue
 
-        if line[0] == "spares":
+        if line[0] in ["spares", "logs", "cache"]:
             start_pool = False
             continue
 
@@ -103,7 +127,7 @@ def check_zpool_status(_no_item, _no_params, info):
 
             if saveint(line[4]) != 0:
                 warning_pools[line[0]] = tuple(line[1:])
-    message = []
+
     for pool in  pool_messages.keys():
         state = 1
         message.append("%s: %s" % (pool, pool_messages[pool]))
@@ -115,6 +139,7 @@ def check_zpool_status(_no_item, _no_params, info):
     for pool in error_pools.keys():
         state = 2
         message.append("%s State:%s(!!)" % (pool, error_pools[pool][0]))
+
     if len(message) == 0:
         message = ['No critical errors']
     return (state, ", ".join(message))

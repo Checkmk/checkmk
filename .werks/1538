@@ -1,0 +1,9 @@
+Title: Only allow switching sites on/off when permitted to
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417165211
+Class: fix
+
+The permission check was missing in the action processing server component.

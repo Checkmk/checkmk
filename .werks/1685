@@ -1,0 +1,9 @@
+Title: enterasys_*: Now supporting device C2G124-48 (Rev 05.02.18.0002)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417776942
+Class: feature
+
+

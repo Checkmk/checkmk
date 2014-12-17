@@ -1,0 +1,24 @@
+Title: megaraid_bbu: handle case isSOHGood and consider it as critical
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417628636
+Class: fix
+
+Thanks to Jukka Santala, who wrote:
+
+"Discovered (the hard way) that when MegaRAID BBU batteries degrade too low,
+disabling WriteBack cache, the firmware doesn't turn on "battery pack needs
+replacing" flag. Instead <tt>isSOHGood</tt> seems to be only reliable way
+to detect this condition. In this patch I've ranked it as critical, as it
+is fairly equivalent to battery pack missing. Unfortunately it's generally
+too late when this goes on, so it would be nice to have little warning.
+The current agents do not query "Absolute State of charge" off the controller,
+and on the DELL 12G RAID-controllers this statistics doesn't even exist;
+they also have different design capacity. Because of these limitations I've
+resolved to just listing the "Full Charge Capacity" in the check status. I
+considered having the passed on perfdata for graphing, but as they're only
+updated on battery re-learn, it's limited usability.  This patch is against
+latest innovation versions, and has been tested again various DELL 9G,
+11G and 12G servers with 5/i, 6/i, H700 and H710P RAID-controllers."

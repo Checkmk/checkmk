@@ -1,0 +1,10 @@
+Title: winperf_ts_sessions: try to fix invalid number of active and inactive sessions
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418142192
+Class: fix
+
+M$ seems to have changed the order of the performance counters in newer OS versions
+(horray!). We try to compensate for that by doing some computations.

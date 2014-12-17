@@ -1,0 +1,11 @@
+Title: Put icon-column in all views at the same position
+Component: multisite
+Class: nastiness
+State: done
+Date: 2014-12-01 10:42:24
+Targetversion: 1.2.5i1
+
+Currently it is sometimes at the right of the output, sometimes
+at the left.
+
+2014-12-05 18:00:10: changed state open -> done

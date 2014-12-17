@@ -1,0 +1,13 @@
+Title: Output icon information in CSV/JSON/Python export of views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418057797
+Class: feature
+
+When exporting views to JSON, Python or CSV the column with the icons
+is now no longer empty but is a space separated list of all icon names
+of the host/sevice in question - without path information or the suffixes
+of the file type. That way you now can get additional information about
+the objects.

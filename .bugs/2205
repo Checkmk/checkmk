@@ -1,0 +1,13 @@
+Title: Path in debug_log is wrong in distributed WATO setups
+Component: wato
+Class: bug
+State: done
+Date: 2014-11-24 15:07:07
+Targetversion: 1.2.5i1
+
+The shown path always shows the path on the centeral site. It should either
+show the path to the correct site, or better, just a spacer which indicates
+that the site id needs to be put into the path.
+
+2014-12-01 08:57:49: changed state open -> done
+Fixed.

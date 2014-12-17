@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# DB2 support requires installation of the IBM Data Server Client:
+#  http://www-01.ibm.com/support/docview.wss?uid=swg27016878
+# as well as the ibm_db2 Python DBI driver for DB2:
+#  https://pypi.python.org/pypi/ibm_db
 
 import sys, getopt
 
@@ -48,7 +52,7 @@ OPTIONS:
   -p PASS,  --password PASS     Password for database access
   -d DBMS,  --dbms DBMS         Name of the database management system.
                                 Default is 'postgres', other valid values are
-                                'mysql', 'mssql' and 'oracle'
+                                'mysql', 'mssql', 'oracle' and 'db2'
   -H HOST,  --hostname HOST     Hostname or IP-Address where the database lives. Default is '127.0.0.1'
   -P PORT,  --port PORT         Port used to connect to the database
   -n NAME,  --name NAME         Name of the database on the DBMS
@@ -171,6 +175,7 @@ try:
             database=opt_name, user=opt_user, password=opt_password )
 
     elif opt_dbms == "oracle":
+        sys.path.append('/usr/lib/python2.6/site-packages')
         sys.path.append('/usr/lib/python2.7/site-packages')
         import cx_Oracle
         db = cx_Oracle
@@ -178,6 +183,19 @@ try:
             opt_port=1521
         cstring = opt_user+"/"+opt_password+"@"+opt_hostname+":"+str(opt_port)+"/"+opt_name
         db_connection = db.connect(cstring)
+
+    elif opt_dbms == "db2":
+        import ibm_db  # IBM data server driver
+        import ibm_db_dbi
+        db = ibm_db
+        if opt_port == None:
+            opt_port=50000
+        cstring = 'DRIVER={IBM DB2 ODBC DRIVER};DATABASE='+opt_name+ \
+            ';HOSTNAME='+opt_hostname+';PORT='+str(opt_port)+';PROTOCOL=TCPIP;'+ \
+           'UID='+opt_user+';PWD='+opt_password+';'
+        ibm_db_conn = db.connect(cstring,'','')
+        db_connection = ibm_db_dbi.Connection(ibm_db_conn)
+
     else:
         print "UNKNOWN - dbms not found"
         sys.exit(3)

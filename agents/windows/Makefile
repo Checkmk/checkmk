@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL         = /bin/bash
-VERSION       = 1.2.5i7
+VERSION       = 1.2.7i1
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i586-mingw32msvc-windres
 COPTIONS      = -s -O2 -Wall -Werror -static -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'
@@ -36,10 +36,24 @@ else
   CXX = mingw32-g++
 endif
 
-all: install_agent.exe install_agent-64.exe msi_installer
+all: fix_linebreaks install_agent.exe install_agent-64.exe msi_installer
 
-.PHONY: inc_build_version
+.PHONY: inc_build_version fix_linebreaks
 
+setversion:
+	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi ; \
+	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
+	rm check_mk_agent.exe check_mk_agent-64.exe check_mk_agent.msi ; \
+	make
+
+# Converts all files which are targeted to a windows system to CRLF
+fix_linebreaks:
+	for F in mrpe/* plugins/* *.ini; do \
+	    if [ -f $$F ]; then \
+	        sed -i 's/\r//' $$F ; \
+	        sed -i 's/$$/\r/' $$F ; \
+	    fi ; \
+	done 
 
 # -----------------------------------------------------------------------------
 # 1. Create ressource files with version and product information. Note: That file
@@ -106,6 +120,7 @@ install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
 msi_installer:
 	cd msibuild ; make BUILD_VERSION=$$(cat ../build_version) CHECK_MK_VERSION=$(VERSION)
 	mv msibuild/check_mk_agent.msi .
+	chmod +x check_mk_agent.msi
 
 crash.exe: crash.cc
 	$(CXX) -o $@ $<

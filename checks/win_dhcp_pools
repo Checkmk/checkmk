@@ -123,55 +123,25 @@ def check_win_dhcp_pools(item, params, info):
         if size == 0:
             return (3, "DHCP Pool contains no IP addresses / is deactivated")
 
-        if size > 0:
-            perc_free = 100.0 * free / size
-        else:
-            perc_free = 0
+        warn_perc, crit_perc = params
+        warn_abs = size * (warn_perc / 100.0)
+        crit_abs = size * (crit_perc / 100.0)
 
-        if perc_free < params[1]:
+        if free < crit_abs:
             status = 2
-        elif perc_free < params[0]:
+        elif free < warn_abs:
             status = 1
 
-        perfdata = [ ('free', free, params[0], params[1], 0, size),
-                     ('used', used, None, None, 0, size),
-                     ('pending', pending, None, None, 0, size) ]
+        perfdata = [ ('free',    free,    warn_abs, crit_abs, 0, size),
+                     ('used',    used,    None,     None,     0, size),
+                     ('pending', pending, None,     None,     0, size) ]
 
-        return (status, 'Addresses Free: %d, Used: %d, Pending: %d' %
-                              (free, used, pending), perfdata)
+        infotext = 'Addresses Free: %d, Used: %d, Pending: %d' % (free, used, pending)
+        if status:
+            infotext += " (levels at %d/%d)" % (warn_abs, crit_abs)
+        return status, infotext, perfdata
     else:
         return (3, 'Pool information not found')
-
-def inventory_win_dhcp_pools_stats(info):
-    return [ (None, None) for line in info if line[0] != '' ]
-
-def check_win_dhcp_pools_stats(item, params, info):
-    output = ''
-    perfdata = []
-    this_time = int(time.time())
-    timedif = 0
-
-    for line in parse_win_dhcp_pools(info):
-        if len(line) > 0:
-            key = win_dhcp_pools_stats_translate.get(line[0], line[0])
-            if key in [ 'Discovers', 'Offers', 'Requests', 'Acks',
-                        'Nacks', 'Declines', 'Releases', 'Scopes' ]:
-                value = saveint(line[1])
-                try:
-                    timedif, per_sec = get_counter("win_dhcp_stats.%s" % key, this_time, value)
-                except MKCounterWrapped:
-                    per_sec = 0
-                    pass
-                output += '%s: %.0f/s, ' % (key, per_sec)
-                perfdata.append((key, per_sec))
-
-    if output == '':
-        return (3, "Information not available")
-    else:
-        if timedif != 0:
-            output = 'In last %d secs: %s' % (timedif, output)
-        return (0, "%s" % (output.rstrip(', ')), perfdata)
-
 
 check_info["win_dhcp_pools"] = {
     'check_function':          check_win_dhcp_pools,
@@ -180,6 +150,31 @@ check_info["win_dhcp_pools"] = {
     'has_perfdata':            True,
     'group':                   'win_dhcp_pools',
 }
+
+
+def inventory_win_dhcp_pools_stats(info):
+    return [ (None, None) for line in info if line[0] != '' ]
+
+def check_win_dhcp_pools_stats(item, params, info):
+    output = ''
+    perfdata = []
+    this_time = int(time.time())
+
+    for line in parse_win_dhcp_pools(info):
+        if len(line) > 0:
+            key = win_dhcp_pools_stats_translate.get(line[0], line[0])
+            if key in [ 'Discovers', 'Offers', 'Requests', 'Acks',
+                        'Nacks', 'Declines', 'Releases', 'Scopes' ]:
+                value = saveint(line[1])
+                per_sec = get_rate("win_dhcp_stats.%s" % key, this_time, value)
+                output += '%s: %.0f/s, ' % (key, per_sec)
+                perfdata.append((key, per_sec))
+
+    if output == '':
+        return (3, "Information not available")
+    else:
+        return 0, output.rstrip(', '), perfdata
+
 
 check_info["win_dhcp_pools.stats"] = {
     'check_function':          check_win_dhcp_pools_stats,

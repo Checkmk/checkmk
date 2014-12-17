@@ -1,0 +1,10 @@
+Title: Remove trailing backslashes from service descriptions
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417693356
+Class: fix
+
+The Nagios core does not support these. But it can happen e.g. due to trailing
+backslashes in the names of network interfaces.

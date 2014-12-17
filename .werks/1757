@@ -1,0 +1,9 @@
+Title: Check SSH can now be configured  in WATO
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418226215
+Class: feature
+
+

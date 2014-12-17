@@ -78,7 +78,10 @@ def inv_win_disks(info):
         elif varname == "MediaType":
             array["type"] = value
         elif varname == "Signature":
-            array["signature"] = int(value)
+            if value != "":
+                array["signature"] = int(value)
+            else:
+                array["signature"] = 0
         array["local"] = True
     node.append(array)
 

@@ -1,0 +1,28 @@
+Title: Move variable data of Linux/UNIX agents to /var/lib/check_mk_agent
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.6b1
+Date: 1418130038
+Class: feature
+
+The Linux, AIX, Solaris and other UNIX agents now put state and cache files
+no longer below <tt>/etc/check_mk</tt> but per default below <tt>/var/lib/check_mk_agent</tt>.
+This can be changed directly in the agent in the following line:
+
+F+:check_mk_agent.*
+export MK_VARDIR=/var/lib/check_mk_agent
+F-:
+
+This means that if you update to the new version of the agent, you must have
+in mind the following things:
+
+<ul>
+<li>Check_MK agent will not find saved <tt>logwatch.state</tt> files and will consider all logfiles as new. This means
+that you will miss up to one check cycle of possible new logfile entries.</li>
+<li>Check_MK agent will forget its cached data and recompute all asynchronous checks</li>
+<li>Maybe other plugin-specific loss of memory</li>
+</ul>
+
+You can prevent this by manually copying selective data from
+<tt>/etc/check_mk</tt>, if you like.

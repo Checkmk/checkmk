@@ -1,0 +1,18 @@
+Title: Crash checks now have an icon for viewing and sending a crash dump
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417715396
+Class: feature
+
+If a check crashed because invalid output from agent, invalid check
+parameters or a bug in the implementation of the check, then Check_MK
+now creates a crash report for the according service in the directory
+<tt>var/check_mk/crashed_checks/</tt>HOST<tt>/</tt>SERVICE.  In this directory
+there is one informational file and the output from the agent (Check_MK agent
+or SNMP). This data is then packed into a tarball, base64 encoded and added
+as a long plugin output to the check.
+
+Multisite has a new icon for displaying that data and for submitting
+a bug report via email.

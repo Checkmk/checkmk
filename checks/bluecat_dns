@@ -46,21 +46,44 @@ def check_bluecat_dns(item, params, info):
     if not info:
         return
 
-    for line in info:
-        oper_state = int(line[0])
+    ok_on_node = False
+    states = {}
+    state = 0
+
+    for node, oper_state in info:
+        oper_state = int(oper_state)
+        temp_state = 0
         if oper_state in params['oper_states']['warning']:
-            state = 1
+            state = max(1, state)
+            temp_state = 1
         elif oper_state in params['oper_states']['critical']:
             state = 2
+            temp_state = 2
         else:
-            state = 0
-            break
+            # If node one ok, the total check is ok
+            ok_on_node = node
+        # Only needed in cluster:
+        states[node] = {'oper_state' : oper_states[oper_state], 'state' : temp_state }
 
+    # Are we in a Cluster?
+    if len(info) > 1:
+        if ok_on_node:
+            node = ok_on_node
+            # One Node is OK:
+            yield 0, "DNS is %s on %s" % (states[node]['oper_state'], node)
+        else:
+            # None of the nodes is ok:
+            for node, data in states.items():
+                yield data['state'], "%s on %s" % (data['oper_state'], node)
+        return
+
+    # Default behavior without Cluster
     yield state, "DNS is %s" % oper_states[oper_state]
 
 check_info["bluecat_dns"] = {
     "check_function"            : check_bluecat_dns,
     "inventory_function"        : inventory_bluecat_dns,
+    "node_info"                 : True,
     "service_description"       : "DNS",
     "default_levels_variable"   : "bluecat_dns",
     "group"                     : "bluecat_dns",

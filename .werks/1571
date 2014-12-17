@@ -1,0 +1,14 @@
+Title: check_mk_agent.linux: fix output of lnx_if on Ubuntu 8.04 (on older kernels), repairs tcp_conn_stats
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417628312
+Class: fix
+
+Problem on some older kernels is, that <tt>/sys/class/net/$eth/address</tt> does
+not contain a newline (or does not exist at all). We now always output an
+additional newline. This does not harm and fixes the problem.
+
+Without the fix the next section <tt>tcp_conn_stats</tt> is not correctly
+detected and is missing.

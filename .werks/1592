@@ -1,0 +1,11 @@
+Title: AIX: New Plugin to monitor errpt in logwatch style
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417540568
+Class: feature
+
+This plugin uses the {errpt} command to obtain log information on IBM AIX systems. For each found message,
+a detailed log will be created in /var/log/errpt_TIMESTAMP.log because a {errclear} is performed by the plugin.
+

@@ -1,0 +1,9 @@
+Title: f5_bigip_interfaces: Cleaned up check a bit
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417716341
+Class: fix
+
+

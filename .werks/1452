@@ -1,0 +1,11 @@
+Title: Solaris HW/SW-Inventory added
+Level: 2
+Component: inv
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417695609
+Class: feature
+
+The inventory agent plugin for Solaris and 6 inventory checks have been
+added. Many thanks to Christian Dewald and Philipp Lemke for the contribution.
+

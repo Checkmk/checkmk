@@ -1,0 +1,30 @@
+title: Raritan PX-2000 family PDU inlet sensor state
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the inlet sensors of the Raritan PX-2000
+ family of intelligent rack power distribution units (iPDUs).
+ The check displays the measured value of the sensor.
+
+item:
+ One item named Summary.
+
+perfdata:
+ Five values: Voltage, current, power, apparent power and energy
+
+inventory:
+ One check per phase is created.
+
+[parameters]
+parameters (dict): This check supports four types of parameters,
+none of which have default values. It is a dictionary with the following keys:
+
+ {"voltage"}: Warning and critical levels for voltage in int, denoting the minimum required voltage in volt.
+
+ {"current"}: Warning and critical levels for current in int, denoted in Ampère
+
+ {"power"}: Warning and critical levels for power in int, denoted in Watt.
+
+ {"appower"}: Warning and critical levels for apparent power in int, denoted in AV.

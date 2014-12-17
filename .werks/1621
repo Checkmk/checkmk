@@ -1,0 +1,9 @@
+Title: Sorting Check_MK* services always on top of services lists
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417684329
+Class: feature
+
+

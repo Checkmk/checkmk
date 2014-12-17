@@ -1,0 +1,12 @@
+Title: Put host and service groups into one WATO menu item
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417598188
+Class: feature
+
+There is now a common menu item in WATO for host and service groups. It
+points to the host group management where you can switch to the service
+groups. This makes the WATO menu a bit more cleaned up.
+

@@ -1,0 +1,9 @@
+Title: mem.win: set default levels for page file to 80%/90%
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417617134
+Class: feature
+
+

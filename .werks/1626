@@ -1,0 +1,23 @@
+Title: Renamed service descriptions of filesystem, process and logwatch checks
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417688186
+Class: feature
+
+The service descriptions of several check types have been renamed in order to
+be more consistent the the rest of the services. For example <tt>fs_</tt> has
+been renamed into <tt>Filesystem</tt>.
+
+In order not to run in problems this renaming is just enabled for <i>new
+sites</i> per default. You can switch existing sites to the new naming
+scheme with a new global WATO option <i>Use new service descriptions</i>
+in the section <i>Operation mode of Check_MK</i>. Please be aware that
+renaming services in operative systems have many implications, such as:
+
+<ul>
+<li>Notifications being sent about non-OK new services</li>
+<li>Performance data will start new and not continue the old one</li>
+<li>History and availability will break</li>
+</ul>

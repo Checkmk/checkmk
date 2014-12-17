@@ -1,0 +1,10 @@
+Title: zpool_status: fix problem when the zpool has a separate log or cache device
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417617431
+Class: fix
+
+Thanks to Craig Cook for the patch (http://lists.mathias-kettner.de/pipermail/checkmk-en/2014-May/012173.html)
+

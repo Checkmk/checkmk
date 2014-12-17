@@ -1,0 +1,16 @@
+Title: Added transformation code for user dashboards created between 2014-08 and 2014-10
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417099138
+Class: fix
+
+Installations which were using early versions of the dashboard editor, which was first available
+our nightly builds from 2014-08 till 2014-10 and created dashoards with it, have now dashboards
+saved in a format, which can not be interpreted by the current dashboard code.
+
+For some time, we assumed that there were not many installations with such files, therefor we
+did not implement any migration code and asked the users to migrate by hand. But now we have
+a bit too many users which are having trouble here, so we decided to implement a migration
+routine for these dashboards.

@@ -1,0 +1,15 @@
+Title: Allow to allow both host name and IP address when checking for events in Event Console
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418073600
+Class: feature
+
+The check <i>Check for events in Event Console</i> used to allow either a
+match for the host name or the IP address when trying to find events that
+belong to a monitored host. Now there is a new third option <i>Try both
+host name and IP address</i> that will try to match the host name and the
+IP address at the same time and will match the event if one of both matches
+succeeds. This helps in situations where the Event Console sometimes just
+gets the IP address of the remote host correctly, but has no host name.

@@ -1,0 +1,14 @@
+Title: winperf_if: Fixed checks of interfaces with equal names but one with index
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417525531
+Class: fix
+
+When having interfaces with nearly equal names, where the only difference is that
+one has an index number as extension and the other has none, the check could not
+get the correct information during checking. Example:
+
+Intel[R] 82576 Gigabit Dual Port Network Connection 2
+Intel[R] 82576 Gigabit Dual Port Network Connection

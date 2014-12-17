@@ -160,7 +160,7 @@ def ack_button(host = None, int_filename = None):
     else:
         label = _("Clear Logs")
 
-    html.context_button(label, html.makeuri([('_ack', '1')]), 'delete')
+    html.context_button(label, html.makeactionuri([('_ack', '1')]), 'delete')
 
 
 def show_file(host, filename):
@@ -241,12 +241,12 @@ def do_log_ack(host, filename):
         for int_filename in host_logs(host):
             file_display = form_file_to_ext(int_filename)
             todo.append((host, int_filename, file_display))
-        ack_msg = _('all logfiles of host <tt>%s</tt>') % html.attrencode(host)
+        ack_msg = _('all logfiles of host %s') % html.attrencode(host)
 
     elif host and filename: # one log on one host
         int_filename = form_file_to_int(filename)
         todo = [ (host, int_filename, form_file_to_ext(int_filename)) ]
-        ack_msg = _('the log file <tt>%s</tt> on host <tt>%s</tt>') % \
+        ack_msg = _('the log file %s on host %s') % \
                        (html.attrencode(filename), html.attrencode(host))
 
     html.header(_("Acknowledge %s") % ack_msg, stylesheets = stylesheets)

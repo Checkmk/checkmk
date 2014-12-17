@@ -6,7 +6,7 @@ import socket, os, time, sys, getopt, signal, thread, pprint, re, \
 from pwd import getpwnam
 from grp import getgrnam
 
-VERSION="1.2.5i7"
+VERSION="1.2.7i1"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -199,7 +199,12 @@ def match(pattern, text, complete = True):
         # Assume compiled regex
         m = pattern.search(text)
         if m:
-            return m.groups()
+            groups = m.groups()
+            if None in groups:
+                # Remove None from result tuples and replace it with empty strings
+                return tuple([g != None and g or '' for g in groups])
+            else:
+                return groups
         else:
             return False
 
@@ -1172,6 +1177,7 @@ class EventServer:
             'application' : application.replace('\n', ''),
             'text'        : text
         }
+        self.do_translate_hostname(event)
         self.process_event(event)
 
     def serve(self):
@@ -1336,7 +1342,10 @@ class EventServer:
                 line = line.decode("latin-1")
 
             if line:
-                self.process_raw_data(self.process_line, (line, address))
+                try:
+                    self.process_raw_data(self.process_line, (line, address))
+                except Exception, e:
+                    log('Exception handling a log line (skipping this one): %s' % format_exception())
 
     def do_housekeeping(self):
         with lock_eventstatus:
@@ -2022,6 +2031,13 @@ class EventServer:
 
         return backedhost
 
+    def do_translate_hostname(self, event):
+        try:
+            event["host"] = self.translate_hostname(event["host"])
+        except Exception, e:
+            if g_config["debug_rules"]:
+                log('Unable to parse host "%s" (%s)' % (event.get("host"), e))
+            event["host"] = ""
 
     def parse_event(self, line, address):
         event = {}
@@ -2130,12 +2146,7 @@ class EventServer:
                 "time"        : time.time(),
             }
 
-        try:
-            event["host"] = self.translate_hostname(event["host"])
-        except Exception, e:
-            if g_config["debug_rules"]:
-                log('Unable to parse host "%s" (%s)' % (event.get("host"), e))
-            event["host"] = ""
+        self.do_translate_hostname(event)
 
         if g_config["debug_rules"]:
             log('Parsed message:\n' +

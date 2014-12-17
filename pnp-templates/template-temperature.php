@@ -31,6 +31,8 @@ $def[1] .= "GPRINT:var1:LAST:\"%2.0lfC\" ";
 $def[1] .= "LINE1:var1#000080:\"\" ";
 $def[1] .= "GPRINT:var1:MAX:\"(Max\: %2.0lfC,\" ";
 $def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lfC)\" ";
-$def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1]C\" ";
-$def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]C\" ";
+if ($WARN[1] != "") {
+    $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1]C\" ";
+    $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]C\" ";
+}
 ?>

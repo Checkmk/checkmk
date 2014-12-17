@@ -1,0 +1,169 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_elphase(parsed):
+    for item in parsed.keys():
+        yield item, {}
+
+
+def check_elphase(item, params, parsed):
+
+    def tostring(value):
+        if type(value) == int:
+            return "%d" % value
+        else:
+            return "%.1f" % value
+
+    if "voltage" in parsed[item]:
+        volt, state_info = parsed[item]["voltage"]
+        infotext = "Voltage: %s V" % tostring(volt)
+        if "voltage" in params:
+            warn, crit = params["voltage"]
+            levelstext = " (warn/crit below %s/%s V)" % (tostring(warn), tostring(crit))
+            perfdata = [ ("voltage", volt, warn, crit) ]
+            if volt < crit:
+                status = 2
+                infotext += levelstext
+            elif volt < warn:
+                status = 1
+                infotext += levelstext
+            else:
+                status = 0
+        else:
+            status = 0
+            perfdata = [ ("voltage", volt) ]
+
+        yield status, infotext, perfdata
+        if state_info:
+            yield state_info
+
+    if "current" in parsed[item]:
+        current, state_info = parsed[item]["current"]
+        perfdata = [ ("current", current) ]
+        infotext = "Current: %s A" % tostring(current)
+
+        if "current" in params:
+            warn, crit = params["current"]
+            levelstext = " (warn/crit at %s/%s A)" % (tostring(warn), tostring(crit))
+            perfdata = [ ("current", current, warn, crit) ]
+            if current >= crit:
+                status = 2
+                infotext += levelstext
+            elif current >= warn:
+                status = 1
+                infotext += levelstext
+            else:
+                status = 0
+
+        else:
+            status = 0
+            perfdata = [ ("current", current) ]
+
+        yield status, infotext, perfdata
+        if state_info:
+            yield state_info
+
+    if "load" in parsed[item]:
+        load, state_info = parsed[item]["load"]
+        infotext = "Load: %s%%" % tostring(load)
+        if "load" in params:
+            warn, crit = params["load"]
+            levelstext = " (warn/crit at %s/%s%%)" % (tostring(warn), tostring(crit))
+            perfdata = [ ("load", load, warn, crit) ]
+            if load >= crit:
+                status = 2
+                infotext += levelstext
+            elif load >= warn:
+                status = 1
+                infotext += levelstext
+            else:
+                status = 0
+
+        else:
+            status = 0
+            perfdata = [ ("load", load) ]
+
+        yield status, infotext, perfdata
+
+        if state_info:
+            yield state_info
+
+    if "power" in parsed[item]:
+        power, state_info = parsed[item]["power"]
+        infotext = "Power: %s W" % tostring(power)
+        if "power" in params:
+            warn, crit = params["power"]
+            levelstext = " (warn/crit at %s/%s W)" % (tostring(warn), tostring(crit))
+            perfdata = [ ("power", power, warn, crit) ]
+            if power >= crit:
+                status = 2
+                infotext += levelstext
+            elif power >= warn:
+                status = 1
+                infotext += levelstext
+            else:
+                status = 0
+
+        else:
+            status = 0
+            perfdata = [ ("power", power) ]
+
+        yield status, infotext, perfdata
+        if state_info:
+            yield state_info
+
+    if "appower" in parsed[item]:
+        appower, state_info = parsed[item]["appower"]
+        infotext = "Apparent Power: %s VA" % tostring(appower)
+        if "appower" in params:
+            warn, crit = params["appower"]
+            levelstext = " (warn/crit at %s/%s VA)" % (tostring(warn), tostring(crit))
+            perfdata = [ ("appower", appower, warn, crit) ]
+            if appower >= crit:
+                status = 2
+                infotext += levelstext
+            elif appower >= warn:
+                status = 1
+                infotext += levelstext
+            else:
+                status = 0
+
+        else:
+            status = 0
+            perfdata = [ ("appower", appower) ]
+
+        yield status, infotext, perfdata
+        if state_info:
+            yield state_info
+
+    if "energy" in parsed[item]:
+        current, state_info = parsed[item]["energy"]
+        perfdata = [ ("energy", current) ]
+        infotext = "Energy: %s Wh" % tostring(current)
+
+        yield 0, infotext, perfdata
+        if state_info:
+            yield state_info

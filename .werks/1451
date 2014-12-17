@@ -1,0 +1,11 @@
+Title: users: new check to monitor number of users logged in on a linux system
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417627059
+Class: feature
+
+This check currently needs the mk_users agent plugin installed in the monitoring client.
+The agent section may at some later point be moved into check_mk_agent.linux
+

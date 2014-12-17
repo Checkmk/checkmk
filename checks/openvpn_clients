@@ -54,7 +54,7 @@ def check_openvpn_clients(item, _no_params, info):
                 ( "in", int(inbytes) ),
                 ( "out", int(outbytes) )]:
                 countername = "openvpn_clients.%s.%s" % (item, what)
-                timedif, bytes_per_sec = get_counter(countername, this_time, val)
+                bytes_per_sec = get_rate(countername, this_time, val)
                 infos.append("%s: %s/sec" % (what, get_bytes_human_readable(bytes_per_sec)))
                 perfdata.append((what, bytes_per_sec))
             return 0, ", ".join(infos), perfdata

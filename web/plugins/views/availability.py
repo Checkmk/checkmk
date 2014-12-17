@@ -1199,7 +1199,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
 
         # 2. Compute Names for the groups and sort according to these names
         if grouping != "host":
-            group_titles = dict(all_groups(grouping[:-7]))
+            group_titles = dict(visuals.all_groups(grouping[:-7]))
 
         titled_groups = []
         for group_id in all_group_ids:
@@ -1299,6 +1299,8 @@ def render_availability_group(group_title, range_title, group_id, availability,
         elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
             return False
         elif sid == "flapping" and not avoptions["consider"]["flapping"]:
+            return False
+        elif sid == "host_down" and not avoptions["consider"]["host_down"]:
             return False
         elif sid in [ "warn", "unknown", "host_down" ] and sid not in state_groups:
             return False

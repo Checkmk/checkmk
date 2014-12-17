@@ -38,6 +38,8 @@
 # Last Result          : 1
 # Scheduled Task State : Disabled
 
+# A list of all task state can be found here:
+# http://msdn.microsoft.com/en-us/library/aa383604%28VS.85%29.aspx
 
 def windows_tasks_convert(info):
     data = {}
@@ -65,12 +67,14 @@ def check_windows_tasks(item, _no_params, info):
             state = 0
             label = ""
             msg = []
-            if last_result not in [ 0, 0x00041301 ]: # SCHED_S_TASK_RUNNING
+            if last_result not in [ 0, 0x00041301, 0x00041325 ]: # SCHED_S_TASK_RUNNING, SCHED_S_TASK_QUEUED
                 state = 2
                 label = "(!!)"
             msg.append("Service in state: %s%s" % ( last_result, label ) )
             if last_result == 0x00041301:
                 msg[-1] += " (currently running)"
+            elif last_result == 0x00041325:
+                msg[-1] += " (queued)"
 
             if values['Scheduled Task State'] != 'Enabled':
                 msg.append("Task not Enabled(!!)")

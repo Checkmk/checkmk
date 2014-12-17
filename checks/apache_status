@@ -35,7 +35,7 @@ def apache_status_open_slots(value, params):
     else:
         return 0, "", extra_perf
 
-apache_status_fields = {
+_apache_status_fields = {
     # key                sort  convert-func param_function
     'Uptime':              (0,  int),
     'IdleWorkers':         (5,  int),
@@ -55,7 +55,7 @@ apache_status_fields = {
     'ConnsAsyncClosing':   (19, int),
 }
 
-apache_status_stats = {
+_apache_status_stats = {
     'Waiting':        '_',
     'StartingUp':     'S',
     'ReadingRequest': 'R',
@@ -75,7 +75,7 @@ def apache_status_parse(info):
         if len(line) != 4:
             continue # Skip unexpected lines
         label = (' '.join(line[2:-1])).rstrip(':')
-        value = apache_status_fields[label][1](line[-1])
+        value = _apache_status_fields[label][1](line[-1])
         item = '%s:%s' % (address, port)
 
         if item not in data:
@@ -83,7 +83,7 @@ def apache_status_parse(info):
 
         # Get statistics from scoreboard
         if label == 'Scoreboard':
-            for stat_label, key in apache_status_stats.items():
+            for stat_label, key in _apache_status_stats.items():
                 data[item]['State_' + stat_label] = value.count(key)
             data[item]['OpenSlots'] = value.count('.')
 
@@ -120,17 +120,17 @@ def check_apache_status(item, params, info):
     perfdata    = []
 
     # Sort keys
-    data.sort(cmp = lambda x, y: cmp(apache_status_fields.get(x[0], (0, None))[0],
-                                     apache_status_fields.get(y[0], (0, None))[0]))
+    data.sort(cmp = lambda x, y: cmp(_apache_status_fields.get(x[0], (0, None))[0],
+                                     _apache_status_fields.get(y[0], (0, None))[0]))
 
     for key, value in data:
-        if key not in apache_status_fields.keys():
+        if key not in _apache_status_fields.keys():
             continue
 
         # Don't process the scoreboard data directly. Print states instead
         if key == 'Scoreboard':
             states = []
-            for stat_label, key in apache_status_stats.items():
+            for stat_label, key in _apache_status_stats.items():
                 val = data_dict.get('State_' + stat_label, 0)
                 if val > 0:
                     states.append('%s: %d' % (stat_label, val))
@@ -147,8 +147,8 @@ def check_apache_status(item, params, info):
 
         extra_info = ""
         extra_perf = []
-        if params.get(key) and len(apache_status_fields[key]) > 2:
-            key_state, extra_info, extra_perf = apache_status_fields[key][2](value, params.get(key))
+        if params.get(key) and len(_apache_status_fields[key]) > 2:
+            key_state, extra_info, extra_perf = _apache_status_fields[key][2](value, params.get(key))
             worst_state = max(key_state, worst_state)
 
         output.append('%s: %s%s' % (key, display_value, extra_info))

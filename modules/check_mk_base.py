@@ -24,7 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, os, sys, time, re, signal, math, tempfile
+import sys
+
+# Remove precompiled directory from sys.path. Leaving it in the path
+# makes problems when host names (name of precompiled files) are equal
+# to python module names like "random"
+sys.path.pop(0)
+
+import socket, os, time, re, signal, math, tempfile
+
+# PLANNED CLEANUP:
+# - central functions for outputting verbose information and bailing
+#   out because of errors. Remove all explicit "if opt_debug:...".
+#   Note: these new functions should force a flush() if TTY is not
+#   a terminal (so that error messages arrive the CMC in time)
+# - --debug should *only* influence exception handling
+# - introduce second levels of verbosity, that takes over debug output
+#   from --debug
+# - remove all remaining print commands and use sys.stdout.write instead
+#   or define a new output function
+# - Also create a function bail_out() for printing and error and exiting
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -76,13 +95,11 @@ else:
         return ''
 
 # global variables used to cache temporary values
-g_dns_cache                  = {}
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_already_contacted    = {} # do we have agent data from this host?
 g_counters                   = {} # storing counters of one host
 g_hostname                   = "unknown" # Host currently being checked
 g_aggregated_service_results = {}   # store results for later submission
-compiled_regexes             = {}   # avoid recompiling regexes
 nagios_command_pipe          = None # Filedescriptor to open nagios command pipe.
 checkresult_file_fd          = None
 checkresult_file_path        = None
@@ -90,6 +107,7 @@ g_single_oid_hostname        = None
 g_single_oid_cache           = {}
 g_broken_snmp_hosts          = set([])
 g_broken_agent_hosts         = set([])
+g_timeout                    = None
 
 
 # variables set later by getopt
@@ -123,14 +141,10 @@ class MKGeneralException(Exception):
         return self.reason
 
 class MKCounterWrapped(Exception):
-    def __init__(self, countername, reason):
-        self.name = countername
+    def __init__(self, reason):
         self.reason = reason
     def __str__(self):
-        if self.name:
-            return '%s: %s' % (self.name, self.reason)
-        else:
-            return self.reason
+        return self.reason
 
 class MKAgentError(Exception):
     def __init__(self, reason):
@@ -466,7 +480,7 @@ def store_persisted_info(hostname, persisted):
         if not os.path.exists(dir):
             os.makedirs(dir)
         file(dir + hostname, "w").write("%r\n" % persisted)
-        if opt_debug:
+        if opt_verbose:
             sys.stdout.write("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 
 def add_persisted_info(hostname, info):
@@ -478,13 +492,13 @@ def add_persisted_info(hostname, info):
 
     now = time.time()
     for section, (persisted_until, persisted_section) in persisted.items():
-        if now < persisted_until:
+        if now < persisted_until or opt_force:
             if section not in info:
                 info[section] = persisted_section
-                if opt_debug:
+                if opt_verbose:
                     sys.stdout.write("Added persisted section %s.\n" % section)
         else:
-            if opt_debug:
+            if opt_verbose:
                 sys.stdout.write("Persisted section %s is outdated by %d seconds.\n" % (
                         section, persisted_until - now))
 
@@ -699,7 +713,7 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
             s.settimeout(tcp_connect_timeout)
         except:
             pass # some old Python versions lack settimeout(). Better ignore than fail
-        if opt_debug:
+        if opt_verbose:
             sys.stderr.write("Connecting via TCP to %s:%d.\n" % (
                     ipaddress, port))
         s.connect((ipaddress, port))
@@ -840,6 +854,17 @@ def cachefile_age(filename):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+SKIP  = None
+RAISE = False
+ZERO  = 0.0
+g_last_counter_wrap = None
+
+def reset_wrapped_counters():
+    global g_last_counter_wrap
+    g_last_counter_wrap = None
+
+def last_counter_wrap():
+    return g_last_counter_wrap
 
 # Variable                 time_t    value
 # netctr.eth.tx_collisions 112354335 818
@@ -858,6 +883,17 @@ def load_counters(hostname):
         except:
             g_counters = {}
 
+def save_counters(hostname):
+    if not opt_dont_submit and not i_am_root(): # never writer counters as root
+        global g_counters
+        filename = counters_directory + "/" + hostname
+        try:
+            if not os.path.exists(counters_directory):
+                os.makedirs(counters_directory)
+            file(filename, "w").write("%r\n" % g_counters)
+        except Exception, e:
+            raise MKGeneralException("User %s cannot write to %s: %s" % (username(), filename, e))
+
 
 # Deletes counters from g_counters matching the given pattern and are older_than x seconds
 def clear_counters(pattern, older_than):
@@ -873,6 +909,23 @@ def clear_counters(pattern, older_than):
     for name in counters_to_delete:
         del g_counters[name]
 
+
+def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP):
+    try:
+        timedif, rate = get_counter(countername, this_time, this_val, allow_negative)
+        return rate
+    except MKCounterWrapped, e:
+        if onwrap == RAISE:
+            raise
+        elif onwrap == SKIP:
+            global g_last_counter_wrap
+            g_last_counter_wrap = e
+            return 0.0
+        else:
+            return onwrap
+
+
+# Legacy. Do not use this function in checks directly any more!
 def get_counter(countername, this_time, this_val, allow_negative=False):
     global g_counters
 
@@ -883,7 +936,7 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
-        raise MKCounterWrapped(countername, 'Counter initialization')
+        raise MKCounterWrapped('Counter initialization')
 
     last_time, last_val = g_counters.get(countername)
     timedif = this_time - last_time
@@ -893,7 +946,7 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
-        raise MKCounterWrapped(countername, 'No time difference')
+        raise MKCounterWrapped('No time difference')
 
     # update counter for next time
     g_counters[countername] = (this_time, this_val)
@@ -907,7 +960,7 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
-        raise MKCounterWrapped(countername, 'Value overflow')
+        raise MKCounterWrapped('Value overflow')
 
     per_sec = float(valuedif) / timedif
     return timedif, per_sec
@@ -925,7 +978,7 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
         if initialize_zero:
             this_val = 0
         g_counters[itemname] = (this_time, this_val)
-        return 1.0, this_val # avoid time diff of 0.0 -> avoid division by zero
+        return this_val # avoid time diff of 0.0 -> avoid division by zero
 
     # Get previous value and time difference
     last_time, last_val = g_counters.get(itemname)
@@ -951,25 +1004,9 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 
     new_val = last_val * weight + this_val * (1 - weight)
 
-    # print "Alt: %.5f, Jetzt: %.5f, Timedif: %.1f, Gewicht: %.5f, Neu: %.5f" % \
-    #     (last_val, this_val, timedif, weight, new_val)
-
     g_counters[itemname] = (this_time, new_val)
-    return timedif, new_val
+    return new_val
 
-
-def save_counters(hostname):
-    if not opt_dont_submit and not i_am_root(): # never writer counters as root
-        global g_counters
-        filename = counters_directory + "/" + hostname
-        try:
-            if not os.path.exists(counters_directory):
-                os.makedirs(counters_directory)
-            file(filename, "w").write("%r\n" % g_counters)
-        except Exception, e:
-            raise MKGeneralException("User %s cannot write to %s: %s" % (username(), filename, e))
-
-# writelines([ "%s %d %d\n" % (i[0], i[1][0], i[1][1]) for i in g_counters.items() ])
 
 
 #   +----------------------------------------------------------------------+
@@ -1073,10 +1110,10 @@ def do_check(hostname, ipaddress, only_check_types = None):
     if opt_keepalive:
         global total_check_output
         total_check_output += output
-        return status
     else:
         sys.stdout.write(nagios_state_names[status] + " - " + output)
-        sys.exit(status)
+
+    return status
 
 # Keepalive-mode for running cmk as a check helper.
 class MKCheckTimeout(Exception):
@@ -1211,7 +1248,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     g_hostname = hostname
     num_success = 0
     error_sections = set([])
-    check_table = get_sorted_check_table(hostname, remove_duplicates=True)
+    check_table = get_sorted_check_table(hostname, remove_duplicates=True, world=opt_keepalive and "active" or "config")
     problems = []
 
     parsed_infos = {} # temporary cache for section infos, maybe parsed
@@ -1277,7 +1314,10 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                 dont_submit = False
 
                 # Call the actual check function
+                reset_wrapped_counters()
                 result = convert_check_result(check_function(item, params, info), check_uses_snmp(checkname))
+                if last_counter_wrap():
+                    raise last_counter_wrap()
 
 
             # handle check implementations that do not yet support the
@@ -1287,37 +1327,52 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                 if opt_verbose:
                     print "Cannot compute check result: %s" % e
                 dont_submit = True
+
             except Exception, e:
-                text = "invalid output from agent, invalid check parameters or error in implementation of check %s." % checkname
-                if not debug_log:
-                    text += " Please enable \"Log exceptions in check plugins\" for further information."
-                else:
-                    debug_log_file = debug_log
-                    if debug_log_file == True:
-                        debug_log_file = log_dir + "/crashed-checks.log"
-                    text += " A trace has been written to %s." % debug_log_file
+                text = "check failed - please submit a crash report!"
+                try:
+                    import traceback, pprint, tarfile, base64
+                    # Create a crash dump with a backtrace and the agent output.
+                    # This is put into a directory per service. The content is then
+                    # put into a tarball, base64 encoded and put into the long output
+                    # of the check :-)
+                    crash_dir = var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
+                    if not os.path.exists(crash_dir):
+                        os.makedirs(crash_dir)
+                    file(crash_dir + "/trace", "w").write(
+                       (
+                       "  Check output:     %s\n"
+                       "  Check_MK Version: %s\n"
+                       "  Date:             %s\n"
+                       "  Host:             %s\n"
+                       "  Service:          %s\n"
+                       "  Check type:       %s\n"
+                       "  Item:             %r\n"
+                       "  Parameters:       %s\n"
+                       "  %s\n") % (
+                                    text,
+                                    check_mk_version,
+                                    time.strftime("%Y-%d-%m %H:%M:%S"),
+                                    hostname,
+                                    description,
+                                    checkname,
+                                    item,
+                                    pprint.pformat(params),
+                                    traceback.format_exc().replace('\n', '\n      ')))
+                    file(crash_dir + "/info", "w").write(repr(info) + "\n")
+                    cachefile = tcp_cache_dir + "/" + hostname
+                    if os.path.exists(cachefile):
+                        file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
+                    elif os.path.exists(crash_dir + "/agent_output"):
+                        os.remove(crash_dir + "/agent_output")
+
+                    tarcontent = os.popen("tar czf - -C %s ." % quote_shell_string(crash_dir)).read()
+                    encoded = base64.b64encode(tarcontent)
+                    text += "\n" + "Crash dump:\n" + encoded + "\n"
+                except:
+                    pass
+
                 result = 3, text
-                if debug_log:
-                    try:
-                        import traceback, pprint
-                        l = file(debug_log_file, "a")
-                        l.write(("Invalid output from plugin or error in check:\n"
-                                "  Check_MK Version: %s\n"
-                                "  Date:             %s\n"
-                                "  Host:             %s\n"
-                                "  Service:          %s\n"
-                                "  Check type:       %s\n"
-                                "  Item:             %r\n"
-                                "  Parameters:       %s\n"
-                                "  %s\n"
-                                "  Agent info:       %s\n\n") % (
-                                check_mk_version,
-                                time.strftime("%Y-%d-%m %H:%M:%S"),
-                                hostname, description, checkname, item, pprint.pformat(params),
-                                traceback.format_exc().replace('\n', '\n      '),
-                                pprint.pformat(info)))
-                    except:
-                        pass
 
                 if opt_debug:
                     raise
@@ -1465,7 +1520,7 @@ def submit_check_result(host, servicedesc, result, sa):
         else:
             p = ''
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
-        print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, infotext, tty_normal, p)
+        print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, infotext.split('\n')[0], tty_normal, p)
 
 
 def submit_to_core(host, service, state, output):
@@ -1605,7 +1660,6 @@ def is_expected_agent_version(agent_version, expected_version):
 
 # Returns the nodes of a cluster, or None if hostname is
 # not a cluster
-g_nodesof_cache = {}
 def nodes_of(hostname):
     nodes = g_nodesof_cache.get(hostname, False)
     if nodes != False:
@@ -1629,6 +1683,34 @@ def pnp_cleanup(s):
         .replace('/',  '_') \
         .replace('\\', '_')
 
+
+#.
+#   .--Caches--------------------------------------------------------------.
+#   |                    ____           _                                  |
+#   |                   / ___|__ _  ___| |__   ___  ___                    |
+#   |                  | |   / _` |/ __| '_ \ / _ \/ __|                   |
+#   |                  | |__| (_| | (__| | | |  __/\__ \                   |
+#   |                   \____\__,_|\___|_| |_|\___||___/                   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Global caches that are valid until the configuration changes        |
+#   '----------------------------------------------------------------------'
+
+def reset_global_caches():
+    global g_check_table_cache
+    g_check_table_cache = {}    # per-host-checktables
+    global g_singlehost_checks
+    g_singlehost_checks = None  # entries in checks used by just one host
+    global g_multihost_checks
+    g_multihost_checks  = None  # entries in checks used by more than one host
+    global g_nodesof_cache
+    g_nodesof_cache     = {}    # Nodes of cluster hosts
+    global g_dns_cache
+    g_dns_cache         = {}
+    global g_ip_lookup_cache
+    g_ip_lookup_cache   = None  # permanently cached ipaddresses from ipaddresses.cache
+
+reset_global_caches()
 
 #   +----------------------------------------------------------------------+
 #   |     ____ _               _      _          _                         |
@@ -1690,18 +1772,18 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     # Critical cases
     if crit_upper != None and value >= crit_upper:
         state = 2
-        infotexts.append("critical level at %.2f%s" % (crit_upper / factor / scale, unit))
+        infotexts.append("critical level at %.2f%s" % (crit_upper / scale, unit))
     elif crit_lower != None and value <= crit_lower:
         state = 2
-        infotexts.append("too low: critical level at %.2f%s" % (crit_lower / factor / scale, unit))
+        infotexts.append("too low: critical level at %.2f%s" % (crit_lower / scale, unit))
 
     # Warning cases
     elif warn_upper != None and value >= warn_upper:
         state = 1
-        infotexts.append("warning level at %.2f%s" % (warn_upper / factor / scale, unit))
+        infotexts.append("warning level at %.2f%s" % (warn_upper / scale, unit))
     elif warn_lower != None and value <= warn_lower:
         state = 1
-        infotexts.append("too low: warning level at %.2f%s" % (warn_lower / factor / scale, unit))
+        infotexts.append("too low: warning level at %.2f%s" % (warn_lower / scale, unit))
 
     # OK
     else:
@@ -1729,6 +1811,7 @@ def within_range(value, minv, maxv):
 # compile regex or look it up in already compiled regexes
 # (compiling is a CPU consuming process. We cache compiled
 # regexes).
+compiled_regexes = {}
 def get_regex(pattern):
     reg = compiled_regexes.get(pattern)
     if not reg:

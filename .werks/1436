@@ -4,7 +4,7 @@ Component: multisite
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415878184
 
 The host filter name of the target page was renamed from <tt>host</tt> to <tt>host_regex</tt>.

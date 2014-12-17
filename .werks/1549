@@ -1,0 +1,11 @@
+Title: bluecat_threads: do not inventorize this check where information is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416913048
+
+This avoid UNKNOWN check results on devices where no thread information is
+available.

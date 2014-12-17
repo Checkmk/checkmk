@@ -1,0 +1,8 @@
+Title: show icon when a delayed notification is active
+Component: multisite
+State: open
+Date: 2014-12-05 16:36:50
+Targetversion: future
+Class: feature
+
+idea of a customer: show an icon when a service is in a state "delayed notification"

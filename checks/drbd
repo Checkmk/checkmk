@@ -147,7 +147,7 @@ drbd_net_default_levels     = ( None, None )
 drbd_disk_default_levels    = ( None, None )
 drbd_stats_default_levels   = ( None, None, None, None, None, None, None, None, None )
 
-drbd_block_start_match = re.compile('^[0-9]+:')
+_drbd_block_start_match = re.compile('^[0-9]+:')
 
 drbd_general_map = [ 'cs', 'ro', 'ds' ]
 drbd_net_map     = [ 'cs', 'ns', 'nr' ]
@@ -166,6 +166,7 @@ drbd_cs_map = {
   'SyncSource':     1, 'SyncTarget':     1,
   'PausedSyncS':    1, 'PausedSyncT':    1,
   'VerifyS':        0, 'VerifyT':        0,
+   'Ahead':         1, 'Behind':         1,
 }
 
 drbd_ds_map = {
@@ -183,16 +184,19 @@ drbd_ds_map = {
 def inventory_drbd(info, checktype):
     inventory = []
     for line in info[2:]:
-        if drbd_block_start_match.search(line[0]) > 0:
+        if _drbd_block_start_match.search(line[0]) > 0:
             parsed = drbd_parse_block(drbd_extract_block('drbd%s' % line[0][:-1], info), checktype)
             # Skip unconfigured drbd devices
             if parsed['cs'] == 'Unconfigured':
                 continue
 
             if checktype == 'drbd':
-                levels = { "roles_inventory":      parsed['ro'],
-                           "diskstates_inventory": parsed['ds']
-                            }
+                if 'ro' not in parsed or 'ds' not in parsed:
+                    continue
+                levels = {
+                    "roles_inventory":      parsed['ro'],
+                    "diskstates_inventory": parsed['ds'],
+                }
             elif checktype == 'drbd.net':
                 levels = "drbd_net_default_levels"
             elif checktype == 'drbd.disk':
@@ -231,7 +235,7 @@ def drbd_extract_block(item, info):
     for line in info[2:]:
         if "drbd" + line[0][:-1] == item:
             inBlock = True
-        elif inBlock and drbd_block_start_match.search(line[0]) > 0 \
+        elif inBlock and _drbd_block_start_match.search(line[0]) > 0 \
                      and "drbd" + line[0][:-1] != item:
             # Another block starts. So the requested block is finished
             break
@@ -245,12 +249,14 @@ def drbd_extract_block(item, info):
 
     return block
 
+
 def drbd_get_block(item, info, checktype):
     block = drbd_extract_block(item, info)
     if len(block) > 0:
         return drbd_parse_block(block, checktype)
     else:
         return None
+
 
 def check_drbd_general(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd')
@@ -300,9 +306,6 @@ def check_drbd_general(item, params, info):
                 state = max(3, state)
                 output += ' (Check requires a new service discovery)'
 
-
-
-
         output += ', Diskstates: %s/%s' % tuple(parsed['ds'])
         # Do not evaluate diskstates. Either set by rule or through the
         # legacy configuration option None in the check parameters tuple
@@ -332,28 +335,22 @@ def check_drbd_general(item, params, info):
 
     return (3, "Undefined state")
 
-check_info["drbd"] = {'check_function': check_drbd_general,
- 'default_levels_variable': None,
- 'group': 'drbd',
- 'has_perfdata': True,
- 'inventory_function': lambda info: inventory_drbd(info, "drbd"),
- 'node_info': False,
- 'service_description': 'DRBD %s status',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+check_info["drbd"] = {
+    'inventory_function'  : lambda info: inventory_drbd(info, "drbd"),
+    'check_function'      : check_drbd_general,
+    'group'               : 'drbd',
+    'has_perfdata'        : True,
+    'service_description' : 'DRBD %s status',
+}
 
-def drbd_get_counters(list):
+def drbd_get_rates(list):
     now = time.time()
     output = ''
     perfdata = []
     for type, name, item, value, uom in list:
-        try:
-            timedif, rate  = get_counter("%s.%s.%s"  % (type, name, item), now, value)
-            perfdata.append((name, rate))
-            output += ' %s/sec: %s%s' % (name, rate, uom)
-        except MKCounterWrapped:
-            perfdata = []
-            break
+        rate  = get_rate("%s.%s.%s"  % (type, name, item), now, value)
+        perfdata.append((name, rate))
+        output += ' %s/sec: %s%s' % (name, rate, uom)
     return (output, perfdata)
 
 def check_drbd_net(item, params, info):
@@ -361,44 +358,40 @@ def check_drbd_net(item, params, info):
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
             return (2, 'The device is "Unconfigured"')
-        output, perfdata = drbd_get_counters([ ('drbd.net', 'in',  item, int(parsed['nr']), 'kb'),
+        output, perfdata = drbd_get_rates([ ('drbd.net', 'in',  item, int(parsed['nr']), 'kb'),
                                                ('drbd.net', 'out', item, int(parsed['ns']), 'kb') ])
         # FIXME: Maybe handle thresholds in the future
         return (0, output, perfdata)
 
     return (3, "Undefined state")
 
-check_info["drbd.net"] = {'check_function': check_drbd_net,
- 'default_levels_variable': None,
- 'group': 'drbd.net',
- 'has_perfdata': True,
- 'inventory_function': lambda info: inventory_drbd(info, "drbd.net"),
- 'node_info': False,
- 'service_description': 'DRBD %s net',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+check_info["drbd.net"] = {
+    'inventory_function'      : lambda info: inventory_drbd(info, "drbd.net"),
+    'check_function'          : check_drbd_net,
+    'group'                   : 'drbd.net',
+    'has_perfdata'            : True,
+    'service_description'     : 'DRBD %s net',
+}
 
 def check_drbd_disk(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.disk')
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
             return (2, 'The device is "Unconfigured"')
-        output, perfdata = drbd_get_counters([ ('drbd.disk', 'write',  item, int(parsed['dw']), 'kb'),
+        output, perfdata = drbd_get_rates([ ('drbd.disk', 'write',  item, int(parsed['dw']), 'kb'),
                                                ('drbd.disk', 'read',   item, int(parsed['dr']), 'kb') ])
         # FIXME: Maybe handle thresholds in the future
         return (0, output, perfdata)
 
     return (3, "Undefined state")
 
-check_info["drbd.disk"] = {'check_function': check_drbd_disk,
- 'default_levels_variable': None,
- 'group': 'drbd.disk',
- 'has_perfdata': True,
- 'inventory_function': lambda info: inventory_drbd(info, "drbd.disk"),
- 'node_info': False,
- 'service_description': 'DRBD %s disk',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+check_info["drbd.disk"] = {
+    'inventory_function'      : lambda info: inventory_drbd(info, "drbd.disk"),
+    'check_function'          : check_drbd_disk,
+    'group'                   : 'drbd.disk',
+    'has_perfdata'            : True,
+    'service_description'     : 'DRBD %s disk',
+}
 
 def check_drbd_stats(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.stats')
@@ -415,18 +408,17 @@ def check_drbd_stats(item, params, info):
             if key in parsed:
                 output += '%s: %s, ' % (label, parsed[key])
             else:
-                parsed[key] = 0 # perfdata must always have same number of entries
-            perfdata.append(('%s' % label.replace(" ", "_"), parsed[key]))
+                parsed[key] = '0' # perfdata must always have same number of entries
+            if parsed[key].isdigit():
+                perfdata.append(('%s' % label.replace(" ", "_"), parsed[key]))
         return (0, output.rstrip(', '), perfdata)
 
     return (3, "Undefined state")
 
-check_info["drbd.stats"] = {'check_function': check_drbd_stats,
- 'default_levels_variable': None,
- 'group': 'drbd.stats',
- 'has_perfdata': True,
- 'inventory_function': lambda info: inventory_drbd(info, "drbd.stats"),
- 'node_info': False,
- 'service_description': 'DRBD %s stats',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+check_info["drbd.stats"] = {
+    'inventory_function'      : lambda info: inventory_drbd(info, "drbd.stats"),
+    'check_function'          : check_drbd_stats,
+    'group'                   : 'drbd.stats',
+    'has_perfdata'            : True,
+    'service_description'     : 'DRBD %s stats',
+}

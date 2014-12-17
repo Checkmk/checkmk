@@ -1,0 +1,9 @@
+Title: smart: update in plugin that also outputs information about disks attached to a MegaRAID controller
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417694156
+Class: feature
+
+Thanks to Florian Heigl

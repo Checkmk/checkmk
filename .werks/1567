@@ -1,0 +1,11 @@
+Title: postfix_mailq: speedup in Linux agent for large mail queues
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417620214
+Class: feature
+
+Instead of the <tt>mailq</tt> command we now use <tt>du</tt> and <tt>wc</tt> in order to count
+the number and size o requests. This is substantially faster, since <tt>mailq</tt> needs
+to open every single mail file. Thanks to Max Matslovfa.

@@ -1,0 +1,9 @@
+Title: check_mk_agent.openbsd: add sections for mem and lnx_if (memory and network interfaces)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417625147
+Class: feature
+
+Thanks to Henry Wahl for this contribution.

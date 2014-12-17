@@ -24,6 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Notes for future rewrite:
+#
+# - Make clear which functions return values and which write out values
+#   render_*, add_*, write_* (e.g. icon() -> outputs directly,
+#                                  render_icon() -> returns icon
+#                                  render_icon() -> returns icon
+#
+# - Order of arguments:
+#   e.g. icon(help, icon) -> change and make help otional?
+
 import time, os, pwd, urllib, random
 
 from lib import *
@@ -316,8 +326,16 @@ class html:
             self.write('</label>')
 
     def icon(self, help, icon):
-       self.write('<img align=absmiddle class=icon title="%s" src="images/icon_%s.png" />' % (
-        help, icon))
+       self.write(self.render_icon(icon, help))
+
+    def render_icon(self, icon, help="", middle=True):
+        align = middle and ' align=absmiddle' or ''
+        title = help and ' title="%s"' % self.attrencode(help) or ""
+        if "/" in icon:
+            src = "images/" + icon
+        else:
+            src = "images/icon_%s.png" % icon
+        return '<img src="%s" class=icon%s%s />' % (src, align, title)
 
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')
@@ -791,7 +809,7 @@ class html:
         self.write('<a id=helpbutton class=%s href="#" onclick="help_toggle();" style="display: none"></a>' %
             cssclass)
         self.write("%s</td></tr></table>" %
-                   _("<a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a>"))
+                   _("<a href=\"http://mathias-kettner.de\"><img src=\"images/logo_mk_small.png\"/></a>"))
         self.write("<hr class=header>\n")
         if self.enable_debug:
             self.dump_get_vars()
@@ -869,10 +887,11 @@ class html:
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
+            encoded_vars = self.attrencode([ (k, v != None and str(v) or '') for k,v in self.page_context.items() ])
             h += '<div class="visualadd"><a class="visualadd" href="javascript:void(0)" ' \
-                 'onclick="toggle_add_to_visual(this, \'%s\', %s, {\'name\': \'%s\'})">' \
+                 'onclick="toggle_add_to_visual(event, this, \'%s\', %s, {\'name\': \'%s\'})">' \
                  '<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % \
-                 (mode_name, self.attrencode(self.page_context), self.var('view_name'), _("Add this view to..."))
+                 (mode_name, encoded_vars, self.var('view_name'), _("Add this view to..."))
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:
@@ -891,6 +910,38 @@ class html:
                 h += "<div>%s: %.1fms</div>" % (name, duration * 1000)
             h += '</div>'
         return h
+
+    def show_exception(self, e):
+        details = \
+              'Check_MK Version: ' + defaults.check_mk_version + '\r\n' \
+            + 'Page: ' + self.myfile + '.py\r\n\r\n' \
+            + 'GET/POST-Variables:\r\n' \
+            + '\r\n'.join([ ' '+n+'='+v for n, v in sorted(self.vars.items()) ]) + '\r\n' \
+            + '\r\n' \
+            + format_exception()
+
+        mail_body = \
+                 "Dear Check_MK Developer team,\r\n\r\n" \
+               + "I hereby send you a report of a crash in the Check_MK Web GUI:\r\n\r\n" \
+               + details + "\r\n" \
+               + "\r\n\r\nWith best regards,\r\n\r\n"
+
+        self.begin_context_buttons()
+        mailto_url = self.makeuri_contextless([
+            ("subject", "Check_MK GUI Crash Report - " + defaults.check_mk_version),
+            ("body", mail_body)], filename="mailto:feedback@check-mk.org")
+        self.context_button(_("Submit Report"), mailto_url, "email")
+        self.end_context_buttons()
+
+        self.write("<div class=error>")
+        self.write("<b>%s:</b>\n%s<br><br>" %(_('Internal error'), self.attrencode(e)))
+
+        self.begin_foldable_container("html", "exc_details", False, _("Details"))
+        self.write('<div class=log_output>')
+        self.write("<pre>%s</pre>" % details)
+        self.write('</div>')
+        self.end_foldable_container()
+        self.write("</div>")
 
     def show_error(self, msg):
         if self.mobile:
@@ -949,8 +1000,8 @@ class html:
             hover = ' onmouseover="this.style.display=\'none\';"'
         else:
             hover = ""
-        self.lowlevel_write('<table %s class=debug_vars>' % hover)
-        self.lowlevel_write("<tr><th colspan=2>POST / GET Variables</th></tr>")
+        self.write('<table %s class=debug_vars>' % hover)
+        self.write("<tr><th colspan=2>POST / GET Variables</th></tr>")
         for name, value in sorted(self.vars.items()):
             if not prefix or name.startswith(prefix):
                 self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
@@ -1128,14 +1179,21 @@ class html:
         else:
             return False
 
-    def confirm(self, msg, method="POST", action=None):
+    # The confirm dialog is normally not a dialog which need to be protected
+    # by a transid itselfs. It is only a intermediate step to the real action
+    # But there are use cases where the confirm dialog is used during rendering
+    # a normal page, for example when deleting a dashlet from a dashboard. In
+    # such cases, the transid must be added by the confirm dialog.
+    def confirm(self, msg, method="POST", action=None, add_transid=False):
         if self.var("_do_actions") == _("No"):
-            return # user has pressed "No"               # None --> "No"
+            # User has pressed "No", now invalidate the unused transid
+            self.check_transaction()
+            return # None --> "No"
         if not self.has_var("_do_confirm"):
             if self.mobile:
                 self.write('<center>')
             self.write("<div class=really>%s" % msg)
-            self.begin_form("confirm", method=method, action=action)
+            self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
             self.button("_do_actions", _("No"), "")
@@ -1143,9 +1201,10 @@ class html:
             self.write("</div>")
             if self.mobile:
                 self.write('</center>')
-            return False                                # False --> "Dialog shown, no answer yet"
+            return False # False --> "Dialog shown, no answer yet"
         else:
-            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload
+            # Now check the transaction
+            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload of "yes" page
 
     def register_event(self, name):
         self.events.add(name)
@@ -1205,19 +1264,7 @@ class html:
         elif type(value) not in [str, unicode]:
             value = str(value)
 
-        new = ""
-        for c in value:
-            if c == '"':
-                new += "&quot;"
-            elif c == '<':
-                new += "&lt;"
-            elif c == '>':
-                new += "&gt;"
-            else:
-                new += c
-        return new
-
-
+        return value.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 
     # This function returns a str object, never unicode!
     # Beware: this code is crucial for the performance of Multisite!

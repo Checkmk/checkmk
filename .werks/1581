@@ -1,0 +1,12 @@
+Title: Single context views with missing context show an error message now
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417513817
+Class: fix
+
+When views which have a single context defined but are missing needed
+context information (not hard coded, not provided per URL) are opened,
+they show an error message about the missing context now.
+

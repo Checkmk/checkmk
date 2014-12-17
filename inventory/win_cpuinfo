@@ -67,15 +67,25 @@ def inv_win_cpuinfo(info):
     for varname, value in info:
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
-        if varname == "NumberOfCores":
-            node["cores_per_cpu"] = int(value)
+
+        if varname == "NumberOfCores" and value != "":
+            if value != "":
+                node["cores_per_cpu"] = int(value)
+            else:
+                node["cores_per_cpu"] = 1 # missing on Windows 2003
+
         elif varname == "NumberOfLogicalProcessors":
-            node["threads_per_cpu"] = int(value)
+            if value != "":
+                node["threads_per_cpu"] = int(value)
+            else:
+                node["threads_per_cpu"] = 1 # missing on Windows 2003
+
         elif varname == "Manufacturer":
             node["vendor"] = {
                 "GenuineIntel" : "intel",
                 "AuthenticAMD" : "amd",
             }.get(value, value)
+
         # there is also the L3CacheSize
         elif varname == "L2CacheSize" and value != "":
             # normalized to bytes!

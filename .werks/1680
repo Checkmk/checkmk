@@ -1,0 +1,14 @@
+Title: Fixed various dashlet designer position/resizing issues
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417731747
+Class: fix
+
+Previous versions of the dashboard designer had problems with resizing,
+moving and changing the anchors of dynamically sized dashlets. Dashlets
+were flipping around in different situations and changing sizes in an
+unintended way.
+
+All known issues have been fixed now.

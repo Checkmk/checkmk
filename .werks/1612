@@ -1,0 +1,9 @@
+Title: job: Fixed wrong reported start time for running jobs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417623022
+Class: fix
+
+

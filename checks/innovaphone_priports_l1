@@ -49,10 +49,10 @@ def check_innovaphone_priports_l1(item, params, info):
             else:
                 messages.append("State is UP")
 
-            timedif, siglos_per_sec = get_counter("innovaphone_priports_l1." + item, time.time(), l1sigloss )
+            siglos_per_sec = get_rate("innovaphone_priports_l1." + item, time.time(), l1sigloss )
             if siglos_per_sec > 0:
                 state = 2
-                messages.append("Signal Loss is %.2f in last %.0fsec(!!)" % ( siglos_per_sec, timedif ))
+                messages.append("Signal Loss is %.2f/sec(!!)" % siglos_per_sec)
 
             if l1slip > params.get('err_slip_count', 0):
                 state = 2

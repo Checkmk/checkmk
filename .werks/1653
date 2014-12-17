@@ -1,0 +1,15 @@
+Title: megaraid_pdisks: Resulting states are now hard coded within the check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417709673
+Class: fix
+
+The megaraid_pdisks check was using the state the device had during initial
+inventory as expected OK state. When a device was failed during inventory,
+the state never changed to CRITICAL, even if the device is failed.
+This has been fixed by hard coding the resulting states now.
+
+Online, Hotspare -> OK
+Failed -> CRITICAL

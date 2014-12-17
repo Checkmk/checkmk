@@ -176,6 +176,36 @@ register_rule(group,
     factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
+register_rule(group,
+    "special_agents:netapp",
+    Dictionary(
+            title = _("Username and password for the NetApp Filer."),
+            elements = [
+                ( "username",
+                  TextAscii(
+                      title = _("Username"),
+                      allow_empty = False,
+                  )
+                ),
+                ( "password",
+                  Password(
+                      title = _("Password"),
+                      allow_empty = False,
+                  )
+                ),
+            ],
+            optional_keys = False
+    ),
+    title = _("Check NetApp via WebAPI"),
+    help  = _("This rule selects the NetApp agent instead of the normal Check_MK Agent "
+              "and allows monitoring via the NetApp API. Right now only <i>7-Mode</i> is supported, "
+              "<i>Cluster Mode</i> is following soon. Important: To make this special agent NetApp work "
+              "you will have to provide two additional python files (NaServer.py, NaElement.py) "
+              "from the NetApp Manageability SDK. They need to be put into the site directory "
+              "<tt>~/local/lib/python</tt>. The user requires a number of permissions for specific API classes. "
+              "They are displayed if you call the agent with <tt>agent_netapp --help</tt>. The agent itself "
+              "is located in the site directory under <tt>~/share/check_mk/agents/special</tt>."),
+    match = 'first')
 
 register_rule(group,
     "special_agents:activemq",

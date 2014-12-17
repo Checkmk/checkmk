@@ -1,0 +1,12 @@
+title: VMWare ESX: Count of VMs on a Host or a vCenter
+agents: vsphere
+catalog: os/misc
+license: GPL
+distribution: check_mk
+description:
+  This Check only Output the number of monitored VMs on a Hostsystem or a vCenter.
+  (Dependig if the special Agents run against a vCenter or a Hostsystem)
+
+inventory:
+ One service will be created
+

@@ -171,6 +171,8 @@ telegram_list = {
          '<ns1:pathSet>hardware.cpuInfo.numCpuCores</ns1:pathSet>'\
          '<ns1:pathSet>config.multipathState.path</ns1:pathSet>'\
          '<ns1:pathSet>hardware.systemInfo.model</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.systemInfo.uuid</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.systemInfo.otherIdentifyingInfo</ns1:pathSet>'\
          '<ns1:pathSet>hardware.systemInfo.vendor</ns1:pathSet>'\
          '<ns1:pathSet>name</ns1:pathSet>'\
          '<ns1:pathSet>overallStatus</ns1:pathSet>'\
@@ -582,7 +584,6 @@ if tracefile:
 
 my_cookie     = None
 server_handle = None
-transport     = None
 def query_server(payload, payload_params = {}):
     # Finalize payload
     payload_params.update(systeminfo)
@@ -641,9 +642,7 @@ def encode_url(text):
 # Initialize server connection
 try:
     netloc        = host_address + ":" + str(opt_port)
-    transport     = httplib.HTTPSConnection
-    transdict     = {'timeout': opt_timeout}
-    server_handle = transport(netloc, None, **transdict)
+    server_handle = httplib.HTTPSConnection(netloc)
 
     if opt_debug:
         sys.stderr.write("Connecting to %s..." % netloc)
@@ -861,11 +860,24 @@ if not error:
                 def eval_pci_device(pci_propset):
                     eval_propset_block( [ "id", "vendorName", "deviceName" ], "id", pci_propset)
 
+                def eval_systeminfo_other(otherinfo_propset):
+                    data       = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>", otherinfo_propset)
+                    keys_index = {}
+
+                    for value, key in data:
+                        idx = 0
+                        if key in keys_index:
+                            keys_index[key] = keys_index[key] + 1
+                            idx = keys_index[key]
+                        hostsystems_properties[hostname]["hardware.systemInfo.otherIdentifyingInfo.%s.%d" % (key, idx)] = [ value ]
+                        keys_index[key] = idx
+
                 eval_functions = {
                     "config.multipathState.path"                                    : eval_multipath_state,
                     "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
                     "hardware.cpuPkg"                                               : eval_cpu_pkg,
                     "hardware.pciDevice"                                            : eval_pci_device,
+                    "hardware.systemInfo.otherIdentifyingInfo"                      : eval_systeminfo_other,
                 }
 
                 elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)
@@ -922,7 +934,8 @@ if not error:
                     continue
                 else:
                     # we don't need this in the agent output
-                    del vm_data["config.hardware.device"]
+                    if vm_data.get("config.hardware.device"):
+                        del vm_data["config.hardware.device"]
                 if "runtime.host" in vm_data:
                     vm_data["runtime.host"] = hostsystems.get(vm_data["runtime.host"], vm_data["runtime.host"])
 
@@ -980,6 +993,7 @@ if not error:
 
 
         print "<<<<>>>>"
+
         print "<<<esx_vsphere_objects:sep(9)>>>"
 
         # the piggybacked data is printed later on, because it looks quite messy...

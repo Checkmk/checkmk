@@ -1,9 +1,9 @@
 Title: Quicksearch of hosts: incorrect WATO link
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2014-02-10 14:24:58
 Targetversion: 1.2.5i1
-Class: bug
 
 For example:
 Doint a quicksearch on "x" returns the hosts esx_host and winxp
@@ -18,3 +18,6 @@ htdocs/views.py:
 lines following: # WATO: If we have a host context, then show button to WATO, if permissions allow this
 
 Note: checking if a WATO host exist might take some time...
+
+2014-12-01 11:07:48: changed state open -> done
+Is already fixed.

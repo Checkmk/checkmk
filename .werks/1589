@@ -1,0 +1,10 @@
+Title: Restructured SNMP credentials rule specification
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417602070
+Class: fix
+
+Previous valuespec allowed wrong configurations which lead to non
+working SNMP credential values.

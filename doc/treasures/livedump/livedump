@@ -107,39 +107,32 @@ def livedump_config():
     # Dump host config
     query = \
          "GET hosts\n" \
-         "Columns: name alias address groups check_command " \
+         "Columns: name alias address groups check_command icon_image " \
          "max_check_attempts contacts contact_groups\n" + \
          opt_host_headers + \
          opt_host_only_headers
     for row in g_connection.query_table_assoc(query):
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
+        sys.stdout.write(
+               "define host {\n"
+               "  use                livedump-host\n"
+               "  host_name          %(name)s\n"
+               "  alias              %(alias)s\n"
+               "  address            %(address)s\n"
+               "  host_groups        %(groupstring)s\n"
+               "  check_command      %(check_command)s\n"
+               "  max_check_attempts %(max_check_attempts)d\n" % row)
         if opt_groups:
-            sys.stdout.write(
-               "define host {\n"
-               "  use                livedump-host\n"
-               "  host_name          %(name)s\n"
-               "  alias              %(alias)s\n"
-               "  address            %(address)s\n"
-               "  host_groups        %(groupstring)s\n" 
-               "  contact_groups     %(contact_groups)s\n"
-               "  check_command      %(check_command)s\n"
-               "  max_check_attempts %(max_check_attempts)d\n"
-               "}\n\n"
-               % row)
+               sys.stdout.write("  contacts           %(contactsstring)s\n" % row)
         else:
-            sys.stdout.write(
-               "define host {\n"
-               "  use                livedump-host\n"
-               "  host_name          %(name)s\n"
-               "  alias              %(alias)s\n"
-               "  address            %(address)s\n"
-               "  host_groups        %(groupstring)s\n" 
-               "  contacts           %(contactsstring)s\n"
-               "  check_command      %(check_command)s\n"
-               "  max_check_attempts %(max_check_attempts)d\n"
-               "}\n\n"
-               % row)
+               sys.stdout.write("  contact_groups     %(contact_groups)s\n" % row)
+
+        if opt_host_icon:
+            if row.get("icon_image"):
+                sys.stdout.write("  icon_image         %(icon_image)s\n" % row)
+
+        sys.stdout.write("}\n\n")
 
     # Dump service config
     query = \
@@ -269,6 +262,8 @@ def usage():
                             with templates (-C -T).
 
   -v, --verbose             output debug information an stderr
+  -G, --include-groups      use contact groups instead of contacts on dumping config
+  --include-host-icon       add host icon_image to config
   --debug                   do not catch Python exceptions
 
 """)
@@ -292,7 +287,7 @@ short_options = 'hVvc:H:S:O:TCMGi:s:'
 long_options = [ "help", "version", "verbose", "debug", "socket=",
                  "host-header=", "host-only-header=", "service-header=",
                  "dump-templates", "config", "state", "mark-mode",
-                 "include-groups", "interval" ]
+                 "include-groups", "interval", "include-host-icon" ]
 
 opt_verbose = False
 opt_debug = False
@@ -303,6 +298,7 @@ opt_host_only_headers = ""
 opt_service_headers = ""
 opt_dump_templates = False
 opt_groups = False
+opt_host_icon = False
 opt_check_interval = None
 
 try:
@@ -340,6 +336,8 @@ for o,a in opts:
         opt_mark_mode = True
     elif o in [ '-G', '--include-groups' ]:
         opt_groups = True
+    elif o in [ '--include-host-icon' ]:
+        opt_host_icon = True
     elif o in [ '-i', '--interval' ]:
         opt_check_interval = int(a)
 

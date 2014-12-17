@@ -1,0 +1,8 @@
+Title: Dashboard toggle edit should add/remove edit=1 to/from the URL
+Component: multisite
+State: open
+Date: 2014-12-01 23:45:31
+Targetversion: 1.2.5i1
+Class: nastiness
+
+Otherwise reloading the page would result in toggling edit mode.

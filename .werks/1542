@@ -1,0 +1,11 @@
+Title: Changed text of "debug_log" option to be clearer in distributed setups
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417420673
+Class: fix
+
+The text of the rule was always refering to the central site, which is
+missleading in distributed setups. Replaced the siteid in the path
+with a spacer.

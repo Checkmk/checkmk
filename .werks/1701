@@ -1,0 +1,11 @@
+Title: Correctly show absolute level for CPU load in case of warn/crit
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417771579
+Class: fix
+
+In the check parameters of the CPU load check the levels are given in
+load <i>per Core</i>. The check plugin output displayed this as level, but
+this was confusing. Now the absolute level is being displayed instead.

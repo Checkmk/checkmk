@@ -56,17 +56,10 @@ def check_win_cpuusage(item, params, info):
             counter_wrapped = False
             for cpu in range(0, num_cpus):
                 ticks = int(line[2 + cpu])
-                try:
-                    timedif, ticks_per_sec = get_counter("cpuusage.%d" % cpu, this_time, ticks)
-                except MKCounterWrapped, e:
-                    counter_wrapped = e
-                    timedif, ticks_per_sec = 60, 0
+                ticks_per_sec = get_rate("cpuusage.%d" % cpu, this_time, ticks)
                 secs_per_sec = ticks_per_sec / 10000000.0;
                 used_perc = 100 * (1 - secs_per_sec)
                 overall_perc += used_perc
-            # At least one counter wrapped or started. This check is useless
-            if counter_wrapped:
-                raise counter_wrapped
 
             used_perc = overall_perc / num_cpus
 
@@ -80,7 +73,7 @@ def check_win_cpuusage(item, params, info):
             else:
                 num_txt = " / %d CPUs" % num_cpus
 
-            infotext = "%d%% used%s (in last %d secs)" % (int(used_perc), num_txt, timedif)
+            infotext = "%d%% used%s" % (int(used_perc), num_txt)
 
             if used_perc >= crit:
                 return (2, infotext, perfdata)
@@ -113,18 +106,18 @@ def check_win_diskstat(item, params, info):
     this_time = int(float(line[1]))
 
     try:
-        read_timedif,  read_per_sec  = get_counter("diskstat.read",  this_time, read_bytes_ctr)
-        write_timedif, write_per_sec = get_counter("diskstat.write", this_time, write_bytes_ctr)
+        read_per_sec  = get_rate("diskstat.read",  this_time, read_bytes_ctr)
+        write_per_sec = get_rate("diskstat.write", this_time, write_bytes_ctr)
     except MKCounterWrapped, e:
         # make sure that inital check does not need three cycles for all counters
         # to be initialized
-        get_counter("diskstat.write", this_time, write_bytes_ctr)
+        get_rate("diskstat.write", this_time, write_bytes_ctr)
         raise e
 
     perfdata = [ ("read", "%dc" % read_bytes_ctr),
                  ("write", "%dc" % write_bytes_ctr) ]
-    return (0, "reading %.1f MB/s, writing %.1f MB/s (in last %d secs)" %
-            (read_per_sec / 1048576, write_per_sec / 1048576, read_timedif), perfdata)
+    return (0, "reading %.1f MB/s, writing %.1f MB/s" %
+            (read_per_sec / 1048576, write_per_sec / 1048576), perfdata)
 
 
 check_config_variables.append("winperf_cpu_default_levels")

@@ -1,0 +1,9 @@
+Title: Renamed "Hostgroups" and "Servicegroups" views to "Host Groups" and "Service Groups"
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417681030
+Class: fix
+
+

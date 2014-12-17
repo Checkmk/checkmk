@@ -27,8 +27,9 @@
 export LC_ALL=C
 unset LANG
 
-export MK_LIBDIR="/to/be/changed"
-export MK_CONFDIR="/to/be/changed"
+export MK_LIBDIR="/usr/check_mk/lib"
+export MK_CONFDIR="/usr/check_mk/conf"
+export MK_VARDIR="/tmp/check_mk"
 
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own
@@ -54,7 +55,7 @@ fi
 # Shell version of the waitmax utility, that limits the runtime of
 # commands. This version does not conserve the original exit code
 # of the command. It is successfull if the command terminated
-# in time.
+    # in time.
 function waitmax
 {
    TIMEOUT=${1}0
@@ -81,8 +82,37 @@ function waitmax
    return 255
 }
 
+function run_cached {
+    NAME=$1
+    MAXAGE=$2
+    shift 2
+    CMDLINE=$*
+    MAXAGE=$MAXAGE*60
+
+    if [ ! -e $MK_VARDIR/cache ] ; then mkdir $MK_VARDIR/cache ; fi
+    CACHE_FILE=$MK_VARDIR/cache/$NAME.cache
+
+    USE_CACHE_FILE=""
+    # Check if file exists and is recent enough
+    if [ -s $CACHE_FILE ]
+    then
+        MTIME=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHE_FILE )
+        if (( $MTIME < $MAXAGE )) ; then
+            USE_CACHE_FILE=1
+        fi
+    fi
+    if [ -s "$CACHE_FILE" ]
+    then
+        cat $CACHE_FILE
+    fi
+    if [ -z "$USE_CACHE_FILE" -a ! -e "$CACHE_FILE.new" ]
+    then
+        nohup sh -c $CMDLINE > $CACHE_FILE.new 2> /dev/null && mv $CACHE_FILE.new $CACHE_FILE  &
+    fi
+}
+
 echo '<<<check_mk>>>'
-echo Version: 1.2.5i7
+echo Version: 1.2.7i1
 echo AgentOS: aix
 
 echo '<<<df>>>'
@@ -189,6 +219,13 @@ then
             ./$skript
     fi
   done
+
+  # Call some plugins only every X'th second
+  for skript in [1-9]*/* ; do
+      if [ -x "$skript" ] ; then
+          run_cached plugins_${skript//\//\#} ${skript%/*} "$skript"
+      fi
+  done
 fi
 
 
@@ -201,6 +238,7 @@ then
         ./$skript
     fi
   done
+
 fi
 
 # MK's Remote Plugin Executor
@@ -215,3 +253,6 @@ then
         echo "(${PLUGIN##*/}) $descr $? $OUTPUT"
     done
 fi
+
+
+

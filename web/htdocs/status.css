@@ -369,7 +369,7 @@ table.data tr.data td.pnpgraph {
    padding: 0;
 }
 
-tr.data td.pnpgraph img {
+tr.data td.pnpgraph div.graph > a > img {
     border: 1px solid #888;
     margin: 4px 4px 4px 4px;
     box-shadow: 1px 1px 3px #000000;
@@ -396,4 +396,14 @@ table.data tr.data td table.customvars td {
 table.data tr.data td table.customvars td:last-child {
     border-left: 1px solid #bbb;
     padding-left: 5px;
+}
+
+td.matchgroups span {
+    margin-right: 3px;
+    background-color: #ffffff;
+    border: 1px solid #eeeeee;
+    border-radius: 3px;
+    box-shadow: 0px 0px 1px #888;
+    padding: 0px 3px;
+    font-family: monospace;
 }

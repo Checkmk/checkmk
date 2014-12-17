@@ -1,0 +1,13 @@
+Title: Added search form to global settings page
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418050203
+Class: feature
+
+It is not always easy to find a global setting in the number of
+foldable containers which all can be folded by default. To find
+a setting one might have to open multiple of the containers to
+get to the requested option. This search form should make it
+easier to find a needed option.

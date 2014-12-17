@@ -24,48 +24,39 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-capabilities = {
-    '1'  : "rmsVoltage",
-    '2'  : "rmsCurrent",
-    '3'  : "activePower",
-    '4'  : "apparentPower",
-    '5'  : "activeEnergy",
-    '9'  : "unbalancedCurrent",
-    '-1'  : "powerFactor",
-    #''  : "apparentEnergy"
-    '0' : "Not known yet",
+# Sensor types (OID_END). Map these to the keys needed by
+# elphase.include
+raritan_pdu_sensor_types = {
+     1: "current", # "rmsCurrent",
+#     2: "peakCurrent",
+#     3: "unbalancedCurrent",
+     4: "voltage", # "rmsVoltage",
+     5: "power", # "activePower",
+     6: "appower", # "apparentPower",
+#     7: "powerFactor",
+     8: "energy", # "activeEnergy",
+#     9: "apparentEnergy",
+#    10: "temperature",
+#    11: "humidity",
+#    12: "airFlow",
+#    13: "airPressure",
+#    14: "onOff",
+#    15: "trip",
+#    16: "vibration",
+#    17: "waterDetection",
+#    18: "smokeDetection",
+#    19: "binary",
+#    20: "contact",
+#    21: "fanSpeed",
+#    30: "other",
+#    31: "none",
 }
 
-units = {
-    '-1'  : "",
-    '0'   : "",
-    '1'   : "V",
-    '2'   : "A",
-    '3'   : "W",
-    '4'   : "VA",
-    '5'   : "Wh",
-    '6'   : "VAh",
-    '7'   : "C",
-    '8'   : "Hz",
-    '9'   : "%",
-    '10'  : "m/s",
-    '11'  : "Pascal",
-    '12'  : "psi",
-    '13'  : "g",
-    '14'  : "F",
-    '15'  : "ft",
-    '16'  : "in",
-    '17'  : "cm",
-    '18'  : "m",
-    '19'  : "rpm",
-    }
-
-
-sensor_states = {
+raritan_pdu_sensor_states = {
     -1 :  "unavailable",
      0 :  "open",
      1 :  "closed",
-     2 :  "belowLowerCritical",
+     2 :  "below lower critical level",
      3 :  "belowLowerWarning",
      4 :  "normal",
      5 :  "aboveUpperWarning",
@@ -75,32 +66,4 @@ sensor_states = {
      9 :  "detected",
      10:  "notDetected",
      11:  "alarmed",
-    }
-
-def inventory_raritan_pdu_inlet_generic(info):
-    for line in info:
-        # Ignore closed sensor state
-        if line[4] != '1':
-            yield line[0], None
-
-def check_raritan_pdu_inlet_generic(item, _no_params, info):
-    for line in info:
-        c_item, unit, digits, availability, sensor_state, sensor_value = line
-
-        if c_item == item:
-            if availability != '1':
-                yield 2, "Sensor not available"
-                return
-
-            digits = int(digits)
-            sensor_value = float(sensor_value) / 10**digits
-            yield 0, "Value: %.2f %s" % ( sensor_value, units[unit] ), [ (item, sensor_value ) ]
-
-            sensor_state = int(sensor_state)
-            sensor_text = "Sensor State: " + sensor_states[sensor_state]
-            if sensor_state in [ 2, 6 ]:
-                 yield 2, sensor_text
-            elif sensor_state != 4:
-                yield 1, sensor_text
-
-
+}

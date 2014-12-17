@@ -1,0 +1,13 @@
+Title: ups_test: Fix computation of time since last self test
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417776132
+Class: fix
+
+Instead of the time since the last self test of the battery, the check used
+the time the last test has <i>lasted</i>. So this check did not trigger
+an alarm every - just for the summary state of the last test.
+
+Thanks for the bug report to Cyril Pawelko!

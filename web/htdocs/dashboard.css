@@ -94,6 +94,10 @@ div.dashlet div.title a:hover {
     text-decoration: underline;
 }
 
+div.dashlet.edit div.title span {
+    padding-left: 27px;
+}
+
 table.dashlet_overview h2 {
     margin: 8px 0px 8px 0px;
     font-size: 10pt;
@@ -208,21 +212,19 @@ div.dashlet_inner div.stats {
     width: 200px;
     list-style: none;
 
+    color: #fff;
     background-color: #508AA1;
-    border: 1px solid #fff;
-    -moz-box-shadow:    1px 1px 1px 1px #000;
-    -webkit-box-shadow: 1px 1px 1px 1px #000;
-    box-shadow:         1px 1px 1px 1px #000;
-
-    /* ie <8 */
-    zoom: 1;
-    filter: progid:DXImageTransform.Microsoft.DropShadow(OffX=2, OffY=2, Color=#000000),
-           progid:DXImageTransform.Microsoft.Chroma(Color='#ffffff');
+    border-width: 1px;
+    border-style: solid;
+    border-color: #9bc #367 #367 #9bc;
+    box-shadow:  0.5px 0.5px 8px #000;
+    border-radius: 5px;
 }
 
 #controls a {
     display: block;
-    padding: 5px 15px;
+    padding: 1px 15px 1px 2px;
+    line-height: 14px;
     text-align: left;
     text-decoration: none;
 }
@@ -231,22 +233,19 @@ div.dashlet_inner div.stats {
     text-decoration: underline;
 }
 
-#controls li.sublink > a:before {
-    position: absolute;
-    left: 7px;
-    width: 6px;
-    height: 10px;
-    margin-top: 3px;
-    background-image: url(images/dashboard_menuarrow.png);
-    background-repeat: no-repeat;
-    content: " ";
-}
-
 /* submenu */
 
 #controls ul.sub {
     bottom: 5px;
-    right: 210px;
+    right: 212px;
+}
+
+#controls > li > a > img,
+#controls ul.menu > li > a > img {
+    margin-right: 4px;
+    vertical-align: middle;
+    width: 12px;
+    height: 12px;
 }
 
 /* dashlet controls */
@@ -268,7 +267,7 @@ div.dashlet.edit .controls {
     position: relative;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(50, 80, 90, 0.6);
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#fffffff', endColorstr='#7fffffff');
 }
@@ -278,12 +277,12 @@ div.dashlet.edit .controls {
 div.dashlet.edit .edit {
     cursor: pointer;
     position: absolute;
-    width: 20px;
-    height: 20px;
-    top: 25px;
-    left: 25px;
+    width: 14px;
+    height: 14px;
+    top: 4px;
+    left: 19px;
 
-    background-color: rgba(0, 0, 0, 0.7);
+    /* background-color: rgba(0, 0, 0, 0.7); */
     border-radius: 5px;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
@@ -300,12 +299,12 @@ div.dashlet.edit .edit:hover {
 div.dashlet.edit .del {
     cursor: pointer;
     position: absolute;
-    width: 20px;
-    height: 20px;
-    top: 25px;
-    left: 48px;
+    width: 14px;
+    height: 14px;
+    top: 4px;
+    right: 19px;
 
-    background-color: rgba(0, 0, 0, 0.7);
+    /* background-color: rgba(0, 0, 0, 0.7); */
     border-radius: 5px;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
@@ -320,12 +319,12 @@ div.dashlet.edit .del:hover {
 /* position anchors */
 
 div.dashlet.edit .anchor {
-    cursor: pointer;
+    cursor: auto;
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
 
-    background-color: rgba(0, 0, 0, 0.7);
+    /* background-color: rgba(255, 255, 255, 0.7); */
     border-radius: 5px;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
@@ -333,32 +332,33 @@ div.dashlet.edit .anchor {
     background-image: url(images/dashlet_anchor_lo.png);
 }
 
-div.dashlet.edit .anchor:hover {
-    background-image: url(images/dashlet_anchor_hi.png);
-}
-
 div.dashlet.edit .anchor.off {
+    cursor: pointer;
     background-image: url(images/dashlet_anchor_off.png);
 }
 
+div.dashlet.edit .anchor.off:hover {
+    background-image: url(images/dashlet_anchor_hi.png);
+}
+
 div.dashlet.edit .anchor.anchor0 {
-    top: 5px;
-    left: 5px;
+    top: 4px;
+    left: 4px;
 }
 
 div.dashlet.edit .anchor.anchor1 {
-    top: 5px;
-    right: 10px;
+    top: 4px;
+    right: 4px;
 }
 
 div.dashlet.edit .anchor.anchor2 {
-    bottom: 10px;
-    right: 10px;
+    bottom: 4px;
+    right: 4px;
 }
 
 div.dashlet.edit .anchor.anchor3 {
-    bottom: 10px;
-    left: 5px;
+    bottom: 4px;
+    left: 4px;
 }
 
 .sizer {
@@ -370,18 +370,23 @@ div.dashlet.edit .anchor.anchor3 {
     cursor: auto;
 }
 
+.sizer {
+    box-shadow: .5px .5px 2px #333;
+    border-radius: 2px;
+}
+
 .sizer:hover, .sizer_lbl:hover {
     cursor: pointer;
 }
 
 .sizer0 {
     width: 50%;
-    height: 17px;
+    height: 10px;
 }
 
 .sizer1 {
     height: 50%;
-    width: 17px;
+    width: 10px;
 }
 
 .sizer.max {
@@ -433,11 +438,11 @@ div.dashlet.edit .anchor.anchor3 {
 
 /* arrow on left */
 .sizer0.anchor1:before, .sizer0.anchor2:before {
-    top: -1px;
-    right: 100%;
+    top: -7px;
+    left: -11px;
     background-repeat: no-repeat;
-    width: 10px;
-    height: 19px;
+    width: 13px;
+    height: 21px;
 }
 
 .sizer0.anchor1.max:before, .sizer0.anchor2.max:before {
@@ -450,11 +455,11 @@ div.dashlet.edit .anchor.anchor3 {
 
 /* arrow on right */
 .sizer0.anchor0:before, .sizer0.anchor3:before {
-    top: -1px;
+    top: -7px;
     left: 100%;
     background-repeat: no-repeat;
-    width: 10px;
-    height: 19px;
+    width: 12px;
+    height: 21px;
 }
 
 .sizer0.anchor0.max:before, .sizer0.anchor3.max:before {
@@ -467,11 +472,11 @@ div.dashlet.edit .anchor.anchor3 {
 
 /* arrow at top */
 .sizer1.anchor2:before, .sizer1.anchor3:before {
-    bottom: 100%;
-    left: -1px;
+    top: -10px;
+    left: -7px;
     background-repeat: no-repeat;
-    height: 10px;
-    width: 19px;
+    height: 14px;
+    width: 23px;
 }
 
 .sizer1.anchor2.max:before, .sizer1.anchor3.max:before {
@@ -484,11 +489,11 @@ div.dashlet.edit .anchor.anchor3 {
 
 /* arrow at bottom */
 .sizer1.anchor0:before, .sizer1.anchor1:before {
-    top: 100%;
-    left: -1px;
+    bottom: -10px;
+    left: -7px;
     background-repeat: no-repeat;
-    height: 10px;
-    width: 19px;
+    height: 14px;
+    width: 23px;
 }
 
 .sizer1.anchor0.max:before, .sizer1.anchor1.max:before {
@@ -504,6 +509,8 @@ div.dashlet.edit .anchor.anchor3 {
     color: #000;
     padding: 2px;
     cursor: auto;
+    /* display: none; */
+    font-size: 6px;
 }
 
 .sizer_lbl0 {
@@ -528,35 +535,36 @@ div.dashlet.edit .anchor.anchor3 {
 /* left side */
 .sizer_lbl1.anchor0,
 .sizer_lbl1.anchor3 {
-    left: 5px;
-    top: 50%;
+    left: 1.5px;
+    top: 47%;
 }
 
 /* right side */
 .sizer_lbl1.anchor1,
 .sizer_lbl1.anchor2 {
-    right: 10px;
-    top: 50%;
+    right: 6.5px;
+    top: 47%;
 }
 
 /* top side */
 .sizer_lbl0.anchor0,
 .sizer_lbl0.anchor1 {
-    left: 50%;
+    left: 47%;
     top: 5px;
 }
 
 /* bottom side */
 .sizer_lbl0.anchor2,
 .sizer_lbl0.anchor3 {
-    left: 50%;
-    bottom: 10px;
+    left: 47%;
+    bottom: 2.5px;
 }
 
 /* transparent resize areas for absolute sized */
 
 .resize {
     position: absolute;
+    z-index: 70;
 }
 
 .resize0 {
@@ -587,4 +595,34 @@ div.dashlet.edit .anchor.anchor3 {
 .resize1_1 {
     bottom: 0;
     cursor:s-resize;
+}
+
+.resize_corner {
+    width: 10px;
+    height: 10px;
+    z-index: 80;
+}
+
+.resize_corner0 {
+    top:0;
+    left:0;
+    cursor:nw-resize;
+}
+
+.resize_corner1 {
+    top:0;
+    right:0;
+    cursor:ne-resize;
+}
+
+.resize_corner2 {
+    bottom:0;
+    right:0;
+    cursor:se-resize;
+}
+
+.resize_corner3 {
+    bottom:0;
+    left:0;
+    cursor:sw-resize;
 }

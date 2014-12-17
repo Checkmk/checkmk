@@ -1,0 +1,17 @@
+Title: check_mk_agent.linux: fix situation where async plugin is not executed after crash
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417615386
+Class: fix
+
+When executing asynchronous sections or plugins the Check_MK Agent uses
+<tt>run_cached()</tt> for putting them in the background. This function
+creates a cachefile with the extension <tt>.new</tt> and removes that suffix
+when the actual plugin has finished. If due to a server crash the file keeps
+lying around the the plugin would not be executed anymore.
+
+We now remove that file if it is older then twice the cache age <i>and
+we kill</i> any process that still has open that file. That way we avoid
+overlapping plugins in case of a real hanger.

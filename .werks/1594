@@ -1,0 +1,10 @@
+Title: ibm_svc_host: Can now be set to be always OK
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417617567
+Class: feature
+
+The Check can now be set to be always OK. This can be done with WATO or a new Check Paramter { 'always_ok' : True }
+

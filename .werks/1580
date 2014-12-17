@@ -1,0 +1,10 @@
+Title: Views: Hardcoded single context filters are not shown in filter form anymore
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417512923
+Class: fix
+
+When a view has a single context and the value of the filters hard coded in the view,
+the filter elements are not shown to the user in the filter form anymore.

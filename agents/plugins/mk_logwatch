@@ -50,16 +50,18 @@ else:
 # If that is not set either, the current directory ist
 # used.
 logwatch_dir = os.getenv("LOGWATCH_DIR")
-if not logwatch_dir:
-    logwatch_dir = os.getenv("MK_CONFDIR")
-    if not logwatch_dir:
-        logwatch_dir = "."
+if logwatch_dir:
+    mk_confdir = logwatch_dir
+    mk_vardir = logwatch_dir
+else:
+    mk_confdir = os.getenv("MK_CONFDIR") or "."
+    mk_vardir = os.getenv("MK_VARDIR") or "."
 
 print "<<<logwatch>>>"
 
-config_filename = logwatch_dir + "/logwatch.cfg"
-status_filename = logwatch_dir + "/logwatch.state"
-config_dir      = logwatch_dir + "/logwatch.d/*.cfg"
+config_filename = mk_confdir + "/logwatch.cfg"
+config_dir      = mk_confdir + "/logwatch.d/*.cfg"
+status_filename = mk_vardir + "/logwatch.state"
 
 def is_not_comment(line):
     if line.lstrip().startswith('#') or \

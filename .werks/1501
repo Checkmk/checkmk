@@ -1,0 +1,18 @@
+Title: Legacy view formats created with 2014-09 snapshots are now converted
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416307562
+
+Views which have been created with Check_MK snapshots from 2014-09 created
+the views in a legacy format which the current multisite code can not interpret.
+When an installation has such a view created by any user, ist ot usable anymore
+and shows an exception like "if 'service' in hide_filters and 'host' in hide_filters:
+TypeError: argument of type 'NoneType' is not iterable".
+
+This has been fixed now. The legacy views are now converted automatically.
+They are saved in the new format once the user makes his first change to this
+or another view.

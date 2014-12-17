@@ -1,6 +1,6 @@
 title: DOCSIS: Downstream Channels
 agents: snmp
-catalog: hw/network/arris
+catalog: hw/network/generic
 license: GPL
 distribution:
 description:

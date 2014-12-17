@@ -1,0 +1,16 @@
+Title: cisco_vpn_tunnel: Refactored complete check, fixed threshold bugs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417714529
+Class: fix
+
+Improved check in different ways:
+
+- When configuring OK as failed tunnel state, this was not handled correctly by the check. 
+- Clarified the valuespec titles and help texts.
+- Check did not process multiple VPN tunnel configurations defined in a single rule.
+- Cleaned up check code
+
+Sadly had no data for testing here... Let's hope for the best.

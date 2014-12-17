@@ -1,0 +1,9 @@
+Title: bluecat_dhcp, bluecat_dns: Checks can now be used in Check_MK Cluster Mode
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417700149
+Class: feature
+
+

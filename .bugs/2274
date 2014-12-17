@@ -1,0 +1,9 @@
+Title: Auxtags and topics
+Component: wato
+State: open
+Date: 2014-12-09 11:40:54
+Targetversion: 1.2.5i1
+Class: bug
+
+if you add a topic to a Auxtag, the auxtag is missing in the rules after
+it only works if a normal tag group has the same topic.

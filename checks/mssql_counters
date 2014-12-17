@@ -120,7 +120,6 @@ def check_mssql_counters_transactions(item, params, info):
     output   = []
     perfdata = []
     now = time.time()
-    wrapped = False
     for line in info:
         if mssql_counters_item(line, False) != item:
             continue
@@ -133,11 +132,7 @@ def check_mssql_counters_transactions(item, params, info):
             if line[1] == counter:
                 value = int(line[-1])
                 countername = "mssql_counters.%s.%s" % (item, counter)
-                try:
-                    timedif, persec = get_counter(countername, now, value)
-                except MKCounterWrapped:
-                    wrapped = True
-                    continue
+                persec = get_rate(countername, now, value)
                 output.append('%s: %.1f/s' % (label, persec))
                 perfdata.append((counter, persec))
 
@@ -159,7 +154,6 @@ def check_mssql_counters_locks(item, params, info):
     output   = []
     perfdata = []
     now = time.time()
-    wrapped = False
     for line in info:
         if mssql_counters_item(line, False) != item:
             continue
@@ -175,11 +169,7 @@ def check_mssql_counters_locks(item, params, info):
                 value = float(line[-1])
                 # compute rate from counter value
                 countername = "mssql_counters.%s.%s" % (item, counter)
-                try:
-                    timedif, persec = get_counter(countername, now, value)
-                except MKCounterWrapped:
-                    wrapped = True
-                    continue
+                persec = get_rate(countername, now, value)
 
                 p = params.get(counter)
                 if p:
@@ -195,9 +185,6 @@ def check_mssql_counters_locks(item, params, info):
 
                 output.append('%s: %.1f/s%s' % (label, persec, prob_txt))
                 perfdata.append((counter, persec, warn, crit))
-
-    if wrapped:
-        raise MKCounterWrapped("", "Some counter wrapped, no data this time")
 
     if output:
         return (state, ', '.join(output), perfdata)

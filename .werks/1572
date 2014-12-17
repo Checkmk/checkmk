@@ -1,0 +1,12 @@
+Title: Sample configs, plugins etc. for windows agent use windows linebreaks now
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417438374
+Class: fix
+
+Some files which are meant to be used on windows systems had unix style linebreaks,
+which are not interpreted correctly by some editors, like for example notepad. This
+has been fixed now. All files in packend agents are now using windows style linebreaks.
+

@@ -28,7 +28,7 @@ function bi_toggle_subtree(oImg, lazy)
         oImg = oImg.previousSibling;
     }
     var oSubtree = oImg.parentNode.childNodes[6];
-    var url = "bi_save_treestate.py?path=" + escape(oSubtree.id);
+    var url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
     var do_open;
 
     if (oSubtree.style.display == "none") {
@@ -73,7 +73,7 @@ function bi_update_tree_response(oDiv, code) {
 
 function bi_toggle_box(oDiv, lazy)
 {
-    var url = "bi_save_treestate.py?path=" + escape(oDiv.id);
+    var url = "bi_save_treestate.py?path=" + encodeURIComponent(oDiv.id);
     var do_open;
 
     if (oDiv.className.indexOf("open") >= 0) {

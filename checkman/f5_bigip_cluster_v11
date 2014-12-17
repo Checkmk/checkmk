@@ -1,0 +1,19 @@
+title: F5 Big-IP: Cluster state for firmware version >= 11
+agents: snmp
+catalog: hw/network/f5
+license: GPL
+distribution: check_mk
+description:
+ The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) to identify
+ if all system configs are in-sync when running a load balancing cluster.
+ It will issue a warning if one of the nodes is out of sync, or a critical on one of the two following conditions:
+
+     - both nodes have differing configs
+
+     - the node being checked has the status "unconfigured"
+
+ It supports devices running the 11 and above releases of the F5 OS.
+
+inventory:
+  One service is defined for the cluster status unless the load balancer config sync is in a status of "unconfigured"
+

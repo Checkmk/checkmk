@@ -45,8 +45,28 @@ using namespace std;
 
 void usage()
 {
-    printf("Usage: check_mkevents_c [-H REMOTE:PORT] [-a] HOST [APPLICATION]");
+    printf("Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] HOST [APPLICATION]");
     printf("\n -a    do not take into account acknowledged events.\n");
+    printf(" HOST  may be a hostname, and IP address or hostname/IP-address.\n");
+}
+
+
+string prepare_hostname_regex(const char *s)
+{
+    const char *scan = s;
+    string result = "";
+    while (*scan) {
+        if (strchr("[](){}^$.*+?|\\", *scan)) {
+            result += "\\";
+            result += *scan;
+        }
+        else if (*scan == '/')
+            result += "|";
+        else
+            result += *scan;
+        scan ++;
+    }
+    return result;
 }
 
 
@@ -60,6 +80,8 @@ int main(int argc, char** argv)
     int   remote_port         = 6558;
     char *application         = NULL;
     bool  ignore_acknowledged = false;
+    char  unixsocket_path[1024];
+    unixsocket_path[0] = 0;
 
     int argc_count = argc;
     for (int i = 1; i < argc ; i++) {
@@ -68,17 +90,22 @@ int main(int argc, char** argv)
             i++;
             argc_count -= 2;
         }
+        else if (!strcmp("-s", argv[i]) && i < argc + 1) {
+            strcpy(unixsocket_path, argv[i+1]);
+            i++;
+            argc_count -= 2;
+        }
         else if (!strcmp("-a", argv[i])) {
             ignore_acknowledged = true;
             argc_count--;
         }
         else if (argc_count > 2) {
-            host        = argv[i];
+            host = argv[i];
             application = argv[i+1];
             break;
         }
         else if (argc_count > 1) {
-            host        = argv[i];
+            host = argv[i];
             break;
         }
     }
@@ -89,13 +116,14 @@ int main(int argc, char** argv)
     }
 
     // Get omd environment
-    char *omd_path = getenv("OMD_ROOT");
-    char unixsocket_path[1024];
-    if (omd_path)
-        snprintf(unixsocket_path, sizeof(unixsocket_path), "%s/tmp/run/mkeventd/status", omd_path);
-    else {
-        printf("UNKNOWN - OMD_ROOT is not set, no socket path is defined.\n");
-        exit(3);
+    if (!unixsocket_path[0] && !remote_host) {
+        char *omd_path = getenv("OMD_ROOT");
+        if (omd_path)
+            snprintf(unixsocket_path, sizeof(unixsocket_path), "%s/tmp/run/mkeventd/status", omd_path);
+        else {
+            printf("UNKNOWN - OMD_ROOT is not set, no socket path is defined.\n");
+            exit(3);
+        }
     }
 
     if (remote_host) {
@@ -103,7 +131,7 @@ int main(int argc, char** argv)
         struct in_addr **addr_list;
 
         remote_hostaddress = strtok(remote_host, ":");
-        if ( (he = gethostbyname( remote_hostaddress ) ) == NULL)
+        if ( (he = gethostbyname(remote_hostaddress) ) == NULL)
         {
             printf("UNKNOWN - Unable to resolve remote host address: %s\n", remote_hostaddress);
             return 3;
@@ -114,9 +142,9 @@ int main(int argc, char** argv)
             strcpy(remote_hostipaddress, inet_ntoa(*addr_list[i]) );
         }
 
-        char *port_str     = strtok(NULL, ":");
+        char *port_str = strtok(NULL, ":");
         if (port_str)
-            remote_port    = atoi(port_str);
+            remote_port = atoi(port_str);
     }
 
     //Create socket and setup connection
@@ -166,15 +194,22 @@ int main(int argc, char** argv)
 
     // Create query message
     string query_message;
-    query_message.append("GET events\nFilter: event_host =~ ");
-    query_message.append(host);
-    query_message.append("\nFilter: event_phase in open ack\n");
-    query_message.append("OutputFormat: plain\n");
+    query_message += "GET events\nFilter: event_host ";
+    if (strchr(host, '/')) {
+        query_message += "~~ ";
+        query_message += prepare_hostname_regex(host);
+    }
+    else {
+        query_message += "=~ ";
+        query_message += host;
+    }
+    query_message += "\nFilter: event_phase in open ack\n";
+    query_message += "OutputFormat: plain\n";
 
     if (application) {
-        query_message.append("Filter: event_application ~~ ");
-        query_message.append(application);
-        query_message.append("\n");
+        query_message += "Filter: event_application ~~ ";
+        query_message += application;
+        query_message += "\n";
     }
 
     // Send message

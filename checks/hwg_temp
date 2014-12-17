@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-hwg_temp_defaultlevels = (23, 25)
+hwg_temp_defaultlevels = (30, 35)
 
 def inventory_hwg_temp(info):
     return [ (line[0], "hwg_temp_defaultlevels")

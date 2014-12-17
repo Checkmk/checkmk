@@ -35,7 +35,7 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_overview(nr, params):
+def dashlet_overview(nr, dashlet):
     html.write(
         '<table class=dashlet_overview>'
         '<tr><td valign=top>'
@@ -71,7 +71,7 @@ dashlet_types["overview"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_mk_logo(nr, params):
+def dashlet_mk_logo(nr, dashlet):
     html.write('<a href="http://mathias-kettner.de/check_mk.html">'
      '<img style="margin-right: 30px;" src="images/check_mk.trans.120.png"></a>')
 
@@ -95,7 +95,7 @@ dashlet_types["mk_logo"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_hoststats(nr, params):
+def dashlet_hoststats(nr, dashlet):
     table = [
        ( _("Up"), "#0b3",
         "searchhost&is_host_scheduled_downtime_depth=0&hst0=on",
@@ -122,7 +122,7 @@ def dashlet_hoststats(nr, params):
     ]
     filter = "Filter: custom_variable_names < _REALNAME\n"
 
-    render_statistics('dashlet_%d' % nr, "hosts", table, filter)
+    render_statistics('dashlet_%d' % nr, "hosts", table, filter, dashlet)
 
 dashlet_types["hoststats"] = {
     "title"       : _("Host Statistics"),
@@ -135,7 +135,7 @@ dashlet_types["hoststats"] = {
     "resizable"   : False,
 }
 
-def dashlet_servicestats(nr, params):
+def dashlet_servicestats(nr, dashlet):
     table = [
        ( _("OK"), "#0b3",
         "searchsvc&hst0=on&st0=on&is_in_downtime=0",
@@ -188,7 +188,7 @@ def dashlet_servicestats(nr, params):
     ]
     filter = "Filter: host_custom_variable_names < _REALNAME\n"
 
-    render_statistics('dashlet_%d' % nr, "services", table, filter)
+    render_statistics('dashlet_%d' % nr, "services", table, filter, dashlet)
 
 
 dashlet_types["servicestats"] = {
@@ -202,27 +202,17 @@ dashlet_types["servicestats"] = {
     "resizable"   : False,
 }
 
-def render_statistics(pie_id, what, table, filter):
+def render_statistics(pie_id, what, table, filter, dashlet):
     html.write("<div class=stats>")
     pie_diameter     = 130
     pie_left_aspect  = 0.5
     pie_right_aspect = 0.8
 
-    # Is the query restricted to a certain WATO-path?
-    wato_folder = html.var("wato_folder")
-    if wato_folder:
-        # filter += "Filter: host_state = 0"
-        filter += "Filter: host_filename ~ ^/wato/%s/\n" % wato_folder.replace("\n", "")
-
-    # Is the query restricted to a host contact group?
-    host_contact_group = html.var("host_contact_group")
-    if host_contact_group:
-        filter += "Filter: host_contact_groups >= %s\n" % host_contact_group.replace("\n", "")
-
-    # Is the query restricted to a service contact group?
-    service_contact_group = html.var("service_contact_group")
-    if service_contact_group:
-        filter += "Filter: service_contact_groups >= %s\n" % service_contact_group.replace("\n", "")
+    info = what == 'hosts' and 'host' or 'service'
+    use_filters = visuals.filters_of_visual(dashlet, [info])
+    for filt in use_filters:
+        if filt.available():
+            filter += filt.filter(info)
 
     query = "GET %s\n" % what
     for entry in table:
@@ -244,12 +234,9 @@ def render_statistics(pie_id, what, table, filter):
         table_entries = table_entries + [ (("", "#95BBCD", "", ""), "&nbsp;") ]
     table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
     for (name, color, viewurl, query), count in table_entries:
-        url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
-              + html.urlencode(html.var("wato_folder", ""))
-        if host_contact_group:
-            url += '&opthost_contactgroup=' + host_contact_group
-        if service_contact_group:
-            url += '&optservice_contactgroup=' + service_contact_group
+        url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder="
+        for filter_name, url_params in dashlet['context'].items():
+            url += '&' + html.urlencode_vars(url_params.items())
         html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
         style = ''
         if color:
@@ -336,10 +323,10 @@ if (has_canvas_support()) {
 #   | Renders a single performance graph                                   |
 #   '----------------------------------------------------------------------'
 
-def make_pnp_url(params, what):
-    if not params['context'].get('host'):
+def make_pnp_url(dashlet, what):
+    if not dashlet['context'].get('host'):
         raise MKUserError('host', _('Missing needed host parameter.'))
-    service = params['context'].get('service')
+    service = dashlet['context'].get('service')
     if not service:
         service = "_HOST_"
 
@@ -349,13 +336,13 @@ def make_pnp_url(params, what):
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
     base_url += "pnp4nagios/index.php/"
-    var_part = "?host=%s&srv=%s&source=%d&view=%s&theme=multisite&_t=%d" % \
-            (pnp_cleanup(params['context']['host']), pnp_cleanup(service),
-             params['source'], params['timerange'], int(time.time()))
+    var_part = "?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \
+            (pnp_cleanup(dashlet['context']['host']), pnp_cleanup(service),
+             dashlet['source'], dashlet['timerange'])
     return base_url + what + var_part
 
-def dashlet_pnpgraph(nr, params):
-    html.write('<a href="%s" id="dashlet_graph_%d"></a>' % (make_pnp_url(params, 'graph'), nr))
+def dashlet_pnpgraph(nr, dashlet):
+    html.write('<a href="%s" id="dashlet_graph_%d"></a>' % (make_pnp_url(dashlet, 'graph'), nr))
 
 dashlet_types["pnpgraph"] = {
     "title"        : _("Performance Graph"),
@@ -389,12 +376,16 @@ dashlet_types["pnpgraph"] = {
     text-align: center;
 }
 """,
-    "on_resize"    : lambda nr, params: 'dashboard_render_pnpgraph(%d, \'%s\');' %
-                                                 (nr, make_pnp_url(params, 'image')),
+    "on_resize"    : lambda nr, dashlet: 'dashboard_render_pnpgraph(%d, \'%s\');' %
+                                                 (nr, make_pnp_url(dashlet, 'image')),
+    # execute this js handler instead of refreshing the dashlet by calling "render" again
+    "on_refresh"   : lambda nr, dashlet: 'dashboard_render_pnpgraph(%d, \'%s\');' %
+                                                 (nr, make_pnp_url(dashlet, 'image')),
     "script": """
 var dashlet_offsets = {};
 function dashboard_render_pnpgraph(nr, img_url)
 {
+    // Get the target size for the graph from the inner dashlet container
     var inner = document.getElementById('dashlet_inner_' + nr);
     var c_w = inner.clientWidth;
     var c_h = inner.clientHeight;
@@ -407,6 +398,12 @@ function dashboard_render_pnpgraph(nr, img_url)
         container.appendChild(img);
     }
 
+    // This handler is called after loading the configured graph image to verify
+    // it fits into the inner dashlet container.
+    // One could think that it can simply be solved by requesting an image of the
+    // given size from PNP/rrdtool, but this is not the case. When we request an
+    // image of a specified size, this size is used for the graphing area. The
+    // resulting image has normally labels which are added to the requested size.
     img.onload = function(nr, url, w, h) {
         return function() {
             var i_w = this.clientWidth;
@@ -420,14 +417,29 @@ function dashboard_render_pnpgraph(nr, img_url)
                 return; // Finished resizing
             }
 
+            // When the target height is smaller or equal to 81 pixels, PNP
+            // returns an image which has no labels, just the graph, which has
+            // exactly the requested height. In this situation no further resizing
+            // is needed.
             if (h <= 81 || h - y_diff <= 81) {
                 this.style.width = '100%';
                 this.style.height = '100%';
                 return;
             }
 
+            // Save the sizing differences between the requested size and the
+            // resulting size. This is, in fact, the size of the graph labels.
+            // load_graph_img() uses these dimensions to try to get an image
+            // which really fits the requested dimensions.
             if (typeof dashlet_offsets[nr] == 'undefined') {
                 dashlet_offsets[nr] = [x_diff, y_diff];
+            } else if (dashlet_offsets[nr][0] != x_diff || dashlet_offsets[nr][1] != y_diff) {
+                // was not successful in getting a correctly sized image. Seems
+                // that PNP/rrdtool was not able to render this size. Terminate
+                // and automatically scale to 100%/100%
+                this.style.width = '100%';
+                this.style.height = '100%';
+                return;
             }
 
             load_graph_img(nr, this, url, w, h);
@@ -449,6 +461,7 @@ function load_graph_img(nr, img, img_url, c_w, c_h)
         img_url += '&graph_width='+(c_w - dashlet_offsets[nr][0])
                   +'&graph_height='+(c_h - dashlet_offsets[nr][1]);
     }
+    img_url += '&_t='+Math.floor(Date.parse(new Date()) / 1000); // prevent caching
     img.src = img_url;
 }
 """
@@ -466,9 +479,9 @@ function load_graph_img(nr, img, img_url, c_w, c_h)
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_nodata(nr, params):
+def dashlet_nodata(nr, dashlet):
     html.write("<div class=nodata><div class=msg>")
-    html.write(params.get("text"))
+    html.write(dashlet.get("text"))
     html.write("</div></div>")
 
 dashlet_types["nodata"] = {
@@ -512,7 +525,7 @@ div.dashlet_inner div.nodata div.msg {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_view(nr, params):
+def dashlet_view(nr, dashlet):
     import bi # FIXME: Cleanup?
     bi.reset_cache_status() # needed for status icon
 
@@ -522,7 +535,7 @@ def dashlet_view(nr, params):
 
     import views # FIXME: HACK, clean this up somehow
     views.load_views()
-    views.show_view(params, True, True, True)
+    views.show_view(dashlet, True, True, True)
 
 def dashlet_view_add_url():
     return 'create_view_dashlet.py?name=%s&back=%s' % \
@@ -567,9 +580,9 @@ dashlet_types["view"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_url(params):
-    if params.get('show_in_iframe', True):
-        return params['url']
+def dashlet_url(dashlet):
+    if dashlet.get('show_in_iframe', True):
+        return dashlet['url']
 
 def dashlet_url_validate(value, varprefix):
     if 'url' not in value and 'urlfunc' not in value:

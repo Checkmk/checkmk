@@ -30,7 +30,7 @@ def inventory_statgrab_disk(info):
             return [ ('read', None), ('write', None) ]
     return []
 
-def check_statgrab_disk(item, params, info):
+def check_statgrab_disk(item, _no_params, info):
     # item is 'read' or 'write'
     if item != 'read' and item != "write":
         return (3, "invalid item %s" % (item,))
@@ -41,10 +41,9 @@ def check_statgrab_disk(item, params, info):
             this_val += int(value)
 
     this_time = int(time.time())
-    timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
-    perfdata = [ (item, per_sec) ]
-    return (0, "%s/s (in last %d secs)" % (get_bytes_human_readable(per_sec), timedif), perfdata)
-
+    bytes_per_sec = get_rate("diskstat." + item, this_time, this_val)
+    perfdata = [ (item, bytes_per_sec) ]
+    return 0, "%s/s" % get_bytes_human_readable(bytes_per_sec), perfdata
 
 
 check_info["statgrab_disk"] = {

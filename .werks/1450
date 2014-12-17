@@ -1,0 +1,9 @@
+Title: checkpoint_connections, checkpoint_packets: new checks to monitor Checkpoint firewalls
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417622839
+Class: feature
+
+

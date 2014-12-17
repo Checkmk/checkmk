@@ -1,0 +1,11 @@
+Title: zfsget: try to speed up agent code for Linux/Solaris/FreeBSD by using -t filesystem,volume
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418130856
+Class: fix
+
+This removes snapshots from the list and thus greatly reduces the run time and output size.
+The option <tt>-t</tt> is not always available, however, so if the command fails with
+the option <tt>-t</tt> it is retried afterwards without.

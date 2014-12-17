@@ -1,0 +1,10 @@
+Title: Fixed exception in event history view when displaying CHANGESTATE events
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416902234
+
+

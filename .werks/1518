@@ -1,0 +1,13 @@
+Title: raritan_pdu_inlet, raritan_pdu_inlet_summary: Modified existing check to give one item per phase and support setting levels.
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.6b1
+Date: 1417190388
+Class: feature
+
+raritan_pdu_inlet used to create one item per sensor. Now, only one item per phase is created.
+A Perf-O-Meter displaying the power has been added, as well as a WATO rule to configure
+warning and critical levels.
+raritan_pdu_inlet_summary works very similarily, but provides summary information concerning all
+phases.

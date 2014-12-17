@@ -24,29 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def raritan_pdu_inlet_summary_convert(info):
-    for line in info:
-        yield capabilities[line[0]], line[0], line[1], line[2], line[3], line[4]
+def parse_raritan_pdu_inlet_summary(info):
+    summary = {}
+    for sensor_type, decimal_digits, availability, sensor_state, value in info:
+        if availability == '1':
+            if int(sensor_type) in raritan_pdu_sensor_types: # handled sensor types
+                key = raritan_pdu_sensor_types[int(sensor_type)] # get key for elphase.include
+                value = float(value) / 10 ** int(decimal_digits)
+                if sensor_state in [ '2', '6' ]:
+                    state = 2
+                elif sensor_state != '4':
+                    state = 1
+                else:
+                    state = 0
+                if state:
+                    summary[key] = (value, (state, raritan_pdu_sensor_states[sensor_state]))
+                else:
+                    summary[key] = (value, None)
 
-def inventory_raritan_pdu_inlet_summary(info):
-    return inventory_raritan_pdu_inlet_generic( raritan_pdu_inlet_summary_convert(info) )
+    parsed = { "Summary" : summary }
+    return parsed
 
-def check_raritan_pdu_inlet_summary(item, _no_params, info):
-    return check_raritan_pdu_inlet_generic( item, _no_params, raritan_pdu_inlet_summary_convert(info) )
 
 check_info['raritan_pdu_inlet_summary'] = {
-  "inventory_function"  : inventory_raritan_pdu_inlet_summary,
-  "check_function"      : check_raritan_pdu_inlet_summary,
-  "service_description" : "Inlets %s",
-  "has_perfdata"        : True,
-  "snmp_info"           : ( ".1.3.6.1.4.1.13742.6", [
-                                                     "3.3.4.1.6.1.1", # inletSensorUnits
-                                                     "3.3.4.1.7.1.1", # inletDecimalDigits value
-                                                     "5.2.3.1.2.1.1", # inlet sensor availability
-                                                     "5.2.3.1.3.1.1", # inlet sensor state
-                                                     "5.2.3.1.4.1.1", # inlet sensor value
-                                                    ]),
-  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.6",
-  "includes"            : [ 'raritan_pdu_inlet.include']
+    "parse_function"      : parse_raritan_pdu_inlet_summary,
+    "inventory_function"  : inventory_elphase,
+    "check_function"      : check_elphase,
+    "service_description" : "Inlet %s",
+    "has_perfdata"        : True,
+    "group"               : "el_inphase",
+    "snmp_info"           : ( ".1.3.6.1.4.1.13742.6", [
+                                                       OID_END,
+                                                       "3.3.4.1.7.1.1", # inletDecimalDigits value
+                                                       "5.2.3.1.2.1.1", # inlet sensor availability
+                                                       "5.2.3.1.3.1.1", # inlet sensor state
+                                                       "5.2.3.1.4.1.1", # inlet sensor value
+                                                      ]),
+    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.6",
+    "includes"            : [ 'raritan_pdu_inlet.include', 'elphase.include' ]
 }
 

@@ -1,0 +1,10 @@
+Title: Hosttag columns are now available right ater creating a tag
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417423222
+Class: fix
+
+In previous versions you had to restart the webserver before the tag
+related columns were available. Also cleaned up names of the column titles.

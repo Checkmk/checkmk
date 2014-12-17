@@ -111,7 +111,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         else:
             warn, crit = None, None
 
-        timedif, per_sec = get_counter(countername, this_time, int(ctr))
+        per_sec = get_rate(countername, this_time, int(ctr))
         if mode == 'sectors':
             # compute IO rate in bytes/sec
             bytes_per_sec = per_sec * 512
@@ -124,7 +124,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
         # compute average of the rate over ___ minutes
         if average_range != None:
-            timedif, avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
+            avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
             dsname = what + ".avg"
             perfdata.append( (dsname, avg) )
             bytes_per_sec = avg
@@ -146,7 +146,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     if len(line) >= 6 and line[4] >= 0 and line[5] > 0:
         reads, writes = map(int, line[4:6])
         ios = reads + writes
-        timedif, ios_per_sec = get_counter(countername + ".ios", this_time, ios)
+        ios_per_sec = get_rate(countername + ".ios", this_time, ios)
         infos.append("IOs: %.2f/sec" % ios_per_sec)
 
         if params.get("latency_perfdata"):
@@ -155,7 +155,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     # Do Latency computation if this information is available:
     if len(line) >= 7 and line[6] >= 0:
         timems = int(line[6])
-        timedif, timems_per_sec = get_counter(countername + ".time", this_time, timems)
+        timems_per_sec = get_rate(countername + ".time", this_time, timems)
         if not ios_per_sec:
             latency = 0.0
         else:
@@ -186,7 +186,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
             else:
                 warn, crit = None, None
 
-            timedif, qlx = get_counter(countername, this_time, int(ctr))
+            qlx = get_rate(countername, this_time, int(ctr))
             ql = qlx / 10000000.0
             infos.append(what.title() + " Queue: %.2f" % ql)
 
@@ -260,8 +260,8 @@ def check_diskstat_old(item, params, this_time, info):
         if ' ' not in line[1]:
             this_val += int(line[index])
 
-    timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
+    per_sec = get_rate("diskstat." + item, this_time, this_val)
     mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
     kb_per_s = per_sec / 2.0
     perfdata = [ (item, "%f" % kb_per_s ) ]
-    return (0, "%.1f MB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
+    return (0, "%.1f MB/s" % mb_per_s, perfdata)

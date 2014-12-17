@@ -39,7 +39,10 @@ def action_add_host(request):
     if not folder:
         raise MKUserError(None, "Foldername is missing")
 
-    return g_api.add_host(hostname, folder, attributes, create_folders = create_folders)
+    return g_api.add_hosts([{"hostname":   hostname,
+                             "folder":     folder,
+                             "attributes": attributes}],
+                             create_folders = create_folders)
 
 api_actions["add_host"] = {
     "handler"         : action_add_host,
@@ -68,7 +71,9 @@ def action_edit_host(request):
     if not hostname:
         raise MKUserError(None, "Hostname is missing")
 
-    return g_api.edit_host(hostname, attr = attributes, unset_attr = unset_attributes)
+    return g_api.edit_hosts([{"hostname":         hostname,
+                              "attributes":       attributes,
+                              "unset_attributes": unset_attributes}])
 
 api_actions["edit_host"] = {
     "handler"     : action_edit_host,
@@ -118,7 +123,7 @@ def action_delete_host(request):
     if not hostname:
         raise MKUserError(None, "Hostname is missing")
 
-    return g_api.delete_host(hostname)
+    return g_api.delete_hosts([hostname])
 
 api_actions["delete_host"] = {
     "handler"     : action_delete_host,

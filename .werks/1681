@@ -1,0 +1,9 @@
+Title: cmciii_lcp_fans: Skipping non FAN units now; cleaned up check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417767611
+Class: fix
+
+

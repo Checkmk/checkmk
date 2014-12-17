@@ -1,0 +1,9 @@
+Title: Quicksearch: Now able to search for services with backslashes in names
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417694635
+Class: fix
+
+

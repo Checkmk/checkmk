@@ -1,0 +1,31 @@
+Title: Fixed views missing values of some filters (serviceregex, hostgroup filters, ...)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416473103
+Class: fix
+
+With the rewrite of the views/dashboards/visuals we introduced a mechanism of transforming
+views of the old format to the new format. This transform mechanism missed to transform
+hard coded values of some filters where the variable names had been renamed. 
+
+The affected filters are:
+
+'serviceregex'
+'hostregex'
+'hostgroupnameregex'
+'servicegroupnameregex'
+'opthostgroup'
+'optservicegroup'
+'hostgroup'
+'servicegroup'
+'host_contactgroup'
+'service_contactgroup'
+
+If you already have migrated to a previous release, which transformed your views and made
+you miss these filters or hard coded values, you can install a version containing this
+fix, remove the file <tt>var/check_mk/web/USER/user_views.mk</tt> from your site and then
+access the Web-GUI again. This should fix the problem. Be aware: By removing the user_views.mk
+all your changes to your views you made since the initial creation of the user_views.mk 
+will be reverted.

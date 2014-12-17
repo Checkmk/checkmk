@@ -1,0 +1,9 @@
+Title: apc_symmetra: Fixed exception when last diagnose date was not known
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418118509
+Class: fix
+
+

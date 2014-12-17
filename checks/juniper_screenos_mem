@@ -24,8 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def parse_juniper_screenos_mem(info):
+    new_info = []
+    for used, free in info:
+        new_info.append([used, int(used)+int(free)])
+    return new_info
 
 check_info["juniper_screenos_mem"] = {
+    "parse_function"        : parse_juniper_screenos_mem,
     "check_function"        : check_juniper_mem,
     "inventory_function"    : inventory_juniper_mem,
     "group"                 : "juniper_mem",

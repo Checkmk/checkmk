@@ -1,0 +1,9 @@
+Title: Fixed invalid json format in Stats query with requested heaeders
+Level: 1
+Component: livestatus
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417625520
+Class: fix
+
+The "," after header line was missing

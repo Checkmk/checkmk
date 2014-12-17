@@ -1,0 +1,11 @@
+Title: Fixed adding cluster nodes to new cluster in complain phase
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417426992
+Class: fix
+
+When adding a cluster without node, getting into the complain phase
+and then adding a node, the cluster node field list did not extend to
+make it possible to add multiple nodes.

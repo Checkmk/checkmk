@@ -1,0 +1,14 @@
+Title: livedump: now able to add hosts icon_image on config generation
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416322807
+Class: feature
+
+You can add these icons with the new livedump option <tt>--include-host-icon</tt>
+
+C+:
+livedump --config --include-host-icon
+C-:
+

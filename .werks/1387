@@ -1,0 +1,9 @@
+Title: mk_oracle: Correctly deal with underscore in SID for Oracle 9.2-10.1
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416906688
+Class: fix
+
+The Plugin is now able to find instances with '_' in ORACLE_SID.

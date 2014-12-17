@@ -1,0 +1,11 @@
+Title: dell_powerconnect_psu: Skipping inventory of not supported System temp sesnor for M6220 devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418125839
+Class: fix
+
+These switches report invalid values for the System temperature sensor. Now skipping
+the inventory of this sensor. If you aleady have this sensor inventorized, simply do
+a complete reinventory to get the check removed.

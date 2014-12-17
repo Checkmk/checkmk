@@ -53,7 +53,7 @@ def check_vms_diskstat_fs(item, params, info):
 check_info['vms_diskstat.df'] = {
     "check_function" :      check_vms_diskstat_fs,
     "inventory_function" :  inventory_vms_diskstat_fs,
-    "service_description" : "fs_%s",
+    "service_description" : "Filesystem %s",
     "has_perfdata" :        True,
     "group" :               "filesystem",
     "includes" :            [ "df.include" ],

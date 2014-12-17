@@ -1,0 +1,11 @@
+Title: zpool_status: Add an overall state check (thx to Craig Cook)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417617359
+Class: feature
+
+This change adds a check on the reported overall state. Patch can
+be found here http://lists.mathias-kettner.de/pipermail/checkmk-en/2014-May/012174.html
+

@@ -19,10 +19,5 @@ item:
  A combination of the enclosure and the slot number, separated by a slash, for
  example {"0/4"} for enclosure {0} and slot {4}.
 
-parameter:
- targetstate (string): The target state of the disk as output
- by {MegaCli}.
-
 inventory:
- All disks are automatically inventorized. The current state is
- taken as the target state.
+ One service is created for each found disk.

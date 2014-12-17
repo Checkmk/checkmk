@@ -156,6 +156,21 @@ function add_event_handler(type, func) {
     }
 }
 
+function del_event_handler(type, func) {
+    if (window.removeEventListener) {
+        // W3 stadnard browsers
+        window.removeEventListener(type, func, false);
+    }
+    else if (window.detachEvent) {
+        // IE<9
+        document.documentElement.detachEvent("on"+type, func);
+    }
+    else {
+        window["on" + type] = null;
+    }
+}
+
+
 function prevent_default_events(event) {
     if (event.preventDefault)
         event.preventDefault();
@@ -558,11 +573,11 @@ function create_graph(data, params) {
 
         // Add the control for adding the graph to a dashboard
         var visualadd = document.createElement('a');
-        visualadd.title = 'Add to dashboard';
-        visualadd.setAttribute('class', 'visualadd');
+        visualadd.title = 'Add this view to...';
+        visualadd.className = 'visualadd';
         visualadd.onclick = function(host, service, view, source) {
-            return function() {
-                toggle_add_to_visual(this, 'pnpgraph',
+            return function(event) {
+                toggle_add_to_visual(event, this, 'pnpgraph',
                     { 'host': host, 'service': service },
                     { 'timerange': view, 'source': source }
                 );
@@ -696,8 +711,8 @@ function performAction(oLink, action, site, host, service, wait_svc) {
     // Chrome and IE are not animating the gif during sync ajax request
     // So better use the async request here
     get_url('nagios_action.py?action=' + action +
-            '&site='     + escape(site) +
-            '&host='     + escape(host) +
+            '&site='     + encodeURIComponent(site) +
+            '&host='     + encodeURIComponent(host) +
             '&service='  + service + // Already URL-encoded!
             '&wait_svc=' + wait_svc,
             actionResponseHandler, oImg);
@@ -946,6 +961,8 @@ function folding_step(oImg, state, step) {
 
 /* Check if an element has a certain css class. */
 function has_class(o, cn) {
+    if (typeof(o.className) === 'undefined')
+        return false;
     var parts = o.className.split(' ');
     for (x=0; x<parts.length; x++) {
         if (parts[x] == cn)
@@ -996,7 +1013,8 @@ function toggle_tree_state(tree, name, oContainer, fetch_url) {
                 change_class(oContainer, 'open', 'closed');
         }
     }
-    get_url('tree_openclose.py?tree=' + escape(tree) + '&name=' + escape(name) + '&state=' + state);
+    get_url('tree_openclose.py?tree=' + encodeURIComponent(tree)
+            + '&name=' + encodeURIComponent(name) + '&state=' + state);
     oContainer = null;
 }
 
@@ -1171,10 +1189,6 @@ function toggle_row(e, elem) {
     if(checkbox === null)
         return;
 
-    // When CTRL is not pressed, remove the selection
-    //if(!e.ctrlKey)
-    //    remove_selected_rows(row_num);
-
     // Is SHIFT pressed?
     // Yes:
     //   Select all from the last selection
@@ -1205,24 +1219,6 @@ function toggle_row(e, elem) {
         e.returnValue = false;
     return false;
 }
-
-// FIXME: If current "row text selection" behavior is ok - remove this
-//function disable_selection(e) {
-//    if(!e)
-//        e = window.event;
-//
-//    // Skip handling clicks on links/images/...
-//    var target = getTarget(e);
-//    if(target.tagName != 'TD')
-//        return true;
-//
-//    // Firefox handling
-//    if(typeof target.style.MozUserSelect != 'undefined')
-//        target.style.MozUserSelect = 'none';
-//
-//    // All others
-//    return false;
-//}
 
 // Toggles the datarows of the group which the given checkbox is part of.
 function toggle_group_rows(checkbox) {
@@ -1391,13 +1387,6 @@ function table_init_rowselect(oTable) {
             elem.onclick = function(e) {
                 return toggle_row(e, this);
             };
-            // Disable selections in IE and then in mozilla
-            //elem.onselectstart = function(e) {
-            //    return disable_selection(e);
-            //};
-            //elem.onmousedown = function(e) {
-            //    return disable_selection(e);
-            //};
             elem = null;
         });
     }
@@ -1495,13 +1484,9 @@ function list_of_strings_init(divid) {
 
 function list_of_strings_add_focus(oLastChild) {
     /* look for <input> in last child node and attach focus handler to it. */
-    for (var j in oLastChild.childNodes) {
-        var o = oLastChild.childNodes[j];
-        if (o.tagName == "INPUT") {
-            o.onfocus = function(e) { return list_of_strings_extend(this); };
-            return;
-        }
-    }
+    var input = oLastChild.getElementsByTagName("input");
+    if (input.length == 1)
+        input[0].onfocus = function(e) { return list_of_strings_extend(this); };
 }
 
 
@@ -2229,9 +2214,9 @@ function toggle_popup(event, id)
 
 // Add to Visual
 
-var add_visual_data    = null;
-var visualadd_popup_id      = null;
-var visualadd_popup_content = null;
+var add_visual_data          = null;
+var visualadd_popup_id       = null;
+var visualadd_popup_contents = {};
 
 function close_visualadd_popup()
 {
@@ -2241,10 +2226,31 @@ function close_visualadd_popup()
         menu.parentNode.removeChild(menu);
         menu = null;
     }
+    visualadd_popup_id = null;
 }
 
-function toggle_add_to_visual(trigger_obj, element_type, context, params)
+// Registerd as click handler on the page while the visualadd menu is opened
+// This is used to close the menu when the user clicks elsewhere
+function handle_visualadd_close(event) {
+    var target = getTarget(event);
+
+    // Check whether or not a parent of the clicked node is the popup menu
+    while (target && target.id != 'visualadd_popup' && !has_class(target, 'visualadd')) {
+        target = target.parentNode;
+    }
+
+    if (target) {
+        return true; // clicked menu or statusicon
+    }
+
+    close_visualadd_popup();
+    del_event_handler('click', handle_visualadd_close);
+}
+
+function toggle_add_to_visual(event, trigger_obj, element_type, context, params)
 {
+    if(!event)
+        event = window.event;
     var container = trigger_obj.parentNode;
     var ident;
     for (var i in container.parentNode.childNodes) {
@@ -2262,28 +2268,55 @@ function toggle_add_to_visual(trigger_obj, element_type, context, params)
     }
     visualadd_popup_id = ident;
 
+    add_event_handler('click', handle_visualadd_close);
+
     menu = document.createElement('div');
     menu.setAttribute('id', 'visualadd_popup');
+    menu.className = "popup_menu";
 
     // populate the menu using a webservice, because the list of dashboards
     // is not known in the javascript code. But it might have been cached
     // before. In this case do not perform a second request.
-    if (visualadd_popup_content !== null)
-        menu.innerHTML = visualadd_popup_content;
+    if (ident in visualadd_popup_contents)
+        menu.innerHTML = visualadd_popup_contents[ident];
     else
-        get_url('ajax_popup_add_visual.py', add_dashboard_response_handler);
+        get_url('ajax_popup_add_visual.py', add_dashboard_response_handler, [ident, event]);
 
     add_visual_data = [ element_type, context, params ];
 
     container.appendChild(menu);
+    fix_visualadd_menu_position(event, menu);
 }
 
 function add_dashboard_response_handler(data, response_text)
 {
-    visualadd_popup_content = response_text;
-    var popup = document.getElementById('visualadd_popup');
-    if (popup) {
-        popup.innerHTML = response_text;
+    var ident = data[0];
+    var event = data[1];
+    visualadd_popup_contents[ident] = response_text;
+    var menu = document.getElementById('visualadd_popup');
+    if (menu) {
+        menu.innerHTML = response_text;
+        fix_visualadd_menu_position(event, menu);
+    }
+}
+
+function fix_visualadd_menu_position(event, menu) {
+    //
+    //// When menu is out of screen on the right, move to left
+    //if (menu.offsetLeft + menu.clientWidth > pageWidth()) {
+    //    menu.style.left = (menu.offsetLeft - menu.clientWidth - 15) + 'px';
+    //    menu.style.right = 'auto';
+    //}
+
+    // menu.offsetTop does not take whole page offset into account, because
+    // it is positioned relative to another element. Take this into account
+    var offset_top = menu.offsetTop + menu.offsetParent.offsetTop;
+
+    // When menu is out of screen on the top, move to bottom
+    console.log(offset_top)
+    if (offset_top < 0) {
+        menu.style.top = (menu.offsetTop + menu.clientHeight) + 'px';
+        menu.style.bottom = 'auto';
     }
 }
 

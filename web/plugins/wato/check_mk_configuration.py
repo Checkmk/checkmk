@@ -240,7 +240,7 @@ register_configvar(group,
              help = _("When enabled a rule editor icon is displayed for each "
                       "service in the multisite views. It is only displayed if the user "
                       "does have the permission to edit rules."),
-            default_value = False),
+            default_value = True),
     domain = "multisite")
 
 
@@ -1080,6 +1080,40 @@ register_configvar(group,
 
 group = _("Operation mode of Check_MK")
 
+
+register_configvar(group,
+    "use_new_descriptions_for",
+    ListChoice(
+        title = _("Use new service descriptions"),
+        help = _("In order to make Check_MK more consistent, "
+                 "the descriptions of several services have been renamed in newer "
+                 "Check_MK versions. One example is the filesystem services that have "
+                 "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
+                 "of existing services has many implications - including existing rules, performance "
+                 "data and availability history - these renamings are disabled per default for "
+                 "existing installations. Here you can switch to the new descriptions for "
+                 "selected check types"),
+        choices = [
+            ( "df",                     _("Used space in filesystems")),
+            ( "df_netapp",              _("NetApp Filers: Used Space in Filesystems")),
+            ( "df_netapp32",            _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters")),
+            ( "esx_vsphere_datastores", _("VMWare ESX host systems: Used space")),
+            ( "hr_fs",                  _("Used space in filesystems via SNMP")),
+            ( "vms_diskstat.df",        _("Disk space on OpenVMS")),
+            ( "zfsget",                 _("Used space in ZFS pools and filesystems")),
+            ( "ps",                     _("State and Count of Processes") ),
+            ( "ps.perf",                _("State and Count of Processes (with additional performance data)")),
+            ( "wmic_process",           _("Ressource consumption of windows processes")),
+            ( "logwatch",               _("Check logfiles for relevant new messages")),
+            ( "cmk-inventory",          _("Monitor hosts for unchecked services (Check_MK inventory)")),
+            ( "hyperv_vms",             _("Hyper-V Server: State of VMs")),
+        ],
+        render_orientation = "vertical",
+    ),
+    need_restart = True
+)
+
+
 register_configvar(group,
     "tcp_connect_timeout",
     Float(title = _("Agent TCP connect timeout (sec)"),
@@ -1137,23 +1171,6 @@ register_configvar(group,
                       "time the host is actually checked being by Nagios.<p>This reduces the time needed "
                       "for the operation, but on the other hand will lead to a slightly higher load "
                       "of Nagios for the first couple of minutes after the restart. ")))
-
-
-register_configvar(group,
-    "debug_log",
-    Transform(
-        Checkbox(
-            label = _("Write exceptions to <tt>%s/crashed-checks.log</tt>" % defaults.log_dir),
-        ),
-        title = _("Log exceptions in check plugins"),
-        help = _("If this option is enabled Check_MK will create a debug logfile at "
-                 "<tt>%s/chrashed-checks.log</tt> "
-                 "containing details about failed checks (those which have the state <i>UNKNOWN "
-                 "and the output UNKNOWN - invalid output from plugin</i>...) Per default no "
-                 "logfile is written.") % defaults.log_dir,
-        forth = lambda x: not not x,
-    ),
-    need_restart = True)
 
 register_configvar(group,
     "cluster_max_cachefile_age",
@@ -1254,21 +1271,21 @@ group = _("Service discovery")
 register_configvar(group,
     "inventory_check_interval",
     Optional(
-        Integer(title = _("Do inventory check every"),
+        Integer(title = _("Perform service discovery check every"),
                 unit = _("minutes"),
                 min_value = 1,
-                default_value = 120),
-        title = _("Enable regular inventory checks"),
+                default_value = 720),
+        title = _("Enable regular service discovery checks"),
         help = _("If enabled, Check_MK will create one additional check per host "
-                 "that does a regular check, if the inventory would find new services "
+                 "that does a regular check, if the service discovery would find new services "
                  "currently un-monitored.")),
     need_restart = True)
 
 register_configvar(group,
     "inventory_check_severity",
     DropdownChoice(
-        title = _("Severity of failed inventory check"),
-        help = _("Please select which alarm state the inventory check services "
+        title = _("Severity of failed service discovery check"),
+        help = _("Please select which alarm state the service discovery check services "
                  "shall assume in case that un-monitored services are found."),
         choices = [
             (0, _("OK - do not alert, just display")),
@@ -1281,7 +1298,7 @@ register_configvar(group,
 register_configvar(group,
     "inventory_check_do_scan",
     DropdownChoice(
-        title = _("Inventory check for SNMP devices"),
+        title = _("Service discovery check for SNMP devices"),
         choices = [
            ( True, _("Perform full SNMP scan always, detect new check types") ),
            ( False, _("Just rely on existing check files, detect new items only") )
@@ -1291,11 +1308,11 @@ register_configvar(group,
 register_configvar(group,
     "inventory_check_autotrigger",
     Checkbox(
-        title = _("Inventory triggers inventory check"),
-        label = _("Automatically schedule inventory check after service configuration changes"),
+        title = _("Service Discovery triggers service discovery check"),
+        label = _("Automatically schedule service discovery check after service configuration changes"),
         help = _("When this option is enabled then after each change of the service "
                  "configuration of a host via WATO - may it be via manual changes or a bulk "
-                 "inventory - the inventory check is automatically rescheduled in order "
+                 "discovry - the service discovery check is automatically rescheduled in order "
                  "to reflect the new service state correctly immediately."),
         default_value = True,
     ))
@@ -2239,50 +2256,82 @@ register_rule(group,
              "and can change."))
 group = "agent/" + _("SNMP")
 
-_snmpv3_basic_elements = [
-     DropdownChoice(
-         choices = [
-             ( "authPriv",     _("authPriv")),
-             ( "authNoPriv",   _("authNoPriv")),
-             ( "noAuthNoPriv", _("noAuthNoPriv")),
-             ],
-         title = _("Security level")),
-      DropdownChoice(
-          choices = [
-             ( "md5", _("MD5") ),
-             ( "sha", _("SHA1") ),
-          ],
-          title = _("Authentication protocol")),
-     TextAscii(title = _("Security name"), attrencode = True),
-     Password(title = _("Authentication password"))]
+_snmpv3_auth_elements = [
+    DropdownChoice(
+        choices = [
+            ( "md5", _("MD5") ),
+            ( "sha", _("SHA1") ),
+        ],
+        title = _("Authentication protocol")
+    ),
+    TextAscii(
+        title = _("Security name"),
+        attrencode = True
+    ),
+    Password(
+        title = _("Authentication password"),
+        minlen = 8,
+    )
+]
 
 register_rule(group,
     "snmp_communities",
     Alternative(
-       elements = [
-           TextAscii(
-               title = _("SNMP community (SNMP Versions 1 and 2c)"),
-               allow_empty = False,
-               attrencode = True,
-           ),
-           Tuple(
-               title = _("Credentials for SNMPv3"),
-               elements = _snmpv3_basic_elements),
-           Tuple(
-               title = _("Credentials for SNMPv3 including privacy options"),
-               elements = _snmpv3_basic_elements + [
-                  DropdownChoice(
-                      choices = [
-                         ( "DES", _("DES") ),
-                         ( "AES", _("AES") ),
-                      ],
-                      title = _("Privacy protocol")),
-                 Password(title = _("Privacy pass phrase")),
-                   ])],
+        elements = [
+            TextAscii(
+                title = _("SNMP community (SNMP Versions 1 and 2c)"),
+                allow_empty = False,
+                attrencode = True,
+            ),
+            Tuple(
+                title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
+                elements = [
+                    FixedValue("noAuthNoPriv",
+                        title = _("Security Level"),
+                        totext = _("No authentication, no privacy"),
+                    ),
+                ]
+            ),
+            Tuple(
+                title = _("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
+                elements = [
+                    FixedValue("authNoPriv",
+                        title = _("Security Level"),
+                        totext = _("authentication but no privacy"),
+                    ),
+                ] + _snmpv3_auth_elements
+            ),
+            Tuple(
+                title = _("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
+                elements = [
+                    FixedValue("authPriv",
+                        title = _("Security Level"),
+                        totext = _("authentication and encryption"),
+                    ),
+                ] + _snmpv3_auth_elements + [
+                    DropdownChoice(
+                        choices = [
+                            ( "DES", _("DES") ),
+                            ( "AES", _("AES") ),
+                        ],
+                        title = _("Privacy protocol")
+                    ),
+                    Password(
+                        title = _("Privacy pass phrase"),
+                        minlen = 8,
+                    ),
+                ]
+            ),
+        ],
 
+        match = lambda x: type(x) == tuple and ( \
+                          len(x) == 1 and 1 or \
+                          len(x) == 4 and 2 or 3) or 0,
+
+        style = "dropdown",
         default_value = "public",
-        title = _("SNMP communities of monitored hosts"),
-        help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP. This rule "
+        title = _("SNMP credentials of monitored hosts"),
+        help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP v1/v2. This rule "
                  "can be used to customize the the credentials to be used when contacting hosts via SNMP.")))
 
 register_rule(group,
@@ -2343,12 +2392,12 @@ register_rule(group,
                   maxvalue = 60,
                   allow_int = True,
                   unit = _("sec"),
+                  size = 6,
               ),
             ),
             ( "retries",
               Integer(
                   title = _("Number of retries"),
-                  help = _("The default is 5."),
                   default_value = 5,
                   minvalue = 0,
                   maxvalue = 50,

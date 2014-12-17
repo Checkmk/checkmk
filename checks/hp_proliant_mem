@@ -34,12 +34,19 @@ hp_proliant_mem_type_map = {
                 5: 'simm',
                 6: 'pcmcia',
                 7: 'compaq-specific',
-                8: 'dimm',
+                8: 'DIMM',
                 9: 'smallOutlineDimm',
-                10: 'rimm',
-                11: 'srimm',
-                12: 'fb-dimm',
+                10: 'RIMM',
+                11: 'SRIMM',
+                12: 'FB-DIMM',
+                13: 'DIMM DDR',
+                14: 'DIMM DDR2',
+                15: 'DIMM DDR3',
+                16: 'DIMM FBD2',
+                17: 'FB-DIMM DDR2',
+                18: 'FB-DIMM DDR3',
 }
+
 hp_proliant_mem_status_map = {
                 1: "other",
                 2: "notPresent",
@@ -52,7 +59,10 @@ hp_proliant_mem_status_map = {
                 9: "notSupported",
                 10: "badConfig",
                 11: "degraded",
+                12: "spare",
+                13: "partial",
 }
+
 hp_proliant_mem_status2nagios_map = {
                 'n/a': 3,
                 'other': 3,
@@ -66,14 +76,24 @@ hp_proliant_mem_status2nagios_map = {
                 'notSupported': 2,
                 'badConfig': 2,
                 'degraded': 2,
+                'spare': 0,
+                'partial': 1,
 }
 
-hp_proliant_mem_condition_status2nagios_map = { 'other': 3, 'ok': 0, 'degraded': 2, 'failed': 2 }
+hp_proliant_mem_condition_status2nagios_map = {
+                 'other'                      : 3,
+                 'ok'                         : 0,
+                 'degraded'                   : 2,
+                 'failed'                     : 2,
+                 'degradedModuleIndexUnknown' : 3
+}
+
 hp_proliant_mem_condition_map = {
-                0: 'n/a',
-                1: 'other',
-                2: 'ok',
-                3: 'degraded',
+                  0: 'n/a',
+                  1: 'other',
+                  2: 'ok',
+                  3: 'degraded',
+                  4: 'degradedModuleIndexUnknown',
 }
 
 def inventory_hp_proliant_mem(info):
@@ -98,25 +118,29 @@ def check_hp_proliant_mem(item, params, info):
 
             detail_output = ', Status: %s ' % snmp_status
             status = hp_proliant_mem_status2nagios_map[snmp_status]
-            if status == 1:
+            if status == 0:
+                detail_output += ''
+            elif status == 1:
                 detail_output += '(!) '
             elif status == 2:
                 detail_output += '(!!) '
             else:
-                detail_output += '(UNKNOWN) '
+                detail_output += '(?) '
 
             condition = 'n/a'
-            if int(module_condition) in hp_proliant_mem_condition_map:
-                condition = hp_proliant_mem_condition_map[int(module_condition)]
+            if saveint(module_condition) in hp_proliant_mem_condition_map:
+                condition = hp_proliant_mem_condition_map[saveint(module_condition)]
             condition_status = hp_proliant_mem_condition_status2nagios_map[condition]
 
             detail_output += ', Condition: %s ' % condition
-            if condition_status == 1:
+            if condition_status == 0:
+                detail_output += ''
+            elif condition_status == 1:
                 detail_output += '(!) '
             elif condition_status == 2:
                 detail_output += '(!!) '
             else:
-                detail_output += '(UNKNOWN) '
+                detail_output += '(?) '
             if condition_status > status:
                 status = condition_status
 

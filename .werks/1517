@@ -1,0 +1,9 @@
+Title: carel_sensors: New check for monitoring temperature sensors of Carel AC devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416418058
+Class: feature
+
+

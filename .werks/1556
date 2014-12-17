@@ -1,0 +1,12 @@
+Title: WATO inventory ignores already inventorized checks which does not exist anymore
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417432395
+Class: fix
+
+Previous versions totally failed to inventorize when a host already has a service
+inventorized which belongs to a check which is not existant anymore. It terminated
+with "Failed to inventorize Fritzbox-Alt: 'fritz.uptime'". This error is skipped over
+now by simply ignoring the check.

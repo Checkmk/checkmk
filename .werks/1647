@@ -1,0 +1,8 @@
+Title: agent_ipmi: Check_MK service gets critical now when ipmi-sensors command fails
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417699352
+Class: fix
+

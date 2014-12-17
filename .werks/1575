@@ -1,0 +1,10 @@
+Title: vSphere Monitoring works with RedHat 5.x now
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417442938
+Class: fix
+
+The vSphere agent is now compatible to at least Python 2.4. Before
+it was only compatible to Python >= 2.6.

@@ -1,0 +1,9 @@
+Title: Quicksearch: Improved error handling on invalid search statements (invalid regexes)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417694664
+Class: fix
+
+

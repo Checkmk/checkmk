@@ -12,6 +12,9 @@ description:
  any unidentified status the check returns {WARN}. If some hosts report
  {offline} status the check returns {CRIT}.
 
+ It is also possible to overwrite the return state with {OK} by passing {'always_ok' : True }
+ as Parameter, or simply with the WATO Rule.
+
  Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
  data from the device. Your monitoring user must be able to SSH to the device
  with SSH Key Authentification. Please exchange SSH key. The Special Agent itself

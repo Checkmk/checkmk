@@ -1,0 +1,12 @@
+Title: Creating WATO backends for each configured site now
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418037792
+Class: feature
+
+For each configured site a new backend is created within NagVis.
+The backend is named equal to the site ID.
+
+This only works in OMD envionments.

@@ -85,10 +85,10 @@ def check_apc(item, params, info):
     AdvOutputCurrent, AdvBatteryRunTimeRemaining, AdvTestCalibrationResults, AdvOutputLoad \
                                                 = [ saveint(x) for x in info[0][:13] ]
 
-    LastDiagnosticsDate = info[0][-1]
+    last_diag_date = info[0][-1]
     RunTimeRemaining = AdvBatteryRunTimeRemaining / 100
 
-    delay_after_test, alt_crit_capacity = None, None
+    alt_crit_capacity = None
     # convert old format tuple to dict
     if type(params) is tuple:
         params = { "levels": params }
@@ -96,14 +96,13 @@ def check_apc(item, params, info):
     # new format with up to 6 params in dict
     crit_capacity, crit_sys_temp, crit_batt_curr, crit_voltage = params['levels']
     if params.get("post_calibration_levels"):
-        delay_after_test  = params['post_calibration_levels']['additional_time_span']
-        alt_crit_capacity = params['post_calibration_levels']['altcapacity']
-        month, day, year = map(saveint, LastDiagnosticsDate.split('/'))
-        last_diag_date = datetime.date( year, month, day)
-        today = datetime.date.today()
-        diag_diff = today - last_diag_date
-        oneday = datetime.timedelta(days=1)
-        delay =  datetime.timedelta(minutes=delay_after_test)
+        if last_diag_date != 'Unknown' and len(last_diag_date) in [8, 10]:
+            year_format = len(last_diag_date) == 8 and '%y' or '%Y'
+            last_ts = time.mktime(time.strptime(last_diag_date, '%m/%d/'+year_format))
+            diff_sec = time.time() - last_ts
+
+            allowed_delay_sec = 86400 + params['post_calibration_levels']['additional_time_span']
+            alt_crit_capacity = params['post_calibration_levels']['altcapacity']
 
     single_states = []
 
@@ -148,7 +147,7 @@ def check_apc(item, params, info):
     state = 0
     infotxt = "capacity %d%% (crit at " % AdvBatteryCapacity
 
-    if alt_crit_capacity != None and diag_diff < oneday + delay:
+    if alt_crit_capacity != None and diff_sec < allowed_delay_sec:
         infotxt += "%d%% in delay after calib.)" % alt_crit_capacity
         if AdvBatteryCapacity <= alt_crit_capacity:
             state = 2

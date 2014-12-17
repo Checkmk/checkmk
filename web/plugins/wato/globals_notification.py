@@ -46,8 +46,8 @@ register_configvar(group,
     EmailAddress(
         title = _("Fallback email address for rule based notifications"),
         help = _("If you work with rule based notifications then you should configure an email "
-                 "address here. In case of a whole in your notification rules a notification "
-                 "will be emailed here. This makes sure that in any case <i>someone</i> gets "
+                 "address here. In case of a hole in your notification rules a notification "
+                 "will be sent to this address. This makes sure that in any case <i>someone</i> gets "
                  "notified."),
         empty_text = _("<i>(No fallback email address configured!)</i>"),
         make_clickable = False,
@@ -84,16 +84,20 @@ register_configvar(group,
 
 register_configvar(group,
     "notification_logging",
-    DropdownChoice(
-        title = _("Notification logfile"),
-        help = _("When notification debugging is on, additional information will be "
-                 "logged in the notification logfile <tt>%s</tt>." %
-                  (defaults.var_dir + "/notify/notify.log")),
-        choices = [
-            ( 0, _("No logging")),
-            ( 1, _("One line per notification")),
-            ( 2, _("Full dump of all variables and command"))]
+    Transform(
+        DropdownChoice(
+            choices = [
+                ( 1, _("Normal logging")),
+                ( 2, _("Full dump of all variables and command"))
+            ],
+            default_value = 1,
         ),
+        forth = lambda x: x == 0 and 1 or x, # transform deprecated value 0 (no logging) to 1
+        title = _("Notification log level"),
+        help = _("You can configure the notification mechanism to log more details about "
+                 "the notifications into the notification log. These information are logged "
+                 "into the file <tt>%s</tt>") % site_neutral_path(defaults.log_dir + "/notify.log"),
+    ),
     domain = "check_mk")
 
 register_configvar(group,
@@ -244,7 +248,12 @@ register_configvar(group,
                  "Event Console when you forward notifications to it and will override the "
                  "setting of the matching rule."),
         allow_empty = False,
-        default_value = [ (0, _("(no service level)")) ],
+        default_value = [
+                (0,  _("(no Service level)")),
+                (10, _("Silver")),
+                (20, _("Gold")),
+                (30, _("Platinum")),
+        ],
     ),
     domain = "multisite",
     allow_reset = False,

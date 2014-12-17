@@ -1,0 +1,14 @@
+Title: Moved notify.log to var/log/notify.log in OMD environments
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417615456
+Class: fix
+
+The log was located in var/check_mk/notify.log but had no log rotation.
+We moved it to var/log/notify.log now and added a log rotation. The
+related configuration options have been changed to be enabled by default.
+We also removed the option to totally disable this logfile because we'd
+rather have some log information about eventual missing notifications
+than no information at all.

@@ -1,0 +1,11 @@
+Title: Fixed exception in complain phase in view editor
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417424913
+Class: fix
+
+Fixed exception "Internal error:: No datasource defined." in view editor
+when editing a view and getting an invalid input error which leads the
+user to the complain phase.

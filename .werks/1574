@@ -1,0 +1,10 @@
+Title: Hosts named like used python modules do not break precompiled checks anymore
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417440175
+Class: fix
+
+Previously, when creating a host named "random" and using the Nagios core, which is
+using the precompiled checks, all checks broke with a python exception.

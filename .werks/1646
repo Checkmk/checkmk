@@ -1,0 +1,10 @@
+Title: hyperv_vms: Plugin garbles following plugin output when no VMs exist
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417698377
+Class: fix
+
+When hyperv_vms.ps1 detects no VMs, it does not output a tailing newline.
+Then the following agent section is broken.

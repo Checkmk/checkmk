@@ -39,6 +39,9 @@
 
 import os, sys, urllib2, re
 
+# tell urllib2 not to honour "http(s)_proxy" env variables
+urllib2.getproxies = lambda: {}
+
 config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
 config_file = config_dir + "/nginx_status.cfg"
 

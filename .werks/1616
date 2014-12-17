@@ -1,0 +1,9 @@
+Title: drbd: Added support for Ahead/Behind cluster states (DRBD >= 8.3.10)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417628356
+Class: feature
+
+

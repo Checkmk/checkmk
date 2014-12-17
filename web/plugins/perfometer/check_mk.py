@@ -348,6 +348,7 @@ perfometers["check_mk-rms200_temp"] = perfometer_temperature
 perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
 perfometers["check_mk-lnx_thermal"] = perfometer_temperature
 perfometers["check_mk-climaveneta_temp"] = perfometer_temperature
+perfometers["check_mk-carel_sensors"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -598,6 +599,7 @@ def perfometer_ps_perf(row, check_command, perf_data):
     except:
         return "", ""
 
+perfometers["check_mk-ps"] = perfometer_ps_perf
 perfometers["check_mk-ps.perf"] = perfometer_ps_perf
 
 
@@ -736,7 +738,7 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     return "<font color=\"%s\">%.0f%%</font>" % (fg_color, left), perfometer_linear(left, color)
 
 perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
-perfometers["check_mk-printer_supply_ricon"] = perfometer_check_mk_printer_supply
+perfometers["check_mk-printer_supply_ricoh"] = perfometer_check_mk_printer_supply
 
 def perfometer_printer_pages(row, check_command, perf_data):
     color = "#909090"
@@ -1197,3 +1199,18 @@ def perfometer_ups_outphase(row, check_command, perf_data):
     return "%d%%" % load, perfometer_linear(load, "#8050ff")
 
 perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase
+
+def perfometer_el_inphase(row, check_command, perf_data):
+    for data in perf_data:
+        if data[0] == "power":
+            power = savefloat(data[1])
+    return "%.0f W" % power, perfometer_linear(power, "#8050ff")
+
+perfometers["check_mk-raritan_pdu_inlet"] = perfometer_el_inphase
+perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_el_inphase
+
+def perfometer_f5_bigip_vserver(row, check_command, perf_data):
+    connections = int(perf_data[0][1])
+    return str(connections), perfometer_logarithmic(connections, 100, 2, "#46a")
+
+perfometers["check_mk-f5_bigip_vserver"] = perfometer_f5_bigip_vserver

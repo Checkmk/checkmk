@@ -1,0 +1,10 @@
+Title: Dashboard: Host/service statistics dashlets now deal with the context
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416497521
+Class: feature
+
+The host and service context dashlets now treat the provided context correctly.
+Past versions did not care about the configured context at all.

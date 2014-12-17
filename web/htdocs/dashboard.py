@@ -47,13 +47,11 @@ MAX = -1
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
 
-header_height    = 60             # Distance from top of the screen to the lower border of the heading
 screen_margin    = 5              # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding  = 21, 5, 5, 0, 4 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
+dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
-title_height     = 0             # Height of dashlet title-box
-raster           = 10, 10        # Raster the dashlet choords are measured in
-dashlet_min_size = 10, 10        # Minimum width and height of dashlets
+raster           = 10            # Raster the dashlet coords are measured in (px)
+dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raster units
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
@@ -93,7 +91,30 @@ def load_dashboards():
     global dashboards, available_dashboards
     transform_builtin_dashboards()
     dashboards = visuals.load('dashboards', builtin_dashboards)
+    transform_dashboards(dashboards)
     available_dashboards = visuals.available('dashboards', dashboards)
+
+# During implementation of the dashboard editor and recode of the visuals
+# we had serveral different data structures, for example one where the
+# views in user dashlets were stored with a context_type instead of the
+# "single_info" key, which is the currently correct one.
+#
+# This code transforms views from user_dashboards.mk which have been
+# migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
+# FIXME: Can be removed one day. Mark as incompatible change or similar.
+def transform_dashboards(dashboards):
+    for (u, n), dashboard in dashboards.items():
+        visuals.transform_old_visual(dashboard)
+
+        # Also transform dashlets
+        for dashlet in dashboard['dashlets']:
+            visuals.transform_old_visual(dashlet)
+
+            if dashlet['type'] == 'pnpgraph':
+                if 'service' not in dashlet['single_infos']:
+                    dashlet['single_infos'].append('service')
+                if 'host' not in dashlet['single_infos']:
+                    dashlet['single_infos'].append('host')
 
 # be compatible to old definitions, where even internal dashlets were
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
@@ -111,9 +132,33 @@ def transform_builtin_dashboards():
         for nr, dashlet in enumerate(dashboard['dashlets']):
             dashlet.setdefault('show_title', True)
 
-            if dashlet.get('url', '').startswith('dashlet_') and dashlet['url'].endswith('.py'):
+            if dashlet.get('url', '').startswith('dashlet_hoststats') or dashlet.get('url', '').startswith('dashlet_servicestats'):
                 # hoststats and servicestats
-                dashlet['type'] = dashlet['url'][8:-3]
+                dashlet['type'] = dashlet['url'][8:].split('.', 1)[0]
+
+                if '?' in dashlet['url']:
+                    # Transform old parameters:
+                    # wato_folder
+                    # host_contact_group
+                    # service_contact_group
+                    paramstr = dashlet['url'].split('?', 1)[1]
+                    dashlet['context'] = {}
+                    for key, val in [ p.split('=', 1) for p in paramstr.split('&') ]:
+                        if key == 'host_contact_group':
+                            dashlet['context']['opthost_contactgroup'] = {
+                                'neg_opthost_contact_group': '',
+                                'opthost_contact_group': val,
+                            }
+                        elif key == 'service_contact_group':
+                            dashlet['context']['optservice_contactgroup'] = {
+                                'neg_optservice_contact_group': '',
+                                'optservice_contact_group': val,
+                            }
+                        elif key == 'wato_folder':
+                            dashlet['context']['wato_folder'] = {
+                                'wato_folder': val,
+                            }
+
                 del dashlet['url']
 
             elif dashlet.get('urlfunc') and type(dashlet['urlfunc']) != str:
@@ -142,6 +187,9 @@ def transform_builtin_dashboards():
                 raise MKGeneralException(_('Unable to transform dashlet %d of dashboard %s. '
                                            'You will need to migrate it on your own. Definition: %r' %
                                                             (nr, name, html.attrencode(dashlet))))
+
+            dashlet.setdefault('context', {})
+            dashlet.setdefault('single_infos', [])
 
         # the modification time of builtin dashboards can not be checked as on user specific
         # dashboards. Set it to 0 to disable the modification chech.
@@ -263,10 +311,12 @@ def render_dashboard(name):
 
     title = visuals.visual_title('dashboard', board)
 
+    # Distance from top of the screen to the lower border of the heading
+    header_height = 55
+
     # The title of the dashboard needs to be prefixed with the WATO path,
     # in order to make it clear to the user, that he is seeing only partial
     # data.
-    global header_height
     if not board.get('show_title'):
         # Remove the whole header line
         html.set_render_headfoot(False)
@@ -325,11 +375,25 @@ def render_dashboard(name):
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
         if "url" in dashlet or ('render' in dashlet_type and dashlet_type.get('refresh')):
-            url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr));
-            refresh = dashlet.get("refresh")
+            url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr))
+            refresh = dashlet.get("refresh", dashlet_type.get("refresh"))
             if refresh:
-                # FIXME: remove add_wato_folder_to_url
-                refresh_dashlets.append([nr, refresh, str(add_wato_folder_to_url(url, wato_folder))])
+                action = None
+                if 'on_refresh' in dashlet_type:
+                    try:
+                        action = 'function() {%s}' % dashlet_type['on_refresh'](nr, dashlet)
+                    except Exception, e:
+                        # Ignore the exceptions in non debug mode, assuming the exception also occures
+                        # while dashlet rendering, which is then shown in the dashlet itselfs.
+                        if config.debug:
+                            raise
+                else:
+                    # FIXME: remove add_wato_folder_to_url
+                    action = '"%s"' % add_wato_folder_to_url(url, wato_folder) # url to dashboard_dashlet.py
+
+                if action:
+                    refresh_dashlets.append('[%d, %d, %s]' % (nr, refresh, action))
+
 
         # Update the dashlets context with the dashboard global context when there are
         # useful information
@@ -342,7 +406,10 @@ def render_dashboard(name):
             try:
                 on_resize.append('%d: function() {%s}' % (nr, dashlet_type['on_resize'](nr, dashlet)))
             except Exception, e:
-                html.write('Error in "on_resize handler": %s' % html.attrencode(e))
+                # Ignore the exceptions in non debug mode, assuming the exception also occures
+                # while dashlet rendering, which is then shown in the dashlet itselfs.
+                if config.debug:
+                    raise
 
         dimensions = {
             'x' : dashlet['position'][0],
@@ -367,21 +434,14 @@ def render_dashboard(name):
             html.write('<li><a href="%s">%s</a></li>\n' % (html.makeuri([('edit', 1)]), _('Edit Dashboard')))
 
         else:
-            # Show these options only to the owner of the dashboard
-            html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
-                       'onmouseover="hide_submenus();" >%s</a></li>\n' %
-                (name, html.urlencode(html.makeuri([])), _('Properties')))
+            #
+            # Add dashlet menu
+            #
 
-            # Links visible during editing
             display = html.var('edit') == '1' and 'block' or 'none'
-            html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
-                       'onmouseover="hide_submenus();" '
-                       'onclick="toggle_dashboard_edit(false)">%s</a>\n' %
-                            (display, _('Stop Editing')))
-
             html.write('<li id="control_add" class="sublink" style="display:%s" '
-                       'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">%s</a>\n' %
-                            (display, _('Add dashlet')))
+                       'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">'
+                       '<img src="images/dashboard_menuarrow.png" />%s</a>\n' % (display, _('Add dashlet')))
 
             # The dashlet types which can be added to the view
             html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
@@ -399,15 +459,37 @@ def render_dashboard(name):
                     url = html.makeuri([('type', ty), ('back', html.makeuri([('edit', '1')]))], filename = 'edit_dashlet.py')
                     if 'add_urlfunc' in dashlet_type:
                         url = dashlet_type['add_urlfunc']()
-                    html.write('<li><a href="%s">%s</a></li>\n' % (url, dashlet_type['title']))
+                    html.write('<li><a href="%s"><img src="images/dashlet_%s.png" />%s</a></li>\n' %
+                                                                (url, ty, dashlet_type['title']))
             html.write('</ul>\n')
 
             html.write('</li>\n')
 
+            #
+            # Properties link
+            #
+
+            html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
+                       'onmouseover="hide_submenus();" ><img src="images/trans.png" />%s</a></li>\n' %
+                (name, html.urlencode(html.makeuri([])), _('Properties')))
+
+            #
+            # Stop editing
+            #
+
+            display = html.var('edit') == '1' and 'block' or 'none'
+            html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
+                       'onmouseover="hide_submenus();" '
+                       'onclick="toggle_dashboard_edit(false)"><img src="images/trans.png" />%s</a></li>\n' %
+                            (display, _('Stop Editing')))
+
+            #
             # Enable editing link
+            #
+
             display = html.var('edit') != '1' and 'block' or 'none'
             html.write('<li id="control_edit" style="display:%s"><a href="javascript:void(0)" '
-                       'onclick="toggle_dashboard_edit(true)">%s</a></li>\n' %
+                       'onclick="toggle_dashboard_edit(true)"><img src="images/trans.png" />%s</a></li>\n' %
                             (display, _('Edit Dashboard')))
 
         html.write("</ul>\n")
@@ -424,38 +506,44 @@ def render_dashboard(name):
     html.javascript("""
 var MAX = %d;
 var GROW = %d;
-var grid_size = new vec%s;
+var grid_size = %d;
 var header_height = %d;
 var screen_margin = %d;
-var title_height = %d;
 var dashlet_padding = Array%s;
 var dashlet_min_size = Array%s;
 var corner_overlap = %d;
-var refresh_dashlets = %r;
+var refresh_dashlets = [%s];
 var on_resize_dashlets = {%s};
 var dashboard_name = '%s';
 var dashboard_mtime = %d;
-var dashboard_url = '%s';
 var dashlets = %s;
 
 calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
-    """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding, dashlet_min_size,
-           corner_overlap, refresh_dashlets, ','.join(on_resize), name, board['mtime'],
-           html.makeuri([('edit', '1')]), repr(dashlets_js)))
+    """ % (MAX, GROW, raster, header_height, screen_margin, dashlet_padding, dashlet_min_size,
+           corner_overlap, ','.join(refresh_dashlets), ','.join(on_resize),
+           name, board['mtime'], repr(dashlets_js)))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')
 
     html.body_end() # omit regular footer with status icons, etc.
 
-def render_dashlet_content(nr, the_dashlet):
+def render_dashlet_content(nr, the_dashlet, stash_html_vars = False):
+    if stash_html_vars:
+        html.stash_vars()
+        html.del_all_vars()
+    visuals.add_context_to_uri_vars(the_dashlet)
+
     dashlet_type = dashlet_types[the_dashlet['type']]
     if 'iframe_render' in dashlet_type:
         dashlet_type['iframe_render'](nr, the_dashlet)
     else:
         dashlet_type['render'](nr, the_dashlet)
+
+    if stash_html_vars:
+        html.unstash_vars()
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
@@ -477,7 +565,7 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
             title = '<a href="%s">%s</a>' % (url, _u(title))
         else:
             title = _u(title)
-        html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, title))
+        html.write('<div class="title" id="dashlet_title_%d"><span>%s</span></div>' % (nr, title))
     if dashlet.get("background", True):
         bg = " background"
     else:
@@ -579,7 +667,7 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_types:
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
 
-    render_dashlet_content(ident, the_dashlet)
+    render_dashlet_content(ident, the_dashlet, stash_html_vars=False)
 
 #.
 #   .--Dashboard List------------------------------------------------------.
@@ -828,6 +916,7 @@ def page_edit_dashlet():
     back_url = html.var('back', 'dashboard.py?name=%s&edit=1' % board)
     next_url = html.var('next', back_url)
     html.context_button(_('Back'), back_url, 'back')
+    html.context_button(_('All Dashboards'), 'edit_dashboards.py', 'dashboard')
     html.end_context_buttons()
 
     vs_general = Dictionary(
@@ -976,7 +1065,7 @@ def page_delete_dashlet():
     html.context_button(_('Back'), back_url, 'back')
     html.end_context_buttons()
 
-    result = html.confirm(_('Do you really want to delete this dashlet?'), method = 'GET')
+    result = html.confirm(_('Do you really want to delete this dashlet?'), method='GET', add_transid=True)
     if result == False:
         html.footer()
         return # confirm dialog shown

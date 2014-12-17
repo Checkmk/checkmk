@@ -1,0 +1,13 @@
+Title: Safely handle characters that have a special meaning in regexes when creating service-specific rules
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417684044
+Class: fix
+
+When you click an icon or button for creating a service specific rule in
+WATO then characters, that have a special meaning in regular expressions,
+are now correctly escaped with backslashes. These characters are: <tt>(</tt>,
+<tt>)</tt>, <tt>.</tt>, <tt>^</tt>, <tt>$</tt>, <tt>[</tt>, <tt>]</tt>,
+<tt>{</tt>, <tt>}</tt>, <tt>+</tt> and <tt>*</tt>

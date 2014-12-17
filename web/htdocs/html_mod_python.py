@@ -233,17 +233,18 @@ def connect_to_livestatus():
         # Also honor HTML-variables for switching off sites
         # right now. This is generally done by the variable
         # _site_switch=sitename1:on,sitename2:off,...
-        switch_var = html.var("_site_switch")
-        if switch_var:
-            for info in switch_var.split(","):
-                sitename, onoff = info.split(":")
-                d = config.user_siteconf.get(sitename, {})
-                if onoff == "on":
-                    d["disabled"] = False
-                else:
-                    d["disabled"] = True
-                config.user_siteconf[sitename] = d
-            config.save_site_config()
+        if config.may("sidesnap.sitestatus"):
+            switch_var = html.var("_site_switch")
+            if switch_var:
+                for info in switch_var.split(","):
+                    sitename, onoff = info.split(":")
+                    d = config.user_siteconf.get(sitename, {})
+                    if onoff == "on":
+                        d["disabled"] = False
+                    else:
+                        d["disabled"] = True
+                    config.user_siteconf[sitename] = d
+                config.save_site_config()
 
         # Make lists of enabled and disabled sites
         enabled_sites = {}

@@ -86,7 +86,7 @@ def check_oracle_jobs(item, params, info):
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped(None, "Login not possible for check %s" % item)
+        raise MKCounterWrapped("Login not possible for check %s" % item)
 
     if not service_found:
         return (2, 'Job is missing')

@@ -1,0 +1,10 @@
+Title: etherbox: Fix for the inventory in case of not connected temperature sensors
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417624517
+Class: fix
+
+Not connected Temperature Sensors (Value of 0) are not longer monitored. 
+

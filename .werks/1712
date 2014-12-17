@@ -1,0 +1,13 @@
+Title: hyper_vms: fixed for snapshot VMs with (...) in their names
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418051145
+Class: fix
+
+When restoring snapshots then HyperV creates names like <tt>VM z4058044_snap
+(23.05.2014 - 09:29:29)</tt>. These names had not been handled correctly by
+neither the agent plugin nor the check. Both has been fixed. The check is
+still compatible with the old agent output - and removes everying after
+the <tt>_snap</tt> in the VM name. Thanks to Alexander Scholler.

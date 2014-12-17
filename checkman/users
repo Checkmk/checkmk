@@ -1,0 +1,24 @@
+title: Number of Users Currently Logged In
+agents: linux
+catalog: os/misc
+license: GPL
+distribution: check_mk
+description:
+ Monitor the number of users currently logged in.
+ The default levels are set to {20} and {30}.
+
+inventory:
+ A check of this type is created automatically on each Linux host as soon
+ as the mk_users plugin is installed on the host.
+
+perfdata:
+ On variable: the current number of users logged in
+
+[parameters]
+warn (int): Number of users logged in at which a warning level
+ is triggered
+crit (int): Number for a critical state
+
+[configuration]
+users_default_levels (int, int): Levels used for all checks found
+ by inventory. This variable is preset to {(20, 30)}.

@@ -34,10 +34,10 @@ def check_aironet_errors(item, params, info):
         if int(line[0]) == item:
             value = int(line[1])
             this_time = time.time()
-            timedif, persec = get_counter("aironet_errors.%s" % item, this_time, value)
+            persec = get_rate("aironet_errors.%s" % item, this_time, value)
             warn, crit = params
             perfdata = [("errors", persec, None, None, warn, crit)]
-            infotxt = "%.2f errors/s in last %d secs" % (persec, int(timedif))
+            infotxt = "%.2f errors/s" % persec
             if persec >= crit:
                 return (2, infotxt, perfdata)
             elif persec >= warn:

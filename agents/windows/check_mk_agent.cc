@@ -286,6 +286,8 @@ bool verbose_mode               = false;
 bool g_crash_debug              = false;
 bool do_tcp                     = false;
 bool force_tcp_output           = false; // if true, send socket data immediately
+bool do_file                    = false;
+static FILE* fileout;
 
 char g_hostname[256];
 int  g_port                     = CHECK_MK_AGENT_PORT;
@@ -986,10 +988,10 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
     int size = counterPtr->CounterSize;
     BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
 
-    if (counterPtr->CounterType | PERF_SIZE_DWORD)
+    if (counterPtr->CounterType & PERF_SIZE_DWORD)
         output(out, " %llu", (ULONGLONG)(*(DWORD*)pData));
 
-    else if (counterPtr->CounterType | PERF_SIZE_LARGE)
+    else if (counterPtr->CounterType & PERF_SIZE_LARGE)
         output(out, " %llu", *(UNALIGNED ULONGLONG*)pData);
 
     // handle other data generically. This is wrong in some situation.
@@ -3651,7 +3653,7 @@ void add_only_from(char *value)
     int bits = 32;
 
     if (strchr(value, '/')) {
-        if (5 != sscanf(value, "%u.%u.%u.%u/%u", &a, &b, &c, &d, &bits)) {
+        if (5 != sscanf(value, "%u.%u.%u.%u/%d", &a, &b, &c, &d, &bits)) {
             fprintf(stderr, "Invalid value %s for only_hosts\n", value);
             exit(1);
         }
@@ -4200,7 +4202,8 @@ void stop_threads()
     // Signal any threads to shut down
     // We don't rely on any check threat running/suspended calls
     // just check the script_container status
-    HANDLE hThreadArray[script_containers.size()];
+    int sizedt = script_containers.size();
+    HANDLE hThreadArray[sizedt];
     int active_thread_count = 0;
 
     script_containers_t::iterator it_cont = script_containers.begin();
@@ -4374,7 +4377,10 @@ void output(SOCKET &out, const char *format, ...)
         }
     }
     else {
-        fwrite(outbuffer, len, 1, stdout);
+        if (do_file)
+            fwrite(outbuffer, len, 1, fileout);
+        else
+            fwrite(outbuffer, len, 1, stdout);
         len = 0;
     }
 }
@@ -4393,12 +4399,13 @@ void output(SOCKET &out, const char *format, ...)
 void usage()
 {
     fprintf(stderr, "Usage: \n"
-            "check_mk_agent version -- show version %s and exit\n"
-            "check_mk_agent install -- install as Windows NT service Check_Mk_Agent\n"
-            "check_mk_agent remove  -- remove Windows NT service\n"
-            "check_mk_agent adhoc   -- open TCP port %d and answer request until killed\n"
-            "check_mk_agent test    -- test output of plugin, do not open TCP port\n"
-            "check_mk_agent debug   -- similar to test, but with lots of debug output\n",
+            "check_mk_agent version         -- show version %s and exit\n"
+            "check_mk_agent install         -- install as Windows NT service Check_Mk_Agent\n"
+            "check_mk_agent remove          -- remove Windows NT service\n"
+            "check_mk_agent adhoc           -- open TCP port %d and answer request until killed\n"
+            "check_mk_agent test            -- test output of plugin, do not open TCP port\n"
+            "check_mk_agent file FILENAME   -- write output of plugin into file, do not open TCP port\n"
+            "check_mk_agent debug           -- similar to test, but with lots of debug output\n",
             check_mk_version, g_port);
     exit(1);
 }
@@ -4414,13 +4421,13 @@ void do_debug()
     output_data(dummy);
 }
 
+
 void do_test()
 {
     do_tcp = false;
     SOCKET dummy;
     open_crash_log();
     crash_log("Started in test mode.");
-    output(dummy, "Enabld: %08x\n", enabled_sections);
     output_data(dummy);
     close_crash_log();
 }
@@ -4779,12 +4786,26 @@ int main(int argc, char **argv)
 
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);
 
-    if (argc > 2)
+    if ( ( argc > 2) and  (strcmp(argv[1], "file")) )
         usage();
     else if (argc <= 1)
         RunService();
     else if (!strcmp(argv[1], "test"))
         do_test();
+    else if (!strcmp(argv[1], "file")) {
+        if (argc < 3) {
+            fprintf(stderr, "Please specify the name of an output file.\n");
+            exit(1);
+        }
+        fileout = fopen(argv[2], "w");
+        if (!fileout) {
+            fprintf(stderr, "Cannot open %s for writing.\n", argv[2]);
+            exit(1);
+        }
+        do_file = true;
+        do_test();
+        fclose(fileout);
+    }
     else if (!strcmp(argv[1], "adhoc"))
         do_adhoc();
     else if (!strcmp(argv[1], "install"))

@@ -1,0 +1,9 @@
+Title: netapp_volumes: The state mixed_raid_type is now treated as non-critical state
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417603533
+Class: fix
+
+

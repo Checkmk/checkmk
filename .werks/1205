@@ -1,0 +1,12 @@
+Title: RBN: Fixed match contactgroup condition
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418724026
+
+The condtion used the host context in case of service notifications and no context
+in case of host notifications. This is fixed now.
+

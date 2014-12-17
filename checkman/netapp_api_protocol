@@ -1,0 +1,17 @@
+title: NetApp Filer: Protocols
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the read and write operations per second for each protocol.
+ Right now there are no configurable limits and the check is always {OK}.
+
+inventory:
+ Creates a check for each protocol (cifs, fcp, iscsi, nfs, nfsv4)
+
+item:
+ The name of the protocol.
+
+perfdata:
+ The read and write operations per second.

@@ -1,0 +1,9 @@
+Title: Remove Auditlog from the main WATO menu and put it into the activate Changes page
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417598377
+Class: feature
+
+

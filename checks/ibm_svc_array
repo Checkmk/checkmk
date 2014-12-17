@@ -65,7 +65,7 @@ def check_ibm_svc_array(item, _no_params, info):
 check_info["ibm_svc_array"] = {
     "check_function"        : check_ibm_svc_array,
     "inventory_function"    : inventory_ibm_svc_array,
-    "service_description"   : "IBM SVC RAID Array %s",
+    "service_description"   : "RAID Array %s",
     "has_perfdata"          : False,
 }
 

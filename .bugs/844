@@ -1,8 +1,11 @@
 Title: apc_rackpdu_power does not work with inline snmp
 Component: checks
-State: open
+Class: bug
+State: works4me
 Date: 2014-04-29 14:11:04
 Targetversion: 1.2.5i1
-Class: bug
 
 The check apc_rackpdu_power does not work with inline snmp, the first value in the snmp_info list (1.1.0) is missing, only the other 3 are queried.
+
+2014-12-01 13:55:08: changed state open -> works4me
+Is working with current inline snmp

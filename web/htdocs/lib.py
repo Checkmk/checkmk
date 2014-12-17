@@ -116,7 +116,16 @@ def create_user_file(path, mode):
     return f
 
 def write_settings_file(path, content):
-    create_user_file(path, "w").write(pprint.pformat(content) + "\n")
+    try:
+        data = pprint.pformat(content)
+    except UnicodeDecodeError:
+        # When writing a dict with unicode keys and normal strings with garbled
+        # umlaut encoding pprint.pformat() fails with UnicodeDecodeError().
+        # example:
+        #   pprint.pformat({'Z\xc3\xa4ug': 'on',  'Z\xe4ug': 'on', u'Z\xc3\xa4ugx': 'on'})
+        # Catch the exception and use repr() instead
+        data = repr(content)
+    create_user_file(path, "w").write(data + "\n")
 
 def savefloat(f):
     try:
@@ -306,16 +315,13 @@ def format_plugin_output(output, row = None):
     if config.escape_plugin_output:
         output = re.sub("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
                          lambda p: '<a href="%s"><img class=pluginurl align=absmiddle title="%s" src="images/pluginurl.png"></a>' %
-                            (p.group(0), p.group(0)), output)
+                            (p.group(0).replace('&quot;', ''), p.group(0).replace('&quot;', '')), output)
 
     return output
 
 def format_exception():
-    import traceback, StringIO, sys
-    txt = StringIO.StringIO()
-    t, v, tb = sys.exc_info()
-    traceback.print_exception(t, v, tb, None, txt)
-    return txt.getvalue()
+    import traceback
+    return traceback.format_exc()
 
 # Escape/strip unwanted chars from (user provided) strings to
 # use them in livestatus queries. Prevent injections of livestatus
@@ -389,6 +395,14 @@ def regex(r):
         raise MKConfigError(_("Invalid regular expression '%s': %s") % (r, e))
     regex_cache[r] = rx
     return rx
+
+def escape_regex_chars(text):
+    escaped = ""
+    for c in text:
+        if c in '().^$[]{}+*\\':
+            escaped += '\\'
+        escaped += c
+    return escaped
 
 
 # Splits a word into sequences of numbers and non-numbers.

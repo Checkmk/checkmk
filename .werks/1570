@@ -1,0 +1,17 @@
+Title: Fix notification of check_http active checks with Nagios core
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417627787
+Class: fix
+
+When using Nagios as the core and a check command that contains single
+quotes then the notification would not work. This is because the variables
+are enclosed in single quotes in <tt>check_mk_templates.cfg</tt>. That file
+has been changed so that for the check command macros double quotes are
+being used. Check_MK itself does never use double quotes in its strings
+so this is less likely to cause problems.
+
+The Check_MK Micro Core does not have this problem. Everything works
+fine here.

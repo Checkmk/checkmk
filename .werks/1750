@@ -1,0 +1,11 @@
+Title: Handle rare cases where SNMP response string begins with a line feed
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418141289
+Class: fix
+
+The SNMP engine von Check_MK already handled the case correctly that a string
+contains newlines. But the rare case that it <i>started</i> with a newline
+was not handled correctly. This has been fixed now.

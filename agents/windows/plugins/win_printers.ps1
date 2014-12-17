@@ -1,5 +1,5 @@
 ####
-# 
+#
 #  http://blogs.msdn.com/b/powershell/archive/2012/07/13/join-object.aspx
 #
 ####
@@ -20,6 +20,7 @@ $pswindow.buffersize = $newsize
 Write-Host -NoNewLine "<<<win_printers>>>"
 $Data_Set1 = Get-WMIObject Win32_PerfFormattedData_Spooler_PrintQueue | Select Name, @{Expression={$_.jobs};Label="CurrentJobs"}
 $Data_Set2 = Get-WmiObject win32_printer | select name, printerstatus, detectederrorstate
+$Data_Set2 = Get-WmiObject win32_printer | ?{$_.PortName -notmatch '^TS'} | Select name, printerstatus, detectederrorstate
 
 
 function AddItemProperties($item, $properties, $output)
@@ -34,18 +35,18 @@ function AddItemProperties($item, $properties, $output)
                 $hashName=$propertyHash["name"] -as [string]
                 if($hashName -eq $null)
                 {
-                    throw "there should be a string Name" 
+                    throw "there should be a string Name"
                 }
-        
+
                 $expression=$propertyHash["expression"] -as [scriptblock]
                 if($expression -eq $null)
                 {
-                    throw "there should be a ScriptBlock Expression" 
+                    throw "there should be a ScriptBlock Expression"
                 }
-        
+
                 $_=$item
                 $expressionValue=& $expression
-        
+
                 $output | add-member -MemberType "NoteProperty" -Name $hashName -Value $expressionValue
             }
             else
@@ -63,7 +64,7 @@ function AddItemProperties($item, $properties, $output)
     }
 }
 
-   
+
 function WriteJoinObjectOutput($leftItem, $rightItem, $leftProperties, $rightProperties, $Type)
 {
     $output = new-object psobject
@@ -158,7 +159,7 @@ function Join-Object
         # a list of the matches in right for each object in left
         $leftMatchesInRight = new-object System.Collections.ArrayList
 
-        # the count for all matches 
+        # the count for all matches
         $rightMatchesCount = New-Object "object[]" $Right.Count
 
         for($i=0;$i -lt $Right.Count;$i++)
@@ -205,7 +206,7 @@ function Join-Object
                     $null = $leftItemMatchesInRight.Add($rightItem)
                     $rightMatchesCount[$i]++
                 }
-           
+
             }
         }
 
@@ -214,7 +215,7 @@ function Join-Object
         {
             $leftItemMatchesInRight=$leftMatchesInRight[$i]
             $leftItem=$left[$i]
-                              
+
             if($leftItemMatchesInRight.Count -eq 0)
             {
                 if($Type -ne "OnlyIfInBoth")

@@ -1,0 +1,12 @@
+Title: mk-job: now also available on solaris systems
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416315864
+Class: feature
+
+Regarding the mk-job feature itself, you can find more information
+<a href="https://mathias-kettner.de/checkmk_job.html">here</a>.
+
+

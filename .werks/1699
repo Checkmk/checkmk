@@ -1,0 +1,17 @@
+Title: Windows agent: new option "file" for writing output into a file
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417767417
+Class: feature
+
+The redirection of the output of the agent via <tt>check_mk_agent test &gt; filename</tt>
+does not work correctly on Windows and misses some of the outputs of check plugins.
+Therefore if you want to get the output into a file the simply call the agent as follows:
+
+C+:
+C:\Program Files\Check_MK\> <b>check_mk_agent file output.txt</b>
+C-:
+
+The output will then be written to the file <tt>output.txt</tt>.

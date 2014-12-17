@@ -1,0 +1,13 @@
+Title: Snapshots are now bound to the used monitoring core
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416403159
+
+Snapshots created with CMC can not be restored on sites currently
+using another core and vice versa. If you need to restore a snapshot
+using another core, you might switch to this core, restore the snapshot
+and then switch back to your former core.

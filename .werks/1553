@@ -1,0 +1,13 @@
+Title: Fix deleting (acknowleding) of logfiles in logwatch
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1417084306
+
+The button for deleting (i.e. acknowleding) logfile messages in the webpage
+for the logwatch check did not work. This was due to a missing transaction ID,
+which in turn was due to an internal code cleanup. This has been fixed now
+and logfiles can now again be deleted.

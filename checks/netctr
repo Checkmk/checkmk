@@ -79,19 +79,11 @@ def check_netctr_combined(nic, params, info):
         infotxt = ""
         problems_per_sec = 0.0
         packets_per_sec = 0.0
-        counter_wrapped = None
         for countername in netctr_counters:
             index = netctr_counter_indices[countername]
             value = int(nicline[index + 1])
-            try:
-                timedif, items_per_sec = get_counter( "netctr." + nic + "." + countername, this_time, value)
-                perfdata.append( ( countername, "%dc" % value ) )
-            except MKCounterWrapped, e:
-                counter_wrapped = e
-                # Important: continue counter loop, so that *all* counters get initialized.
-                # Otherwise this checks would need 7 check cycles until the first result
-                # would be produced
-                continue
+            items_per_sec = get_rate( "netctr." + nic + "." + countername, this_time, value)
+            perfdata.append( ( countername, "%dc" % value ) )
 
             if countername in [ "rx_errors", "tx_errors", "tx_collisions" ]:
                 problems_per_sec += items_per_sec
@@ -101,11 +93,6 @@ def check_netctr_combined(nic, params, info):
                 infotxt += ' - Receive: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
             elif countername == 'tx_bytes':
                 infotxt += ' - Send: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
-
-        # if at least one counter wrapped, we cannot send or use performance
-        # data and leave out this check for this turn
-        if counter_wrapped:
-            raise counter_wrapped
 
         error_percentage = 0.0
         if problems_per_sec > 0:

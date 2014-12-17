@@ -1,0 +1,9 @@
+Title: juniper_screenos_mem: Fixed wrong total memory computation
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418022065
+Class: fix
+
+

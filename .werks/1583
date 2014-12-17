@@ -1,0 +1,11 @@
+Title: Can use contact groups without hosts/services assigned in RBN rules now
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417519674
+Class: fix
+
+Contact groups without hosts/services assigned could be configured, but not
+used when using Nagios as monitoring core. This has been fixed now. You can
+now safely configure all existing contact groups as recipients for notifications.

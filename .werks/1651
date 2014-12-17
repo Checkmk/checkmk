@@ -1,0 +1,11 @@
+Title: Consolidated painters of service list views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417707079
+Class: fix
+
+The painters (columns) of views which are listing multiple services were
+using different orders of the painters. We consolidatet the columns now
+to have a better consistent feeling.

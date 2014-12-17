@@ -1,0 +1,10 @@
+Title: Folding states of containers with umlauts in titles are now persisted
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417453414
+Class: fix
+
+When a foldable container has umlauts in the title, for example when a view
+topic has umlauts in it, the folding state was not persisted across page reloads.

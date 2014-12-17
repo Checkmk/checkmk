@@ -1,0 +1,17 @@
+Title: Preserve files in OMD tmpfs during reboot or update
+Component: core
+State: open
+Date: 2014-12-10 09:51:47
+Targetversion: 1.2.5i1
+Class: todo
+
+When unmounting the tmpfs of an OMD site would should create a tarball
+of tmp, without tmp/run. Before this we need to do some cleanup things:
+
+- Nobody must have PID files or sockets in other place than tmp/run
+  (fix apache and rrdcached)
+- Create *all* directories already via skel (e.g. tmp/check_mk/piggyback
+  is missing here)
+
+When later mounting the tmpfs populate it from skel as usual and then
+extract all files from the tarball that match *existing* directories.

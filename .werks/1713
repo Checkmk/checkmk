@@ -1,0 +1,10 @@
+Title: check_fstab_mounts: now correctly ignores swap space
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418052383
+Class: fix
+
+Thanks to Christian Thiemann
+

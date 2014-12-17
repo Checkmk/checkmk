@@ -44,15 +44,15 @@ except:
     pass
 
 # in case of local directories (OMD) use those instead
-package_parts = [ (part, title, ldir and ldir or dir) for part, title, dir, ldir in [
-  ( "checks",        "Checks",                    checks_dir,          local_checks_dir ),
-  ( "notifications", "Notification scripts",      notifications_dir,   local_notifications_dir ),
-  ( "inventory",     "Inventory plugins",         inventory_dir,       local_inventory_dir ),
-  ( "checkman",      "Checks' man pages",         check_manpages_dir,  local_check_manpages_dir ),
-  ( "agents",        "Agents",                    agents_dir,          local_agents_dir ),
-  ( "web",           "Multisite extensions",      web_dir,             local_web_dir ),
-  ( "pnp-templates", "PNP4Nagios templates",      pnp_templates_dir,   local_pnp_templates_dir ),
-  ( "doc",           "Documentation files",       doc_dir,             local_doc_dir ),
+package_parts = [ (part, title, perm, ldir and ldir or dir) for part, title, perm, dir, ldir in [
+  ( "checks",        "Checks",                    0644, checks_dir,          local_checks_dir ),
+  ( "notifications", "Notification scripts",      0755, notifications_dir,   local_notifications_dir ),
+  ( "inventory",     "Inventory plugins",         0644, inventory_dir,       local_inventory_dir ),
+  ( "checkman",      "Checks' man pages",         0644, check_manpages_dir,  local_check_manpages_dir ),
+  ( "agents",        "Agents",                    0755, agents_dir,          local_agents_dir ),
+  ( "web",           "Multisite extensions",      0644, web_dir,             local_web_dir ),
+  ( "pnp-templates", "PNP4Nagios templates",      0644, pnp_templates_dir,   local_pnp_templates_dir ),
+  ( "doc",           "Documentation files",       0644, doc_dir,             local_doc_dir ),
 ]]
 
 def packaging_usage():
@@ -166,14 +166,14 @@ def show_package(name, show_info = False):
     else:
         if opt_verbose:
             sys.stdout.write("Files in package %s:\n" % name)
-            for part, title, dir in package_parts:
+            for part, title, perm, dir in package_parts:
                 files = package["files"].get(part, [])
                 if len(files) > 0:
                     sys.stdout.write("  %s%s%s:\n" % (tty_bold, title, tty_normal))
                     for f in files:
                         sys.stdout.write("    %s\n" % f)
         else:
-            for part, title, dir in package_parts:
+            for part, title, perm, dir in package_parts:
                 for fn in package["files"].get(part, []):
                     sys.stdout.write(dir + "/" + fn + "\n")
 
@@ -200,7 +200,7 @@ def package_create(args):
         "files"                : filelists
     }
     num_files = 0
-    for part, title, dir in package_parts:
+    for part, title, perm, dir in package_parts:
         files = unpackaged_files_in_dir(part, dir)
         filelists[part] = files
         num_files += len(files)
@@ -216,7 +216,7 @@ def package_create(args):
 
 def package_find(_no_args):
     first = True
-    for part, title, dir in package_parts:
+    for part, title, perm, dir in package_parts:
         files = unpackaged_files_in_dir(part, dir)
         if len(files) > 0:
             if first:
@@ -243,7 +243,7 @@ def package_release(args):
     os.unlink(pacpath)
     verbose("Releasing files of package %s into freedom...\n" % pacname)
     if opt_verbose:
-        for part, title, dir in package_parts:
+        for part, title, perm, dir in package_parts:
             filenames = package["files"].get(part, [])
             if len(filenames) > 0:
                 verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
@@ -256,7 +256,7 @@ def package_pack(args):
 
     # Make sure, user is not in data directories of Check_MK
     p = os.path.abspath(os.curdir)
-    for dir in [var_dir] + [ dir for x,y,dir in package_parts ]:
+    for dir in [var_dir] + [ dir for x,y,perm,dir in package_parts ]:
         if p == dir or p.startswith(dir + "/"):
             raise PackageException("You are in %s!\n"
                                "Please leave the directories of Check_MK before creating\n"
@@ -287,7 +287,7 @@ def package_pack(args):
     tar.addfile(info, info_file)
 
     # Now pack the actual files into sub tars
-    for part, title, dir in package_parts:
+    for part, title, perm, dir in package_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
@@ -310,7 +310,7 @@ def package_remove(args):
         raise PackageException("No such package %s." % pacname)
 
     verbose("Removing package %s...\n" % pacname)
-    for part, title, dir in package_parts:
+    for part, title, perm, dir in package_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             verbose("  %s%s%s\n" % (tty_bold, title, tty_normal))
@@ -345,7 +345,7 @@ def package_install(args):
 
     # Before installing check for conflicts
     keep_files = {}
-    for part, title, dir in package_parts:
+    for part, title, perm, dir in package_parts:
         packaged = packaged_files_in_dir(part)
         keep = []
         keep_files[part] = keep
@@ -361,7 +361,7 @@ def package_install(args):
                 raise PackageException("File conflict: %s already existing." % path)
 
     # Now install files, but only unpack files explicitely listed
-    for part, title, dir in package_parts:
+    for part, title, perm, dir in package_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
@@ -379,10 +379,20 @@ def package_install(args):
                 if not data:
                     break
                 tardest.write(data)
+            tardest.close()
+
+            # Fix permissions of extracted files
+            for filename in filenames:
+                path = dir + "/" + filename
+                has_perm = os.stat(path).st_mode & 07777
+                if has_perm != perm:
+                    verbose("    Fixing permissions of %s: %04o -> %04o\n" % (path, has_perm, perm))
+                    os.chmod(path, perm)
+
 
     # In case of an update remove files from old_package not present in new one
     if update:
-        for part, title, dir in package_parts:
+        for part, title, perm, dir in package_parts:
             filenames = old_package["files"].get(part, [])
             keep = keep_files.get(part, [])
             for fn in filenames:
@@ -403,7 +413,7 @@ def files_in_dir(part, dir, prefix = ""):
         return []
 
     # Handle case where one part-dir lies below another
-    taboo_dirs = [ d for p, t, d in package_parts if p != part ]
+    taboo_dirs = [ d for p, t, perm, d in package_parts if p != part ]
     if dir in taboo_dirs:
         return []
 

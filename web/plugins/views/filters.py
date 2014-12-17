@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 # This file was shipped with Check_MK previous to 1.2.5i6. To prevent
-# problems during updaate, this dummy file is shipped. It overwrites
+# problems during update, this dummy file is shipped. It overwrites
 # the outdated existing file and invalidates it. This can be removed
 # in later versions.
+
+# The filters are now defined in plugins/visuals/filters.py

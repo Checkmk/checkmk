@@ -1,0 +1,93 @@
+title: NetApp Filers: Used space and traffic of volumes
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ This check measures the usage of volumes. The usage
+ is checked against a warning and a critical level, which
+ can be specified in numerous ways.
+
+ {Trends:} This checks supports volume {trends}. This means that the {netapp_api_volumes} check
+ is able to compute the {change} of the used space over the time and can
+ make a forecast into the future. It can estimate the time when
+ the volume will be full.
+
+ In the default configuration the check will compute the trend based on the
+ data of the last 24 hours using a logarithmic average that gives more recent
+ data a higher weight. Also data beyond the 24 hours will to some small degree be
+ reflected in the computation. The advantage of this algorithm is a more
+ precise prediction and a simpler implementation, which does not need any
+ access to any RRDs or similar storage.
+
+ Please note that when a volume is started to be monitored,
+ the trend of the past is unknown and is assumed to be {zero}.
+ It will take at least one trend range of time until the trend
+ approximately reflects the reality.
+
+ You can also enable performance data for the traffic and latency
+ for specific protocols (global, nfs, cifs, san, fcp, iscsi) via the parameters
+
+item:
+ Name of the volume as defined in the system
+
+examples:
+ # Example configuration with usage levels at 75%/90%, trend enabled
+ # and performance data for global, nfs, fcp and iscsi
+ checkgroup_parameters['netapp_volumes'] = [
+  ( {'trend_range': 24,
+     'trend_mb': (100, 200),
+     'trend_showtimeleft': True,
+     'trend_perc': (5.0, 10.0),
+     'trend_perfdata': True},
+     'perfdata': ['', 'nfs', 'fcp', 'iscsi'],
+     'levels': (75.0, 90.0),
+     [], ALL_HOSTS, ALL_SERVICES ),
+ ] + checkgroup_parameters['netapp_volumes']
+
+
+inventory:
+ All {local} volumes are automatically inventorized.
+
+[parameters]
+parameters (dict): The following keys are available
+
+ {"levels"}: Warning and critical level of filesystem usage. You need to
+ supply two numbers. Depending of the type of number you can choose
+ different kinds of levels as follows: Positive integers denote the
+ amount of used space in megabytes. Positive floating point numbers
+ denote the amount of used space in percent. Negative numbers impose
+ limits on the amount of space available, again with the possibility
+ to specify integers or floats to denote values in megabytes of precent.
+ The default is {(80.0, 90.0)}, meaning 80% and 90%.
+
+ {"trend_range"}: The time range over that trends are computed. This
+ is in hours and preset to {24} (i.e. one day). If you set this to
+ {None} then trend computing is disabled and the check outputs only
+ one performance data value.
+
+ {"trend_mb"}: A pair of numbers specifying the maximum number of
+ megabytes the usage is allowed to grow within the time range if not
+ triggering warning/critical. If you set this to {(10,20)} then
+ the check will warn if the size grows by more than 10 MB per {trend_range}
+ hours and critical if it grows more than 20 MB. Per default no levels
+ are applied.
+
+ {"trend_perc"}: This is similar to trend_mb but here you specify
+ the allowed growth in percentages of the filesystem size. Fractional
+ values are allowed. This may be used in parallel with trend_mb.
+
+ {"trend_timeleft"}: A pair of numbers that specifies the minimum
+ hours of time left until the filesystem gets full. If you set this
+ to {(48,24)} then the check will warn if the estimated time until
+ the disk is full is 48 hours or less. It will get critical if only
+ 24 hours are assumed to be left.
+
+ {"trend_perfdata"}: If this is set to {True}, then the check will
+ output two further performance data values: the current growth
+ and the trend.
+
+ {"perfdata"}: A list of strings for which protocol perfdata should
+ be saved. Possible values are "" (sum of all protocols), "nfs", "cifs",
+ "san", "fcp", "iscsi"
+

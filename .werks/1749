@@ -1,0 +1,15 @@
+Title: Allow title of notifiation script to be in third line if second line is encoding: utf-8
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418137567
+Class: feature
+
+This allows to write Python script with non-ASCII characters as notification scripts:
+
+F+:mynotify
+#!/usr/bin/python
+# encoding: utf-8
+# Notify With Föbäz
+F-:

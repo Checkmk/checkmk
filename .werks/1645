@@ -1,0 +1,9 @@
+Title: Added basic kernel section to FreeBSD agent
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417697860
+Class: feature
+
+Thanks to Andreas Pflug for providing the patch.

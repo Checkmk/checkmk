@@ -55,7 +55,7 @@ def check_ibm_svc_eventlog(item, _no_params, info):
 check_info["ibm_svc_eventlog"] = {
     "check_function"        : check_ibm_svc_eventlog,
     "inventory_function"    : inventory_ibm_svc_eventlog,
-    "service_description"   : "IBM SVC Eventlog",
+    "service_description"   : "Eventlog",
     "has_perfdata"          : False,
 }
 

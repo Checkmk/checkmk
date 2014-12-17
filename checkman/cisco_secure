@@ -4,13 +4,9 @@ catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
 description:
- This check monitors the port Security feature of cisco_switches. It returns a {CRITICAL} state for
- each port which is locked due a security isse. If is port security configured but cant be enabled
- the check returns {WARNING}.
-
-item:
- None
+ This check monitors the port Security feature of Cisco Switches. It returns a CRIT state if at
+ least one port has security violations. If port security is configured but can't be enabled then
+ no WARN is issued.
 
 inventory:
- One summary check will be created
-
+ One summary check will be created if for at least one port the port security is enabled.

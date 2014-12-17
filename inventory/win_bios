@@ -36,12 +36,16 @@
 # SMBIOSMajorVersion : 2
 # SMBIOSMinorVersion : 5
 
-
 def inv_win_bios(info):
     node = inv_tree("hardware.bios.")
     smbios_version = ""
     bios_version = ""
-    for varname, value in info:
+    for line in info:
+        # Separator : seams not ideal. Some systems have : in the BIOS version
+        if len(line) > 2:
+            line = [ line[0], ":".join(line[1:]) ]
+        varname, value = line
+
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
         if varname == "BIOSVersion":
@@ -56,6 +60,7 @@ def inv_win_bios(info):
             # The ReleaseDate property indicates the release date of the
             # Win32 BIOS in the Coordinated Universal Time (UTC) format
             # of YYYYMMDDHHMMSS.MMMMMM(+-)OOO.
+            value = value.replace("*", "0")
             node["date"] = int(time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
         elif varname == "Manufacturer":
             node["vendor"] = value

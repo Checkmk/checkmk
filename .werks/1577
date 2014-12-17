@@ -1,0 +1,10 @@
+Title: Fixed editing of views using the "Downtime for host/service" sorter or column
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417449307
+Class: fix
+
+Views which were using the "Downtime for host/service" (downtime_what) sorter or column
+were loosing this information when opening the view for editing and saving it again.

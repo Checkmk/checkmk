@@ -1,0 +1,13 @@
+Title: Fixed matching dynamic number of regex match groups
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417697483
+Class: fix
+
+Regexes and rewrites like this here lead into an exception when matching:
+
+Regex: foo(bar|baz(abc|xyz)) (stuff to match and reference)
+Rewrite: Service foo\1 said: \3
+LogLine: foobar asasdsadxxxxx

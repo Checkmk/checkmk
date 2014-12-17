@@ -1,0 +1,11 @@
+Title: Pending changes can now be discarded
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418045153
+Class: feature
+
+We added a button to the "activate changes" page which can be used to discard
+the currently pending changes. This is done by applying the last automatically
+created snapshot and activating it.

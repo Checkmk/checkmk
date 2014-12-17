@@ -1,0 +1,9 @@
+Title: Fix exception when a non-Ascii character is part of the variable part of a view title
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418044482
+Class: fix
+
+

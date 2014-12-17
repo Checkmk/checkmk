@@ -1,0 +1,17 @@
+Title: Fix check_notify_count: notification had been counted twice
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417772551
+Class: fix
+
+The active check for counting the notifications of users have been fixed.
+The dummy contact <tt>check-mk-notify</tt> is now being handled separately.
+We make a distinction between <i>raw notifications</i> - notifications created
+by the monitoring - and <i>user notification</i> - those being sent out
+to users.
+
+Note: in the rule based notifications one raw notification can create several
+user notifications. Other raw notifcations might create no user notification
+at all.

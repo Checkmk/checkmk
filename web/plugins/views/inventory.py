@@ -243,7 +243,7 @@ def render_inv_dicttable(hostname, invpath, node):
     extratitles.sort()
     titles += extratitles
 
-    # We cannot use table here, since html.plug does not work recursively
+    # We cannot use table here, since html.plug() does not work recursively
     html.write('<table class=data>')
     html.write('<tr>')
     for title, key in titles:
@@ -615,7 +615,7 @@ def declare_swpacs_columns(name, title, sortfunc):
         "title"   : _("Package") + " " + title,
         "short"   : title,
         "columns" : [ "invswpac_name" ],
-        "paint"   : lambda row: ("", row.get(column)),
+        "paint"   : lambda row: ("", str(row.get(column))),
         "sorter"  : column,
     }
     multisite_sorters[column] = {

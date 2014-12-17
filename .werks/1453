@@ -1,0 +1,10 @@
+Title: drbd.stats: tried to send non-numeric write order parameter to rrd
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417700773
+Class: fix
+
+"write order" is no longer monitored with the drbd.stats subcheck
+

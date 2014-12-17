@@ -1,0 +1,39 @@
+Title: Interface Check: In some cases the check use information of the wrong interface
+Component: checks
+Class: bug
+State: done
+Date: 2014-11-21 14:45:22
+Targetversion: 1.2.5i1
+
+In some cases the condition in check_if_common who trys to find the right item
+matchs to early if there two interfaces have the same name, but in one case
+with a number and in the other without but with the same interface index.
+See the following agent output:
+
+<<<winperf_if>>>
+1416471728.39 510
+6 instances: Intel[R]_82576_Gigabit_Dual_Port_Network_Connection Intel[R]_82576_Gigabit_Dual_Port_Network_Connection__2 Intel[R]_PRO_1000_PT_Dual_Port_Server_Adapter Intel[R]_PRO_1000_PT_Dual_Port_Server_Adapter__2 isatap.{76FCB5A2-8B81-4EC1-A917-7BB6004938B9} 6TO4_Adapter
+-122 3152470526 0 0 0 0 3209053651 bulk_count
+-110 90473997 0 0 0 0 46660432 bulk_count
+-244 72853543 0 0 0 0 35395085 bulk_count
+-58 17620454 0 0 0 0 11265347 bulk_count
+10 1000000000 0 0 0 100000 300000000 large_rawcount
+-246 11486319 0 0 0 0 1648725994 bulk_count
+14 51856476 0 0 0 0 35395085 bulk_count
+16 20996309 0 0 0 0 0 bulk_count
+18 379 0 0 0 0 0 large_rawcount
+20 379 0 0 0 0 0 large_rawcount
+22 0 0 0 0 0 0 large_rawcount
+-4 3140984207 0 0 0 0 1560327657 bulk_count
+26 17492003 0 0 0 0 11265347 bulk_count
+28 128451 0 0 0 0 0 bulk_count
+30 0 0 0 0 0 0 large_rawcount
+32 0 0 0 0 0 0 large_rawcount
+34 0 0 0 0 0 0 large_rawcount
+1086 0 0 0 0 0 0 large_rawcount
+
+Intel[R] 82576 Gigabit Dual Port Network Connection 2
+Intel[R] 82576 Gigabit Dual Port Network Connection
+
+2014-12-02 14:04:52: changed state open -> done
+Fixed by changing internal sorting of interfaces in winperf_if check

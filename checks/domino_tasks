@@ -46,7 +46,7 @@ def inventory_domino_tasks(info):
     return inventory_ps_common(inv_domino_tasks, inv_domino_tasks_rules, info)
 
 def check_domino_tasks(item, params, info):
-    return check_ps_common( item, params, info, with_perfdata = True, info_name = "Tasks" )
+    return check_ps_common( item, params, info, info_name = "Tasks" )
 
 check_info['domino_tasks'] = {
     "check_function"      : check_domino_tasks,

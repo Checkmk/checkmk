@@ -1,9 +1,9 @@
 Title: Service levels are missing in gui
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2013-11-29 17:07:45
 Targetversion: 1.2.3i6
-Class: nastiness
 
 Its not possible to see the service levels on Hosts/ Services in Multisite. The Reason is,
 that they are no part of the livestatus output. With cmc its not possible to looking into the configfile to see the sl.
@@ -13,3 +13,5 @@ Create:
 - Filter
 - Add Detail views of Host / Service
 - Change Global Settings Group
+
+2014-12-05 17:41:26: changed state open -> done

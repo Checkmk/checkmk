@@ -1,0 +1,12 @@
+Title: Fixed randomly hidden dashboard title
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416413736
+
+When dashboards with title enabled and without title were opened after each other,
+it could happen randomly, that the dashboard with a title was hiding the title
+behind the dashlets.

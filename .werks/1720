@@ -1,0 +1,9 @@
+Title: Remove bogus column H.Down if "Consider times where the host is down" is switch off
+Level: 1
+Component: reporting
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418074135
+Class: fix
+
+That column would be displayed nevertheless and was also zero.

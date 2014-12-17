@@ -1,0 +1,85 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# .1.3.6.1.2.1.1.1.0 Linux gateway1 2.6.18-92cp #1 SMP Tue Dec 4 21:44:22 IST 2012 i686
+# .1.3.6.1.4.1.2620.1.1.4.0 131645
+# .1.3.6.1.4.1.2620.1.1.5.0 0
+# .1.3.6.1.4.1.2620.1.1.6.0 1495
+# .1.3.6.1.4.1.2620.1.1.7.0 16297
+
+factory_settings["checkpoint_packets_default_levels"] = {
+    "accepted": (100000, 200000),
+    "rejected": (100000, 200000),
+    "dropped":  (100000, 200000),
+    "logged":   (100000, 200000),
+}
+
+def inventory_checkpoint_packets(info):
+    if len(info[0]) == 4:
+        return [ (None, "checkpoint_packets_default_levels" ) ]
+
+def check_checkpoint_packets(item, params, info):
+    if info and len(info[0]) == 4:
+        value = {}
+        value["accepted"] = int(info[0][0])
+        value["rejected"] = int(info[0][1])
+        value["dropped"]  = int(info[0][2])
+        value["logged"]   = int(info[0][3])
+
+        this_time = time.time()
+        state = 0
+
+        for name in value.keys():
+            warn, crit = params.get(name, (None, None))
+            rate = get_rate(name, this_time, value[name])
+            infotext = "%s: %.1f pkts/s" % ( name, rate )
+            if rate >= crit:
+                state = 2
+            elif rate >= warn:
+                state = 1
+            perfdata = [ (name, rate, warn, crit, 0) ]
+            yield state, infotext, perfdata
+
+
+check_info["checkpoint_packets"] = {
+    "check_function"          : check_checkpoint_packets,
+    "inventory_function"      : inventory_checkpoint_packets,
+    "service_description"     : "Packet Statistics",
+    "has_perfdata"            : True,
+    "group"                   : "checkpoint_packets",
+    "default_levels_variable" : "checkpoint_packets_default_levels",
+    # detect a checkpoint kernel
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.1.0").split(" ")[2].endswith("cp")\
+                                        and oid(".1.3.6.1.4.1.2620.1.1.21.0").lower().startswith('firewall'),
+    # checkpoint.products.fw.fwPolicyStat.fwNumConn
+    "snmp_info"		      : ( ".1.3.6.1.4.1.2620.1.1",
+                                                [ 4, # fwAccepted
+                                                  5, # fwRejected
+                                                  6, # fwDropped
+                                                  7, # fwLogged
+                                                ]),
+}
+

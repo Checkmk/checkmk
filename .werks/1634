@@ -1,0 +1,11 @@
+Title: Fix editing of cluster hosts in WATO: cluster-property no longer goes lost
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417705023
+Class: fix
+
+When editing a cluster host in WATO the list of nodes (and thereore the cluster
+property) got list. This bug was probably introduced while creating the new WATO
+webservice. This has been fixed.

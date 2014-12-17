@@ -1,0 +1,12 @@
+Title: IBM SVC Checks: The Service Descriptions not longer contain IBM SVC as prefix
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.6b1
+Date: 1417615343
+Class: fix
+
+There is no need to have IBM SVC as prefix for the service name because the check only appears on SVC Devices.
+
+Cause of the namechange, a re- inventory is needed after update.
+

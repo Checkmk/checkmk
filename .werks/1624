@@ -1,0 +1,12 @@
+Title: Remove illegal characters from service descriptions of active checks
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417682307
+Class: fix
+
+This fix removes illegal characters like brackets from service descriptions
+of configured active checks (<tt>legacy_checks</tt>, <tt>custom_checks</tt> and
+<tt>active_checks</tt>). These characters are disallowed by Nagios and will
+lead to configuration errors.

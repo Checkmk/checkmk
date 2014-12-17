@@ -1,0 +1,11 @@
+Title: Fixed missing graphs in mails when sending notifications to non-contacts
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417517720
+Class: fix
+
+When sending HTML mails to mail addresses or contacts which are not assigned to
+a host or service, the graphs were missing in the HTML mails. This has been fixed
+now. To make it fully working, you need to use the Check_MK Monitoring System builds.

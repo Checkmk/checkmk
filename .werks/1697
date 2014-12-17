@@ -1,0 +1,9 @@
+Title: Allow non-Ascii characters in topic of host tag groups
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417716684
+Class: feature
+
+

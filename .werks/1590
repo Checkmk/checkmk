@@ -1,0 +1,9 @@
+Title: printer_supply_ricoh: Fixed broken check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417603065
+Class: fix
+
+

@@ -1,0 +1,11 @@
+Title: SNMP Community host attribute is now visible for IE<=8
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417446679
+Class: fix
+
+The SNMP Community was not visible on host edit page for hosts
+using the snmp tag when opening the page with Internet Explorer
+version 8 or below.

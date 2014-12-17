@@ -1,0 +1,11 @@
+Title: New installations have the service to check for unchecked services enabled by default
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417702829
+Class: feature
+
+The former known service "Check_MK inventory" is now enabled by default for all new
+installations. For existing installations there is nothing changed automatically.
+It will also be renamed to "Check_MK Discovery" with this release.

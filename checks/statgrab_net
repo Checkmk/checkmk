@@ -138,7 +138,7 @@ def check_statgrab_net_ctr(nic, _no_params, info):
         if countername == None:
             continue
         value = int(value)
-        timedif, items_per_sec = get_counter( "netctr." + nic + "." + countername, this_time, value)
+        items_per_sec = get_rate( "netctr." + nic + "." + countername, this_time, value)
         perfdata_dict[countername] = ( countername, items_per_sec )
         if countername == 'rx_bytes':
             infotxt += ' - Receive: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))

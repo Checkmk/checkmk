@@ -1,0 +1,11 @@
+Title: cisco_temp_sensor: Value reported of check was not always correct (precision was wrong)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418113954
+Class: fix
+
+We already had a workaround to get the correct precision of the value reported by the device,
+but this code was kind of a hack. No we retrieve the precision value from the target device
+and then scale the value according to it.

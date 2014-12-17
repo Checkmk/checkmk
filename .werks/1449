@@ -1,0 +1,9 @@
+Title: nginx_status: agent plugin no longer honours "http(s)_proxy" env variables of root user
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416505550
+Class: fix
+
+

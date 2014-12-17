@@ -41,7 +41,11 @@ loaded_with_language = False
 # Load all view plugins
 def load_plugins():
     global loaded_with_language
+
     if loaded_with_language == current_language:
+        # always reload the hosttag painters, because new hosttags might have been
+        # added during runtime
+        load_host_tag_painters()
         return
 
     global multisite_datasources     ; multisite_datasources      = {}
@@ -57,6 +61,7 @@ def load_plugins():
     config.declare_permission_section("action", _("Commands on host and services"), do_sort = True)
 
     load_web_plugins("views", globals())
+    load_host_tag_painters()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -91,6 +96,7 @@ def permitted_views():
     return available_views
 
 # Convert views that are saved in the pre 1.2.6-style
+# FIXME: Can be removed one day. Mark as incompatible change or similar.
 def transform_old_views():
 
     for view in multisite_views.values():
@@ -100,9 +106,16 @@ def transform_old_views():
         if "context" not in view: # legacy views did not have this explicitly
             view.setdefault("user_sortable", True)
 
-        # This tries to map the datasource and additional settings of the
-        # views to get the correct view context
-        if 'single_infos' not in view:
+        if 'context_type' in view:
+            # This code transforms views from user_views.mk which have been migrated with
+            # daily snapshots from 2014-08 till beginning 2014-10.
+            visuals.transform_old_visual(view)
+
+        elif 'single_infos' not in view:
+            # This tries to map the datasource and additional settings of the
+            # views to get the correct view context
+            #
+            # This code transforms views from views.mk (legacy format) to the current format
             try:
                 hide_filters = view.get('hide_filters')
 
@@ -160,6 +173,7 @@ def transform_old_views():
                     # The exact match filters have been removed. They where used only as
                     # link filters anyway - at least by the builtin views.
                     continue
+
                 for var in f.htmlvars:
                     # Check whether or not the filter is supported by the datasource,
                     # then either skip or use the filter vars
@@ -167,6 +181,56 @@ def transform_old_views():
                         value = filtervars[var]
                         all_vars[var] = value
                         context[filter_name][var] = value
+
+                # We changed different filters since the visuals-rewrite. This must be treated here, since
+                # we need to transform views which have been created with the old filter var names.
+                # Changes which have been made so far:
+                changed_filter_vars = {
+                    'serviceregex': { # Name of the filter
+                        # old var name: new var name
+                        'service': 'service_regex',
+                    },
+                    'hostregex': {
+                        'host': 'host_regex',
+                    },
+                    'hostgroupnameregex': {
+                        'hostgroup_name': 'hostgroup_regex',
+                    },
+                    'servicegroupnameregex': {
+                        'servicegroup_name': 'servicegroup_regex',
+                    },
+                    'opthostgroup': {
+                        'opthostgroup': 'opthost_group',
+                        'neg_opthostgroup': 'neg_opthost_group',
+                    },
+                    'optservicegroup': {
+                        'optservicegroup': 'optservice_group',
+                        'neg_optservicegroup': 'neg_optservice_group',
+                    },
+                    'hostgroup': {
+                        'hostgroup': 'host_group',
+                        'neg_hostgroup': 'neg_host_group',
+                    },
+                    'servicegroup': {
+                        'servicegroup': 'service_group',
+                        'neg_servicegroup': 'neg_service_group',
+                    },
+                    'host_contactgroup': {
+                        'host_contactgroup': 'host_contact_group',
+                        'neg_host_contactgroup': 'neg_host_contact_group',
+                    },
+                    'service_contactgroup': {
+                        'service_contactgroup': 'service_contact_group',
+                        'neg_service_contactgroup': 'neg_service_contact_group',
+                    },
+                }
+
+                if filter_name in changed_filter_vars and f.info in datasource['infos']:
+                    for old_var, new_var in changed_filter_vars[filter_name].items():
+                        if old_var in filtervars:
+                            value = filtervars[old_var]
+                            all_vars[new_var] = value
+                            context[filter_name][new_var] = value
 
             # Now, when there are single object infos specified, add these keys to the
             # context
@@ -616,6 +680,7 @@ def transform_valuespec_value_to_view(view):
 # view is the new dict object to be updated.
 def create_view_from_valuespec(old_view, view):
     ds_name = old_view.get('datasource', html.var('datasource'))
+    view['datasource'] = ds_name
     datasource = multisite_datasources[ds_name]
     vs_value = {}
     for ident, vs in view_editor_specs(ds_name):
@@ -866,12 +931,24 @@ def show_view(view, show_heading = False, show_buttons = True,
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
 
-    # Filters to show in the view
+    # Filters to use in the view
     # In case of single object views, the needed filters are fixed, but not always present
     # in context. In this case, take them from the context type definition.
-    show_filters = visuals.show_filters(view, datasource['infos'], all_filters_active)
+    use_filters = visuals.filters_of_visual(view, datasource['infos'], all_filters_active)
 
+    # Not all filters are really shown later in show_filter_form(), because filters which
+    # have a hardcoded value are not changeable by the user
+    show_filters = visuals.visible_filters_of_visual(view, use_filters)
+
+    # Now populate the HTML vars with context vars from the view definition. Hard
+    # coded default values are treated differently:
+    #
+    # a) single context vars of the view are enforced
+    # b) multi context vars can be overwritten by existing HTML vars
     visuals.add_context_to_uri_vars(view, datasource["infos"], only_count)
+
+    # Check that all needed information for configured single contexts are available
+    visuals.verify_single_contexts('views', view)
 
     # Af any painter, sorter or filter needs the information about the host's
     # inventory, then we load it and attach it as column "host_inventory"
@@ -880,7 +957,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Prepare Filter headers for Livestatus
     filterheaders = ""
     only_sites = None
-    all_active_filters = [ f for f in show_filters if f.available() ]
+    all_active_filters = [ f for f in use_filters if f.available() ]
     for filt in all_active_filters:
         header = filt.filter(tablename)
         if header.startswith("Sites:"):
@@ -2263,7 +2340,9 @@ def cmp_simple_string(column, r1, r2):
     return cmp_insensitive_string(v1, v2)
 
 def cmp_num_split(column, r1, r2):
-    return cmp(num_split(r1[column]), num_split(r2[column]))
+    c1 = r1[column]
+    c2 = r2[column]
+    return cmp(num_split(c1) + (c1,), num_split(c2) + (c2,))
 
 def cmp_string_list(column, r1, r2):
     v1 = ''.join(r1.get(column, []))

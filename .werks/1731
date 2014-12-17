@@ -1,0 +1,12 @@
+Title: ipmi_sensors: Fixed agent part when ipmi-sensors call on first agent run
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418119634
+Class: fix
+
+The agent code always failed when ipmi-sensors is executed with --sdr-cache-directory /var/cache
+for the first time using the agent. This happens because the code tries to create
+a locked file within the directory /var/cache/.freeipmi/sdr-cache while this directory
+does not exists. The agent now ensures the existance of this directory.

@@ -151,10 +151,10 @@ def convert_winperf_if(info):
     converted = []
 
     # Sort NIC names are create artifical index
-    nic_names = nics.keys()
-    nic_names.sort()
+    nic_index = dict(map(lambda x: (x[1], x[0] + 1), enumerate(nic_names)))
+    nic_names.sort(reverse=True)
 
-    for nr, nic_name in enumerate(nic_names):
+    for nic_name in nic_names:
         nic = nics[nic_name]
         mac_txt = nic.get('MACAddress')
         bandwidth = saveint(nic.get('Speed'))
@@ -163,7 +163,7 @@ def convert_winperf_if(info):
         else:
             mac = ''
         converted.append((
-           str(nr + 1),
+           str(nic_index[nic_name]),
            nic_name,
            "loopback" in nic_name.lower() and '24' or '6',
            bandwidth or nic[10], # Aktuelle Bandbreite

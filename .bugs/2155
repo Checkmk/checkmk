@@ -1,9 +1,9 @@
 Title: Host named like a Python module will break precompiled checks
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2014-05-14 13:57:30
 Targetversion: 1.2.5i1
-Class: bug
 
 Operating System: Debian 7
 
@@ -16,3 +16,6 @@ instead of the real random module.
 
 This only seems to affect that indrectly imported module. A test with creating a
 host with the name 'os' did not show any abnormalities.
+
+2014-12-01 14:22:43: changed state open -> done
+Fixed.

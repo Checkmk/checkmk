@@ -2,7 +2,7 @@ Title: Added iCalendar import for generating timeperiods e.g. for holidays
 Level: 2
 Component: wato
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415272776
 Class: feature
 

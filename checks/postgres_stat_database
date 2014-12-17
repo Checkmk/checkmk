@@ -69,7 +69,6 @@ def check_postgres_stat_database(item, params, info):
     infos = []
     perfdata = []
     this_time = time.time()
-    one_wrapped = False
     for what, title in [
         ( "blks_read",    "Blocks Read" ),
         ( "tup_fetched",  "Fetches" ),
@@ -79,11 +78,7 @@ def check_postgres_stat_database(item, params, info):
         ( "tup_inserted", "Inserts" ), ]:
         counter = stats[what]
         counter_name = "postgres_stat_database.%s.%s" % (item, what)
-        try:
-            timedif, rate = get_counter(counter_name, this_time, counter)
-        except MKCounterWrapped, e:
-            one_wrapped = e
-            continue
+        rate = get_rate(counter_name, this_time, counter)
 
         infos.append("%s: %.2f/s" % (title, rate))
         if what in params:
@@ -97,9 +92,6 @@ def check_postgres_stat_database(item, params, info):
         else:
             warn, crit = None, None
         perfdata.append((what, rate, warn, crit))
-
-    if one_wrapped:
-        raise one_wrapped
 
     return (status, ", ".join(infos), perfdata)
 

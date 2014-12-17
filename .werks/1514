@@ -1,0 +1,12 @@
+Title: Try harder to detect previous hard state in notification when using Nagios as core
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.6b1
+Date: 1416492466
+Class: fix
+
+In the case where you have more than one check attempt then now the previous
+hard state is assumed to be the previous soft state when the new state is
+OK or UP. This avoids some cases where the previous state had been set to
+<tt>?</tt> in previous versions. The CMC does not have these problems anyway.

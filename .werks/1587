@@ -1,0 +1,19 @@
+Title: Prevent logging of passwords during initial distributed site login
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417594096
+Class: security
+
+When creating a distributed monitoring setup using WATO, after configuring
+a remote site in the central site, you need to login into the remote site
+as admin user once to establish a trust between both sites.
+
+This login was made using a HTTP get request, which is logged in the access
+logs of the affected webservers (local system apache, local site apache, 
+remote system apache, remote site apache). All these log entries contain the
+whole GET query string, which also includes the inserted username and password.
+
+This has been fixed by replacing the GET request with a POST request where
+the request vars are not logged in the access log.

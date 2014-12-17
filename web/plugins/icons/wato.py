@@ -35,12 +35,13 @@ def wato_link(folder, site, hostname, where):
            (html.urlencode(folder), html.urlencode(hostname))
         if where == "inventory":
             url += "&mode=inventory"
-            help = _("Edit services in WATO - the Check_MK Web Administration Tool")
+            help = _("Edit services")
+            icon = "services"
         else:
             url += "&mode=edithost"
-            help = _("Open this host in WATO - the Check_MK Web Administration Tool")
-        return '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
-               'title="%s"></a>' % (url, help)
+            help = _("Edit this host")
+            icon = "wato"
+        return '<a href="%s">%s</a>' % (url, html.render_icon(icon, help))
     else:
         return ""
 
@@ -53,7 +54,7 @@ def paint_wato(what, row, tags, custom_vars):
         wato_folder = filename[6:-8].rstrip("/")
         if what == "host":
             return wato_link(wato_folder, row["site"], row["host_name"], "edithost")
-        elif row["service_description"].lower() == "check_mk inventory":
+        elif row["service_description"] in [ "Check_MK inventory", "Check_MK Discovery" ]:
             return wato_link(wato_folder, row["site"], row["host_name"], "inventory")
 
 multisite_icons.append({

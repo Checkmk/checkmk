@@ -1,0 +1,9 @@
+Title: oracle_instance: Be compatible to old oracle agent outputs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418139738
+Class: fix
+
+

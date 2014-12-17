@@ -1,0 +1,9 @@
+Title: Changed default service discovery check intervall to 12 hours
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418291243
+Class: fix
+
+

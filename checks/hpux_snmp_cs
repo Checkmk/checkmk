@@ -61,7 +61,6 @@ def inventory_hpux_snmp_cpu(info):
 
 def check_hpux_snmp_cpu(item, _no_params, info):
     parts = dict(info)
-    some_counter_wrapped = False
     this_time = time.time()
     total_rate = 0
     rates = []
@@ -71,18 +70,12 @@ def check_hpux_snmp_cpu(item, _no_params, info):
         ( "idle",   "15.0" ),
         ( "nice",   "16.0" )]:
         value = int(parts[oid])
-        try:
-            timedif, rate = get_counter("snmp_cpu_util.%s" % what, this_time, value)
-            total_rate += rate
-            rates.append(rate)
-        except MKCounterWrapped:
-            some_counter_wrapped = True
-
-    if some_counter_wrapped:
-        raise MKCounterWrapped("", "Some counter wrapped, no data this time")
+        rate = get_rate("snmp_cpu_util.%s" % what, this_time, value)
+        total_rate += rate
+        rates.append(rate)
 
     if total_rate == 0:
-        raise MKCounterWrapped("", "No counter counted. Time has ceased to flow.")
+        raise MKCounterWrapped("No counter counted. Time has ceased to flow.")
 
     perfdata = []
     infos = []

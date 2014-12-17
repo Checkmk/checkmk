@@ -175,16 +175,14 @@ def check_emcvnx_disks(item, _no_params, info):
     write_bytes = parsed[item]["Kbytes Written"] * 1024
     countername_r = "emcvnx_disks.read_bytes.%s" % item.replace(" ", "_")
     countername_w = "emcvnx_disks.write_bytes.%s" % item.replace(" ", "_")
-    try:
-        timedif, read_bytes_per_sec = get_counter(countername_r, now, read_bytes)
-        message += ", Read: %s/s" % get_bytes_human_readable(read_bytes_per_sec)
-        perfdata.append(("read", read_bytes_per_sec))
 
-        timedif, write_bytes_per_sec = get_counter(countername_w, now, write_bytes)
-        message += ", Write: %s/s" % get_bytes_human_readable(write_bytes_per_sec)
-        perfdata.append(("write", write_bytes_per_sec))
-    except MKCounterWrapped:
-        pass
+    read_bytes_per_sec = get_rate(countername_r, now, read_bytes)
+    message += ", Read: %s/s" % get_bytes_human_readable(read_bytes_per_sec)
+    perfdata.append(("read", read_bytes_per_sec))
+
+    write_bytes_per_sec = get_rate(countername_w, now, write_bytes)
+    message += ", Write: %s/s" % get_bytes_human_readable(write_bytes_per_sec)
+    perfdata.append(("write", write_bytes_per_sec))
 
     return nagstate, message, perfdata
 

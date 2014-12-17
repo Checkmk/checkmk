@@ -93,7 +93,7 @@ def check_cisco_vss(item, params, info):
             state = 0
         yield state, "chassis %s: %s" % (switch_id, cisco_vss_role_names[chassis_role])
 
-    yield 0, "%d VLS connections configured" % len(ports)
+    yield 0, "%d VSL connections configured" % len(ports)
 
     for core_switch_id, operstatus, conf_portcount, op_portcount in ports:
         if operstatus == '1':

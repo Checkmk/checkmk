@@ -52,51 +52,44 @@
 #         ::= { upsAdvTest 4 }
 #
 
-import datetime
-
-ups_test_default = ( 0, 0 )
+ups_test_default = (0, 0)
 
 def check_apc_test(item, params, info):
-    warn, crit = params
+    days_warn, days_crit = params
     if not info:
         return 3, "Data Missing"
-    line = info[0]
-    DiagnosticsResults = saveint(line[0])
-    LastDiagnosticsDate = line[1]
+    last_result = int(info[0][0])
+    last_date   = info[0][1]
 
-    if LastDiagnosticsDate == 'Unknown':
+    if last_date == 'Unknown' or len(last_date) not in [8, 10]:
         return 3, "Date of last self test is unknown"
 
-    month, day, year = map(saveint, LastDiagnosticsDate.split('/'))
-    last_diag_date = datetime.date( year, month, day)
-    today = datetime.date.today()
-    diag_diff = today - last_diag_date
-    dcrit =  datetime.timedelta(days=crit)
-    dwarn =  datetime.timedelta(days=warn)
+    year_format = len(last_date) == 8 and '%y' or '%Y'
+    last_ts = time.mktime(time.strptime(last_date, '%m/%d/'+year_format))
+    days_diff = (time.time() - last_ts) / 86400
 
     diagnostic_status_text = { 1:"OK", 2:"failed", 3:"invalid", 4:"in progress" }
 
     state = 0
     diag_label = ""
-    if DiagnosticsResults == 2:
+    if last_result == 2:
         state = 2
         diag_label = "(!!)"
-    elif DiagnosticsResults == 3:
+    elif last_result == 3:
         state = 1
         diag_label = "(!)"
 
     time_label = ""
-    if crit != 0 and diag_diff >= dcrit:
+    if days_crit and days_diff >= days_crit:
         state = 2
         time_label = "(!!)"
-    elif warn != 0 and diag_diff >= dwarn:
+    elif days_warn and days_diff >= days_warn:
         state = max(state, 1)
         time_label = "(!)"
 
-    ResultsDetail = "Result of self test: %s%s, Date of last test: %s%s" \
-        % (diagnostic_status_text.get(DiagnosticsResults), diag_label, LastDiagnosticsDate, time_label)
+    return state, "Result of self test: %s%s, Date of last test: %s%s" % \
+            (diagnostic_status_text.get(last_result, '-'), diag_label, last_date, time_label)
 
-    return (state, ResultsDetail )
 
 def inventory_apc_test(info):
     if info:

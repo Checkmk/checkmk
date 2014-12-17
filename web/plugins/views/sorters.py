@@ -129,8 +129,27 @@ multisite_sorters['servicelevel'] = {
     'cmp'     : lambda r1, r2: cmp_custom_variable(r1, r2, 'EC_SL', cmp_simple_number)
 }
 
+def cmp_service_name_equiv(r):
+    if r == "Check_MK":
+        return -5
+    elif r == "Check_MK Discovery":
+        return -4
+    elif r == "Check_MK inventory":
+        return -3 # FIXME: Remove old name one day
+    elif r == "Check_MK HW/SW Inventory":
+        return -2
+    else:
+        return 0
+
+def cmp_service_name(column, r1, r2):
+    o = cmp(cmp_service_name_equiv(r1[column]), cmp_service_name_equiv(r2[column]))
+    if o == 0:
+        return cmp_simple_string(column, r1, r2)
+    else:
+        return o
+
 #                      name           title                    column                       sortfunction
-declare_simple_sorter("svcdescr",                _("Service description"),         "service_description",        cmp_simple_string)
+declare_simple_sorter("svcdescr",                _("Service description"),         "service_description",        cmp_service_name)
 declare_simple_sorter("svcdispname",             _("Service alternative display name"),   "service_display_name",  cmp_simple_string)
 declare_simple_sorter("svcoutput",               _("Service plugin output"),       "service_plugin_output",      cmp_simple_string)
 declare_simple_sorter("svc_long_plugin_output",  _("Long output of check plugin"), "service_long_plugin_output", cmp_simple_string)
@@ -300,7 +319,7 @@ declare_1to1_sorter("downtime_author",         cmp_simple_string)
 declare_1to1_sorter("downtime_comment",        cmp_simple_string)
 declare_1to1_sorter("downtime_fixed",          cmp_simple_number)
 declare_1to1_sorter("downtime_type",           cmp_simple_number)
-declare_simple_sorter("downtime_what",         _("Downtime type (host/service)"),  "is_service",            cmp_simple_number)
+declare_simple_sorter("downtime_what",         _("Downtime for host/service"),     "downtime_is_service",   cmp_simple_number)
 declare_simple_sorter("downtime_start_time",   _("Downtime start"),                "downtime_start_time",   cmp_simple_number)
 declare_simple_sorter("downtime_end_time",     _("Downtime end"),                  "downtime_end_time",     cmp_simple_number)
 declare_simple_sorter("downtime_entry_time",   _("Downtime entry time"),           "downtime_entry_time",   cmp_simple_number)
@@ -313,6 +332,19 @@ declare_1to1_sorter("log_type",                cmp_simple_string)
 declare_1to1_sorter("log_contact_name",        cmp_simple_string)
 declare_1to1_sorter("log_time",                cmp_simple_number)
 declare_1to1_sorter("log_lineno",              cmp_simple_number)
+
+def cmp_log_what(col, a, b):
+    return cmp(log_what(a[col]), log_what(b[col]))
+
+def log_what(t):
+    if "HOST" in t:
+        return 1
+    elif "SERVICE" in t or "SVC" in t:
+        return 2
+    else:
+        return 0
+
+declare_1to1_sorter("log_what",                cmp_log_what)
 
 import time
 def get_day_start_timestamp(t):

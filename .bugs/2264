@@ -1,0 +1,16 @@
+Title: Use fixed variable name for perfdata of df check
+Component: checks
+State: open
+Date: 2014-12-08 17:02:38
+Targetversion: 1.2.5i1
+Class: nastiness
+
+Currently it uses the mount point as variable name. This is nonsense and leads
+to problems. In one case we even get too long filenames for the resulting RRDs
+in MULTIPLE mode.
+
+Resolution:
+
+- Change to simple variable name
+- Create some deprecated global option that simulates the old behaviour for some
+  time.

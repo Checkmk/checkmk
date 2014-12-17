@@ -1,0 +1,61 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<netapp_api_aggr:sep(9)>>>
+# [config_instance]       aggr-list-info
+# aggregates
+#   aggr-info
+#     name        aggr0
+#     size-total  6606028800
+#     size-available      5707771904
+
+def inventory_netapp_api_aggr(parsed):
+    aggrs = parsed.get("aggr-list-info")
+    return [ (values.get("name"), {}) for name, values in aggrs.items() if values.get("name") ]
+
+def check_netapp_api_aggr(item, params, parsed):
+    aggrs = parsed.get("aggr-list-info")
+    aggr  = aggrs.get(item)
+    if not aggr:
+        return (3, "Aggregation not found in agent output")
+
+    mega = 1024.0 * 1024.0
+    size_total = saveint(aggr.get("size-total")) / mega
+    size_avail = saveint(aggr.get("size-available")) / mega
+    size_total = 20000
+    size_avail = 20000
+    return df_check_filesystem_list(item, params, [(item, size_total, size_avail)])
+
+check_info["netapp_api_aggr"] = {
+    'check_function'      : check_netapp_api_aggr,
+    'parse_function'      : lambda info: netapp_api_convert_info(info,
+                                         configs = {"aggr-list-info": {"block-name": "aggr-info", "key": "name"}}),
+    'inventory_function'  : inventory_netapp_api_aggr,
+    'service_description' : 'Aggregation %s',
+    'group'               : 'filesystem',
+    'has_perfdata'        : True,
+    'includes'            : [ "df.include", "netapp_api.include" ]
+}

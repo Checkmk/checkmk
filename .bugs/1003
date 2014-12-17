@@ -1,10 +1,12 @@
 Title: ps: unable to set custom limits for clustered ps checks
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-12-16 17:36:45
 Targetversion: 1.2.4
-Class: bug
 
 If we configure a process inventory check for a process, and configure the
 corresponding service as a cluster service, it is not possible to configure
 limits for this cluster check.
+
+2014-12-03 12:41:23: changed state open -> done

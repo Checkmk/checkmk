@@ -1,0 +1,12 @@
+Title: Move manual checks into a new WATO module
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417599830
+Class: feature
+
+The rulesets for configuration manual checks (i.e. checks not created by the service
+discovery) have been moved into a new WATO module <i>Manual Checks</i>. This should
+save users from accidentally using these rules instead of their counterparts for
+invetorized checks.

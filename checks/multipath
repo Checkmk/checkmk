@@ -130,6 +130,18 @@ inventory_multipath_rules = []
 # \_ round-robin 0 [prio=-1][enabled]
 #  \_ 4:0:0:11 sdt  65:48  [active][undef]
 
+# This one here is from RedHat 6. Very creative...
+# 1IET     00010001 dm-4 IET,VIRTUAL-DISK
+# size=200G features='0' hwhandler='0' wp=rw
+# |-+- policy='round-robin 0' prio=0 status=active
+# | `- 23:0:0:1   sdk  8:160   active undef running
+# |-+- policy='round-robin 0' prio=0 status=enabled
+# | `- 21:0:0:1   sdj  8:144   active undef running
+# |-+- policy='round-robin 0' prio=0 status=enabled
+# | `- 22:0:0:1   sdg  8:96    active undef running
+# `-+- policy='round-robin 0' prio=0 status=enabled
+#   `- 20:0:0:1   sdi  8:128   active undef running
+
 # And a completely new situation:
 # <<<multipath>>>
 # Nov 05 17:17:03 | DM multipath kernel driver not loaded
@@ -148,11 +160,11 @@ def parse_multipath(info):
     # 2: matched regex-group id of alias (optional)
     reg_headers = [
         (get_regex(r"^[0-9a-z]{33}$"),                       0, None), # 1. (should be included in 3.)
-        (get_regex(r"^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"),      2, 1), # 2.
+        (get_regex(r"^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"),      2, 1),    # 2.
         (get_regex(r"^[a-zA-Z0-9_]+$"),                      0, None), # 3.
         (get_regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?dm.+$"), 1, None), # 4.
         (get_regex(r"^[a-zA-Z0-9_]+dm-.+$"),                 0, None), # 5. Remove this line in 1.2.0
-        (get_regex(r"^([a-zA-Z0-9_-]+)\s?dm-.+$"),           1, None), # 6. and 7.
+        (get_regex(r"^([-a-zA-Z0-9_ ]+)\s?dm-[0-9]+.*$"),    1, None), # 6. and 7.
     ]
 
     reg_prio = get_regex("[[ ]prio=")

@@ -1,0 +1,9 @@
+Title: ad_replication: fixed typo in plugin output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417606053
+Class: fix
+
+

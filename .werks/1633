@@ -1,0 +1,11 @@
+Title: Fix problem that attributes of new WATO folders have not been saved
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417704150
+Class: fix
+
+When you created a new folder then only its name and title would be saved,
+not any further attributes. This problem seems to exist from the very
+beginning of WATO but nobody noticed...

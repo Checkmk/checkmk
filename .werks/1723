@@ -1,0 +1,68 @@
+Title: New check API function get_average() as more intelligent replacement for get_counter()
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418113568
+Class: feature
+
+The function <tt>get_counter()</tt> is now deprecated in the programming of
+checks. There is a new function called <tt>get_rate()</tt> that should be
+used as a replacement.
+
+F+:
+def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP):
+    ...
+    return rate
+F-:
+
+The call syntax is almostthe same - just with the new optional parameter
+<tt>onwrap</tt>.  Important however: now just the rate (counter steps
+per second) is being returned. The formerly additional return value
+<tt>timedif</tt> has been dropped since it is of no real use. So the return
+type has changed from tuple to float.
+
+The most imporant change - however - is in the handling of counter wraps. A
+<i>counter wrap</i> happens in three situations:
+
+<ul>
+<li>When the counter is seen for the first time (initialization)</li>
+<li>When the previous value of the counter is larger than the new one</li>
+<li>When the time difference since the last counter update was less than one second</li>
+</ul>
+
+Wraps usually happen when a device reboots or when the valid range of the
+counter is exceeded and it wraps through again to zero.
+
+The old function <tt>get_counter()</tt> used to raise an exception of type
+<tt>MKCounterWrapped</tt>. This exception was handeld by the main core of
+Check_MK, which skipped that check for one cycle. The problem were checks
+with more than one counter: at the point of initialization the code of the
+check wasaborted after the first of these counters had been initialized.
+If you had 10 counters, you would need 10 check cycles until the first time
+a check result would be returned. So in order to avoid that the check had
+to catch the <tt>MKCounterWrapped</tt> itself and handle this situation -
+very ugly.
+
+The new function <tt>get_rate</tt> implements a different approach.
+Per default no exception is raised in case of a counter wrap, but simply the
+value <tt>0.00</tt> is being returned. But Check_MK keeps record of this wrap
+event. After the check function has completed (and all counters are handled),
+Check_MK creates <i>one final</i> <tt>MKCounterWrapped</tt> exception, so
+that the (invalid) check result is being skipped as it should be.  This way
+the check programmers' burden is a reduced a bit because now even if the
+check has several counters he does not need to catch counter wraps.
+
+In order to give the check more flexibility there are two other behaviours,
+that can be selected by the optional argument <tt>onwrap</tt>:
+
+<table>
+<tr><th>onwrap</th><th>behaviour</th></tr>
+<tr><td class=tt>SKIP</td><td>Skip result of check, after all counters are handled (default)</td></tr>
+<tr><td class=tt>RAISE</td><td>Immediately raise a <tt>MKCounterWrapped</tt> exception (legacy behaviour)</td></tr>
+<tr><td class=tt>ZERO</td><td>Ignore the wrap and return a rate of 0.0 (be careful!)</td></tr>
+</table>
+
+Note: Using <tt>ZERO</tt> is generally <i>not</i> a good idea. This can
+make a service jump from CRIT to OK from now and then and generate bogus
+notifications.

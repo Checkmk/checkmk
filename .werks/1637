@@ -1,0 +1,9 @@
+Title: Fixed exception in notification analysis when notifications have not NOTIFICATIONTYPE set
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417685701
+Class: fix
+
+

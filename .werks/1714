@@ -1,0 +1,11 @@
+Title: Add support for jsonp export (next to json and python)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418053509
+Class: feature
+
+The web service for exporting data from views now also supports JSONP. This
+is basically the same as JSON, but everything is wrapped into <tt>parseJSON(</tt>...<tt>)</tt>.
+You can select this by adding <tt>&output_format=jsonp</tt> to the URL of a Multisite view.

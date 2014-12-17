@@ -24,8 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+factory_settings["ps_default_levels"] = {
+    "levels" : (1, 1, 99999, 99999),
+}
 
-def inventory_ps_common(invdata, invrules, info, with_perfdata = False):
+def inventory_ps_common(invdata, invrules, info):
     inventory = []
 
     entries = []
@@ -54,7 +57,7 @@ def inventory_ps_common(invdata, invrules, info, with_perfdata = False):
 
         entries.append(inventry)
 
-    # Handle new wato style inventory rules
+    # Handle new WATO style inventory rules
     for rule in invrules:
         taglist, hostlist = rule[1:3]
         if len(rule) >= 4:
@@ -69,17 +72,9 @@ def inventory_ps_common(invdata, invrules, info, with_perfdata = False):
 
         v = rule[0]
 
-        # Make ps skip rules for ps.perf and vice versa
-        # Ignore if perfdata key is not set
-        if v.get('perfdata', False) != with_perfdata:
-            continue
+        entries.append((v['descr'], v['match'], v.get('user')))
 
-        extra_options = []
-        for token in [ 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels', 'handle_count' ]:
-            extra_options.append( (token, v.get(token)) )
-        entries.append((v['descr'], v['match'], v.get('user')) + v['levels'] +  (extra_options,) )
-
-    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax, extra_options in entries:
+    for servicedesc, pattern, userspec in entries:
         num_perc_s = servicedesc.count("%s")
         for line in info:
             # First entry in line is the node name or None for non-clusters
@@ -111,20 +106,11 @@ def inventory_ps_common(invdata, invrules, info, with_perfdata = False):
 
                 # Problem here: We need to instantiate all subexpressions
                 # with their actual values of the found process.
-                extra_keys = {}
-                for key, value in extra_options:
-                    if value:
-                        extra_keys[key] = value
-
                 i_pattern = instantiate_regex_pattern(pattern, matches)
                 inv_keys = {
                     "process" : i_pattern,
                     "user"    : i_userspec,
-                    "warnmin" : warnmin,
-                    "okmin"   : okmin,
-                    "okmax"   : okmax,
-                    "warnmax" : warnmax }
-                inv_keys.update(extra_keys)
+                }
                 inv = ( i_servicedesc, inv_keys )
 
                 if inv not in inventory:
@@ -203,7 +189,13 @@ def process_matches(ps, procname, l_user):
 #    "warnmax" : 1,
 # }
 
-def check_ps_common(item, params, info, with_perfdata = False, cpu_cores = 1, info_name = "processes" ):
+# Even newer format:
+# {
+#   "user" : "foo",
+#   "levels" : (1, 1, 99999, 99999)
+# }
+
+def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" ):
     now = time.time()
     if type(params) in (list, tuple):
         if len(params) == 5:
@@ -213,13 +205,17 @@ def check_ps_common(item, params, info, with_perfdata = False, cpu_cores = 1, in
             procname, user, warnmin, okmin, okmax, warnmax = params
         params = {
             "process" : procname,
-            "warnmin" : warnmin,
-            "okmin"   : okmin,
-            "okmax"   : okmax,
-            "warnmax" : warnmax,
+            "levels" :  (warnmin, okmin, okmax, warnmax),
         }
         if user != None:
             params["user"] = user
+    elif "okmin" in params or "warnmin" in params or "okmax" in params or "warnmax" in params:
+        params["levels"] = (
+            params.get("warnmin", 1),
+            params.get("okmin", 1),
+            params.get("okmax", 99999),
+            params.get("warnmax", 99999),
+        )
 
     count = 0
     virtual_size   = 0
@@ -237,7 +233,7 @@ def check_ps_common(item, params, info, with_perfdata = False, cpu_cores = 1, in
     for line in info:
         node_name = line[0]
         ps = line[1:]
-        if process_matches(ps, params["process"], [params.get("user")]) != False:
+        if process_matches(ps, params.get("process"), [params.get("user")]) != False:
             count += 1
             if node_name != None:
                 running_on.add(node_name)
@@ -250,12 +246,12 @@ def check_ps_common(item, params, info, with_perfdata = False, cpu_cores = 1, in
                         pid, pagefile_usage, user_c, kernel_c, handle_c = map(int, addinfo[4:9])
                         counter_wrapped = False
                         try:
-                            timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, now, user_c)
+                            user_per_sec   = get_rate("ps_wmic.user.%d" % pid, now, user_c, onwrap=RAISE)
                         except MKCounterWrapped, e:
                             counter_wrapped = True
 
                         try:
-                            timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, now, kernel_c)
+                            kernel_per_sec = get_rate("ps_wmic.kernel.%d" % pid, now, kernel_c, onwrap=RAISE)
                         except MKCounterWrapped, e:
                             counter_wrapped = True
 
@@ -279,7 +275,7 @@ def check_ps_common(item, params, info, with_perfdata = False, cpu_cores = 1, in
                             hours, minutes, seconds = map(int, addinfo[3].split(":"))
                             total_seconds = 86400 * days + 3600 * hours + 60 * minutes + seconds
                             try:
-                                timedif, cputime = get_counter("ps_stat.pcpu.%s" % pid, now, total_seconds)
+                                cputime = get_rate("ps_stat.pcpu.%s" % pid, now, total_seconds, onwrap=RAISE)
                             except MKCounterWrapped, e:
                                 cputime = 0
 
@@ -294,36 +290,35 @@ def check_ps_common(item, params, info, with_perfdata = False, cpu_cores = 1, in
     else:
         warn_cpu, crit_cpu = None, None
 
-    if with_perfdata:
-        perfdata = [ ("count", count, params["okmax"]+1, params["warnmax"]+1, 0) ]
-        if count == 0 and not extended_perfdata:
-            # No matching process found. Therefore we don't know yet,
-            # wether the agents sends extended data for processes.
-            # We need to know this in order to create the RRD with the
-            # correct number of DSes. To just look at the first process
-            # in the agent output to make sure. We assume that at least
-            # one process is always present.
-            firstword = info[0][1]
-            if firstword[0] == '(' and firstword.count(",") >= 3:
-                extended_perfdata = True
-        if extended_perfdata:
-            perfdata += [ ("vsz", virtual_size),
-                          ("rss", resident_size)]
-            perfdata.append(("pcpu", percent_cpu, warn_cpu, crit_cpu))
-    else:
-        perfdata = []
+
+    warnmin, okmin, okmax, warnmax = params["levels"]
+    perfdata = [ ("count", count, okmax+1, warnmax+1, 0) ]
+    if count == 0 and not extended_perfdata:
+        # No matching process found. Therefore we don't know yet,
+        # wether the agents sends extended data for processes.
+        # We need to know this in order to create the RRD with the
+        # correct number of DSes. To just look at the first process
+        # in the agent output to make sure. We assume that at least
+        # one process is always present.
+        firstword = info[0][1]
+        if firstword[0] == '(' and firstword.count(",") >= 3:
+            extended_perfdata = True
+    if extended_perfdata:
+        perfdata += [ ("vsz", virtual_size),
+                      ("rss", resident_size)]
+        perfdata.append(("pcpu", percent_cpu, warn_cpu, crit_cpu))
 
     infotext = "%d %s" % (count, info_name)
     if running_on:
         infotext += " [running on %s]" % ", ".join(running_on)
 
     state = 0
-    if count > params["warnmax"] or count < params["warnmin"]:
+    if count > warnmax or count < warnmin:
         state = 2
-        infotext += " (ok from %d to %d)(!!)" % (params["okmin"], params["okmax"])
-    elif count > params["okmax"] or count < params["okmin"]:
+        infotext += " (ok from %d to %d)(!!)" % (okmin, okmax)
+    elif count > okmax or count < okmin:
         state = 1
-        infotext += " (ok from %d to %d)(!)" % (params["okmin"], params["okmax"])
+        infotext += " (ok from %d to %d)(!)" % (okmin, okmax)
 
     if virtual_size:
         for size, name in [ (virtual_size, "virtual"), (resident_size, "resident") ]:
@@ -341,10 +336,10 @@ def check_ps_common(item, params, info, with_perfdata = False, cpu_cores = 1, in
         infotext += " %.1f%% CPU" % percent_cpu
 
         if "cpu_average" in params:
-            timedif, avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
+            avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
             infotext += " (%d min average: %.1f%%)" % (params["cpu_average"], avg_cpu)
             percent_cpu = avg_cpu # use this for level comparison
-            if with_perfdata and extended_perfdata:
+            if extended_perfdata:
                 perfdata.append(("pcpuavg", avg_cpu, warn_cpu, crit_cpu, 0, params["cpu_average"]))
 
         if "cpulevels" in params:

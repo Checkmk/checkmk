@@ -1,0 +1,55 @@
+Title: Reworked configuration of process monitoring
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.6b1
+Date: 1417606886
+Class: fix
+
+The configuration of the monitoring of processes has been reworked. This was
+mainly to overcome a bug: when the process check was used on a cluster then
+the check parameters would be taken randomly from one of the nodes.
+
+The new process monitoring works like this:
+
+H2:Static checks
+Statically configured checks are like before. They are configured via the ruleset
+<i>State and count of processes</i>.
+
+
+H2:Checks created by service discovery
+
+The ruleset <i>Process Inventory</i> now does not set parameters (levels)
+for the created services anymore. Only the settings for matching process
+names and user remain - and of course the service description.
+
+The new ruleset <i>State and count of processes</i> in the section
+<i>Parameters for inventorized checks</i> (please do not mix up with static
+checks here) is used for defining levels for the count, CPU usage, averaging
+and all of the other parameters. The default is to make the check OK if at
+least one process is being found. So from now on if you are using process
+inventory with custom levels, you need to make configurations in <i>both
+rulesets</i>.
+
+On the other hand that can make things easier for you. You might have a lot
+of rulesets for detecting various processes but then only need a few rules
+for setting levels for these services.
+
+In order to make the migration easier services that have already been created
+with previous versions of Check_MK will remain to work as they did. But
+after a new service discovery the levels will vanish and then you have to
+configure them in the new extra ruleset.
+
+Please note: the ruleset <i>State and count of processes</i> does contain the
+settings for matching the process and the user even when used for discovered
+checks. The reason is that it is the same ruleset as for manual checks.
+Setting these parameters do not make sense here in most cases. Simply leave
+them unchecked.
+
+
+H2:Performance data - ps versus ps.perf
+The check <tt>ps.perf</tt> is now deprecated. The normal <tt>ps</tt> check now
+does <i>always</i> create performance data. For compatibility reasons the old
+<tt>ps.perf</tt> is still defined but does exactly the same as <tt>ps</tt>
+
+

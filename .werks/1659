@@ -1,0 +1,10 @@
+Title: windows agent: fixed output of 64 bit performance counters
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418131110
+Class: fix
+
+The windows agent was unable to output 64 bit performance counters.
+Those values were cut at 32 bit, which caused unwanted counter wraps in the checks.

@@ -1,0 +1,9 @@
+Title: check_jolokia_metrics_serv_req: Fixed wrong levels shown for upper thresholds
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417691732
+Class: fix
+
+

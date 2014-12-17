@@ -1,0 +1,9 @@
+Title: mk_sap: Working around garbled SAP state file when multiple instances were running parallel
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1418136328
+Class: fix
+
+

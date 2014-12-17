@@ -1,0 +1,9 @@
+Title: Fix link from BI icon to BI views (aggregations affected by this host/service)
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417540906
+Class: fix
+
+

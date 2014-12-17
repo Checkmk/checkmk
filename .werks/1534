@@ -1,0 +1,13 @@
+Title: Fixed filtering views in distributed setup lead to empty views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416992290
+
+This fixes an error where filtering a view leads into an empty view, because 
+the enforced site filter has the first site preselected, which is not always
+the site of the data shown in the view. Now we use the optional site filter
+for most views to cleanup this error.

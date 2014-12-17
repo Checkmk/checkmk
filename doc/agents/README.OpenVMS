@@ -55,7 +55,7 @@ datasource_programs = [
 ]
 
 
-Now you can run Check_MK inventory as usually and should find a couple
+Now you can run Check_MK service discovery as usually and should find a couple
 of new checks. Here is an example output from the VMS agent on a small
 virtualized test machine:
 

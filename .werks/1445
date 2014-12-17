@@ -2,7 +2,7 @@ Title: quantum_libsmall_door, quantum_libsmall_status: Two new checks for monito
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415288440
 Class: feature
 

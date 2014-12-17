@@ -1,0 +1,16 @@
+Title: Check_MK inventory service has been renamed to Check_MK Discovery
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417704691
+Class: fix
+
+For new installations (using WATO), the former "Check_MK inventory" service
+has been renamed to "Check_MK Discovery". This has been done to clarify
+the difference between the service discovery (find new things to monitor)
+and the hw/sw inventory.
+
+Existing installations are not affected by default, but can switch to the new
+name by checking "Monitor hosts for unchecked services (Check_MK inventory)"
+in the Global Setting "Use new service descriptions".

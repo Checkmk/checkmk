@@ -292,7 +292,7 @@ class Integer(ValueSpec):
         return text
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != int:
+        if type(value) not in [ int, long ]:
             raise MKUserError(varprefix, _("The value %r has the wrong type %s, but must be of type int")
             % (value, type_name(value)))
 
@@ -353,6 +353,7 @@ class TextAscii(ValueSpec):
         self._regex         = kwargs.get("regex")
         self._regex_error   = kwargs.get("regex_error",
             _("Your input does not match the required format."))
+        self._minlen        = kwargs.get('minlen', None)
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
         self._prefix_buttons = kwargs.get("prefix_buttons", [])
@@ -430,6 +431,10 @@ class TextAscii(ValueSpec):
         if value and self._regex:
             if not self._regex.match(value):
                 raise MKUserError(varprefix, self._regex_error)
+
+        if self._minlen != None and len(value) < self._minlen:
+            raise MKUserError(varprefix, _("You need to provide at least %d characters.") % self._minlen)
+
         ValueSpec.custom_validate(self, value, varprefix)
 
 class TextUnicode(TextAscii):
@@ -569,6 +574,12 @@ class Hostname(TextAscii):
         self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
         self._regex_error = _("Please enter a valid hostname or IPv4 address.")
 
+class AbsoluteDirname(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._regex = re.compile('^(/|(/[^/]+)+)$')
+        self._regex_error = _("Please enter a valid absolut pathname with / as a path separator.")
+
 
 # Valuespec for a HTTP Url (not HTTPS), that
 # automatically adds http:// to the value
@@ -653,6 +664,7 @@ class TextAreaUnicode(TextUnicode):
 
 # A variant of TextAscii() that validates a path to a filename that
 # lies in an existing directory.
+# TODO: Rename the valuespec here to ExistingFilename or somehting similar
 class Filename(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
@@ -837,7 +849,7 @@ class ListOf(ValueSpec):
         # Render reference element for cloning
         html.write('<table style="display:none" id="%s_prototype">' % varprefix)
         html.write('<tr><td class=vlof_buttons>')
-        html.hidden_field(varprefix + "_indexof_" + self._magic, "") # reconstruct order after moving stuff
+        html.hidden_field(varprefix + "_indexof_" + self._magic, "", add_var=True) # reconstruct order after moving stuff
         self.del_button(varprefix, self._magic)
         if self._movable:
             self.move_button(varprefix, self._magic, "up")
@@ -867,10 +879,11 @@ class ListOf(ValueSpec):
         # Actual table of currently existing entries
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
 
+        # FIXME: Use plug/unplug mechanism instead of transform / then remove transform
         for nr, v in enumerate(value):
             html.push_transformation(lambda x: x.replace(self._magic, str(nr+1)))
             html.write('<tr><td class=vlof_buttons>')
-            html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "") # reconstruct order after moving stuff
+            html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "", add_var=True) # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
             if self._movable:
                 self.move_button(varprefix, self._magic, "up") # visibility fixed by javascript
@@ -1072,7 +1085,7 @@ class Float(Integer):
 
     def validate_datatype(self, value, varprefix):
         if type(value) != float and not \
-            (type(value) == int and self._allow_int):
+            (type(value) not in [ int, long ] and self._allow_int):
             raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float%s") %
                  (value, type_name(value), self._allow_int and _(" or int") or ""))
 
@@ -1301,7 +1314,7 @@ class CascadingDropdown(ValueSpec):
             options.append((str(nr), title))
             # Determine the default value for the select, so the
             # the dropdown pre-selects the line corresponding with value.
-            # Note: the html.select with automatically show the modified
+            # Note: the html.select() with automatically show the modified
             # selection, if the HTML variable varprefix_sel aleady
             # exists.
             if value == val or (
@@ -1452,6 +1465,7 @@ class ListChoice(ValueSpec):
         self._render_function = kwargs.get("render_function",
                   lambda id, val: val)
         self._toggle_all = kwargs.get("toggle_all", False)
+        self._render_orientation = kwargs.get("render_orientation", "horizontal") # other: vertical
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
@@ -1490,7 +1504,11 @@ class ListChoice(ValueSpec):
     def value_to_text(self, value):
         self.load_elements()
         d = dict(self._elements)
-        return ", ".join([ self._render_function(v, d.get(v,v)) for v in value ])
+        texts = [ self._render_function(v, d.get(v,v)) for v in value ]
+        if self._render_orientation == "horizontal":
+            return ", ".join(texts)
+        else:
+            return "<table><tr><td>" + "<br>".join(texts) + "</td></tr></table>"
 
     def from_html_vars(self, varprefix):
         self.load_elements()
@@ -2628,6 +2646,7 @@ class Dictionary(ValueSpec):
         self._elements = kwargs["elements"]
         self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
         self._required_keys = kwargs.get("required_keys", [])
+        self._ignored_keys = kwargs.get("ignored_keys", [])
         self._default_keys = kwargs.get("default_keys", []) # keys present in default value
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
@@ -2860,6 +2879,8 @@ class Dictionary(ValueSpec):
 
         # Check for exceeding keys
         allowed_keys = [ p for (p,v) in self._get_elements() ]
+        if self._ignored_keys:
+            allowed_keys += self._ignored_keys
         for param in value.keys():
             if param not in allowed_keys:
                 raise MKUserError(varprefix, _("Undefined key '%s' in the dictionary. Allowed are %s.") %

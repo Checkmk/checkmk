@@ -36,7 +36,7 @@ def check_mail_loop_arguments(params):
         args == ' --smtp-tls'
 
     if 'smtp_port' in params:
-        args += ' --smtp-port=%s' % quote_shell_string(params['smtp_port'])
+        args += ' --smtp-port=%d' % params['smtp_port']
 
     if 'smtp_auth' in params:
         args += ' --smtp-username=%s' % quote_shell_string(params['smtp_auth'][0])
@@ -54,7 +54,7 @@ def check_mail_loop_arguments(params):
     if fetch_use_ssl:
         args += ' --fetch-ssl'
     if fetch_port != None:
-        args += ' --fetch-port=%s' % quote_shell_string(fetch_port)
+        args += ' --fetch-port=%d' % fetch_port
 
     args += ' --fetch-username=%s' % quote_shell_string(fetch_params['auth'][0])
     args += ' --fetch-password=%s' % quote_shell_string(fetch_params['auth'][1])
@@ -63,7 +63,7 @@ def check_mail_loop_arguments(params):
     args += ' --mail-to=%s' % quote_shell_string(params['mail_to'])
 
     if 'connect_timeout' in params:
-        args += ' --connect-timeout=%s' % quote_shell_string(params['connect_timeout'])
+        args += ' --connect-timeout=%d' % params['connect_timeout']
 
     if 'delete_messages' in params:
         args += ' --delete-messages'

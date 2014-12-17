@@ -1,0 +1,9 @@
+Title: zfs_arc_cache: do not inventorize of no cache information available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417000713
+Class: fix
+
+This avoid an exception.

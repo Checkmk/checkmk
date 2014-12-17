@@ -107,9 +107,10 @@ class RequestError(Exception):
 g_device  = None
 g_version = None
 
+base_urls = [ 'http://%s:49000/upnp' % host_address, 'http://%s:49000/igdupnp' % host_address ]
+
 def get_upnp_info(control, namespace, action):
     global g_device, g_version
-    url = 'http://%s:49000/upnp/control/%s' % (host_address, control)
 
     headers = {
         'User-agent':   'Check_MK agent_fritzbox',
@@ -124,20 +125,32 @@ def get_upnp_info(control, namespace, action):
         </s:Body>
     </s:Envelope>''' % (action, namespace)
 
-    if opt_debug:
-        sys.stdout.write('============================\n')
-        sys.stdout.write('URL: %s\n' % url)
-        sys.stdout.write('SoapAction: %s\n' % headers['SoapAction'])
-
-    try:
-        req = urllib2.Request(url, data, headers)
-        handle = urllib2.urlopen(req)
-    except Exception, e:
-        if opt_debug:
-            sys.stdout.write('----------------------------\n')
-            sys.stdout.write(traceback.format_exc())
-            sys.stdout.write('============================\n')
-        raise RequestError('Error during UPNP call')
+    # Fritz!Box with firmware >= 6.0 use a new url. We try the newer one first and
+    # try the other one, when the first one did not succeed.
+    for base_url in base_urls[:]:
+        url = base_url + '/control/' + control
+        try:
+            if opt_debug:
+                sys.stdout.write('============================\n')
+                sys.stdout.write('URL: %s\n' % url)
+                sys.stdout.write('SoapAction: %s\n' % headers['SoapAction'])
+            req = urllib2.Request(url, data, headers)
+            handle = urllib2.urlopen(req)
+            break # got a good response
+        except urllib2.HTTPError, e:
+            if e.code == 500:
+                # Is the result when the old URL can not be found, continue in this
+                # case and revert the order of base urls in the hope that the other
+                # url gets a successful result to have only one try on future requests
+                # during an agent execution
+                base_urls.reverse()
+                continue
+        except Exception, e:
+            if opt_debug:
+                sys.stdout.write('----------------------------\n')
+                sys.stdout.write(traceback.format_exc())
+                sys.stdout.write('============================\n')
+            raise RequestError('Error during UPNP call')
 
     infos    = handle.info()
     contents = handle.read()

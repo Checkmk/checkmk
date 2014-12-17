@@ -1,0 +1,9 @@
+Title: cisco_vpn_tunnel: Now supporting VPN 3000 Conncentrator devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417776280
+Class: feature
+
+

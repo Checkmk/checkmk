@@ -1,0 +1,12 @@
+Title: Dashboard: Fixed mass client CPU load consumption when making graph dashlets too small
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b1
+Date: 1417531745
+Class: fix
+
+When PNP graph dashlets were too small, the PNP graph resizing code could get into
+a situation where continous HTTP requests were made to get a smaller PNP graph where
+it was not possible to get a smaller one. This resulted in a lot of CPU load by the
+browser on the client host.

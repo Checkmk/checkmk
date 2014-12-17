@@ -1,0 +1,10 @@
+Title: Mobile-GUI: Fixed "all host problems" view not showing all problems
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1416478405
+
+The view was not showing all problems. Instead it was filtering acknowledged hosts.

@@ -107,7 +107,7 @@ def check_df(item, params, info):
 check_info['df'] = {
     "check_function"          : check_df,
     "inventory_function"      : inventory_df,
-    "service_description"     : "fs_%s",
+    "service_description"     : "Filesystem %s",
     "has_perfdata"            : True,
     "group"                   : "filesystem",
     "default_levels_variable" : "filesystem_default_levels",

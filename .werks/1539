@@ -1,0 +1,12 @@
+Title: Fixed refreshing of PNP graphs in dashboards
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b1
+Date: 1417165950
+
+The PNP graphs contained in dashboards were not refreshed as intended.
+Now they are refreshed in the hard coded default interval of 60 seconds.
+This will be configurable soon.

@@ -176,7 +176,7 @@ def inventory_windows_services(info):
 def check_windows_services(item, params, info):
     # Hack for old manually defined checks:
     if params == None:
-        params = factory_settings["services_default_levels"];
+        params = factory_settings["services_default_levels"]
 
     # A service may appear more than once (due to clusters).
     # First make a list of all matching entries with their
@@ -185,7 +185,10 @@ def check_windows_services(item, params, info):
     for line in info:
         # allow to match agains the internal name or agains the display name
         # of the service
-        if item == line[1] or item == " ".join(line[3:]):
+        display_name = " ".join(line[3:])
+        if item == line[1] or item == display_name \
+           or line[1] in params['additional_servicenames'] \
+           or display_name in params['additional_servicenames']:
             # newer agents also send start type as part of state,
             # e.g. running/auto
             if '/' in line[2]:
@@ -222,8 +225,9 @@ def check_windows_services(item, params, info):
 
 
 factory_settings["services_default_levels"] = {
-    "states"      : [ ( "running", None, 0 ) ],
-    "else"        : 2,
+    "states"                    : [ ( "running", None, 0 ) ],
+    "else"                      : 2,
+    "additional_servicenames"   : [],
 }
 
 check_info['services'] = {

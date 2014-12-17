@@ -1,0 +1,10 @@
+Title: Fix preview of passive checks in WATO list of services
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418831491
+
+

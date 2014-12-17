@@ -1270,6 +1270,8 @@ def automation_active_check(args):
                 if command_line:
                     command_line = autodetect_plugin(command_line)
                     return execute_check_plugin(command_line)
+                else:
+                    return -1, "Passive check - cannot be executed"
     else:
         rules = active_checks.get(plugin)
         if rules:

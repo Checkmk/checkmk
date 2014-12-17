@@ -3329,7 +3329,11 @@ def ajax_execute_check():
     hostname  = html.var("host")
     checktype = html.var("checktype")
     item      = html.var("item")
-    status, output = check_mk_automation(site, "active-check", [ hostname, checktype, item ])
+    try:
+        status, output = check_mk_automation(site, "active-check", [ hostname, checktype, item ])
+    except Exception, e:
+        status = 1
+        output = str(e)
     statename = nagios_short_state_names.get(status, "UNKN")
     html.write("%d\n%s\n%s" % (status, statename, output))
 

@@ -1,0 +1,11 @@
+Title: New personal setting for start page, right after login
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418829739
+Class: feature
+
+A user can now configure an alternative start URL in his personal
+settings. Default is <tt>dashboard.py</tt> (which can changed in the
+global setting). Only relative URLs are allowed.

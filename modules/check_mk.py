@@ -4605,8 +4605,8 @@ def dump_host(hostname):
         parents_list = parents_of(hostname)
     if len(parents_list) > 0:
         print tty_yellow + "Parents:                " + tty_normal + ", ".join(parents_list)
-    print tty_yellow + "Host groups:            " + tty_normal + ", ".join(hostgroups_of(hostname))
-    print tty_yellow + "Contact groups:         " + tty_normal + ", ".join(host_contactgroups_of([hostname]))
+    print tty_yellow + "Host groups:            " + tty_normal + make_utf8(", ".join(hostgroups_of(hostname)))
+    print tty_yellow + "Contact groups:         " + tty_normal + make_utf8(", ".join(host_contactgroups_of([hostname])))
 
     agenttypes = []
     if is_tcp_host(hostname):

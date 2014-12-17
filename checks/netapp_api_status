@@ -24,9 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# This file was shipped with Check_MK previous to 1.2.5i6. To prevent
-# problems during update, this dummy file is shipped. It overwrites
-# the outdated existing file and invalidates it. This can be removed
-# in later versions.
+# <<<netapp_api_status:sep(9)>>>
+# [config_instance]   diagnosis-status-get
+# attributes
+#   diagnosis-status
+#     status  ok
 
-# The filters are now defined in plugins/visuals/filters.py
+def inventory_netapp_api_status(info):
+    return [ (None, None) ]
+
+def check_netapp_api_status(item, _no_params, info):
+    data = dict([line for line in info if len(line) == 2 and line[0] != "[config_instance]"])
+
+    if data.get("status"):
+        state = data["status"].lower() not in ["ok", "ok-with-suppressed"] and 2 or 0
+        yield state, "Status: %s" % data["status"]
+        del data["status"]
+
+    for key, value in data.items():
+        yield 0, "%s: %s" % (key.title(), value)
+
+check_info["netapp_api_status"] = {
+    'check_function'      : check_netapp_api_status,
+    'inventory_function'  : inventory_netapp_api_status,
+    'service_description' : 'Diagnosis Status',
+}
+
+

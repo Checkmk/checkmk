@@ -1,0 +1,10 @@
+Title: Finish the view "History of Scheduled Downtimes"
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418739860
+
+Add missing filters, group by Host/Service

@@ -4756,6 +4756,113 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_storage,
+    "netapp_disks",
+    _("NetApp Broken/Spare Disk Ratio"),
+    Dictionary(
+        help = _("You can set level of the broken to spare disk ratio. "
+                 "The ratio is calculated with <i>broken / (broken + spare)</i>."),
+        elements = [
+            ( "broken_spare_ratio",
+            Tuple(
+                title = _("Broken to spare ratio"),
+                elements = [
+                    Percentage(title = _("Warning at or above")),
+                    Percentage(title = _("Critical at or above")),
+                ]
+            )),
+        ],
+        optional_keys = False
+    ),
+    None,
+    "match"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "netapp_volumes",
+    _("NetApp Volumes"),
+    Dictionary(
+        elements = [
+             ("levels",
+                Alternative(
+                    title = _("Levels for volume"),
+                    show_alternative_title = True,
+                    default_value = (80.0, 90.0),
+                    match = match_dual_level_type,
+                    elements = [
+                           get_free_used_dynamic_valuespec("used", "volume"),
+                           Transform(
+                                    get_free_used_dynamic_valuespec("free", "volume", default_value = (20.0, 10.0)),
+                                    allow_empty = False,
+                                    forth = transform_filesystem_free,
+                                    back  = transform_filesystem_free
+                           )
+                    ]
+                 )
+            ),
+            ("perfdata",
+                ListChoice(
+                    title = _("Performance data for protocols"),
+                    help = _("Specify for which protocol performance data should get recorded."),
+                    choices = [
+                       ( "", _("Summarized data of all protocols") ),
+                       ( "nfs",    _("NFS") ),
+                       ( "cifs",   _("CIFS") ),
+                       ( "san",    _("SAN") ),
+                       ( "fcp",    _("FCP") ),
+                       ( "iscsi",  _("ISCSI") ),
+                    ],
+                )),
+            (  "trend_range",
+               Optional(
+                   Integer(
+                       title = _("Time Range for filesystem trend computation"),
+                       default_value = 24,
+                       minvalue = 1,
+                       unit= _("hours")),
+                   title = _("Trend computation"),
+                   label = _("Enable trend computation"))),
+            (  "trend_mb",
+               Tuple(
+                   title = _("Levels on trends in MB per time range"),
+                   elements = [
+                       Integer(title = _("Warning if above"), unit = _("MB / range"), default_value = 100),
+                       Integer(title = _("Critical if above"), unit = _("MB / range"), default_value = 200)
+                   ])),
+            (  "trend_perc",
+               Tuple(
+                   title = _("Levels for the percentual growth per time range"),
+                   elements = [
+                       Percentage(title = _("Warning if above"), unit = _("% / range"), default_value = 5,),
+                       Percentage(title = _("Critical if above"), unit = _("% / range"), default_value = 10,),
+                   ])),
+            (  "trend_timeleft",
+               Tuple(
+                   title = _("Levels on the time left until the filesystem gets full"),
+                   elements = [
+                       Integer(title = _("Warning if below"), unit = _("hours"), default_value = 12,),
+                       Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
+                    ])),
+            ( "trend_showtimeleft",
+                    Checkbox( title = _("Display time left in check output"), label = _("Enable"),
+                               help = _("Normally, the time left until the disk is full is only displayed when "
+                                        "the configured levels have been breached. If you set this option "
+                                        "the check always reports this information"))
+            ),
+            ( "trend_perfdata",
+              Checkbox(
+                  title = _("Trend performance data"),
+                  label = _("Enable generation of performance data from trends"))),
+
+
+        ]
+    ),
+    TextAscii(title = _("Volume name")),
+    "match"
+)
+
+register_check_parameters(
     subgroup_applications,
     "services",
     _("Windows Services"),

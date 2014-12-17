@@ -24,9 +24,46 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# This file was shipped with Check_MK previous to 1.2.5i6. To prevent
-# problems during update, this dummy file is shipped. It overwrites
-# the outdated existing file and invalidates it. This can be removed
-# in later versions.
+# <<<netapp_api_cpu:sep(9)>>>
+# [counter_instance]      system
+# ---new_counter---
+# cpu_busy        8362860064
+# num_processors  2
 
-# The filters are now defined in plugins/visuals/filters.py
+netapp_api_cpu_default_levels = (90.0, 95.0)
+
+def inventory_netapp_api_cpu_utilization(info):
+    return [ (None, 'netapp_api_cpu_default_levels') ]
+
+def check_netapp_api_cpu_utilization(item, params, info):
+    data = dict([line for line in info if len(line) == 2])
+    now = time.time()
+
+    cpu_busy = saveint(data["cpu_busy"])
+    num_cpus = saveint(data["num_processors"])
+    timedif, ticks_per_sec = get_counter("netapp_api_cpu.utilization", now, cpu_busy)
+    cpusecs_per_sec = ticks_per_sec / 1000000.0
+    used_perc = 100.0 * cpusecs_per_sec
+
+    # Due to timeing invariancies the measured level can become > 100%.
+    # This makes users unhappy, so cut it off.
+    if used_perc < 0:
+        used_perc = 0
+    elif used_perc > 100:
+        used_perc = 100
+
+    state, infotext, perfdata = check_cpu_util(used_perc, params, now)
+    perfdata[0] = perfdata[0][:5] + (num_cpus,)
+    infotext += ", %d CPUs" % num_cpus
+    return state, infotext, perfdata
+
+check_info["netapp_api_cpu.utilization"] = {
+    'check_function'      : check_netapp_api_cpu_utilization,
+    'inventory_function'  : inventory_netapp_api_cpu_utilization,
+    'service_description' : 'CPU utilization',
+    'has_perfdata'        : True,
+    'group'               : 'cpu_utilization',
+    'includes'            : [ "cpu_util.include" ]
+}
+
+

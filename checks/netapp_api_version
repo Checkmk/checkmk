@@ -24,9 +24,42 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# This file was shipped with Check_MK previous to 1.2.5i6. To prevent
-# problems during update, this dummy file is shipped. It overwrites
-# the outdated existing file and invalidates it. This can be removed
-# in later versions.
+# <<<netapp_api_info:sep(9)>>>
+# [config_instance]       system-get-version
+# version NetApp Release 8.2.1 7-Mode: Fri Mar 21 14:48:58 PDT 2014
+# is-clustered    false
+# [config_instance]       system-get-info
+# system-info
+#   system-name   netapp-host
+#   system-id     4082367488
+#   system-model  SIMBOX
+#   system-machine-type   SIMBOX
+#   vendor-id     NetApp
+#   system-serial-number  4082367488
+#   board-speed   2933
+#   board-type    NetApp VSim
+#   cpu-serial-number     999999
+#   number-of-processors  2
+#   memory-size   1599
+#   cpu-processor-id      0x206c2
+#   cpu-microcode-version 21
+#   maximum-aggregate-size        2199023255552
+#   maximum-flexible-volume-size  17592186044416
+#   maximum-flexible-volume-count 500
+#   supports-raid-array   true
 
-# The filters are now defined in plugins/visuals/filters.py
+
+def inventory_netapp_api_info(info):
+    return [ (None, None) ]
+
+def check_netapp_api_info(item, _no_params, info):
+    data = dict([(line[0], " ".join(line[1:])) for line in info if len(line) == 2 and line[0] != "[config_instance]"])
+    return 0, "Version: %s" % data["version"]
+
+check_info["netapp_api_version"] = {
+    'check_function'      : check_netapp_api_info,
+    'inventory_function'  : inventory_netapp_api_info,
+    'service_description' : 'NetApp Version',
+}
+
+

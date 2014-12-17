@@ -1,0 +1,66 @@
+Title: agent_netapp: New special agent for NetApp monitoring via Web-API
+Level: 3
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418736173
+
+The new agent_netapp allows you to collect data from a NetApp Filer through
+its Web-API. Right now <b>only 7-Mode</b> setups are supported, but Cluster-Mode is
+following soon.
+
+H2: Agent setup
+This agent does not run out of the box, because it depends on some files
+from the <i>Netapp Manageability SDK</i> from NetApp. You can download it
+<a href="http://mysupport.netapp.com/NOW/cgi-bin/software/?product=NetApp+Manageability+SDK&platform=All+Platforms">here (customer/partner login required)</a>
+In this package you will find a python API binding. The agent_netapp requires
+the two python files (<tt>NaElement.py</tt> / <tt>NaServer.py</tt>) to be put into
+the sites local directory <tt>~/local/lib/python</tt>.
+(Our plan is to eleminate this tedious step in a future version)
+
+Once the agent has all required files you need to create a user account
+with the following permissions:
+
+<ul>
+<li>perf-object-get-instances</li>
+<li>net-ifconfig-get</li>
+<li>aggr-list-info</li>
+<li>storage-shelf-bay-list-info</li>
+<li>disk-list-info</li>
+<li>vfiler-list-info</li>
+<li>vfiler-get-status</li>
+<li>volume-list-info</li>
+<li>system-get-version</li>
+<li>system-get-info</li>
+<li>storage-shelf-environment-list-info</li>
+<li>cf-status</li>
+<li>diagnosis-status-get</li>
+</ul>
+
+Note: This list might increase in later versions
+
+If the new agent is able to access the Web-API the following new checks
+are ready to process the data:
+
+<table>
+<tr><th>Check</th><th>Description</th></tr>
+<tr><td>netapp_api_aggr</td><td>Used space and trend of aggregations</td></tr>
+<tr><td>netapp_api_volumes</td><td>Used space and trend of volumes. Able to record detailed performance data for each protocol</td></tr>
+<tr><td>netapp_api_cluster</td><td>Cluster status</td></tr>
+<tr><td>netapp_api_cpu</td><td>Overall CPU utilization</td></tr>
+<tr><td>netapp_api_disk</td><td>Disk summary check. Includes total raw capacity and info about broken and spare disks</td></tr>
+<tr><td>netapp_api_if</td><td>Interface checks (Fibrechannel not include so far)</td></tr>
+<tr><td>netapp_api_protocol</td><td>Read OPS / Write OPS for each protocol (nfs, nfsv4, cifs, fcp, iscsci)</td></tr>
+<tr><td>netapp_api_status</td><td>Filers Diagnosis Status (overall status)</td></tr>
+<tr><td>netapp_api_version</td><td>Version information</td></tr>
+<tr><td>netapp_api_vf_stats.traffic</td><td>vFiler traffic (Read/Write OPS, Net-Data Send/Recv, Read/Write Bytes)</td></tr>
+<tr><td>netapp_api_vf_stats.cpu_util</td><td>vFiler CPU utilization</td></tr>
+<tr><td>netapp_api_vf_status</td><td>vFiler status</td></tr>
+<tr><td>netapp_api_psu</td><td>Power supplies summary which are relevant to that filer. Reports broken units</td></tr>
+<tr><td>netapp_api_fan</td><td>Fans summary which are relevant to that filer. Reports broken units</td><tr>
+<tr><td>netapp_api_temp</td><td>Temperature sensor summary for internal and ambient sensors relevant to that filer. Reports broken units</td></tr>
+</table>
+
+Note: This is the initial version of this agent. It has been tested on a handful of NetApp systems.

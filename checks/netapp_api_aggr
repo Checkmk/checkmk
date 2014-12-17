@@ -24,9 +24,38 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# This file was shipped with Check_MK previous to 1.2.5i6. To prevent
-# problems during update, this dummy file is shipped. It overwrites
-# the outdated existing file and invalidates it. This can be removed
-# in later versions.
+# <<<netapp_api_aggr:sep(9)>>>
+# [config_instance]       aggr-list-info
+# aggregates
+#   aggr-info
+#     name        aggr0
+#     size-total  6606028800
+#     size-available      5707771904
 
-# The filters are now defined in plugins/visuals/filters.py
+def inventory_netapp_api_aggr(parsed):
+    aggrs = parsed.get("aggr-list-info")
+    return [ (values.get("name"), {}) for name, values in aggrs.items() if values.get("name") ]
+
+def check_netapp_api_aggr(item, params, parsed):
+    aggrs = parsed.get("aggr-list-info")
+    aggr  = aggrs.get(item)
+    if not aggr:
+        return (3, "Aggregation not found in agent output")
+
+    mega = 1024.0 * 1024.0
+    size_total = saveint(aggr.get("size-total")) / mega
+    size_avail = saveint(aggr.get("size-available")) / mega
+    size_total = 20000
+    size_avail = 20000
+    return df_check_filesystem_list(item, params, [(item, size_total, size_avail)])
+
+check_info["netapp_api_aggr"] = {
+    'check_function'      : check_netapp_api_aggr,
+    'parse_function'      : lambda info: netapp_api_convert_info(info,
+                                         configs = {"aggr-list-info": {"block-name": "aggr-info", "key": "name"}}),
+    'inventory_function'  : inventory_netapp_api_aggr,
+    'service_description' : 'Aggregation %s',
+    'group'               : 'filesystem',
+    'has_perfdata'        : True,
+    'includes'            : [ "df.include", "netapp_api.include" ]
+}

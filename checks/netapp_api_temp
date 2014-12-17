@@ -1,0 +1,97 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<netapp_api_temp:sep(9)>>>
+# 50:05:0c:c0:02:20:d1:16 shelf-owned true
+# 50:05:0c:c0:02:20:d1:16 temp-sensor-is-ambient  true    false   false
+# 50:05:0c:c0:02:20:d1:16 temp-sensor-low-warning 10  10  10
+# 50:05:0c:c0:02:20:d1:16 temp-sensor-hi-warning  40  53  53
+# 50:05:0c:c0:02:20:d1:16 temp-sensor-hi-critical 50  63  63
+# 50:05:0c:c0:02:20:d1:16 temp-sensor-current-temperature 28  33  35
+# 50:05:0c:c0:02:20:d1:16 temp-sensor-low-critical 0   0   0
+
+def inventory_netapp_api_temp(parsed):
+    yield "Internal", None
+    yield "Ambient", None
+
+def check_netapp_api_temp(item, _no_params, parsed):
+    is_ambient = item == "Ambient" and "true" or "false"
+
+    sensor_count  = 0
+    sum_temp      = []
+
+    sensor_errors = []
+    for shelf, sensors in parsed.items():
+        if sensors["shelf-owned"][0] != "true":
+            continue
+
+        for idx, ambient in enumerate(sensors["temp-sensor-is-ambient"]):
+            if ambient != is_ambient:
+                continue
+
+            sensor_count += 1
+            current_temp = saveint(sensors["temp-sensor-current-temperature"][idx])
+            sum_temp.append(current_temp)
+
+            # Check built-in levels
+            if sensors["temp-sensor-is-error"][idx] == "true":
+                sensor_no = sensors["temp-sensor-element-no"][idx]
+                warn_low  = saveint(sensors["temp-sensor-low-warning"][idx])
+                crit_low  = saveint(sensors["temp-sensor-low-critical"][idx])
+                warn_high = saveint(sensors["temp-sensor-hi-warning"][idx])
+                crit_high = saveint(sensors["temp-sensor-hi-critical"][idx])
+                if current_temp >= crit_high:
+                    sensor_errors.append((2, "Shelf %s(%s) too high (warn/crit at %s/%s)" % (shelf, sensor_no, warn_high, crit_high)))
+                elif current_temp >= warn_high:
+                    sensor_errors.append((1, "Shelf %s(%s) too high (warn/crit at %s/%s)" % (shelf, sensor_no, warn_high, crit_high)))
+                elif current_temp <= crit_low:
+                    sensor_errors.append((2, "Shelf %s(%s) too low (warn/crit at %s/%s)" % (shelf, sensor_no, warn_low, crit_low)))
+                elif current_temp <= warn_low:
+                    sensor_errors.append((1, "Shelf %s(%s) too low (warn/crit at %s/%s)" % (shelf, sensor_no, warn_low, crit_low)))
+
+    yield 0, "%s Temperature sensors" % sensor_count
+
+    if sum_temp:
+        temp_avg = float(sum(sum_temp)) / len(sum_temp)
+        perfdata = [ (item.lower(), temp_avg) ]
+        yield 0, "Average Temp: %.1f °C" % temp_avg, perfdata
+
+    max_sensors = 5
+    for state, text in sensor_errors[:max_sensors]:
+        yield state, text
+    if len(sensor_errors) > max_sensors:
+        yield 0, "more sensors failed (%d total) - only the first %d errors are shown..." % (len(sensor_errors), max_sensors)
+
+
+check_info["netapp_api_temp"] = {
+    'check_function'      : check_netapp_api_temp,
+    'inventory_function'  : inventory_netapp_api_temp,
+    'parse_function'      : netapp_api_parse_info_environ,
+    'has_perfdata'        : True,
+    'service_description' : 'Temperature Shelfes %s',
+    'includes'            : ["netapp_api.include"]
+}
+

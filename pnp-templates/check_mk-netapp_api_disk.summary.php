@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,9 +23,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# This file was shipped with Check_MK previous to 1.2.5i6. To prevent
-# problems during update, this dummy file is shipped. It overwrites
-# the outdated existing file and invalidates it. This can be removed
-# in later versions.
+setlocale(LC_ALL, "POSIX");
 
-# The filters are now defined in plugins/visuals/filters.py
+// Make data sources available via names
+$RRD = array();
+foreach ($NAME as $i => $n) {
+    $RRD[$n] = "$RRDFILE[$i]:$DS[$i]:AVERAGE";
+}
+
+$sizegb = sprintf("%.1f", $MAX[1]);
+
+$opt[1] = "--vertical-label Bytes -l 0 -b 1024 --title 'Total raw capacity of $hostname' ";
+# First graph show current filesystem usage
+$def[1] = "DEF:bytes=$RRD[total_space] ";
+$def[1] .= "AREA:bytes#00ffc6:\"Capacity\" ";
+
+# read ops
+$opt[2] = "--vertical-label Disks -l 0 --title 'Spare and broken disks of $hostname' ";
+$def[2] = "".
+"DEF:sparedisks=$RRD[spare] ".
+"LINE:sparedisks#00e060:\" Spare  \" ".
+"GPRINT:sparedisks:LAST:\"%7.0lf last\" ".
+"GPRINT:sparedisks:AVERAGE:\"%7.0lf avg\" ".
+"GPRINT:sparedisks:MAX:\"%7.0lf max\\n\" ".
+
+"DEF:brokendisks=$RRD[broken] ".
+"LINE:brokendisks#e04000:\" Broken \" ".
+"GPRINT:brokendisks:LAST:\"%7.0lf last\" ".
+"GPRINT:brokendisks:AVERAGE:\"%7.0lf avg\" ".
+"GPRINT:brokendisks:MAX:\"%7.0lf max\\n\" ";
+
+?>

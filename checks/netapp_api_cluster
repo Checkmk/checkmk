@@ -1,0 +1,111 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<netapp_api_cluster:sep(9)>>>
+# [config_instance] cf-status
+# current-time    1415200211
+# current-mode    non_ha
+# is-enabled  true
+# partner
+# state   ERROR
+# is-interconnect-up  false
+# partner-in-headswap false
+# local-in-headswap   false
+# new-partner-sysid   0
+#
+# <<<netapp_api_cluster:sep(9)>>>
+# [config_instance]   cf-status
+# current-time    1415280951
+# is-enabled  true
+# partner zmucfd
+# state   CONNECTED
+# time-master-status  unknown
+# is-interconnect-up  true
+
+
+def inventory_netapp_api_cluster(info):
+    data = dict([line for line in info if len(line) == 2])
+    if data.get("current-mode", "").lower() != "non_ha": # non_ha is standalone
+        return [ (data.get("partner"), {"state": data.get("state", "").lower()}) ]
+
+# Cluster states according to docu:
+# connected - Partner is available for takeover
+# takeover_scheduled - Partner is down and takeover is scheduled
+# takeover_started - Takeover process has begun
+# takeover - Currently controlling partner's resources.
+# taken_over - Partner is controlling filer's resources
+# takeover_failed - Failed to takeover the partner
+# giving_back - Sendhome process in progress
+# giveback_partial_waiting - This node controls partner aggregates even
+#                            though the node is not in takeover. And we're waiting for a connection to the partner.
+# giveback_partial_connected - This node controls partner aggregates even though the node is not in takeover.
+#                              The partner is available to receive the aggregates.
+# waiting_for_root_aggr - Partner is controlling dblade's root aggregate If we're in this state, many other optional fields are not returned.
+# waiting - Waiting for a connection to partner. Generally happens while partner is rebooting.
+# in_maintenance_mode - node is in maintenance mode. In the mode it is not possible to determine more detailed information (e.g. cluster or not; takeover or not, etc).
+# pending_shutdown - starting a takeover/sendhome is inhibited due to a pending system shutdown. i
+# error - There is an error with the system
+# User have to compare the return values case-insensitively.
+
+def check_netapp_api_cluster(item, params, info):
+    data = dict([line for line in info if len(line) == 2])
+
+    had_errors = False
+    state = data.get("state").lower()
+    if state == "error":
+        had_errors = True
+        yield 2, "Cluster state error"
+    if state == "takeover":
+        had_errors = True
+        yield 1, "Cluster takeover"
+    elif state == "takeover_failed":
+        had_errors = True
+        yield 2, "Takeover failed. Reason: %s" % data.get("takeover-failure-reason", "None available")
+    elif state != params["state"]:
+        had_errors = True
+        yield 1, "Cluster state is %s. (%s expected)" % (state, params.get("state"))
+
+    if data.get("is-interconnect-up") != "true":
+        had_errors = True
+        yield 2, "Cluster interconnect is not up"
+
+    if data.get("current-mode", "") == "non_ha":
+        had_errors = True
+        yield 1, "Running in stand-alone mode"
+
+    if data.get("partner") != item:
+        had_errors = True
+        yield 1, "Partner name changed: %s instead of %s" % (data.get("partner", "None"), item)
+
+    if not had_errors:
+        yield 0, "Cluster Status OK"
+
+check_info["netapp_api_cluster"] = {
+    'check_function'      : check_netapp_api_cluster,
+    'inventory_function'  : inventory_netapp_api_cluster,
+    'service_description' : 'Cluster with %s',
+}
+

@@ -87,8 +87,7 @@ check_info["casa_cpu_temp"] = {
     "service_description"   : "Temperature %s",
     "group"                 : "hw_temperature",
     "has_perfdata"          : True,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
-                                 [".1.3.6.1.4.1.20858.2.400", ".1.3.6.1.4.1.20858.2.50"],
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20858.2."),
     "snmp_info"             : [
                ( ".1.3.6.1.2.1.47.1.1.1.1.2",        [ OID_END, '' ] ), # Entity descriptions, quite long...
                ( ".1.3.6.1.2.1.99.1.1.1.4",          [ OID_END, '' ] ), # Temperatures, Value
@@ -96,4 +95,3 @@ check_info["casa_cpu_temp"] = {
                ( ".1.3.6.1.2.1.99.1.1.1.6",          [ OID_END, '' ] ), # Temperatures, Unit
                               ]
 }
-

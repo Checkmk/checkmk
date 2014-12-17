@@ -187,6 +187,7 @@ else:
                           ],
           "checksum"    : False,
         },
+
         "mkeventstatus": {
           "group"       : _("Configuration"),
           "title"       : _("Event Console Configuration"),
@@ -207,6 +208,16 @@ else:
                             ("dir",  "var/mkeventd/messages-history"),
                           ],
         },
+        "snmpmibs": {
+          "group"       : _("Configuration"),
+          "title"       : _("SNMP MIBs"),
+          "prefix"      : defaults.omd_root,
+          "paths"       : [
+                            ("dir",  "local/share/check_mk/mibs"),
+                          ],
+          "default"     : True
+        },
+
         "dokuwiki": {
           "title"       : _("Doku Wiki Pages and Settings"),
           "prefix"      : defaults.omd_root,

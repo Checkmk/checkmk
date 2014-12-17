@@ -32,10 +32,12 @@ from lib import *
 try:
     socket_path = defaults.omd_root + "/tmp/run/mkeventd/status"
     pipe_path = defaults.omd_root + "/tmp/run/mkeventd/events"
+    snmp_mibs_dir = defaults.omd_root + "/local/share/check_mk/mibs"
 except:
     run_dir = defaults.livestatus_unix_socket.rsplit("/",1)[0]
     socket_path = run_dir + "/mkeventd/status"
     pipe_path = run_dir + "/mkeventd/events"
+    snmp_mibs_dir = var_dir + "/mkeventd/mibs"
 
 syslog_priorities = [
     (0, "emerg" ),

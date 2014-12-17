@@ -1,0 +1,10 @@
+Title: docsis_channels_upstream, docsis_channels_downstream: now also support CASA 100G
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418823689
+
+

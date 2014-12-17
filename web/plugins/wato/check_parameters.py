@@ -2774,7 +2774,7 @@ register_check_parameters(
                     ])
             ]
         ),
-        help = _("Here you can specify the total memory usage levels for clustered hosts "),
+        help = _("Here you can specify the total memory usage levels for clustered hosts."),
         title = _("Memory Usage"),
         add_label = _("Add limits")
     ),
@@ -4870,9 +4870,10 @@ register_check_parameters(
         elements = [
             ( "additional_servicenames",
                 ListOfStrings(
-                    title = _("Additional names for the service"),
-                    help = _("If the service have diffrent names on diffrent "
-                           "Hosts, you can use this option to match them in one rule"),
+                    title = _("Alternative names for the service"),
+                    help = _("Here you can specify alternative names that the service might have. "
+                             "This helps when the exact spelling of the services can changed from "
+                             "one version to another."),
                 )
             ),
             ( "states",

@@ -1,0 +1,10 @@
+Title: fc_port: Re-enabled check discovery of this check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418828602
+
+

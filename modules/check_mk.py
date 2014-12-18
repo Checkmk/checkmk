@@ -5990,7 +5990,7 @@ def read_autochecks_of(hostname, world="config"):
         autochecks.append( (ct, it, compute_check_parameters(hostname, ct, it, par)) )
     return autochecks
 
-# Read autochecks, but do not compute final check parameters, 
+# Read autochecks, but do not compute final check parameters,
 # also return a forth column with the raw string of the parameters.
 def parse_autochecks_file(hostname):
     def split_python_tuple(line):
@@ -6385,7 +6385,7 @@ if not done:
                 except:
                     print "Cannot resolve hostname '%s'." % hostname
                     sys.exit(2)
-    
+
         exit_status = do_check(hostname, ipaddress, check_types)
 
 output_profile()

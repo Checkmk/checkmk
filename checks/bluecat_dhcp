@@ -45,11 +45,11 @@ def check_bluecat_dhcp(item, params, info):
         4 : "currently stopping",
         5 : "fault"
     }
-    
+
     ok_on_node = False
     states = {}
     state = 0
-    
+
     # Collect  states of nodes
     for node, oper_state, leases in info:
         oper_state, leases_sec = map(int, (oper_state, leases))
@@ -65,7 +65,7 @@ def check_bluecat_dhcp(item, params, info):
             ok_on_node = node
         # Only needed in cluster:
         states[node] = {'oper_state' : oper_states[oper_state], 'leases_sec' : leases_sec, 'state' : temp_state }
-   
+
     # Are we in a Cluster?
     if len(info) > 1:
         if ok_on_node:

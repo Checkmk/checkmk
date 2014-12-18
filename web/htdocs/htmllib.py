@@ -33,6 +33,14 @@
 #
 # - Order of arguments:
 #   e.g. icon(help, icon) -> change and make help otional?
+#
+# - General rules:
+# 1. values of type str that are passed as arguments or
+#    return values or are stored in datastructures most not contain
+#    non-Ascii characters! UTF-8 encoding must just be used in
+#    the last few CPU cycles before outputting. Conversion from
+#    input to str or unicode must happen as early as possible,
+#    directly when reading from file or URL.
 
 import time, os, pwd, urllib, random
 
@@ -513,21 +521,22 @@ class html:
             self.set_focus(varname)
         self.form_vars.append(varname)
 
-    def sorted_select(self, varname, options, deflt="", onchange=None, attrs = {}):
+    def sorted_select(self, varname, choices, deflt="", onchange=None, attrs = {}):
         # Sort according to display texts, not keys
-        sorted = options[:]
+        sorted = choices[:]
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
         self.select(varname, sorted, deflt, onchange, attrs)
 
-    def select(self, varname, options, deflt="", onchange=None, attrs = {}):
-        current = self.var(varname, deflt)
+    # Choices is a list pairs of (key, title)
+    def select(self, varname, choices, deflt="", onchange=None, attrs = {}):
+        current = self.var_utf8(varname, deflt)
         onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
         attrs.setdefault('size', 1)
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
 
         self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" %
                              (onchange_code, varname, varname, attributes))
-        for value, text in options:
+        for value, text in choices:
             if value == None:
                 value = ""
             elif type(value) == unicode:
@@ -1026,9 +1035,7 @@ class html:
 
     def var_utf8(self, varname, deflt = None):
         val = self.vars.get(varname, deflt)
-        if val == None:
-            return val
-        else:
+        if val != None:
             return val.decode("utf-8")
 
     # Return all values of a variable that possible occurs more

@@ -980,7 +980,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
     # Now process all entries that are specific to the host
     # in search (single host) or that might match the host.
-    for entry in read_autochecks_of(hostname):
+    for entry in read_autochecks_of(hostname, world):
         handle_entry(entry)
 
     for entry in g_singlehost_checks.get(hostname, []):

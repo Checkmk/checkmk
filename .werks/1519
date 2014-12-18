@@ -1,0 +1,11 @@
+Title: etherbox.temp: Now supports lower levels, output configurable to Celsius, Fahrenheit or Kelvin
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1418915146
+Class: feature
+
+etherbox.temp now no longer uses the room temperature WATO rule, but the new "temperature" rule, note that the
+old rule no longer applies to etherbox. The new rule allows to set lower levels, as well as output in
+Celsius, Fahrenheit or Kelvin.

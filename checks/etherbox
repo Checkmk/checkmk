@@ -83,33 +83,20 @@ def check_etherbox_temp(item, params, info):
     except Exception, error:
         return 3, error.message
 
-    uom = { "0": "°C", "1": "°F", "2": "K" }[info[0][0][0]]
-    state = 0
-
+    uom = { "0": "c", "1": "f", "2": "k" }[info[0][0][0]]
     temp = int(value) / 10.0
-    levels_text = ""
-    if params:
-        warn, crit = params
-        levels_text = " (warn/crit at %.1f/%.1f %s)" % (warn, crit, uom)
-        if temp > crit:
-            state = 2
-        elif temp > warn:
-            state = 1
-    else:
-        warn, crit = None, None
+    return check_temperature(temp, params, uom)
 
-    perfdata = [ ("temp", temp, warn, crit) ]
-    infotext = "%s: Temperature %.1f %s %s" % (name, temp, uom, levels_text)
-    return (state, infotext, perfdata)
 
 check_info["etherbox.temp"] = {
     "check_function"        : check_etherbox_temp,
     "inventory_function"    : lambda x: inventory_etherbox(x, "1"),
     "service_description"   : "Sensor %s",
     "has_perfdata"          : True,
-    "group"                 : "room_temperature",
+    "group"                 : "temperature",
     "snmp_scan_function"    : etherbox_scan,
     "snmp_info"             : etherbox_info,
+    "includes"              : [ "temperature.include" ],
 }
 
 def check_etherbox_humidity(item, params, info):

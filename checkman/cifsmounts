@@ -1,0 +1,38 @@
+title: Health of CIFS Mounts mountet on UNIX/ Linux
+agents: linux, aix
+catalog: os/services
+license: GPL
+distribution: check_mk
+description:
+ This check probes the availability of CIFS mounts. The agent sends the
+ status of all NFS mounts, if the command line utility {waitmax} is available
+ (it is is used to avoid hanging if the server is not responding). The
+ probe is done by trying a {stat -f} (system call {statfs(2)}) on the mount
+ point. If that lasts longer then 2 seconds, then the server is considered
+ to be not responding.
+
+ When you install the agent manually, please do not forget to also
+ install {waitmax} into {/usr/bin}.  That file is shipped together with
+ the agent. When {waitmax} is missing, the agent will silently omit the
+ section {nfsmounts}.
+
+ If the CIFS mount is "stale", then {stat -f} returns immediately but with
+ a size of {0}. The check detects that and results in a warning state.
+
+ Please note, that though this check outputs the current usage of the remote
+ filesystem, no levels can be defined for the used space and no performance
+ data is output. Please do a check for used space directly on the CIFS server.
+
+item:
+ The mount point.
+
+perfdata:
+  This check does not provide performance data. The disk usage is assumedly
+  measured on the file server itself.  Duplicating that data on all clients
+  would unneccessarily create redundant RRDs.
+
+inventory:
+  All CIFS mounts are found automatically. This is done
+  by scanning {/proc/mounts} (linux) or using the mount command (aix). The file {/etc/fstab}
+  is irrelevant.
+

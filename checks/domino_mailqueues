@@ -38,9 +38,10 @@ domino_mailqueues = {
 
 def inventory_domino_mailqueues(info):
     for line in info:
-        val = int(line[0][0].split(".")[12])
-        if val in domino_mailqueues.keys():
-            yield domino_mailqueues[val][0], {}
+        if line:
+            val = int(line[0][0].split(".")[12])
+            if val in domino_mailqueues.keys():
+                yield domino_mailqueues[val][0], {}
 
 def check_domino_mailqueues(item, params, info):
     for line in info:

@@ -1,0 +1,9 @@
+Title: domino_mailqueues: Fixed exception during inventory when no data usable data available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418890967
+Class: fix
+
+

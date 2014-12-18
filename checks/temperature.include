@@ -28,11 +28,14 @@
 def fahrenheit_to_celsius(tempf):
     return (float(tempf) - 32) * (5.0 / 9.0)
 
+def celsius_to_fahrenheit(tempc):
+    return (float(tempc) * (9.0 / 5.0)) + 32
+
 
 # Checks Celsius temperature against crit/warn levels defined in params. temp must
 # be int or float
 
-def check_temperature(temp, params):
+def check_temperature(temp, params, dev_unit = "c"):
 
     def tostring(temp):
         if type(temp) == int:
@@ -40,18 +43,66 @@ def check_temperature(temp, params):
         else:
             return "%.1f" % temp
 
-    warn, crit = params
-    perfdata = [ ("temp", temp, warn, crit) ]
-    infotext  = "Temperature: %s °C" % tostring(temp)
-    levelstext = " (warn/crit at %s/%s °C)" % (tostring(warn), tostring(crit))
+    def outtemp(tempc, output_unit):
+        if output_unit == "f":
+            return celsius_to_fahrenheit(tempc)
+        elif output_unit == "k":
+            return tempc + 273.15
+        else:
+            return tempc
 
-    if crit != None and temp >= crit:
-        status = 2
-        infotext += levelstext
-    elif warn != None and temp >= warn:
-        status = 1
-        infotext += levelstext
-    else:
-        status = 0
+    unitsym = {
+        "c": "°C",
+        "f": "°F",
+        "k": "K",
+    }
+
+    if type(params) == tuple:
+        params = { "levels" : params }
+    elif params == None:
+        params = {}
+
+    input_unit = params.get("input_unit", dev_unit)
+    output_unit = params.get("output_unit", "c")
+
+    if input_unit == "f":
+        temp = fahrenheit_to_celsius(temp)
+    if input_unit == "k":
+        temp = temp - 273.15
+
+    if type(params) == dict:
+        warn, crit = params.get("levels", (None, None))
+        warnl, critl = params.get("levels_lower", (None, None))
+        perfdata = [ ("temp", temp, warn, crit, warnl, critl) ]
+        infotext = "%s %s" % (tostring(outtemp(temp, output_unit)), unitsym[output_unit])
+        levelstext = ""
+        levelstext_lower = ""
+        if warn != None and crit != None:
+            levelstext = " (warn/crit at %s/%s %s)" % (
+                tostring(outtemp(warn, output_unit)),
+                tostring(outtemp(crit, output_unit)),
+                unitsym[output_unit])
+        if warnl != None and critl != None:
+            levelstext_lower = " (warn/crit below %s/%s %s)" % (
+                tostring(outtemp(warnl, output_unit)),
+                tostring(outtemp(critl, output_unit)),
+                unitsym[output_unit])
+
+        if crit != None and temp >= crit:
+            status = 2
+            infotext += levelstext
+        elif critl != None and temp < critl:
+            status = 2
+            infotext += levelstext_lower
+
+        elif warn != None and temp >= warn:
+            status = 1
+            infotext += levelstext
+        elif warnl != None and temp < warnl:
+            status = 1
+            infotext += levelstext_lower
+
+        else:
+            status = 0
 
     return status, infotext, perfdata

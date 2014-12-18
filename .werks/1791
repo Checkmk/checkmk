@@ -1,0 +1,15 @@
+Title: Fix problem where many bogus RRD files for Check_MK service would be created
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418918877
+
+The problem appeared when using CMC and during check execution some general problem
+appeared like <tt>UNKNOWN - global name 'netsnmp' is not defined</tt>. Then in the
+<i>next</i> check done by the same helper this message would appear again because
+one variable was not cleared. That garbled the protocol with the microcore and the
+later took the output of the passive checks as performance data. This has been
+fixed.

@@ -1,0 +1,11 @@
+Title: hwg_temp: Now uses new temperature ruleset, allows lower levels and alternate output units.
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1418915653
+Class: feature
+
+hwg_temp now no longer uses the room temperature WATO rule, but the new temperature rule, please note
+that the old rule no longer applies. The new rule allows setting lower levels, overriding the input unit
+and output in Kelvin, Celsius and Fahrenheit.

@@ -1,0 +1,11 @@
+Title: carel_sensors: Now uses new Temperature WATO-Rule
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1418918544
+Class: feature
+
+This check no longer uses the Room Temperature rule, but the new Temperature rule,
+allowing to set lower levels, configure output unit and override the sensor unit.
+Please note that existing room temperature rulesets will no longer apply.

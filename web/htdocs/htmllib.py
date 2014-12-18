@@ -730,6 +730,7 @@ class html:
             self.write('<title>')
             self.write(self.attrencode(title))
             self.write('</title>\n')
+            self.write('<meta http-equiv="X-UA-Compatible" content="IE=edge" />')
 
             # If the variable _link_target is set, then all links in this page
             # should be targetted to the HTML frame named by _link_target. This

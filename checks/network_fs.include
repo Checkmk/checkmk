@@ -49,7 +49,7 @@ def check_network_fs_mounts(item, _no_params, info):
             free_blocks = int(line[-2]) # for non-root user
             blocksize = int(line[-1])
 
-            if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
+            if size_blocks <= 0 or free_blocks < 0 or blocksize > 1024*1024:
                 return (2, "Stale fs handle")
 
             if line[-5] == 'ok':

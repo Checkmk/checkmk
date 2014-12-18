@@ -22,6 +22,7 @@
     * 1769 FIX: megaraid_bbu: Fixed exception for some controllers reporting "full charge capacity"
     * 1770 FIX: megaraid_pdisks: Now handling unconfigured good/bad states...
     * 1771 FIX: domino_mailqueues: Fixed exception during inventory when no data usable data available
+    * 1208 FIX: netwroks_fs: Detects now not reachable cifs mounts
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

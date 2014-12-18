@@ -1,0 +1,9 @@
+Title: netwroks_fs: Detects now not reachable cifs mounts
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418891703
+Class: fix
+
+

@@ -5983,7 +5983,7 @@ def read_autochecks_of(hostname, world="config"):
         autochecks.append( (ct, it, compute_check_parameters(hostname, ct, it, par)) )
     return autochecks
 
-# Read autochecks, but do not compute final check parameters, 
+# Read autochecks, but do not compute final check parameters,
 # also return a forth column with the raw string of the parameters.
 def parse_autochecks_file(hostname):
     def split_python_tuple(line):
@@ -6086,6 +6086,8 @@ def output_profile():
 #   | Main entry point and option parsing. Here is where all begins.       |
 #   '----------------------------------------------------------------------'
 
+load_checks()
+
 opt_nowiki     = False
 opt_split_rrds = False
 
@@ -6107,18 +6109,11 @@ non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify'
                       '--man', '-V', '--version' ,'-h', '--help', '--automation',
                       '--create-rrd', '--convert-rrds', '--keepalive' ]
 
-non_checks_options = ['--create-rrd', '--convert-rrds', '--help']
-
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, err:
     print str(err)
     sys.exit(1)
-
-# The check files set serveral config vars which might be overwritten
-# later by configuration. So the checks need to be loaded before the config
-if len(set.intersection(set(non_checks_options), [o[0] for o in opts])) == 0:
-    load_checks()
 
 # Read the configuration files (main.mk, autochecks, etc.), but not for
 # certain operation modes that does not need them and should not be harmed
@@ -6378,7 +6373,7 @@ if not done:
                 except:
                     print "Cannot resolve hostname '%s'." % hostname
                     sys.exit(2)
-    
+
         exit_status = do_check(hostname, ipaddress, check_types)
 
 output_profile()

@@ -88,7 +88,7 @@ def check_megaraid_bbu(item, _no_params, info):
     else:
         charge = ", Charge is %s" % controller['Relative State of Charge']
         if 'Full Charge Capacity' in controller:
-            charge += ", Charge is %s, Capacity is %s" % controller['Full Charge Capacity']
+            charge += ", Capacity is %s" % controller['Full Charge Capacity']
 
     # verify defined important parameters to current level
     for varname, (refvalue, refstate) in megaraid_bbu_refvalues.items():

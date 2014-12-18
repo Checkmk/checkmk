@@ -263,14 +263,15 @@ except Exception, e:
     sys.exit(5)
 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .--Check helpers ------------------------------------------------------.
 #   |     ____ _               _      _          _                         |
 #   |    / ___| |__   ___  ___| | __ | |__   ___| |_ __   ___ _ __ ___     |
 #   |   | |   | '_ \ / _ \/ __| |/ / | '_ \ / _ \ | '_ \ / _ \ '__/ __|    |
 #   |   | |___| | | |  __/ (__|   <  | | | |  __/ | |_) |  __/ |  \__ \    |
 #   |    \____|_| |_|\___|\___|_|\_\ |_| |_|\___|_| .__/ \___|_|  |___/    |
 #   |                                             |_|                      |
-#   |                                                                      |
+#   +----------------------------------------------------------------------+
 #   | These functions are used by some checks at administration time.      |
 #   +----------------------------------------------------------------------+
 
@@ -282,8 +283,8 @@ def no_inventory_possible(checkname, info):
         sys.stdout.write("%s does not support inventory. Skipping it.\n" % checkname)
     return []
 
-
-#   +----------------------------------------------------------------------+
+#.
+#   .--Load checks---------------------------------------------------------.
 #   |       _                    _        _               _                |
 #   |      | |    ___   __ _  __| |   ___| |__   ___  ___| | _____         |
 #   |      | |   / _ \ / _` |/ _` |  / __| '_ \ / _ \/ __| |/ / __|        |
@@ -309,49 +310,48 @@ special_agent_info                 = {}
 # configuration, because checks define variables with default
 # values. The user can override those variables in his configuration.
 # Do not read in the checks if check_mk is called as module
+def load_checks():
+    filelist = glob.glob(checks_dir + "/*")
+    filelist.sort()
 
-filelist = glob.glob(checks_dir + "/*")
-filelist.sort()
+    # read local checks *after* shipped ones!
+    if local_checks_dir:
+        local_files = glob.glob(local_checks_dir + "/*")
+        local_files.sort()
+        filelist += local_files
 
-# read local checks *after* shipped ones!
-if local_checks_dir:
-    local_files = glob.glob(local_checks_dir + "/*")
-    local_files.sort()
-    filelist += local_files
+    # read include files always first, but still in the sorted
+    # order with local ones last (possibly overriding variables)
+    filelist = [ f for f in filelist if f.endswith(".include") ] + \
+               [ f for f in filelist if not f.endswith(".include") ]
 
-# read include files always first, but still in the sorted
-# order with local ones last (possibly overriding variables)
-filelist = [ f for f in filelist if f.endswith(".include") ] + \
-           [ f for f in filelist if not f.endswith(".include") ]
+    varname = None
+    value = None
+    ignored_variable_types = [ type(lambda: None), type(os) ]
 
-varname = None
-value = None
-ignored_variable_types = [ type(lambda: None), type(os) ]
+    known_vars = set(vars().keys()) # track new configuration variables
 
-known_vars = set(vars().keys()) # track new configuration variables
+    for f in filelist:
+        if not f.endswith("~"): # ignore emacs-like backup files
+            try:
+                execfile(f, globals())
+            except Exception, e:
+                sys.stderr.write("Error in plugin file %s: %s\n" % (f, e))
+                if opt_debug:
+                    raise
+                sys.exit(5)
 
-for f in filelist:
-    if not f.endswith("~"): # ignore emacs-like backup files
-        try:
-            execfile(f)
-        except Exception, e:
-            sys.stderr.write("Error in plugin file %s: %s\n" % (f, e))
-            if opt_debug:
-                raise
-            sys.exit(5)
+    for varname, value in vars().iteritems():
+        if varname[0] != '_' \
+            and varname not in known_vars \
+            and type(value) not in ignored_variable_types:
+            config_variable_names.add(varname)
 
-for varname, value in vars().iteritems():
-    if varname[0] != '_' \
-        and varname not in known_vars \
-        and type(value) not in ignored_variable_types:
-        config_variable_names.add(varname)
+    # Now convert check_info to new format.
+    convert_check_info()
 
-# Now convert check_info to new format.
-convert_check_info()
-
-
-
-#   +----------------------------------------------------------------------+
+#.
+#   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
 #   |                   / ___| |__   ___  ___| | _____                     |
 #   |                  | |   | '_ \ / _ \/ __| |/ / __|                    |
@@ -980,7 +980,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
     # Now process all entries that are specific to the host
     # in search (single host) or that might match the host.
-    for entry in read_autochecks_of(hostname):
+    for entry in read_autochecks_of(hostname, world):
         handle_entry(entry)
 
     for entry in g_singlehost_checks.get(hostname, []):
@@ -1473,7 +1473,7 @@ def host_check_command(hostname, ip, is_clust):
         return "check-mk-host-smart"
 
     elif value in [ "ping", "smart" ]:
-        ping_args = check_icmp_arguments(hostname)
+        ping_args = check_icmp_arguments_of(hostname)
         if is_clust and ip: # Do check cluster IP address if one is there
             return "check-mk-host-ping!%s" % ping_args
         elif ping_args and is_clust: # use check_icmp in cluster mode
@@ -1510,7 +1510,7 @@ def host_check_command(hostname, ip, is_clust):
 
 
 
-def check_icmp_arguments(hostname):
+def check_icmp_arguments_of(hostname):
     values = host_extra_conf(hostname, ping_levels)
     levels = {}
     for value in values[::-1]: # make first rules have precedence
@@ -2410,7 +2410,7 @@ define service {
 %s  host_name\t\t\t%s
 }
 
-""" % (pingonly_template, ping_command, check_icmp_arguments(hostname), extra_service_conf_of(hostname, "PING"), hostname))
+""" % (pingonly_template, ping_command, check_icmp_arguments_of(hostname), extra_service_conf_of(hostname, "PING"), hostname))
 
 def autodetect_plugin(command_line):
     plugin_name = command_line.split()[0]
@@ -6112,11 +6112,18 @@ non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify'
                       '--man', '-V', '--version' ,'-h', '--help', '--automation',
                       '--create-rrd', '--convert-rrds', '--keepalive' ]
 
+non_checks_options = ['--create-rrd', '--convert-rrds', '--help']
+
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, err:
     print str(err)
     sys.exit(1)
+
+# The check files set serveral config vars which might be overwritten
+# later by configuration. So the checks need to be loaded before the config
+if len(set.intersection(set(non_checks_options), [o[0] for o in opts])) == 0:
+    load_checks()
 
 # Read the configuration files (main.mk, autochecks, etc.), but not for
 # certain operation modes that does not need them and should not be harmed

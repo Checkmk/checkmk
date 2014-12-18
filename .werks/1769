@@ -1,0 +1,10 @@
+Title: megaraid_bbu: Fixed exception for some controllers reporting "full charge capacity"
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418888985
+
+

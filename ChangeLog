@@ -33,6 +33,7 @@
     * 1206 FIX: Hostname not longer shown as column in host views
     * 1766 FIX: Fixed exceptions in Web GUI when host or service groups used non ascii characters in names...
     * 1773 FIX: Fixed different exceptions when using localized multisite
+    * 1774 FIX: IE: Always use the latest available rendering enginge of the used browser...
 
     WATO:
     * 1760 Added search form to manual checks page
@@ -51,6 +52,7 @@
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used
+
 
 1.2.6b2:
 

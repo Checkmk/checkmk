@@ -47,6 +47,7 @@ def page_index():
 <html>
 <head>
  <title>%s</title>
+ <meta http-equiv="X-UA-Compatible" content="IE=edge" />
  <link rel="shortcut icon" href="images/favicon.ico" type="image/ico">
 </head>
 <frameset cols="280,*" frameborder="0" framespacing="0" border="0">

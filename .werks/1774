@@ -1,0 +1,14 @@
+Title: IE: Always use the latest available rendering enginge of the used browser
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418915144
+
+We tell IE to always use the latest available rendering engine instead of a guessed one
+or the default one. The user might still override this by choosing a rendering engine
+by hand in IE.
+
+This should fix several rendering and JS problems e.g. when using the dashboard designer.

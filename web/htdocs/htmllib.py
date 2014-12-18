@@ -530,8 +530,6 @@ class html:
         for value, text in options:
             if value == None:
                 value = ""
-            elif type(value) == unicode:
-                value = value.encode('utf-8')
             sel = value == current and " selected" or ""
             self.write("<option value=\"%s\"%s>%s</option>\n" %
                 (self.attrencode(value), sel, self.attrencode(text)))

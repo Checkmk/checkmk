@@ -43,10 +43,14 @@ def inventory_lparstat(info):
 
 def check_lparstat(item, params, info):
     line = info[0]
-    if len(line) == 9:
+    if len(line) == 10:
+        cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint' ]
+        uom    = [ '',      '%',    '',      '',    '',     '' ]
+        values = line[-6:]
+    elif len(line) == 9:
         cols   = [ 'physc', 'entc', 'lbusy', 'app' ]
         uom    = [ '',      '%',    '',      '' ]
-        values = line[-4]
+        values = line[-4:]
     elif len(line) == 6:
         cols   = [ 'nsp', 'utcyc' ]
         uom    = [ '%',   '%' ]

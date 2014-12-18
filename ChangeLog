@@ -1,3 +1,8 @@
+1.2.6b4:
+    Multisite:
+    * 1774 FIX: IE: Always use the latest available rendering enginge of the used browser...
+
+
 1.2.6b3:
     Core & Setup:
     * 1759 Packed RPM and DEB agent packages are now shipped with normal Check_MK package...

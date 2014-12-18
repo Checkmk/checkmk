@@ -1268,8 +1268,6 @@ class html:
             return str(value)
         elif ty not in [str, unicode]:
             value = str(value)
-        elif ty == unicode:
-            value = value.encode("utf-8")
 
         return value.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 

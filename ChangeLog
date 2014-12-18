@@ -26,6 +26,7 @@
     * 1770 FIX: megaraid_pdisks: Now handling unconfigured good/bad states...
     * 1771 FIX: domino_mailqueues: Fixed exception during inventory when no data usable data available
     * 1208 FIX: netwroks_fs: Detects now not reachable cifs mounts
+    * 1772 FIX: lparstat_aix: Check handles already working agent output again
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

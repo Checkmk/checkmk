@@ -1,0 +1,29 @@
+title: Citrix Netscaler CPU Utilization
+agents: snmp
+catalog: app/netscaler
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the CPU utilization on the Citrix Netscaler Loadbalacing
+ Appliance. It uses the {NS-ROOT-MIB} to access the CPU name {nsCPUname}
+ and CPU usage in percent {nsCPUusage}.
+
+ Warning and critical levels can be configured for the check.
+
+inventory:
+ One service per detected CPU will be created.
+
+perfdata:
+ The CPU utilization value in percent for every CPU
+
+item:
+ The name of the CPU
+
+[parameters]
+parameters(dict): parameters is a dictionary with one key
+
+ {"levels"}: a tuple of warning and critical levels for the CPU utilization.
+ The numbers are integers and represent a percentage value.
+
+[configuration]
+netscaler_cpu_default_levels(dict): This variable is preset to {{ "levels": (90, 95) }}

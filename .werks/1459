@@ -1,0 +1,9 @@
+Title: netscaler_cpu: new check to monitor the CPUs of Citrix Netscaler Appliances
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1418922628
+Class: feature
+
+

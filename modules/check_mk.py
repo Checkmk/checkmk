@@ -5611,39 +5611,40 @@ def do_check_keepalive():
                  (status, len(total_check_output), total_check_output))
             total_check_output = ""
 
-            # Flush file descriptors of stdout and stderr, so that diagnostic
-            # messages arrive in time in cmc.log
-            sys.stdout.flush()
-            sys.stderr.flush()
-
-            cleanup_globals()
-
-            # Check if all global variables are clean, but only in debug mode
-            if opt_debug:
-                after = copy_globals()
-                for varname, value in before.items():
-                    if value != after[varname]:
-                        sys.stderr.write("WARNING: global variable %s has changed: %r ==> %s\n"
-                               % (varname, value, repr(after[varname])[:50]))
-                new_vars = set(after.keys()).difference(set(before.keys()))
-                if (new_vars):
-                    sys.stderr.write("WARNING: new variable appeared: %s\n" % ", ".join(new_vars))
-                sys.stderr.flush()
-
         except Exception, e:
             signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
             signal.alarm(0)
             if opt_debug:
                 raise
-            total_check_output = "UNKNOWN - %s\n" % e
-            os.write(keepalive_fd, "%03d\n%08d\n%s" %
-                 (3, len(total_check_output), total_check_output))
+            output = "UNKNOWN - %s\n" % e
+            os.write(keepalive_fd, "%03d\n%08d\n%s" % (3, len(output), output))
+
+        # Flush file descriptors of stdout and stderr, so that diagnostic
+        # messages arrive in time in cmc.log
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        cleanup_globals() # Prepare for next check
+
+        # Check if all global variables are clean, but only in debug mode
+        if opt_debug:
+            after = copy_globals()
+            for varname, value in before.items():
+                if value != after[varname]:
+                    sys.stderr.write("WARNING: global variable %s has changed: %r ==> %s\n"
+                           % (varname, value, repr(after[varname])[:50]))
+            new_vars = set(after.keys()).difference(set(before.keys()))
+            if (new_vars):
+                sys.stderr.write("WARNING: new variable appeared: %s\n" % ", ".join(new_vars))
+            sys.stderr.flush()
 
         keepalive_check_memory(num_checks, keepalive_fd)
         # In case of profiling do just this one cycle and end afterwards
         if g_profile:
             output_profile()
             sys.exit(0)
+
+        # end of while True:...
 
 
 # Just one lines from stdin. But: make sure that
@@ -5718,7 +5719,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
 
     # Initialize dictionary-type default levels variables
     for check in check_info.values():
-        def_var = check.get("default_levels_variable") ######################### HIRN
+        def_var = check.get("default_levels_variable")
         if def_var:
             globals()[def_var] = {}
 

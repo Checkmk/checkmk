@@ -1,4 +1,7 @@
 1.2.6b4:
+    Core & Setup:
+    * 1791 FIX: Fix problem where many bogus RRD files for Check_MK service would be created...
+
     Checks & Agents:
     * 1775 FIX: logins: Fixed exception during check execution
 

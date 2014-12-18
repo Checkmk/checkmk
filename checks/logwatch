@@ -330,11 +330,10 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
             if www_group != None:
                 try:
                     if i_am_root():
-                        import pwd
-                        to_user = pwd.getpwnam(nagios_user)[2]
+                        to_user = nagios_user
                     else:
-                        to_user = -1 # keep user unchanged
-                    os.chown(logdir, to_user, www_group)
+                        to_user = "" # keep user unchanged
+                    os.system("chown %s:%s %s" % (to_user, www_group, quote_shell_string(logdir)))
                     os.chmod(logdir, 0775)
                 except Exception, e:
                     os.rmdir(logdir)

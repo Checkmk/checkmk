@@ -5072,19 +5072,19 @@ register_check_parameters(
                         ( "k", _("Kelvin") ),
                       ]
                 )),
-                ## ( "input_unit",
-                ##   DropdownChoice(
-                ##       title = _("Override unit of sensor"),
-                ##       help = _("In some rare cases the unit that is signalled by the sensor "
-                ##                "is wrong and e.g. the sensor sends values in Fahrenheit while "
-                ##                "they are misinterpreted as Celsius. With this setting you can "
-                ##                "force the reading of the sensor to be interpreted as customized. "),
-                ##       choices = [
-                ##         ( "c", _("Celsius") ),
-                ##         ( "f", _("Fahrenheit") ),
-                ##         ( "k", _("Kelvin") ),
-                ##       ]
-                ## )),
+                ( "input_unit",
+                  DropdownChoice(
+                      title = _("Override unit of sensor"),
+                      help = _("In some rare cases the unit that is signalled by the sensor "
+                               "is wrong and e.g. the sensor sends values in Fahrenheit while "
+                               "they are misinterpreted as Celsius. With this setting you can "
+                               "force the reading of the sensor to be interpreted as customized. "),
+                      choices = [
+                        ( "c", _("Celsius") ),
+                        ( "f", _("Fahrenheit") ),
+                        ( "k", _("Kelvin") ),
+                      ]
+                )),
                 ## ( "sensor_levels",
                 ##   DropdownChoice(
                 ##       title = _("Interpretation of Sensor's own temperature status"),

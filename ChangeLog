@@ -1,6 +1,7 @@
 1.2.6b3:
     Core & Setup:
     * 1759 Packed RPM and DEB agent packages are now shipped with normal Check_MK package...
+    * 1791 FIX: Fix problem where many bogus RRD files for Check_MK service would be created...
 
     Checks & Agents:
     * 1665 agent_netapp: New special agent for NetApp monitoring via Web-API...
@@ -51,6 +52,7 @@
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used
+
 
 1.2.6b2:
 

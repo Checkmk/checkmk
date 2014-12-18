@@ -3,7 +3,7 @@
 
 import os, sys, getopt, signal, time, socket, select, traceback, re, gzip, StringIO
 
-VERSION="1.2.6b2"
+VERSION="1.2.6b3"
 
 sites = {}
 dump_interval = 5 # dump state once every five seconds

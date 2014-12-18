@@ -30,17 +30,11 @@
 # {iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) 3375 bigipTrafficMgmt(2) bigipSystem(1) sysGlobals(1) sysGlobalStats(2) sysGlobalClientSslStat(9) sysClientsslStatCurConns(2)}
 
 factory_settings["f5_bigip_conns_default_levels"] = {
-        "conns": ( 25000, 30000 ),
-        "ssl_conns": ( 25000, 30000 ),
+        "conns"     : (25000, 30000),
+        "ssl_conns" : (25000, 30000),
 }
 
 def inventory_f5_bigip_conns(info):
-    #inventory = []
-    #if info[0][0]:
-    #    inventory.append( ( "Open Connections", {} ) )
-    #if info[0][1]:
-    #    inventory.append( ( "Open SSL Connections", {} ) )
-    #return inventory
     if info:
         return [ ( None, {} ) ]
 

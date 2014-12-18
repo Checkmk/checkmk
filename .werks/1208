@@ -1,4 +1,4 @@
-Title: netwroks_fs: Detects now not reachable cifs mounts
+Title: cifsmounts: Detects now unreachable CIFS mounts
 Level: 1
 Component: checks
 Class: fix

@@ -1,0 +1,78 @@
+IDEE
+
+Der Notifications-Spooler mknotifyd verbindet sich aktiv mit seinen Slaves
+per TCP und nicht umgekehrt. Er kümmert sich darum, dass die Verbindungen
+stets offen sind.
+
+UMSETZUNG:
+
+[1] Global Settings:Notifications: Die ganzen Optionen zum Notification-Spooling
+    plus neue Optionen werden sauber neu gruppiert in einem Dictionary:
+
+    [X] Enable Notification Spooling
+
+      1. [X] Deliver local notifications asynchronously (gabs vorher schon)
+
+      2. [X] Distributed Notifications
+         Hier tauchen weitere Optionen auf:
+         2.1 Role: [v Notification Source] (oder: Notification Sink)
+             Hier kann man die Rolle einstellen. Der Master (muss nicht unbedingt
+             auf der Master Site sein) bekommt die Rolle "Sink". Die anderen
+             Sites die Rolle "Source". Eine Site kann nicht beides sein, also
+             gibt es keine Notification-Proxies. Standalone ist der Default. Hier
+             gibt es keine Verbindung mit anderen Spoolern.
+
+         2.2 [X] TCP Server
+             Listen on Port: [6675]
+             Send Heartbeat every [10] Seconds (only for Notification sources)
+
+         2.3 [X] TCP Client
+             Connect to Servers:
+                 IP-Address: [12.3.45.5] Port: [6678]
+                 IP-Address: [12.3.45.6] Port: [6678]
+                 IP-Address: [12.3.45.6] Port: [6679]
+             Expect Heartbeat every [15] Seconds (only for Notification sinks)
+             Cooldown time after dead connection: [4] Seconds
+
+
+     Wenn man die Rolle Notification Source hat, dann kann
+     man nur einen Server angeben.
+
+     Für das zentrale System wählen man also Notification Sink aus. Wenn
+     es Slaves gibt, die sich selbst verbinden, dann wählt man Listen on
+     Port und gibt eine Portnummer an.
+
+     Für Remote-Sites, von denen die Not. abgeholt werden sollen, gibt man
+     diese in der Liste an.
+
+     Bei der Rolle Source kann man nur einen Server angeben (könnte man evtl.
+     aufweichen).
+
+[2] Der Notification-Spooler muss jetzt mit der neuen Konfiguration zurechtkommen,
+    und auch mit der alten. Die WATO-Regeln für die alten werden aber entfernt.
+    Sobald man über die neue Regel etwas konfiguriert, werden die alten ignoriert.
+    Das muss in den Migration-Notes so beschrieben sein.
+
+[3] Der Notification-Spooler muss jetzt aktiv eine Liste von TCP-Verbindungen
+    pflegen (stehende Verbindungen), falls er Rolle Sink hat und TCP Client
+    ist. Auf diese muss er mit select() warten. Wenn ein Socket lesbar wird,
+    muss er von dort eine Notification lesen. Dazu muss der aktuelle Code
+    so zentralisiert werden, dass alle Sockets gleichzeitig bedient werden
+    und ein Wartezustand in einer der Verbindungen die anderen nicht aushungert.
+    Auch der bestehende Code zum Senden von Notifications muss da einbezogen
+    werden.
+
+[4] Lebenszeichen: Wenn eine Notification Source, die TCP Server ist, eine
+    Connection empfängt, muss es diese in eine Liste stecken. Mehrere Connections
+    parallel sollten möglich sein. In jede Connection wird alle X Sekunden
+    ein Lebenszeichen gesendet. Eine Sink, die TCP Client ist, überprüft die
+    Lebenszeichen und macht die Verbindung zu, wenn eines ausbleibt.
+    Nach einer Cooldown-Zeit wird die Verbindung dann wieder aufgebaut.
+
+[5] Monitoring: Der aktuelle Status wird alle X Sekunden in eine Datei
+    rausgeschrieben - nach var/log/mknotifyd.status (analog zu dem
+    liveproxyd). Diese Datei wird von einem neuen Plugin eingelesen -
+    mit der Zuordnung zur Site. Dazu schreiben wir ein Plugin, welches
+    dann die stehenden TCP-Verbindungen zu den Remote-Sites überwacht,
+    evtl. auch Counter für gesendete und empfangene Notifications.
+

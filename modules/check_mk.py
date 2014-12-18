@@ -307,7 +307,7 @@ special_agent_info                 = {}
 
 # Now read in all checks. Note: this is done *before* reading the
 # configuration, because checks define variables with default
-# values. The user can override those variables in his configuration.
+# values user can override those variables in his configuration.
 # Do not read in the checks if check_mk is called as module
 
 filelist = glob.glob(checks_dir + "/*")
@@ -3541,6 +3541,12 @@ def pack_config():
         out.write("\n%s = %r\n" % (varname, globals()[varname]))
     for varname in derived_config_variable_names:
         out.write("\n%s = %r\n" % (varname, globals()[varname]))
+    for varname, factory_setting in factory_settings.items():
+        if varname in globals():
+            out.write("\n%s = %r\n" % (varname, globals()[varname]))
+        else: # remove explicit setting from previous packed config!
+            out.write("\nif %r in globals():\n    del %s\n" % (varname, varname))
+
     out.close()
     os.rename(filepath + ".new", filepath)
 
@@ -5710,7 +5716,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
 
     # Initialize dictionary-type default levels variables
     for check in check_info.values():
-        def_var = check.get("default_levels_variable")
+        def_var = check.get("default_levels_variable") ######################### HIRN
         if def_var:
             globals()[def_var] = {}
 
@@ -5845,17 +5851,6 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
         sys.stderr.write("--> Found %d invalid variables\n" % errors)
         sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
         sys.exit(1)
-
-    # Convert www_group into numeric id
-    global www_group
-    if type(www_group) == str:
-        try:
-            import grp
-            www_group = grp.getgrnam(www_group)[2]
-        except Exception, e:
-            sys.stderr.write("Cannot convert group '%s' into group id: %s\n" % (www_group, e))
-            sys.stderr.write("Please set www_group to an existing group in main.mk.\n")
-            sys.exit(3)
 
     # Prepare information for --backup and --restore
     global backup_paths

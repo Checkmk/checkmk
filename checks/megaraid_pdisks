@@ -104,9 +104,11 @@ def inventory_megaraid_pdisks(info):
     return inventory
 
 megaraid_pdisks_states = {
-    'Online'   : 0,
-    'Hotspare' : 0,
-    'Failed'   : 2,
+    'Online'             : 0,
+    'Hotspare'           : 0,
+    'Unconfigured(good)' : 0,
+    'Failed'             : 2,
+    'Unconfigured(bad)'  : 1,
 }
 
 def check_megaraid_pdisks(item, _no_params, info):

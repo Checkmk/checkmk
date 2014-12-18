@@ -1,0 +1,10 @@
+Title: megaraid_pdisks: Now handling unconfigured good/bad states
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418889442
+Class: fix
+
+The check now also handles the states Unconfigured(good) (as OK state)
+and Unconfigured(bad) (as WARNING state).

@@ -143,6 +143,8 @@ rrd_path                           = None # used by prediction.py
 if len(sys.argv) >= 2 and sys.argv[1] == '--defaults':
     defaults_path = sys.argv[2]
     del sys.argv[1:3]
+else:
+    defaults_path = os.path.dirname(sys.argv[0]) + "/defaults"
 
 try:
     execfile(defaults_path)

@@ -35,6 +35,7 @@
     * 1783 FIX: Finish the view "History of Scheduled Downtimes"...
     * 1206 FIX: Hostname not longer shown as column in host views
     * 1766 FIX: Fixed exceptions in Web GUI when host or service groups used non ascii characters in names...
+    * 1773 FIX: Fixed different exceptions when using localized multisite
 
     WATO:
     * 1760 Added search form to manual checks page

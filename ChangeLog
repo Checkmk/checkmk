@@ -1,4 +1,7 @@
 1.2.6b3:
+    Multisite:
+    * 1773 FIX: Fixed different exceptions when using localized multisite
+
 
 1.2.6b2:
     Core & Setup:

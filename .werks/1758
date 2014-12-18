@@ -2,7 +2,7 @@ Title: Improved exception hander: Shows details without additional debug request
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418305269
 Class: feature
 

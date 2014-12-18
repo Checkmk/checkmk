@@ -2,7 +2,7 @@ Title: Fix exception in BI Boxes when parents are being used
 Level: 1
 Component: bi
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418741446
 Class: fix
 

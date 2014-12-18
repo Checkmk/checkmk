@@ -2,7 +2,7 @@ Title: cisco_vpn_tunnel: fix exception in case tunnel is not OK
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418394229
 Class: fix
 

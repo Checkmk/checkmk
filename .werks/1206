@@ -2,7 +2,7 @@ Title: Hostname not longer shown as column in host views
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418810580
 Class: fix
 

@@ -2,7 +2,7 @@ Title: agent_ibmsvc: do not abort execution if one of the sections fail
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418395490
 Class: fix
 

@@ -2,7 +2,7 @@ Title: brocade_fcport/brocade_info: Only try to discover these services when dev
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418828693
 Class: fix
 

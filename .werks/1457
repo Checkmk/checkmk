@@ -2,7 +2,7 @@ Title: logins: new check renamed from "users" check
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418313533
 Class: fix
 

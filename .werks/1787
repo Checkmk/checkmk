@@ -2,7 +2,7 @@ Title: docsis_channels_upstream, docsis_channels_downstream: now also support CA
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418823689
 Class: feature
 

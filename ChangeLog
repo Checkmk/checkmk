@@ -1,9 +1,4 @@
 1.2.6b3:
-    Multisite:
-    * 1773 FIX: Fixed different exceptions when using localized multisite
-
-
-1.2.6b2:
     Core & Setup:
     * 1759 Packed RPM and DEB agent packages are now shipped with normal Check_MK package...
 
@@ -37,6 +32,7 @@
     * 1783 FIX: Finish the view "History of Scheduled Downtimes"...
     * 1206 FIX: Hostname not longer shown as column in host views
     * 1766 FIX: Fixed exceptions in Web GUI when host or service groups used non ascii characters in names...
+    * 1773 FIX: Fixed different exceptions when using localized multisite
 
     WATO:
     * 1760 Added search form to manual checks page
@@ -56,6 +52,7 @@
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used
 
+1.2.6b2:
 
 1.2.6b1:
     Core & Setup:

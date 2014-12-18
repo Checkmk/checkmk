@@ -2,7 +2,7 @@ Title: mknotifyd: improved performance when receiving forwarded notifications
 Level: 1
 Component: notifications
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418401218
 Class: fix
 

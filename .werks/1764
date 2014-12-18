@@ -2,7 +2,7 @@ Title: mk_sap: Fixed exception when saving status file
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418398819
 Class: fix
 

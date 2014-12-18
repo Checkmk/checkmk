@@ -2,7 +2,7 @@ Title: veeam_client: Not longer throwing an error in case of currenlty running b
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418650305
 Class: fix
 

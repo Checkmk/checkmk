@@ -2,7 +2,7 @@ Title: Fixed exceptions in Web GUI when host or service groups used non ascii ch
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418811123
 Class: fix
 

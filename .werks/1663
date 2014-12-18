@@ -2,7 +2,7 @@ Title: winperf_if: fixed incorrect enumeration of interface index
 Level: 2
 Component: checks
 Compatible: compat
-Version: 1.2.6b2
+Version: 1.2.6b3
 Date: 1418646805
 Class: fix
 

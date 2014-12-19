@@ -37,35 +37,47 @@ nagios_state_names = { -1: _("NODATA"), 0: _("OK"), 1: _("WARNING"), 2: _("CRITI
 nagios_short_state_names = { -1: _("PEND"), 0: _("OK"), 1: _("WARN"), 2: _("CRIT"), 3: _("UNKN") }
 nagios_short_host_state_names = { 0: _("UP"), 1: _("DOWN"), 2: _("UNREACH") }
 
-class MKGeneralException(Exception):
+# never used directly in the code. Just some wrapper to make all of our
+# exceptions handleable with one call
+class MKException(Exception):
+    # Do not use the Exception() __str__, because it uses str()
+    # to convert the message. We want to keep unicode strings untouched
+    def __str__(self):
+        return self.message
+
+class MKGeneralException(MKException):
+    plain_title = _("General error")
+    title       = _("Error")
     def __init__(self, reason):
         self.reason = reason
     def __str__(self):
         return self.reason
 
-class MKAuthException(Exception):
+class MKAuthException(MKException):
+    title       = _("Permission denied")
+    plain_title = _("Authentication error")
     def __init__(self, reason):
         self.reason = reason
     def __str__(self):
         return self.reason
 
 class MKUnauthenticatedException(MKGeneralException):
-    pass
+    title       = _("Not authenticated")
+    plain_title = _("Missing authentication credentials")
 
-class MKConfigError(Exception):
-    def __init__(self, msg):
-        Exception.__init__(self, msg)
+class MKConfigError(MKException):
+    title       = _("Configuration error")
+    plain_title = _("Configuration error")
 
-class MKUserError(Exception):
-    def __init__(self, varname, msg):
+class MKUserError(MKException):
+    title       = _("Invalid User Input")
+    plain_title = _("User error")
+    def __init__(self, varname, message):
         self.varname = varname
-        self.message = msg
-        Exception.__init__(self, msg)
+        Exception.__init__(self, message)
 
-class MKInternalError(Exception):
-    def __init__(self, msg):
-        Exception.__init__(self, msg)
-
+class MKInternalError(MKException):
+    pass
 
 # Create directory owned by common group of Nagios and webserver,
 # and make it writable for the group

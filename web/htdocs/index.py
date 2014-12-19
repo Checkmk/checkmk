@@ -240,68 +240,36 @@ def handler(req, fields = None, profiling = True):
 
         handler()
 
-    except MKUserError, e:
-        if plain_error:
-            html.write(_("User error") + ": %s\n" % e)
-        elif not fail_silently:
-            html.header("Invalid User Input")
-            html.show_error(unicode(e))
-            html.footer()
-
-    except MKAuthException, e:
-        if plain_error:
-            html.write(_("Authentication error") + ": %s\n" % e)
-        elif not fail_silently:
-            html.header(_("Permission denied"))
-            html.show_error(unicode(e))
-            html.footer()
-
-    except MKUnauthenticatedException, e:
-        if plain_error:
-            html.write(_("Missing authentication credentials") + ": %s\n" % e)
-        elif not fail_silently:
-            html.header(_("Not authenticated"))
-            html.show_error(unicode(e))
-            html.footer()
-        response_code = apache.HTTP_UNAUTHORIZED
-
-    except MKConfigError, e:
-        if plain_error:
-            html.write(_("Configuration error") + ": %s\n" % e)
-        elif not fail_silently:
-            html.header(_("Configuration Error"))
-            html.show_error(unicode(html.attrencode(e)))
-            html.footer()
-        html.log(_("Configuration error: %s") % (e,))
-
-    except MKGeneralException, e:
-        if plain_error:
-            html.write(_("General error") + ": %s\n" % e)
-        elif not fail_silently:
-            html.header(_("Error"))
-            html.show_error(unicode(html.attrencode(e)))
-            html.footer()
-        html.log(_("Error: %s") % (e,))
-
-    except livestatus.MKLivestatusNotFoundError, e:
-        if plain_error:
-            html.write(_("Livestatus-data not found") + ": %s\n" % e)
-        elif not fail_silently:
-            html.header(_("Data not found"))
-            html.show_error(_("The following query produced no output:\n<pre>\n%s</pre>\n") % \
-                    html.attrencode(e.query))
-            html.footer()
-        response_code = apache.HTTP_NOT_FOUND
-
-    except livestatus.MKLivestatusException, e:
-        if plain_error:
-            html.write(_("Livestatus problem") + ": %s\n" % e)
-        elif not fail_silently:
-            html.header(_("Livestatus problem"))
-            html.show_error(_("Livestatus problem: %s") % html.attrencode(e))
-            html.footer()
+    except (MKUserError, MKAuthException, MKUnauthenticatedException, MKConfigError, MKGeneralException,
+            livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusException), e:
+        ty = type(e)
+        if ty ==livestatus.MKLivestatusNotFoundError:
+            title       = _("Data not found")
+            plain_title = _("Livestatus-data not found")
+        elif ty ==livestatus.MKLivestatusException:
+            title       = _("Livestatus problem")
+            plain_title = _("Livestatus problem")
         else:
+            title       = e.title
+            plain_title = e.plain_title
+
+        if plain_error:
+            html.write("%s: %s\n" % (plain_title, e))
+        elif not fail_silently:
+            html.header(title)
+            html.show_error(e)
+            html.footer()
+
+        # Some exception need to set a specific HTTP status code
+        if ty == MKUnauthenticatedException:
+            response_code = apache.HTTP_UNAUTHORIZED
+        elif ty == livestatus.MKLivestatusNotFoundError:
+            response_code = apache.HTTP_NOT_FOUND
+        elif ty == livestatus.MKLivestatusException:
             response_code = apache.HTTP_BAD_GATEWAY
+
+        if ty in [MKConfigError, MKGeneralException]:
+            html.log(_("%s: %s") % (plain_title, e))
 
     except (apache.SERVER_RETURN,
             (apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED),
@@ -312,7 +280,10 @@ def handler(req, fields = None, profiling = True):
 
     except Exception, e:
         html.unplug()
-        apache.log_error("%s %s %s" % (req.uri, _('Internal error') + ':', e), apache.APLOG_ERR) # log in all cases
+        msg = "%s %s: %s" % (req.uri, _('Internal error'), e)
+        if type(msg) == unicode:
+            msg = msg.encode('utf-8')
+        apache.log_error(msg, apache.APLOG_ERR) # log in all cases
         if plain_error:
             html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
         elif not fail_silently:

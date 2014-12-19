@@ -34,6 +34,8 @@
 # - Order of arguments:
 #   e.g. icon(help, icon) -> change and make help otional?
 #
+# - Fix names of message() show_error() show_warning()
+#
 # - General rules:
 # 1. values of type str that are passed as arguments or
 #    return values or are stored in datastructures most not contain
@@ -42,7 +44,7 @@
 #    input to str or unicode must happen as early as possible,
 #    directly when reading from file or URL.
 
-import time, os, pwd, urllib, random
+import time, os, pwd, urllib, random, re
 
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
@@ -953,7 +955,7 @@ class html:
         self.end_context_buttons()
 
         self.write("<div class=error>")
-        self.write("<b>%s:</b>\n%s<br><br>" %(_('Internal error'), self.attrencode(e)))
+        self.write("<b>%s:</b>\n%s<br><br>" % (_('Internal error'), self.attrencode(e)))
 
         self.begin_foldable_container("html", "exc_details", False, _("Details"))
         self.write('<div class=log_output>')
@@ -963,40 +965,37 @@ class html:
         self.write("</div>")
 
     def show_error(self, msg):
-        if self.mobile:
-            self.write('<center>')
-        if self.output_format == "html":
-            self.write("<div class=error>%s</div>\n" % msg)
-        else:
-            self.write(_("ERROR: "))
-            self.write(self.strip_tags(msg))
-            self.write("\n")
-        if self.mobile:
-            self.write('</center>')
+        self.message(msg, 'error')
 
     def show_warning(self, msg):
-        if self.mobile:
-            self.write('<center>')
-        if self.output_format == "html":
-            self.write("<div class=warning>%s</div>\n" % msg)
-        else:
-            self.write(_("WARNING: "))
-            self.write(self.strip_tags(msg))
-            self.write("\n")
-        if self.mobile:
-            self.write('</center>')
+        self.message(msg, 'warning')
 
-    def message(self, msg):
-        if self.mobile:
-            self.write('<center>')
-        if self.output_format == "html":
-            self.write("<div class=success>%s</div>\n" % msg)
+    # obj might be either a string (str or unicode) or an exception object
+    def message(self, obj, what='message'):
+        if what == 'message':
+            cls    = 'success'
+            prefix = _('MESSAGE')
+        elif what == 'warning':
+            cls    = 'warning'
+            prefix = _('WARNING')
         else:
-            self.write(_("MESSAGE: "))
-            self.write(self.strip_tags(msg))
-            self.write("\n")
-        if self.mobile:
-            self.write('</center>')
+            cls    = 'error'
+            prefix = _('ERROR')
+
+        # Only strip off some tags. We allow some simple tags like
+        # <b>, <tt>, <i> to be part of the exception message. The tags
+        # are escaped first and then fixed again after attrencode.
+        msg = self.attrencode(obj)
+        msg = re.sub(r'&lt;(/?)(b|tt|i|br|pre)&gt;', r'<\1\2>', msg)
+
+        if self.output_format == "html":
+            if self.mobile:
+                self.write('<center>')
+            self.write("<div class=%s>%s</div>\n" % (cls, msg))
+            if self.mobile:
+                self.write('</center>')
+        else:
+            self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
 
     # Embed help box, whose visibility is controlled by a global
     # button in the page.

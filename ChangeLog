@@ -8,6 +8,7 @@
     Multisite:
     * 1776 Dashboard: Allowing unicode characters in static text dashlet
     * 1774 FIX: IE: Always use the latest available rendering enginge of the used browser...
+    * 1777 FIX: Fixed js error making the "add to visual" link break on pages with context...
 
 
 1.2.6b3:

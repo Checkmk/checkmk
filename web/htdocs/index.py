@@ -272,7 +272,7 @@ def handler(req, fields = None, profiling = True):
             html.header(_("Configuration Error"))
             html.show_error(unicode(html.attrencode(e)))
             html.footer()
-        apache.log_error(_("Configuration error: %s") % (e,), apache.APLOG_ERR)
+        html.log(_("Configuration error: %s") % (e,))
 
     except MKGeneralException, e:
         if plain_error:
@@ -281,7 +281,7 @@ def handler(req, fields = None, profiling = True):
             html.header(_("Error"))
             html.show_error(unicode(html.attrencode(e)))
             html.footer()
-        apache.log_error(_("Error: %s") % (e,), apache.APLOG_ERR)
+        html.log(_("Error: %s") % (e,))
 
     except livestatus.MKLivestatusNotFoundError, e:
         if plain_error:

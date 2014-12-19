@@ -297,8 +297,8 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
 
     # Check if already in autochecks (but not found anymore)
     for ct, item, params in read_autochecks_of(hostname):
-        if hn == hostname and (ct, item) not in found:
-            found[(ct, item)] = ( 'vanished', repr(params) ) # This is not the real paramstring!
+        if (ct, item) not in found:
+            found[(ct, item)] = ('vanished', repr(params) ) # This is not the real paramstring!
 
     # Find manual checks
     existing = get_check_table(hostname)

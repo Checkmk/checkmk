@@ -14,6 +14,9 @@
     * 1798 FIX: Filters are now retained when adding a view to a dashboard...
     * 1799 FIX: Dashboards: Existing views added to dashboards now get a correct title / title_url
 
+    WATO:
+    * 1794 FIX: Fix exception in WATO service list in case of vanished checks
+
 
 1.2.6b3:
     Core & Setup:

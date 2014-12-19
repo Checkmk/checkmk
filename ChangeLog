@@ -5,6 +5,7 @@
 
     Checks & Agents:
     * 1775 FIX: logins: Fixed exception during check execution
+    * 1793 FIX: fritz: avoid Exception in inventory function of fritz checks if agent output is empty
 
     Multisite:
     * 1776 Dashboard: Allowing unicode characters in static text dashlet

@@ -5545,6 +5545,9 @@ def do_check_keepalive():
         elif not cmdline:
             break
 
+        # Always cleanup the total check output var before handling a new task
+        total_check_output = ""
+
         num_checks += 1
 
         g_timeout = int(keepalive_read_line())

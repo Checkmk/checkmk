@@ -899,13 +899,13 @@ class html:
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
 
-            encoded_vars = []
+            encoded_vars = {}
             for k, v in self.page_context.items():
                 if v == None:
                     v = ''
                 elif type(v) == unicode:
                     v = v.encode('utf-8')
-                encoded_vars.append((k, v))
+                encoded_vars[k] = v
 
             h += '<div class="visualadd"><a class="visualadd" href="javascript:void(0)" ' \
                  'onclick="toggle_add_to_visual(event, this, \'%s\', %s, {\'name\': \'%s\'})">' \

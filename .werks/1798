@@ -1,0 +1,10 @@
+Title: Filters are now retained when adding a view to a dashboard
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b4
+Date: 1418976614
+Class: fix
+
+Only the context of the URL variables was retained before. The hard coded
+context in the view was lost.

@@ -1173,6 +1173,7 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
     if dashboard_name not in available_dashboards:
 	return
     dashboard = load_dashboard_with_cloning(dashboard_name)
+
     dashlet = default_dashlet_definition(dashlet_type)
 
     dashlet["context"] = context
@@ -1181,13 +1182,12 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
     else:
         dashlet.update(params)
 
-
     # When a view shal be added to the dashboard, load the view and put it into the dashlet
     if dashlet_type == 'view':
         # save the original context and override the context provided by the view
         context = dashlet['context']
         load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name)
-        dashlet['context'] = context
+        dashlet['context'].update(context)
 
     add_dashlet(dashlet, dashboard)
 

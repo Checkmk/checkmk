@@ -1,9 +1,11 @@
 1.2.6b4:
     Core & Setup:
     * 1791 FIX: Fix problem where many bogus RRD files for Check_MK service would be created...
+    * 1792 FIX: Fix path to special agents in case of manual installation
 
     Checks & Agents:
     * 1775 FIX: logins: Fixed exception during check execution
+    * 1793 FIX: fritz: avoid Exception in inventory function of fritz checks if agent output is empty
 
     Multisite:
     * 1776 Dashboard: Allowing unicode characters in static text dashlet
@@ -11,6 +13,9 @@
     * 1777 FIX: Fixed js error making the "add to visual" link break on pages with context...
     * 1798 FIX: Filters are now retained when adding a view to a dashboard...
     * 1799 FIX: Dashboards: Existing views added to dashboards now get a correct title / title_url
+
+    WATO:
+    * 1794 FIX: Fix exception in WATO service list in case of vanished checks
 
 
 1.2.6b3:

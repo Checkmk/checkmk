@@ -6,6 +6,7 @@
     * 1775 FIX: logins: Fixed exception during check execution
 
     Multisite:
+    * 1776 Dashboard: Allowing unicode characters in static text dashlet
     * 1774 FIX: IE: Always use the latest available rendering enginge of the used browser...
 
 

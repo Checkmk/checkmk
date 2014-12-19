@@ -1,0 +1,11 @@
+Title: Fixed js error making the "add to visual" link break on pages with context
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418974714
+
+When opening e.g. the detail page of a host or a view which has hardcoded filters
+set, the "add to visual" link might not work because of a syntax error.

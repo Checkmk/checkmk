@@ -206,12 +206,21 @@ def transform_builtin_dashboards():
         dashboard.setdefault('description', dashboard.get('title', ''))
     builtin_dashboards_transformed = True
 
-def load_view_into_dashlet(dashlet, nr, view_name):
+def load_view_into_dashlet(dashlet, nr, view_name, add_context=None):
     import views
     views.load_views()
     views = views.permitted_views()
     if view_name in views:
-        dashlet.update(views[view_name])
+        view = copy.deepcopy(views[view_name])
+        dashlet.update(view)
+        if add_context:
+            dashlet['context'].update(add_context)
+
+        # Overwrite the views default title with the context specific title
+        dashlet['title'] = visuals.visual_title('view', view)
+        dashlet['title_url'] = html.makeuri_contextless(
+                [('view_name', view_name)] + visuals.get_singlecontext_vars(view).items(),
+                filename='view.py')
 
     dashlet['type']       = 'view'
     dashlet['name']       = 'dashlet_%d' % nr
@@ -1186,8 +1195,7 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
     if dashlet_type == 'view':
         # save the original context and override the context provided by the view
         context = dashlet['context']
-        load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name)
-        dashlet['context'].update(context)
+        load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name, add_context=context)
 
     add_dashlet(dashlet, dashboard)
 

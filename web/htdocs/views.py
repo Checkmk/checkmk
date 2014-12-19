@@ -780,7 +780,7 @@ def page_view():
     if not view:
         raise MKGeneralException(_("No view defined with the name '%s'.") % html.attrencode(view_name))
 
-    html.set_page_context(dict(visuals.get_singlecontext_html_vars(view)))
+    html.set_page_context(visuals.get_singlecontext_html_vars(view))
 
     show_view(view, True, True, True)
 

@@ -36,6 +36,7 @@
     * 1771 FIX: domino_mailqueues: Fixed exception during inventory when no data usable data available
     * 1208 FIX: cifsmounts: Detects now unreachable CIFS mounts
     * 1772 FIX: lparstat_aix: Check handles already working agent output again
+    * 1793 FIX: fritz: avoid Exception in inventory function of fritz checks if agent output is empty
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

@@ -122,7 +122,9 @@ check_info['fritz.config'] = {
 #
 
 def fritz_wan_if_to_if64(data):
-    if data['NewLinkStatus'] == 'Up':
+    if 'NewLinkStatus' not in data:
+        oper_status = None
+    elif data['NewLinkStatus'] == 'Up':
         oper_status = '1'
     else:
         oper_status = '2'
@@ -131,9 +133,9 @@ def fritz_wan_if_to_if64(data):
         # ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast,
         # inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, outucast,
         # outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress
-        ('0', 'WAN', '6', data['NewLayer1DownstreamMaxBitRate'], oper_status,
-         data['NewTotalBytesReceived'], '0', '0', '0', '0', '0',
-         data['NewTotalBytesSent'],     '0', '0', '0', '0', '0', '0',
+        ('0', 'WAN', '6', data.get('NewLayer1DownstreamMaxBitRate'), oper_status,
+         data.get('NewTotalBytesReceived'), '0', '0', '0', '0', '0',
+         data.get('NewTotalBytesSent'),     '0', '0', '0', '0', '0', '0',
          'WAN', '')
     ]
 

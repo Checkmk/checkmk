@@ -1295,7 +1295,7 @@ def ajax_popup_add():
         if "popup_add_handler" in visual_type:
             module_name = visual_type["module_name"]
             visual_module = __import__(module_name)
-            handler = eval("visual_module." + visual_type["popup_add_handler"])
+            handler = visual_module.__dict__[visual_type["popup_add_handler"]]
             visuals = handler()
             html.write('<li><span>Add to %s:</span></li>' % visual_type["title"])
             for name, title in handler():
@@ -1306,13 +1306,17 @@ def ajax_popup_add():
 
 
 def ajax_add_visual():
-    visual_type = html.var('visual_type')
+    visual_type = html.var('visual_type') # dashboards / views / ...
     visual_type = visual_types[visual_type]
     module_name = visual_type["module_name"]
     visual_module = __import__(module_name)
-    handler = eval("visual_module." + visual_type["add_visual_handler"])
-    element_name = html.var("name")
+    handler = visual_module.__dict__[visual_type["add_visual_handler"]]
+
+    visual_name = html.var("visual_name") # add to this visual
+
+    # type of the visual to add (e.g. view)
     element_type = html.var("type")
+
     # Context and params are | separated lists of : separated triples
     # of name, datatype and value. Datatype is int or string
     extra_data = []
@@ -1328,5 +1332,4 @@ def ajax_add_visual():
                 value = int(value)
             data[key] = value
 
-    handler(element_name, element_type, *extra_data)
-
+    handler(visual_name, element_type, *extra_data)

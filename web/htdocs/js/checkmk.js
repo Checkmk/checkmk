@@ -2320,7 +2320,7 @@ function fix_visualadd_menu_position(event, menu) {
     }
 }
 
-function add_to_visual(visual_type, name)
+function add_to_visual(visual_type, visual_name)
 {
     close_visualadd_popup();
 
@@ -2337,7 +2337,7 @@ function add_to_visual(visual_type, name)
     }
 
     response = get_url_sync('ajax_add_visual.py?visual_type=' + visual_type
-                                  + '&name=' + name
+                                  + '&visual_name=' + visual_name
                                   + '&type=' + add_visual_data[0]
                                   + '&context=' + encodeURIComponent(context_txt.join('|'))
                                   + '&params=' + encodeURIComponent(params_txt.join('|')));

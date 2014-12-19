@@ -1,4 +1,7 @@
 1.2.6b5:
+    Multisite:
+    * 1801 FIX: "Add to visual" menu in views is now sorted
+
 
 1.2.6b4:
     Core & Setup:

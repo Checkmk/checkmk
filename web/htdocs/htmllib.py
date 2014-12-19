@@ -1275,15 +1275,16 @@ class html:
 
     # From here: Former not class functions
 
-    # This function returns a str object, never unicode!
     # Encode HTML attributes: replace " with &quot;, also replace
-    # < and >. This code is slow.
+    # < and >. This code is slow. Works on str and unicode without
+    # changing the type. Also works on things that can be converted
+    # with %s.
     def attrencode(self, value):
         ty = type(value)
         if ty == int:
             return str(value)
-        elif ty not in [str, unicode]:
-            value = str(value)
+        elif ty not in [str, unicode]: # also possible: type Exception!
+            value = "%s" % value # Note: this allows Unicode. value might not have type str now
 
         return value.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 

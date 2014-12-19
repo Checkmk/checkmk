@@ -145,7 +145,7 @@ class html_mod_python(htmllib.html):
     def log(self, msg):
         if type(msg) != str:
             msg = repr(msg)
-        self.req.log_error(msg, apache.APLOG_WARNING)
+        self.req.log_error(msg, apache.APLOG_ERR)
 
     def http_redirect(self, url):
         self.set_http_header('Location', url)

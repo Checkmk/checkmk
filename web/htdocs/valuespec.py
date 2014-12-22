@@ -323,7 +323,8 @@ class Filesize(Integer):
         exp, count = self.get_exponent(value)
         html.number_input(varprefix + '_size', count, size = self._size)
         html.write("&nbsp;")
-        html.select(varprefix + '_unit', enumerate(self._names), exp)
+        choices = [ (str(nr), name) for (nr, name) in enumerate(self._names) ]
+        html.select(varprefix + '_unit', choices, str(exp))
 
     def from_html_vars(self, varprefix):
         try:

@@ -1,0 +1,26 @@
+title: Citrix Netscaler: Used Space in Filesystems
+agents: snmp
+catalog: app/netscaler
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the filesystem usage on Citrix Netscaler appliances.
+ It uses the {NS-ROOT-MIB} to access the filesystem data.
+
+ The check makes use of the general check framework of the {df} check. Please
+ refer to the man page of the {df} check for the detailed description of
+ the check and its numerous features.
+
+inventory:
+ All filesystems found will be inventorized except mount points listed
+ in {inventory_df_exclude_mountpoints} and filesystems with zero size.
+
+item:
+ The mount point of the filesystem on the netscaler device.
+
+perfdata:
+ See the man page of the {df} check
+
+[parameters]
+parameters (dict): See the man page of the {df} check
+

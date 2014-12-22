@@ -529,7 +529,8 @@ class html:
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
         self.select(varname, sorted, deflt, onchange, attrs)
 
-    # Choices is a list pairs of (key, title)
+    # Choices is a list pairs of (key, title). They keys of the choices
+    # and the default value must be of type None, str or unicode.
     def select(self, varname, choices, deflt="", onchange=None, attrs = {}):
         current = self.var_utf8(varname, deflt)
         onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""

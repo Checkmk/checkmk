@@ -1,0 +1,11 @@
+Title: Fix internal exception in WATO rule for filesystems
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1419262975
+Class: fix
+
+In the WATO rule for filesystems there was a bug such that you
+could not configure any filesystem levels. This has been fixed.
+The bug had been introduced recently.

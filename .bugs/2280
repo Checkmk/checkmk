@@ -1,9 +1,9 @@
 Title: Distributed Setup: Error when deleting/creating/login to a connection
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2014-12-12 14:27:08
 Targetversion: 1.2.5i1
-Class: bug
 
 Internal error: not all arguments converted during string formatting
 
@@ -19,3 +19,6 @@ Traceback (most recent call last):
   File "/omd/sites/schulung/share/check_mk/web/htdocs/wato.py", line 10622, in create_nagvis_backends
     'socket="%s"' % site['socket'],
 TypeError: not all arguments converted during string formatting
+
+2014-12-19 08:32:37: changed state open -> done
+Already fixed.

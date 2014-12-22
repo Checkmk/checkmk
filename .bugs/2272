@@ -1,8 +1,11 @@
 Title: Success icon is missing in diagnostic page
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2014-12-09 09:17:54
 Targetversion: 1.2.5i1
-Class: bug
 
 see description
+
+2014-12-19 08:30:54: changed state open -> done
+Already fixed

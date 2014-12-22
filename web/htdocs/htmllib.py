@@ -34,6 +34,8 @@
 # - Order of arguments:
 #   e.g. icon(help, icon) -> change and make help otional?
 #
+# - Fix names of message() show_error() show_warning()
+#
 # - General rules:
 # 1. values of type str that are passed as arguments or
 #    return values or are stored in datastructures most not contain
@@ -42,7 +44,7 @@
 #    input to str or unicode must happen as early as possible,
 #    directly when reading from file or URL.
 
-import time, os, pwd, urllib, random
+import time, os, pwd, urllib, random, re
 
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
@@ -900,11 +902,19 @@ class html:
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
-            encoded_vars = self.attrencode([ (k, v != None and v or '') for k,v in self.page_context.items() ])
+
+            encoded_vars = {}
+            for k, v in self.page_context.items():
+                if v == None:
+                    v = ''
+                elif type(v) == unicode:
+                    v = v.encode('utf-8')
+                encoded_vars[k] = v
+
             h += '<div class="visualadd"><a class="visualadd" href="javascript:void(0)" ' \
                  'onclick="toggle_add_to_visual(event, this, \'%s\', %s, {\'name\': \'%s\'})">' \
                  '<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % \
-                 (mode_name, encoded_vars, self.var('view_name'), _("Add this view to..."))
+                 (mode_name, self.attrencode(repr(encoded_vars)), self.var('view_name'), _("Add this view to..."))
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:
@@ -947,7 +957,7 @@ class html:
         self.end_context_buttons()
 
         self.write("<div class=error>")
-        self.write("<b>%s:</b>\n%s<br><br>" %(_('Internal error'), self.attrencode(e)))
+        self.write("<b>%s:</b>\n%s<br><br>" % (_('Internal error'), self.attrencode(e)))
 
         self.begin_foldable_container("html", "exc_details", False, _("Details"))
         self.write('<div class=log_output>')
@@ -957,40 +967,37 @@ class html:
         self.write("</div>")
 
     def show_error(self, msg):
-        if self.mobile:
-            self.write('<center>')
-        if self.output_format == "html":
-            self.write("<div class=error>%s</div>\n" % msg)
-        else:
-            self.write(_("ERROR: "))
-            self.write(self.strip_tags(msg))
-            self.write("\n")
-        if self.mobile:
-            self.write('</center>')
+        self.message(msg, 'error')
 
     def show_warning(self, msg):
-        if self.mobile:
-            self.write('<center>')
-        if self.output_format == "html":
-            self.write("<div class=warning>%s</div>\n" % msg)
-        else:
-            self.write(_("WARNING: "))
-            self.write(self.strip_tags(msg))
-            self.write("\n")
-        if self.mobile:
-            self.write('</center>')
+        self.message(msg, 'warning')
 
-    def message(self, msg):
-        if self.mobile:
-            self.write('<center>')
-        if self.output_format == "html":
-            self.write("<div class=success>%s</div>\n" % msg)
+    # obj might be either a string (str or unicode) or an exception object
+    def message(self, obj, what='message'):
+        if what == 'message':
+            cls    = 'success'
+            prefix = _('MESSAGE')
+        elif what == 'warning':
+            cls    = 'warning'
+            prefix = _('WARNING')
         else:
-            self.write(_("MESSAGE: "))
-            self.write(self.strip_tags(msg))
-            self.write("\n")
-        if self.mobile:
-            self.write('</center>')
+            cls    = 'error'
+            prefix = _('ERROR')
+
+        # Only strip off some tags. We allow some simple tags like
+        # <b>, <tt>, <i> to be part of the exception message. The tags
+        # are escaped first and then fixed again after attrencode.
+        msg = self.attrencode(obj)
+        msg = re.sub(r'&lt;(/?)(b|tt|i|br|pre)&gt;', r'<\1\2>', msg)
+
+        if self.output_format == "html":
+            if self.mobile:
+                self.write('<center>')
+            self.write("<div class=%s>%s</div>\n" % (cls, msg))
+            if self.mobile:
+                self.write('</center>')
+        else:
+            self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
 
     # Embed help box, whose visibility is controlled by a global
     # button in the page.
@@ -1267,15 +1274,16 @@ class html:
 
     # From here: Former not class functions
 
-    # This function returns a str object, never unicode!
     # Encode HTML attributes: replace " with &quot;, also replace
-    # < and >. This code is slow.
+    # < and >. This code is slow. Works on str and unicode without
+    # changing the type. Also works on things that can be converted
+    # with %s.
     def attrencode(self, value):
         ty = type(value)
         if ty == int:
             return str(value)
-        elif ty not in [str, unicode]:
-            value = str(value)
+        elif ty not in [str, unicode]: # also possible: type Exception!
+            value = "%s" % value # Note: this allows Unicode. value might not have type str now
 
         return value.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 

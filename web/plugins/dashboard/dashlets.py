@@ -491,7 +491,7 @@ dashlet_types["nodata"] = {
     "render"      : dashlet_nodata,
     "allowed"     : config.builtin_role_ids,
     "parameters"  : [
-        ("text", TextAscii(
+        ("text", TextUnicode(
             title = _('Text'),
             size = 50,
         )),

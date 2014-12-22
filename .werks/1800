@@ -1,0 +1,20 @@
+Title: Fixed umlauts and HTML tags in exception texts
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418998671
+
+Previous versions allowed HTML codes to be used in texts of exceptions to give the
+error messages some kind of markup. This was removed to prevent XSS attacks. Now
+we changed the code to only allow special markup tags like <tt>, <b>, <i>, <br>.
+
+So if you saw these tags in error messages in previous version, they should be
+fixed now.
+
+Additionally, when you used the Web GUI localized, for example in German language,
+you might have had problems with umlauts in error messages. This has been fixed
+and cleaned up.
+

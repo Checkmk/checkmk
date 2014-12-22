@@ -1,0 +1,10 @@
+Title: Fix exception in WATO service list in case of vanished checks
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418993584
+
+

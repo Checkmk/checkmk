@@ -109,7 +109,6 @@ checks_dir                         = '/usr/share/check_mk/checks'
 notifications_dir                  = '/usr/share/check_mk/notifications'
 inventory_dir                      = '/usr/share/check_mk/inventory'
 agents_dir                         = '/usr/share/check_mk/agents'
-special_agent_dir                  = agents_dir + "/special"
 check_manpages_dir                 = '/usr/share/doc/check_mk/checks'
 modules_dir                        = '/usr/share/check_mk/modules'
 var_dir                            = '/var/lib/check_mk'
@@ -143,6 +142,8 @@ rrd_path                           = None # used by prediction.py
 if len(sys.argv) >= 2 and sys.argv[1] == '--defaults':
     defaults_path = sys.argv[2]
     del sys.argv[1:3]
+else:
+    defaults_path = os.path.dirname(sys.argv[0]) + "/defaults"
 
 try:
     execfile(defaults_path)
@@ -1087,6 +1088,8 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config"):
 # be None in most cases -> to TCP connect on port 6556
 
 def get_datasource_program(hostname, ipaddress):
+    special_agents_dir = agents_dir + "/special"
+
     # First check WATO-style special_agent rules
     for agentname, ruleset in special_agents.items():
         params = host_extra_conf(hostname, ruleset)
@@ -1097,7 +1100,7 @@ def get_datasource_program(hostname, ipaddress):
                 os.path.exists(local_special_agents_dir + "/agent_" + agentname):
                 path = local_special_agents_dir + "/agent_" + agentname
             else:
-                path = special_agent_dir + "/agent_" + agentname
+                path = special_agents_dir + "/agent_" + agentname
             return path + " " + cmd_arguments
 
     programs = host_extra_conf(hostname, datasource_programs)
@@ -5542,6 +5545,9 @@ def do_check_keepalive():
 
         elif not cmdline:
             break
+
+        # Always cleanup the total check output var before handling a new task
+        total_check_output = ""
 
         num_checks += 1
 

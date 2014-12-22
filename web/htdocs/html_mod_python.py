@@ -143,9 +143,11 @@ class html_mod_python(htmllib.html):
     # suppress messages generated here. Again, this is only for debugging during
     # development, so this should be no problem for regular users.
     def log(self, msg):
-        if type(msg) != str:
+        if type(msg) == unicode:
+            msg = msg.encode('utf-8')
+        elif type(msg) != str:
             msg = repr(msg)
-        self.req.log_error(msg, apache.APLOG_WARNING)
+        self.req.log_error(msg, apache.APLOG_ERR) # only accepts str, not unicode
 
     def http_redirect(self, url):
         self.set_http_header('Location', url)

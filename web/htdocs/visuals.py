@@ -1118,7 +1118,7 @@ def unpack_context_after_editing(packed_context):
 #   '----------------------------------------------------------------------'
 
 def verify_single_contexts(what, visual):
-    for k, v in get_singlecontext_html_vars(visual):
+    for k, v in get_singlecontext_html_vars(visual).items():
         if v == None:
             raise MKUserError(k, _('This %s can not be displayed, because the '
                                    'necessary context information "%s" is missing.') %
@@ -1130,7 +1130,7 @@ def visual_title(what, visual):
     # Beware: if a single context visual is being visited *without* a context, then
     # the value of the context variable(s) is None. In order to avoid exceptions,
     # we simply drop these here.
-    extra_titles = [ v for k, v in get_singlecontext_html_vars(visual) if v != None ]
+    extra_titles = [ v for k, v in get_singlecontext_html_vars(visual).items() if v != None ]
     # FIXME: Is this really only needed for visuals without single infos?
     if not visual['single_infos']:
         used_filters = [ multisite_filters[fn] for fn in visual["context"].keys() ]
@@ -1176,10 +1176,18 @@ def get_single_info_keys(visual):
         keys += info_params(info_key)
     return list(set(keys))
 
-def get_singlecontext_html_vars(visual):
-    vars = []
+def get_singlecontext_vars(visual):
+    vars = {}
     for key in get_single_info_keys(visual):
-        vars.append((key, html.var_utf8(key, visual['context'].get(key))))
+        vars[key] = visual['context'].get(key)
+    return vars
+
+def get_singlecontext_html_vars(visual):
+    vars = get_singlecontext_vars(visual)
+    for key in get_single_info_keys(visual):
+        val = html.var_utf8(key)
+        if val != None:
+            vars[key] = val
     return vars
 
 # Collect all visuals that share a context with visual. For example
@@ -1187,7 +1195,7 @@ def get_singlecontext_html_vars(visual):
 def collect_context_links(this_visual, mobile = False, only_types = []):
     # compute list of html variables needed for this visual
     active_filter_vars = set([])
-    for var, val in get_singlecontext_html_vars(this_visual):
+    for var, val in get_singlecontext_html_vars(this_visual).items():
         if html.has_var(var):
             active_filter_vars.add(var)
 
@@ -1236,7 +1244,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
 
         # We can show a button only if all single contexts of the
         # target visual are known currently
-        needed_vars = get_singlecontext_html_vars(visual)
+        needed_vars = get_singlecontext_html_vars(visual).items()
         skip = False
         vars_values = []
         for var, val in needed_vars:
@@ -1295,7 +1303,7 @@ def ajax_popup_add():
         if "popup_add_handler" in visual_type:
             module_name = visual_type["module_name"]
             visual_module = __import__(module_name)
-            handler = eval("visual_module." + visual_type["popup_add_handler"])
+            handler = visual_module.__dict__[visual_type["popup_add_handler"]]
             visuals = handler()
             html.write('<li><span>Add to %s:</span></li>' % visual_type["title"])
             for name, title in handler():
@@ -1306,13 +1314,17 @@ def ajax_popup_add():
 
 
 def ajax_add_visual():
-    visual_type = html.var('visual_type')
+    visual_type = html.var('visual_type') # dashboards / views / ...
     visual_type = visual_types[visual_type]
     module_name = visual_type["module_name"]
     visual_module = __import__(module_name)
-    handler = eval("visual_module." + visual_type["add_visual_handler"])
-    element_name = html.var("name")
+    handler = visual_module.__dict__[visual_type["add_visual_handler"]]
+
+    visual_name = html.var("visual_name") # add to this visual
+
+    # type of the visual to add (e.g. view)
     element_type = html.var("type")
+
     # Context and params are | separated lists of : separated triples
     # of name, datatype and value. Datatype is int or string
     extra_data = []
@@ -1328,5 +1340,4 @@ def ajax_add_visual():
                 value = int(value)
             data[key] = value
 
-    handler(element_name, element_type, *extra_data)
-
+    handler(visual_name, element_type, *extra_data)

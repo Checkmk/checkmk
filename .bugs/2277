@@ -1,9 +1,9 @@
 Title: It's not possible to edit a dashlet anymore
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2014-12-10 09:57:05
 Targetversion: 1.2.5i1
-Class: bug
 
 Clicking the edit button for a dashlet and saving the formular after leads to the following error:
 Internal error:: local variable 'action' referenced before assignment (Retry with debug mode)
@@ -12,3 +12,6 @@ and then you get the following error when trying to open the view again:
      
 
 Missing needed host parameter. ( Sorry the dasboard not view )
+
+2014-12-19 08:32:10: changed state open -> done
+Already fixed

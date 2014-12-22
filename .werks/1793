@@ -1,0 +1,10 @@
+Title: fritz: avoid Exception in inventory function of fritz checks if agent output is empty
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418993501
+
+

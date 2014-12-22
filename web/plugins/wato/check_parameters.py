@@ -1985,6 +1985,27 @@ register_check_parameters(
     "first"
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "msexch_copyqueue",
+    _("MS Exchange DAG CopyQueue"),
+          Tuple(
+              title = _("Upper Levels for CopyQueue Length"),
+              help = _("This rule sets upper levels to the number of transaction logs waiting to be copied "
+                       "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
+                       "(DAG). This is also known as the CopyQueue length."),
+              elements = [
+                  Integer(title = _("Warning at")),
+                  Integer(title = _("Critical at"))
+              ],
+          ),
+    TextAscii(
+        title = _("Database Name"),
+        help = _("The database name on the Mailbox Server."),
+    ),
+    "first"
+)
+
 def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
     if what == "used":
         title  = _("used space")

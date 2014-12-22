@@ -57,6 +57,7 @@
     WATO:
     * 1760 Added search form to manual checks page
     * 1785 Upload SNMP MIBs via WATO...
+    * 1461 msexch_dag.copyqueue: added a WATO rule for this check
     * 1761 FIX: Ruleset search is now consistent for host & serviceparameters and manual checks
     * 1765 FIX: Fixed bug when generating nagvis backends while having sites with livestatus proxy configured...
     * 1789 FIX: Fix preview of passive checks in WATO list of services

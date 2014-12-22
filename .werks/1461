@@ -1,0 +1,9 @@
+Title: msexch_dag.copyqueue: added a WATO rule for this check
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1419259490
+Class: feature
+
+

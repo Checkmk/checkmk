@@ -1376,7 +1376,6 @@ register_check_parameters(
                             forth = lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)
                        ),
                        PredictiveLevels(
-                           title = _("Predictive levels"),
                            unit = _("GB"),
                            default_difference = (0.5, 1.0)
                        )
@@ -2658,10 +2657,123 @@ register_check_parameters(
     None
 )
 
+
+def UsedSize(**args):
+    GB = 1024 * 1024 * 1024
+    return Tuple(
+        elements = [
+            Filesize(title = _("Warning at"), default_value = 1 * GB),
+            Filesize(title = _("Critical at"), default_value = 2 * GB),
+        ],
+        **args)
+
+def FreeSize(**args):
+    GB = 1024 * 1024 * 1024
+    return Tuple(
+        elements = [
+            Filesize(title = _("Warning below"), default_value = 2 * GB),
+            Filesize(title = _("Critical below"), default_value = 1 * GB),
+        ],
+        **args)
+
+def UsedPercentage(default_percents=None, of_what=None):
+    if of_what:
+        unit = _("%% of %s") % of_what
+    else:
+        unit = "%"
+    return Tuple(
+        elements = [
+            Percentage(title = _("Warning at"),
+                       default_value = default_percents and default_percents[0] or 80.0,
+                       unit = unit),
+            Percentage(title = _("Critical at"),
+                       default_value = default_percents and default_percents[1] or 90.0,
+                       unit = unit),
+        ])
+
+def FreePercentage(default_percents=None, of_what=None):
+    if of_what:
+        unit = _("%% of %s") % of_what
+    else:
+        unit = "%"
+    return Tuple(
+        elements = [
+            Percentage(title = _("Warning below"),
+                       default_value = default_percents and default_percents[0] or 20.0,
+                       unit = unit),
+            Percentage(title = _("Critical below"),
+                       default_value = default_percents and default_percents[1] or 10.0,
+                       unit = unit),
+        ])
+
+def DualMemoryLevels(what):
+    return CascadingDropdown(
+        title = _("Levels for %s") % what,
+        choices = [
+            ( "perc_used",  _("Percentual levels for used %s") % what, UsedPercentage() ),
+            ( "perc_free",  _("Percentual levels for free %s") % what, FreePercentage() ),
+            ( "abs_used",   _("Absolute levels for used %s") % what,   UsedSize() ),
+            ( "abs_free",   _("Absolute levels for free %s") % what,   FreeSize() ),
+            PredictiveMemoryChoice(_("used %s") % what),
+        ]
+    )
+
+def UpperMemoryLevels(what, default_percents=None, of_what=None):
+    return CascadingDropdown(
+        title = _("Upper levels for %s") % what,
+        choices = [
+            ( "perc_used",  _("Percentual levels"),
+              UsedPercentage(default_percents, of_what) ),
+            ( "abs_used",   _("Absolute levels"),   UsedSize() ),
+            PredictiveMemoryChoice(what),
+        ]
+    )
+
+def LowerMemoryLevels(what, default_percents=None, of_what=None):
+    return CascadingDropdown(
+        title = _("Lower levels for %s") % what,
+        choices = [
+            ( "perc_free",  _("Percentual levels"), FreePercentage(default_percents, of_what) ),
+            ( "abs_free",   _("Absolute levels"),   FreeSize() ),
+            PredictiveMemoryChoice(what),
+        ]
+    )
+
+def PredictiveMemoryChoice(what):
+    return ( "predictive", _("Predictive levels for %s") % what,
+        PredictiveLevels(
+           unit = _("GB"),
+           default_difference = (0.5, 1.0)
+    ))
+
+
+register_check_parameters(
+    subgroup_os,
+    "memory_linux",
+    _("Memory and Swap usage on Linux"),
+    Dictionary(
+        elements = [
+            ( "levels_ram",         DualMemoryLevels(_("RAM"))),
+            ( "levels_swap",        DualMemoryLevels(_("Swap"))),
+            ( "levels_total",       UpperMemoryLevels(_("Total Data"),       (120.0, 150.0), _("RAM"))),
+            ( "levels_shm",         UpperMemoryLevels(_("Shared Memory"),    ( 20.0,  30.0), _("RAM"))),
+            ( "levels_pagetables",  UpperMemoryLevels(_("Page tables"),      (  8.0,  16.0), _("RAM"))),
+            ( "levels_writeback",   UpperMemoryLevels(_("Disk Writeback"))),
+            ( "levels_committed",   UpperMemoryLevels(_("Committed memory"), ( 80.0,  90.0), _("RAM + Swap"))),
+            ( "levels_commitlimit", LowerMemoryLevels(_("Commit Limit"),     ( 20.0,  10.0), _("RAM + Swap"))),
+            ( "levels_vmalloc",     LowerMemoryLevels(_("VMalloc Chunk"))),
+        ],
+    ),
+    None,
+    "dict",
+)
+
+
+
 register_check_parameters(
     subgroup_os,
     "memory",
-    _("Main memory usage (Linux / UNIX / Other Devices)"),
+    _("Main memory usage (UNIX / Other Devices)"),
     Transform(
         Dictionary(
             elements = [
@@ -2681,6 +2793,7 @@ register_check_parameters(
                         elements = [
                             Alternative(
                                 title = _("Levels for used memory"),
+                                style = "dropdown",
                                 elements = [
                                     Tuple(
                                         title = _("Specify levels in percentage of total RAM"),
@@ -2700,6 +2813,7 @@ register_check_parameters(
                             ),
                             Transform(
                                     Alternative(
+                                        style = "dropdown",
                                         elements = [
                                             Tuple(
                                                 title = _("Specify levels in percentage of total RAM"),
@@ -2776,7 +2890,7 @@ register_check_parameters(
         title = _("Module name"),
         allow_empty = False
     ),
-    "match"
+    "dict",
 )
 
 register_check_parameters(

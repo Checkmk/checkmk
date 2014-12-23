@@ -1,0 +1,11 @@
+Title: Fix filtering in Multisite View BI Boxes
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1419329931
+
+In this view always all hosts would be displayed, not just those of the
+group in question. This has been fixed.

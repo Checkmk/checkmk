@@ -1,0 +1,10 @@
+Title: quantum_libsmall_door, quantum libsmall_status: Fixed broken scan function
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1419330317
+
+

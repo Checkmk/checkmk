@@ -2714,7 +2714,8 @@ def DualMemoryLevels(what):
             ( "perc_free",  _("Percentual levels for free %s") % what, FreePercentage() ),
             ( "abs_used",   _("Absolute levels for used %s") % what,   UsedSize() ),
             ( "abs_free",   _("Absolute levels for free %s") % what,   FreeSize() ),
-            PredictiveMemoryChoice(_("used %s") % what),
+            # PredictiveMemoryChoice(_("used %s") % what), # not yet implemented
+            ( "ignore",     _("Do not impose levels") ),
         ]
     )
 
@@ -2725,7 +2726,8 @@ def UpperMemoryLevels(what, default_percents=None, of_what=None):
             ( "perc_used",  _("Percentual levels"),
               UsedPercentage(default_percents, of_what) ),
             ( "abs_used",   _("Absolute levels"),   UsedSize() ),
-            PredictiveMemoryChoice(what),
+            # PredictiveMemoryChoice(what), # not yet implemented
+            ( "ignore",     _("Do not impose levels") ),
         ]
     )
 
@@ -2735,16 +2737,18 @@ def LowerMemoryLevels(what, default_percents=None, of_what=None):
         choices = [
             ( "perc_free",  _("Percentual levels"), FreePercentage(default_percents, of_what) ),
             ( "abs_free",   _("Absolute levels"),   FreeSize() ),
-            PredictiveMemoryChoice(what),
+            # PredictiveMemoryChoice(what), # not yet implemented
+            ( "ignore",     _("Do not impose levels") ),
         ]
     )
 
-def PredictiveMemoryChoice(what):
-    return ( "predictive", _("Predictive levels for %s") % what,
-        PredictiveLevels(
-           unit = _("GB"),
-           default_difference = (0.5, 1.0)
-    ))
+# Beware: This is not yet implemented in the check.
+# def PredictiveMemoryChoice(what):
+#     return ( "predictive", _("Predictive levels for %s") % what,
+#         PredictiveLevels(
+#            unit = _("GB"),
+#            default_difference = (0.5, 1.0)
+#     ))
 
 
 register_check_parameters(
@@ -2761,7 +2765,7 @@ register_check_parameters(
             ( "levels_writeback",   UpperMemoryLevels(_("Disk Writeback"))),
             ( "levels_committed",   UpperMemoryLevels(_("Committed memory"), ( 80.0,  90.0), _("RAM + Swap"))),
             ( "levels_commitlimit", LowerMemoryLevels(_("Commit Limit"),     ( 20.0,  10.0), _("RAM + Swap"))),
-            ( "levels_vmalloc",     LowerMemoryLevels(_("VMalloc Chunk"))),
+            ( "levels_vmalloc",     LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
         ],
     ),
     None,

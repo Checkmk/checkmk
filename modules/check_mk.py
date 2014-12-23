@@ -330,7 +330,7 @@ def load_checks():
     value = None
     ignored_variable_types = [ type(lambda: None), type(os) ]
 
-    known_vars = set(vars().keys()) # track new configuration variables
+    known_vars = set(globals().keys()) # track new configuration variables
 
     for f in filelist:
         if not f.endswith("~"): # ignore emacs-like backup files
@@ -342,7 +342,7 @@ def load_checks():
                     raise
                 sys.exit(5)
 
-    for varname, value in vars().iteritems():
+    for varname, value in globals().iteritems():
         if varname[0] != '_' \
             and varname not in known_vars \
             and type(value) not in ignored_variable_types:
@@ -350,6 +350,8 @@ def load_checks():
 
     # Now convert check_info to new format.
     convert_check_info()
+
+load_checks()
 
 #.
 #   .--Checks--------------------------------------------------------------.

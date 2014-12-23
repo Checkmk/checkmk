@@ -1,0 +1,12 @@
+Title: Handle situations with too many open events better
+Component: ec
+State: open
+Date: 2014-12-23 09:38:15
+Targetversion: 1.2.5i1
+Class: nastiness
+
+We need to add a configurable upper limit for the number of open
+events and handle this gracefully. We could e.g. create a new
+artificial event "Too many open Events". If we are in the state of
+too many open events further events should just be archived with
+a special state "OVERFLOW".

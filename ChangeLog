@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 1795 FIX: Fix internal exception in WATO rule for filesystems...
+    * 1522 FIX: quantum_libsmall_door, quantum libsmall_status: Fixed broken scan function
 
     Multisite:
     * 1801 FIX: "Add to visual" menu in views is now sorted

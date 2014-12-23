@@ -330,7 +330,7 @@ def load_checks():
     value = None
     ignored_variable_types = [ type(lambda: None), type(os) ]
 
-    known_vars = set(vars().keys()) # track new configuration variables
+    known_vars = set(globals().keys()) # track new configuration variables
 
     for f in filelist:
         if not f.endswith("~"): # ignore emacs-like backup files
@@ -342,7 +342,7 @@ def load_checks():
                     raise
                 sys.exit(5)
 
-    for varname, value in vars().iteritems():
+    for varname, value in globals().iteritems():
         if varname[0] != '_' \
             and varname not in known_vars \
             and type(value) not in ignored_variable_types:
@@ -350,6 +350,8 @@ def load_checks():
 
     # Now convert check_info to new format.
     convert_check_info()
+
+load_checks()
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -6119,18 +6121,11 @@ non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify'
                       '--man', '-V', '--version' ,'-h', '--help', '--automation',
                       '--create-rrd', '--convert-rrds', '--keepalive' ]
 
-non_checks_options = ['--create-rrd', '--convert-rrds', '--help']
-
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, err:
     print str(err)
     sys.exit(1)
-
-# The check files set serveral config vars which might be overwritten
-# later by configuration. So the checks need to be loaded before the config
-if len(set.intersection(set(non_checks_options), [o[0] for o in opts])) == 0:
-    load_checks()
 
 # Read the configuration files (main.mk, autochecks, etc.), but not for
 # certain operation modes that does not need them and should not be harmed

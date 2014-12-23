@@ -1,4 +1,7 @@
 1.2.6b5:
+    Core & Setup:
+    * 1797 FIX: Fix incomplete configuration during checking when using CMC...
+
     Checks & Agents:
     * 1795 FIX: Fix internal exception in WATO rule for filesystems...
 

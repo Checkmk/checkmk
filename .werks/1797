@@ -1,0 +1,10 @@
+Title: Fix incomplete configuration during checking when using CMC
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.6b5
+Date: 1419330925
+Class: fix
+
+This also affected the Discovery checks - which didn't honor any rules that
+affected the service discovery (e.g. diskstat inventory mode).

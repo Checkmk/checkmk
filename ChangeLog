@@ -5,6 +5,7 @@
 
     Multisite:
     * 1801 FIX: "Add to visual" menu in views is now sorted
+    * 1796 FIX: Fix filtering in Multisite View BI Boxes...
 
 
 1.2.6b4:

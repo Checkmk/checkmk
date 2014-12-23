@@ -166,7 +166,6 @@ def check_mem_levels(title, used, total, levels, of_what=None, of_value=None):
             # Predictive Levels nur für ausgewählte Werte zulassen.
             # return check_levels(used, levels[1], unit = "GB")
 
-        print levels
         warn, crit = levels[1]
         if how.startswith("perc_"):
             perc_used = 100.0 * float(used) / of_value
@@ -298,8 +297,6 @@ def check_mem_linux(_no_item, params, info):
     hwc = meminfo.get("HardwareCorrupted")
     if hwc:
         yield 2, "Hardware defect of %s" % get_bytes_human_readable(hwc)
-
-    pprint.pprint(meminfo)
 
 
 

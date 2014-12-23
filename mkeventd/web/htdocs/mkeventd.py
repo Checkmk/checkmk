@@ -37,7 +37,7 @@ except:
     run_dir = defaults.livestatus_unix_socket.rsplit("/",1)[0]
     socket_path = run_dir + "/mkeventd/status"
     pipe_path = run_dir + "/mkeventd/events"
-    snmp_mibs_dir = var_dir + "/mkeventd/mibs"
+    snmp_mibs_dir = defaults.var_dir + "/mkeventd/mibs"
 
 syslog_priorities = [
     (0, "emerg" ),

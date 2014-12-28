@@ -1,0 +1,10 @@
+Title: dell_poweredge_cpu: Fix exception where BrandName is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1419778658
+
+

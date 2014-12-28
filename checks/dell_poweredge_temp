@@ -24,48 +24,54 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def dell_poweredge_temp_makeitem(chassisIndex, Index, LocationName):
+    if LocationName:
+        item = LocationName
+    else:
+        item = chassisIndex + "-" + Index
+    if item.endswith(" Temp"):
+        item = item[:-5]
+    return item
+
+
 def inventory_dell_poweredge_temp(info):
-    inventory = []
     for line in info:
         if line[2] != '1':  # StateSettings not 'unknown'
-            if line[5] != "":
-                inventory.append( ( line[5], None ) )
-            else:
-                inventory.append( ( line[0]+"-"+line[1], None ) )
-    return inventory
+            item = dell_poweredge_temp_makeitem(line[0], line[1], line[5])
+            yield item, None
+
 
 def check_dell_poweredge_temp(item, _no_params, info):
     for chassisIndex, Index, StateSettings, Status, Reading, LocationName, \
         UpperCritical, UpperNonCritical in info:
 
-        if item == LocationName or item == chassisIndex+"-"+Index:
-            temp = saveint(Reading)/10.0
-            warn = saveint(UpperNonCritical)/10.0
-            crit = saveint(UpperCritical)/10.0
+        if item == dell_poweredge_temp_makeitem(chassisIndex, Index, LocationName):
+            temp = int(Reading) / 10.0
+            warn = int(UpperNonCritical) / 10.0
+            crit = int(UpperCritical) / 10.0
             state_table = {
-                "1" : ( "other", 1 ),
-                "2" : ( "unknown", 1 ),
-                "3" : ( "", 0 ),
-                "4" : ( "nonCriticalUpper", 1 ),
-                "5" : ( "CriticalUpper", 2 ),
-                "6" : ( "NonRecoverableUpper", 2 ),
-                "7" : ( "nonCriticalLower", 1 ),
-                "8" : ( "CriticalLower", 2 ),
-                "9" : ( "NonRecoverableLower", 2 ),
-                "10" : ( "failed", 2 ),
+                 "1" : ("other",               1),
+                 "2" : ("unknown",             1),
+                 "3" : ("",                    0),
+                 "4" : ("nonCriticalUpper",    1),
+                 "5" : ("CriticalUpper",       2),
+                 "6" : ("NonRecoverableUpper", 2),
+                 "7" : ("nonCriticalLower",    1),
+                 "8" : ("CriticalLower",       2),
+                 "9" : ("NonRecoverableLower", 2),
+                "10" : ("failed",              2),
             }
-            state_txt, state = state_table.get(Status, ( "unknown state", 2 ))
-            infotext = "%.1f Degrees (upper limits %s/%s) %s" % ( temp, warn, crit, state_txt )
-            perfdata = [( "temp", temp, warn, crit )]
+            state_txt, state = state_table.get(Status, ("unknown state", 3))
+            if state:
+                yield state, state_txt
+            yield check_temperature(temp, (warn, crit))
 
-            return state, infotext, perfdata
 
-    return 3, "Temp Sensor not found"
 
 check_info["dell_poweredge_temp"] = {
     "check_function"        : check_dell_poweredge_temp,
     "inventory_function"    : inventory_dell_poweredge_temp,
-    "service_description"   : "%s",
+    "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
     "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.5.4.700.20.1", [
                                       "1", # temperatureProbechassisIndex
@@ -85,5 +91,6 @@ check_info["dell_poweredge_temp"] = {
                                       #"16", # temperatureProbeDiscreteReading
                               ]),
     "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
+    "includes"              : [ "temperature.include" ],
 }
 

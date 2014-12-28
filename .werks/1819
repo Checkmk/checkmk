@@ -1,0 +1,15 @@
+Title: dell_poweredge_temp: Make output and service description consistent with other temperature checks
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.2.7i1
+Date: 1419779377
+
+The temperature checks for Dell PowerEdge now use a service description that starts with
+<tt>Temperature</tt> and a plugin output that is consistent with the other temperature
+checks in the system.
+
+Note: since the name of the item has changed you need to reinventorize all these checks.
+Also new RRD will be created since the service description has changed.

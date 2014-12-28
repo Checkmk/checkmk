@@ -1,4 +1,7 @@
 1.2.6b6:
+    Checks & Agents:
+    * 1818 FIX: dell_poweredge_cpu: Fix exception where BrandName is missing
+
 
 1.2.6b5:
     Core & Setup:

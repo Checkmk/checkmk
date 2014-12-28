@@ -1,6 +1,8 @@
 1.2.6b6:
     Checks & Agents:
     * 1818 FIX: dell_poweredge_cpu: Fix exception where BrandName is missing
+    * 1819 FIX: dell_poweredge_temp: Make output and service description consistent with other temperature checks...
+            NOTE: Please refer to the migration notes!
 
 
 1.2.6b5:

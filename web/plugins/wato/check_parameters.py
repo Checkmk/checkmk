@@ -2679,16 +2679,21 @@ def FreeSize(**args):
 def UsedPercentage(default_percents=None, of_what=None):
     if of_what:
         unit = _("%% of %s") % of_what
+        maxvalue = None
     else:
         unit = "%"
+        maxvalue = 101.0
     return Tuple(
         elements = [
             Percentage(title = _("Warning at"),
                        default_value = default_percents and default_percents[0] or 80.0,
-                       unit = unit),
+                       unit = unit,
+                       maxvalue = maxvalue,
+                       ),
             Percentage(title = _("Critical at"),
                        default_value = default_percents and default_percents[1] or 90.0,
-                       unit = unit),
+                       unit = unit,
+                       maxvalue = maxvalue),
         ])
 
 def FreePercentage(default_percents=None, of_what=None):
@@ -2706,11 +2711,11 @@ def FreePercentage(default_percents=None, of_what=None):
                        unit = unit),
         ])
 
-def DualMemoryLevels(what):
+def DualMemoryLevels(what, default_percents=None):
     return CascadingDropdown(
         title = _("Levels for %s") % what,
         choices = [
-            ( "perc_used",  _("Percentual levels for used %s") % what, UsedPercentage() ),
+            ( "perc_used",  _("Percentual levels for used %s") % what, UsedPercentage(default_percents) ),
             ( "perc_free",  _("Percentual levels for free %s") % what, FreePercentage() ),
             ( "abs_used",   _("Absolute levels for used %s") % what,   UsedSize() ),
             ( "abs_free",   _("Absolute levels for free %s") % what,   FreeSize() ),
@@ -2723,7 +2728,7 @@ def UpperMemoryLevels(what, default_percents=None, of_what=None):
     return CascadingDropdown(
         title = _("Upper levels for %s") % what,
         choices = [
-            ( "perc_used",  _("Percentual levels"),
+            ( "perc_used",  _("Percentual levels%s") % (of_what and (_(" in relation to %s") % of_what) or ""),
               UsedPercentage(default_percents, of_what) ),
             ( "abs_used",   _("Absolute levels"),   UsedSize() ),
             # PredictiveMemoryChoice(what), # not yet implemented
@@ -2759,12 +2764,13 @@ register_check_parameters(
         elements = [
             ( "levels_ram",         DualMemoryLevels(_("RAM"))),
             ( "levels_swap",        DualMemoryLevels(_("Swap"))),
-            ( "levels_total",       UpperMemoryLevels(_("Total Data"),       (120.0, 150.0), _("RAM"))),
-            ( "levels_shm",         UpperMemoryLevels(_("Shared Memory"),    ( 20.0,  30.0), _("RAM"))),
-            ( "levels_pagetables",  UpperMemoryLevels(_("Page tables"),      (  8.0,  16.0), _("RAM"))),
+            ( "levels_virtual",     DualMemoryLevels(_("Total virtual memory"), ( 80.0, 90.0))),
+            ( "levels_total",       UpperMemoryLevels(_("Total Data in relation to RAM"), (120.0, 150.0), _("RAM"))),
+            ( "levels_shm",         UpperMemoryLevels(_("Shared Memory"),       ( 20.0,  30.0), _("RAM"))),
+            ( "levels_pagetables",  UpperMemoryLevels(_("Page tables"),         (  8.0,  16.0), _("RAM"))),
             ( "levels_writeback",   UpperMemoryLevels(_("Disk Writeback"))),
-            ( "levels_committed",   UpperMemoryLevels(_("Committed memory"), ( 80.0,  90.0), _("RAM + Swap"))),
-            ( "levels_commitlimit", LowerMemoryLevels(_("Commit Limit"),     ( 20.0,  10.0), _("RAM + Swap"))),
+            ( "levels_committed",   UpperMemoryLevels(_("Committed memory"),    ( 80.0,  90.0), _("RAM + Swap"))),
+            ( "levels_commitlimit", LowerMemoryLevels(_("Commit Limit"),        ( 20.0,  10.0), _("RAM + Swap"))),
             ( "levels_vmalloc",     LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
         ],
     ),

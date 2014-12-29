@@ -181,15 +181,28 @@ perfometers["check_mk-lparstat_aix.cpu_util"] = perfometer_check_mk_kernel_util
 
 def perfometer_check_mk_mem_used(row, check_command, perf_data):
     h = '<table><tr>'
-    ram_total  = float(perf_data[0][6])
-    swap_total = float(perf_data[1][6])
-    virt_total = ram_total + swap_total
+    for entry in perf_data:
+        # Get total and used RAM
+        if entry[0] == "ramused":
+            ram_used   = float(entry[1]) # mem.include
+            ram_total  = float(entry[6]) # mem.include
+        elif entry[0] == "mem_used":
+            ram_used   = float(entry[1]) # mem.linux
+        elif entry[0] == "mem_total":
+            ram_total  = float(entry[1]) # mem.linux
 
-    ram_used   = float(perf_data[0][1])
-    swap_used  = float(perf_data[1][1])
+        # Get total and used SWAP
+        elif entry[0] == "swapused":
+            swap_used   = float(entry[1]) # mem.include
+            swap_total  = float(entry[6]) # mem.include
+        elif entry[0] == "swap_used":
+            swap_used   = float(entry[1]) # mem.linux
+        elif entry[0] == "swap_total":
+            swap_total  = float(entry[1]) # mem.linux
+
+    virt_total = ram_total + swap_total
     virt_used  = ram_used + swap_used
 
-    state = row["service_state"]
     # paint used ram and swap
     ram_color, swap_color = "#80ff40", "#008030"
     h += perfometer_td(100 * ram_used / virt_total, ram_color)
@@ -206,12 +219,12 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
     return "%d%%" % (100 * (virt_used / ram_total)), h
 
 perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
+perfometers["check_mk-mem.linux"] = perfometer_check_mk_mem_used
 perfometers["check_mk-aix_memory"] = perfometer_check_mk_mem_used
 perfometers["check_mk-hr_mem"] = perfometer_check_mk_mem_used
 
 def perfometer_check_mk_mem_win(row, check_command, perf_data):
     # only show mem usage, do omit page file
-    state = row["service_state"]
     color = "#5090c0"
     ram_total  = float(perf_data[0][6])
     ram_used   = float(perf_data[0][1])

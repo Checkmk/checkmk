@@ -1922,6 +1922,29 @@ def get_age_human_readable(secs):
 def quote_shell_string(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
+# ThisIsACamel -> this_is_a_camel
+def camelcase_to_underscored(name):
+    previous_lower = False
+    previous_underscore = True
+    result = ""
+    for c in name:
+        if c.isupper():
+            if previous_lower and not previous_underscore:
+                result += "_"
+            previous_lower = False
+            previous_underscore = False
+            result += c.lower()
+        elif c == "_":
+            previous_lower = False
+            previous_underscore = True
+            result += c
+        else:
+            previous_lower = True
+            previous_underscore = False
+            result += c
+    return result
+
+
 
 # Check if a timeperiod is currently active. We have no other way than
 # doing a Livestatus query. This is not really nice, but if you have a better

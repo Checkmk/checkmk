@@ -304,6 +304,25 @@ def check_mem_linux(_no_item, params, info):
     if hwc:
         yield 2, "Hardware defect of %s" % get_bytes_human_readable(hwc)
 
+    # Now send performance data. We simply output *all* fields of meminfo
+    # except for a few really useless values
+    perfdata = []
+    items = meminfo.items()
+    items.sort()
+    for name, value in items:
+        if name.startswith("DirectMap"):
+            continue
+        if name.startswith("Vmalloc") and meminfo["VmallocTotal"] > 2**40: # useless on 64 Bit system
+            continue
+        if name.startswith("Huge"):
+            if meminfo["HugePages_Total"] == 0: # omit useless data
+                continue
+            if name == "Hugepagesize":
+                continue # not needed
+            value = value * meminfo["Hugepagesize"] # convert number to actual memory size
+        perfdata.append((camelcase_to_underscored(name.replace("(", "_").replace(")","")), value))
+    yield 0, "", perfdata
+
 
 
 check_info["mem.linux"] = {

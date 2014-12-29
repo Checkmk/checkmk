@@ -1,0 +1,13 @@
+Title: mk_oracle: better detection of RMAN Archivelog Backups
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1419847501
+Class: fix
+
+The SQL in mk_oracle plugin sometimes missed Archivelog Backups.
+This has been fixed with a new SQL.
+
+Please update the mk_oracle plugin!
+

@@ -1,0 +1,44 @@
+title: Detailed usage of RAM, Swap, VMalloc and other memory areas on Linux
+agents: linux
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check measures all of the available memory readings of the complex
+ Linux memory management, which are found in {/proc/meminfo}. You can
+ define levels on every useful value, not only on RAM and Swap. Please
+ note that the Linux memory management is very complex. This check takes
+ all this into account and also correctly handles the concept of
+ caching and the fact that Linux swaps out inactive parts of processes
+ even if there is enough RAM left.
+
+ This is not a bug, it's a feature. In fact it is the only way to do it right
+ (at least for Linux): What parts of a process currently reside in physical
+ RAM and what parts are swapped out is not related in a direct way with the
+ current memory usage.
+
+ Linux tends to swap out parts of processes even if RAM is available. It
+ does this in situations where disk buffers (are assumed to) speed up the
+ overall performance more than keeping rarely used parts of processes in RAM.
+
+ For example after a complete backup of your system you might experiance
+ that your swap usage has increased while you have more RAM free then
+ before. That is because Linux has taken RAM from processes in order to
+ increase disk buffers.
+
+ Per default there are various crit/warn levels set. Please use WATO
+ for viewing and adapting these levels.
+
+item:
+ {None}
+
+inventory:
+ One item per Linux host is being created.
+
+perfdata:
+ For every value in {/proc/meminfo} one performance variable
+ is being output.
+
+[parameters]
+parameters (dict): This dictionary is very complex. Please create
+  a configuration with WATO.

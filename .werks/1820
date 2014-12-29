@@ -1,0 +1,19 @@
+Title: mem.linux: new dedicated check for Linux memory management
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1419857838
+Class: feature
+
+The new check {mem.linux} replaces {mem.used} and {mem.vmalloc} for Linux
+hosts.  It takes core of almost every aspect of the Linux memory management,
+such as page tables, shared memory, overcommitting, disk writeback areas
+and much more. It outputs lots of performance data. Depending on the kernel
+version and of which memory areas are present you will see up to ten predefined
+PNP graphs for a single host!
+
+Please note that this is an incompatible change since the new check's
+performance data is not compatible with that one from the superseeded
+checks. The new check will be selected as soon as you redo the service
+discovery for your Linux hosts.

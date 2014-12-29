@@ -45,6 +45,8 @@ def inventory_oracle_asm_diskgroup(info):
 def check_oracle_asm_diskgroup(item, params, info):
 
     for line in info:
+        voting_files = 'N'
+
         if len(line) == 13:
             state, typ, rebal, sector, block, au, total_mb,  \
                 free_mb, req_mir_free_mb, usable_file_mb, offline_disks, \
@@ -59,19 +61,38 @@ def check_oracle_asm_diskgroup(item, params, info):
         dg_name = name.rstrip('/')
 
         if dg_name == item:
-            if typ in ('NORMAL', 'HIGH') and params.get('req_mir_free'):
+            if typ in ('NORMAL', 'HIGH'):
+                if typ == 'NORMAL':
+                    if voting_files == 'Y':
+                        # NORMAL Redundancy Disk-Groups with Voting requires 3 Failgroups
+                        dg_factor = 3
+                    else:
+                        dg_factor = 2
 
-                req_mir_free_mb = int(req_mir_free_mb)
+                elif typ == 'HIGH':
+                    if voting_files == 'Y':
+                        # HIGH Redundancy Disk-Groups with Voting requires 5 Failgroups
+                        dg_factor = 5
+                    else:
+                        dg_factor = 3
 
-                if req_mir_free_mb < 0:
-                    # requirred mirror free space could be negative!
-                    req_mir_free_mb = 0
+                total_mb = int(total_mb)/dg_factor
+                free_space_mb = int(free_mb)/dg_factor
 
-                free_space_mb = int(req_mir_free_mb)
+                if params.get('req_mir_free'):
 
-                infotext += ', required mirror free space used' % lower()
+                    req_mir_free_mb = int(req_mir_free_mb)
+
+                    if req_mir_free_mb < 0:
+                        # requirred mirror free space could be negative!
+                        req_mir_free_mb = 0
+
+                    free_space_mb = int(req_mir_free_mb)
+
+                    infotext += ', required mirror free space used' % lower()
 
             else:
+                # EXTERNAL Redundancy
                 free_space_mb = int(free_mb)
 
             status, infotext, perfdata =  df_check_filesystem(g_hostname, item, int(total_mb),

@@ -3737,6 +3737,12 @@ register_check_parameters(
                     title = _("State in case of logins are not possible: "),
                 ),
             ),(
+            'primarynotopen',
+                MonitoringState(
+                    default_value = 2,
+                    title = _("State in case of Database is PRIMARY and not OPEN: "),
+                ),
+            ),(
             'uptime_min',
              Tuple(
                  title = _("Minimum required uptime"),

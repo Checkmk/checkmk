@@ -34,6 +34,7 @@ factory_settings["oracle_instance_defaults"] = {
     "logins"  : 2,
     "noforcelogging"  : 1,
     "noarchivelog"  : 1,
+    "primarynotopen"  : 2,
 }
 
 
@@ -81,10 +82,15 @@ def check_oracle_instance(item, params, info):
             infotext = "Database Name %s, Status %s" % \
                        (name, openmode)
 
-            # Make sure that primary databases are always open
+            # Check state for PRIMARY Database. Normaly there are always OPEN
             if database_role == 'PRIMARY' and openmode != 'OPEN':
-                state = 2
-                infotext += '(!!)'
+                state = params.get('primarynotopen')
+                if state == 1:
+                    infotext += '(!)'
+                elif state == 2:
+                    infotext += '(!!)'
+                elif state == 0:
+                    infotext += ' (allowed by rule)'
 
             # ORACLE is sick and cannot handle timezone changes >:-P
             up_seconds = max(0, int(up_seconds))

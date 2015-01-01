@@ -44,18 +44,33 @@ def check_oracle_rman(item, params, info):
             backupage = int(backupage)
             infotext = "Last backup %s ago" % get_age_human_readable(backupage * 60)
 
-            state = 0
-            if "levels" in params:
-                warn, crit = params.get("levels")
-                if backupage >= crit:
-                    state = 2
-                elif backupage >= warn:
-                    state = 1
-                infotext += " (levels at %s/%s)" % (
-                    get_age_human_readable(warn),
-                    get_age_human_readable(crit))
+            perfdata = []
+            state = 2
+            infotext = "no COMPLETED backup found in last 14 days"
 
-            perfdata = [ ("age", backupage, ) ]
+            if status in  ('COMPLETED', 'COMPLETED WITH WARNINGS'):
+                if not backupage:
+                    # This should not be possible until last fix
+                    return 3, "Unknown backupage in check found"
+
+                # backupage is time in minutes from agent!
+                backupage = int(backupage)*60
+                infotext = "Last backup %s ago" % get_age_human_readable(backupage)
+
+                state = 0
+                if "levels" in params:
+                    warn, crit = params.get("levels")
+                    if backupage >= crit:
+                        state = 2
+                    elif backupage >= warn:
+                        state = 1
+                    infotext += " (levels at %s/%s)" % (
+                        get_age_human_readable(warn),
+                        get_age_human_readable(crit))
+
+                    perfdata = [ ("age", backupage, warn, crit) ]
+                else:
+                    perfdata = [ ("age", backupage, ) ]
 
             return state, infotext, perfdata
 

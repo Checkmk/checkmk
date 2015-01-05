@@ -158,13 +158,14 @@ def parse_multipath(info):
     # 0: matching regex
     # 1: matched regex-group id of UUID
     # 2: matched regex-group id of alias (optional)
+    # 3: matched regex-group id of dm-device (optional)
     reg_headers = [
-        (get_regex(r"^[0-9a-z]{33}$"),                       0, None), # 1. (should be included in 3.)
-        (get_regex(r"^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"),      2, 1),    # 2.
-        (get_regex(r"^[a-zA-Z0-9_]+$"),                      0, None), # 3.
-        (get_regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?dm.+$"), 1, None), # 4.
-        (get_regex(r"^[a-zA-Z0-9_]+dm-.+$"),                 0, None), # 5. Remove this line in 1.2.0
-        (get_regex(r"^([-a-zA-Z0-9_ ]+)\s?dm-[0-9]+.*$"),    1, None), # 6. and 7.
+        (get_regex(r"^[0-9a-z]{33}$"),                                0, None, None), # 1. (should be included in 3.)
+        (get_regex(r"^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"),               2, 1,    None),    # 2.
+        (get_regex(r"^[a-zA-Z0-9_]+$"),                               0, None, None), # 3.
+        (get_regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?(dm.[0-9]+).*$"), 1, None, 2), # 4.
+        (get_regex(r"^[a-zA-Z0-9_]+(dm-[0-9]+).*$"),                  0, None, 1), # 5. Remove this line in 1.2.0
+        (get_regex(r"^([-a-zA-Z0-9_ ]+)\s?(dm-[0-9]+).*$"),           1, None, 2), # 6. and 7.
     ]
 
     reg_prio = get_regex("[[ ]prio=")
@@ -201,16 +202,21 @@ def parse_multipath(info):
         if line[0][0] not in [ '[', '`', '|', '\\' ] and not line[0].startswith("size="):
             # Try to match header lines
             matchobject = None
-            for regex, uuid_pos, alias_pos in reg_headers:
+            for regex, uuid_pos, alias_pos, dm_pos in reg_headers:
                 matchobject = regex.search(l)
 
                 if matchobject:
-                    uuid = matchobject.group(uuid_pos)
+                    uuid = matchobject.group(uuid_pos).strip()
 
                     if alias_pos:
                         alias = matchobject.group(alias_pos)
                     else:
                         alias = None
+
+                    if dm_pos:
+                        dm_device = matchobject.group(dm_pos)
+                    else:
+                        dm_device = None
 
                     break
 
@@ -230,6 +236,7 @@ def parse_multipath(info):
             group['uuid'] = uuid
             group['state'] = None
             group['numpaths'] = 0
+            group['device'] = dm_device
             groups[uuid] = group
 
             # If the device has an alias, then extract it

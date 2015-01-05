@@ -1,0 +1,15 @@
+Title: diskstat: detect multipath devices and handle them instead of the physical paths
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1420467168
+Class: feature
+
+The Linux <i>Disk IO</i> check now uses the information about the Multipathing
+if available and the drops single checks for the various <tt>sd</tt><i>XY</i>
+devices of the paths and instead adds checks for the resulting multipath
+devices.
+
+That drastically reduces the number of services and displays more useful
+information at the same time.

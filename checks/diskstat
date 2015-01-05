@@ -113,27 +113,43 @@ def diskstat_parse_info(info):
 
     return info_plain, nameinfo
 
-def diskstat_rewrite_device(nameinfo, linestart):
+def diskstat_rewrite_device(nameinfo, multipath_nameinfo, linestart):
     node = linestart[0]
     major, minor = map(int, linestart[1:3])
     device = linestart[3]
-    return nameinfo.get((node, major, minor), device)
+    if device in multipath_nameinfo:
+        return multipath_nameinfo[device]
+    else:
+        return nameinfo.get((node, major, minor), device)
 
 def linux_diskstat_convert(info):
-    info, nameinfo = diskstat_parse_info(info)
+    diskstat_info, multipath_info = info
+    info, nameinfo = diskstat_parse_info(diskstat_info)
+
+    # For multipath devices use the entries for dm-?? and rename
+    # them with their multipath UUID/alias - and drop the according
+    # sdXY that belong to the paths.
+    multipath_nameinfo = {}
+    skipped_devices = set([])
+    if multipath_info:
+        for uuid, multipath in multipath_info.items():
+            skipped_devices.update(multipath["paths"])
+            multipath_nameinfo[multipath["device"]] = uuid # map dm-8 to its alias
+
     # The generic function takes the following values per line:
-    #  0: devname
-    #  1: read bytes counter
-    #  2: write bytes counter
+    #  0: None or node name
+    #  1: devname
+    #  2: read bytes counter
+    #  3: write bytes counter
     # Optional ones:
-    #  3: number of reads
-    #  4: number of writes
-    #  5: timems
-    #  6: read queue length *counters*
-    #  7: write queue length *counters*
+    #  4: number of reads
+    #  5: number of writes
+    #  6: timems
+    #  7: read queue length *counters*
+    #  8: write queue length *counters*
     rewritten = [
         ( l[0], # node name or None
-        diskstat_rewrite_device(nameinfo, l[0:4]),
+        diskstat_rewrite_device(nameinfo, multipath_nameinfo, l[0:4]),
         int(l[6]),
         int(l[10]),
         int(l[4]),
@@ -143,13 +159,16 @@ def linux_diskstat_convert(info):
     ]
 
     # Remove device mapper devices without a translated name
-    return [ line for line in rewritten if not line[1].startswith("dm-") ]
+    return [ line for line in rewritten
+             if not line[1].startswith("dm-")
+                and not line[1] in skipped_devices ]
 
 def inventory_diskstat(info):
     return inventory_diskstat_generic(linux_diskstat_convert(info))
 
 def check_diskstat(item, params, info):
-    this_time = int(info[0][1])
+    diskstat_info, multipath_info = info
+    this_time = int(diskstat_info[0][1])
     return check_diskstat_generic(item, params, this_time, linux_diskstat_convert(info))
 
 
@@ -162,5 +181,6 @@ check_info["diskstat"] = {
     'group'               : 'disk_io',
     "node_info"           : True, # add first column with actual host name
     'includes'            : [ "diskstat.include" ],
+    'extra_sections'      : [ "multipath" ],
 }
 

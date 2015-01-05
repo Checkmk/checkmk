@@ -278,7 +278,7 @@ def submit_check_mk_aggregation(hostname, status, output):
 # checks usually use existing cache files, if check_mk is not misconfigured,
 # and thus do no network activity at all...
 
-def get_host_info(hostname, ipaddress, checkname):
+def get_host_info(hostname, ipaddress, checkname, max_cachefile_age, ignore_check_interval=False):
     # If the check want's the node info, we add an additional
     # column (as the first column) with the name of the node
     # or None (in case of non-clustered nodes). On problem arises,
@@ -299,7 +299,9 @@ def get_host_info(hostname, ipaddress, checkname):
             # try the other nodes.
             try:
                 ipaddress = lookup_ipaddress(node)
-                new_info = get_realhost_info(node, ipaddress, checkname, cluster_max_cachefile_age)
+                new_info = get_realhost_info(node, ipaddress, checkname,
+                               max_cachefile_age == None and cluster_max_cachefile_age or max_cache_age,
+                               ignore_check_interval)
                 if new_info != None:
                     if add_nodeinfo:
                         new_info = [ [node] + line for line in new_info ]
@@ -323,9 +325,15 @@ def get_host_info(hostname, ipaddress, checkname):
                 raise MKAgentError(", ".join(exception_texts))
 
     else:
-        info = get_realhost_info(hostname, ipaddress, checkname, check_max_cachefile_age)
+        info = get_realhost_info(hostname, ipaddress, checkname,
+                      max_cachefile_age == None and check_max_cachefile_age or max_cachefile_age,
+                      ignore_check_interval)
         if info != None and add_nodeinfo:
-            info = [ [ None ] + line for line in info ]
+            if clusters_of(hostname):
+                add_host = hostname
+            else:
+                add_host = None
+            info = [ [add_host] + line for line in info ]
 
     # Now some check types define a parse function. In that case the
     # info is automatically being parsed by that function - on the fly.
@@ -1149,6 +1157,7 @@ def convert_check_info():
                 "default_levels_variable" : check_default_levels.get(check_type),
                 "node_info"               : False,
                 "parse_function"          : None,
+                "extra_sections"          : [],
             }
         else:
             # Check does already use new API. Make sure that all keys are present,
@@ -1160,6 +1169,7 @@ def convert_check_info():
             info.setdefault("snmp_scan_function", None)
             info.setdefault("default_levels_variable", None)
             info.setdefault("node_info", False)
+            info.setdefault("extra_sections", [])
 
             # Include files are related to the check file (= the basename),
             # not to the (sub-)check. So we keep them in check_includes.
@@ -1284,11 +1294,12 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
             if infotype in parsed_infos:
                 info = parsed_infos[infotype]
             else:
-                info = get_host_info(hostname, ipaddress, infotype)
+                info = get_info_for_check(hostname, ipaddress, infotype)
                 parsed_infos[infotype] = info
 
         except MKSkipCheck, e:
             continue
+
         except MKSNMPError, e:
             if str(e):
                 problems.append(str(e))
@@ -1398,6 +1409,25 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     error_sections.sort()
     return agent_version, num_success, error_sections, ", ".join(problems)
 
+
+# Collect information needed for one check. In case the check uses
+# extra sections (new feature since 1.2.7i1) only the main section
+# raises exceptions. Error in extra sections are silently ignored
+# and the info is replaced with None.
+def get_info_for_check(hostname, ipaddress, infotype, max_cachefile_age=None, ignore_check_interval=False):
+
+    if infotype in check_info:
+        extra_sections = check_info[infotype]["extra_sections"]
+        if extra_sections:
+            info = [ get_host_info(hostname, ipaddress, infotype, max_cachefile_age, ignore_check_interval) ]
+            for es in extra_sections:
+                try:
+                    info.append(get_host_info(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=False))
+                except:
+                    info.append(None)
+            return info
+
+    return get_host_info(hostname, ipaddress, infotype, max_cachefile_age, ignore_check_interval)
 
 
 def open_checkresult_file():

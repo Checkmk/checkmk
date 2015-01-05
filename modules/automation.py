@@ -358,7 +358,7 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
             try:
                 exitcode = None
                 perfdata = []
-                info = get_host_info(hostname, ipaddress, infotype)
+                info = get_info_for_check(hostname, ipaddress, infotype)
             # Handle cases where agent does not output data
             except MKAgentError, e:
                 exitcode = 3

@@ -180,10 +180,7 @@ def logwatch_precompile(hostname, item, _unused):
 
 def logwatch_reclassify(counts, patterns, text):
     for level, pattern in patterns:
-        reg = compiled_regexes.get(pattern)
-        if not reg:
-            reg = re.compile(pattern)
-            compiled_regexes[pattern] = reg
+        reg = regex(pattern)
         if reg.search(text):
             # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
             # then we count how many times this pattern has already matched and

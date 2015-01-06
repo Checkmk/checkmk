@@ -121,8 +121,8 @@ def inventory_if_common(info, has_nodeinfo = False):
     def alias_matches(alias):
         if match_alias == None:
             return True
-        for regex in match_alias:
-            if get_regex(regex).match(alias):
+        for r in match_alias:
+            if regex(r).match(alias):
                 return True
         return False
 

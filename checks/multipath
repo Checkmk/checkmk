@@ -160,16 +160,16 @@ def parse_multipath(info):
     # 2: matched regex-group id of alias (optional)
     # 3: matched regex-group id of dm-device (optional)
     reg_headers = [
-        (get_regex(r"^[0-9a-z]{33}$"),                                0, None, None), # 1. (should be included in 3.)
-        (get_regex(r"^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"),               2, 1,    None),    # 2.
-        (get_regex(r"^[a-zA-Z0-9_]+$"),                               0, None, None), # 3.
-        (get_regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?(dm.[0-9]+).*$"), 1, None, 2), # 4.
-        (get_regex(r"^[a-zA-Z0-9_]+(dm-[0-9]+).*$"),                  0, None, 1), # 5. Remove this line in 1.2.0
-        (get_regex(r"^([-a-zA-Z0-9_ ]+)\s?(dm-[0-9]+).*$"),           1, None, 2), # 6. and 7.
+        (regex(r"^[0-9a-z]{33}$"),                                0, None, None), # 1. (should be included in 3.)
+        (regex(r"^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"),               2, 1,    None),    # 2.
+        (regex(r"^[a-zA-Z0-9_]+$"),                               0, None, None), # 3.
+        (regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?(dm.[0-9]+).*$"), 1, None, 2), # 4.
+        (regex(r"^[a-zA-Z0-9_]+(dm-[0-9]+).*$"),                  0, None, 1), # 5. Remove this line in 1.2.0
+        (regex(r"^([-a-zA-Z0-9_ ]+)\s?(dm-[0-9]+).*$"),           1, None, 2), # 6. and 7.
     ]
 
-    reg_prio = get_regex("[[ ]prio=")
-    reg_lun  = get_regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
+    reg_prio = regex("[[ ]prio=")
+    reg_lun  = regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
     uuid = None
     alias = None
     groups = {}

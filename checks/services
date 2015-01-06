@@ -84,7 +84,7 @@ def inventory_windows_services(info):
         use_as_item = None
         if svc:
             if svc.startswith("~"):
-                r = get_regex(svc[1:])
+                r = regex(svc[1:])
                 if not r.match(name) and not r.match(description):
                     return []
             elif svc != name and svc != description:

@@ -115,10 +115,7 @@ def sap_value_path_matches(path, pattern):
     elif pattern[0] == '~':
         # regex matching
         pattern = pattern[1:]
-        reg = compiled_regexes.get(pattern)
-        if not reg:
-            reg = re.compile(pattern)
-            compiled_regexes[pattern] = reg
+        reg = regex(pattern)
         matchobject = reg.match(path)
         if matchobject:
             return True
@@ -172,10 +169,7 @@ def sap_groups_of_value( value_name, patterns=False ):
             inclusion, exclusion = pattern
             # Exclude:
             if exclusion:
-                reg = compiled_regexes.get(exclusion)
-                if not reg:
-                    reg = re.compile(exclusion)
-                    compiled_regexes[exclusion] = reg
+                reg = regex(exclusion)
                 if reg.match(value_name):
                     no_match = True
                     break
@@ -184,10 +178,7 @@ def sap_groups_of_value( value_name, patterns=False ):
                 break
 
             # Include
-            reg = compiled_regexes.get(inclusion)
-            if not reg:
-                reg = re.compile(inclusion)
-                compiled_regexes[inclusion] = reg
+            reg = regex(inclusion)
             if reg.match(value_name):
                 groups.append(group_name)
     return groups

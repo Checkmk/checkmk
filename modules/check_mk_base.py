@@ -108,9 +108,12 @@ g_single_oid_cache           = {}
 g_broken_snmp_hosts          = set([])
 g_broken_agent_hosts         = set([])
 g_timeout                    = None
+g_compiled_regexes           = {}
 
 
-# variables set later by getopt
+# variables set later by getopt. These are defined here since in precompiled
+# mode the module check_mk.py is not present and we need all options to be
+# present.
 opt_dont_submit              = False
 opt_showplain                = False
 opt_showperfdata             = False
@@ -596,7 +599,7 @@ def translate_piggyback_host(sourcehost, backedhost):
         regex, subst = translation.get("regex")
         if not regex.endswith('$'):
             regex += '$'
-        rcomp = get_regex(regex)
+        rcomp = regex(regex)
         mo = rcomp.match(backedhost)
         if mo:
             backedhost = subst
@@ -1841,12 +1844,14 @@ def within_range(value, minv, maxv):
 # compile regex or look it up in already compiled regexes
 # (compiling is a CPU consuming process. We cache compiled
 # regexes).
-compiled_regexes = {}
-def get_regex(pattern):
-    reg = compiled_regexes.get(pattern)
+def regex(pattern):
+    reg = g_compiled_regexes.get(pattern)
     if not reg:
-        reg = re.compile(pattern)
-        compiled_regexes[pattern] = reg
+        try:
+            reg = re.compile(pattern)
+        except Exception, e:
+            raise MKGeneralException("Invalid regular expression '%s': %s" % (pattern, e))
+        g_compiled_regexes[pattern] = reg
     return reg
 
 # Names of texts usually output by checks

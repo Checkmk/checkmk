@@ -170,10 +170,7 @@ def process_matches(ps, procname, l_user):
             return ()
     else:
         pattern = procname[1:]
-        reg = compiled_regexes.get(pattern)
-        if not reg:
-            reg = re.compile(pattern)
-            compiled_regexes[pattern] = reg
+        reg = regex(pattern)
         matchobject = reg.match(" ".join(ps))
         if matchobject:
             return [ g and g or "" for g in matchobject.groups() ]

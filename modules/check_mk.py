@@ -566,17 +566,6 @@ def agent_target_version(hostname):
         else:
             return spec # return the whole spec in case of an "at least version" config
 
-regex_cache = {}
-def regex(r):
-    rx = regex_cache.get(r)
-    if rx:
-        return rx
-    try:
-        rx = re.compile(r)
-    except Exception, e:
-        raise MKGeneralException("Invalid regular expression '%s': %s" % (r, e))
-    regex_cache[r] = rx
-    return rx
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -5442,7 +5431,7 @@ def copy_globals():
         # Some global caches are allowed to change.
         if varname not in [ "g_service_description", "g_multihost_checks",
                             "g_check_table_cache", "g_singlehost_checks",
-                            "g_nodesof_cache", "compiled_regexes", "vars_before_config",
+                            "g_nodesof_cache", "g_compiled_regexes", "vars_before_config",
                             "g_initial_times", "g_keepalive_initial_memusage",
                             "g_dns_cache", "g_ip_lookup_cache" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:

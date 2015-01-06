@@ -359,3 +359,11 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
 
     # print levels
     return ref_value, levels
+
+
+def pnp_cleanup(s):
+    return s \
+        .replace(' ',  '_') \
+        .replace(':',  '_') \
+        .replace('/',  '_') \
+        .replace('\\', '_')

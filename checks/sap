@@ -207,11 +207,11 @@ def check_sap_value_groups( item, params, info ):
             output = ''
             if line[4] == '-':
                 output  = ' '.join(line[6:])
-            backend.append( path + output + " "  + nagios_state_names[status] )
+            backend.append( path + output + " " + core_state_names[status] )
             state = max(state, status)
             if status > 0:
                 count_crit += 1
-                frontend.append( path + output + " "  + nagios_state_names[status] )
+                frontend.append( path + output + " " + core_state_names[status] )
             else:
                 count_ok += 1
 

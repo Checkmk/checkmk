@@ -1548,11 +1548,7 @@ def service_deps(hostname, servicedesc):
         if hosttags_match_taglist(tags_of_host(hostname), tags) and \
            in_extraconf_hostlist(hostlist, hostname):
             for pattern in patternlist:
-                reg = compiled_regexes.get(pattern)
-                if not reg:
-                    reg = re.compile(pattern)
-                    compiled_regexes[pattern] = reg
-                matchobject = reg.search(servicedesc)
+                matchobject = regex(pattern).search(servicedesc)
                 if matchobject:
                     try:
                         item = matchobject.groups()[-1]
@@ -1813,11 +1809,7 @@ def in_extraconf_servicelist(list, item):
         else:
             negate = False
 
-        reg = compiled_regexes.get(pattern)
-        if not reg:
-            reg = re.compile(pattern)
-            compiled_regexes[pattern] = reg
-        if reg.match(item):
+        if regex(pattern).match(item):
             return not negate
 
     # no match in list -> negative answer
@@ -3045,7 +3037,7 @@ def check_inventory(hostname, ipaddress=None):
         total_check_output += output
         return status
     else:
-        sys.stdout.write(nagios_state_names[status] + " - " + output)
+        sys.stdout.write(core_state_names[status] + " - " + output)
         sys.exit(status)
 
 
@@ -5582,7 +5574,7 @@ def do_check_keepalive():
                 spec = exit_code_spec(hostname)
                 status = spec.get("timeout", 2)
                 total_check_output = "%s - Check_MK timed out after %d seconds\n" % (
-                    nagios_state_names[status], g_timeout)
+                    core_state_names[status], g_timeout)
 
             os.write(keepalive_fd, "%03d\n%08d\n%s" %
                  (status, len(total_check_output), total_check_output))

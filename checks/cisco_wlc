@@ -64,7 +64,7 @@ def check_cisco_wlc(item, params, info):
     if params:
         for ap_name, ap_state in params.get("ap_name", []):
             if item.startswith(ap_name):
-                return ap_state, "Accesspoint 1 not found (State set to %s by rule)" % nagios_state_names[ap_state]
+                return ap_state, "Accesspoint 1 not found (State set to %s by rule)" % core_state_names[ap_state]
 
     return 2, "Accesspoint not found"
 

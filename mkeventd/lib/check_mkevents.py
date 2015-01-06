@@ -134,7 +134,7 @@ for line in response[1:]:
     if p == 'open':
         unhandled += 1
 
-nagios_state_names = {
+core_state_names = {
     0 : "OK",
     1 : "WARN",
     2 : "CRIT",
@@ -147,15 +147,15 @@ elif count == 0:
     sys.stdout.write("OK - no events for %s\n" % host_name)
 else:
     if opt_less_verbose:
-        sys.stdout.write(nagios_state_names[worst_state] + " - %d events" % (count))
+        sys.stdout.write(core_state_names[worst_state] + " - %d events" % (count))
         if worst_row:
             sys.stdout.write(" (Worst line: %s)" % (worst_row['event_text'].encode('utf-8')))
     else:
-        sys.stdout.write(nagios_state_names[worst_state] + \
+        sys.stdout.write(core_state_names[worst_state] + \
              " - %d events (%d unacknowledged)" % (count, unhandled))
         if worst_row:
             sys.stdout.write(", worst state is %s (Last line: %s)" % \
-             (nagios_state_names[worst_state], worst_row['event_text'].encode('utf-8')))
+             (core_state_names[worst_state], worst_row['event_text'].encode('utf-8')))
     sys.stdout.write("\n")
 
 sys.exit(worst_state)

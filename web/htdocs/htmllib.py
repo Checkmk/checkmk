@@ -36,6 +36,8 @@
 #
 # - Fix names of message() show_error() show_warning()
 #
+# - change naming of html.attrencode() to html.render()
+#
 # - General rules:
 # 1. values of type str that are passed as arguments or
 #    return values or are stored in datastructures most not contain
@@ -44,7 +46,7 @@
 #    input to str or unicode must happen as early as possible,
 #    directly when reading from file or URL.
 
-import time, os, pwd, urllib, random, re
+import time, os, pwd, urllib, random, re, __builtin__
 
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
@@ -62,6 +64,19 @@ class InvalidUserInput(Exception):
     def __init__(self, varname, text):
         self.varname = varname
         self.text = text
+
+# This is a simple class which wraps a string provided by the caller
+# to make html.attrencode() know that this string should not be
+# encoded, html.attrencode() will then return the unmodified value.
+#
+# This way we can implement encodings while still allowing HTML code
+# processing for some special cases. This is useful when one needs
+# to print out HTML tables in messages or help texts.
+class HTML:
+    def __init__(self, value):
+        self.value = value
+
+__builtin__.HTML = HTML
 
 class html:
     def __init__(self):
@@ -1002,6 +1017,13 @@ class html:
         else:
             self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
 
+    def show_localization_hint(self):
+        url = "wato.py?mode=edit_configvar&varname=user_localizations"
+        self.message(HTML("<sup>*</sup>" +
+            _("These texts may be localized depending on the users' "
+              "language. You can configure the localizations "
+              "<a href=\"%s\">in the global settings</a>.") % url))
+
     # Embed help box, whose visibility is controlled by a global
     # button in the page.
     def help(self, text):
@@ -1285,6 +1307,8 @@ class html:
         ty = type(value)
         if ty == int:
             return str(value)
+        elif isinstance(value, HTML):
+            return value.value # This is HTML code which must not be escaped
         elif ty not in [str, unicode]: # also possible: type Exception!
             value = "%s" % value # Note: this allows Unicode. value might not have type str now
 

@@ -1,0 +1,9 @@
+Title: Fixed exception in Check_MK prediction page
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b6
+Date: 1420619546
+Class: fix
+
+The page was showing up an exception right after opening the page.

@@ -88,7 +88,7 @@ def page_graph():
 
     html.begin_form("prediction")
     html.write(_("Show prediction for "))
-    html.select("timegroup", choices, choices[0], onchange="document.prediction.submit();")
+    html.select("timegroup", choices, choices[0][0], onchange="document.prediction.submit();")
     html.hidden_fields()
     html.end_form()
 

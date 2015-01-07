@@ -4,6 +4,9 @@
     * 1819 FIX: dell_poweredge_temp: Make output and service description consistent with other temperature checks...
             NOTE: Please refer to the migration notes!
 
+    Multisite:
+    * 1802 FIX: Links in messages like "successfully sent X commands" are now working again...
+
 
 1.2.6b5:
     Core & Setup:

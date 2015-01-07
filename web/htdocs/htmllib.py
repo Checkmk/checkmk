@@ -987,7 +987,9 @@ class html:
         # <b>, <tt>, <i> to be part of the exception message. The tags
         # are escaped first and then fixed again after attrencode.
         msg = self.attrencode(obj)
-        msg = re.sub(r'&lt;(/?)(b|tt|i|br|pre)&gt;', r'<\1\2>', msg)
+        msg = re.sub(r'&lt;(/?)(b|tt|i|br|pre|a|sup|p)&gt;', r'<\1\2>', msg)
+        # Also repair link definitions
+        msg = re.sub(r'&lt;a href=&quot;(.*)&quot;&gt;', r'<a href="\1">', msg)
 
         if self.output_format == "html":
             if self.mobile:

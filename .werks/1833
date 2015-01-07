@@ -1,0 +1,9 @@
+Title: jolokia_metrics.gc: fix recently introduced exception for missing variable
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b6
+Date: 1420637894
+Class: fix
+
+

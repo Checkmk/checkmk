@@ -1,8 +1,12 @@
 1.2.6b6:
+    Core & Setup:
+    * 1832 FIX: Fix "global name 'splitted' is not defined" in bulk inventory...
+
     Checks & Agents:
     * 1818 FIX: dell_poweredge_cpu: Fix exception where BrandName is missing
     * 1819 FIX: dell_poweredge_temp: Make output and service description consistent with other temperature checks...
             NOTE: Please refer to the migration notes!
+    * 1833 FIX: jolokia_metrics.gc: fix recently introduced exception for missing variable
 
     Multisite:
     * 1802 FIX: Links in messages like "successfully sent X commands" are now working again...

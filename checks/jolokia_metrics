@@ -531,10 +531,10 @@ def check_jolokia_metrics_gc(item, params, info):
     status = 0
     perf = []
 
-    ttrate = get_rate("jvm.gc.time.%s" % (item), \
-                        time.time(), saveint(gc['CollectionTime']))
-    ccrate = get_rate("jvm.gc.count.%s" % (item), \
-                        time.time(), saveint(gc['CollectionCount']))
+    trate = get_rate("jvm.gc.time.%s" % (item), \
+                     time.time(), saveint(gc['CollectionTime']))
+    crate = get_rate("jvm.gc.count.%s" % (item), \
+                     time.time(), saveint(gc['CollectionCount']))
 
     trate = trate * 60.0
     crate = crate * 60.0

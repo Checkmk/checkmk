@@ -48,6 +48,7 @@
     * 1818 FIX: dell_poweredge_cpu: Fix exception where BrandName is missing
     * 1819 FIX: dell_poweredge_temp: Make output and service description consistent with other temperature checks...
             NOTE: Please refer to the migration notes!
+    * 1833 FIX: jolokia_metrics.gc: fix recently introduced exception for missing variable
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

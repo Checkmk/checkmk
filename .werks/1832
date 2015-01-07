@@ -1,0 +1,10 @@
+Title: Fix "global name 'splitted' is not defined" in bulk inventory
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1420635662
+
+This happened in case of an unimplemented check.

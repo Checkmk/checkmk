@@ -3081,7 +3081,7 @@ def remove_autochecks_of(hostname, checktypes = None): # None = all
         else:
             removed += 1
             if ct not in check_info:
-                sys.stderr.write('Removing unimplemented check %s.\n' % splitted[3])
+                sys.stderr.write('Removing unimplemented check %s.\n' % ct)
 
     if len(kept_lines) == 0:
         if opt_verbose:

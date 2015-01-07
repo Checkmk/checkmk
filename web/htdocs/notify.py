@@ -212,7 +212,7 @@ def page_notify():
                     handler(user_id, msg)
                     num_success[method] = num_success[method] + 1
                 except MKInternalError, e:
-                    errors.setdefault(method, []).append( (user_id, e) )
+                    errors.setdefault(method, []).append((user_id, e))
 
         message = _('The notification has been sent via<br>')
         message += "<table>"
@@ -221,19 +221,19 @@ def page_notify():
                             (notify_methods[method]["title"], num_success[method], num_recipients)
         message += "</table>"
 
-        message += ' <a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
         message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
-        html.message(message)
+        message += '<a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
+        html.message(HTML(message))
 
         if errors:
             error_message = ""
-            for key, values in errors.items():
-                error_message += _("Failed to sent %s notifications to the following users") % key
+            for method, method_errors in errors.items():
+                error_message += _("Failed to send %s notifications to the following users:") % method
                 error_message += "<table>"
-                for user, error in values:
-                    error_message += "<tr><td>%s</td><td>%s</td></tr>" % (user, error )
+                for user, exception in method_errors:
+                    error_message += "<tr><td><tt>%s</tt></td><td>%s</td></tr>" % (user, html.attrencode(exception))
                 error_message += "</table><br>"
-            html.show_error(error_message)
+            html.show_error(HTML(error_message))
 
 
     html.footer()

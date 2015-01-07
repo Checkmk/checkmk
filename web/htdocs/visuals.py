@@ -730,9 +730,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     render_context_specs(visual, context_specs)
 
     forms.end()
-    url = "wato.py?mode=edit_configvar&varname=user_localizations"
-    html.message("<sup>*</sup>" + _("These texts may be localized depending on the users' "
-          "language. You can configure the localizations <a href=\"%s\">in the global settings</a>.") % url)
+    html.show_localization_hint()
 
     html.button("save", _("Save"))
     for nr, (title, pagename, icon) in enumerate(sub_pages):

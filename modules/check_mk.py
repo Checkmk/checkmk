@@ -4384,13 +4384,14 @@ def output_plain_hostinfo(hostname):
 
     sys.stdout.write(get_piggyback_info(hostname))
 
-def do_snmptranslate(walk):
-    walk = walk[0]
+def do_snmptranslate(args):
+    if not args:
+        raise MKGeneralException("Please provide the name of a SNMP walk file")
+    walk_filename = args[0]
 
-    path_walk = "%s/%s" % (snmpwalks_dir, walk)
-    if not os.path.exists(path_walk):
-        print "Walk does not exist"
-        return
+    walk_path = "%s/%s" % (snmpwalks_dir, walk_filename)
+    if not os.path.exists(walk_path):
+        raise MKGeneralException("Walk does not exist")
 
     def translate(lines):
         result_lines = []
@@ -4419,7 +4420,7 @@ def do_snmptranslate(walk):
     entries_per_cycle = 500
     translated_lines = []
 
-    walk_lines = file(path_walk).readlines()
+    walk_lines = file(walk_path).readlines()
     sys.stderr.write("Processing %d lines.\n" %  len(walk_lines))
 
     i = 0

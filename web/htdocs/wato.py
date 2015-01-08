@@ -962,7 +962,7 @@ def mode_folder(phase):
         render_folder_path()
 
         if not auth_read:
-            html.message('<img class=authicon src="images/icon_autherr.png"> %s' % auth_message)
+            html.message(HTML('<img class=authicon src="images/icon_autherr.png"> %s' % html.attrencode(auth_message)))
 
         lock_messages = []
         if g_folder.get(".lock_hosts"):
@@ -7238,7 +7238,7 @@ def mode_ldap_config(phase):
 
     html.write('<h2>' + _('Diagnostics') + '</h2>')
     if not html.var('_test'):
-        html.message('<p>%s</p><p>%s</p>' %
+        html.message(HTML('<p>%s</p><p>%s</p>' %
                     (_('You can verify the single parts of your ldap configuration using this '
                        'dialog. Simply make your configuration in the form on the left side and '
                        'hit the "Save & Test" button to execute the tests. After '
@@ -7246,7 +7246,7 @@ def mode_ldap_config(phase):
                      _('If you need help during configuration or experience problems, please refer '
                        'to the Multisite <a target="_blank" '
                        'href="http://mathias-kettner.de/checkmk_multisite_ldap_integration.html">'
-                       'LDAP Documentation</a>.')))
+                       'LDAP Documentation</a>.'))))
     else:
         def test_connect(address):
             conn, msg = userdb.ldap_connect_server(address)
@@ -12972,7 +12972,7 @@ def mode_edit_auxtag(phase):
 
     # Button and end
     forms.end()
-    show_localization_hint()
+    html.show_localization_hint()
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
@@ -13216,16 +13216,11 @@ def mode_edit_hosttag(phase):
 
     # Button and end
     forms.end()
-    show_localization_hint()
+    html.show_localization_hint()
 
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
-
-def show_localization_hint():
-    url = "wato.py?mode=edit_configvar&varname=user_localizations"
-    html.message("<sup>*</sup>" + _("These texts may be localized depending on the users' "
-          "language. You can configure the localizations <a href=\"%s\">in the global settings</a>.") % url)
 
 def format_php(data, lvl = 1):
     s = ''
@@ -17330,7 +17325,7 @@ def mode_edit_custom_attr(phase, what):
     html.checkbox('add_custom_macro', attr.get('add_custom_macro', False))
 
     forms.end()
-    show_localization_hint()
+    html.show_localization_hint()
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()

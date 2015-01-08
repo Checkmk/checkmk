@@ -116,6 +116,7 @@ register_rule(group + '/' + subgroup_inventory,
                           'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
                           '<tt>(?i).*mssql</tt> matches all services which contain <tt>MSSQL</tt> '
                           'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
+
                 orientation = "horizontal",
             )),
             ('state', DropdownChoice(
@@ -2769,7 +2770,7 @@ register_check_parameters(
             ( "levels_shm",         UpperMemoryLevels(_("Shared Memory"),       ( 20.0,  30.0), _("RAM"))),
             ( "levels_pagetables",  UpperMemoryLevels(_("Page tables"),         (  8.0,  16.0), _("RAM"))),
             ( "levels_writeback",   UpperMemoryLevels(_("Disk Writeback"))),
-            ( "levels_committed",   UpperMemoryLevels(_("Committed memory"),    ( 80.0,  90.0), _("RAM + Swap"))),
+            ( "levels_committed",   UpperMemoryLevels(_("Committed memory"),    (100.0, 150.0), _("RAM + Swap"))),
             ( "levels_commitlimit", LowerMemoryLevels(_("Commit Limit"),        ( 20.0,  10.0), _("RAM + Swap"))),
             ( "levels_vmalloc",     LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
         ],

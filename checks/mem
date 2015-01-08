@@ -124,7 +124,7 @@ factory_settings["mem_linux_default_levels"] = {
     "levels_total":         ("perc_used", (120.0, 150.0)),
     "levels_shm":           ("perc_used", ( 20.0,  30.0)),
     "levels_pagetables":    ("perc_used", (  8.0,  16.0)),
-    "levels_committed":     ("perc_used", ( 80.0,  90.0)),
+    "levels_committed":     ("perc_used", (100.0, 150.0)),
     "levels_commitlimit":   ("perc_free", ( 20.0,  10.0)),
     "levels_vmalloc":       ("abs_free",  (50*1024*1024, 30*1024*1024)),
 }
@@ -148,12 +148,16 @@ def inventory_mem_linux(info):
         return [ (None, {}) ]
 
 
-def check_mem_levels(title, used, total, levels, of_what=None, of_value=None, show_percentage=False):
+def check_mem_levels(title, used, total, levels, of_what=None, of_value=None, show_percentage=False, show_free=False):
     if of_value == None:
         of_value = total # Reference for percentage levels
     state = 0
     if of_what:
-        infotext = "%s: %s" % (title, get_bytes_human_readable(used))
+        if show_free:
+            value = total - used
+        else:
+            value = used
+        infotext = "%s: %s" % (title, get_bytes_human_readable(value))
     else:
         infotext = "%s used: %s of %s" % (
              title, get_bytes_human_readable(used), get_bytes_human_readable(total))
@@ -295,7 +299,7 @@ def check_mem_linux(_no_item, params, info):
 
     # VMalloc
     r = check_mem_levels("Largest Free VMalloc Chunk", meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
-            meminfo["VmallocTotal"], params.get("levels_vmalloc"), of_what = "VMalloc Area")
+            meminfo["VmallocTotal"], params.get("levels_vmalloc"), of_what = "VMalloc Area", show_free=True)
     if r[0]:
         yield r # only display if non-OK
 

@@ -243,10 +243,10 @@ def handler(req, fields = None, profiling = True):
     except (MKUserError, MKAuthException, MKUnauthenticatedException, MKConfigError, MKGeneralException,
             livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusException), e:
         ty = type(e)
-        if ty ==livestatus.MKLivestatusNotFoundError:
+        if ty == livestatus.MKLivestatusNotFoundError:
             title       = _("Data not found")
             plain_title = _("Livestatus-data not found")
-        elif ty ==livestatus.MKLivestatusException:
+        elif isinstance(e, livestatus.MKLivestatusException):
             title       = _("Livestatus problem")
             plain_title = _("Livestatus problem")
         else:

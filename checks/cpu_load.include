@@ -29,6 +29,8 @@
 # of processes in the running state (on some systems, like Linux,
 # also Disk wait is account for the load).
 
+# load is a triple of three floats: average load of
+# the last 1, 5 or 15 minutes
 def check_cpu_load_generic(params, load, num_cpus=1):
 
     # Prepare performance data

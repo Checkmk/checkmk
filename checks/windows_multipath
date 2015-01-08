@@ -51,12 +51,7 @@ def check_windows_multipath(item, params, info):
     elif num_paths < all_paths:
         state = 1
 
-
     return (state, "paths reported %d, expected paths %d" % (num_paths, all_paths) + state * "!")
-
-
-
-    return (3, "Data not in agent output")
 
 
 check_info["windows_multipath"]  = {

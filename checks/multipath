@@ -202,8 +202,8 @@ def parse_multipath(info):
         if line[0][0] not in [ '[', '`', '|', '\\' ] and not line[0].startswith("size="):
             # Try to match header lines
             matchobject = None
-            for regex, uuid_pos, alias_pos, dm_pos in reg_headers:
-                matchobject = regex.search(l)
+            for header_regex, uuid_pos, alias_pos, dm_pos in reg_headers:
+                matchobject = header_regex.search(l)
 
                 if matchobject:
                     uuid = matchobject.group(uuid_pos).strip()

@@ -3421,7 +3421,8 @@ register_check_parameters(
         elements = [
             ("levels",
                 Alternative(
-                    title = _("Levels for the Tablespace size"),
+                    title = _("Levels for the Tablespace usage"),
+                    default_value = (10.0, 5.0),
                     elements = [
                         Tuple(
                             title = _("Percentage free space"),
@@ -3433,8 +3434,8 @@ register_check_parameters(
                         Tuple(
                             title = _("Absolute free space"),
                             elements = [
-                                 Integer(title = _("Warning if below"), unit = _("MB")),
-                                 Integer(title = _("Critical if below"), unit = _("MB")),
+                                 Integer(title = _("Warning if below"), unit = _("MB"), default_value = 1000),
+                                 Integer(title = _("Critical if below"), unit = _("MB"), default_value = 500),
                             ]
                         ),
                         ListOf(
@@ -3471,22 +3472,24 @@ register_check_parameters(
             ("magic",
                Float(
                   title = _("Magic factor (automatic level adaptation for large tablespaces)"),
+                  help = _("This is only be used in case of percentual levels"),
                   minvalue = 0.1,
-                  maxvalue = 1.0)),
+                  maxvalue = 1.0,
+                  default_value = 0.9)),
             (  "magic_normsize",
                Integer(
                    title = _("Reference size for magic factor"),
                    minvalue = 1,
                    default_value = 1000,
-                   label = _("MB"))),
-            ( "levels_low",
+                   unit = _("MB"))),
+            ( "magic_maxlevels",
               Tuple(
-                  title = _("Minimum levels if using magic factor"),
-                  help = _("The tablespace levels will never fall below these values, when using "
+                  title = _("Maximum levels if using magic factor"),
+                  help = _("The tablespace levels will never be raise above these values, when using "
                            "the magic factor and the tablespace is very small."),
                   elements = [
-                      Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True),
-                      Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True)])),
+                      Percentage(title = _("Maximum warning level"),  unit = _("% free"), allow_int = True, default_value = 60.0),
+                      Percentage(title = _("Maximum critical level"), unit = _("% free"), allow_int = True, default_value = 50.0)])),
             ( "autoextend",
                 Checkbox(
                   title = _("Autoextend"),

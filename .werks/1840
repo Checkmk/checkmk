@@ -1,0 +1,10 @@
+Title: oracle_tablespaces: fix implementation of magic factor
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1420816035
+
+

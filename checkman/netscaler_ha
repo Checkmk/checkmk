@@ -1,0 +1,20 @@
+title: Citrix Netscaler CPU Utilization
+agents: snmp
+catalog: app/netscaler
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the high availability status of Citrix Netscaler
+ Loadbalacing Appliances operating in a cluster setup. It uses snmp and the
+ NS-ROOT-MIB to access the {haPeerState}, {haCurStatus} and {haCurState}
+ OIDs from the nsHighAvailabilityGroup.
+
+ The check is in the state OK when the system is not setup for ha, or
+ {haCurState} is up/funtional. It is in the state WARN when the system is
+ manually configured not to participate in a HA cluster, or initializing to
+ become a cluster member, or when {haCurState} is {monitorFAIL} or {monitorOK},
+ because these two states are not documented in the MIB. It is critical in
+ other states {haCurState} can be.
+
+inventory:
+ One service per host will be created.

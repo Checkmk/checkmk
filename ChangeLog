@@ -16,6 +16,9 @@
     WATO:
     * 1805 FIX: Changing roles marks sites where users can login dirty for sync now...
 
+    Event Console:
+    * 1839 FIX: Fix exception when notifying EC alert into monitoring for traps (because PID is missing)
+
 
 1.2.6b5:
     Core & Setup:

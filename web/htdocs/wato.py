@@ -10524,6 +10524,12 @@ def mode_edit_site(phase):
     html.help( _('This might be needed to make the synchronization accept problems with '
                  'SSL certificates when using an SSL secured connection.'))
 
+    forms.section(_('Direct login to Web GUI allowed'), simple=True)
+    html.checkbox('user_login', site.get('user_login', True),
+                  label = _('Users are allowed to directly login into the Web GUI of this site'))
+    html.help(_('When enabled, this site is marked for synchronisation every time a Web GUI '
+                'related option is changed in the master site.'))
+
     forms.end()
     html.button("save", _("Save"))
 
@@ -10885,6 +10891,11 @@ def update_replication_status(site_id, vars, times = {}):
                 old_times[what] = 0.8 * old_times[what] + 0.2 * duration
     save_replication_status(repstatus)
     os.close(fd)
+
+def update_login_sites_replication_status():
+    for siteid, site in config.sites.items():
+        if site.get('user_login', True) and not site_is_local(siteid):
+            update_replication_status(siteid, {'need_sync': True})
 
 def global_replication_state():
     repstatus = load_replication_status()
@@ -12357,7 +12368,8 @@ def mode_roles(phase):
                 rename_user_role(delid, None) # Remove from existing users
                 del roles[delid]
                 save_roles(roles)
-                log_pending(False, None, "edit-roles", _("Deleted role '%s'" % delid))
+                update_login_sites_replication_status()
+                log_pending(AFFECTED, None, "edit-roles", _("Deleted role '%s'" % delid))
             elif c == False:
                 return ""
         elif html.var("_clone"):
@@ -12374,7 +12386,8 @@ def mode_roles(phase):
                     new_role["basedon"] = cloneid
                 roles[newid] = new_role
                 save_roles(roles)
-                log_pending(False, None, "edit-roles", _("Created new role '%s'" % newid))
+                update_login_sites_replication_status()
+                log_pending(AFFECTED, None, "edit-roles", _("Created new role '%s'" % newid))
         return
 
     table.begin("roles")
@@ -12484,7 +12497,8 @@ def mode_edit_role(phase):
             rename_user_role(id, new_id)
 
         save_roles(roles)
-        log_pending(False, None, "edit-roles", _("Modified user role '%s'" % new_id))
+        update_login_sites_replication_status()
+        log_pending(AFFECTED, None, "edit-roles", _("Modified user role '%s'" % new_id))
         return "roles"
 
     html.begin_form("role", method="POST")

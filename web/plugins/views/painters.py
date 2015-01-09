@@ -276,7 +276,7 @@ def paint_site_icon(row):
         return None, ""
 
 multisite_painters["sitename_plain"] = {
-    "title"   : _("Site id"),
+    "title"   : _("Site ID"),
     "short"   : _("Site"),
     "columns" : ["site"],
     "paint"   : lambda row: (None, row["site"]),

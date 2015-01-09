@@ -8,7 +8,7 @@ description:
  to a WuT (Wiesemann & Theis) Web-Thermograph.
 
 item:
- The item is the number of the sensor as string - usuall {"1"}.
+ The item is the number of the sensor as string - usually {"1"}.
 
 perfdata:
  One variable: the current temperature in degrees celsius.

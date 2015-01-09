@@ -195,9 +195,8 @@ def check_windows_services(item, params, info):
                 start_type = "unknown"
             found.append((line[0], state, start_type, " ".join(line[3:])))
 
-    if len(found) == 0:
-        return (3, "service not found")
-
+    if not found:
+        return params["else"], "service not found"
 
     # We take the best found state (neccessary for clusters)
     best_state = None

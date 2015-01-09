@@ -7,6 +7,7 @@
     * 1819 FIX: dell_poweredge_temp: Make output and service description consistent with other temperature checks...
             NOTE: Please refer to the migration notes!
     * 1833 FIX: jolokia_metrics.gc: fix recently introduced exception for missing variable
+    * 1806 FIX: services check was not recognizing configured state when no service was found
 
     Multisite:
     * 1802 FIX: Links in messages like "successfully sent X commands" are now working again...

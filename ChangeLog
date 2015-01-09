@@ -55,6 +55,7 @@
     * 1463 FIX: juniper_screenos_mem, juniper_trpz_mem: pnp template fixed
     * 1806 FIX: services check was not recognizing configured state when no service was found
     * 1840 FIX: oracle_tablespaces: fix implementation of magic factor
+    * 1848 FIX: df: title of pnp graphs for filesystem checks fixed...
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

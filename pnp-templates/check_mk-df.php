@@ -41,7 +41,7 @@ foreach ($NAME as $i => $n) {
 # RRDtool Options
 #$servicedes=$NAGIOS_SERVICEDESC
 
-$fsname = str_replace("_", "/", substr($servicedesc, 3));
+$fsname = str_replace("_", "/", substr($servicedesc,11));
 $fstitle = $fsname;
 
 # Hack for windows: replace C// with C:\

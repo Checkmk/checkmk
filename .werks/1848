@@ -1,0 +1,12 @@
+Title: df: title of pnp graphs for filesystem checks fixed
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1420844843
+
+The title of pnp graphs for filesystem checks (df...) where broken since the new service description
+of these checks ("Filesystem ...") was introduced. This has been fixed now.
+

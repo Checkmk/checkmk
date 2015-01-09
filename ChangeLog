@@ -90,6 +90,9 @@
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used
 
+    Event Console:
+    * 1839 FIX: Fix exception when notifying EC alert into monitoring for traps (because PID is missing)
+
 
 1.2.6b1:
     Core & Setup:

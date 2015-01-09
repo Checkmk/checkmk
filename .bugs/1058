@@ -1,4 +1,4 @@
-Title: hen RBN are enabled and site is empty, nagios can not be started
+Title: When RBN are enabled and site is empty, nagios can not be started
 Component: core
 State: open
 Date: 2015-01-09 11:36:22

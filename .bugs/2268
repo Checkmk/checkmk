@@ -1,0 +1,8 @@
+Title: Rename service descriptions of ORACLE checks, move %s to the end
+Component: checks
+State: open
+Date: 2015-01-09 11:34:21
+Targetversion: future
+Class: nastiness
+
+For details read README.renaming_services

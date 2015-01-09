@@ -12,9 +12,9 @@ description:
  The check is in the state OK when the system is not setup for ha, or
  {haCurState} is up/funtional. It is in the state WARN when the system is
  manually configured not to participate in a HA cluster, or initializing to
- become a cluster member, or when {haCurState} is {monitorFAIL} or {monitorOK},
- because these two states are not documented in the MIB. It is critical in
- other states {haCurState} can be.
+ become a cluster member, or when {haCurState} is {monitorFAIL}, {monitorOK},
+ or {unkown} because these states are not documented in the MIB. It is
+ critical in other states {haCurState} can be.
 
 inventory:
  One service per host will be created.

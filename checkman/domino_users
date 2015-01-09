@@ -11,7 +11,7 @@ perfdata:
  The number of users
 
 inventory:
- One check per Lotus Domino Server is created.
+ One service is created per Lotus Domino Server.
 
 [parameters]
 parameters(tuple): parameters is a tuple of two values

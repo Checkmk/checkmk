@@ -1825,6 +1825,11 @@ def paint_log_icon(row):
         img = "stop"
     elif " FLAPPING " in log_type:
         img = "flapping"
+    elif "ACKNOWLEDGE ALERT" in log_type:
+        if row["log_state_type"] == "STARTED":
+            img = "ack"
+        else:
+            img = "ackstop"
 
     if img:
         return "icon", '<img class=icon src="images/alert_%s.png">' % img

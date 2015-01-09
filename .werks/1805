@@ -1,0 +1,17 @@
+Title: Changing roles marks sites where users can login dirty for sync now
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1420808847
+
+Previously a change to the roles did not result in a pending change for remote
+sites in a distributed WATO setup. To have these changes synchronized one needed
+to make another change to mark the sites dirty and make the sync possible.
+
+This has been changed now. Each site can now be configured to make "user logins
+to Web GUI possible", which is enabled by default. Those sites will be marked as
+dirty now which will make the admin able to trigger a synchronisation right
+after modifying a role.

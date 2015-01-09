@@ -80,6 +80,7 @@
     * 1789 FIX: Fix preview of passive checks in WATO list of services
     * 1790 FIX: Fix WATO parameters page for passive checks...
     * 1794 FIX: Fix exception in WATO service list in case of vanished checks
+    * 1805 FIX: Changing roles marks sites where users can login dirty for sync now...
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

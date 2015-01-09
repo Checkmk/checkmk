@@ -10,6 +10,9 @@ description:
 perfdata:
  The number of users
 
+inventory:
+ One check per Lotus Domino Server is created.
+
 [parameters]
 parameters(tuple): parameters is a tuple of two values
 

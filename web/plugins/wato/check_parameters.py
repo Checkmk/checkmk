@@ -2620,6 +2620,21 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "netscaler_mem",
+    _("Netscaler Memory Usage"),
+    Tuple(
+        title = _("Specify levels in percentage of total memory usage"),
+        elements = [
+            Percentage(title = _("Warning at a usage of"), unit =_("% of RAM"), default_value = 80.0, maxvalue = 100.0 ),
+            Percentage(title = _("Critical at a usage of"), unit =_("% of RAM"), default_value = 90.0, maxvalue = 100.0 )
+        ]
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_os,
     "general_flash_usage",
     _("Flash Space Usage"),
     Alternative(

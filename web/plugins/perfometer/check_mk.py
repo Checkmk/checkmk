@@ -956,6 +956,7 @@ perfometers['check_mk-esx_vsphere_hostsystem.mem_usage'] = perfometer_simple_mem
 perfometers['check_mk-brocade_mlx.module_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-innovaphone_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-juniper_screenos_mem'] = perfometer_simple_mem_usage
+perfometers['check_mk-netscaler_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-arris_cmts_mem'] = perfometer_simple_mem_usage
 perfometers["check_mk-juniper_trpz_mem"] = perfometer_simple_mem_usage
 

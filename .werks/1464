@@ -1,0 +1,9 @@
+Title: netscaler_mem: new check to monitor the memory usage of Citrix Netscaler Appliances
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1420810662
+Class: feature
+
+

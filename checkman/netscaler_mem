@@ -1,0 +1,27 @@
+title: Citrix Netscaler Memory Utilization
+agents: snmp
+catalog: app/netscaler
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the Memmory utilization on the Citrix Netscaler
+ Appliance. It uses the NS-ROOT-MIB to access the amount of used memory
+ {resMemUsage} in percent and the total installed memory {memSizeMB}.
+
+ Warning and critical levels can be configured for the check.
+
+inventory:
+ One service per appliance will be created.
+
+perfdata:
+ The memory utilization value
+
+[parameters]
+warning (float): The percentage of memory usage that triggers a warning level.
+critical (float): The percentage of memory usage that triggers a critical level.
+
+[configuration]
+netscaler_mem_default_levels (float, float): Default levels for warning and critical used
+ by inventorized checks. This is preset to {(80.0, 90.0)}
+

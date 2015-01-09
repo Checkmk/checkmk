@@ -1034,9 +1034,7 @@ def page_edit_dashlet():
     visuals.render_context_specs(dashlet, context_specs)
 
     forms.end()
-    url = "wato.py?mode=edit_configvar&varname=user_localizations"
-    html.message("<sup>*</sup>" + _("These texts may be localized depending on the users' "
-          "language. You can configure the localizations <a href=\"%s\">in the global settings</a>.") % url)
+    html.show_localization_hint()
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()

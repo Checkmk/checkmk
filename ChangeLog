@@ -8,6 +8,7 @@
             NOTE: Please refer to the migration notes!
     * 1833 FIX: jolokia_metrics.gc: fix recently introduced exception for missing variable
     * 1806 FIX: services check was not recognizing configured state when no service was found
+    * 1840 FIX: oracle_tablespaces: fix implementation of magic factor
 
     Multisite:
     * 1802 FIX: Links in messages like "successfully sent X commands" are now working again...

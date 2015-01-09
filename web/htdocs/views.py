@@ -1182,7 +1182,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
             try:
                 # Create URI with all actions variables removed
-                backurl = html.makeuri([])
+                backurl = html.makeuri([], delvars=['filled_in', 'actions'])
                 has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
             except MKUserError, e:
                 html.show_error(e.message)

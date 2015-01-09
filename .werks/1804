@@ -1,0 +1,12 @@
+Title: Fixed prechecked checkboxes in view actions after first action submit
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1420801587
+
+When e.g. acknowleding a problem for the first time, the checkboxes "fixed" and "notify"
+are prechecked. When acknowledging a problem and opening the form again afterwards, the
+checkboxes were not prechecked anymore. This has been fixed now.

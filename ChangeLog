@@ -53,6 +53,7 @@
             NOTE: Please refer to the migration notes!
     * 1833 FIX: jolokia_metrics.gc: fix recently introduced exception for missing variable
     * 1463 FIX: juniper_screenos_mem, juniper_trpz_mem: pnp template fixed
+    * 1806 FIX: services check was not recognizing configured state when no service was found
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

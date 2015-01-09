@@ -3091,7 +3091,7 @@ def do_notify(event, username, is_cancelling):
         "EC_PHASE":                    event["phase"],
         "EC_COMMENT":                  event.get("comment", ""),
         "EC_OWNER":                    event.get("owner", ""),
-        "EC_PID":                      str(event["pid"]),
+        "EC_PID":                      str(event.get("pid", 0)),
         "EC_MATCH_GROUPS":             "\t".join(event["match_groups"]),
         "EC_CONTACT_GROUPS":           event["contact_groups"] and " ".join(event["contact_groups"]) or "",
     }

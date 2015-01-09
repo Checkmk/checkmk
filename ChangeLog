@@ -13,6 +13,9 @@
     * 1803 FIX: Fixed exception in Check_MK prediction page...
     * 1804 FIX: Fixed prechecked checkboxes in view actions after first action submit...
 
+    Event Console:
+    * 1839 FIX: Fix exception when notifying EC alert into monitoring for traps (because PID is missing)
+
 
 1.2.6b5:
     Core & Setup:

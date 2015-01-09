@@ -1,0 +1,23 @@
+title: EMC Datadomain: MTree Usage
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Reports the Precompiled MTree usage in GB of the EMC Datadomain
+ Deduplication Storage Systems. The state of the check is determined
+ from the state reported by the device as follows:
+ The check is {OK} when the System reports {3} (readWrite), {4} (replicationDestination)
+ {5} (retentionLockEnabled), {6} (retentionLockDisabled). The check is {WARN}
+ when the MTree reports a state of {1} (readOnly).
+ The check is {CRIT} when the Mtree reports a state of {1} (deleted).
+
+item:
+ Name of the Mtree
+
+perfdata:
+ The Precompiled size of the MTree Data in Bytes
+
+inventory:
+ Automatically configures one check for every cwMTreesensor found on the
+ device

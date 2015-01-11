@@ -29,6 +29,11 @@
 # <<<oracle_recovery_state:sep(124)>>>
 # TUX2|tux2|PRIMARY|MOUNTED|1|1405456155|ONLINE||NO|2719061
 # TUX2|tux2|PRIMARY|MOUNTED|2|1405456155|ONLINE||NO|2719061
+# new format with backupmode
+# <<<oracle_recovery_status:sep(124)>>>
+# TUX2|tux2|PRIMARY|READ WRITE|1|1419771465|317|ONLINE|NO|YES|8149107|NOT ACTIVE|489
+# TUX2|tux2|PRIMARY|READ WRITE|2|1419771465|317|ONLINE|NO|YES|8149107|NOT ACTIVE|489
+
 
 def inventory_oracle_recovery_status(info):
     return [ ( line[0], {} ) for line in info ]
@@ -38,22 +43,39 @@ def check_oracle_recovery_status(item, params, info):
     offlinecount = 0
     oldest_checkpoint_age = -1
 
-    perfdata = ""
+    oldest_backup_age = -1
+    backup_count = 0
+
+    perfdata = []
 
     itemfound = False
     for line in info:
         if line[0] == item:
             itemfound = True
-            db_name, db_unique_name, database_role, open_mode, filenr, \
-            checkpoint_time, checkpoint_age, datafilestatus, recovery, fuzzy, checkpoint_change = line
+
+            if len(line) == 11:
+                db_name, db_unique_name, database_role, open_mode, filenr, \
+                checkpoint_time, checkpoint_age, datafilestatus, recovery, fuzzy, checkpoint_change = line
+
+                backupmode = 'not checked'
+                backup_state = 'unknown'
+
+            elif len(line) == 13:
+                db_name, db_unique_name, database_role, open_mode, filenr, \
+                checkpoint_time, checkpoint_age, datafilestatus, recovery, \
+                fuzzy, checkpoint_change, backup_state, backup_age = line
+
             if params.get("levels"):
                 warn, crit = params["levels"]
+
+            if backup_state == 'ACTIVE':
+                backup_count += 1
+                oldest_backup_age = max(int(backup_age), oldest_backup_age)
 
             if datafilestatus == 'ONLINE':
                 checkpoint_age = int(checkpoint_age)
 
-                if oldest_checkpoint_age == -1 or oldest_checkpoint_age > checkpoint_age:
-                    oldest_checkpoint_age = checkpoint_age
+                oldest_checkpoint_age = max(oldest_checkpoint_age, checkpoint_age)
             else:
                 offlinecount += 1
 
@@ -71,7 +93,7 @@ def check_oracle_recovery_status(item, params, info):
            or not params.get("levels"):
             # We ignore the state of the check when no parameters are known
             # _mgmtdb is new internal instance from 12.1.0.2 on Grid-Infrastructure
-            perfdata = [('checkpoint_age', oldest_checkpoint_age)]
+            perfdata.append(['checkpoint_age', oldest_checkpoint_age])
         else:
             if database_role == 'PRIMARY':
                 # checkpoint age should not higher on primary as well
@@ -82,9 +104,9 @@ def check_oracle_recovery_status(item, params, info):
                     infotext += '(!)'
                     state = max(1, state)
 
-                perfdata = [('checkpoint_age', oldest_checkpoint_age, warn)]
+                perfdata.append(['checkpoint_age', oldest_checkpoint_age, warn])
             else:
-                perfdata = [('checkpoint_age', oldest_checkpoint_age, warn, crit)]
+                perfdata.append(['checkpoint_age', oldest_checkpoint_age, warn, crit])
 
                 # check the checkpoint age on a non primary database!
                 if oldest_checkpoint_age >= crit:
@@ -100,6 +122,30 @@ def check_oracle_recovery_status(item, params, info):
             infotext += " %i datafiles offline(!!)" \
                         % (offlinecount)
             state = 2
+
+        if oldest_backup_age > 0:
+            infotext += " %i datafiles in backup mode oldest is %s" % ( \
+                         backup_count, get_age_human_readable(oldest_backup_age))
+
+            if params.get("backup_age"):
+
+                warn, crit = params["backup_age"]
+                infotext += " levels at (%s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
+                perfdata.append(['backup_age', oldest_backup_age, warn, crit])
+
+                if oldest_backup_age >= crit:
+                    infotext += '(!!)'
+                    state = 2
+                elif oldest_backup_age >= warn:
+                    infotext += '(!)'
+                    state = max(1, state)
+            else:
+                perfdata.append(['backup_age', oldest_backup_age])
+        else:
+
+            # create a 'dummy' performance data with 0
+            # => The age from plugin is only valid when a datafile is in backup mode!
+            perfdata.append(['backup_age', 0])
 
 
         return state, infotext, perfdata

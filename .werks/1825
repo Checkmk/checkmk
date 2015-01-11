@@ -1,0 +1,12 @@
+Title: oracle_recovery_status: backupcheck for user managed backups
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.6b7
+Date: 1420969906
+
+A new check for manual backups has been added. The check monitors the
+backup state for all datafiles when using the manual backup mode. This
+has no function when RMAN is used for backing up an Oracle Database!

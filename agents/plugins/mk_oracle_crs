@@ -44,10 +44,23 @@ resourcefilter="^NAME=|^TYPE=|^STATE=|^TARGET=|^ENABLED="
 
 function set_has_env(){
     test -f ${ocrcfgfile} || exit 0
-
     local_has_type=$(cat $ocrcfgfile | grep "^local_only=" | cut -d"=" -f2 | tr '[:lower:]' '[:upper:]')
     local_has_type=${local_has_type:-"FALSE"}
-    has_ORACLE_HOME=$(cat $olrcfgfile | grep "^crs_home=" | cut -d"=" -f2)
+
+    if [ -f ${olrcfgfile} ] ; then
+        has_ORACLE_HOME=$(cat $olrcfgfile | grep "^crs_home=" | cut -d"=" -f2)
+    else
+        # There is no olr.cfg in 10.2 and 11.1
+        # we try to get the ORA_CRS_HOME from /etc/init.d/init.cssd
+        local_has_type=FALSE
+        INITCSSD=/etc/init.d/init.cssd
+        if [ ! -f ${INITCSSD} ] ; then
+            exit 0
+        else
+            has_ORACLE_HOME=$(grep "^ORA_CRS_HOME=" ${INITCSSD} | cut -d"=" -f2-)
+        fi
+    fi
+
     CRSCTL=${has_ORACLE_HOME}/bin/crsctl
     OLSNODES=${has_ORACLE_HOME}/bin/olsnodes
     CRS_STAT=${has_ORACLE_HOME}/bin/crs_stat
@@ -64,7 +77,7 @@ function printhasdata() {
 }
 
 function printcrsdata() {
-    ps -e | grep ohasd.bin > /dev/null || exit 0
+    ps -e | grep -e ohasd.bin -e crsd.bin > /dev/null || exit 0
 
     echo "<<<oracle_crs_version:sep(124)>>>"
     crs_version=$($CRSCTL query crs releaseversion)
@@ -87,7 +100,7 @@ function printcrsdata() {
             $CRSCTL stat res -v -n $nodelist | grep -E $resourcefilter | sed "s/^/$nodelist\|/"
         done
     else
-        $CRS_STAT -f | grep -E $resourcefilter
+        $CRS_STAT -f -c $OLS_NODENAME | grep -E $resourcefilter | sed "s/^/$OLS_NODENAME\|/"
     fi
 }
 

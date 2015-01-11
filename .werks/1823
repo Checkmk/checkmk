@@ -1,0 +1,13 @@
+Title: mk_oracle_crs: compatibility against CRS 10.2 + 11.1
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1420965608
+Class: feature
+
+CRS 10.2 and 11.1 has different syntax in commands and some configuration
+files are not existing.
+This has been fixed and the new version of mk_oracle_crs is compatible
+against CRS 10.2, 11.1, 11.2 and 12.1
+

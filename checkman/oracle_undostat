@@ -1,0 +1,62 @@
+title: Check Undo Retention of Oracle Instances
+agents: linux, aix, hp/ux, Solaris
+catalog: app/oracle
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the Undo Retention in the current Database Instance.
+ The Undo information  is very important in Oracle for read consistency
+ of SQL statements. In older time, there was no real monitoring of Undo
+ information and most users did only a monitoring of the Undo Tablespace
+ where that data is placed. Oracle introduced with 9i a new parameter
+ called undo_retention. The value describes the amount in seconds of
+ data that should be hold in the undo Tablespace.
+
+ The v$undostat has a column 'tuned_retention' which displays the
+ current number of seconds of Undo data availibe for read consistency.
+ This value could be monitored with this check.
+
+ The other important counter is nonspaceerrorcnt which counts the number
+ of 'out of space' events in the Undo Tablespace due to big amount of needed
+ data from current active transactions.
+
+ Normaly the checks goes to CRITICAL when a space error occurs. After ~
+ 10 minutes the counter is resetted back to 0 and the state is OK again.
+ The state for this event could be configured with nospaceerrcnt_state.
+ There is no real usable value for the minimum amount of space errors.
+
+ This check needs the Check_MK {mk_oracle}-plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The SID of the database in uppercase (as appearing in the process
+ name of the pmon_... process).
+
+perfdata:
+ Four values: The values are the following:
+
+ First the amount of active undo blocks. Second the number of maximum
+ concurrent transactions in 10 minutes. Third the tuned undo retention.
+ This is the value for the levels parameter. Fourth the maximum time
+ for a running query. Last the non space error count.
+
+
+[parameters]
+parameters (dict):
+
+ "levels": (int, int) - Minimum time in seconds for TUNED_UNDORETENTION from
+ v$undostat. Default is 300 for crit and 600 for warn.
+
+ "nospaceerrcnt_state": (int) - Expected state when a non space error count occurs
+ in v$undstat. The default is 2 for crit. Allowed values are 0=ok, 1=warn and 3=unknown.
+
+inventory:
+ One separate check for each database found running will
+ be created.
+
+checkgroup_parameters['oracle_undostat'] = [
+  ( {'nospaceerrcnt_state': 1}, [], ALL_HOSTS, ALL_SERVICES ),
+]
+
+

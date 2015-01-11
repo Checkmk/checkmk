@@ -3459,7 +3459,13 @@ register_check_parameters(
                           Age(title = _("critical if less then"), default_value = 300),
                      ]
                  )
-             )
+             ),(
+            'nospaceerrcnt_state',
+                MonitoringState(
+                    default_value = 2,
+                    title = _("State in case of non space error count is greater then 0: "),
+                ),
+            ),
          ]
     ),
     TextAscii(

@@ -1,0 +1,18 @@
+Title: oracle_recovery_status: removed default values from Check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b7
+Date: 1420968906
+
+The old check has caused a lot of false messages. The reason is
+the different behavior in Oracle Releases. There is no easy
+solution for all Releases and a lot of users had disabled this
+check.
+Now the check only reports the current checkpoint time in the
+database until a rule with levels is defined.
+
+Please Note: This change only applies to new discovered services.
+

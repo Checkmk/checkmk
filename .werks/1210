@@ -1,0 +1,10 @@
+Title: New Downtime Filter for comments
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421076001
+Class: feature
+
+It is no possible to add a comment filter to downtime views.
+

@@ -318,7 +318,7 @@ def forward_to_ec(mails):
 
         # Construct the final syslog message
         log = '<%d>%s' % (forward_facility + priority, cur_time)
-        log += ' %s %s: %s' % (forward_host or 'None', application, log_line)
+        log += ' %s %s: %s' % (forward_host or fetch_server, application, log_line)
         messages.append(log)
         g_forwarded.append(index)
 

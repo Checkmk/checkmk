@@ -59,6 +59,9 @@ def check_mail_arguments(params):
         if 'facility' in forward:
             args += ' --forward-facility=%d' % forward['facility']
 
+        if 'host' in forward:
+            args += ' --forward-host=%s' % quote_shell_string(forward['host'])
+
         if forward.get('application'):
             args += ' --forward-app=%s' % quote_shell_string(forward['application'])
 

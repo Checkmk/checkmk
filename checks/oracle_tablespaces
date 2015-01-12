@@ -64,7 +64,7 @@ oracle_tablespaces_default_levels = (10.0, 5.0)
 factory_settings["oracle_tablespaces_defaults"] = {
     "levels"         : (10.0, 5.0),
     "magic_normsize" : 1000,
-    "levels_low"     : (0.0, 0.0)
+    "magic_maxlevels": (60.0, 50.0),
 }
 
 # Whether to check auto extend settings
@@ -113,50 +113,34 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
                 warn, crit = this_levels
                 break
         else:
-            return None, None, ""
+            return None, None, "", False
 
-    levels_text = "levels at "
-    if magic:
-        # convert warn/crit to percentage
-        if type(warn) != float:
-            warn = savefloat(warn * 1024 * 1024 / float(size_bytes)) * 100
-        if type(crit) != float:
-            crit = savefloat(crit * 1024 * 1024 / float(size_bytes)) * 100
+    # warn/crit level are float => percentages of max size, otherwise MB
+    if type(warn) == float:
+        output_as_percentage = True
+        if magic:
+            normsize = params["magic_normsize"] * 1024 * 1024
+            hbytes_size = size_bytes / float(normsize)
+            felt_size = hbytes_size ** magic
+            scale = felt_size / hbytes_size
+            warn *= scale
+            crit *= scale
+            max_warning_level, max_critical_level = params["magic_maxlevels"]
+            warn = min(warn, max_warning_level)
+            crit = min(crit, max_critical_level)
+        levels_text = " (levels at %.1f%%/%.1f%%)" % (warn, crit)
+        warn_bytes = warn * size_bytes / 100
+        crit_bytes = crit * size_bytes / 100
 
-        normsize = params["magic_normsize"]
-        hbytes_size = size_bytes / (float(normsize) * 1024 * 1024)
-        felt_size = hbytes_size ** magic
-        scale = felt_size / hbytes_size
-        warn_scaled = 100 - (( 100 - warn ) * scale)
-        crit_scaled = 100 - (( 100 - crit ) * scale)
-
-        # Make sure, levels do never get too low due to magic factor
-        lowest_warning_level, lowest_critical_level = params["levels_low"]
-        if warn_scaled < lowest_warning_level:
-            warn_scaled = lowest_warning_level
-        if crit_scaled < lowest_critical_level:
-            crit_scaled = lowest_critical_level
-        warn_bytes = savefloat(size_bytes * warn_scaled / 100)
-        crit_bytes = savefloat(size_bytes * crit_scaled / 100)
-        levels_text += get_bytes_human_readable(warn_bytes)
-        levels_text += "/%s" % get_bytes_human_readable(crit_bytes)
+    # Absolute free space in MB
     else:
-        # warn/crit level are float => percentages of max size, otherwise MB
-        if type(warn) == float:
-            warn_bytes = warn / 100.0 * size_bytes
-            levels_text += "%.1f%%" % warn
-        else:
-            warn_bytes = warn * 1024 * 1024
-            levels_text += get_bytes_human_readable(warn_bytes)
+        output_as_percentage = False
+        warn_bytes = warn * 1024 * 1024
+        crit_bytes = crit * 1024 * 1024
+        levels_text = " (levels at %s/%s)" % (get_bytes_human_readable(warn_bytes), get_bytes_human_readable(crit_bytes))
 
-        if type(crit) == float:
-            crit_bytes = crit / 100.0 * size_bytes
-            levels_text += "/%.1f%%" % crit
-        else:
-            crit_bytes = crit * 1024 * 1024
-            levels_text += "/%s" % get_bytes_human_readable(crit_bytes)
 
-    return warn_bytes, crit_bytes, levels_text
+    return warn_bytes, crit_bytes, levels_text, output_as_percentage
 
 
 def check_oracle_tablespaces(item, params, info):
@@ -238,14 +222,20 @@ def check_oracle_tablespaces(item, params, info):
         raise MKCounterWrapped("Login into database failed")
 
 
-    infotext = "%s (%s), size %s, used %s" % \
+    warn, crit, levels_text, output_as_percentage = get_tablespace_levels_in_bytes(max_size, params)
+
+    infotext = "%s (%s), size: %s, free: " % \
        (ts_status,
         ts_type,
-        get_bytes_human_readable(current_size),
-        get_bytes_human_readable(used))
+        get_bytes_human_readable(current_size))
+
+    if output_as_percentage:
+        infotext += "%.1f%%" % (100.0 * (max_size - used) / max_size)
+    else:
+        infotext += get_bytes_human_readable(max_size - used)
 
     if num_extensible > 0:
-        infotext += ", max %s" % get_bytes_human_readable(max_size)
+        infotext += ", maximum size: %s" % get_bytes_human_readable(max_size)
         infotext += " - %d increments (%s)" % \
             (num_increments, get_bytes_human_readable(increment_size))
 
@@ -270,16 +260,13 @@ def check_oracle_tablespaces(item, params, info):
     else:
         infotext += ", no autoextend"
 
-
-    warn, crit, levels_text = get_tablespace_levels_in_bytes(max_size, params)
-
     # Check free space, but only if status is not READONLY
     # and Tablespace-Type must be PERMANENT
     if ts_status != "READONLY" and ts_type == 'PERMANENT':
         if (crit is not None and free_space <= crit) \
            or (warn is not None and free_space <= warn):
             infotext += ", only %s left" % get_bytes_human_readable(free_space)
-            infotext += " (%s)" % levels_text
+            infotext += levels_text
             if free_space <= crit:
                 status = 2
             else:

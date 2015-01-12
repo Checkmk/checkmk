@@ -1876,16 +1876,14 @@ register_rule(group,
                                  'but only the whones whose subject matches the given regular expression. '),
                     )),
                     ('facility', DropdownChoice(
-                        title = _("Syslog facility for forwarded messages"),
-                        help = _("When forwarding messages and no facility can be extracted from the "
-                                 "message this facility is used."),
+                        title = _("Events: Syslog facility"),
+                        help = _("Use this syslog facility for all created events"),
                         choices = syslog_facilities,
                         default_value = 2, # mail
                     )),
                     ('application', Alternative(
-                        title = _("Syslog application"),
-                        help = _("When forwarding messages and no facility can be extracted from the "
-                                 "message this application is used."),
+                        title = _("Events: Syslog application"),
+                        help = _("Use this syslog application for all created events"),
                         elements = [
                             FixedValue(None,
                                 title = _("Use the mail subject"),
@@ -1899,6 +1897,10 @@ register_rule(group,
                                 allow_empty = False,
                             ),
                         ]
+                    )),
+                    ('host', TextAscii(
+                        title = _('Events: Hostname'),
+                        help = _('Use this hostname for all created events instead of the name of the mailserver'),
                     )),
                     ('body_limit', Integer(
                         title = _('Limit length of mail body'),

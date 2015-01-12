@@ -1,0 +1,9 @@
+Title: livestatus_status: Check handles cluster using in cluster now
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b6
+Date: 1421058385
+Class: fix
+
+

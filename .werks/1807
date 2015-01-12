@@ -1,0 +1,12 @@
+Title: check_mail: Added new check to check IMAP/POP3 login (incl. forwarding of mails to event console)
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421064065
+
+A new check has been added which checks whether or not a connect and login to an IMAP/POP3 server is
+possible. This check also support fetching of the mails located in the inbox of the logged in mailbox,
+parsing and forwarding them to the event console.

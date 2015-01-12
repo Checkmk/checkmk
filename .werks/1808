@@ -1,0 +1,12 @@
+Title: Fixed broken nagios config when using RBN without a host defined
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421066674
+
+Check_MK generated a broken configuration where the contact group 'check-mk-notify'
+was missing when rule based notifications (RBN) were enabled without a single
+host configured.

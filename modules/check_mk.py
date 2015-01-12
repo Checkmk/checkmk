@@ -1885,7 +1885,7 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     for hostname in hostnames:
         create_nagios_config_host(outfile, hostname)
 
-    create_nagios_config_contacts(outfile)
+    create_nagios_config_contacts(outfile, hostnames)
     create_nagios_config_hostgroups(outfile)
     create_nagios_config_servicegroups(outfile)
     create_nagios_config_contactgroups(outfile)
@@ -2570,7 +2570,7 @@ def create_nagios_config_timeperiods(outfile):
                 outfile.write("  exclude\t\t\t%s\n" % ",".join(tp["exclude"]))
             outfile.write("}\n\n")
 
-def create_nagios_config_contacts(outfile):
+def create_nagios_config_contacts(outfile, hostnames):
     if len(contacts) > 0:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Contact definitions (controlled by variable 'contacts')\n")
@@ -2619,7 +2619,7 @@ def create_nagios_config_contacts(outfile):
             outfile.write("  contactgroups\t\t\t%s\n" % ", ".join(cgrs))
             outfile.write("}\n\n")
 
-    if enable_rulebased_notifications:
+    if enable_rulebased_notifications and hostnames:
         outfile.write(
             "# Needed for rule based notifications\n"
             "define contact {\n"

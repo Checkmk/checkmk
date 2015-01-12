@@ -9016,14 +9016,16 @@ def mode_notifications(phase):
         table.begin(table_id = "plugins", title = _("Resulting notifications"))
         for contact, plugin, parameters, bulk in analyse[1]:
             table.row()
-            table.cell(_("Contact"), contact)
+            if contact.startswith('mailto:'):
+                contact = contact[7:] # strip of fake-contact mailto:-prefix
+            table.cell(_("Recipient"), contact)
             table.cell(_("Plugin"), vs_notification_scripts().value_to_text(plugin))
             table.cell(_("Plugin parameters"), ", ".join(parameters))
             table.cell(_("Bulking"))
             if bulk:
                 html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
                 html.write(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                html.write(", group by %s" % vs_notification_bulkby().value_to_text(bulk["groupby"]))
+                html.write(", %s %s" % (_("group by"), vs_notification_bulkby().value_to_text(bulk["groupby"])))
 
         table.end()
 

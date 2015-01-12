@@ -23,6 +23,9 @@
     WATO:
     * 1805 FIX: Changing roles marks sites where users can login dirty for sync now...
 
+    Notifications:
+    * 1810 FIX: Rule based notifications: Fixed output of non contact mail recipient address in analyze table...
+
     Event Console:
     * 1839 FIX: Fix exception when notifying EC alert into monitoring for traps (because PID is missing)
 

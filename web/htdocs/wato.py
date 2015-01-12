@@ -9016,14 +9016,16 @@ def mode_notifications(phase):
         table.begin(table_id = "plugins", title = _("Resulting notifications"))
         for contact, plugin, parameters, bulk in analyse[1]:
             table.row()
-            table.cell(_("Contact"), contact)
+            if contact.startswith('mailto:'):
+                contact = contact[7:] # strip of fake-contact mailto:-prefix
+            table.cell(_("Recipient"), contact)
             table.cell(_("Plugin"), vs_notification_scripts().value_to_text(plugin))
             table.cell(_("Plugin parameters"), ", ".join(parameters))
             table.cell(_("Bulking"))
             if bulk:
                 html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
                 html.write(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                html.write(", group by %s" % vs_notification_bulkby().value_to_text(bulk["groupby"]))
+                html.write(", %s %s" % (_("group by"), vs_notification_bulkby().value_to_text(bulk["groupby"])))
 
         table.end()
 
@@ -18342,6 +18344,30 @@ def site_neutral_path(path):
         return '/'.join(parts)
     else:
         return path
+
+syslog_facilities = [
+    (0, "kern"),
+    (1, "user"),
+    (2, "mail"),
+    (3, "daemon"),
+    (4, "auth"),
+    (5, "syslog"),
+    (6, "lpr"),
+    (7, "news"),
+    (8, "uucp"),
+    (9, "cron"),
+    (10, "authpriv"),
+    (11, "ftp"),
+    (16, "local0"),
+    (17, "local1"),
+    (18, "local2"),
+    (19, "local3"),
+    (20, "local4"),
+    (21, "local5"),
+    (22, "local6"),
+    (23, "local7"),
+]
+
 
 #.
 #   .--Plugins-------------------------------------------------------------.

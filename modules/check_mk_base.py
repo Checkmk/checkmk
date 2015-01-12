@@ -270,7 +270,7 @@ def get_info_for_check(hostname, ipaddress, infotype, max_cachefile_age=None, ig
 # checks usually use existing cache files, if check_mk is not misconfigured,
 # and thus do no network activity at all...
 
-def get_host_info(hostname, ipaddress, checkname, max_cachefile_age, ignore_check_interval=False):
+def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore_check_interval=False):
     # If the check want's the node info, we add an additional
     # column (as the first column) with the name of the node
     # or None (in case of non-clustered nodes). On problem arises,

@@ -13,6 +13,7 @@
     * 1840 FIX: oracle_tablespaces: fix implementation of magic factor
     * 1848 FIX: df: title of pnp graphs for filesystem checks fixed...
     * 1209 FIX: livestatus_status: Check handles cluster using in cluster now
+    * 1809 FIX: cisco_temp_perf: Fixed exception when no temperature threshold provided by device
 
     Multisite:
     * 1802 FIX: Links in messages like "successfully sent X commands" are now working again...

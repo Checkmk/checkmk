@@ -37,7 +37,9 @@ def livestatus_status_parse(info):
     while n < len(info):
         site = info[n][0][1:-1]
         if n == len(info) - 1 or info[n+1][0].startswith('['):
-            parsed[site] = None # Site is down
+            # Handle the case if the check running in cluster
+            if site not in parsed.keys():
+                parsed[site] = None # Site is down
             n += 1
         else:
             headers = info[n+1]

@@ -173,8 +173,6 @@ wato_styles = [ "pages", "wato", "status" ]
 def page_handler():
     global g_html_head_open
     g_html_head_open = False
-    global g_git_messages
-    g_git_messages = []
 
     if not config.wato_enabled:
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
@@ -11232,9 +11230,6 @@ def page_automation():
     if secret != get_login_secret():
         raise MKAuthException(_("Invalid automation secret."))
 
-    global g_git_messages
-    g_git_messages = []
-
     # To prevent mixups in written files we use the same lock here as for
     # the normal WATO page processing. This might not be needed for some
     # special automation requests, like inventory e.g., but to keep it simple,
@@ -18457,6 +18452,9 @@ modes = {
 
 loaded_with_language = False
 def load_plugins():
+    global g_git_messages
+    g_git_messages = []
+
     global loaded_with_language
     if loaded_with_language == current_language:
         return

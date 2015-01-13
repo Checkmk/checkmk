@@ -1,0 +1,12 @@
+Title: Fixed g_git_messages error on activate changes
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421150687
+
+Randomly there was a error message while activate changes g_git_messages, referenced before assignment. This
+should be fixed now.
+

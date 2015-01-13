@@ -68,6 +68,10 @@ div.floatfilter {
     color: black;
 }
 
+div.floatfilter input[type=text].neg {
+    width: 229px;
+}
+
 div.floatfilter.double {
     height: 110px;
     display: table-cell;

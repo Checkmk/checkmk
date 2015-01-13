@@ -212,6 +212,15 @@ def render_tree_folder(f, js_func):
 
 
 def render_wato_foldertree():
+    is_slave_site = not wato.is_distributed() and os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk")
+    if not is_slave_site:
+        if not config.wato_enabled:
+            html.write(_("WATO is disabled."))
+            return False
+        elif not config.may("wato.use"):
+            html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
+            return False
+
     user_folders = compute_foldertree()
 
     #

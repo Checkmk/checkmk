@@ -276,13 +276,15 @@ except Exception, e:
 #   | These functions are used by some checks at administration time.      |
 #   +----------------------------------------------------------------------+
 
-# The function no_inventory_possible is as stub function used for
+# The function no_discovery_possible is as stub function used for
 # those checks that do not support inventory. It must be known before
 # we read in all the checks
-def no_inventory_possible(checkname, info):
+def no_discovery_possible(check_type, info):
     if opt_verbose:
-        sys.stdout.write("%s does not support inventory. Skipping it.\n" % checkname)
+        sys.stdout.write("%s does not support discovery. Skipping it.\n" % check_type)
     return []
+
+
 
 #.
 #   .--Load checks---------------------------------------------------------.
@@ -914,7 +916,7 @@ def host_of_clustered_service(hostname, servicedesc):
 # Returns check table for a specific host
 # Format: (checkname, item) -> (params, description)
 
-def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='config'):
+def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='config', skip_autochecks=False):
     global g_singlehost_checks
     global g_multihost_checks
 
@@ -983,8 +985,9 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
     # Now process all entries that are specific to the host
     # in search (single host) or that might match the host.
-    for entry in read_autochecks_of(hostname, world):
-        handle_entry(entry)
+    if not skip_autochecks:
+        for entry in read_autochecks_of(hostname, world):
+            handle_entry(entry)
 
     for entry in g_singlehost_checks.get(hostname, []):
         handle_entry(entry)
@@ -996,7 +999,12 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
     if is_cluster(hostname):
         for node in nodes_of(hostname):
             node_checks = g_singlehost_checks.get(node, [])
-            for nodename, checkname, item, params in node_checks:
+            if not skip_autochecks:
+                node_checks = node_checks + read_autochecks_of(node, world)
+            for entry in node_checks:
+                if len(entry) == 4:
+                    entry = entry[1:] # drop hostname from g_singlehost_checks
+                checkname, item, params = entry
                 descr = service_description(checkname, item)
                 if hostname == host_of_clustered_service(node, descr):
                     cluster_params = compute_check_parameters(hostname, checkname, item, params)
@@ -2655,18 +2663,19 @@ def quote_nagios_string(s):
 #   |                                                                      |
 #   | Function call graph of discovery related functions                   |
 #   |                                                                      |
+#   | =1=                                                                  |
 #   | __main__ -> do_inventory() ----> do_snmp_scan() -> make_inventory()  |
 #   |                               |                 |                    |
 #   |                               `-----------------'                    |
-#   |                                                                      |
+#   | =2=                                                                  |
 #   | __main__ -> check_inventory() -> do_snmp_scan() -> make_inventory()  |
 #   |                               |                 |                    |
 #   |                               `-----------------'                    |
-#   |                                                                      |
+#   | =3=                                                                  |
 #   | keepalive -> check_inventory() -> do_snmp_scan() -> make_inventory() |
 #   |                                |                 |                   |
 #   |                                `-----------------'                   |
-#   |                                                                      |
+#   | =4=                                                                  |
 #   | automation_try_inventory() ----> do_snmp_scan() -> make_inventory()  |
 #   |                               |                 |                    |
 #   |                               `-----------------'                    |
@@ -2729,10 +2738,11 @@ def do_inventory(hostnames, checknames, only_new):
             checknames = inventorable_checktypes("tcp")
 
         for checkname in checknames:
-            make_inventory(checkname, hostnames, check_only=False)
+            make_inventory(checkname, hostnames, check_only=False) # =1=
 
 
 
+# OBSOLETE
 def inventorable_checktypes(what): # snmp, tcp, all
     checknames = [ k for k in check_info.keys()
                    if check_info[k]["inventory_function"] != None
@@ -2775,7 +2785,7 @@ def do_snmp_scan(hostnamelist, check_only=False, include_state=False):
         for checkname in checknames:
             if opt_debug:
                 sys.stdout.write("Trying inventory for %s on %s\n" % (checkname, hostname))
-            result += make_inventory(checkname, [hostname], check_only, include_state)
+            result += make_inventory(checkname, [hostname], check_only, include_state) # =5=
     return result
 
 
@@ -2812,11 +2822,6 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                 # Skip SNMP check if this checktype is disabled
                 if service_ignored(host, checkname, None):
                     continue
-
-            # The decision wether to contact the agent via TCP
-            # is done in get_realhost_info(). This is due to
-            # the possibility that piggyback data from other
-            # hosts is available.
 
             if is_cluster(host):
                 sys.stderr.write("%s is a cluster host and cannot be inventorized.\n" % host)
@@ -2953,9 +2958,11 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                                                     (hostname, checkname))
                     continue
 
-
                 # Find logical host this check belongs to. The service might belong to a cluster.
                 hn = host_of_clustered_service(hostname, description)
+                if hn != hostname:
+                    hn = hostname # FAKE TEST HIRN
+                    # print "AAAAAAAAAAAAAAAAAA"
 
                 # Now compare with already known checks for this host (from
                 # previous inventory or explicit checks). Also drop services
@@ -2978,7 +2985,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     else:
                         continue # user does not want this item to be checked
 
-                newcheck = '  ("%s", %r, %s),' % (checkname, item, paramstring)
+                newcheck = "  (%r, %r, %s)," % (checkname, item, paramstring)
                 newcheck += "\n"
                 if newcheck not in newchecks[host]: # avoid duplicates if inventory outputs item twice
                     newchecks[host].append(newcheck)
@@ -3032,7 +3039,7 @@ def check_inventory(hostname, ipaddress=None):
                 hostdef = [hostname+'/'+ipaddress]
             else:
                 hostdef = [hostname]
-            new = make_inventory(ct, hostdef, check_only=True)
+            new = make_inventory(ct, hostdef, check_only=True) # =2=
             newitems += new
             count = len(new)
             if count > 0:
@@ -6208,6 +6215,9 @@ try:
             sys.stderr.write("'generate_hostconf = False' in main.mk.\n")
             done = True
         elif o == '-N':
+            execfile(modules_dir + "/discovery.py")
+            discover_services(args[0], None, use_caches=True, do_snmp_scan=True)
+            sys.exit(1)
             do_output_nagios_conf(args)
             done = True
         elif o == '-B':

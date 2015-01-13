@@ -204,26 +204,28 @@ def automation_try_inventory(args, leave_no_tcp=False, with_snmp_scan=False):
     # services of that cluster.
     services = []
     if is_cluster(hostname):
-        already_added = set([])
+        already_added = {}
         for node in nodes_of(hostname):
-            new_services = automation_try_inventory_node(node, leave_no_tcp=leave_no_tcp, with_snmp_scan=with_snmp_scan)
+            print "NODE: " + node
+            new_services = automation_try_inventory_node(node, hostname, leave_no_tcp=leave_no_tcp, with_snmp_scan=with_snmp_scan)
+            pprint.pprint([(s[0],s[1],s[3]) for s in new_services])
 
             for entry in new_services:
                 if host_of_clustered_service(node, entry[6]) == hostname:
                     # 1: check, 6: Service description
-                    if (entry[1], entry[6]) not in already_added:
-                        services.append(entry)
-                        already_added.add((entry[1], entry[6])) # make it unique
+                    if (entry[1], entry[6]) not in already_added or already_added[(entry[1], entry[6])][0] == "vanished":
+                        already_added[(entry[1], entry[6])] = entry # make it unique
 
         # Find manual checks for this cluster
-        cluster_checks = get_check_table(hostname)
+        cluster_checks = get_check_table(hostname, skip_autochecks=True)
         for (ct, item), (params, descr, deps) in cluster_checks.items():
             if (ct, descr) not in already_added:
-                services.append(("manual", ct, None, item, repr(params), params, descr, 0, "", None))
-                already_added.add( (ct, descr) ) # make it unique
+                already_added[(ct, descr)] = ("manual", ct, None, item, repr(params), params, descr, 0, "", None)
+
+        services = already_added.values()
 
     else:
-        new_services = automation_try_inventory_node(hostname, leave_no_tcp=leave_no_tcp, with_snmp_scan=with_snmp_scan)
+        new_services = automation_try_inventory_node(hostname, hostname, leave_no_tcp=leave_no_tcp, with_snmp_scan=with_snmp_scan)
         for entry in new_services:
             host = host_of_clustered_service(hostname, entry[6])
             if host == hostname:
@@ -235,7 +237,8 @@ def automation_try_inventory(args, leave_no_tcp=False, with_snmp_scan=False):
 
 
 
-def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=False):
+# For non-clusters hostname == clustername
+def automation_try_inventory_node(hostname, clustername, leave_no_tcp=False, with_snmp_scan=False):
     global opt_use_cachefile, opt_no_tcp, opt_dont_submit
 
     try:
@@ -286,40 +289,40 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
                 raise
             tcp_error = str(e)
 
-    # raise MKAutomationError("%s/%s/%s" % (dual_host, snmp_error, tcp_error))
     if dual_host and snmp_error and tcp_error:
         raise MKAutomationError("Error using TCP (%s)\nand SNMP (%s)" %
                 (tcp_error, snmp_error))
 
     found = {}
     for hn, ct, item, paramstring, state_type in found_services:
-       found[(ct, item)] = ( state_type, paramstring )
+       found[(ct, item)] = (state_type, paramstring)
 
     # Check if already in autochecks (but not found anymore)
-    for ct, item, params in read_autochecks_of(hostname):
-        if (ct, item) not in found:
-            found[(ct, item)] = ('vanished', repr(params) ) # This is not the real paramstring!
+    if hostname == clustername: # no cluster situation
+        for ct, item, params in read_autochecks_of(hostname):
+            if (ct, item) not in found:
+                found[(ct, item)] = ('vanished', repr(params) ) # This is not the real paramstring!
 
     # Find manual checks
-    existing = get_check_table(hostname)
+    existing = get_check_table(clustername, skip_autochecks = hostname != clustername)
     for (ct, item), (params, descr, deps) in existing.items():
         if (ct, item) not in found:
             found[(ct, item)] = ('manual', repr(params) )
 
     # Add legacy checks and active checks with artificial type 'legacy'
-    legchecks = host_extra_conf(hostname, legacy_checks)
+    legchecks = host_extra_conf(clustername, legacy_checks)
     for cmd, descr, perf in legchecks:
         found[('legacy', descr)] = ( 'legacy', 'None' )
 
     # Add custom checks and active checks with artificial type 'custom'
-    custchecks = host_extra_conf(hostname, custom_checks)
+    custchecks = host_extra_conf(clustername, custom_checks)
     for entry in custchecks:
         found[('custom', entry['service_description'])] = ( 'custom', 'None' )
 
     # Similar for 'active_checks', but here we have parameters
     for acttype, rules in active_checks.items():
         act_info = active_check_info[acttype]
-        entries = host_extra_conf(hostname, rules)
+        entries = host_extra_conf(clustername, rules)
         for params in entries:
             descr = act_info["service_description"](params)
             found[(acttype, descr)] = ( 'active', repr(params) )

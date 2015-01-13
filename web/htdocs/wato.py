@@ -9806,6 +9806,9 @@ class TimeperiodSelection(ElementSelection):
            [ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
         return elements
 
+    def default_value(self):
+        return "24x7"
+
 # Check if a timeperiod is currently in use and cannot be deleted
 # Returns a list of occurrances.
 # Possible usages:

@@ -887,9 +887,9 @@ def filters_of_visual(visual, info_keys, show_all=False):
     # add ubiquitary_filters that are possible for these infos
     for fn in ubiquitary_filters:
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
-        if fn == "wato_folder" and (not config.wato_enabled or 'host' in visual['single_infos']):
-            continue
         filter = get_filter(fn)
+        if fn == "wato_folder" and (not filter.available() or 'host' in visual['single_infos']):
+            continue
         if not filter.info or filter.info in info_keys:
             filters.append(filter)
 

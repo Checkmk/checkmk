@@ -85,16 +85,35 @@ def fileinfo_groups_of_file(check_filename,reftime):
                 groups.append(group_name)
     return groups
 
+def fileinfo_check_timeranges(params):
+    ranges = params.get("timeofday")
+    if ranges == None:
+        return None # no ranges defined
+
+    now = time.localtime()
+    for range_spec in ranges:
+        if fileinfo_in_timerange(now, *range_spec):
+            return None
+    return " (out of relevant time of day)"
+
+def fileinfo_in_timerange(now, range_from, range_to):
+    minutes_from = range_from[0] * 60 + range_from[1]
+    minutes_to = range_to[0] * 60 + range_to[1]
+    minutes_now = now.tm_hour * 60 + now.tm_min
+    return minutes_now >= minutes_from and minutes_now < minutes_to
+
+
 def check_fileinfo(item, params, info):
     if len(info) == 0:
         return (3, "no information sent by agent")
 
+    outof_range = fileinfo_check_timeranges(params)
     reftime = int(info[0][0])
     check_definition = False
     for line in info[1:]:
         if item == line[0]:
             if line[1] == "missing":
-                return (3, "File not found")
+                return in_timerange and 3 or 0, "File not found" + outof_range
             state = 0
             size = int(line[1])
             age = reftime - int(line[2])
@@ -102,9 +121,10 @@ def check_fileinfo(item, params, info):
             check_definition = [
                 ("size", size, get_filesize_human_readable),
                 ("age",  age,  get_age_human_readable) ]
+
     if check_definition == False:
-        return (3, "File not found")
-    return fileinfo_check_function(check_definition, params)
+        return in_timerange and 3 or 0, "File not found" + outof_range
+    return fileinfo_check_function(check_definition, params, outof_range)
 
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of patterns and makes them available for the check
@@ -122,6 +142,9 @@ def fileinfo_groups_precompile(hostname, item, params):
 def check_fileinfo_groups(item, params, info):
     if not info:
         return 3, "No information sent by agent"
+
+    outof_range = fileinfo_check_timeranges(params)
+
     import fnmatch
     reftime = int(info[0][0])
 
@@ -184,9 +207,9 @@ def check_fileinfo_groups(item, params, info):
     if date_inclusion:
         check_definition.append(("date pattern",  date_inclusion, str ))
 
-    return fileinfo_check_function(check_definition, params)
+    return fileinfo_check_function(check_definition, params, outof_range)
 
-def fileinfo_check_function(check_definition, params):
+def fileinfo_check_function(check_definition, params, outof_range):
     import operator
     state = 0
     infos = []
@@ -207,6 +230,9 @@ def fileinfo_check_function(check_definition, params):
                         infos[-1] += " (%s %s)(!)" % (comp, verbfunc(warn))
             perfdata.append((what, val, warn, crit))
     infotext = ", ".join(infos)
+    if outof_range:
+        state = 0
+        infotext += outof_range
     return (state, infotext, perfdata)
 
 

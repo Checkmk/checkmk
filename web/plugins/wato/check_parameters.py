@@ -1100,8 +1100,13 @@ register_check_parameters(
                       Filesize(title = _("Critical if above")),
                     ]
                 )
-            )
-
+            ),
+            ("timeofday",
+                TimeofdayRanges(
+                    title = _("Only check during the following times of the day"),
+                    help = _("Outside these ranges the check will always be OK"),
+                    count = 3,
+            )),
         ]
     ),
     TextAscii(
@@ -1300,6 +1305,12 @@ register_check_parameters(
                     ]
                 )
             ),
+            ("timeofday",
+                TimeofdayRanges(
+                    title = _("Only check during the following times of the day"),
+                    help = _("Outside these ranges the check will always be OK"),
+                    count = 3,
+            )),
         ]
     ),
     TextAscii(

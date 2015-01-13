@@ -13826,6 +13826,7 @@ def mode_ineffective_rules(phase):
                 html.write(get_folder_aliaspath(f, show_main = False))
 
                 # Conditions
+                # YURKS. This is copy & pase from mode_edit_rule!
                 table.cell(_("Conditions"), css="condition")
                 render_conditions(rulespec, tag_specs, host_list, item_list, varname, f)
 
@@ -13834,9 +13835,9 @@ def mode_ineffective_rules(phase):
                 if rulespec["valuespec"]:
                     try:
                         value_html = rulespec["valuespec"].value_to_text(value)
-                    except:
+                    except Exception, e:
                         try:
-                            reason = ""
+                            reason = str(e)
                             rulespec["valuespec"].validate_datatype(value, "")
                         except Exception, e:
                             reason = str(e)
@@ -14364,9 +14365,9 @@ def mode_edit_ruleset(phase):
             if rulespec["valuespec"]:
                 try:
                     value_html = rulespec["valuespec"].value_to_text(value)
-                except:
+                except Exception, e:
                     try:
-                        reason = ""
+                        reason = str(e)
                         rulespec["valuespec"].validate_datatype(value, "")
                     except Exception, e:
                         reason = str(e)

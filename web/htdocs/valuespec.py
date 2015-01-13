@@ -2071,8 +2071,11 @@ class TimeofdayRange(ValueSpec):
         self._bounds[1].render_input(varprefix + "_until", value[1])
 
     def value_to_text(self, value):
-        return self._bounds[0].value_to_text(value[0]) + "-" + \
-               self._bounds[1].value_to_text(value[1])
+        if value == None:
+            return ""
+        else:
+            return self._bounds[0].value_to_text(value[0]) + "-" + \
+                   self._bounds[1].value_to_text(value[1])
 
     def from_html_vars(self, varprefix):
         from_value = self._bounds[0].from_html_vars(varprefix + "_from")
@@ -2098,6 +2101,13 @@ class TimeofdayRange(ValueSpec):
         self._bounds[1].validate_datatype(value[1], varprefix + "_until")
 
     def validate_value(self, value, varprefix):
+        if value == None:
+            if self._allow_empty:
+                return
+            else:
+                raise MKUserError(varprefix + "_from", _("Please enter a valid time of day range"))
+            return
+
         self._bounds[0].validate_value(value[0], varprefix + "_from")
         self._bounds[1].validate_value(value[1], varprefix + "_until")
         if value[0] > value[1]:
@@ -2556,6 +2566,7 @@ class Tuple(ValueSpec):
         self._elements = kwargs["elements"]
         self._show_titles = kwargs.get("show_titles", True)
         self._orientation = kwargs.get("orientation", "vertical")
+        self._separator = kwargs.get("separator", " ") # in case of float
         self._title_br = kwargs.get("title_br", True)
 
     def canonical_value(self):
@@ -2579,7 +2590,7 @@ class Tuple(ValueSpec):
             if self._orientation == "vertical":
                 html.write("<tr>")
             elif self._orientation == "float":
-                html.write(" ")
+                html.write(self._separator)
 
             if self._show_titles:
                 elem_title = element.title()
@@ -3251,3 +3262,20 @@ class IconSelector(ValueSpec):
     def validate_value(self, value, varprefix):
         if value and value not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
+
+
+class TimeofdayRanges(Transform):
+    def __init__(self, **args):
+        self._count = args.get("count", 3)
+        Transform.__init__(
+            self,
+            Tuple(
+                elements = [ TimeofdayRange(allow_empty=True, allow_24_00=True) for x in range(self._count) ],
+                orientation = "float",
+                separator = " &nbsp; ",
+            ),
+            forth = lambda outter: tuple((outter + [None]*self._count)[0:self._count]),
+            back = lambda inner: [ x for x in inner if x != None ],
+            **args
+        )
+

@@ -413,7 +413,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     # the data comes piggyback!
 
     # No SNMP check. Then we must contact the check_mk_agent. Have we already
-    # tries to get data from the agent? If yes we must not do that again! Even if
+    # tried to get data from the agent? If yes we must not do that again! Even if
     # no cache file is present.
     if g_agent_already_contacted.has_key(hostname):
         raise MKAgentError("")
@@ -1368,7 +1368,7 @@ def convert_check_info():
         if type(info) != dict:
             # Convert check declaration from old style to new API
             check_function, service_description, has_perfdata, inventory_function = info
-            if inventory_function == no_inventory_possible:
+            if inventory_function == no_discovery_possible:
                 inventory_function = None
 
             check_info[check_type] = {

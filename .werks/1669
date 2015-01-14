@@ -1,0 +1,24 @@
+Title: mrpe program check_16bit_program.cc: Monitors 16 bit programs on windows
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421241371
+Class: feature
+
+This script is only available as source code in the check_mk git repository under
+<tt>doc/treasures/check_16bit_program.cc</tt>.
+It should be configured as mrpe script in the check_mk.ini.
+For example:
+
+<tt>check = Pump_Program C:\test\check_16bit_program.exe petro3003.exe</tt>
+
+On success it returns with exit code 0 and
+"{program} is running. Path of executable: {Path of program}"
+
+On failure it returns with exit code 2 and
+"{program} not running"
+
+Note: 16 Bit programs in windows are actually not real processes. They are executed
+as separate threads in processes named ntvdm.exe.
+

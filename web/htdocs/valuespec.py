@@ -2938,9 +2938,6 @@ class ElementSelection(ValueSpec):
         self.load_elements()
         if len(self._elements) > 0:
             return self._elements.keys()[0]
-        else:
-            raise MKUserError(None,
-              _("There are not defined any elements for this selection yet."))
 
     def render_input(self, varprefix, value):
         self.load_elements()

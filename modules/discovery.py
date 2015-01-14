@@ -25,6 +25,152 @@
 # Boston, MA 02110-1301 USA.
 
 
+# Function implementing cmk -I and cmk -II. This is directly
+# being called from the main option parsing code. The list
+# hostnames is already prepared by the main code. If it is
+# empty then we use all hosts and switch to using cache files.
+def do_discovery(hostnames, check_types, only_new):
+    use_caches = False
+    if not hostnames:
+        verbose("Discovering services on all hosts:\n")
+        hostnames = all_hosts_untagged
+        use_caches = True
+    else:
+        verbose("Discovering services on %s:\n" % ", ".join(hostnames))
+
+    # For clusters add their nodes to the list. Clusters itself
+    # cannot be discovered but the user is allowed to specify
+    # them and we do discovery on the nodes instead.
+    nodes = []
+    for h in hostnames:
+        nodes = nodes_of(h)
+        if nodes:
+            hostnames += nodes
+
+    # Then remove clusters and make list unique
+    hostnames = list(set([ h for h in hostnames if not is_cluster(h) ]))
+    hostnames.sort()
+
+    # Now loop through all hosts
+    for hostname in hostnames:
+        try:
+            verbose(tty_white + tty_bold + hostname + tty_normal + ":\n")
+            do_discovery_for(hostname, check_types, only_new, use_caches)
+            verbose("\n")
+        except Exception, e:
+            if opt_debug:
+                raise
+            verbose(" -> Failed: %s\n" % e)
+
+
+def do_discovery_for(hostname, check_types, only_new, use_caches):
+    new_items = discover_services(hostname, check_types, use_caches, use_caches)
+    if not check_types and not only_new:
+        old_items = [] # do not even read old file
+    else:
+        old_items = parse_autochecks_file(hostname)
+
+    # There are three ways of how to merge existing and new discovered checks:
+    # 1. -II without --checks=
+    #        check_types is empty, only_new is False
+    #    --> complete drop old services, only use new ones
+    # 2. -II with --checks=
+    #    --> drop old services of that types
+    #        check_types is not empty, only_new is False
+    # 3. -I
+    #    --> just add new services
+    #        only_new is True
+
+    # Parse old items into a dict (ct, item) -> paramstring
+    result = {}
+    for check_type, item, paramstring in old_items:
+        # Take over old items if -I is selected or if -II
+        # is selected with --checks= and the check type is not
+        # one of the listed ones
+        if only_new or (check_types and check_type not in check_types):
+            result[(check_type, item)] = paramstring
+
+    stats = {}
+    for check_type, item, paramstring in new_items:
+        if (check_type, item) not in result:
+            result[(check_type, item)] = paramstring
+            stats.setdefault(check_type, 0)
+            stats[check_type] += 1
+
+    final_items = []
+    for (check_type, item), paramstring in result.items():
+        final_items.append((check_type, item, paramstring))
+    final_items.sort()
+    save_autochecks_file(hostname, final_items)
+
+    found_check_types = stats.keys()
+    found_check_types.sort()
+    if found_check_types:
+        for check_type in found_check_types:
+            verbose("  %s%3d%s %s\n" % (tty_green + tty_bold, stats[check_type], tty_normal, check_type))
+    else:
+        verbose("  nothing%s\n" % (only_new and " new" or ""))
+
+
+def save_autochecks_file(hostname, items):
+    if not os.path.exists(autochecksdir):
+        os.makedirs(autochecksdir)
+    filepath = autochecksdir + "/" + hostname + ".mk"
+    out = file(filepath, "w")
+    out.write("[\n")
+    for entry in items:
+        out.write("  (%r, %r, %s),\n" % entry)
+    out.write("]\n")
+
+
+def snmp_scan(hostname, ipaddress):
+    # Make hostname globally available for scan functions.
+    # This is rarely used, but e.g. the scan for if/if64 needs
+    # this to evaluate if_disabled_if64_checks.
+    global g_hostname
+    g_hostname = hostname
+
+    vverbose("  SNMP scan:")
+    if not in_binary_hostlist(hostname, snmp_without_sys_descr):
+        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
+        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
+        if sys_descr == None:
+            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
+
+    found = []
+    for check_type, check in check_info.items():
+        if check_type in ignored_checktypes:
+            continue
+        elif not check_uses_snmp(check_type):
+            continue
+        basename = check_type.split(".")[0]
+        # The scan function should be assigned to the basename, because
+        # subchecks sharing the same SNMP info of course should have
+        # an identical scan function. But some checks do not do this
+        # correctly
+        scan_function = snmp_scan_functions.get(check_type,
+                snmp_scan_functions.get(basename))
+        if scan_function:
+            try:
+                result = scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid))
+                if result is not None and type(result) not in [ str, bool ]:
+                    verbose("[%s] Scan function returns invalid type (%s).\n" %
+                            (check_type, type(result)))
+                elif result:
+                    found.append(check_type)
+                    vverbose(" " + check_type)
+            except:
+                pass
+        else:
+            found.append(check_type)
+            vverbose(" " + tty_blue + tty_bold + check_type + tty_normal)
+
+    vverbose("\n")
+    found.sort()
+    return found
+
+
+
 # Changes from previous behaviour
 #  - Syntax with hostname/ipaddress has been dropped
 
@@ -39,11 +185,11 @@
 #
 # This function does not handle:
 # - clusters
-# - ignored services
+# - disabled services
 #
 # This function *does* handle:
-# - ignored check typess
-# 
+# - disabled check typess
+#
 def discover_services(hostname, check_types, use_caches, do_snmp_scan):
     ipaddress = lookup_ipaddress(hostname)
 
@@ -52,10 +198,9 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan):
         check_types = []
         if is_snmp_host(hostname):
 
-            # May we do an SNMP scan? 
+            # May we do an SNMP scan?
             if do_snmp_scan:
                 check_types = snmp_scan(hostname, ipaddress)
-                print check_types
 
             # Otherwise use all check types that we already have discovered
             # previously
@@ -103,7 +248,8 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
 
     try:
         info = None
-        info = get_realhost_info(hostname, ipaddress, section_name, use_caches and inventory_max_cachefile_age or 0, ignore_check_interval=True)
+        info = get_realhost_info(hostname, ipaddress, section_name,
+               use_caches and inventory_max_cachefile_age or 0, ignore_check_interval=True)
 
     except MKAgentError, e:
         if str(e):
@@ -182,7 +328,6 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
             sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
         return []
 
-    print "DISC OF %s: %r" % (check_type, result)
     return result
 
 

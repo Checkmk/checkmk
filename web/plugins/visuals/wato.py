@@ -32,7 +32,12 @@ class FilterWatoFile(Filter):
         self.last_wato_data_update = None
 
     def available(self):
-        return config.wato_enabled and wato.have_folders()
+        # This filter is also available on slave sites with disabled WATO
+        # To determine if this site is a slave we check the existance of the distributed_wato.mk
+        # file and the absence of any site configuration
+        return (config.wato_enabled or\
+               (not wato.is_distributed() and os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk")))\
+                and wato.have_folders()
 
     def load_wato_data(self):
         self.tree = wato.get_folder_tree()

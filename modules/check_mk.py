@@ -49,7 +49,7 @@ g_profile_path = 'profile.out'
 
 opt_debug        = '--debug' in sys.argv[1:]
 opt_interactive  = '--interactive' in sys.argv[1:]
-opt_verbose      = '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
+opt_verbose      = ('-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]) and 1 or 0
 
 if '--profile' in sys.argv[1:]:
     import cProfile
@@ -253,7 +253,7 @@ config_variable_names = set.difference(set(vars().keys()) - known_vars)
 
 # at check time (and many of what is also needed at administration time).
 try:
-    modules = [ 'check_mk_base', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery' ]
+    modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         if os.path.exists(filename):
@@ -520,11 +520,6 @@ def aggregated_service_name(hostname, servicedesc):
 #   | Misc functions which do not belong to any other topic                |
 #   '----------------------------------------------------------------------'
 
-def verbose(t):
-    if opt_verbose:
-        sys.stderr.write(t)
-        sys.stderr.flush()
-
 def is_tcp_host(hostname):
     return in_binary_hostlist(hostname, tcp_hosts)
 
@@ -784,65 +779,6 @@ def get_single_oid(hostname, ipaddress, oid):
 
     g_single_oid_cache[oid] = value
     return value
-
-def snmp_scan(hostname, ipaddress):
-    # Make hostname globally available for scan functions.
-    # This is rarely used, but e.g. the scan for if/if64 needs
-    # this to evaluate if_disabled_if64_checks.
-    global g_hostname
-    g_hostname = hostname
-
-    if opt_verbose:
-        sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
-        sys.stdout.flush()
-    if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
-        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
-        if sys_descr == None:
-            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
-            # if opt_verbose:
-            #     sys.stderr.write("no SNMP answer\n")
-            # return []
-
-    found = []
-    for check_type, check in check_info.items():
-        if check_type in ignored_checktypes:
-            continue
-        elif not check_uses_snmp(check_type):
-            continue
-        basename = check_type.split(".")[0]
-        # The scan function should be assigned to the basename, because
-        # subchecks sharing the same SNMP info of course should have
-        # an identical scan function. But some checks do not do this
-        # correctly
-        scan_function = snmp_scan_functions.get(check_type,
-                snmp_scan_functions.get(basename))
-        if scan_function:
-            try:
-                result = scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid))
-                if result is not None and type(result) not in [ str, bool ]:
-                    if opt_debug:
-                        sys.stderr.write("[%s] Scan function returns invalid type (%s).\n" %
-                                                                (check_type, type(result)))
-                elif result:
-                    found.append(check_type)
-                    if opt_verbose:
-                        sys.stdout.write(tty_green + tty_bold + check_type
-                           + " " + tty_normal)
-                        sys.stdout.flush()
-            except:
-                pass
-        else:
-            found.append(check_type)
-            if opt_verbose:
-                sys.stdout.write(tty_blue + tty_bold + check_type \
-                    + tty_normal + " ")
-                sys.stdout.flush()
-
-    if opt_verbose:
-        sys.stdout.write("\n")
-    found.sort()
-    return found
 
 #.
 #   .--Cluster-------------------------------------------------------------.
@@ -2684,6 +2620,7 @@ def quote_nagios_string(s):
 
 
 def do_inventory(hostnames, checknames, only_new):
+        return do_discovery(hostnames, checknames, only_new)
         # For clusters add their nodes to the list
         nodes = []
         for h in hostnames:
@@ -3089,6 +3026,7 @@ def service_ignored(hostname, checktype, service_description):
         return True
     return False
 
+# OBSOLETED by discovery.py
 def add_to_autochecks_of(hostname, newchecks):
     if not os.path.exists(autochecksdir):
         os.makedirs(autochecksdir)
@@ -3104,6 +3042,7 @@ def add_to_autochecks_of(hostname, newchecks):
     out.write("".join(newchecks))
     out.write("]\n")
 
+# OBSOLETED by discovery.py
 # Remove all autochecks of certain types of a certain host
 def remove_autochecks_of(hostname, checktypes = None): # None = all
     fn = autochecksdir + "/" + hostname + ".mk"
@@ -3113,7 +3052,7 @@ def remove_autochecks_of(hostname, checktypes = None): # None = all
     count = 0
     removed = 0
     kept_lines = []
-    for ct, item, params, paramstring in parse_autochecks_file(hostname):
+    for ct, item, paramstring in parse_autochecks_file(hostname):
         count += 1
         if checktypes != None and ct not in checktypes:
             kept_lines.append((ct, item, paramstring))
@@ -3270,7 +3209,7 @@ if os.path.islink(%(dst)r):
     # initialize global variables
     output.write("""
 # very simple commandline parsing: only -v and -d are supported
-opt_verbose = '-v' in sys.argv
+opt_verbose = ('-v' in sys.argv) and 1 or 0
 opt_debug   = '-d' in sys.argv
 
 # make sure these names are defined (even if never needed)
@@ -5971,6 +5910,10 @@ def get_checkgroup_parameters(host, checktype, item):
 # Read automatically discovered checks of one host.
 # world: "config" -> File in var/check_mk/autochecks
 #        "active" -> Copy in var/check_mk/core/autochecks
+# Returns a table with three columns:
+# 1. check_type
+# 2. item
+# 3. parameters evaluated!
 def read_autochecks_of(hostname, world="config"):
     if world == "config":
         basedir = autochecksdir
@@ -6007,6 +5950,10 @@ def read_autochecks_of(hostname, world="config"):
 
 # Read autochecks, but do not compute final check parameters,
 # also return a forth column with the raw string of the parameters.
+# Returns a table with three columns:
+# 1. check_type
+# 2. item
+# 3. parameter string, not yet evaluated!
 def parse_autochecks_file(hostname):
     def split_python_tuple(line):
         quote = None
@@ -6074,7 +6021,7 @@ def parse_autochecks_file(hostname):
                 raise Exception("Invalid number of parts: %d" % len(parts))
 
             checktypestring, itemstring, paramstring = parts
-            table.append((eval(checktypestring), eval(itemstring), eval(paramstring), paramstring))
+            table.append((eval(checktypestring), eval(itemstring), paramstring))
         except:
             if opt_debug:
                 raise
@@ -6145,11 +6092,12 @@ done = False
 seen_I = 0
 check_types = None
 exit_status = 0
+opt_verbose = 0 # start again from 0, was already faked at the beginning
 
 # Scan modifying options first (makes use independent of option order)
 for o,a in opts:
     if o in [ '-v', '--verbose' ]:
-        opt_verbose = True
+        opt_verbose += 1
     elif o in [ '-f', '--force' ]:
         opt_force = True
     elif o == '-c':
@@ -6215,7 +6163,6 @@ try:
             sys.stderr.write("'generate_hostconf = False' in main.mk.\n")
             done = True
         elif o == '-N':
-            execfile(modules_dir + "/discovery.py")
             discover_services(args[0], None, use_caches=True, do_snmp_scan=True)
             sys.exit(1)
             do_output_nagios_conf(args)
@@ -6361,43 +6308,44 @@ try:
             do_show_snmp_stats()
             done = True
 
-except MKGeneralException, e:
+    # handle -I / -II
+    if not done and seen_I > 0:
+        hostnames = parse_hostname_list(args)
+        do_inventory(hostnames, check_types, seen_I == 1)
+        done = True
+
+    if not done:
+        if (len(args) == 0 and not opt_keepalive) or len(args) > 2:
+            usage()
+            sys.exit(1)
+
+        # handle --keepalive
+        elif opt_keepalive:
+            do_check_keepalive()
+
+        # handle adhoc-check
+        else:
+            hostname = args[0]
+            if len(args) == 2:
+                ipaddress = args[1]
+            else:
+                if is_cluster(hostname):
+                    ipaddress = None
+                else:
+                    try:
+                        ipaddress = lookup_ipaddress(hostname)
+                    except:
+                        print "Cannot resolve hostname '%s'." % hostname
+                        sys.exit(2)
+
+            exit_status = do_check(hostname, ipaddress, check_types)
+
+    output_profile()
+    sys.exit(exit_status)
+
+except (MKGeneralException, MKBailOut), e:
     sys.stderr.write("%s\n" % e)
     if opt_debug:
         raise
     sys.exit(3)
 
-# handle -I / -II
-if not done and seen_I > 0:
-    hostnames = parse_hostname_list(args)
-    do_inventory(hostnames, check_types, seen_I == 1)
-    done = True
-
-if not done:
-    if (len(args) == 0 and not opt_keepalive) or len(args) > 2:
-        usage()
-        sys.exit(1)
-
-    # handle --keepalive
-    elif opt_keepalive:
-        do_check_keepalive()
-
-    # handle adhoc-check
-    else:
-        hostname = args[0]
-        if len(args) == 2:
-            ipaddress = args[1]
-        else:
-            if is_cluster(hostname):
-                ipaddress = None
-            else:
-                try:
-                    ipaddress = lookup_ipaddress(hostname)
-                except:
-                    print "Cannot resolve hostname '%s'." % hostname
-                    sys.exit(2)
-
-        exit_status = do_check(hostname, ipaddress, check_types)
-
-output_profile()
-sys.exit(exit_status)

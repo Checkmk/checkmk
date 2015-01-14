@@ -94,6 +94,23 @@ else:
     def tty(fg=-1, bg=-1, attr=-1):
         return ''
 
+# Output text if opt_verbose is set (-v). Adds no linefeed
+def verbose(text):
+    if opt_verbose:
+        sys.stdout.write(text)
+        sys.stdout.flush()
+
+# Output text if, opt_verbose >= 2 (-vv).
+def vverbose(text):
+    if opt_verbose >= 2:
+        verbose(text)
+
+# Output text to sys.stderr with a linefeed added. Exists
+# afterwards with and exit code of 3, in order to be
+# compatible with monitoring plugin API.
+def bail_out(reason):
+    raise MKBailOut(reason)
+
 # global variables used to cache temporary values
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_already_contacted    = {} # do we have agent data from this host?
@@ -135,6 +152,12 @@ def interrupt_handler(signum, frame):
 signal.signal(signal.SIGINT, interrupt_handler)
 
 class MKGeneralException(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+    def __str__(self):
+        return self.reason
+
+class MKBailOut(Exception):
     def __init__(self, reason):
         self.reason = reason
     def __str__(self):
@@ -713,9 +736,7 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
             s.settimeout(tcp_connect_timeout)
         except:
             pass # some old Python versions lack settimeout(). Better ignore than fail
-        if opt_verbose:
-            sys.stderr.write("Connecting via TCP to %s:%d.\n" % (
-                    ipaddress, port))
+        vverbose("Connecting via TCP to %s:%d.\n" % (ipaddress, port))
         s.connect((ipaddress, port))
         try:
             s.setblocking(1)

@@ -453,7 +453,7 @@ def automation_set_autochecks(args):
         for node in nodes_of(hostname):
             new_autochecks = []
             existing = parse_autochecks_file(node)
-            for ct, item, params, paramstring in existing:
+            for ct, item, paramstring in existing:
                 descr = service_description(ct, item)
                 if hostname != host_of_clustered_service(node, descr):
                     new_autochecks.append((ct, item, paramstring))
@@ -466,7 +466,7 @@ def automation_set_autochecks(args):
         # write new autochecks file, but take paramstrings from existing ones
         # for those checks which are kept
         new_autochecks = []
-        for ct, item, params, paramstring in existing:
+        for ct, item, paramstring in existing:
             if (ct, item) in new_items:
                 new_autochecks.append((ct, item, paramstring))
                 del new_items[(ct, item)]
@@ -480,7 +480,10 @@ def automation_set_autochecks(args):
 
 def automation_get_autochecks(args):
     hostname = args[0]
-    return parse_autochecks_file(hostname)
+    result = []
+    for ct, item, paramstring in parse_autochecks_file(hostname):
+        result.append((ct, item, eval(paramstring), paramstring))
+    return result
 
 def automation_write_autochecks_file(hostname, table):
     if not os.path.exists(autochecksdir):
@@ -866,7 +869,7 @@ def automation_rename_host(args):
         old_autochecks = parse_autochecks_file(oldname)
         out = file(autochecksdir + "/" + newname + ".mk", "w")
         out.write("[\n")
-        for ct, item, params, paramstring in old_autochecks:
+        for ct, item, paramstring in old_autochecks:
             out.write("  (%r, %r, %s),\n" % (ct, item, paramstring))
         out.write("]\n")
         out.close()

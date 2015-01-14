@@ -43,28 +43,20 @@ def check_hwg_temp(item, params, info):
         "5" : "Alarm High",
     }
 
-    unit_text = {
-        "0" : "unknown",
-        "1" : "°C",
-        "2" : "°F",
-        "3" : "°K",
-        "4" : "%",
-    }
-
     # Nomenclature in this check: sensorstatus is what the device sends, state is what the check returns.
     for index, descr, sensorstatus, current, unit in info:
         if index == item:
             tempval = float(current)
             if unit == "2":
-                temp = fahrenheit_to_celsius(tempval)
+                dev_unit = "f"
             elif unit == "3":
-                temp = tempval - 273.15
+                dev_unit = "k"
             elif unit == "4":
                 return
             else:
-                temp = tempval
+                dev_unit = "c"
 
-            state, infotext, perfdata = check_temperature(temp, params)
+            state, infotext, perfdata = check_temperature(tempval, params, dev_unit)
             if descr:
                 infotext += " (%s)" % descr
             yield state, infotext, perfdata

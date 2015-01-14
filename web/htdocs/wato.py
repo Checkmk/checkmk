@@ -2392,7 +2392,7 @@ def rename_host(host, newname):
         elif what == "history":
             actions.append(_("Monitoring history entries (events and availability)"))
         elif what == "retention":
-            actions.append(_("The current monitoring state (including ackowledgements and downtimes)"))
+            actions.append(_("The current monitoring state (including acknowledgements and downtimes)"))
         elif what == "ipfail":
             actions.append("<div class=error>%s</div>" % (_("<b>WARNING:</b> the IP address lookup of "
                    "<tt>%s</tt> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. "

@@ -28,21 +28,33 @@
 
 # Filters for substring search, displaying a text input field
 class FilterText(Filter):
-    def __init__(self, name, title, info, column, htmlvar, op):
-        Filter.__init__(self, name, title, info, [htmlvar], [column])
+    def __init__(self, name, title, info, column, htmlvar, op, negateable=False):
+        htmlvars = [htmlvar]
+        if negateable:
+            htmlvars.append("neg_" + htmlvar)
+        Filter.__init__(self, name, title, info, htmlvars, [column])
         self.op = op
         self.column = column
+        self.negateable = negateable
 
     def display(self):
         htmlvar = self.htmlvars[0]
         current_value = html.var(htmlvar, "")
-        html.text_input(htmlvar, current_value)
+        html.text_input(htmlvar, current_value, self.negateable and 'neg' or '')
+        if self.negateable:
+            html.write(" <nobr>")
+            html.checkbox(self.htmlvars[1], label=_("negate"))
+            html.write("</nobr>")
 
     def filter(self, infoname):
         htmlvar = self.htmlvars[0]
         current_value = html.var(htmlvar)
+        if self.negateable and html.get_checkbox(self.htmlvars[1]):
+            negate = "!"
+        else:
+            negate = ""
         if current_value:
-            return "Filter: %s %s %s\n" % (self.column, self.op, lqencode(current_value))
+            return "Filter: %s %s%s %s\n" % (self.column, negate, self.op, lqencode(current_value))
         else:
             return ""
 
@@ -663,6 +675,7 @@ declare_filter(250, FilterTime("host", "host_last_state_change", _("Last host st
 declare_filter(251, FilterTime("host", "host_last_check", _("Last host check"), "host_last_check"))
 declare_filter(253, FilterTime("comment", "comment_entry_time", _("Time of comment"), "comment_entry_time" ))
 declare_filter(253, FilterTime("downtime", "downtime_entry_time", _("Time of Downtime"), "downtime_entry_time" ))
+declare_filter(254, FilterText("downtime_comment", _("Downtime comment"), "downtime", "downtime_comment", "downtime_comment", "~"))
 #    _
 #   | |    ___   __ _
 #   | |   / _ \ / _` |
@@ -735,11 +748,13 @@ class FilterLogClass(Filter):
             return "".join(headers) + ("Or: %d\n" % len(headers))
 
 declare_filter(255, FilterLogClass())
+#                               filter          title              info       column           htmlvar
 declare_filter(202, FilterText("log_plugin_output",  _("Log: plugin output"), "log", "log_plugin_output", "log_plugin_output", "~~"))
-declare_filter(203, FilterText("log_type", _("Log: message type"), "log", "log_type", "log_type", "~~"))
-declare_filter(204, FilterText("log_state_type", _("Log: state type"), "log", "log_state_type", "log_state_type", "~~"))
-declare_filter(260, FilterText("log_contact_name",   _("Log: contact name"),  "log", "log_contact_name",  "log_contact_name",  "="),
+declare_filter(203, FilterText("log_type",           _("Log: message type"), "log", "log_type", "log_type", "~~"))
+declare_filter(204, FilterText("log_state_type",     _("Log: state type"), "log", "log_state_type", "log_state_type", "~~"))
+declare_filter(260, FilterText("log_contact_name",   _("Log: contact name (exact match)"),  "log", "log_contact_name",  "log_contact_name",  "="),
                                                                                                   _("Exact match, used for linking"))
+declare_filter(261, FilterText("log_contact_name_regex",   _("Log: contact name"),  "log", "log_contact_name",  "log_contact_name_regex",  "~~", negateable=True))
 
 class FilterLogState(Filter):
     def __init__(self):

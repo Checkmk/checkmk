@@ -1,0 +1,22 @@
+Title: Sidebar snapin 'Tree of Folders' and 'WATO folder' filter now available on slave sites
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421142996
+
+The multisite filter <i>WATO folder</i> was not available on slave sites with disabled WATO.
+The <i>Tree of Folders</i> snapin was available even if WATO was disabled.
+If you clicked on a link on the <i>Tree of Folders</i> snapin the upcoming page displayed
+wrong information because the <i>WATO folder</i> filter was missing.
+This has been fixed.
+
+The new behaviour:
+<ul>
+<li>Slave site:<i>Tree of Folders</i> snapin is always available</li>
+<li>Slave site:<i>WATO folder</i> filter is always available</li>
+<li>Master site:<i>Tree of Folders</i> snapin is not available if WATO is disabled</li>
+<li>Master site:<i>WATO folder</i> filter not available if WATO is disabled</li>
+</ul>

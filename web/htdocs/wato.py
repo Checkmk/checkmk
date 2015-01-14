@@ -173,8 +173,6 @@ wato_styles = [ "pages", "wato", "status" ]
 def page_handler():
     global g_html_head_open
     g_html_head_open = False
-    global g_git_messages
-    g_git_messages = []
 
     if not config.wato_enabled:
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
@@ -2394,7 +2392,7 @@ def rename_host(host, newname):
         elif what == "history":
             actions.append(_("Monitoring history entries (events and availability)"))
         elif what == "retention":
-            actions.append(_("The current monitoring state (including ackowledgements and downtimes)"))
+            actions.append(_("The current monitoring state (including acknowledgements and downtimes)"))
         elif what == "ipfail":
             actions.append("<div class=error>%s</div>" % (_("<b>WARNING:</b> the IP address lookup of "
                    "<tt>%s</tt> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. "
@@ -9808,6 +9806,9 @@ class TimeperiodSelection(ElementSelection):
            [ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
         return elements
 
+    def default_value(self):
+        return "24x7"
+
 # Check if a timeperiod is currently in use and cannot be deleted
 # Returns a list of occurrances.
 # Possible usages:
@@ -11231,9 +11232,6 @@ def page_automation():
         raise MKAuthException(_("Missing secret for automation command."))
     if secret != get_login_secret():
         raise MKAuthException(_("Invalid automation secret."))
-
-    global g_git_messages
-    g_git_messages = []
 
     # To prevent mixups in written files we use the same lock here as for
     # the normal WATO page processing. This might not be needed for some
@@ -13828,6 +13826,7 @@ def mode_ineffective_rules(phase):
                 html.write(get_folder_aliaspath(f, show_main = False))
 
                 # Conditions
+                # YURKS. This is copy & pase from mode_edit_rule!
                 table.cell(_("Conditions"), css="condition")
                 render_conditions(rulespec, tag_specs, host_list, item_list, varname, f)
 
@@ -13836,9 +13835,9 @@ def mode_ineffective_rules(phase):
                 if rulespec["valuespec"]:
                     try:
                         value_html = rulespec["valuespec"].value_to_text(value)
-                    except:
+                    except Exception, e:
                         try:
-                            reason = ""
+                            reason = str(e)
                             rulespec["valuespec"].validate_datatype(value, "")
                         except Exception, e:
                             reason = str(e)
@@ -14366,9 +14365,9 @@ def mode_edit_ruleset(phase):
             if rulespec["valuespec"]:
                 try:
                     value_html = rulespec["valuespec"].value_to_text(value)
-                except:
+                except Exception, e:
                     try:
-                        reason = ""
+                        reason = str(e)
                         rulespec["valuespec"].validate_datatype(value, "")
                     except Exception, e:
                         reason = str(e)
@@ -18457,6 +18456,9 @@ modes = {
 
 loaded_with_language = False
 def load_plugins():
+    global g_git_messages
+    g_git_messages = []
+
     global loaded_with_language
     if loaded_with_language == current_language:
         return

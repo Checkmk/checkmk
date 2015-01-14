@@ -1,0 +1,10 @@
+Title: Added new filter for regex based filtering of contacts to log based views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421141961
+Class: feature
+
+This filter can be used to filter monitoring log based views by a regex matching
+the contact name. Additionally the filter can be negated.

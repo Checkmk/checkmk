@@ -1,0 +1,8 @@
+Title: Hide check-mk-notify notifications from notification views per default
+Component: multisite
+State: open
+Date: 2015-01-13 10:44:49
+Targetversion: 1.2.5i1
+Class: nastiness
+
+The filter "Log: contact name" can be used for this.

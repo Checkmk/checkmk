@@ -1,0 +1,12 @@
+Title: Fixed default value in wato parameter page for timeperiods
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421151221
+
+In some cases wato has shown the wrong default values on the parameter page for all rules
+based on time periods (e.g. check period, notification period)
+

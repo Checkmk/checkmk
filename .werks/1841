@@ -1,0 +1,11 @@
+Title: fileinfo, fileinfo.groups: new parameter for selecting ranges of the time of the day
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421156140
+Class: feature
+
+With this new check parameter you can make the check go critical only during certain
+times of the day. That way you can for example say: Between 8:00 and 9:00 this must
+exist a certain file, but otherwise it is not neccessary.

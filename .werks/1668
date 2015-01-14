@@ -1,0 +1,14 @@
+Title: Interface groups: Can create groups out of interface item names
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421226714
+Class: feature
+
+In the previous version a interface group could only get created out of
+interfaces which shared the same interface type.
+
+With this update you can now specify grouped interfaces by their type as well
+as their item name. Keep in mind that the item name depends on the parameters
+<tt>if_inventory_uses_alias</tt> or <tt>if_inventory_uses_description</tt>.

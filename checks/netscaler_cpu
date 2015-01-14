@@ -41,19 +41,20 @@ def inventory_netscaler_cpu(info):
 def check_netscaler_cpu(item, params, info):
     warn, crit = params.get("levels")
     for cpu_name, cpu_usage in info:
-        cpu_usage = int(cpu_usage)
         if cpu_name == item:
+            cpu_usage = int(cpu_usage)
+
             infotext = "%d%%" % cpu_usage
             perfdata = [ ("load", cpu_usage, warn, crit, 0) ]
+
             state = 0
-            levelstext = ""
             if cpu_usage >= crit:
                 state = 2
-                levelstext = " (levels at %d/%d)" % (warn,crit)
             elif cpu_usage >= warn:
                 state = 1
-                levelstext = " (levels at %d/%d)" % (warn,crit)
-            infotext += levelstext
+            if state > 0:
+                infotext += " (levels at %d/%d)" % (warn,crit)
+
             return state, infotext, perfdata
 
 check_info["netscaler_cpu"] = {

@@ -135,13 +135,11 @@ def inventory_if_common(info, has_nodeinfo = False):
 
     for line in host_extra_conf(g_hostname, if_groups):
         for entry in line:
-            if str(entry["iftype"]) in porttypes:
-                group_patterns[entry["name"]] = entry
+            group_patterns[entry["name"]] = entry
 
     seen_items  = set([])
     duplicate   = set([])
     have_groups = {}
-
 
     # Determine whether single, grouped or both
     for line in info:
@@ -168,14 +166,19 @@ def inventory_if_common(info, has_nodeinfo = False):
         elif uses_alias and ifAlias:
             item = ifAlias
         else:
-            item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo )
+            item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo)
 
         # Prepare grouped interfaces
         is_only_in_group = False
         for group_name, pattern in group_patterns.items():
-            if pattern["iftype"] == saveint(ifType):
-                have_groups.setdefault(group_name, {"interfaces": []})["iftype"] = pattern["iftype"]
-                have_groups[group_name]["interfaces"].append((saveint(ifSpeed), ifOperStatus))
+            # Interfaces can be grouped by item and iftype
+            match_item = not pattern.get("include_items") or (item in pattern["include_items"])
+            match_type = not pattern.get("iftype")        or (pattern["iftype"] == saveint(ifType))
+            if match_item and match_type:
+                have_groups.setdefault(group_name, {"interfaces": [],
+                                                    "iftype": pattern.get("iftype"),
+                                                    "include_items": pattern.get("include_items")})
+                have_groups[group_name]["interfaces"].append((saveint(ifSpeed), ifOperStatus, ifType))
                 if pattern.get("single"):
                     is_only_in_group = True
 
@@ -203,15 +206,19 @@ def inventory_if_common(info, has_nodeinfo = False):
         one_up = "1" in [pair[1] for pair in values["interfaces"]]
         group_operStatus = one_up and "1" or "2"
 
-        ifType = group_patterns[group_name]["iftype"]
-        if str(ifType) in porttypes and group_operStatus in portstates:
-            params = { "iftype": ifType, "aggregate": True }
+        if group_operStatus in portstates:
+            params = { "iftype": values["iftype"],
+                       "include_items": values["include_items"],
+                       "aggregate": True }
+
             if if_inventory_monitor_state:
-                params["state"] = [ group_operStatus ]
+                params["state"] = [group_operStatus]
 
             if ifSpeed != "" and if_inventory_monitor_speed:
                 params["speed"] = total_speed
-            pre_inventory.append( (group_name, "%r" % params, int(ifIndex)) )
+
+            # Note: the group interface index is always set to 1
+            pre_inventory.append((group_name, "%r" % params, 1))
 
     inventory = []
     # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
@@ -225,17 +232,28 @@ def inventory_if_common(info, has_nodeinfo = False):
     return inventory
 
 def check_if_common(item, params, info, has_nodeinfo = False):
-
     # If this item is in an ifgroup create a pseudo interface and pass its data to the common instance
     # This is done by simply adding the additional group_info data to the already existing info table
     if params.get("aggregate"):
         matching_interfaces = []
-        if has_nodeinfo:
-            type_index = 3
-        else:
-            type_index = 2
+
+        node_offset = has_nodeinfo and 1 or 0
+        def get_interface_item(line):
+            ifIndex = line[ 0 + node_offset]
+            ifDescr = line[ 1 + node_offset]
+            ifAlias = line[18 + node_offset]
+            if if_inventory_uses_description and ifDescr:
+                if_item = ifDescr
+            elif if_inventory_uses_alias and ifAlias:
+                if_item = ifAlias
+            else:
+                if_item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo)
+            return if_item
+
         for element in info:
-            if params["iftype"] == saveint(element[type_index]):
+            match_item = not params.get("include_items") or (get_interface_item(element) in params["include_items"])
+            match_type = not params.get("iftype")        or (params["iftype"] == saveint(element[2 + node_offset]))
+            if match_item and match_type:
                 matching_interfaces.append(element)
 
         # Accumulate info over matching_interfaces
@@ -248,19 +266,14 @@ def check_if_common(item, params, info, has_nodeinfo = False):
             "outbcast" : 0, "ifOutDiscards" : 0, "ifOutErrors" : 0, "ifOutQLen" : 0
         }
 
-        for line in matching_interfaces:
-            node, line = if_extract_node(line,has_nodeinfo)
+        for element in matching_interfaces:
+            node, line = if_extract_node(element, has_nodeinfo)
             ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
                 inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
                 outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
                 ifOutQLen, ifAlias, ifPhysAddress = line
-            if if_inventory_uses_description and ifDescr:
-                group_item = ifDescr
-            elif if_inventory_uses_alias and ifAlias:
-                group_item = ifAlias
-            else:
-                group_item = if_pad_with_zeroes(info, ifIndex)
 
+            if_item = get_interface_item(element)
             perfdata = []
 
             # Only these values are packed into counters
@@ -281,7 +294,7 @@ def check_if_common(item, params, info, has_nodeinfo = False):
                 ( "outdisc",   ifOutDiscards),
                 ( "outerr",    ifOutErrors) ]:
                 try:
-                    get_rate("if.%s.%s.%s" % (name, item, group_item), this_time, saveint(counter), onwrap=RAISE)
+                    get_rate("if.%s.%s.%s" % (name, item, if_item), this_time, saveint(counter), onwrap=RAISE)
                 except MKCounterWrapped:
                     wrapped = True
                     # continue, other counters might wrap as well
@@ -308,6 +321,12 @@ def check_if_common(item, params, info, has_nodeinfo = False):
         one_up = "1" in [element[4] for element in matching_interfaces]
         group_operStatus = one_up and "1" or "2"
 
+        alias_info = []
+        if params.get("iftype"):
+            alias_info.append("iftype %s" % params["iftype"])
+        if params.get("include_items"):
+            alias_info.append("grouped items")
+
         group_entry = [
                     "ifgroup%s" % item,         # ifIndex
                     item,                       # ifDescr
@@ -328,9 +347,10 @@ def check_if_common(item, params, info, has_nodeinfo = False):
                     group_info["ifOutDiscards"],# ifOutDiscards
                     group_info["ifOutErrors"],  # ifOutErrors
                     group_info["ifOutQLen"],    # ifOutQLen
-                    "iftype %s" % params["iftype"],        # ifAlias
+                    " and ".join(alias_info),
                     "",                         # ifPhysAddress
         ]
+
         info.append(group_entry)
         # If applicable, signal the check_if_common_single if the counter of the
         # given interface has wrapped. Actually a wrap of the if group itself is unlikely,

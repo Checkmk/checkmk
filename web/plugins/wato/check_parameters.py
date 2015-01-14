@@ -4626,7 +4626,8 @@ register_rule(group + '/' + subgroup_networking,
                   'By defining if-group patterns multiple interfaces can be combined together. '
                   'A single service is created for this interface group showing the total traffic amount '
                   'of its members. You can configure if interfaces which are identified as group interfaces '
-                  'should not show up as single service'),
+                  'should not show up as single service. You can restrict grouped interfaces by iftype and the '
+                  'item name of the single interface.'),
     valuespec = ListOf(
                     Dictionary(
                         elements = [
@@ -4637,17 +4638,22 @@ register_rule(group + '/' + subgroup_networking,
                                        allow_empty = False,
                                    )),
                             ("iftype", Integer(
-                                title = _("Interface port type"),
-                                help = _("The number of the port type. For example 53 (propVirtual)"),
-                                default_value = 0,
+                                title = _("Restrict interface port type"),
+                                help = _("Only interfaces with the given port type are put into this group. "
+                                         "For example 53 (propVirtual)."),
+                                default_value = 6,
                                 minvalue = 1,
                                 maxvalue = 255,
+                            )),
+                            ("include_items", ListOfStrings(
+                                title = _("Restrict interface items"),
+                                help = _("Only interface with this item names are put into this group."),
                             )),
                             ("single", Checkbox(
                                 title = _("Do not list grouped interfaces separately"),
                             )),
                         ],
-                        required_keys = ["name", "iftype", "single"]),
+                        required_keys = ["name", "single"]),
                     add_label = _("Add pattern")),
     match = 'all',
 )

@@ -1,0 +1,9 @@
+Title: juniper_screenos_mem: Fixed too large memory reported (byte <> kbyte mixup)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421237757
+

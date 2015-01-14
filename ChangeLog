@@ -62,6 +62,7 @@
     * 1848 FIX: df: title of pnp graphs for filesystem checks fixed...
     * 1209 FIX: livestatus_status: Check handles cluster using in cluster now
     * 1809 FIX: cisco_temp_perf: Fixed exception when no temperature threshold provided by device
+    * 1812 FIX: juniper_screenos_mem: Fixed too large memory reported (byte <> kbyte mixup)
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

@@ -15,6 +15,7 @@
     * 1209 FIX: livestatus_status: Check handles cluster using in cluster now
     * 1809 FIX: cisco_temp_perf: Fixed exception when no temperature threshold provided by device
     * 1812 FIX: juniper_screenos_mem: Fixed too large memory reported (byte <> kbyte mixup)
+    * 1814 FIX: agent_ibmsvc: Fixed missing executable flag
 
     Multisite:
     * 1667 Sidebar snapin 'Tree of Folders' and 'WATO folder' filter now available on slave sites...

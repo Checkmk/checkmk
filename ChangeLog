@@ -1,4 +1,9 @@
 1.2.6b9:
+    Checks & Agents:
+    * 1668 Interface groups: Can create groups out of interface item names...
+    * 1827 oracle_tablespace: WATO rule for default increment...
+            NOTE: Please refer to the migration notes!
+
 
 1.2.6b8:
     Core & Setup:

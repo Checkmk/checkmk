@@ -24,6 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# ZUTUN:
+# - inventory_max_cachefile_age reparieren, entfernen, was weiß ich
+# - obsoleten Code rauswerfen
+# - evtl. Funtionen aus check_mk.py umziehen
+
 
 # Function implementing cmk -I and cmk -II. This is directly
 # being called from the main option parsing code. The list
@@ -349,21 +354,23 @@ def discoverable_check_types(what): # snmp, tcp, all
 # to service discovery. The result is a dictionary of the form
 # (check_type, item) -> (check_source, paramstring)
 # check_source is the reason/state/source of the service:
-#    "new"      : Check is discovered but currently not yet monitored
-#    "old"      : Check is discovered and already monitored (most common)
-#    "vanished" : Check had been discovered previously, but item has vanished
-#    "legacy"   : Check is defined via legacy_checks
-#    "active"   : Check is defined via active_checks
-#    "custom"   : Check is defined via custom_checks
-#    "manual"   : Check is a manual Check_MK check without service discovery
-#    "ignored"  : discovered or static, but disabled via ignored_services
-#    "obsolete" : Discovered by vanished check is meanwhile ignored via ignored_services
+#    "new"           : Check is discovered but currently not yet monitored
+#    "old"           : Check is discovered and already monitored (most common)
+#    "vanished"      : Check had been discovered previously, but item has vanished
+#    "legacy"        : Check is defined via legacy_checks
+#    "active"        : Check is defined via active_checks
+#    "custom"        : Check is defined via custom_checks
+#    "manual"        : Check is a manual Check_MK check without service discovery
+#    "ignored"       : discovered or static, but disabled via ignored_services
+#    "obsolete"      : Discovered by vanished check is meanwhile ignored via ignored_services
+#    "clustered_new" : New service found on a node that belongs to a cluster
+#    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
-def get_host_services(hostname, use_caches, with_snmp_scan):
+def get_host_services(hostname, use_caches, do_snmp_scan):
     if is_cluster(hostname):
-        return get_cluster_services(hostname, use_caches, with_snmp_scan)
+        return get_cluster_services(hostname, use_caches, do_snmp_scan)
     else:
-        return get_node_services(hostname, use_caches, with_snmp_scan)
+        return get_node_services(hostname, use_caches, do_snmp_scan)
 
 # Part of get_node_services that deals with discovered services
 def get_discovered_services(hostname, use_caches, do_snmp_scan):
@@ -396,7 +403,7 @@ def get_node_services(hostname, use_caches, do_snmp_scan):
             if check_source == "vanished":
                 del services[(check_type, item)] # do not show vanished clustered services here
             else:
-                services[(check_type, item)] = ("clustered", paramstring) 
+                services[(check_type, item)] = ("clustered_" + check_source, paramstring)
 
     merge_manual_services(services, hostname)
     return services
@@ -482,9 +489,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan):
     leave_no_tcp = True # FIXME TODO
 
     table = []
-    for (check_type, item), (state_type, paramstring) in services.items():
+    for (check_type, item), (check_source, paramstring) in services.items():
         params = None
-        if state_type not in [ 'legacy', 'active', 'custom' ]:
+        if check_source not in [ 'legacy', 'active', 'custom' ]:
             # apply check_parameters
             try:
                 if type(paramstring) == str:
@@ -543,7 +550,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan):
 
             if exitcode == None:
                 check_function = check_info[check_type]["check_function"]
-                if state_type != 'manual':
+                if check_source != 'manual':
                     params = compute_check_parameters(hostname, check_type, item, params)
 
                 try:
@@ -563,20 +570,20 @@ def get_check_preview(hostname, use_caches, do_snmp_scan):
         else:
             descr = item
             exitcode = None
-            output = "WAITING - %s check, cannot be done offline" % state_type.title()
+            output = "WAITING - %s check, cannot be done offline" % check_source.title()
             perfdata = []
 
-        if state_type == "active":
+        if check_source == "active":
             params = eval(paramstring)
 
-        if state_type in [ "legacy", "active", "custom" ]:
+        if check_source in [ "legacy", "active", "custom" ]:
             checkgroup = None
             if service_ignored(hostname, None, descr):
-                state_type = "ignored"
+                check_source = "ignored"
         else:
             checkgroup = check_info[check_type]["group"]
 
-        table.append((state_type, check_type, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
+        table.append((check_source, check_type, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
 
     return table
 
@@ -657,12 +664,12 @@ def automation_try_discovery_node(hostname, clustername, leave_no_tcp=False, wit
     # Add legacy checks and active checks with artificial type 'legacy'
     legchecks = host_extra_conf(clustername, legacy_checks)
     for cmd, descr, perf in legchecks:
-        found[('legacy', descr)] = ( 'legacy', 'None' )
+        found[('legacy', descr)] = ('legacy', 'None')
 
     # Add custom checks and active checks with artificial type 'custom'
     custchecks = host_extra_conf(clustername, custom_checks)
     for entry in custchecks:
-        found[('custom', entry['service_description'])] = ( 'custom', 'None' )
+        found[('custom', entry['service_description'])] = ('custom', 'None')
 
     # Similar for 'active_checks', but here we have parameters
     for acttype, rules in active_checks.items():

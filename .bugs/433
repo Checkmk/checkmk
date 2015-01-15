@@ -1,11 +1,14 @@
 Title: cmk -II should keep services on error
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2011-11-10 11:52:56
 Targetversion: future
-Class: nastiness
 
 If you do a cmk -II on a host and no data can be
 fetched from the agent, then all services are removed
 anyway. Better would be to abort with an error and
 keep the services.
+
+2015-01-15 17:31:55: changed state open -> done
+Fixed by a new implementation of service discovery

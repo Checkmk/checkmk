@@ -38,7 +38,7 @@
 def inventory_lnx_thermal(info):
     return [ (l[0].replace('thermal_zone', ''), None) for l in info ]
 
-def check_lnx_thermal(item, params, info):
+def check_lnx_thermal(item, _no_params, info):
     for line in info:
         if line[0].replace('thermal_zone', '') == item:
             # ['thermal_zone0', 'enabled', 'acpitz', '51000', '90000', 'critical', '79000', 'passive']

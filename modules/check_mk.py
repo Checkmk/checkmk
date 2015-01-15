@@ -2596,86 +2596,9 @@ def quote_nagios_string(s):
 #   |                                                   |___/              |
 #   +----------------------------------------------------------------------+
 #   | Automatic service discovery                                          |
-#   |                                                                      |
-#   | Function call graph of discovery related functions                   |
-#   |                                                                      |
-#   | =1=                                                                  |
-#   | __main__ -> do_inventory() ----> do_snmp_scan() -> make_inventory()  |
-#   |                               |                 |                    |
-#   |                               `-----------------'                    |
-#   | =2=                                                                  |
-#   | __main__ -> check_inventory() -> do_snmp_scan() -> make_inventory()  |
-#   |                               |                 |                    |
-#   |                               `-----------------'                    |
-#   | =3=                                                                  |
-#   | keepalive -> check_inventory() -> do_snmp_scan() -> make_inventory() |
-#   |                                |                 |                   |
-#   |                                `-----------------'                   |
-#   | =4=                                                                  |
-#   | automation_try_inventory() ----> do_snmp_scan() -> make_inventory()  |
-#   |                               |                 |                    |
-#   |                               `-----------------'                    |
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 
-def do_inventory(hostnames, checknames, only_new):
-        return do_discovery(hostnames, checknames, only_new)
-        # For clusters add their nodes to the list
-        nodes = []
-        for h in hostnames:
-            nodes = nodes_of(h)
-            if nodes:
-                hostnames += nodes
-
-        # Then remove clusters and make list unique
-        hostnames = list(set([ h for h in hostnames if not is_cluster(h) ]))
-        hostnames.sort()
-
-        if opt_verbose:
-            if len(hostnames) > 0:
-                sys.stdout.write("Inventorizing %s.\n" % ", ".join(hostnames))
-            else:
-                sys.stdout.write("Inventorizing all hosts.\n")
-
-        # remove existing checks, if option -I is used twice
-        if seen_I > 1:
-            if not checknames:
-                checks_to_remove = inventorable_checktypes("all")
-            else:
-                checks_to_remove = checknames
-
-            if len(hostnames) > 0:
-                for host in hostnames:
-                    remove_autochecks_of(host, checks_to_remove)
-                    # If all nodes of a cluster are contained in the list, then
-                    # also remove the autochecks of that cluster. Beware: a host
-                    # can be part more multiple clusters
-                    for clust in clusters_of(host):
-                        missing = [] # collect nodes missing on the command line
-                        for node in nodes_of(clust):
-                            if node not in hostnames:
-                                missing.append(node)
-
-                        if len(missing) == 0:
-                            if opt_verbose:
-                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, node))
-                            remove_autochecks_of(clust, checks_to_remove)
-
-                        else:
-                            sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" %
-                            (host, clust, ",".join(missing), clust))
-
-            else:
-                for host in all_active_hosts() + all_active_clusters():
-                    remove_autochecks_of(host, checks_to_remove)
-
-        if checknames == None:
-            do_snmp_scan(hostnames)
-            checknames = inventorable_checktypes("tcp")
-
-        for checkname in checknames:
-            make_inventory(checkname, hostnames, check_only=False) # =1=
 
 
 
@@ -2946,6 +2869,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
     return newitems
 
 
+# NEEDS TO BE REWRITTEN
 def check_inventory(hostname, ipaddress=None):
     newchecks = []
     newitems = []
@@ -3042,48 +2966,6 @@ def add_to_autochecks_of(hostname, newchecks):
     out.write("".join(newchecks))
     out.write("]\n")
 
-# OBSOLETED by discovery.py
-# Remove all autochecks of certain types of a certain host
-def remove_autochecks_of(hostname, checktypes = None): # None = all
-    fn = autochecksdir + "/" + hostname + ".mk"
-    if not os.path.exists(fn):
-        return 0
-
-    count = 0
-    removed = 0
-    kept_lines = []
-    for ct, item, paramstring in parse_autochecks_file(hostname):
-        count += 1
-        if checktypes != None and ct not in checktypes:
-            kept_lines.append((ct, item, paramstring))
-        else:
-            removed += 1
-            if ct not in check_info:
-                sys.stderr.write('Removing unimplemented check %s.\n' % ct)
-
-    if len(kept_lines) == 0:
-        if opt_verbose:
-            sys.stdout.write("Deleting %s.\n" % fn)
-        if os.path.exists(fn):
-            os.remove(fn)
-
-    elif removed:
-        if opt_verbose:
-            sys.stdout.write("Removing %d checks from %s.\n" % (removed, fn))
-        f = file(fn, "w+")
-        f.write("[\n")
-        for line in kept_lines:
-            f.write("  (%r, %r, %s),\n" % line)
-        f.write("]\n")
-
-    return removed
-
-def remove_all_autochecks():
-    for f in glob.glob(autochecksdir + '/*.mk'):
-        if opt_verbose:
-            sys.stdout.write("Deleting %s.\n" % f)
-        if os.path.exists(f):
-            os.remove(f)
 
 
 #.
@@ -4254,10 +4136,10 @@ def do_flush(hosts):
                 sys.stdout.write(tty_bold + tty_magenta + " logfiles(%d)" % d)
 
         # autochecks
-        d = remove_autochecks_of(host)
-        if d > 0:
+        count = remove_autochecks_of(host)
+        if count:
             flushed = True
-            sys.stdout.write(tty_bold + tty_cyan + " autochecks(%d)" % d)
+            sys.stdout.write(tty_bold + tty_cyan + " autochecks(%d)" % count)
 
         # inventory
         path = var_dir + "/inventory/" + host
@@ -5948,87 +5830,6 @@ def read_autochecks_of(hostname, world="config"):
         autochecks.append( (ct, it, compute_check_parameters(hostname, ct, it, par)) )
     return autochecks
 
-# Read autochecks, but do not compute final check parameters,
-# also return a forth column with the raw string of the parameters.
-# Returns a table with three columns:
-# 1. check_type
-# 2. item
-# 3. parameter string, not yet evaluated!
-def parse_autochecks_file(hostname):
-    def split_python_tuple(line):
-        quote = None
-        bracklev = 0
-        backslash = False
-        for i, c in enumerate(line):
-            if backslash:
-                backslash = False
-                continue
-            elif c == '\\':
-                backslash = True
-            elif c == quote:
-                quote = None # end of quoted string
-            elif c in [ '"', "'" ]:
-                quote = c # begin of quoted string
-            elif quote:
-                continue
-            elif c in [ '(', '{', '[' ]:
-                bracklev += 1
-            elif c in [ ')', '}', ']' ]:
-                bracklev -= 1
-            elif bracklev > 0:
-                continue
-            elif c == ',':
-                value = line[0:i]
-                rest = line[i+1:]
-                return value.strip(), rest
-        return line.strip(), None
-
-    path = "%s/%s.mk" % (autochecksdir, hostname)
-    if not os.path.exists(path):
-        return []
-    lineno = 0
-
-    table = []
-    for line in file(path):
-        lineno += 1
-        try:
-            line = line.strip()
-            if not line.startswith("("):
-                continue
-
-            # drop everything after potential '#' (from older versions)
-	    i = line.rfind('#')
-	    if i > 0: # make sure # is not contained in string
-		rest = line[i:]
-		if '"' not in rest and "'" not in rest:
-		    line = line[:i].strip()
-
-            if line.endswith(","):
-                line = line[:-1]
-            line = line[1:-1] # drop brackets
-
-            # First try old format - with hostname
-            parts = []
-            while True:
-                try:
-                    part, line = split_python_tuple(line)
-                    parts.append(part)
-                except:
-                    break
-            if len(parts) == 4:
-                parts = parts[1:] # drop hostname, legacy format with host in first column
-            elif len(parts) != 3:
-                raise Exception("Invalid number of parts: %d" % len(parts))
-
-            checktypestring, itemstring, paramstring = parts
-            table.append((eval(checktypestring), eval(itemstring), paramstring))
-        except:
-            if opt_debug:
-                raise
-            raise Exception("Invalid line %d in autochecks file %s" % (lineno, path))
-    return table
-
-
 def output_profile():
     if g_profile:
         g_profile.dump_stats(g_profile_path)
@@ -6311,7 +6112,7 @@ try:
     # handle -I / -II
     if not done and seen_I > 0:
         hostnames = parse_hostname_list(args)
-        do_inventory(hostnames, check_types, seen_I == 1)
+        do_discovery(hostnames, check_types, seen_I == 1)
         done = True
 
     if not done:

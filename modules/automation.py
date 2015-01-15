@@ -136,8 +136,11 @@ def automation_discovery(args):
     for hostname in hostnames:
         counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, total
         try:
-            if how == "refresh" and not is_cluster(hostname):
-                counts[hostname][1] += remove_autochecks_of(hostname) # checktype could be added here
+            # in "refresh" mode we first need to remove all previously discovered
+            # checks of the host, so that get_host_services() does show us the
+            # new discovered check parameters.
+            if how == "refresh":
+                counts[hostname][1] += remove_autochecks_of(hostname) # this is cluster-aware!
 
             # Compute current state of new and existing checks
             services = get_host_services(hostname, use_caches=use_caches, do_snmp_scan=do_snmp_scan)

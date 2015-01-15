@@ -152,7 +152,6 @@ inventory_multipath_rules = []
 # Nov 05 17:17:03 | DM multipath kernel driver not loaded
 
 def parse_multipath(info):
-    print "ICH PARSE"
     # New reported header lines need to be placed here
     # the matches need to be put in a list of tupples
     # while the structure of the tupple is:

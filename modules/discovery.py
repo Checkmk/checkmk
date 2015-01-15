@@ -745,3 +745,23 @@ def check_discovery(hostname, ipaddress=None):
         sys.exit(status)
 
 
+def checktype_ignored_for_host(host, checktype):
+    if checktype in ignored_checktypes:
+        return True
+    ignored = host_extra_conf(host, ignored_checks)
+    for e in ignored:
+        if checktype == e or (type(e) == list and checktype in e):
+            return True
+    return False
+
+def service_ignored(hostname, check_type, service_description):
+    if check_type and check_type in ignored_checktypes:
+        return True
+    if service_description != None and in_boolean_serviceconf_list(hostname, service_description, ignored_services):
+        return True
+    if check_type and checktype_ignored_for_host(hostname, check_type):
+        return True
+    return False
+
+
+

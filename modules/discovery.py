@@ -24,11 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# ZUTUN:
-# - inventory_max_cachefile_age reparieren, entfernen, was weiß ich
-# - obsoleten Code rauswerfen
-# - evtl. Funtionen aus check_mk.py umziehen
-
+#   .--cmk -I--------------------------------------------------------------.
+#   |                                  _           ___                     |
+#   |                    ___ _ __ ___ | | __      |_ _|                    |
+#   |                   / __| '_ ` _ \| |/ /  _____| |                     |
+#   |                  | (__| | | | | |   <  |_____| |                     |
+#   |                   \___|_| |_| |_|_|\_\      |___|                    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Functions for command line options -I and -II                       |
+#   '----------------------------------------------------------------------'
 
 # Function implementing cmk -I and cmk -II. This is directly
 # being called from the main option parsing code. The list
@@ -116,68 +121,108 @@ def do_discovery_for(hostname, check_types, only_new, use_caches):
     else:
         verbose("  nothing%s\n" % (only_new and " new" or ""))
 
+#.
+#   .--Check_MK Discovery--------------------------------------------------.
+#   |           ____  _                   _               _                |
+#   |          |  _ \(_)___  ___      ___| |__   ___  ___| | __            |
+#   |          | | | | / __|/ __|    / __| '_ \ / _ \/ __| |/ /            |
+#   |          | |_| | \__ \ (__ _  | (__| | | |  __/ (__|   <             |
+#   |          |____/|_|___/\___(_)  \___|_| |_|\___|\___|_|\_\            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Active check for checking undiscovered services.                    |
+#   '----------------------------------------------------------------------'
 
-def save_autochecks_file(hostname, items):
-    if not os.path.exists(autochecksdir):
-        os.makedirs(autochecksdir)
-    filepath = autochecksdir + "/" + hostname + ".mk"
-    out = file(filepath, "w")
-    out.write("[\n")
-    for entry in items:
-        out.write("  (%r, %r, %s),\n" % entry)
-    out.write("]\n")
+def check_discovery(hostname, ipaddress=None):
+    new_check_types = {}
+    lines = []
 
+    try:
+        services = get_host_services(hostname, use_caches=opt_use_cachefile, do_snmp_scan=inventory_check_do_scan, ipaddress=ipaddress)
+        for (check_type, item), (check_source, paramstring) in services.items():
+            if check_source == "new":
+                new_check_types.setdefault(check_type, 0)
+                new_check_types[check_type] += 1
+                lines.append("%s: %s\n" % (check_type, service_description(check_type, item)))
 
-def snmp_scan(hostname, ipaddress):
-    # Make hostname globally available for scan functions.
-    # This is rarely used, but e.g. the scan for if/if64 needs
-    # this to evaluate if_disabled_if64_checks.
-    global g_hostname
-    g_hostname = hostname
-
-    vverbose("  SNMP scan:")
-    if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
-        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
-        if sys_descr == None:
-            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
-
-    found = []
-    for check_type, check in check_info.items():
-        if check_type in ignored_checktypes:
-            continue
-        elif not check_uses_snmp(check_type):
-            continue
-        basename = check_type.split(".")[0]
-        # The scan function should be assigned to the basename, because
-        # subchecks sharing the same SNMP info of course should have
-        # an identical scan function. But some checks do not do this
-        # correctly
-        scan_function = snmp_scan_functions.get(check_type,
-                snmp_scan_functions.get(basename))
-        if scan_function:
-            try:
-                result = scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid))
-                if result is not None and type(result) not in [ str, bool ]:
-                    verbose("[%s] Scan function returns invalid type (%s).\n" %
-                            (check_type, type(result)))
-                elif result:
-                    found.append(check_type)
-                    vverbose(" " + check_type)
-            except:
-                pass
+        if lines:
+            info = ", ".join([ "%s:%d" % e for e in new_check_types.items() ])
+            output = "%d unchecked services (%s)\n" % (len(lines), info)
+            output += "".join(lines)
+            status = inventory_check_severity
         else:
-            found.append(check_type)
-            vverbose(" " + tty_blue + tty_bold + check_type + tty_normal)
+            output = "no unchecked services found\n"
+            status = 0
+    except SystemExit, e:
+        raise e
+    except Exception, e:
+        if opt_debug:
+            raise
+        # Honor rule settings for "Status of the Check_MK service". In case of
+        # a problem we assume a connection error here.
+        spec = exit_code_spec(hostname)
+        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
+            what = "connection"
+        else:
+            what = "exception"
+        status = spec.get(what, 3)
+        output = str(e) + "\n"
 
-    vverbose("\n")
-    found.sort()
-    return found
+    if opt_keepalive:
+        global total_check_output
+        total_check_output += output
+        return status
+    else:
+        sys.stdout.write(nagios_state_names[status] + " - " + output)
+        sys.exit(status)
+
+
+#.
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   |  Various helper functions                                            |
+#   '----------------------------------------------------------------------'
+
+def checktype_ignored_for_host(host, checktype):
+    if checktype in ignored_checktypes:
+        return True
+    ignored = host_extra_conf(host, ignored_checks)
+    for e in ignored:
+        if checktype == e or (type(e) == list and checktype in e):
+            return True
+    return False
+
+
+def service_ignored(hostname, check_type, service_description):
+    if check_type and check_type in ignored_checktypes:
+        return True
+    if service_description != None and in_boolean_serviceconf_list(hostname, service_description, ignored_services):
+        return True
+    if check_type and checktype_ignored_for_host(hostname, check_type):
+        return True
+    return False
 
 
 
-# Changes from previous behaviour
-#  - Syntax with hostname/ipaddress has been dropped
+#.
+#   .--Discovery-----------------------------------------------------------.
+#   |              ____  _                                                 |
+#   |             |  _ \(_)___  ___ _____   _____ _ __ _   _               |
+#   |             | | | | / __|/ __/ _ \ \ / / _ \ '__| | | |              |
+#   |             | |_| | \__ \ (_| (_) \ V /  __/ |  | |_| |              |
+#   |             |____/|_|___/\___\___/ \_/ \___|_|   \__, |              |
+#   |                                                  |___/               |
+#   +----------------------------------------------------------------------+
+#   |  Core code of actual service discovery                               |
+#   '----------------------------------------------------------------------'
+
+
 
 # Create a table of autodiscovered services of a host. Do not save
 # this table anywhere. Do not read any previously discovered
@@ -237,6 +282,52 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, ipaddress
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
+
+def snmp_scan(hostname, ipaddress):
+    # Make hostname globally available for scan functions.
+    # This is rarely used, but e.g. the scan for if/if64 needs
+    # this to evaluate if_disabled_if64_checks.
+    global g_hostname
+    g_hostname = hostname
+
+    vverbose("  SNMP scan:")
+    if not in_binary_hostlist(hostname, snmp_without_sys_descr):
+        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
+        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
+        if sys_descr == None:
+            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
+
+    found = []
+    for check_type, check in check_info.items():
+        if check_type in ignored_checktypes:
+            continue
+        elif not check_uses_snmp(check_type):
+            continue
+        basename = check_type.split(".")[0]
+        # The scan function should be assigned to the basename, because
+        # subchecks sharing the same SNMP info of course should have
+        # an identical scan function. But some checks do not do this
+        # correctly
+        scan_function = snmp_scan_functions.get(check_type,
+                snmp_scan_functions.get(basename))
+        if scan_function:
+            try:
+                result = scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid))
+                if result is not None and type(result) not in [ str, bool ]:
+                    verbose("[%s] Scan function returns invalid type (%s).\n" %
+                            (check_type, type(result)))
+                elif result:
+                    found.append(check_type)
+                    vverbose(" " + check_type)
+            except:
+                pass
+        else:
+            found.append(check_type)
+            vverbose(" " + tty_blue + tty_bold + check_type + tty_normal)
+
+    vverbose("\n")
+    found.sort()
+    return found
 
 def discover_check_type(hostname, ipaddress, check_type, use_caches):
     # Skip this check type if is ignored for that host
@@ -340,8 +431,6 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
 
     return result
 
-
-
 def discoverable_check_types(what): # snmp, tcp, all
     check_types = [ k for k in check_info.keys()
                    if check_info[k]["inventory_function"] != None
@@ -350,6 +439,7 @@ def discoverable_check_types(what): # snmp, tcp, all
                  ]
     check_types.sort()
     return check_types
+
 
 # Creates a table of all services that a host has or could have according
 # to service discovery. The result is a dictionary of the form
@@ -372,6 +462,7 @@ def get_host_services(hostname, use_caches, do_snmp_scan, ipaddress=None):
         return get_cluster_services(hostname, use_caches, do_snmp_scan)
     else:
         return get_node_services(hostname, ipaddress, use_caches, do_snmp_scan)
+
 
 # Part of get_node_services that deals with discovered services
 def get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan):
@@ -590,6 +681,60 @@ def get_check_preview(hostname, use_caches, do_snmp_scan):
 
 
 
+#.
+#   .--Autochecks----------------------------------------------------------.
+#   |            _         _             _               _                 |
+#   |           / \  _   _| |_ ___   ___| |__   ___  ___| | _____          |
+#   |          / _ \| | | | __/ _ \ / __| '_ \ / _ \/ __| |/ / __|         |
+#   |         / ___ \ |_| | || (_) | (__| | | |  __/ (__|   <\__ \         |
+#   |        /_/   \_\__,_|\__\___/ \___|_| |_|\___|\___|_|\_\___/         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Reading, parsing, writing, modifying autochecks files               |
+#   '----------------------------------------------------------------------'
+
+# Read automatically discovered checks of one host.
+# world: "config" -> File in var/check_mk/autochecks
+#        "active" -> Copy in var/check_mk/core/autochecks
+# Returns a table with three columns:
+# 1. check_type
+# 2. item
+# 3. parameters evaluated!
+def read_autochecks_of(hostname, world="config"):
+    if world == "config":
+        basedir = autochecksdir
+    else:
+        basedir = var_dir + "/core/autochecks"
+    filepath = basedir + '/' + hostname + '.mk'
+
+    if not os.path.exists(filepath):
+        return []
+    try:
+        autochecks_raw = eval(file(filepath).read())
+    except SyntaxError,e:
+        if opt_verbose:
+            sys.stderr.write("Syntax error in file %s: %s\n" % (filepath, e))
+        if opt_debug:
+            sys.exit(3)
+        return []
+    except Exception, e:
+        if opt_verbose:
+            sys.stderr.write("Error in file %s:\n%s\n" % (filepath, e))
+        if opt_debug:
+            sys.exit(3)
+        return []
+
+    # Exchange inventorized check parameters with those configured by
+    # the user. Also merge with default levels for modern dictionary based checks.
+    autochecks = []
+    for entry in autochecks_raw:
+        if len(entry) == 4: # old format where hostname is at the first place
+            entry = entry[1:]
+        ct, it, par = entry
+        autochecks.append( (ct, it, compute_check_parameters(hostname, ct, it, par)) )
+    return autochecks
+
+
 # Read autochecks, but do not compute final check parameters,
 # also return a forth column with the raw string of the parameters.
 # Returns a table with three columns:
@@ -671,6 +816,17 @@ def parse_autochecks_file(hostname):
     return table
 
 
+def save_autochecks_file(hostname, items):
+    if not os.path.exists(autochecksdir):
+        os.makedirs(autochecksdir)
+    filepath = autochecksdir + "/" + hostname + ".mk"
+    out = file(filepath, "w")
+    out.write("[\n")
+    for entry in items:
+        out.write("  (%r, %r, %s),\n" % entry)
+    out.write("]\n")
+
+
 # Remove all autochecks of a host while being cluster-aware!
 def remove_autochecks_of(hostname):
     removed = 0
@@ -698,70 +854,4 @@ def remove_autochecks_of(hostname):
         save_autochecks_file(hostname, new_items)
 
     return removed
-
-# NEEDS TO BE REWRITTEN
-def check_discovery(hostname, ipaddress=None):
-
-    new_check_types = {}
-    lines = []
-
-    try:
-        services = get_host_services(hostname, use_caches=opt_use_cachefile, do_snmp_scan=inventory_check_do_scan, ipaddress=ipaddress)
-        for (check_type, item), (check_source, paramstring) in services.items():
-            if check_source == "new":
-                new_check_types.setdefault(check_type, 0)
-                new_check_types[check_type] += 1
-                lines.append("%s: %s\n" % (check_type, service_description(check_type, item)))
-
-        if lines:
-            info = ", ".join([ "%s:%d" % e for e in new_check_types.items() ])
-            output = "%d unchecked services (%s)\n" % (len(lines), info)
-            output += "".join(lines)
-            status = inventory_check_severity
-        else:
-            output = "no unchecked services found\n"
-            status = 0
-    except SystemExit, e:
-        raise e
-    except Exception, e:
-        if opt_debug:
-            raise
-        # Honor rule settings for "Status of the Check_MK service". In case of
-        # a problem we assume a connection error here.
-        spec = exit_code_spec(hostname)
-        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
-            what = "connection"
-        else:
-            what = "exception"
-        status = spec.get(what, 3)
-        output = str(e) + "\n"
-
-    if opt_keepalive:
-        global total_check_output
-        total_check_output += output
-        return status
-    else:
-        sys.stdout.write(nagios_state_names[status] + " - " + output)
-        sys.exit(status)
-
-
-def checktype_ignored_for_host(host, checktype):
-    if checktype in ignored_checktypes:
-        return True
-    ignored = host_extra_conf(host, ignored_checks)
-    for e in ignored:
-        if checktype == e or (type(e) == list and checktype in e):
-            return True
-    return False
-
-def service_ignored(hostname, check_type, service_description):
-    if check_type and check_type in ignored_checktypes:
-        return True
-    if service_description != None and in_boolean_serviceconf_list(hostname, service_description, ignored_services):
-        return True
-    if check_type and checktype_ignored_for_host(hostname, check_type):
-        return True
-    return False
-
-
 

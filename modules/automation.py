@@ -108,7 +108,6 @@ def do_automation(cmd, args):
 # "fixall" - find new, remove exceeding
 # "refresh" - drop all services and reinventorize
 def automation_discovery(args):
-    ###### global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
 
     # perform full SNMP scan on SNMP devices?
     if args[0] == "@scan":

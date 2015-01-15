@@ -2316,8 +2316,8 @@ define service {
     if 'cmk-inventory' in use_new_descriptions_for:
         service_discovery_name = 'Check_MK Discovery'
 
-    # Inventory checks - if user has configured them. Not for clusters.
-    if inventory_check_interval and not is_cluster(hostname) \
+    # Inventory checks - if user has configured them.
+    if inventory_check_interval \
         and not service_ignored(hostname, None, service_discovery_name) \
         and not "ping" in tags_of_host(hostname):
         outfile.write("""
@@ -2867,78 +2867,6 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
 
     return newitems
-
-
-# NEEDS TO BE REWRITTEN
-def check_inventory(hostname, ipaddress=None):
-    newchecks = []
-    newitems = []
-    total_count = 0
-    is_snmp = is_snmp_host(hostname)
-    is_tcp  = is_tcp_host(hostname)
-    check_table = get_check_table(hostname, use_cache=False)
-
-    try:
-        if is_snmp and inventory_check_do_scan:
-            if not ipaddress:
-                ipaddress = lookup_ipaddress(hostname)
-            snmp_checktypes = snmp_scan(hostname, ipaddress)
-        else:
-            snmp_checktypes = []
-
-        hosts_checktypes = set([ ct for (ct, item), params in check_table.items() ])
-
-        for ct in inventorable_checktypes("all"):
-            if check_uses_snmp(ct) and not is_snmp:
-                continue # Skip SNMP checks on non-SNMP hosts
-            elif check_uses_snmp(ct) and ct not in hosts_checktypes and ct not in snmp_checktypes:
-                continue # Only try positive scans and existing types
-            elif not check_uses_snmp(ct) and not is_tcp:
-                continue # Skip TCP checks on non-TCP hosts
-
-            if ipaddress:
-                hostdef = [hostname+'/'+ipaddress]
-            else:
-                hostdef = [hostname]
-            new = make_inventory(ct, hostdef, check_only=True) # =2=
-            newitems += new
-            count = len(new)
-            if count > 0:
-                newchecks.append((ct, count))
-                total_count += count
-
-        if total_count > 0:
-            info = ", ".join([ "%s:%d" % (ct, count) for ct,count in newchecks ])
-            output = "%d unchecked services (%s)\n" % (total_count, info)
-            # Put detailed list into long plugin output
-            for hostname, checkname, item in newitems:
-                output += "%s: %s\n" % (checkname, service_description(checkname, item))
-            status = inventory_check_severity
-        else:
-            output = "no unchecked services found\n"
-            status = 0
-    except SystemExit, e:
-        raise e
-    except Exception, e:
-        if opt_debug:
-            raise
-        # Honor rule settings for "Status of the Check_MK service". In case of
-        # a problem we assume a connection error here.
-        spec = exit_code_spec(hostname)
-        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
-            what = "connection"
-        else:
-            what = "exception"
-        status = spec.get(what, 3)
-        output = str(e)
-
-    if opt_keepalive:
-        global total_check_output
-        total_check_output += output
-        return status
-    else:
-        sys.stdout.write(nagios_state_names[status] + " - " + output)
-        sys.exit(status)
 
 
 def service_ignored(hostname, check_type, service_description):
@@ -4579,7 +4507,7 @@ def usage():
  cmk -R, --restart                    precompile + config + core restart
  cmk -D, --dump [H1 H2 ..]            dump all or some hosts
  cmk -d HOSTNAME|IPADDRESS            show raw information from agent
- cmk --check-inventory HOSTNAME       check for items not yet checked
+ cmk --check-discovery HOSTNAME       check for items not yet checked
  cmk --update-dns-cache               update IP address lookup cache
  cmk -l, --list-hosts [G1 G2 ...]     print list of all hosts
  cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
@@ -4658,7 +4586,7 @@ NOTES:
   -d does not work on clusters (such defined in main.mk) but only on
   real hosts.
 
-  --check-inventory make check_mk behave as monitoring plugins that
+  --check-discovery make check_mk behave as monitoring plugins that
   checks if an inventory would find new services for the host.
 
   --list-hosts called without argument lists all hosts. You may
@@ -5406,9 +5334,13 @@ def do_check_keepalive():
                     check_max_cachefile_age     = orig_check_max_cachefile_age
                     inventory_max_cachefile_age = orig_inventory_max_cachefile_age
 
+                # FIXME: remove obsolete check-inventory
                 if '--check-inventory' in args:
                     args.remove('--check-inventory')
-                    mode_function = check_inventory
+                    mode_function = check_discovery
+                elif '--check-discovery' in args:
+                    args.remove('--check-discovery')
+                    mode_function = check_discovery
                 else:
                     mode_function = do_check
 
@@ -5870,7 +5802,8 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "convert-rrds", "split-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                  "man", "nowiki", "config-check", "backup=", "restore=",
-                 "check-inventory=", "paths", "checks=", "inventory", "inventory-as-check=",
+                 "check-inventory=", "check-discovery=", "paths", 
+                 "checks=", "inventory", "inventory-as-check=",
                  "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
 
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
@@ -6052,13 +5985,8 @@ try:
         elif o == '-d':
             output_plain_hostinfo(a)
             done = True
-        elif o == '--check-inventory':
-            if '/' in a:
-                hostname, ipaddress = a.split('/', 1)
-            else:
-                hostname  = a
-                ipaddress = None
-            check_inventory(hostname, ipaddress)
+        elif o in [ '--check-discovery', '--check-inventory' ]:
+            check_discovery(a)
             done = True
         elif o == '--scan-parents':
             do_scan_parents(args)

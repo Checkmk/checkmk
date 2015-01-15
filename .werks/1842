@@ -1,0 +1,18 @@
+Title: Rewrote implementation of service discovery (formerly inventory)
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421339331
+
+The internal code for the service discovery has been writting. The previous
+name for that feature was "inventory" but the word inventory is now being
+used for hardware/software-inventory. The option <tt>--check-inventory</tt>
+has been renamed into <tt>--check-discovery</tt>.
+
+Several bugs have been fixed while doing the new implementation. One prominent
+bug was service discovery on clusters. Another problem that has been fixed
+was that when during <tt>cmk -II</tt> a host was not reachable its services
+would have been lost.

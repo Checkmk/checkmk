@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,29 +23,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$opt[1] = "--vertical-label 'Messages' -l0 --title \"$hostname / $servicedesc\" ";
 
-f5_bigip_cpu_temp_default_params = (60, 80)
-
-
-def inventory_f5_bigip_cpu_temp(info):
-    for line in info:
-        yield line[0], "f5_bigip_cpu_temp_default_params"
-
-
-
-def check_f5_bigip_cpu_temp(item, params, info):
-    for name, temp in info:
-        if name == item:
-            return check_temperature(int(temp), params)
-
-
-check_info["f5_bigip_cpu_temp"] = {
-    'check_function':       check_f5_bigip_cpu_temp,
-    'inventory_function':   inventory_f5_bigip_cpu_temp,
-    'service_description':  'Temperature CPU %s',
-    'has_perfdata':         True,
-    'includes':             [ 'temperature.include' ],
-    'snmp_info':            ( '.1.3.6.1.4.1.3375.2.1.3.1.2.1', [1, 2] ),
-    'snmp_scan_function':      \
-     lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
-}
+$def[1] = "DEF:dur=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:dur#80f000:\"Messages\" ";
+$def[1] .= "LINE:dur#408000 ";
+$def[1] .= "GPRINT:dur:LAST:\"%7.2lf %s LAST\" ";
+$def[1] .= "GPRINT:dur:MAX:\"%7.2lf %s MAX\\n\" ";
+?>

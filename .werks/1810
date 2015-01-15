@@ -1,0 +1,9 @@
+Title: Rule based notifications: Fixed output of non contact mail recipient address in analyze table
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.6b6
+Date: 1421071639
+Class: fix
+
+The recipient mail address was shown as "mailto:...", stripping of the prefix now.

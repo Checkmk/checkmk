@@ -173,8 +173,6 @@ wato_styles = [ "pages", "wato", "status" ]
 def page_handler():
     global g_html_head_open
     g_html_head_open = False
-    global g_git_messages
-    g_git_messages = []
 
     if not config.wato_enabled:
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
@@ -2394,7 +2392,7 @@ def rename_host(host, newname):
         elif what == "history":
             actions.append(_("Monitoring history entries (events and availability)"))
         elif what == "retention":
-            actions.append(_("The current monitoring state (including ackowledgements and downtimes)"))
+            actions.append(_("The current monitoring state (including acknowledgements and downtimes)"))
         elif what == "ipfail":
             actions.append("<div class=error>%s</div>" % (_("<b>WARNING:</b> the IP address lookup of "
                    "<tt>%s</tt> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. "
@@ -9016,14 +9014,16 @@ def mode_notifications(phase):
         table.begin(table_id = "plugins", title = _("Resulting notifications"))
         for contact, plugin, parameters, bulk in analyse[1]:
             table.row()
-            table.cell(_("Contact"), contact)
+            if contact.startswith('mailto:'):
+                contact = contact[7:] # strip of fake-contact mailto:-prefix
+            table.cell(_("Recipient"), contact)
             table.cell(_("Plugin"), vs_notification_scripts().value_to_text(plugin))
             table.cell(_("Plugin parameters"), ", ".join(parameters))
             table.cell(_("Bulking"))
             if bulk:
                 html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
                 html.write(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                html.write(", group by %s" % vs_notification_bulkby().value_to_text(bulk["groupby"]))
+                html.write(", %s %s" % (_("group by"), vs_notification_bulkby().value_to_text(bulk["groupby"])))
 
         table.end()
 
@@ -9805,6 +9805,9 @@ class TimeperiodSelection(ElementSelection):
         elements = dict([ ("24X7", _("Always")) ] + \
            [ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
         return elements
+
+    def default_value(self):
+        return "24x7"
 
 # Check if a timeperiod is currently in use and cannot be deleted
 # Returns a list of occurrances.
@@ -11229,9 +11232,6 @@ def page_automation():
         raise MKAuthException(_("Missing secret for automation command."))
     if secret != get_login_secret():
         raise MKAuthException(_("Invalid automation secret."))
-
-    global g_git_messages
-    g_git_messages = []
 
     # To prevent mixups in written files we use the same lock here as for
     # the normal WATO page processing. This might not be needed for some
@@ -18343,6 +18343,30 @@ def site_neutral_path(path):
     else:
         return path
 
+syslog_facilities = [
+    (0, "kern"),
+    (1, "user"),
+    (2, "mail"),
+    (3, "daemon"),
+    (4, "auth"),
+    (5, "syslog"),
+    (6, "lpr"),
+    (7, "news"),
+    (8, "uucp"),
+    (9, "cron"),
+    (10, "authpriv"),
+    (11, "ftp"),
+    (16, "local0"),
+    (17, "local1"),
+    (18, "local2"),
+    (19, "local3"),
+    (20, "local4"),
+    (21, "local5"),
+    (22, "local6"),
+    (23, "local7"),
+]
+
+
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -18431,6 +18455,9 @@ modes = {
 
 loaded_with_language = False
 def load_plugins():
+    global g_git_messages
+    g_git_messages = []
+
     global loaded_with_language
     if loaded_with_language == current_language:
         return

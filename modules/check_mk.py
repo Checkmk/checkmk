@@ -2985,12 +2985,12 @@ def check_inventory(hostname, ipaddress=None):
         sys.exit(status)
 
 
-def service_ignored(hostname, checktype, service_description):
-    if checktype and checktype in ignored_checktypes:
+def service_ignored(hostname, check_type, service_description):
+    if check_type and check_type in ignored_checktypes:
         return True
     if service_description != None and in_boolean_serviceconf_list(hostname, service_description, ignored_services):
         return True
-    if checktype and checktype_ignored_for_host(hostname, checktype):
+    if check_type and checktype_ignored_for_host(hostname, check_type):
         return True
     return False
 
@@ -6128,7 +6128,7 @@ try:
             sys.stderr.write("'generate_hostconf = False' in main.mk.\n")
             done = True
         elif o == '-N':
-            discover_services(args[0], None, use_caches=True, do_snmp_scan=True)
+            pprint.pprint(get_check_preview(args[0], use_caches=True, do_snmp_scan=True))
             sys.exit(1)
             do_output_nagios_conf(args)
             done = True

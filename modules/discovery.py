@@ -176,10 +176,14 @@ def snmp_scan(hostname, ipaddress):
 
 # Create a table of autodiscovered services of a host. Do not save
 # this table anywhere. Do not read any previously discovered
-# services.
-# check_types: None -> try all check types, list -> omit scan in any case
-# use_caches: True is cached agent data is being used (for -I without hostnames)
-# do_snmp_scan: True if SNMP scan should be done (WATO: Full scan)
+# services. The table has the following columns:
+# 1. Check type
+# 2. Item
+# 3. Parameter string (not evaluated)
+# Arguments:
+#   check_types: None -> try all check types, list -> omit scan in any case
+#   use_caches: True is cached agent data is being used (for -I without hostnames)
+#   do_snmp_scan: True if SNMP scan should be done (WATO: Full scan)
 # Error situation (unclear what to do):
 # - IP address cannot be looked up
 #
@@ -332,246 +336,6 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
 
 
 
-###        # Find logical host this check belongs to. The service might belong to a cluster.
-###        hn = host_of_clustered_service(hostname, description)
-###        if hn != hostname:
-###            hn = hostname # FAKE TEST HIRN
-###            # print "AAAAAAAAAAAAAAAAAA"
-###
-###        # Now compare with already known checks for this host (from
-###        # previous inventory or explicit checks). Also drop services
-###        # the user wants to ignore via 'ignored_services'.
-###        checktable = get_check_table(hn)
-###        checked_items = [ i for ( (cn, i), (par, descr, deps) ) \
-###                          in checktable.items() if cn == checkname ]
-###        if item in checked_items:
-###            if include_state:
-###                state_type = "old"
-###            else:
-###                continue # we have that already
-###
-###        if service_ignored(hn, checkname, description):
-###            if include_state:
-###                if state_type == "old":
-###                    state_type = "obsolete"
-###                else:
-###                    state_type = "ignored"
-###            else:
-###                continue # user does not want this item to be checked
-###
-###        newcheck = "  (%r, %r, %s)," % (checkname, item, paramstring)
-###        newcheck += "\n"
-###        if newcheck not in newchecks[host]: # avoid duplicates if inventory outputs item twice
-###            newchecks[host].append(newcheck)
-###            if include_state:
-###                newitems.append( (hostname, checkname, item, paramstring, state_type) )
-###            else:
-###                newitems.append( (hostname, checkname, item) )
-###            count_new += 1
-###
-###
-###    if not check_only:
-###        if count_new:
-###            for hostname, nc in newchecks.items():
-###                add_to_autochecks_of(hostname, nc)
-###            sys.stdout.write('%-30s ' % (tty_cyan + tty_bold + checkname + tty_normal))
-###        sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
-
-####    return newitems
-
-####def make_inventory(checkname, hostnamelist, check_only=False, include_state=False):
-####    try:
-####        inventory_function = check_info[checkname]["inventory_function"]
-####        if inventory_function == None:
-####            inventory_function = no_inventory_possible
-####    except KeyError:
-####        sys.stderr.write("No such check type '%s'. Try check_mk -L.\n" % checkname)
-####        sys.exit(1)
-####
-####    is_snmp_check = check_uses_snmp(checkname)
-####
-####    newchecks = {}  # dict host -> list of new checks
-####    newitems = []   # used by inventory check to display unchecked items
-####    count_new = 0
-####    checked_hosts = []
-####
-####    # if no hostnamelist is specified, we use all hosts
-####    if not hostnamelist or len(hostnamelist) == 0:
-####        global opt_use_cachefile
-####        opt_use_cachefile = True
-####        hostnamelist = all_hosts_untagged
-####
-####    try:
-####        for host in hostnamelist:
-####            newchecks.setdefault(host, [])
-####            if is_snmp_check:
-####                # Skip SNMP check on non-SNMP hosts
-####                if not is_snmp_host(host):
-####                    continue
-####                # Skip SNMP check if this checktype is disabled
-####                if service_ignored(host, checkname, None):
-####                    continue
-####
-####            if is_cluster(host):
-####                sys.stderr.write("%s is a cluster host and cannot be inventorized.\n" % host)
-####                continue
-####
-####            # host is either hostname or "hostname/ipaddress"
-####            s = host.split("/")
-####            hostname = s[0]
-####            if len(s) == 2:
-####                ipaddress = s[1]
-####            else:
-####                # try to resolve name into ip address
-####                if not opt_no_tcp:
-####                    try:
-####                        ipaddress = lookup_ipaddress(hostname)
-####                    except:
-####                        sys.stderr.write("Cannot resolve %s into IP address.\n" % hostname)
-####                        continue
-####                else:
-####                    ipaddress = None # not needed, not TCP used
-####
-####            # Make hostname available as global variable in inventory functions
-####            # (used e.g. by ps-inventory)
-####            global g_hostname
-####            g_hostname = hostname
-####
-####            # On --no-tcp option skip hosts without cache file
-####            if opt_no_tcp:
-####                if opt_no_cache:
-####                    sys.stderr.write("You allowed me neither TCP nor cache. Bailing out.\n")
-####                    sys.exit(4)
-####
-####                cachefile = tcp_cache_dir + "/" + hostname
-####                if not os.path.exists(cachefile):
-####                    if opt_verbose:
-####                        sys.stderr.write("No cachefile %s. Skipping this host.\n" % cachefile)
-####                    continue
-####
-####            checked_hosts.append(hostname)
-####
-####            checkname_base = checkname.split('.')[0]    # make e.g. 'lsi' from 'lsi.arrays'
-####            try:
-####                info = get_realhost_info(hostname, ipaddress, checkname_base, inventory_max_cachefile_age, True)
-####                # Add information about nodes if check wants this
-####                if check_info[checkname]["node_info"]:
-####                    if clusters_of(hostname):
-####                        add_host = hostname
-####                    else:
-####                        add_host = None
-####                    info = [ [add_host] + line for line in info ]
-####
-####                # Convert with parse function if available
-####                if checkname_base in check_info: # parse function must be define for base check
-####                    parse_function = check_info[checkname_base]["parse_function"]
-####                    if parse_function:
-####                        info = check_info[checkname_base]["parse_function"](info)
-####
-####
-####            if info == None: # No data for this check type
-####                continue
-####            try:
-####                # Check number of arguments of inventory function
-####                if len(inspect.getargspec(inventory_function)[0]) == 2:
-####                    inventory = inventory_function(checkname, info) # inventory is a list of pairs (item, current_value)
-####                else:
-####                    # New preferred style since 1.1.11i3: only one argument: info
-####                    inventory = inventory_function(info)
-####                if inventory == None: # tolerate if function does no explicit return
-####                    inventory = []
-####
-####                # New yield based api style
-####                if type(inventory) != list:
-####                    inventory = list(inventory)
-####            except Exception, e:
-####                if opt_debug:
-####                    sys.stderr.write("Exception in inventory function of check type %s\n" % checkname)
-####                    raise
-####                if opt_verbose:
-####                    sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
-####                continue
-####
-####            if not isinstance(inventory, list):
-####                sys.stderr.write("%s: Check %s returned invalid inventory data: %s\n" %
-####                                                    (hostname, checkname, repr(inventory)))
-####                continue
-####
-####            for entry in inventory:
-####                state_type = "new" # assume new, change later if wrong
-####
-####                if not isinstance(entry, tuple):
-####                    sys.stderr.write("%s: Check %s returned invalid inventory data (entry not a tuple): %s\n" %
-####                                                                         (hostname, checkname, repr(inventory)))
-####                    continue
-####
-####                if len(entry) == 2: # comment is now obsolete
-####                    item, paramstring = entry
-####                else:
-####                    try:
-####                        item, comment, paramstring = entry
-####                    except ValueError:
-####                        sys.stderr.write("%s: Check %s returned invalid inventory data (not 2 or 3 elements): %s\n" %
-####                                                                               (hostname, checkname, repr(inventory)))
-####                        continue
-####
-####                description = service_description(checkname, item)
-####                # make sanity check
-####                if len(description) == 0:
-####                    sys.stderr.write("%s: Check %s returned empty service description - ignoring it.\n" %
-####                                                    (hostname, checkname))
-####                    continue
-####
-####                # Find logical host this check belongs to. The service might belong to a cluster.
-####                hn = host_of_clustered_service(hostname, description)
-####                if hn != hostname:
-####                    hn = hostname # FAKE TEST HIRN
-####                    # print "AAAAAAAAAAAAAAAAAA"
-####
-####                # Now compare with already known checks for this host (from
-####                # previous inventory or explicit checks). Also drop services
-####                # the user wants to ignore via 'ignored_services'.
-####                checktable = get_check_table(hn)
-####                checked_items = [ i for ( (cn, i), (par, descr, deps) ) \
-####                                  in checktable.items() if cn == checkname ]
-####                if item in checked_items:
-####                    if include_state:
-####                        state_type = "old"
-####                    else:
-####                        continue # we have that already
-####
-####                if service_ignored(hn, checkname, description):
-####                    if include_state:
-####                        if state_type == "old":
-####                            state_type = "obsolete"
-####                        else:
-####                            state_type = "ignored"
-####                    else:
-####                        continue # user does not want this item to be checked
-####
-####                newcheck = "  (%r, %r, %s)," % (checkname, item, paramstring)
-####                newcheck += "\n"
-####                if newcheck not in newchecks[host]: # avoid duplicates if inventory outputs item twice
-####                    newchecks[host].append(newcheck)
-####                    if include_state:
-####                        newitems.append( (hostname, checkname, item, paramstring, state_type) )
-####                    else:
-####                        newitems.append( (hostname, checkname, item) )
-####                    count_new += 1
-####
-####
-####    except KeyboardInterrupt:
-####        sys.stderr.write('<Interrupted>\n')
-####
-####    if not check_only:
-####        if count_new:
-####            for hostname, nc in newchecks.items():
-####                add_to_autochecks_of(hostname, nc)
-####            sys.stdout.write('%-30s ' % (tty_cyan + tty_bold + checkname + tty_normal))
-####            sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
-####
-####    return newitems
-
 def discoverable_check_types(what): # snmp, tcp, all
     check_types = [ k for k in check_info.keys()
                    if check_info[k]["inventory_function"] != None
@@ -580,3 +344,344 @@ def discoverable_check_types(what): # snmp, tcp, all
                  ]
     check_types.sort()
     return check_types
+
+# Creates a table of all services that a host has or could have according
+# to service discovery. The result is a dictionary of the form
+# (check_type, item) -> (check_source, paramstring)
+# check_source is the reason/state/source of the service:
+#    "new"      : Check is discovered but currently not yet monitored
+#    "old"      : Check is discovered and already monitored (most common)
+#    "vanished" : Check had been discovered previously, but item has vanished
+#    "legacy"   : Check is defined via legacy_checks
+#    "active"   : Check is defined via active_checks
+#    "custom"   : Check is defined via custom_checks
+#    "manual"   : Check is a manual Check_MK check without service discovery
+#    "ignored"  : discovered or static, but disabled via ignored_services
+#    "obsolete" : Discovered by vanished check is meanwhile ignored via ignored_services
+# This function is cluster-aware
+def get_host_services(hostname, use_caches, with_snmp_scan):
+    if is_cluster(hostname):
+        return get_cluster_services(hostname, use_caches, with_snmp_scan)
+    else:
+        return get_node_services(hostname, use_caches, with_snmp_scan)
+
+# Part of get_node_services that deals with discovered services
+def get_discovered_services(hostname, use_caches, do_snmp_scan):
+    # Create a dict from check_type/item to check_source/paramstring
+    services = {}
+
+    # Handle discovered services -> "new"
+    new_items = discover_services(hostname, None, use_caches, do_snmp_scan)
+    for check_type, item, paramstring in new_items:
+       services[(check_type, item)] = ("new", paramstring)
+
+    # Match with existing items -> "old" and "vanished"
+    old_items = parse_autochecks_file(hostname)
+    for check_type, item, paramstring in old_items:
+        if (check_type, item) not in services:
+            services[(check_type, item)] = ("vanished", paramstring)
+        else:
+            services[(check_type, item)] = ("old", paramstring)
+
+    return services
+
+# Do the actual work for a non-cluster host or node
+def get_node_services(hostname, use_caches, do_snmp_scan):
+    services = get_discovered_services(hostname, use_caches, do_snmp_scan)
+
+    # Identify clustered services
+    for (check_type, item), (check_source, paramstring) in services.items():
+        descr = service_description(check_type, item)
+        if hostname != host_of_clustered_service(hostname, descr):
+            if check_source == "vanished":
+                del services[(check_type, item)] # do not show vanished clustered services here
+            else:
+                services[(check_type, item)] = ("clustered", paramstring) 
+
+    merge_manual_services(services, hostname)
+    return services
+
+# To a list of discovered services add/replace manual and active
+# checks and handle ignoration
+def merge_manual_services(services, hostname):
+    # Find manual checks. These can override discovered checks -> "manual"
+    manual_items = get_check_table(hostname, skip_autochecks=True)
+    for (check_type, item), (params, descr, deps) in manual_items.items():
+        services[(check_type, item)] = ('manual', repr(params) )
+
+    # Add legacy checks -> "legacy"
+    legchecks = host_extra_conf(hostname, legacy_checks)
+    for cmd, descr, perf in legchecks:
+        services[('legacy', descr)] = ('legacy', 'None')
+
+    # Add custom checks -> "custom"
+    custchecks = host_extra_conf(hostname, custom_checks)
+    for entry in custchecks:
+        services[('custom', entry['service_description'])] = ('custom', 'None')
+
+    # Similar for 'active_checks', but here we have parameters
+    for acttype, rules in active_checks.items():
+        act_info = active_check_info[acttype]
+        entries = host_extra_conf(hostname, rules)
+        for params in entries:
+            descr = act_info["service_description"](params)
+            services[(acttype, descr)] = ('active', repr(params))
+
+    # Handle disabled services -> "obsolete" and "ignored"
+    for (check_type, item), (check_source, paramstring) in services.items():
+        descr = service_description(check_type, item)
+        if service_ignored(hostname, check_type, descr):
+            if check_source == "vanished":
+                new_source = "obsolete"
+            else:
+                new_source = "ignored"
+            services[(check_type, item)] = (new_source, paramstring)
+
+    return services
+
+# Do the work for a cluster
+def get_cluster_services(hostname, use_caches, with_snmp_scan):
+    nodes = nodes_of(hostname)
+
+    # Get services of the nodes. We are only interested in "old", "new" and "vanished"
+    # From the states and parameters of these we construct the final state per service.
+    cluster_items = {}
+    for node in nodes:
+        services = get_discovered_services(node, use_caches, with_snmp_scan)
+        for (check_type, item), (check_source, paramstring) in services.items():
+            descr = service_description(check_type, item)
+            if hostname == host_of_clustered_service(node, descr):
+                if (check_type, item) not in cluster_items:
+                    cluster_items[(check_type, item)] = (check_source, paramstring)
+                else:
+                    first_check_source, first_paramstring = cluster_items[(check_type, item)]
+                    if first_check_source == "old":
+                        pass
+                    elif check_source == "old":
+                        cluster_items[(check_type, item)] = (check_source, paramstring)
+                    elif first_check_source == "vanished" and check_source == "new":
+                        cluster_items[(check_type, item)] = ("old", first_paramstring)
+                    elif check_source == "vanished" and first_check_source == "new":
+                        cluster_items[(check_type, item)] = ("old", paramstring)
+                    # In all other cases either both must be "new" or "vanished" -> let it be
+
+    # Now add manual and active serivce and handle ignored services
+    merge_manual_services(cluster_items, hostname)
+    return cluster_items
+
+
+# Get the list of service of a host or cluster and guess the current state of
+# all services if possible
+def get_check_preview(hostname, use_caches, do_snmp_scan):
+    services = get_host_services(hostname, use_caches, do_snmp_scan)
+    if is_cluster(hostname):
+        ipaddress = None
+    else:
+        ipaddress = lookup_ipaddress(hostname)
+
+    leave_no_tcp = True # FIXME TODO
+
+    table = []
+    for (check_type, item), (state_type, paramstring) in services.items():
+        params = None
+        if state_type not in [ 'legacy', 'active', 'custom' ]:
+            # apply check_parameters
+            try:
+                if type(paramstring) == str:
+                    params = eval(paramstring)
+                else:
+                    params = paramstring
+            except:
+                raise MKGeneralException("Invalid check parameter string '%s'" % paramstring)
+
+            descr = service_description(check_type, item)
+            global g_service_description
+            g_service_description = descr
+            infotype = check_type.split('.')[0]
+
+            # Sorry. The whole caching stuff is the most horrible hack in
+            # whole Check_MK. Nobody dares to clean it up, YET. But that
+            # day is getting nearer...
+            global opt_use_cachefile
+            old_opt_use_cachefile = opt_use_cachefile
+            opt_use_cachefile = True
+	    if not leave_no_tcp:
+	        opt_no_tcp = True
+            opt_dont_submit = True
+
+            if check_type not in check_info:
+                continue # Skip not existing check silently
+
+            try:
+                exitcode = None
+                perfdata = []
+                info = get_host_info(hostname, ipaddress, infotype)
+            # Handle cases where agent does not output data
+            except MKAgentError, e:
+                exitcode = 3
+                output = "Error getting data from agent"
+                if str(e):
+                    output += ": %s" % e
+                tcp_error = output
+
+            except MKSNMPError, e:
+                exitcode = 3
+                output = "Error getting data from agent for %s via SNMP" % infotype
+                if str(e):
+                    output += ": %s" % e
+                snmp_error = output
+
+            except Exception, e:
+                exitcode = 3
+                output = "Error getting data for %s: %s" % (infotype, e)
+                if check_uses_snmp(check_type):
+                    snmp_error = output
+                else:
+                    tcp_error = output
+
+            opt_use_cachefile = old_opt_use_cachefile
+
+            if exitcode == None:
+                check_function = check_info[check_type]["check_function"]
+                if state_type != 'manual':
+                    params = compute_check_parameters(hostname, check_type, item, params)
+
+                try:
+                    reset_wrapped_counters()
+                    result = convert_check_result(check_function(item, params, info), check_uses_snmp(check_type))
+                    if last_counter_wrap():
+                        raise last_counter_wrap()
+                except MKCounterWrapped, e:
+                    result = (None, "WAITING - Counter based check, cannot be done offline")
+                except Exception, e:
+                    if opt_debug:
+                        raise
+                    result = (3, "UNKNOWN - invalid output from agent or error in check implementation")
+                if len(result) == 2:
+                    result = (result[0], result[1], [])
+                exitcode, output, perfdata = result
+        else:
+            descr = item
+            exitcode = None
+            output = "WAITING - %s check, cannot be done offline" % state_type.title()
+            perfdata = []
+
+        if state_type == "active":
+            params = eval(paramstring)
+
+        if state_type in [ "legacy", "active", "custom" ]:
+            checkgroup = None
+            if service_ignored(hostname, None, descr):
+                state_type = "ignored"
+        else:
+            checkgroup = check_info[check_type]["group"]
+
+        table.append((state_type, check_type, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
+
+    return table
+
+
+
+def automation_try_discovery_node(hostname, clustername, leave_no_tcp=False, with_snmp_scan=False):
+
+    global opt_use_cachefile, opt_no_tcp, opt_dont_submit
+
+    try:
+        ipaddress = lookup_ipaddress(hostname)
+    except:
+        raise MKAutomationError("Cannot lookup IP address of host %s" % hostname)
+
+    found_services = []
+
+    dual_host = is_snmp_host(hostname) and is_tcp_host(hostname)
+
+    # if we are using cache files, then we restrict us to existing
+    # check types. SNMP scan is only done without the --cache option
+    snmp_error = None
+    if is_snmp_host(hostname):
+        try:
+            if not with_snmp_scan:
+                existing_checks = set([ cn for (cn, item) in get_check_table(hostname) ])
+                for cn in inventorable_checktypes("snmp"):
+                    if cn in existing_checks:
+                        found_services += make_inventory(cn, [hostname], check_only=True, include_state=True)
+            else:
+                if not in_binary_hostlist(hostname, snmp_without_sys_descr):
+                    sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
+                    if sys_descr == None:
+                        raise MKSNMPError("Cannot get system description via SNMP. "
+                                          "SNMP agent is not responding. Probably wrong "
+                                          "community or wrong SNMP version. IP address is %s" %
+                                           ipaddress)
+
+                found_services = do_snmp_scan([hostname], True, True)
+
+        except Exception, e:
+            if not dual_host:
+                raise
+            snmp_error = str(e)
+
+    tcp_error = None
+
+    # Honor piggy_back data, even if host is not declared as TCP host
+    if is_tcp_host(hostname) or \
+           get_piggyback_info(hostname) or get_piggyback_info(ipaddress):
+        try:
+            for cn in inventorable_checktypes("tcp"):
+                found_services += make_inventory(cn, [hostname], check_only=True, include_state=True)
+        except Exception, e:
+            if not dual_host:
+                raise
+            tcp_error = str(e)
+
+    if dual_host and snmp_error and tcp_error:
+        raise MKAutomationError("Error using TCP (%s)\nand SNMP (%s)" %
+                (tcp_error, snmp_error))
+
+    found = {}
+    for hn, ct, item, paramstring, state_type in found_services:
+       found[(ct, item)] = (state_type, paramstring)
+
+    # Check if already in autochecks (but not found anymore)
+    if hostname == clustername: # no cluster situation
+        for ct, item, params in read_autochecks_of(hostname):
+            if (ct, item) not in found:
+                found[(ct, item)] = ('vanished', repr(params) ) # This is not the real paramstring!
+
+    # Find manual checks
+    existing = get_check_table(clustername, skip_autochecks = hostname != clustername)
+    for (ct, item), (params, descr, deps) in existing.items():
+        if (ct, item) not in found:
+            found[(ct, item)] = ('manual', repr(params) )
+
+    # Add legacy checks and active checks with artificial type 'legacy'
+    legchecks = host_extra_conf(clustername, legacy_checks)
+    for cmd, descr, perf in legchecks:
+        found[('legacy', descr)] = ( 'legacy', 'None' )
+
+    # Add custom checks and active checks with artificial type 'custom'
+    custchecks = host_extra_conf(clustername, custom_checks)
+    for entry in custchecks:
+        found[('custom', entry['service_description'])] = ( 'custom', 'None' )
+
+    # Similar for 'active_checks', but here we have parameters
+    for acttype, rules in active_checks.items():
+        act_info = active_check_info[acttype]
+        entries = host_extra_conf(clustername, rules)
+        for params in entries:
+            descr = act_info["service_description"](params)
+            found[(acttype, descr)] = ( 'active', repr(params) )
+
+
+    if not table and (tcp_error or snmp_error):
+        error = ""
+        if snmp_error:
+            error = "Error getting data via SNMP: %s" % snmp_error
+        if tcp_error:
+            if error:
+                error += ", "
+            error += "Error getting data from Check_MK agent: %s" % tcp_error
+        raise MKAutomationError(error)
+
+    return table
+

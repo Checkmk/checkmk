@@ -3134,7 +3134,7 @@ def mode_inventory(phase, firsttime):
                         varname = "_%s_%s" % (ct, html.varencode(item))
                         if html.var(varname, "") != "":
                             active_checks[(ct, item)] = paramstring
-                    if st == "clustered":
+                    if st.startswith("clustered"):
                         active_checks[(ct, item)] = paramstring
 
                 check_mk_automation(host[".siteid"], "set-autochecks", [hostname], active_checks)
@@ -3212,7 +3212,7 @@ def show_service_table(host, firsttime):
     # This option will later be switchable somehow
 
     divid = 0
-    for state_name, state_type, checkbox in [
+    for state_name, check_source, checkbox in [
         ( _("Available (missing) services"), "new", firsttime ),
         ( _("Already configured services"), "old", True, ),
         ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ),
@@ -3222,12 +3222,13 @@ def show_service_table(host, firsttime):
         ( _("Manual services (defined in main.mk)"), "manual", None ),
         ( _("Legacy services (defined in main.mk)"), "legacy", None ),
         ( _("Custom checks (defined via rule)"), "custom", None ),
-        ( _("Clustered services (located on cluster host)"), "clustered", None )
+        ( _("Already configured clustered services (located on cluster host)"), "clustered_old", None ),
+        ( _("Available clustered services"), "clustered_new", None ),
         ]:
         first = True
         for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in checktable:
             item = html.attrencode(item or 'None')
-            if state_type != st:
+            if check_source != st:
                 continue
             if first:
                 table.groupheader(state_name)
@@ -3249,7 +3250,7 @@ def show_service_table(host, firsttime):
             table.cell(_("Service Description"), html.attrencode(descr))
             table.cell(_("Plugin output"))
 
-            if defaults.omd_root and state_type in ( "custom", "active" ):
+            if defaults.omd_root and check_source in ( "custom", "active" ):
                 divid += 1
                 html.write("<div id='activecheck%d'><img class=icon title='%s' src='images/icon_reloading.gif'></div>" % (divid, hostname))
                 html.final_javascript("execute_active_check('%s', '%s', '%s', '%s', 'activecheck%d');" % (
@@ -3261,7 +3262,7 @@ def show_service_table(host, firsttime):
             varname = None
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
-            elif state_type == "active":
+            elif check_source == "active":
                 varname = "active_checks:" + ct
 
             if parameter_column:
@@ -3280,7 +3281,7 @@ def show_service_table(host, firsttime):
 
             # Icon for Service parameters. Not for missing services!
             table.cell(css='buttons')
-            if state_type not in [ "new", "ignored" ]:
+            if check_source not in [ "new", "ignored" ]:
                 # Link to list of all rulesets affecting this service
                 params_url = make_link([("mode", "object_parameters"),
                                         ("host", hostname),
@@ -3293,7 +3294,7 @@ def show_service_table(host, firsttime):
                                  ("item", mk_repr(item))])
                 html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
 
-            if state_type == "ignored":
+            if check_source == "ignored":
                 url = make_link([("mode", "edit_ruleset"),
                                  ("varname", "ignored_services"),
                                  ("host", hostname),
@@ -3301,7 +3302,7 @@ def show_service_table(host, firsttime):
                 html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
 
             # Permanently disable icon
-            if state_type in ['new', 'old']:
+            if check_source in ['new', 'old']:
                 url = make_link([
                     ('mode', 'edit_ruleset'),
                     ('varname', 'ignored_services'),

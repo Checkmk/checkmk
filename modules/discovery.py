@@ -578,8 +578,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan):
     else:
         ipaddress = lookup_ipaddress(hostname)
 
-    leave_no_tcp = True # FIXME TODO
-
     table = []
     for (check_type, item), (check_source, paramstring) in services.items():
         params = None
@@ -604,9 +602,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan):
             global opt_use_cachefile
             old_opt_use_cachefile = opt_use_cachefile
             opt_use_cachefile = True
-	    if not leave_no_tcp:
-	        opt_no_tcp = True
-            opt_dont_submit = True
+            opt_dont_submit = True # hack for get_realhost_info, avoid skipping because of check interval
 
             if check_type not in check_info:
                 continue # Skip not existing check silently

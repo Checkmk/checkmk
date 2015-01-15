@@ -2813,6 +2813,8 @@ no_inventory_possible = None
     else:
         output.write("clusters = {}\ndef is_cluster(hostname):\n    return False\n\n")
 
+    output.write("def clusters_of(hostname):\n    return %r\n\n" % clusters_of(hostname))
+
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
     output.write("def is_tcp_host(hostname):\n   return %r\n\n" % is_tcp_host(hostname))

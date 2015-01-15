@@ -567,7 +567,11 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
 
     html.write('<div class="%s" id="dashlet_%d">' % (' '.join(classes), nr))
 
-    title = dashlet.get('title', dashlet_type.get('title'))
+    # Get the title of the dashlet type (might be dynamically defined)
+    title = dashlet_type.get('title')
+    if dashlet_type.get('title_func'):
+        title = dashlet_type.get('title_func')(dashlet)
+    title = dashlet.get('title', title)
     if title and dashlet.get('show_title'):
         url = dashlet.get("title_url", None)
         if url:
@@ -609,7 +613,7 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
                 url = 'about:blank'
 
             # Fix of iPad >:-P
-            html.write('<div style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch; overflow: hidden;">')
+            html.write('<div style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;">')
             html.write('<iframe id="dashlet_iframe_%d" allowTransparency="true" frameborder="0" width="100%%" '
                        'height="100%%" src="%s"> </iframe>' % (nr, url))
             html.write('</div>')

@@ -1,0 +1,12 @@
+Title: Dashboard: Sidebar snapins can now be added as dashlets to dashboards
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421326059
+Class: feature
+
+It is now possible to add sidebar snapins to dashboards using the dashboard
+editor. Simply go to edit mode of a dashboard, then add a new dashlet of
+the type "Sidebar Snapin". In the following dialog you can choose one from
+all available snapins.

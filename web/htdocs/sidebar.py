@@ -267,11 +267,14 @@ def page_side():
 
     html.body_end()
 
-def render_snapin(name, state):
-    snapin = sidebar_snapins.get(name)
+def render_snapin_styles(snapin):
     styles = snapin.get("styles")
     if styles:
         html.write("<style>\n%s\n</style>\n" % styles)
+
+def render_snapin(name, state):
+    snapin = sidebar_snapins.get(name)
+    render_snapin_styles(snapin)
 
     html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % name)
     if state == "closed":

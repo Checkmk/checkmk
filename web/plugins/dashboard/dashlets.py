@@ -560,7 +560,7 @@ def dashlet_view_handle_input(ident, dashlet):
 dashlet_types["view"] = {
     "title"          : _("View"),
     "sort_index"     : 10,
-    "description"    : _("Displays a the content of a Multisite view."),
+    "description"    : _("Displays the content of a Multisite view."),
     "size"           : (40, 20),
     "iframe_render"  : dashlet_view,
     "allowed"        : config.builtin_role_ids,
@@ -614,4 +614,99 @@ dashlet_types["url"] = {
     ],
     "opt_params"      : ['url', 'urlfunc'],
     "validate_params" : dashlet_url_validate,
+}
+
+#.
+#   .--Snapin--------------------------------------------------------------.
+#   |                   ____                    _                          |
+#   |                  / ___| _ __   __ _ _ __ (_)_ __                     |
+#   |                  \___ \| '_ \ / _` | '_ \| | '_ \                    |
+#   |                   ___) | | | | (_| | |_) | | | | |                   |
+#   |                  |____/|_| |_|\__,_| .__/|_|_| |_|                   |
+#   |                                    |_|                               |
+#   +----------------------------------------------------------------------+
+#   | Render sidebar snapins within the dashboard                          |
+#   '----------------------------------------------------------------------'
+
+def dashlet_snapin(nr, dashlet):
+    import sidebar # FIXME: HACK, clean this up somehow
+    snapin = sidebar.sidebar_snapins.get(dashlet['snapin'])
+    if not snapin:
+        raise MKUserError(None, _('The configured snapin does not exist.'))
+
+    dashlet_type = dashlet_types[dashlet['type']]
+
+    overflow = ''
+    scroll_x, scroll_y = dashlet_type.get("iframe_scroll", (False, False))
+    if not scroll_x:
+        overflow += 'overflow-x: hidden;\n'
+    else:
+        overflow += 'overflow-x: auto;\n'
+    if not scroll_y:
+        overflow += 'overflow-y: hidden;\n'
+    else:
+        overflow += 'overflow-y: auto;\n'
+
+    html.set_browser_reload(dashlet_type['refresh'])
+    html.html_head(_('Snapin Dashlet'), javascripts=['sidebar'], stylesheets=['sidebar', 'status'])
+    html.write('''<style>
+#side_content {
+    height: auto;
+    top: 0;
+    padding-top: 4px;
+    padding-left: 4px;
+}
+div.snapin:last-child {
+    margin-bottom: 0;
+}
+div.snapin div.content {
+    background-image: none;
+    background-color: #508AA1;
+}
+div.snapin {
+    margin: 0;
+    padding: 0;
+}
+body.side {
+    %s
+}
+</style>''' % overflow)
+    html.write('<body class="side">\n')
+    html.write('<div id="check_mk_sidebar">\n')
+    html.write('<div id="side_content">\n')
+    html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % dashlet['snapin'])
+    html.write("<div id=\"snapin_%s\" class=\"content\">\n" % (dashlet['snapin']))
+    sidebar.render_snapin_styles(snapin)
+    snapin['render']()
+    html.write('</div>\n')
+    html.write('</div>\n')
+    html.write('</div>\n')
+    html.write('</div>\n')
+    html.body_end()
+
+def dashlet_snapin_get_snapins():
+    import sidebar # FIXME: HACK, clean this up somehow
+    return sorted([ (k, v['title']) for k, v in sidebar.sidebar_snapins.items() ], key=lambda x: x[1])
+
+def dashlet_snapin_title(dashlet):
+    import sidebar # FIXME: HACK, clean this up somehow
+    return sidebar.sidebar_snapins[dashlet['snapin']]['title']
+
+dashlet_types["snapin"] = {
+    "title"          : _("Sidebar Snapin"),
+    "title_func"     : dashlet_snapin_title,
+    "sort_index"     : 55,
+    "description"    : _("Displays a sidebar snapin."),
+    "size"           : (27, 20),
+    "iframe_render"  : dashlet_snapin,
+    "iframe_scroll"  : (False, True),
+    "allowed"        : config.builtin_role_ids,
+    "refresh"        : 30,
+    "parameters"     : [
+        ('snapin', DropdownChoice(
+            title = _('Snapin'),
+            help = _('Choose the snapin you like to show.'),
+            choices = dashlet_snapin_get_snapins,
+        )),
+    ],
 }

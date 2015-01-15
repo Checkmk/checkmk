@@ -5410,47 +5410,6 @@ def get_checkgroup_parameters(host, checktype, item):
         return service_extra_conf(host, str(item), rules)
 
 
-# Read automatically discovered checks of one host.
-# world: "config" -> File in var/check_mk/autochecks
-#        "active" -> Copy in var/check_mk/core/autochecks
-# Returns a table with three columns:
-# 1. check_type
-# 2. item
-# 3. parameters evaluated!
-def read_autochecks_of(hostname, world="config"):
-    if world == "config":
-        basedir = autochecksdir
-    else:
-        basedir = var_dir + "/core/autochecks"
-    filepath = basedir + '/' + hostname + '.mk'
-
-    if not os.path.exists(filepath):
-        return []
-    try:
-        autochecks_raw = eval(file(filepath).read())
-    except SyntaxError,e:
-        if opt_verbose:
-            sys.stderr.write("Syntax error in file %s: %s\n" % (filepath, e))
-        if opt_debug:
-            sys.exit(3)
-        return []
-    except Exception, e:
-        if opt_verbose:
-            sys.stderr.write("Error in file %s:\n%s\n" % (filepath, e))
-        if opt_debug:
-            sys.exit(3)
-        return []
-
-    # Exchange inventorized check parameters with those configured by
-    # the user. Also merge with default levels for modern dictionary based checks.
-    autochecks = []
-    for entry in autochecks_raw:
-        if len(entry) == 4: # old format where hostname is at the first place
-            entry = entry[1:]
-        ct, it, par = entry
-        autochecks.append( (ct, it, compute_check_parameters(hostname, ct, it, par)) )
-    return autochecks
-
 def output_profile():
     if g_profile:
         g_profile.dump_stats(g_profile_path)

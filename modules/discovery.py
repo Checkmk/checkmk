@@ -692,3 +692,112 @@ def automation_try_discovery_node(hostname, clustername, leave_no_tcp=False, wit
 
     return table
 
+# Read autochecks, but do not compute final check parameters,
+# also return a forth column with the raw string of the parameters.
+# Returns a table with three columns:
+# 1. check_type
+# 2. item
+# 3. parameter string, not yet evaluated!
+def parse_autochecks_file(hostname):
+    def split_python_tuple(line):
+        quote = None
+        bracklev = 0
+        backslash = False
+        for i, c in enumerate(line):
+            if backslash:
+                backslash = False
+                continue
+            elif c == '\\':
+                backslash = True
+            elif c == quote:
+                quote = None # end of quoted string
+            elif c in [ '"', "'" ]:
+                quote = c # begin of quoted string
+            elif quote:
+                continue
+            elif c in [ '(', '{', '[' ]:
+                bracklev += 1
+            elif c in [ ')', '}', ']' ]:
+                bracklev -= 1
+            elif bracklev > 0:
+                continue
+            elif c == ',':
+                value = line[0:i]
+                rest = line[i+1:]
+                return value.strip(), rest
+        return line.strip(), None
+
+    path = "%s/%s.mk" % (autochecksdir, hostname)
+    if not os.path.exists(path):
+        return []
+    lineno = 0
+
+    table = []
+    for line in file(path):
+        lineno += 1
+        try:
+            line = line.strip()
+            if not line.startswith("("):
+                continue
+
+            # drop everything after potential '#' (from older versions)
+	    i = line.rfind('#')
+	    if i > 0: # make sure # is not contained in string
+		rest = line[i:]
+		if '"' not in rest and "'" not in rest:
+		    line = line[:i].strip()
+
+            if line.endswith(","):
+                line = line[:-1]
+            line = line[1:-1] # drop brackets
+
+            # First try old format - with hostname
+            parts = []
+            while True:
+                try:
+                    part, line = split_python_tuple(line)
+                    parts.append(part)
+                except:
+                    break
+            if len(parts) == 4:
+                parts = parts[1:] # drop hostname, legacy format with host in first column
+            elif len(parts) != 3:
+                raise Exception("Invalid number of parts: %d" % len(parts))
+
+            checktypestring, itemstring, paramstring = parts
+            table.append((eval(checktypestring), eval(itemstring), paramstring))
+        except:
+            if opt_debug:
+                raise
+            raise Exception("Invalid line %d in autochecks file %s" % (lineno, path))
+    return table
+
+
+# Remove all autochecks of a host while being cluster-aware!
+def remove_autochecks_of(hostname):
+    removed = 0
+    nodes = nodes_of(hostname)
+    if nodes:
+        for node in nodes:
+            old_items = parse_autochecks_file(node)
+            new_items = []
+            for check_type, item, paramstring in old_items:
+                descr = service_description(check_type, item)
+                if hostname != host_of_clustered_service(node, descr):
+                    new_items.append((check_type, item, paramstring))
+                else:
+                    removed += 1
+            save_autochecks_file(node, new_items)
+    else:
+        old_items = parse_autochecks_file(hostname)
+        new_items = []
+        for check_type, item, paramstring in old_items:
+            descr = service_description(check_type, item)
+            if hostname != host_of_clustered_service(hostname, descr):
+                new_items.append((check_type, item, paramstring))
+            else:
+                removed += 1
+        save_autochecks_file(hostname, new_items)
+
+    return removed
+

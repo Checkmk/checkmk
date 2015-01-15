@@ -1,0 +1,10 @@
+Title: Fixed crash in display of crash report for precompiled host checks
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421340523
+
+

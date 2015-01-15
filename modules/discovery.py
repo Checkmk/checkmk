@@ -199,8 +199,9 @@ def snmp_scan(hostname, ipaddress):
 # This function *does* handle:
 # - disabled check typess
 #
-def discover_services(hostname, check_types, use_caches, do_snmp_scan):
-    ipaddress = lookup_ipaddress(hostname)
+def discover_services(hostname, check_types, use_caches, do_snmp_scan, ipaddress=None):
+    if ipaddress == None:
+        ipaddress = lookup_ipaddress(hostname)
 
     # Check types not specified (via --checks=)? Determine automatically
     if not check_types:
@@ -366,19 +367,19 @@ def discoverable_check_types(what): # snmp, tcp, all
 #    "clustered_new" : New service found on a node that belongs to a cluster
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
-def get_host_services(hostname, use_caches, do_snmp_scan):
+def get_host_services(hostname, use_caches, do_snmp_scan, ipaddress=None):
     if is_cluster(hostname):
         return get_cluster_services(hostname, use_caches, do_snmp_scan)
     else:
-        return get_node_services(hostname, use_caches, do_snmp_scan)
+        return get_node_services(hostname, ipaddress, use_caches, do_snmp_scan)
 
 # Part of get_node_services that deals with discovered services
-def get_discovered_services(hostname, use_caches, do_snmp_scan):
+def get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan):
     # Create a dict from check_type/item to check_source/paramstring
     services = {}
 
     # Handle discovered services -> "new"
-    new_items = discover_services(hostname, None, use_caches, do_snmp_scan)
+    new_items = discover_services(hostname, None, use_caches, do_snmp_scan, ipaddress)
     for check_type, item, paramstring in new_items:
        services[(check_type, item)] = ("new", paramstring)
 
@@ -393,8 +394,8 @@ def get_discovered_services(hostname, use_caches, do_snmp_scan):
     return services
 
 # Do the actual work for a non-cluster host or node
-def get_node_services(hostname, use_caches, do_snmp_scan):
-    services = get_discovered_services(hostname, use_caches, do_snmp_scan)
+def get_node_services(hostname, ipaddress, use_caches, do_snmp_scan):
+    services = get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan)
 
     # Identify clustered services
     for (check_type, item), (check_source, paramstring) in services.items():
@@ -454,7 +455,7 @@ def get_cluster_services(hostname, use_caches, with_snmp_scan):
     # From the states and parameters of these we construct the final state per service.
     cluster_items = {}
     for node in nodes:
-        services = get_discovered_services(node, use_caches, with_snmp_scan)
+        services = get_discovered_services(node, None, use_caches, with_snmp_scan)
         for (check_type, item), (check_source, paramstring) in services.items():
             descr = service_description(check_type, item)
             if hostname == host_of_clustered_service(node, descr):
@@ -589,109 +590,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan):
 
 
 
-def automation_try_discovery_node(hostname, clustername, leave_no_tcp=False, with_snmp_scan=False):
-
-    global opt_use_cachefile, opt_no_tcp, opt_dont_submit
-
-    try:
-        ipaddress = lookup_ipaddress(hostname)
-    except:
-        raise MKAutomationError("Cannot lookup IP address of host %s" % hostname)
-
-    found_services = []
-
-    dual_host = is_snmp_host(hostname) and is_tcp_host(hostname)
-
-    # if we are using cache files, then we restrict us to existing
-    # check types. SNMP scan is only done without the --cache option
-    snmp_error = None
-    if is_snmp_host(hostname):
-        try:
-            if not with_snmp_scan:
-                existing_checks = set([ cn for (cn, item) in get_check_table(hostname) ])
-                for cn in inventorable_checktypes("snmp"):
-                    if cn in existing_checks:
-                        found_services += make_inventory(cn, [hostname], check_only=True, include_state=True)
-            else:
-                if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-                    sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
-                    if sys_descr == None:
-                        raise MKSNMPError("Cannot get system description via SNMP. "
-                                          "SNMP agent is not responding. Probably wrong "
-                                          "community or wrong SNMP version. IP address is %s" %
-                                           ipaddress)
-
-                found_services = do_snmp_scan([hostname], True, True)
-
-        except Exception, e:
-            if not dual_host:
-                raise
-            snmp_error = str(e)
-
-    tcp_error = None
-
-    # Honor piggy_back data, even if host is not declared as TCP host
-    if is_tcp_host(hostname) or \
-           get_piggyback_info(hostname) or get_piggyback_info(ipaddress):
-        try:
-            for cn in inventorable_checktypes("tcp"):
-                found_services += make_inventory(cn, [hostname], check_only=True, include_state=True)
-        except Exception, e:
-            if not dual_host:
-                raise
-            tcp_error = str(e)
-
-    if dual_host and snmp_error and tcp_error:
-        raise MKAutomationError("Error using TCP (%s)\nand SNMP (%s)" %
-                (tcp_error, snmp_error))
-
-    found = {}
-    for hn, ct, item, paramstring, state_type in found_services:
-       found[(ct, item)] = (state_type, paramstring)
-
-    # Check if already in autochecks (but not found anymore)
-    if hostname == clustername: # no cluster situation
-        for ct, item, params in read_autochecks_of(hostname):
-            if (ct, item) not in found:
-                found[(ct, item)] = ('vanished', repr(params) ) # This is not the real paramstring!
-
-    # Find manual checks
-    existing = get_check_table(clustername, skip_autochecks = hostname != clustername)
-    for (ct, item), (params, descr, deps) in existing.items():
-        if (ct, item) not in found:
-            found[(ct, item)] = ('manual', repr(params) )
-
-    # Add legacy checks and active checks with artificial type 'legacy'
-    legchecks = host_extra_conf(clustername, legacy_checks)
-    for cmd, descr, perf in legchecks:
-        found[('legacy', descr)] = ('legacy', 'None')
-
-    # Add custom checks and active checks with artificial type 'custom'
-    custchecks = host_extra_conf(clustername, custom_checks)
-    for entry in custchecks:
-        found[('custom', entry['service_description'])] = ('custom', 'None')
-
-    # Similar for 'active_checks', but here we have parameters
-    for acttype, rules in active_checks.items():
-        act_info = active_check_info[acttype]
-        entries = host_extra_conf(clustername, rules)
-        for params in entries:
-            descr = act_info["service_description"](params)
-            found[(acttype, descr)] = ( 'active', repr(params) )
-
-
-    if not table and (tcp_error or snmp_error):
-        error = ""
-        if snmp_error:
-            error = "Error getting data via SNMP: %s" % snmp_error
-        if tcp_error:
-            if error:
-                error += ", "
-            error += "Error getting data from Check_MK agent: %s" % tcp_error
-        raise MKAutomationError(error)
-
-    return table
-
 # Read autochecks, but do not compute final check parameters,
 # also return a forth column with the raw string of the parameters.
 # Returns a table with three columns:
@@ -800,4 +698,50 @@ def remove_autochecks_of(hostname):
         save_autochecks_file(hostname, new_items)
 
     return removed
+
+# NEEDS TO BE REWRITTEN
+def check_discovery(hostname, ipaddress=None):
+
+    new_check_types = {}
+    lines = []
+
+    try:
+        services = get_host_services(hostname, use_caches=opt_use_cachefile, do_snmp_scan=inventory_check_do_scan, ipaddress=ipaddress)
+        for (check_type, item), (check_source, paramstring) in services.items():
+            if check_source == "new":
+                new_check_types.setdefault(check_type, 0)
+                new_check_types[check_type] += 1
+                lines.append("%s: %s\n" % (check_type, service_description(check_type, item)))
+
+        if lines:
+            info = ", ".join([ "%s:%d" % e for e in new_check_types.items() ])
+            output = "%d unchecked services (%s)\n" % (len(lines), info)
+            output += "".join(lines)
+            status = inventory_check_severity
+        else:
+            output = "no unchecked services found\n"
+            status = 0
+    except SystemExit, e:
+        raise e
+    except Exception, e:
+        if opt_debug:
+            raise
+        # Honor rule settings for "Status of the Check_MK service". In case of
+        # a problem we assume a connection error here.
+        spec = exit_code_spec(hostname)
+        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
+            what = "connection"
+        else:
+            what = "exception"
+        status = spec.get(what, 3)
+        output = str(e) + "\n"
+
+    if opt_keepalive:
+        global total_check_output
+        total_check_output += output
+        return status
+    else:
+        sys.stdout.write(nagios_state_names[status] + " - " + output)
+        sys.exit(status)
+
 

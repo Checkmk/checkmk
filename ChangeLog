@@ -2,6 +2,9 @@
     Core & Setup:
     * 1842 FIX: Rewrote implementation of service discovery (formerly inventory)...
 
+    Checks & Agents:
+    * 1817 FIX: The Check_MK service did not result in CRITICAL/WARNING states when using Nagios as core...
+
     Multisite:
     * 1843 FIX: Fixed crash in display of crash report for precompiled host checks
 

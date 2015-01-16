@@ -22,6 +22,9 @@
     WATO:
     * 1816 FIX: Fixed garbled output on "rename host" result page
 
+    Notifications:
+    * 1213 New Macro $SERVICEDESC_FOR_URL$ for asciimail...
+
 
 1.2.6b6:
     Core & Setup:

@@ -1,0 +1,14 @@
+Title: The Check_MK service did not result in CRITICAL/WARNING states when using Nagios as core
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421393931
+
+When using Nagios (or Icinga) as monitoring core, the "Check_MK" services was always resulting
+in an OK state, even when the output reported that it has a critical problem, for example
+because of the agent of the monitored host can not be reached.
+
+This bug seem to be existant since Mon, 15 Dec 2014.

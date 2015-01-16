@@ -66,6 +66,7 @@
     * 1809 FIX: cisco_temp_perf: Fixed exception when no temperature threshold provided by device
     * 1812 FIX: juniper_screenos_mem: Fixed too large memory reported (byte <> kbyte mixup)
     * 1814 FIX: agent_ibmsvc: Fixed missing executable flag
+    * 1844 FIX: oracle_crs_res: fix computation of node a ressource is running on...
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

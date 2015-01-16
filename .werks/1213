@@ -1,0 +1,13 @@
+Title: New Macro $SERVICEDESC_FOR_URL$ for asciimail
+Level: 1
+Component: notifications
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421430462
+
+The new macrco $SERVICEDESC_FOR_URL$ can be used in the body of asciimails. The Macro replaces
+whitespaces in the servicename with %20. This makes it possible to create custom urls who can e.g. be used
+to ackknowledge services.
+

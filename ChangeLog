@@ -106,6 +106,7 @@
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications
+    * 1213 New Macro $SERVICEDESC_FOR_URL$ for asciimail...
     * 1661 FIX: mknotifyd: improved performance when receiving forwarded notifications
     * 1664 FIX: mknotifyd: further performance improvements for notification forwarding
     * 1205 FIX: RBN: Fixed match contactgroup condition...

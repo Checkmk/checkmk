@@ -159,6 +159,7 @@ def construct_content(context):
             tmpl_body += context["PARAMETER_SERVICE_BODY"]
         else:
             tmpl_body += tmpl_service_body
+        context['SERVICEDESC_FOR_URL']   = context['SERVICEDESC'].replace(' ','%20')
 
     context['SUBJECT'] = substitute_context(tmpl, context)
     body = substitute_context(tmpl_body, context)

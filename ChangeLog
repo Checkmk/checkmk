@@ -2,6 +2,9 @@
     Core & Setup:
     * 1842 FIX: Rewrote implementation of service discovery (formerly inventory)...
 
+    Checks & Agents:
+    * 1844 FIX: oracle_crs_res: fix computation of node a ressource is running on...
+
     Multisite:
     * 1843 FIX: Fixed crash in display of crash report for precompiled host checks
 

@@ -1,0 +1,10 @@
+Title: oracle_crs_res: fix computation of node a ressource is running on
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b7
+Date: 1421407433
+Class: fix
+
+Also now output information about the status of the ressource on
+all nodes.

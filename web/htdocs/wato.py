@@ -2249,8 +2249,8 @@ def mode_rename_host(phase):
             log_commit_pending() # All activated by the underlying rename automation
             html.set_var("host", newname)
             action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
-            return "edithost", _("Renamed host <b>%s</b> into <b>%s</b> at the following places:<br><ul>%s</ul>") % (
-                                 hostname, newname, action_txt)
+            return "edithost", HTML(_("Renamed host <b>%s</b> into <b>%s</b> at the following places:<br><ul>%s</ul>") % (
+                                 hostname, newname, action_txt))
         elif c == False: # not yet confirmed
             return ""
         return

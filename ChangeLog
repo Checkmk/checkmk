@@ -1,4 +1,7 @@
 1.2.6b7:
+    WATO:
+    * 1816 FIX: Fixed garbled output on "rename host" result page
+
 
 1.2.6b6:
     Core & Setup:

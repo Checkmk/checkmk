@@ -5266,16 +5266,18 @@ register_check_parameters(
                         ( "k", _("Kelvin") ),
                       ]
                 )),
-                ## ( "sensor_levels",
-                ##   DropdownChoice(
-                ##       title = _("Interpretation of Sensor's own temperature status"),
-                ##       choices = [
-                ##           ( "ignore", _("Ignore sensor's own levels") ),
-                ##           ( "sensor", _("Only use sensor's levels, ignore yours" ) ),
-                ##           ( "best", _("Use least critical of your and sensor's levels") ),
-                ##           ( "worst", _("Use most critical of your and sensor's levels") ),
-                ##       ]
-                ## )),
+                ( "device_levels_handling",
+                  DropdownChoice(
+                      title = _("Interpretation of the device's own temperature status"),
+                      choices = [
+                          ( "usr", _("Ignore device's own levels") ),
+                          ( "dev", _("Only use device's levels, ignore yours" ) ),
+                          ( "best", _("Use least critical of your and device's levels") ),
+                          ( "worst", _("Use most critical of your and device's levels") ),
+                          ( "devdefault", _("Use device's levels if present, otherwise yours") ),
+                          ( "usrdefault", _("Use your own levels if present, otherwise the device's") ),
+                      ]
+                )),
 
             ]
         ),

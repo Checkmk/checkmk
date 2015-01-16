@@ -8,6 +8,11 @@ description:
  on an ORACLE database. You can set warn/crit levels in seconds
  for apply lag and transport lag.
 
+ The apply_lag_min is only useful when an apply lag is configured
+ in Data Guard. Otherwise the apply lag is 0.
+
+ This check only works on Enterprise Edition with Data Guard.
+
  The init.ora-Parameter log_archive_config must be configured.
  Oracle Enterprise Edition is required for Oracle Data-Guard.
 
@@ -21,6 +26,18 @@ item:
 
 perfdata:
  One value: the current apply lag in seconds
+
+[parameters]
+parameters (dict):
+
+ "apply_lag": (int, int) - Maximum time in seconds for the apply_lag
+ in Data Guard. no default value
+
+ "apply_lag_min": (int, int) - Minimum time in seconds for the apply_lag
+ in Data Guard. no default value
+
+ "transport_lag": (int, int) - Maximum time in seconds for the transport_lag
+ in Data Guard. no default value
 
 inventory:
  One separate check for each database found running will

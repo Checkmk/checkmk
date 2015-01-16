@@ -1,0 +1,13 @@
+Title: oracle_instance: New function for Primary Database not OPEN
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1419847846
+Class: fix
+
+An Oracle Database is normaly running as PRIMARY in OPEN mode.
+This is not the case in very rare configurations and leads to
+unwanted CRITICAL states.
+The OPEN mode can now be configured and the default is CRITICAL
+when a PRIMARY is not open.

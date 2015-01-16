@@ -1,0 +1,19 @@
+Title: oracle_asm_diskgroup: fixed wrong calculation of free space in NORMAL/HIGH redundancy Disk Groups
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1419846003
+Class: fix
+
+The total and free space is calculated on the redundancy of the Disk Group. The
+calculation is complicated when a Disk Group has more then the required number
+of Failure Groups. The check expects 2 for NORMAL and 3 for HIGH redundancy
+without and 3 or 5 with voting files.
+The size of every Failure Group of a Disk Group must be the same, which is a
+recommendation from Oracle. Otherwise the calculation is wrong.
+
+The expected number of Failure Groups for a Disk Groups is the default for
+nearly every Oracle installation.
+
+This fix changes nothing when EXTERNAL redundancy is used.

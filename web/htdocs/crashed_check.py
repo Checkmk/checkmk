@@ -67,11 +67,19 @@ def page_crashed_check():
         raise MKGeneralException("Encoded crash dump data is invalid: %s" % e)
 
     trace = fetch_file_from_tar(tardata, "./trace")
+    tracelines = []
+    for line in trace.splitlines():
+        try:
+            tracelines.append(line.decode('utf-8'))
+        except:
+            tracelines.append(repr(line))
+    trace = "\r\n".join(tracelines)
+
     agent_output = fetch_file_from_tar(tardata, "./agent_output")
 
     body =   "Dear Check_MK Developer team,\r\n\r\n" \
            + "I hereby send you a report of a crashed check:\r\n\r\n" \
-           + trace + "\r\n" \
+           + trace.decode('utf-8') + "\r\n" \
            + "BASE64 encoded tarball with agent output:" \
            + "\r\n\r\n\r\n" + encoded_tardata \
            + "\r\n\r\nWith best regards,\r\n\r\n"

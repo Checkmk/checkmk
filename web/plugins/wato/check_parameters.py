@@ -3597,18 +3597,26 @@ register_check_parameters(
         elements = [
             ( "apply_lag",
               Tuple(
-                  title = _("Apply Lag"),
-                  help = _( "The limit for the apply lag in v$dataguard_stats."),
+                  title = _("Apply Lag Maximum Time"),
+                  help = _( "The maximum limit for the apply lag in v$dataguard_stats."),
                   elements = [
-                      Age(title = _("Warning if above"), default_value = 10800),
-                      Age(title = _("Critical if above"), default_value = 21600)])),
+                      Age(title = _("Warning if above"),),
+                      Age(title = _("Critical if above"),)])),
+            ( "apply_lag_min",
+              Tuple(
+                  title = _("Apply Lag Minimum Time"),
+                  help = _( "The minimum limit for the apply lag in v$dataguard_stats. "
+                            "This is only usable when Maximum Time has beend configured. "),
+                  elements = [
+                      Age(title = _("Warning if above"),),
+                      Age(title = _("Critical if above"),)])),
             ( "transport_lag",
               Tuple(
                   title = _("Transport Lag"),
                   help = _( "The limit for the transport lag in v$dataguard_stats."),
                   elements = [
-                      Age(title = _("Warning if above"), default_value = 10800),
-                      Age(title = _("Critical if above"), default_value = 21600)])),
+                      Age(title = _("Warning if above"),),
+                      Age(title = _("Critical if above"),)])),
                    ]),
     TextAscii(
         title = _("Database SID"),
@@ -3631,7 +3639,13 @@ register_check_parameters(
                           Age(title = _("critical if less then"), default_value = 300),
                      ]
                  )
-             )
+             ),(
+            'nospaceerrcnt_state',
+                MonitoringState(
+                    default_value = 2,
+                    title = _("State in case of non space error count is greater then 0: "),
+                ),
+            ),
          ]
     ),
     TextAscii(
@@ -3650,6 +3664,18 @@ register_check_parameters(
              ("levels",
                  Tuple(
                      title = _("Levels for checkpoint time"),
+                     elements = [
+                          Age(title = _("warning if higher then"), default_value = 1800),
+                          Age(title = _("critical if higher then"), default_value = 3600),
+                     ]
+                 )
+             ),
+             ("backup_age",
+                 Tuple(
+                     title = _("Levels for user managed backup files"),
+                     help = _( "Important! This checks is only for monitoring of datafiles "
+                               "who were left in backup mode. "
+                               "(alter database datafile ... begin backup;) "),
                      elements = [
                           Age(title = _("warning if higher then"), default_value = 1800),
                           Age(title = _("critical if higher then"), default_value = 3600),
@@ -3735,6 +3761,12 @@ register_check_parameters(
                 MonitoringState(
                     default_value = 2,
                     title = _("State in case of logins are not possible: "),
+                ),
+            ),(
+            'primarynotopen',
+                MonitoringState(
+                    default_value = 2,
+                    title = _("State in case of Database is PRIMARY and not OPEN: "),
                 ),
             ),(
             'uptime_min',

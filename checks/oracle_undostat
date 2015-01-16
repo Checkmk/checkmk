@@ -31,6 +31,7 @@
 
 factory_settings["oracle_undostat_defaults"] = {
     "levels"  : (600, 300),
+    "nospaceerrcnt_state"  : 2,
 }
 
 
@@ -58,8 +59,17 @@ def check_oracle_undostat(item, params, info):
             if nospaceerrcnt == 0:
                 nospaceerrcntpic = ""
             else:
-                state = 2
-                nospaceerrcntpic = "(!!)"
+
+                if params.get('nospaceerrcnt_state'):
+                    state_errcnt = params.get('nospaceerrcnt_state')
+                    state = max(state, state_errcnt)
+
+                if state_errcnt == 1:
+                    nospaceerrcntpic = "(!)"
+                elif state_errcnt == 2:
+                    nospaceerrcntpic = "(!!)"
+                elif state_errcnt == 3:
+                    nospaceerrcntpic = "(?)"
 
             if tuned_undoretention >= 0:
                 infotext = "%s Undoretention (levels at %s/%s), %d active undoblocks, " \
@@ -72,7 +82,6 @@ def check_oracle_undostat(item, params, info):
                 % (maxconcurrency,
                    get_age_human_readable(maxquerylen),
                    nospaceerrcnt, nospaceerrcntpic)
-
 
 
             perfdata =  [('activeblk',        activeblks),

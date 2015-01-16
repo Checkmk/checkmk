@@ -1,0 +1,17 @@
+Title: oracle_dataguard_stats: New rule for apply_lag_min, removed default rule
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1420970426
+Class: feature
+
+The default parameters for this check has been removed, because there are
+no real usable default values for this check. Please add a rule if you used
+the default parameters in the past.
+
+A new check has been introduced. The minimum time in seconds for the apply_lag
+could be monitored as well. This requires a configured apply_lag in your
+Data Guard which is very seldom used.
+
+

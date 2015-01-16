@@ -3,10 +3,14 @@
     * 1842 FIX: Rewrote implementation of service discovery (formerly inventory)...
 
     Checks & Agents:
+    * 1817 FIX: The Check_MK service did not result in CRITICAL/WARNING states when using Nagios as core...
     * 1844 FIX: oracle_crs_res: fix computation of node a ressource is running on...
 
     Multisite:
     * 1843 FIX: Fixed crash in display of crash report for precompiled host checks
+
+    WATO:
+    * 1816 FIX: Fixed garbled output on "rename host" result page
 
 
 1.2.6b6:

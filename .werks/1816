@@ -1,0 +1,9 @@
+Title: Fixed garbled output on "rename host" result page
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b7
+Date: 1421393030
+Class: fix
+
+

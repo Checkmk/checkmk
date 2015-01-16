@@ -1,4 +1,10 @@
 1.2.6b7:
+    Core & Setup:
+    * 1842 FIX: Rewrote implementation of service discovery (formerly inventory)...
+
+    Multisite:
+    * 1843 FIX: Fixed crash in display of crash report for precompiled host checks
+
     WATO:
     * 1816 FIX: Fixed garbled output on "rename host" result page
 

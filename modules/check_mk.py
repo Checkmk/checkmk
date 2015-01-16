@@ -49,7 +49,7 @@ g_profile_path = 'profile.out'
 
 opt_debug        = '--debug' in sys.argv[1:]
 opt_interactive  = '--interactive' in sys.argv[1:]
-opt_verbose      = '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
+opt_verbose      = ('-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]) and 1 or 0
 
 if '--profile' in sys.argv[1:]:
     import cProfile
@@ -253,7 +253,7 @@ config_variable_names = set.difference(set(vars().keys()) - known_vars)
 
 # at check time (and many of what is also needed at administration time).
 try:
-    modules = [ 'check_mk_base', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery' ]
+    modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         if os.path.exists(filename):
@@ -276,13 +276,15 @@ except Exception, e:
 #   | These functions are used by some checks at administration time.      |
 #   +----------------------------------------------------------------------+
 
-# The function no_inventory_possible is as stub function used for
+# The function no_discovery_possible is as stub function used for
 # those checks that do not support inventory. It must be known before
 # we read in all the checks
-def no_inventory_possible(checkname, info):
+def no_discovery_possible(check_type, info):
     if opt_verbose:
-        sys.stdout.write("%s does not support inventory. Skipping it.\n" % checkname)
+        sys.stdout.write("%s does not support discovery. Skipping it.\n" % check_type)
     return []
+
+
 
 #.
 #   .--Load checks---------------------------------------------------------.
@@ -517,11 +519,6 @@ def aggregated_service_name(hostname, servicedesc):
 #   +----------------------------------------------------------------------+
 #   | Misc functions which do not belong to any other topic                |
 #   '----------------------------------------------------------------------'
-
-def verbose(t):
-    if opt_verbose:
-        sys.stderr.write(t)
-        sys.stderr.flush()
 
 def is_tcp_host(hostname):
     return in_binary_hostlist(hostname, tcp_hosts)
@@ -783,65 +780,6 @@ def get_single_oid(hostname, ipaddress, oid):
     g_single_oid_cache[oid] = value
     return value
 
-def snmp_scan(hostname, ipaddress):
-    # Make hostname globally available for scan functions.
-    # This is rarely used, but e.g. the scan for if/if64 needs
-    # this to evaluate if_disabled_if64_checks.
-    global g_hostname
-    g_hostname = hostname
-
-    if opt_verbose:
-        sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
-        sys.stdout.flush()
-    if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
-        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
-        if sys_descr == None:
-            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
-            # if opt_verbose:
-            #     sys.stderr.write("no SNMP answer\n")
-            # return []
-
-    found = []
-    for check_type, check in check_info.items():
-        if check_type in ignored_checktypes:
-            continue
-        elif not check_uses_snmp(check_type):
-            continue
-        basename = check_type.split(".")[0]
-        # The scan function should be assigned to the basename, because
-        # subchecks sharing the same SNMP info of course should have
-        # an identical scan function. But some checks do not do this
-        # correctly
-        scan_function = snmp_scan_functions.get(check_type,
-                snmp_scan_functions.get(basename))
-        if scan_function:
-            try:
-                result = scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid))
-                if result is not None and type(result) not in [ str, bool ]:
-                    if opt_debug:
-                        sys.stderr.write("[%s] Scan function returns invalid type (%s).\n" %
-                                                                (check_type, type(result)))
-                elif result:
-                    found.append(check_type)
-                    if opt_verbose:
-                        sys.stdout.write(tty_green + tty_bold + check_type
-                           + " " + tty_normal)
-                        sys.stdout.flush()
-            except:
-                pass
-        else:
-            found.append(check_type)
-            if opt_verbose:
-                sys.stdout.write(tty_blue + tty_bold + check_type \
-                    + tty_normal + " ")
-                sys.stdout.flush()
-
-    if opt_verbose:
-        sys.stdout.write("\n")
-    found.sort()
-    return found
-
 #.
 #   .--Cluster-------------------------------------------------------------.
 #   |                    ____ _           _                                |
@@ -914,7 +852,7 @@ def host_of_clustered_service(hostname, servicedesc):
 # Returns check table for a specific host
 # Format: (checkname, item) -> (params, description)
 
-def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='config'):
+def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='config', skip_autochecks=False):
     global g_singlehost_checks
     global g_multihost_checks
 
@@ -983,8 +921,9 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
     # Now process all entries that are specific to the host
     # in search (single host) or that might match the host.
-    for entry in read_autochecks_of(hostname, world):
-        handle_entry(entry)
+    if not skip_autochecks:
+        for entry in read_autochecks_of(hostname, world):
+            handle_entry(entry)
 
     for entry in g_singlehost_checks.get(hostname, []):
         handle_entry(entry)
@@ -996,7 +935,12 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
     if is_cluster(hostname):
         for node in nodes_of(hostname):
             node_checks = g_singlehost_checks.get(node, [])
-            for nodename, checkname, item, params in node_checks:
+            if not skip_autochecks:
+                node_checks = node_checks + read_autochecks_of(node, world)
+            for entry in node_checks:
+                if len(entry) == 4:
+                    entry = entry[1:] # drop hostname from g_singlehost_checks
+                checkname, item, params = entry
                 descr = service_description(checkname, item)
                 if hostname == host_of_clustered_service(node, descr):
                     cluster_params = compute_check_parameters(hostname, checkname, item, params)
@@ -2372,8 +2316,8 @@ define service {
     if 'cmk-inventory' in use_new_descriptions_for:
         service_discovery_name = 'Check_MK Discovery'
 
-    # Inventory checks - if user has configured them. Not for clusters.
-    if inventory_check_interval and not is_cluster(hostname) \
+    # Inventory checks - if user has configured them.
+    if inventory_check_interval \
         and not service_ignored(hostname, None, service_discovery_name) \
         and not "ping" in tags_of_host(hostname):
         outfile.write("""
@@ -2641,505 +2585,6 @@ def create_nagios_config_contacts(outfile, hostnames):
 def quote_nagios_string(s):
     return "'" + s.replace('\\', '\\\\').replace("'", "'\"'\"'").replace('!', '\\!') + "'"
 
-
-#.
-#   .--Inventory-----------------------------------------------------------.
-#   |            ___                      _                                |
-#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
-#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
-#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
-#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
-#   |                                                   |___/              |
-#   +----------------------------------------------------------------------+
-#   | Automatic service discovery                                          |
-#   |                                                                      |
-#   | Function call graph of discovery related functions                   |
-#   |                                                                      |
-#   | __main__ -> do_inventory() ----> do_snmp_scan() -> make_inventory()  |
-#   |                               |                 |                    |
-#   |                               `-----------------'                    |
-#   |                                                                      |
-#   | __main__ -> check_inventory() -> do_snmp_scan() -> make_inventory()  |
-#   |                               |                 |                    |
-#   |                               `-----------------'                    |
-#   |                                                                      |
-#   | keepalive -> check_inventory() -> do_snmp_scan() -> make_inventory() |
-#   |                                |                 |                   |
-#   |                                `-----------------'                   |
-#   |                                                                      |
-#   | automation_try_inventory() ----> do_snmp_scan() -> make_inventory()  |
-#   |                               |                 |                    |
-#   |                               `-----------------'                    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def do_inventory(hostnames, checknames, only_new):
-        # For clusters add their nodes to the list
-        nodes = []
-        for h in hostnames:
-            nodes = nodes_of(h)
-            if nodes:
-                hostnames += nodes
-
-        # Then remove clusters and make list unique
-        hostnames = list(set([ h for h in hostnames if not is_cluster(h) ]))
-        hostnames.sort()
-
-        if opt_verbose:
-            if len(hostnames) > 0:
-                sys.stdout.write("Inventorizing %s.\n" % ", ".join(hostnames))
-            else:
-                sys.stdout.write("Inventorizing all hosts.\n")
-
-        # remove existing checks, if option -I is used twice
-        if seen_I > 1:
-            if not checknames:
-                checks_to_remove = inventorable_checktypes("all")
-            else:
-                checks_to_remove = checknames
-
-            if len(hostnames) > 0:
-                for host in hostnames:
-                    remove_autochecks_of(host, checks_to_remove)
-                    # If all nodes of a cluster are contained in the list, then
-                    # also remove the autochecks of that cluster. Beware: a host
-                    # can be part more multiple clusters
-                    for clust in clusters_of(host):
-                        missing = [] # collect nodes missing on the command line
-                        for node in nodes_of(clust):
-                            if node not in hostnames:
-                                missing.append(node)
-
-                        if len(missing) == 0:
-                            if opt_verbose:
-                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, node))
-                            remove_autochecks_of(clust, checks_to_remove)
-
-                        else:
-                            sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" %
-                            (host, clust, ",".join(missing), clust))
-
-            else:
-                for host in all_active_hosts() + all_active_clusters():
-                    remove_autochecks_of(host, checks_to_remove)
-
-        if checknames == None:
-            do_snmp_scan(hostnames)
-            checknames = inventorable_checktypes("tcp")
-
-        for checkname in checknames:
-            make_inventory(checkname, hostnames, check_only=False)
-
-
-
-def inventorable_checktypes(what): # snmp, tcp, all
-    checknames = [ k for k in check_info.keys()
-                   if check_info[k]["inventory_function"] != None
-                   and (what == "all"
-                        or check_uses_snmp(k) == (what == "snmp"))
-                 ]
-    checknames.sort()
-    return checknames
-
-def checktype_ignored_for_host(host, checktype):
-    if checktype in ignored_checktypes:
-        return True
-    ignored = host_extra_conf(host, ignored_checks)
-    for e in ignored:
-        if checktype == e or (type(e) == list and checktype in e):
-            return True
-    return False
-
-def do_snmp_scan(hostnamelist, check_only=False, include_state=False):
-    if hostnamelist == []:
-        hostnamelist = all_hosts_untagged
-
-    result = []
-    for hostname in hostnamelist:
-        if not is_snmp_host(hostname):
-            continue
-        try:
-            ipaddress = lookup_ipaddress(hostname)
-        except:
-            sys.stdout.write("Cannot resolve %s into IP address. Skipping.\n" % hostname)
-            continue
-        try:
-            checknames = snmp_scan(hostname, ipaddress)
-        except Exception, e:
-            if opt_debug:
-                raise
-            sys.stdout.write("SNMP scan for %s failed: %s\n" % (hostname, e))
-            continue
-
-        for checkname in checknames:
-            if opt_debug:
-                sys.stdout.write("Trying inventory for %s on %s\n" % (checkname, hostname))
-            result += make_inventory(checkname, [hostname], check_only, include_state)
-    return result
-
-
-
-def make_inventory(checkname, hostnamelist, check_only=False, include_state=False):
-    try:
-        inventory_function = check_info[checkname]["inventory_function"]
-        if inventory_function == None:
-            inventory_function = no_inventory_possible
-    except KeyError:
-        sys.stderr.write("No such check type '%s'. Try check_mk -L.\n" % checkname)
-        sys.exit(1)
-
-    is_snmp_check = check_uses_snmp(checkname)
-
-    newchecks = {}  # dict host -> list of new checks
-    newitems = []   # used by inventory check to display unchecked items
-    count_new = 0
-    checked_hosts = []
-
-    # if no hostnamelist is specified, we use all hosts
-    if not hostnamelist or len(hostnamelist) == 0:
-        global opt_use_cachefile
-        opt_use_cachefile = True
-        hostnamelist = all_hosts_untagged
-
-    try:
-        for host in hostnamelist:
-            newchecks.setdefault(host, [])
-            if is_snmp_check:
-                # Skip SNMP check on non-SNMP hosts
-                if not is_snmp_host(host):
-                    continue
-                # Skip SNMP check if this checktype is disabled
-                if service_ignored(host, checkname, None):
-                    continue
-
-            # The decision wether to contact the agent via TCP
-            # is done in get_realhost_info(). This is due to
-            # the possibility that piggyback data from other
-            # hosts is available.
-
-            if is_cluster(host):
-                sys.stderr.write("%s is a cluster host and cannot be inventorized.\n" % host)
-                continue
-
-            # host is either hostname or "hostname/ipaddress"
-            s = host.split("/")
-            hostname = s[0]
-            if len(s) == 2:
-                ipaddress = s[1]
-            else:
-                # try to resolve name into ip address
-                if not opt_no_tcp:
-                    try:
-                        ipaddress = lookup_ipaddress(hostname)
-                    except:
-                        sys.stderr.write("Cannot resolve %s into IP address.\n" % hostname)
-                        continue
-                else:
-                    ipaddress = None # not needed, not TCP used
-
-            # Make hostname available as global variable in inventory functions
-            # (used e.g. by ps-inventory)
-            global g_hostname
-            g_hostname = hostname
-
-            # On --no-tcp option skip hosts without cache file
-            if opt_no_tcp:
-                if opt_no_cache:
-                    sys.stderr.write("You allowed me neither TCP nor cache. Bailing out.\n")
-                    sys.exit(4)
-
-                cachefile = tcp_cache_dir + "/" + hostname
-                if not os.path.exists(cachefile):
-                    if opt_verbose:
-                        sys.stderr.write("No cachefile %s. Skipping this host.\n" % cachefile)
-                    continue
-
-            checked_hosts.append(hostname)
-
-            checkname_base = checkname.split('.')[0]    # make e.g. 'lsi' from 'lsi.arrays'
-            try:
-                info = get_realhost_info(hostname, ipaddress, checkname_base, inventory_max_cachefile_age, True)
-                # Add information about nodes if check wants this
-                if check_info[checkname]["node_info"]:
-                    if clusters_of(hostname):
-                        add_host = hostname
-                    else:
-                        add_host = None
-                    info = [ [add_host] + line for line in info ]
-
-                # Convert with parse function if available
-                if checkname_base in check_info: # parse function must be define for base check
-                    parse_function = check_info[checkname_base]["parse_function"]
-                    if parse_function:
-                        info = check_info[checkname_base]["parse_function"](info)
-
-            except MKAgentError, e:
-                # This special handling is needed for the inventory check. It needs special
-                # handling for WATO.
-                if check_only and not include_state and str(e):
-                    raise
-                elif not include_state and str(e):
-                    sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
-                elif include_state and str(e): # WATO automation. Abort
-                    raise
-                continue
-
-            except MKSNMPError, e:
-                # This special handling is needed for the inventory check. It needs special
-                # handling for WATO.
-                if check_only and not include_state and str(e):
-                    raise
-                elif not include_state and str(e):
-                    sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
-                continue
-
-            except Exception, e:
-                if check_only or opt_debug:
-                    raise
-                sys.stderr.write("Cannot get information from host '%s': %s\n" % (hostname, e))
-                continue
-
-            if info == None: # No data for this check type
-                continue
-            try:
-                # Check number of arguments of inventory function
-                if len(inspect.getargspec(inventory_function)[0]) == 2:
-                    inventory = inventory_function(checkname, info) # inventory is a list of pairs (item, current_value)
-                else:
-                    # New preferred style since 1.1.11i3: only one argument: info
-                    inventory = inventory_function(info)
-                if inventory == None: # tolerate if function does no explicit return
-                    inventory = []
-
-                # New yield based api style
-                if type(inventory) != list:
-                    inventory = list(inventory)
-            except Exception, e:
-                if opt_debug:
-                    sys.stderr.write("Exception in inventory function of check type %s\n" % checkname)
-                    raise
-                if opt_verbose:
-                    sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
-                continue
-
-            if not isinstance(inventory, list):
-                sys.stderr.write("%s: Check %s returned invalid inventory data: %s\n" %
-                                                    (hostname, checkname, repr(inventory)))
-                continue
-
-            for entry in inventory:
-                state_type = "new" # assume new, change later if wrong
-
-                if not isinstance(entry, tuple):
-                    sys.stderr.write("%s: Check %s returned invalid inventory data (entry not a tuple): %s\n" %
-                                                                         (hostname, checkname, repr(inventory)))
-                    continue
-
-                if len(entry) == 2: # comment is now obsolete
-                    item, paramstring = entry
-                else:
-                    try:
-                        item, comment, paramstring = entry
-                    except ValueError:
-                        sys.stderr.write("%s: Check %s returned invalid inventory data (not 2 or 3 elements): %s\n" %
-                                                                               (hostname, checkname, repr(inventory)))
-                        continue
-
-                description = service_description(checkname, item)
-                # make sanity check
-                if len(description) == 0:
-                    sys.stderr.write("%s: Check %s returned empty service description - ignoring it.\n" %
-                                                    (hostname, checkname))
-                    continue
-
-
-                # Find logical host this check belongs to. The service might belong to a cluster.
-                hn = host_of_clustered_service(hostname, description)
-
-                # Now compare with already known checks for this host (from
-                # previous inventory or explicit checks). Also drop services
-                # the user wants to ignore via 'ignored_services'.
-                checktable = get_check_table(hn)
-                checked_items = [ i for ( (cn, i), (par, descr, deps) ) \
-                                  in checktable.items() if cn == checkname ]
-                if item in checked_items:
-                    if include_state:
-                        state_type = "old"
-                    else:
-                        continue # we have that already
-
-                if service_ignored(hn, checkname, description):
-                    if include_state:
-                        if state_type == "old":
-                            state_type = "obsolete"
-                        else:
-                            state_type = "ignored"
-                    else:
-                        continue # user does not want this item to be checked
-
-                newcheck = '  ("%s", %r, %s),' % (checkname, item, paramstring)
-                newcheck += "\n"
-                if newcheck not in newchecks[host]: # avoid duplicates if inventory outputs item twice
-                    newchecks[host].append(newcheck)
-                    if include_state:
-                        newitems.append( (hostname, checkname, item, paramstring, state_type) )
-                    else:
-                        newitems.append( (hostname, checkname, item) )
-                    count_new += 1
-
-
-    except KeyboardInterrupt:
-        sys.stderr.write('<Interrupted>\n')
-
-    if not check_only:
-        if count_new:
-            for hostname, nc in newchecks.items():
-                add_to_autochecks_of(hostname, nc)
-            sys.stdout.write('%-30s ' % (tty_cyan + tty_bold + checkname + tty_normal))
-            sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
-
-    return newitems
-
-
-def check_inventory(hostname, ipaddress=None):
-    newchecks = []
-    newitems = []
-    total_count = 0
-    is_snmp = is_snmp_host(hostname)
-    is_tcp  = is_tcp_host(hostname)
-    check_table = get_check_table(hostname, use_cache=False)
-
-    try:
-        if is_snmp and inventory_check_do_scan:
-            if not ipaddress:
-                ipaddress = lookup_ipaddress(hostname)
-            snmp_checktypes = snmp_scan(hostname, ipaddress)
-        else:
-            snmp_checktypes = []
-
-        hosts_checktypes = set([ ct for (ct, item), params in check_table.items() ])
-
-        for ct in inventorable_checktypes("all"):
-            if check_uses_snmp(ct) and not is_snmp:
-                continue # Skip SNMP checks on non-SNMP hosts
-            elif check_uses_snmp(ct) and ct not in hosts_checktypes and ct not in snmp_checktypes:
-                continue # Only try positive scans and existing types
-            elif not check_uses_snmp(ct) and not is_tcp:
-                continue # Skip TCP checks on non-TCP hosts
-
-            if ipaddress:
-                hostdef = [hostname+'/'+ipaddress]
-            else:
-                hostdef = [hostname]
-            new = make_inventory(ct, hostdef, check_only=True)
-            newitems += new
-            count = len(new)
-            if count > 0:
-                newchecks.append((ct, count))
-                total_count += count
-
-        if total_count > 0:
-            info = ", ".join([ "%s:%d" % (ct, count) for ct,count in newchecks ])
-            output = "%d unchecked services (%s)\n" % (total_count, info)
-            # Put detailed list into long plugin output
-            for hostname, checkname, item in newitems:
-                output += "%s: %s\n" % (checkname, service_description(checkname, item))
-            status = inventory_check_severity
-        else:
-            output = "no unchecked services found\n"
-            status = 0
-    except SystemExit, e:
-        raise e
-    except Exception, e:
-        if opt_debug:
-            raise
-        # Honor rule settings for "Status of the Check_MK service". In case of
-        # a problem we assume a connection error here.
-        spec = exit_code_spec(hostname)
-        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
-            what = "connection"
-        else:
-            what = "exception"
-        status = spec.get(what, 3)
-        output = str(e)
-
-    if opt_keepalive:
-        global total_check_output
-        total_check_output += output
-        return status
-    else:
-        sys.stdout.write(nagios_state_names[status] + " - " + output)
-        sys.exit(status)
-
-
-def service_ignored(hostname, checktype, service_description):
-    if checktype and checktype in ignored_checktypes:
-        return True
-    if service_description != None and in_boolean_serviceconf_list(hostname, service_description, ignored_services):
-        return True
-    if checktype and checktype_ignored_for_host(hostname, checktype):
-        return True
-    return False
-
-def add_to_autochecks_of(hostname, newchecks):
-    if not os.path.exists(autochecksdir):
-        os.makedirs(autochecksdir)
-    filepath = autochecksdir + "/" + hostname + ".mk"
-    if not os.path.exists(filepath):
-        out = file(filepath, "w")
-        out.write("[\n")
-    else:
-        lines = file(filepath).readlines()
-        out = file(filepath, "w")
-        out.write("".join(lines[:-1])) # drop final ]
-
-    out.write("".join(newchecks))
-    out.write("]\n")
-
-# Remove all autochecks of certain types of a certain host
-def remove_autochecks_of(hostname, checktypes = None): # None = all
-    fn = autochecksdir + "/" + hostname + ".mk"
-    if not os.path.exists(fn):
-        return 0
-
-    count = 0
-    removed = 0
-    kept_lines = []
-    for ct, item, params, paramstring in parse_autochecks_file(hostname):
-        count += 1
-        if checktypes != None and ct not in checktypes:
-            kept_lines.append((ct, item, paramstring))
-        else:
-            removed += 1
-            if ct not in check_info:
-                sys.stderr.write('Removing unimplemented check %s.\n' % ct)
-
-    if len(kept_lines) == 0:
-        if opt_verbose:
-            sys.stdout.write("Deleting %s.\n" % fn)
-        if os.path.exists(fn):
-            os.remove(fn)
-
-    elif removed:
-        if opt_verbose:
-            sys.stdout.write("Removing %d checks from %s.\n" % (removed, fn))
-        f = file(fn, "w+")
-        f.write("[\n")
-        for line in kept_lines:
-            f.write("  (%r, %r, %s),\n" % line)
-        f.write("]\n")
-
-    return removed
-
-def remove_all_autochecks():
-    for f in glob.glob(autochecksdir + '/*.mk'):
-        if opt_verbose:
-            sys.stdout.write("Deleting %s.\n" % f)
-        if os.path.exists(f):
-            os.remove(f)
-
-
 #.
 #   .--Precompile----------------------------------------------------------.
 #   |          ____                                     _ _                |
@@ -3263,7 +2708,7 @@ if os.path.islink(%(dst)r):
     # initialize global variables
     output.write("""
 # very simple commandline parsing: only -v and -d are supported
-opt_verbose = '-v' in sys.argv
+opt_verbose = ('-v' in sys.argv) and 1 or 0
 opt_debug   = '-d' in sys.argv
 
 # make sure these names are defined (even if never needed)
@@ -4308,10 +3753,10 @@ def do_flush(hosts):
                 sys.stdout.write(tty_bold + tty_magenta + " logfiles(%d)" % d)
 
         # autochecks
-        d = remove_autochecks_of(host)
-        if d > 0:
+        count = remove_autochecks_of(host)
+        if count:
             flushed = True
-            sys.stdout.write(tty_bold + tty_cyan + " autochecks(%d)" % d)
+            sys.stdout.write(tty_bold + tty_cyan + " autochecks(%d)" % count)
 
         # inventory
         path = var_dir + "/inventory/" + host
@@ -4751,7 +4196,7 @@ def usage():
  cmk -R, --restart                    precompile + config + core restart
  cmk -D, --dump [H1 H2 ..]            dump all or some hosts
  cmk -d HOSTNAME|IPADDRESS            show raw information from agent
- cmk --check-inventory HOSTNAME       check for items not yet checked
+ cmk --check-discovery HOSTNAME       check for items not yet checked
  cmk --update-dns-cache               update IP address lookup cache
  cmk -l, --list-hosts [G1 G2 ...]     print list of all hosts
  cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
@@ -4830,7 +4275,7 @@ NOTES:
   -d does not work on clusters (such defined in main.mk) but only on
   real hosts.
 
-  --check-inventory make check_mk behave as monitoring plugins that
+  --check-discovery make check_mk behave as monitoring plugins that
   checks if an inventory would find new services for the host.
 
   --list-hosts called without argument lists all hosts. You may
@@ -5578,9 +5023,13 @@ def do_check_keepalive():
                     check_max_cachefile_age     = orig_check_max_cachefile_age
                     inventory_max_cachefile_age = orig_inventory_max_cachefile_age
 
+                # FIXME: remove obsolete check-inventory
                 if '--check-inventory' in args:
                     args.remove('--check-inventory')
-                    mode_function = check_inventory
+                    mode_function = check_discovery
+                elif '--check-discovery' in args:
+                    args.remove('--check-discovery')
+                    mode_function = check_discovery
                 else:
                     mode_function = do_check
 
@@ -5961,120 +5410,6 @@ def get_checkgroup_parameters(host, checktype, item):
         return service_extra_conf(host, str(item), rules)
 
 
-# Read automatically discovered checks of one host.
-# world: "config" -> File in var/check_mk/autochecks
-#        "active" -> Copy in var/check_mk/core/autochecks
-def read_autochecks_of(hostname, world="config"):
-    if world == "config":
-        basedir = autochecksdir
-    else:
-        basedir = var_dir + "/core/autochecks"
-    filepath = basedir + '/' + hostname + '.mk'
-
-    if not os.path.exists(filepath):
-        return []
-    try:
-        autochecks_raw = eval(file(filepath).read())
-    except SyntaxError,e:
-        if opt_verbose:
-            sys.stderr.write("Syntax error in file %s: %s\n" % (filepath, e))
-        if opt_debug:
-            sys.exit(3)
-        return []
-    except Exception, e:
-        if opt_verbose:
-            sys.stderr.write("Error in file %s:\n%s\n" % (filepath, e))
-        if opt_debug:
-            sys.exit(3)
-        return []
-
-    # Exchange inventorized check parameters with those configured by
-    # the user. Also merge with default levels for modern dictionary based checks.
-    autochecks = []
-    for entry in autochecks_raw:
-        if len(entry) == 4: # old format where hostname is at the first place
-            entry = entry[1:]
-        ct, it, par = entry
-        autochecks.append( (ct, it, compute_check_parameters(hostname, ct, it, par)) )
-    return autochecks
-
-# Read autochecks, but do not compute final check parameters,
-# also return a forth column with the raw string of the parameters.
-def parse_autochecks_file(hostname):
-    def split_python_tuple(line):
-        quote = None
-        bracklev = 0
-        backslash = False
-        for i, c in enumerate(line):
-            if backslash:
-                backslash = False
-                continue
-            elif c == '\\':
-                backslash = True
-            elif c == quote:
-                quote = None # end of quoted string
-            elif c in [ '"', "'" ]:
-                quote = c # begin of quoted string
-            elif quote:
-                continue
-            elif c in [ '(', '{', '[' ]:
-                bracklev += 1
-            elif c in [ ')', '}', ']' ]:
-                bracklev -= 1
-            elif bracklev > 0:
-                continue
-            elif c == ',':
-                value = line[0:i]
-                rest = line[i+1:]
-                return value.strip(), rest
-        return line.strip(), None
-
-    path = "%s/%s.mk" % (autochecksdir, hostname)
-    if not os.path.exists(path):
-        return []
-    lineno = 0
-
-    table = []
-    for line in file(path):
-        lineno += 1
-        try:
-            line = line.strip()
-            if not line.startswith("("):
-                continue
-
-            # drop everything after potential '#' (from older versions)
-	    i = line.rfind('#')
-	    if i > 0: # make sure # is not contained in string
-		rest = line[i:]
-		if '"' not in rest and "'" not in rest:
-		    line = line[:i].strip()
-
-            if line.endswith(","):
-                line = line[:-1]
-            line = line[1:-1] # drop brackets
-
-            # First try old format - with hostname
-            parts = []
-            while True:
-                try:
-                    part, line = split_python_tuple(line)
-                    parts.append(part)
-                except:
-                    break
-            if len(parts) == 4:
-                parts = parts[1:] # drop hostname, legacy format with host in first column
-            elif len(parts) != 3:
-                raise Exception("Invalid number of parts: %d" % len(parts))
-
-            checktypestring, itemstring, paramstring = parts
-            table.append((eval(checktypestring), eval(itemstring), eval(paramstring), paramstring))
-        except:
-            if opt_debug:
-                raise
-            raise Exception("Invalid line %d in autochecks file %s" % (lineno, path))
-    return table
-
-
 def output_profile():
     if g_profile:
         g_profile.dump_stats(g_profile_path)
@@ -6115,7 +5450,8 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "convert-rrds", "split-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                  "man", "nowiki", "config-check", "backup=", "restore=",
-                 "check-inventory=", "paths", "checks=", "inventory", "inventory-as-check=",
+                 "check-inventory=", "check-discovery=", "paths", 
+                 "checks=", "inventory", "inventory-as-check=",
                  "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
 
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
@@ -6138,11 +5474,12 @@ done = False
 seen_I = 0
 check_types = None
 exit_status = 0
+opt_verbose = 0 # start again from 0, was already faked at the beginning
 
 # Scan modifying options first (makes use independent of option order)
 for o,a in opts:
     if o in [ '-v', '--verbose' ]:
-        opt_verbose = True
+        opt_verbose += 1
     elif o in [ '-f', '--force' ]:
         opt_force = True
     elif o == '-c':
@@ -6294,13 +5631,8 @@ try:
         elif o == '-d':
             output_plain_hostinfo(a)
             done = True
-        elif o == '--check-inventory':
-            if '/' in a:
-                hostname, ipaddress = a.split('/', 1)
-            else:
-                hostname  = a
-                ipaddress = None
-            check_inventory(hostname, ipaddress)
+        elif o in [ '--check-discovery', '--check-inventory' ]:
+            check_discovery(a)
             done = True
         elif o == '--scan-parents':
             do_scan_parents(args)
@@ -6351,43 +5683,44 @@ try:
             do_show_snmp_stats()
             done = True
 
-except MKGeneralException, e:
+    # handle -I / -II
+    if not done and seen_I > 0:
+        hostnames = parse_hostname_list(args)
+        do_discovery(hostnames, check_types, seen_I == 1)
+        done = True
+
+    if not done:
+        if (len(args) == 0 and not opt_keepalive) or len(args) > 2:
+            usage()
+            sys.exit(1)
+
+        # handle --keepalive
+        elif opt_keepalive:
+            do_check_keepalive()
+
+        # handle adhoc-check
+        else:
+            hostname = args[0]
+            if len(args) == 2:
+                ipaddress = args[1]
+            else:
+                if is_cluster(hostname):
+                    ipaddress = None
+                else:
+                    try:
+                        ipaddress = lookup_ipaddress(hostname)
+                    except:
+                        print "Cannot resolve hostname '%s'." % hostname
+                        sys.exit(2)
+
+            exit_status = do_check(hostname, ipaddress, check_types)
+
+    output_profile()
+    sys.exit(exit_status)
+
+except (MKGeneralException, MKBailOut), e:
     sys.stderr.write("%s\n" % e)
     if opt_debug:
         raise
     sys.exit(3)
 
-# handle -I / -II
-if not done and seen_I > 0:
-    hostnames = parse_hostname_list(args)
-    do_inventory(hostnames, check_types, seen_I == 1)
-    done = True
-
-if not done:
-    if (len(args) == 0 and not opt_keepalive) or len(args) > 2:
-        usage()
-        sys.exit(1)
-
-    # handle --keepalive
-    elif opt_keepalive:
-        do_check_keepalive()
-
-    # handle adhoc-check
-    else:
-        hostname = args[0]
-        if len(args) == 2:
-            ipaddress = args[1]
-        else:
-            if is_cluster(hostname):
-                ipaddress = None
-            else:
-                try:
-                    ipaddress = lookup_ipaddress(hostname)
-                except:
-                    print "Cannot resolve hostname '%s'." % hostname
-                    sys.exit(2)
-
-        exit_status = do_check(hostname, ipaddress, check_types)
-
-output_profile()
-sys.exit(exit_status)

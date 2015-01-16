@@ -49,9 +49,9 @@ def do_automation(cmd, args):
         else:
             read_config_files()
             if cmd == "try-inventory":
-                result = automation_try_inventory(args)
+                result = automation_try_discovery(args)
             elif cmd == "inventory":
-                result = automation_inventory(args)
+                result = automation_discovery(args)
             elif cmd == "analyse-service":
                 result = automation_analyse_service(args)
             elif cmd == "active-check":
@@ -107,25 +107,21 @@ def do_automation(cmd, args):
 # "remove" - remove exceeding services
 # "fixall" - find new, remove exceeding
 # "refresh" - drop all services and reinventorize
-def automation_inventory(args):
-    global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
+def automation_discovery(args):
 
     # perform full SNMP scan on SNMP devices?
     if args[0] == "@scan":
-        with_snmp_scan = True
+        do_snmp_scan = True
         args = args[1:]
     else:
-        with_snmp_scan = False
+        do_snmp_scan = False
 
     # use cache files if present?
     if args[0] == "@cache":
-        opt_use_cachefile = True
-        inventory_max_cachefile_age = 1000000000
-        check_max_cachefile_age = 1000000000
         args = args[1:]
+        use_caches = True
     else:
-        opt_use_cachefile = False
-        inventory_max_cachefile_age = -1
+        use_caches = False
 
     if len(args) < 2:
         raise MKAutomationError("Need two arguments: new|remove|fixall|refresh HOSTNAME")
@@ -135,47 +131,57 @@ def automation_inventory(args):
 
     counts = {}
     failed_hosts = {}
-    k = globals().keys()
-    if how == "refresh":
-        for hostname in hostnames:
-            counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, new
-            counts[hostname][1] += remove_autochecks_of(hostname) # checktype could be added here
 
     for hostname in hostnames:
-        counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, new
-
+        counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, total
         try:
+            # in "refresh" mode we first need to remove all previously discovered
+            # checks of the host, so that get_host_services() does show us the
+            # new discovered check parameters.
+            if how == "refresh":
+                counts[hostname][1] += remove_autochecks_of(hostname) # this is cluster-aware!
+
             # Compute current state of new and existing checks
-            table = automation_try_inventory([hostname], leave_no_tcp=True, with_snmp_scan=with_snmp_scan)
+            services = get_host_services(hostname, use_caches=use_caches, do_snmp_scan=do_snmp_scan)
 
             # Create new list of checks
-            new_items = []
-            for entry in table:
-                state_type, ct, checkgroup, item, paramstring = entry[:5]
-                if state_type in [ "legacy", "active", "manual", "ignored" ]:
+            new_items = {}
+            for (check_type, item), (check_source, paramstring) in services.items():
+                if check_source in ("custom", "legacy", "active", "manual"):
                     continue # this is not an autocheck or ignored and currently not checked
+                    # Note discovered checks that are shadowed by manual checks will vanish
+                    # that way.
 
-                if state_type == "new":
-                    if how in [ "new", "fixall", "refresh" ]:
-                        counts[hostname][0] += 1
-                        new_items.append((ct, item, paramstring))
+                if check_source in ("new"):
+                    if how in ("new", "fixall", "refresh"):
+                        counts[hostname][0] += 1 # added
+                        counts[hostname][3] += 1 # total
+                        new_items[(check_type, item)] = paramstring
 
-                elif state_type == "old":
+                elif check_source in ("old", "ignored"):
                     # keep currently existing valid services in any case
-                    new_items.append((ct, item, paramstring))
-                    counts[hostname][2] += 1
+                    new_items[(check_type, item)] = paramstring
+                    counts[hostname][2] += 1 # kept
+                    counts[hostname][3] += 1 # total
 
-                elif state_type in [ "obsolete", "vanished" ]:
+                elif check_source in ("obsolete", "vanished"):
                     # keep item, if we are currently only looking for new services
                     # otherwise fix it: remove ignored and non-longer existing services
-                    if how not in [ "fixall", "remove" ]:
-                        new_items.append((ct, item, paramstring))
-                        counts[hostname][2] += 1
+                    if how not in ("fixall", "remove"):
+                        new_items[(check_type, item)] = paramstring
+                        counts[hostname][2] += 1 # kept
+                        counts[hostname][3] += 1 # total
                     else:
-                        counts[hostname][1] += 1
+                        counts[hostname][1] += 1 # removed
 
-            automation_write_autochecks_file(hostname, new_items)
-            counts[hostname][3] += len(new_items)
+                # Silently keep clustered services
+                elif check_source.startswith("clustered_"):
+                    new_items[(check_type, item)] = paramstring
+
+                else:
+                    raise MKGeneralException("Unknown check source '%s'" % check_source)
+
+            set_autochecks_of(hostname, new_items)
 
         except Exception, e:
 	    if opt_debug:
@@ -185,253 +191,22 @@ def automation_inventory(args):
     return counts, failed_hosts
 
 
-def automation_try_inventory(args, leave_no_tcp=False, with_snmp_scan=False):
-    global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
+def automation_try_discovery(args): #### , leave_no_tcp=False, with_snmp_scan=False):
+    use_caches = False
+    do_snmp_scan = False
     if args[0] == '@noscan':
         args = args[1:]
-        with_snmp_scan = False
-        opt_use_cachefile = True
-        check_max_cachefile_age = 1000000000
-        inventory_max_cachefile_age = 1000000000
+        do_snmp_scan = False
+        use_caches = True
     elif args[0] == '@scan':
         args = args[1:]
-        with_snmp_scan = True
-        leave_no_tcp = True
+        do_snmp_scan = True
+        use_caches = False
 
     hostname = args[0]
-
-    # hostname might be a cluster. In that case we compute the clustered
-    # services of that cluster.
-    services = []
-    if is_cluster(hostname):
-        already_added = set([])
-        for node in nodes_of(hostname):
-            new_services = automation_try_inventory_node(node, leave_no_tcp=leave_no_tcp, with_snmp_scan=with_snmp_scan)
-
-            for entry in new_services:
-                if host_of_clustered_service(node, entry[6]) == hostname:
-                    # 1: check, 6: Service description
-                    if (entry[1], entry[6]) not in already_added:
-                        services.append(entry)
-                        already_added.add((entry[1], entry[6])) # make it unique
-
-        # Find manual checks for this cluster
-        cluster_checks = get_check_table(hostname)
-        for (ct, item), (params, descr, deps) in cluster_checks.items():
-            if (ct, descr) not in already_added:
-                services.append(("manual", ct, None, item, repr(params), params, descr, 0, "", None))
-                already_added.add( (ct, descr) ) # make it unique
-
-    else:
-        new_services = automation_try_inventory_node(hostname, leave_no_tcp=leave_no_tcp, with_snmp_scan=with_snmp_scan)
-        for entry in new_services:
-            host = host_of_clustered_service(hostname, entry[6])
-            if host == hostname:
-                services.append(entry)
-            else:
-                services.append(("clustered",) + entry[1:])
-
-    return services
-
-
-
-def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=False):
-    global opt_use_cachefile, opt_no_tcp, opt_dont_submit
-
-    try:
-        ipaddress = lookup_ipaddress(hostname)
-    except:
-        raise MKAutomationError("Cannot lookup IP address of host %s" % hostname)
-
-    found_services = []
-
-    dual_host = is_snmp_host(hostname) and is_tcp_host(hostname)
-
-    # if we are using cache files, then we restrict us to existing
-    # check types. SNMP scan is only done without the --cache option
-    snmp_error = None
-    if is_snmp_host(hostname):
-        try:
-            if not with_snmp_scan:
-                existing_checks = set([ cn for (cn, item) in get_check_table(hostname) ])
-                for cn in inventorable_checktypes("snmp"):
-                    if cn in existing_checks:
-                        found_services += make_inventory(cn, [hostname], check_only=True, include_state=True)
-            else:
-                if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-                    sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
-                    if sys_descr == None:
-                        raise MKSNMPError("Cannot get system description via SNMP. "
-                                          "SNMP agent is not responding. Probably wrong "
-                                          "community or wrong SNMP version. IP address is %s" %
-                                           ipaddress)
-
-                found_services = do_snmp_scan([hostname], True, True)
-
-        except Exception, e:
-            if not dual_host:
-                raise
-            snmp_error = str(e)
-
-    tcp_error = None
-
-    # Honor piggy_back data, even if host is not declared as TCP host
-    if is_tcp_host(hostname) or \
-           get_piggyback_info(hostname) or get_piggyback_info(ipaddress):
-        try:
-            for cn in inventorable_checktypes("tcp"):
-                found_services += make_inventory(cn, [hostname], check_only=True, include_state=True)
-        except Exception, e:
-            if not dual_host:
-                raise
-            tcp_error = str(e)
-
-    # raise MKAutomationError("%s/%s/%s" % (dual_host, snmp_error, tcp_error))
-    if dual_host and snmp_error and tcp_error:
-        raise MKAutomationError("Error using TCP (%s)\nand SNMP (%s)" %
-                (tcp_error, snmp_error))
-
-    found = {}
-    for hn, ct, item, paramstring, state_type in found_services:
-       found[(ct, item)] = ( state_type, paramstring )
-
-    # Check if already in autochecks (but not found anymore)
-    for ct, item, params in read_autochecks_of(hostname):
-        if (ct, item) not in found:
-            found[(ct, item)] = ('vanished', repr(params) ) # This is not the real paramstring!
-
-    # Find manual checks
-    existing = get_check_table(hostname)
-    for (ct, item), (params, descr, deps) in existing.items():
-        if (ct, item) not in found:
-            found[(ct, item)] = ('manual', repr(params) )
-
-    # Add legacy checks and active checks with artificial type 'legacy'
-    legchecks = host_extra_conf(hostname, legacy_checks)
-    for cmd, descr, perf in legchecks:
-        found[('legacy', descr)] = ( 'legacy', 'None' )
-
-    # Add custom checks and active checks with artificial type 'custom'
-    custchecks = host_extra_conf(hostname, custom_checks)
-    for entry in custchecks:
-        found[('custom', entry['service_description'])] = ( 'custom', 'None' )
-
-    # Similar for 'active_checks', but here we have parameters
-    for acttype, rules in active_checks.items():
-        act_info = active_check_info[acttype]
-        entries = host_extra_conf(hostname, rules)
-        for params in entries:
-            descr = act_info["service_description"](params)
-            found[(acttype, descr)] = ( 'active', repr(params) )
-
-    # Collect current status information about all existing checks
-    table = []
-    for (ct, item), (state_type, paramstring) in found.items():
-        params = None
-        if state_type not in [ 'legacy', 'active', 'custom' ]:
-            # apply check_parameters
-            try:
-                if type(paramstring) == str:
-                    params = eval(paramstring)
-                else:
-                    params = paramstring
-            except:
-                raise MKAutomationError("Invalid check parameter string '%s'" % paramstring)
-
-            descr = service_description(ct, item)
-            global g_service_description
-            g_service_description = descr
-            infotype = ct.split('.')[0]
-
-            # Sorry. The whole caching stuff is the most horrible hack in
-            # whole Check_MK. Nobody dares to clean it up, YET. But that
-            # day is getting nearer...
-            old_opt_use_cachefile = opt_use_cachefile
-            opt_use_cachefile = True
-	    if not leave_no_tcp:
-	        opt_no_tcp = True
-            opt_dont_submit = True
-
-            if ct not in check_info:
-                continue # Skip not existing check silently
-
-            try:
-                exitcode = None
-                perfdata = []
-                info = get_host_info(hostname, ipaddress, infotype)
-            # Handle cases where agent does not output data
-            except MKAgentError, e:
-                exitcode = 3
-                output = "Error getting data from agent"
-                if str(e):
-                    output += ": %s" % e
-                tcp_error = output
-
-            except MKSNMPError, e:
-                exitcode = 3
-                output = "Error getting data from agent for %s via SNMP" % infotype
-                if str(e):
-                    output += ": %s" % e
-                snmp_error = output
-
-            except Exception, e:
-                exitcode = 3
-                output = "Error getting data for %s: %s" % (infotype, e)
-                if check_uses_snmp(ct):
-                    snmp_error = output
-                else:
-                    tcp_error = output
-
-            opt_use_cachefile = old_opt_use_cachefile
-
-            if exitcode == None:
-                check_function = check_info[ct]["check_function"]
-                if state_type != 'manual':
-                    params = compute_check_parameters(hostname, ct, item, params)
-
-                try:
-                    reset_wrapped_counters()
-                    result = convert_check_result(check_function(item, params, info), check_uses_snmp(ct))
-                    if last_counter_wrap():
-                        raise last_counter_wrap()
-                except MKCounterWrapped, e:
-                    result = (None, "WAITING - Counter based check, cannot be done offline")
-                except Exception, e:
-                    if opt_debug:
-                        raise
-                    result = (3, "UNKNOWN - invalid output from agent or error in check implementation")
-                if len(result) == 2:
-                    result = (result[0], result[1], [])
-                exitcode, output, perfdata = result
-        else:
-            descr = item
-            exitcode = None
-            output = "WAITING - %s check, cannot be done offline" % state_type.title()
-            perfdata = []
-
-        if state_type == "active":
-            params = eval(paramstring)
-
-        if state_type in [ "legacy", "active", "custom" ]:
-            checkgroup = None
-            if service_ignored(hostname, None, descr):
-                state_type = "ignored"
-        else:
-            checkgroup = check_info[ct]["group"]
-
-        table.append((state_type, ct, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
-
-    if not table and (tcp_error or snmp_error):
-        error = ""
-        if snmp_error:
-            error = "Error getting data via SNMP: %s" % snmp_error
-        if tcp_error:
-            if error:
-                error += ", "
-            error += "Error getting data from Check_MK agent: %s" % tcp_error
-        raise MKAutomationError(error)
-
+    table = get_check_preview(hostname, use_caches=use_caches, do_snmp_scan=do_snmp_scan)
     return table
+
 
 # Set the new list of autochecks. This list is specified by a
 # table of (checktype, item). No parameters are specified. Those
@@ -441,7 +216,9 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
 def automation_set_autochecks(args):
     hostname = args[0]
     new_items = eval(sys.stdin.read())
+    set_autochecks_of(hostname, new_items)
 
+def set_autochecks_of(hostname, new_items):
     # A Cluster does not have an autochecks file
     # All of its services are located in the nodes instead
     # So we cycle through all nodes remove all clustered service
@@ -450,12 +227,12 @@ def automation_set_autochecks(args):
         for node in nodes_of(hostname):
             new_autochecks = []
             existing = parse_autochecks_file(node)
-            for ct, item, params, paramstring in existing:
-                descr = service_description(ct, item)
+            for check_type, item, paramstring in existing:
+                descr = service_description(check_type, item)
                 if hostname != host_of_clustered_service(node, descr):
-                    new_autochecks.append((ct, item, paramstring))
-            for (ct, item), paramstring in new_items.items():
-                new_autochecks.append((ct, item, paramstring))
+                    new_autochecks.append((check_type, item, paramstring))
+            for (check_type, item), paramstring in new_items.items():
+                new_autochecks.append((check_type, item, paramstring))
             # write new autochecks file for that host
             automation_write_autochecks_file(node, new_autochecks)
     else:
@@ -463,7 +240,7 @@ def automation_set_autochecks(args):
         # write new autochecks file, but take paramstrings from existing ones
         # for those checks which are kept
         new_autochecks = []
-        for ct, item, params, paramstring in existing:
+        for ct, item, paramstring in existing:
             if (ct, item) in new_items:
                 new_autochecks.append((ct, item, paramstring))
                 del new_items[(ct, item)]
@@ -475,21 +252,26 @@ def automation_set_autochecks(args):
         automation_write_autochecks_file(hostname, new_autochecks)
 
 
-def automation_get_autochecks(args):
-    hostname = args[0]
-    return parse_autochecks_file(hostname)
-
 def automation_write_autochecks_file(hostname, table):
     if not os.path.exists(autochecksdir):
         os.makedirs(autochecksdir)
     path = "%s/%s.mk" % (autochecksdir, hostname)
     f = file(path, "w")
     f.write("[\n")
-    for ct, item, paramstring in table:
-        f.write("  (%r, %r, %s),\n" % (ct, item, paramstring))
+    for check_type, item, paramstring in table:
+        f.write("  (%r, %r, %s),\n" % (check_type, item, paramstring))
     f.write("]\n")
     if inventory_check_autotrigger and inventory_check_interval:
         schedule_inventory_check(hostname)
+
+
+def automation_get_autochecks(args):
+    hostname = args[0]
+    result = []
+    for ct, item, paramstring in parse_autochecks_file(hostname):
+        result.append((ct, item, eval(paramstring), paramstring))
+    return result
+
 
 def schedule_inventory_check(hostname):
     try:
@@ -863,7 +645,7 @@ def automation_rename_host(args):
         old_autochecks = parse_autochecks_file(oldname)
         out = file(autochecksdir + "/" + newname + ".mk", "w")
         out.write("[\n")
-        for ct, item, params, paramstring in old_autochecks:
+        for ct, item, paramstring in old_autochecks:
             out.write("  (%r, %r, %s),\n" % (ct, item, paramstring))
         out.write("]\n")
         out.close()

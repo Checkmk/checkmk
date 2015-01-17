@@ -1,0 +1,37 @@
+title: Citrix Netscaler DNS Rates
+agents: snmp
+catalog: app/netscaler
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors various DNS counter rates of the Citrix Netscaler
+ Loadbalacing Appliance. It uses the {NS-ROOT-MIB} to access the
+ {nsDnsServerStatsGroup} via SNMP.
+
+ Monitored counter rates are the total DNS queries and the total DNS
+ answers (aka replies).
+
+ Warning and critical levels can be configured for each of the rates.
+
+inventory:
+ One service per loadbalancer device will be created.
+
+perfdata:
+ The counter rates of the monitored counters.
+
+item:
+ The name of counter.
+
+[parameters]
+parameters(dict): parameters is a dictionary with a key for each monitored counter.
+
+ {"query_rate"}: a tuple of warning and critical levels.
+
+ {"answer_rate"}: a tuple of warning and critical levels.
+
+ The numbers are integers and represent the counter increase per second.
+
+[configuration]
+netscaler_dnsrates_default_levels(dict): This variable is preset to
+{{ "query_rate": (1500.0, 2000.0), "answer_rate": (1500.0, 2000.0) }}

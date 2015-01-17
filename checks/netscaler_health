@@ -1,0 +1,208 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+#
+# Based on contribution by Karsten Schöke <karsten.schoeke@geobasis-bb.de>
+#
+# Example Output:
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.12.1 "CPUFan0Speed"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.12.2 "CPUFan1Speed"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.14.1 "BatteryVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.14.2 "SystemFanSpeed"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.14.3 "VoltageSensor2"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.15 "CPU0CoreVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.15 "CPU0Temperature"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.15 "CPU1CoreVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.15 "CPU1Temperature"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.15 "SystemFan1Speed"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.15 "SystemFan2Speed"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.16 "IntelCPUVttPower"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.18 "+5.0VSupplyVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.18 "-5.0VSupplyVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.19 "+12.0VSupplyVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.19 "-12.0VSupplyVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.19 "InternalTemperature"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.21 "Main3.3VSupplyVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.24 "Standby3.3VSupplyVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.25 "PowerSupply1FailureStatus"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.25 "PowerSupply2FailureStatus"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.1.27 "PowerSupply5vStandbyVoltage"
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.12.1 9975
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.12.2 9750
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.14.1 3104
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.14.2 9825
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.14.3 3343
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.15 1183
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.15 60
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.15 0
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.15 0
+# .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.15 9900
+
+
+netscaler_health_scan = lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1")
+
+netscaler_health_info = (".1.3.6.1.4.1.5951.4.1.1.41.7.1", [ # nsSysHealthTable
+                                1, # sysHealthname
+                                2, # sysHealthvalue
+                 ])
+#.
+#   .--fan-----------------------------------------------------------------.
+#   |                            __                                        |
+#   |                           / _| __ _ _ __                             |
+#   |                          | |_ / _` | '_ \                            |
+#   |                          |  _| (_| | | | |                           |
+#   |                          |_|  \__,_|_| |_|                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+factory_settings["netscaler_health_fan_default_levels"] = {
+    "lower": (3500, 3000),
+}
+
+def inventory_netscaler_health_fan(info):
+    for name, value in info:
+        if name.endswith("Speed"):
+           yield name[:-5], None
+
+def check_netscaler_health_fan(item, params, info):
+    for name, value in info:
+        if name[:-5] == item:
+            value=int(value)
+            infotext = "speed is %d rpm" % value
+
+            state = 0
+            lower_warn, lower_crit = params.get("lower", ("", "") )
+            upper_warn, upper_crit = params.get("upper", ("", "") )
+            if lower_crit and value <= lower_crit:
+                state = 2
+                infotext += " (lower levels at %d/%d rpm)" % (lower_warn, lower_crit)
+            elif lower_warn and value <= lower_warn:
+                state = 1
+                infotext += " (lower levels at %d/%d rpm)" % (lower_warn, lower_crit)
+            elif upper_crit and value >= upper_crit:
+                state = 2
+                infotext += " (upper levels at %d/%d rpm)" % (upper_warn, upper_crit)
+            elif upper_warn and value >= upper_warn:
+                state = 1
+                infotext += " (upper levels at %d/%d rpm)" % (upper_warn, upper_crit)
+
+            return state, infotext
+
+check_info["netscaler_health.fan"] = {
+    "check_function"          : check_netscaler_health_fan,
+    "inventory_function"      : inventory_netscaler_health_fan,
+    "service_description"     : "FAN %s",
+    "group"                   : "hw_fans",
+    "snmp_info"               : netscaler_health_info,
+    "snmp_scan_function"      : netscaler_health_scan,
+    "default_levels_variable" : "netscaler_health_fan_default_levels",
+}
+#.
+#   .--temp----------------------------------------------------------------.
+#   |                       _                                              |
+#   |                      | |_ ___ _ __ ___  _ __                         |
+#   |                      | __/ _ \ '_ ` _ \| '_ \                        |
+#   |                      | ||  __/ | | | | | |_) |                       |
+#   |                       \__\___|_| |_| |_| .__/                        |
+#   |                                        |_|                           |
+#   +----------------------------------------------------------------------+
+
+factory_settings["netscaler_health_temp_default_levels"] = {
+    "levels": (80, 90),
+}
+
+def inventory_netscaler_health_temp(info):
+    for name, value in info:
+        if name.endswith("Temperature") and value != "0":
+            yield name[:-11], None
+
+def check_netscaler_health_temp(item, params, info):
+    for name, value in info:
+        if name[:-11] == item and name.endswith("Temperature"):
+            temp=int(value)
+            return check_temperature(temp, params)
+
+check_info["netscaler_health.temp"] = {
+    "check_function"          : check_netscaler_health_temp,
+    "inventory_function"      : inventory_netscaler_health_temp,
+    "service_description"     : "Temperature %s",
+    "group"                   : "temperature",
+    "has_perfdata"            : True,
+    "snmp_info"               : netscaler_health_info,
+    "snmp_scan_function"      : netscaler_health_scan,
+    "includes"                : [ "temperature.include" ],
+    "default_levels_variable" : "netscaler_health_temp_default_levels",
+}
+
+#.
+#   .--psus----------------------------------------------------------------.
+#   |                                                                      |
+#   |                         _ __  ___ _   _ ___                          |
+#   |                        | '_ \/ __| | | / __|                         |
+#   |                        | |_) \__ \ |_| \__ \                         |
+#   |                        | .__/|___/\__,_|___/                         |
+#   |                        |_|                                           |
+#   +----------------------------------------------------------------------+
+
+def inventory_netscaler_health_psus(info):
+    for name, value in info:
+        value=int(value)
+        r = regex('(PowerSupply[\d])(Failure|)Status')
+        m = r.match(name)
+        if m:
+            if value > 0:
+                yield m.group(1), None
+
+def check_netscaler_health_psus(item, _no_params, info):
+    ps_status_map = ( ("not supported", 1),# 0
+                      ("not present", 0),  # 1
+                      ("failed", 2),       # 2
+                      ("normal", 0),       # 3
+    )
+
+    for name, value in info:
+        if name.startswith(item) and name.endswith("Status") \
+                or name.endswith("FailureStatus"):
+            value=int(value)
+            name, state = ps_status_map[value]
+
+            state = 0
+            infotext = "Status: "
+            if value >= len(ps_status_map):
+                infotext += "status code %d has no known meaning" % value
+                state = 1
+            else:
+                infotext += "%s" % name
+                state = ps_status_map[value][1]
+
+            return state, infotext
+
+check_info["netscaler_health.psus"] = {
+    "check_function"        : check_netscaler_health_psus,
+    "inventory_function"    : inventory_netscaler_health_psus,
+    "service_description"   : "%s",
+    "snmp_info"             : netscaler_health_info,
+    "snmp_scan_function"    : netscaler_health_scan,
+}

@@ -1,0 +1,15 @@
+Title: Keep record of original source IP address of a syslog message or SNMP trap
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421491585
+Class: feature
+
+The Event Console now stores the original source IP address when receiving an event
+directly via an SNMP trap or the builting syslog server. This ipaddress is put into
+a new dedicated field in the event and is shown in the details of the event. In the
+event rules you can now match on this address using a X.X.X.X/Y networking syntax.
+
+Note: If you receive syslog messages forwarded from another syslog server, then
+you will see the IP address of that server there - not from the original message.

@@ -131,6 +131,7 @@
     * 1784 FIX: Fix exception in BI Boxes when parents are being used
 
     Event Console:
+    * 1845 Keep record of original source IP address of a syslog message or SNMP trap...
     * 1839 FIX: Fix exception when notifying EC alert into monitoring for traps (because PID is missing)
     * 1813 FIX: Fixed bug in event console rule editor when no contact groups configured
 

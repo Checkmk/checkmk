@@ -546,6 +546,14 @@ vs_mkeventd_rule = Dictionary(
                      "event might use the IP address instead of the host name."),
           )
         ),
+        ( "match_ipaddress",
+          IPv4Network(
+            title = _("Match original source IP address"),
+            help = _("The rules does only apply when the event is being received from a "
+                     "certain IP address. You can specify either a single IP address "
+                     "or an IPv4 network in the notation X.X.X.X/Bits."),
+          )
+        ),
         ( "match_application",
           RegExpUnicode(
               title = _("Match syslog application (tag)"),
@@ -687,12 +695,12 @@ vs_mkeventd_rule = Dictionary(
         ),
     ],
     optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority",
-                      "match_facility", "match_sl", "match_host", "match_application", "match_timeperiod",
+                      "match_facility", "match_sl", "match_host", "match_ipaddress", "match_application", "match_timeperiod",
                       "set_text", "set_host", "set_application", "set_comment",
                       "set_contact", "cancel_priority", "match_ok", "contact_groups" ],
     headers = [
         ( _("General Properties"), [ "id", "description", "disabled" ] ),
-        ( _("Matching Criteria"), [ "match", "match_host", "match_application", "match_priority", "match_facility",
+        ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
                                     "match_sl", "match_ok", "cancel_priority", "match_timeperiod" ]),
         ( _("Outcome &amp; Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "drop", "autodelete" ]),
         ( _("Counting &amp; Timing"), [ "count", "expect", "delay", "livetime", ]),
@@ -739,6 +747,12 @@ vs_mkeventd_event = Dictionary(
             regex_error = _("The host name may not contain spaces."),
             )
         ),
+        ( "ipaddress",
+          IPv4Address(
+            title = _("IP Address"),
+            help = _("Original IP address the event was received from"),
+            default_value = "1.2.3.4",
+        )),
         ( "priority",
           DropdownChoice(
             title = _("Syslog Priority"),

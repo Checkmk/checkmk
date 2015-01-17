@@ -29,6 +29,29 @@ syslog_facilities = [ "kern", "user", "mail", "daemon", "auth", "syslog", "lpr",
                       "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7",
                       None, None, None, None, None, None, None, "snmptrap" ]
 
+# If you need a new column here, then these are the places to change:
+# bin/mkeventd:
+# - add column to the end of event_columns
+# - add column to grepping_filters if it is a str column
+# - deal with convert_history_line() (if not a str column)
+# - make sure that the new column is filled at *every* place where
+#   an event is being created:
+#   * process_snmptrap()
+#   * parse_event()
+#   * handle_absent_event()
+# - When loading the status file add the possibly missing column to all
+#   loaded events
+# - Maybe add matching/rewriting for the new column
+# - write the actual code using the new column
+# web:
+# - Add column painter for the new column
+# - Create a sorter
+# - Create a filter
+# - Add painter and filter to all views where appropriate
+# - maybe add WATO code for matching rewriting
+# - do not forget event_rule_matches() in web!
+# - maybe add a field into the event simulator
+
 event_columns = [
     ( "event_id",              1 ),
     ( "event_count",           1 ),
@@ -49,6 +72,19 @@ event_columns = [
     ( "event_owner",          "" ),
     ( "event_match_groups",   "" ),
     ( "event_contact_groups", "" ),
+    ( "event_ipaddress",      "" ), # introduced in 1.2.7
+]
+
+grepping_filters = [
+    'event_text',
+    'event_comment',
+    'event_host',
+    'event_host_regex',
+    'event_contact',
+    'event_application',
+    'event_rule_id',
+    'event_owner',
+    'event_ipaddress',
 ]
 
 history_columns = [
@@ -213,6 +249,41 @@ def pattern(pat):
         return pat.pattern
     except:
         return pat
+
+# Sorry: this code is dupliated in web/plugins/wato/mkeventd.py
+def match_ipv4_network(pattern, ipaddress_text):
+    network, network_bits = parse_ipv4_network(pattern) # is validated by valuespec
+    if network_bits == 0:
+        return True # event if ipaddress is empty
+    try:
+        ipaddress = parse_ipv4_address(ipaddress_text)
+    except:
+        return False # invalid address never matches
+
+    # first network_bits of network and ipaddress must be
+    # identical. Create a bitmask.
+    bitmask = 0
+    for n in range(32):
+        bitmask = bitmask << 1
+        if n < network_bits:
+            bit = 1
+        else:
+            bit = 0
+        bitmask += bit
+
+    return (network & bitmask) == (ipaddress & bitmask)
+
+def parse_ipv4_address(text):
+    parts = map(int, text.split("."))
+    return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
+
+def parse_ipv4_network(text):
+    if "/" not in text:
+        return parse_ipv4_address(text), 32
+
+    network_text, bits_text = text.split("/")
+    return parse_ipv4_address(network_text), int(bits_text)
+
 
 def replace_groups(text, origtext, groups):
     # replace \0 with text itself. This allows to add information
@@ -691,9 +762,6 @@ def flush_event_history_files():
     with lock_logging:
         expire_logfiles(True)
 
-grepping_filters = [ 'event_text', 'event_comment', 'event_host', 'event_host_regex',
-                     'event_contact', 'event_application', 'event_rule_id', 'event_owner' ]
-
 def get_event_history(filters, limit):
     if g_config['archive_mode'] == 'mongodb':
         return get_event_history_from_mongodb(filters, limit)
@@ -1119,7 +1187,7 @@ class EventServer:
             var_binds.append((key, val))
         return var_binds
 
-    def process_snmptrap(self, (whole_msg, (host, port))):
+    def process_snmptrap(self, (whole_msg, (ipaddress, port))):
         while whole_msg:
             # Verify the version is supported
             proto_version = int(pysnmp_api.decodeMessageVersion(whole_msg))
@@ -1141,7 +1209,7 @@ class EventServer:
 
                 # use the enterprise oid as application
                 application = proto.apiTrapPDU.getEnterprise(req_pdu).prettyPrint()
-                # override the host with the agent address
+                # Get the host name from the trap
                 host = proto.apiTrapPDU.getAgentAddr(req_pdu).prettyPrint()
 
                 trap = []
@@ -1152,6 +1220,8 @@ class EventServer:
 
             elif proto_version == pysnmp_api.protoVersion2c:
                 trap = self.snmptrap_convert_var_binds(proto.apiPDU.getVarBinds(req_pdu))
+                # Use the IP address as host name
+                host = ipaddress
 
                 # use the trap-oid as application
                 application = ''
@@ -1172,6 +1242,7 @@ class EventServer:
         event = {
             'time'        : time.time(),
             'host'        : host.replace('\n', ''),
+            'ipaddress'   : ipaddress,
             'priority'    : 5,  # notice
             'facility'    : 31, # not used by syslog -> we use this for all traps
             'application' : application.replace('\n', ''),
@@ -1557,6 +1628,7 @@ class EventServer:
                 "last"           : now,
                 "comment"        : "",
                 "host"           : "",
+                "ipaddress"      : "",
                 "application"    : "",
                 "pid"            : 0,
                 "priority"       : 3,
@@ -1838,6 +1910,11 @@ class EventServer:
                 if debug:
                     log("  did not match because of wrong host '%s' (need '%s')" %
                             (event["host"], pattern(rule.get("match_host"))))
+                return False
+
+            if False == match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
+                if debug:
+                    log("  did not match because of wrong source IP address '%s' (need '%s')" % (event["ipaddress"], rule.get("match_ipaddress")))
                 return False
 
             if False == match(rule.get("match_application"), event["application"], complete=False):
@@ -2133,6 +2210,11 @@ class EventServer:
                     # A further problem here: we do not now wether the message is in DST or not
                     event["time"] = time.mktime((year, month, day, hours, minutes, seconds, 0, 0, lt.tm_isdst))
 
+            # The event simulator ships the simulated original IP address in the
+            # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
+            if "|" in event["host"]:
+                event["host"], event["ipaddress"] = event["host"].split("|", 1)
+
         except Exception, e:
             if g_config["debug_rules"]:
                 log('Got non-syslog message "%s" (%s)' % (line, e) )
@@ -2141,6 +2223,7 @@ class EventServer:
                 "priority"    : 0,
                 "text"        : line,
                 "host"        : "",
+                "ipaddress"   : address or "",
                 "application" : "",
                 "pid"         : 0,
                 "time"        : time.time(),
@@ -2781,6 +2864,10 @@ class EventStatus():
             except Exception, e:
                 log("Error loading event state from %s: %s" % (path, e))
                 raise
+
+        # Add new columns
+        for event in self._events:
+            event.setdefault("ipaddress", "")
 
 
     def new_event(self, event):

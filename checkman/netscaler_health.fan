@@ -1,5 +1,6 @@
 title: Citrix Netscaler Loadbalancer: Speed of Fans
 agents: snmp
+catalog: app/netscaler
 license: GPL
 distribution: check_mk
 description:

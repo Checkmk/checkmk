@@ -1757,6 +1757,10 @@ def complete_raw_context(raw_context):
         if key.endswith("STATE"):
             raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
 
+    if raw_context["WHAT"] == "SERVICE":
+        raw_context['SERVICEFORURL'] = urllib.quote(raw_context['SERVICEDESC'])
+    raw_context['HOSTFORURL'] = urllib.quote(raw_context['HOSTNAME'])
+
     convert_context_to_unicode(raw_context)
 
 

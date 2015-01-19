@@ -10,6 +10,9 @@ description:
 
  {Requirements:} The {mk_oracle} is needed on the monitored machines.
  See details for mk_oracle at manpage of oracle_instance.
+ All Failure Groups need the same size. Otherwise the calculation of
+ total and used space is wrong. Disk Groups with Voting require 3 for
+ NORMAL and 5 for HIGH Redundancy!
 
  {Trends:} This checks supports Disk Group {trends}. This means that the
  check is able to compute the change of the used space over the time

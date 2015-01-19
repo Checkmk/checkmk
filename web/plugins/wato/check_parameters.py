@@ -3597,18 +3597,26 @@ register_check_parameters(
         elements = [
             ( "apply_lag",
               Tuple(
-                  title = _("Apply Lag"),
-                  help = _( "The limit for the apply lag in v$dataguard_stats."),
+                  title = _("Apply Lag Maximum Time"),
+                  help = _( "The maximum limit for the apply lag in v$dataguard_stats."),
                   elements = [
-                      Age(title = _("Warning if above"), default_value = 10800),
-                      Age(title = _("Critical if above"), default_value = 21600)])),
+                      Age(title = _("Warning if above"),),
+                      Age(title = _("Critical if above"),)])),
+            ( "apply_lag_min",
+              Tuple(
+                  title = _("Apply Lag Minimum Time"),
+                  help = _( "The minimum limit for the apply lag in v$dataguard_stats. "
+                            "This is only usable when Maximum Time has beend configured. "),
+                  elements = [
+                      Age(title = _("Warning if above"),),
+                      Age(title = _("Critical if above"),)])),
             ( "transport_lag",
               Tuple(
                   title = _("Transport Lag"),
                   help = _( "The limit for the transport lag in v$dataguard_stats."),
                   elements = [
-                      Age(title = _("Warning if above"), default_value = 10800),
-                      Age(title = _("Critical if above"), default_value = 21600)])),
+                      Age(title = _("Warning if above"),),
+                      Age(title = _("Critical if above"),)])),
                    ]),
     TextAscii(
         title = _("Database SID"),
@@ -3631,7 +3639,13 @@ register_check_parameters(
                           Age(title = _("critical if less then"), default_value = 300),
                      ]
                  )
-             )
+             ),(
+            'nospaceerrcnt_state',
+                MonitoringState(
+                    default_value = 2,
+                    title = _("State in case of non space error count is greater then 0: "),
+                ),
+            ),
          ]
     ),
     TextAscii(
@@ -3650,6 +3664,18 @@ register_check_parameters(
              ("levels",
                  Tuple(
                      title = _("Levels for checkpoint time"),
+                     elements = [
+                          Age(title = _("warning if higher then"), default_value = 1800),
+                          Age(title = _("critical if higher then"), default_value = 3600),
+                     ]
+                 )
+             ),
+             ("backup_age",
+                 Tuple(
+                     title = _("Levels for user managed backup files"),
+                     help = _( "Important! This checks is only for monitoring of datafiles "
+                               "who were left in backup mode. "
+                               "(alter database datafile ... begin backup;) "),
                      elements = [
                           Age(title = _("warning if higher then"), default_value = 1800),
                           Age(title = _("critical if higher then"), default_value = 3600),
@@ -3735,6 +3761,12 @@ register_check_parameters(
                 MonitoringState(
                     default_value = 2,
                     title = _("State in case of logins are not possible: "),
+                ),
+            ),(
+            'primarynotopen',
+                MonitoringState(
+                    default_value = 2,
+                    title = _("State in case of Database is PRIMARY and not OPEN: "),
                 ),
             ),(
             'uptime_min',
@@ -5266,16 +5298,18 @@ register_check_parameters(
                         ( "k", _("Kelvin") ),
                       ]
                 )),
-                ## ( "sensor_levels",
-                ##   DropdownChoice(
-                ##       title = _("Interpretation of Sensor's own temperature status"),
-                ##       choices = [
-                ##           ( "ignore", _("Ignore sensor's own levels") ),
-                ##           ( "sensor", _("Only use sensor's levels, ignore yours" ) ),
-                ##           ( "best", _("Use least critical of your and sensor's levels") ),
-                ##           ( "worst", _("Use most critical of your and sensor's levels") ),
-                ##       ]
-                ## )),
+                ( "device_levels_handling",
+                  DropdownChoice(
+                      title = _("Interpretation of the device's own temperature status"),
+                      choices = [
+                          ( "usr", _("Ignore device's own levels") ),
+                          ( "dev", _("Only use device's levels, ignore yours" ) ),
+                          ( "best", _("Use least critical of your and device's levels") ),
+                          ( "worst", _("Use most critical of your and device's levels") ),
+                          ( "devdefault", _("Use device's levels if present, otherwise yours") ),
+                          ( "usrdefault", _("Use your own levels if present, otherwise the device's") ),
+                      ]
+                )),
 
             ]
         ),
@@ -7465,6 +7499,35 @@ register_check_parameters(
         elements = [
             Integer(title = _("warning if above"), default_value = 30000 ),
             Integer(title = _("critical if above"), default_value = 35000 ),
+        ]
+    ),
+    None, None
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "netscaler_dnsrates",
+    _("Citrix Netscaler DNS counter rates"),
+    Dictionary(
+        help = _("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer "
+                 "Appliances"),
+        elements =  [
+            ("query",
+            Tuple(
+                title = _("Upper Levels for Total Number of DNS queries"),
+                elements = [
+                    Float(title = _("Warning at"), default_value=1500.0, unit="/sec"),
+                    Float(title = _("Critical at"), default_value=2000.0, unit="/sec")],
+                ),
+            ),
+            ("answer",
+            Tuple(
+                title = _("Upper Levels for Total Number of DNS replies"),
+                elements = [
+                    Float(title = _("Warning at"), default_value=1500.0, unit="/sec"),
+                    Float(title = _("Critical at"), default_value=2000.0, unit="/sec")],
+                ),
+            ),
         ]
     ),
     None, None

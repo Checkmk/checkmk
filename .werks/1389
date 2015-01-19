@@ -1,0 +1,11 @@
+Title: oracle_rman: detect failed jobs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1419847194
+Class: fix
+
+The old check ignored the state of the RMAN Backup. This has been
+changed. Only COMPLETED and COMPLETED WITH WARNINGS are considered
+as a sucesfull backup.

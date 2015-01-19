@@ -146,12 +146,15 @@ def daemon_running():
     return os.path.exists(socket_path)
 
 
+# Note: in order to be able to simulate an original IP address
+# we put hostname|ipaddress into the host name field. The EC
+# recognizes this and unpacks the data correctly.
 def send_event(event):
     # "<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag% %msg%\n"
     prio = (event["facility"] << 3) + event["priority"]
     timestamp = time.strftime("%b %d %T", time.localtime())
-    rfc = "<%d>%s %s %s: %s\n" % (
-        prio, timestamp, event["host"], event["application"], event["text"])
+    rfc = "<%d>%s %s|%s %s: %s\n" % (
+        prio, timestamp, event["host"], event["ipaddress"], event["application"], event["text"])
     if type(rfc) == unicode:
         rfc = rfc.encode("utf-8")
     pipe = file(pipe_path, "w")
@@ -198,6 +201,9 @@ def replication_mode():
 # does not know anything about the currently configured but not yet activated
 # rules. And also we do not want to have shared code.
 def event_rule_matches(rule, event):
+    if False == match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
+        return _("The source IP address does not match.")
+
     if False == match(rule.get("match_host"), event["host"], complete=True):
         return _("The host name does not match.")
 
@@ -276,3 +282,38 @@ def match(pattern, text, complete = True):
             return m.groups()
         else:
             return False
+
+def match_ipv4_network(pattern, ipaddress_text):
+    network, network_bits = parse_ipv4_network(pattern) # is validated by valuespec
+    if network_bits == 0:
+        return True # event if ipaddress is empty
+    try:
+        ipaddress = parse_ipv4_address(ipaddress_text)
+    except:
+        return False # invalid address never matches
+
+    # first network_bits of network and ipaddress must be
+    # identical. Create a bitmask.
+    bitmask = 0
+    for n in range(32):
+        bitmask = bitmask << 1
+        if n < network_bits:
+            bit = 1
+        else:
+            bit = 0
+        bitmask += bit
+
+    return (network & bitmask) == (ipaddress & bitmask)
+
+def parse_ipv4_address(text):
+    parts = map(int, text.split("."))
+    return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
+
+def parse_ipv4_network(text):
+    if "/" not in text:
+        return parse_ipv4_address(text), 32
+
+    network_text, bits_text = text.split("/")
+    return parse_ipv4_address(network_text), int(bits_text)
+
+

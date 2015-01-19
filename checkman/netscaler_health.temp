@@ -1,0 +1,35 @@
+title: Citrix Netscaler Loadbalancer: Temperature Sensors
+agents: snmp
+catalog: app/netscaler
+license: GPL
+distribution: check_mk
+description:
+ This check monitors temperatures of Citrix Netscaler Appliances as measured
+ by various sensors on the device. It uses SNMP to scan the {nsSysHealthTable}
+ in the NS-ROOT-MIB for sensors.
+
+ Upper and lower warning and critical levels to the temperatures can be configured.
+
+item:
+ The name of the sensor according to the {sysHealthname} in the {nsSysHealthTable}
+
+perfdata:
+ One value for each service: the temperature of the sensor
+
+inventory:
+ For each temperature sensor found on the appliance a service is created.
+
+[parameters]
+parameters(dict): parameters is a dictionary with the following keys
+
+ {"levels"}: a tuple of upper warning and critical levels for the temperature
+
+ {"levels_lower"}: a tuple of lower warning and critical levels for the temperature
+
+ {"output_unit"}: "c", "f" or "k", the check will output the temperature in the specified unit. If this is not set, output is in degrees Celsius.
+
+ {"input_unit"}: "c, "f" or "k". By default, the check interprets the sensor value according to the unit sent by the device. This key allows to override this. Use carefully, as this may lead to a misinterpreted temperature. Should only be used if the device reports its unit incorrectly.
+
+[configuration]
+netscaler_health_temp_default_levels(dict): This variable is preset to {{ "levels": (80, 90) }}
+

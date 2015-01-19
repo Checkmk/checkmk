@@ -1,0 +1,14 @@
+Title: mk_oracle: changed connection to dedicated server mode
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1420962000
+Class: fix
+
+Some users have problems with the configuration of the connection
+to Oracle due to missing '(SERVER=DEDICATED)(UR=A)' in the internal
+connect string.
+
+This has been fixed.
+

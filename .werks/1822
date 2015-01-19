@@ -1,0 +1,15 @@
+Title: oracle_undostat: rule for non space error count
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1420965043
+Class: feature
+
+The check oracle_undostat has a new rule for choosing the state when a
+'cannot allocate another extent' in the Undo-Tablespace occurs. Oracle
+counts this event as non space error count in v$undostat.
+
+In previos versions this leads to a critical state. Now it is possible 
+to configure the state with a new rule.
+

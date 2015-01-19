@@ -1,0 +1,12 @@
+Title: New Notification macros $SERVICEFORURL$ and $HOSTFORURL$
+Level: 1
+Component: notifications
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421430462
+
+The two new macrcos can be used in notifications to create custom urls who can e.g. be used
+to ackknowledge services.
+

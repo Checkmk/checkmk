@@ -33,23 +33,57 @@ def celsius_to_fahrenheit(tempc):
 
 
 # Checks Celsius temperature against crit/warn levels defined in params. temp must
-# be int or float
+# be int or float. Parameters:
+# temp:              temperature reading of the device (per default interpreted as Celsius)
+# params:            check parameters (pair or dict)
+# dev_unit:          unit of the device reading if this is not Celsius ("f": Fahrenheit, "k": Kelvin)
+# dev_levels:        warn/crit levels of the device itself, if any. In the same unit as temp (dev_unit)
+# dev_level_lower:   lower warn/crit device levels
+# dev_status:        temperature state (0, 1, 2) as the device reports it (if applies)
+# Note: you must not specify dev_status and dev_levels at the same time!
+#
 
-def check_temperature(temp, params, dev_unit = "c"):
+def check_temperature(reading, params, dev_unit = "c",
+                      dev_levels = None, dev_levels_lower = None, dev_status = None):
 
-    def tostring(temp):
-        if type(temp) == int:
-            return "%d" % temp
-        else:
-            return "%.1f" % temp
-
-    def outtemp(tempc, output_unit):
-        if output_unit == "f":
+    def from_celsius(tempc, unit):
+        if unit == "f":
             return celsius_to_fahrenheit(tempc)
-        elif output_unit == "k":
+        elif unit == "k":
             return tempc + 273.15
         else:
             return tempc
+
+    def to_celsius(reading, unit):
+        if type(reading) == tuple:
+            tuple([to_celsius(x, unit) for x in reading])
+        elif unit == "f":
+            return fahrenheit_to_celsius(reading)
+        if unit == "k":
+            return reading - 273.15
+        else:
+            return reading
+
+    # Format number according to its datatype
+    def render_temp(n):
+        t = from_celsius(n, output_unit)
+        if type(n) == int:
+            return "%d" % t
+        else:
+            return "%.1f" % t
+
+    def check_temp_levels(temp, warn, crit, warn_lower, crit_lower):
+        if crit != None and temp >= crit:
+            status = 2
+        elif crit_lower != None and temp < crit_lower:
+            status = 2
+        elif warn != None and temp >= warn:
+            status = 1
+        elif warn_lower != None and temp < warn_lower:
+            status = 1
+        else:
+            status = 0
+        return status
 
     unitsym = {
         "c": "°C",
@@ -57,52 +91,167 @@ def check_temperature(temp, params, dev_unit = "c"):
         "k": "K",
     }
 
-    if type(params) == tuple:
-        params = { "levels" : params }
-    elif params == None:
+    # Convert legacy tuple params into new dict
+    if params == None or params == (None, None):
         params = {}
+    elif type(params) == tuple:
+        params = { "levels" : params }
 
+    # Convert reading into Celsius
     input_unit = params.get("input_unit", dev_unit)
     output_unit = params.get("output_unit", "c")
+    temp = to_celsius(reading, input_unit)
 
-    if input_unit == "f":
-        temp = fahrenheit_to_celsius(temp)
-    if input_unit == "k":
-        temp = temp - 273.15
+    # Prepare levels, dealing with user defined and device's own levels
+    usr_levels = params.get("levels")
+    usr_levels_lower = params.get("levels_lower")
 
-    if type(params) == dict:
-        warn, crit = params.get("levels", (None, None))
-        warnl, critl = params.get("levels_lower", (None, None))
-        perfdata = [ ("temp", temp, warn, crit, warnl, critl) ]
-        infotext = "%s %s" % (tostring(outtemp(temp, output_unit)), unitsym[output_unit])
-        levelstext = ""
-        levelstext_lower = ""
-        if warn != None and crit != None:
-            levelstext = " (warn/crit at %s/%s %s)" % (
-                tostring(outtemp(warn, output_unit)),
-                tostring(outtemp(crit, output_unit)),
-                unitsym[output_unit])
-        if warnl != None and critl != None:
-            levelstext_lower = " (warn/crit below %s/%s %s)" % (
-                tostring(outtemp(warnl, output_unit)),
-                tostring(outtemp(critl, output_unit)),
-                unitsym[output_unit])
+    # Set all user levels to None. None means do not impose a level
+    usr_warn       = None
+    usr_crit       = None
+    usr_warn_lower = None
+    usr_crit_lower = None
 
-        if crit != None and temp >= crit:
-            status = 2
-            infotext += levelstext
-        elif critl != None and temp < critl:
-            status = 2
-            infotext += levelstext_lower
+    if usr_levels:
+        usr_warn, usr_crit = usr_levels
+    if usr_levels_lower:
+        usr_warn_lower, usr_crit_lower = usr_levels_lower
 
-        elif warn != None and temp >= warn:
-            status = 1
-            infotext += levelstext
-        elif warnl != None and temp < warnl:
-            status = 1
-            infotext += levelstext_lower
+    # Same for device levels
+    dev_warn       = None
+    dev_crit       = None
+    dev_warn_lower = None
+    dev_crit_lower = None
 
+    if dev_levels:
+        dev_warn, dev_crit = to_celsius(dev_levels, dev_unit)
+    if dev_levels_lower:
+        dev_warn_lower, dev_crit_lower = to_celsius(dev_levels_lower, dev_unit)
+
+#    if dev_status:
+#        warn, crit, warn_lower, crit_lower = usr_warn, usr_crit, usr_warn_lower, usr_crit_lower
+#        ustatus = check_temp_levels(temp, warn, crit, warn_lower, crit_lower)
+#        if dlh == "usr":
+#            status = ustatus
+#        if dlh == "dev" or dlh == "devdefault":
+#            warn = crit = warn_lower = crit_lower = None
+#            status = dev_status
+#        if dlh == "best":
+#            status = min(dev_status, ustatus)
+#        if dlh == "worst":
+#            status = max(dev_status, ustatus)
+
+#    if not dev_status:
+
+
+    # Decide which of user's and device's levels should be used according to the setting
+    # "device_levels_handling". Result is four variables: {warn,crit}{,_lower}
+    dlh = params.get("device_levels_handling", "usrdefault")
+
+    # Ignore device's own levels
+    if dlh == "usr":
+        warn, crit, warn_lower, crit_lower = usr_warn, usr_crit, usr_warn_lower, usr_crit_lower
+
+    # Only use device's levels, ignore yours
+    elif dlh == "dev":
+        warn, crit, warn_lower, crit_lower = dev_warn, dev_crit, dev_warn_lower, dev_crit_lower
+
+    # The following for cases are all identical, if either *only* device levels or *only*
+    # user levels exist (or no levels at all).
+
+    # Use least critical of your and device's levels. If just one of both is defined,
+    # take that (min and max deal correctly with None here).
+    elif dlh == "best":
+        warn, crit = max(usr_warn, dev_warn), max(usr_crit, dev_crit)
+        warn_lower, crit_lower = min(usr_warn_lower, dev_warn_lower), min(usr_crit_lower, dev_crit_lower)
+
+    # Use most critical of your and device's levels
+    elif dlh == "worst":
+        warn, crit = min(usr_warn, dev_warn), min(usr_crit, dev_crit)
+        warn_lower, crit_lower = max(usr_warn_lower, dev_warn_lower), max(usr_crit_lower, dev_crit_lower)
+
+    # Use user's levels if present, otherwise the device's
+    elif dlh == "usrdefault":
+        if usr_levels:
+            warn, crit = usr_levels
         else:
-            status = 0
+            warn, crit = dev_warn, dev_crit
+        if usr_levels_lower:
+            warn_lower, crit_lower = usr_levels_lower
+        else:
+            warn_lower, crit_lower = dev_warn_lower, dev_crit_lower
+
+    # Use device's levels if present, otherwise yours
+    elif dlh == "devdefault":
+        if dev_levels:
+            warn, crit = dev_levels
+        else:
+            warn, crit = usr_warn, usr_crit
+        if dev_levels_lower:
+            warn_lower, crit_lower = dev_levels_lower
+        else:
+            warn, crit = usr_warn_lower, usr_crit_lower
+
+    # Now finally compute status. Hooray!
+    status = check_temp_levels(temp, warn, crit, warn_lower, crit_lower)
+    perfdata = [ ("temp", temp, warn, crit, warn_lower, crit_lower) ]
+
+    # Render actual temperature, e.g. "17.8 °F"
+    infotext = "%s %s" % (render_temp(temp), unitsym[output_unit])
+
+    # In case of a non-OK status ouput the information about the levels
+    if status != 0:
+        usr_levelstext       = ""
+        usr_levelstext_lower = ""
+        dev_levelstext       = ""
+        dev_levelstext_lower = ""
+
+        if usr_levels:
+            usr_levelstext = " (warn/crit at %s/%s %s)" % (
+                render_temp(usr_warn),
+                render_temp(usr_crit),
+                unitsym[output_unit])
+
+        if usr_levels_lower:
+            usr_levelstext_lower = " (warn/crit below %s/%s %s)" % (
+                render_temp(usr_warn_lower),
+                render_temp(usr_crit_lower),
+                unitsym[output_unit])
+
+        if dev_levels:
+            dev_levelstext = " (device warn/crit at %s/%s %s)" % (
+                render_temp(dev_warn),
+                render_temp(dev_crit),
+                unitsym[output_unit])
+
+        if dev_levels_lower:
+            dev_levelstext_lower = " (device warn/crit below %s/%s %s)" % (
+                render_temp(dev_warn_lower),
+                render_temp(dev_crit_lower),
+                unitsym[output_unit])
+
+        # Output only levels that are relevant when computing the state
+        if dlh == "usr":
+            infotext += usr_levelstext + usr_levelstext_lower
+
+        elif dlh == "dev":
+            infotext += dev_levelstext + dev_levelstext_lower
+
+        elif dlh in ("best", "worst"):
+            infotext += usr_levelstext + usr_levelstext_lower + dev_levelstext + dev_levelstext_lower
+
+        elif dlh == "devdefault":
+            infotext += dev_levelstext + dev_levelstext_lower
+            if not dev_levels:
+                infotext += usr_levelstext
+            if not dev_levels_lower:
+                infotext += usr_levelstext_lower
+
+        elif dlh == "usrdefault":
+            infotext += usr_levelstext + usr_levelstext_lower
+            if not usr_levels:
+                infotext += dev_levelstext
+            if not usr_levels_lower:
+                infotext += dev_levelstext_lower
 
     return status, infotext, perfdata

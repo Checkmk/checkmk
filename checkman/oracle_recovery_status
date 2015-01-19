@@ -1,0 +1,60 @@
+title: Check Checkpoint and user managed Backup state of datafiles
+agents: linux, aix, hp/ux, Solaris
+catalog: app/oracle
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the Checkpoint and the online backup state
+ on every datafile of the Database.
+ The Checkpoint is normaly needed for Standby Databases as the apply
+ of an archived redolog will move the checkpoint of the database. This
+ is a usual way to monitor the apply of archived redologs on a Physical
+ Standby Database without Data Guard. This is normaly needed for
+ Standard Edition Databases. There is an imporatnt difference between
+ Primary and Standby Database. Primary will only create WARNINGs, when
+ the level of levels is exceeded. A value for CRITICAL is only usable
+ when the Database is in Physical Standby Mode. 
+
+ The 2nd function is the monitoring of datafiles in manual backup mode.
+ This is important for database which are backed up with 'alter database
+ begin/end backup;' - RMAN didn't use this function and it is not needed
+ for that backup type. If an end backup is missing and you restart the
+ database you'll unable to open the database.
+
+ To prevent such situations, the state of the backup mode could be 
+ monitored. The rule describes the maximum time for an active backup
+ mode for a datafile until a WARN or CRIT is generated.
+
+ {Important Information}
+ There is no checkpoint created if a database is in backup mode. It 
+ is expected, that the checkpoint time could also reach a configured
+ limit when a backup is running! This is not the case for Backups with
+ RMAN.
+
+ This check needs the Check_MK {mk_oracle}-plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The SID of the database in uppercase (as appearing in the process
+ name of the pmon_... process).
+
+perfdata:
+ One value: the current apply lag in seconds
+
+[parameters]
+parameters (dict):
+
+ "levels": (int, int) - Maximum time in seconds for warn and crit
+ for the last Checkpoint over all Datafiles. No default value
+
+ "backup_age": (int, int) - Maximum time in seconds for warn and crit 
+ for datafiles in Online Backup Mode.
+
+inventory:
+ One separate check for each database found running will
+ be created.
+
+ checkgroup_parameters['oracle_recovery_status'] = [
+  ( {'backup_age': (10800, 21600)}
+   , [], ALL_HOSTS, ALL_SERVICES ),

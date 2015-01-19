@@ -1,0 +1,12 @@
+Title: cmk -v for a new host only creates the first RRD
+Component: core
+State: open
+Date: 2015-01-19 18:15:29
+Targetversion: 1.2.5i1
+Class: bug
+
+When you do a cmk -v on the command line (using CMC) for a new host
+without any RRD then only the first RRD is being created. Also the Perf-O-Meter
+runs into a problem. Looks like only the first perfdata value is being
+processed. Could be some spacing problem when sending check results from
+the cmk command took via pipe into the core

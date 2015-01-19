@@ -1,0 +1,10 @@
+Title: ups_bat_temp,ups_capacity,ups_in_freq,ups_in_voltage,ups_out_load,ups_out_voltage: Checks now detect more UPS Devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421665416
+Class: feature
+
+The SNMP scan function now checks also for the common ups interface MIB. 
+

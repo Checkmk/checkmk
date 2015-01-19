@@ -1,4 +1,4 @@
-Title: New Macro $SERVICEDESC_FOR_URL$ for asciimail
+Title: New Notification macros $SERVICEFORURL$ and $HOSTFORURL$
 Level: 1
 Component: notifications
 Compatible: compat
@@ -6,7 +6,6 @@ Version: 1.2.6b7
 Date: 1421430462
 Class: feature
 
-The new macrco $SERVICEDESC_FOR_URL$ can be used in the body of asciimails. The Macro replaces
-whitespaces in the servicename with %20. This makes it possible to create custom urls who can e.g. be used
+The two new macrcos can be used in notifications to create custom urls who can e.g. be used
 to ackknowledge services.
 

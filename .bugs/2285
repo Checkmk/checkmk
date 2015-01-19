@@ -1,0 +1,8 @@
+Title: "Add to visual" in views does not honor user provided filter vars
+Component: multisite
+State: open
+Date: 2015-01-19 16:04:58
+Targetversion: 1.2.5i1
+Class: nastiness
+
+It only cares about the filter values configured in the view.

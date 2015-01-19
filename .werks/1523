@@ -1,0 +1,11 @@
+Title: lnx_thermal: Now supports setting levels
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1421686301
+Class: feature
+
+lnx_thermal can now be configured via the Temperature WATO Rule.
+Default behaviour uses trip points if present, otherwise user defined levels.
+Due to a changed item name, re-inventory is required.

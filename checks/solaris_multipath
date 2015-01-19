@@ -24,31 +24,41 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example output:
 # <<<solaris_multipath>>>
 # /dev/rdsk/c4t600601608CB02A00DCFD2EEB19A0E111d0s2 4 4
 
-
 def inventory_solaris_multipath(info):
-    inventory = []
     for device, total, ok in info:
         item = device.split('/')[-1]
-        inventory.append( (item, None) )
-    return inventory
+        yield item, '{ "total": %s }' % total
 
-
-def check_solaris_multipath(item, _no_params, info):
+def check_solaris_multipath(item, params, info):
     for device, total, ok in info:
         if item == device.split('/')[-1]:
-            total = int(total)
-            ok    = int(ok)
-            if total == ok:
-                return 0, "%d paths up" % total
-            elif float(ok) / total <= 0.5: # critical if only half of paths ok
-                return 2, "only %d/%d paths up" % (ok, total)
-            else:
-                return 1, "only %d/%d paths up" % (ok, total)
 
-    return 3, "Path not found"
+            itotal = params.get("total") # total from last service discovery
+            ok    = int(ok)
+            total = int(total)
+
+
+            if not itotal:
+                state = 1
+                infotext = "%d of %d paths up, but total paths not yet inventorized, redo service discovery" % (ok, total)
+            else:
+                itotal = int(itotal)
+                infotext = "%d of %d paths up" % (ok, itotal)
+                if total > itotal:
+                    state = 1
+                    infotext += ", but total paths increased to %d, redo service discovery" % total
+                elif itotal == ok:
+                    state = 0
+                elif itotal >= ok * 2: # less than half of paths ok
+                    state = 2
+                else:
+                    state = 1
+
+            return state, infotext
 
 
 check_info["solaris_multipath"] =  {

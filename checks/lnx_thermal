@@ -35,6 +35,11 @@
 # thermal_zone0 enabled acpitz 38000 98000 critical
 # thermal_zone1 pkg-temp-0  44000 0 passive 0 passive
 
+factory_settings["lnx_thermal_default_levels"] = {
+    "levels"                    : (70, 80),
+    "device_levels_handling"    : "devdefault",
+}
+
 def inventory_lnx_thermal(info):
     return [ (l[0].replace('thermal_zone', 'Zone '), {}) for l in info ]
 
@@ -91,5 +96,6 @@ check_info['lnx_thermal'] = {
     "service_description"     : "Temperature %s",
     "has_perfdata"            : True,
     "group"                   : "temperature",
+    "default_levels_variable" : "lnx_thermal_default_levels",
     "includes"                : [ "temperature.include" ],
 }

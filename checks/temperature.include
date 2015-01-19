@@ -160,7 +160,8 @@ def check_temperature(reading, params, dev_unit = "c",
     # user levels exist (or no levels at all).
 
     # Use least critical of your and device's levels. If just one of both is defined,
-    # take that (min and max deal correctly with None here).
+    # take than max deals correctly with None here. min does not work because None < int
+    # TODO FIXME HIRN
     elif dlh == "best":
         warn, crit = max(usr_warn, dev_warn), max(usr_crit, dev_crit)
         warn_lower, crit_lower = min(usr_warn_lower, dev_warn_lower), min(usr_crit_lower, dev_crit_lower)

@@ -46,14 +46,6 @@ def celsius_to_fahrenheit(tempc):
 def check_temperature(reading, params, dev_unit = "c",
                       dev_levels = None, dev_levels_lower = None, dev_status = None):
 
-    # Format number according to its datatype
-    def render_temp(n):
-        t = from_celsius(n, output_unit))
-        if type(n) == int:
-            return "%d" % t
-        else:
-            return "%.1f" % t
-
     def from_celsius(tempc, unit):
         if unit == "f":
             return celsius_to_fahrenheit(tempc)
@@ -71,6 +63,14 @@ def check_temperature(reading, params, dev_unit = "c",
             return reading - 273.15
         else:
             return reading
+
+    # Format number according to its datatype
+    def render_temp(n):
+        t = from_celsius(n, output_unit)
+        if type(n) == int:
+            return "%d" % t
+        else:
+            return "%.1f" % t
 
     def check_temp_levels(temp, warn, crit, warn_lower, crit_lower):
         if crit != None and temp >= crit:

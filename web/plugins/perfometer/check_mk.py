@@ -180,7 +180,8 @@ perfometers["check_mk-ucd_cpu_util"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-lparstat_aix.cpu_util"] = perfometer_check_mk_kernel_util
 
 def perfometer_check_mk_mem_used(row, check_command, perf_data):
-    h = '<table><tr>'
+    ram_used = None
+
     for entry in perf_data:
         # Get total and used RAM
         if entry[0] == "ramused":
@@ -200,11 +201,16 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
         elif entry[0] == "swap_total":
             swap_total  = float(entry[1]) # mem.linux
 
+    if not ram_used:
+        return
+
     virt_total = ram_total + swap_total
     virt_used  = ram_used + swap_used
 
     # paint used ram and swap
     ram_color, swap_color = "#80ff40", "#008030"
+
+    h = '<table><tr>'
     h += perfometer_td(100 * ram_used / virt_total, ram_color)
     h += perfometer_td(100 * swap_used / virt_total, swap_color)
 

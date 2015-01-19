@@ -1,0 +1,9 @@
+Title: win_exefiles: inventory check can now handle time stamps in us english locale
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421658742
+Class: fix
+
+

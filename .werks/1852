@@ -1,0 +1,11 @@
+Title: solaris_multipath: this check now works with inventory to remember the number of total paths
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1421685959
+Class: fix
+
+Since the current number of total paths has been reported to decrease when paths are lost, the check
+has been modified to remember the total number of paths during inventory and compare the current number of
+active paths with this remembered value. See also: the check man page.

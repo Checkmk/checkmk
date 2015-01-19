@@ -90,7 +90,7 @@ def check_netscaler_health_fan(item, params, info):
     for name, value in info:
         if name[:-5] == item:
             value=int(value)
-            infotext = "speed is %d rpm" % value
+            infotext = "speed is %d RPM" % value
 
             state = 0
             lower_warn, lower_crit = params.get("lower", ("", "") )
@@ -109,6 +109,7 @@ def check_netscaler_health_fan(item, params, info):
                 infotext += " (upper levels at %d/%d rpm)" % (upper_warn, upper_crit)
 
             return state, infotext
+
 
 check_info["netscaler_health.fan"] = {
     "check_function"          : check_netscaler_health_fan,
@@ -141,7 +142,7 @@ def inventory_netscaler_health_temp(info):
 def check_netscaler_health_temp(item, params, info):
     for name, value in info:
         if name[:-11] == item and name.endswith("Temperature"):
-            temp=int(value)
+            temp = int(value)
             return check_temperature(temp, params)
 
 check_info["netscaler_health.temp"] = {
@@ -157,7 +158,7 @@ check_info["netscaler_health.temp"] = {
 }
 
 #.
-#   .--psus----------------------------------------------------------------.
+#   .--Power supply--------------------------------------------------------.
 #   |                                                                      |
 #   |                         _ __  ___ _   _ ___                          |
 #   |                        | '_ \/ __| | | / __|                         |
@@ -167,42 +168,31 @@ check_info["netscaler_health.temp"] = {
 #   +----------------------------------------------------------------------+
 
 def inventory_netscaler_health_psus(info):
-    for name, value in info:
-        value=int(value)
-        r = regex('(PowerSupply[\d])(Failure|)Status')
+    for name, state in info:
+        r = regex('PowerSupply([\d])(Failure|)Status')
         m = r.match(name)
         if m:
-            if value > 0:
+            if int(state) > 0:
                 yield m.group(1), None
 
+
 def check_netscaler_health_psus(item, _no_params, info):
-    ps_status_map = ( ("not supported", 1),# 0
-                      ("not present", 0),  # 1
-                      ("failed", 2),       # 2
-                      ("normal", 0),       # 3
+    ps_status_map = ( (3, "not supported"), # 0
+                      (2, "not present"),   # 1
+                      (2, "failed"),        # 2
+                      (0, "normal"),        # 3
     )
 
-    for name, value in info:
-        if name.startswith(item) and name.endswith("Status") \
+    for name, state in info:
+        if name.startswith("PowerSupply" + item) and name.endswith("Status") \
                 or name.endswith("FailureStatus"):
-            value=int(value)
-            name, state = ps_status_map[value]
+            return ps_status_map[int(state)]
 
-            state = 0
-            infotext = "Status: "
-            if value >= len(ps_status_map):
-                infotext += "status code %d has no known meaning" % value
-                state = 1
-            else:
-                infotext += "%s" % name
-                state = ps_status_map[value][1]
-
-            return state, infotext
 
 check_info["netscaler_health.psus"] = {
     "check_function"        : check_netscaler_health_psus,
     "inventory_function"    : inventory_netscaler_health_psus,
-    "service_description"   : "%s",
+    "service_description"   : "Power supply %s",
     "snmp_info"             : netscaler_health_info,
     "snmp_scan_function"    : netscaler_health_scan,
 }

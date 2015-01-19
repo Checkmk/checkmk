@@ -35,13 +35,18 @@
 # thermal_zone0 enabled acpitz 38000 98000 critical
 # thermal_zone1 pkg-temp-0  44000 0 passive 0 passive
 
+factory_settings["lnx_thermal_default_levels"] = {
+    "levels"                    : (70, 80),
+    "device_levels_handling"    : "devdefault",
+}
+
 def inventory_lnx_thermal(info):
-    return [ (l[0].replace('thermal_zone', 'Zone '), None) for l in info ]
+    return [ (l[0].replace('thermal_zone', 'Zone '), {}) for l in info ]
 
 
 def check_lnx_thermal(item, params, info):
     for line in info:
-        if line[0].replace('thermal_zone', '') == item:
+        if line[0].replace('thermal_zone', 'Zone ') == item:
             # ['thermal_zone0', 'enabled', 'acpitz', '51000', '90000', 'critical', '79000', 'passive']
             state = 0
             tp_reached = []
@@ -56,13 +61,13 @@ def check_lnx_thermal(item, params, info):
                 pass # -> regular line
 
             # convert values from millidegree
-            temp = int(line[3]) / 1000
+            temp = int(line[3]) / 1000.0
 
             # parse trip points
             dev_warn = None
             dev_crit = None
             if len(line) > 4:
-                trip_points = dict(zip(line[5::2], map(lambda x: int(x) / 1000, line[4::2])))
+                trip_points = dict(zip(line[5::2], map(lambda x: int(x) / 1000.0, line[4::2])))
                 for tp_num, (tp_name, level) in enumerate(trip_points.items()):
                     # ignore active cooling device trip points (means enabling a fan or similar)
                     if tp_name == 'active':
@@ -75,14 +80,14 @@ def check_lnx_thermal(item, params, info):
 
             # If only one relevant trip point is found, use that for both warn and crit
             if (dev_warn != None) != (dev_crit != None):
-                dev_warn = dev_crit = min(dev_warn, dev_crit)
+                dev_warn = dev_crit = max(dev_warn, dev_crit)
 
             if dev_warn and dev_crit:
                 dev_levels = (dev_warn, dev_crit)
             else:
                 dev_levels = None
 
-            return check_temperature(temp, params, None, dev_levels)
+            return check_temperature(temp, params, dev_levels=dev_levels)
 
 
 check_info['lnx_thermal'] = {
@@ -91,5 +96,6 @@ check_info['lnx_thermal'] = {
     "service_description"     : "Temperature %s",
     "has_perfdata"            : True,
     "group"                   : "temperature",
+    "default_levels_variable" : "lnx_thermal_default_levels",
     "includes"                : [ "temperature.include" ],
 }

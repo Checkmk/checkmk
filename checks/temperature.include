@@ -156,11 +156,12 @@ def check_temperature(reading, params, dev_unit = "c",
     elif dlh == "dev":
         warn, crit, warn_lower, crit_lower = dev_warn, dev_crit, dev_warn_lower, dev_crit_lower
 
-    # The following for cases are all identical, if either *only* device levels or *only*
+    # The following four cases are all identical, if either *only* device levels or *only*
     # user levels exist (or no levels at all).
 
     # Use least critical of your and device's levels. If just one of both is defined,
-    # take that (min and max deal correctly with None here).
+    # take than max deals correctly with None here. min does not work because None < int
+    # TODO FIXME HIRN
     elif dlh == "best":
         warn, crit = max(usr_warn, dev_warn), max(usr_crit, dev_crit)
         warn_lower, crit_lower = min(usr_warn_lower, dev_warn_lower), min(usr_crit_lower, dev_crit_lower)
@@ -190,7 +191,7 @@ def check_temperature(reading, params, dev_unit = "c",
         if dev_levels_lower:
             warn_lower, crit_lower = dev_levels_lower
         else:
-            warn, crit = usr_warn_lower, usr_crit_lower
+            warn_lower, crit_lower = usr_warn_lower, usr_crit_lower
 
     # Now finally compute status. Hooray!
     status = check_temp_levels(temp, warn, crit, warn_lower, crit_lower)

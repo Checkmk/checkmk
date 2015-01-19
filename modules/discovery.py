@@ -122,7 +122,7 @@ def do_discovery_for(hostname, check_types, only_new, use_caches):
         verbose("  nothing%s\n" % (only_new and " new" or ""))
 
 #.
-#   .--Check_MK Discovery--------------------------------------------------.
+#   .--Discovery Check-----------------------------------------------------.
 #   |           ____  _                   _               _                |
 #   |          |  _ \(_)___  ___      ___| |__   ___  ___| | __            |
 #   |          | | | | / __|/ __|    / __| '_ \ / _ \/ __| |/ /            |
@@ -348,7 +348,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
     section_name = check_type.split('.')[0]    # make e.g. 'lsi' from 'lsi.arrays'
 
     try:
-        info = None
+        info = None # default in case of exception
         info = get_realhost_info(hostname, ipaddress, section_name,
                use_caches and inventory_max_cachefile_age or 0, ignore_check_interval=True)
 
@@ -363,13 +363,12 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
     if info == None: # No data for this check type
         return []
 
-    # Add information about nodes if check wants this
+    # Add information about nodes if check wants this. Note:
+    # in the node info we always put None, not the name of a node.
+    # During inventory we behave like a non-cluster. We do not know
+    # yet if the service is going to be clustered!
     if check_info[check_type]["node_info"]:
-        if clusters_of(hostname):
-            add_host = hostname
-        else:
-            add_host = None
-        info = [ [add_host] + line for line in info ]
+        info = [ [None] + line for line in info ]
 
     # Now do the actual inventory
     try:

@@ -1,0 +1,17 @@
+Title: windows agent: fixed gaps in eventlog monitoring after agent restart
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421759267
+Class: fix
+
+The windows eventlog monitoring was not entirely continuous.
+After the agent started it determined determined the initial record number
+for each eventlog. Per default the start number was the last record.
+Thus resulted in monitoring gaps as long as the windows was not running, e.g. windows startup.
+
+With this fix, the windows agent now uses a statefile (<tt>eventstate.txt</tt>) which
+contains the last processed eventrecord ids for each eventlog.
+On startup the statefile is read and the record numbers are set accordingly.
+

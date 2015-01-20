@@ -1,4 +1,4 @@
-Title: cisco_power, cisco_fan, cisco_temp_perf: fixed algorithm to determine check item for some special cases
+Title: cisco_power, cisco_fan, cisco_temp_perf: fixed service description for some special cases
 Level: 1
 Component: checks
 Class: fix

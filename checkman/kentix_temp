@@ -6,8 +6,34 @@ distribution: check_mk
 description:
  This check monitors the temperature measured by the Kentix MultiSensor-RACK device.
 
- No limits are set in the check, since limits are configured in the device
- itself. These limits are taken as the lower and upper warning levels of the check.
+ The device allows to configure an upper and lower warning level. These are used as
+ device critical levels.
+
+item:
+ "Rack"
 
 perfdata:
- One variable: the temperature
+ One variable: the temperature in °C
+
+[parameters]
+This checks parameters are a dictionary with the
+following (optional) keys:
+
+ {"levels"}: A tuple (warn, crit) containing the upper levels. Default: (70, 80)
+
+ {"levels_lower"}: A tuple (warn, crit) containing the lower levels. No defaults.
+
+ {"output_unit"}: "c", "f" or "k", the check will output the temperature in the
+specified unit. If this is not set, output is in degrees Celsius.
+
+ {"input_unit"}: "c, "f" or "k". By default, the check interprets the sensor value
+according to the unit sent by the device. This key allows to override that. Tread
+lightly, as this may lead to a misinterpreted temperature. Should only be used if
+the device reports its unit incorrectly.
+
+ {"device_levels_handling"]: How the check treats the device's internal levels
+versus the ones you specify yourself. The following options are supported: "best"
+results in the best status between yours and the device's levels, "worst" in the
+worst, "usr" ignore's the device's levels, "dev" ignores yours, usrdefault and
+devdefault uses your/the devices set of levels if present, otherwise the other
+respectively. Default setting is "devdefault"

@@ -86,10 +86,10 @@ def check_temperature(reading, params, dev_unit = "c",
         return status
 
     # min that deals correctly with None
-    def minn(a,b)
-        if a = None:
+    def minn(a,b):
+        if a == None:
             return b
-        elif b = None:
+        elif b == None:
             return a
         else:
             return min(a,b)

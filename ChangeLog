@@ -1,6 +1,7 @@
 1.2.6b7:
     Core & Setup:
     * 1842 FIX: Rewrote implementation of service discovery (formerly inventory)...
+    * 1869 FIX: Deleting outdated persisted agent sections now
 
     Checks & Agents:
     * 1822 oracle_undostat: rule for non space error count...

@@ -559,7 +559,11 @@ systemfields = [
  ("perfManager", None),
  ("sessionManager", None),
  ("licenseManager", None),
- ("propertyCollector", None)
+ ("propertyCollector", None),
+ ("version", None),
+ ("build", None),
+ ("vendor", None),
+ ("osType", None),
 ]
 
 systeminfo = {}
@@ -687,6 +691,10 @@ if not error:
         print   "<<<check_mk>>>"
         print "Version: %.1f" % systeminfo["apiVersion"]
         print "AgentOS: %s" %   systeminfo["name"]
+
+        print "<<<esx_systeminfo>>>"
+        for entry in systeminfo.items():
+            print "%s %s" % entry
 
         ###########################
         # Licenses

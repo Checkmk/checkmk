@@ -261,21 +261,28 @@ class MKCheckTimeout(Exception):
 # extra sections (new feature since 1.2.7i1) only the main section
 # raises exceptions. Error in extra sections are silently ignored
 # and the info is replaced with None.
-def get_info_for_check(hostname, ipaddress, infotype, max_cachefile_age=None, ignore_check_interval=False):
-
-    if infotype in check_info:
-        extra_sections = check_info[infotype]["extra_sections"]
+def get_info_with_extra_sections(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval, info_func):
+    if section_name in check_info:
+        extra_sections = check_info[section_name]["extra_sections"]
         if extra_sections:
-            info = [ get_host_info(hostname, ipaddress, infotype, max_cachefile_age, ignore_check_interval) ]
+            info = [ info_func(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval) ]
             for es in extra_sections:
                 try:
-                    info.append(get_host_info(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=False))
+                    info.append(info_func(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=False))
                 except:
                     info.append(None)
             return info
 
-    return get_host_info(hostname, ipaddress, infotype, max_cachefile_age, ignore_check_interval)
+    return info_func(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval)
 
+def get_info_for_check(hostname, ipaddress, section_name, max_cachefile_age=None, ignore_check_interval=False):
+    return get_info_with_extra_sections(hostname, ipaddress, section_name,
+                                        max_cachefile_age, ignore_check_interval, info_func=get_host_info)
+
+def get_info_for_inventory(hostname, ipaddress, section_name, use_caches):
+    return get_info_with_extra_sections(hostname, ipaddress, section_name,
+                                        use_caches and inventory_max_cachefile_age or 0,
+                                        ignore_check_interval=True, info_func=get_realhost_info)
 
 # This is the main function for getting information needed by a
 # certain check. It is called once for each check type. For SNMP this
@@ -503,27 +510,32 @@ def store_persisted_info(hostname, persisted):
         if not os.path.exists(dir):
             os.makedirs(dir)
         file(dir + hostname, "w").write("%r\n" % persisted)
-        if opt_verbose:
-            sys.stdout.write("Persisted sections %s.\n" % ", ".join(persisted.keys()))
+        verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 
 def add_persisted_info(hostname, info):
+    file_path = var_dir + "/persisted/" + hostname
     try:
-        path = var_dir + "/persisted/" + hostname
-        persisted = eval(file(path).read())
+        persisted = eval(file(file_path).read())
     except:
         return
 
     now = time.time()
+    modified = False
     for section, (persisted_until, persisted_section) in persisted.items():
         if now < persisted_until or opt_force:
             if section not in info:
                 info[section] = persisted_section
-                if opt_verbose:
-                    sys.stdout.write("Added persisted section %s.\n" % section)
+                verbose("Added persisted section %s.\n" % section)
         else:
-            if opt_verbose:
-                sys.stdout.write("Persisted section %s is outdated by %d seconds.\n" % (
-                        section, persisted_until - now))
+            verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" % (
+                    section, now - persisted_until))
+            del persisted[section]
+            modified = True
+
+    if not persisted:
+        os.remove(file_path)
+    elif modified:
+        store_persisted_info(hostname, persisted)
 
 
 def get_piggyback_info(hostname):
@@ -538,15 +550,12 @@ def get_piggyback_info(hostname):
                 file_path = dir + "/" + sourcehost
 
                 if cachefile_age(file_path) > piggyback_max_cachefile_age:
-                    if opt_debug:
-                        sys.stderr.write("Piggyback file %s is outdated by %d seconds. Deleting it.\n" %
-                            (file_path, cachefile_age(file_path) - piggyback_max_cachefile_age))
+                    verbose("Piggyback file %s is outdated by %d seconds. Deleting it.\n" %
+                        (file_path, cachefile_age(file_path) - piggyback_max_cachefile_age))
                     os.remove(file_path)
                     continue
 
-                if opt_debug:
-                    sys.stderr.write("Using piggyback information from host %s.\n" %
-                      sourcehost)
+                verbose("Using piggyback information from host %s.\n" % sourcehost)
 
                 output += file(file_path).read()
     return output
@@ -555,8 +564,7 @@ def get_piggyback_info(hostname):
 def store_piggyback_info(sourcehost, piggybacked):
     piggyback_path = tmp_dir + "/piggyback/"
     for backedhost, lines in piggybacked.items():
-        if opt_debug:
-            sys.stderr.write("Storing piggyback data for %s.\n" % backedhost)
+        verbose("Storing piggyback data for %s.\n" % backedhost)
         dir = piggyback_path + backedhost
         if not os.path.exists(dir):
             os.makedirs(dir)
@@ -580,8 +588,7 @@ def remove_piggyback_info_from(sourcehost, keep=[]):
         if backedhost not in ['.', '..'] and backedhost not in keep:
             path = piggyback_path + backedhost + "/" + sourcehost
             if os.path.exists(path):
-                if opt_debug:
-                    sys.stderr.write("Removing stale piggyback file %s\n" % path)
+                verbose("Removing stale piggyback file %s\n" % path)
                 os.remove(path)
                 removed += 1
 
@@ -639,8 +646,7 @@ def read_cache_file(relpath, max_cache_age):
             result = f.read(10000000)
             f.close()
             if len(result) > 0:
-                if opt_debug:
-                    sys.stderr.write("Using data from cachefile %s.\n" % cachefile)
+                verbose("Using data from cachefile %s.\n" % cachefile)
                 return result
         elif opt_debug:
             sys.stderr.write("Skipping cache file %s: Too old "

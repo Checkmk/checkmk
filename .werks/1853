@@ -1,0 +1,25 @@
+Title: cisco_power, cisco_fan, cisco_temp_perf: fixed service description for some special cases
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1421751304
+Class: fix
+
+For some Cisco switches the item name of sensors was incorrectly determined
+from the snmp oid "ciscoEnvMonSupplyStatusDescr". When the status description
+contains "Status is ..." or "PS1 ..." in the second field, this field was
+incorrectly included in the item name.
+
+The problem is fixed. Since the item name changes due to this fix, you need to
+redo a service discovery.
+
+To our knowledge this problem only affects the cisco_power check. cisco_fan
+and cisco_temp_perf may theorectically be affected since the same algorithm
+is used, but the status descriptions for these checks are different.
+
+Example:
+
+status description: "Sw1, PS1 Normal, RPS Normal",
+old item name: "Sw1 PS1 Normal 3036",
+new item name: "Sw1"

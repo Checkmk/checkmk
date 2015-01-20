@@ -1,0 +1,12 @@
+Title: Joined columns were empty in CSV, JSON or PYTHON exports of view
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421744582
+
+Joined view columns did not work correctly in CSV, JSON or PYTHON output formats.
+The columns were simply empty, while the regular columns on the web page were
+showing information.

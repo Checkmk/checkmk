@@ -1,0 +1,9 @@
+Title: Add search function to edit role page
+Component: wato
+State: open
+Date: 2015-01-20 11:30:17
+Targetversion: 1.2.5i1
+Class: feature
+
+There are a lot of permissions. The user should be able to filter the list
+using a search term.

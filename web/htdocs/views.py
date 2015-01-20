@@ -2008,23 +2008,37 @@ def execute_hooks(hook):
             else:
                 pass
 
-def paint_painter(painter, row):
+def paint(p, row, tdattrs=""):
+    tdclass, content = prepare_paint(p, row)
+
+    if tdclass:
+        html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
+    else:
+        html.write("<td %s>%s</td>" % (tdattrs, content))
+    return content != ""
+
+def paint_painter(painter, row, join_key=None):
+    if join_key != None:
+        row = row.get("JOIN", {}).get(join_key)
+        if not row:
+            return "", ""  # no join information available for that column
+
     if "args" in painter:
         return painter["paint"](row, *painter["args"])
     else:
         return painter["paint"](row)
 
+def get_join_key(p):
+    return len(p) >= 4 and p[3] or None
+
 def prepare_paint(p, row):
     painter = p[0]
     linkview = p[1]
     tooltip = len(p) > 2 and p[2] or None
-    if len(p) >= 4:
-        join_key = p[3]
-        row = row.get("JOIN", {}).get(p[3])
-        if not row:
-            return "", ""  # no join information available for that column
 
-    tdclass, content = paint_painter(painter, row)
+    tdclass, content = paint_painter(painter, row, join_key=get_join_key(p))
+    if tdclass == "" and content == "":
+        return tdclass, content
 
     content = html.utf8_to_entities(content)
 
@@ -2081,15 +2095,6 @@ def row_id(view, row):
     for col in multisite_datasources[view['datasource']]['idkeys']:
         key += '~%s' % row[col]
     return str(hash(key))
-
-def paint(p, row, tdattrs=""):
-    tdclass, content = prepare_paint(p, row)
-
-    if tdclass:
-        html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
-    else:
-        html.write("<td %s>%s</td>" % (tdattrs, content))
-    return content != ""
 
 def paint_stalified(row, text):
     if is_stale(row):

@@ -118,12 +118,14 @@ $def[] = ""
         ;
 
 # 6. Committing
-$opt[] = $defopt . "--title \"Memory committing\"";
-$def[] = ""
-        . mem_area("total_total",   "f0f0f0", "Total virtual memory",   FALSE)
-        . mem_area("committed_as",  "40a080", "Committed memory",       FALSE)
-        . mem_area("commit_limit",  "e0e0e0", "Commit limit",            TRUE)
-        ;
+if (isset($mem_defines["commit_limit"])) {
+    $opt[] = $defopt . "--title \"Memory committing\"";
+    $def[] = ""
+            . mem_area("total_total",   "f0f0f0", "Total virtual memory",   FALSE)
+            . mem_area("committed_as",  "40a080", "Committed memory",       FALSE)
+            . mem_area("commit_limit",  "e0e0e0", "Commit limit",            TRUE)
+            ;
+}
 
 # 7. Shared memory
 if (isset($mem_defines["shmem"])) {

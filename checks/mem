@@ -118,6 +118,34 @@
 # HugePages_Rsvd:      0
 # Hugepagesize:     2048 kB
 
+# Yet earlier kernel (SLES 9):
+# <<<mem>>>
+# MemTotal: 6224268 kB
+# MemFree: 2913660 kB
+# Buffers: 84712 kB
+# Cached: 1779052 kB
+# SwapCached: 0 kB
+# Active: 1931528 kB
+# Inactive: 1276156 kB
+# HighTotal: 5373824 kB
+# HighFree: 2233984 kB
+# LowTotal: 850444 kB
+# LowFree: 679676 kB
+# SwapTotal: 1052280 kB
+# SwapFree: 1052280 kB
+# Dirty: 55680 kB
+# Writeback: 0 kB
+# Mapped: 1469268 kB
+# Slab: 71724 kB
+# Committed_AS: 2758332 kB
+# PageTables: 7672 kB
+# VmallocTotal: 112632 kB
+# VmallocUsed: 9324 kB
+# VmallocChunk: 103180 kB
+# HugePages_Total: 0
+# HugePages_Free: 0
+# Hugepagesize: 2048 kB
+
 
 factory_settings["mem_linux_default_levels"] = {
     "levels_virtual":       ("perc_used", ( 80.0,  90.0)),
@@ -292,10 +320,11 @@ def check_mem_linux(_no_item, params, info):
         yield r # only display if non-OK
 
     # Commit limit
-    r = check_mem_levels("Commit Limit", meminfo["TotalTotal"] - meminfo["CommitLimit"],
-            meminfo["TotalTotal"], params.get("levels_commitlimit"), of_what = "RAM + Swap")
-    if r[0]:
-        yield r # only display if non-OK
+    if "CommitLimit" in meminfo:
+        r = check_mem_levels("Commit Limit", meminfo["TotalTotal"] - meminfo["CommitLimit"],
+                meminfo["TotalTotal"], params.get("levels_commitlimit"), of_what = "RAM + Swap")
+        if r[0]:
+            yield r # only display if non-OK
 
     # VMalloc
     r = check_mem_levels("Largest Free VMalloc Chunk", meminfo["VmallocTotal"] - meminfo["VmallocChunk"],

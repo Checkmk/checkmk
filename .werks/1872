@@ -1,0 +1,10 @@
+Title: View editor hides filter selection for object types which have no filter to choose
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421747701
+
+A small usability cleanup. Options where nothing can be choosen from are confusing.

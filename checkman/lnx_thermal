@@ -4,25 +4,37 @@ catalog: os/hardware
 license: GPL
 distribution: check_mk
 description:
-  This check uses the temperature information provided by the kernel in
+  This check monitors the temperature provided by the kernel in
   /sys/class/thermal/thermal_zone* and reports values in °C
 
-  The measured value is matched against levels delivered by the kernel.
-  Returns {CRIT} if the kernel reports {hot} or {critical} state,
-  {WARN} on any other non ok state and {OK} if the temperature is
-  considered to be within normal operation temperature levels.
-
 item:
-  The ID of the thermal zone
-
-examples:
-  # adding a check for /sys/class/thermal/thermal_zone0
-  checks += [
-    ( "localhost", "lnx_thermal", "0", None )
-  ]
+  "Zone "+(The ID of the thermal zone)
 
 perfdata:
   One value: The current temperature in °C
 
 inventory:
   Creates one check for earch thermal zone.
+
+[parameters]
+This checks parameters are a dictionary with the
+following (optional) keys:
+
+ {"levels"}: A tuple (warn, crit) containing the upper levels. Default: (70, 80)
+
+ {"levels_lower"}: A tuple (warn, crit) containing the lower levels. No defaults.
+
+ {"output_unit"}: "c", "f" or "k", the check will output the temperature in the
+specified unit. If this is not set, output is in degrees Celsius.
+
+ {"input_unit"}: "c, "f" or "k". By default, the check interprets the sensor value
+according to the unit sent by the device. This key allows to override that. Tread
+lightly, as this may lead to a misinterpreted temperature. Should only be used if
+the device reports its unit incorrectly.
+
+ {"device_levels_handling"]: How the check treats the device's internal levels
+versus the ones you specify yourself. The following options are supported: "best"
+results in the best status between yours and the device's levels, "worst" in the
+worst, "usr" ignore's the device's levels, "dev" ignores yours, usrdefault and
+devdefault uses your/the devices set of levels if present, otherwise the other
+respectively. Default setting is "devdefault"

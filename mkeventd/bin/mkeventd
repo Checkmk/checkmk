@@ -2117,7 +2117,9 @@ class EventServer:
             event["host"] = ""
 
     def parse_event(self, line, address):
-        event = {}
+        event = {
+            "ipaddress"   : address or "",
+        }
         try:
             # Variant 1: plain syslog message without priority/facility:
             # May 26 13:45:01 Klapprechner CRON[8046]:  message....

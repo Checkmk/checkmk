@@ -1,0 +1,9 @@
+Title: winperf_processor: fixed invalid check values on counter wrap
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421742895
+Class: feature
+
+This check reused a counter wrapped value in further counter calculations.

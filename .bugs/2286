@@ -1,0 +1,14 @@
+Title: Implement custom sorting of infos in view editor
+Component: multisite
+State: open
+Date: 2015-01-20 10:56:39
+Targetversion: 1.2.5i1
+Class: nastiness
+
+When creating a new view, the first dialog is to choose whether or not
+a "specific object" should be shown, this list is sorted by alphabetic
+order. However, this does not reflect the common uses. It would be more
+user friendly to sort the assumed most used to the top, for example
+Host / Service.
+
+Same task for the list of filters when editing a view.

@@ -1,0 +1,12 @@
+Title: Escaping event text of event console messages correctly in views
+Level: 1
+Component: ec
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421751062
+
+Event texts of messages which have been processed by the event console
+and resulted in a event might contain HTML code which is now escaped
+correctly to prevent XSS attacks when shown in the event console views.

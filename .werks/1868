@@ -1,0 +1,9 @@
+Title: "Successfully created the host" message is also shown on host diagnose page now
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421739446
+Class: feature
+
+

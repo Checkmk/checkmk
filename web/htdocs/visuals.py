@@ -1024,6 +1024,7 @@ class VisualFilterList(ListOfMultiple):
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))
+        kwargs.setdefault('del_label', _('Remove filter'))
         kwargs["delete_style"] = "filter"
 
         ListOfMultiple.__init__(self, fspecs, **kwargs)

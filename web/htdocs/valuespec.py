@@ -818,6 +818,7 @@ class ListOf(ValueSpec):
         self._magic = kwargs.get("magic", "@!@")
         self._rowlabel = kwargs.get("row_label")
         self._add_label = kwargs.get("add_label", _("Add new element"))
+        self._del_label = kwargs.get("del_label", _("Delete this entry"))
         self._movable = kwargs.get("movable", True)
         self._totext = kwargs.get("totext")
         self._allow_empty = kwargs.get("allow_empty", True)
@@ -827,7 +828,7 @@ class ListOf(ValueSpec):
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
-        html.icon_button("#", _("Delete this entry"), "delete", onclick=js)
+        html.icon_button("#", self._del_label, "delete", onclick=js)
 
     def move_button(self, vp, nr, where):
         js = "valuespec_listof_move(this, '%s', '%s', '%s')" % (vp, nr, where)
@@ -966,11 +967,12 @@ class ListOfMultiple(ValueSpec):
         self._choice_dict = dict(choices)
         self._size = kwargs.get("size")
         self._add_label = kwargs.get("add_label", _("Add element"))
+        self._del_label = kwargs.get("del_label", _("Delete this entry"))
         self._delete_style = kwargs.get("delete_style", "default") # or "filter"
 
     def del_button(self, varprefix, ident):
         js = "vs_listofmultiple_del('%s', '%s')" % (varprefix, ident)
-        html.icon_button("#", _("Delete this entry"), "delete", onclick=js)
+        html.icon_button("#", self._del_label, "delete", onclick=js)
 
     def render_input(self, varprefix, value):
         # Beware: the 'value' is only the default value in case the form

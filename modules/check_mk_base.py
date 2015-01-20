@@ -261,21 +261,28 @@ class MKCheckTimeout(Exception):
 # extra sections (new feature since 1.2.7i1) only the main section
 # raises exceptions. Error in extra sections are silently ignored
 # and the info is replaced with None.
-def get_info_for_check(hostname, ipaddress, infotype, max_cachefile_age=None, ignore_check_interval=False):
-
-    if infotype in check_info:
-        extra_sections = check_info[infotype]["extra_sections"]
+def get_info_with_extra_sections(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval, info_func):
+    if section_name in check_info:
+        extra_sections = check_info[section_name]["extra_sections"]
         if extra_sections:
-            info = [ get_host_info(hostname, ipaddress, infotype, max_cachefile_age, ignore_check_interval) ]
+            info = [ info_func(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval) ]
             for es in extra_sections:
                 try:
-                    info.append(get_host_info(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=False))
+                    info.append(info_func(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=False))
                 except:
                     info.append(None)
             return info
 
-    return get_host_info(hostname, ipaddress, infotype, max_cachefile_age, ignore_check_interval)
+    return info_func(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval)
 
+def get_info_for_check(hostname, ipaddress, section_name, max_cachefile_age=None, ignore_check_interval=False):
+    return get_info_with_extra_sections(hostname, ipaddress, section_name,
+                                        max_cachefile_age, ignore_check_interval, info_func=get_host_info)
+
+def get_info_for_inventory(hostname, ipaddress, section_name, use_caches):
+    return get_info_with_extra_sections(hostname, ipaddress, section_name,
+                                        use_caches and inventory_max_cachefile_age or 0,
+                                        ignore_check_interval=True, info_func=get_realhost_info)
 
 # This is the main function for getting information needed by a
 # certain check. It is called once for each check type. For SNMP this

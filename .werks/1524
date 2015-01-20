@@ -1,0 +1,14 @@
+Title: kentix_temp: Now supports setting levels
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1421752383
+Class: feature
+
+Previously, this check only used the levels configured in the device.
+Now, setting own levels is possible, as well as specifying which levels
+have priority.
+As the service description and the item name has changed, re-inventory
+is required
+

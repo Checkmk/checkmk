@@ -20,6 +20,7 @@
     Multisite:
     * 1843 FIX: Fixed crash in display of crash report for precompiled host checks
     * 1870 FIX: Joined columns were empty in CSV, JSON or PYTHON exports of view...
+    * 1871 FIX: Site filter is only shown as host related filter now...
 
     WATO:
     * 1816 FIX: Fixed garbled output on "rename host" result page

@@ -1,0 +1,10 @@
+Title: Site filter is only shown as host related filter now
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b7
+Date: 1421747385
+Class: fix
+
+Previously the site filter was displayed for all kind of object
+types in the view editor. This has been fixed now.

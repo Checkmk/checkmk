@@ -486,7 +486,7 @@ declare_filter(232, FilterNagiosExpression("service", "service_staleness",      
 
 class FilterSite(Filter):
     def __init__(self, name, enforce):
-        Filter.__init__(self, name, _("Site") + (enforce and _( " (enforced)") or ""), None, ["site"], [])
+        Filter.__init__(self, name, _("Site") + (enforce and _( " (enforced)") or ""), 'host', ["site"], [])
         self.enforce = enforce
 
     def visible(self):

@@ -27,6 +27,7 @@
 import gzip
 
 inventory_output_dir = var_dir + "/inventory"
+inventory_archive_dir = var_dir + "/inventory_archive"
 inventory_pprint_output = True
 
 #   .--Plugins-------------------------------------------------------------.
@@ -156,6 +157,8 @@ def do_inv(hostnames):
 
     if not os.path.exists(inventory_output_dir):
         os.makedirs(inventory_output_dir)
+    if not os.path.exists(inventory_archive_dir):
+        os.makedirs(inventory_archive_dir)
 
     # No hosts specified: do all hosts and force caching
     if hostnames == None:
@@ -166,26 +169,14 @@ def do_inv(hostnames):
     errors = []
     for hostname in hostnames:
         try:
-            try:
-                ipaddress = lookup_ipaddress(hostname)
-            except:
-                raise MKGeneralException("Cannot resolve hostname '%s'." % hostname)
-
-            if opt_verbose:
-                sys.stdout.write("Doing HW/SW-Inventory for %s..." % hostname)
-                sys.stdout.flush()
-
-            do_inv_for(hostname, ipaddress)
-            run_inv_export_hooks(hostname, g_inv_tree)
-            if opt_verbose:
-                sys.stdout.write("OK\n")
+            verbose("Doing HW/SW-Inventory for %s..." % hostname)
+            do_inv_for(hostname)
+            verbose("..OK\n")
         except Exception, e:
             if opt_debug:
                 raise
-            if opt_verbose:
-                sys.stdout.write("Failed: %s\n" % e)
-            else:
-                errors.append("Failed to inventorize %s: %s" % (hostname, e))
+            verbose("Failed: %s\n" % e)
+            errors.append("Failed to inventorize %s: %s" % (hostname, e))
 
     if errors:
         raise MKGeneralException("\n".join(errors))
@@ -193,14 +184,37 @@ def do_inv(hostnames):
 
 def do_inv_check(hostname):
     try:
-        do_inv([hostname])
+        inv_tree, old_timestamp = do_inv_for(hostname)
         num_entries = count_nodes(g_inv_tree)
         if not num_entries:
             sys.stdout.write("WARN - Found no data\n")
             sys.exit(1)
-        else:
-            sys.stdout.write("OK - found %d entries\n" % num_entries)
-            sys.exit(0)
+
+        infotext = "found %d entries" % num_entries
+        state = 0
+
+        if old_timestamp:
+            path = inventory_archive_dir + "/" + hostname + "/%d" % old_timestamp
+            old_tree = eval(file(path).read())
+
+            if inv_tree.get("software") != old_tree.get("software"):
+                infotext += ", software changes"
+                if opt_inv_sw_changes:
+                    state = opt_inv_sw_changes
+                    infotext += state_markers[opt_inv_sw_changes]
+
+            if inv_tree.get("hardware") != old_tree.get("hardware"):
+                infotext += ", hardware changes"
+                if state == 2 or opt_inv_hw_changes == 2:
+                    state = 2
+                else:
+                    state = max(state, opt_inv_sw_changes)
+                if opt_inv_hw_changes:
+                    infotext += state_markers[opt_inv_hw_changes]
+
+        sys.stdout.write(core_state_names[state] + " - " + infotext + "\n")
+        sys.exit(state)
+
     except Exception, e:
         if opt_debug:
             raise
@@ -218,7 +232,12 @@ def count_nodes(tree):
     else:
         return 1
 
-def do_inv_for(hostname, ipaddress):
+def do_inv_for(hostname):
+    try:
+        ipaddress = lookup_ipaddress(hostname)
+    except:
+        raise MKGeneralException("Cannot resolve hostname '%s'." % hostname)
+
     global g_inv_tree
     g_inv_tree = {}
 
@@ -242,17 +261,55 @@ def do_inv_for(hostname, ipaddress):
 
     # Remove empty paths
     inv_cleanup_tree(g_inv_tree)
+    old_timestamp = save_inv_tree(hostname)
+
+    if opt_verbose:
+        sys.stdout.write("..%s%s%d%s entries" % (tty_bold, tty_yellow, count_nodes(g_inv_tree), tty_normal))
+        sys.stdout.flush()
+
+    run_inv_export_hooks(hostname, g_inv_tree)
+    return g_inv_tree, old_timestamp
+
+
+# Returns the time stamp of the previous inventory with different
+# outcome or None.
+def save_inv_tree(hostname):
+    if not os.path.exists(inventory_output_dir):
+        os.makedirs(inventory_output_dir)
+
+    old_time = None
 
     if inventory_pprint_output:
-        import pprint
         r = pprint.pformat(g_inv_tree)
     else:
         r = repr(g_inv_tree)
 
     path = inventory_output_dir + "/" + hostname
     if g_inv_tree:
-        file(path, "w").write(r + "\n")
-        gzip.open(path + ".gz", "w").write(r + "\n")
+        old_tree = None
+        if os.path.exists(path):
+            try:
+                old_tree = eval(file(path).read())
+            except:
+                pass
+
+        if old_tree != g_inv_tree:
+            if old_tree:
+                verbose("..changed")
+                old_time = os.stat(path).st_mtime
+                arcdir = "%s/%s" % (inventory_archive_dir, hostname)
+                if not os.path.exists(arcdir):
+                    os.makedirs(arcdir)
+                os.rename(path, arcdir + ("/%d" % old_time))
+            else:
+                verbose("..new")
+
+            file(path, "w").write(r + "\n")
+            gzip.open(path + ".gz", "w").write(r + "\n")
+            # Inform Livestatus about the latest inventory update
+            file(inventory_output_dir + "/.last", "w")
+        else:
+            verbose("..unchanged")
 
     else:
         if os.path.exists(path): # Remove empty inventory files. Important for host inventory icon
@@ -260,12 +317,8 @@ def do_inv_for(hostname, ipaddress):
         if os.path.exists(path + ".gz"):
             os.remove(path + ".gz")
 
-    # Inform Livestatus about the latest inventory update
-    file(inventory_output_dir + "/.last", "w")
+    return old_time
 
-    if opt_verbose:
-        sys.stdout.write("..%s%s%d%s entries" % (tty_bold, tty_yellow, count_nodes(g_inv_tree), tty_normal))
-        sys.stdout.flush()
 
 def run_inv_export_hooks(hostname, tree):
     for hookname, ruleset in inv_exports.items():

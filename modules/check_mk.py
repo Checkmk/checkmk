@@ -4229,6 +4229,8 @@ OPTIONS:
                  You can specify this option multiple times.
   --oid A        Do --snmpwalk on this OID instead of mib-2 and enterprises.
                  You can specify this option multiple times.
+  --hw-changes=S --inventory-as-check: Use monitoring state S for HW changes
+  --sw-changes=S --inventory-as-check: Use monitoring state S for SW changes
 
 NOTES:
   -I can be restricted to certain check types. Write '--checks df -I' if you
@@ -5430,8 +5432,8 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "convert-rrds", "split-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                  "man", "nowiki", "config-check", "backup=", "restore=",
-                 "check-inventory=", "check-discovery=", "paths", 
-                 "checks=", "inventory", "inventory-as-check=",
+                 "check-inventory=", "check-discovery=", "paths",
+                 "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=",
                  "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
 
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
@@ -5455,6 +5457,8 @@ seen_I = 0
 check_types = None
 exit_status = 0
 opt_verbose = 0 # start again from 0, was already faked at the beginning
+opt_inv_hw_changes = 0
+opt_inv_sw_changes = 0
 
 # Scan modifying options first (makes use independent of option order)
 for o,a in opts:
@@ -5506,6 +5510,10 @@ for o,a in opts:
         opt_cmc_relfilename = a
     elif o == "--split-rrds":
         opt_split_rrds = True
+    elif o == "--hw-changes":
+        opt_inv_hw_changes = int(a)
+    elif o == "--sw-changes":
+        opt_inv_sw_changes = int(a)
 
 # Perform actions (major modes)
 try:

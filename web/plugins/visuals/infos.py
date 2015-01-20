@@ -114,3 +114,8 @@ infos['invswpac'] = {
     'title'       : _('Software Package'),
     'single_spec' : None,
 }
+
+infos['invhist'] = {
+    'title'       : _('Inventory History'),
+    'single_spec' : None,
+}

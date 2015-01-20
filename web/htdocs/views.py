@@ -2381,11 +2381,15 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
 def ajax_inv_render_tree():
     hostname = html.var("host")
     invpath = html.var("path")
-    tree = inventory.host(hostname)
+    tree_id = html.var("treeid", "")
+    if tree_id:
+        tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+    else:
+        tree = inventory.host(hostname)
     node = inventory.get(tree, invpath)
     if not node:
         html.show_error(_("Invalid path %s in inventory tree") % invpath)
     else:
-        render_inv_subtree_container(hostname, invpath, node)
+        render_inv_subtree_container(hostname, tree_id, invpath, node)
 
 

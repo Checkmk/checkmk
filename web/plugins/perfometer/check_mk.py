@@ -369,6 +369,7 @@ perfometers["check_mk-lnx_thermal"] = perfometer_temperature
 perfometers["check_mk-climaveneta_temp"] = perfometer_temperature
 perfometers["check_mk-carel_sensors"] = perfometer_temperature
 perfometers["check_mk-netscaler_health.temp"]  = perfometer_temperature
+perfometers["check_mk-kentix_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1

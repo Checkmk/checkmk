@@ -349,13 +349,10 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
 
     try:
         info = None # default in case of exception
-        info = get_realhost_info(hostname, ipaddress, section_name,
-               use_caches and inventory_max_cachefile_age or 0, ignore_check_interval=True)
-
+        info = get_info_for_inventory(hostname, ipaddress, section_name, use_caches)
     except MKAgentError, e:
         if str(e):
             raise
-
     except MKSNMPError, e:
         if str(e):
             raise
@@ -368,7 +365,10 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
     # During inventory we behave like a non-cluster. We do not know
     # yet if the service is going to be clustered!
     if check_info[check_type]["node_info"]:
-        info = [ [None] + line for line in info ]
+        if check_info[section_name]["extra_sections"]:
+            info = [ sec and [ [None] + line for line in sec ] or None for sec in info ]
+        else:
+            info = [ [None] + line for line in info ]
 
     # Now do the actual inventory
     try:

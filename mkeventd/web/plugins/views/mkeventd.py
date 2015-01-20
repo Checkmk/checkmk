@@ -331,7 +331,7 @@ if mkeventd_enabled:
         "title"   : _("Text/Message of the event"),
         "short"   : _("Message"),
         "columns" : ["event_text"],
-        "paint"   : lambda row: ("", row["event_text"].replace("\x01","<br>")),
+        "paint"   : lambda row: ("", html.attrencode(row["event_text"]).replace("\x01","<br>")),
     }
 
     def paint_ec_match_groups(row):

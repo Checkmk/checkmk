@@ -29,6 +29,9 @@
     Notifications:
     * 1213 New Notification macros $SERVICEFORURL$ and $HOSTFORURL$...
 
+    Event Console:
+    * 1873 SEC: Escaping event text of event console messages correctly in views...
+
 
 1.2.6b6:
     Core & Setup:

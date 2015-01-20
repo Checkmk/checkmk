@@ -2061,20 +2061,20 @@ def mode_edithost(phase, new, cluster):
                 return
             elif new:
                 if host.get('tag_agent') != 'ping':
-                    create_result = 'folder', _('Successfully created the host. Now you should do a '
-                                                '<a href="%s">service discovery</a> in order to auto-configure '
-                                                'all services to be checked on this host.') % \
-                                                    make_link([("mode", "inventory"), ("host", hostname)])
+                    create_msg = _('Successfully created the host. Now you should do a '
+                                   '<a href="%s">service discovery</a> in order to auto-configure '
+                                   'all services to be checked on this host.') % \
+                                    make_link([("mode", "inventory"), ("host", hostname)])
                 else:
-                    create_result = 'folder'
+                    create_msg = None
 
                 if go_to_services:
                     return "firstinventory"
                 elif go_to_diag:
                     html.set_var("_try", "1")
-                    return "diag_host"
+                    return "diag_host", create_msg
                 else:
-                    return create_result
+                    return "folder", create_msg
             else:
                 if go_to_services:
                     return "inventory"

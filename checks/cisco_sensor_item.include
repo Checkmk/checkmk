@@ -39,7 +39,7 @@ def cisco_sensor_item(trial_string, fall_back):
         elif '#' in splited[-1] or 'Power' in splited[-1]:
             item = " ".join(splited)
         # If second last part start with Status, remove that part
-        elif splited[-2].startswith(" Status"):
+        elif splited[-2].startswith("Status") or splited[-2].startswith("PS1"):
             item = " ".join(splited[:-2])
         # Take anything, but without last part
         else:

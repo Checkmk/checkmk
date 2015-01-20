@@ -460,6 +460,10 @@ def get_context_specs(visual, info_handler):
         else:
             filter_list  = VisualFilterList([info_key], title=info['title'])
             filter_names = filter_list.filter_names()
+
+            if not filter_names:
+                continue # Skip infos which have no filters available
+
             params = [
                 ('filters', filter_list),
             ]
@@ -1016,11 +1020,11 @@ class VisualFilterList(ListOfMultiple):
                     self._filters[fname] = fspecs[fname]._filter
 
         # Convert to list and sort them!
-        fspecs = fspecs.items()
-        fspecs.sort(key = lambda x: (x[1]._filter.sort_index, x[1].title()))
+        fspecs = sorted(fspecs.items(), key=lambda x: (x[1]._filter.sort_index, x[1].title()))
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))
+        kwargs.setdefault('del_label', _('Remove filter'))
         kwargs["delete_style"] = "filter"
 
         ListOfMultiple.__init__(self, fspecs, **kwargs)

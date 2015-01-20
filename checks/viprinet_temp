@@ -25,32 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 def check_viprinet_temp(item, params, info):
-    state = 0
-    value = saveint(info[0][item == "System"])
-    state_info = ""
-
-    warn = ""
-    crit = ""
-    if params:
-        warn, crit = params
-        if value > crit:
-            state_info = "(crit at %d°C)" % crit
-            state = 2
-        elif value > warn:
-            state_info = "(warn at %d°C)" % warn
-            state = 1
-
-    infotext = "%s: %s°C %s" % (item, value, state_info)
-    return state, infotext, [("temp", value, warn, crit)]
+    reading = int(info[0][item == "System"])
+    return check_temperature(reading, params)
 
 
 check_info["viprinet_temp"] = {
     'check_function'        : check_viprinet_temp,
     'inventory_function'    : lambda info: len(info) > 0 and [("CPU", None), ("System", None)] or [],
     'service_description'   : "Temperature %s",
-    'group'                 : "room_temperature",
+    'group'                 : "temperature",
     'has_perfdata'          : True,
     'snmp_info'             : (".1.3.6.1.4.1.35424.1.2", [3, 4]),
     'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
+    'includes'              : [ 'temperature.include' ]
 }
 

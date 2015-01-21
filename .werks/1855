@@ -1,4 +1,4 @@
-Title: esx_systeminfo: new inventory check to retrieve info about the host operating system for ESX servers
+Title: esx_systeminfo: new inventory plugin to retrieve info about the host operating system for ESX servers
 Level: 1
 Component: inv
 Compatible: compat

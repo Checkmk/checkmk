@@ -1600,7 +1600,7 @@ def all_matching_hosts(tags, hostlist):
 def convert_service_ruleset(ruleset):
     new_rules = []
     for rule in ruleset:
-        rule, rule_options = get_rule_options(rule) # Das könnte man einmal umbauen und so lassen (8 sec von 137)
+        rule, rule_options = get_rule_options(rule)
         if rule_options.get("disabled"):
             continue
 

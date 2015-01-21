@@ -5034,6 +5034,26 @@ register_check_parameters(
                        ( "iscsi",  _("ISCSI") ),
                     ],
                 )),
+            (  "magic",
+               Float(
+                  title = _("Magic factor (automatic level adaptation for large volumes)"),
+                  default_value = 0.8,
+                  minvalue = 0.1,
+                  maxvalue = 1.0)),
+            (  "magic_normsize",
+               Integer(
+                   title = _("Reference size for magic factor"),
+                   default_value = 20,
+                   minvalue = 1,
+                   unit = _("GB"))),
+            ( "levels_low",
+              Tuple(
+                  title = _("Minimum levels if using magic factor"),
+                  help = _("The volume levels will never fall below these values, when using "
+                           "the magic factor and the volume is very small."),
+                  elements = [
+                      Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True, default_value=50),
+                      Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True, default_value=60)])),
             (  "trend_range",
                Optional(
                    Integer(
@@ -6503,8 +6523,21 @@ register_check_parameters(subgroup_applications,
                                      "all of the logfiles listed here are reported by the monitored system."),
                         )
                     ),
+                    ('logwatch_reclassify',
+                        Checkbox(
+                            title =  _("Reclassify messages before forwarding them to the EC"),
+                            label = _("Apply logwatch patterns"),
+                            help = _("If this option is enabled, the logwatch lines are first reclassified by the logwatch "
+                                     "patterns before they are sent to the event console. If you reclassify specific lines to "
+                                     "IGNORE they are not forwarded to the event console. This takes the burden from the "
+                                     "event console to process the message itself through all of its rulesets. The reclassifcation "
+                                     "of each line takes into account from which logfile the message originates. So you can create "
+                                     "logwatch reclassification rules specifically designed for a logfile <i>access.log</i>, "
+                                     "which do not apply to other logfiles."),
+                     )
+                    )
                 ],
-                optional_keys = ['restrict_logfiles', 'expected_logfiles'],
+                optional_keys = ['restrict_logfiles', 'expected_logfiles', 'logwatch_reclassify'],
             ),
         ],
         default_value = '',

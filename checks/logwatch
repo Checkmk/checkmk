@@ -584,8 +584,30 @@ def check_logwatch_ec(item, params, info):
     messages = []
     cur_time = syslog_time()
     forwarded_logfiles = set([])
+
+    # Get the logwatch patterns if they are not already precompiled
+    if "logwatch_patterns" not in params:
+        logwatch_ec_precompile(g_hostname, None, params)
+
     for logfile, lines in logs.items():
+        # Determine logwatch patterns specifically for this logfile
+        log_reclassify_patterns = []
+        for entry in params["logwatch_patterns"]:
+            patterns, log_items = entry
+            for log_item in log_items:
+                reg = regex(log_item)
+                if reg.search(logfile):
+                    log_reclassify_patterns.extend(patterns)
+
         for line in lines:
+            if log_reclassify_patterns:
+                counts = {} # unused...
+                level, text = line.split(" ", 1)
+                level = logwatch_reclassify(counts, log_reclassify_patterns, line[2:]) or level
+                if level == "I": # Ignored lines are not forwarded
+                    continue
+
+
             msg = '<%d>' % (facility + logwatch_to_prio(line[0]),)
             msg += '%s %s %s: %s' % (cur_time, g_hostname, logfile, line[2:])
             messages.append(msg)
@@ -649,6 +671,35 @@ def check_logwatch_ec(item, params, info):
     except Exception, e:
         return (2, 'Unable to forward messages to event console (%s). Lost %d messages.' %
                 (e, num_messages))
+
+def logwatch_ec_precompile(hostname, item, params):
+    if not params.get("logwatch_reclassify"):
+        params.update({"logwatch_patterns": []})
+        return params
+
+    if not serviceruleset_is_converted(logwatch_rules):
+        convert_service_ruleset(logwatch_rules)
+
+    tags = tags_of_host(hostname)
+    logwatch_patterns = []
+    # Filter out any logwatch_rules which do apply to to this host
+    # 1st filter: Do not use rules where the hostname does not match
+    # 2nd filter: Do not use rules with configured items where no item matches the
+    #             "restrict_logfiles" condition (if applicable)
+    for rule in logwatch_rules:
+        patterns, hosts, rule_items = rule
+        if hostname in hosts:
+            if params.get("restrict_logfiles"):
+                for rule_item in rule_items:
+                    if rule_item == "" or logwatch_ec_forwarding_enabled(params, rule_item):
+                        logwatch_patterns.append( (map(lambda x: x[:2], patterns), rule_items) )
+                        break
+            else:
+                logwatch_patterns.append( (map(lambda x: x[:2], patterns), rule_items) )
+    params.update({"logwatch_patterns": logwatch_patterns})
+    return params
+
+precompile_params['logwatch.ec'] = logwatch_ec_precompile
 
 check_info['logwatch.ec'] = {
     'check_function':      check_logwatch_ec,

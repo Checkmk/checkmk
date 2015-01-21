@@ -45,18 +45,14 @@ def check_netscaler_tcp_conns(_no_item, params, info):
     for name, (index, infotext) in tcp_conns_types.iteritems():
         value = int(info[0][index])
         infotext += ": %d" % value
-        print params
-        if params.get(name):
-            warn, crit = params.get(name)
-        else:
-            warn, crit = None, None
+        warn, crit = params.get(name)
 
         perfdata = [ (name, value, warn, crit, 0) ]
 
         state = 0
-        if crit and value >= crit:
+        if value >= crit:
             state = 2
-        elif warn and value >= warn:
+        elif value >= warn:
             state = 1
         if state > 0:
             infotext += " (levels at %d/%d)" % (warn,crit)

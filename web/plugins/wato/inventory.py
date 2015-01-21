@@ -31,16 +31,32 @@ group = "inventory"
 
 register_rule(group,
     "active_checks:cmk_inv",
-    FixedValue(None, totext = _("No configuration neccessary")),
-    title = _("Do hardware/software Inventory"),
-    help = _("All hosts configured via this ruleset will do a hardware and "
-           "software inventory. For each configured host a new active check "
-           "will be created. You should also create a rule for changing the "
-           "normal interval for that check to something between a couple of "
-           "hours and one day. "
-           "<b>Note:</b> in order to get any useful "
-           "result for agent based hosts make sure that you have installed "
-           "the agent plugin <tt>mk_inventory</tt> on these hosts."),
+    Transform(
+        Dictionary(
+            elements = [
+                ( "sw_changes",
+                  MonitoringState(
+                      title = _("State when software changes are detected"),
+                      default_value = 0,
+                )),
+                ( "hw_changes",
+                  MonitoringState(
+                      title = _("State when hardware changes are detected"),
+                      default_value = 0,
+                )),
+            ]
+        ),
+        title = _("Do hardware/software Inventory"),
+        help = _("All hosts configured via this ruleset will do a hardware and "
+               "software inventory. For each configured host a new active check "
+               "will be created. You should also create a rule for changing the "
+               "normal interval for that check to something between a couple of "
+               "hours and one day. "
+               "<b>Note:</b> in order to get any useful "
+               "result for agent based hosts make sure that you have installed "
+               "the agent plugin <tt>mk_inventory</tt> on these hosts."),
+        forth = lambda x: { }, # convert from legacy None
+    ),
     match = "all",
 )
 

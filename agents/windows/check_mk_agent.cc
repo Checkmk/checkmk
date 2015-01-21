@@ -337,6 +337,13 @@ DWORD    known_record_numbers[MAX_EVENTLOGS];
 char    *eventlog_names[MAX_EVENTLOGS];
 bool     newly_found[MAX_EVENTLOGS];
 
+struct eventlog_hint_t {
+    char  *name;
+    DWORD record_no;
+};
+typedef vector<eventlog_hint_t*> eventlog_hints_t;
+eventlog_hints_t g_eventlog_hints;
+
 // Directories
 char g_agent_directory[256];
 char g_current_directory[256];
@@ -348,6 +355,7 @@ char g_crash_log[256];
 char g_connection_log[256];
 char g_success_log[256];
 char g_logwatch_statefile[256];
+char g_eventlog_statefile[256];
 
 // Configuration of eventlog monitoring (see config parser)
 int num_eventlog_configs = 0;
@@ -1154,7 +1162,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 
 
 void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
-        DWORD bytesread, DWORD *record_number, bool just_find_end,
+        DWORD bytesread, DWORD *record_number, bool do_not_output,
         int *worst_state, int level, int hide_context)
 {
     WCHAR *strings[64];
@@ -1197,8 +1205,9 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
             *worst_state = this_state;
 
         // If we are not just scanning for the current end and the worst state,
+
         // we output the event message
-        if (!just_find_end && (!hide_context || type_char != '.'))
+        if (!do_not_output && (!hide_context || type_char != '.'))
         {
             // The source name is the name of the application that produced the event
             // It is UTF-16 encoded
@@ -1282,7 +1291,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 
 
 void output_eventlog(SOCKET &out, const char *logname,
-        DWORD *record_number, bool just_find_end, int level, int hide_context)
+        DWORD *record_number, int level, int hide_context)
 {
     crash_log(" - event log \"%s\":", logname);
 
@@ -1297,6 +1306,7 @@ void output_eventlog(SOCKET &out, const char *logname,
     DWORD bytesneeded = 0;
     if (hEventlog) {
         crash_log("   . successfully opened event log");
+
         output(out, "[[[%s]]]\n", logname);
         int worst_state = 0;
         DWORD old_record_number = *record_number;
@@ -1305,14 +1315,14 @@ void output_eventlog(SOCKET &out, const char *logname,
         // at least one warning/error message is present. Only if this
         // is the case we make a second run where we output *all* messages,
         // even the informational ones.
-        for (int t=0; t<2; t++)
+        for (int cycle = 0; cycle < 2; cycle++)
         {
             *record_number = old_record_number;
             verbose("Starting from entry number %u", old_record_number);
             while (true) {
                 DWORD flags;
                 if (*record_number == 0) {
-                    if (t == 1) {
+                    if (cycle == 1) {
                         verbose("Need to reopen Logfile in order to find start again.");
                         CloseEventLog(hEventlog);
                         hEventlog = OpenEventLog(NULL, logname);
@@ -1338,8 +1348,10 @@ void output_eventlog(SOCKET &out, const char *logname,
                             &bytesneeded))
                 {
                     crash_log("   . got entries starting at %d (%d bytes)", *record_number + 1, bytesread);
+
+
                     process_eventlog_entries(out, logname, eventlog_buffer,
-                            bytesread, record_number, just_find_end || t==0, &worst_state, level, hide_context);
+                            bytesread, record_number, cycle == 0, &worst_state, level, hide_context);
                 }
                 else {
                     DWORD error = GetLastError();
@@ -1816,6 +1828,62 @@ void load_logwatch_offsets()
             fclose(file);
         }
         offsets_loaded = true;
+    }
+}
+
+void save_eventlog_offsets()
+{
+    FILE *file = fopen(g_eventlog_statefile, "w");
+    for (unsigned i=0; i < num_eventlogs; i++) {
+        int level = 1;
+        for (int j=0; j<num_eventlog_configs; j++) {
+            const char *cname = eventlog_config[j].name;
+            if (!strcmp(cname, "*") || !strcasecmp(cname, eventlog_names[i]))
+            {
+                level = eventlog_config[j].level;
+                break;
+            }
+        }
+        if (level != -1)
+            fprintf(file, "%s|%lu\n", eventlog_names[i], known_record_numbers[i]);
+    }
+    fclose(file);
+}
+
+void parse_eventlog_state_line(char *line)
+{
+    /* Example: line = "System|1234" */
+    rstrip(line);
+    char *p = line;
+    while (*p && *p != '|') p++;
+    *p = 0;
+    char *path = line;
+    p++;
+
+    char *token = strtok(p, "|");
+
+    if (!token) return;
+    unsigned long long record_no = string_to_llu(token);
+
+    eventlog_hint_t *elh = new eventlog_hint_t();
+    elh->name      = strdup(path);
+    elh->record_no = record_no;
+    g_eventlog_hints.push_back(elh);
+}
+
+void load_eventlog_offsets()
+{
+    static bool records_loaded = false;
+    if (!records_loaded) {
+        FILE *file = fopen(g_eventlog_statefile, "r");
+        if (file) {
+            char line[256];
+            while (NULL != fgets(line, sizeof(line), file)) {
+                parse_eventlog_state_line(line);
+            }
+            fclose(file);
+        }
+        records_loaded = true;
     }
 }
 
@@ -2381,6 +2449,38 @@ void section_eventlog(SOCKET &out)
 
     if (find_eventlogs(out))
     {
+        // Special handling on startup (first_run)
+        // The last processed record number of each eventlog is stored in the file eventstate.txt
+        // If there is no entry for the given eventlog we start at the end
+        if (first_run && !logwatch_send_initial_entries) {
+            for (unsigned i=0; i < num_eventlogs; i++) {
+                char *logname      = eventlog_names[i];
+                bool found_hint = false;
+                for (eventlog_hints_t::iterator it_el  = g_eventlog_hints.begin();
+                                                it_el != g_eventlog_hints.end(); it_el++) {
+                    eventlog_hint_t *hint = *it_el;
+                    if (!strcmp(hint->name, logname)) {
+                        known_record_numbers[i] = hint->record_no;
+                        found_hint = true;
+                        break;
+                    }
+                }
+                if (!found_hint)
+                {
+                    HANDLE hEventlog = OpenEventLog(NULL, logname);
+                    if (hEventlog)
+                    {
+                        DWORD no_records;
+                        DWORD oldest_record;
+                        GetNumberOfEventLogRecords(hEventlog, &no_records);
+                        GetOldestEventLogRecord(hEventlog, &oldest_record);
+                        if (no_records > 0)
+                           known_record_numbers[i] = oldest_record + no_records - 1;
+                    }
+                }
+            }
+        }
+
         for (unsigned i=0; i < num_eventlogs; i++) {
             if (!newly_found[i]) // not here any more!
                 output(out, "[[[%s:missing]]]\n", eventlog_names[i]);
@@ -2399,11 +2499,11 @@ void section_eventlog(SOCKET &out)
                     }
                 }
                 if (level != -1) {
-                    output_eventlog(out, eventlog_names[i], &known_record_numbers[i],
-                            first_run && !logwatch_send_initial_entries, level, hide_context);
+                    output_eventlog(out, eventlog_names[i], &known_record_numbers[i], level, hide_context);
                 }
             }
         }
+        save_eventlog_offsets();
     }
     first_run = false;
 }
@@ -3897,6 +3997,7 @@ bool handle_logfiles_config_variable(char *var, char *value)
 
 bool handle_logwatch_config_variable(char *var, char *value)
 {
+    load_eventlog_offsets();
     if (!strncmp(var, "logfile ", 8)) {
         int level;
         char *logfilename = lstrip(var + 8);
@@ -4701,6 +4802,7 @@ void determine_directories()
     snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
     snprintf(g_spool_dir, sizeof(g_spool_dir), "%s\\spool", g_agent_directory);
     snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt", g_agent_directory);
+    snprintf(g_eventlog_statefile, sizeof(g_eventlog_statefile), "%s\\eventstate.txt", g_agent_directory);
 
     // Set these directories as environment variables. Some scripts might use them...
     SetEnvironmentVariable("PLUGINSDIR", g_plugins_dir);

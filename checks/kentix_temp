@@ -30,11 +30,10 @@ def inventory_kentix_temp(info):
 
 def check_kentix_temp(item, params, info):
     value, lower_warn, upper_warn, alarm, text = info[0]
-    upper_warn = float(upper_warn)
-    lower_warn = float(lower_warn)
     temp = float(value)/10
 
-    return check_temperature(temp, params, dev_levels = (upper_warn, upper_warn), dev_levels_lower = (lower_warn, lower_warn))
+    return check_temperature(temp, params, dev_levels = (float(upper_warn), float(upper_warn)),
+                                     dev_levels_lower = (float(lower_warn), float(lower_warn)))
 
 check_info["kentix_temp"] = {
     'check_function'        :          check_kentix_temp,

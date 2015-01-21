@@ -1,0 +1,10 @@
+Title: viprinet_temp: Now uses new Temperature WATO rule
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1421761352
+Class: feature
+
+This check is no longer in the room_temperature group, but in the
+temperature group. Old rules will therefore no longer apply.

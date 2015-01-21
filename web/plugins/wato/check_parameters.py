@@ -6503,8 +6503,21 @@ register_check_parameters(subgroup_applications,
                                      "all of the logfiles listed here are reported by the monitored system."),
                         )
                     ),
+                    ('logwatch_reclassify',
+                        Checkbox(
+                            title =  _("Reclassify messages before forwarding them to the EC"),
+                            label = _("Apply logwatch patterns"),
+                            help = _("If this option is enabled, the logwatch lines are first reclassified by the logwatch "
+                                     "patterns before they are sent to the event console. If you reclassify specific lines to "
+                                     "IGNORE they are not forwarded to the event console. This takes the burden from the "
+                                     "event console to process the message itself through all of its rulesets. The reclassifcation "
+                                     "of each line takes into account from which logfile the message originates. So you can create "
+                                     "logwatch reclassification rules specifically designed for a logfile <i>access.log</i>, "
+                                     "which do not apply to other logfiles."),
+                     )
+                    )
                 ],
-                optional_keys = ['restrict_logfiles', 'expected_logfiles'],
+                optional_keys = ['restrict_logfiles', 'expected_logfiles', 'logwatch_reclassify'],
             ),
         ],
         default_value = '',

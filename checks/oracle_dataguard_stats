@@ -75,6 +75,9 @@ def check_oracle_dataguard_stats(item, params, info):
                 elif parameter == 'transport lag':
                     params_value = 'transport_lag'
 
+                else:
+                    params_value = ''
+
                 state_marker = ''
 
                 seconds = int(get_seconds(value))

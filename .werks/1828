@@ -1,0 +1,11 @@
+Title: oracle_dataguard_stats: Bugfix for 'params_value' referenced before assignment
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b7
+Date: 1421696011
+Class: fix
+
+This bugfix is needed for every vonfiguration without an existing rule for
+oracle_dataguard_stats.
+

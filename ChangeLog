@@ -35,7 +35,6 @@
     Event Console:
     * 1873 SEC: Escaping event text of event console messages correctly in views...
 
-
 1.2.6b6:
     Core & Setup:
     * 1832 FIX: Fix "global name 'splitted' is not defined" in bulk inventory...

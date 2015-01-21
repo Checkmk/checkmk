@@ -1,0 +1,34 @@
+title: Citrix Netscaler TCP Connections
+agents: snmp
+catalog: app/netscaler
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the number of TCP connections on a Citrix Netscaler
+ Loadbalacing Appliance. It uses the {NS-ROOT-MIB} to access the
+ {nsTcpStatsGroup} via SNMP.
+
+ Monitored values are the number of TCP server connections and the number of
+ TCP client connections.
+
+ Warning and critical levels can be configured for these values.
+
+inventory:
+ One service per loadbalancer device will be created.
+
+perfdata:
+ The number of client connections and the number of client connections.
+
+[parameters]
+parameters(dict): parameters is a dictionary with a key for each monitored value.
+
+ {"server_conns"}: a tuple of warning and critical levels.
+
+ {"client conns"}: a tuple of warning and critical levels.
+
+ The numbers are integers.
+
+[configuration]
+netscaler_tcp_conns_default_levels(dict): This variable is preset to
+{{ "server_conns": (25000, 30000), "client_conns": (25000, 30000) }}

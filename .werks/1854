@@ -1,0 +1,9 @@
+Title: netscaler_tcp_conns: new check to monitor tcp connections on Citrix Netscaler Loadbalancer Appliances
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421840838
+Class: feature
+
+

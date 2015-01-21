@@ -50,8 +50,6 @@
             NOTE: Please refer to the migration notes!
     * 1673 netapp_volumes: now able to configure levels by magic factor
     * 1854 netscaler_tcp_conns: new check to monitor tcp connections on Citrix Netscaler Loadbalancer Appliances
-    * 1526 climaveneta_fan: No longer outputs performance data, now configured via "fan" rule...
-            NOTE: Please refer to the migration notes!
     * 1888 bintec_sensors.fan: No longer outputs performance data, now configured via "fan" rule...
             NOTE: Please refer to the migration notes!
     * 1857 ibm_svc_portsas: new check and extended special agent for IBM SVC / Storwize V3700 / V7000 devices

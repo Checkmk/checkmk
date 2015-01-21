@@ -1,0 +1,20 @@
+Title: Now able to reclassify logwatch messages before forwarding them to the event console
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421838593
+Class: feature
+
+You are now able to apply already existing logwatch patterns to the messages which
+are sent to the event console. Each message can be reclassified to a different alert level
+and even set to IGNORED, which causes a message not to be sent to the event console.
+This pre-sorting might reduce the load of the event console.
+
+Keep in mind that the logwatch pattern are configured by host and the logfile name.
+These restrictions do also apply to the messages intented for the event console.
+So you can configure a logwatch pattern specifially designed for a message from a certain logfile.
+
+For example, you can reclassify any messages from a logfile <i>access.log</i> containing "C Login error" to
+"I Login error". Any message of <i>access.log</i>  containing the "Login error" pattern will therefore get ignored and
+not sent to the event console.

@@ -718,3 +718,11 @@ td.invtree table td {
     background-color: #fff;
 }
 
+td.invtree span.invold, span.invold table.data {
+    color: #ff0000;
+}
+
+td.invtree span.invnew, span.invnew table.data {
+    color: #00bf00;
+}
+

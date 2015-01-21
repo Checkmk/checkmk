@@ -4791,8 +4791,10 @@ register_check_parameters(
 register_check_parameters(
      subgroup_storage,
     "multipath",
-    _("Multipathing - health of a multipath LUN"),
+    _("Linux and Solaris Multipath Count"),
     Integer(
+        help = _("This rules sets the expected number of active paths for a multipath LUN "
+                 "on Linux and Solaris hosts"),
         title = _("Expected number of active paths")),
     TextAscii(
         title = _("Name of the MP LUN"),
@@ -4811,12 +4813,13 @@ register_rule(
             ("use_alias", Checkbox(
                      title = _("Use the multipath alias as service name, if one is set"),
                          label = _("use alias"),
-                         help = _("If a multipath device has an alias then you can use that for specifying "
+                         help = _("If a multipath device has an alias then you can use it for specifying "
                                   "the device instead of the UUID. The alias will then be part of the service "
                                   "description. The UUID will be output in the pluging outpout."))
             ),
         ],
-        help = _('This rule controls the inventory of Multipath devices on Linux.'),
+        help = _("This rule controls if the UUID or alias is used in the service description during "
+                 "inventory of Multipath devices on Linux."),
     ),
     match = 'dict',
 )
@@ -4824,8 +4827,10 @@ register_rule(
 register_check_parameters(
      subgroup_storage,
     "multipath_count",
-    _("Multipath Count"),
+    _("ESX Multipath Count"),
     Alternative(
+            help = _("This rules sets the expected number of active paths for a multipath LUN "
+                     "on ESX servers"),
             title = _("Match type"),
             elements = [
                     FixedValue(
@@ -4869,9 +4874,11 @@ register_check_parameters(
 register_check_parameters(
      subgroup_storage,
     "hpux_multipath",
-    _("Multipathing on HPUX - state of paths of a LUN"),
+    _("HPUX Multipath Count"),
     Tuple(
         title = _("Expected path situation"),
+        help = _("This rules sets the expected number of various paths for a multipath LUN "
+                 "on HPUX servers"),
         elements = [
             Integer(title = _("Number of active paths")),
             Integer(title = _("Number of standby paths")),

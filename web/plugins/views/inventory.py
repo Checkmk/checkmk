@@ -38,7 +38,7 @@ def paint_host_inventory(row, invpath):
         return "", ""
     elif type(invdata) in ( str, unicode ):
         return "", invdata
-    elif type(invdata) in ( list, dict ):
+    elif not is_leaf_type(invdata):
         return paint_inv_tree(row, invpath)
     else:
         return "number", str(invdata)
@@ -115,23 +115,27 @@ def declare_inv_column(invpath, datatype, title, short = None):
 
 
 # Tree painter
-def paint_inv_tree(row, invpath = "."):
+def paint_inv_tree(row, invpath = ".", column = "host_inventory"):
     hostname = row["host_name"]
-    tree = row["host_inventory"]
+    tree = row[column]
+    if column == "host_inventory":
+        tree_id = ""
+    else:
+        tree_id = "/" + str(row["invhist_time"])
     node = inventory.get(tree, invpath)
     html.plug()
-    render_inv_subtree_container(hostname, invpath, node)
+    render_inv_subtree_container(hostname, tree_id, invpath, node)
     code = html.drain()
     html.unplug()
     return "invtree", code
 
-def render_inv_subtree(hostname, invpath, node):
-    if type(node) in (dict, list):
-        render_inv_subtree_foldable(hostname, invpath, node)
+def render_inv_subtree(hostname, tree_id, invpath, node):
+    if is_leaf_type(node):
+        render_inv_subtree_leaf(hostname, tree_id, invpath, node)
     else:
-        render_inv_subtree_leaf(hostname, invpath, node)
+        render_inv_subtree_foldable(hostname, tree_id, invpath, node)
 
-def render_inv_subtree_foldable(hostname, invpath, node):
+def render_inv_subtree_foldable(hostname, tree_id, invpath, node):
     if node: # omit empty nodes completely
         icon, title = inv_titleinfo(invpath, node)
 
@@ -139,28 +143,39 @@ def render_inv_subtree_foldable(hostname, invpath, node):
             list_index = int(invpath.split(":")[-1].rstrip(".")) + 1
             title = title % list_index
 
-        fetch_url = html.makeuri_contextless([("host", hostname), ("path", invpath)], "ajax_inv_render_tree.py")
-        if html.begin_foldable_container("inv_" + hostname, invpath, False, title, icon=icon, fetch_url=fetch_url):
+        fetch_url = html.makeuri_contextless([("host", hostname), ("path", invpath), ("treeid", tree_id)], "ajax_inv_render_tree.py")
+        if html.begin_foldable_container("inv_" + hostname + tree_id, invpath, False, title, icon=icon, fetch_url=fetch_url):
             # Render only if it is open. We'll get the stuff via ajax later if it's closed
-            render_inv_subtree_container(hostname, invpath, node)
+            render_inv_subtree_container(hostname, tree_id, invpath, node)
         html.end_foldable_container()
 
-def render_inv_subtree_container(hostname, invpath, node):
+def render_inv_subtree_container(hostname, tree_id, invpath, node):
     hint = inv_display_hint(invpath)
     if "render" in hint:
-        hint["render"](hostname, invpath, node)
+        try:
+            hint["render"](hostname, invpath, node)
+        except:
+            hint["render"](hostname, tree_id, invpath, node)
     elif type(node) == dict:
-        render_inv_subtree_dict(hostname, invpath, node)
+        render_inv_subtree_dict(hostname, tree_id, invpath, node)
     else:
-        render_inv_subtree_list(hostname, invpath, node)
+        render_inv_subtree_list(hostname, tree_id, invpath, node)
 
-def render_inv_subtree_dict(hostname, invpath, node):
+def is_leaf_type(value):
+    if type(value) in (list, dict):
+        return False
+    elif type(value) == tuple and type(value[0]) == list: # Delta mode lists
+        return False
+    else:
+        return True
+
+def render_inv_subtree_dict(hostname, tree_id, invpath, node):
     items = node.items()
     items.sort()
 
     leaf_nodes = []
     for key, value in items:
-        if type(value) not in (list, dict):
+        if is_leaf_type(value):
             invpath_sub = invpath + key
             icon, title = inv_titleinfo(invpath_sub, value)
             leaf_nodes.append((title, invpath_sub, value))
@@ -170,32 +185,68 @@ def render_inv_subtree_dict(hostname, invpath, node):
         html.write("<table>")
         for title, invpath_sub, value in leaf_nodes:
             html.write("<tr><th title='%s'>%s</th><td>" % (invpath_sub, title))
-            render_inv_subtree(hostname, invpath_sub, value)
+            render_inv_subtree(hostname, tree_id, invpath_sub, value)
             html.write("</td></tr>")
         html.write("</table>")
 
-    non_leaf_nodes = [ item for item in items if type(item[1]) in (list, dict) ]
+    non_leaf_nodes = [ item for item in items if not is_leaf_type(item[1]) ]
     non_leaf_nodes.sort()
     for key, value in non_leaf_nodes:
         invpath_sub = invpath + key
         if type(value) == dict:
             invpath_sub += "."
-        elif type(value) == list:
+        elif type(value) == list or (type(value) == tuple and type(value[0]) == list):
             invpath_sub += ":"
-        render_inv_subtree_foldable(hostname, invpath_sub, value)
+        render_inv_subtree_foldable(hostname, tree_id, invpath_sub, value)
 
-def render_inv_subtree_list(hostname, invpath, node):
+def render_inv_subtree_list(hostname, tree_id, invpath, node):
+    # In delta-mode node is a pair of (removed, new)
     if not node:
         return
-    for nr, value in enumerate(node):
-        invpath_sub = invpath + str(nr)
-        if type(value) == dict:
-            invpath_sub += "."
-        elif type(value) == list:
-            invpath_sub += ":"
-        render_inv_subtree(hostname, invpath_sub, value)
 
-def render_inv_subtree_leaf(hostname, invpath, node):
+    elif type(node) == tuple:
+        html.write(_("Removed entries") + ":<br>")
+        html.write("<span class=invold>")
+        render_inv_subtree_list(hostname, tree_id, invpath, node[0])
+        html.write("</span>")
+
+        html.write(_("New entries") + ":<br>")
+        html.write("<span class=invnew>")
+        render_inv_subtree_list(hostname, tree_id, invpath, node[1])
+        html.write("</span>")
+
+    else:
+        for nr, value in enumerate(node):
+            invpath_sub = invpath + str(nr)
+            if type(value) == dict:
+                invpath_sub += "."
+            elif type(value) == list or (type(value) == tuple and type(value[0]) == list):
+                invpath_sub += ":"
+            render_inv_subtree(hostname, tree_id, invpath_sub, value)
+
+
+def render_inv_subtree_leaf(hostname, tree_id, invpath, node):
+    # In delta mode node is a pair (old_value, new_value)
+    if type(node) == tuple:
+        if node[0] == node[1] or node[0] == None:
+            if node[0] == None:
+                html.write("<span class=invnew>")
+            render_inv_subtree_leaf_value(hostname, tree_id, invpath, node[1])
+            if node[0] == None:
+                html.write("</span>")
+        else:
+            html.write("<span class=invold>")
+            render_inv_subtree_leaf_value(hostname, tree_id, invpath, node[0])
+            html.write("</span>")
+            html.write(u" → ")
+            html.write("<span class=invnew>")
+            render_inv_subtree_leaf_value(hostname, tree_id, invpath, node[1])
+            html.write("</span>")
+    else:
+        render_inv_subtree_leaf_value(hostname, tree_id, invpath, node)
+    html.write("<br>")
+
+def render_inv_subtree_leaf_value(hostname, tree_id, invpath, node):
     hint = inv_display_hint(invpath)
     if "paint_function" in hint:
         tdclass, code = hint["paint_function"](node)
@@ -216,10 +267,22 @@ def render_inv_subtree_leaf(hostname, invpath, node):
         html.write("%.2f" % node)
     elif node != None:
         html.write(str(node))
-    html.write("<br>")
 
 
-def render_inv_dicttable(hostname, invpath, node):
+def render_inv_dicttable(hostname, tree_id, invpath, node):
+    # In delta mode node is a pair of (old_items, new_items)
+    if type(node) == tuple:
+        html.write(_("Removed entries") + ":")
+        html.write("<span class=invold>")
+        render_inv_dicttable(hostname, tree_id, invpath, node[0])
+        html.write("</span>")
+
+        html.write(_("New entries") + ":")
+        html.write("<span class=invnew>")
+        render_inv_dicttable(hostname, tree_id, invpath, node[1])
+        html.write("</span>")
+        return
+
     hint = inv_display_hint(invpath)
     keyorder = hint.get("keyorder", []) # well known keys
 
@@ -257,10 +320,10 @@ def render_inv_dicttable(hostname, invpath, node):
             invpath_sub = invpath + "%d.%s" % (nr, key)
             if type(value) == dict:
                 invpath_sub += "."
-            elif type(value) == list:
+            elif type(value) == list or (type(value) == tuple and type(value[0]) == list):
                 invpath_sub += ":"
             html.write('<td>')
-            render_inv_subtree(hostname, invpath_sub, value)
+            render_inv_subtree(hostname, tree_id, invpath_sub, value)
             html.write('</td>')
         html.write('</tr>')
     html.write('</table>')
@@ -561,10 +624,13 @@ multisite_builtin_views["inv_hosts_cpu"] = {
 
 
 def inv_software_table(columns, add_headers, only_sites, limit, filters):
+    return inv_multisite_table("invswpacs", columns, add_headers, only_sites, limit, filters)
+
+def inv_multisite_table(dsname, columns, add_headers, only_sites, limit, filters):
     # Create livestatus filter for filtering out hosts
     filter_code = ""
     for filt in filters:
-        header = filt.filter("invswpacs")
+        header = filt.filter(dsname)
         if not header.startswith("Sites:"):
             filter_code += header
     host_columns = [ "host_name" ] + filter(lambda c: c.startswith("host_"), columns)
@@ -591,23 +657,33 @@ def inv_software_table(columns, add_headers, only_sites, limit, filters):
 
     headers = [ "site" ] + host_columns
 
-    # Now create big table of all software packages of these hosts
+    # Now create big table of all software packages / inventory histories of these hosts
+
     rows = []
     hostnames = [ row[1] for row in data ]
     for row in data:
         site     = row[0]
         hostname = row[1]
-        tree     = inventory.host(hostname)
         hostrow = dict(zip(headers, row))
-        packages = inventory.get(tree, ".software.packages:")
-        for package in packages:
-            newrow = {}
-            for key, value in package.items():
-                newrow["invswpac_" + key] = value
-            newrow.update(hostrow)
-            rows.append(newrow)
+        if dsname == "invswpac":
+            subrows = create_swpac_rows(hostname)
+        else:
+            subrows = create_hist_rows(hostname, columns)
 
+        for subrow in subrows:
+            subrow.update(hostrow)
+            rows.append(subrow)
     return rows
+
+
+def create_swpac_rows(hostname):
+    tree     = inventory.host(hostname)
+    packages = inventory.get(tree, ".software.packages:")
+    for package in packages:
+        newrow = {}
+        for key, value in package.items():
+            newrow["invswpac_" + key] = value
+        yield newrow
 
 def declare_swpacs_columns(name, title, sortfunc):
     column = "invswpac_" + name
@@ -642,8 +718,6 @@ for name, title, sortfunc in [
     declare_swpacs_columns(name, title, sortfunc)
 
 
-
-
 multisite_datasources["invswpacs"] = {
     "title"        : _("Inventory: Software Packages"),
     "table"        : inv_software_table,
@@ -651,7 +725,6 @@ multisite_datasources["invswpacs"] = {
     "keys"         : [],
     "idkeys"       : [],
 }
-
 
 # View for searching for a certain software
 multisite_builtin_views["inv_swpacs"] = {
@@ -714,3 +787,136 @@ multisite_builtin_views["inv_swpacs"] = {
     'hide_filters'                 : [],
     'sorters'                      : [],
 }
+
+
+#.
+#   .--History-------------------------------------------------------------.
+#   |                   _   _ _     _                                      |
+#   |                  | | | (_)___| |_ ___  _ __ _   _                    |
+#   |                  | |_| | / __| __/ _ \| '__| | | |                   |
+#   |                  |  _  | \__ \ || (_) | |  | |_| |                   |
+#   |                  |_| |_|_|___/\__\___/|_|   \__, |                   |
+#   |                                             |___/                    |
+#   +----------------------------------------------------------------------+
+#   |  Code for history view of inventory                                  |
+#   '----------------------------------------------------------------------'
+
+def inv_history_table(columns, add_headers, only_sites, limit, filters):
+    return inv_multisite_table("invhist", columns, add_headers, only_sites, limit, filters)
+
+def create_hist_rows(hostname, columns):
+    hist_tree = None
+    # Iterate over all known historic inventory states - from new to old
+    for timestamp in inventory.get_host_history(hostname)[::-1]:
+        old_hist_tree = hist_tree
+        hist_tree = inventory.load_historic_host(hostname, timestamp)
+        removed, new, changed, delta_tree = inventory.compare_trees(old_hist_tree, hist_tree)
+        newrow = {
+            "invhist_time"    : timestamp,
+            "invhist_delta"   : delta_tree,
+            "invhist_removed" : removed,
+            "invhist_new"     : new,
+            "invhist_changed" : changed,
+        }
+        yield newrow
+
+multisite_datasources["invhist"] = {
+    "title"        : _("Inventory: History"),
+    "table"        : inv_history_table,
+    "infos"        : [ "host", "invhist" ],
+    "keys"         : [],
+    "idkeys"       : [ "host_name", "invhist_date" ],
+}
+
+multisite_painters["invhist_time"] = {
+    "title"    : _("Inventory Date/Time"),
+    "short"    : _("Date/Time"),
+    "columns"  : [ "invhist_time" ],
+    "options"  : [ "ts_format", "ts_date" ],
+    "paint"    : lambda row: paint_age(row["invhist_time"], True, 60 * 10),
+}
+
+multisite_painters["invhist_delta"] = {
+    "title"    : _("Inventory changes"),
+    "columns"  : [ "invhist_delta" "invhist_time" ],
+    "paint"    : lambda row: paint_inv_tree(row, column="invhist_delta"),
+}
+
+def paint_invhist_count(row, what):
+    number = row["invhist_" + what]
+    if number:
+        return "narrow number", str(number)
+    else:
+        return "narrow number unused", "0"
+
+multisite_painters["invhist_removed"] = {
+    "title"    : _("Removed entries"),
+    "short"    : _("Removed"),
+    "columns"  : [ "invhist_removed" ],
+    "paint"    : lambda row: paint_invhist_count(row, "removed"),
+}
+
+multisite_painters["invhist_new"] = {
+    "title"    : _("new entries"),
+    "short"    : _("new"),
+    "columns"  : [ "invhist_new" ],
+    "paint"    : lambda row: paint_invhist_count(row, "new"),
+}
+
+multisite_painters["invhist_changed"] = {
+    "title"    : _("changed entries"),
+    "short"    : _("changed"),
+    "columns"  : [ "invhist_changed" ],
+    "paint"    : lambda row: paint_invhist_count(row, "changed"),
+}
+
+
+# sorteres
+declare_1to1_sorter("invhist_time",    cmp_simple_number, reverse=True)
+declare_1to1_sorter("invhist_removed", cmp_simple_number)
+declare_1to1_sorter("invhist_new",     cmp_simple_number)
+declare_1to1_sorter("invhist_changed", cmp_simple_number)
+
+# View for inventory history of one host
+
+multisite_builtin_views["inv_host_history"] = {
+    # General options
+    'datasource'                   : 'invhist',
+    'topic'                        : _('Inventory'),
+    'title'                        : _('Inventory history of host'),
+    'linktitle'                    : _('Inventory History'),
+    'description'                  : _('The history for changes in hardware- and software inventory of a host'),
+    'icon'                         : 'inv',
+    'hidebutton'                   : False,
+    'public'                       : True,
+    'hidden'                       : True,
+
+    # Layout options
+    'layout'                       : 'table',
+    'num_columns'                  : 1,
+    'browser_reload'               : 0,
+    'column_headers'               : 'pergroup',
+    'user_sortable'                : True,
+    'play_sounds'                  : False,
+    'force_checkboxes'             : False,
+    'mustsearch'                   : False,
+    'mobile'                       : False,
+
+    # Columns
+    'group_painters'               : [],
+    'painters'                     : [
+            ('invhist_time',     None,   ''),
+            ('invhist_removed',  None,   ''),
+            ('invhist_new',      None,   ''),
+            ('invhist_changed',  None,   ''),
+            ('invhist_delta',    None,   ''),
+    ],
+
+    # Filters
+    'hard_filters'                 : [],
+    'hard_filtervars'              : [],
+    'hide_filters'                 : ['host'],
+    'show_filters'                 : [],
+    'sorters'                      : [('invhist_time', False)],
+}
+

@@ -6,4 +6,4 @@ Version: 1.2.7i1
 Date: 1421853099
 Class: feature
 
-This check is now configured via a different WATO rule, so any old rules set will no longer apply. Re-inventory required.
+This check is now configured via a different WATO rule, so any old rules set will no longer apply.

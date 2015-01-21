@@ -7,4 +7,4 @@ Date: 1421850987
 Class: feature
 
 This check is now configured via a different WATO rule, so any old rules set will
-no longer apply. Re-inventory required.
+no longer apply.

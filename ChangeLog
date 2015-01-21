@@ -48,13 +48,10 @@
             NOTE: Please refer to the migration notes!
     * 1525 viprinet_temp: Now uses new Temperature WATO rule...
             NOTE: Please refer to the migration notes!
-<<<<<<< HEAD
-    * 1526 climaveneta_fan: No longer outputs performance data, now configured via "fan" rule...
-            NOTE: Please refer to the migration notes!
-=======
     * 1673 netapp_volumes: now able to configure levels by magic factor
     * 1854 netscaler_tcp_conns: new check to monitor tcp connections on Citrix Netscaler Loadbalancer Appliances
->>>>>>> 92eaa76066f0ba1122cb72f4f1f783d8c0439378
+    * 1526 climaveneta_fan: No longer outputs performance data, now configured via "fan" rule...
+            NOTE: Please refer to the migration notes!
     * 1457 FIX: logins: new check renamed from "users" check...
             NOTE: Please refer to the migration notes!
     * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...
@@ -166,7 +163,7 @@
 
     HW/SW-Inventory:
     * 1846 Keep track of changes of software and hardware...
-    * 1855 esx_systeminfo: new inventory check to retrieve info about the host operating system for ESX servers
+    * 1855 esx_systeminfo: new inventory plugin to retrieve info about the host operating system for ESX servers
     * 1851 FIX: win_exefiles: inventory check can now handle time stamps in us english locale
 
 

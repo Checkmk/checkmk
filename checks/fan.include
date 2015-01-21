@@ -25,16 +25,22 @@
 # Boston, MA 02110-1301 USA.
 
 def check_fan(rpm, params):
-    if type(params) == dict:
-        warn, crit = params["lower"]
-    else:
-        warn, crit = params
+    if type(params) == tuple:
+        params = { "lower" : params }
+
+    warn, crit = params["lower"]
+    warn_upper, crit_upper = params.get("upper", (None, None))
     message = "Speed at %d rpm" % rpm
-    levelstext = " (warn/crit at %s/%s rpm)" % params
-    if rpm < crit:
+    levelstext = " (warn/crit below %s/%s rpm)" % (warn, crit)
+    if warn_upper and crit_upper:
+        levelstext = levelstext[:-1] + \
+            " and at or above %s/%s rpm)" % (warn_upper, crit_upper)
+
+    # Note that None < int
+    if rpm < crit or rpm >= crit_upper:
         message += levelstext
         return 2, message
-    elif rpm < warn:
+    elif rpm < warn or rpm >= warn_upper:
         message += levelstext
         return 1, message
     else:

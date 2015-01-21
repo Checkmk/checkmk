@@ -1,4 +1,4 @@
-Title: Now able reclassify logwatch messages before forwarding them to the event console
+Title: Now able to reclassify logwatch messages before forwarding them to the event console
 Level: 2
 Component: ec
 Compatible: compat

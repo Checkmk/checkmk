@@ -4891,6 +4891,26 @@ register_check_parameters(
                        ( "iscsi",  _("iSCSI") ),
                     ],
                 )),
+            (  "magic",
+               Float(
+                  title = _("Magic factor (automatic level adaptation for large volumes)"),
+                  default_value = 0.8,
+                  minvalue = 0.1,
+                  maxvalue = 1.0)),
+            (  "magic_normsize",
+               Integer(
+                   title = _("Reference size for magic factor"),
+                   default_value = 20,
+                   minvalue = 1,
+                   unit = _("GB"))),
+            ( "levels_low",
+              Tuple(
+                  title = _("Minimum levels if using magic factor"),
+                  help = _("The volume levels will never fall below these values, when using "
+                           "the magic factor and the volume is very small."),
+                  elements = [
+                      Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True, default_value=50),
+                      Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True, default_value=60)])),
             (  "trend_range",
                Optional(
                    Integer(

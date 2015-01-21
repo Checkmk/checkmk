@@ -1,0 +1,9 @@
+Title: bintec_sensors.fan: No longer outputs performance data, now configured via "fan" rule
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1421853099
+Class: feature
+
+This check is now configured via a different WATO rule, so any old rules set will no longer apply.

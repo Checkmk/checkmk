@@ -25,7 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 def check_fan(rpm, params):
-    warn, crit = params
+    if type(params) == dict:
+        warn, crit = params["lower"]
+    else:
+        warn, crit = params
     message = "Speed at %d rpm" % rpm
     levelstext = " (warn/crit at %s/%s rpm)" % params
     if rpm < crit:

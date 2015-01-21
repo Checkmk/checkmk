@@ -56,33 +56,28 @@ def ibm_svc_mdiskgrp_to_mb(size):
     return size
 
 def inventory_ibm_svc_mdiskgrp(info):
-    inventory = []
-    for mgrp_id, mgrp_name, mgrp_status, mdisk_count, vdisk_count, capacity, \
-        extent_size, free_capacity, virtual_capacity, used_capacity, \
-        real_capacity, overallocation, mgrp_warning, easy_tier, easy_tier_status, \
-        compression_active, compression_virtual_capacity, compression_compressed_capacity, \
-        compression_uncompressed_capacity in info:
-            inventory.append( (mgrp_name, {}) )
-    return inventory
+    for line in info:
+        if len(line) in (15, 19, 24):
+            yield line[1], {}
 
 def check_ibm_svc_mdiskgrp(item, params, info):
-    for mgrp_id, mgrp_name, mgrp_status, mdisk_count, vdisk_count, capacity, \
-        extent_size, free_capacity, virtual_capacity, used_capacity, \
-        real_capacity, overallocation, mgrp_warning, easy_tier, easy_tier_status, \
-        compression_active, compression_virtual_capacity, compression_compressed_capacity, \
-        compression_uncompressed_capacity in info:
-            if mgrp_name == item:
-                if mgrp_status != "online":
-                    return 2, "MDiskGrp %s reports status %s" % (item, mgrp_status)
-                fslist = []
-                size_mb   = ibm_svc_mdiskgrp_to_mb(capacity)
-                avail_mb  = ibm_svc_mdiskgrp_to_mb(free_capacity)
-                fslist.append((item, size_mb, avail_mb))
-                status, message, perfdata = df_check_filesystem_list(item, params, fslist)
-                message += ", MDiskGrp %s reports status %s" % (item, mgrp_status)
-                return status, message, perfdata
+    for line in info:
+        if len(line) in (15, 19, 24) and item == line[1]:
+            mgrp_status = line[2]
 
-    return 3, "MDiskGrp %s not found in agent output" % item
+            if mgrp_status != "online":
+                return 2, "Status: %s" % mgrp_status
+
+            fslist = []
+            capacity = line[5]
+            free_capacity = line[7]
+            size_mb   = ibm_svc_mdiskgrp_to_mb(capacity)
+            avail_mb  = ibm_svc_mdiskgrp_to_mb(free_capacity)
+            fslist.append((item, size_mb, avail_mb))
+            status, message, perfdata = df_check_filesystem_list(item, params, fslist)
+            message += ", Status: %s" % mgrp_status
+
+            return status, message, perfdata
 
 
 check_info["ibm_svc_mdiskgrp"] = {

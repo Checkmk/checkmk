@@ -1,0 +1,23 @@
+Title: Keep track of changes of software and hardware
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.7i1
+Date: 1421772093
+Class: feature
+
+The HW/SW-Inventory module now keeps tracks of changes of the hardware and
+software on a system: Each time an inventory is being done the outcome is
+being compared with the data from the last time. If a change has been detected,
+a copy of the previous inventory data is being stored for later reference (in
+<tt>var/check_mk/inventory_archive</tt>).  The check <tt>HW/SW Inventory</tt>
+can be configured with the WATO ruleset <i>Do hardware/software Inventory</i>
+to report a WARN or CRIT state if one of hardware or software has changed.
+
+Secondly - if you are viewing details of a host - a button <i>Inventory
+History</i> brings you to a new view of the historic development of the
+host's hardware and software. At the beginning this button is hidden
+behind the <i>[...]</i>-button (as usual). The history shows you each point
+of time where at least one item of the inventory data has changed. That
+way you can easily keep track of new installed software, exchanged
+hard disks, BIOS updates and much more.

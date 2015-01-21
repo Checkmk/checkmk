@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,16 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_cmk_inv(params):
-    if params == None:
-        params = {} # convert from legacy rule syntax
+# Example output:
+# <<<esx_systeminfo>>>
+# vendor VMware, Inc.
+# name VMware ESXi
+# propertyCollector ha-property-collector
+# apiVersion 5.0
+# sessionManager ha-sessionmgr
+# osType vmnix-x86
+# version 5.0.0
+# build 914586
+# licenseManager ha-license-manager
+# perfManager ha-perfmgr
+# rootFolder ha-folder-root
 
-    return "--hw-changes=%d --sw-changes=%d" % (params.get("hw_changes", 0), params.get("sw_changes", 0))
 
-active_check_info['cmk_inv'] = {
-    "command_line"        : 'cmk $ARG1$ --inventory-as-check $HOSTNAME$',
-    "argument_function"   : check_cmk_inv,
-    "service_description" : lambda x: "Check_MK HW/SW Inventory",
-    "has_perfdata"        : False,
+def inv_esx_systeminfo(info):
+    node = inv_tree("software.os.")
+    for line in info:
+        if line[0] == 'vendor':
+            node["vendor"] = " ".join(line[1:])
+        elif line[0] == 'name':
+            node["name"] = " ".join(line[1:])
+        elif line[0] == 'version':
+            node["version"] = " ".join(line[1:])
+        elif line[0] == 'osType':
+            node["type"] = " ".join(line[1:])
+        node["arch"] = "x86_64"
+
+inv_info['esx_systeminfo'] = {
+   "inv_function"           : inv_esx_systeminfo,
 }
-

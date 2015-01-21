@@ -4791,8 +4791,10 @@ register_check_parameters(
 register_check_parameters(
      subgroup_storage,
     "multipath",
-    _("Multipathing - health of a multipath LUN"),
+    _("Linux and Solaris Multipath Count"),
     Integer(
+        help = _("This rules sets the expected number of active paths for a multipath LUN "
+                 "on Linux and Solaris hosts"),
         title = _("Expected number of active paths")),
     TextAscii(
         title = _("Name of the MP LUN"),
@@ -4811,12 +4813,13 @@ register_rule(
             ("use_alias", Checkbox(
                      title = _("Use the multipath alias as service name, if one is set"),
                          label = _("use alias"),
-                         help = _("If a multipath device has an alias then you can use that for specifying "
+                         help = _("If a multipath device has an alias then you can use it for specifying "
                                   "the device instead of the UUID. The alias will then be part of the service "
                                   "description. The UUID will be output in the pluging outpout."))
             ),
         ],
-        help = _('This rule controls the inventory of Multipath devices on Linux.'),
+        help = _("This rule controls if the UUID or alias is used in the service description during "
+                 "inventory of Multipath devices on Linux."),
     ),
     match = 'dict',
 )
@@ -4824,8 +4827,10 @@ register_rule(
 register_check_parameters(
      subgroup_storage,
     "multipath_count",
-    _("Multipath Count"),
+    _("ESX Multipath Count"),
     Alternative(
+            help = _("This rules sets the expected number of active paths for a multipath LUN "
+                     "on ESX servers"),
             title = _("Match type"),
             elements = [
                     FixedValue(
@@ -4869,9 +4874,11 @@ register_check_parameters(
 register_check_parameters(
      subgroup_storage,
     "hpux_multipath",
-    _("Multipathing on HPUX - state of paths of a LUN"),
+    _("HPUX Multipath Count"),
     Tuple(
         title = _("Expected path situation"),
+        help = _("This rules sets the expected number of various paths for a multipath LUN "
+                 "on HPUX servers"),
         elements = [
             Integer(title = _("Number of active paths")),
             Integer(title = _("Number of standby paths")),
@@ -5027,6 +5034,26 @@ register_check_parameters(
                        ( "iscsi",  _("ISCSI") ),
                     ],
                 )),
+            (  "magic",
+               Float(
+                  title = _("Magic factor (automatic level adaptation for large volumes)"),
+                  default_value = 0.8,
+                  minvalue = 0.1,
+                  maxvalue = 1.0)),
+            (  "magic_normsize",
+               Integer(
+                   title = _("Reference size for magic factor"),
+                   default_value = 20,
+                   minvalue = 1,
+                   unit = _("GB"))),
+            ( "levels_low",
+              Tuple(
+                  title = _("Minimum levels if using magic factor"),
+                  help = _("The volume levels will never fall below these values, when using "
+                           "the magic factor and the volume is very small."),
+                  elements = [
+                      Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True, default_value=50),
+                      Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True, default_value=60)])),
             (  "trend_range",
                Optional(
                    Integer(
@@ -6520,8 +6547,21 @@ register_check_parameters(subgroup_applications,
                                      "all of the logfiles listed here are reported by the monitored system."),
                         )
                     ),
+                    ('logwatch_reclassify',
+                        Checkbox(
+                            title =  _("Reclassify messages before forwarding them to the EC"),
+                            label = _("Apply logwatch patterns"),
+                            help = _("If this option is enabled, the logwatch lines are first reclassified by the logwatch "
+                                     "patterns before they are sent to the event console. If you reclassify specific lines to "
+                                     "IGNORE they are not forwarded to the event console. This takes the burden from the "
+                                     "event console to process the message itself through all of its rulesets. The reclassifcation "
+                                     "of each line takes into account from which logfile the message originates. So you can create "
+                                     "logwatch reclassification rules specifically designed for a logfile <i>access.log</i>, "
+                                     "which do not apply to other logfiles."),
+                     )
+                    )
                 ],
-                optional_keys = ['restrict_logfiles', 'expected_logfiles'],
+                optional_keys = ['restrict_logfiles', 'expected_logfiles', 'logwatch_reclassify'],
             ),
         ],
         default_value = '',
@@ -7554,5 +7594,47 @@ register_check_parameters(
             ),
         ]
     ),
-    None, None
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "netscaler_tcp_conns",
+    _("Citrix Netscaler Loadbalancer TCP Connections"),
+    Dictionary(
+        elements = [
+            ( "client_conns",
+                Tuple(
+                    title = _("Max. number of client connections"),
+                    elements = [
+                        Integer(
+                            title = _("Warning at"),
+                            default_value = 25000,
+                        ),
+                        Integer(
+                            title = _("Critical at"),
+                            default_value = 30000,
+                        ),
+                    ]
+                ),
+            ),
+            ( "server_conns",
+                Tuple(
+                    title = _("Max. number of server connections"),
+                    elements = [
+                        Integer(
+                            title = _("Warning at"),
+                            default_value = 25000,
+                        ),
+                        Integer(
+                            title = _("Critical at"),
+                            default_value = 30000,
+                        ),
+                    ]
+                ),
+            ),
+        ]),
+    None,
+    "dict"
 )

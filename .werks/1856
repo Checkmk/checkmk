@@ -1,0 +1,12 @@
+Title: ibm_svc_array ibm_svc_mdisk ibm_svc_mdiskgrp ibm_svc_portfc: made checks more robust for varying number of parameters of IBM SVC agent plugin
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421851629
+
+The number of parameters returned by the IBM SVC agent plugin depends on the IBM SVC's version. This change makes the corresponding checks
+handle IBM SVC versions up to at least V7.4
+

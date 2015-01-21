@@ -33,23 +33,22 @@
 
 
 def inventory_ibm_svc_array(info):
-    inventory = []
-    for mdisk_id, mdisk_name, mdisk_status, mdisk_grp_id, mdisk_grp_name, capacity, \
-        raid_status, raid_level, redundancy, strip_size, tier in info:
-        inventory.append( (mdisk_id, None) )
-    return inventory
+    for line in info:
+        if len(line) in (11, 12):
+            yield line[0], None
 
 def check_ibm_svc_array(item, _no_params, info):
-    status = 3
-    for mdisk_id, mdisk_name, mdisk_status, mdisk_grp_id, mdisk_grp_name, capacity, \
-        raid_status, raid_level, redundancy, strip_size, tier in info:
-        if mdisk_id == item:
+    for line in info:
+        if len(line) in (11, 12) and line[0] == item:
+            raid_status = line[6]
+            raid_level = line[7]
+            tier = line[10]
 
             # Check raid_status
-            message = "RAID Array %s reports status %s" % (item, raid_status)
+            message = "Status: %s" % raid_status
             if raid_status == "online":
                 status = 0
-            elif raid_status == "offline" or raid_status == "degraded":
+            elif raid_status in ("offline", "degraded"):
                 status = 2
                 message += "(!!)"
             else:
@@ -60,12 +59,9 @@ def check_ibm_svc_array(item, _no_params, info):
             message += ", RAID Level: %s, Tier: %s" % (raid_level, tier)
 
             return status, message
-    return 3, "RAID Array %s not found in agent output" % item
 
 check_info["ibm_svc_array"] = {
     "check_function"        : check_ibm_svc_array,
     "inventory_function"    : inventory_ibm_svc_array,
     "service_description"   : "RAID Array %s",
-    "has_perfdata"          : False,
 }
-

@@ -39,40 +39,36 @@
 
 
 def inventory_ibm_svc_mdisk(info):
-    inventory = []
-    for mdisk_id, mdisk_name, mdisk_status, mdisk_mode, mdisk_grp_id, mdisk_grp_name, capacity, ctrl_lun_number, controller_name, mdisk_uid, tier in info:
-        inventory.append( (mdisk_name, None) )
-    return inventory
+    for line in info:
+        if len(line) in (11, 12):
+            yield line[1], None
 
 def check_ibm_svc_mdisk(item, _no_params, info):
-    status = 3
-    for mdisk_id, mdisk_name, mdisk_status, mdisk_mode, mdisk_grp_id, mdisk_grp_name, capacity, ctrl_lun_number, controller_name, mdisk_uid, tier in info:
-        if mdisk_name == item:
+    for line in info:
+        if len(line) in (11, 12) and line[1] == item:
+            mdisk_status = line[2]
+            mdisk_mode = line[3]
 
-            # Check mdisk_status
-            message = "%s reports status %s" % (item, mdisk_status)
+            message = "Status: %s" % mdisk_status
             if mdisk_status == "online":
                 status = 0
-            elif mdisk_status == "offline" or mdisk_status == "excluded":
+            elif mdisk_status in ("offline", "excluded"):
                 status = 2
                 message += "(!!)"
             else:
                 status = 1
                 message += "(!)"
 
-            # check mdisk_mode
-            message += ", Mode %s" % mdisk_mode
+            message += ", Mode: %s" % mdisk_mode
             if mdisk_mode not in ( "managed", "array" ):
                 status = max(status, 1)
                 message += "(!)"
 
             return status, message
-    return 3, "MDisk %s not found in agent output" % item
 
 check_info["ibm_svc_mdisk"] = {
     "check_function"        : check_ibm_svc_mdisk,
     "inventory_function"    : inventory_ibm_svc_mdisk,
     "service_description"   : "MDisk %s",
-    "has_perfdata"          : False,
 }
 

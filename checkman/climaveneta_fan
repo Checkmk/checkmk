@@ -10,13 +10,11 @@ item:
  The id of the fan (1 or 2)
 
 perfdata:
- the current fan speed in RPM
+ None
 
 inventory:
  For each fan one service is created
 
 [parameters]
-lower_warning (int): Warning if speed is beneath
-lower_critical (int): Minimum level for the speed
-upper_warning (int):  Warning if the speed is above
-upper_critical (int): Maximum level for the speed
+warn (int): Warning if speed is below
+crit (int): Critical if speed is below

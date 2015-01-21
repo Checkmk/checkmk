@@ -5608,6 +5608,30 @@ register_check_parameters(
 )
 
 register_check_parameters(
+   subgroup_environment,
+    "fan",
+    _("Fan speed"),
+    Tuple(
+        elements = [
+            Integer(
+                title = _("Warning below"),
+                default_value = 200,
+                unit = u"rpm",
+            ),
+            Integer(
+                title = _("Critical below"),
+                default_value = 100,
+                unit = u"rpm",
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Fan Name"),
+        help = _("The identificator of the fan.")),
+    None
+)
+
+register_check_parameters(
     subgroup_os,
     "pf_used_states",
     _("Number of used states of OpenBSD PF engine"),

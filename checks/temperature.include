@@ -41,7 +41,6 @@ def celsius_to_fahrenheit(tempc):
 # dev_level_lower:   lower warn/crit device levels
 # dev_status:        temperature state (0, 1, 2) as the device reports it (if applies)
 # Note: you must not specify dev_status and dev_levels at the same time!
-#
 
 def check_temperature(reading, params, dev_unit = "c",
                       dev_levels = None, dev_levels_lower = None, dev_status = None):
@@ -209,7 +208,7 @@ def check_temperature(reading, params, dev_unit = "c",
     # Render actual temperature, e.g. "17.8 °F"
     infotext = "%s %s" % (render_temp(temp), unitsym[output_unit])
 
-    # In case of a non-OK status ouput the information about the levels
+    # In case of a non-OK status output the information about the levels
     if status != 0:
         usr_levelstext       = ""
         usr_levelstext_lower = ""

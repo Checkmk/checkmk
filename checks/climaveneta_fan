@@ -30,7 +30,7 @@ climaveneta_fan_default_levels = (200, 100)
 
 def inventory_climaveneta_fan(info):
     if len(info[0]) == 2:
-        return [ (1, climaveneta_fan_default_levels), (2, climaveneta_fan_default_levels) ]
+        return [ (1, "climaveneta_fan_default_levels"), (2, "climaveneta_fan_default_levels") ]
 
 
 def check_climaveneta_fan(item, params, info):

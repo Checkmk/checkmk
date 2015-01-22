@@ -3550,10 +3550,10 @@ register_check_parameters(
           help = _("This check monitors the number of log switches of an ORACLE "
                    "database instance in the last 60 minutes. You can set levels for upper and lower bounds."),
           elements = [
-              Integer(title = _("Critical if fewer than"), unit=_("log switches")),
-              Integer(title = _("Warning if fewer than"), unit=_("log switches")),
-              Integer(title = _("Warning if more than"), unit=_("log switches")),
-              Integer(title = _("Critical if more than"), unit=_("log switches")),
+              Integer(title = _("Critical at or below"), unit=_("log switches / hour"), default_value = -1),
+              Integer(title = _("Warning at or below"),  unit=_("log switches / hour"), default_value = -1),
+              Integer(title = _("Warning at or above"),  unit=_("log switches / hour"), default_value = 50),
+              Integer(title = _("Critical at or above"), unit=_("log switches / hour"), default_value = 100),
               ]),
     TextAscii(
         title = _("Database SID"),

@@ -1,0 +1,11 @@
+Title: oracle_logswitches: Fixed description of WATO rule for levels
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421934217
+
+Both levels are compared with &lt;= or &gt;=. The description now clearly
+shows this.

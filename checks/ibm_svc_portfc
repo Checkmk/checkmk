@@ -52,29 +52,26 @@
 
 
 def inventory_ibm_svc_portfc(info):
-    inventory = []
     for line in info:
-        if len(line) in (11, 12) and line[9] == "active":
-            inventory.append( (line[0], None) )
-    return inventory
+        if len(line) in (11, 12, 14) and line[9] == "active":
+            yield line[0], None
 
 def check_ibm_svc_portfc(item, _no_params, info):
     for line in info:
-        if len(line) in (11, 12):
-            fc_port_id = line[0]
-            fc_port_status = line[9]
-            if fc_port_id == item:
-                if fc_port_status == "active":
-                    return 0, "FC Port %s is %s" % (fc_port_id, fc_port_status)
-                else:
-                    return 2, "FC Port %s is %s" % (fc_port_id, fc_port_status)
+        if len(line) in (11, 12, 14):
+            if line[0] == item:
+                fc_port_status = line[9]
 
-    return 3, "FC Port %s not found in agent output" % item
+                if fc_port_status == "active":
+                    state = 0
+                else:
+                    state = 2
+
+                return state, fc_port_status
 
 check_info["ibm_svc_portfc"] = {
     "check_function"        : check_ibm_svc_portfc,
     "inventory_function"    : inventory_ibm_svc_portfc,
     "service_description"   : "FC Port %s",
-    "has_perfdata"          : False,
 }
 

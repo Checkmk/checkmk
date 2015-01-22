@@ -1,0 +1,16 @@
+Title: Fixed possible exceptions of CMC Check_MK helpers when using some custom checks
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1421918120
+
+When using the CMC together with some custom checks which register variables
+in the global context which can not be written out with repr() and read with
+eval() like for example python module references or function pointers, all
+Check_MK workers stopped working and were restarting in an endless loop.
+
+A verification has been added to prevent those variable from being written
+to the Check_MK check helper config var/check_mk/core/config.mk.

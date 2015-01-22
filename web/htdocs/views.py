@@ -2237,7 +2237,7 @@ def paint_header(view, p):
     onclick = ''
     title = ''
     if 'L' in html.display_options \
-       and view.get('user_sortable', True) \
+       and view.get('user_sortable', False) \
        and get_sorter_name_of_painter(painter) is not None:
         params = [
             ('sort', sort_url(view, painter, join_index)),

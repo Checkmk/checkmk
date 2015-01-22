@@ -4669,20 +4669,23 @@ register_rule(group + '/' + subgroup_networking,
                                        help  = _("Name of group in service description"),
                                        allow_empty = False,
                                    )),
-                            ("iftype", Integer(
-                                title = _("Restrict interface port type"),
-                                help = _("Only interfaces with the given port type are put into this group. "
-                                         "For example 53 (propVirtual)."),
-                                default_value = 6,
-                                minvalue = 1,
-                                maxvalue = 255,
+                            ("iftype", Transform(
+                                        DropdownChoice(
+                                            title = _("Select interface port type"),
+                                            choices = _if_porttype_choices,
+                                            help = _("Only interfaces with the given port type are put into this group. "
+                                                     "For example 53 (propVirtual)."),
+                                        ),
+                                    forth = lambda x: str(x),
+                                    back  = lambda x: int(x),
                             )),
                             ("include_items", ListOfStrings(
                                 title = _("Restrict interface items"),
                                 help = _("Only interface with this item names are put into this group."),
                             )),
                             ("single", Checkbox(
-                                title = _("Do not list grouped interfaces separately"),
+                                title = _("Group separately"),
+                                label = _("Do not list grouped interfaces separately"),
                             )),
                         ],
                         required_keys = ["name", "single"]),

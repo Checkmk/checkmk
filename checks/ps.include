@@ -74,7 +74,8 @@ def inventory_ps_common(invdata, invrules, info):
 
         entries.append((v['descr'], v['match'], v.get('user')))
 
-    for servicedesc, pattern, userspec in entries:
+    for entry in entries:
+        servicedesc, pattern, userspec = entry[:3]
         num_perc_s = servicedesc.count("%s")
         for line in info:
             # First entry in line is the node name or None for non-clusters

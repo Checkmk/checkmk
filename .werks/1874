@@ -1,0 +1,13 @@
+Title: ps: Old process inventory configurations work now again
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b7
+Date: 1421913153
+Class: fix
+
+Since werk #1563 we migrated the way the process inventory is being
+configured.
+
+The intention was that old style configurations remain working after
+an upgrade. This compatibility was broken and has been fixed again.

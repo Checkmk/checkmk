@@ -34,28 +34,28 @@ def inventory_ps_common(invdata, invrules, info):
     entries = []
 
     # Handle inventory_processes, inventory_processes_perf variables
-    for inventry in invdata:
+    for inv_entry in invdata:
         # New in 1.1.7i1: inventory_processes may be prefixed with list of
         # host names or tags + ALL_HOSTS
         tags = None
-        if len(inventry) == 8:
+        if len(inv_entry) == 8:
             tags = []
-            hostlist = inventry[0]
-            inventry = inventry[1:]
-        elif len(inventry) == 9:
-            tags = inventry[0]
-            hostlist = inventry[1]
-            inventry = inventry[2:]
+            hostlist = inv_entry[0]
+            inv_entry = inv_entry[1:]
+        elif len(inv_entry) == 9:
+            tags = inv_entry[0]
+            hostlist = inv_entry[1]
+            inv_entry = inv_entry[2:]
 
         # Filter out entries with do not match our current host
         if tags != None and ( not hosttags_match_taglist(tags_of_host(g_hostname), tags) or
                               not in_extraconf_hostlist(hostlist, g_hostname)):
             continue
 
-        if len(inventry) == 7: # extend old inventory_processes
-            inventry += ([],)
+        if len(inv_entry) == 7: # extend old inventory_processes
+            inv_entry += ([],)
 
-        entries.append(inventry)
+        entries.append(inv_entry[:3])
 
     # Handle new WATO style inventory rules
     for rule in invrules:
@@ -74,8 +74,7 @@ def inventory_ps_common(invdata, invrules, info):
 
         entries.append((v['descr'], v['match'], v.get('user')))
 
-    for entry in entries:
-        servicedesc, pattern, userspec = entry[:3]
+    for servicedesc, pattern, userspec in entries:
         num_perc_s = servicedesc.count("%s")
         for line in info:
             # First entry in line is the node name or None for non-clusters

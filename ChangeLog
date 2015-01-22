@@ -166,7 +166,6 @@
     * 1855 esx_systeminfo: new inventory plugin to retrieve info about the host operating system for ESX servers
     * 1851 FIX: win_exefiles: inventory check can now handle time stamps in us english locale
 
-
 1.2.6b1:
     Core & Setup:
     * 1439 mk-job: now also available on solaris systems...

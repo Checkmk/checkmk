@@ -2984,13 +2984,25 @@ no_inventory_possible = None
 # the running system.
 derived_config_variable_names = [ "hosttags", "all_hosts_untagged" ]
 def pack_config():
+    # Checks whether or not a variable can be written to the config.mk
+    # and read again from it.
+    def packable(varname, val):
+        if type(val) in [ int, str, unicode, bool ] or not val:
+            return True
+
+        try:
+            eval(repr(val))
+            return True
+        except:
+            return False
+
     filepath = var_dir + "/core/config.mk"
     out = file(filepath + ".new", "w")
     out.write("#!/usr/bin/python\n# encoding: utf-8\n# Created by Check_MK. Dump of the currently active configuration\n\n")
-    for varname in config_variable_names:
-        out.write("\n%s = %r\n" % (varname, globals()[varname]))
-    for varname in derived_config_variable_names:
-        out.write("\n%s = %r\n" % (varname, globals()[varname]))
+    for varname in list(config_variable_names) + derived_config_variable_names:
+        val = globals()[varname]
+        if packable(varname, val):
+            out.write("\n%s = %r\n" % (varname, val))
     for varname, factory_setting in factory_settings.items():
         if varname in globals():
             out.write("\n%s = %r\n" % (varname, globals()[varname]))

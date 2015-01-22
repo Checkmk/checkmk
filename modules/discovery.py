@@ -173,7 +173,7 @@ def check_discovery(hostname, ipaddress=None):
         total_check_output += output
         return status
     else:
-        sys.stdout.write(core_state_names[status] + " - " + output)
+        sys.stdout.write(nagios_state_names[status] + " - " + output)
         sys.exit(status)
 
 

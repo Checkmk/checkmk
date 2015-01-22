@@ -38,7 +38,7 @@ def check_docsis_channels_downstream(item, params, info):
         if channel_id == item:
             # Power
             warn, crit = params["power"]
-            power_dbmv = abs(float(int(power))) / 10
+            power_dbmv = float(int(power)) / 10
             infotext = "Power is %.1f dBmV" % power_dbmv
             levels = " (Levels Warn/Crit at %d dBmV/ %d dBmV)" % ( warn, crit )
             state = 0

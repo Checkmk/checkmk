@@ -589,6 +589,11 @@ def check_logwatch_ec(item, params, info):
     if "logwatch_patterns" not in params:
         logwatch_ec_precompile(g_hostname, None, params)
 
+
+    # Keep track of reclassifed lines
+    rclfd_total     = 0
+    rclfd_to_ignore = 0
+
     for logfile, lines in logs.items():
         # Determine logwatch patterns specifically for this logfile
         log_reclassify_patterns = []
@@ -602,10 +607,13 @@ def check_logwatch_ec(item, params, info):
         for line in lines:
             if log_reclassify_patterns:
                 counts = {} # unused...
-                level, text = line.split(" ", 1)
-                level = logwatch_reclassify(counts, log_reclassify_patterns, line[2:]) or level
-                if level == "I": # Ignored lines are not forwarded
-                    continue
+                old_level, text = line.split(" ", 1)
+                level = logwatch_reclassify(counts, log_reclassify_patterns, line[2:]) or old_level
+                if level != old_level:
+                    rclfd_total += 1
+                    if level == "I": # Ignored lines are not forwarded
+                        rclfd_to_ignore += 1
+                        continue
 
 
             msg = '<%d>' % (facility + logwatch_to_prio(line[0]),)
@@ -666,6 +674,9 @@ def check_logwatch_ec(item, params, info):
             logfile_info = ""
 
         infotexts.append('Forwarded %d messages%s to event console' % (num_messages, logfile_info))
+        if rclfd_total:
+            infotexts.append('Reclassified %d messages through logwatch patterns (%d to IGNORE)' %
+                             (rclfd_total, rclfd_to_ignore))
         return (status, ", ".join(infotexts), [('messages', num_messages)])
 
     except Exception, e:

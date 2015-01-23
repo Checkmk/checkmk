@@ -1,0 +1,9 @@
+Title: printer_input/printer_output: Check can no handle non reported capacity unit
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b7
+Date: 1422005392
+Class: fix
+
+

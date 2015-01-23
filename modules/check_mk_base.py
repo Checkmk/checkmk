@@ -257,32 +257,26 @@ class MKCheckTimeout(Exception):
 #   |  Functions for getting monitoring data from TCP/SNMP agent.          |
 #   '----------------------------------------------------------------------'
 
-# Collect information needed for one check. In case the check uses
-# extra sections (new feature since 1.2.7i1) only the main section
-# raises exceptions. Error in extra sections are silently ignored
-# and the info is replaced with None.
-def get_info_with_extra_sections(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval, info_func):
-    if section_name in check_info:
-        extra_sections = check_info[section_name]["extra_sections"]
-        if extra_sections:
-            info = [ info_func(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval) ]
-            for es in extra_sections:
-                try:
-                    info.append(info_func(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=False))
-                except:
-                    info.append(None)
-            return info
-
-    return info_func(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval)
+def apply_parse_function(info, section_name):
+    # Now some check types define a parse function. In that case the
+    # info is automatically being parsed by that function - on the fly.
+    if info != None and section_name in check_info:
+        parse_function = check_info[section_name]["parse_function"]
+        if parse_function:
+            return parse_function(info)
+    return info
 
 def get_info_for_check(hostname, ipaddress, section_name, max_cachefile_age=None, ignore_check_interval=False):
-    return get_info_with_extra_sections(hostname, ipaddress, section_name,
-                                        max_cachefile_age, ignore_check_interval, info_func=get_host_info)
+    info = apply_parse_function(get_host_info(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval), section_name)
+    if section_name in check_info and check_info[section_name]["extra_sections"]:
+        info = [ info ]
+        for es in check_info[section_name]["extra_sections"]:
+            try:
+                info.append(apply_parse_function(get_host_info(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=False), es))
+            except:
+                info.append(None)
+    return info
 
-def get_info_for_inventory(hostname, ipaddress, section_name, use_caches):
-    return get_info_with_extra_sections(hostname, ipaddress, section_name,
-                                        use_caches and inventory_max_cachefile_age or 0,
-                                        ignore_check_interval=True, info_func=get_realhost_info)
 
 # This is the main function for getting information needed by a
 # certain check. It is called once for each check type. For SNMP this
@@ -356,14 +350,6 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
             else:
                 add_host = None
             info = [ [add_host] + line for line in info ]
-
-    # Now some check types define a parse function. In that case the
-    # info is automatically being parsed by that function - on the fly.
-    if checkname in check_info: # e.g. not the case for cpu (check is cpu.loads)
-        parse_function = check_info[checkname]["parse_function"]
-        if parse_function:
-            parsed = parse_function(info)
-            return parsed
 
     return info
 
@@ -1370,7 +1356,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
     try:
         if is_tcp_host(hostname):
-            version_info = get_host_info(hostname, ipaddress, 'check_mk')
+            version_info = get_info_for_check(hostname, ipaddress, 'check_mk')
             agent_version = version_info[0][1]
         else:
             agent_version = None

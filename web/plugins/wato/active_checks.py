@@ -141,7 +141,7 @@ mail_receiving_params = [
                                     default_value = 110,
                                 ),
                                 title = _('TCP Port'),
-                                help = _('By default the standard IMAP Port 110 is used.'),
+                                help = _('By default the standard POP3 Port 110 is used.'),
                             )),
                             (False, _('Encrypt POP3 communication using SSL'),
                                 Optional(Integer(

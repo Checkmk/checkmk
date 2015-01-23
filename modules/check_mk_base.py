@@ -1344,8 +1344,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
             # handling of wrapped counters via exception. Do not submit
             # any check result in that case:
             except MKCounterWrapped, e:
-                if opt_verbose:
-                    print "Cannot compute check result: %s" % e
+                verbose("%-20s PEND - Cannot compute check result: %s\n" % (description, e))
                 dont_submit = True
 
             except Exception, e:

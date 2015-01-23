@@ -12112,8 +12112,8 @@ def mode_edit_user(phase):
         html.write("</td></tr><tr><td>%s:</td><td>" % _("Enforce change"))
         # Only make password enforcement selection possible when user is allowed to change the PW
         if new or config.user_may(userid, 'general.edit_profile') and config.user_may(userid, 'general.change_password'):
-            html.checkbox("enforce_pw_change", user.get("enforce_pw_change", False))
-            html.write(_("Change password at next login or access"))
+            html.checkbox("enforce_pw_change", user.get("enforce_pw_change", False),
+                          label=_("Change password at next login or access"))
         else:
             html.write(_("Not permitted to change the password. Change can not be enforced."))
     else:

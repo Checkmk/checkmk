@@ -74,7 +74,7 @@ def do_discovery(hostnames, check_types, only_new):
 
 
 def do_discovery_for(hostname, check_types, only_new, use_caches):
-    new_items = discover_services(hostname, check_types, use_caches, use_caches)
+    new_items = discover_services(hostname, check_types, use_caches, not use_caches)
     if not check_types and not only_new:
         old_items = [] # do not even read old file
     else:

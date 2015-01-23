@@ -74,7 +74,11 @@ def do_discovery(hostnames, check_types, only_new):
 
 
 def do_discovery_for(hostname, check_types, only_new, use_caches):
-    new_items = discover_services(hostname, check_types, use_caches, not use_caches)
+    # Usually we disable SNMP scan if cmk -I is used without a list of
+    # explicity hosts. But for host that have never been service-discovered
+    # yet (do not have autochecks), we enable SNMP scan.
+    do_snmp_scan = not use_caches or not has_autochecks(hostname)
+    new_items = discover_services(hostname, check_types, use_caches, do_snmp_scan)
     if not check_types and not only_new:
         old_items = [] # do not even read old file
     else:
@@ -809,6 +813,10 @@ def parse_autochecks_file(hostname):
                 raise
             raise Exception("Invalid line %d in autochecks file %s" % (lineno, path))
     return table
+
+
+def has_autochecks(hostname):
+    return os.path.exists(autochecksdir + "/" + hostname + ".mk")
 
 
 def save_autochecks_file(hostname, items):

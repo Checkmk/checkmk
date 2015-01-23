@@ -37,6 +37,8 @@
 # (user, virtual_size, resident_size, %cpu, processID, pagefile_usage, usermodetime, kernelmodetime, openHandles, threadCount) name
 #(\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1)    NOTEPAD.EXE
 
+# Sixth generation (>=1.2.7) adds an optional etime, joined by "/" with the CPU time
+
 # The plugin "psperf.bat" is deprecated. As of version 1.2.5 all of this information
 # is reported by the windows agent itself. However, we still support sections from psperf.bat
 # if the agent version is lower than 1.2.5.
@@ -136,7 +138,7 @@ def ps_parse_info(info):
                     kernelc  = int(psinfo["KernelModeTime"]) # do not resolve counter here!
                     handlec  = int(psinfo.get("HandleCount", 0)) # Only in newer psperf.bat versions
                     threadc  = int(psinfo["ThreadCount"])    # do not resolve counter here!
-                    line[1:1] = [ "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d)" %
+                    line[1:1] = [ "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" %
                                     (virt, resi, pid, pagefile, userc, kernelc, handlec, threadc) ]
             info.append(line)
         return cpu_cores, info

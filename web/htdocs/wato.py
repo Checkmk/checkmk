@@ -8903,7 +8903,7 @@ def mode_notifications(phase):
     if not current_settings.get("enable_rulebased_notifications"):
         url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
         html.show_warning(
-           _("<p>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
+           _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
              "The rules that you edit here will have affect only on notifications that are "
              "created by the Event Console. Normal monitoring alerts will <b>not</b> use the "
              "rule based notifications now."

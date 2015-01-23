@@ -3697,8 +3697,7 @@ register_check_parameters(
     _("ORACLE Scheduler Job"),
     Dictionary(
         help = _("A scheduler job is an object in an ORACLE database which could be "
-                 "compared to a cron job on unix. "
-                 "This rule allows you to define the maximum run duration and state.."),
+                 "compared to a cron job on Unix. "),
         elements = [
             ( "run_duration",
               Tuple(
@@ -3798,9 +3797,9 @@ register_check_parameters(
              choices = [
                  ( False, _("Disregard required mirror space as free space")),
                  ( True, _("Regard required mirror space as free space")),],
-             help = _("ASM calculates the free space depending on free_mb or require mirror "
-                      "free space. Enable this option to set the check against require "
-                      "mirror free space. This only works for normal or high redundancy Disk Groups. "))
+             help = _("ASM calculates the free space depending on free_mb or required mirror "
+                      "free space. Enable this option to set the check against required "
+                      "mirror free space. This only works for normal or high redundancy Disk Groups."))
             ),
         ],
         hidden_keys = ["flex_levels"],
@@ -4537,11 +4536,11 @@ register_check_parameters(
         elements = [
             ( "always_ok",
              DropdownChoice(
+                  title = _("Override Service State"),
                   choices = [
-                    ( False, _("Check show Errors in Case of degraded or offline hosts")),
+                    ( False, _("Check shows errors in case of degraded or offline hosts")),
                     ( True, _("Check always is in a OK State") )
                   ],
-                  title = _("Overwrite Service State"),
                   )
             )
         ],

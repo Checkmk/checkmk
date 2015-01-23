@@ -30,6 +30,8 @@ printer_io_units = {
      '8': 'sheets',
     '16': 'feet',
     '17': 'meters',
+    '18': 'items',
+    '19': 'percent',
 }
 
 printer_io_states = {
@@ -90,11 +92,14 @@ def inventory_printer_io(info):
 
 def check_printer_io(item, params, info, what):
     for line in info:
-        index, name, descr, snmp_status, capacity_unit, capacity_max, level = line
-        snmp_status, level, capacity_max = saveint(snmp_status), saveint(level), saveint(capacity_max)
-        capacity_unit = printer_io_units[capacity_unit]
+        index, name, descr = line[:3]
 
         if name == item or descr == item or index.split('.')[-1] == item:
+            snmp_status, capacity_unit, capacity_max, level = line[3:]
+            snmp_status, level, capacity_max = saveint(snmp_status), saveint(level), saveint(capacity_max)
+            if capacity_unit != '':
+                capacity_unit = ' ' + printer_io_units[capacity_unit]
+
             state_txt = []
             state_state = 0
 
@@ -116,7 +121,7 @@ def check_printer_io(item, params, info, what):
 
             elif capacity_max in [ -1, -2 ]:
                 # -1: no restriction, -2: unknown
-                yield 0, 'Capacity: %s %s' % (level, capacity_unit)
+                yield 0, 'Capacity: %s%s' % (level, capacity_unit)
 
             else:
                 state = 0
@@ -147,6 +152,6 @@ def check_printer_io(item, params, info, what):
                             state = 1
                             levels_txt = ' (>= %0.2f%%)' % warn
 
-                yield state, 'Capacity: %s of %s %s %s%s' % \
+                yield state, 'Capacity: %s of %s%s %s%s' % \
                     (level_txt, capacity_max, capacity_unit, how, levels_txt)
 

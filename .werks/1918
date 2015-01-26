@@ -1,0 +1,12 @@
+Title: ps: new option for checking the age of a process (on Linux)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422023842
+Class: feature
+
+The process check now shows the age of processes (the total elapsed time since
+the start of a process) and also allows to set upper limits on this. Currently
+this is only implemented in the Linux agent. You need to update that agent if
+you want to make use of the new feature.

@@ -50,10 +50,8 @@ def check_ibm_svc_array(item, _no_params, info):
                 status = 0
             elif raid_status in ("offline", "degraded"):
                 status = 2
-                message += "(!!)"
             else:
                 status = 1
-                message += "(!)"
 
             # add information
             message += ", RAID Level: %s, Tier: %s" % (raid_level, tier)

@@ -2998,6 +2998,35 @@ register_check_parameters(
 )
 
 register_check_parameters(
+   subgroup_networking,
+   "cpu_utilization_cluster",
+   _("CPU Utilization of Clusters"),
+    ListOf(
+        Tuple(
+            elements = [
+                Integer(title = _("Equal or more than"), unit = _("nodes")),
+                Tuple(
+                      elements = [
+                          Percentage(title = _("Warning at a utilization of"), default_value = 90.0),
+                          Percentage(title = _("Critical at a utilization of"), default_value = 95.0)
+                      ],
+                      title = _("Alert on too high CPU utilization"),
+                )
+            ]
+        ),
+        help = _("Configure levels for averaged CPU utilization depending on number of cluster nodes. "
+                 "The CPU utilization sums up the percentages of CPU time that is used "
+                 "for user processes and kernel routines over all available cores within "
+                 "the last check interval. The possible range is from 0% to 100%"),
+        title = _("Memory Usage"),
+        add_label = _("Add limits")
+    ),
+   None,
+   "first",
+   False
+)
+
+register_check_parameters(
     subgroup_os,
     "esx_host_memory",
     _("Main memory usage of ESX host system"),

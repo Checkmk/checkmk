@@ -17,11 +17,6 @@ examples:
     ]), [], ['esx_cluster'] ),
  ] + static_checks['mem_cluster']
 
-
-
-inventory:
- Not applicable
-
 perfdata:
  One value: the current total usage in bytes.
 

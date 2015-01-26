@@ -1,0 +1,13 @@
+Title: esx_vsphere_hostsystem.cpu_util_cluster: Averaged CPU utilization of all cluster nodes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422287199
+Class: feature
+
+This new check allows you to monitor the average CPU utilization over all cluster nodes.
+Each node has informations about the total available MHz and the actually used MHz for computing.
+The actual usage of a cluster is calculated by the formula <i>(total_used_mhz / total_avail_mhz) * 100</i>
+
+Via WATO you can configure a set of WARN and CRIT levels for specific node counts.

@@ -1,0 +1,14 @@
+Title: Include check-functions from extra_sections in precompailed checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422275822
+Class: fix
+
+Due a new feature it's no possible for a check to use agent sections from foreign checks. In some
+cases this checks has a parse function. In rare cases the foreign check was not part check_table of the host.
+This had been leading to a missing parse function.
+
+Bug not affected the cmc microcore.
+

@@ -45,9 +45,9 @@ def license_check_levels(have, used, params):
     else:
         infotext = "used %d licenses, but you have only %d" % (used, have)
 
-    if crit != None and used >= crit:
+    if crit != None and used > crit:
         status = 2
-    elif warn != None and used >= warn:
+    elif warn != None and used > warn:
         status = 1
     else:
         status = 0

@@ -44,9 +44,11 @@ def check_bonding(item, params, parsed):
     status = parsed[item]
     if status["status"] not in ("up", "degraded"):
         return 2, "interface is " + status["status"]
-
     infos = [ "mode: " + status["mode"] ]
     state = 0
+    speed = status.get('speed')
+    if speed:
+        infos.append("Speed:" + speed)
     for eth, slave in status["interfaces"].items():
         if "hwaddr" in slave:
             infos.append("%s/%s %s" % (eth, slave["hwaddr"], slave["status"]))

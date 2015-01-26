@@ -6826,15 +6826,15 @@ vs_license = Alternative(
               Tuple(
                   title = _("Absolute levels for unused licenses"),
                   elements = [
-                      Integer(title = _("Warning at"), default_value = 5, unit = _("unused licenses")),
-                      Integer(title = _("Critical at"), default_value = 0, unit = _("unused licenses")),
+                      Integer(title = _("Warning below"), default_value = 5, unit = _("unused licenses")),
+                      Integer(title = _("Critical below"), default_value = 0, unit = _("unused licenses")),
                   ]
               ),
               Tuple(
                   title = _("Percentual levels for unused licenses"),
                   elements = [
-                      Percentage(title = _("Warning at"), default_value = 10.0),
-                      Percentage(title = _("Critical at"), default_value = 0),
+                      Percentage(title = _("Warning below"), default_value = 10.0),
+                      Percentage(title = _("Critical below"), default_value = 0),
                   ]
              ),
              FixedValue(
@@ -6870,6 +6870,18 @@ register_check_parameters(
     vs_license,
     TextAscii(
        title = _("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
+       allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "ibmsvc_licenses",
+    _("Number of used IBM SVC licenses"),
+    vs_license,
+    TextAscii(
+       title = _("ID of the license, e.g. <tt>virtualization</tt>"),
        allow_empty = False,
     ),
     "first"

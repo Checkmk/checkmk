@@ -53,16 +53,16 @@ def check_netapp_api_temp(item, _no_params, parsed):
                 continue
 
             sensor_count += 1
-            current_temp = saveint(sensors["temp-sensor-current-temperature"][idx])
+            current_temp = int(sensors["temp-sensor-current-temperature"][idx])
             sum_temp.append(current_temp)
 
             # Check built-in levels
             if sensors["temp-sensor-is-error"][idx] == "true":
                 sensor_no = sensors["temp-sensor-element-no"][idx]
-                warn_low  = saveint(sensors["temp-sensor-low-warning"][idx])
-                crit_low  = saveint(sensors["temp-sensor-low-critical"][idx])
-                warn_high = saveint(sensors["temp-sensor-hi-warning"][idx])
-                crit_high = saveint(sensors["temp-sensor-hi-critical"][idx])
+                warn_low  = int(sensors["temp-sensor-low-warning"][idx])
+                crit_low  = int(sensors["temp-sensor-low-critical"][idx])
+                warn_high = int(sensors["temp-sensor-hi-warning"][idx])
+                crit_high = int(sensors["temp-sensor-hi-critical"][idx])
                 if current_temp >= crit_high:
                     sensor_errors.append((2, "Shelf %s(%s) too high (warn/crit at %s/%s)" % (shelf, sensor_no, warn_high, crit_high)))
                 elif current_temp >= warn_high:

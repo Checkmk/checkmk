@@ -407,8 +407,8 @@ register_rule(group,
 register_rule(group,
     "special_agents:hivemanager",
     Tuple(
-        title = _("Hivemanager"),
-        help = _( "Connect to AeroHive HiveManger via a webcall to get a list of all devices"),
+        title = _("Aerohive HiveManager"),
+        help = _( "Activate monitoring of host via a HTTP connect to the HiveManager"),
         elements = [
            TextAscii(title = _("Username")),
            Password( title = _("Password")),

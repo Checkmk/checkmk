@@ -39,7 +39,7 @@ def output_box(title, content):
                % html.attrencode(content).replace("\n", "<br>"))
 
 def page_crashed_check():
-    html.header(_("Crash Check Report"), stylesheets=["status", "pages",])
+    html.header(_("Crashed Check Report"), stylesheets=["status", "pages",])
 
     site    = html.var("site")
     host    = html.var("host")

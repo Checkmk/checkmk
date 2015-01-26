@@ -3378,10 +3378,10 @@ register_check_parameters(
           help = _("This check monitors the number of log switches of an ORACLE "
                    "database instance in the last 60 minutes. You can set levels for upper and lower bounds."),
           elements = [
-              Integer(title = _("Critical if fewer than"), unit=_("log switches")),
-              Integer(title = _("Warning if fewer than"), unit=_("log switches")),
-              Integer(title = _("Warning if more than"), unit=_("log switches")),
-              Integer(title = _("Critical if more than"), unit=_("log switches")),
+              Integer(title = _("Critical at or below"), unit=_("log switches / hour"), default_value = -1),
+              Integer(title = _("Warning at or below"),  unit=_("log switches / hour"), default_value = -1),
+              Integer(title = _("Warning at or above"),  unit=_("log switches / hour"), default_value = 50),
+              Integer(title = _("Critical at or above"), unit=_("log switches / hour"), default_value = 100),
               ]),
     TextAscii(
         title = _("Database SID"),
@@ -3525,8 +3525,7 @@ register_check_parameters(
     _("ORACLE Scheduler Job"),
     Dictionary(
         help = _("A scheduler job is an object in an ORACLE database which could be "
-                 "compared to a cron job on unix. "
-                 "This rule allows you to define the maximum run duration and state.."),
+                 "compared to a cron job on Unix. "),
         elements = [
             ( "run_duration",
               Tuple(
@@ -3626,9 +3625,9 @@ register_check_parameters(
              choices = [
                  ( False, _("Disregard required mirror space as free space")),
                  ( True, _("Regard required mirror space as free space")),],
-             help = _("ASM calculates the free space depending on free_mb or require mirror "
-                      "free space. Enable this option to set the check against require "
-                      "mirror free space. This only works for normal or high redundancy Disk Groups. "))
+             help = _("ASM calculates the free space depending on free_mb or required mirror "
+                      "free space. Enable this option to set the check against required "
+                      "mirror free space. This only works for normal or high redundancy Disk Groups."))
             ),
         ],
         hidden_keys = ["flex_levels"],
@@ -4365,11 +4364,11 @@ register_check_parameters(
         elements = [
             ( "always_ok",
              DropdownChoice(
+                  title = _("Override Service State"),
                   choices = [
-                    ( False, _("Check show Errors in Case of degraded or offline hosts")),
+                    ( False, _("Check shows errors in case of degraded or offline hosts")),
                     ( True, _("Check always is in a OK State") )
                   ],
-                  title = _("Overwrite Service State"),
                   )
             )
         ],

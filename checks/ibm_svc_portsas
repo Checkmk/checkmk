@@ -42,7 +42,6 @@ def check_ibm_svc_portsas(item, _no_params, info):
                 state = 0
             else:
                 state = 2
-                infotext += "(!!)"
 
             infotext += ", Speed: %s, Type: %s" % (sasport_speed, sasport_type)
 

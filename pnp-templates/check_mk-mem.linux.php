@@ -33,12 +33,12 @@ foreach ($NAME as $i => $n) {
     $mem_defines[$n] = "DEF:$n=$RRDFILE[$i]:$DS[$i]:MAX ";
 }
 
-function mem_area($varname, $color, $title, $stacked) 
+function mem_area($varname, $color, $title, $stacked)
 {
     return mem_curve("AREA", $varname, $color, $title, $stacked);
 }
 
-function mem_line($varname, $color, $title, $stacked) 
+function mem_line($varname, $color, $title, $stacked)
 {
     return mem_curve("LINE1", $varname, $color, $title, $stacked);
 }

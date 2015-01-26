@@ -58,7 +58,7 @@ echo AgentDirectory: $MK_CONFDIR
 # modern systems with vxfs only here. The filesystem type is currently
 # not used by the check anyway.
 echo '<<<df>>>'
-df -kP -F vxfs | sed 's/ / - /' | awk '/^(.*-.*)$/ { print $0 } /^([^-]+)$/ { printf $0 }' | grep -Ev "^/proc|^Filesystem|^/aha|:" 
+df -kP -F vxfs | sed 's/ / - /' | awk '/^(.*-.*)$/ { print $0 } /^([^-]+)$/ { printf $0 }' | grep -Ev "^/proc|^Filesystem|^/aha|:"
 
 # Process table: HP-UX does not provide a resident size of processes.
 # We send a 0 here for RSZ.

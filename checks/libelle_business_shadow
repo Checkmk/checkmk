@@ -393,7 +393,7 @@ def inventory_libelle_business_shadow_archive_dir(info):
 def check_libelle_business_shadow_archive_dir(item, params, info):
     parsed = check_libelle_business_shadow_parse(info)
     fslist = []
-    fslist.append((item, parsed["arch_total_mb"], parsed["arch_free_mb"]))
+    fslist.append((item, parsed["arch_total_mb"], parsed["arch_free_mb"], 0))
 
     return df_check_filesystem_list(item, params, fslist)
 

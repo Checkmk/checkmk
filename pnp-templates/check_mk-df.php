@@ -64,17 +64,34 @@ $critgbtxt = sprintf("%.1f", $critgb);
 
 $opt[1] = "--vertical-label GB -l 0 -u $maxgb --title '$hostname: Filesystem $fstitle ($sizegb GB)' ";
 
-# First graph show current filesystem usage
-$def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX ";
-$def[1] .= "CDEF:var1=mb,1024,/ ";
-$def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" ";
+# First graph show current filesystem usage. If there is a "reserved" RRD
+# then substract that and show as extra area
+if (isset($RRD['reserved']))
+{
+    $def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX ";
+    $def[1] .= "DEF:reserved=$RRD[reserved] ";
+    $def[1] .= "CDEF:used=mb,reserved,- ";
+    $def[1] .= "CDEF:var1=used,1024,/ ";
+    $def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" ";
+    $def[1] .= "CDEF:reserved_gb=reserved,1024,/ ";
+    $def[1] .= "AREA:reserved_gb#48b79e:\"reserved for root\\n\" ";
+
+}
+else
+{
+#
+    $def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX ";
+    $def[1] .= "CDEF:var1=mb,1024,/ ";
+    $def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" ";
+}
 
 # Optional uncommitted usage e.g. for esx hosts
-if(isset($RRD['uncommitted'])) {
+if (isset($RRD['uncommitted'])) {
     $def[1] .= "DEF:uncommitted_mb=".$RRD['uncommitted']." ";
     $def[1] .= "CDEF:uncommitted_gb=uncommitted_mb,1024,/ ";
     $def[1] .= "CDEF:total_gb=uncommitted_gb,var1,+ ";
-} else {
+}
+else {
     $def[1] .= "CDEF:total_gb=var1 ";
 }
 

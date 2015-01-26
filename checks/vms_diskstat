@@ -45,7 +45,7 @@ def check_vms_diskstat_fs(item, params, info):
             device, label, size, used, ios = line
             size_mb = int(size) * 512 / (1024.0 * 1024.0)
             avail_mb = int(used) * 512 / (1024.0 * 1024.0)
-            return df_check_filesystem(g_hostname, item, size_mb, avail_mb, params)
+            return df_check_filesystem(g_hostname, item, size_mb, avail_mb, 0, params)
 
     return (3, "no such disk")
 

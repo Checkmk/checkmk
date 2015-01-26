@@ -99,7 +99,9 @@ def check_df(item, params, info):
             # to compute the used space.
             size_mb    = int(line[2]) / 1024.0
             avail_mb   = int(line[4]) / 1024.0
-            fslist_blocks.append((mountpoint, size_mb, avail_mb))
+            used_mb    = int(line[3]) / 1024.0
+            reserved_mb = size_mb - avail_mb - used_mb # reserved for root
+            fslist_blocks.append((mountpoint, size_mb, avail_mb, reserved_mb))
             if df_inodes:
                 # FIXME: if the normal and the inodes section has not the same format
                 # this will crash!

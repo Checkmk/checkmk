@@ -62,7 +62,7 @@ def check_hr_fs(item, params, info):
             size_mb   = size / 1048576.0
             used_mb   = used / 1048576.0
             avail_mb  = size_mb - used_mb
-            fslist.append((hrdescr, size_mb, avail_mb))
+            fslist.append((hrdescr, size_mb, avail_mb, 0))
 
     return df_check_filesystem_list(item, params, fslist)
 

@@ -337,7 +337,7 @@ def check_esx_vsphere_counters_ramdisk(item, params, info):
                     continue
             used_mb  = float(counter) / 1000
             avail_mb = size_mb - used_mb
-            ramdisks.append((name, size_mb, avail_mb))
+            ramdisks.append((name, size_mb, avail_mb, 0))
 
     return df_check_filesystem_list(item, params, ramdisks)
 

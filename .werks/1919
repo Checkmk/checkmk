@@ -1,0 +1,10 @@
+Title: cmk --snmpwalk: continue if one of the OIDs to walk fails
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1422029191
+
+

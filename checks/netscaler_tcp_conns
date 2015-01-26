@@ -38,14 +38,13 @@ def inventory_netscaler_tcp_conns(info):
         return[ (None, {}) ]
 
 def check_netscaler_tcp_conns(_no_item, params, info):
-    tcp_conns_types = {
-        "server_conns": (0, "Server Connections"),
-        "client_conns": (1, "Client Connections"),
-    }
-    for name, (index, infotext) in tcp_conns_types.iteritems():
+    for name, index, infotext in [
+            ("server_conns", 0, "Server Connections"),
+            ("client_conns", 1, "Client Connections"),
+        ]:
         value = int(info[0][index])
         infotext += ": %d" % value
-        warn, crit = params.get(name)
+        warn, crit = params[name]
 
         perfdata = [ (name, value, warn, crit, 0) ]
 

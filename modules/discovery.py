@@ -74,7 +74,11 @@ def do_discovery(hostnames, check_types, only_new):
 
 
 def do_discovery_for(hostname, check_types, only_new, use_caches):
-    new_items = discover_services(hostname, check_types, use_caches, not use_caches)
+    # Usually we disable SNMP scan if cmk -I is used without a list of
+    # explicity hosts. But for host that have never been service-discovered
+    # yet (do not have autochecks), we enable SNMP scan.
+    do_snmp_scan = not use_caches or not has_autochecks(hostname)
+    new_items = discover_services(hostname, check_types, use_caches, do_snmp_scan)
     if not check_types and not only_new:
         old_items = [] # do not even read old file
     else:
@@ -209,6 +213,28 @@ def service_ignored(hostname, check_type, service_description):
     return False
 
 
+def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
+    def add_nodeinfo(info, s):
+        if s in check_info and check_info[s]["node_info"]:
+            return [ [ None ] + l for l in info ]
+        else:
+            return info
+
+    max_cachefile_age = use_caches and inventory_max_cachefile_age or 0
+    info = apply_parse_function(add_nodeinfo(get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval=True), section_name), section_name)
+    if section_name in check_info and check_info[section_name]["extra_sections"]:
+        info = [ info ]
+        for es in check_info[section_name]["extra_sections"]:
+            try:
+                bare_info = get_realhost_info(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=True)
+                with_node_info = add_nodeinfo(bare_info, es)
+                parsed = apply_parse_function(with_node_info, es)
+                info.append(parsed)
+            except:
+                if opt_debug:
+                    raise
+                info.append(None)
+    return info
 
 #.
 #   .--Discovery-----------------------------------------------------------.
@@ -349,7 +375,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
 
     try:
         info = None # default in case of exception
-        info = get_info_for_inventory(hostname, ipaddress, section_name, use_caches)
+        info = get_info_for_discovery(hostname, ipaddress, section_name, use_caches)
     except MKAgentError, e:
         if str(e):
             raise
@@ -360,24 +386,8 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
     if info == None: # No data for this check type
         return []
 
-    # Add information about nodes if check wants this. Note:
-    # in the node info we always put None, not the name of a node.
-    # During inventory we behave like a non-cluster. We do not know
-    # yet if the service is going to be clustered!
-    if check_info[check_type]["node_info"]:
-        if check_info[section_name]["extra_sections"]:
-            info = [ sec and [ [None] + line for line in sec ] or None for sec in info ]
-        else:
-            info = [ [None] + line for line in info ]
-
     # Now do the actual inventory
     try:
-        # Convert with parse function if available
-        if section_name in check_info: # parse function must be define for base check
-            parse_function = check_info[section_name]["parse_function"]
-            if parse_function:
-                info = check_info[section_name]["parse_function"](info)
-
         # Check number of arguments of discovery function. Note: This
         # check for the legacy API will be removed after 1.2.6.
         if len(inspect.getargspec(discovery_function)[0]) == 2:
@@ -609,7 +619,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan):
             try:
                 exitcode = None
                 perfdata = []
-                info = get_host_info(hostname, ipaddress, infotype)
+                info = get_info_for_check(hostname, ipaddress, infotype)
             # Handle cases where agent does not output data
             except MKAgentError, e:
                 exitcode = 3
@@ -809,6 +819,10 @@ def parse_autochecks_file(hostname):
                 raise
             raise Exception("Invalid line %d in autochecks file %s" % (lineno, path))
     return table
+
+
+def has_autochecks(hostname):
+    return os.path.exists(autochecksdir + "/" + hostname + ".mk")
 
 
 def save_autochecks_file(hostname, items):

@@ -196,7 +196,7 @@ grep ^/dev < /proc/mounts
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-ps ax -o user,vsz,rss,cputime,pid,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4,\5) /'
+ps ax -o user,vsz,rss,cputime,etime,pid,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 
 # Memory usage
 echo '<<<mem>>>'

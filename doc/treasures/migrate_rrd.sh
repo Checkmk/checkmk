@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+#!/bin/sh
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,42 +23,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
-# <<<ibm_svc_array:sep(58)>>>
-# 27:SSD_mdisk27:online:1:POOL_0_V7000_RZ:372.1GB:online:raid1:1:256:generic_ssd
-# 28:SSD_mdisk28:online:2:POOL_1_V7000_BRZ:372.1GB:online:raid1:1:256:generic_ssd
-# 29:SSD_mdisk0:online:1:POOL_0_V7000_RZ:372.1GB:online:raid1:1:256:generic_ssd
-# 30:SSD_mdisk1:online:2:POOL_1_V7000_BRZ:372.1GB:online:raid1:1:256:generic_ssd
+ALT=$1
+NEU=$2
 
-
-def inventory_ibm_svc_array(info):
-    for line in info:
-        if len(line) in (11, 12):
-            yield line[0], None
-
-def check_ibm_svc_array(item, _no_params, info):
-    for line in info:
-        if len(line) in (11, 12) and line[0] == item:
-            raid_status = line[6]
-            raid_level = line[7]
-            tier = line[10]
-
-            # Check raid_status
-            message = "Status: %s" % raid_status
-            if raid_status == "online":
-                status = 0
-            elif raid_status in ("offline", "degraded"):
-                status = 2
-            else:
-                status = 1
-
-            # add information
-            message += ", RAID Level: %s, Tier: %s" % (raid_level, tier)
-
-            return status, message
-
-check_info["ibm_svc_array"] = {
-    "check_function"        : check_ibm_svc_array,
-    "inventory_function"    : inventory_ibm_svc_array,
-    "service_description"   : "RAID Array %s",
-}
+echo "Copying rrd data for service description $1 to a new name $2 ..."
+find ~/var/pnp4nagios/perfdata -name "$ALT"_\*.rrd | sed -re "s,(/\S*/)$ALT\_(\S*).rrd,\1$ALT\_\2.rrd \1$NEU\_\2.rrd,"  | xargs -n 2 cp
+echo "...finished."

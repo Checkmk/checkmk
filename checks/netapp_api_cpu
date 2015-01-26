@@ -39,8 +39,8 @@ def check_netapp_api_cpu_utilization(item, params, info):
     data = dict([line for line in info if len(line) == 2])
     now = time.time()
 
-    cpu_busy = saveint(data["cpu_busy"])
-    num_cpus = saveint(data["num_processors"])
+    cpu_busy = int(data["cpu_busy"])
+    num_cpus = int(data["num_processors"])
     timedif, ticks_per_sec = get_counter("netapp_api_cpu.utilization", now, cpu_busy)
     cpusecs_per_sec = ticks_per_sec / 1000000.0
     used_perc = 100.0 * cpusecs_per_sec

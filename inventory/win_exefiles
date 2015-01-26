@@ -38,7 +38,7 @@ def inv_win_exefiles(info):
         # 14.02.2014 23:12:04
         if re.match("^\d{2}\.\d{2}\.20\d{2} \d{2}:\d{2}:\d{2}", write_time):
             install_date = int(time.mktime(time.strptime(write_time, "%d.%m.%Y %H:%M:%S")))
-        elif re.match("^\d{1,2}/d{1,2}/20\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)", write_time):
+        elif re.match("^\d{1,2}/\d{1,2}/20\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)", write_time):
             install_date = int(time.mktime(time.strptime(write_time, "%m/%d/%Y %H:%M:%S %p")))
         else:
             install_date = write_time

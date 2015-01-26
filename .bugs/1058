@@ -1,10 +1,13 @@
 Title: When RBN are enabled and site is empty, nagios can not be started
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2015-01-09 11:36:22
 Targetversion: 1.2.5i1
-Class: bug
 
 When creating an empty site while the rule based notifications are enabled,
 then starting the site with e.g. cmk -R, nagios reports a config error
 because the contact group check-mk-notify can not be found.
+
+2015-01-23 12:19:39: changed state open -> done
+Has already been fixed.

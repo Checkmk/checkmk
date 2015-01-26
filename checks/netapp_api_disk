@@ -71,7 +71,7 @@ def check_netapp_api_disk_summary(_no_item, params, info):
         if disk.get("raid-state") == "partner":
             continue # Disk belongs to partner
 
-        total_space  += saveint(disk.get("used-space"))
+        total_space  += int(disk.get("used-space"))
 
         if disk.get("raid-state", "") == "broken":
             broken_disks.append(disk)

@@ -8258,7 +8258,7 @@ def vs_notification_rule(userid = None):
               ListOf(
                   UserSelection(only_contacts = False),
                   title = _("The following users"),
-                  help = _("Enter a list of user ids to be notified here. These users need to be members "
+                  help = _("Enter a list of user IDs to be notified here. These users need to be members "
                            "of at least one contact group in order to be notified."),
                   movable = False,
               )

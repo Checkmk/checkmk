@@ -1209,8 +1209,8 @@ register_rule(group,
             ( "share",
               TextUnicode(
                   title = _("SMB share to check"),
-                  help = _("Enter the plain name of the share only, e. g. <tt>iso</tt>, NOT "
-                           "the full UNC like \\\\servername\\iso"),
+                  help = _("Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> "
+                           "the full UNC like <tt>\\\\servername\\iso</tt>"),
                   size = 32,
                   allow_empty = False,
             )),

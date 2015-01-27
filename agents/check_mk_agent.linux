@@ -419,30 +419,36 @@ fi
 # Status of CUPS printer queues
 if type lpstat > /dev/null 2>&1; then
     if pgrep cups > /dev/null 2>&1; then
-        echo '<<<cups_queues>>>'
-        CPRINTCONF=/etc/cups/printers.conf
-        if [ -r "$CPRINTCONF" ] ; then
-            LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" $CPRINTCONF | awk '{print $2}' | sed -e 's/>//')
-            lpstat -p | while read LINE
-            do
-                PRINTER=$(echo $LINE | awk '{print $2}')
-                if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
-                    echo $LINE
+        # first define a function to check cups
+        function cups_queues () {
+            CPRINTCONF=/etc/cups/printers.conf
+            if [ -r "$CPRINTCONF" ] ; then
+                LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" $CPRINTCONF | awk '{print $2}' | sed -e 's/>//')
+                lpstat -p | while read LINE
+                do
+                    PRINTER=$(echo $LINE | awk '{print $2}')
+                    if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
+                        echo $LINE
+                    fi
+                done
+                echo '---'
+                lpstat -o | while read LINE
+                do
+                    PRINTER=${LINE%%-*}
+                    if echo $LOCAL_PRINTERS | grep -q $PRINTER; then
+                        echo $LINE
+                    fi
+                done
+            else
+                lpstat -p
+                echo '---'
+                lpstat -o | sort
                 fi
-            done
-            echo '---'
-            lpstat -o | while read LINE
-            do
-                PRINTER=${LINE%%-*}
-                if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
-                    echo $LINE
-                fi
-            done
-        else
-            lpstat -p
-            echo '---'
-            lpstat -o | sort
-        fi
+        }
+        # Make cups_queues available for subshell
+        export -f cups_queues
+        # Use cups_queues function with run_cached and cache time of 5 mins
+        run_cached -s cups_queues 300 "cups_queues"
     fi
 fi
 

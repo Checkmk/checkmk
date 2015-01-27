@@ -38,7 +38,7 @@ def check_fast_lta_volumes(item, params, info):
             fslist = []
             size_mb   = int(volquota) / 1048576.0
             avail_mb  = ( int(volquota) - int(volused) ) / 1048576.0
-            fslist.append((item, size_mb, avail_mb))
+            fslist.append((item, size_mb, avail_mb, 0))
             return df_check_filesystem_list(item, params, fslist)
 
     return 3, "Volume %s not found" % item

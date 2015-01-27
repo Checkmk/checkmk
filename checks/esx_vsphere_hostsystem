@@ -148,7 +148,83 @@ check_info['esx_vsphere_hostsystem.mem_usage_cluster'] = {
 }
 
 
+#.
+#   .--CPU-Cluster---------------------------------------------------------.
+#   |        ____ ____  _   _        ____ _           _                    |
+#   |       / ___|  _ \| | | |      / ___| |_   _ ___| |_ ___ _ __         |
+#   |      | |   | |_) | | | |_____| |   | | | | / __| __/ _ \ '__|        |
+#   |      | |___|  __/| |_| |_____| |___| | |_| \__ \ ||  __/ |           |
+#   |       \____|_|    \___/       \____|_|\__,_|___/\__\___|_|           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
 
+
+def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, info):
+    current_node = {}
+    def get_node_usage(node):
+        num_sockets    = int(node['hardware.cpuInfo.numCpuPackages'])
+        num_cores      = int(node['hardware.cpuInfo.numCpuCores'])
+        num_threads    = int(node['hardware.cpuInfo.numCpuThreads'])
+        used_mhz     = float(node['summary.quickStats.overallCpuUsage'])
+        mhz_per_core = float(node['hardware.cpuInfo.hz']) / 1024.0 / 1024.0
+        total_mhz = mhz_per_core * num_cores
+        return used_mhz, total_mhz, num_threads
+
+    overall_used    = []
+    overall_total   = []
+    overall_threads = []
+    for line in info:
+        if line[0] in [ "hardware.cpuInfo.numCpuPackages",
+                        "hardware.cpuInfo.numCpuCores",
+                        "hardware.cpuInfo.numCpuThreads",
+                        "summary.quickStats.overallCpuUsage",
+                        "hardware.cpuInfo.hz" ]:
+            current_node[line[0]] = line[1]
+        if len(current_node) == 5: # 5 keys -> node complete
+            node_used, node_total, node_threads = get_node_usage(current_node)
+            overall_used.append(node_used)
+            overall_total.append(node_total)
+            overall_threads.append(node_threads)
+            current_node = {}
+
+
+    sum_used    = sum(overall_used)
+    sum_total   = sum(overall_total)
+    sum_threads = sum(overall_threads)
+    usage       = sum_used / sum_total * 100
+    node_count  = len(overall_used)
+
+    # Convert legacy parameters
+    this_time = time.time()
+
+
+    sorted_params = sorted(params, reverse = True)
+    for count, levels in sorted_params:
+        if node_count >= count:
+            state, infotext, perfdata = check_cpu_util(usage, levels)
+            break
+    else:
+        state, infotext, perfdata = check_cpu_util(usage, None)
+
+    yield 0, "%d Nodes" % node_count
+    yield 0, "%.2fGHz/%.2fGHz" % (sum_used / 1024.0, sum_total / 1024.0)
+    yield 0, "%d threads" % sum_threads
+
+    # put number of threads as MAX value for first perf-data. This
+    # is needed by the PNP template.
+    perfdata_cpu = list(perfdata[0])
+    perfdata_cpu[-1] = sum_threads
+    perfdata = [ tuple(perfdata_cpu) ] + perfdata[1:]
+    yield state, infotext, perfdata
+
+
+check_info['esx_vsphere_hostsystem.cpu_util_cluster'] = {
+   "check_function"          : check_esx_vsphere_hostsystem_cpu_util_cluster,
+   "service_description"     : "CPU utilization",
+   "group"                   : "cpu_utilization_cluster",
+   "has_perfdata"            : True,
+   "includes"                : [ "cpu_util.include" ],
+}
 #   .--Memory--------------------------------------------------------------.
 #   |               __  __                                                 |
 #   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |

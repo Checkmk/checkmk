@@ -2137,13 +2137,13 @@ register_rule(
               FixedValue(
                   True,
                   title = _("Less Verbose Output"),
-                  help = _("If enabled the check reports less information in its output.<br>"
-                           "You will see no information regarding the worst state or unacknowledged events.<br>"
-                           " For example a default output without this option <br>"
-                           "<tt>WARN - 1 events (1 unacknowledged), worst state is WARN (Last line: Incomplete Content)</tt><br>"
-                           "Output with less verbosity<br>"
+                  help = _("If enabled the check reports less information in its output. "
+                           "You will see no information regarding the worst state or unacknowledged events. "
+                           " For example a default output without this option is "
+                           "<tt>WARN - 1 events (1 unacknowledged), worst state is WARN (Last line: Incomplete Content)</tt>."
+                           "Output with less verbosity: "
                            "<tt>WARN - 1 events (Worst line: Incomplete Content)</tt><br>"
-                            ),
+                          ),
                  )
             ),
             ( "remote",

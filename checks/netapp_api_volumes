@@ -65,9 +65,9 @@ def check_netapp_api_volumes(item, params, parsed):
         return (3, "Volume not found in agent output")
 
     mega = 1024.0 * 1024.0
-    size_total = saveint(volume.get("size-total")) / mega
-    size_avail = saveint(volume.get("size-available")) / mega
-    state, info, perf = df_check_filesystem_list(item, params, [(volume.get("name"), size_total, size_avail)])
+    size_total = int(volume.get("size-total")) / mega
+    size_avail = int(volume.get("size-available")) / mega
+    state, info, perf = df_check_filesystem_list(item, params, [(volume.get("name"), size_total, size_avail, 0)])
 
     counter_wrapped = False
     counters        = []
@@ -80,7 +80,7 @@ def check_netapp_api_volumes(item, params, parsed):
         for mode in ["read_", "write_", "other_"]:
             for field, factor, format_text in [ ("data", None, None), ("latency", 10000.0, "%s: %.2f ms")]:
                 key = protocol + mode + field
-                value = saveint(volume.get("counters", {}).get(key))
+                value = int(volume.get("counters", {}).get(key))
                 if value != None:
                     try:
                         timedif, delta = get_counter("netapp_api_volumes.%s.%s" % (item, key), now, value)

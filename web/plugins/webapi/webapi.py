@@ -48,7 +48,7 @@ api_actions["add_host"] = {
     "handler"         : action_add_host,
     "title"           : _("Add a host to WATO"),
     "description"     : _("This webservice allows you to add a new host."),
-    "example_request" : ([("create_folders=1", _("If set to 1(default) create non-existing folders1)"))],
+    "example_request" : ([("create_folders=1", _("If set to 1 (default) create non-existing folders"))],
                          { "attributes": {
                                     "tag_criticality": "prod",
                                     "tag_agent": "cmk-agent",

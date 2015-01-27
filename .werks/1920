@@ -1,0 +1,12 @@
+Title: df: Linux filesystem check now supports displaying data reserved for root
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422286529
+Class: feature
+
+Check_MK accounts space that is reserved for the root user on Linux and Unix
+as used space. Usually 5% are being reserved for root when a new filesystem is
+being created. With this new parameter option you can have Check_MK display
+the current amount of reserved but yet unused space.

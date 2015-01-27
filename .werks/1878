@@ -1,0 +1,21 @@
+Title: Fixed possible shell injection when filtering the EC archive
+Level: 2
+Component: ec
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1422344183
+
+To optimize searches in the Event Console archive files, the event console
+uses "grep" to make a fast preselection of history entries. The grep command
+is used for different filters, like the "ID of rule". This allows normal logged
+in users with only GUI privileges to execute shell commands on the monitoring
+host with privileges of the user the Event Console is running with. Normally
+this is the sites user in OMD sites or the user nagios.
+
+All currently maintained versions are affected. If you are using an affected
+version which we offer no more releases for, you can use the patch of
+this Werk to fix the issue for your version.
+
+This issue has been discovered and reported by Christian Thiemann. Thanks!

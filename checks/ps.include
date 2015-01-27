@@ -37,12 +37,13 @@ def inventory_ps_common(invdata, invrules, info):
     for inv_entry in invdata:
         # New in 1.1.7i1: inventory_processes may be prefixed with list of
         # host names or tags + ALL_HOSTS
+        # New in 1.2.6b7: inventory_processes might have no levels specified
         tags = None
-        if len(inv_entry) == 8:
+        if len(inv_entry) in (4, 8):
             tags = []
             hostlist = inv_entry[0]
             inv_entry = inv_entry[1:]
-        elif len(inv_entry) == 9:
+        elif len(inv_entry) in (5, 9):
             tags = inv_entry[0]
             hostlist = inv_entry[1]
             inv_entry = inv_entry[2:]

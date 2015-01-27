@@ -2728,6 +2728,10 @@ no_inventory_possible = None
         if check_type not in check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_type)
             continue
+        if check_info[check_type].get("extra_sections"):
+            for section in check_info[check_type]["extra_sections"]:
+                needed_check_types.add(section)
+                needed_sections.add(section.split(".")[0])
         period = check_period_of(hostname, descr)
         if period:
             service_timeperiods[descr] = period

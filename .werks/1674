@@ -1,0 +1,33 @@
+Title: ibm_svc_license / other license checks: now able to configure limits
+Level: 1
+Component: wato
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1422280492
+Class: feature
+
+The check ibm_svc_license now has configurable license limits via WATO.
+
+Additionally, the limits for all license check got a small change,
+thats why this werk is marked as <tt>incompatible</tt>.
+
+
+Old limits:
+<ul>
+<li>Absolute unused levels - Warn/Crit at xx</li>
+<li>Percentage unused levels - Warn/Crit at xx</li>
+<li>Go critical if all licenses are used</li>
+<li>Always report OK</li>
+</ul>
+
+
+New limits:
+<ul>
+<li>Absolute unused levels - Warn/Crit below xx</li>
+<li>Percentage unused levels - Warn/Crit below xx</li>
+<li>Go critical if all licenses are used</li>
+<li>Always report OK</li>
+</ul>
+
+This change has been made because it was hard to configure an OK state
+when the used licenses equalled the number of available licenses.

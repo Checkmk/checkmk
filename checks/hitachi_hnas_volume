@@ -41,7 +41,7 @@ def check_hitachi_hnas_volume(item, params, info):
         if volid + " " + label == item:
             size_mb = int(total) / 1048576.0
             avail_mb = int(free) / 1048576.0
-            fslist.append((item, size_mb, avail_mb))
+            fslist.append((item, size_mb, avail_mb, 0))
 
             status, message, perfdata = df_check_filesystem_list(item, params, fslist)
 

@@ -196,7 +196,7 @@ def check_emcvnx_raidgroups_capacity(item, params, info):
     blocksize = 512
     size_mb   = int(parsed[item]["capacity_logical_blocks"]) * blocksize / 1048576.0
     avail_mb  = int(parsed[item]["capacity_free_total_blocks"]) * blocksize / 1048576.0
-    fslist.append((item, size_mb, avail_mb))
+    fslist.append((item, size_mb, avail_mb, 0))
 
     # variable name in perfdata is not allowed to be just a number
     # especially 0 does not work, so prefix it generally with "rg"
@@ -246,7 +246,7 @@ def check_emcvnx_raidgroups_capacity_contiguous(item, params, info):
     blocksize = 512
     size_mb   = int(parsed[item]["capacity_logical_blocks"]) * blocksize / 1048576.0
     avail_mb  = int(parsed[item]["capacity_free_contiguous_blocks"]) * blocksize / 1048576.0
-    fslist.append((item, size_mb, avail_mb))
+    fslist.append((item, size_mb, avail_mb, 0))
 
     # variable name in perfdata is not allowed to be just a number
     # especially 0 does not work, so prefix it generally with "rg"

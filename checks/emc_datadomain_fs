@@ -38,7 +38,7 @@ def check_emc_datadomain_fs(item, params, info):
         if item == line[1] or "patterns" in params:
             size_mb = float(line[2])*1024.0
             avail_mb = float(line[4])*1024.0
-            fslist.append((item, size_mb, avail_mb))
+            fslist.append((item, size_mb, avail_mb, 0))
     return df_check_filesystem_list(item, params, fslist)
 
 check_info["emc_datadomain_fs"] = {

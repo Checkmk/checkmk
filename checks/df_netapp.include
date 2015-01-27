@@ -38,7 +38,7 @@ def check_df_netapp(item, params, info):
             size_mb = int(size_kb) / 1024
             used_mb = int(used_kb) / 1024
             avail_mb = size_mb - used_mb
-            fslist.append((mp, size_mb, avail_mb))
+            fslist.append((mp, size_mb, avail_mb, 0))
     return df_check_filesystem_list(item, params, fslist)
 
 def is_netapp_filer(oid):

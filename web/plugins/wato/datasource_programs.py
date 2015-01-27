@@ -305,8 +305,6 @@ register_rule(group,
                    title = _("Accept any SSH Host Key"),
                    label = _("Accept any SSH Host Key"),
                    default_value = False,
-                   true_label = _("True"),
-                   false_label = _("False"),
                    help = _("Accepts any SSH Host Key presented by the storage device. "
                             "Please note: This might be a security issue because man-in-the-middle "
                             "attacks are not recognized! Better solution would be to add the "

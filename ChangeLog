@@ -2,6 +2,7 @@
     Core & Setup:
     * 1842 FIX: Rewrote implementation of service discovery (formerly inventory)...
     * 1869 FIX: Deleting outdated persisted agent sections now
+    * 1919 FIX: cmk --snmpwalk: continue if one of the OIDs to walk fails
 
     Checks & Agents:
     * 1822 oracle_undostat: rule for non space error count...
@@ -41,6 +42,9 @@
     Event Console:
     * 1873 SEC: Escaping event text of event console messages correctly in views...
     * 1878 SEC: Fixed possible shell injection when filtering the EC archive...
+
+    HW/SW-Inventory:
+    * 1851 FIX: win_exefiles: inventory check can now handle time stamps in us english locale
 
 
 1.2.6b6:

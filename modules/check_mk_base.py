@@ -518,7 +518,7 @@ def add_persisted_info(hostname, info):
         if now < persisted_until or opt_force:
             if section not in info:
                 info[section] = persisted_section
-                verbose("Added persisted section %s.\n" % section)
+                vverbose("Added persisted section %s.\n" % section)
         else:
             verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" % (
                     section, now - persisted_until))

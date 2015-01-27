@@ -3917,8 +3917,7 @@ def do_snmpwalk(hostnames):
                 raise
 
 def do_snmpwalk_on(hostname, filename):
-    if opt_verbose:
-        sys.stdout.write("%s:\n" % hostname)
+    verbose("%s:\n" % hostname)
     ip = lookup_ipaddress(hostname)
 
     out = file(filename, "w")
@@ -3930,21 +3929,19 @@ def do_snmpwalk_on(hostname, filename):
         ] + opt_extra_oids
 
     for oid in oids_to_walk:
-        if opt_verbose:
-            sys.stdout.write("Walk on \"%s\"..." % oid)
-            sys.stdout.flush()
+        try:
+            verbose("Walk on \"%s\"..." % oid)
 
-        results = snmpwalk_on_suboid(hostname, ip, oid, hex_plain = True)
-
-        for oid, value in results:
-            out.write("%s %s\n" % (oid, value))
-
-        if opt_verbose:
-            sys.stdout.write("%d variables.\n" % len(results))
+            results = snmpwalk_on_suboid(hostname, ip, oid, hex_plain = True)
+            for oid, value in results:
+                out.write("%s %s\n" % (oid, value))
+            verbose("%d variables.\n" % len(results))
+        except:
+            if opt_debug:
+                raise
 
     out.close()
-    if opt_verbose:
-        sys.stdout.write("Successfully Wrote %s%s%s.\n" % (tty_bold, filename, tty_normal))
+    verbose("Successfully Wrote %s%s%s.\n" % (tty_bold, filename, tty_normal))
 
 def do_snmpget(oid, hostnames):
     if len(hostnames) == 0:

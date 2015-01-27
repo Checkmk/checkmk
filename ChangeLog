@@ -40,6 +40,7 @@
 
     Event Console:
     * 1873 SEC: Escaping event text of event console messages correctly in views...
+    * 1878 SEC: Fixed possible shell injection when filtering the EC archive...
 
 
 1.2.6b6:

@@ -1,4 +1,7 @@
 1.2.6b8:
+    Checks & Agents:
+    * 1928 netapp_api_if: Improved handling and check output of virtual interfaces...
+
 
 1.2.6b7:
     Core & Setup:

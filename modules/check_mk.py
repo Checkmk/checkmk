@@ -5459,7 +5459,7 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "convert-rrds", "split-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                  "man", "nowiki", "config-check", "backup=", "restore=",
-                 "check-inventory=", "check-discovery=", "paths", 
+                 "check-inventory=", "check-discovery=", "paths",
                  "checks=", "inventory", "inventory-as-check=",
                  "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
 

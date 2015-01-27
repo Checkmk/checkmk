@@ -13,7 +13,7 @@ description:
  Standard Edition Databases. There is an imporatnt difference between
  Primary and Standby Database. Primary will only create WARNINGs, when
  the level of levels is exceeded. A value for CRITICAL is only usable
- when the Database is in Physical Standby Mode. 
+ when the Database is in Physical Standby Mode.
 
  The 2nd function is the monitoring of datafiles in manual backup mode.
  This is important for database which are backed up with 'alter database
@@ -21,12 +21,12 @@ description:
  for that backup type. If an end backup is missing and you restart the
  database you'll unable to open the database.
 
- To prevent such situations, the state of the backup mode could be 
+ To prevent such situations, the state of the backup mode could be
  monitored. The rule describes the maximum time for an active backup
  mode for a datafile until a WARN or CRIT is generated.
 
  {Important Information}
- There is no checkpoint created if a database is in backup mode. It 
+ There is no checkpoint created if a database is in backup mode. It
  is expected, that the checkpoint time could also reach a configured
  limit when a backup is running! This is not the case for Backups with
  RMAN.
@@ -48,7 +48,7 @@ parameters (dict):
  "levels": (int, int) - Maximum time in seconds for warn and crit
  for the last Checkpoint over all Datafiles. No default value
 
- "backup_age": (int, int) - Maximum time in seconds for warn and crit 
+ "backup_age": (int, int) - Maximum time in seconds for warn and crit
  for datafiles in Online Backup Mode.
 
 inventory:

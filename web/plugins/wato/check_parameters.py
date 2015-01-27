@@ -1542,7 +1542,7 @@ register_check_parameters(
             ),
         ]
     ),
-    TextAscii(title = _("ID of the Channel (usually ranging from 1)")),
+    TextAscii(title = _("ID of the channel (usually ranging from 1)")),
     "dict"
 )
 
@@ -1554,7 +1554,7 @@ register_check_parameters(
         elements = [
             ( "error_states", ListChoice(
                 title = _("Modem States that lead to a critical state"),
-                help = _("If one of the selected state occur, the check will repsond with a Critical state "),
+                help = _("If one of the selected states occurs the check will repsond with a critical state "),
                 choices = [
                   ( 1,   "other" ),
                   ( 2,   "notReady" ),
@@ -2774,7 +2774,7 @@ register_check_parameters(
                     ])
             ]
         ),
-        help = _("Here you can specify the total memory usage levels for clustered hosts "),
+        help = _("Here you can specify the total memory usage levels for clustered hosts."),
         title = _("Memory Usage"),
         add_label = _("Add limits")
     ),
@@ -4634,7 +4634,7 @@ register_rule(
                          label = _("use alias"),
                          help = _("If a multipath device has an alias then you can use that for specifying "
                                   "the device instead of the UUID. The alias will then be part of the service "
-                                  "description. The UUID will be output in the pluging outpout."))
+                                  "description. The UUID will be displayed in the pluging output."))
             ),
         ],
         help = _('This rule controls the inventory of Multipath devices on Linux.'),
@@ -4845,7 +4845,7 @@ register_check_parameters(
                        ( "cifs",   _("CIFS") ),
                        ( "san",    _("SAN") ),
                        ( "fcp",    _("FCP") ),
-                       ( "iscsi",  _("ISCSI") ),
+                       ( "iscsi",  _("iSCSI") ),
                     ],
                 )),
             (  "trend_range",

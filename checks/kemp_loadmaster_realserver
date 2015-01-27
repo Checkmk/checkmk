@@ -51,11 +51,11 @@ def check_kemp_loadmaster_realserver(item, _no_params, info):
             state = int(line[2])
             message = "State: %s, IP: %s" % (states[state], line[0])
 
-            if state in [ 1, 20 ]:
+            if state in [ 1 ]:
                 return 0, message
-            elif state in [ 2, 3, 4 ]:
+            elif state in [ 2, 4 ]:
                 return 1, message
-            elif state in [ 5, 6, 7 ]:
+            elif state in [ 3 ]:
                 return 2, message
             else:
                 return 3, message

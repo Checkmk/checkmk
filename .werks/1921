@@ -1,0 +1,9 @@
+Title: kemp_loadmaster_realserver: reimplementation, now use vendor specific information
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422361861
+Class: fix
+
+

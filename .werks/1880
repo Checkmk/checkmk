@@ -1,0 +1,33 @@
+Title: inventory_processes rules can now be configured without setting levels
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1422355345
+
+Since werk #1563 the levels configured in the rule {inventory_processes} are not
+interpreted anymore. If you used this rule to configure process discovery, you
+can now leave the last four elements (thresholds) of.
+
+Note: If you use WATO for configuring process discovery, this change does not affect you.
+
+To configure the thresholds, you need to use the {check_parameters} option like
+shown in the example below:
+
+F+:etc/check_mk/main.mk
+# Old configuration style
+inventory_processes += [
+  ( ["sap", ], ALL_HOSTS, "SAP_ora_pmon_%s", "~ora_pmon_([A-Z][A-Z,0-9]{2,3})$",             GRAB_USER, 1, 1, 1, 1 ),
+]
+
+# new style configuration:
+
+inventory_processes += [
+  ( ["sap", ], ALL_HOSTS, "SAP_ora_pmon_%s", "~ora_pmon_([A-Z][A-Z,0-9]{2,3})$",             GRAB_USER),
+
+check_parameters += [
+  ( {'levels' : (1, 1, 1, 1)},  ALL_HOSTS, ['proc_SAP_ora_pmon_.*'] ),
+]
+F-:

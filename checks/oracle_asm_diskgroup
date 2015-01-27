@@ -96,7 +96,7 @@ def check_oracle_asm_diskgroup(item, params, info):
                 free_space_mb = int(free_mb)
 
             status, infotext, perfdata =  df_check_filesystem(g_hostname, item, int(total_mb),
-                   free_space_mb, params)
+                   free_space_mb, 0, params)
 
             infotext += ', %s redundancy' % typ.lower()
 

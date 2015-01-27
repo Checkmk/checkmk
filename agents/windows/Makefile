@@ -53,7 +53,7 @@ fix_linebreaks:
 	        sed -i 's/\r//' $$F ; \
 	        sed -i 's/$$/\r/' $$F ; \
 	    fi ; \
-	done 
+	done
 
 # -----------------------------------------------------------------------------
 # 1. Create ressource files with version and product information. Note: That file

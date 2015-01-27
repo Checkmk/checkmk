@@ -65,21 +65,18 @@ def inventory_ibm_svc_license(info):
         inventory.append( (license, None) )
     return inventory
 
-def check_ibm_svc_license(item, _no_params, info):
+def check_ibm_svc_license(item, params, info):
     licenses = parse_ibm_svc_license(info)
     licensed, used = licenses[item]
     perfdata = [ ("licensed", licensed), ("used", used) ]
 
-    if used > licensed:
-        status = 2
-    else:
-        status = 0
-    return status, "%s %s licensed, %s used" % (item, licensed, used), perfdata
+    return license_check_levels(licensed, used, params)
 
 check_info["ibm_svc_license"] = {
     "check_function"        : check_ibm_svc_license,
     "inventory_function"    : inventory_ibm_svc_license,
     "service_description"   : "License %s",
+    "group"                 : "ibmsvc_licenses",
     "has_perfdata"          : True,
 }
 

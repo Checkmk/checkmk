@@ -8258,7 +8258,7 @@ def vs_notification_rule(userid = None):
               ListOf(
                   UserSelection(only_contacts = False),
                   title = _("The following users"),
-                  help = _("Enter a list of user ids to be notified here. These users need to be members "
+                  help = _("Enter a list of user IDs to be notified here. These users need to be members "
                            "of at least one contact group in order to be notified."),
                   movable = False,
               )
@@ -11883,7 +11883,7 @@ def mode_edit_user(phase):
             if topic is not None and topic != attr['topic']:
                 continue # skip attrs of other topics
 
-            if not attr.get("permission") or config.may(attr["permission"]):
+            if not userid or not attr.get("permission") or config.user_may(userid, attr["permission"]):
                 vs = attr['valuespec']
                 forms.section(_u(vs.title()))
                 if attr['user_editable'] and not is_locked(name):

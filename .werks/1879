@@ -1,0 +1,13 @@
+Title: Not showing "only show permitted hosts/services" option for users not having "see all" permissions
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1422346516
+
+This option is only meant to reduce the amount of seen hosts/services of a user having the
+"see all hosts/services" permission to the hosts/services which the user is really assigned
+to. To configure this option makes only sense for users having the "see all" permissions. Now
+WATO only shows the checkboxes for these users.

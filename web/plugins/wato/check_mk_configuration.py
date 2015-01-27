@@ -290,7 +290,7 @@ register_configvar(group,
         add_label = _("Create new virtual host tree configuration"),
         title = _("Virtual Host Trees"),
         help = _("Here you can define tree configurations for the snapin <i>Virtual Host-Trees</i>. "
-                 "These trees organize your host based on their values in certain host tag groups. "
+                 "These trees organize your hosts based on their values in certain host tag groups. "
                  "Each host tag group you select will create one level in the tree."),
     ),
     domain = "multisite",

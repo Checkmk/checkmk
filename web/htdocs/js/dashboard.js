@@ -543,7 +543,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
                 else
                     render_sizer(controls, nr, i, anchor_id, dashlet.h);
             }
-            
+
             if (!is_dynamic(dashlet.w) && !is_dynamic(dashlet.h))
                 render_corner_resizers(controls, nr);
         }

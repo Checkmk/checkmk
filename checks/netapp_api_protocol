@@ -58,10 +58,10 @@ def check_netapp_api_protocol(item, _no_params, parsed):
         item = "nfsv3"
 
     infotext = ""
-    now = savefloat(time.time())
+    now = time.time()
     for entry, text in [ ("read_ops", "Read OPS"), ("write_ops", "Write OPS") ]:
         key = "%s_%s" % (item, entry)
-        value = saveint(counter_data.get(entry, counter_data.get(key, "0")))
+        value = int(counter_data.get(entry, counter_data.get(key, "0")))
         timedif, per_sec = get_counter("netapp_api_protocol.%s.%s" % (item, entry), now, value)
         yield 0, "%s %s" % (text, get_bytes_human_readable(per_sec, 1000, unit = "")), [(entry, per_sec)]
 

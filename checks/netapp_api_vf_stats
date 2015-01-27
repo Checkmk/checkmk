@@ -40,7 +40,7 @@ def check_netapp_api_vf_stats_cpu_util(item, params, info):
     else:
         now = time.time()
 
-        cpu_busy = saveint(vf["vfiler_cpu_busy"])
+        cpu_busy = int(vf["vfiler_cpu_busy"])
         timedif, ticks_per_sec = get_counter("netapp_api_vf_stats.cpu_util.%s" % item, now, cpu_busy )
         cpusecs_per_sec = ticks_per_sec / 1000.0 / 1000 / 10000
         used_perc = 100.0 * cpusecs_per_sec
@@ -86,7 +86,7 @@ def check_netapp_api_vf_stats_traffic(item, params, info):
                                                  ("net_data_sent",  "Net Data Sent", 1024.0, 1024, "B/s"),
                                                  ("read_bytes",     "Read",    1024.0, 1024, "B/s"),
                                                  ("write_bytes",    "Write",   1024.0, 1024, "B/s")]:
-            traffic = saveint(vf["vfiler_" + entry]) * factor
+            traffic = int(vf["vfiler_" + entry]) * factor
             timedif, ticks_per_sec = get_counter("netapp_api_vf_stats.traffic.%s.%s" % (item, entry), now, traffic)
             yield 0, "%s: %s" % (name, get_bytes_human_readable(ticks_per_sec, base = base, unit = unit)), [(entry, ticks_per_sec)]
 

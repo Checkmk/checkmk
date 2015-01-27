@@ -197,7 +197,7 @@ def check_zfsget(item, params, info):
                 used_mb = entry["used"]
                 avail_mb = entry["available"]
                 total_mb = used_mb + avail_mb
-            fslist.append((mountpoint, total_mb, avail_mb))
+            fslist.append((mountpoint, total_mb, avail_mb, 0))
 
     return df_check_filesystem_list(item, params, fslist)
 

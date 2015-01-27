@@ -73,7 +73,7 @@ def check_ibm_svc_mdiskgrp(item, params, info):
             free_capacity = line[7]
             size_mb   = ibm_svc_mdiskgrp_to_mb(capacity)
             avail_mb  = ibm_svc_mdiskgrp_to_mb(free_capacity)
-            fslist.append((item, size_mb, avail_mb))
+            fslist.append((item, size_mb, avail_mb, 0))
             status, message, perfdata = df_check_filesystem_list(item, params, fslist)
             message += ", Status: %s" % mgrp_status
 

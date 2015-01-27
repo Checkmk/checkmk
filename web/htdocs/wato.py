@@ -11883,7 +11883,7 @@ def mode_edit_user(phase):
             if topic is not None and topic != attr['topic']:
                 continue # skip attrs of other topics
 
-            if not attr.get("permission") or config.may(attr["permission"]):
+            if not userid or not attr.get("permission") or config.user_may(userid, attr["permission"]):
                 vs = attr['valuespec']
                 forms.section(_u(vs.title()))
                 if attr['user_editable'] and not is_locked(name):

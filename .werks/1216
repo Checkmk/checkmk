@@ -1,0 +1,9 @@
+Title: hp_procurve_cpu: Can now be configured with Wato
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422364863
+Class: feature
+
+

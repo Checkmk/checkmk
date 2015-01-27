@@ -1,5 +1,6 @@
 1.2.6b8:
     Checks & Agents:
+    * 1676 if.include: now able to detect grouped interfaces...
     * 1928 netapp_api_if: Improved handling and check output of virtual interfaces...
 
 

@@ -109,6 +109,7 @@
     * 1858 FIX: docsis_channels_downstream: allow for negative values of power in dBm
     * 1847 FIX: oracle_logswitches: Fixed description of WATO rule for levels...
     * 1877 FIX: printer_input/printer_output: Check can now handle non reported capacity unit
+    * 1921 FIX: kemp_loadmaster_realserver: reimplementation, now use vendor specific information
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

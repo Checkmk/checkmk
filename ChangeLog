@@ -1,3 +1,5 @@
+1.2.6b8:
+
 1.2.6b7:
     Core & Setup:
     * 1842 FIX: Rewrote implementation of service discovery (formerly inventory)...

@@ -35,6 +35,7 @@
 
     WATO:
     * 1816 FIX: Fixed garbled output on "rename host" result page
+    * 1879 FIX: Not showing "only show permitted hosts/services" option for users not having "see all" permissions...
 
     Notifications:
     * 1213 New Notification macros $SERVICEFORURL$ and $HOSTFORURL$...

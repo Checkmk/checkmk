@@ -1,0 +1,132 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import sys, os, time, pprint, getopt
+
+# Note: This check only works in an OMD environment!
+sys.path.append(os.path.expanduser("~/share/check_mk/modules"))
+execfile(os.path.expanduser("~/etc/check_mk/defaults"), globals())
+execfile(os.path.expanduser("~/share/check_mk/modules/prediction.py"), globals())
+rrdcached_socket = None
+
+def usage():
+    sys.stderr.write("""== check_cpu_peaks ==
+This checks raises an alert if the CPU utilization over a configurable
+timeperiod (default is "-30 days until now") does NOT exceed the configured thresholds.
+It can be used to detect unchallenged hosts. The check is done by evaluating the
+rrd data of the given host and must therefore run in the same site where the rrd data
+of this host is located."
+
+USAGE: check_cpu_peaks [OPTIONS] HOST
+
+ARGUMENTS:
+  HOST                          Host
+
+OPTIONS:
+  -v   Verbose mode, Outputs RRD data
+  -w   Return WARN if this value (integer) is never breached in the check period
+  -c   Return CRIT if this value (integer) is never breached in the check period
+  -u   Until time (unixtimestamp)
+  -f   From time (unixtimestamp), default is until time minus 30 days
+""")
+
+if len(sys.argv) < 2:
+    usage()
+    sys.exit(1)
+
+short_options = "vw:c:f:u:"
+opts, args = getopt.getopt(sys.argv[1:], short_options)
+
+opt_verbose = False
+host        = None
+warn_level  = None
+crit_level  = None
+fromtime    = None
+untiltime   = None
+
+for o,a in opts:
+    if o in [ '-v' ]:
+        opt_verbose = True
+    elif o in [ '-w' ]:
+        warn_level = int(a)
+    elif o in [ '-c' ]:
+        crit_level = int(a)
+    elif o in [ '-f' ]:
+        fromtime = int(a)
+    elif o in [ '-u' ]:
+        untiltime = int(a)
+
+if len(args) == 1:
+    host = args[0]
+else:
+    usage()
+    sys.exit(2)
+
+if not untiltime:
+    untiltime = time.time()
+if not fromtime:
+    fromtime  = untiltime - 86400 * 30
+
+try:
+    datasets  = []
+    step_secs = 0
+    for key in ["system", "user", "wait"]:
+        data = get_rrd_data(host, "CPU utilization", key, "AVERAGE", fromtime, untiltime)
+        datasets.append(data[1])
+    util_total = map(lambda x: int(sum([y for y in x if y != None])),
+                     zip(datasets[0], datasets[1], datasets[2]))
+
+    cpu_peak = max(util_total)
+    peak_time = time.localtime(fromtime + step_secs * util_total.index(cpu_peak))
+
+    if opt_verbose:
+        for idx, x in enumerate(datasets[0]):
+            sys.stdout.write("idx: %d " % idx)
+            sys.stdout.write("%s\t" % int(datasets[0][idx] or -1))
+            sys.stdout.write("%s\t" % int(datasets[1][idx] or -1))
+            sys.stdout.write("%s" %   int(datasets[2][idx] or -1))
+            print ""
+
+    info = [ "CPU utilization (user, system, wait) from %s until %s" %\
+            (time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
+             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
+
+    info.append("Highest Peak of %d%% at %s" % (cpu_peak, time.strftime("%b %d %H:%M:%S", peak_time)))
+    state = 0
+    if crit_level and cpu_peak <= crit_level:
+        info.append("less than %d (!!)" % crit_level)
+        state = 2
+    elif warn_level and cpu_peak <= warn_level:
+        info.append("less than %d (!)" % warn_level)
+        state = 1
+    print ", ".join(info)
+    sys.exit(state)
+except Exception, e:
+    # TODO: Exception handling could be improved. 
+    # Right now no handling of MKGeneralException, etc. is implemented
+    print "Exception while processing data."
+    sys.exit(2)
+

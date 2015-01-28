@@ -1,0 +1,16 @@
+Title: if.include: now able to detect grouped interfaces
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422366130
+Class: feature
+
+This feature is more developer oriented. There are no changes to any interface checks.
+
+The inventory function in if.include can now automatically create interface groups.
+If an interface is in a group you can specify this group in the first field (ifIndex) of the line.
+Instead of a simple index, you now put a tuple of (ifGroup, ifIndex).
+
+The inventory function detects if there are multiple interfaces in the same group and creates
+a virtual interface out of them. Grouped interfaces are no longer listed separately.

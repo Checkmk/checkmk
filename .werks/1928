@@ -1,0 +1,18 @@
+Title: netapp_api_if: Improved handling and check output of virtual interfaces
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422367069
+Class: feature
+
+The connection speed of virtual interfaces is now determined correctly.
+Per default, the highest speed of all physical interface members is taken.
+
+Please note that this speed depends on how your virtual interfaces are configured.
+It is also possible that a virtual interface has the accumulated bandwith of all its physical
+interfaces. In this case you need to set a "Assumed interface speed" in WATO.
+
+Furthermore the check now outputs the physical interfaces for each virtual interface
+and raises a warning if not all members have the same speed.
+

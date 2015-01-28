@@ -9,6 +9,9 @@ description:
 
  Right now only the ethernet and virtual interfaces are checked.
 
+ For virtual interfaces the check raises a WARN if not all members of
+ this virtual interface have the same speed set.
+
  Depending on the check parameters this check can go WARN or CRIT when the
  port status changes (i.e. is down), when the link speed changes (e.g. a
  port expected to be set to 1GBit/s operates only at 100MBit/s), when the

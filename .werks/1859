@@ -1,0 +1,12 @@
+Title: cups_queues: linux agent now runs section cups_queues in cached mode
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422391502
+Class: fix
+
+After reports of problems with the agent run time for printer servers with
+very long print queues the agent now runs the cups_queues section in cached
+mode with a cache time of 5 mins. This means that the section is updated
+only every 5 mins.

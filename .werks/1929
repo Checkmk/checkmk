@@ -1,0 +1,12 @@
+Title: netapp_api_if: improved inventory and check output of virtual interfaces
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422453295
+Class: feature
+
+The netapp_api_if check now uses the common inventory function, which is used
+by most of the other inventory checks. This allows you to choose which port states
+to monitor and set whether the interface should use the interface description as service name
+

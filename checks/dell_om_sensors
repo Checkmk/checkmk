@@ -32,7 +32,9 @@ def dell_om_sensors_item(name):
 
 
 def inventory_dell_om_sensors(info):
-    return [ (dell_om_sensors_item(line[4]), "dell_om_sensors_default_levels") for line in info ]
+    for line in info:
+        if line[3]:
+            yield dell_om_sensors_item(line[3]), "dell_om_sensors_default_levels"
 
 
 def check_dell_om_sensors(item, params, info):
@@ -43,19 +45,26 @@ def check_dell_om_sensors(item, params, info):
          3  : 'AmbientESM', # type is Ambient Embedded Systems Management temperature probe
          16 : 'Discrete',   # type is temperature probe with discrete reading
     }
-    for idx, sensor_state, reading, sensor_type, location_name in info:
+    sensor_states = {
+        1  : "other",
+        2  : "unknown",
+        10 : "failed",
+    }
+    for idx, sensor_state, reading, location_name, dev_crit, dev_warn, dev_warn_lower, dev_crit_lower in info:
         if item == idx or dell_om_sensors_item(location_name) == item:
             if params == None:
                 params = dell_om_sensors_default_levels # compatibility with old autochecks
+
+            sensor_state = int(sensor_state)
+            if sensor_state in [ 1, 2, 10 ]:
+                return 2, "Sensor is: " + sensor_states[sensor_state]
+
             temp = int(reading) / 10.0
 
-            yield check_temperature(temp, params)
+            dev_warn, dev_crit, dev_warn_lower, dev_crit_lower = \
+               map(lambda v: float(v)/10 if v else None, [ dev_warn, dev_crit, dev_warn_lower, dev_crit_lower ])
 
-            if item == idx: # old style item: output location name
-                yield 0, "%s, Type: %s" % (location_name, probe_types[int(sensor_type)])
-
-            if int(sensor_state) != 3:
-                yield 2, "in critical state"
+            return check_temperature(temp, params, dev_levels = (dev_warn, dev_crit), dev_levels_lower = (dev_warn_lower, dev_crit_lower))
 
 
 check_info["dell_om_sensors"] = {
@@ -63,19 +72,19 @@ check_info["dell_om_sensors"] = {
     "inventory_function"    : inventory_dell_om_sensors,
     "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
-    "group"                 : "room_temperature",
+    "group"                 : "temperature",
     # There is no other way to find out that openmanage is present.
     "snmp_scan_function"    : scan_dell_om,
     "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.1.700.20.1", [
                                         '2', # ProbeIndex
                                         '5', # ProbeStatus
                                         '6', # ProbeReading
-                                        '7', # ProbeType
+                                        #'7', # ProbeType
                                         '8', # ProbeLocationName
-                                        #'10.1', # ProbeUpperCriticalThreshold',
-                                        #'11.1', # ProbeUpperNonCriticalThreshold',
-                                        #'12.1', # ProbeLowerNonCriticalThreshold',
-                                        #'13.1', # ProbeLowerCriticalThreshold',
+                                        '10', # ProbeUpperCriticalThreshold',
+                                        '11', # ProbeUpperNonCriticalThreshold',
+                                        '12', # ProbeLowerNonCriticalThreshold',
+                                        '13', # ProbeLowerCriticalThreshold',
                                         #'16.1', # ProbeDiscreteReading',
                               ]),
     "includes"              : [ "dell_om.include", "temperature.include" ],

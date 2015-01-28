@@ -331,7 +331,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
        elif used_mb >= warn_mb:
            status = max(1, status)
 
-    show_levels = params["show_levels"]
+    show_levels = params.get("show_levels")
     if show_levels == "always" or \
         (show_levels == "onproblem" and status > 0) or \
         (show_levels == "onmagic" and (status > 0 or levels.get("magic", 1.0) != 1.0)):

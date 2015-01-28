@@ -88,6 +88,14 @@ def if_extract_node(line, has_nodeinfo):
     else:
         return None, line
 
+def if_item_matches(item, ifIndex, ifAlias, ifDescr):
+    return item.lstrip("0") == ifIndex \
+            or (item == "0" * len(item) and saveint(ifIndex) == 0) \
+            or item == ifAlias \
+            or item == ifDescr \
+            or item == "%s %s" % (ifAlias, ifIndex) \
+            or item == "%s %s" % (ifDescr, ifIndex)
+
 # Pads port numbers with zeroes, so that items
 # nicely sort alphabetically
 def if_pad_with_zeroes(info, ifIndex, has_nodeinfo):
@@ -96,7 +104,13 @@ def if_pad_with_zeroes(info, ifIndex, has_nodeinfo):
     else:
         index = 0
     if if_inventory_pad_portnumbers:
-        max_index = max([int(line[index]) for line in info])
+        def get_index(line):
+            if type(line[index]) == tuple:
+                return line[index][1]
+            else:
+                return line[index]
+
+        max_index = max([int(get_index(line)) for line in info])
         digits = len(str(max_index))
         return ("%0"+str(digits)+"d") % int(ifIndex)
     else:
@@ -148,6 +162,11 @@ def inventory_if_common(info, has_nodeinfo = False):
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
             ifOutQLen, ifAlias, ifPhysAddress = line
+
+        ifGroup = None
+        if type(ifIndex) == tuple:
+            ifGroup, ifIndex = ifIndex
+
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
@@ -181,6 +200,14 @@ def inventory_if_common(info, has_nodeinfo = False):
                 have_groups[group_name]["interfaces"].append((saveint(ifSpeed), ifOperStatus, ifType))
                 if pattern.get("single"):
                     is_only_in_group = True
+
+        # The agent output already set this interface to grouped
+        if ifGroup:
+            have_groups.setdefault(ifGroup, {"interfaces": [],
+                                             "iftype": ifType,
+                                             "include_items": []})
+            have_groups[ifGroup]["interfaces"].append((saveint(ifSpeed), ifOperStatus, ifType))
+            is_only_in_group = True
 
         # Prepare single interfaces
         if not is_only_in_group:
@@ -240,6 +267,9 @@ def check_if_common(item, params, info, has_nodeinfo = False):
         node_offset = has_nodeinfo and 1 or 0
         def get_interface_item(line):
             ifIndex = line[ 0 + node_offset]
+            if type(ifIndex) == tuple:
+                ifGroup, ifIndex = ifIndex
+
             ifDescr = line[ 1 + node_offset]
             ifAlias = line[18 + node_offset]
             if if_inventory_uses_description and ifDescr:
@@ -250,11 +280,21 @@ def check_if_common(item, params, info, has_nodeinfo = False):
                 if_item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo)
             return if_item
 
+
+
         for element in info:
-            match_item = not params.get("include_items") or (get_interface_item(element) in params["include_items"])
-            match_type = not params.get("iftype")        or (params["iftype"] == saveint(element[2 + node_offset]))
-            if match_item and match_type:
+            ifIndex = element[0 + node_offset]
+            ifGroup = None
+            if type(ifIndex) == tuple:
+                ifGroup, ifIndex = ifIndex
+
+            if ifGroup and ifGroup == item:
                 matching_interfaces.append(element)
+            else:
+                match_item = not params.get("include_items") or (get_interface_item(element) in params["include_items"])
+                match_type = not params.get("iftype")        or (params["iftype"] == saveint(element[2 + node_offset]))
+                if match_item and match_type:
+                    matching_interfaces.append(element)
 
         # Accumulate info over matching_interfaces
         wrapped = False
@@ -272,6 +312,10 @@ def check_if_common(item, params, info, has_nodeinfo = False):
                 inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
                 outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
                 ifOutQLen, ifAlias, ifPhysAddress = line
+
+            ifGroup = None
+            if type(ifIndex) == tuple:
+                ifGroup, ifIndex = ifIndex
 
             if_item = get_interface_item(element)
             perfdata = []
@@ -394,16 +438,15 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
             ifOutQLen, ifAlias, ifPhysAddress = line
+
+        ifGroup = None
+        if type(ifIndex) == tuple:
+            ifGroup, ifIndex = ifIndex
+
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
-        if item.lstrip("0") == ifIndex \
-            or (item == "0" * len(item) and saveint(ifIndex) == 0) \
-            or item == ifAlias \
-            or item == ifDescr \
-            or item == "%s %s" % (ifAlias, ifIndex) \
-            or item == "%s %s" % (ifDescr, ifIndex):
-
+        if if_item_matches(item, ifIndex, ifAlias, ifDescr):
             # Display port number or alias in infotext if that is not part
             # of the service description anyway
             if item.lstrip("0") == ifIndex \

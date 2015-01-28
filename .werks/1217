@@ -1,0 +1,11 @@
+Title: dell_om_sensors: Check now uses generic temperature template
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1422451362
+Class: feature
+
+The Check now uses the Wato Temperature Rule who provides more configuration options. 
+If you used the Wato Room Temeperature Rule before you have to migrate the levels.
+

@@ -2640,7 +2640,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "memory",
-    _("Main memory usage (Linux / UNIX / Other Devices)"),
+    _("Main memory usage (UNIX / Other Devices)"),
     Transform(
         Dictionary(
             elements = [
@@ -3502,8 +3502,8 @@ register_check_parameters(
                  Tuple(
                      title = _("Levels for user managed backup files"),
                      help = _( "Important! This checks is only for monitoring of datafiles "
-                               "who were left in backup mode. "
-                               "(alter database datafile ... begin backup;) "),
+                               "who were left in backup mode "
+                               "(<tt>alter database datafile ... begin backup;</tt>)."),
                      elements = [
                           Age(title = _("warning if higher then"), default_value = 1800),
                           Age(title = _("critical if higher then"), default_value = 3600),
@@ -3525,7 +3525,7 @@ register_check_parameters(
     _("ORACLE Scheduler Job"),
     Dictionary(
         help = _("A scheduler job is an object in an ORACLE database which could be "
-                 "compared to a cron job on Unix. "),
+                 "compared to a cron job on Unix."),
         elements = [
             ( "run_duration",
               Tuple(
@@ -5053,8 +5053,7 @@ register_check_parameters(
         default_value = "on"
     ),
     TextAscii(
-        title = _("Plug Item number or name"),
-        help = _("If you need the number or the name depends on the check. Just take a look to the service description. "),
+        title = _("Number or name of the plug item"),
         allow_empty = True),
      None
 )
@@ -6532,7 +6531,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "citrix_load",
-    _("Load of Citrix Server"),
+    _("CPU load of Citrix Server"),
     Tuple(
         title = _("Citrix Server load"),
         elements = [

@@ -236,7 +236,7 @@ class RuleState(CascadingDropdown):
                              'the generic "text to match pattern" before) which set the state of the '
                              'generated event depending on the match.<br><br>'
                              'First the CRITICAL pattern is tested, then WARNING and OK at last. '
-                             'When none of the patterns matches, the events state is set to UNKNOWN.'),
+                             'If none of the patterns matches, the events state is set to UNKNOWN.'),
                 )
             ),
         ]

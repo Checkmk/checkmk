@@ -1,0 +1,10 @@
+Title: Inital Agent Version for zOS (IBM Mainframes)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422458934
+Class: feature
+
+This is only the first Version of the Agent. It has to be extended in the future.
+

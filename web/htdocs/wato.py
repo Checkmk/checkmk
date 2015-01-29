@@ -6944,8 +6944,8 @@ def mode_snapshot(phase):
         html.write("<br>")
 
         html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
-        html.write(_("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites<br>"
-                   "backup directory %s/wato/snapshots. It will then show up in the snapshots table.<br><br>") % defaults.var_dir)
+        html.write(_("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites "
+                   "backup directory <tt>%s/wato/snapshots</tt>. It will then show up in the snapshots table.<br><br>") % defaults.var_dir)
         html.begin_form("upload_form", method = "POST")
         html.upload_file("_upload_file")
         html.button("upload_button", _("Restore from file"), "submit")
@@ -17714,10 +17714,12 @@ class API:
             # Check if folder or host file is locked
             if check_folder == host_foldername: # Target folder exists
                 if check_folder.get(".lock_hosts"):
-                    raise MKAuthException(_("Not allowed to change hosts.mk file. It is locked"))
+                    raise MKAuthException(_("You are not allowed to modify hosts in this folder. The host configuration in the folder "
+                                            "is locked, because it has been created by an external application."))
             else:
                 if check_folder.get(".lock_subfolders"):
-                    raise MKAuthException(_("Not allowed create subfolders"))
+                    raise MKAuthException(_("Not allowed to create subfolders in this folder. The Folder has been "
+                                            "created by an external application and is locked."))
 
         if "permissions_create" in validate:
             # Find the closest parent folder. If we can write there, we can also write in our new folder

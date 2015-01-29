@@ -34,8 +34,8 @@ def dump_templates():
     if opt_check_interval != None:
         check_interval = "check_interval          %d" % opt_check_interval
 
-    sys.stdout.write("""
-define host {
+    sys.stdout.write(
+"""define host {
     name                    livedump-host
     use                     check_mk_default
     register                0
@@ -59,16 +59,16 @@ define command {
 }
 
 define timeperiod {
-    timeperiod_name 0x0
-    alias           Never ever
+    timeperiod_name         0x0
+    alias                   Never ever
 }
+
 """ % (check_interval, check_interval))
 
 def encode_row(row):
     for key, val in row.items():
         if type(val) == unicode:
             row[key] = val.encode("utf-8")
-
 
 #   .-Livedump-------------------------------------------------------------.
 #   |            _     _               _                                   |
@@ -115,22 +115,29 @@ def livedump_config():
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
         sys.stdout.write(
-               "define host {\n"
-               "  use                livedump-host\n"
-               "  host_name          %(name)s\n"
-               "  alias              %(alias)s\n"
-               "  address            %(address)s\n"
-               "  host_groups        %(groupstring)s\n"
-               "  check_command      %(check_command)s\n"
-               "  max_check_attempts %(max_check_attempts)d\n" % row)
-        if opt_groups:
-               sys.stdout.write("  contacts           %(contactsstring)s\n" % row)
+            "define host {\n"
+            "  use                livedump-host\n")
+
+        if opt_prefix:
+            sys.stdout.write("  host_name          %s%s\n" % (opt_prefix, row["name"]))
         else:
-               sys.stdout.write("  contact_groups     %(contact_groups)s\n" % row)
+            sys.stdout.write("  host_name          %s\n" % row["name"])
+
+        sys.stdout.write(
+            "  alias              %(alias)s\n"
+            "  address            %(address)s\n"
+            "  host_groups        %(groupstring)s\n"
+            "  check_command      %(check_command)s\n"
+            "  max_check_attempts %(max_check_attempts)d\n" % row)
+
+        if opt_groups:
+            sys.stdout.write("  contacts           %s\n" % row["contactsstring"])
+        else:
+            sys.stdout.write("  contact_groups     %s\n" % row["contact_groups"])
 
         if opt_host_icon:
             if row.get("icon_image"):
-                sys.stdout.write("  icon_image         %(icon_image)s\n" % row)
+                sys.stdout.write("  icon_image         %s\n" % row["icon_image"])
 
         sys.stdout.write("}\n\n")
 
@@ -150,16 +157,20 @@ def livedump_config():
         row["contactsstring"] = (",".join(row["contacts"])).encode("utf-8")
         sys.stdout.write(
            "define service {\n"
-           "  use                livedump-service\n"
-           "  host_name          %(host_name)s\n"
-           "  description        %(description)s\n"
-           "  %(groupstring)s\n"
-           "  check_command      check-livedump\n"
-           "  contacts           %(contactsstring)s\n"
-           "  max_check_attempts %(max_check_attempts)d\n"
-           "}\n\n"
-           % row)
+           "  use                livedump-service\n")
 
+        if opt_prefix:
+            sys.stdout.write("  host_name          %s%s\n" % (opt_prefix, row["host_name"]))
+        else:
+            sys.stdout.write("  host_name          %s\n" % row["host_name"])
+
+        sys.stdout.write(
+            "  description        %(description)s\n"
+            "  %(groupstring)s\n"
+            "  check_command      check-livedump\n"
+            "  contacts           %(contactsstring)s\n"
+            "  max_check_attempts %(max_check_attempts)d\n"
+            "}\n\n" % row)
 
 def livedump_state():
     now = time.time()
@@ -173,7 +184,13 @@ def livedump_state():
     for row in g_connection.query_table_assoc(query):
         encode_row(row)
         row["now"] = now
-        sys.stdout.write("""host_name=%(name)s
+
+        if opt_prefix:
+            sys.stdout.write("host_name=%s%s" % (opt_prefix, row["name"]))
+        else:
+            sys.stdout.write("host_name=%s" % row["name"])
+
+        sys.stdout.write("""
 check_type=1
 check_options=0
 reschedule_check
@@ -194,7 +211,13 @@ output=%(plugin_output)s|%(perf_data)s
     for row in g_connection.query_table_assoc(query):
         row["now"] = now
         encode_row(row)
-        sys.stdout.write("""host_name=%(host_name)s
+
+        if opt_prefix:
+            sys.stdout.write("host_name=%s%s" % (opt_prefix, row["host_name"]))
+        else:
+            sys.stdout.write("host_name=%s" % row["host_name"])
+
+        sys.stdout.write("""
 service_description=%(description)s
 check_type=1
 check_options=0
@@ -206,9 +229,6 @@ return_code=%(state)d
 output=%(plugin_output)s|%(perf_data)s
 
 """ % row)
-
-
-
 
 #.
 #   .-Helpers--------------------------------------------------------------.
@@ -237,39 +257,42 @@ def bail_out(x):
     sys.exit(1)
 
 def usage():
-    sys.stderr.write("""Usage: %s [OPTIONS] [-C]
+    sys.stderr.write("""
+Usage: %s [OPTION]...
 
-  -C, --config              Dump configuration (instead of state)
+  -C, --config               Dump configuration (instead of state)
 
-  -h, --help                Show this cruft
-  -V, --version             Show version and exit
-  -T, --dump-templates      Also dump host/service templates
-  -M, --mark-mode           Puts the mode (state/configuration dump) in the first
-                            line for use with livedump-ssh-recv and similar scripts
+  -h, --help                 Show this help
+  -V, --version              Show version and exit
+  -T, --dump-templates       Also dump host/service templates
+  -M, --mark-mode            Puts the mode (state/configuration dump) in the first
+                             line for use with livedump-ssh-recv and similar scripts
+  -p, --prefix P             Add a prefix P to hostnames. Use this option to dump live
+                             data from multiple sites with duplicated hostnames
 
-  -s, --socket S            connect to Livestatus-socket at S
+  -s, --socket S             Connect to Livestatus-socket at S
                              -s tcp:10.11.0.55:6557
                              -s unix:/var/run/nagios/rw/live
-  -O, --host-only-header H  add header H to host queries only (usually Filter: ...)
-  -H, --host-header H       add header H to host queries (usually Filter: ...).
-                            This header is also used in service queries.
-  -S, --service-header H    add header H to service queries (usually Filter: ...)
+  -O, --host-only-header H   Add header H to host queries only (usually Filter: ...)
+  -H, --host-header H        Add header H to host queries (usually Filter: ...)
+                             This header is also used in service queries
+  -S, --service-header H     Add header H to service queries (usually Filter: ...)
 
-  -i, --interval            assume this check interval for hosts/services. This is
-                            used in nagios config definition "check_interval".
-                            Will be used for staleness checks on the server. This
-                            option is only used when dumping the config together
-                            with templates (-C -T).
+  -i, --interval I           Assume this check interval for hosts/services. This is
+                             used in nagios config definition "check_interval".
+                             Will be used for staleness checks on the server. This
+                             option is only used when dumping the config together
+                             with templates (-C -T)
 
-  -v, --verbose             output debug information an stderr
-  -G, --include-groups      use contact groups instead of contacts on dumping config
-  --include-host-icon       add host icon_image to config
-  --debug                   do not catch Python exceptions
+  -v, --verbose              Output debug information on stderr
+  -G, --include-groups       Use contact groups instead of contacts on dumping config
+      --include-host-icon    Add host icon_image to config
+      --debug                Do not catch Python exceptions
 
-""")
+""" % os.path.split(sys.argv[0])[1])
 
 def print_version():
-    sys.stdout.write("This is livedump version %s" % check_mk_version)
+    sys.stdout.write("This is livedump version %s\n" % check_mk_version)
 
 #.
 #   .-main-----------------------------------------------------------------.
@@ -283,16 +306,17 @@ def print_version():
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hVvc:H:S:O:TCMGi:s:'
-long_options = [ "help", "version", "verbose", "debug", "socket=",
-                 "host-header=", "host-only-header=", "service-header=",
-                 "dump-templates", "config", "state", "mark-mode",
-                 "include-groups", "interval", "include-host-icon" ]
+short_options = 'ChVTMp:s:O:H:S:i:vG'
+long_options = [ "config", "help", "version", "dump-templates", "mark-mode",
+                 "prefix=", "socket=", "host-only-header=","host-header=",
+                 "service-header=", "interval=", "verbose", "include-groups",
+                 "include-host-icon", "debug" ]
 
 opt_verbose = False
 opt_debug = False
 opt_socket = None
 opt_mark_mode = False
+opt_prefix = ""
 opt_host_headers = ""
 opt_host_only_headers = ""
 opt_service_headers = ""
@@ -318,10 +342,12 @@ for o,a in opts:
         sys.exit(0)
 
     # Modifiers
-    elif o in [ '-v', '--verbose' ]:
-        opt_verbose = True
-    elif o == '--debug':
-        opt_debug = True
+    elif o in [ '-T', '--dump-templates' ]:
+        opt_dump_templates = True
+    elif o in [ '-M', '--mark-mode' ]:
+        opt_mark_mode = True
+    elif o in [ '-p', '--prefix' ]:
+        opt_prefix = a
     elif o in [ '-s', '--socket' ]:
         opt_socket = a
     elif o in [ '-O', '--host-only-header' ]:
@@ -330,16 +356,16 @@ for o,a in opts:
         opt_host_headers += a + "\n"
     elif o in [ '-S', '--service-header' ]:
         opt_service_headers += a + "\n"
-    elif o in [ '-T', '--dump-templates' ]:
-        opt_dump_templates = True
-    elif o in [ '-M', '--mark-mode' ]:
-        opt_mark_mode = True
+    elif o in [ '-i', '--interval' ]:
+        opt_check_interval = int(a)
+    elif o in [ '-v', '--verbose' ]:
+        opt_verbose = True
     elif o in [ '-G', '--include-groups' ]:
         opt_groups = True
     elif o in [ '--include-host-icon' ]:
         opt_host_icon = True
-    elif o in [ '-i', '--interval' ]:
-        opt_check_interval = int(a)
+    elif o == '--debug':
+        opt_debug = True
 
 # Main modes
 try:

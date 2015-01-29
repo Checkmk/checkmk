@@ -1,0 +1,19 @@
+Title: Livedump: Host names can now be prefixed with an individual string
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422459786
+Class: feature
+
+The import from several independent monitoring sites with duplicated host names was not possible.
+We introduced a new command line option for livedump to give you the
+possibility to add a individual string as prefix for host names.
+
+C+:
+RP: livedump -Cp site1 # dumps the configuration of site1 with prefix site1 for every host name
+RP: livedump -Cp site2 # dumps the configuration of site2 with prefix site2 for every host name
+
+RP: livedump -p site1 # dumps the status of site1 with prefix site1 for every host name
+RP: livedump -p site2 # dumps the status of site2 with prefix site2 for every host name
+C-:

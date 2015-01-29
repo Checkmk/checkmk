@@ -1,0 +1,2 @@
+iconv -f ibm-1047 -t utf-8 FILE_NAME |tr "\205" "\12"|tr -d "\302"
+

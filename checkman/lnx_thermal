@@ -32,7 +32,7 @@ according to the unit sent by the device. This key allows to override that. Trea
 lightly, as this may lead to a misinterpreted temperature. Should only be used if
 the device reports its unit incorrectly.
 
- {"device_levels_handling"]: How the check treats the device's internal levels
+ {"device_levels_handling"}: How the check treats the device's internal levels
 versus the ones you specify yourself. The following options are supported: "best"
 results in the best status between yours and the device's levels, "worst" in the
 worst, "usr" ignore's the device's levels, "dev" ignores yours, usrdefault and

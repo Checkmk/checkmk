@@ -27,6 +27,10 @@ description:
  in bytes. If you have configured traffic levels, then those levels are
  applied to the averaged values.
 
+ It might be a good idea to use the option "Use description as service name
+ for network interface checks", since there is no real interface index available
+ and can change over time.
+
 item:
  There are three allowed ways to specify a port: {1}: the index of the interface
  (depends on the order of the data reported by the agent), the {ifDescr} of

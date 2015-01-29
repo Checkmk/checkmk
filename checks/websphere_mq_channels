@@ -56,7 +56,10 @@ def check_websphere_mq_channels(item, params, info):
                 message += "(!)"
 
             message += ", Channel State: %s" % status
-            if status not in [ 'RUNNING' ]:
+            if status == 'STOPPED':
+                state = 1
+                message += "(!)"
+            elif status not in [ 'RUNNING' ]:
                 state = 2
                 message += "(!!)"
             perf = [ ('messages', messages, warn, crit, 0, max_messages) ]

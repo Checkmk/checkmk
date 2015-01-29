@@ -852,7 +852,8 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
             verbose("Buffer for RegQueryValueEx too small. Resizing...");
             delete [] data;
             data = new BYTE [size];
-        } else {
+        }
+        else {
             // Es ist ein anderer Fehler aufgetreten. Abbrechen.
             delete [] data;
             return;
@@ -1554,7 +1555,8 @@ process_entry_t get_process_perfdata()
             size += DEFAULT_BUFFER_SIZE;
             delete [] data;
             data = new BYTE [size];
-        } else {
+        }
+        else {
             // Es ist ein anderer Fehler aufgetreten. Abbrechen.
             delete [] data;
             return process_info;
@@ -2028,7 +2030,8 @@ void update_or_create_logwatch_textfile(const char *full_filename, glob_token* t
                     verbose(" to %s\n", llu_to_string(file_id));
                     textfile->offset = 0;
                     textfile->file_id = file_id;
-                } else if (textfile->file_size < textfile->offset) { // file has been truncated
+                }
+                else if (textfile->file_size < textfile->offset) { // file has been truncated
                     verbose("File %s: file has been truncated\n", full_filename);
                     textfile->offset = 0;
                 }
@@ -2036,7 +2039,8 @@ void update_or_create_logwatch_textfile(const char *full_filename, glob_token* t
                 textfile->missing = false;
             }
             CloseHandle(hFile);
-        } else {
+        }
+        else {
             verbose("Cant open file with CreateFile %s\n", full_filename);
         }
     }
@@ -2147,7 +2151,8 @@ void cleanup_logwatch_textfiles()
             // remove this file from the list
             free((*it_tf)->path);
             it_tf = g_logwatch_textfiles.erase(it_tf);
-        } else
+        }
+        else
             it_tf++;
     }
 }
@@ -2649,7 +2654,8 @@ bool handle_script_config_variable(char *var, char *value, script_type type)
             cache_configs_plugin.push_back(entry);
         else
             cache_configs_local.push_back(entry);
-    } else if (!strncmp(var, "retry_count ", 12)) {
+    }
+    else if (!strncmp(var, "retry_count ", 12)) {
         char *plugin_pattern = lstrip(var + 12);
         retry_config *entry  = new retry_config();
         entry->pattern       = strdup(plugin_pattern);
@@ -2658,7 +2664,8 @@ bool handle_script_config_variable(char *var, char *value, script_type type)
             retry_configs_plugin.push_back(entry);
         else
             retry_configs_local.push_back(entry);
-    } else if (!strncmp(var, "execution ", 10)) {
+    }
+    else if (!strncmp(var, "execution ", 10)) {
         char *plugin_pattern = lstrip(var + 10);
         execution_mode_config *entry  = new execution_mode_config();
         entry->pattern       = strdup(plugin_pattern);
@@ -2667,7 +2674,8 @@ bool handle_script_config_variable(char *var, char *value, script_type type)
             execution_mode_configs_plugin.push_back(entry);
         else
             execution_mode_configs_local.push_back(entry);
-    } else if (!strncmp(var, "include", 7)) {
+    }
+    else if (!strncmp(var, "include", 7)) {
         char *user = NULL;
         if (strlen(var) > 7)
             user = lstrip(var + 7);
@@ -3034,7 +3042,8 @@ void output_external_programs(SOCKET &out, script_type type)
                 cont->buffer      = cont->buffer_work;
                 cont->buffer_work = NULL;
                 cont->status      = SCRIPT_IDLE;
-            } else if (cont->retry_count < 0 && cont->buffer != NULL) {
+            }
+            else if (cont->retry_count < 0 && cont->buffer != NULL) {
                 // Remove outdated cache entries
                 HeapFree(GetProcessHeap(), 0, cont->buffer);
                 cont->buffer = NULL;
@@ -4401,7 +4410,8 @@ void listen_tcp_loop()
                     ip = remote_addr.sin_addr.s_addr;
                     snprintf(ip_hr, sizeof(ip_hr), "%u.%u.%u.%u",
                              ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
-                } else
+                }
+                else
                     snprintf(ip_hr, sizeof(ip_hr), "None");
                 if (check_only_from(ip)) {
                     open_crash_log();

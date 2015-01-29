@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-deprecated = _("Deprecated")
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
 #   | / ___| | ___ | |__   __ _| | / ___|  ___| |_| |_(_)_ __   __ _ ___   |
@@ -37,6 +36,7 @@ deprecated = _("Deprecated")
 #   | Global configuration settings for main.mk and multisite.mk           |
 #   '----------------------------------------------------------------------'
 
+deprecated = _("Deprecated")
 
 group = _("Status GUI (Multisite)")
 
@@ -1103,9 +1103,9 @@ register_configvar(group,
             ( "zfsget",                 _("Used space in ZFS pools and filesystems")),
             ( "ps",                     _("State and Count of Processes") ),
             ( "ps.perf",                _("State and Count of Processes (with additional performance data)")),
-            ( "wmic_process",           _("Ressource consumption of windows processes")),
+            ( "wmic_process",           _("Resource consumption of windows processes")),
             ( "logwatch",               _("Check logfiles for relevant new messages")),
-            ( "cmk-inventory",          _("Monitor hosts for unchecked services (Check_MK inventory)")),
+            ( "cmk-inventory",          _("Monitor hosts for unchecked services (Check_MK Discovery)")),
             ( "hyperv_vms",             _("Hyper-V Server: State of VMs")),
         ],
         render_orientation = "vertical",

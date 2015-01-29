@@ -60,7 +60,8 @@ def netapp_convert_to_if64(info):
     interfaces = parsed_data.get("net-ifconfig-get")
 
     # Calculate speed, state and create mac-address list
-    if_mac_list = {}
+    if_mac_list = {} # Dictionary with lists of common mac addresses
+    vif_list    = [] # List of virtual interfaces
     for name, values in interfaces.items():
         mediatype = values.get("mediatype")
         if mediatype:
@@ -74,8 +75,13 @@ def netapp_convert_to_if64(info):
                 speed = 10000000000
             elif "10" in mediatype:
                 speed = 10000000
+            else:
+                speed = 0
             values["speed"] = speed
             values["state"] = tokens[-1].lower() == "up" and "1" or "2"
+        elif values.get("port-role") != "storage-acp":
+            # If an interface has no media type and is not a storage-acp it is considered as virtual interface
+            vif_list.append(name)
         if "mac-address" in values:
             if_mac_list.setdefault(values["mac-address"], [])
             if_mac_list[values["mac-address"]].append(name)
@@ -101,7 +107,7 @@ def netapp_convert_to_if64(info):
                 mac_list = if_mac_list[values["mac-address"]]
                 if len(mac_list) > 1: # check if this interface is grouped
                     extra_info.setdefault(nic_name, {})
-                    extra_info[nic_name]["grouped_if"] = mac_list
+                    extra_info[nic_name]["grouped_if"] = [ x for x in mac_list if x not in vif_list ]
 
                     for tmp_if in mac_list:
                         if tmp_if == nic_name:
@@ -129,7 +135,7 @@ def netapp_convert_to_if64(info):
                 mac = ''
 
             nic = ['0'] * 20
-            nic[0]  = idx + 1                               # Index
+            nic[0]  = str(idx + 1)                          # Index
             nic[1]  = nic_name                              # Description
             nic[2]  = "6" # Fake ethernet                   # Type
             nic[3]  = speed                                 # Speed
@@ -158,8 +164,7 @@ def netapp_convert_to_if64(info):
 
 def inventory_netapp_api_if(parsed):
     nics, extra_info = parsed
-    for entry in nics:
-        yield entry[1], None
+    return inventory_if_common(nics)
 
 def check_netapp_api_if(item, params, parsed):
     nics, extra_info = parsed

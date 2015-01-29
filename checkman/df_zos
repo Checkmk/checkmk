@@ -1,0 +1,25 @@
+title: zOS Mainframes: Used Space in Filesystems
+agents: z_os
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the filesystem usage on IBM zOS Mainframes.
+
+ The check makes use of the general check framework of the {df} check. Please
+ refer to the man page of the {df} check for the detailed description of
+ the check and its numerous features.
+
+inventory:
+ All filesystems found will be inventorized except mount points listed
+ in {inventory_df_exclude_mountpoints} and filesystems with zero size.
+
+item:
+ The mount point of the filesystem
+
+perfdata:
+ See the man page of the {df} check
+
+[parameters]
+parameters (dict): See the man page of the {df} check
+

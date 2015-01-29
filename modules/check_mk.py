@@ -253,7 +253,7 @@ config_variable_names = set.difference(set(vars().keys()) - known_vars)
 
 # at check time (and many of what is also needed at administration time).
 try:
-    modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery' ]
+    modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         if os.path.exists(filename):
@@ -353,7 +353,6 @@ def load_checks():
     # Now convert check_info to new format.
     convert_check_info()
 
-load_checks()
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -4212,6 +4211,7 @@ def usage():
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
+ cmk --cap pack|unpack|list FILE.cap  Pack/unpack agent packages (not in all versions)
  cmk --show-snmp-stats                Analyzes recorded Inline SNMP statistics
  cmk -V, --version                    print version
  cmk -h, --help                       print this help
@@ -5447,11 +5447,11 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "man", "nowiki", "config-check", "backup=", "restore=",
                  "check-inventory=", "check-discovery=", "paths",
                  "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=",
-                 "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
+                 "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap" ]
 
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
                       '--man', '-V', '--version' ,'-h', '--help', '--automation',
-                      '--create-rrd', '--convert-rrds', '--keepalive' ]
+                      '--create-rrd', '--convert-rrds', '--keepalive', '--cap' ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -5669,14 +5669,20 @@ try:
             done = True
         elif o in [ '-A', '--bake-agents' ]:
             if 'do_bake_agents' not in globals():
-                sys.stderr.write("Agent baking is not implemented in your version of Check_MK. Sorry.\n")
-                sys.exit(1)
+                bail_out("Agent baking is not implemented in your version of Check_MK. Sorry.")
             if args:
                 hostnames = parse_hostname_list(args, with_clusters = False)
             else:
                 hostnames = None
             do_bake_agents(hostnames)
             done = True
+
+        elif o == '--cap':
+            if 'do_cap' not in globals():
+                bail_out("Agent packages are not supported by your version of Check_MK.")
+            do_cap(args)
+            done = True
+
         elif o in [ '--show-snmp-stats' ]:
             if 'do_show_snmp_stats' not in globals():
                 sys.stderr.write("Handling of SNMP statistics is not implemented in your version of Check_MK. Sorry.\n")

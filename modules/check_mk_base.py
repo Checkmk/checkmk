@@ -139,8 +139,11 @@ else:
 # Output text if opt_verbose is set (-v). Adds no linefeed
 def verbose(text):
     if opt_verbose:
-        sys.stdout.write(text)
-        sys.stdout.flush()
+        try:
+            sys.stdout.write(text)
+            sys.stdout.flush()
+        except:
+            pass # avoid exception on broken pipe (e.g. due to | head)
 
 # Output text if, opt_verbose >= 2 (-vv).
 def vverbose(text):

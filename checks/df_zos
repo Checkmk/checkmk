@@ -1,0 +1,91 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<df_zos>>>
+# SYS5.OMVS.ALF0.HFS         720          92        504       16% /ALF0
+# HFS, Read/Write, Device:2, ACLS=Y
+# Filetag : T=off   codeset=0
+# 
+# SYS5.OMVS.SYSPLEX.ROOT     720         224        372       38% /
+# HFS, Read Only, Device:1, ACLS=Y
+# Filetag : T=off   codeset=0
+
+# FS Types:
+# AUTOMNT
+# TFS
+# ZFS
+# NFS
+# HFS
+
+def df_zos_convert(data):
+    entries = []
+    found = False
+    for line in data:
+        if len(line) == 6:
+            entry = list(line)
+            found = True
+            continue
+        elif found:
+            entry.append(line[0][:-1]) #Filesystem Type
+            # Read/Write
+            if len(line) == 4:
+                entry.append('rw')
+            # Read Only
+            else:
+                entry.append('ro')
+            entries.append(entry)
+            found = False
+    return entries
+
+df_zos_exclude_list = ['AUTOMNT', 'TFS', 'NFS']
+
+def inventory_df_zos(info):
+    info = df_zos_convert(info)
+    mplist = []
+    for line in info:
+        if line[-1] == "rw" and line[-2] not in df_zos_exclude_list:
+            mplist.append(line[5])
+    return df_inventory(mplist)
+
+
+def check_df_zos(item, params, info):
+    info_convert = df_zos_convert(info)
+    fslist = []
+    for fs, size, used, avail, used_perc, mount_point, fs_type, fs_state in info_convert:
+        size_mb    = float(size) / 1024
+        avail_mb   = float(avail) / 1024
+        fslist.append((mount_point, size_mb, avail_mb, 0))
+    return df_check_filesystem_list(item, params, fslist)
+
+check_info['df_zos'] = {
+    "check_function"          : check_df_zos,
+    "inventory_function"      : inventory_df_zos,
+    "service_description"     : "Filesystem %s",
+    "has_perfdata"            : True,
+    "group"                   : "filesystem",
+    "default_levels_variable" : "filesystem_default_levels",
+    "includes"                : [ "df.include" ],
+}

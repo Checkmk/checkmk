@@ -77,7 +77,7 @@ def check_df_zos(item, params, info):
     for fs, size, used, avail, used_perc, mount_point, fs_type, fs_state in info_convert:
         size_mb    = float(size) / 1024
         avail_mb   = float(avail) / 1024
-        fslist.append((mount_point, size_mb, avail_mb))
+        fslist.append((mount_point, size_mb, avail_mb, 0))
     return df_check_filesystem_list(item, params, fslist)
 
 check_info['df_zos'] = {

@@ -120,6 +120,7 @@ manpage_catalog_titles = {
         "solaris"       : "Solaris",
         "vsphere"       : "VMWare ESX (via vSphere)",
         "windows"       : "Microsoft Windows",
+        "z_os"          : "IBM zOS Mainframes",
 
         "hardware"    : "Hardware Sensors",
         "kernel"      : "CPU, Memory and Kernel Performance",

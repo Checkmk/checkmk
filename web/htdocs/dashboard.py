@@ -940,7 +940,7 @@ def page_edit_dashlet():
             ('single_infos', FixedValue(single_infos,
                 title = _('Show information of single'),
                 totext = single_infos and ', '.join(single_infos) \
-                                      or _('Not showing information for a specific object.'),
+                                      or _('Not restricted to showing a specific object.'),
             )),
             ('background', Checkbox(
                 title = _('Colored Background'),

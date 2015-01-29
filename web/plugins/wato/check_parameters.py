@@ -224,7 +224,7 @@ _if_porttype_choices = [
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_if_rules",
-    title     = _("Network Interface and Switch Port Inventory"),
+    title     = _("Network Interface and Switch Port Discovery"),
     valuespec = Dictionary(
         elements = [
          ( "use_desc",
@@ -244,7 +244,7 @@ register_rule(group + '/' + subgroup_inventory,
         ( "match_alias",
           ListOfStrings(
               title = _("Match interface alias (regex)"),
-              help = _("Only inventorize interfaces whose alias matches one of the configured "
+              help = _("Only discover interfaces whose alias matches one of the configured "
                        "regular expressions. The match is done on the beginning of the alias. "
                        "This allows you to select interfaces based on the alias without having "
                        "the alias be part of the service description."),
@@ -253,16 +253,16 @@ register_rule(group + '/' + subgroup_inventory,
         )),
 
         ( "portstates",
-          ListChoice(title = _("Network interface port states to inventorize"),
-              help = _("When doing inventory on switches or other devices with network interfaces "
+          ListChoice(title = _("Network interface port states to discover"),
+              help = _("When doing discovery on switches or other devices with network interfaces "
                        "then only ports found in one of the configured port states will be added to the monitoring."),
               choices = _if_portstate_choices,
               toggle_all = True,
               default_value = ['1'],
         )),
         ( "porttypes",
-          ListChoice(title = _("Network interface port types to inventorize"),
-              help = _("When doing inventory on switches or other devices with network interfaces "
+          ListChoice(title = _("Network interface port types to discovery"),
+              help = _("When doing discovery on switches or other devices with network interfaces "
                        "then only ports of the specified types will be created services for."),
               choices = _if_porttype_choices,
               columns = 3,
@@ -668,23 +668,23 @@ register_rule(group + '/' + subgroup_inventory,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_heartbeat_crm_rules",
-    title     = _("Heartbeat CRM Inventory"),
+    title     = _("Heartbeat CRM Discovery"),
     valuespec = Dictionary(
         elements = [
             ("naildown_dc", Checkbox(
                    title = _("Naildown the DC"),
-                   label = _("Mark the current distinguished controller as preferred one"),
-                   help = _("Nails down the DC to the node which is the DC during inventory. The check "
+                   label = _("Mark the currently distinguished controller as preferred one"),
+                   help = _("Nails down the DC to the node which is the DC during discovery. The check "
                             "will report CRITICAL when another node becomes the DC during later checks.")
             )),
             ("naildown_resources", Checkbox(
                    title = _("Naildown the resources"),
                    label = _("Mark the nodes of the resources as preferred one"),
-                   help = _("Nails down the resources to the node which is holding them during inventory. "
+                   help = _("Nails down the resources to the node which is holding them during discovery. "
                             "The check will report CRITICAL when another holds the resource during later checks.")
             )),
         ],
-        help = _('This rule can be used to control the inventory for Heartbeat CRM checks.'),
+        help = _('This rule can be used to control the discovery for Heartbeat CRM checks.'),
         optional_keys = [],
     ),
     match = 'dict',
@@ -1970,7 +1970,7 @@ register_check_parameters(
                         Integer(
                             title = _("Offset"),
                             help = _("Use this only if you want to overwrite the postion of the information in the agent "
-                                     "output. Also refer to the rule <i>Microsoft Exchange Queues Inventory</i> ")
+                                     "output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</i> ")
                         )
                     ),
                   ],
@@ -6976,7 +6976,7 @@ register_check_parameters(
     "jvm_gc",
     _("JVM garbage collection levels"),
     Dictionary(
-        help = _("Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+        help = _("This ruleset also covers Tomcat, Jolokia and JMX. "),
         elements = [
             ( "CollectionTime",
                Alternative(
@@ -7020,7 +7020,7 @@ register_check_parameters(
     "jvm_tp",
     _("JVM tomcat threadpool levels"),
     Dictionary(
-        help = _("Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+        help = _("This ruleset also covers Tomcat, Jolokia and JMX. "),
         elements = [
             ( "currentThreadCount",
                Alternative(

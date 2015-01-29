@@ -1598,7 +1598,7 @@ register_rule(group,
             ),
             ( "method",
               DropdownChoice(
-                  title = _("Method or probing"),
+                  title = _("Method of probing"),
                   choices = [
                       ( None,   _("UDP (default behaviour of tcpdump)") ),
                       ( "icmp", _("ICMP Echo Request") ),

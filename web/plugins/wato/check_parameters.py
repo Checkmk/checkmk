@@ -4514,9 +4514,9 @@ register_rule(group + '/' + subgroup_networking,
 register_rule(group + '/' + subgroup_inventory,
     varname   = "winperf_msx_queues_inventory",
     title     = _('Microsoft Exchange Queues Inventory'),
-    help      = _('Per default all Counters a preconfigured in the check. '
-                  'It needed it is possible to overwrite that with this rule. '
-                  'To do that, knowledge about the Agent Output is needed. '),
+    help      = _('Per default the offsets of all Windows performance counters are preconfigured in the check. '
+                  'If the format of your counters object is not compatible then you can adapt the counter '
+                  'offsets manually.'),
     valuespec = ListOf(
                     Tuple(
                         orientation = "horizontal",

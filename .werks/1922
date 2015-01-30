@@ -1,0 +1,9 @@
+Title: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422606938
+Class: fix
+
+

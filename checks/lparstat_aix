@@ -49,7 +49,7 @@
 lparstat_default_levels = (5, 10)
 
 def inventory_lparstat(info):
-    if len(info) >= 1 and len(info[2]) >= 5:
+    if len(info) >= 1 and len(info[-1]) >= 5:
         return [(None, "", "lparstat_default_levels")]
 
 def check_lparstat(item, params, info):
@@ -72,9 +72,9 @@ def check_lparstat(item, params, info):
             return 3, "Invalid output from agent"
     else:
         # The new agent provides three lines, the title line, spacer line and the values
-        cols   = [ c.replace('%', '') for c in info[0] ]
-        uom    = [ '%' in c and '%' or '' for c in info[0] ]
-        values = info[2]
+        cols   = [ c.replace('%', '') for c in info[-3] ]
+        uom    = [ '%' in c and '%' or '' for c in info[-3] ]
+        values = info[-1]
 
     perfdata = [ (cols[i], val+uom[i]) for i, val in enumerate(values) ]
     output   = ', '.join([ cols[i].title()+': '+val+uom[i] for i, val in enumerate(values) ])
@@ -92,14 +92,14 @@ check_info["lparstat_aix"] = {
 kernel_util_default_levels = None
 
 def inventory_lparstat_aix_cpu(info):
-    if len(info) >= 1 and len(info[2]) >= 4:
+    if len(info) >= 1 and len(info[-1]) >= 4:
         return [(None, "kernel_util_default_levels")]
 
 def check_lparstat_aix_cpu(_no_item, params, info):
     if len(info) == 1:
         line = info[0] # old (single line) agent output
     else:
-        line = info[2]
+        line = info[-1]
     user, system, wait, idle = map(float, line[:4])
     perfdata = [
           ( "user",   "%.3f" % user ),

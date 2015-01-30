@@ -1815,12 +1815,6 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
         extra_service_conf["_SERVICE_PERIOD"] = extra_service_conf["service_period"]
         del extra_service_conf["service_period"]
 
-    if filesystem_levels != []:
-        raise MKGeneralException("filesystem_levels is not longer supported.\n"
-                "Please use check_parameters instead.\n"
-                "Please refer to documentation:\n"
-                " --> http://mathias-kettner.de/checkmk_check_parameters.html\n")
-
     output_conf_header(outfile)
     if hostnames == None:
         hostnames = all_hosts_untagged + all_active_clusters()

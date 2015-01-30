@@ -125,6 +125,7 @@
     * 1881 FIX: omd_status: Check works now event when a site is reported as not OK...
     * 1923 FIX: cisco_qos: Fixed exception in discovery that might lead to missing services
     * 1924 FIX: cisco_power: Fixed missing power supplies in case where name is not unique
+    * 1886 FIX: win_printers: Fixed exception in WATO when displaying default parameters
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

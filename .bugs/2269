@@ -2,7 +2,7 @@ Title: cmk -v for a new host only creates the first RRD
 Component: core
 State: open
 Date: 2015-01-19 18:15:29
-Targetversion: 1.2.5i1
+Targetversion: 1.2.6
 Class: bug
 
 When you do a cmk -v on the command line (using CMC) for a new host

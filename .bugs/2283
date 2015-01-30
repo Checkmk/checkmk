@@ -2,9 +2,9 @@ Title: logwatch: log entries with braces in names can not be shown in logwatch G
 Component: multisite
 State: open
 Date: 2014-12-12 17:21:28
-Targetversion: 1.2.5i1
+Targetversion: 1.2.7
 Class: bug
 
-Braces are not removed from logwatch stored files. Logwatch-GUI does not handle this difference correctly.
-e.g. mk_sap creates such logwatch files
+Braces are not removed from logwatch stored files. Logwatch-GUI does not
+handle this difference correctly.  e.g. mk_sap creates such logwatch files
 

@@ -2,8 +2,8 @@ Title: LDAP-Logfile create exception if directory does not exist
 Component: wato
 State: open
 Date: 2014-12-23 09:28:57
-Targetversion: 1.2.5i1
-Class: bug
+Targetversion: 1.2.7
+Class: cleanup
 
 Anyway we should move the log messages of the LDAP connecttor
 to some central place. It needn't be a separate Logfile. We should

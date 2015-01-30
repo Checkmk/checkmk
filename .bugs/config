@@ -7,7 +7,7 @@ states = {
     "discuss"    : tty_red,
 }
 
-components = [ 
+components = [
   ( "core",       "Core Modules, Setup, etc." ),
   ( "checks",     "Checks and Agent plugins" ),
   ( "multisite",  "Multisite GUI" ),
@@ -17,11 +17,11 @@ components = [
   ( "livecheck",  "Livecheck part in Livestatus, livecheck helper" ),
   ( "wato",       "Check_MK's Web Administration Tool" ),
   ( "bi",         "BI - Business Intelligence" ),
-  ( "mobile",     "Multisite Mobile GUI" ), 
+  ( "mobile",     "Multisite Mobile GUI" ),
   ( "docu",       "Documentation "),
 ]
 
-classes = [ 
+classes = [
   "cleanup",
   "nastiness",
   "bug",
@@ -31,6 +31,7 @@ classes = [
 ]
 
 targetversions = [
-  "1.2.5i1",
+  "1.2.6",
+  "1.2.7",
   "future",
 ]

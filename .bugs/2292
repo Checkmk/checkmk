@@ -1,0 +1,20 @@
+Title: omd_status agent section disappears when omd status has RC != 0
+Component: checks
+Class: bug
+State: done
+Date: 2015-01-29 19:31:35
+Targetversion: 1.2.5i1
+
+check_mk_agent calls
+
+run_cached 60 "omd status --bare --auto"
+
+to get the status of all omd site in mode AUTOSTART = on.
+
+If a site is not running, "omd status" gives a return code of 2.
+
+run_cached cannot handle this, and no longer produces any results, so that
+the omd_status section disappears from the agent output.
+
+2015-01-30 09:29:42: changed state open -> done
+Fixed.

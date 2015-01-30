@@ -1,0 +1,24 @@
+Title: datasource and service discovery check
+Component: checks
+Class: bug
+State: closed
+Date: 2015-01-30 09:10:34
+Targetversion: 1.2.5i1
+
+When selecting a different datasource for a host (a shell script), the
+service discovery check for the host complains about a missing snmp_info
+and snmp_uptime service, even thought the host is not configured to use snmp
+(but check_mk_agent with a different datasource).  Version is 1.2.6b7.
+
+In the cache directory of the host, there are two files <hostname>.snmp_info
+and <hostname>.snmp_uptime, They contain empty lists. Doing a tabula rasa
+service discovery gives us the two additional services with empty check output.
+
+2015-01-30 09:56:56: changed state open -> works4me
+Tried to reproduce with current 1.2.6 code with both, nagios and cmc, but was
+unable to reproduce the problem. Please re-check configuration, is the
+host really not configured to use SNMP? cmk -D [hostname]. Does it really
+use the datasource program?
+2015-01-30 10:09:20: changed state open -> closed
+solved, was a configuration issue with a tag group
+at the customer

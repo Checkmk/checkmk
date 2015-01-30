@@ -13297,8 +13297,8 @@ def export_hosttags(hosttags, auxtags):
     hosttags_dict =  {}
     for id, title, choices in hosttags:
         tags = {}
-        for tag_id, tag_title, auxtags in choices:
-            tags[tag_id] = tag_title, auxtags
+        for tag_id, tag_title, tag_auxtags in choices:
+            tags[tag_id] = tag_title, tag_auxtags
         topic, title = parse_hosttag_title(title)
         hosttags_dict[id] = topic, title, tags
     auxtags_dict = dict(auxtags)
@@ -14441,6 +14441,8 @@ def rule_button(action, help=None, folder=None, rulenr=0):
             vars.append(("rule_folder", html.var("rule_folder")))
         if html.var("host"):
             vars.append(("host", html.var("host")))
+        if html.var("item"):
+            vars.append(("item", html.var("item")))
         url = make_action_link(vars)
         html.icon_button(url, help, action)
 

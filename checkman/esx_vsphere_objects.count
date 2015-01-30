@@ -1,0 +1,16 @@
+title: VMWare ESX: Number of Virtualmachnies and Hostssystems
+agents: vsphere
+catalog: os/misc
+license: GPL
+distribution: check_mk
+description:
+ This Check only counts the nubmer of Virtualmachines on a Hostsystem, or the number of
+ Virtualmachines and Hostsystems on a vCenter. 
+ It's always {OK}
+
+inventory:
+ One service will be created
+
+perfdata:
+ One graph for vms and one for hosts
+

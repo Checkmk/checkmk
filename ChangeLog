@@ -122,6 +122,8 @@
     * 1921 FIX: kemp_loadmaster_realserver: reimplementation, now use vendor specific information
     * 1859 FIX: cups_queues: linux agent now runs section cups_queues in cached mode...
     * 1881 FIX: omd_status: Check works now event when a site is reported as not OK...
+    * 1923 FIX: cisco_qos: Fixed exception in discovery that might lead to missing services
+    * 1924 FIX: cisco_power: Fixed missing power supplies in case where name is not unique
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
@@ -150,6 +152,8 @@
     * 1871 FIX: Site filter is only shown as host related filter now...
     * 1872 FIX: View editor hides filter selection for object types which have no filter to choose...
     * 1876 FIX: User sorting of views can now be disabled again
+    * 1884 FIX: Fixed exception in virtual host tree snapin
+    * 1885 FIX: Fixed filtering by software versions in software package search
 
     WATO:
     * 1760 Added search form to manual checks page

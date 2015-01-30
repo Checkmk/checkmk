@@ -1,0 +1,17 @@
+title: Synology NAS: RAID Status
+agents: snmp
+catalog: hw/storagehw/synology
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the health and current Status of
+ Raids configured on a Synology NAS device.
+ The check returns an {CRIT} in case of an error state reported
+ by the device (Degrade, Crashed) and {WARN} at all other RAID operations (but for OK, Raid Syncing and Raid Parity Checking)
+
+item:
+ The name of the Raid Volume like reported in the MIB
+
+inventory:
+ One check is created for Volume
+

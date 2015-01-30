@@ -1,0 +1,9 @@
+Title: synology_disks, synology_fans, synology_info, synology_raid, synology_status, synology_update: Multiple Synology NAS Checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422615283
+Class: feature
+
+

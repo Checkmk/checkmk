@@ -1,0 +1,21 @@
+title: Synology NAS: Harddisk Status
+agents: snmp
+catalog: hw/storagehw/synology
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the health and current Status of
+ Hardisks attached to a Synology NAS device.
+ The check returns an {CRIT} in case of an error state reported
+ by the device. The check also reports the model number and the
+ temperature for each disk.
+
+item:
+ The name of the disk like reported in the MIB
+
+inventory:
+ One check is created for each Disk
+
+perfdata:
+ Temperature of the disk
+

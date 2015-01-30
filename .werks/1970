@@ -1,0 +1,11 @@
+Title: lparstat_aix: Made the check compatible to different kind of lparstat output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422627719
+Class: fix
+
+lparstat seem to produce a lot of different kinds of output, meaning different number
+and order of columns. The check can now deal with a lot more kind of output types.
+To get this new flexibility, you need to use the newest version of the agent now.

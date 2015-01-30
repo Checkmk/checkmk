@@ -353,6 +353,7 @@ def load_checks():
     # Now convert check_info to new format.
     convert_check_info()
 
+load_checks()
 
 #.
 #   .--Checks--------------------------------------------------------------.

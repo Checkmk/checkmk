@@ -1,0 +1,11 @@
+Title: Fix missing auxilliary tags that have their own topic
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422615110
+Class: fix
+
+If you have created an auxiliary host tag with a topic this
+is not also used in any of the normal host tags then that tag
+would not be displayed in the rule editor. This has been fixed.

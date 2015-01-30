@@ -633,7 +633,7 @@ def inv_multisite_table(dsname, columns, add_headers, only_sites, limit, filters
         header = filt.filter(dsname)
         if not header.startswith("Sites:"):
             filter_code += header
-    host_columns = [ "host_name" ] + filter(lambda c: c.startswith("host_"), columns)
+    host_columns = list(set([ "host_name" ] + filter(lambda c: c.startswith("host_"), columns)))
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
@@ -665,7 +665,7 @@ def inv_multisite_table(dsname, columns, add_headers, only_sites, limit, filters
         site     = row[0]
         hostname = row[1]
         hostrow = dict(zip(headers, row))
-        if dsname == "invswpac":
+        if dsname == "invswpacs":
             subrows = create_swpac_rows(hostname)
         else:
             subrows = create_hist_rows(hostname, columns)

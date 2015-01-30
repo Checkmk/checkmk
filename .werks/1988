@@ -1,0 +1,10 @@
+Title: Gracefully handline invalid empty bulk notification files from previous buggy versions
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1422631128
+
+

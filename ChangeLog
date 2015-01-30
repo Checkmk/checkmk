@@ -193,6 +193,7 @@
     * 1664 FIX: mknotifyd: further performance improvements for notification forwarding
     * 1205 FIX: RBN: Fixed match contactgroup condition...
     * 1810 FIX: Rule based notifications: Fixed output of non contact mail recipient address in analyze table...
+    * 1988 FIX: Gracefully handline invalid empty bulk notification files from previous buggy versions
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used

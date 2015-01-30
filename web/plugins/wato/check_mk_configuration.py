@@ -986,10 +986,13 @@ register_configvar(group,
             ('num_groups', Integer(
                 title = _("Number of character groups to use"),
                 minvalue = 1,
-                help = _("Make the user choose the password from this number of character groups. "
-                         "Character groups are: <ul><li>lowercase letters</li>"
+                maxvalue = 4,
+                help = _("Force the user to choose a password that contains characters from at least "
+                         "this number of different character groups. "
+                         "Character groups are: <ul>"
+                         "<li>lowercase letters</li>"
                          "<li>uppercase letters</li>"
-                         "<li>numbers</li>"
+                         "<li>digits</li>"
                          "<li>special characters such as an underscore or dash</li>"
                          "</ul>"),
             )),

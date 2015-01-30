@@ -1,0 +1,11 @@
+Title: datasource and service discovery check
+Component: checks
+State: open
+Date: 2015-01-30 09:10:34
+Targetversion: 1.2.5i1
+Class: bug
+
+When selecting a different datasource for a host, the service discovery check
+for the host complains about a missing snmp_info service, even thought the host
+is not configured to use snmp (but check_mk_agent with a different datasource).
+Version is 1.2.6b7. Doing a service discovery doesnt help.

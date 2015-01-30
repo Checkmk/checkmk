@@ -1,10 +1,12 @@
 Title: cisco_power: Check mixes up different sensors (non unique item)
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2014-12-11 10:40:05
 Targetversion: 1.2.5i1
-Class: bug
 
-The walk switch-cisco-c4500-x-1chassis contains 4 power supply sensors, while two are named
+The walk switch-cisco-c4500-6 contains 4 power supply sensors, while two are named
 Power Supply 1 and two Power Supply 2. The check does not handled them correctly and mixes
 the data.
+
+2015-01-30 11:07:29: changed state open -> done

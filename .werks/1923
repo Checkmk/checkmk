@@ -1,0 +1,9 @@
+Title: cisco_qos: Fixed exception in discovery that might lead to missing services
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422612381
+Class: fix
+
+

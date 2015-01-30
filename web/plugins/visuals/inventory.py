@@ -26,6 +26,23 @@
 
 import inventory
 
+# Try to magically compare two software versions.
+# Currently we only assume the format A.B.C.D....
+# When we suceed converting A to a number, then we
+# compare by integer, otherwise by text.
+def try_int(x):
+    try:
+        return int(x)
+    except:
+        return x
+
+def cmp_version(a, b):
+    if a == None or b == None:
+        return cmp(a, b)
+    aa = map(try_int, a.split("."))
+    bb = map(try_int, b.split("."))
+    return cmp(aa, bb)
+
 class FilterInvText(Filter):
     def __init__(self, name, invpath, title):
         self._invpath = invpath

@@ -48,25 +48,6 @@ def cmp_inventory_node(a, b, invpath):
     val_b = inventory.get(b["host_inventory"], invpath)
     return cmp(a, b)
 
-# Try to magically compare two software versions.
-# Currently we only assume the format A.B.C.D....
-# When we suceed converting A to a number, then we
-# compare by integer, otherwise by text.
-def try_int(x):
-    try:
-        return int(x)
-    except:
-        return x
-
-def cmp_version(a, b):
-    if a == None or b == None:
-        return cmp(a, b)
-    aa = map(try_int, a.split("."))
-    bb = map(try_int, b.split("."))
-    return cmp(aa, bb)
-
-
-
 inv_filter_info = {
     "bytes"         : { "unit" : _("MB"),    "scale" : 1024*1024 },
     "bytes_rounded" : { "unit" : _("MB"),    "scale" : 1024*1024 },
@@ -700,7 +681,7 @@ def declare_swpacs_columns(name, title, sortfunc):
         "cmp"      : lambda a, b: sortfunc(a.get(column), b.get(column))
     }
 
-    if sortfunc == cmp_version:
+    if sortfunc == visuals.cmp_version:
         visuals.declare_filter(801, visuals.FilterSWPacsVersion(name, _("Software Package") + ": " + title))
     else:
         visuals.declare_filter(800, visuals.FilterSWPacsText(name, _("Software Package") + ": " + title))
@@ -711,8 +692,8 @@ for name, title, sortfunc in [
     ( "summary",         _("Summary"),          cmp ),
     ( "arch",            _("CPU Architecture"), cmp ),
     ( "package_type",    _("Type"),             cmp ),
-    ( "package_version", _("Package Version"),  cmp_version ),
-    ( "version",         _("Version"),          cmp_version ),
+    ( "package_version", _("Package Version"),  visuals.cmp_version ),
+    ( "version",         _("Version"),          visuals.cmp_version ),
     ( "install_date",    _("Install Date"),     cmp ),
     ]:
     declare_swpacs_columns(name, title, sortfunc)

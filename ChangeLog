@@ -150,6 +150,7 @@
     * 1872 FIX: View editor hides filter selection for object types which have no filter to choose...
     * 1876 FIX: User sorting of views can now be disabled again
     * 1884 FIX: Fixed exception in virtual host tree snapin
+    * 1885 FIX: Fixed filtering by software versions in software package search
 
     WATO:
     * 1760 Added search form to manual checks page

@@ -5,7 +5,11 @@ Date: 2015-01-30 09:10:34
 Targetversion: 1.2.5i1
 Class: bug
 
-When selecting a different datasource for a host, the service discovery check
-for the host complains about a missing snmp_info service, even thought the host
-is not configured to use snmp (but check_mk_agent with a different datasource).
-Version is 1.2.6b7. Doing a service discovery doesnt help.
+When selecting a different datasource for a host (a shell script), the
+service discovery check for the host complains about a missing snmp_info
+and snmp_uptime service, even thought the host is not configured to use snmp
+(but check_mk_agent with a different datasource).  Version is 1.2.6b7.
+
+In the cache directory of the host, there are two files <hostname>.snmp_info
+and <hostname>.snmp_uptime, They contain empty lists. Doing a tabula rasa
+service discovery gives us the two additional services with empty check output.

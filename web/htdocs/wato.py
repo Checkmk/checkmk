@@ -14440,6 +14440,8 @@ def rule_button(action, help=None, folder=None, rulenr=0):
             vars.append(("rule_folder", html.var("rule_folder")))
         if html.var("host"):
             vars.append(("host", html.var("host")))
+        if html.var("item"):
+            vars.append(("item", html.var("item")))
         url = make_action_link(vars)
         html.icon_button(url, help, action)
 

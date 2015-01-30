@@ -518,9 +518,9 @@ register_rule(group + '/' + subgroup_inventory,
                  Dictionary(
                      title = _("Default parameters for detected services"),
                      help = _("Here you can select default parameters that are being set "
-                              "few detected services. Note: the preferred way is to use "
+                              "for detected services. Note: the preferred way for setting parameters is to use "
                               "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
-                              "State and Count of Processes</a> instead for setting parameters. "
+                              "State and Count of Processes</a> instead. "
                               "A change there will immediately be active, while a change in this rule "
                               "requires a re-discovery of the services."),
                     elements = process_level_elements,
@@ -3450,9 +3450,9 @@ register_check_parameters(
     "oracle_dataguard_stats",
     _("Oracle Data-Guard Stats"),
     Dictionary(
-        help = _("The Data-Guard are availible in Oracle Enterprise Edition with enabled Data-Guard. "
-                 "The init.ora Parameter dg_broker_start must be TRUE for this check. The apply and "
-                 "transport lag could be configured with this rule."),
+        help = _("The Data-Guard statistics are available in Oracle Enterprise Edition with enabled Data-Guard. "
+                 "The <tt>init.ora</tt> parameter <tt>dg_broker_start</tt> must be <tt>TRUE</tt> for this check. "
+                 "The apply and transport lag can be configured with this rule."),
         elements = [
             ( "apply_lag",
               Tuple(
@@ -4560,7 +4560,7 @@ register_rule(group + '/' + subgroup_inventory,
                             ),
                             Integer(
                                 title = _("Offset"),
-                                help  = _("The Offset of the information relative to counter base"),
+                                help  = _("The offset of the information relative to counter base"),
                                 allow_empty = False,
                             ),
                         ]),

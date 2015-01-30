@@ -8,6 +8,9 @@
     * 1929 netapp_api_if: improved inventory and check output of virtual interfaces...
     * 1881 FIX: omd_status: Check works now event when a site is reported as not OK...
 
+    Multisite:
+    * 1884 FIX: Fixed exception in virtual host tree snapin
+
     WATO:
     * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
     * 1883 FIX: Fixed lossing service context when cloning a rule

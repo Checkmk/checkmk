@@ -1,0 +1,9 @@
+Title: Fixed exception in virtual host tree snapin
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422611436
+Class: fix
+
+

@@ -1497,7 +1497,7 @@ def render_tag_tree():
         tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
 
 
-    choices = enumerate([v[0] for v in config.virtual_host_trees])
+    choices = [ (str(i), v[0]) for i, v in enumerate(config.virtual_host_trees)]
     html.begin_form("vtree")
 
     # Give chance to change one level up, if we are in a subtree
@@ -1506,7 +1506,7 @@ def render_tag_tree():
         upurl = "javascript:virtual_host_tree_enter(%r)" % "|".join(cwd[:-1])
         html.icon_button(upurl, _("Go up one tree level"), "back")
 
-    html.select("vtree", choices, tree_conf["tree"], onchange = 'virtual_host_tree_changed(this)')
+    html.select("vtree", choices, str(tree_conf["tree"]), onchange = 'virtual_host_tree_changed(this)')
     html.write("<br>")
     html.end_form()
     html.final_javascript(virtual_host_tree_js)

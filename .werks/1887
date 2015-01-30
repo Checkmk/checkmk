@@ -1,0 +1,9 @@
+Title: Logwatch event console forwarding: Better dealing with logwatch states
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422622576
+Class: fix
+
+

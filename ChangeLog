@@ -9,6 +9,7 @@
     * 1881 FIX: omd_status: Check works now event when a site is reported as not OK...
     * 1923 FIX: cisco_qos: Fixed exception in discovery that might lead to missing services
     * 1924 FIX: cisco_power: Fixed missing power supplies in case where name is not unique
+    * 1926 FIX: ps: reenable compatiblity with existing configurations...
 
     Multisite:
     * 1884 FIX: Fixed exception in virtual host tree snapin

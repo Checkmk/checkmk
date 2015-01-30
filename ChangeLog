@@ -166,6 +166,7 @@
     * 1212 FIX: Fixed default value in wato parameter page for timeperiods...
     * 1816 FIX: Fixed garbled output on "rename host" result page
     * 1879 FIX: Not showing "only show permitted hosts/services" option for users not having "see all" permissions...
+    * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

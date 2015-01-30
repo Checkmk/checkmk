@@ -2991,13 +2991,19 @@ register_check_parameters(
     subgroup_printing,
     "windows_printer_queues",
     _("Number of open jobs of a printer on windows" ),
-    Tuple(
-          help = _("This rule is applied to the number of print jobs "
-                   "currently waiting in windows printer queue."),
-          elements = [
-              Integer(title = _("Warning if above"), unit = _("jobs"), default_value = 40),
-              Integer(title = _("Critical if above"), unit = _("jobs"), default_value = 60),
-          ]
+    Transform(
+        Optional(
+            Tuple(
+                help = _("This rule is applied to the number of print jobs "
+                         "currently waiting in windows printer queue."),
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("jobs"), default_value = 40),
+                    Integer(title = _("Critical at"), unit = _("jobs"), default_value = 60),
+                ]
+            ),
+            label=_('Enable thresholds on the number of jobs'),
+        ),
+        forth = lambda old: old != (None, None) and old or None,
     ),
     TextAscii(
         title = _("Printer Name"),

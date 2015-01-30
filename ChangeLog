@@ -12,6 +12,7 @@
     * 1886 FIX: win_printers: Fixed exception in WATO when displaying default parameters
     * 1887 FIX: Logwatch event console forwarding: Better dealing with logwatch states
     * 1969 FIX: apc_symmetra: Fix wrong critical state "0 batteries need replacement"
+    * 1926 FIX: ps: reenable compatiblity with existing configurations...
     * 1970 FIX: lparstat_aix: Made the check compatible to different kind of lparstat output...
     * 1971 FIX: printer_input/printer_output: Discovery is using name field when available no...
             NOTE: Please refer to the migration notes!
@@ -24,6 +25,7 @@
     * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
     * 1883 FIX: Fixed lossing service context when cloning a rule
     * 1925 FIX: Fix missing auxilliary tags that have their own topic...
+    * 1927 FIX: Fixed level description in WATO rules, change from if above into at
 
 
 1.2.6b7:

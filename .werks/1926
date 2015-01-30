@@ -1,0 +1,20 @@
+Title: ps: reenable compatiblity with existing configurations
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422625157
+Class: fix
+
+In werk #1563 we moved all parameters for the process check to
+a check parameter rule set in normal Check_MK style. Previously
+these parameters (like process count, CPU levels, etc.) had been
+set only during discovery. But that way existing configuration
+with rules for process inventory would not work anymore.
+
+This werk fixes this. All old inventory rule (now called
+discovery) work again. Also they are ediable via WATO. You can
+set the process parameters now in two places: during discovery
+and in the parameter rule. The preferred way is the new way:
+to set these in the parameter rule. That way changes will immediately
+get active without a need for a new discovery.

@@ -38,7 +38,7 @@ def inventory_akcp_daisy_smoke(info):
         yield line[0], None
 
 
-def check_akcp_daisy_smoke(item, _no_param, info):
+def check_akcp_daisy_smoke(item, _no_params, info):
     # States as they are defined in corresponding MIB: SPAGENT-MIB
     states = {
         '1' : (3, 'no status'     ),

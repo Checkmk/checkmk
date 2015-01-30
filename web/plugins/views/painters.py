@@ -1652,7 +1652,7 @@ multisite_painters["downtime_comment"] = {
 
 multisite_painters["downtime_fixed"] = {
     "title"   : _("Downtime start mode"),
-    "short"   : _("Start"),
+    "short"   : _("Mode"),
     "columns" : ["downtime_fixed"],
     "paint"   : lambda row: (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed")),
 }

@@ -126,6 +126,7 @@
     * 1923 FIX: cisco_qos: Fixed exception in discovery that might lead to missing services
     * 1924 FIX: cisco_power: Fixed missing power supplies in case where name is not unique
     * 1886 FIX: win_printers: Fixed exception in WATO when displaying default parameters
+    * 1887 FIX: Logwatch event console forwarding: Better dealing with logwatch states
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

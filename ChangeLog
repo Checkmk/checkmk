@@ -10,6 +10,7 @@
     * 1869 FIX: Deleting outdated persisted agent sections now
     * 1919 FIX: cmk --snmpwalk: continue if one of the OIDs to walk fails
     * 1880 FIX: inventory_processes rules can now be configured without setting levels...
+    * 1882 FIX: Fixed exception "filesystem_levels" not defined when compiling config for nagios
 
     Checks & Agents:
     * 1665 agent_netapp: New special agent for NetApp monitoring via Web-API...

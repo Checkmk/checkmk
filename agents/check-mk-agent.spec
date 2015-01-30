@@ -23,13 +23,13 @@
 # Boston, MA 02110-1301 USA.
 
 Summary:   Check_MK Agent for Linux
-Name:      check_mk_agent
+Name:      check-mk-agent
 Version:   (automatically inserted)
 Release:   1
 License:   GPL
 Group:     System/Monitoring
 URL:       http://mathias-kettner.de/check_mk.html
-Source:    check_mk_agent-%{_version}.tar.gz
+Source:    check-mk-agent-%{_version}.tar.gz
 BuildRoot: %{_topdir}/buildroot
 AutoReq:   off
 AutoProv:  off
@@ -40,7 +40,7 @@ The Check_MK Agent uses xinetd to provide information about the system
 on TCP port 6556. This can be used to monitor the host via Check_MK.
 
 %prep
-%setup -n check_mk_agent-%{_version}
+%setup -n check-mk-agent-%{_version}
 
 %install
 

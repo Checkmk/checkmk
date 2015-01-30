@@ -112,13 +112,13 @@ def check_etherbox_humidity(item, params, info):
         crit_low, warn_low, warn_high, crit_high = params
         levels_info = " (low levels at %.1f/%.1f %%RH / high levels at %.1f/%.1f %%RH )" %\
                         (crit_low, warn_low, warn_high, crit_high)
-        if temp < crit_low:
+        if temp <= crit_low:
             state = 2
-        elif temp < warn_low:
+        elif temp >= crit_high:
+            state = 2
+        elif temp <= warn_low:
             state = 1
-        elif temp > crit_high:
-            state = 2
-        elif temp > warn_high:
+        elif temp >= warn_high:
             state = 1
     else:
         crit_low, warn_low, warn_high, crit_high = None, None, None, None

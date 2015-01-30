@@ -108,8 +108,7 @@ def do_discovery_for(hostname, check_types, only_new, use_caches):
     for check_type, item, paramstring in new_items:
         if (check_type, item) not in result:
             result[(check_type, item)] = paramstring
-            stats.setdefault(check_type, 0)
-            stats[check_type] += 1
+            stats.setdefault(check_type, []).append((item, paramstring))
 
     final_items = []
     for (check_type, item), paramstring in result.items():
@@ -121,7 +120,11 @@ def do_discovery_for(hostname, check_types, only_new, use_caches):
     found_check_types.sort()
     if found_check_types:
         for check_type in found_check_types:
-            verbose("  %s%3d%s %s\n" % (tty_green + tty_bold, stats[check_type], tty_normal, check_type))
+            verbose("  %s%3d%s %s\n" % (tty_green + tty_bold, len(stats[check_type]), tty_normal, check_type))
+            if opt_verbose >= 2:
+                for item, paramstring in stats[check_type]:
+                    verbose("      - %s%-30s%s %s%s\n" % (
+                            tty_bold, service_description(check_type, item), tty_blue, paramstring, tty_normal))
     else:
         verbose("  nothing%s\n" % (only_new and " new" or ""))
 

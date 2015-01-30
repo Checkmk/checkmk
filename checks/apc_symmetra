@@ -121,7 +121,7 @@ def check_apc(item, params, info):
         if AdvBatteryNumOfBadBattPacks == 1:
             infotxt = "one battery needs replacement(!)"
             state = 1
-        else:
+        elif AdvBatteryNumOfBadBattPacks > 1:
             infotxt = "%i batteries need replacement(!!)" % AdvBatteryNumOfBadBattPacks
             state = 2
         single_states.append( (state, infotxt, None) )

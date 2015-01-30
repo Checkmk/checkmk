@@ -503,9 +503,10 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
 
 import socket, time
 
-# OK   -> priority 5
-# WARN -> priority 4
-# CRIT -> priority 2
+# OK      -> priority 5 (notice)
+# WARN    -> priority 4 (warning)
+# CRIT    -> priority 2 (crit)
+# context -> priority 6 (info)
 # u = Uknown
 def logwatch_to_prio(level):
     if level == 'W':
@@ -514,7 +515,9 @@ def logwatch_to_prio(level):
         return 2
     elif level == 'O':
         return 5
-    elif level == 'u':
+    elif level == '.':
+        return 6
+    else:
         return 4
 
 def syslog_time():

@@ -1,8 +1,11 @@
 Title: Wato rule editor: loosing context after cloning a rule
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2014-12-09 10:08:45
 Targetversion: 1.2.5i1
-Class: bug
 
 After cloning a rule the  context to the service is missing (if comming from wato service view)
+
+2015-01-30 10:13:01: changed state open -> done
+Fixed

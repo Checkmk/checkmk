@@ -1,11 +1,7 @@
 Title: datasource and service discovery check
 Component: checks
 Class: bug
-<<<<<<< HEAD
 State: closed
-=======
-State: works4me
->>>>>>> 956ea68eae1dc6834d58d730da0a40f3a3eb7197
 Date: 2015-01-30 09:10:34
 Targetversion: 1.2.5i1
 

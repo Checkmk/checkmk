@@ -13297,8 +13297,8 @@ def export_hosttags(hosttags, auxtags):
     hosttags_dict =  {}
     for id, title, choices in hosttags:
         tags = {}
-        for tag_id, tag_title, auxtags in choices:
-            tags[tag_id] = tag_title, auxtags
+        for tag_id, tag_title, tag_auxtags in choices:
+            tags[tag_id] = tag_title, tag_auxtags
         topic, title = parse_hosttag_title(title)
         hosttags_dict[id] = topic, title, tags
     auxtags_dict = dict(auxtags)

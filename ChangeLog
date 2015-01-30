@@ -1,8 +1,15 @@
 1.2.6b8:
+    Core & Setup:
+    * 1882 FIX: Fixed exception "filesystem_levels" not defined when compiling config for nagios
+
     Checks & Agents:
     * 1676 if.include: now able to detect grouped interfaces...
     * 1928 netapp_api_if: Improved handling and check output of virtual interfaces...
     * 1929 netapp_api_if: improved inventory and check output of virtual interfaces...
+    * 1881 FIX: omd_status: Check works now event when a site is reported as not OK...
+
+    WATO:
+    * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
 
 
 1.2.6b7:

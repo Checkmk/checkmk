@@ -10,6 +10,7 @@
     * 1869 FIX: Deleting outdated persisted agent sections now
     * 1919 FIX: cmk --snmpwalk: continue if one of the OIDs to walk fails
     * 1880 FIX: inventory_processes rules can now be configured without setting levels...
+    * 1882 FIX: Fixed exception "filesystem_levels" not defined when compiling config for nagios
 
     Checks & Agents:
     * 1665 agent_netapp: New special agent for NetApp monitoring via Web-API...
@@ -119,6 +120,7 @@
     * 1877 FIX: printer_input/printer_output: Check can now handle non reported capacity unit
     * 1921 FIX: kemp_loadmaster_realserver: reimplementation, now use vendor specific information
     * 1859 FIX: cups_queues: linux agent now runs section cups_queues in cached mode...
+    * 1881 FIX: omd_status: Check works now event when a site is reported as not OK...
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
@@ -165,6 +167,7 @@
     * 1212 FIX: Fixed default value in wato parameter page for timeperiods...
     * 1816 FIX: Fixed garbled output on "rename host" result page
     * 1879 FIX: Not showing "only show permitted hosts/services" option for users not having "see all" permissions...
+    * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

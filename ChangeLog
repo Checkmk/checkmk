@@ -129,6 +129,7 @@
     * 1886 FIX: win_printers: Fixed exception in WATO when displaying default parameters
     * 1887 FIX: Logwatch event console forwarding: Better dealing with logwatch states
     * 1969 FIX: apc_symmetra: Fix wrong critical state "0 batteries need replacement"
+    * 1926 FIX: ps: reenable compatiblity with existing configurations...
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

@@ -6322,6 +6322,81 @@ register_check_parameters(
     "jvm_memory",
     _("JVM memory levels"),
     Dictionary(
+            help = _("This rule allows to set the warn and crit levels of the heap / "
+                     "non-heap and total memory area usage on web application servers. "
+                     "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+            elements = [
+                ( "totalheap",
+                   Alternative(
+                       title = _("Total Memory Levels"),
+                       elements = [
+                           Tuple(
+                               title = _("Percentage levels of used space"),
+                               elements = [
+                                   Percentage(title = _("Warning if above"), label = _("% usage")),
+                                   Percentage(title = _("Critical if above"), label = _("% usage")),
+                               ]
+                           ),
+                           Tuple(
+                               title = _("Absolute free space in MB"),
+                               elements = [
+                                    Integer(title = _("Warning if below"), unit = _("MB")),
+                                    Integer(title = _("Critical if below"), unit = _("MB")),
+                               ]
+                            )
+                       ])),
+                ( "heap",
+                   Alternative(
+                       title = _("Heap Memory Levels"),
+                       elements = [
+                           Tuple(
+                               title = _("Percentage levels of used space"),
+                               elements = [
+                                   Percentage(title = _("Warning if above"), label = _("% usage")),
+                                   Percentage(title = _("Critical if above"), label = _("% usage")),
+                               ]
+                           ),
+                           Tuple(
+                               title = _("Absolute free space in MB"),
+                               elements = [
+                                    Integer(title = _("Warning if below"), unit = _("MB")),
+                                    Integer(title = _("Critical if below"), unit = _("MB")),
+                               ]
+                            )
+                       ])),
+                ( "nonheap",
+                   Alternative(
+                       title = _("Nonheap Memory Levels"),
+                       elements = [
+                           Tuple(
+                               title = _("Percentage levels of used space"),
+                               elements = [
+                                   Percentage(title = _("Warning if above"), label = _("% usage")),
+                                   Percentage(title = _("Critical if above"), label = _("% usage")),
+                               ]
+                           ),
+                           Tuple(
+                               title = _("Absolute free space in MB"),
+                               elements = [
+                                    Integer(title = _("Warning if below"), unit = _("MB")),
+                                    Integer(title = _("Critical if below"), unit = _("MB")),
+                               ]
+                            )
+                       ])),
+            ]),
+        TextAscii(
+            title = _("Name of the virtual machine"),
+            help = _("The name of the application server"),
+            allow_empty = False,
+        ),
+        "dict"
+   )
+
+register_check_parameters(
+    subgroup_applications,
+    "sym_brightmail_queues",
+    "Symantec Brightmail Queues",
+    Dictionary( 
         help = _("This check is used to monitor successful email delivery through "
                  "Symantec Brightmail Scanner appliances."),
         elements = [

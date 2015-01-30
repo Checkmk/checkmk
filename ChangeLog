@@ -174,6 +174,7 @@
     * 1879 FIX: Not showing "only show permitted hosts/services" option for users not having "see all" permissions...
     * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
     * 1883 FIX: Fixed lossing service context when cloning a rule
+    * 1925 FIX: Fix missing auxilliary tags that have their own topic...
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

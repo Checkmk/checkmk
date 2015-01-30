@@ -14993,7 +14993,7 @@ def mode_edit_rule(phase, new = False):
             html.write('<img class=ruleyesno align=top src="images/rule_%s.png"> ' % img)
             html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
 
-    # Addiitonal rule options
+    # Additonal rule options
     vs_rule_options.render_input("options", rule_options)
 
     forms.end()
@@ -15054,36 +15054,45 @@ def render_condition_editor(tag_specs, varprefix=""):
             varprefix, id, not div_is_open and "display: none;" or ""))
 
 
-    auxtags = dict(group_hosttags_by_topic(config.wato_aux_tags))
+    auxtags = group_hosttags_by_topic(config.wato_aux_tags)
     hosttags = group_hosttags_by_topic(config.wato_host_tags)
-    make_foldable = len(hosttags) > 1
-    for topic, grouped_tags in hosttags:
+    all_topics = set([])
+    for topic, taggroups in auxtags + hosttags:
+        all_topics.add(topic)
+    all_topics = list(all_topics)
+    all_topics.sort()
+    make_foldable = len(all_topics) > 1
+    for topic in all_topics:
         if make_foldable:
             html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (_u(topic)))
         html.write("<table class=\"hosttags\">")
 
         # Show main tags
-        for entry in grouped_tags:
-            id, title, choices = entry[:3]
-            html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
-            default_tag, deflt = current_tag_setting(choices)
-            tag_condition_dropdown("tag", deflt, id)
-            if len(choices) == 1:
-                html.write(" " + _("set"))
-            else:
-                html.select(varprefix + "tagvalue_" + id,
-                    [(t[0], _u(t[1])) for t in choices if t[0] != None], deflt=default_tag)
-            html.write("</div>")
-            html.write("</td></tr>")
+        for t, grouped_tags in hosttags:
+            if t == topic:
+                for entry in grouped_tags:
+                    id, title, choices = entry[:3]
+                    html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
+                    default_tag, deflt = current_tag_setting(choices)
+                    tag_condition_dropdown("tag", deflt, id)
+                    if len(choices) == 1:
+                        html.write(" " + _("set"))
+                    else:
+                        html.select(varprefix + "tagvalue_" + id,
+                            [(t[0], _u(t[1])) for t in choices if t[0] != None], deflt=default_tag)
+                    html.write("</div>")
+                    html.write("</td></tr>")
 
         # And auxiliary tags
-        for id, title in sorted(auxtags.get(topic, []), key = lambda x: x[0]):
-            html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
-            default_tag, deflt = current_tag_setting([(id, _u(title))])
-            tag_condition_dropdown("auxtag", deflt, id)
-            html.write(" " + _("set"))
-            html.write("</div>")
-            html.write("</td></tr>")
+        for t, grouped_tags in auxtags:
+            if t == topic:
+                for id, title in grouped_tags:
+                    html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
+                    default_tag, deflt = current_tag_setting([(id, _u(title))])
+                    tag_condition_dropdown("auxtag", deflt, id)
+                    html.write(" " + _("set"))
+                    html.write("</div>")
+                    html.write("</td></tr>")
 
         html.write("</table>")
         if make_foldable:

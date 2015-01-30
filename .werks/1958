@@ -1,0 +1,10 @@
+Title: akcp_daisy_smoke: added new check for smoke sensors on expansion boards which are daisy chained to an AKCP securityProbe 5E
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422610163
+Class: feature
+
+This check is used to monitor the sensor state of smoke sensors which are plugged into an expansion board that is part of a daisy chain connected to an AKCP sensorProbe 5E.
+

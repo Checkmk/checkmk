@@ -10,6 +10,7 @@
 
     Multisite:
     * 1884 FIX: Fixed exception in virtual host tree snapin
+    * 1885 FIX: Fixed filtering by software versions in software package search
 
     WATO:
     * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag

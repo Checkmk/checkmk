@@ -1,0 +1,10 @@
+Title: Fixed exception "filesystem_levels" not defined when compiling config for nagios
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1422607495
+
+

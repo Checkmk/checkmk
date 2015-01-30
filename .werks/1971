@@ -1,0 +1,15 @@
+Title: printer_input/printer_output: Discovery is using name field when available no
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.2.7i1
+Date: 1422630051
+
+The service discovery of the printer_input/printer_output checks were always using
+the index of the unit instead of the name. We have fixed this now.
+
+You don't have to take an immediate action, because already discovered checks will
+continue working. But your "Check_MK Discovery" service will report new services
+and when you do a re-discovery, the new services will be found.

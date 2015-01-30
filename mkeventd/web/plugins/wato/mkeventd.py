@@ -122,7 +122,7 @@ vs_mkeventd_actions = \
               (   "disabled",
                   Checkbox(
                       title = _("Disable"),
-                      label = _("Current disable execution of this action"),
+                      label = _("Currently disable execution of this action"),
                   )
               ),
               (   "hidden",

@@ -37,7 +37,7 @@ def check_synology_update(_no_item, params, info):
     states = {
        1 : "Available",
        2 : "Unavailable",
-       3 : "Connection", 
+       3 : "Connection",
        4 : "Disconnected",
        5 : "Others",
     }

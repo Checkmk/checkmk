@@ -29,11 +29,10 @@
 # check is SNMP-Based, then remove this section
 
 def inventory_win_printers(info):
-    return [ (" ".join(x[:-3]), (None, None)) for x in info ]
+    return [ (" ".join(x[:-3]), None) for x in info ]
 
 def check_win_printers(item, params, info):
     status_map = {
-
         1 : "Other",
         2 : "Unkown",
         3 : "Idle",
@@ -41,7 +40,6 @@ def check_win_printers(item, params, info):
         5 : "Warming Up",
         6 : "Stopped Printing",
         7 : "Offline",
-
     }
     error_map = {
         0 : "Unkown",
@@ -57,7 +55,12 @@ def check_win_printers(item, params, info):
         10 : "Service Requested",
         11 : "Output Bin Full"
     }
-    warn, crit = params
+
+    if params == None:
+        warn, crit = None, None
+    else:
+        warn, crit = params
+
     for line in info:
         name = " ".join(line[:-3])
         if name == item:
@@ -73,10 +76,10 @@ def check_win_printers(item, params, info):
                 error_text = "Error State: %s(!)" % error_map[error]
 
             queue_label = ""
-            if crit and current_jobs >= crit:
+            if crit != None and current_jobs >= crit:
                 state = 2
                 queue_label = "(!!)"
-            elif warn and current_jobs >= warn:
+            elif warn != None and current_jobs >= warn:
                 state = max(1, state)
                 queue_label = "(!)"
 

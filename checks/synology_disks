@@ -43,7 +43,7 @@ def check_synology_disks(item, _no_params, info):
             temp = int(temperature)
             message = "Status: %s, Temperature: %d °C, Model: %s" % \
               ( states[state][0], temp, model )
-            return states[state][1], message, [("temp", temp )] 
+            return states[state][1], message, [("temp", temp )]
 
 check_info["synology_disks"] = {
     "check_function"        : check_synology_disks,

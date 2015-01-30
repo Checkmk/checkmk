@@ -29,11 +29,11 @@ def inventory_synology_update(info):
 
 def check_synology_update(_no_item, _no_params, info):
     states = {
-       1 : ("Available", 2),
-       2 : ("Unavailable", 0),
-       3 : ("Connecting", 0),
-       4 : ("Disconnected", 2),
-       5 : ("Others", 3),
+       1: ("Available",    2),
+       2: ("Unavailable",  0),
+       3: ("Connecting",   0),
+       4: ("Disconnected", 2),
+       5: ("Other",        3),
     }
     version, state = info[0]
     state = int(state)

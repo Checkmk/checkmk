@@ -326,7 +326,6 @@ def perfometer_ipmi_sensors(row, check_command, perf_data):
 perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
 
 def perfometer_temperature(row, check_command, perf_data):
-    state = row["service_state"]
     color = "#39f"
     value = float(perf_data[0][1])
     return u"%d °C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)

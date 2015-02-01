@@ -26,6 +26,7 @@
 
 # Painters for Perf-O-Meter
 import math
+import metrics
 
 perfometers = {}
 
@@ -186,11 +187,6 @@ def paint_perfometer(row):
     # Strip away arguments like in "check_http!-H mathias-kettner.de"
     check_command = check_command.split("!")[0]
 
-    # Find matching perf-o-meter function
-    perf_painter = perfometers.get(check_command)
-    if not perf_painter:
-        return "", ""
-
     # Python's isdigit() works only on str. We deal with unicode since
     # we deal with data coming from Livestatus
     def isdigit(x):
@@ -221,24 +217,78 @@ def paint_perfometer(row):
         stale_css = " stale"
     else:
         stale_css = ""
+
     try:
-        title, h = perf_painter(row, check_command, perf_data)
-        content =  '<div class=content>%s</div>' % h
-        content += '<div class=title>%s</div>' % title
-        content += '<img class=glass src="images/perfometer-bg.png">'
+        # Try new metrics module
+        translated = metrics.translate_metrics(check_command, perf_data)
+        if translated: # definition for this check type exists
+            perfometer_definitions = list(metrics.get_perfometers(translated))
+            if perfometer_definitions:
+                title, h = render_metrics_perfometer(perfometer_definitions[0], translated)
+            else:
+                return "", ""
 
-        # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
-        if 'X' in html.display_options and \
-           row["service_pnpgraph_present"] != 0:
-            return "perfometer" + stale_css, ('<a href="%s">%s</a>' % (pnp_url(row, "service"), content))
+        # Find matching Perf-O-Meter function
         else:
-            return "perfometer" + stale_css, content
+            perf_painter = perfometers.get(check_command)
+            if not perf_painter:
+                return "", ""
 
+            title, h = perf_painter(row, check_command, perf_data)
 
     except Exception, e:
         if config.debug:
             raise
         return "perfometer", ("invalid data: %s" % e)
+
+    content =  '<div class=content>%s</div>' % h
+    content += '<div class=title>%s</div>' % title
+    content += '<img class=glass src="images/perfometer-bg.png">'
+
+    # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
+    if 'X' in html.display_options and \
+       row["service_pnpgraph_present"] != 0:
+        return "perfometer" + stale_css, ('<a href="%s">%s</a>' % (pnp_url(row, "service"), content))
+    else:
+        return "perfometer" + stale_css, content
+
+
+# New Perf-O-Meter implementation based on new metrics module.
+# This function gets a Perf-O-Meter-Definition, translated
+# matrics and outputs a Text and HTML code for the Perf-O-Meter.
+# translated is a dict from metric-name to ...
+def render_metrics_perfometer(perfometer, translated):
+    perfometer_type, definition = perfometer
+    if perfometer_type == "single_logarithmic":
+        metrics_name, median, exponent = definition
+        metric = translated[metrics_name]
+        text = metrics.metric_to_text(metric)
+        return text, perfometer_logarithmic(metric["value"], median, exponent, metric["color"])
+
+    elif perfometer_type == "stacked":
+        h = '<table><tr>'
+        metrics_names, total = definition
+        summed = 0.0
+        for mn in metrics_names:
+            metric = translated[mn]
+            value = metric["value"]
+            summed += value
+        for mn in metrics_names:
+            metric = translated[mn]
+            value = metric["value"]
+            h += perfometer_td(100.0 * value / total, metric["color"])
+        h += perfometer_td(100.0 * (total - summed) / total, "white")
+        h += "</tr></table>"
+        # Use unit of first metrics for output of sum. We assume that all
+        # stackes metrics have the same unit anyway
+        text = metrics.metric_to_text(translated[metrics_names[0]], summed)
+        return text, h
+
+    else:
+        raise MKInternalError(_("Unsupported Perf-O-Meter type '%s'") % perfometer_type)
+
+
+
 
 multisite_painters["perfometer"] = {
     "title" : _("Service Perf-O-Meter"),

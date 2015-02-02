@@ -1,0 +1,9 @@
+Title: agent_vsphere: no longer crashes when host has no license information
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422889303
+Class: fix
+
+

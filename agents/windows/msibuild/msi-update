@@ -72,7 +72,7 @@ try:
     # our path
 
     # Export required idt files into work dir
-    for entry in [ "File", "Upgrade", "Property" ]:
+    for entry in [ "File", "Property", "Component" ]:
         verbose("Export table %s from file %s" % (entry, msi_file))
         os.system((path_prefix + "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % \
                  { "work_dir" : work_dir, "msi_file": msi_file, "property": entry })
@@ -85,6 +85,7 @@ try:
 
     # HACK: the 64 bit agent is msi internally handled as check_mk_agent64.exe
     os.rename(source_dir + "/check_mk_agent-64.exe", source_dir + "/check_mk_agent64.exe")
+
 
     lines_file_idt = file(work_dir + "/File.idt").readlines()
     file_idt_new   = file(work_dir + "/File.idt.new", "w")
@@ -107,24 +108,31 @@ try:
 
 
     # ==============================================
-    # Modify Upgrade.idt
-    lines_upgrade_idt = file(work_dir + "/Upgrade.idt").readlines()
-    upgrade_idt_new   = file(work_dir + "/Upgrade.idt.new", "w")
-    upgrade_idt_new.write("".join(lines_upgrade_idt[:3]))
+    # Modify Component.idt
+    lines_component_idt = file(work_dir + "/Component.idt").readlines()
+    component_idt_new   = file(work_dir + "/Component.idt.new", "w")
+    component_idt_new.write("".join(lines_component_idt[:3]))
 
-    for idx, token_offset in [ (3, 1), (4, 2) ]:
-        new_line = lines_upgrade_idt[idx]
-        tokens = new_line.split("\t")
-        tokens[token_offset] = ".".join(new_version_build.split(".")[:3])
-        upgrade_idt_new.write("\t".join(tokens))
-    upgrade_idt_new.close()
+    plugins_cap_code  = ("{%s}" % uuid.uuid1()).upper()
+    check_mk_ini_code = ("{%s}" % uuid.uuid1()).upper()
+
+    for line in lines_component_idt[3:]:
+        tokens = line.split("\t")
+        if tokens[0] == "plugins.cap":
+            tokens[1] = plugins_cap_code
+        elif tokens[0] == "check_mk.ini":
+            tokens[1] = check_mk_ini_code
+        elif tokens[0] == "agent32":
+            tokens[1] = ("{%s}" % uuid.uuid1()).upper()
+        component_idt_new.write("\t".join(tokens))
+
+    component_idt_new.close()
+
     # ==============================================
-
 
     # ==============================================
     # Modify Property.idt
     product_code = ("{%s}\r\n" % uuid.uuid1()).upper()
-    upgrade_code = ("{%s}\r\n" % uuid.uuid1()).upper()
     lines_property_idt = file(work_dir + "/Property.idt").readlines()
     property_idt_new   = file(work_dir + "/Property.idt.new", "w")
     property_idt_new.write("".join(lines_property_idt[:3]))
@@ -145,17 +153,16 @@ try:
     # ==============================================
 
 
-
     verbose("Creating copy of original file %s -> %s" % (msi_file, new_msi_file))
 
     # Make a copy
     os.system("cp %(msi_file)s %(new_msi_file)s" % { "msi_file": msi_file, "new_msi_file": new_msi_file})
 
     # Rename modified tables
-    for entry in [ "Property", "File", "Upgrade" ]:
+    for entry in [ "Property", "File", "Component" ]:
         os.rename(work_dir + "/%s.idt.new" % entry , work_dir + "/%s.idt" % entry)
 
-    for entry in [ "Property", "File", "Upgrade" ]:
+    for entry in [ "Property", "File", "Component" ]:
         os.system((path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
              { "work_dir" : work_dir, "new_msi_file": new_msi_file, "file": entry })
 

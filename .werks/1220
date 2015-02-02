@@ -1,0 +1,10 @@
+Title: if,if64: Discovery can now be based on port description
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422880649
+Class: feature
+
+Like in Werk #1509 for ifAlias, interface checks can now also filter by ifDesc without the need to use the ifdescription as part of the service description
+

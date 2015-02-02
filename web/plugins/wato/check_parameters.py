@@ -252,7 +252,16 @@ register_rule(group + '/' + subgroup_inventory,
               orientation = "horizontal",
               valuespec = RegExp(size = 32),
         )),
-
+        ( "match_desc",
+          ListOfStrings(
+              title = _("Match interface description (regex)"),
+              help = _("Only discover interfaces whose the description matches one of the configured "
+                       "regular expressions. The match is done on the beginning of the description. "
+                       "This allows you to select interfaces based on the description without having "
+                       "the alias be part of the service description."),
+              orientation = "horizontal",
+              valuespec = RegExp(size = 32),
+        )),
         ( "portstates",
           ListChoice(title = _("Network interface port states to discover"),
               help = _("When doing discovery on switches or other devices with network interfaces "

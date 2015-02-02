@@ -450,17 +450,21 @@ def number_human_readable(n, precision=1, unit="B"):
 def age_human_readable(secs, min_only=False):
     if min_only:
         mins = secs / 60.0
-        return "%.1f min" % mins
-    if secs < 240:
-        return "%d sec" % secs
+        return "%.1f %s" % (mins, _("min"))
+    if secs < 10:
+        return "%.2f %s" % (secs, _("sec"))
+    if secs < 60:
+        return "%.1f %s" % (secs, _("sec"))
+    elif secs < 240:
+        return "%d %s" % (secs, _("sec"))
     mins = secs / 60
-    if mins < 240:
-        return "%d min" % mins
+    if mins < 360:
+        return "%d %s" % (mins, _("min"))
     hours = mins / 60
     if hours < 48:
-        return "%d hours" % hours
+        return "%d %s" % (hours, _("hours"))
     days = hours / 24
-    return "%d days" % days
+    return "%d %s" % (days, _("days"))
 
 def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
     base = float(base)

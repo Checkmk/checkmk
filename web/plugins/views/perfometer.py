@@ -177,13 +177,14 @@ def paint_perfometer(row):
             else:
                 return "", ""
 
-        # Find matching Perf-O-Meter function
+        # Legacy Perf-O-Meters: find matching Perf-O-Meter function
         else:
             perf_painter = perfometers.get(check_command)
             if not perf_painter:
                 return "", ""
 
             title, h = perf_painter(row, check_command, perf_data)
+            title = '{ ' + title + ' }' # TODO: Remove this
 
     except Exception, e:
         if config.debug:
@@ -208,7 +209,7 @@ def paint_perfometer(row):
 # translated is a dict from metric-name to ...
 def render_metrics_perfometer(perfometer, translated):
     perfometer_type, definition = perfometer
-    if perfometer_type == "single_logarithmic":
+    if perfometer_type == "logarithmic":
         metrics_name, median, exponent = definition
         metric = translated[metrics_name]
         text = metrics.metric_to_text(metric)

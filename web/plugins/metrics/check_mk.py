@@ -43,12 +43,20 @@ PB = 1024 * 1024 * 1024 * 1024 * 1024
 #   |  Definition of units of measurement.                                 |
 #   '----------------------------------------------------------------------'
 
+unit_info[None] = {
+    "render" : lambda v: "%.1f" % v,
+}
+
 unit_info["count"] = {
-    "render" : drop_dotzero,
+    "render" : lambda v: "%d" % v,
 }
 
 unit_info["%"] = {
     "render" : lambda v: "%s%%" % drop_dotzero(v),
+}
+
+unit_info["s"] = {
+    "render" : age_human_readable,
 }
 
 unit_info["/s"] = {
@@ -80,6 +88,18 @@ unit_info["c"] = {
 #   |  Definitions of metrics                                              |
 #   '----------------------------------------------------------------------'
 
+metric_info["execution_time"] = {
+    "title" : _("Execution time"),
+    "unit" : "s",
+    "color" : "#22dd33",
+}
+
+metric_info["load1"] = {
+    "title" : _("CPU load average of last minute"),
+    "unit"  : None,
+    "color" : "#6688ff",
+}
+
 metric_info["fs_used"] = {
     "title" : _("Used filesystem space"),
     "unit"  : "bytes",
@@ -105,9 +125,15 @@ metric_info["pgmajfault"] = {
 }
 
 metric_info["proc_creat"] = {
-    "title" : _("Process Creations"),
+    "title" : _("Process creations"),
     "unit"  : "/s",
     "color" : "#ddaa99",
+}
+
+metric_info["threads"] = {
+    "title" : _("Number of threads"),
+    "unit"  : "count",
+    "color" : "#aa44ff",
 }
 
 metric_info["user"] = {
@@ -144,6 +170,16 @@ metric_info["io_wait"] = {
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
 
+check_metrics["check-mk"]                                       = {}
+
+check_metrics["check_mk-cpu.loads"]                             = {}
+check_metrics["check_mk-ucd_cpu_load"]                          = {}
+check_metrics["check_mk-statgrab_load"]                         = {}
+check_metrics["check_mk-hpux_cpu"]                              = {}
+check_metrics["check_mk-blade_bx_load"]                         = {}
+
+check_metrics["check_mk-cpu.threads"]                           = {}
+
 check_metrics["check_mk-df"]                                    = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-vms_df"]                                = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-vms_diskstat.df"]                       = { 0: { "name": "fs_used", "scale" : MB } }
@@ -163,6 +199,7 @@ check_metrics["check_mk-ibm_svc_mdiskgrp"]                      = { 0: { "name":
 check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-fast_lta_volumes"]                      = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = { 0: { "name": "fs_used", "scale" : MB } }
+
 check_metrics["check_mk-nvidia.temp"]                           = {}
 check_metrics["check_mk-cisco_temp_sensor"]                     = {}
 check_metrics["check_mk-cisco_temp_perf"]                       = {}
@@ -202,7 +239,9 @@ check_metrics["check_mk-climaveneta_temp"]                      = {}
 check_metrics["check_mk-carel_sensors"]                         = {}
 check_metrics["check_mk-netscaler_health.temp"]                 = {}
 check_metrics["check_mk-kentix_temp"]                           = {}
+
 check_metrics["check_mk-kernel"]                                = { "processes" : { "name" : "proc_creat", } }
+
 check_metrics["check_mk-kernel.util"]                           = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-vms_sys.util"]                          = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "name" : "io_wait" } }
@@ -221,9 +260,12 @@ check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "
 #   |  Definition of Perf-O-Meters                                         |
 #   '----------------------------------------------------------------------'
 
-perfometer_info.append(("single_logarithmic", ( "temp",         40.0, 1.2)))
-perfometer_info.append(("single_logarithmic", ( "ctxt",       1000.0, 2.0)))
-perfometer_info.append(("single_logarithmic", ( "pgmajfault", 1000.0, 2.0)))
-perfometer_info.append(("single_logarithmic", ( "proc_creat", 1000.0, 2.0)))
+perfometer_info.append(("stacked",            ( ["execution_time"], 90.0)))
+perfometer_info.append(("logarithmic",        ( "load1",         4.0, 2.0)))
+perfometer_info.append(("logarithmic",        ( "temp",         40.0, 1.2)))
+perfometer_info.append(("logarithmic",        ( "ctxt",       1000.0, 2.0)))
+perfometer_info.append(("logarithmic",        ( "pgmajfault", 1000.0, 2.0)))
+perfometer_info.append(("logarithmic",        ( "proc_creat", 1000.0, 2.0)))
+perfometer_info.append(("logarithmic",        ( "threads",     400.0, 2.0)))
 perfometer_info.append(("stacked",            ( [ "user", "system", "io_wait" ], 100.0)))
 perfometer_info.append(("stacked",            ( [ "fs_used(%)" ], 100.0 ))),

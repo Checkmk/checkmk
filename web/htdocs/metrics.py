@@ -155,10 +155,12 @@ def get_perfometers(metrics):
 # have more and more Perf-O-Meter definitions.
 def perfometer_possible(perfometer, translated):
     perf_type, perf_args = perfometer
-    if perf_type == "single_logarithmic":
+    if perf_type == "logarithmic":
         required = [ perf_args[0] ]
     elif perf_type == "stacked":
         required = perf_args[0]
+    else:
+        raise MKInternalError(_("Undefined Perf-O-Meter type '%s'") % perf_type)
 
     for req in required:
         try:

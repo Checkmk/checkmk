@@ -45,5 +45,5 @@ def check_datacore_poolstatus(item, _no_params, info):
 check_info['datacore_poolstatus'] = {
     "check_function"          : check_datacore_poolstatus,
     "inventory_function"      : inventory_datacore_poolstatus,
-    "service_description"     : "DataCore Diskpool %s",
+    "service_description"     : "DataCore Disk Pool %s",
 }

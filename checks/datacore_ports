@@ -24,13 +24,13 @@
 # to the free software foundation, inc., 51 franklin st,  fifth floor,
 # boston, ma 02110-1301 usa.
 
-#<<<datacore_ports>>>
-#shdesolssy01_FE1 FibreChannel True
-#Server_FC_Port_2 FibreChannel True
-#Server_FC_Port_3 FibreChannel False
-#Server_FC_Port_4 FibreChannel True
-#Server_iSCSI_Port_1 iSCSI True
-#Microsoft_iSCSI-Initiator iSCSI True
+# <<<datacore_ports>>>
+# shdesolssy01_FE1 FibreChannel True
+# Server_FC_Port_2 FibreChannel True
+# Server_FC_Port_3 FibreChannel False
+# Server_FC_Port_4 FibreChannel True
+# Server_iSCSI_Port_1 iSCSI True
+# Microsoft_iSCSI-Initiator iSCSI True
 
 def inventory_datacore_ports(info):
     for portname, porttype, portstatus in info:

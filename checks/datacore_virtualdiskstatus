@@ -24,9 +24,9 @@
 # to the free software foundation, inc., 51 franklin st,  fifth floor,
 # boston, ma 02110-1301 usa.
 
-#<<<datacore_virtualdiskstatus>>>
-#testvmfs01 Online
-#vmfs10 Online
+# <<<datacore_virtualdiskstatus>>>
+# testvmfs01 Online
+# vmfs10 Online
 
 def inventory_datacore_virtualdiskstatus(info):
    for line in info:
@@ -43,5 +43,5 @@ def check_datacore_virtualdiskstatus(item, _no_params, info):
 check_info['datacore_virtualdiskstatus'] = {
     "check_function"          : check_datacore_virtualdiskstatus,
     "inventory_function"      : inventory_datacore_virtualdiskstatus,
-    "service_description"     : "DataCore VirtualDisk %s",
+    "service_description"     : "DataCore Virtual Disk %s",
 }

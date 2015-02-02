@@ -24,7 +24,7 @@
 # to the free software foundation, inc., 51 franklin st,  fifth floor,
 # boston, ma 02110-1301 usa.
 
-datacore_alerts_default_values = (1,2)
+datacore_alerts_default_values = (1, 2)
 
 def inventory_datacore_alerts(info):
     return [ (None, "datacore_alerts_default_values") ]
@@ -34,7 +34,7 @@ def check_datacore_alerts(_no_item, params, info):
     warn, crit = params
     nr_of_alerts = int(info[0][0])
     perfdata = [ ( "alerts", nr_of_alerts, warn, crit ) ]
-    infotxt = "There are %d unacknowlegded alerts" % nr_of_alerts
+    infotxt = "Unacknowlegded alerts: %d" % nr_of_alerts
     levels = " (levels at %d/%d)" % (warn, crit)
 
     state = 0
@@ -45,6 +45,7 @@ def check_datacore_alerts(_no_item, params, info):
         state = 1
         infotxt += levels
     return state, infotxt, perfdata
+
 
 check_info["datacore_alerts"] = {
     "check_function"        : check_datacore_alerts,

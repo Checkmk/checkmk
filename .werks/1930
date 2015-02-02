@@ -1,0 +1,13 @@
+Title: Windows agent: now able to unpack plugins.cap file (created by Check_MK agent bakery)
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1422885763
+
+The windows agent is now able to unpack the plugins.cap file upon install.
+This file may contain host specific check_mk.ini parameters, as well as
+local and plugins scripts.
+

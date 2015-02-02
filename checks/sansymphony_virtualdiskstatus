@@ -24,15 +24,15 @@
 # to the free software foundation, inc., 51 franklin st,  fifth floor,
 # boston, ma 02110-1301 usa.
 
-# <<<datacore_virtualdiskstatus>>>
+# <<<sansymphony_virtualdiskstatus>>>
 # testvmfs01 Online
 # vmfs10 Online
 
-def inventory_datacore_virtualdiskstatus(info):
+def inventory_sansymphony_virtualdiskstatus(info):
    for line in info:
        yield line[0], None
 
-def check_datacore_virtualdiskstatus(item, _no_params, info):
+def check_sansymphony_virtualdiskstatus(item, _no_params, info):
     for volname, vol_state in info:
 	if volname == item:
             state = 2
@@ -40,8 +40,8 @@ def check_datacore_virtualdiskstatus(item, _no_params, info):
                 state = 0
             return state, "Volume state is: " + vol_state
 
-check_info['datacore_virtualdiskstatus'] = {
-    "check_function"          : check_datacore_virtualdiskstatus,
-    "inventory_function"      : inventory_datacore_virtualdiskstatus,
-    "service_description"     : "DataCore Virtual Disk %s",
+check_info['sansymphony_virtualdiskstatus'] = {
+    "check_function"          : check_sansymphony_virtualdiskstatus,
+    "inventory_function"      : inventory_sansymphony_virtualdiskstatus,
+    "service_description"     : "sansymphony Virtual Disk %s",
 }

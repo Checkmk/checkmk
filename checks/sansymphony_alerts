@@ -24,13 +24,13 @@
 # to the free software foundation, inc., 51 franklin st,  fifth floor,
 # boston, ma 02110-1301 usa.
 
-datacore_alerts_default_values = (1, 2)
+sansymphony_alerts_default_values = (1, 2)
 
-def inventory_datacore_alerts(info):
-    return [ (None, "datacore_alerts_default_values") ]
+def inventory_sansymphony_alerts(info):
+    return [ (None, "sansymphony_alerts_default_values") ]
 
 
-def check_datacore_alerts(_no_item, params, info):
+def check_sansymphony_alerts(_no_item, params, info):
     warn, crit = params
     nr_of_alerts = int(info[0][0])
     perfdata = [ ( "alerts", nr_of_alerts, warn, crit ) ]
@@ -47,10 +47,10 @@ def check_datacore_alerts(_no_item, params, info):
     return state, infotxt, perfdata
 
 
-check_info["datacore_alerts"] = {
-    "check_function"        : check_datacore_alerts,
-    "inventory_function"    : inventory_datacore_alerts,
-    "service_description"   : "DataCore Alerts",
+check_info["sansymphony_alerts"] = {
+    "check_function"        : check_sansymphony_alerts,
+    "inventory_function"    : inventory_sansymphony_alerts,
+    "service_description"   : "sansymphony Alerts",
     "has_perfdata"          : True,
-    "group"                 : "datacore_alerts",
+    "group"                 : "sansymphony_alerts",
 }

@@ -24,7 +24,7 @@
 # to the free software foundation, inc., 51 franklin st,  fifth floor,
 # boston, ma 02110-1301 usa.
 
-# <<<datacore_ports>>>
+# <<<sansymphony_ports>>>
 # shdesolssy01_FE1 FibreChannel True
 # Server_FC_Port_2 FibreChannel True
 # Server_FC_Port_3 FibreChannel False
@@ -32,12 +32,12 @@
 # Server_iSCSI_Port_1 iSCSI True
 # Microsoft_iSCSI-Initiator iSCSI True
 
-def inventory_datacore_ports(info):
+def inventory_sansymphony_ports(info):
     for portname, porttype, portstatus in info:
         if portstatus == "True":
             yield portname, None
 
-def check_datacore_ports(item, _no_params, info):
+def check_sansymphony_ports(item, _no_params, info):
     for portname, porttype, portstatus in info:
         if portname == item:
             if portstatus == "True":
@@ -45,8 +45,8 @@ def check_datacore_ports(item, _no_params, info):
             else:
                 return 2, "%s Port %s is down" % (porttype, portname)
 
-check_info['datacore_ports'] = {
-    "check_function"          : check_datacore_ports,
-    "inventory_function"      : inventory_datacore_ports,
-    "service_description"     : "DataCore Port %s",
+check_info['sansymphony_ports'] = {
+    "check_function"          : check_sansymphony_ports,
+    "inventory_function"      : inventory_sansymphony_ports,
+    "service_description"     : "sansymphony Port %s",
 }

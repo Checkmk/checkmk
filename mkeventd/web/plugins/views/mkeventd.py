@@ -42,7 +42,7 @@ except:
 #   '----------------------------------------------------------------------'
 
 def table_events(what, columns, add_headers, only_sites, limit, filters):
-    # First we wetch the list of all events from mkeventd - either current
+    # First we fetch the list of all events from mkeventd - either current
     # or historic ones. We ignore any filters for host_ here. Note:
     # event_host and host_name needn't be compatible. They might differ
     # in case. Also in the events table instead of the host name there
@@ -139,7 +139,7 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
             filter_code = filt.filter('event')
             if filter_code:
                 have_host_filter = True
-            break
+                break
 
     if not have_host_filter:
         # Create empty host for outer join on host table
@@ -147,7 +147,6 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
         empty_host["site"] = ''
         empty_host["host_state"] = 0
         empty_host["host_has_been_checked"] = 0
-
 
     # We're ready to join the host-data with the event data now. The question
     # is what to do with events that cannot be mapped to a host...

@@ -663,8 +663,16 @@ def paint_basic_service_types(what, row, tags, custom_vars):
             return 'disk_io'
         elif svc_desc.startswith('Uptime'):
             return 'uptime'
+        elif svc_desc.startswith('Kernel'):
+            return 'kernel'
+        elif svc_desc.startswith('Events'):
+            return 'events'
+        elif svc_desc.startswith('TCP Connections'):
+            return 'connections'
         elif svc_desc.startswith('Postfix'):
             return 'mail_queue'
+        elif svc_desc.startswith('Job'):
+            return 'job'
         elif svc_desc.startswith('NTP') or svc_desc == 'System Time':
             return 'time'
 

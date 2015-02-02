@@ -1,9 +1,9 @@
 Title: Reloading sidebar after config change erases Quicksearch
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2013-10-15 01:34:28
 Targetversion: 1.2.3i3
-Class: nastiness
 
 If you active changes via WATO then the sidebar reloads.
 That way Quicksearch is emptied. This is nasty.
@@ -15,3 +15,6 @@ That way Quicksearch is emptied. This is nasty.
 
 Does the Quicksearch need to be reloaded at the first place?
 It's now AJAX-enabled, isn't it?
+
+2015-02-02 11:42:44: changed state open -> done
+Fixed.

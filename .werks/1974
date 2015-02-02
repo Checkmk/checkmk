@@ -1,0 +1,12 @@
+Title: Event console views were randomly ignoring host filters
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422880977
+Class: fix
+
+Some times the event console views were accessed with a host filter,
+for example using the name of a host, the view was showing events
+which did not belong to this host. After reloading the page, the
+view was showing a correctly filtered list again some times.

@@ -31,6 +31,9 @@
     Notifications:
     * 1988 FIX: Gracefully handline invalid empty bulk notification files from previous buggy versions
 
+    Event Console:
+    * 1974 FIX: Event console views were randomly ignoring host filters...
+
 
 1.2.6b7:
     Core & Setup:

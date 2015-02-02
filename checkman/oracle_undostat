@@ -41,6 +41,11 @@ perfdata:
  This is the value for the levels parameter. Fourth the maximum time
  for a running query. Last the non space error count.
 
+examples:
+ checkgroup_parameters['oracle_undostat'] = [
+   ( {'nospaceerrcnt_state': 1}, [], ALL_HOSTS, ALL_SERVICES ),
+ ]
+
 
 [parameters]
 parameters (dict):
@@ -54,9 +59,5 @@ parameters (dict):
 inventory:
  One separate check for each database found running will
  be created.
-
-checkgroup_parameters['oracle_undostat'] = [
-  ( {'nospaceerrcnt_state': 1}, [], ALL_HOSTS, ALL_SERVICES ),
-]
 
 

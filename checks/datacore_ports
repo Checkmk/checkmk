@@ -1,0 +1,52 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | copyright mathias kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# this file is part of check_mk.
+# the official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  gnu general public license  as published by
+# the free software foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but without any warranty;  with-
+# out even the implied warranty of  merchantability  or  fitness for a
+# particular purpose. see the  gnu general public license for more de-
+# ails.  you should have  received  a copy of the  gnu  general public
+# license along with gnu make; see the file  copying.  if  not,  write
+# to the free software foundation, inc., 51 franklin st,  fifth floor,
+# boston, ma 02110-1301 usa.
+
+#<<<datacore_ports>>>
+#shdesolssy01_FE1 FibreChannel True
+#Server_FC_Port_2 FibreChannel True
+#Server_FC_Port_3 FibreChannel False
+#Server_FC_Port_4 FibreChannel True
+#Server_iSCSI_Port_1 iSCSI True
+#Microsoft_iSCSI-Initiator iSCSI True
+
+def inventory_datacore_ports(info):
+    for portname, porttype, portstatus in info:
+        if portstatus == "True":
+            yield portname, None
+
+def check_datacore_ports(item, _no_params, info):
+    for portname, porttype, portstatus in info:
+        if portname == item:
+            if portstatus == "True":
+                return 0, "%s Port %s is up" % (porttype, portname)
+            else:
+                return 2, "%s Port %s is down" % (porttype, portname)
+
+check_info['datacore_ports'] = {
+    "check_function"          : check_datacore_ports,
+    "inventory_function"      : inventory_datacore_ports,
+    "service_description"     : "DataCore Port %s",
+}

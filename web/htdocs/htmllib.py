@@ -1123,7 +1123,7 @@ class html:
 
     def reload_sidebar(self):
         if not self.has_var("_ajaxid"):
-            self.javascript("if(parent && parent.frames[0]) parent.frames[0].location.reload();");
+            self.javascript("reload_sidebar()")
 
     def set_ignore_transids(self):
         self.ignore_transids = True

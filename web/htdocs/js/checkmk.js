@@ -2347,3 +2347,49 @@ function add_to_visual(visual_type, visual_name)
     if (response)
         window.location.href = response;
 }
+
+var g_sidebar_reload_timer = null;
+
+function reload_sidebar()
+{
+    if (parent && parent.frames[0]) {
+        // reload sidebar, but preserve eventual quicksearch field value and focus
+        var val = '';
+        var focused = false;
+        var field = parent.frames[0].document.getElementById('mk_side_search_field');
+        if (field) {
+            val = field.value;
+            focused = parent.frames[0].document.activeElement == field;
+        }
+
+        parent.frames[0].document.reloading = 1;
+        parent.frames[0].document.location.reload();
+
+        if (field) {
+            g_sidebar_reload_timer = setInterval(function (value, has_focus) {
+                return function() {
+                    if (!parent.frames[0].document.reloading
+                        && parent.frames[0].document.readyState === 'complete') {
+                        var field = parent.frames[0].document.getElementById('mk_side_search_field');
+                        if (field) {
+                            field.value = value;
+                            if (has_focus) {
+                                field.focus();
+
+                                // Move caret to end
+                                if (field.setSelectionRange !== undefined)
+                                    field.setSelectionRange(value.length, value.length);
+                            }
+                            field = null;
+                        }
+
+                        clearInterval(g_sidebar_reload_timer);
+                        g_sidebar_reload_timer = null;
+                    }
+                };
+            }(val, focused), 50);
+
+            field = null;
+        }
+    }
+}

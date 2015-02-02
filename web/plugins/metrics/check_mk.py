@@ -90,7 +90,7 @@ unit_info["c"] = {
 
 metric_info["execution_time"] = {
     "title" : _("Execution time"),
-    "unit" : "s",
+    "unit"  : "s",
     "color" : "#22dd33",
 }
 
@@ -268,4 +268,4 @@ perfometer_info.append(("logarithmic",        ( "pgmajfault", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",        ( "proc_creat", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",        ( "threads",     400.0, 2.0)))
 perfometer_info.append(("stacked",            ( [ "user", "system", "io_wait" ], 100.0)))
-perfometer_info.append(("stacked",            ( [ "fs_used(%)" ], 100.0 ))),
+perfometer_info.append(("stacked",            ( [ "fs_used(%)" ], 100.0 )))

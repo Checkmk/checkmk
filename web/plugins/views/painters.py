@@ -227,7 +227,9 @@ def paint_type_icon(what, row):
         if icon.get('type', 'icon') == 'type_icon':
             try:
                 result = icon['paint'](what, row, tags, custom_vars)
-                if result is not None:
+                if result == "":
+                    break # Explicitly disabled. Don't show an icon
+                elif result is not None:
                     if type(result) in [str,unicode]:
                         result = result, what == 'service' and row['service_description'] or row['host_name']
 

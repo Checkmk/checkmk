@@ -431,6 +431,60 @@ def num_split(s):
         first_word = regex("[0-9]").split(s)[0]
         return ( first_word.lower(), ) + num_split(s[len(first_word):])
 
+def number_human_readable(n, precision=1, unit="B"):
+    base = 1024.0
+    if unit == "Bit":
+        base = 1000.0
+
+    n = float(n)
+    f = "%." + str(precision) + "f"
+    if abs(n) > base * base * base:
+        return (f + "G%s") % (n / (base * base * base), unit)
+    elif abs(n) > base * base:
+        return (f + "M%s") % (n / (base * base), unit)
+    elif abs(n) > base:
+        return (f + "k%s") % (n / base, unit)
+    else:
+        return (f + "%s") % (n, unit)
+
+def age_human_readable(secs, min_only=False):
+    if min_only:
+        mins = secs / 60.0
+        return "%.1f min" % mins
+    if secs < 240:
+        return "%d sec" % secs
+    mins = secs / 60
+    if mins < 240:
+        return "%d min" % mins
+    hours = mins / 60
+    if hours < 48:
+        return "%d hours" % hours
+    days = hours / 24
+    return "%d days" % days
+
+def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
+    base = float(base)
+    # Handle negative bytes correctly
+    prefix = ''
+    if b < 0:
+        prefix = '-'
+        b *= -1
+
+    if b >= base * base * base * base:
+        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
+    elif b >= base * base * base:
+        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
+    elif b >= base * base:
+        return '%s%.2f M%s' % (prefix, b / base / base, unit)
+    elif b >= base:
+        return '%s%.2f k%s' % (prefix, b / base, unit)
+    elif bytefrac:
+        return '%s%.2f %s' % (prefix, b, unit)
+    else: # Omit byte fractions
+        return '%s%.0f %s' % (prefix, b, unit)
+
+
+
 
 __builtin__.default_user_localizations = {
      u'Agent type':                          { "de": u"Art des Agenten", },

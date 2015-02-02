@@ -117,59 +117,6 @@ def perfometer_logarithmic_dual_independent\
 
     return result + '</tr></table>'
 
-def number_human_readable(n, precision=1, unit="B"):
-    base = 1024.0
-    if unit == "Bit":
-        base = 1000.0
-
-    n = float(n)
-    f = "%." + str(precision) + "f"
-    if abs(n) > base * base * base:
-        return (f + "G%s") % (n / (base * base * base), unit)
-    elif abs(n) > base * base:
-        return (f + "M%s") % (n / (base * base), unit)
-    elif abs(n) > base:
-        return (f + "k%s") % (n / base, unit)
-    else:
-        return (f + "%s") % (n, unit)
-
-def age_human_readable(secs, min_only=False):
-    if min_only:
-        mins = secs / 60.0
-        return "%.1f min" % mins
-    if secs < 240:
-        return "%d sec" % secs
-    mins = secs / 60
-    if mins < 240:
-        return "%d min" % mins
-    hours = mins / 60
-    if hours < 48:
-        return "%d hours" % hours
-    days = hours / 24
-    return "%d days" % days
-
-def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
-    base = float(base)
-    # Handle negative bytes correctly
-    prefix = ''
-    if b < 0:
-        prefix = '-'
-        b *= -1
-
-    if b >= base * base * base * base:
-        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
-    elif b >= base * base * base:
-        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
-    elif b >= base * base:
-        return '%s%.2f M%s' % (prefix, b / base / base, unit)
-    elif b >= base:
-        return '%s%.2f k%s' % (prefix, b / base, unit)
-    elif bytefrac:
-        return '%s%.2f %s' % (prefix, b, unit)
-    else: # Omit byte fractions
-        return '%s%.0f %s' % (prefix, b, unit)
-
-
 def paint_perfometer(row):
     perfstring = unicode(row["service_perf_data"].strip())
     if not perfstring:
@@ -209,6 +156,8 @@ def paint_perfometer(row):
             value = value[:i]
             perf_data.append((varname, value, unit, warn, crit, min, max))
     except:
+        if config.debug:
+            raise
         perf_data = None
     if not perf_data:
         return "", ""
@@ -267,21 +216,23 @@ def render_metrics_perfometer(perfometer, translated):
 
     elif perfometer_type == "stacked":
         h = '<table><tr>'
-        metrics_names, total = definition
+        metrics_expressions, total_spec = definition
+        total = metrics.evaluate(total_spec, translated)
         summed = 0.0
-        for mn in metrics_names:
-            metric = translated[mn]
-            value = metric["value"]
+        for ex in metrics_expressions:
+            value = metrics.evaluate(ex, translated)
             summed += value
-        for mn in metrics_names:
-            metric = translated[mn]
-            value = metric["value"]
-            h += perfometer_td(100.0 * value / total, metric["color"])
+        for ex in metrics_expressions:
+            name = ex.split(":")[0]
+            value = metrics.evaluate(ex, translated)
+            color = metrics.get_color(ex)
+            h += perfometer_td(100.0 * value / total, color)
         h += perfometer_td(100.0 * (total - summed) / total, "white")
         h += "</tr></table>"
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
-        text = metrics.metric_to_text(translated[metrics_names[0]], summed)
+        unit = metrics.get_unit(metrics_expressions[0])
+        text = unit["render"](summed)
         return text, h
 
     else:

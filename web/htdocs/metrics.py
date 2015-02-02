@@ -56,22 +56,93 @@ def translate_metrics(check_command, perf_data):
     cm = check_metrics[check_command]
 
     translated = {}
-    for entry in perf_data:
+    for nr, entry in enumerate(perf_data):
         varname = entry[0]
-        translation_entry = cm.get(varname, {})
-        metrics_name = translation_entry.get("name", varname)
-        # TODO: scaling
+        if nr in cm:
+            translation_entry = cm[nr]  # access by index of perfdata (e.g. in filesystem)
+        else:
+            translation_entry = cm.get(varname, {})
+
+        # Translate name
+        metric_name = translation_entry.get("name", varname)
+
+        if metric_name not in metric_info:
+            mi = { "title" : metric_name, "unit" : "count", "color" : "#888888" }
+        else:
+            mi = metric_info[metric_name]
+
+        # Optional scaling
+        scale = translation_entry.get("scale", 1.0)
+
         new_entry = {
-            "value" : float(entry[1]),
+            "value"  : float(entry[1]) * scale,
+            "scalar" : {},
         }
-        new_entry.update(metric_info[metrics_name])
+
+        # Add warn, crit, min, max
+        for index, key in [ (3, "warn"), (4, "crit"), (5, "min"), (6, "max") ]:
+            if len(entry) < index + 1:
+                break
+            elif entry[index]:
+                try:
+                    value = float(entry[index])
+                    new_entry["scalar"][key] = value * scale
+                except:
+                    if config.debug:
+                        raise
+                    pass # empty of invalid number
+
+
+        new_entry.update(mi)
         new_entry["unit"] = unit_info[new_entry["unit"]]
-        translated[metrics_name] = new_entry
+        translated[metric_name] = new_entry
         # TODO: warn, crit, min, max
         # if entry[2]:
         #     # TODO: lower and upper levels
-        #     translate_metrics[metrics_name]["warn"] = float(entry[2])
+        #     translate_metrics[metric_name]["warn"] = float(entry[2])
     return translated
+
+
+# e.g. "fs_used:max"    -> 12.455
+# e.g. "fs_used(%)"     -> 17.5
+# e.g. "fs_used:max(%)" -> 100.0
+def evaluate(expression, translated):
+    if type(expression) in (int, float):
+        return expression
+
+    # TODO: Error handling with useful exceptions
+    if expression.endswith("(%)"):
+        percent = True
+        expression = expression[:-3]
+    else:
+        percent = False
+
+    if ":" in expression:
+        varname, scalarname = expression.split(":")
+        value = translated[varname]["scalar"].get(scalarname)
+    else:
+        varname = expression
+        value = translated[varname]["value"]
+
+    if percent:
+        value = value / translated[varname]["scalar"]["max"] * 100.0
+
+    return value
+
+# e.g. "fs_used:max(%)" -> "fs_used"
+def get_name(expression):
+    if expression.endswith("(%)"):
+        expression = expression[:-3]
+    return expression.split(":")[0]
+
+def get_color(expression):
+    return metric_info[get_name(expression)]["color"]
+
+def get_unit(expression):
+    if expression.endswith("(%)"):
+        return unit_info["%"]
+    else:
+        return unit_info[metric_info[get_name(expression)]["unit"]]
 
 
 def get_perfometers(metrics):
@@ -80,7 +151,9 @@ def get_perfometers(metrics):
             yield perfometer
 
 
-def perfometer_possible(perfometer, metrics):
+# TODO: We will run into a performance problem here when we
+# have more and more Perf-O-Meter definitions.
+def perfometer_possible(perfometer, translated):
     perf_type, perf_args = perfometer
     if perf_type == "single_logarithmic":
         required = [ perf_args[0] ]
@@ -88,7 +161,9 @@ def perfometer_possible(perfometer, metrics):
         required = perf_args[0]
 
     for req in required:
-        if req not in metrics:
+        try:
+            evaluate(req, translated)
+        except:
             return False
     return True
 

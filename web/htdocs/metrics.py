@@ -48,7 +48,7 @@ def load_plugins():
 # into floating point numbers, do scaling if neccessary.
 # Simple example for perf_data: [(u'temp', u'48', u'', u'70', u'80', u'', u'')]
 # Result for this example:
-# { "temp" : "value" : 48.0, "warn" : 70.0, "crit" : 80.0 }
+# { "temp" : "value" : 48.0, "warn" : 70.0, "crit" : 80.0, "unit" : { ... } }
 def translate_metrics(check_command, perf_data):
     if check_command not in check_metrics:
         return None

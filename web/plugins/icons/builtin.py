@@ -57,24 +57,6 @@
 #    'paint':           paint_icon_image,
 #})
 
-#   +----------------------------------------------------------------------+
-#   |         ___                  ___                                     |
-#   |        |_ _|___ ___  _ __   |_ _|_ __ ___   __ _  __ _  ___          |
-#   |         | |/ __/ _ \| '_ \   | || '_ ` _ \ / _` |/ _` |/ _ \         |
-#   |         | | (_| (_) | | | |  | || | | | | | (_| | (_| |  __/         |
-#   |        |___\___\___/|_| |_| |___|_| |_| |_|\__,_|\__, |\___|         |
-#   |                                                  |___/               |
-#   +----------------------------------------------------------------------+
-
-def paint_icon_image(what, row, tags, custom_vars):
-    if row[what + '_icon_image']:
-        return html.render_icon("icons/" + row[what + '_icon_image'])
-
-multisite_icons.append({
-    'columns':         [ 'icon_image' ],
-    'paint':           paint_icon_image,
-})
-
 
 #   +----------------------------------------------------------------------+
 #   |          ____                _              _       _                |
@@ -629,4 +611,87 @@ def paint_icon_crashed_check(what, row, tags, custom_vars):
 multisite_icons.append({
     'service_columns' : [ 'plugin_output', 'state', 'host_name' ],
     'paint'   : paint_icon_crashed_check,
+})
+
+#.
+#   .--Type Icons----------------------------------------------------------.
+#   |           _____                   ___                                |
+#   |          |_   _|   _ _ __   ___  |_ _|___ ___  _ __  ___             |
+#   |            | || | | | '_ \ / _ \  | |/ __/ _ \| '_ \/ __|            |
+#   |            | || |_| | |_) |  __/  | | (_| (_) | | | \__ \            |
+#   |            |_| \__, | .__/ \___| |___\___\___/|_| |_|___/            |
+#   |                |___/|_|                                              |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def paint_icon_image(what, row, tags, custom_vars):
+    if row[what + '_icon_image']:
+        return row[what + '_icon_image'][:-4]
+
+# When an icon image is defined for a host/service, this is always used
+# as type image for this object in advanced to the other (auto detected)
+# type icons
+multisite_icons.append({
+    'columns' : [ 'icon_image' ],
+    'paint'   : paint_icon_image,
+    'type'    : 'type_icon',
+})
+
+def paint_basic_service_types(what, row, tags, custom_vars):
+    if what == "service":
+        svc_desc = row["service_description"]
+        if svc_desc.startswith('Check_MK'):
+            return 'checkmk'
+        elif svc_desc.startswith('Memory'):
+            return 'memory'
+        elif svc_desc.startswith('CPU'):
+            return 'cpu'
+        elif svc_desc.startswith('Filesystem'):
+            return 'filesystem'
+        elif svc_desc.startswith('Mount options'):
+            return 'mount'
+        elif svc_desc.startswith('Interface'):
+            return 'interface'
+        elif svc_desc.startswith('Log'):
+            return 'log'
+        elif svc_desc.startswith('Temperature'):
+            return 'temperature'
+        elif svc_desc.startswith('CUPS'):
+            return 'printer'
+        elif svc_desc.startswith('Disk IO'):
+            return 'disk_io'
+        elif svc_desc.startswith('Uptime'):
+            return 'uptime'
+        elif svc_desc.startswith('Postfix'):
+            return 'mail_queue'
+        elif svc_desc.startswith('NTP') or svc_desc == 'System Time':
+            return 'time'
+
+multisite_icons.append({
+    'paint' : paint_basic_service_types,
+    'type'  : 'type_icon',
+})
+
+def paint_basic_host_types(what, row, tags, custom_vars):
+    if what == "host":
+        services = dict([ (s[0], s[1:]) for s in row['host_services_with_info'] ])
+
+        if 'CPU load' in services and 'Kernel Context Switches' in services:
+            return 'linux'
+
+        elif 'Pages' in services and 'SNMP Info' in services:
+            return 'printer'
+
+        elif 'SNMP Info' in services and 'Cisco IOS' in services['SNMP Info'][2]:
+            return 'cisco'
+
+        for service in services.keys():
+            if service.startswith('Filesystem C:'):
+                return 'windows'
+
+multisite_icons.append({
+    'host_columns' : ['services_with_info'],
+    'paint'        : paint_basic_host_types,
+    'type'         : 'type_icon',
 })

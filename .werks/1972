@@ -1,0 +1,11 @@
+Title: Prevent erasing of quicksearch field when sidebar is reloaded (e.g. during activate changes)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422873119
+Class: fix
+
+When performing "activate changes" in WATO, the quicksearch field of the sidebar was cleared
+during this process. This lead to user confusions when typing into the quicksearch field
+while the activate changes process was completing.

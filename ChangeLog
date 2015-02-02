@@ -28,6 +28,9 @@
     * 1925 FIX: Fix missing auxilliary tags that have their own topic...
     * 1927 FIX: Fixed level description in WATO rules, change from if above into at
 
+    Notifications:
+    * 1988 FIX: Gracefully handline invalid empty bulk notification files from previous buggy versions
+
 
 1.2.6b7:
     Core & Setup:

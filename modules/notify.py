@@ -1601,13 +1601,21 @@ def notify_bulk(dirname, uuids):
     old_params = None
     unhandled_uuids = []
     for mtime, uuid in uuids:
-        params, context = eval(file(dirname + "/" + uuid).read())
+        try:
+            params, context = eval(file(dirname + "/" + uuid).read())
+        except Exception, e:
+            if opt_debug:
+                raise
+            notify_log("    Deleting corrupted or empty bulk file %s/%s: %s" % (dirname, uuid, e))
+            continue
+
         if old_params == None:
             old_params = params
         elif params != old_params:
             notify_log("     Parameters are different from previous, postponing into separate bulk")
             unhandled_uuids.append((mtime, uuid))
             continue
+
         bulk_context.append("\n")
         for varname, value in context.items():
             bulk_context.append("%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1")))
@@ -1618,9 +1626,12 @@ def notify_bulk(dirname, uuids):
         plugin_name = "bulk " + (plugin or "plain email")
         core_notification_log(plugin_name, context)
 
-    parameter_context = create_bulk_parameter_context(old_params)
-    context_text = "".join(parameter_context + bulk_context)
-    call_bulk_notification_script(plugin, context_text)
+    if bulk_context: # otherwise: only corrupted files
+        parameter_context = create_bulk_parameter_context(old_params)
+        context_text = "".join(parameter_context + bulk_context)
+        call_bulk_notification_script(plugin, context_text)
+    else:
+        notify_log("No valid notification file left. Skipping this bulk.")
 
     # Remove sent notifications
     for mtime, uuid in uuids:

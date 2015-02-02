@@ -1380,7 +1380,7 @@ register_rule(group,
         elements = [
             TextAscii(
                 title = _("Base URL (OMD Site)"),
-                help = _("The base URL to the monitoring instance. For example <tt>http://<hostname>/<siteid></tt>. You can use "
+                help = _("The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. You can use "
                          "macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to make them be replaced by "
                          "the hosts values."),
                 size = 60,

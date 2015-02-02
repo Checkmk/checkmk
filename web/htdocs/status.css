@@ -352,6 +352,10 @@ td.icons img {
     margin-right: 3px;
 }
 
+td.icon {
+    width: 20px;
+}
+
 img.tabicon {
     width: 16px;
     height: 16px;

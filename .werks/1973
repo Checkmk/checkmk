@@ -1,0 +1,28 @@
+Title: Added intelligent host and service type icons to default views
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422875482
+Class: feature
+
+The default list views of hosts and services show a new column, the
+type icon, by default now.
+
+The rendered icon is some kind of intelligent icon. It tries to detect
+which icon has to be shown for each host or service. This is done
+automatically based on the available information, for example which
+services are configured for a host or what is the name of a service.
+
+The currently implemented auto detection is far from being complete.
+It only contains some examples to show the new possibilites. This can
+be extended using icon plugins. For details take a look at the default
+<tt>plugins/icons/builtin.py</tt> code.
+
+If you like to change / override the icon by hand, you can configure the
+already existing rulesets "Icon image for hosts in status GUI" and
+"Icon image for services in status GUI".
+
+You can choose from the PNG icons available in <tt>htdocs/images/icons</tt>.
+If you use OMD, the default files are located in <tt>share/check_mk/web/htdocs/images/icons</tt>.
+You can place your own files in <tt>local/share/check_mk/web/htdocs/images/icons</tt>.

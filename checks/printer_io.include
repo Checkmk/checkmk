@@ -83,10 +83,8 @@ def inventory_printer_io(info):
         # When no name is set
         # a) try to use the description
         # b) try to use the type otherwise use the index
-        if not name and descr:
-            name = descr
-        else:
-            name = index.split('.')[-1]
+        if not name:
+            name = descr and descr or index.split('.')[-1]
 
         yield (name, {})
 

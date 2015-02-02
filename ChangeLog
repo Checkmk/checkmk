@@ -67,6 +67,7 @@
     * 1948 Livedump: Host names can now be prefixed with an individual string...
     * 1958 akcp_daisy_smoke: added new check for smoke sensors on expansion boards which are daisy chained to an AKCP securityProbe 5E...
     * 1219 synology_disks, synology_fans, synology_info, synology_raid, synology_status, synology_update: Multiple Synology NAS Checks
+    * 1968 qlogic_fcport, qlogic_sanbox, qlogic_sanbox_fabric_element: Supporting SAN Switch Module for IBM BladeCenter(R) now
     * 1457 FIX: logins: new check renamed from "users" check...
             NOTE: Please refer to the migration notes!
     * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...
@@ -126,6 +127,12 @@
     * 1923 FIX: cisco_qos: Fixed exception in discovery that might lead to missing services
     * 1924 FIX: cisco_power: Fixed missing power supplies in case where name is not unique
     * 1886 FIX: win_printers: Fixed exception in WATO when displaying default parameters
+    * 1887 FIX: Logwatch event console forwarding: Better dealing with logwatch states
+    * 1969 FIX: apc_symmetra: Fix wrong critical state "0 batteries need replacement"
+    * 1926 FIX: ps: reenable compatiblity with existing configurations...
+    * 1970 FIX: lparstat_aix: Made the check compatible to different kind of lparstat output...
+    * 1971 FIX: printer_input/printer_output: Discovery is using name field when available no...
+            NOTE: Please refer to the migration notes!
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
@@ -177,6 +184,7 @@
     * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
     * 1883 FIX: Fixed lossing service context when cloning a rule
     * 1925 FIX: Fix missing auxilliary tags that have their own topic...
+    * 1927 FIX: Fixed level description in WATO rules, change from if above into at
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications
@@ -185,6 +193,7 @@
     * 1664 FIX: mknotifyd: further performance improvements for notification forwarding
     * 1205 FIX: RBN: Fixed match contactgroup condition...
     * 1810 FIX: Rule based notifications: Fixed output of non contact mail recipient address in analyze table...
+    * 1988 FIX: Gracefully handline invalid empty bulk notification files from previous buggy versions
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used

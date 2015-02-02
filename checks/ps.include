@@ -34,6 +34,7 @@ def inventory_ps_common(invdata, invrules, info):
     entries = []
 
     # Handle inventory_processes, inventory_processes_perf variables
+    default_levels = None
     for inv_entry in invdata:
         # New in 1.1.7i1: inventory_processes may be prefixed with list of
         # host names or tags + ALL_HOSTS
@@ -43,10 +44,13 @@ def inventory_ps_common(invdata, invrules, info):
             tags = []
             hostlist = inv_entry[0]
             inv_entry = inv_entry[1:]
+            if len(inv_entry) == 8:
+                default_levels = inv_entry[3:7]
         elif len(inv_entry) in (5, 9):
             tags = inv_entry[0]
             hostlist = inv_entry[1]
             inv_entry = inv_entry[2:]
+            default_levels = inv_entry[4:8]
 
         # Filter out entries with do not match our current host
         if tags != None and ( not hosttags_match_taglist(tags_of_host(g_hostname), tags) or
@@ -55,8 +59,9 @@ def inventory_ps_common(invdata, invrules, info):
 
         if len(inv_entry) == 7: # extend old inventory_processes
             inv_entry += ([],)
+            default_levels = inv_entry[3:7]
 
-        entries.append(inv_entry[:3])
+        entries.append(inv_entry[:3] + ({ "levels" : default_levels },))
 
     # Handle new WATO style inventory rules
     for rule in invrules:
@@ -73,9 +78,9 @@ def inventory_ps_common(invdata, invrules, info):
 
         v = rule[0]
 
-        entries.append((v['descr'], v['match'], v.get('user')))
+        entries.append((v['descr'], v['match'], v.get('user'), v.get('default_params', v)))
 
-    for servicedesc, pattern, userspec in entries:
+    for servicedesc, pattern, userspec, default_params in entries:
         num_perc_s = servicedesc.count("%s")
         for line in info:
             # First entry in line is the node name or None for non-clusters
@@ -112,6 +117,12 @@ def inventory_ps_common(invdata, invrules, info):
                     "process" : i_pattern,
                     "user"    : i_userspec,
                 }
+                # default_params is either a clean dict with optional parameters to set as default
+                # or - from version 1.2.4 - the dict from the rule itself. In the later case
+                # we need o remove the keys that do not specify default parameters
+                for key, value in default_params.items():
+                    if key not in ( "descr", "match", "user", "perfdata" ):
+                        inv_keys.setdefault(key, value)
                 inv = ( i_servicedesc, inv_keys )
 
                 if inv not in inventory:

@@ -30,36 +30,55 @@
 # | Joerg Linge 2009 <joerg.linge@pnp4nagios.org>     Copyright 2010 |
 # +------------------------------------------------------------------+
 
-#       %user  %sys  %wait  %idle physc %entc  lbusy   app  vcsw phint
-#       -----  ----  -----  ----- ----- ----- ------   ---  ---- -----
-#         2.5   6.0    0.1   91.5  0.03  11.4    1.8  3.27 1976647217 490545630
+# %user  %sys  %wait  %idle physc %entc  lbusy   app  vcsw phint
+# -----  ----  -----  ----- ----- ----- ------   ---  ---- -----
+#   2.5   6.0    0.1   91.5  0.03  11.4    1.8  3.27 1976647217 490545630
 
+# %user  %sys  %wait  %idle physc %entc  lbusy  vcsw phint  %nsp  %utcyc
+# ----- ----- ------ ------ ----- ----- ------ ----- ----- -----  ------
+#   0.2   0.4    0.0   99.3  0.02   1.7    0.0   215     3   101   0.64
+
+# %user  %sys  %wait  %idle physc %entc  lbusy   app  vcsw phint  %nsp  %utcyc
+# ----- ----- ------ ------ ----- ----- ------   --- ----- ----- -----  ------
+#   0.1   0.4    0.0   99.5  0.02   1.6    0.0  3.97   297     0   101   0.64
+
+# %user  %sys  %wait  %idle physc %entc  lbusy  vcsw phint  %nsp
+# ----- ----- ------ ------ ----- ----- ------ ----- ----- -----
+#   0.1   0.2    0.0   99.6  0.04   1.8    2.3   371     0    58
 
 lparstat_default_levels = (5, 10)
 
 def inventory_lparstat(info):
-    if len(info) == 1 and len(info[0]) >= 5:
+    if len(info) >= 1 and len(info[-1]) >= 5:
         return [(None, "", "lparstat_default_levels")]
 
 def check_lparstat(item, params, info):
-    line = info[0]
-    if len(line) == 10:
-        cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint' ]
-        uom    = [ '',      '%',    '',      '',    '',     '' ]
-        values = line[-6:]
-    elif len(line) == 9:
-        cols   = [ 'physc', 'entc', 'lbusy', 'app' ]
-        uom    = [ '',      '%',    '',      '' ]
-        values = line[-4:]
-    elif len(line) == 6:
-        cols   = [ 'nsp', 'utcyc' ]
-        uom    = [ '%',   '%' ]
-        values = line[-2:]
+    if len(info) == 1:
+        # Old agent provided only the values in a single line
+        line = info[0]
+        if len(line) == 10:
+            cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint' ]
+            uom    = [ '',      '%',    '',      '',    '',     '' ]
+            values = line[-6:]
+        elif len(line) == 9:
+            cols   = [ 'physc', 'entc', 'lbusy', 'app' ]
+            uom    = [ '',      '%',    '',      '' ]
+            values = line[-4:]
+        elif len(line) == 6:
+            cols   = [ 'nsp', 'utcyc' ]
+            uom    = [ '%',   '%' ]
+            values = line[-2:]
+        else:
+            return 3, "Invalid output from agent"
     else:
-        return 3, "Invalid output from agent"
+        # The new agent provides three lines, the title line, spacer line and the values
+        cols   = [ c.replace('%', '') for c in info[-3] ]
+        uom    = [ '%' in c and '%' or '' for c in info[-3] ]
+        values = info[-1]
 
     perfdata = [ (cols[i], val+uom[i]) for i, val in enumerate(values) ]
     output   = ', '.join([ cols[i].title()+': '+val+uom[i] for i, val in enumerate(values) ])
+
     return 0, output, perfdata
 
 check_info["lparstat_aix"] = {
@@ -73,11 +92,15 @@ check_info["lparstat_aix"] = {
 kernel_util_default_levels = None
 
 def inventory_lparstat_aix_cpu(info):
-    if len(info) == 1 and len(info[0]) >= 4:
+    if len(info) >= 1 and len(info[-1]) >= 4:
         return [(None, "kernel_util_default_levels")]
 
 def check_lparstat_aix_cpu(_no_item, params, info):
-    user, system, wait, idle = map(float, info[0][:4])
+    if len(info) == 1:
+        line = info[0] # old (single line) agent output
+    else:
+        line = info[-1]
+    user, system, wait, idle = map(float, line[:4])
     perfdata = [
           ( "user",   "%.3f" % user ),
           ( "system", "%.3f" % system ),

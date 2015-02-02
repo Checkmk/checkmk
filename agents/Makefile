@@ -25,7 +25,7 @@
 SHELL           = /bin/bash
 VERSION         = 1.2.7i1
 RPM_VERSION     = $(subst -,_,$(VERSION))
-NAME            = check_mk_agent
+NAME            = check-mk-agent
 DISTNAME       	= $(NAME)-$(VERSION)
 RPM_TOPDIR     	= $$(pwd)/.rpm.topdir
 RPM_BUILDROOT  	= $$(pwd)/.rpm.buildroot

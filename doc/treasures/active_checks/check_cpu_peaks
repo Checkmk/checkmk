@@ -93,13 +93,25 @@ if not fromtime:
 try:
     datasets  = []
     step_secs = 0
-    for key in ["system", "user", "wait"]:
-        data = get_rrd_data(host, "CPU utilization", key, "AVERAGE", fromtime, untiltime)
+    util_total = []
+    is_windows = True
+    try:
+        data = get_rrd_data(host, "CPU utilization", "util", "AVERAGE", fromtime, untiltime)
         datasets.append(data[1])
-    util_total = map(lambda x: int(sum([y for y in x if y != None])),
-                     zip(datasets[0], datasets[1], datasets[2]))
+        step_secs = data[0]
+        util_total = [ x for x in datasets[0] if x != None ]
+    except Exception, e:
+        # looks like this is not a windows rrd...
+        is_windows = False
+        for key in ["system", "user", "wait"]:
+            data = get_rrd_data(host, "CPU utilization", key, "AVERAGE", fromtime, untiltime)
+            datasets.append(data[1])
+            step_secs = data[0]
+        util_total = map(lambda x: int(sum([y for y in x if y != None])),
+                         zip(datasets[0], datasets[1], datasets[2]))
 
     cpu_peak = max(util_total)
+
     peak_time = time.localtime(fromtime + step_secs * util_total.index(cpu_peak))
 
     if opt_verbose:
@@ -110,7 +122,12 @@ try:
             sys.stdout.write("%s" %   int(datasets[2][idx] or -1))
             print ""
 
-    info = [ "CPU utilization (user, system, wait) from %s until %s" %\
+    if is_windows:
+        info = [ "CPU utilization from %s until %s" %\
+            (time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
+             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
+    else:
+        info = [ "CPU utilization (user, system, wait) from %s until %s" %\
             (time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
              time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
 
@@ -127,6 +144,6 @@ try:
 except Exception, e:
     # TODO: Exception handling could be improved. 
     # Right now no handling of MKGeneralException, etc. is implemented
-    print "Exception while processing data."
+    print "Exception while processing data.", e
     sys.exit(2)
 

@@ -4885,6 +4885,117 @@ int get_perf_counter_id(const char *counter_name)
     return -1;
 }
 
+void do_unpack_plugins(char *plugin_filename) {
+    snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt", g_agent_directory);
+
+    FILE *file = fopen(plugin_filename, "rb");
+    if (!file) {
+        printf("Unable to open Check_MK-Agent package %s\n", plugin_filename);
+        exit(1);
+    }
+
+
+    char uninstall_file_path[512];
+    snprintf(uninstall_file_path, 512, "%s\\uninstall_plugins.bat", g_agent_directory);
+    FILE *uninstall_file = fopen(uninstall_file_path, "w");
+    fprintf(uninstall_file, "REM * If you want to uninstall the plugins which were installed during the\n"
+                            "REM * last 'check_mk_agent.exe unpack' command, just execute this script\n\n");
+
+
+    bool had_error = false;
+    while (true) {
+        int   read_bytes;
+        BYTE  filepath_length;
+        int   content_length;
+        BYTE *filepath;
+        BYTE *content;
+
+        // Read Filename
+        read_bytes = fread(&filepath_length, 1, 1, file);
+        if (read_bytes != 1) {
+            if (feof(file))
+                break;
+            else {
+                had_error = true;
+                break;
+            }
+        }
+        filepath = (BYTE *)malloc(filepath_length + 1);
+        read_bytes = fread(filepath, 1, filepath_length, file);
+        filepath[filepath_length] = 0;
+
+        if (read_bytes != filepath_length) {
+            had_error = true;
+            break;
+        }
+
+        // Read Content
+        read_bytes = fread(&content_length, 1, sizeof(content_length), file);
+        if (read_bytes != sizeof(content_length)) {
+            had_error = true;
+            break;
+        }
+
+        // Maximum plugin size is 20 MB
+        if (content_length > 20 * 1024 * 1024) {
+            had_error = true;
+            break;
+        }
+        content = (BYTE *)malloc(content_length);
+        read_bytes = fread(content, 1, content_length, file);
+        if (read_bytes != content_length) {
+            had_error = true;
+            break;
+        }
+
+        // Extract filename and path to file
+        BYTE *filename = NULL;
+        BYTE *dirname  = NULL;
+        for (int i = filepath_length - 1; i >= 0; i--)
+        {
+            if (filepath[i] == '/') {
+                if (filename == NULL) {
+                    filename = filepath + i + 1;
+                    dirname  = filepath;
+                    filepath[i] = 0;
+                }
+                else {
+                    filepath[i] = '\\';
+                }
+            }
+        }
+
+        if (dirname != NULL) {
+            char new_dir[1024];
+            snprintf(new_dir, sizeof(new_dir), "%s\\%s", g_agent_directory, dirname);
+            CreateDirectory(new_dir, NULL);
+        }
+
+        // Add uninstall information for this plugin
+        fprintf(uninstall_file, "del \"%s\\%s\\%s\"\n", g_agent_directory, dirname, filename);
+
+        // Write plugin
+        char plugin_path[512];
+        snprintf(plugin_path, sizeof(plugin_path), "%s\\%s\\%s", g_agent_directory, dirname, filename);
+        FILE *plugin_file = fopen(plugin_path, "wb");
+        fwrite(content, 1, content_length, plugin_file);
+        fclose(plugin_file);
+
+        free(filepath);
+        free(content);
+    }
+
+    fclose(uninstall_file);
+    fclose(file);
+
+    if (had_error) {
+        printf("There was an error on unpacking the Check_MK-Agent package: File integrety is broken\n."
+               "The file might have been installed partially.");
+        exit(1);
+    }
+
+}
+
 int main(int argc, char **argv)
 {
     wsa_startup();
@@ -4898,7 +5009,7 @@ int main(int argc, char **argv)
 
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);
 
-    if ( ( argc > 2) and  (strcmp(argv[1], "file")) )
+    if ( ( argc > 2) and  (strcmp(argv[1], "file") && strcmp(argv[1], "unpack")) )
         usage();
     else if (argc <= 1)
         RunService();
@@ -4924,6 +5035,8 @@ int main(int argc, char **argv)
         do_install();
     else if (!strcmp(argv[1], "remove"))
         do_remove();
+    else if (!strcmp(argv[1], "unpack"))
+        do_unpack_plugins(argv[2]);
     else if (!strcmp(argv[1], "debug"))
         do_debug();
     else if (!strcmp(argv[1], "version"))

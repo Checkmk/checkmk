@@ -288,6 +288,10 @@ def pnp_cleanup(s):
         .replace('/', '_') \
         .replace('\\', '_')
 
+# Quote string for use as arguments on the shell
+def quote_shell_string(s):
+        return "'" + s.replace("'", "'\"'\"'") + "'"
+
 ok_marker      = '<b class="stmark state0">OK</b>'
 warn_marker    = '<b class="stmark state1">WARN</b>'
 crit_marker    = '<b class="stmark state2">CRIT</b>'
@@ -430,6 +434,64 @@ def num_split(s):
     else:
         first_word = regex("[0-9]").split(s)[0]
         return ( first_word.lower(), ) + num_split(s[len(first_word):])
+
+def number_human_readable(n, precision=1, unit="B"):
+    base = 1024.0
+    if unit == "Bit":
+        base = 1000.0
+
+    n = float(n)
+    f = "%." + str(precision) + "f"
+    if abs(n) > base * base * base:
+        return (f + "G%s") % (n / (base * base * base), unit)
+    elif abs(n) > base * base:
+        return (f + "M%s") % (n / (base * base), unit)
+    elif abs(n) > base:
+        return (f + "k%s") % (n / base, unit)
+    else:
+        return (f + "%s") % (n, unit)
+
+def age_human_readable(secs, min_only=False):
+    if min_only:
+        mins = secs / 60.0
+        return "%.1f %s" % (mins, _("min"))
+    if secs < 10:
+        return "%.2f %s" % (secs, _("sec"))
+    if secs < 60:
+        return "%.1f %s" % (secs, _("sec"))
+    elif secs < 240:
+        return "%d %s" % (secs, _("sec"))
+    mins = secs / 60
+    if mins < 360:
+        return "%d %s" % (mins, _("min"))
+    hours = mins / 60
+    if hours < 48:
+        return "%d %s" % (hours, _("hours"))
+    days = hours / 24
+    return "%d %s" % (days, _("days"))
+
+def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
+    base = float(base)
+    # Handle negative bytes correctly
+    prefix = ''
+    if b < 0:
+        prefix = '-'
+        b *= -1
+
+    if b >= base * base * base * base:
+        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
+    elif b >= base * base * base:
+        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
+    elif b >= base * base:
+        return '%s%.2f M%s' % (prefix, b / base / base, unit)
+    elif b >= base:
+        return '%s%.2f k%s' % (prefix, b / base, unit)
+    elif bytefrac:
+        return '%s%.2f %s' % (prefix, b, unit)
+    else: # Omit byte fractions
+        return '%s%.0f %s' % (prefix, b, unit)
+
+
 
 
 __builtin__.default_user_localizations = {

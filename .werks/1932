@@ -1,0 +1,10 @@
+Title: check_http: Check SSL Certificate: did not work when SNI Option was set
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1422951366
+
+The option <tt>--sni</tt> did not work in conjunction with <tt>--IP-address</tt>.

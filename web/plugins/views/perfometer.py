@@ -149,7 +149,8 @@ def paint_perfometer(row):
                 return "", ""
 
             title, h = perf_painter(row, check_command, perf_data)
-            title = '{ ' + title + ' }' # TODO: Remove this
+            # Test code for optically detecting old-style Perf-O-Meters
+            # title = '{ ' + title + ' }'
 
     except Exception, e:
         if config.debug:

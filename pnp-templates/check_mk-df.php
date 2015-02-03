@@ -66,23 +66,28 @@ $opt[1] = "--vertical-label GB -l 0 -u $maxgb --title '$hostname: Filesystem $fs
 
 # First graph show current filesystem usage. If there is a "reserved" RRD
 # then substract that and show as extra area
+$def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX ";
 if (isset($RRD['reserved']))
 {
-    $def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX ";
     $def[1] .= "DEF:reserved=$RRD[reserved] ";
     $def[1] .= "CDEF:used=mb,reserved,- ";
     $def[1] .= "CDEF:var1=used,1024,/ ";
-    $def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" ";
+    $def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\" ";
     $def[1] .= "CDEF:reserved_gb=reserved,1024,/ ";
-    $def[1] .= "AREA:reserved_gb#48b79e:\"reserved for root\\n\" ";
-
+    $def[1] .= "AREA:reserved_gb#B748B2:\"reserved for root\\n\" ";
 }
-else
-{
-#
-    $def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX ";
+else {
     $def[1] .= "CDEF:var1=mb,1024,/ ";
     $def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" ";
+}
+
+# Optional size of fs plotted
+if(isset($RRD['fs_size'])) {
+    $def[1] .= "DEF:size_plotted_mb=".$RRD['fs_size']." ";
+    $def[1] .= "CDEF:size_plotted_gb=size_plotted_mb,1024,/ ";
+    $def[1] .= "LINE:size_plotted_gb#003300:\"Size $sizegb GB \" ";
+} else {
+    $def[1] .= "HRULE:$maxgb#003300:\"Size ($sizegb GB) \" ";
 }
 
 # Optional uncommitted usage e.g. for esx hosts
@@ -95,7 +100,6 @@ else {
     $def[1] .= "CDEF:total_gb=var1 ";
 }
 
-$def[1] .= "HRULE:$maxgb#003300:\"Size ($sizegb GB) \" ";
 $def[1] .= "HRULE:$warngb#ffff00:\"Warning at $warngbtxt GB \" ";
 $def[1] .= "HRULE:$critgb#ff0000:\"Critical at $critgbtxt GB \\n\" ";
 $def[1] .= "GPRINT:var1:LAST:\"current\: %6.2lf GB\" ";

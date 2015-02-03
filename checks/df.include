@@ -309,6 +309,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
     # TODO: In some future version use a fixed name as perf variable
     perf_var = mountpoint.replace(" ", "_")
     perfdata = [(perf_var, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb)]
+    perfdata.append(('fs_size', str(size_mb) + 'MB'))
 
     if size_gb < 10240:
         infotext = "%.1f%% used (%.2f of %.2f GB)" % (used_perc, used_mb / 1024.0, size_gb)

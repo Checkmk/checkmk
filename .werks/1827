@@ -7,12 +7,12 @@ State: unknown
 Version: 1.2.7i1
 Date: 1422393240
 
-The WATO rule missed a configuration for default incremente on datafiles.
+The WATO rule missed a configuration for default increment on datafiles.
 This has been added.
 
 Importan Note:
-The old configuration variable oracle_tablespaces_check_default_increment
-has been replaced with the dictionary based parameter defaultincrement.
+The old configuration variable <tt>oracle_tablespaces_check_default_increment</tt>
+has been replaced with the dictionary based parameter <tt>defaultincrement</tt>.
 The default behaivor is still true and only users who disabled the check
 for default increment need to add a rule with the new dictionary based
 parameter.

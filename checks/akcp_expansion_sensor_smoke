@@ -26,29 +26,26 @@
 
 
 # Example for contents of info
-#      description       percent  status  online
-# ['Humdity1 Description', '0',    '0',    '2']
+#           description                 state  online
+# ['Port 4 Rauchmelder USV Raum A',      '2',   '1']
 
-def inventory_akcp_sensor_humidity(info):
-    return inventory_akcp_sensor(info, 'akcp_sensor_humidity_defaultlevels')
-
-
-def check_akcp_sensor_humidity(item, params, info):
-    return check_akcp_sensor_humid(item, params, info)
+def inventory_akcp_expansion_sensor_smoke(info):
+    return inventory_akcp_sensor(info)
 
 
-check_info['akcp_sensor_humidity'] = {
-    'check_function'      : check_akcp_sensor_humidity,
-    'inventory_function'  : inventory_akcp_sensor_humidity,
-    'service_description' : 'Humidity %s',
-    'has_perfdata'        : True,
-    'snmp_scan_function'  : snmp_scan_akcp_sensor,
-    'snmp_info'           : ( '.1.3.6.1.4.1.3854.1.2.2.1.17.1', [
-                                         1, # sensorProbeHumidityDescription
-                                         3, # sensorProbeHumidityPercent
-                                         4, # sensorProbeHumidityStatus - The current status of this Sensor
-                                         5, # sensorProbeHumidityOnline - online(1), offline(2)
-                                        ] ),
-    'group'               : 'humidity',
+def check_akcp_expansion_sensor_smoke(item, _no_params, info):
+    return check_akcp_sensor_relay(item, info)
+
+
+check_info['akcp_expansion_sensor_smoke'] = {
+    'check_function'      : check_akcp_expansion_sensor_smoke,
+    'inventory_function'  : inventory_akcp_expansion_sensor_smoke,
+    'service_description' : 'Smoke %s',
+    'snmp_scan_function'  : snmp_scan_akcp_expansion_sensor,
+    'snmp_info'           : ( '.1.3.6.1.4.1.3854.2.3.14.1', [
+                                         2, # SPAGENT-MIB:sensorSmokeDescription
+                                         6, # SPAGENT-MIB:sensorSmokeStatus
+                                         8, # SPAGENT-MIB::sensorSmokeGoOffline
+                                         ] ),
     'includes'            : [ 'akcp_sensor.include' ],
 }

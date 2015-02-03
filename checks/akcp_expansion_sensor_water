@@ -24,45 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # Example for contents of info
-#           description                 state
-# ['Port 4 Rauchmelder USV Raum A',      '2'],
-# ['Port 5 Rauchmelder USV Raum B',      '2'],
-# ['Port 5 Rauchmelder Warmgang links',  '2'],
-# ['Port 4 Rauchmelder Warmgang rechts', '2'],
-# ['Port 6 Rauchmelder RZ Klima',        '2']
+#           description              state   online
+# ['Port 1 Wassermelder BE Lager',    '2',    '1']
+
+def inventory_akcp_expansion_sensor_water(info):
+    return inventory_akcp_sensor(info)
 
 
-def inventory_akcp_daisy_smoke(info):
-    for line in info:
-        yield line[0], None
+def check_akcp_expansion_sensor_water(item, _no_params, info):
+    return check_akcp_sensor_relay(item, info)
 
 
-def check_akcp_daisy_smoke(item, _no_params, info):
-    # States as they are defined in corresponding MIB: SPAGENT-MIB
-    states = {
-        '1' : (3, 'no status'     ),
-        '2' : (0, 'normal'        ),
-        '4' : (2, 'high critical' ),
-        '6' : (2, 'low critical'  ),
-        '7' : (2, 'sensor error'  ),
-        '8' : (3, 'relay on'      ),
-        '9' : (3, 'relay off'     ),
-    }
-
-    for sensor_description, state_id in info:
-        if item == sensor_description:
-            state, state_name = states[state_id]
-            return state, 'State: %s' % state_name
-
-
-check_info['akcp_daisy_smoke'] = {
-    'check_function'      : check_akcp_daisy_smoke,
-    'inventory_function'  : inventory_akcp_daisy_smoke,
-    'service_description' : 'Smoke %s',
-    'snmp_scan_function'  : lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.3854.1') and oid('.1.3.6.1.4.1.3854.2.*'),
-    'snmp_info'           : ( '.1.3.6.1.4.1.3854.2.3.14.1', [
-                                         2,  # SPAGENT-MIB:sensorSmokeDescription
-                                         6,  # SPAGENT-MIB:sensorSmokeStatus
+check_info['akcp_expansion_sensor_water'] = {
+    'check_function'      : check_akcp_expansion_sensor_water,
+    'inventory_function'  : inventory_akcp_expansion_sensor_water,
+    'service_description' : 'Water %s',
+    'snmp_scan_function'  : snmp_scan_akcp_expansion_sensor,
+    'snmp_info'           : ( '.1.3.6.1.4.1.3854.2.3.9.1', [
+                                         2, # SPAGENT-MIB:sensorWaterDescription
+                                         6, # SPAGENT-MIB:sensorWaterStatus
+                                         8, # SPAGENT-MIB::sensorSmokeGoOffline
                                          ] ),
+    'includes'            : [ 'akcp_sensor.include' ]
 }

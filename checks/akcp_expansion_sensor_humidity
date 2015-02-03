@@ -26,28 +26,28 @@
 
 
 # Example for contents of info
-#      description       percent  status  online
-# ['Humdity1 Description', '0',    '0',    '2']
+#           description         percent  status  online
+# ['Port 8 Feuchte USV Raum A',  '38',    '5',    '1']
 
-def inventory_akcp_sensor_humidity(info):
+def inventory_akcp_expansion_sensor_humidity(info):
     return inventory_akcp_sensor(info, 'akcp_sensor_humidity_defaultlevels')
 
 
-def check_akcp_sensor_humidity(item, params, info):
+def check_akcp_expansion_sensor_humidity(item, params, info):
     return check_akcp_sensor_humid(item, params, info)
 
 
-check_info['akcp_sensor_humidity'] = {
-    'check_function'      : check_akcp_sensor_humidity,
-    'inventory_function'  : inventory_akcp_sensor_humidity,
+check_info['akcp_expansion_sensor_humidity'] = {
+    'check_function'      : check_akcp_expansion_sensor_humidity,
+    'inventory_function'  : inventory_akcp_expansion_sensor_humidity,
     'service_description' : 'Humidity %s',
     'has_perfdata'        : True,
-    'snmp_scan_function'  : snmp_scan_akcp_sensor,
-    'snmp_info'           : ( '.1.3.6.1.4.1.3854.1.2.2.1.17.1', [
-                                         1, # sensorProbeHumidityDescription
-                                         3, # sensorProbeHumidityPercent
-                                         4, # sensorProbeHumidityStatus - The current status of this Sensor
-                                         5, # sensorProbeHumidityOnline - online(1), offline(2)
+    'snmp_scan_function'  : snmp_scan_akcp_expansion_sensor,
+    'snmp_info'           : ( '.1.3.6.1.4.1.3854.2.3.3.1', [
+                                         2, # SPAGENT-MIB::sensorHumidityDescription
+                                         4, # SPAGENT-MIB::sensorHumidityPercent
+                                         6, # SPAGENT-MIB::sensorHumidityStatus
+                                         8, # SPAGENT-MIB::sensorHumidityGoOffline
                                         ] ),
     'group'               : 'humidity',
     'includes'            : [ 'akcp_sensor.include' ],

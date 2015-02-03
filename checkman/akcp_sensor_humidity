@@ -8,10 +8,10 @@ description:
  to AKCP SensorProbe.
 
 item:
- The item is the sensor description of the sensor as string.
+ The description of the sensor as string as specified by the user during board configuration.
 
 perfdata:
- the current humidity in percent, lower crit, lower warn, upper warn, upper crit
+ The current humidity in percent, lower crit, lower warn, upper warn, upper crit.
 
 inventory:
  All available humidity sensors are automatically inventorized.

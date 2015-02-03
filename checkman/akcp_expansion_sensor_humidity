@@ -1,0 +1,36 @@
+title: AKCP Expansion Sensor Humidity
+agents: snmp
+catalog: hw/environment/akcp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors all online humidity sensors on AKCP securityProbe environment monitoring boards which have expansion boards
+ daisy chained to them.
+
+item:
+ The description of the sensor as string as specified by the user during board configuration.
+
+perfdata:
+ The current humidity in percent, lower crit, lower warn, upper warn, upper crit.
+
+inventory:
+ All online humidity sensors are automatically detected and inventorized.
+
+examples:
+ # set default levels for all akcp humidity sensors
+ akcp_sensor_humidity_defaultlevels = (35, 40, 60, 65)
+
+ # to Overwrite the default levels for a sensor
+ checks += [
+   ( 'hostname', "akcp_expansion_sensor_humidity", 'sensor description', ( lower crit, lower warn, upper warn, upper crit ) ),
+ ]
+
+[parameters]
+ critical low (int): lower border for triggering critical level
+ warning low (int): lower border for warning level
+ warning high (int): upper border for triggering warning level
+ critical high (int): upper border for critical level
+
+[configuration]
+ akcp_expansion_sensor_humidity (int, int, int, int): default levels for lower critical lower warning
+  and upper warning, upper critical. Preset to ( 35, 40, 60, 65 ).

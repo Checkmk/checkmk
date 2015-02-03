@@ -3624,6 +3624,11 @@ register_check_parameters(
                   title = _("Autoextend"),
                   label = _("Autoextension is expected"),
                   help = "")),
+            ( "defaultincrement",
+                Checkbox(
+                  title = _("Detault Increment"),
+                  label = _("State is WARNING in case of next extent is default."),
+                  help = "")),
                    ]),
     TextAscii(
         title = _("Explicit tablespaces"),

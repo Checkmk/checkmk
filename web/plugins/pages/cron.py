@@ -27,5 +27,5 @@
 import cron
 
 pagehandlers.update({
-    "run_cron" :  cron.page_run_cron,
+    "noauth:run_cron" :  cron.page_run_cron,
 })

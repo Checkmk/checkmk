@@ -158,17 +158,19 @@ def handler(req, fields = None, profiling = True):
         # during automation action processing (e.g. hooks triggered by restart)
         default_permissions.load()
 
-        # Special handling for automation.py. Sorry, this must be hardcoded
-        # here. Automation calls bybass the normal authentication stuff
-        if html.myfile in [ "automation", "run_cron" ]:
-            try:
-                handler()
-            except Exception, e:
-                html.write(str(e))
-                if config.debug:
-                    html.write(html.attrencode(format_exception()))
-            release_all_locks()
-            return apache.OK
+        # Some pages do skip authentication. This is done by adding
+        # noauth: to the page hander, e.g. "noauth:run_cron" : ...
+        if handler == page_not_found:
+            handler = pagehandlers.get("noauth:" + html.myfile, page_not_found)
+            if handler != page_not_found:
+                try:
+                    handler()
+                except Exception, e:
+                    html.write(str(e))
+                    if config.debug:
+                        html.write(html.attrencode(format_exception()))
+                release_all_locks()
+                return apache.OK
 
         # Prepare output format
         output_format = html.var("output_format", "html")

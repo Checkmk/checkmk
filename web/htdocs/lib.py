@@ -288,6 +288,10 @@ def pnp_cleanup(s):
         .replace('/', '_') \
         .replace('\\', '_')
 
+# Quote string for use as arguments on the shell
+def quote_shell_string(s):
+        return "'" + s.replace("'", "'\"'\"'") + "'"
+
 ok_marker      = '<b class="stmark state0">OK</b>'
 warn_marker    = '<b class="stmark state1">WARN</b>'
 crit_marker    = '<b class="stmark state2">CRIT</b>'

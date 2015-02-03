@@ -964,6 +964,14 @@ and change the path there. Restart Apache afterwards."
       Satisfy any
   </Location>
 
+  # Webservice for dynamic creation of PNP templates
+  <Location "${url_prefix}check_mk/pnp_template.py">
+      Order deny,allow
+      Deny from all
+      Allow from 127.0.0.1
+      Satisfy any
+  </Location>
+
 </IfModule>
 
 

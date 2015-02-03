@@ -117,48 +117,13 @@ def perfometer_logarithmic_dual_independent\
 
     return result + '</tr></table>'
 
+
 def paint_perfometer(row):
-    perfstring = unicode(row["service_perf_data"].strip())
-    if not perfstring:
+    perf_data_string = unicode(row["service_perf_data"].strip())
+    if not perf_data_string:
         return "", ""
 
-    parts = perfstring.split()
-    # Try if check command is appended to performance data
-    # in a PNP like style
-    if parts[-1].startswith("[") and parts[-1].endswith("]"):
-        check_command = parts[-1][1:-1]
-        del parts[-1]
-    else:
-        check_command = row["service_check_command"]
-
-    # Strip away arguments like in "check_http!-H mathias-kettner.de"
-    check_command = check_command.split("!")[0]
-
-    # Python's isdigit() works only on str. We deal with unicode since
-    # we deal with data coming from Livestatus
-    def isdigit(x):
-        return x in [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ]
-
-    # Parse performance data, at least try
-    try:
-        perf_data = []
-        for part in parts:
-            varname, values = part.split("=")
-            value_parts = values.split(";")
-            while len(value_parts) < 5:
-                value_parts.append(None)
-            value, warn, crit, min, max = value_parts[0:5]
-            # separate value from unit
-            i = 0
-            while i < len(value) and (isdigit(value[i]) or value[i] in ['.', ',', '-']):
-                i += 1
-            unit = value[i:]
-            value = value[:i]
-            perf_data.append((varname, value, unit, warn, crit, min, max))
-    except:
-        if config.debug:
-            raise
-        perf_data = None
+    check_command, perf_data = metrics.parse_perf_data(perf_data_string, row["service_check_command"])
     if not perf_data:
         return "", ""
 

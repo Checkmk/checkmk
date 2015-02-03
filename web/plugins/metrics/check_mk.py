@@ -44,34 +44,44 @@ PB = 1024 * 1024 * 1024 * 1024 * 1024
 #   '----------------------------------------------------------------------'
 
 unit_info[None] = {
+    "title"  : "",
+    "symbol" : "",
     "render" : lambda v: "%.1f" % v,
 }
 
 unit_info["count"] = {
+    "title"  : _("Count"),
+    "symbol" : "",
     "render" : lambda v: "%d" % v,
 }
 
 unit_info["%"] = {
+    "title"  : _("%"),
+    "symbol" : _("%"),
     "render" : lambda v: "%s%%" % drop_dotzero(v),
 }
 
 unit_info["s"] = {
+    "title" : _("sec"),
+    "symbol" : _("s"),
     "render" : age_human_readable,
 }
 
 unit_info["/s"] = {
-    # "title" : _("per second"),
-    # "symbol" : _("/s"),
+    "title" : _("per second"),
+    "symbol" : _("/s"),
     "render" : lambda v: "%s%s" % (drop_dotzero(v), _("/s")),
 }
 
 unit_info["bytes"] = {
+    "title"  : _("Bytes"),
+    "symbol" : _("B"),
     "render" : bytes_human_readable,
 }
 
 unit_info["c"] = {
-    # "title"  : _("Degree Celsius"),
-    # "symbol" : _("°C"),
+    "title"  : _("Degree Celsius"),
+    "symbol" : _("°C"),
     "render" : lambda v: "%s %s" % (drop_dotzero(v), _("°C")),
 }
 
@@ -140,21 +150,21 @@ metric_info["user"] = {
     "title" : _("User"),
     "help"  : _("Percentage of CPU time spent in user space"),
     "unit"  : "%",
-    "color" : "#66ff22",
+    "color" : "#60f020",
 }
 
 metric_info["system"] = {
     "title" : _("System"),
     "help"  : _("Percentage of CPU time spent in kernel space"),
     "unit"  : "%",
-    "color" : "#ff6600",
+    "color" : "#ff6000",
 }
 
 metric_info["io_wait"] = {
     "title" : _("IO-Wait"),
     "help"  : _("Percentage of CPU time spent waiting for IO"),
     "unit"  : "%",
-    "color" : "#00bbcc",
+    "color" : "#00b0c0",
 }
 
 #.
@@ -269,3 +279,32 @@ perfometer_info.append(("logarithmic",        ( "proc_creat", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",        ( "threads",     400.0, 2.0)))
 perfometer_info.append(("stacked",            ( [ "user", "system", "io_wait" ], 100.0)))
 perfometer_info.append(("stacked",            ( [ "fs_used(%)" ], 100.0 )))
+
+
+#.
+#   .--Graphs--------------------------------------------------------------.
+#   |                    ____                 _                            |
+#   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
+#   |                  | |  _| '__/ _` | '_ \| '_ \/ __|                   |
+#   |                  | |_| | | | (_| | |_) | | | \__ \                   |
+#   |                   \____|_|  \__,_| .__/|_| |_|___/                   |
+#   |                                  |_|                                 |
+#   +----------------------------------------------------------------------+
+#   |  Definitions of time series graphs                                   |
+#   '----------------------------------------------------------------------'
+graph_info.append({
+    # "title"          : _("Das ist der Titel"),       # Wenn fehlt, dann nimmer er den Titel der ersten Metrik
+    # "vertical_label" : _("Das hier kommt vertikal"), # Wenn fehlt, dann nimmt er die Unit der ersten Metrik
+    "metrics" : [
+        ( "fs_used", "area" ),
+    ]
+})
+
+graph_info.append({
+    "title"   : _("CPU utilization"),
+    "metrics" : [
+        ( "user",    "area" ),
+        ( "system",  "stack" ),
+        ( "io_wait", "stack" ),
+    ]
+})

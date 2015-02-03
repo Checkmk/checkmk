@@ -27,5 +27,5 @@
 import metrics
 
 pagehandlers.update({
-    # Currently no pages are defined in this module
+    "noauth:pnp_template" : metrics.page_pnp_template,
 })

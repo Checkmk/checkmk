@@ -2964,6 +2964,13 @@ register_check_parameters(
                            default_value = 1,
                        )
                     ),
+                    ( "unknown",
+                       MonitoringState(
+                           title = _("Unknown"),
+                           help = _("Check result if the host or VM state is reported as <i>unknown</i>"),
+                           default_value = 3,
+                       )
+                    ),
                  ]
               )
            ),

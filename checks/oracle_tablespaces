@@ -65,12 +65,14 @@ factory_settings["oracle_tablespaces_defaults"] = {
     "levels"         : (10.0, 5.0),
     "magic_normsize" : 1000,
     "magic_maxlevels": (60.0, 50.0),
+    "defaultincrement": True,
 }
 
 # Whether to check auto extend settings
 oracle_tablespaces_check_autoext = True
 
-# Whether to check default increment size
+# this parameter is deprecated and needed for old configurations with
+# parameter in main.mk. It is not used anymore!
 oracle_tablespaces_check_default_increment = True
 
 def inventory_oracle_tablespaces(info):
@@ -242,7 +244,7 @@ def check_oracle_tablespaces(item, params, info):
     status = 0
 
     # Check increment size, should not be set to default (1)
-    if oracle_tablespaces_check_default_increment:
+    if params.get("defaultincrement"):
         if uses_default_increment:
             infotext += ", DEFAULT INCREMENT(!)"
             status = 1
@@ -290,4 +292,3 @@ check_info['oracle_tablespaces'] = {
     "default_levels_variable" : "oracle_tablespaces_defaults",
     "includes"                : [ "oracle.include" ]
 }
-check_config_variables.append("oracle_tablespaces_check_default_increment")

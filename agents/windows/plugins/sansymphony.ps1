@@ -32,17 +32,11 @@ if($?)  {
 
 	Disconnect-DcsServer -Connection check_mk
 
-	# Output state of all Disk Pools
 
-	write-host "<<<datacore_poolstatus>>>"
-	foreach ($Item in $poolstatus) {
-	$poolalias=$Item.Alias -replace '\s+', '_'
-	write-host $poolalias $Item.PoolStatus $Item.PoolMode $Item.Type
-	}
 
 	# Output state of all Volumes
 
-	write-host "<<<datacore_virtualdiskstatus>>>"
+	write-host "<<<sansymphony_virtualdiskstatus>>>"
 	foreach ($Item in $volumes) {
 	$virtualdiskalias=$Item.Alias -replace '\s+', '_'
 	write-host $virtualdiskalias $Item.DiskStatus
@@ -50,13 +44,13 @@ if($?)  {
 
 	# Output amount of unacknowlegded alerts
 
-	write-host "<<<datacore_alerts>>>"
+	write-host "<<<sansymphony_alerts>>>"
 	$amountofalerts=$ssvalerts.length
 	write-host $amountofalerts
 
 	# Output type and status of ports
 
-	write-host "<<<datacore_ports>>>"
+	write-host "<<<sansymphony_ports>>>"
 	foreach ($Item in $dcsports) {
 	if ($Item.Alias -ne "Loopback Port")
 		{	
@@ -67,31 +61,40 @@ if($?)  {
 
 	# output server and cachestate information
 
-	write-host "<<<datacore_serverstatus>>>"
+	write-host "<<<sansymphony_serverstatus>>>"
 	foreach ($Item in $serverinfo) {
 		write-host $Item.State $Item.Cachestate
 		}
 
 	# output allocation of disk pools
 
-	write-host "<<<datacore_poolallocation>>>"
+	write-host "<<<sansymphony_pool>>>"
 	
 	$a = @()
 	foreach ($Item in $poolstatus) {
-	$poolalias=$Item.Alias -replace '\s+', '_'
-	$a += $poolalias
+	    $poolalias=$Item.Alias -replace '\s+', '_'
+	    $a += $poolalias
 	}
 	
 	$b = @()
 	foreach ($Item in $poolinfo) {
-	$poolallocation=$Item.PercentAllocated
-	$b += $poolallocation
+	    $poolallocation=$Item.PercentAllocated
+	    $b += $poolallocation
+	}
+        
+        $c = @()
+        $d = @()
+        $e = @()
+	foreach ($Item in $poolstatus) {
+            $c += $Item.PoolStatus
+            $d += $Item.PoolMode
+            $e += $Item.Type
 	}
 
 	$i=0
-	do 
-	{Write-Host $a[$i] $b[$i]; $i++}
-	while ($i -le $poolinfo.length-1)
+	do {
+            Write-Host $a[$i] $b[$i] $c[$i] $d[$i] $e[$i]; $i++
+           }while ($i -le $poolinfo.length-1)
 
 	exit 0
 

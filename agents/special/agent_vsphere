@@ -703,7 +703,10 @@ if not error:
         license_hosts = get_pattern('<returnval>(.*?)</returnval>', licenses_response)
         licenses = {}
         for host in license_hosts:
-            key, name, total, used = get_pattern("<licenseKey>(.*?)</licenseKey>.*?<name>(.*?)</name><total>(.*?)</total><used>(.*?)</used>", host)[0]
+            license_info = get_pattern("<licenseKey>(.*?)</licenseKey>.*?<name>(.*?)</name><total>(.*?)</total><used>(.*?)</used>", host)
+            if not license_info:
+                continue
+            key, name, total, used  = license_info[0]
             # We merge all entries with the same name, duplicate keys are ignored since they provide the same data
             licenses.setdefault(name, {"used_keys": [], "total": 0, "used": 0})
             if key not in licenses[name]["used_keys"]:

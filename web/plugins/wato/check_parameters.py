@@ -3216,6 +3216,13 @@ register_check_parameters(
                            default_value = 1,
                        )
                     ),
+                    ( "unknown",
+                       MonitoringState(
+                           title = _("Unknown"),
+                           help = _("Check result if the host or VM state is reported as <i>unknown</i>"),
+                           default_value = 3,
+                       )
+                    ),
                  ]
               )
            ),
@@ -3616,6 +3623,11 @@ register_check_parameters(
                 Checkbox(
                   title = _("Autoextend"),
                   label = _("Autoextension is expected"),
+                  help = "")),
+            ( "defaultincrement",
+                Checkbox(
+                  title = _("Detault Increment"),
+                  label = _("State is WARNING in case of next extent is default."),
                   help = "")),
                    ]),
     TextAscii(

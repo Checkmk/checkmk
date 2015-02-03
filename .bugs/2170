@@ -1,0 +1,17 @@
+Title: ensure that the params parameter is not modified within checks
+Component: checks
+State: open
+Date: 2015-02-03 11:55:21
+Targetversion: future
+Class: cleanup
+
+Example check: fritz
+
+    if 'assumed_speed_in' not in params:
+        params['assumed_speed_in'] = int(data['NewLayer1DownstreamMaxBitRate'])
+
+This type of assignment actively modifies the params dictionary -> not allowed
+
+How to find such checks:
+Make a comparision between the parameters before and after the execution of the check function
+Any variation results either in an Exception or an output to stderr.

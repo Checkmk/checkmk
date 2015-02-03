@@ -24,18 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import wato
+import metrics
 
 pagehandlers.update({
-    "wato"                    : wato.page_handler,
-    "wato_ajax_replication"   : wato.ajax_replication,
-    "wato_ajax_activation"    : wato.ajax_activation,
-    "automation_login"        : wato.page_automation_login,
-    "noauth:automation"       : wato.page_automation,
-    "user_profile"            : wato.page_user_profile,
-    "user_change_pw"          : lambda: wato.page_user_profile(change_pw=True),
-    "ajax_set_foldertree"     : wato.ajax_set_foldertree,
-    "wato_ajax_diag_host"     : wato.ajax_diag_host,
-    "wato_ajax_profile_repl"  : wato.ajax_profile_repl,
-    "wato_ajax_execute_check" : wato.ajax_execute_check,
+    "noauth:pnp_template" : metrics.page_pnp_template,
 })

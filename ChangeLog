@@ -18,6 +18,7 @@
     * 1971 FIX: printer_input/printer_output: Discovery is using name field when available no...
             NOTE: Please refer to the migration notes!
     * 1931 FIX: agent_vsphere: no longer crashes when host has no license information
+    * 1932 FIX: check_http: Check SSL Certificate: did not work when SNI Option was set...
 
     Multisite:
     * 1884 FIX: Fixed exception in virtual host tree snapin

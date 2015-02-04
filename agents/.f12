@@ -1,7 +1,7 @@
 #!/bin/bash
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo cp -r * /omd/sites/$SITE/share/check_mk/agents/
+sudo rsync -varx --delete ./ /omd/sites/$SITE/share/check_mk/agents/
 if [ -e /etc/check_mk ]
 then
     sudo install -m 644 cfg_examples/logwatch.cfg /etc/check_mk/

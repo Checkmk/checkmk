@@ -30,7 +30,10 @@ def check_mbg_lantime_nb_state(_no_item, params, info):
         '1': (2, 'not synchronized'),
         '2': (0, 'synchronized'),
     }
-    return check_mbg_lantime_state_common(states, _no_item, params, info)
+    converted_info = info[0]
+    #Convert to microseconds
+    converted_info[3] = float(converted_info[3]) * 1000
+    return check_mbg_lantime_state_common(states, _no_item, params, [converted_info])
 
 
 check_info["mbg_lantime_ng_state"] = {

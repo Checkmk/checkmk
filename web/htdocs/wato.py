@@ -8375,9 +8375,9 @@ def vs_notification_rule(userid = None):
             ),
             ( "match_contactgroups",
               GroupChoice("contact",
-                  title = _("Match Contact Groups (cmc only)"),
-                  help = _("The host/ service must be in one of the selected contact groups. Only works with Check_MK Microcore. " \
-                           "If you don't use the CMC, that filter will not apply"),
+                  title = _("Match Contact Groups (CMC only)"),
+                  help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
+                           "If you don't use the CMC that filter will not apply"),
                   allow_empty = False,
               )
             ),

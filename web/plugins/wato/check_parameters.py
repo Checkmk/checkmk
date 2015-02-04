@@ -2964,6 +2964,13 @@ register_check_parameters(
                            default_value = 1,
                        )
                     ),
+                    ( "unknown",
+                       MonitoringState(
+                           title = _("Unknown"),
+                           help = _("Check result if the host or VM state is reported as <i>unknown</i>"),
+                           default_value = 3,
+                       )
+                    ),
                  ]
               )
            ),
@@ -3365,6 +3372,11 @@ register_check_parameters(
                   title = _("Autoextend"),
                   label = _("Autoextension is expected"),
                   help = "")),
+            ( "defaultincrement",
+                Checkbox(
+                  title = _("Detault Increment"),
+                  label = _("State is WARNING in case of next extent is default."),
+                  help = "")),
                    ]),
     TextAscii(
         title = _("Explicit tablespaces"),
@@ -3457,22 +3469,22 @@ register_check_parameters(
             ( "apply_lag",
               Tuple(
                   title = _("Apply Lag Maximum Time"),
-                  help = _( "The maximum limit for the apply lag in v$dataguard_stats."),
+                  help = _( "The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."),
                   elements = [
                       Age(title = _("Warning at"),),
                       Age(title = _("Critical at"),)])),
             ( "apply_lag_min",
               Tuple(
                   title = _("Apply Lag Minimum Time"),
-                  help = _( "The minimum limit for the apply lag in v$dataguard_stats. "
-                            "This is only usable when Maximum Time has beend configured. "),
+                  help = _( "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. "
+                            "This is only useful if also <i>Apply Lag Maximum Time</i> has been configured."),
                   elements = [
                       Age(title = _("Warning at"),),
                       Age(title = _("Critical at"),)])),
             ( "transport_lag",
               Tuple(
                   title = _("Transport Lag"),
-                  help = _( "The limit for the transport lag in v$dataguard_stats."),
+                  help = _( "The limit for the transport lag in <tt>v$dataguard_stats</tt>"),
                   elements = [
                       Age(title = _("Warning at"),),
                       Age(title = _("Critical at"),)])),
@@ -4879,6 +4891,26 @@ register_check_parameters(
                        ( "iscsi",  _("iSCSI") ),
                     ],
                 )),
+            (  "magic",
+               Float(
+                  title = _("Magic factor (automatic level adaptation for large volumes)"),
+                  default_value = 0.8,
+                  minvalue = 0.1,
+                  maxvalue = 1.0)),
+            (  "magic_normsize",
+               Integer(
+                   title = _("Reference size for magic factor"),
+                   default_value = 20,
+                   minvalue = 1,
+                   unit = _("GB"))),
+            ( "levels_low",
+              Tuple(
+                  title = _("Minimum levels if using magic factor"),
+                  help = _("The volume levels will never fall below these values, when using "
+                           "the magic factor and the volume is very small."),
+                  elements = [
+                      Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True, default_value=50),
+                      Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True, default_value=60)])),
             (  "trend_range",
                Optional(
                    Integer(
@@ -7103,7 +7135,7 @@ register_check_parameters(
         elements = [
             Integer(
                 title = _("Maximum age"),
-                help = _("Maximum accepted age of the reported data in seconds."),
+                help = _("Maximum accepted age of the reported data in seconds"),
                 unit = _("seconds"),
                 default_value = 60,
             ),
@@ -7112,7 +7144,7 @@ register_check_parameters(
                     allow_empty = False
                 ),
                 title = _("Expected DC"),
-                help = _("The hostname of the expected distinguished controller of the cluster."),
+                help = _("The hostname of the expected distinguished controller of the cluster"),
             ),
             Optional(
                 Integer(
@@ -7120,14 +7152,14 @@ register_check_parameters(
                     default_value = 2
                 ),
                 title = _("Number of Nodes"),
-                help = _("The expected number of nodes in the cluster."),
+                help = _("The expected number of nodes in the cluster"),
             ),
             Optional(
                 Integer(
                     min_value = 0,
                 ),
                 title = _("Number of Resources"),
-                help = _("The expected number of resources in the cluster."),
+                help = _("The expected number of resources in the cluster"),
             ),
         ]
     ),

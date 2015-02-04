@@ -1,0 +1,10 @@
+Title: esx_vsphere_objects: now able to set a different alert level when the host/vm reports 'unknown'
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422957021
+Class: feature
+
+The unknown level can be configured via the WATO rule <i>State of ESX hosts and virtual machines</i>
+

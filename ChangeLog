@@ -175,6 +175,7 @@
     * 1885 FIX: Fixed filtering by software versions in software package search
     * 1972 FIX: Prevent erasing of quicksearch field when sidebar is reloaded (e.g. during activate changes)...
     * 1221 FIX: veeam_client: Multisite perfometer is now more robust
+    * 1989 FIX: Fix sorting of services in availability views
 
     WATO:
     * 1760 Added search form to manual checks page

@@ -1,0 +1,10 @@
+Title: Fix sorting of services in availability views
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423069133
+
+

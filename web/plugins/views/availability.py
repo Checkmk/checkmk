@@ -1311,7 +1311,15 @@ def render_availability_group(group_title, range_title, group_id, availability,
     do_csv = html.output_format == "csv_export"
     no_html = do_csv or fetch
 
-    availability.sort()
+    # Sort according to host and service. First after site, then
+    # host (natural sort), then service
+    def cmp_av_entry(a, b):
+        return cmp(a[0], b[0]) or \
+               cmp(num_split(a[1]) + (a[1],), num_split(b[1]) + (b[1],)) or \
+               cmp(cmp_service_name_equiv(a[2]), cmp_service_name_equiv(b[2])) or \
+               cmp(a[2], b[2])
+
+    group_availability.sort(cmp = cmp_av_entry)
     show_summary = avoptions.get("summary")
     summary = {}
     summary_counts = {}

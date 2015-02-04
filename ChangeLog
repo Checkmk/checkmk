@@ -39,6 +39,7 @@
     * 1981 FIX: Not trying to render view in view editor when the view is not valid
 
     WATO:
+    * 1935 WATO Web-API: Reduced number configurable role permissions...
     * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
     * 1883 FIX: Fixed lossing service context when cloning a rule
     * 1925 FIX: Fix missing auxilliary tags that have their own topic...

@@ -1,0 +1,13 @@
+Title: df and other filesystem checks: process total fs size as perfdata
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1422983316
+Class: feature
+
+
+Since the total size of a filesystem may change we store the total size
+as additional performance data and plot it with rrdtools like the used space.
+As a consequence another rrd database file is created for every filesystem,
+and slightly more disk space will be used for the rrd data of your site.

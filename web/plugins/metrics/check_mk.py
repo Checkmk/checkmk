@@ -55,10 +55,18 @@ unit_info["count"] = {
     "render" : lambda v: "%d" % v,
 }
 
+# value ranges from 0.0 ... 100.0
 unit_info["%"] = {
     "title"  : _("%"),
     "symbol" : _("%"),
     "render" : lambda v: "%s%%" % drop_dotzero(v),
+}
+
+# Similar as %, but value ranges from 0.0 ... 1.0
+unit_info["100%"] = {
+    "title"  : _("%"),
+    "symbol" : _("%"),
+    "render" : lambda v: "%s%%" % drop_dotzero(100.0 * v),
 }
 
 unit_info["s"] = {
@@ -97,6 +105,37 @@ unit_info["c"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of metrics                                              |
 #   '----------------------------------------------------------------------'
+
+metric_info["mem_used"] = {
+    "title" : _("Used RAM"),
+    "unit"  : "bytes",
+    "color" : "#80ff40",
+}
+
+metric_info["mem_free"] = {
+    "title" : _("Free RAM"),
+    "unit"  : "bytes",
+    "color" : "#ffffff",
+}
+
+metric_info["swap_used"] = {
+    "title" : _("Used Swap space"),
+    "unit"  : "bytes",
+    "color" : "#008030",
+}
+
+metric_info["caches"] = {
+    "title" : _("Memory used by caches"),
+    "unit"  : "bytes",
+    "color" : "#ffffff",
+}
+
+metric_info["swap_free"] = {
+    "title" : _("Free Swap space"),
+    "unit"  : "bytes",
+    "color" : "#eeeeee",
+}
+
 
 metric_info["execution_time"] = {
     "title" : _("Execution time"),
@@ -190,6 +229,8 @@ check_metrics["check_mk-blade_bx_load"]                         = {}
 
 check_metrics["check_mk-cpu.threads"]                           = {}
 
+check_metrics["check_mk-mem.linux"]                             = {}
+
 check_metrics["check_mk-df"]                                    = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-vms_df"]                                = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-vms_diskstat.df"]                       = { 0: { "name": "fs_used", "scale" : MB } }
@@ -270,15 +311,17 @@ check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "
 #   |  Definition of Perf-O-Meters                                         |
 #   '----------------------------------------------------------------------'
 
-perfometer_info.append(("stacked",            ( ["execution_time"], 90.0)))
-perfometer_info.append(("logarithmic",        ( "load1",         4.0, 2.0)))
-perfometer_info.append(("logarithmic",        ( "temp",         40.0, 1.2)))
-perfometer_info.append(("logarithmic",        ( "ctxt",       1000.0, 2.0)))
-perfometer_info.append(("logarithmic",        ( "pgmajfault", 1000.0, 2.0)))
-perfometer_info.append(("logarithmic",        ( "proc_creat", 1000.0, 2.0)))
-perfometer_info.append(("logarithmic",        ( "threads",     400.0, 2.0)))
-perfometer_info.append(("stacked",            ( [ "user", "system", "io_wait" ], 100.0)))
-perfometer_info.append(("stacked",            ( [ "fs_used(%)" ], 100.0 )))
+perfometer_info.append(("stacked",      ( ["execution_time"], 90.0, None)))
+perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "temp",         40.0, 1.2)))
+perfometer_info.append(("logarithmic",  ( "ctxt",       1000.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "pgmajfault", 1000.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "proc_creat", 1000.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
+perfometer_info.append(("stacked",      ( [ "user", "system", "io_wait" ],                               100.0,       None)))
+perfometer_info.append(("stacked",      ( [ "fs_used(%)" ],                                              100.0,       None)))
+perfometer_info.append(("stacked",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_total,mem_used,swap_used,+,/", "100%"))))
+perfometer_info.append(("stacked",      ( [ "mem_used" ],                                                "mem_total", None)))
 
 
 #.

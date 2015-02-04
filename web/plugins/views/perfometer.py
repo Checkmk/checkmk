@@ -123,7 +123,7 @@ def paint_perfometer(row):
     if not perf_data_string:
         return "", ""
 
-    check_command, perf_data = metrics.parse_perf_data(perf_data_string, row["service_check_command"])
+    perf_data, check_command = metrics.parse_perf_data(perf_data_string, row["service_check_command"])
     if not perf_data:
         return "", ""
 
@@ -134,11 +134,11 @@ def paint_perfometer(row):
 
     try:
         # Try new metrics module
-        translated = metrics.translate_metrics(check_command, perf_data)
-        if translated: # definition for this check type exists
-            perfometer_definitions = list(metrics.get_perfometers(translated))
+        translated_metrics = metrics.translate_metrics(check_command, perf_data)
+        if translated_metrics: # definition for this check type exists
+            perfometer_definitions = list(metrics.get_perfometers(translated_metrics))
             if perfometer_definitions:
-                title, h = render_metrics_perfometer(perfometer_definitions[0], translated)
+                title, h = render_metrics_perfometer(perfometer_definitions[0], translated_metrics)
             else:
                 return "", ""
 
@@ -150,7 +150,8 @@ def paint_perfometer(row):
 
             title, h = perf_painter(row, check_command, perf_data)
             # Test code for optically detecting old-style Perf-O-Meters
-            # title = '{ ' + title + ' }'
+            if config.debug:
+                title = '{ ' + title + ' }'
 
     except Exception, e:
         if config.debug:
@@ -170,36 +171,52 @@ def paint_perfometer(row):
 
 
 # New Perf-O-Meter implementation based on new metrics module.
-# This function gets a Perf-O-Meter-Definition, translated
+# This function gets a Perf-O-Meter-Definition, translated_metrics
 # matrics and outputs a Text and HTML code for the Perf-O-Meter.
-# translated is a dict from metric-name to ...
-def render_metrics_perfometer(perfometer, translated):
+# translated_metrics is a dict from metric-name to ...
+def render_metrics_perfometer(perfometer, translated_metrics):
     perfometer_type, definition = perfometer
     if perfometer_type == "logarithmic":
         metrics_name, median, exponent = definition
-        metric = translated[metrics_name]
+        metric = translated_metrics[metrics_name]
         text = metrics.metric_to_text(metric)
         return text, perfometer_logarithmic(metric["value"], median, exponent, metric["color"])
 
     elif perfometer_type == "stacked":
         h = '<table><tr>'
-        metrics_expressions, total_spec = definition
-        total = metrics.evaluate(total_spec, translated)
+        # NOTE: This might be converted to a dict later.
+        metrics_expressions, total_spec, label_expression = definition
         summed = 0.0
+
         for ex in metrics_expressions:
-            value = metrics.evaluate(ex, translated)
+            value = metrics.evaluate(ex, translated_metrics)
             summed += value
+
+        if total_spec == None:
+            total = summed
+        else:
+            total = metrics.evaluate(total_spec, translated_metrics)
+
         for ex in metrics_expressions:
             name = ex.split(":")[0]
-            value = metrics.evaluate(ex, translated)
+            value = metrics.evaluate(ex, translated_metrics)
             color = metrics.get_color(ex)
             h += perfometer_td(100.0 * value / total, color)
-        h += perfometer_td(100.0 * (total - summed) / total, "white")
+
+        # Paint rest only, if it is positive and larger than one promille
+        if total - summed > 0.001:
+            h += perfometer_td(100.0 * (total - summed) / total, "white")
+
         h += "</tr></table>"
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
-        unit = metrics.get_unit(metrics_expressions[0])
-        text = unit["render"](summed)
+        if label_expression:
+            expr, unit = label_expression
+            value = metrics.evaluate(expr, translated_metrics)
+            text = metrics.value_to_text(value, unit)
+        else: # absolute
+            unit = metrics.get_unit(metrics_expressions[0])
+            text = unit["render"](summed)
         return text, h
 
     else:

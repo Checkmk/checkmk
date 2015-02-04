@@ -3,7 +3,7 @@
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |   | "_ \ / _ \/ __| |/ /   | |\/| | " /            |
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
@@ -25,30 +25,28 @@
 # Boston, MA 02110-1301 USA.
 
 
+# This variable exists to maintain compatibility with already installed checks.
+# When this check gets reworked some day we shall use the guideline-compliant
+# akcp_humidity_default_levels variable from akcp_sensor.include instead.
+akcp_sensor_humidity_defaultlevels = (35, 40, 60, 65)
+
 # Example for contents of info
 #      description       percent  status  online
-# ['Humdity1 Description', '0',    '0',    '2']
+# ["Humdity1 Description", "0",    "0",    "2"]
 
-def inventory_akcp_sensor_humidity(info):
-    return inventory_akcp_sensor(info, 'akcp_sensor_humidity_defaultlevels')
-
-
-def check_akcp_sensor_humidity(item, params, info):
-    return check_akcp_sensor_humid(item, params, info)
-
-
-check_info['akcp_sensor_humidity'] = {
-    'check_function'      : check_akcp_sensor_humidity,
-    'inventory_function'  : inventory_akcp_sensor_humidity,
-    'service_description' : 'Humidity %s',
-    'has_perfdata'        : True,
-    'snmp_scan_function'  : snmp_scan_akcp_sensor,
-    'snmp_info'           : ( '.1.3.6.1.4.1.3854.1.2.2.1.17.1', [
-                                         1, # sensorProbeHumidityDescription
-                                         3, # sensorProbeHumidityPercent
-                                         4, # sensorProbeHumidityStatus - The current status of this Sensor
-                                         5, # sensorProbeHumidityOnline - online(1), offline(2)
+check_info["akcp_sensor_humidity"] = {
+    "check_function"      : check_akcp_sensor_humidity,
+    "inventory_function"  : lambda info: inventory_akcp_sensor(info, \
+                                            "akcp_sensor_humidity_defaultlevels"),
+    "service_description" : "Humidity %s",
+    "has_perfdata"        : True,
+    "snmp_scan_function"  : snmp_scan_akcp_sensor,
+    "snmp_info"           : ( ".1.3.6.1.4.1.3854.1.2.2.1.17.1", [
+                                         1, # SPAGENT-MIB::sensorProbeHumidityDescription
+                                         3, # SPAGENT-MIB::sensorProbeHumidityPercent
+                                         4, # SPAGENT-MIB::sensorProbeHumidityStatus
+                                         5, # SPAGENT-MIB::sensorProbeHumidityOnline
                                         ] ),
-    'group'               : 'humidity',
-    'includes'            : [ 'akcp_sensor.include' ],
+    "group"               : "humidity",
+    "includes"            : [ "akcp_sensor.include" ],
 }

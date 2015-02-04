@@ -24,45 +24,55 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+factory_settings['mbg_lantime_state_default_levels'] = {
+     "stratum" : (1,   1),
+     "offset"  : (500, 1000), # ms
+}
+
+
 def inventory_mbg_lantime_state_common(info):
     return [(None, {})]
+
 
 def check_mbg_lantime_state_common(states, _no_item, params, info):
     ntp_state, stratum, refclock_name, refclock_offset = info[0]
     if type(params) != dict:
         params = {
              'stratum' : (params[0], params[1]),
-             'offset' : (params[2], params[3]),
+             'offset'  : (params[2], params[3]),
         }
 
     # Handle State
     yield states[ntp_state][0], "State: " + states[ntp_state][1]
 
-    # handle the reported stratum
+    # Check the reported stratum
     state = 0
-    levels = ""
+    levels_text = ""
     warn, crit = params['stratum']
     if int(stratum) > crit:
         state = 2
     elif int(stratum) > warn:
         state = 1
     if state != 0:
-        levels = " (Warn/Crit at %s/%s)" % (warn, crit)
-    yield state, "Stratum: %s%s" % (stratum, levels)
+        levels_text = " (warn/crit at %d/%d)" % (warn, crit)
+    yield state, "Stratum: %s%s" % (stratum, levels_text)
 
     # Add refclock information
-    yield 0, 'Refclock: ' + refclock_name
+    yield 0, 'Reference clock: ' + refclock_name
 
+    # Check offset
     state = 0
-    levels = ""
+    levels_text = ""
     warn, crit = params['offset']
-    pos_refclock_offset = abs(float(refclock_offset))
-    if pos_refclock_offset > crit:
+    refclock_offset = float(refclock_offset)
+    pos_refclock_offset = abs(refclock_offset)
+    if pos_refclock_offset >= crit:
         state = 2
-    elif pos_refclock_offset > warn:
+    elif pos_refclock_offset >= warn:
         state = 1
     if state != 0:
-        levels = " (Warn/Crit at %d/%d ms)"
+        levels_text = " (warn/crit at %d/%d ms)" % (warn, crit)
     perfdata = [('offset', refclock_offset, warn, crit )]
-    yield state, 'Refclock Offset: %0.4f ms%s' % (float(refclock_offset) / 1000, levels), perfdata
+    yield state, 'Reference clock offset: %g us%s' % (refclock_offset, levels_text), perfdata
 

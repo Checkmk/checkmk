@@ -24,34 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings['mbg_lantime_ng_state'] = {
-     "stratum" : ( 2, 3 ),
-     "offset" : ( 500, 1000),
-}
-
-mbg_lantime_ng_states = {
-          '0': (2,  'notAvailable'),
-          '1': (2,  'notSynchronized'),
-          '2': (0,  'synchronized'),
-}
+def check_mbg_lantime_nb_state(_no_item, params, info):
+    states = {
+        '0': (2, 'not aailable'),
+        '1': (2, 'not synchronized'),
+        '2': (0, 'synchronized'),
+    }
+    return check_mbg_lantime_state_common(states, _no_item, params, info)
 
 
 check_info["mbg_lantime_ng_state"] = {
-    'check_function'            : lambda item, params, info: \
-        check_mbg_lantime_state_common(mbg_lantime_ng_states, item, params, info),
+    'check_function'            : check_mbg_lantime_nb_state,
     'inventory_function'        : inventory_mbg_lantime_state_common,
     'service_description'       : 'LANTIME State',
     'has_perfdata'              : True,
-    'default_levels_variable'   : "mbg_lantime_ng_state",
+    'default_levels_variable'   : "mbg_lantime_state_default_levels",
     'group'                     : 'mbg_lantime_state',
-    'includes'                  : ["mbg_lantime.include"],
     'snmp_info'                 : ('.1.3.6.1.4.1.5597.30.0.2', [
-                                    1, # MBG-SNMP-LTNG-MIB::mbgLtNgNtpCurrentState 
+                                    1, # MBG-SNMP-LTNG-MIB::mbgLtNgNtpCurrentState
                                     2, # MBG-SNMP-LTNG-MIB::mbgLtNgNtpStratum
                                     3, # MBG-SNMP-LTNG-MIB::mbgLtNgNtpRefclockName
                                     4, # MBG-SNMP-LTNG-MIB::mbgLtNgNtpRefclockOffset
                                   ]),
-    'snmp_scan_function'        : \
-          lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3" and \
-          oid(".1.3.6.1.4.1.5597.30.0.2.*"),
+    'snmp_scan_function'        : lambda oid: (oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3" and \
+                                               oid(".1.3.6.1.4.1.5597.30.0.2.*")),
+    'includes'                  : ["mbg_lantime.include"],
 }

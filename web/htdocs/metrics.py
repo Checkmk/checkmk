@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 # Frequently used variable names an terms
-# perf_data_string: Raw performance data as sent by the core, e.g "foor=17M;1;2;4;5"
-# perf_data:        Split performance data, e.g. [("foo", "17", "M", "1", "2", "4", "5")]
+# perf_data_string:   Raw performance data as sent by the core, e.g "foor=17M;1;2;4;5"
+# perf_data:          Split performance data, e.g. [("foo", "17", "M", "1", "2", "4", "5")]
 # translated_metrics: Completely parsed and translated into metrics, e.g. { "foo" : { "value" : 17.0, "unit" : { "render" : ... }, ... } }
 
 
@@ -160,10 +160,10 @@ def translate_metrics(check_command, perf_data):
 # e.g. "fs_used(%)"     -> 17.5
 # e.g. "fs_used:max(%)" -> 100.0
 def evaluate(expression, translated_metrics):
-    if ',' in expression:
-        return evaluate_rpn(expression, translated_metrics)
-    else:
+    if type(expression) in (float, int) or "," not in expression:
         return evaluate_literal(expression, translated_metrics)
+    else:
+        return evaluate_rpn(expression, translated_metrics)
 
 rpn_operators = {
     "+" : lambda a, b: (a + b),

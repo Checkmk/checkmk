@@ -1,0 +1,11 @@
+Title: WATO Web-API: Documentation is finally available
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1423059355
+Class: feature
+
+If you want to manage WATO hosts without a graphical user interface
+you might have a look at <a href="http://mathias-kettner.com/checkmk_wato_webapi.html">this</a>
+documentation.

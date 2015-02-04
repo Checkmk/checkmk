@@ -311,7 +311,7 @@ check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "
 #   |  Definition of Perf-O-Meters                                         |
 #   '----------------------------------------------------------------------'
 
-perfometer_info.append(("stacked",      ( ["execution_time"], 90.0)))
+perfometer_info.append(("stacked",      ( ["execution_time"], 90.0, None)))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "temp",         40.0, 1.2)))
 perfometer_info.append(("logarithmic",  ( "ctxt",       1000.0, 2.0)))

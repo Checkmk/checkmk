@@ -1,0 +1,10 @@
+Title: check_bi_aggr: Ignoring proxy settings from environment now
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423059135
+
+

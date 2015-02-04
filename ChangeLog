@@ -16,6 +16,7 @@
     * 1970 FIX: lparstat_aix: Made the check compatible to different kind of lparstat output...
     * 1971 FIX: printer_input/printer_output: Discovery is using name field when available no...
             NOTE: Please refer to the migration notes!
+    * 1975 FIX: check_bi_aggr: Ignoring proxy settings from environment now
 
     Multisite:
     * 1884 FIX: Fixed exception in virtual host tree snapin

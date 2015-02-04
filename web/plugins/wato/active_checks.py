@@ -1388,7 +1388,9 @@ register_rule(group,
             ),
             TextAscii(
                 title = _("Aggregation Name"),
-                help = _("The name of the aggregation to fetch. It will be added to the service description."),
+                help = _("The name of the aggregation to fetch. It will be added to the service description. You can use "
+                         "macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to make them be replaced by "
+                         "the hosts values."),
                 allow_empty = False
             ),
             TextAscii(

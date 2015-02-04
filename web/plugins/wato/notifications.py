@@ -189,7 +189,7 @@ register_notification_parameters("mkeventd",
             ( "facility",
               DropdownChoice(
                   title = _("Syslog Facility to use"),
-                  help = _("The notifications will be converted into syslog message with "
+                  help = _("The notifications will be converted into syslog messages with "
                            "the facility that you choose here. In the Event Console you can "
                            "later create a rule matching this facility."),
                   choices = syslog_facilities,

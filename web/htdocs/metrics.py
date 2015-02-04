@@ -160,6 +160,41 @@ def translate_metrics(check_command, perf_data):
 # e.g. "fs_used(%)"     -> 17.5
 # e.g. "fs_used:max(%)" -> 100.0
 def evaluate(expression, translated_metrics):
+    if ',' in expression:
+        return evaluate_rpn(expression, translated_metrics)
+    else:
+        return evaluate_literal(expression, translated_metrics)
+
+rpn_operators = {
+    "+" : lambda a, b: (a + b),
+    "-" : lambda a, b: (a - b),
+    "*" : lambda a, b: (a * b),
+    "/" : lambda a, b: (a / b),
+}
+
+
+def evaluate_rpn(expression, translated_metrics):
+    parts = expression.split(",")
+    stack = []
+    while parts:
+        operator_name = parts[0]
+        parts = parts[1:]
+        if operator_name in rpn_operators:
+            if len(stack) < 2:
+                raise MKGeneralException("Syntax error in expression '%s': too few operands" % expression)
+            op1 = stack[-1]
+            op2 = stack[-2]
+            stack = stack[:-2] + [ rpn_operators[operator_name](op1, op2) ]
+        else:
+            stack.append(evaluate_literal(operator_name, translated_metrics))
+
+    if len(stack) != 1:
+        raise MKGeneralException("Syntax error in expression '%s': too much operands left" % expression)
+
+    return stack[0]
+
+
+def evaluate_literal(expression, translated_metrics):
     if type(expression) in (int, float):
         return expression
 
@@ -241,6 +276,9 @@ def metric_to_text(metric, value=None):
         value = metric["value"]
     return metric["unit"]["render"](value)
 
+def value_to_text(value, unit):
+    return unit_info[unit]["render"](value)
+
 # A few helper function to be used by the definitions
 # 45.1 -> "45.1"
 # 45.0 -> "45"
@@ -320,12 +358,6 @@ def output_pnp_graph(graph, host_name, service_desc, translated_metrics):
     html.write(rrdgraph_commands + "\n")
 
 
-# $def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
-# $def[1] .= "AREA:var1#2080ff:\"Temperature\:\" ";
-# $def[1] .= "GPRINT:var1:LAST:\"%2.0lfC\" ";
-# $def[1] .= "LINE1:var1#000080:\"\" ";
-# $def[1] .= "GPRINT:var1:MAX:\"(Max\: %2.0lfC,\" ";
-# $def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lfC)\" ";
 
 def rrd_path(host_name, service_desc, varname):
     return "%s/%s/%s_%s.rrd" % (
@@ -333,17 +365,6 @@ def rrd_path(host_name, service_desc, varname):
         pnp_cleanup(host_name),
         pnp_cleanup(service_desc),
         pnp_cleanup(varname))
-
-
-
-    html.write(' --vertical-label \"Celsius\"  -l 0 -u 40 --title \"Temperature $servicedesc\" \n')
-    html.write(
-'DEF:var1=/opt/omd/foo/bar/test.rrd:temp:MAX '
-'AREA:var1#2080ff:\"Temperature\:\" '
-'GPRINT:var1:LAST:\"%2.0lfC\" '
-'LINE1:var1#000080:\"\" '
-'GPRINT:var1:MAX:\"(Max\: %2.0lfC,\" '
-'GPRINT:var1:AVERAGE:\"Avg\: %2.0lfC)\"\n')
 
 
 # "#ff0080" -> (1.0, 0.0, 0.5)

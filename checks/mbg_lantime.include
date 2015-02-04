@@ -27,7 +27,7 @@
 
 factory_settings['mbg_lantime_state_default_levels'] = {
      "stratum" : (1,   1),
-     "offset"  : (500, 1000), # ms
+     "offset"  : (500, 1000), # us
 }
 
 
@@ -72,7 +72,7 @@ def check_mbg_lantime_state_common(states, _no_item, params, info):
     elif pos_refclock_offset >= warn:
         state = 1
     if state != 0:
-        levels_text = " (warn/crit at %d/%d ms)" % (warn, crit)
-    perfdata = [('offset', refclock_offset, warn, crit )]
+        levels_text = " (warn/crit at %d/%d us)" % (warn, crit)
+    perfdata = [('offset', refclock_offset, warn * 1000, crit * 1000)] # all in us
     yield state, 'Reference clock offset: %g us%s' % (refclock_offset, levels_text), perfdata
 

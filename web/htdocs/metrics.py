@@ -348,6 +348,7 @@ def output_pnp_graph(graph, host_name, service_desc, translated_metrics):
         unit = unit_info[mi["unit"]]
         rrd = rrd_path(host_name, service_desc, translated_metrics[metric_name]["orig_name"])
         rrdgraph_commands += "DEF:%s=%s:1:MAX " % (metric_name, rrd)
+        # TODO: Hier muss noch die Skalierung rein!!!
         rrdgraph_commands += "%s:%s%s:\"%s\"%s " % (draw_type, metric_name, mi["color"], ("%-20s" % mi["title"]), draw_stack)
         rrdgraph_commands += "GPRINT:%s:AVERAGE:\"avg\\: %%8.2lf %s\" "  % (metric_name, unit["symbol"].replace("%", "%%"))
         rrdgraph_commands += "GPRINT:%s:MAX:\"max\\: %%8.2lf %s\" "      % (metric_name, unit["symbol"].replace("%", "%%"))

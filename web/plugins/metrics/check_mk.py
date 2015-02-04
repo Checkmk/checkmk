@@ -136,7 +136,6 @@ metric_info["swap_free"] = {
     "color" : "#eeeeee",
 }
 
-
 metric_info["execution_time"] = {
     "title" : _("Execution time"),
     "unit"  : "s",
@@ -205,6 +204,13 @@ metric_info["io_wait"] = {
     "unit"  : "%",
     "color" : "#00b0c0",
 }
+
+metric_info["time_offset"] = {
+    "title" : _("Time offset"),
+    "unit"  : "s",
+    "color" : "#9a52bf",
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -299,6 +305,9 @@ check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "
 check_metrics["check_mk-ucd_cpu_util"]                          = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "name" : "io_wait" } }
 
+check_metrics["check_mk-mbg_lantime_state"]                     = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
+check_metrics["check_mk-mbg_lantime_nb_state"]                  = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -322,6 +331,7 @@ perfometer_info.append(("stacked",      ( [ "user", "system", "io_wait" ],      
 perfometer_info.append(("stacked",      ( [ "fs_used(%)" ],                                              100.0,       None)))
 perfometer_info.append(("stacked",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_total,mem_used,swap_used,+,/", "100%"))))
 perfometer_info.append(("stacked",      ( [ "mem_used" ],                                                "mem_total", None)))
+perfometer_info.append(("logarithmic",  ( "time_offset",  1.0, 10.0)))
 
 
 #.
@@ -349,5 +359,11 @@ graph_info.append({
         ( "user",    "area" ),
         ( "system",  "stack" ),
         ( "io_wait", "stack" ),
+    ]
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "time_offset", "area" ),
     ]
 })

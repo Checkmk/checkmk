@@ -89,7 +89,7 @@ unit_info["bytes"] = {
 
 unit_info["c"] = {
     "title"  : _("Degree Celsius"),
-    "symbol" : _("°C"),
+    "symbol" : _(u"°C"),
     "render" : lambda v: "%s %s" % (drop_dotzero(v), _("°C")),
 }
 

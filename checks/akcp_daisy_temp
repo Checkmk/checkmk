@@ -62,7 +62,7 @@ check_info["akcp_daisy_temp"] = {
             ]
     ),
     'snmp_scan_function':  lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
-                         [ ".1.3.6.1.4.1.3854.1.2.2.1.1", ".1.3.6.1.4.1.3854.1" ],
+                         [ ".1.3.6.1.4.1.3854.1.2.2.1.1", ".1.3.6.1.4.1.3854.1" ] and not oid('.1.3.6.1.4.1.3854.2.*'),
     'group'             :  'room_temperature',
     'includes'          : [ 'temperature.include' ],
 }

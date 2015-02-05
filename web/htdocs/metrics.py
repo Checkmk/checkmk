@@ -219,12 +219,18 @@ def evaluate_literal(expression, translated_metrics):
 
 # e.g. "fs_used:max(%)" -> "fs_used"
 def get_name(expression):
+    if type(expression) in (int, float):
+        return None
     if expression.endswith("(%)"):
         expression = expression[:-3]
     return expression.split(":")[0]
 
 def get_color(expression):
-    return metric_info[get_name(expression)]["color"]
+    name = get_name(expression)
+    if name:
+        return metric_info[name]["color"]
+    else:
+        return "#808080"
 
 def get_unit(expression):
     if expression.endswith("(%)"):
@@ -247,12 +253,16 @@ def perfometer_possible(perfometer, translated_metrics):
         required = [ perf_args[0] ]
     elif perf_type == "stacked":
         required = perf_args[0]
+        if perf_args[1]:
+            required = required + [perf_args[1]] # Reference value for 100%
+        if perf_args[2]:
+            required = required + [perf_args[2]] # Labelling value
     else:
         raise MKInternalError(_("Undefined Perf-O-Meter type '%s'") % perf_type)
 
     for req in required:
         try:
-            evaluate(req, translated_metrics)
+            x = evaluate(req, translated_metrics)
         except:
             return False
     return True

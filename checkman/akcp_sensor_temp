@@ -8,10 +8,10 @@ description:
  to AKCP SensorProbe.
 
 item:
- The item is the sensor description of the sensor as string.
+ The description of the sensor as string as specified by the user during board configuration.
 
 perfdata:
- the current temperature in degree celsius
+ The current temperature in degree celsius.
 
 inventory:
  All available temperature sensors are automatically inventorized.

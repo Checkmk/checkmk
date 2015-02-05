@@ -1,0 +1,31 @@
+title: AKCP Expansion Sensor Temperature
+agents: snmp
+catalog: hw/environment/akcp
+license: GPL
+distribution:
+description:
+ This check monitors all online temperature sensors on AKCP securityProbe environment monitoring boards which have expansion boards
+ daisy chained to them.
+
+item:
+ The description of the sensor as string as specified by the user during board configuration.
+
+perfdata:
+ The current temperature in degree celsius.
+
+inventory:
+ All online temperature sensors are automatically detected and inventorized.
+
+examples:
+ # set default levels for all akcp temperature sensors
+ akcp_sensor_temp_defaultlevels = (32, 35)
+
+[parameters]
+critical low (int): lower border for triggering critical level
+warning low (int): lower border for warning level
+warning high (int): upper border for triggering warning level
+critical high (int): upper border for critical level
+
+[configuration]
+akcp_sensor_temperature_defaultlevels (int, int): Default levels. This is
+ preset to {(32, 35)}.

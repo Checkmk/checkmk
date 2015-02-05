@@ -9,8 +9,7 @@ description:
  this states.
 
 item:
- The item is the sensor description of the sensor as string.
-
+ The description of the sensor as string as specified by the user during board configuration.
 
 inventory:
  All available sensors are automatically inventorized.

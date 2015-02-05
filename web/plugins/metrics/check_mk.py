@@ -89,8 +89,8 @@ unit_info["bytes"] = {
 
 unit_info["c"] = {
     "title"  : _("Degree Celsius"),
-    "symbol" : _("°C"),
-    "render" : lambda v: "%s %s" % (drop_dotzero(v), _("°C")),
+    "symbol" : _(u"°C"),
+    "render" : lambda v: "%s %s" % (drop_dotzero(v), _(u"°C")),
 }
 
 
@@ -236,6 +236,8 @@ check_metrics["check_mk-blade_bx_load"]                         = {}
 check_metrics["check_mk-cpu.threads"]                           = {}
 
 check_metrics["check_mk-mem.linux"]                             = {}
+check_metrics["check_mk-aix_memory"]                            = { "ramused" : { "name" : "mem_used", "scale": MB }, "swapused" : { "name" : "swap_used", "scale": MB }}
+check_metrics["check_mk-mem.win"]                               = { "memory" : { "name" : "mem_used", "scale" : MB }, "pagefile" : { "name" : "pagefile_used", "scale" : MB }}
 
 check_metrics["check_mk-df"]                                    = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-vms_df"]                                = { 0: { "name": "fs_used", "scale" : MB } }
@@ -331,6 +333,7 @@ perfometer_info.append(("stacked",      ( [ "user", "system", "io_wait" ],      
 perfometer_info.append(("stacked",      ( [ "fs_used(%)" ],                                              100.0,       None)))
 perfometer_info.append(("stacked",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_total,mem_used,swap_used,+,/", "100%"))))
 perfometer_info.append(("stacked",      ( [ "mem_used" ],                                                "mem_total", None)))
+perfometer_info.append(("stacked",      ( [ "mem_used(%)" ],                                              100.0, None)))
 perfometer_info.append(("logarithmic",  ( "time_offset",  1.0, 10.0)))
 
 

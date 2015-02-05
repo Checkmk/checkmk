@@ -1,0 +1,11 @@
+Title: akcp_sensor_drycontact: Service description prefix changed from "Device" to "Dry Contact"
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1423134033
+Class: fix
+
+The service description of the akcp_sensor_drycontact check has changed from "Device" to
+"Dry Contact" which describes more accurately what the service is.
+Beware! This is an incompatible change which means that the check has to be re-inventoried.

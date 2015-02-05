@@ -232,7 +232,10 @@ class FormParser(HTMLParser):
             if self.current_form is None:
                 debug('Ignoring form field out of form tag')
             else:
-                self.current_form['elements'][attrs['name']] = attrs.get('value', '')
+                if 'name' in attrs:
+                    self.current_form['elements'][attrs['name']] = attrs.get('value', '')
+                else:
+                    debug('Ignoring form field without name %r' % attrs)
 
     def handle_endtag(self, tag):
         if tag == 'form':

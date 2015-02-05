@@ -6168,6 +6168,44 @@ register_check_parameters(
 
 register_check_parameters(
    subgroup_applications,
+    "mbg_lantime_state",
+    _("Meinberg Lantime State"),
+    Dictionary(
+    title = _("Meinberg Lantime State"),
+    elements = [
+       ("stratum", Tuple(
+            title = _("Warning levels for Stratum"),
+            elements = [
+                Integer(
+                    title = _("Warning at"),
+                    default_value = 1,
+                ),
+                Integer(
+                    title = _("Critical at"),
+                    default_value = 1,
+            ),
+            ])),
+       ("offset", Tuple(
+            title = _("Warning levels for Time Offset"),
+            elements = [
+                Integer(
+                    title = _("Warning at"),
+                    unit = _("microseconds"),
+                    default_value = 1,
+                ),
+                Integer(
+                    title = _("Critical at"),
+                    unit = _("microseconds"),
+                    default_value = 1,
+            ),
+            ])),
+    ]),
+    None,
+    "first"
+)
+
+register_check_parameters(
+   subgroup_applications,
     "datacore_poolallocation",
     _("Datacore: pool allocation"),
     Tuple(

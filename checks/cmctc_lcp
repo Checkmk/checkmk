@@ -125,12 +125,12 @@ snmp_info["cmctc_lcp"] = (
 )
 
 
-for s, i in cmctc_lcp_sensortypes.items():
-    check_info['cmctc_lcp.' + s] = {
-        "check_function" :      (lambda st: lambda item,params,info: check_cmctc_lcp(item, params, info, st))(s),
-        "inventory_function" :  (lambda st: lambda info: inventory_cmctc_lcp(info, st))(s),
+for _s, _i in cmctc_lcp_sensortypes.items():
+    check_info['cmctc_lcp.' + _s] = {
+        "check_function" :      (lambda st: lambda item,params,info: check_cmctc_lcp(item, params, info, st))(_s),
+        "inventory_function" :  (lambda st: lambda info: inventory_cmctc_lcp(info, st))(_s),
         "has_perfdata" :        True,
-        "service_description" : i[1],
+        "service_description" : _i[1],
     }
 
 # Set WATO check group for temperature checks

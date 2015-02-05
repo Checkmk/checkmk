@@ -200,6 +200,7 @@
     * 1883 FIX: Fixed lossing service context when cloning a rule
     * 1925 FIX: Fix missing auxilliary tags that have their own topic...
     * 1927 FIX: Fixed level description in WATO rules, change from if above into at
+    * 1976 FIX: Sorting BI rule choice dropdown field entries now
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

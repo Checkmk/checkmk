@@ -16812,6 +16812,7 @@ def declare_bi_valuespecs(aggregation_rules):
             DropdownChoice(
                 title = _("Rule:"),
                 choices = rule_choices,
+                sorted = True,
             ),
             ListOfStrings(
                 orientation = "horizontal",

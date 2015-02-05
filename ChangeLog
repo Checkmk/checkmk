@@ -143,6 +143,7 @@
     * 1931 FIX: agent_vsphere: no longer crashes when host has no license information
     * 1932 FIX: check_http: Check SSL Certificate: did not work when SNI Option was set...
     * 1975 FIX: check_bi_aggr: Ignoring proxy settings from environment now
+    * 1936 FIX: check_form_submit: fixed crash on certain form fields with unnamed input elements
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

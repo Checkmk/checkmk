@@ -18706,7 +18706,7 @@ def load_plugins():
 
     config.declare_permission("wato.notifications",
          _("Notification configuration"),
-         _("This permission is needed for the new rule based notification configuration via the WATO module <i>Notifications</i>.</b>"),
+         _("This permission is needed for the new rule based notification configuration via the WATO module <i>Notifications</i>."),
          [ "admin", ])
 
     config.declare_permission("wato.snapshots",

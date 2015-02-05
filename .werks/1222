@@ -1,0 +1,12 @@
+Title: mbg_lantime_ng_state: Support for the new Meinberg Lantime MIB (MBG-LANTIME-NG-MIB)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1423127749
+Class: feature
+
+This new Checks supports the NG MIB on Meinberg Lantime devices. 
+The old version of the check (mbg_lantime_state) now also uses the same sourcecode base and benefits
+from the new Wato option. 
+

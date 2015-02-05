@@ -198,7 +198,6 @@ def render_metrics_perfometer(perfometer, translated_metrics):
             total = metrics.evaluate(total_spec, translated_metrics)
 
         for ex in metrics_expressions:
-            name = ex.split(":")[0]
             value = metrics.evaluate(ex, translated_metrics)
             color = metrics.get_color(ex)
             h += perfometer_td(100.0 * value / total, color)

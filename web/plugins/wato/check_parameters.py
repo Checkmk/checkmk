@@ -4680,7 +4680,7 @@ register_rule(
                                   "description. The UUID will be displayed in the pluging output."))
             ),
         ],
-        help = _('This rule controls the inventory of Multipath devices on Linux.'),
+        help = _('This rule set controls the discovery of Multipath devices on Linux.'),
     ),
     match = 'dict',
 )
@@ -5527,7 +5527,7 @@ register_check_parameters(
         title = _("Temperature Trend Analysis"),
         help = _("This rule enables and configures a trend analysis and corresponding limits for devices, "
                  "which have their own limits configured on the device. It will only work for supported "
-                 "checks, right now the adva_fsp_temp check"),
+                 "checks, right now the <tt>adva_fsp_temp</tt> check"),
         elements = [
             (  "trend_range",
                Optional(

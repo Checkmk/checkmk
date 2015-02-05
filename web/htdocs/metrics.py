@@ -97,7 +97,7 @@ def parse_perf_data(perf_data_string, check_command=None):
 # Simple example for perf_data: [(u'temp', u'48', u'', u'70', u'80', u'', u'')]
 # Result for this example:
 # { "temp" : "value" : 48.0, "warn" : 70.0, "crit" : 80.0, "unit" : { ... } }
-def translate_metrics(check_command, perf_data):
+def translate_metrics(perf_data, check_command):
     if check_command not in check_metrics:
         return None
 
@@ -152,7 +152,7 @@ def translate_metrics(check_command, perf_data):
         # TODO: warn, crit, min, max
         # if entry[2]:
         #     # TODO: lower and upper levels
-        #     translate_metrics[metric_name]["warn"] = float(entry[2])
+        #     translated_metrics[metric_name]["warn"] = float(entry[2])
     return translated_metrics
 
 
@@ -311,7 +311,7 @@ def page_pnp_template():
     if not perf_data or not check_command:
         return
 
-    translated_metrics = translate_metrics(check_command, perf_data)
+    translated_metrics = translate_metrics(perf_data, check_command)
     if not translated_metrics:
         return # check not supported
 

@@ -134,7 +134,7 @@ def paint_perfometer(row):
 
     try:
         # Try new metrics module
-        translated_metrics = metrics.translate_metrics(check_command, perf_data)
+        translated_metrics = metrics.translate_metrics(perf_data, check_command)
         if translated_metrics: # definition for this check type exists
             perfometer_definitions = list(metrics.get_perfometers(translated_metrics))
             if perfometer_definitions:
@@ -231,7 +231,7 @@ multisite_painters["perfometer"] = {
                   "service_check_command", "service_pnpgraph_present", "service_plugin_output" ],
     "paint" : paint_perfometer,
     "sorter" : "svc_perf_val01",
-    "printable" : False, # No printable on PDF, only in HTML
+    "printable" : "perfometer", # Special rendering in PDFs
 }
 
 load_web_plugins("perfometer", globals())

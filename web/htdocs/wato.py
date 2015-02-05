@@ -8942,7 +8942,7 @@ def mode_notifications(phase):
                 context = entry.items()
                 context.sort()
                 tooltip = "".join(("%s: %s\n" % e).decode('utf-8') for e in context)
-                html.icon_button(analyse_url, _("Anaylse ruleset with this notification:\n%s" % tooltip), "analyze")
+                html.icon_button(analyse_url, _("Analyze ruleset with this notification:\n%s" % tooltip), "analyze")
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
                 if html.var("analyse") and nr == int(html.var("analyse")):

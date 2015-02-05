@@ -2026,18 +2026,19 @@ def paint_painter(painter, row):
     else:
         return painter["paint"](row)
 
-def get_join_key(p):
-    return len(p) >= 4 and p[3] or None
+def join_row(row, p):
+    join_key = len(p) >= 4 and p[3] or None
+    if join_key != None:
+        return row.get("JOIN", {}).get(join_key)
+    else:
+        return row
 
 def prepare_paint(p, row):
     painter = p[0]
     linkview = p[1]
     tooltip = len(p) > 2 and p[2] or None
 
-    join_key = get_join_key(p)
-    if join_key != None:
-        row = row.get("JOIN", {}).get(join_key)
-
+    row = join_row(row, p)
     tdclass, content = paint_painter(painter, row)
     if tdclass == "" and content == "":
         return tdclass, content

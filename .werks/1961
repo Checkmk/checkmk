@@ -1,0 +1,16 @@
+Title: akcp_exp_humidity, akcp_exp_smoke, akcp_exp_temp, akcp_exp_water: New checks to monitor AKCP securityProbe and expansion boards
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1423134463
+Class: feature
+
+
+Until now Check MK was only able to monitor sensors on the securityProbe monitoring board
+which were directly connected to it. Albeit the number of sensors can be increased by daisy
+chaining expansion boards to the securityProbe base board.
+The new akcp_exp_* checks are designed for this setup.
+
+AKCP sensorProbe boards or securityProbes with no expansion boards connected to them
+are still handled by the akcp_sensor_* checks.

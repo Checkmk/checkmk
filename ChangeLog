@@ -31,6 +31,7 @@
     * 1972 FIX: Prevent erasing of quicksearch field when sidebar is reloaded (e.g. during activate changes)...
     * 1221 FIX: veeam_client: Multisite perfometer is now more robust
     * 1989 FIX: Fix sorting of services in availability views
+    * 1978 FIX: Fixed linking to other views using "joined columns"...
 
     WATO:
     * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag

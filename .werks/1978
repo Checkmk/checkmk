@@ -1,0 +1,10 @@
+Title: Fixed linking to other views using "joined columns"
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b8
+Date: 1423149130
+Class: fix
+
+Creating views with a joined columns which links to another view
+resulted in an exception when displaying the view.

@@ -2017,11 +2017,9 @@ def paint(p, row, tdattrs=""):
         html.write("<td %s>%s</td>" % (tdattrs, content))
     return content != ""
 
-def paint_painter(painter, row, join_key=None):
-    if join_key != None:
-        row = row.get("JOIN", {}).get(join_key)
-        if not row:
-            return "", ""  # no join information available for that column
+def paint_painter(painter, row):
+    if not row:
+        return "", ""  # no join information available for that column
 
     if "args" in painter:
         return painter["paint"](row, *painter["args"])
@@ -2036,7 +2034,11 @@ def prepare_paint(p, row):
     linkview = p[1]
     tooltip = len(p) > 2 and p[2] or None
 
-    tdclass, content = paint_painter(painter, row, join_key=get_join_key(p))
+    join_key = get_join_key(p)
+    if join_key != None:
+        row = row.get("JOIN", {}).get(join_key)
+
+    tdclass, content = paint_painter(painter, row)
     if tdclass == "" and content == "":
         return tdclass, content
 

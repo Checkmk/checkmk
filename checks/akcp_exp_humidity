@@ -32,7 +32,7 @@
 check_info["akcp_exp_humidity"] = {
     "check_function"      : check_akcp_sensor_humidity,
     "inventory_function"  : lambda info: inventory_akcp_sensor(info, \
-                                            "akcp_humidity_default_levels"),
+                                            "akcp_humidity_defaultlevels"),
     "service_description" : "Humidity %s",
     "has_perfdata"        : True,
     "snmp_scan_function"  : snmp_scan_akcp_exp,

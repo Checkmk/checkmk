@@ -25,8 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 
-# These values were specified in the original check
-akcp_humidity_default_levels = (35, 40, 60, 65)
+# These values were determined by the author of the original check
+# akcp_sensor_humidity
+# This variable does not compy to the check guidelines. This has to be fixed one day.
+akcp_humidity_defaultlevels = (35, 40, 60, 65)
 
 
 factory_settings["akcp_temp_default_levels"] = {

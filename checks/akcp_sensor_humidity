@@ -25,11 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-# This variable exists to maintain compatibility with already installed checks.
-# When this check gets reworked some day we shall use the guideline-compliant
-# akcp_humidity_default_levels variable from akcp_sensor.include instead.
-akcp_sensor_humidity_defaultlevels = (35, 40, 60, 65)
-
 # Example for contents of info
 #      description       percent  status  online
 # ["Humdity1 Description", "0",    "0",    "2"]

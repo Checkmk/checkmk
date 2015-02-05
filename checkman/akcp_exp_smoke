@@ -1,0 +1,16 @@
+title: AKCP Expansion Smoke Sensor
+agents: snmp
+catalog: hw/environment/akcp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of all online smoke sensors on AKCP securityProbe environment monitoring boards which have expansion boards
+ daisy chained to them.
+ If the sensors's state is 'normal' or 'relay off' the check results in OK. The sensor states 'no status', or 'sensor is offline' lead
+ to an UNKN result. When the sensor state is one of 'high critical', 'low critical', 'sensor error' or 'relay on' the check results in CRIT.
+
+item:
+ The description of the sensor as string as specified by the user during board configuration.
+
+inventory:
+ All online smoke sensors are automatically detected and inventorized.

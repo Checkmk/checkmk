@@ -30,7 +30,25 @@ import metrics
 
 perfometers = {}
 
-# Helper functions for perfometers
+# TODO: Umbau: alle Funktionen perfometer_.. geben eine logische Struktur
+# zurück.
+# perfometer_td() -> perfometer_segment() ergebit (breite_in_proz, farbe)
+# Ein perfometer ist eine Liste von Listen.
+# [ [segment, segment, segment], [segment, segment] ] --> horizontal gespaltet.
+# Darin die vertikalen Balken.
+
+#.
+#   .--Old Style-----------------------------------------------------------.
+#   |                ___  _     _   ____  _         _                      |
+#   |               / _ \| | __| | / ___|| |_ _   _| | ___                 |
+#   |              | | | | |/ _` | \___ \| __| | | | |/ _ \                |
+#   |              | |_| | | (_| |  ___) | |_| |_| | |  __/                |
+#   |               \___/|_|\__,_| |____/ \__|\__, |_|\___|                |
+#   |                                         |___/                        |
+#   +----------------------------------------------------------------------+
+#   |  Perf-O-Meter helper functions for old classical Perf-O-Meters.      |
+#   '----------------------------------------------------------------------'
+
 def perfometer_td(perc, color):
     return '<td class="inner" style="background-color: %s; ' \
            'width: %d%%;"></td>' % (color, int(float(perc)))
@@ -45,22 +63,7 @@ def perfometer_linear(perc, color):
 # Paint logarithm with base 10, half_value is being
 # displayed at 50% of the width
 def perfometer_logarithmic(value, half_value, base, color):
-    value = float(value)
-    if value == 0.0:
-        pos = 0
-    else:
-        half_value = float(half_value)
-        h = math.log(half_value, base) # value to be displayed at 50%
-        pos = 50 + 10.0 * (math.log(value, base) - h)
-        if pos < 2:
-            pos = 2
-        if pos > 98:
-            pos = 98
-
-    return "<table><tr>" + \
-      perfometer_td(pos, color) + \
-      perfometer_td(100 - pos, "white") + \
-      "</tr></table>"
+    return render_metricometer([metrics.metricometer_logarithmic(value, half_value, base, color)])
 
 
 # Dual logarithmic Perf-O-Meter
@@ -170,57 +173,42 @@ def paint_perfometer(row):
         return "perfometer" + stale_css, content
 
 
-# New Perf-O-Meter implementation based on new metrics module.
-# This function gets a Perf-O-Meter-Definition, translated_metrics
-# matrics and outputs a Text and HTML code for the Perf-O-Meter.
-# translated_metrics is a dict from metric-name to ...
-def render_metrics_perfometer(perfometer, translated_metrics):
-    perfometer_type, definition = perfometer
-    if perfometer_type == "logarithmic":
-        metrics_name, median, exponent = definition
-        metric = translated_metrics[metrics_name]
-        text = metrics.metric_to_text(metric)
-        return text, perfometer_logarithmic(metric["value"], median, exponent, metric["color"])
+#.
+#   .--New Style--(Metric-O-Meters)----------------------------------------.
+#   |            _   _                 ____  _         _                   |
+#   |           | \ | | _____      __ / ___|| |_ _   _| | ___              |
+#   |           |  \| |/ _ \ \ /\ / / \___ \| __| | | | |/ _ \             |
+#   |           | |\  |  __/\ V  V /   ___) | |_| |_| | |  __/             |
+#   |           |_| \_|\___| \_/\_/   |____/ \__|\__, |_|\___|             |
+#   |                                            |___/                     |
+#   +----------------------------------------------------------------------+
+#   |  Perf-O-Meters created by new metrics system                         |
+#   '----------------------------------------------------------------------'
 
-    elif perfometer_type == "stacked":
+# Create HTML representation of Perf-O-Meter
+def render_metricometer(stack):
+    if len(stack) not in (1, 2):
+        raise MKGeneralException(_("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack)
+
+    if len(stack) == 2:
+        h = '<div class="stacked">'
+
+    for entry in stack:
         h = '<table><tr>'
-        # NOTE: This might be converted to a dict later.
-        metrics_expressions, total_spec, label_expression = definition
-        summed = 0.0
-
-        for ex in metrics_expressions:
-            value = metrics.evaluate(ex, translated_metrics)
-            summed += value
-
-        if total_spec == None:
-            total = summed
-        else:
-            total = metrics.evaluate(total_spec, translated_metrics)
-
-        for ex in metrics_expressions:
-            value = metrics.evaluate(ex, translated_metrics)
-            color = metrics.get_color(ex)
-            h += perfometer_td(100.0 * value / total, color)
-
-        # Paint rest only, if it is positive and larger than one promille
-        if total - summed > 0.001:
-            h += perfometer_td(100.0 * (total - summed) / total, "white")
-
+        for percentage, color in entry:
+            h += perfometer_td(percentage, color)
         h += "</tr></table>"
-        # Use unit of first metrics for output of sum. We assume that all
-        # stackes metrics have the same unit anyway
-        if label_expression:
-            expr, unit = label_expression
-            value = metrics.evaluate(expr, translated_metrics)
-            text = metrics.value_to_text(value, unit)
-        else: # absolute
-            unit = metrics.get_unit(metrics_expressions[0])
-            text = unit["render"](summed)
-        return text, h
 
-    else:
-        raise MKInternalError(_("Unsupported Perf-O-Meter type '%s'") % perfometer_type)
+    if len(stack) == 2:
+        h += '</div>'
+    return h
 
+# Compute logarithmic Perf-O-Meter
+
+
+def render_metrics_perfometer(perfometer, translated_metrics):
+    label, stack = metrics.build_perfometer(perfometer, translated_metrics)
+    return label, render_metricometer(stack)
 
 
 

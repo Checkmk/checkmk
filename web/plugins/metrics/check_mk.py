@@ -309,6 +309,7 @@ check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "
 
 check_metrics["check_mk-mbg_lantime_state"]                     = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
 check_metrics["check_mk-mbg_lantime_nb_state"]                  = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
+check_metrics["check_mk-systemtime"]                            = { "offset" : { "name" : "time_offset" }}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -331,7 +332,8 @@ perfometer_info.append(("logarithmic",  ( "proc_creat", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
 perfometer_info.append(("stacked",      ( [ "user", "system", "io_wait" ],                               100.0,       None)))
 perfometer_info.append(("stacked",      ( [ "fs_used(%)" ],                                              100.0,       None)))
-perfometer_info.append(("stacked",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_total,mem_used,swap_used,+,/", "100%"))))
+perfometer_info.append(("stacked",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, 
+("mem_total,mem_used,swap_used,+,/", "100%"))))
 perfometer_info.append(("stacked",      ( [ "mem_used" ],                                                "mem_total", None)))
 perfometer_info.append(("stacked",      ( [ "mem_used(%)" ],                                              100.0, None)))
 perfometer_info.append(("logarithmic",  ( "time_offset",  1.0, 10.0)))

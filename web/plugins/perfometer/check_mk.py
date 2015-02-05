@@ -516,11 +516,12 @@ perfometers["check_mk-hpux_snmp_cs.cpu"] = perfometer_hpux_snmp_cs_cpu
 
 
 def perfometer_check_mk_uptime(row, check_command, perf_data):
-    days,    rest    = divmod(int(float(perf_data[0][1])), 60*60*24)
+    seconds = int(float(perf_data[0][1]))
+    days,    rest    = divmod(seconds, 60*60*24)
     hours,   rest    = divmod(rest,   60*60)
     minutes, seconds = divmod(rest,      60)
 
-    return "%02dd %02dh %02dm" % (days, hours, minutes), perfometer_logarithmic(perf_data[0][1], 2592000, 2, '#80F000')
+    return "%02dd %02dh %02dm" % (days, hours, minutes), perfometer_logarithmic(seconds, 2592000.0, 2, '#80F000')
 
 perfometers["check_mk-uptime"]      = perfometer_check_mk_uptime
 perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime

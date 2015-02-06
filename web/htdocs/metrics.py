@@ -30,6 +30,7 @@
 # translated_metrics: Completely parsed and translated into metrics, e.g. { "foo" : { "value" : 17.0, "unit" : { "render" : ... }, ... } }
 
 
+import math
 import config, defaults
 from lib import *
 
@@ -298,6 +299,75 @@ def drop_dotzero(v):
         return t[:-2]
     else:
         return t
+
+def metricometer_logarithmic(value, half_value, base, color):
+    # Negative values are printed like positive ones (e.g. time offset)
+    value = abs(float(value))
+    if value == 0.0:
+        pos = 0
+    else:
+        half_value = float(half_value)
+        h = math.log(half_value, base) # value to be displayed at 50%
+        pos = 50 + 10.0 * (math.log(value, base) - h)
+        if pos < 2:
+            pos = 2
+        if pos > 98:
+            pos = 98
+
+    return [ (pos, color), (100 - pos, "white") ]
+
+
+def build_perfometer(perfometer, translated_metrics):
+    perfometer_type, definition = perfometer
+
+    if perfometer_type == "logarithmic":
+        metrics_name, median, exponent = definition
+        metric = translated_metrics[metrics_name]
+        label = metric_to_text(metric)
+        stack = [ metricometer_logarithmic(metric["value"], median, exponent, metric["color"]) ]
+
+    elif perfometer_type == "stacked":
+        entry = []
+        stack = [entry]
+
+        # NOTE: This might be converted to a dict later.
+        metrics_expressions, total_spec, label_expression = definition
+        summed = 0.0
+
+        for ex in metrics_expressions:
+            value = evaluate(ex, translated_metrics)
+            summed += value
+
+        if total_spec == None:
+            total = summed
+        else:
+            total = evaluate(total_spec, translated_metrics)
+
+        for ex in metrics_expressions:
+            value = evaluate(ex, translated_metrics)
+            color = get_color(ex)
+            entry.append((100.0 * value / total, color))
+
+        # Paint rest only, if it is positive and larger than one promille
+        if total - summed > 0.001:
+            entry.append((100.0 * (total - summed) / total, "white"))
+
+        # Use unit of first metrics for output of sum. We assume that all
+        # stackes metrics have the same unit anyway
+        if label_expression:
+            expr, unit = label_expression
+            value = evaluate(expr, translated_metrics)
+            label = value_to_text(value, unit)
+        else: # absolute
+            unit = get_unit(metrics_expressions[0])
+            label = unit["render"](summed)
+
+    else:
+        raise MKInternalError(_("Unsupported Perf-O-Meter type '%s'") % perfometer_type)
+
+    return label, stack
+
+
 
 
 def page_pnp_template():

@@ -937,11 +937,7 @@ def page_edit_dashlet():
                 totext = dashlet_type['title'],
                 title = _('Dashlet Type'),
             )),
-            ('single_infos', FixedValue(single_infos,
-                title = _('Show information of single'),
-                totext = single_infos and ', '.join(single_infos) \
-                                      or _('Not restricted to showing a specific object.'),
-            )),
+            visuals.single_infos_spec(single_infos),
             ('background', Checkbox(
                 title = _('Colored Background'),
                 label = _('Render background'),

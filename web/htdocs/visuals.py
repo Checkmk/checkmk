@@ -601,11 +601,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
         render = 'form',
         optional_keys = None,
         elements = [
-            ('single_infos', FixedValue(single_infos,
-                title = _('Specific objects'),
-                totext = single_infos and ', '.join(single_infos) \
-                                      or _('Showing information of multiple objects.'),
-            )),
+            single_infos_spec(single_infos),
             ('name', TextAscii(
                 title = _('Unique ID'),
                 help = _("The ID will be used in URLs that point to a view, e.g. "
@@ -1089,14 +1085,15 @@ def SingleInfoSelection(info_keys, **args):
 
 # Converts a context from the form { filtername : { ... } } into
 # the for { infoname : { filtername : { } } for editing.
-def pack_context_for_editing(context):
+def pack_context_for_editing(visual, info_handler):
     # We need to pack all variables into dicts with the name of the
     # info. Since we have no mapping from info the the filter variable,
     # we pack into every info every filter. The dict valuespec will
     # pick out what it needs. Yurks.
     packed_context = {}
-    for info_name in infos.keys():
-        packed_context[info_name] = context
+    info_keys = info_handler and info_handler(visual) or infos.keys()
+    for info_name in info_keys:
+        packed_context[info_name] = visual.get('context', {})
     return packed_context
 
 def unpack_context_after_editing(packed_context):
@@ -1118,6 +1115,13 @@ def unpack_context_after_editing(packed_context):
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+def single_infos_spec(single_infos):
+    return ('single_infos', FixedValue(single_infos,
+        title = _('Show information of single'),
+        totext = single_infos and ', '.join(single_infos) \
+                    or _('Not restricted to showing a specific object.'),
+    ))
 
 def verify_single_contexts(what, visual):
     for k, v in get_singlecontext_html_vars(visual).items():

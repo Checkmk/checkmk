@@ -27,5 +27,5 @@ uses an additional parameter - the interface index - to make this service name u
 <li>Upstream Channel 1393.3</li>
 </ul>
 
-<b>Note:</b> This extended item name is only used if it is requires, means if there
+<b>Note:</b> This extended item name is only used if it is required, means if there
 are duplicate ChannelId entries for this device.

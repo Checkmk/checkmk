@@ -270,12 +270,10 @@ class FilterGroupSelection(Filter):
 
     def filter(self, infoname):
         current_value = self.current_value()
-        if not current_value:
-            raise MKGeneralException(_("This view needs a host/service group to be specified. "
-                                       "We are missing the URL variable <tt>%s</tt>." %
-                                        self.htmlvars[0]))
-
-        return "Filter: %s_name = %s\n" % (self.what, lqencode(current_value))
+        if current_value:
+            return "Filter: %s_name = %s\n" % (self.what, lqencode(current_value))
+        else:
+            return ""
 
     def variable_settings(self, row):
         group_name = row[self.what + "_name"]
@@ -296,7 +294,7 @@ class FilterHostgroupVisibility(Filter):
         if html.var("hostgroupshowempty"):
             return ""
         else:
-            return "Filter: num_hosts > 0\n"
+            return "Filter: hostgroup_num_hosts > 0\n"
 
 declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup (Regex)"),        "hostgroup",    "hostgroup_name",      "hostgroup_regex",    "~~"),
                                _("Search field allowing regular expressions and partial matches on the names of hostgroups"))

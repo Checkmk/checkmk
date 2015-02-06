@@ -1,0 +1,10 @@
+Title: Fix two exceptions in PDF exports of host group views
+Level: 2
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423222676
+
+

@@ -28,9 +28,11 @@
 def inventory_ibm_svc_portsas(info):
     for line in info:
         if len(line) in (10, 12) and line[6] != "offline_unconfigured":
-            yield line[0], None
+            yield line[0], {'current_state' : line[6]}
 
-def check_ibm_svc_portsas(item, _no_params, info):
+def check_ibm_svc_portsas(item, params, info):
+    if not params:
+        params = { 'current_state' : 'offline' }
     for line in info:
         if len(line) in (10, 12) and line[0] == item:
             sasport_status = line[6]
@@ -38,7 +40,7 @@ def check_ibm_svc_portsas(item, _no_params, info):
             sasport_type = line[9]
 
             infotext = "Status: %s" % sasport_status
-            if sasport_status == "online":
+            if sasport_status == params['current_state']:
                 state = 0
             else:
                 state = 2

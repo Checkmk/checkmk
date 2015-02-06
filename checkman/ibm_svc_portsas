@@ -7,7 +7,7 @@ description:
  Checks the status of SAS Ports in an IBM SVC / Storwize V3700 / V7000
  device.
 
- Status {online} is {OK}, every other status is {CRIT}.
+ Every Status Change after Discovery results in a {CRIT} state.
 
  Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
  data from the device. Your monitoring user must be able to SSH to the device

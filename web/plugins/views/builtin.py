@@ -27,7 +27,7 @@
 # Painters used in list of services views
 service_view_painters = [
     ('service_state',       None),
-    ('service_type_icon',   None),
+#    ('service_type_icon',   None),
     ('service_description', 'service'),
     ('service_icons',       None),
     ('svc_plugin_output',   None),
@@ -42,9 +42,9 @@ host_service_view_painters.insert(1, ('host', 'host'))
 
 host_view_painters = [
     ('host_state',           None),
-    ('host_type_icon',       None),
+#    ('host_type_icon',       None),
     ('host',                 'host'),
-#    ('host_icons',           None),
+    ('host_icons',           None),
     ('num_services_ok',      'host_ok'),
     ('num_services_warn',    'host_warn'),
     ('num_services_unknown', 'host_unknown'),

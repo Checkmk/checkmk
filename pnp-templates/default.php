@@ -28,15 +28,18 @@ $fd = @fopen($url . "pnp_template.py"
                   . "&service="       . urlencode($servicedesc)
                   . "&perfdata="      . urlencode($NAGIOS_PERFDATA)
                   . "&check_command=" . urlencode($NAGIOS_CHECK_COMMAND), "r");
+
+$use_legacy_template = True;
 if ($fd) {
     while (!feof($fd)) {
+        $use_legacy_template = False;
         $opt[] = trim(fgets($fd));
         $def[] = trim(fgets($fd));
     }
 }
-else
-{
 
+if ($use_legacy_template)
+{
     $_WARNRULE = '#FFFF00';
     $_CRITRULE = '#FF0000';
     $_AREA     = '#256aef';
@@ -93,7 +96,7 @@ else
                     $vlabel = $VAL['UNIT'];
             }
 
-            $opt[$KEY] = '--vertical-label "' . $titel . $vlabel . '" --title "' . $this->MACRO['DISP_HOSTNAME'] . ' / ' . $this->MACRO['DISP_SERVICEDESC'] . '"' . $upper . $lower;
+            $opt[$KEY] = '--vertical-label "' . $vlabel . '" --title "' . $this->MACRO['DISP_HOSTNAME'] . ' / ' . $this->MACRO['DISP_SERVICEDESC'] . '"' . $upper . $lower;
             $ds_name[$KEY] = $VAL['LABEL'];
             $def[$KEY]  = rrd::def     ("var1", $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
             $def[$KEY] .= rrd::gradient("var1", "3152A5", "BDC6DE", rrd::cut($VAL['NAME'],16), 20);

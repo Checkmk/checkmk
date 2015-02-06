@@ -31,6 +31,8 @@ def inventory_ibm_svc_portsas(info):
             yield line[0], {'current_state' : line[6]}
 
 def check_ibm_svc_portsas(item, params, info):
+    # This can be removed soon, because the age of the check
+    # was only about 7 days:
     if not params:
         params = { 'current_state' : 'offline' }
     for line in info:

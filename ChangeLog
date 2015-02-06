@@ -26,6 +26,7 @@
     * 1936 FIX: check_form_submit: fixed crash on certain form fields with unnamed input elements
 
     Multisite:
+    * 1979 Relative timestamps display warnings when they should be in future but are in past
     * 1884 FIX: Fixed exception in virtual host tree snapin
     * 1885 FIX: Fixed filtering by software versions in software package search
     * 1972 FIX: Prevent erasing of quicksearch field when sidebar is reloaded (e.g. during activate changes)...

@@ -314,7 +314,7 @@ def paint_nagios_link(row):
     return "singleicon", "<a href=\"%s\">%s</a>" % \
         (url, html.render_icon('nagios', _('Show this %s in Nagios') % what))
 
-def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None):
+def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):
     if not has_been_checked:
         return "age", "-"
 
@@ -325,8 +325,8 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None):
         return "", str(int(timestamp))
 
     if mode == "both":
-        css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs")
-        css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel")
+        css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs", what=what)
+        css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
         return css, "%s - %s" % (h1, h2)
 
     dateformat = get_painter_option("ts_date")
@@ -345,14 +345,21 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None):
         age_class = "age recent"
     else:
         age_class = "age"
-    return age_class, prefix + html.age_text(age)
+
+    warn_txt = ''
+    if what == 'future' and age > 0:
+        warn_txt = ' <b>%s</b>' % _('in the past!')
+    elif what == 'past' and age < 0:
+        warn_txt = ' <b>%s</b>' % _('in the future!')
+
+    return age_class, prefix + html.age_text(age) + warn_txt
 
 
 def paint_future_time(timestamp):
     if timestamp <= 0:
         return "", "-"
     else:
-        return paint_age(timestamp, True, 0)
+        return paint_age(timestamp, True, 0, what='future')
 
 def paint_day(timestamp):
     return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
@@ -1672,7 +1679,7 @@ multisite_painters["comment_expires"] = {
     "short"   : _("Expires"),
     "columns" : ["comment_expire_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint"   : lambda row: paint_age(row["comment_expire_time"], row["comment_expire_time"] != 0, 3600),
+    "paint"   : lambda row: paint_age(row["comment_expire_time"], row["comment_expire_time"] != 0, 3600, what='future'),
 }
 
 def paint_comment_entry_type(row):
@@ -1772,7 +1779,7 @@ multisite_painters["downtime_start_time"] = {
     "short"   : _("Start"),
     "columns" : ["downtime_start_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint"   : lambda row: paint_age(row["downtime_start_time"], True, 3600),
+    "paint"   : lambda row: paint_age(row["downtime_start_time"], True, 3600, what=None),
 }
 
 multisite_painters["downtime_end_time"] = {
@@ -1780,7 +1787,7 @@ multisite_painters["downtime_end_time"] = {
     "short"   : _("End"),
     "columns" : ["downtime_end_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint"   : lambda row: paint_age(row["downtime_end_time"], True, 3600),
+    "paint"   : lambda row: paint_age(row["downtime_end_time"], True, 3600, what=None),
 }
 
 def paint_downtime_duration(row):

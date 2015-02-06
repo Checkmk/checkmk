@@ -58,6 +58,10 @@ if ($WARN[1]) {
          . "";
 }
 
+if ($MAX[1]) {
+    $def[1] .= "COMMENT:\" Number of CPUs $MAX[1]\" ";
+}
+
 if (isset($RRD["predict_load15"])) {
     $def[1] .= ""
          . "DEF:predict=$RRD[predict_load15] "

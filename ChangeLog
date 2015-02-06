@@ -24,6 +24,7 @@
     * 1932 FIX: check_http: Check SSL Certificate: did not work when SNI Option was set...
     * 1975 FIX: check_bi_aggr: Ignoring proxy settings from environment now
     * 1936 FIX: check_form_submit: fixed crash on certain form fields with unnamed input elements
+    * 1938 FIX: docsis_channels_upstream: fixed missing checks if channels had the same ChannelId...
 
     Multisite:
     * 1979 Relative timestamps display warnings when they should be in future but are in past

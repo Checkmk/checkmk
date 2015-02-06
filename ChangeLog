@@ -40,6 +40,9 @@
     Notifications:
     * 1988 FIX: Gracefully handline invalid empty bulk notification files from previous buggy versions
 
+    Reporting & Availability:
+    * 1990 FIX: Fix two exceptions in PDF exports of host group views
+
     Event Console:
     * 1974 FIX: Event console views were randomly ignoring host filters...
 

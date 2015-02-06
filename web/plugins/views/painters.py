@@ -247,6 +247,12 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
         (mode == "mixed" and age >= 48 * 3600 or age < -48 * 3600):
         return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
 
+    warn_txt = ''
+    if what == 'future' and age > 0:
+        warn_txt = ' <b>%s</b>' % _('in the past!')
+    elif what == 'past' and age < 0:
+        warn_txt = ' <b>%s</b>' % _('in the future!')
+
     # Time delta less than two days => make relative time
     if age < 0:
         age = -age
@@ -257,12 +263,6 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
         age_class = "age recent"
     else:
         age_class = "age"
-
-    warn_txt = ''
-    if what == 'future' and age > 0:
-        warn_txt = ' <b>%s</b>' % _('in the past!')
-    elif what == 'past' and age < 0:
-        warn_txt = ' <b>%s</b>' % _('in the future!')
 
     return age_class, prefix + html.age_text(age) + warn_txt
 

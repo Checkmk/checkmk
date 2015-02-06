@@ -184,6 +184,7 @@
     * 1221 FIX: veeam_client: Multisite perfometer is now more robust
     * 1989 FIX: Fix sorting of services in availability views
     * 1978 FIX: Fixed linking to other views using "joined columns"...
+    * 1980 FIX: logwatch: Fixed exception when acknowledging errors of a single logfile on a single host
 
     WATO:
     * 1760 Added search form to manual checks page

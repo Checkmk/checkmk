@@ -154,7 +154,7 @@ def paint_icons(what, row):
                 # b) single string - the icon name (without .png)
                 # c) tuple         - icon, link
                 # d) triple        - icon, link, title
-                result = icon['paint'](what, row, tags, custom_vars)a
+                result = icon['paint'](what, row, tags, custom_vars)
 
                 if result == None:
                     continue

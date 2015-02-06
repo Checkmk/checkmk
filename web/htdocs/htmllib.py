@@ -356,7 +356,7 @@ class html:
     def render_icon(self, icon, help="", middle=True):
         align = middle and ' align=absmiddle' or ''
         title = help and ' title="%s"' % self.attrencode(help) or ""
-        if "/" in icon:
+        if "/" in icon or "." in icon:
             src = "images/" + icon
         else:
             src = "images/icon_%s.png" % icon

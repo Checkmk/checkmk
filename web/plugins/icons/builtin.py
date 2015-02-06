@@ -110,8 +110,7 @@ def paint_rule_editor(what, row, tags, custom_vars):
         else:
             title = _("View and edit parameters for this host")
 
-        url = html.makeuri_contextless(urlvars, "wato.py")
-        return '<a href="%s">%s</a>' % (url, html.render_icon('rulesets', title))
+        return 'rulesets', html.makeuri_contextless(urlvars, "wato.py"), title
 
 multisite_icons.append({
     'service_columns': [ 'description', 'check_command', "host_name" ],

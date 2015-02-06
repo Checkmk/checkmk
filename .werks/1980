@@ -1,0 +1,9 @@
+Title: logwatch: Fixed exception when acknowledging errors of a single logfile on a single host
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b8
+Date: 1423227422
+Class: fix
+
+

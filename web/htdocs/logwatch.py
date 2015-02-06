@@ -281,7 +281,7 @@ def do_log_ack(host, filename):
             os.remove(defaults.logwatch_dir + '/' + this_host + '/' + int_filename)
         except Exception, e:
             html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
-                                      (html.attrencode(file_display), html.attrencode(this_host), e))
+                                      (html.attrencode(display_name), html.attrencode(this_host), e))
 
     html.message('<b>%s</b><p>%s</p>' % (
         _('Acknowledged %s') % ack_msg,

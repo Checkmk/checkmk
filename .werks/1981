@@ -1,0 +1,10 @@
+Title: Not trying to render view in view editor when the view is not valid
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423236294
+
+

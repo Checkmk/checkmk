@@ -742,7 +742,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
         html.button("try", _("Try out"))
         html.end_form()
 
-        if html.has_var("try") or html.has_var("search"):
+        if (html.has_var("try") or html.has_var("search")) and not html.has_user_errors():
             html.set_var("search", "on")
             if visual:
                 import bi

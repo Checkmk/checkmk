@@ -232,6 +232,12 @@ register_rule(group,
     Transform(
         Dictionary(
             elements = [
+                ("port",
+                    Integer(
+                        title = _("Portnumber"),
+                        default_value = 21,
+                        )
+                ),
                 ( "response_time",
                   Tuple(
                       title = _("Expected response time"),

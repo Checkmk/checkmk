@@ -33,6 +33,9 @@ def check_ftp_arguments(params):
 
     args = ' -H %s' % quote_shell_string(host)
 
+    if "port" in settings:
+        args += ' -p %d' % settings['port']
+
     if "response_time" in settings:
         args += ' -w %f -c %f' % (
             settings["response_time"][0]/1000.0,

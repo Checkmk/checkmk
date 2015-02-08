@@ -26,12 +26,6 @@
 
 # Metric definitions for Check_MK's checks
 
-KB = 1024
-MB = 1024 * 1024
-GB = 1024 * 1024 * 1024
-TB = 1024 * 1024 * 1024 * 1024
-PB = 1024 * 1024 * 1024 * 1024 * 1024
-
 #   .--Units---------------------------------------------------------------.
 #   |                        _   _       _ _                               |
 #   |                       | | | |_ __ (_) |_ ___                         |
@@ -63,8 +57,8 @@ unit_info["%"] = {
 }
 
 # Similar as %, but value ranges from 0.0 ... 1.0
-unit_info["100%"] = {
-    "title"  : _("%"),
+unit_info["ratio"] = {
+    "title"  : _("Ratio"),
     "symbol" : _("%"),
     "render" : lambda v: "%s%%" % drop_dotzero(100.0 * v),
 }
@@ -91,6 +85,18 @@ unit_info["c"] = {
     "title"  : _("Degree Celsius"),
     "symbol" : _(u"°C"),
     "render" : lambda v: "%s %s" % (drop_dotzero(v), _(u"°C")),
+}
+
+unit_info["a"] = {
+    "title"  : _("Current (Amperage)"),
+    "symbol" : _("A"),
+    "render" : lambda v: physical_precision(v, 3, _("A")),
+}
+
+unit_info["dbm"] = {
+    "title" : _("Decibel-milliwatts"),
+    "symbol" : _("dBm"),
+    "render" : lambda v: "%s %s" % (drop_dotzero(v), _("dBm")),
 }
 
 
@@ -211,6 +217,25 @@ metric_info["time_offset"] = {
     "color" : "#9a52bf",
 }
 
+metric_info["input_signal_power_dbm"] = {
+    "title" : _("Input Power"),
+    "unit"  : "dbm",
+    "color" : "#20c080",
+}
+
+metric_info["output_signal_power_dbm"] = {
+    "title" : _("Output Power"),
+    "unit"  : "dbm",
+    "color" : "#2080c0",
+}
+
+metric_info["current"] = {
+    "title" : _("Electrical Current"),
+    "unit"  : "a",
+    "color" : "#ffb030",
+}
+
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -298,6 +323,7 @@ check_metrics["check_mk-climaveneta_temp"]                      = {}
 check_metrics["check_mk-carel_sensors"]                         = {}
 check_metrics["check_mk-netscaler_health.temp"]                 = {}
 check_metrics["check_mk-kentix_temp"]                           = {}
+check_metrics["check_mk-emc_datadomain_temps"]                  = {}
 
 check_metrics["check_mk-kernel"]                                = { "processes" : { "name" : "proc_creat", } }
 
@@ -311,6 +337,11 @@ check_metrics["check_mk-mbg_lantime_state"]                     = { "offset" : {
 check_metrics["check_mk-mbg_lantime_nb_state"]                  = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
 check_metrics["check_mk-systemtime"]                            = { "offset" : { "name" : "time_offset" }}
 
+check_metrics["check_mk-adva_fsp_if"]                           = { "output_power" : { "name" : "output_signal_power_dbm" },
+                                                                    "input_power" : { "name" : "input_signal_power_dbm" }}
+
+check_metrics["check_mk-adva_fsp_current"]                      = {}
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -323,20 +354,37 @@ check_metrics["check_mk-systemtime"]                            = { "offset" : {
 #   |  Definition of Perf-O-Meters                                         |
 #   '----------------------------------------------------------------------'
 
-perfometer_info.append(("stacked",      ( ["execution_time"], 90.0, None)))
+# Types of Perf-O-Meters:
+# linear      -> multiple values added from left to right
+# logarithmic -> one value in a logarithmic scale
+# dual        -> two Perf-O-Meters next to each other, the first one from right to left
+# stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
+# The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
+
+perfometer_info.append(("linear",      ( ["execution_time"], 90.0, None)))
+perfometer_info.append(("stacked", [
+   ( "logarithmic",  ( "load1",         4.0, 2.0)),
+   ( "linear",       ( [ "load1:max", ], 16, None)) ]))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "temp",         40.0, 1.2)))
 perfometer_info.append(("logarithmic",  ( "ctxt",       1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "pgmajfault", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "proc_creat", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
-perfometer_info.append(("stacked",      ( [ "user", "system", "io_wait" ],                               100.0,       None)))
-perfometer_info.append(("stacked",      ( [ "fs_used(%)" ],                                              100.0,       None)))
-perfometer_info.append(("stacked",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, 
-("mem_total,mem_used,swap_used,+,/", "100%"))))
-perfometer_info.append(("stacked",      ( [ "mem_used" ],                                                "mem_total", None)))
-perfometer_info.append(("stacked",      ( [ "mem_used(%)" ],                                              100.0, None)))
+perfometer_info.append(("linear",      ( [ "user", "system", "io_wait" ],                               100.0,       None)))
+perfometer_info.append(("linear",      ( [ "fs_used(%)" ],                                              100.0,       None)))
+perfometer_info.append(("linear",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None,
+("mem_total,mem_used,swap_used,+,/", "ratio"))))
+perfometer_info.append(("linear",      ( [ "mem_used" ],                                                "mem_total", None)))
+perfometer_info.append(("linear",      ( [ "mem_used(%)" ],                                              100.0, None)))
 perfometer_info.append(("logarithmic",  ( "time_offset",  1.0, 10.0)))
+
+perfometer_info.append(("dual", [
+   ( "logarithmic", ( "input_signal_power_dbm", 4, 2)),
+   ( "logarithmic", ( "output_signal_power_dbm", 4, 2)),
+]))
+
+perfometer_info.append(("logarithmic", ( "current", 10, 4)))
 
 
 #.

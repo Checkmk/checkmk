@@ -52,6 +52,15 @@ def load_plugins():
     loaded_with_language = current_language
 
 
+# Definitions to be used in the actual metric declarations
+
+KB = 1024
+MB = 1024 * 1024
+GB = 1024 * 1024 * 1024
+TB = 1024 * 1024 * 1024 * 1024
+PB = 1024 * 1024 * 1024 * 1024 * 1024
+
+
 # Convert perf_data_string into perf_data, extract check_command
 def parse_perf_data(perf_data_string, check_command=None):
     parts = perf_data_string.split()
@@ -250,14 +259,23 @@ def get_perfometers(translated_metrics):
 # have more and more Perf-O-Meter definitions.
 def perfometer_possible(perfometer, translated_metrics):
     perf_type, perf_args = perfometer
+
     if perf_type == "logarithmic":
         required = [ perf_args[0] ]
-    elif perf_type == "stacked":
+
+    elif perf_type == "linear":
         required = perf_args[0]
         if perf_args[1]:
             required = required + [perf_args[1]] # Reference value for 100%
         if perf_args[2]:
             required = required + [perf_args[2]] # Labelling value
+
+    elif perf_type in ("stacked", "dual"):
+        for sub_perf in perf_args:
+            if not perfometer_possible(sub_perf, translated_metrics):
+                return False
+        return True
+
     else:
         raise MKInternalError(_("Undefined Perf-O-Meter type '%s'") % perf_type)
 
@@ -300,6 +318,70 @@ def drop_dotzero(v):
     else:
         return t
 
+
+def frexp10(x):
+    exp = int(math.log10(x))
+    mantissa = x / 10**exp
+    if mantissa < 1:
+        mantissa *= 10
+        exp -= 1
+    return mantissa, exp
+
+# Render a physical value witha precision of p
+# digits. Use K (kilo), M (mega), m (milli), µ (micro)
+# p is the number of non-zero digits - not the number of
+# decimal places.
+# Examples for p = 3:
+# a: 0.0002234   b: 4,500,000  c: 137.56
+# Result:
+# a: 223 µ       b: 4.50 M     c: 138
+
+def physical_precision(v, precision, unit):
+    if v == 0:
+        return "%%.%df" % (precision - 1) % v
+    elif v < 0:
+        return "-" + physical_precision(-v, precision)
+
+    # Splitup in mantissa (digits) an exponent to the power of 10
+    # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
+    mantissa, exponent = frexp10(float(v))
+
+    # Round the mantissa to the required number of digits
+    # -> a: 2.23              b: 4.5         c: 1.38
+    mant_rounded = round(mantissa, precision-1) * 10**exponent
+
+    # Choose a power where no artifical zero (due to rounding) needs to be
+    # placed left of the decimal point.
+    scale_symbols = {
+        -4 : "p",
+        -3 : "n",
+        -2 : u"µ",
+        -1 : "m",
+        0 : "",
+        1 : "K",
+        2 : "M",
+        3 : "G",
+        4 : "T",
+        5 : "P",
+    }
+    scale = 0
+
+    while exponent < 0:
+        scale -= 1
+        exponent += 3
+
+    # scale, exponent = divmod(exponent, 3)
+    places_before_comma = exponent + 1
+    places_after_comma = precision - places_before_comma
+    while places_after_comma < 0:
+        scale += 1
+        exponent -= 3
+        places_before_comma = exponent + 1
+        places_after_comma = precision - places_before_comma
+    value = mantissa * 10**exponent
+    return u"%%.%df %%s%%s" % places_after_comma % (value, scale_symbols[scale], unit)
+
+
 def metricometer_logarithmic(value, half_value, base, color):
     # Negative values are printed like positive ones (e.g. time offset)
     value = abs(float(value))
@@ -326,7 +408,7 @@ def build_perfometer(perfometer, translated_metrics):
         label = metric_to_text(metric)
         stack = [ metricometer_logarithmic(metric["value"], median, exponent, metric["color"]) ]
 
-    elif perfometer_type == "stacked":
+    elif perfometer_type == "linear":
         entry = []
         stack = [entry]
 
@@ -361,6 +443,45 @@ def build_perfometer(perfometer, translated_metrics):
         else: # absolute
             unit = get_unit(metrics_expressions[0])
             label = unit["render"](summed)
+
+    elif perfometer_type == "stacked":
+        stack = []
+        labels = []
+        for sub_perf in definition:
+            sub_label, sub_stack = build_perfometer(sub_perf, translated_metrics)
+            stack.append(sub_stack[0])
+            if sub_label:
+                labels.append(sub_label)
+        if labels:
+            label = " / ".join(labels)
+        else:
+            label = ""
+        return label, stack
+
+    elif perfometer_type == "dual":
+        labels = []
+        if len(definition) != 2:
+            raise MKInternalError(_("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d") % len(definition))
+
+        content = []
+        for nr, sub_perf in enumerate(definition):
+            sub_label, sub_stack = build_perfometer(sub_perf, translated_metrics)
+            if len(sub_stack) != 1:
+                raise MKInternalError(_("Perf-O-Meter of type 'dual' must only contain plain Perf-O-Meters"))
+
+            half_stack = [ (value/2, color) for (value, color) in sub_stack[0] ]
+            if nr == 0:
+                half_stack.reverse()
+            content += half_stack
+            if sub_label:
+                labels.append(sub_label)
+
+        if labels:
+            label = " / ".join(labels)
+        else:
+            label = ""
+        return label, [ content ]
+
 
     else:
         raise MKInternalError(_("Unsupported Perf-O-Meter type '%s'") % perfometer_type)

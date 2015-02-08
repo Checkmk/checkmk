@@ -102,11 +102,20 @@ def parse_perf_data(perf_data_string, check_command=None):
     return perf_data, check_command
 
 
+
+# "45.0" -> 45.0, "45" -> 45
+def float_or_int(v):
+    try:
+        return int(v)
+    except:
+        return float(v)
+
+
 # Convert Ascii-based performance data as output from a check plugin
 # into floating point numbers, do scaling if neccessary.
-# Simple example for perf_data: [(u'temp', u'48', u'', u'70', u'80', u'', u'')]
+# Simple example for perf_data: [(u'temp', u'48.1', u'', u'70', u'80', u'', u'')]
 # Result for this example:
-# { "temp" : "value" : 48.0, "warn" : 70.0, "crit" : 80.0, "unit" : { ... } }
+# { "temp" : "value" : 48.1, "warn" : 70, "crit" : 80, "unit" : { ... } }
 def translate_metrics(perf_data, check_command):
     if check_command not in check_metrics:
         return None
@@ -134,10 +143,10 @@ def translate_metrics(perf_data, check_command):
             mi = metric_info[metric_name]
 
         # Optional scaling
-        scale = translation_entry.get("scale", 1.0)
+        scale = translation_entry.get("scale", 1)
 
         new_entry = {
-            "value"     : float(entry[1]) * scale,
+            "value"     : float_or_int(entry[1]),
             "orig_name" : varname,
             "scalar"    : {},
         }
@@ -148,7 +157,7 @@ def translate_metrics(perf_data, check_command):
                 break
             elif entry[index]:
                 try:
-                    value = float(entry[index])
+                    value = float_or_int(entry[index])
                     new_entry["scalar"][key] = value * scale
                 except:
                     if config.debug:
@@ -336,15 +345,20 @@ def frexp10(x):
 # Result:
 # a: 223 µ       b: 4.50 M     c: 138
 
+# Note if the type of v is integer, then the precision cut
+# down to the precision of the actual number
 def physical_precision(v, precision, unit):
     if v == 0:
         return "%%.%df" % (precision - 1) % v
     elif v < 0:
-        return "-" + physical_precision(-v, precision)
+        return "-" + physical_precision(-v, precision, unit)
 
     # Splitup in mantissa (digits) an exponent to the power of 10
     # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
     mantissa, exponent = frexp10(float(v))
+
+    if type(v) == int:
+        precision = min(precision, exponent + 1)
 
     # Round the mantissa to the required number of digits
     # -> a: 2.23              b: 4.5         c: 1.38

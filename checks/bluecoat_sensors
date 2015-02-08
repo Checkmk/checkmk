@@ -24,22 +24,49 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# OID branch 3 means the sensor unit type (from SENSOR-MIB):
+# other(1)
+# truthvalue(2)
+# specialEnum(3)
+# volts(4)
+# celsius(5)
+# rpm(6)
+
+# TODO: Put temperature into a sub check. Otherwise it is not
+# configurable via WATO.
 
 def inventory_bluecoat_sensors(info):
-    return [ (line[0], "current value: " + line[1], '""') for line in info ]
+    for name, reading, status, scale, unit in info:
+        yield name, {}
+
 
 def check_bluecoat_sensors(item, params, info):
-    for line in info:
-        if line[0] == item:
-            value = int(line[1]) * 10 ** int(line[3])
-            perfdata = [("value", value) ]
-            if line[2] == '1':
-                return (0, "%s" % (value,), perfdata)
+
+    # other(1)
+    # truthvalue(2)
+    # specialEnum(3)
+    # volts(4)
+    # celsius(5)
+    # rpm(6)
+    for name, reading, status, scale, unit in info:
+        if name == item:
+            value = float(reading) * 10 ** float(scale)
+            if unit == '5':
+                return check_temperature(value, {}, status != '1' and 2 or 0)
+            elif unit == '4':
+                varname = "voltage"
+                unitname = " V"
+                perfdata = [ ("voltage", value) ]
             else:
-                return (2, "%s" % (value, ), perfdata)
-    return (3, "item not found in SNMP data")
+                perfdata = None
+                unitname = ""
 
+            if status == '1':
+                state = 0
+            else:
+                state = 2
 
+            return state, "%.1f%s" % (value, unitname), perfdata
 
 
 check_info["bluecoat_sensors"] = {
@@ -47,7 +74,7 @@ check_info["bluecoat_sensors"] = {
     'inventory_function':      inventory_bluecoat_sensors,
     'service_description':     '%s',
     'has_perfdata':            True,
-    'snmp_info':               ('.1.3.6.1.4.1.3417.2.1.1.1.1.1', [9, 5, 7, 4]),
+    'snmp_info':               ('.1.3.6.1.4.1.3417.2.1.1.1.1.1', [9, 5, 7, 4, 3]),
     'snmp_scan_function':      \
      lambda oid: '1.3.6.1.4.1.3417.1.1' in oid(".1.3.6.1.2.1.1.2.0"),
 }

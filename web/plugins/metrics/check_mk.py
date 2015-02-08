@@ -69,7 +69,7 @@ unit_info["s"] = {
     "render" : age_human_readable,
 }
 
-unit_info["/s"] = {
+unit_info["1/s"] = {
     "title" : _("per second"),
     "symbol" : _("/s"),
     "render" : lambda v: "%s%s" % (drop_dotzero(v), _("/s")),
@@ -88,9 +88,21 @@ unit_info["c"] = {
 }
 
 unit_info["a"] = {
-    "title"  : _("Current (Amperage)"),
+    "title"  : _("Electrical Current (Amperage)"),
     "symbol" : _("A"),
     "render" : lambda v: physical_precision(v, 3, _("A")),
+}
+
+unit_info["v"] = {
+    "title"  : _("Electrical Tension (Voltage)"),
+    "symbol" : _("V"),
+    "render" : lambda v: physical_precision(v, 3, _("V")),
+}
+
+unit_info["w"] = {
+    "title"  : _("Electrical Power"),
+    "symbol" : _("W"),
+    "render" : lambda v: physical_precision(v, 3, _("W")),
 }
 
 unit_info["dbm"] = {
@@ -163,24 +175,24 @@ metric_info["fs_used"] = {
 metric_info["temp"] = {
     "title" : _("Temperature"),
     "unit"  : "c",
-    "color" : "#3399ff",
+    "color" : "#80a0c0",
 }
 
 metric_info["ctxt"] = {
     "title" : _("Context switches"),
-    "unit"  : "/s",
+    "unit"  : "1/s",
     "color" : "#ddaa66",
 }
 
 metric_info["pgmajfault"] = {
     "title" : _("Major Page Faults"),
-    "unit"  : "/s",
+    "unit"  : "1/s",
     "color" : "#ddaa22",
 }
 
 metric_info["proc_creat"] = {
     "title" : _("Process creations"),
-    "unit"  : "/s",
+    "unit"  : "1/s",
     "color" : "#ddaa99",
 }
 
@@ -202,6 +214,13 @@ metric_info["system"] = {
     "help"  : _("Percentage of CPU time spent in kernel space"),
     "unit"  : "%",
     "color" : "#ff6000",
+}
+
+metric_info["util"] = {
+    "title" : _("CPU Utilization"),
+    "help"  : _("Percentage of CPU time used"),
+    "unit"  : "%",
+    "color" : "#60f020",
 }
 
 metric_info["io_wait"] = {
@@ -235,6 +254,47 @@ metric_info["current"] = {
     "color" : "#ffb030",
 }
 
+metric_info["voltage"] = {
+    "title" : _("Electrical Voltage"),
+    "unit"  : "v",
+    "color" : "#ffc060",
+}
+
+metric_info["output_power"] = {
+    "title" : _("Eletrical Output power"),
+    "unit"  : "w",
+    "color" : "#8848c0",
+}
+
+metric_info["output_load"] = {
+    "title" : _("Output load"),
+    "unit"  : "%",
+    "color" : "#c83880",
+}
+
+metric_info["voltage_percent"] = {
+    "title" : _("Electrical Tension in % of normal value"),
+    "unit"  : "%",
+    "color" : "#ffc020",
+}
+
+metric_info["humidity"] = {
+    "title" : _("Relative Humidity"),
+    "unit"  : "%",
+    "color" : "#90b0b0",
+}
+
+metric_info["requests_per_second"] = {
+    "title" : _("Requests per second"),
+    "unit"  : "1/s",
+    "color" : "#4080a0",
+}
+
+metric_info["busy_workers"] = {
+    "title" : _("Busy Workers"),
+    "unit"  : "count",
+    "color" : "#a080b0",
+}
 
 
 #.
@@ -284,54 +344,57 @@ check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = { 0: { "name":
 check_metrics["check_mk-fast_lta_volumes"]                      = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = { 0: { "name": "fs_used", "scale" : MB } }
 
-check_metrics["check_mk-nvidia.temp"]                           = {}
-check_metrics["check_mk-cisco_temp_sensor"]                     = {}
-check_metrics["check_mk-cisco_temp_perf"]                       = {}
-check_metrics["check_mk-cmctc_lcp.temp"]                        = {}
-check_metrics["check_mk-cmctc.temp"]                            = {}
-check_metrics["check_mk-smart.temp"]                            = {}
-check_metrics["check_mk-f5_bigip_chassis_temp"]                 = {}
-check_metrics["check_mk-f5_bigip_cpu_temp"]                     = {}
-check_metrics["check_mk-hp_proliant_temp"]                      = {}
-check_metrics["check_mk-akcp_sensor_temp"]                      = {}
+check_metrics["check_mk-adva_fsp_temp"]                         = {}
 check_metrics["check_mk-akcp_daisy_temp"]                       = {}
-check_metrics["check_mk-fsc_temp"]                              = {}
-check_metrics["check_mk-viprinet_temp"]                         = {}
-check_metrics["check_mk-hwg_temp"]                              = {}
-check_metrics["check_mk-sensatronics_temp"]                     = {}
+check_metrics["check_mk-akcp_exp_temp"]                         = {}
+check_metrics["check_mk-akcp_sensor_temp"]                      = {}
+check_metrics["check_mk-allnet_ip_sensoric.temp"]               = {}
 check_metrics["check_mk-apc_inrow_temperature"]                 = {}
-check_metrics["check_mk-hitachi_hnas_temp"]                     = {}
-check_metrics["check_mk-dell_poweredge_temp"]                   = {}
+check_metrics["check_mk-apc_symmetra_temp"]                     = {}
+check_metrics["check_mk-arris_cmts_temp"]                       = {}
+check_metrics["check_mk-bintec_sensors.temp"]                   = {}
+check_metrics["check_mk-carel_sensors"]                         = {}
+check_metrics["check_mk-casa_cpu_temp"]                         = {}
+check_metrics["check_mk-cisco_temp_perf"]                       = {}
+check_metrics["check_mk-cisco_temp_sensor"]                     = {}
+check_metrics["check_mk-climaveneta_temp"]                      = {}
+check_metrics["check_mk-cmciii.temp"]                           = {}
+check_metrics["check_mk-cmctc.temp"]                            = {}
+check_metrics["check_mk-cmctc_lcp.temp"]                        = {}
 check_metrics["check_mk-dell_chassis_temp"]                     = {}
 check_metrics["check_mk-dell_om_sensors"]                       = {}
-check_metrics["check_mk-innovaphone_temp"]                      = {}
-check_metrics["check_mk-cmciii.temp"]                           = {}
-check_metrics["check_mk-ibm_svc_enclosurestats.temp"]           = {}
-check_metrics["check_mk-wagner_titanus_topsense.temp"]          = {}
-check_metrics["check_mk-enterasys_temp"]                        = {}
-check_metrics["check_mk-adva_fsp_temp"]                         = {}
-check_metrics["check_mk-allnet_ip_sensoric.temp"]               = {}
-check_metrics["check_mk-qlogic_sanbox.temp"]                    = {}
-check_metrics["check_mk-bintec_sensors.temp"]                   = {}
-check_metrics["check_mk-knuerr_rms_temp"]                       = {}
-check_metrics["check_mk-arris_cmts_temp"]                       = {}
-check_metrics["check_mk-casa_cpu_temp"]                         = {}
-check_metrics["check_mk-rms200_temp"]                           = {}
-check_metrics["check_mk-juniper_screenos_temp"]                 = {}
-check_metrics["check_mk-lnx_thermal"]                           = {}
-check_metrics["check_mk-climaveneta_temp"]                      = {}
-check_metrics["check_mk-carel_sensors"]                         = {}
-check_metrics["check_mk-netscaler_health.temp"]                 = {}
-check_metrics["check_mk-kentix_temp"]                           = {}
+check_metrics["check_mk-dell_poweredge_temp"]                   = {}
 check_metrics["check_mk-emc_datadomain_temps"]                  = {}
+check_metrics["check_mk-enterasys_temp"]                        = {}
+check_metrics["check_mk-f5_bigip_chassis_temp"]                 = {}
+check_metrics["check_mk-f5_bigip_cpu_temp"]                     = {}
+check_metrics["check_mk-fsc_temp"]                              = {}
+check_metrics["check_mk-hitachi_hnas_temp"]                     = {}
+check_metrics["check_mk-hp_proliant_temp"]                      = {}
+check_metrics["check_mk-hwg_temp"]                              = {}
+check_metrics["check_mk-ibm_svc_enclosurestats.temp"]           = {}
+check_metrics["check_mk-innovaphone_temp"]                      = {}
+check_metrics["check_mk-juniper_screenos_temp"]                 = {}
+check_metrics["check_mk-kentix_temp"]                           = {}
+check_metrics["check_mk-knuerr_rms_temp"]                       = {}
+check_metrics["check_mk-lnx_thermal"]                           = {}
+check_metrics["check_mk-netscaler_health.temp"]                 = {}
+check_metrics["check_mk-nvidia.temp"]                           = {}
+check_metrics["check_mk-qlogic_sanbox.temp"]                    = {}
+check_metrics["check_mk-rms200_temp"]                           = {}
+check_metrics["check_mk-sensatronics_temp"]                     = {}
+check_metrics["check_mk-smart.temp"]                            = {}
+check_metrics["check_mk-viprinet_temp"]                         = {}
+check_metrics["check_mk-wagner_titanus_topsense.temp"]          = {}
 
 check_metrics["check_mk-kernel"]                                = { "processes" : { "name" : "proc_creat", } }
 
+check_metrics["check_mk-hr_cpu"]                                = {}
 check_metrics["check_mk-kernel.util"]                           = { "wait" : { "name" : "io_wait" } }
-check_metrics["check_mk-vms_sys.util"]                          = { "wait" : { "name" : "io_wait" } }
-check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "name" : "io_wait" } }
-check_metrics["check_mk-ucd_cpu_util"]                          = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "name" : "io_wait" } }
+check_metrics["check_mk-ucd_cpu_util"]                          = { "wait" : { "name" : "io_wait" } }
+check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "name" : "io_wait" } }
+check_metrics["check_mk-vms_sys.util"]                          = { "wait" : { "name" : "io_wait" } }
 
 check_metrics["check_mk-mbg_lantime_state"]                     = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
 check_metrics["check_mk-mbg_lantime_nb_state"]                  = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
@@ -340,7 +403,21 @@ check_metrics["check_mk-systemtime"]                            = { "offset" : {
 check_metrics["check_mk-adva_fsp_if"]                           = { "output_power" : { "name" : "output_signal_power_dbm" },
                                                                     "input_power" : { "name" : "input_signal_power_dbm" }}
 
+check_metrics["check_mk-allnet_ip_sensoric.tension"]            = { "tension" : { "name" : "voltage_percent" }}
 check_metrics["check_mk-adva_fsp_current"]                      = {}
+
+check_metrics["check_mk-akcp_exp_humidity"]                     = {}
+check_metrics["check_mk-apc_humidity"]                          = {}
+
+
+check_metrics["check_mk-apache_status"]                         = { "ReqPerSec" : { "name" : "requests_per_second" }, "BusyWorkers" : { "name" : "busy_workers" }}
+
+check_metrics["check_mk-bintec_sensors.voltage"]                = {}
+check_metrics["check_mk-hp_blade_psu"]                          = { "output" : { "name" : "output_power" }}
+check_metrics["check_mk-apc_rackpdu_power"]                     = { "amperage" : { "name" : "current" }}
+check_metrics["check_mk-apc_ats_output"]                        = { "volt" : { "name" : "voltage" }, "watt" : { "name" : "output_power"}, "ampere": { "name": "current"}, "load_perc" : { "name": "output_load" }}
+
+check_metrics["check_mk-bluecoat_sensors"]                      = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -372,6 +449,7 @@ perfometer_info.append(("logarithmic",  ( "pgmajfault", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "proc_creat", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
 perfometer_info.append(("linear",      ( [ "user", "system", "io_wait" ],                               100.0,       None)))
+perfometer_info.append(("linear",      ( [ "util", ],                                                   100.0,       None)))
 perfometer_info.append(("linear",      ( [ "fs_used(%)" ],                                              100.0,       None)))
 perfometer_info.append(("linear",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None,
 ("mem_total,mem_used,swap_used,+,/", "ratio"))))
@@ -384,7 +462,16 @@ perfometer_info.append(("dual", [
    ( "logarithmic", ( "output_signal_power_dbm", 4, 2)),
 ]))
 
+perfometer_info.append(("linear",      ( [ "output_load" ], 100.0, None)))
 perfometer_info.append(("logarithmic", ( "current", 10, 4)))
+perfometer_info.append(("logarithmic", ( "voltage", 220.0, 2)))
+perfometer_info.append(("logarithmic", ( "output_power", 1000, 2)))
+perfometer_info.append(("linear",      ( [ "voltage_percent" ], 100.0, None)))
+perfometer_info.append(("linear",      ( [ "humidity" ], 100.0, None)))
+
+perfometer_info.append(("stacked",    [
+  ( "logarithmic", ( "requests_per_second", 10, 5)),
+  ( "logarithmic", ( "busy_workers",        10, 2))]))
 
 
 #.

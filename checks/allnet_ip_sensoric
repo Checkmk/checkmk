@@ -132,7 +132,6 @@ def inventory_allnet_ip_sensoric_tension(info):
 
 def check_allnet_ip_sensoric_tension(item, _no_params, info):
     parsed = allnet_ip_sensoric_parse(info)
-    pprint.pprint(parsed)
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
     if sensor_id not in parsed.keys():

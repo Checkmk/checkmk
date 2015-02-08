@@ -35,7 +35,6 @@ def inventory_apc_ats_output(info):
 def check_apc_ats_output(item, params, info):
     for line in info:
         if line[0] == item:
-            print line
             vac, watt, ampere, load_perc = map(int, line[1:])
             ampere = ampere/10
             state = 0

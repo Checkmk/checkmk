@@ -89,8 +89,7 @@ multisite_datasources["hostsbygroup"] = {
     "keys"    : [ "host_name", "host_downtimes" ],
     "join"    : ( "services", "host_name" ),
     "idkeys"  : [ "site", "hostgroup_name", "host_name" ],
-    "description" : _("Using this, datasources host rows might appear multiple times depending "
-                      "on their membership in hostgroups."),
+    "description" : _("This datasource has a separate row for each group membership that a host has."),
 }
 
 multisite_datasources["services"] = {

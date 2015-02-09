@@ -141,7 +141,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
             if opt_use_snmp_walk or is_usewalk_host(hostname):
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid)
             elif has_inline_snmp and use_inline_snmp:
-                rowinfo = inline_snmpwalk_on_suboid(hostname, check_type, fetchoid)
+                rowinfo = inline_snmpwalk_on_suboid(hostname, check_type, fetchoid, oid)
             else:
                 rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid)
 
@@ -150,8 +150,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
             # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
             # by removing any duplicate OID information
             if len(rowinfo) > 1 and rowinfo[0][0] == rowinfo[1][0]:
-                if opt_verbose:
-                    sys.stderr.write("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rowinfo[0][0])
+                vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rowinfo[0][0])
                 rowinfo = rowinfo[:1]
 
             columns.append((fetchoid, rowinfo))
@@ -419,8 +418,7 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False):
     portspec = snmp_port_spec(hostname)
     command = snmp_walk_command(hostname) + \
              " -OQ -OU -On -Ot %s%s %s" % (ip, portspec, oid)
-    if opt_debug:
-        sys.stderr.write('   Running %s\n' % (command,))
+    vverbose('   Running %s\n' % command)
 
     snmp_process = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
@@ -459,7 +457,6 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False):
     error = snmp_process.stderr.read()
     exitstatus = snmp_process.wait()
     if exitstatus:
-        if opt_verbose:
-            sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error: %s\n" % error.strip())
+        verbose(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error: %s\n" % error.strip())
         raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (ip, error.strip(), exitstatus))
     return rowinfo

@@ -65,10 +65,19 @@ def check_ftp_arguments(params):
 
     return args
 
+
+def check_ftp_get_item(params):
+    if type(params) == tuple:
+        return "FTP " + args[0]
+    else:
+        if "port" in params and params["port"] != 21:
+            return "FTP Port " + str(params["port"])
+        return "FTP"
+
 active_check_info['ftp'] = {
     "command_line"        : '$USER1$/check_ftp $ARG1$',
     "argument_function"   : check_ftp_arguments,
-    "service_description" : lambda args: type(args) == tuple and ("FTP %s" % args[0]) or "FTP",
+    "service_description" : check_ftp_get_item,
     "has_perfdata"        : True,
 }
 

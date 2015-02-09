@@ -1,0 +1,16 @@
+Title: check_ftp: changed service description if the ftp port differs from 21
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1423480555
+Class: feature
+
+If a host had two check_ftp services assigned they both shared the same
+service description, which resulted in only one check. This has been changed.
+
+If the ftp port differs from 21, the port is also shown in the service
+description, e.g. <i>FTP Port 999</i>.
+
+So, if you had any check_ftp services running on a port that differs from 21 they will
+have an updated service description.

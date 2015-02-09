@@ -1,0 +1,10 @@
+Title: df: Show usages near to zero with a higher precision - not simply as 0.00
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423487531
+
+

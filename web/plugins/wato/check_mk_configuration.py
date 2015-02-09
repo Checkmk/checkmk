@@ -974,10 +974,10 @@ register_configvar(group,
     "password_policy",
     Dictionary(
         title = _('htpasswd: Password Policy'),
-        help  = _('You can define some rules which each user password must fit with. By default '
+        help  = _('You can define some rules to which each user password aher. By default '
                   'all passwords are accepted, even ones which are made of only a single character, '
                   'which is obviously a bad idea. Using this option you can enforce your users '
-                  'to choose more secure passwords of a minimal length having a defined complexity.'),
+                  'to choose more secure passwords.'),
         elements = [
             ('min_length', Integer(
                 title = _("Minimum password length"),

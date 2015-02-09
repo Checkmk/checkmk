@@ -1780,7 +1780,7 @@ register_rule(group,
                     ('match_subject', RegExpUnicode(
                         title = _('Only process mails with matching subject'),
                         help = _('Use this option to not process all messages found in the inbox, '
-                                 'but only the whones whose subject matches the given regular expression. '),
+                                 'but only the those whose subject matches the given regular expression.'),
                     )),
                     ('facility', DropdownChoice(
                         title = _("Events: Syslog facility"),
@@ -1799,8 +1799,8 @@ register_rule(group,
                             TextUnicode(
                                 title = _("Specify the application"),
                                 help = _("Use this text as application. You can use macros like <tt>\\1</tt>, <tt>\\2</tt>, ... "
-                                         "here when you configured <i>subject matching</i> in this rule with a regex "
-                                         "which declares match groups (using braces)."),
+                                         "here when you configured <i>subject matching</i> in this rule with a regular expression "
+                                         "that declares match groups (using braces)."),
                                 allow_empty = False,
                             ),
                         ]

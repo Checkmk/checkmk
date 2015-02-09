@@ -197,7 +197,7 @@ register_rule(group,
             optional_keys = False
     ),
     title = _("Check NetApp via WebAPI"),
-    help  = _("This rule selects the NetApp special agent instead of the normal Check_MK Agent "
+    help  = _("This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
               "and allows monitoring via the NetApp API. Right now only <i>7-Mode</i> is supported, "
               "<i>Cluster Mode</i> will follow soon. Important: To make this special agent NetApp work "
               "you will have to provide two additional python files (<tt>NaServer.py</tt>, <tt>NaElement.py</tt>) "
@@ -284,7 +284,7 @@ register_rule(group,
     "special_agents:ibmsvc",
      Dictionary(
         title = _("Check state of IBM SVC / V7000 storage systems"),
-        help = _("This rule selects the ibmsvc agent instead of the normal Check_MK Agent "
+        help = _("This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Check_MK Agent "
                  "and allows monitoring of IBM SVC / V7000 storage systems by calling "
                  "ls* commands there over SSH. "
                  "Make sure you have SSH key authentication enabled for your monitoring user. "

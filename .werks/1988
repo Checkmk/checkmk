@@ -1,4 +1,4 @@
-Title: Gracefully handline invalid empty bulk notification files from previous buggy versions
+Title: Gracefully handle invalid empty bulk notification files from previous buggy versions
 Level: 1
 Component: notifications
 Class: fix

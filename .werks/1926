@@ -10,12 +10,12 @@ Date: 1422625157
 In werk #1563 we moved all parameters for the process check to
 a check parameter rule set in normal Check_MK style. Previously
 these parameters (like process count, CPU levels, etc.) had been
-set only during discovery. But that way existing configuration
+set only during discovery. Due to this werk existing configurations
 with rules for process inventory would not work anymore.
 
-This werk fixes this. All old inventory rule (now called
-discovery) work again. Also they are ediable via WATO. You can
-set the process parameters now in two places: during discovery
+This werk fixes this. All old inventory (now called
+discovery) rules work again. Also they are ediable via WATO. Now you can
+set the process parameters in two places: during discovery
 and in the parameter rule. The preferred way is the new way:
-to set these in the parameter rule. That way changes will immediately
+to set them in the parameter rule. That way changes will immediately
 get active without a need for a new discovery.

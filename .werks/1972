@@ -7,6 +7,6 @@ State: unknown
 Version: 1.2.7i1
 Date: 1422873119
 
-When performing "activate changes" in WATO, the quicksearch field of the sidebar was cleared
-during this process. This lead to user confusions when typing into the quicksearch field
-while the activate changes process was completing.
+When performing "activate changes" in WATO, the quicksearch field of
+the sidebar was cleared. This led to user confusion when typing into the
+quicksearch field while the activate changes process was completing.

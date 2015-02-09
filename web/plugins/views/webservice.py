@@ -41,7 +41,8 @@ def render_python(rows, view, group_painters, painters, num_columns, show_checkb
     for row in rows:
         html.write("[")
         for p in painters:
-            tdclass, content = paint_painter(p[0], row, join_key=get_join_key(p))
+            row = join_row(row, p)
+            tdclass, content = paint_painter(p[0], row)
             html.write(repr(html.strip_tags(content)))
             html.write(",")
         html.write("],")
@@ -94,7 +95,8 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
                 first = False
             else:
                 html.write(",")
-            tdclass, content = paint_painter(p[0], row, join_key=get_join_key(p))
+            row = join_row(row, p)
+            tdclass, content = paint_painter(p[0], row)
             if type(content) == unicode:
 	        content = content.encode("utf-8")
             else:
@@ -161,7 +163,8 @@ def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxe
                 first = False
             else:
                 html.write(csv_separator)
-            tdclass, content = paint_painter(p[0], row, join_key=get_join_key(p))
+            row = join_row(row, p)
+            tdclass, content = paint_painter(p[0], row)
             content = type(content) in [ int, float ] and str(content) or content
             stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
             html.write('"%s"' % stripped.encode("utf-8"))

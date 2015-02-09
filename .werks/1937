@@ -1,0 +1,10 @@
+Title: cpu.loads: performance graph now displays number of CPUs
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.6b8
+Date: 1423228119
+
+

@@ -1731,6 +1731,8 @@ def reset_global_caches():
     g_dns_cache         = {}
     global g_ip_lookup_cache
     g_ip_lookup_cache   = None  # permanently cached ipaddresses from ipaddresses.cache
+    global g_converted_rulesets_cache
+    g_converted_rulesets_cache = {}
 
 reset_global_caches()
 

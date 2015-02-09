@@ -6493,12 +6493,12 @@ def get_snapshot_status(snapshot, validate_checksums = False):
         using_cmc = os.path.exists(defaults.omd_root + '/etc/check_mk/conf.d/microcore.mk')
         snapshot_cmc = 'conf.d/microcore.mk' in files
         if using_cmc and not snapshot_cmc:
-            raise MKGeneralException(_('You are currently using the Check_MK Microcore, but this snapshot does not use the '
-                                       'Check_MK Microcore. If you need to migrate your data, you could consider changing '
+            raise MKGeneralException(_('You are currently using the Check_MK Micro Core, but this snapshot does not use the '
+                                       'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
                                        'the core, restoring the snapshot and changing the core back again.'))
         elif not using_cmc and snapshot_cmc:
-            raise MKGeneralException(_('You are currently not using the Check_MK Microcore, but this snapshot uses the '
-                                       'Check_MK Microcore. If you need to migrate your data, you could consider changing '
+            raise MKGeneralException(_('You are currently not using the Check_MK Micro Core, but this snapshot uses the '
+                                       'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
                                        'the core, restoring the snapshot and changing the core back again.'))
 
     def snapshot_secret():
@@ -9786,7 +9786,7 @@ def mode_edit_timeperiod(phase):
     # Excludes
     if other_tps:
         forms.section(_("Exclude"))
-        html.help(_('You can use other timeperiod defnitions to exclude the times '
+        html.help(_('You can use other timeperiod definitions to exclude the times '
                     'defined in the other timeperiods from this current timeperiod.'))
         vs_excl.render_input("exclude", timeperiod.get("exclude", []))
 

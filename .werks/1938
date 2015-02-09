@@ -1,0 +1,31 @@
+Title: docsis_channels_upstream: fixed missing checks if channels had the same ChannelId
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423237560
+
+DOCSIS services used only the ChannelId as item name.
+<ul>
+<li>Upstream Channel 1</li>
+<li>Upstream Channel 2</li>
+<li>Upstream Channel 3</li>
+</ul>
+
+There are instances when this ChannelId is not unique causing the check
+to loose some services. With this update the docsis_channels_upstream check now
+uses an additional parameter - the interface index - to make this service name unique.
+
+<ul>
+<li>Upstream Channel 1337.1</li>
+<li>Upstream Channel 1338.2</li>
+<li>Upstream Channel 1343.3</li>
+<li>Upstream Channel 1363.1</li>
+<li>Upstream Channel 1373.2</li>
+<li>Upstream Channel 1393.3</li>
+</ul>
+
+<b>Note:</b> The extended item name is only used when required, i.e. when there
+are duplicate ChannelId entries for this device.

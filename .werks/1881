@@ -1,4 +1,4 @@
-Title: omd_status: Check works now event when a site is reported as not OK
+Title: omd_status: Check works now even when a site is reported as not OK
 Level: 1
 Component: checks
 Class: fix

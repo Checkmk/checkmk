@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_hitachi_hnas_cifs(info):
-    # import pprint; pprint.pprint(info)
     inventory = []
     for evs_id, share_name, users in info:
         inventory.append( (evs_id + " " + share_name, None) )

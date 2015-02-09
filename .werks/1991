@@ -1,0 +1,15 @@
+Title: emc_datadomain_temps: make configurable via WATO, add Perf-O-Meter
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1423395404
+Class: feature
+
+The check plugin <tt>emc_datadomain_temps</tt> has been converted to the
+new standard implementation for all temperature checks. This means that
+the check can now be configured via WATO with all available features
+and also has a Perf-O-Meter. The price for this is that the name
+of the service has been changed, e.g. from <tt>Temperature 1-1</tt> to
+<tt>Temperature Chassis Ambient Enclosure 1</tt>. This makes it more
+convenient to write general rules, e.g. or all ambient sensors.

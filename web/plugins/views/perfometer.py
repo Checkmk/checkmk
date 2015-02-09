@@ -190,11 +190,12 @@ def render_metricometer(stack):
     if len(stack) not in (1, 2):
         raise MKGeneralException(_("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack)
 
+    h = ""
     if len(stack) == 2:
-        h = '<div class="stacked">'
+        h += '<div class="stacked">'
 
     for entry in stack:
-        h = '<table><tr>'
+        h += '<table><tr>'
         for percentage, color in entry:
             h += perfometer_td(percentage, color)
         h += "</tr></table>"

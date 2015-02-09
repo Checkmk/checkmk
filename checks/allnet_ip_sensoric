@@ -139,13 +139,13 @@ def check_allnet_ip_sensoric_tension(item, _no_params, info):
 
     value = float(parsed[sensor_id]["value_float"])
 
-    perfdata = [ ("tension", "%0.2f" % value, '', '', 0, 100) ]
+    perfdata = [ ("tension", value, None, None, 0, 100) ]
 
     status = 0
     if value == 0:
         status = 2
 
-    return status, "%s is at %0.2f" % (item, value), perfdata
+    return status, "%d%% of the normal level" % value, perfdata
 
 check_info["allnet_ip_sensoric.tension"] = {
     "check_function"        : check_allnet_ip_sensoric_tension,

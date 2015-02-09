@@ -43,7 +43,8 @@ def celsius_to_fahrenheit(tempc):
 # Note: you must not specify dev_status and dev_levels at the same time!
 
 def check_temperature(reading, params, dev_unit = "c",
-                      dev_levels = None, dev_levels_lower = None, dev_status = None):
+                      dev_levels = None, dev_levels_lower = None,
+                      dev_status = None, dev_status_name = None):
 
     def from_celsius(tempc, unit):
         if unit == "f":
@@ -159,6 +160,7 @@ def check_temperature(reading, params, dev_unit = "c",
     # Ignore device's own levels
     if dlh == "usr":
         warn, crit, warn_lower, crit_lower = usr_warn, usr_crit, usr_warn_lower, usr_crit_lower
+        dev_status = None
 
     # Only use device's levels, ignore yours
     elif dlh == "dev":
@@ -183,6 +185,7 @@ def check_temperature(reading, params, dev_unit = "c",
     elif dlh == "usrdefault":
         if usr_levels:
             warn, crit = usr_levels
+            dev_status = None
         else:
             warn, crit = dev_warn, dev_crit
         if usr_levels_lower:
@@ -192,7 +195,7 @@ def check_temperature(reading, params, dev_unit = "c",
 
     # Use device's levels if present, otherwise yours
     elif dlh == "devdefault":
-        if dev_levels:
+        if dev_levels or dev_status != None:
             warn, crit = dev_levels
         else:
             warn, crit = usr_warn, usr_crit
@@ -203,10 +206,19 @@ def check_temperature(reading, params, dev_unit = "c",
 
     # Now finally compute status. Hooray!
     status = check_temp_levels(temp, warn, crit, warn_lower, crit_lower)
+    if dev_status != None:
+        if dlh == "best":
+            status = min(status, dev_status)
+        else:
+            status = max(status, dev_status)
+
     perfdata = [ ("temp", temp, warn, crit, warn_lower, crit_lower) ]
 
     # Render actual temperature, e.g. "17.8 °F"
     infotext = "%s %s" % (render_temp(temp), unitsym[output_unit])
+
+    if dev_status != None and dev_status_name:
+        infotext += ", %s" % dev_status_name
 
     # In case of a non-OK status output the information about the levels
     if status != 0:

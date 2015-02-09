@@ -1,4 +1,4 @@
-Title: Logwatch event console forwarding: Better dealing with logwatch states
+Title: Logwatch event console forwarding: Better handling of logwatch states
 Level: 1
 Component: checks
 Class: fix

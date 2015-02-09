@@ -41,9 +41,11 @@ def docsis_channels_upstream_convert(info):
     else:
         sig_info_dict = dict([ (x[0], x[1:]) for x in sig_info])
         cm_info_dict  = dict([ (x[0], x[1:]) for x in cm_info])
+        # If the channel id is not unique we also use the OID_END in the item name
+        is_unique = len(freq_info) == len(set(map(lambda x: x[1], freq_info)))
         for line in freq_info:
             endoid = line[0]
-            cid = line[1]
+            cid = is_unique and line[1] or "%s.%s" % (line[0], line[1])
             if line[2] != '0':
                 parsed[cid] = line[1:] + sig_info_dict[endoid] + cm_info_dict.get(endoid, [])
 

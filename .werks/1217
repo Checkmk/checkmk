@@ -6,6 +6,7 @@ Version: 1.2.7i1
 Date: 1422451362
 Class: feature
 
-The Check now uses the Wato Temperature Rule who provides more configuration options. 
-If you used the Wato Room Temeperature Rule before, you have to migrate the levels.
+The check now uses the WATO temperature rule which provides more configuration
+options.  If you have used the WATO room temperature rule until now, you
+have to migrate the levels.
 

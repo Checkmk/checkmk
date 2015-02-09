@@ -5105,7 +5105,7 @@ register_check_parameters(
     "netapp_disks",
     _("NetApp Broken/Spare Disk Ratio"),
     Dictionary(
-        help = _("You can set level of the broken to spare disk ratio. "
+        help = _("You can set a limit to the broken to spare disk ratio. "
                  "The ratio is calculated with <i>broken / (broken + spare)</i>."),
         elements = [
             ( "broken_spare_ratio",

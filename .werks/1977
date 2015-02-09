@@ -8,4 +8,4 @@ Version: 1.2.7i1
 Date: 1423142432
 
 Optimized the memory footprint of the Check_MK check helper processes
-which are used when using the CMC.
+used by the microcore (CMC).

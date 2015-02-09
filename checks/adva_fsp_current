@@ -36,8 +36,8 @@ def check_adva_fsp_current(item, _no_params, info):
     for line in info:
         if len(line) == 5 and line[4] == item:
             current, high, power, descr = line[0:4]
-            current = float(current)/1000
-            high = float(high)/1000
+            current = float(current) / 1000.0
+            high = float(high) / 1000
 
             infotext = "%.3f A (limit at %.3f A) at %s" % (current, high, descr)
             perfdata = [ ("current", current, "", str(high),  ) ]

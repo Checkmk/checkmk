@@ -14,7 +14,7 @@ DOCSIS services used only the ChannelId as item name.
 <li>Upstream Channel 3</li>
 </ul>
 
-There are instances were this ChannelId is not unique, which causes the check
+There are instances when this ChannelId is not unique causing the check
 to loose some services. With this update the docsis_channels_upstream check now
 uses an additional parameter - the interface index - to make this service name unique.
 
@@ -27,5 +27,5 @@ uses an additional parameter - the interface index - to make this service name u
 <li>Upstream Channel 1393.3</li>
 </ul>
 
-<b>Note:</b> This extended item name is only used if it is required, means if there
+<b>Note:</b> The extended item name is only used when required, i.e. when there
 are duplicate ChannelId entries for this device.

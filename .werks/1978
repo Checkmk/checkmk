@@ -7,5 +7,5 @@ State: unknown
 Version: 1.2.7i1
 Date: 1423149130
 
-Creating views with a joined columns which links to another view
+Creating views with a joined column which links to another view
 resulted in an exception when displaying the view.

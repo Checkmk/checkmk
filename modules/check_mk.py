@@ -4889,9 +4889,8 @@ def cleanup_globals():
     global g_timeout
     g_timeout = None
 
-    if 'g_snmp_sessions' in globals():
-        global g_snmp_sessions
-        g_snmp_sessions = {}
+    if has_inline_snmp and use_inline_snmp:
+        cleanup_inline_snmp_globals()
 
 
 # Diagnostic function for detecting global variables that have

@@ -18,17 +18,17 @@ inventory:
  The inventory creates a service for each temperature sensor found
 
 [parameters]
-This checks parameters are a dictionary with the
-following (optional) keys:
+parameters(dict): This checks parameters are a dictionary with the
+ following (optional) keys:
 
- {"levels"}: A tuple (warn, crit) containing the upper levels. No defaults.
+  {"levels"}: A tuple (warn, crit) containing the upper levels. No defaults.
 
- {"levels_lower"}: A tuple (warn, crit) containing the lower levels. No defaults.
+  {"levels_lower"}: A tuple (warn, crit) containing the lower levels. No defaults.
 
- {"output_unit"}: "c", "f" or "k", the check will output the temperature in the
-specified unit. If this is not set, output is in degrees Celsius.
+  {"output_unit"}: "c", "f" or "k", the check will output the temperature in the
+ specified unit. If this is not set, output is in degrees Celsius.
 
- {"input_unit"}: "c, "f" or "k". By default, the check interprets the sensor value
-according to the unit sent by the device. This key allows to override that. Tread
-lightly, as this may lead to a misinterpreted temperature. Should only be used if
-the device reports its unit incorrectly.
+  {"input_unit"}: "c, "f" or "k". By default, the check interprets the sensor value
+ according to the unit sent by the device. This key allows to override that. Tread
+ lightly, as this may lead to a misinterpreted temperature. Should only be used if
+ the device reports its unit incorrectly.

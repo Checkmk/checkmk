@@ -589,12 +589,13 @@ function create_graph(data, params) {
         // Add the control for adding the graph to a dashboard
         var visualadd = document.createElement('a');
         visualadd.title = data['add_txt'];
-        visualadd.className = 'visualadd';
+        visualadd.className = 'popup_trigger';
         visualadd.onclick = function(host, service, view, source) {
             return function(event) {
-                toggle_add_to_visual(event, this, 'pnpgraph',
-                    { 'host': host, 'service': service },
-                    { 'timerange': view, 'source': source }
+                toggle_popup(event, this, 'add_visual',
+                    ['pnpgraph',
+                     { 'host': host, 'service': service },
+                     { 'timerange': view, 'source': source }]
                 );
             }
         }(data['host'], data['service'], view, source);
@@ -1816,7 +1817,7 @@ function vs_iconselector_select(event, varprefix, value) {
     var img = document.getElementById(varprefix + '_img');
     img.src = src_img.src;
 
-    toggle_popup(event, varprefix);
+    close_popup();
 }
 
 function vs_listofmultiple_add(varprefix) {
@@ -2209,57 +2210,30 @@ function keybindings_check_keylist(keylist)
 //   |                            |_|         |_|                           |
 //   +----------------------------------------------------------------------+
 
-function toggle_popup(event, id)
+var popup_data      = null;
+var popup_id        = null;
+var popup_contents  = {};
+
+function close_popup()
 {
-    if(!event)
-        event = window.event;
+    del_event_handler('click', handle_popup_close);
 
-    var obj = document.getElementById(id + '_popup');
-    if(obj) {
-        if(obj.style.display == 'none') {
-            obj.style.display = 'block';
-        } else {
-            obj.style.display = 'none';
-        }
-        obj = null;
-    }
-
-    if (event.stopPropagation)
-        event.stopPropagation();
-    event.cancelBubble = true;
-
-    // Disable the default events for all the different browsers
-    if (event.preventDefault)
-        event.preventDefault();
-    else
-        event.returnValue = false;
-    return false;
-}
-
-// Add to Visual
-
-var add_visual_data          = null;
-var visualadd_popup_id       = null;
-var visualadd_popup_contents = {};
-
-function close_visualadd_popup()
-{
-    var menu = document.getElementById('visualadd_popup');
+    var menu = document.getElementById('popup_menu');
     if (menu) {
         // hide the open menu
         menu.parentNode.removeChild(menu);
         menu = null;
     }
-    visualadd_popup_id = null;
+    popup_id = null;
 }
 
-// Registerd as click handler on the page while the visualadd menu is opened
+// Registerd as click handler on the page while the popup menu is opened
 // This is used to close the menu when the user clicks elsewhere
-function handle_visualadd_close(event) {
+function handle_popup_close(event) {
     var target = getTarget(event);
 
     // Check whether or not a parent of the clicked node is the popup menu
-    while (target && target.id != 'visualadd_popup' && !has_class(target, 'visualadd')) {
+    while (target && target.id != 'popup_menu' && !has_class(target, 'popup_trigger')) { // FIXME
         target = target.parentNode;
     }
 
@@ -2267,12 +2241,13 @@ function handle_visualadd_close(event) {
         return true; // clicked menu or statusicon
     }
 
-    close_visualadd_popup();
-    del_event_handler('click', handle_visualadd_close);
+    close_popup();
 }
 
-function toggle_add_to_visual(event, trigger_obj, element_type, context, params)
+function toggle_popup(event, trigger_obj, what, data, params)
 {
+    var params = typeof(params) === "undefined" ? '' : '?'+params;
+
     if(!event)
         event = window.event;
     var container = trigger_obj.parentNode;
@@ -2284,47 +2259,46 @@ function toggle_add_to_visual(event, trigger_obj, element_type, context, params)
         }
     }
 
-    close_visualadd_popup();
+    close_popup();
 
-    if (visualadd_popup_id === ident) {
-        visualadd_popup_id = null;
+    if (popup_id === ident) {
+        popup_id = null;
         return; // same icon clicked: just close the menu
     }
-    visualadd_popup_id = ident;
+    popup_id = ident;
 
-    add_event_handler('click', handle_visualadd_close);
+    add_event_handler('click', handle_popup_close);
 
     menu = document.createElement('div');
-    menu.setAttribute('id', 'visualadd_popup');
-    menu.className = "popup_menu";
+    menu.setAttribute('id', 'popup_menu');
+    menu.className = 'popup_menu';
+    container.appendChild(menu);
+    fix_popup_menu_position(event, menu);
+
+    popup_data = data;
 
     // populate the menu using a webservice, because the list of dashboards
     // is not known in the javascript code. But it might have been cached
     // before. In this case do not perform a second request.
-    if (ident in visualadd_popup_contents)
-        menu.innerHTML = visualadd_popup_contents[ident];
+    if (ident in popup_contents)
+        menu.innerHTML = popup_contents[ident];
     else
-        get_url('ajax_popup_add_visual.py', add_dashboard_response_handler, [ident, event]);
-
-    add_visual_data = [ element_type, context, params ];
-
-    container.appendChild(menu);
-    fix_visualadd_menu_position(event, menu);
+        get_url('ajax_popup_'+what+'.py'+params, handle_render_popup_contents, [ident, event]);
 }
 
-function add_dashboard_response_handler(data, response_text)
+function handle_render_popup_contents(data, response_text)
 {
     var ident = data[0];
     var event = data[1];
-    visualadd_popup_contents[ident] = response_text;
-    var menu = document.getElementById('visualadd_popup');
+    popup_contents[ident] = response_text;
+    var menu = document.getElementById('popup_menu');
     if (menu) {
         menu.innerHTML = response_text;
-        fix_visualadd_menu_position(event, menu);
+        fix_popup_menu_position(event, menu);
     }
 }
 
-function fix_visualadd_menu_position(event, menu) {
+function fix_popup_menu_position(event, menu) {
     //
     //// When menu is out of screen on the right, move to left
     //if (menu.offsetLeft + menu.clientWidth > pageWidth()) {
@@ -2337,7 +2311,7 @@ function fix_visualadd_menu_position(event, menu) {
     var offset_top = menu.offsetTop + menu.offsetParent.offsetTop;
 
     // When menu is out of screen on the top, move to bottom
-    console.log(offset_top)
+    //console.log(offset_top)
     if (offset_top < 0) {
         menu.style.top = (menu.offsetTop + menu.clientHeight) + 'px';
         menu.style.bottom = 'auto';
@@ -2346,26 +2320,26 @@ function fix_visualadd_menu_position(event, menu) {
 
 function add_to_visual(visual_type, visual_name)
 {
-    close_visualadd_popup();
+    close_popup();
 
     var context_txt = [];
-    for (var key in add_visual_data[1]) {
-        var ty = typeof(add_visual_data[1][key]);
-        context_txt.push(key+':'+ty+':'+add_visual_data[1][key]);
+    for (var key in popup_data[1]) {
+        var ty = typeof(popup_data[1][key]);
+        context_txt.push(key+':'+ty+':'+popup_data[1][key]);
     }
 
     var params_txt = [];
-    for (var key in add_visual_data[2]) {
-        var ty = typeof(add_visual_data[2][key]);
-        params_txt.push(key+':'+ty+':'+add_visual_data[2][key]);
+    for (var key in popup_data[2]) {
+        var ty = typeof(popup_data[2][key]);
+        params_txt.push(key+':'+ty+':'+popup_data[2][key]);
     }
 
     response = get_url_sync('ajax_add_visual.py?visual_type=' + visual_type
                                   + '&visual_name=' + visual_name
-                                  + '&type=' + add_visual_data[0]
+                                  + '&type=' + popup_data[0]
                                   + '&context=' + encodeURIComponent(context_txt.join('|'))
                                   + '&params=' + encodeURIComponent(params_txt.join('|')));
-    add_visual_data = null;
+    popup_data = null;
 
     // After adding a dashlet, go to the choosen dashboard
     if (response)

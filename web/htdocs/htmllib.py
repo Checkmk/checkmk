@@ -869,17 +869,19 @@ class html:
     def bottom_footer(self):
         if self.header_sent:
             self.bottom_focuscode()
-            corner_text = ""
-            corner_text += '<div style="display: %s" id=foot_refresh>%s</div>' % (
-                (self.browser_reload and "inline-block" or "none",
-                 _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload))
             if self.render_headfoot:
-                si = self.render_status_icons()
-                self.write("<table class=footer><tr>"
-                           "<td class=left>%s</td>"
-                           "<td class=middle></td>"
-                           "<td class=right>%s</td></tr></table>"
-                               % (si, corner_text))
+                self.write("<table class=footer><tr>")
+
+                self.write("<td class=left>")
+                self.write_status_icons()
+                self.write("</td>")
+
+                self.write("<td class=middle></td>"
+                           "<td class=right>")
+                self.write("<div style=\"display:%s\" id=foot_refresh>%s</div>" % (
+                        (self.browser_reload and "inline-block" or "none",
+                     _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)))
+                self.write("</td></tr></table>")
 
     def body_end(self):
         if self.have_help:
@@ -908,16 +910,26 @@ class html:
         else:
             self.status_icons[img] = tooltip
 
-    def render_status_icons(self):
-        h = '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
-             (self.makeuri([]), _("URL to this frame"))
-        h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
-             ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
+    def begin_popup_trigger(self, ident, data=None, params=None):
+        self.write('<div class="popup_trigger">\n')
+        onclick = 'toggle_popup(event, this, \'%s\', %s, %s)' % \
+                    (ident, data or 'null', params and "'"+params+"'" or 'null')
+        self.write('<a class="popup_trigger" href="javascript:void(0)" onclick="%s">\n' % onclick)
+
+    def end_popup_trigger(self):
+        self.write('</a>\n')
+        self.write('</div>\n')
+
+    def write_status_icons(self):
+        self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
+             (self.makeuri([]), _("URL to this frame")))
+        self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
+             ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar")))
 
         if self.myfile == "view" and self.var('mode') != 'availability':
-            h += '<a target="_top" href="%s">' \
+            self.write('<a target="_top" href="%s">' \
                  '<img class=statusicon src="images/status_download_csv.png" title="%s"></a>\n' % \
-                 (self.makeuri([("output_format", "csv_export")]), _("Export as CSV"))
+                 (self.makeuri([("output_format", "csv_export")]), _("Export as CSV")))
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
@@ -930,28 +942,27 @@ class html:
                     v = v.encode('utf-8')
                 encoded_vars[k] = v
 
-            h += '<div class="visualadd"><a class="visualadd" href="javascript:void(0)" ' \
-                 'onclick="toggle_add_to_visual(event, this, \'%s\', %s, {\'name\': \'%s\'})">' \
-                 '<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % \
-                 (mode_name, self.attrencode(repr(encoded_vars)), self.var('view_name'), _("Add this view to..."))
+            self.begin_popup_trigger('add_visual',
+                data='[\'%s\', %s, {\'name\': \'%s\'}]' % (mode_name, self.attrencode(repr(encoded_vars)), self.var('view_name')))
+            self.write('<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % _("Add this view to..."))
+            self.end_popup_trigger()
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:
                 tooltip, url = tooltip
-                h += '<a target="_top" href="%s"><img class=statusicon src="images/status_%s.png" title="%s"></a>\n' % \
-                     (url, img, tooltip)
+                self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_%s.png" title="%s"></a>\n' % \
+                     (url, img, tooltip))
             else:
-                h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
+                self.write('<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip))
 
         if self.times:
             self.measure_time('body')
-            h += '<div class=execution_times>'
+            self.write('<div class=execution_times>')
             entries = self.times.items()
             entries.sort()
             for name, duration in entries:
-                h += "<div>%s: %.1fms</div>" % (name, duration * 1000)
-            h += '</div>'
-        return h
+                self.write("<div>%s: %.1fms</div>" % (name, duration * 1000))
+            self.write('</div>')
 
     def show_exception(self, e):
         details = \

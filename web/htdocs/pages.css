@@ -1043,15 +1043,15 @@ table.debug_vars td {
 
 /* Popup for adding to visuals (Dashboard, Reports */
 
-div.graph, div.visualadd {
+div.graph, div.popup_trigger {
     position: relative;
 }
 
-div.visualadd {
+div.popup_trigger {
     display: inline-block;
 }
 
-div.graph a.visualadd {
+div.graph a.popup_trigger {
     position: absolute;
     top: 10px;
     left: 10px;
@@ -1062,7 +1062,7 @@ div.graph a.visualadd {
     background-image: url(images/button_add_dashlet_lo.png);
 }
 
-div.graph a.visualadd:hover {
+div.graph a.popup_trigger:hover {
     background-image: url(images/button_add_dashlet_hi.png);
     cursor: pointer;
 }

@@ -3241,14 +3241,19 @@ class IconSelector(ValueSpec):
         if not value:
             value = self._empty_img
 
-        html.write('<div class="popup_container">')
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)
-        self.render_icon(value, 'toggle_popup(event, \'%s\')' % varprefix,
-                        _('Choose another Icon'), id = varprefix + '_img')
-        if not value:
-            html.write('<a href="javascript:void(0)" onclick="toggle_popup(event, \'%s\')">%s</a>' %
-                            (varprefix, _('Select an Icon')))
-        html.write('<div id="%s_popup" class="popup" style="display:none">' % varprefix)
+
+        html.begin_popup_trigger('icon_selector',
+            params=html.urlencode_vars([('value',       value),
+                                        ('varprefix',   varprefix),
+                                        ('allow_empty', self._allow_empty and '1' or '0')]))
+        if value:
+            self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img')
+        else:
+            html.write(_('Select an Icon'))
+        html.end_popup_trigger()
+
+    def render_popup_input(self, varprefix, value):
         html.write('<table>')
         empty = self._allow_empty and ['empty'] or []
         for nr, icon in enumerate(empty + self.available_icons()):
@@ -3264,8 +3269,6 @@ class IconSelector(ValueSpec):
             html.write('</td>')
         html.write('</tr>')
         html.write('</table>')
-        html.write('</div>')
-        html.write('</div>')
 
     def from_html_vars(self, varprefix):
         icon = html.var(varprefix + '_value')

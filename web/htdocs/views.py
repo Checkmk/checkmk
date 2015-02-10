@@ -2409,4 +2409,22 @@ def ajax_inv_render_tree():
     else:
         render_inv_subtree_container(hostname, tree_id, invpath, node)
 
+#.
+#   .--Icon Selector-------------------------------------------------------.
+#   |      ___                  ____       _           _                   |
+#   |     |_ _|___ ___  _ __   / ___|  ___| | ___  ___| |_ ___  _ __       |
+#   |      | |/ __/ _ \| '_ \  \___ \ / _ \ |/ _ \/ __| __/ _ \| '__|      |
+#   |      | | (_| (_) | | | |  ___) |  __/ |  __/ (__| || (_) | |         |
+#   |     |___\___\___/|_| |_| |____/ \___|_|\___|\___|\__\___/|_|         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | AJAX API call for rendering the icon selector                        |
+#   '----------------------------------------------------------------------'
 
+def ajax_popup_icon_selector():
+    varprefix   = html.var('varprefix')
+    value       = html.var('value')
+    allow_empty = html.var('allow_empty') == '1'
+
+    vs = IconSelector(allow_empty=allow_empty)
+    vs.render_popup_input(varprefix, value)

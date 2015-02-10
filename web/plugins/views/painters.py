@@ -189,7 +189,11 @@ def paint_icons(what, row):
 
                 if html.output_format == "html":
                     if link:
-                        output += '<a href="%s">' % link
+                        onclick = ''
+                        if link.startswith('onclick:'):
+                            onclick = ' onclick="%s"' % link[8:]
+                            link    = 'javascript:void(0)'
+                        output += '<a href="%s"%s>' % (link, onclick)
                     output += html.render_icon(icon_name, title)
                     if link:
                         output += '</a>'

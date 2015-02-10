@@ -313,7 +313,10 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
 
     # Show enough decimal digits so that very small percentages are still
     # visible!
-    perc_precision = max(1, 2 - int(round(math.log(used_perc, 10))))
+    if used_perc > 0:
+        perc_precision = max(1, 2 - int(round(math.log(used_perc, 10))))
+    else:
+        perc_precision = 1
     infotext = "%%.%df%%%% used (%%s of %%s), %%s" % perc_precision % (used_perc, used_hr, size_hr, levels["levels_text"])
 
     # Trends. The trends are computed in two steps. In the first step we

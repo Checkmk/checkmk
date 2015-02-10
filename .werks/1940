@@ -1,0 +1,12 @@
+Title: ps: Fixed a rare crash on malformed agent output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1423577273
+Class: fix
+
+Sometimes the windows agent reported process lines without a process name, like<br>
+<tt>(\\ZAOE\Grotest,149572,25184,0,20348,7752,7656250,12500000,241,5)</tt><br>
+The ps check crashed because it couldn't handle this type of line
+

@@ -3188,28 +3188,39 @@ class IconSelector(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._prefix      = kwargs.get('prefix', 'icon_')
-        self._subdir      = kwargs.get('subdir', '')
-        self._num_cols    = kwargs.get('num_cols', 12)
         self._allow_empty = kwargs.get('allow_empty', True)
-        if self._subdir:
-            self._html_path = os.path.join('images', self._subdir)
-        else:
-            self._html_path = 'images'
-        self._empty_img = kwargs.get('emtpy_img', 'empty')
+        self._html_path   = 'images/icons'
+        self._empty_img   = kwargs.get('emtpy_img', 'empty')
 
         self._exclude = [
             'trans',
             'empty',
         ]
 
+        # Mapping table to put icons into categories etc.
+        # FIXME: Need specification file or some plugin mechanism
+        self._icons = [
+            'logos': (_('Logos'), [
+                'windows',
+                'linux',
+                'cisco',
+                'checkmk',
+                'ooo_gulls',
+                'acroread',
+            ],
+            'misc': (_('Misc'), [
+
+            ],
+        ]
+
     def available_icons(self):
         if defaults.omd_root:
             dirs = [
-                os.path.join(defaults.omd_root, "local/share/check_mk/web/htdocs/images", self._subdir),
-                os.path.join(defaults.omd_root, "share/check_mk/web/htdocs/images", self._subdir),
+                os.path.join(defaults.omd_root, "local/share/check_mk/web/htdocs/images/icons"),
+                os.path.join(defaults.omd_root, "share/check_mk/web/htdocs/images/icons"),
             ]
         else:
-            dirs = [ os.path.join(defaults.web_dir, "htdocs/images", self._subdir) ]
+            dirs = [ os.path.join(defaults.web_dir, "htdocs/images/icons") ]
 
         icons = set([])
         for dir in dirs:
@@ -3254,21 +3265,13 @@ class IconSelector(ValueSpec):
         html.end_popup_trigger()
 
     def render_popup_input(self, varprefix, value):
-        html.write('<table>')
+        html.write('<div class="icons">')
         empty = self._allow_empty and ['empty'] or []
         for nr, icon in enumerate(empty + self.available_icons()):
-            if nr == 0:
-                html.write('<tr>')
-            elif nr % self._num_cols == 0:
-                html.write('</tr><tr>')
-
-            html.write('<td>')
             self.render_icon(icon,
                 onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
-                title = _('Choose this Icon'), id = varprefix + '_i_' + icon)
-            html.write('</td>')
-        html.write('</tr>')
-        html.write('</table>')
+                title = _('Choose this icon'), id = varprefix + '_i_' + icon)
+        html.write('</div>')
 
     def from_html_vars(self, varprefix):
         icon = html.var(varprefix + '_value')

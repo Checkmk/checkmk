@@ -42,9 +42,9 @@ inventory:
  {Grouping:} In some situations you do not want to monitor a single
  interface but a group of interfaces that together form a pool.
  The {if} check supports such pools by defining groups.
- For each group you specify a name and the interface port type which
- all members of the group must share. The data of all members
- is accumulated and put together in a single grouped interface service
+ You can specifiy the members of a group by their port type and the item name(s) of
+ the single interfaces. The data of all members is accumulated and put together
+ in a single grouped interface service.
 
  You can specify the groups with the ruleset {if_groups}.
  Groups are defined as list of dictionaries.
@@ -54,6 +54,9 @@ inventory:
   {"name"}:   String. Name of the group within the service description
 
   {"iftype"}: Integer. Interface port type as integer
+
+  {"include_items"}: List of Strings. Interface item name. This name depends
+  on further settings like if_inventory_uses_alias or if_inventory_uses_description
 
   {"single"}(optional): Bool. Interfaces in this group do not show up
   as single service if "single" is set to True (Default: False)

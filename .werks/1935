@@ -1,0 +1,11 @@
+Title: WATO Web-API: Reduced number configurable role permissions
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.6b8
+Date: 1423060960
+
+The WATO Web-API now has only one permission left (use API at all).
+The permission itself has been moved to <i>WATO -> Access to Web-API</i>.

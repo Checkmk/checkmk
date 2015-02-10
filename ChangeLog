@@ -11,6 +11,7 @@
     * 1929 netapp_api_if: improved inventory and check output of virtual interfaces...
     * 1930 Windows agent: now able to unpack plugins.cap file (created by Check_MK agent bakery)...
     * 1933 esx_vsphere_objects: now able to set a different alert level when the host/vm reports 'unknown'...
+    * 1992 df: Show usages near to zero with a higher precision - not simply as 0.00
     * 1881 FIX: omd_status: Check works now event when a site is reported as not OK...
     * 1923 FIX: cisco_qos: Fixed exception in discovery that might lead to missing services
     * 1924 FIX: cisco_power: Fixed missing power supplies in case where name is not unique
@@ -25,6 +26,7 @@
     * 1932 FIX: check_http: Check SSL Certificate: did not work when SNI Option was set...
     * 1975 FIX: check_bi_aggr: Ignoring proxy settings from environment now
     * 1936 FIX: check_form_submit: fixed crash on certain form fields with unnamed input elements
+    * 1938 FIX: docsis_channels_upstream: fixed missing checks if channels had the same ChannelId...
 
     Multisite:
     * 1979 Relative timestamps display warnings when they should be in future but are in past
@@ -39,6 +41,7 @@
     * 1981 FIX: Not trying to render view in view editor when the view is not valid
 
     WATO:
+    * 1935 WATO Web-API: Reduced number configurable role permissions...
     * 1922 FIX: Fix exception in saving of hosttags if hosttag has at least one auxiliary tag
     * 1883 FIX: Fixed lossing service context when cloning a rule
     * 1925 FIX: Fix missing auxilliary tags that have their own topic...
@@ -47,6 +50,9 @@
 
     Notifications:
     * 1988 FIX: Gracefully handline invalid empty bulk notification files from previous buggy versions
+
+    Reporting & Availability:
+    * 1990 FIX: Fix two exceptions in PDF exports of host group views
 
     Event Console:
     * 1974 FIX: Event console views were randomly ignoring host filters...

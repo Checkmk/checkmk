@@ -2,6 +2,7 @@
     Core & Setup:
     * 1882 FIX: Fixed exception "filesystem_levels" not defined when compiling config for nagios
     * 1977 FIX: Dramatically reduced size of Check_MK check helper processes...
+    * 1982 FIX: Fixed exception during checking regular checking when having checks without discovery function
 
     Checks & Agents:
     * 1673 netapp_volumes: now able to configure levels by magic factor

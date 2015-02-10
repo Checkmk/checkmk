@@ -104,7 +104,7 @@ def ps_parse_info(info):
                     # We need to determine the number of cpu_cores without the wmic_info
                     if len(line) < 3:
                         # On some rare instances the name of the process is missing
-                        # This line will be igored
+                        # This line will be ignored
                         continue
                     if line[2].lower() == "system idle process":
                         cpu_cores = int(line[1][1:-1].split(",")[9])

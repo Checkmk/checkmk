@@ -1,4 +1,7 @@
 1.2.6b10:
+    Checks & Agents:
+    * 1942 FIX: netapp_api_volumes: fixed exception when performance data generation was enabled
+
 
 1.2.6b9:
     Checks & Agents:

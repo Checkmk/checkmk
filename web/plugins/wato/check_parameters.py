@@ -4676,7 +4676,7 @@ register_check_parameters(
                 ),
                 ( "inactive_hosts",
                     Tuple(
-                        title = _("Absolute amout of inactive hosts"),
+                        title = _("Absolute amount of inactive hosts"),
                         elements = [
                             Integer(title = _("Warning at or above"), minvalue = 0, unit = _("inactive hosts")),
                             Integer(title = _("Critical at or above"), minvalue = 0, unit = _("inactive hosts")),
@@ -4685,7 +4685,7 @@ register_check_parameters(
                 ),
                 ( "degraded_hosts",
                     Tuple(
-                        title = _("Absolute amout of degraded hosts"),
+                        title = _("Absolute amount of degraded hosts"),
                         elements = [
                             Integer(title = _("Warning at or above"), minvalue = 0, unit = _("degraded hosts")),
                             Integer(title = _("Critical at or above"), minvalue = 0, unit = _("degraded hosts")),
@@ -4694,7 +4694,7 @@ register_check_parameters(
                 ),
                 ( "offline_hosts",
                     Tuple(
-                        title = _("Absolute amout of offline hosts"),
+                        title = _("Absolute amount of offline hosts"),
                         elements = [
                             Integer(title = _("Warning at or above"), minvalue = 0, unit = _("offline hosts")),
                             Integer(title = _("Critical at or above"), minvalue = 0, unit = _("offline hosts")),
@@ -4703,7 +4703,7 @@ register_check_parameters(
                 ),
                 ( "other_hosts",
                     Tuple(
-                        title = _("Absolute amout of other hosts"),
+                        title = _("Absolute amount of other hosts"),
                         elements = [
                             Integer(title = _("Warning at or above"), minvalue = 0, unit = _("other hosts")),
                             Integer(title = _("Critical at or above"), minvalue = 0, unit = _("other hosts")),

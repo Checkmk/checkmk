@@ -37,10 +37,10 @@ def check_fan(rpm, params):
             " and at or above %s/%s rpm)" % (warn_upper, crit_upper)
 
     # Note that None < int
-    if rpm < crit or rpm >= crit_upper:
+    if rpm < crit or crit_upper != None and rpm >= crit_upper:
         message += levelstext
         return 2, message
-    elif rpm < warn or rpm >= warn_upper:
+    elif rpm < warn or warn_upper != None and rpm >= warn_upper:
         message += levelstext
         return 1, message
     else:

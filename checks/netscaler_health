@@ -74,27 +74,7 @@ def inventory_netscaler_health_fan(info):
 def check_netscaler_health_fan(item, params, info):
     for name, value in info:
         if name[:-5] == item:
-            value=int(value)
-            infotext = "speed is %d rpm" % value
-
-            state = 0
-            lower_warn, lower_crit = params["lower"]
-            upper_warn, upper_crit = params["upper"]
-            if lower_crit and value <= lower_crit:
-                state = 2
-                infotext += " (lower levels at %d/%d rpm)" % (lower_warn, lower_crit)
-            elif lower_warn and value <= lower_warn:
-                state = 1
-                infotext += " (lower levels at %d/%d rpm)" % (lower_warn, lower_crit)
-            elif upper_crit and value >= upper_crit:
-                state = 2
-                infotext += " (upper levels at %d/%d rpm)" % (upper_warn, upper_crit)
-            elif upper_warn and value >= upper_warn:
-                state = 1
-                infotext += " (upper levels at %d/%d rpm)" % (upper_warn, upper_crit)
-
-            return state, infotext
-
+            return check_fan(int(value), params)
 
 check_info["netscaler_health.fan"] = {
     "check_function"          : check_netscaler_health_fan,
@@ -104,6 +84,7 @@ check_info["netscaler_health.fan"] = {
     "snmp_info"               : netscaler_health_info,
     "snmp_scan_function"      : netscaler_health_scan,
     "default_levels_variable" : "netscaler_health_fan_default_levels",
+    "includes"                : [ "fan.include" ],
 }
 #.
 #   .--temp----------------------------------------------------------------.

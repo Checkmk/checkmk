@@ -4,16 +4,19 @@ catalog: hw/storagehw/ibm
 license: GPL
 distribution: check_mk
 description:
- Checks the status of hosts an IBM SVC / Storwize V3700 / V7000 presents volumes
- to.
+ Checks the status of hosts on IBM SVC / Storwize V3700 / V7000 presents volumes to.
 
- If there are only hosts reporting status {active}, {online} or {inactive}
- the check returns {OK}. If there are hosts reporting {degraded} status or
- any unidentified status the check returns {WARN}. If some hosts report
- {offline} status the check returns {CRIT}.
+ For every host category {active}, {inactive}, {degraded}, {offline}, {other} the
+ amount of hosts is compared to the configured limits.
 
- It is also possible to overwrite the return state with {OK} by passing {'always_ok' : True }
- as Parameter, or simply with the WATO Rule.
+ For host category {active} the check returns {CRIT} if the amount of hosts is
+ equal or below the critical limit. The check returns {WARN} if the amount of hosts
+ is above critical limit and equal or below warning level. Otherwise the check returns {OK}.
+
+ For host categories {inactive}, {degraded}, {offline}, {other} the check return {CRIT} if
+ the amount of hosts is equal or above the critical limit. The check return {WARN} if
+ the amount of hosts is below critical limit and equal or above warning limit. Otherwise
+ the check return {OK}.
 
  Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
  data from the device. Your monitoring user must be able to SSH to the device

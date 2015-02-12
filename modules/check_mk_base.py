@@ -97,8 +97,11 @@ else:
 # Output text if opt_verbose is set (-v). Adds no linefeed
 def verbose(text):
     if opt_verbose:
-        sys.stdout.write(text)
-        sys.stdout.flush()
+        try:
+            sys.stdout.write(text)
+            sys.stdout.flush()
+        except:
+            pass # avoid exception on broken pipe (e.g. due to | head)
 
 # Output text if, opt_verbose >= 2 (-vv).
 def vverbose(text):
@@ -1728,6 +1731,8 @@ def reset_global_caches():
     g_dns_cache         = {}
     global g_ip_lookup_cache
     g_ip_lookup_cache   = None  # permanently cached ipaddresses from ipaddresses.cache
+    global g_converted_rulesets_cache
+    g_converted_rulesets_cache = {}
 
 reset_global_caches()
 

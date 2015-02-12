@@ -59,14 +59,10 @@ def netapp_convert_to_if64(info):
                       counter_key = "instance_name")
     interfaces = parsed_data.get("net-ifconfig-get")
 
-    nics = []
-
-    for idx, entry in enumerate(sorted(interfaces)):
-        nic_name, values = entry, interfaces[entry]
-
-        # auto-1000t-fd-up
-        speed = 0
-        state = "1"
+    # Calculate speed, state and create mac-address list
+    if_mac_list = {} # Dictionary with lists of common mac addresses
+    vif_list    = [] # List of virtual interfaces
+    for name, values in interfaces.items():
         mediatype = values.get("mediatype")
         if mediatype:
             tokens = mediatype.split("-")
@@ -79,7 +75,56 @@ def netapp_convert_to_if64(info):
                 speed = 10000000000
             elif "10" in mediatype:
                 speed = 10000000
-            state  = tokens[-1].lower() == "up" and "1" or "2"
+            else:
+                speed = 0
+            values["speed"] = speed
+            values["state"] = tokens[-1].lower() == "up" and "1" or "2"
+        elif values.get("port-role") != "storage-acp":
+            # If an interface has no media type and is not a storage-acp it is considered as virtual interface
+            vif_list.append(name)
+        if "mac-address" in values:
+            if_mac_list.setdefault(values["mac-address"], [])
+            if_mac_list[values["mac-address"]].append(name)
+
+
+    nics       = []
+    extra_info = {}
+    for idx, entry in enumerate(sorted(interfaces)):
+        nic_name, values = entry, interfaces[entry]
+
+        speed = values.get("speed", 0)
+        state = values.get("state", "2")
+
+        # Try to determine the speed and state for virtual interfaces
+        # We know all physical interfaces for this virtual device and use the highest available
+        # speed as the virtual speed. Note: Depending on the configuration this behaviour might
+        # differ, e.g. the speed of all interfaces might get accumulated..
+        # Additionally, we check if not all interfaces of the virtual group share the same connection speed
+        max_speed = 0
+        min_speed = 0
+        if not speed:
+            if "mac-address" in values:
+                mac_list = if_mac_list[values["mac-address"]]
+                if len(mac_list) > 1: # check if this interface is grouped
+                    extra_info.setdefault(nic_name, {})
+                    extra_info[nic_name]["grouped_if"] = [ x for x in mac_list if x not in vif_list ]
+
+                    for tmp_if in mac_list:
+                        if tmp_if == nic_name:
+                            continue
+                        max_speed = max(max_speed, interfaces[tmp_if].get("speed", 0))
+                        min_speed = min(max_speed, interfaces[tmp_if].get("speed", 0))
+                    if max_speed != min_speed:
+                        extra_info[nic_name]["speed_differs"] = True
+                    speed = max_speed
+
+        # Virtual interfaces is "Up" if at least one physical interface is up
+        if "state" not in values:
+            if "mac-address" in values:
+                for tmp_if in if_mac_list[values["mac-address"]]:
+                    if interfaces[tmp_if].get("state") == "1":
+                        state = "1"
+                        break
 
         # Only add interfaces with counters
         if "counters" in values:
@@ -90,7 +135,7 @@ def netapp_convert_to_if64(info):
                 mac = ''
 
             nic = ['0'] * 20
-            nic[0]  = idx + 1                               # Index
+            nic[0]  = str(idx + 1)                          # Index
             nic[1]  = nic_name                              # Description
             nic[2]  = "6" # Fake ethernet                   # Type
             nic[3]  = speed                                 # Speed
@@ -115,14 +160,35 @@ def netapp_convert_to_if64(info):
 
             nics.append(nic)
 
-    return nics
+    return nics, extra_info
 
 def inventory_netapp_api_if(parsed):
-    for entry in parsed:
-        yield entry[1], None
+    nics, extra_info = parsed
+    return inventory_if_common(nics)
+
+def check_netapp_api_if(item, params, parsed):
+    nics, extra_info = parsed
+    yield check_if_common(item, params, nics)
+
+    for line in nics:
+        ifIndex = line[0]
+        ifDescr = line[1]
+        ifAlias = line[18]
+        if type(ifIndex) == tuple:
+            ifGroup, ifIndex = ifIndex
+
+        ifDescr_cln = cleanup_if_strings(ifDescr)
+        ifAlias_cln = cleanup_if_strings(ifAlias)
+        if if_item_matches(item, ifIndex, ifAlias_cln, ifDescr_cln):
+            if ifDescr in extra_info:
+                vif_group = extra_info[ifDescr]
+                yield 0, "Physical interfaces: %s" %\
+                    ", ".join([group for group in vif_group["grouped_if"] if group != ifDescr])
+                if "speed_differs" in vif_group:
+                    yield 1, "Interfaces do not have the same speed"
 
 check_info["netapp_api_if"] = {
-    'check_function'          : check_if_common,
+    'check_function'          : check_netapp_api_if,
     'inventory_function'      : inventory_netapp_api_if,
     'parse_function'          : netapp_convert_to_if64,
     'service_description'     : 'Interface %s',

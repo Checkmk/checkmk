@@ -46,18 +46,6 @@ def action_add_host(request):
 
 api_actions["add_host"] = {
     "handler"         : action_add_host,
-    "title"           : _("Add a host to WATO"),
-    "description"     : _("This webservice allows you to add a new host."),
-    "example_request" : ([("create_folders=1", _("If set to 1(default) create non-existing folders1)"))],
-                         { "attributes": {
-                                    "tag_criticality": "prod",
-                                    "tag_agent": "cmk-agent",
-                                    "alias": "Alias of testhost",
-                                    "ipaddress": "127.0.0.1",
-                                },
-                          "folder": "server",
-                          "hostname": "testhost"
-                         }),
     "locking"         : True,
 }
 
@@ -77,17 +65,6 @@ def action_edit_host(request):
 
 api_actions["edit_host"] = {
     "handler"     : action_edit_host,
-    "title"       : _("Edit a host in WATO"),
-    "description" : _("Allows you to modify the host attributes in WATO, but can not change a hosts folder.<br>"\
-                      "If you want to unset a host_tag specify it with <tt>tag_agent=False</tt>."),
-    "example_request" : ([],
-                         { "attributes": {
-                                    "tag_agent": "snmp-only",
-                                    "site": "slave"
-                                },
-                           "unset_attributes": ["tag_criticality"],
-                           "hostname": "testhost"
-                         }),
     "locking"     : True,
 }
 
@@ -108,10 +85,6 @@ def action_get_host(request):
 
 api_actions["get_host"] = {
     "handler"         : action_get_host,
-    "title"           : _("Get host data from WATO"),
-    "description"     : _("Returns the host_attributes of the given hostname"),
-    "example_request" : ( [("effective_attributes=0", _("If set to 1 (default=0) also get attributes from parent folders"))],
-                          { "hostname": "testhost" } ),
     "locking"         : False,
 }
 
@@ -127,10 +100,6 @@ def action_delete_host(request):
 
 api_actions["delete_host"] = {
     "handler"     : action_delete_host,
-    "title"       : _("Delete host in WATO"),
-    "description" : _("Deletes the given hostname in WATO"),
-    "example_request" : ( [],
-                          { "hostname": "testhost" } ),
     "locking"     : True,
 }
 
@@ -148,10 +117,6 @@ def action_discover_services(request):
 
 api_actions["discover_services"] = {
     "handler"     : action_discover_services,
-    "title"       : _("Host service discovery"),
-    "description" : _("Starts a service discovery for the given hostname."),
-    "example_request" : ( [("mode=new",_("Available modes: new, remove, fixall, refresh"))],
-                          { "hostname": "testhost" } ),
     "locking"     : True,
 }
 
@@ -169,11 +134,6 @@ def action_activate_changes(request):
 
 api_actions["activate_changes"] = {
     "handler"         : action_activate_changes,
-    "title"           : _("Activate changes"),
-    "description"     : _("Activates changes. The user still needs the required permissions to do so."),
-    "example_request" : ( [("allow_foreign_changes=0", _("If set to 1 (default=0) proceed if there are foreign changes")),
-                           ("mode=dirty", _("Available modes: dirty (only dirty sites), all (all sites), specific (use sites set in request)"))],
-                          { "sites": ["slave", "localsite"] }),
     "locking"         : True,
 }
 

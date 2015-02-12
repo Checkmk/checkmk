@@ -45,7 +45,7 @@ if mknotifyd_enabled:
             help = _("The option will make notifications handled asynchronously. For each notification a spool "
                      "file will be created and later processes by the notification spooler. This avoids a hanging "
                      "core in case of notifications that need very long to execute. It also enables a retry in "
-                     "case of failed notifications. Please not that this is not useful if you only use notification "
+                     "case of failed notifications. Please note that this is not useful if you only use notification "
                      "methods that have their own spooling (like email or SMS tools)."),
             default_value = False),
         domain = "check_mk"

@@ -353,8 +353,8 @@ def may(pname):
     user_permissions[pname] = he_may
     return he_may
 
-def user_may(u, pname):
-    return may_with_roles(roles_of_user(u), pname)
+def user_may(user_id, pname):
+    return may_with_roles(roles_of_user(user_id), pname)
 
 def need_permission(pname):
     if not may(pname):

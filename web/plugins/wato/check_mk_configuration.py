@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-deprecated = _("Deprecated")
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
 #   | / ___| | ___ | |__   __ _| | / ___|  ___| |_| |_(_)_ __   __ _ ___   |
@@ -37,6 +36,7 @@ deprecated = _("Deprecated")
 #   | Global configuration settings for main.mk and multisite.mk           |
 #   '----------------------------------------------------------------------'
 
+deprecated = _("Deprecated")
 
 group = _("Status GUI (Multisite)")
 
@@ -290,7 +290,7 @@ register_configvar(group,
         add_label = _("Create new virtual host tree configuration"),
         title = _("Virtual Host Trees"),
         help = _("Here you can define tree configurations for the snapin <i>Virtual Host-Trees</i>. "
-                 "These trees organize your host based on their values in certain host tag groups. "
+                 "These trees organize your hosts based on their values in certain host tag groups. "
                  "Each host tag group you select will create one level in the tree."),
     ),
     domain = "multisite",
@@ -974,10 +974,10 @@ register_configvar(group,
     "password_policy",
     Dictionary(
         title = _('htpasswd: Password Policy'),
-        help  = _('You can define some rules which each user password must fit with. By default '
+        help  = _('You can define some rules to which each user password aher. By default '
                   'all passwords are accepted, even ones which are made of only a single character, '
                   'which is obviously a bad idea. Using this option you can enforce your users '
-                  'to choose more secure passwords of a minimal length having a defined complexity.'),
+                  'to choose more secure passwords.'),
         elements = [
             ('min_length', Integer(
                 title = _("Minimum password length"),
@@ -986,10 +986,13 @@ register_configvar(group,
             ('num_groups', Integer(
                 title = _("Number of character groups to use"),
                 minvalue = 1,
-                help = _("Make the user choose the password from this number of character groups. "
-                         "Character groups are: <ul><li>lowercase letters</li>"
+                maxvalue = 4,
+                help = _("Force the user to choose a password that contains characters from at least "
+                         "this number of different character groups. "
+                         "Character groups are: <ul>"
+                         "<li>lowercase letters</li>"
                          "<li>uppercase letters</li>"
-                         "<li>numbers</li>"
+                         "<li>digits</li>"
                          "<li>special characters such as an underscore or dash</li>"
                          "</ul>"),
             )),
@@ -1103,9 +1106,9 @@ register_configvar(group,
             ( "zfsget",                 _("Used space in ZFS pools and filesystems")),
             ( "ps",                     _("State and Count of Processes") ),
             ( "ps.perf",                _("State and Count of Processes (with additional performance data)")),
-            ( "wmic_process",           _("Ressource consumption of windows processes")),
+            ( "wmic_process",           _("Resource consumption of windows processes")),
             ( "logwatch",               _("Check logfiles for relevant new messages")),
-            ( "cmk-inventory",          _("Monitor hosts for unchecked services (Check_MK inventory)")),
+            ( "cmk-inventory",          _("Monitor hosts for unchecked services (Check_MK Discovery)")),
             ( "hyperv_vms",             _("Hyper-V Server: State of VMs")),
         ],
         render_orientation = "vertical",
@@ -2482,9 +2485,9 @@ register_rule(group,
     Transform(
         CascadingDropdown(
             title = _("Check for correct version of Check_MK agent"),
-            help = _("If you want to make sure all of your Check_MK agents are running"
-                     " one specific version, you may set it by this rule. Agents running "
-                     " some different version return a none ok state then"),
+            help = _("Here you can make sure that all of your Check_MK agents are running"
+                     " one specific version. Agents running "
+                     " a different version return a none-OK state."),
             choices = [
                 ("ignore",   _("Ignore the version")),
                 ("site",     _("Same version as the monitoring site")),

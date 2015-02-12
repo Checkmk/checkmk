@@ -1,0 +1,9 @@
+Title: win_printers: Fixed exception in WATO when displaying default parameters
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422615407
+Class: fix
+
+

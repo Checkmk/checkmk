@@ -70,7 +70,7 @@ def jolokia_metrics_parse(info):
                     continue
                 inst = part1[0]
                 part2 = part1[1].split(',type=')
-                tp = part2[0]
+                tp = part2[0].replace('"','')
             elif len(parts) == 3:
                 inst, app, servlet = parts
             else:

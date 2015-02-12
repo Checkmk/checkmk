@@ -50,35 +50,11 @@ def load_plugins():
     # are loaded).
     loaded_with_language = current_language
 
-    config.declare_permission("webapi.api_allowed", _("API accessible"),
-                                                    _("This permissions specifies if the role "\
-                                                      "is able to use web API functions at all"),
+    config.declare_permission("wato.api_allowed", _("Access to Web-API"),
+                                                  _("This permissions specifies if the role "\
+                                                    "is able to use Web-API functions. It is only available "\
+                                                    "for automation users."),
                               config.builtin_role_ids)
-
-    # Declare permissions for all api actions
-    config.declare_permission_section("webapi", _("Web API"), do_sort = True)
-    for name, settings in api_actions.items():
-        full_description  = "%s<br>API function <tt>{site}/check_mk/webapi.py?action=%s</tt>" % (settings.get("description",""), name)
-        example_request = settings.get("example_request")
-        if example_request:
-            full_description += "<br>"
-            if example_request[0]:
-                full_description += "<br>Optional GET parameters<br><table>"
-                for entry in example_request[0]:
-                    full_description += "<tr><td><tt>%s</tt></td><td>%s</td></tr>" % entry
-                full_description += "</table>"
-            if example_request[1]:
-                full_description +=  "<br>Example request ( Json formatted POST parameter <tt>request=</tt> ):<br>"
-                try:
-                    import json
-                    full_description += "<pre>%s</pre>" % json.dumps(example_request[1], sort_keys = True, indent = 2)
-                except:
-                    full_description += "<pre>%s</pre>" % pprint.pformat(example_request[1])
-
-        config.declare_permission("webapi.%s" % name,
-                settings["title"],
-                full_description,
-                config.builtin_role_ids)
 
 g_api = None
 
@@ -89,13 +65,12 @@ def page_api():
         if not config.user.get("automation_secret"):
             raise MKAuthException("The WATO API is only available for automation users")
 
-        config.need_permission("webapi.api_allowed")
+        config.need_permission("wato.use")
+        config.need_permission("wato.api_allowed")
 
         action = html.var('action')
         if action not in api_actions:
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
-
-        config.need_permission("webapi.%s" % action)
 
         # Create API instance
         g_api = API()
@@ -128,19 +103,10 @@ def page_api():
         if api_actions[action].get("locking", True):
             g_api.lock_wato()
 
-        if html.var("debug_webapi"):
-            if api_actions[action]["example_request"]:
-                example_request = api_actions[action]["example_request"]
-                for entry, description in example_request[0]:
-                    key, value = entry.split("=")
-                    html.set_var(key, value)
-                request_object = example_request[1]
 
         action_response = api_actions[action]["handler"](request_object)
         response = { "result_code": 0, "result": action_response }
     except Exception, e:
-        #import traceback
-        #html.debug(traceback.format_exc().replace("\n","<br>"))
         response = { "result_code": 1, "result": str(e) }
 
     output_format = html.var("output_format", "json")

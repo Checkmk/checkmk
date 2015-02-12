@@ -110,6 +110,31 @@ check_info['esx_vsphere_objects'] = {
   "group"               : "esx_vsphere_objects",
 }
 
+def inventory_esx_vsphere_objects_count(info):
+    return [(None, None)]
+
+def check_esx_vsphere_objects_count(_no_item, _no_params, info):
+    virtualmachines = 0
+    hostsystems = 0
+    for line in info:
+        if line[0] == 'hostsystem':
+            hostsystems += 1
+        elif line[0] == 'virtualmachine':
+            virtualmachines += 1
+    messages = "Virtualmachines: %d" % virtualmachines
+    perfdata = [('vms', virtualmachines)]
+    if hostsystems > 1:
+        messages += ", Hostsystems: %d" % hostsystems
+        perfdata.append(('hosts', hostsystems))
+    return 0, messages, perfdata
+
+
+check_info['esx_vsphere_objects.count'] = {
+  "inventory_function"  : inventory_esx_vsphere_objects_count,
+  "check_function"      : check_esx_vsphere_objects_count,
+  "service_description" : "Object count",
+  "has_perfdata"        : True,
+}
 #   .--Cluster-------------------------------------------------------------.
 #   |                    ____ _           _                                |
 #   |                   / ___| |_   _ ___| |_ ___ _ __                     |

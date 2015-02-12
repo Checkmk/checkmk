@@ -1,0 +1,9 @@
+Title: Relative timestamps display warnings when they should be in future but are in past
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b8
+Date: 1423211681
+Class: feature
+
+

@@ -1,0 +1,10 @@
+Title: omd_status: Check works now event when a site is reported as not OK
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b8
+Date: 1422606490
+Class: fix
+
+The check resulted in state UNKNOWN because the agent section was missing
+when at least one site had a problem.

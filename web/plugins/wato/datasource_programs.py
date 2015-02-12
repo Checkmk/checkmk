@@ -197,12 +197,12 @@ register_rule(group,
             optional_keys = False
     ),
     title = _("Check NetApp via WebAPI"),
-    help  = _("This rule selects the NetApp agent instead of the normal Check_MK Agent "
+    help  = _("This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
               "and allows monitoring via the NetApp API. Right now only <i>7-Mode</i> is supported, "
-              "<i>Cluster Mode</i> is following soon. Important: To make this special agent NetApp work "
-              "you will have to provide two additional python files (NaServer.py, NaElement.py) "
+              "<i>Cluster Mode</i> will follow soon. Important: To make this special agent NetApp work "
+              "you will have to provide two additional python files (<tt>NaServer.py</tt>, <tt>NaElement.py</tt>) "
               "from the NetApp Manageability SDK. They need to be put into the site directory "
-              "<tt>~/local/lib/python</tt>. The user requires a number of permissions for specific API classes. "
+              "into <tt>~/local/lib/python</tt>. The user requires a number of permissions for specific API classes. "
               "They are displayed if you call the agent with <tt>agent_netapp --help</tt>. The agent itself "
               "is located in the site directory under <tt>~/share/check_mk/agents/special</tt>."),
     match = 'first')
@@ -284,7 +284,7 @@ register_rule(group,
     "special_agents:ibmsvc",
      Dictionary(
         title = _("Check state of IBM SVC / V7000 storage systems"),
-        help = _("This rule selects the ibmsvc agent instead of the normal Check_MK Agent "
+        help = _("This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Check_MK Agent "
                  "and allows monitoring of IBM SVC / V7000 storage systems by calling "
                  "ls* commands there over SSH. "
                  "Make sure you have SSH key authentication enabled for your monitoring user. "
@@ -305,8 +305,6 @@ register_rule(group,
                    title = _("Accept any SSH Host Key"),
                    label = _("Accept any SSH Host Key"),
                    default_value = False,
-                   true_label = _("True"),
-                   false_label = _("False"),
                    help = _("Accepts any SSH Host Key presented by the storage device. "
                             "Please note: This might be a security issue because man-in-the-middle "
                             "attacks are not recognized! Better solution would be to add the "
@@ -321,7 +319,7 @@ register_rule(group,
                          ( "lshost",          _("Hosts Connected") ),
                          ( "lslicense",       _("Licensing Status") ),
                          ( "lsmdisk",         _("MDisks") ),
-                         ( "lsmdiskgrp",      _("MDisksGrps") ),
+                         ( "lsmdiskgrp",      _("MDisks Groups") ),
                          ( "lsnode",          _("IO Groups") ),
                          ( "lsnodestats",     _("Node Stats") ),
                          ( "lssystem",        _("System Info") ),

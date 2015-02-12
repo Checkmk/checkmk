@@ -119,7 +119,7 @@ multisite_builtin_views.update({
                                'hostalias',
                                'host_favorites'],
               'sorters': [('site', False), ('site_host', False)],
-              'title': _('Favourite hosts'),
+              'title': _('Favorite hosts'),
               'topic': _('Hosts')},
  'allhosts_mini': {'browser_reload': 30,
                    'column_headers': 'pergroup',

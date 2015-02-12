@@ -1,0 +1,10 @@
+Title: df.include: fixed exception on emtpy filesystems
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b9
+Date: 1423580445
+Class: fix
+
+The df.include library crashed on filesystems where the available
+space was equal to the total space of the device.

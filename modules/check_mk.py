@@ -253,7 +253,7 @@ config_variable_names = set.difference(set(vars().keys()) - known_vars)
 
 # at check time (and many of what is also needed at administration time).
 try:
-    modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery' ]
+    modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         if os.path.exists(filename):
@@ -1588,6 +1588,7 @@ def in_binary_hostlist(hostname, conf):
 
     return False
 
+
 # Pick out the last element of an entry if it is a dictionary.
 # This is a new feature (1.2.0p3) that allows to add options
 # to rules. Currently only the option "disabled" is being
@@ -1611,6 +1612,7 @@ def all_matching_hosts(tags, hostlist):
            matching.add(hostname)
     return matching
 
+g_converted_rulesets_cache = {}
 
 def convert_service_ruleset(ruleset):
     new_rules = []
@@ -1632,18 +1634,11 @@ def convert_service_ruleset(ruleset):
         hosts = all_matching_hosts(tags, hostlist)
         new_rules.append((item, hosts, servlist))
 
-    # Replace rules inplace. This finally modifies it, so we
-    # need this conversion only once
-    ruleset[:] = new_rules
+    g_converted_rulesets_cache[id(ruleset)] = new_rules
+
 
 def serviceruleset_is_converted(ruleset):
-    if not ruleset:
-        return True # empty rulesets are converted in a trivial way
-
-    if type(ruleset[0]) != tuple:
-        return False
-
-    return type(ruleset[0][1]) == set
+    return id(ruleset) in g_converted_rulesets_cache
 
 
 # Compute outcome of a service rule set that has an item
@@ -1652,10 +1647,11 @@ def service_extra_conf(hostname, service, ruleset):
         convert_service_ruleset(ruleset)
 
     entries = []
-    for item, hosts, servlist in ruleset:
+    for item, hosts, servlist in g_converted_rulesets_cache[id(ruleset)]:
         if hostname in hosts and in_extraconf_servicelist(servlist, service):
             entries.append(item)
     return entries
+
 
 def convert_boolean_service_ruleset(ruleset):
     new_rules = []
@@ -1683,27 +1679,15 @@ def convert_boolean_service_ruleset(ruleset):
         hosts = all_matching_hosts(tags, hostlist)
         new_rules.append((negate, hosts, servlist))
 
-    # Replace rules inplace. This finally modifies it, so we
-    # need this conversion only once
-    ruleset[:] = new_rules
-
-
-def boolean_serviceruleset_is_converted(ruleset):
-    if not ruleset:
-        return True # empty rulesets are converted in a trivial way
-
-    if type(ruleset[0]) != tuple:
-        return False
-
-    return type(ruleset[0][1]) == set
+    g_converted_rulesets_cache[id(ruleset)] = new_rules
 
 
 # Compute outcome of a service rule set that just say yes/no
 def in_boolean_serviceconf_list(hostname, service_description, ruleset):
-    if not boolean_serviceruleset_is_converted(ruleset):
+    if not serviceruleset_is_converted(ruleset):
         convert_boolean_service_ruleset(ruleset)
 
-    for negate, hosts, servlist in ruleset:
+    for negate, hosts, servlist in g_converted_rulesets_cache[id(ruleset)]:
         if hostname in hosts and \
            in_extraconf_servicelist(servlist, service_description):
             return not negate
@@ -1758,6 +1742,7 @@ def in_extraconf_hostlist(hostlist, hostname):
                 raise
 
     return False
+
 
 def in_extraconf_servicelist(list, item):
     for pattern in list:
@@ -1815,12 +1800,6 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     if "service_period" in extra_service_conf:
         extra_service_conf["_SERVICE_PERIOD"] = extra_service_conf["service_period"]
         del extra_service_conf["service_period"]
-
-    if filesystem_levels != []:
-        raise MKGeneralException("filesystem_levels is not longer supported.\n"
-                "Please use check_parameters instead.\n"
-                "Please refer to documentation:\n"
-                " --> http://mathias-kettner.de/checkmk_check_parameters.html\n")
 
     output_conf_header(outfile)
     if hostnames == None:
@@ -2712,7 +2691,7 @@ opt_verbose = ('-v' in sys.argv) and 1 or 0
 opt_debug   = '-d' in sys.argv
 
 # make sure these names are defined (even if never needed)
-no_inventory_possible = None
+no_discovery_possible = None
 """)
 
     # Compile in all neccessary global variables
@@ -2982,7 +2961,29 @@ no_inventory_possible = None
 # of all autochecks files. The check helpers of the running core just
 # use those files, so that changes in the actual config do not harm
 # the running system.
-derived_config_variable_names = [ "hosttags", "all_hosts_untagged" ]
+
+derived_config_variable_names = [ "hosttags" ]
+
+# These variables are part of the Check_MK configuration, but are not needed
+# by the Check_MK keepalive mode, so exclude them from the packed config
+skipped_config_variable_names = [
+    "define_contactgroups",
+    "define_hostgroups",
+    "define_servicegroups",
+    "service_contactgroups",
+    "host_contactgroups",
+    "service_groups",
+    "host_groups",
+    "contacts",
+    "host_paths",
+    "timeperiods",
+    "host_attributes",
+    "all_hosts_untagged",
+    "extra_service_conf",
+    "extra_host_conf",
+    "extra_nagios_conf",
+]
+
 def pack_config():
     # Checks whether or not a variable can be written to the config.mk
     # and read again from it.
@@ -2998,11 +2999,15 @@ def pack_config():
 
     filepath = var_dir + "/core/config.mk"
     out = file(filepath + ".new", "w")
-    out.write("#!/usr/bin/python\n# encoding: utf-8\n# Created by Check_MK. Dump of the currently active configuration\n\n")
+    out.write("#!/usr/bin/python\n"
+              "# encoding: utf-8\n"
+              "# Created by Check_MK. Dump of the currently active configuration\n\n")
     for varname in list(config_variable_names) + derived_config_variable_names:
-        val = globals()[varname]
-        if packable(varname, val):
-            out.write("\n%s = %r\n" % (varname, val))
+        if varname not in skipped_config_variable_names:
+            val = globals()[varname]
+            if packable(varname, val):
+                out.write("\n%s = %r\n" % (varname, val))
+
     for varname, factory_setting in factory_settings.items():
         if varname in globals():
             out.write("\n%s = %r\n" % (varname, globals()[varname]))
@@ -4230,6 +4235,7 @@ def usage():
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
+ cmk --cap pack|unpack|list FILE.cap  Pack/unpack agent packages (not in all versions)
  cmk --show-snmp-stats                Analyzes recorded Inline SNMP statistics
  cmk -V, --version                    print version
  cmk -h, --help                       print this help
@@ -4917,7 +4923,7 @@ def copy_globals():
                             "g_check_table_cache", "g_singlehost_checks",
                             "g_nodesof_cache", "compiled_regexes", "vars_before_config",
                             "g_initial_times", "g_keepalive_initial_memusage",
-                            "g_dns_cache", "g_ip_lookup_cache" ] \
+                            "g_dns_cache", "g_ip_lookup_cache", "g_converted_rulesets_cache" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
             global_saved[varname] = copy.copy(value)
     return global_saved
@@ -5459,13 +5465,13 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "convert-rrds", "split-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                  "man", "nowiki", "config-check", "backup=", "restore=",
-                 "check-inventory=", "check-discovery=", "paths", 
+                 "check-inventory=", "check-discovery=", "paths",
                  "checks=", "inventory", "inventory-as-check=",
-                 "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
+                 "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap" ]
 
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
                       '--man', '-V', '--version' ,'-h', '--help', '--automation',
-                      '--create-rrd', '--convert-rrds', '--keepalive' ]
+                      '--create-rrd', '--convert-rrds', '--keepalive', '--cap' ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -5677,14 +5683,20 @@ try:
             done = True
         elif o in [ '-A', '--bake-agents' ]:
             if 'do_bake_agents' not in globals():
-                sys.stderr.write("Agent baking is not implemented in your version of Check_MK. Sorry.\n")
-                sys.exit(1)
+                bail_out("Agent baking is not implemented in your version of Check_MK. Sorry.")
             if args:
                 hostnames = parse_hostname_list(args, with_clusters = False)
             else:
                 hostnames = None
             do_bake_agents(hostnames)
             done = True
+
+        elif o == '--cap':
+            if 'do_cap' not in globals():
+                bail_out("Agent packages are not supported by your version of Check_MK.")
+            do_cap(args)
+            done = True
+
         elif o in [ '--show-snmp-stats' ]:
             if 'do_show_snmp_stats' not in globals():
                 sys.stderr.write("Handling of SNMP statistics is not implemented in your version of Check_MK. Sorry.\n")

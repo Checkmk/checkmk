@@ -26,6 +26,9 @@
 
 import sys, getopt, urllib2, traceback
 
+# tell urllib2 not to honour "http(s)_proxy" env variables
+urllib2.getproxies = lambda: {}
+
 def usage():
     sys.stderr.write("""
 USAGE: check_bi_aggr -b <BASE_URL> -a <AGGR_NAME> -u <USER> -s <SECRET>
@@ -130,7 +133,7 @@ except urllib2.socket.timeout:
     sys.stdout.write('ERROR: Socket timeout while opening URL: %s\n' % (url))
     sys.exit(3)
 except urllib2.URLError:
-    sys.stdout.write("UNKNOWN: Nagios not available.\n")
+    sys.stdout.write("UNKNOWN: Core not available.\n")
     sys.exit(3)
 except Exception, e:
     sys.stdout.write('ERROR: Exception while opening URL (%s): %s\n' %

@@ -1209,8 +1209,8 @@ register_rule(group,
             ( "share",
               TextUnicode(
                   title = _("SMB share to check"),
-                  help = _("Enter the plain name of the share only, e. g. <tt>iso</tt>, NOT "
-                           "the full UNC like \\\\servername\\iso"),
+                  help = _("Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> "
+                           "the full UNC like <tt>\\\\servername\\iso</tt>"),
                   size = 32,
                   allow_empty = False,
             )),
@@ -1380,7 +1380,7 @@ register_rule(group,
         elements = [
             TextAscii(
                 title = _("Base URL (OMD Site)"),
-                help = _("The base URL to the monitoring instance. For example <tt>http://<hostname>/<siteid></tt>. You can use "
+                help = _("The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. You can use "
                          "macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to make them be replaced by "
                          "the hosts values."),
                 size = 60,
@@ -1388,7 +1388,9 @@ register_rule(group,
             ),
             TextAscii(
                 title = _("Aggregation Name"),
-                help = _("The name of the aggregation to fetch. It will be added to the service description."),
+                help = _("The name of the aggregation to fetch. It will be added to the service description. You can use "
+                         "macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to make them be replaced by "
+                         "the hosts values."),
                 allow_empty = False
             ),
             TextAscii(
@@ -1598,7 +1600,7 @@ register_rule(group,
             ),
             ( "method",
               DropdownChoice(
-                  title = _("Method or probing"),
+                  title = _("Method of probing"),
                   choices = [
                       ( None,   _("UDP (default behaviour of tcpdump)") ),
                       ( "icmp", _("ICMP Echo Request") ),
@@ -1778,7 +1780,7 @@ register_rule(group,
                     ('match_subject', RegExpUnicode(
                         title = _('Only process mails with matching subject'),
                         help = _('Use this option to not process all messages found in the inbox, '
-                                 'but only the whones whose subject matches the given regular expression. '),
+                                 'but only the those whose subject matches the given regular expression.'),
                     )),
                     ('facility', DropdownChoice(
                         title = _("Events: Syslog facility"),
@@ -1797,8 +1799,8 @@ register_rule(group,
                             TextUnicode(
                                 title = _("Specify the application"),
                                 help = _("Use this text as application. You can use macros like <tt>\\1</tt>, <tt>\\2</tt>, ... "
-                                         "here when you configured <i>subject matching</i> in this rule with a regex "
-                                         "which declares match groups (using braces)."),
+                                         "here when you configured <i>subject matching</i> in this rule with a regular expression "
+                                         "that declares match groups (using braces)."),
                                 allow_empty = False,
                             ),
                         ]

@@ -5364,10 +5364,10 @@ def check_mk_local_automation(command, args=[], indata=""):
                 sudoline = "%s ALL = (root) NOPASSWD: %s *" % (html.apache_user(), commandargs[0], " ".join(commandargs[1:]))
 
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
-                    "needed Check_MK/Nagios files.<br />Please ensure you have set-up "
+                    "needed Check_MK/Nagios files.<br>Please ensure you have set-up "
                     "the sudo environment correctly. e.g. proceed as follows:</p>\n"
                     "<ol><li>install sudo package</li>\n"
-                    "<li>Append the following to the <code>/etc/sudoers</code> file:\n"
+                    "<li>Append the following to the <tt>/etc/sudoers</tt> file:\n"
                     "<pre># Needed for WATO - the Check_MK Web Administration Tool\n"
                     "Defaults:%s !requiretty\n"
                     "%s\n"
@@ -5393,7 +5393,7 @@ def check_mk_local_automation(command, args=[], indata=""):
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     except Exception, e:
         if commandargs[0] == 'sudo':
-            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s<br /><br >%s" % (commandargs[0], e, sudo_msg))
+            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s<br><br>%s" % (commandargs[0], e, sudo_msg))
         else:
             raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
     p.stdin.write(repr(indata))
@@ -5658,7 +5658,7 @@ class TextAttribute(Attribute):
         if self._mandatory and not value:
             raise MKUserError("attr_" + self.name(),
                   _("Please specify a value for %s") % self.title())
-        if value.strip() == "" and not self._allow_empty:
+        if not self._allow_empty and value.strip() == "":
             raise MKUserError("attr_" + self.name(),
                   _("%s may be missing, if must not be empty if it is set.") % self.title())
 
@@ -6493,12 +6493,12 @@ def get_snapshot_status(snapshot, validate_checksums = False):
         using_cmc = os.path.exists(defaults.omd_root + '/etc/check_mk/conf.d/microcore.mk')
         snapshot_cmc = 'conf.d/microcore.mk' in files
         if using_cmc and not snapshot_cmc:
-            raise MKGeneralException(_('You are currently using the Check_MK Microcore, but this snapshot does not use the '
-                                       'Check_MK Microcore. If you need to migrate your data, you could consider changing '
+            raise MKGeneralException(_('You are currently using the Check_MK Micro Core, but this snapshot does not use the '
+                                       'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
                                        'the core, restoring the snapshot and changing the core back again.'))
         elif not using_cmc and snapshot_cmc:
-            raise MKGeneralException(_('You are currently not using the Check_MK Microcore, but this snapshot uses the '
-                                       'Check_MK Microcore. If you need to migrate your data, you could consider changing '
+            raise MKGeneralException(_('You are currently not using the Check_MK Micro Core, but this snapshot uses the '
+                                       'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
                                        'the core, restoring the snapshot and changing the core back again.'))
 
     def snapshot_secret():
@@ -6944,8 +6944,8 @@ def mode_snapshot(phase):
         html.write("<br>")
 
         html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
-        html.write(_("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites<br>"
-                   "backup directory %s/wato/snapshots. It will then show up in the snapshots table.<br><br>") % defaults.var_dir)
+        html.write(_("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites "
+                   "backup directory <tt>%s/wato/snapshots</tt>. It will then show up in the snapshots table.<br><br>") % defaults.var_dir)
         html.begin_form("upload_form", method = "POST")
         html.upload_file("_upload_file")
         html.button("upload_button", _("Restore from file"), "submit")
@@ -8258,7 +8258,7 @@ def vs_notification_rule(userid = None):
               ListOf(
                   UserSelection(only_contacts = False),
                   title = _("The following users"),
-                  help = _("Enter a list of user ids to be notified here. These users need to be members "
+                  help = _("Enter a list of user IDs to be notified here. These users need to be members "
                            "of at least one contact group in order to be notified."),
                   movable = False,
               )
@@ -8375,9 +8375,9 @@ def vs_notification_rule(userid = None):
             ),
             ( "match_contactgroups",
               GroupChoice("contact",
-                  title = _("Match Contact Groups (cmc only)"),
-                  help = _("The host/ service must be in one of the selected contact groups. Only works with Check_MK Microcore. " \
-                           "If you don't use the CMC, that filter will not apply"),
+                  title = _("Match Contact Groups (CMC only)"),
+                  help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
+                           "If you don't use the CMC that filter will not apply"),
                   allow_empty = False,
               )
             ),
@@ -8417,7 +8417,7 @@ def vs_notification_rule(userid = None):
                       Integer(
                           label = _("from"),
                           help = _("Let through notifications counting from this number. "
-                                   "For normal alerts The first notification has the number 1. "
+                                   "For normal alerts the first notification has the number 1. "
                                    "For custom notifications the number is 0."),
                           default_value = 0,
                           minvalue = 0,
@@ -8942,7 +8942,7 @@ def mode_notifications(phase):
                 context = entry.items()
                 context.sort()
                 tooltip = "".join(("%s: %s\n" % e).decode('utf-8') for e in context)
-                html.icon_button(analyse_url, _("Anaylse ruleset with this notification:\n%s" % tooltip), "analyze")
+                html.icon_button(analyse_url, _("Analyze ruleset with this notification:\n%s" % tooltip), "analyze")
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
                 if html.var("analyse") and nr == int(html.var("analyse")):
@@ -9786,7 +9786,7 @@ def mode_edit_timeperiod(phase):
     # Excludes
     if other_tps:
         forms.section(_("Exclude"))
-        html.help(_('You can use other timeperiod defnitions to exclude the times '
+        html.help(_('You can use other timeperiod definitions to exclude the times '
                     'defined in the other timeperiods from this current timeperiod.'))
         vs_excl.render_input("exclude", timeperiod.get("exclude", []))
 
@@ -11883,7 +11883,7 @@ def mode_edit_user(phase):
             if topic is not None and topic != attr['topic']:
                 continue # skip attrs of other topics
 
-            if not attr.get("permission") or config.may(attr["permission"]):
+            if not userid or not attr.get("permission") or config.user_may(userid, attr["permission"]):
                 vs = attr['valuespec']
                 forms.section(_u(vs.title()))
                 if attr['user_editable'] and not is_locked(name):
@@ -13297,8 +13297,8 @@ def export_hosttags(hosttags, auxtags):
     hosttags_dict =  {}
     for id, title, choices in hosttags:
         tags = {}
-        for tag_id, tag_title, auxtags in choices:
-            tags[tag_id] = tag_title, auxtags
+        for tag_id, tag_title, tag_auxtags in choices:
+            tags[tag_id] = tag_title, tag_auxtags
         topic, title = parse_hosttag_title(title)
         hosttags_dict[id] = topic, title, tags
     auxtags_dict = dict(auxtags)
@@ -14440,6 +14440,8 @@ def rule_button(action, help=None, folder=None, rulenr=0):
             vars.append(("rule_folder", html.var("rule_folder")))
         if html.var("host"):
             vars.append(("host", html.var("host")))
+        if html.var("item"):
+            vars.append(("item", html.var("item")))
         url = make_action_link(vars)
         html.icon_button(url, help, action)
 
@@ -14990,7 +14992,7 @@ def mode_edit_rule(phase, new = False):
             html.write('<img class=ruleyesno align=top src="images/rule_%s.png"> ' % img)
             html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
 
-    # Addiitonal rule options
+    # Additonal rule options
     vs_rule_options.render_input("options", rule_options)
 
     forms.end()
@@ -15051,36 +15053,45 @@ def render_condition_editor(tag_specs, varprefix=""):
             varprefix, id, not div_is_open and "display: none;" or ""))
 
 
-    auxtags = dict(group_hosttags_by_topic(config.wato_aux_tags))
+    auxtags = group_hosttags_by_topic(config.wato_aux_tags)
     hosttags = group_hosttags_by_topic(config.wato_host_tags)
-    make_foldable = len(hosttags) > 1
-    for topic, grouped_tags in hosttags:
+    all_topics = set([])
+    for topic, taggroups in auxtags + hosttags:
+        all_topics.add(topic)
+    all_topics = list(all_topics)
+    all_topics.sort()
+    make_foldable = len(all_topics) > 1
+    for topic in all_topics:
         if make_foldable:
             html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (_u(topic)))
         html.write("<table class=\"hosttags\">")
 
         # Show main tags
-        for entry in grouped_tags:
-            id, title, choices = entry[:3]
-            html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
-            default_tag, deflt = current_tag_setting(choices)
-            tag_condition_dropdown("tag", deflt, id)
-            if len(choices) == 1:
-                html.write(" " + _("set"))
-            else:
-                html.select(varprefix + "tagvalue_" + id,
-                    [(t[0], _u(t[1])) for t in choices if t[0] != None], deflt=default_tag)
-            html.write("</div>")
-            html.write("</td></tr>")
+        for t, grouped_tags in hosttags:
+            if t == topic:
+                for entry in grouped_tags:
+                    id, title, choices = entry[:3]
+                    html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
+                    default_tag, deflt = current_tag_setting(choices)
+                    tag_condition_dropdown("tag", deflt, id)
+                    if len(choices) == 1:
+                        html.write(" " + _("set"))
+                    else:
+                        html.select(varprefix + "tagvalue_" + id,
+                            [(t[0], _u(t[1])) for t in choices if t[0] != None], deflt=default_tag)
+                    html.write("</div>")
+                    html.write("</td></tr>")
 
         # And auxiliary tags
-        for id, title in sorted(auxtags.get(topic, []), key = lambda x: x[0]):
-            html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
-            default_tag, deflt = current_tag_setting([(id, _u(title))])
-            tag_condition_dropdown("auxtag", deflt, id)
-            html.write(" " + _("set"))
-            html.write("</div>")
-            html.write("</td></tr>")
+        for t, grouped_tags in auxtags:
+            if t == topic:
+                for id, title in grouped_tags:
+                    html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
+                    default_tag, deflt = current_tag_setting([(id, _u(title))])
+                    tag_condition_dropdown("auxtag", deflt, id)
+                    html.write(" " + _("set"))
+                    html.write("</div>")
+                    html.write("</td></tr>")
 
         html.write("</table>")
         if make_foldable:
@@ -16800,6 +16811,7 @@ def declare_bi_valuespecs(aggregation_rules):
             DropdownChoice(
                 title = _("Rule:"),
                 choices = rule_choices,
+                sorted = True,
             ),
             ListOfStrings(
                 orientation = "horizontal",
@@ -17713,10 +17725,12 @@ class API:
             # Check if folder or host file is locked
             if check_folder == host_foldername: # Target folder exists
                 if check_folder.get(".lock_hosts"):
-                    raise MKAuthException(_("Not allowed to change hosts.mk file. It is locked"))
+                    raise MKAuthException(_("You are not allowed to modify hosts in this folder. The host configuration in the folder "
+                                            "is locked, because it has been created by an external application."))
             else:
                 if check_folder.get(".lock_subfolders"):
-                    raise MKAuthException(_("Not allowed create subfolders"))
+                    raise MKAuthException(_("Not allowed to create subfolders in this folder. The Folder has been "
+                                            "created by an external application and is locked."))
 
         if "permissions_create" in validate:
             # Find the closest parent folder. If we can write there, we can also write in our new folder
@@ -18691,7 +18705,7 @@ def load_plugins():
 
     config.declare_permission("wato.notifications",
          _("Notification configuration"),
-         _("This permission is needed for the new rule based notification configuration via the WATO module <i>Notifications</i>.</b>"),
+         _("This permission is needed for the new rule based notification configuration via the WATO module <i>Notifications</i>."),
          [ "admin", ])
 
     config.declare_permission("wato.snapshots",

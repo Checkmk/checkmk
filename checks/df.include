@@ -305,12 +305,19 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
     perf_var = mountpoint.replace(" ", "_")
     perfdata = [(perf_var, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb)]
 
-    if size_gb < 10240:
-        infotext = "%.1f%% used (%.2f of %.2f GB), %s" % \
-                    (used_perc, used_mb / 1024.0, size_gb, levels["levels_text"])
+    used_hr = get_bytes_human_readable(used_mb * 1024 * 1024)
+    size_hr = get_bytes_human_readable(size_mb * 1024 * 1024)
+    # If both numbers end with both MB or GB or TB, then drop the first one
+    if used_hr[-2:] == size_hr[-2:]:
+        used_hr = used_hr[:-3]
+
+    # Show enough decimal digits so that very small percentages are still
+    # visible!
+    if used_perc > 0:
+        perc_precision = max(1, 2 - int(round(math.log(used_perc, 10))))
     else:
-        infotext = "%.1f%% used (%.2f of %.2f TB), %s" % \
-                    (used_perc, used_mb / 1024.0 / 1024.0, size_gb / 1024.0, levels["levels_text"])
+        perc_precision = 1
+    infotext = "%%.%df%%%% used (%%s of %%s), %%s" % perc_precision % (used_perc, used_hr, size_hr, levels["levels_text"])
 
     # Trends. The trends are computed in two steps. In the first step we
     # compute the delta to the last check, using a normal check_mk counter.

@@ -1,0 +1,8 @@
+Title: exception in mkeventd when archiving certain event log lines
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.6b7
+Date: 1423751976
+Class: fix
+

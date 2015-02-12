@@ -120,6 +120,7 @@
 
     Event Console:
     * 1873 SEC: Escaping event text of event console messages correctly in views...
+    * 1861 FIX: exception in mkeventd when archiving certain event log lines
     * 1878 SEC: Fixed possible shell injection when filtering the EC archive...
 
     HW/SW-Inventory:

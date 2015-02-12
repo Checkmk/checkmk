@@ -242,6 +242,7 @@
     * 1839 FIX: Fix exception when notifying EC alert into monitoring for traps (because PID is missing)
     * 1813 FIX: Fixed bug in event console rule editor when no contact groups configured
     * 1974 FIX: Event console views were randomly ignoring host filters...
+    * 1861 FIX: exception in mkeventd when archiving certain event log lines
 
     HW/SW-Inventory:
     * 1846 Keep track of changes of software and hardware...

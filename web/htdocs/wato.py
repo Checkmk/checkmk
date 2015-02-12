@@ -3171,7 +3171,7 @@ def show_service_table(host, firsttime):
     except Exception, e:
         if config.debug:
             raise
-        html.show_error("Inventory failed for this host: %s" % e)
+        html.show_error(_("Inventory failed for this host: %s") % e)
         return
 
     checktable.sort()
@@ -5381,7 +5381,7 @@ def check_mk_local_automation(command, args=[], indata=""):
         except Exception, e:
             if config.debug:
                 raise
-            html.show_error("<h1>Cannot activate changes</h1>%s" % e)
+            html.show_error(_("<h1>Cannot activate changes</h1>%s") % e)
             return
 
     try:

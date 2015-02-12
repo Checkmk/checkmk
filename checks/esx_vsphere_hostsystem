@@ -225,6 +225,7 @@ check_info['esx_vsphere_hostsystem.cpu_util_cluster'] = {
    "has_perfdata"            : True,
    "includes"                : [ "cpu_util.include" ],
 }
+#.
 #   .--Memory--------------------------------------------------------------.
 #   |               __  __                                                 |
 #   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |

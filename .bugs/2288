@@ -1,0 +1,11 @@
+Title: Don't hide "activate changes" button when activion produced an error
+Component: wato
+State: open
+Date: 2015-02-10 13:51:03
+Targetversion: 1.2.7
+Class: nastiness
+
+When a user activates a change in WATO and the activation fails
+for some reason, the activate changes button is hidden. The user
+needs to reload the page to be able to retry the operation. It
+would be better to let the user simply retry the action.

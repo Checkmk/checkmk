@@ -1,0 +1,10 @@
+Title: Fixed exception during checking regular checking when having checks without discovery function
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423553729
+
+

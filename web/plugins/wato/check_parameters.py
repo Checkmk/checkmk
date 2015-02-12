@@ -4650,29 +4650,73 @@ register_check_parameters(
     "first"
 )
 
+def transform_ibm_svc_host(params):
+    if 'always_ok' in params:
+        if params['always_ok'] == False:
+            params = { 'degraded_hosts': (1,1), 'offline_hosts': (1,1), 'other_hosts': (1,1) }
+        else:
+            params = {}
+    return params
 
 register_check_parameters(
     subgroup_storage,
     "ibm_svc_host",
     _("IBM SVC: Options for SVC Hosts Check "),
-    Dictionary(
-        elements = [
-            ( "always_ok",
-             DropdownChoice(
-                  title = _("Override Service State"),
-                  choices = [
-                    ( False, _("Check shows errors in case of degraded or offline hosts")),
-                    ( True, _("Check always is in a OK State") )
-                  ],
-                  )
-            )
-        ],
-        optional_keys = None,
+    Transform(
+        Dictionary(
+            elements = [
+                ( "active_hosts",
+                    Tuple(
+                        title = _("Absolute amount of active hosts"),
+                        elements = [
+                            Integer(title = _("Warning at or below"), minvalue = 0, unit = _("active hosts")),
+                            Integer(title = _("Critical at or below"), minvalue = 0, unit = _("active hosts")),
+                        ]
+                    ),
+                ),
+                ( "inactive_hosts",
+                    Tuple(
+                        title = _("Absolute amount of inactive hosts"),
+                        elements = [
+                            Integer(title = _("Warning at or above"), minvalue = 0, unit = _("inactive hosts")),
+                            Integer(title = _("Critical at or above"), minvalue = 0, unit = _("inactive hosts")),
+                        ]
+                    ),
+                ),
+                ( "degraded_hosts",
+                    Tuple(
+                        title = _("Absolute amount of degraded hosts"),
+                        elements = [
+                            Integer(title = _("Warning at or above"), minvalue = 0, unit = _("degraded hosts")),
+                            Integer(title = _("Critical at or above"), minvalue = 0, unit = _("degraded hosts")),
+                        ]
+                    ),
+                ),
+                ( "offline_hosts",
+                    Tuple(
+                        title = _("Absolute amount of offline hosts"),
+                        elements = [
+                            Integer(title = _("Warning at or above"), minvalue = 0, unit = _("offline hosts")),
+                            Integer(title = _("Critical at or above"), minvalue = 0, unit = _("offline hosts")),
+                        ]
+                    ),
+                ),
+                ( "other_hosts",
+                    Tuple(
+                        title = _("Absolute amount of other hosts"),
+                        elements = [
+                            Integer(title = _("Warning at or above"), minvalue = 0, unit = _("other hosts")),
+                            Integer(title = _("Critical at or above"), minvalue = 0, unit = _("other hosts")),
+                        ]
+                    ),
+                ),
+            ]
+        ),
+        forth = transform_ibm_svc_host,
     ),
     None,
-    "first"
+    "dict",
 )
-
 
 register_check_parameters(
     subgroup_storage,

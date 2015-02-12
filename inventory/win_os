@@ -34,10 +34,11 @@ def inv_win_os(info):
     if len(line) == 7:
         node["name"] = line[1]
         node["kernel_version"] = line[2]
-        if line[3] == "64-Bit":
-            node["arch"] = "x86_64"
-        else:
-            node["arch"] = "i386"
+        if line[3]:
+            if line[3].lower() == "64-bit":
+                node["arch"] = "x86_64"
+            else:
+                node["arch"] = "i386"
         node["service_pack"] = line[4]+"."+line[5]
         dat = re.sub("\+\d+","",line[6])
         tz = int(re.sub("\d{14}.\d{6}","",line[6]))

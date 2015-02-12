@@ -1,0 +1,27 @@
+Title: ibm_svc_host / other license checks: now able to configure limits
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1423639361
+Class: feature
+
+The check ibm_svc_host now has configurable host limits via WATO.
+
+Old limits:
+<ul>
+<li>Check shows errors in case of degraded or offline hosts</li>
+<li>Check always is in a OK State</li>
+</ul>
+
+New limits:
+<ul>
+<li>Absolut amount of active hosts - Warning/Critical at or below</li>
+<li>Absolute amout of inactive hosts - Warning/Critical at or above</li>
+<li>Absolute amout of degraded hosts - Warning/Critical at or above</li>
+<li>Absolute amout of offline hosts - Warning/Critical at or above</li>
+<li>Absolute amout of other hosts - Warning/Critical at or above</li>
+</ul>
+
+This change has been made because it was not possible to configure limits without
+warning/critical states. Now all host categories can configured independently.

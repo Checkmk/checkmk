@@ -1,0 +1,11 @@
+Title: inventory plugin win_os: no longer detects incorrect i386 architecture
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423743481
+
+The inventory plugin set the architecture to i386 whenever the field was empty
+or the 64-Bit info was written in lowercase.

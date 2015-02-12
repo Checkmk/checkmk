@@ -2671,7 +2671,7 @@ opt_verbose = ('-v' in sys.argv) and 1 or 0
 opt_debug   = '-d' in sys.argv
 
 # make sure these names are defined (even if never needed)
-no_inventory_possible = None
+no_discovery_possible = None
 """)
 
     # Compile in all neccessary global variables

@@ -31,19 +31,8 @@
 # 2:host105:2:2:online
 # 3:host106:2:2:online
 
-factory_settings['ibm_svc_host_default_levels'] = {
-    'always_ok'  : False
-}
-
 def inventory_ibm_svc_host(info):
     return [(None, None)]
-
-
-def check_ibm_svc_host_state(state, aw_ok):
-    if aw_ok:
-        return 0
-    else:
-        return state
 
 def check_ibm_svc_host(item, params, info):
     degraded = 0
@@ -51,7 +40,7 @@ def check_ibm_svc_host(item, params, info):
     active   = 0
     inactive = 0
     other    = 0
-    status   = 0
+
     for line in info:
         if line[4] == 'degraded':
             degraded += 1
@@ -64,29 +53,52 @@ def check_ibm_svc_host(item, params, info):
         else:
             other +=1
 
-    perfdata = [ ("active",   active),
-                 ("inactive", inactive),
-                 ("degraded", degraded),
-                 ("offline",  offline),
-                 ("other",    other),
-               ]
-    yield 0, "%s hosts active, %s inactive" % (active, inactive), perfdata
+    if 'always_ok' in params:
+        # Old configuration rule
+        # This was used with only one parameter always_ok until version 1.2.7
+        perfdata = [ ("active",   active),
+                     ("inactive", inactive),
+                     ("degraded", degraded),
+                     ("offline",  offline),
+                     ("other",    other),
+                   ]
+        yield 0, "%s active, %s inactive" % (active, inactive), perfdata
 
-    aw_ok = params['always_ok'] # Needed in function check_ibm_svc_host_state
-    if degraded > 0:
-        yield check_ibm_svc_host_state(1, aw_ok), "%s degraded" % degraded
-    if offline > 0:
-        yield check_ibm_svc_host_state(2, aw_ok), "%s offline" % offline
-    if other > 0:
-        yield check_ibm_svc_host_state(1, aw_ok),  "%s in an unidentified state(!)" % other
+        if degraded > 0:
+            yield (not params['always_ok'] and 1 or 0), "%s degraded" % degraded
+        if offline > 0:
+            yield (not params['always_ok'] and 2 or 0), "%s offline" % offline
+        if other > 0:
+            yield (not params['always_ok'] and 1 or 0), "%s in an unidentified state" % other
+    else:
+        warn, crit = params.get('active_hosts', (None, None))
 
+        if crit != None and active <= crit:
+            yield 2, "%s active" % active
+        elif warn != None and active <= warn:
+            yield 1, "%s active" % active
+        else:
+            yield 0, "%s active" % active
+
+        for ident, value in [ ('inactive', inactive),
+                              ('degraded', degraded),
+                              ('offline',  offline),
+                              ('other',    other),
+                            ]:
+            warn, crit = params.get(ident+'_hosts', (None, None))
+
+            if crit != None and value >= crit:
+                state = 2
+            if warn != None and value >= warn:
+                state = 1
+            else:
+                state = 0
+            yield state, "%s %s" % (value, ident), [ (ident, value, warn, crit) ]
 
 check_info["ibm_svc_host"] = {
     "check_function"        : check_ibm_svc_host,
     "inventory_function"    : inventory_ibm_svc_host,
     "service_description"   : "Hosts",
     "has_perfdata"          : True,
-    "default_levels_variable": "ibm_svc_host_default_levels",
     "group"                 : "ibm_svc_host",
 }
-

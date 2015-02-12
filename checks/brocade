@@ -55,7 +55,7 @@ brocade_info = ('.1.3.6.1.4.1.1588.2.1.1.1.1.22.1', [
                     5, # swSensorInfo
                 ])
 
-brocade_fan_default_levels = { "lower": (3000 , 2800 ) }
+brocade_fan_default_levels = { "lower": (3000 , 2800) }
 
 def inventory_brocade_fan(info):
     converted = brocade_sensor_convert(info, "FAN")
@@ -64,43 +64,20 @@ def inventory_brocade_fan(info):
 def check_brocade_fan(item, params, info):
     converted = brocade_sensor_convert(info, "FAN")
     if type(params) is tuple:  # old format
-        warn, crit = params
-    else:  # new format
-        warn, crit = params.get("lower")
-        if params.get("upper"):
-            upperwarn, uppercrit  = params["upper"]
-        else:
-            upperwarn, uppercrit = ( None, None )
+        params = { "lower" : params }
 
     for snmp_item, name, value in converted:
         if item == snmp_item:
-            state = 0
-            label = ""
-            value = saveint(value)
-            perf = [ ('fan', value, warn, crit) ]
-            if value <= crit:
-                state = 2
-                label = "(Levels below: %d/%d)" % (warn, crit)
-            elif value <= warn:
-                state = 1
-                label = "(Levels below: %d/%d)" % (warn, crit)
-            elif uppercrit and value >= uppercrit:
-                state = 2
-                label = "(Levels above: %d/%d)" % (upperwarn, uppercrit)
-            elif upperwarn and value >= upperwarn:
-                state = 1
-                label = "(Levels above: %d/%d)" % (upperwarn, uppercrit)
-            return state, "Fans at %drpm %s " % (value, label), perf
-    return 3, "FAN not found"
+            return check_fan(int(value), params)
 
 check_info["brocade.fan"] = {
     "check_function"        : check_brocade_fan,
     "inventory_function"    : inventory_brocade_fan,
     "service_description"   : "FAN %s",
-    "has_perfdata"          : True,
     "group"                 : "hw_fans",
     "snmp_info"             : brocade_info,
     'snmp_scan_function'    : brocade_scan,
+    "includes"              : [ "fan.include" ],
 }
 
 def inventory_brocade_power(info):

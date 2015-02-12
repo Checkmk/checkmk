@@ -5364,10 +5364,10 @@ def check_mk_local_automation(command, args=[], indata=""):
                 sudoline = "%s ALL = (root) NOPASSWD: %s *" % (html.apache_user(), commandargs[0], " ".join(commandargs[1:]))
 
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
-                    "needed Check_MK/Nagios files.<br />Please ensure you have set-up "
+                    "needed Check_MK/Nagios files.<br>Please ensure you have set-up "
                     "the sudo environment correctly. e.g. proceed as follows:</p>\n"
                     "<ol><li>install sudo package</li>\n"
-                    "<li>Append the following to the <code>/etc/sudoers</code> file:\n"
+                    "<li>Append the following to the <tt>/etc/sudoers</tt> file:\n"
                     "<pre># Needed for WATO - the Check_MK Web Administration Tool\n"
                     "Defaults:%s !requiretty\n"
                     "%s\n"
@@ -5393,7 +5393,7 @@ def check_mk_local_automation(command, args=[], indata=""):
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     except Exception, e:
         if commandargs[0] == 'sudo':
-            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s<br /><br >%s" % (commandargs[0], e, sudo_msg))
+            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s<br><br>%s" % (commandargs[0], e, sudo_msg))
         else:
             raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
     p.stdin.write(repr(indata))
@@ -5658,7 +5658,7 @@ class TextAttribute(Attribute):
         if self._mandatory and not value:
             raise MKUserError("attr_" + self.name(),
                   _("Please specify a value for %s") % self.title())
-        if value.strip() == "" and not self._allow_empty:
+        if not self._allow_empty and value.strip() == "":
             raise MKUserError("attr_" + self.name(),
                   _("%s may be missing, if must not be empty if it is set.") % self.title())
 

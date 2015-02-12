@@ -208,7 +208,7 @@ def check_temperature(reading, params, dev_unit = "c",
     status = check_temp_levels(temp, warn, crit, warn_lower, crit_lower)
     if dev_status != None:
         if dlh == "best":
-            status = min(status, dev_status)
+            status = minn(status, dev_status)
         else:
             status = max(status, dev_status)
 

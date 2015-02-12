@@ -5658,7 +5658,7 @@ class TextAttribute(Attribute):
         if self._mandatory and not value:
             raise MKUserError("attr_" + self.name(),
                   _("Please specify a value for %s") % self.title())
-        if value.strip() == "" and not self._allow_empty:
+        if not self._allow_empty and value.strip() == "":
             raise MKUserError("attr_" + self.name(),
                   _("%s may be missing, if must not be empty if it is set.") % self.title())
 

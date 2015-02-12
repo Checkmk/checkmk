@@ -2,6 +2,9 @@
     Checks & Agents:
     * 1942 FIX: netapp_api_volumes: fixed exception when performance data generation was enabled
 
+    HW/SW-Inventory:
+    * 1943 FIX: inventory plugin win_os: no longer detects incorrect i386 architecture...
+
 
 1.2.6b9:
     Checks & Agents:

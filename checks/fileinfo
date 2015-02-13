@@ -114,7 +114,7 @@ def check_fileinfo(item, params, info):
     for line in info[1:]:
         if item == line[0]:
             if line[1] == "missing":
-                return in_timerange and 3 or 0, "File not found" + outof_range_txt
+                return in_timerange and 3 or 0, "File not found" + (outof_range_txt or "")
             state = 0
             size = int(line[1])
             age = reftime - int(line[2])
@@ -124,7 +124,7 @@ def check_fileinfo(item, params, info):
                 ("age",  age,  get_age_human_readable) ]
 
     if check_definition == False:
-        return in_timerange and 3 or 0, "File not found" + outof_range_txt
+        return in_timerange and 3 or 0, "File not found" + (outof_range_txt or "")
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 # Extracts patterns that are relevant for the current host and item.

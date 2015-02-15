@@ -28,7 +28,8 @@
 # perf_data_string:   Raw performance data as sent by the core, e.g "foor=17M;1;2;4;5"
 # perf_data:          Split performance data, e.g. [("foo", "17", "M", "1", "2", "4", "5")]
 # translated_metrics: Completely parsed and translated into metrics, e.g. { "foo" : { "value" : 17.0, "unit" : { "render" : ... }, ... } }
-
+# color:              RGB color representation ala HTML, e.g. "#ffbbc3" or "#FFBBC3", len() is always 7!
+# color_rgb:          RGB color split into triple (r, g, b), where r,b,g in (0.0 .. 1.0)
 
 import math
 import config, defaults
@@ -410,7 +411,7 @@ def metricometer_logarithmic(value, half_value, base, color):
         if pos > 98:
             pos = 98
 
-    return [ (pos, color), (100 - pos, "white") ]
+    return [ (pos, color), (100 - pos, "#ffffff") ]
 
 
 def build_perfometer(perfometer, translated_metrics):
@@ -446,7 +447,7 @@ def build_perfometer(perfometer, translated_metrics):
 
         # Paint rest only, if it is positive and larger than one promille
         if total - summed > 0.001:
-            entry.append((100.0 * (total - summed) / total, "white"))
+            entry.append((100.0 * (total - summed) / total, "#ffffff"))
 
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
@@ -584,17 +585,23 @@ def rrd_path(host_name, service_desc, varname):
 
 
 # "#ff0080" -> (1.0, 0.0, 0.5)
-def parse_color(color_string):
-    return tuple([ int(color_string[a:a+2], 16) / 255.0 for a in (1,3,5) ])
+def parse_color(color):
+    return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
 
-def render_color(rgb):
+def render_color(color_rgb):
     return "#%02x%02x%02x" % (
-       int(rgb[0] * 255),
-       int(rgb[1] * 255),
-       int(rgb[2] * 255),)
+       int(color_rgb[0] * 255),
+       int(color_rgb[1] * 255),
+       int(color_rgb[2] * 255),)
 
 # Make a color darker. v ranges from 0 (not darker) to 1 (black)
 def darken_color(rgb, v):
     def darken(x, v):
         return x * (1.0 - v)
     return tuple([ darken(x, v) for x in rgb ])
+
+# Make a color lighter. v ranges from 0 (not lighter) to 1 (white)
+def lighten_color(rgb, v):
+    def lighten(x, v):
+        return 1.0 - ((1.0 - x) * (1.0 - v))
+    return tuple([ lighten(x, v) for x in rgb ])

@@ -693,13 +693,13 @@ multisite_painters["svc_normal_interval"] = {
     "title"   : _("Service normal check interval"),
     "short"   : _("Check int."),
     "columns" : [ "service_check_interval" ],
-    "paint"   : lambda row: (None, "%.0fs" % (row["service_check_interval"] * 60.0)),
+    "paint"   : lambda row: ("number", "%.0fs" % (row["service_check_interval"] * 60.0)),
 }
 multisite_painters["svc_retry_interval"] = {
     "title"   : _("Service retry check interval"),
     "short"   : _("Retry"),
     "columns" : [ "service_retry_interval" ],
-    "paint"   : lambda row: (None, "%.0fs" % (row["service_retry_interval"] * 60.0)),
+    "paint"   : lambda row: ("number", "%.0fs" % (row["service_retry_interval"] * 60.0)),
 }
 multisite_painters["svc_check_interval"] = {
     "title"   : _("Service normal/retry check interval"),

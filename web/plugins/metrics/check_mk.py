@@ -439,9 +439,6 @@ check_metrics["check_mk-bluecoat_sensors"]                      = {}
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
 perfometer_info.append(("linear",      ( ["execution_time"], 90.0, None)))
-perfometer_info.append(("stacked", [
-   ( "logarithmic",  ( "load1",         4.0, 2.0)),
-   ( "linear",       ( [ "load1:max", ], 16, None)) ]))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "temp",         40.0, 1.2)))
 perfometer_info.append(("logarithmic",  ( "ctxt",       1000.0, 2.0)))

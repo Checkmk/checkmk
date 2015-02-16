@@ -1,0 +1,9 @@
+Title: solaris_multipath: Fix detection of expected number of paths
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b10
+Date: 1424089642
+Class: fix
+
+

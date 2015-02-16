@@ -34,17 +34,19 @@ def inventory_checkpoint_connections(info):
 
 def check_checkpoint_connections(item, params, info):
     warn, crit = params
-    current = saveint(info[0][0])
+    current = int(info[0][0])
     state = 0
-    icon = ''
+    levels = " (levels at %d/%d)" % (warn, crit)
+    infotext = "%d Current Connections" % (current)
     if current >= warn:
         state = 1
+        infotext += levels
     if current >= crit:
         state = 2
+        infotext += levels
 
     perfdata = [("connections", current, warn, crit)]
-    infotext = "%d Current Connections (levels at %d/%d)" % (current, warn, crit)
-    yield state, infotext, perfdata
+    return state, infotext, perfdata
 
 check_info["checkpoint_connections"] = {
     "check_function"        : check_checkpoint_connections,

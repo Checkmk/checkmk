@@ -966,7 +966,7 @@ class html:
         self.begin_context_buttons()
         mailto_url = self.makeuri_contextless([
             ("subject", "Check_MK GUI Crash Report - " + defaults.check_mk_version),
-            ("body", mail_body)], filename="mailto:feedback@check-mk.org")
+            ("body", mail_body)], filename="mailto:" + config.crash_report_target)
         self.context_button(_("Submit Report"), mailto_url, "email")
         self.end_context_buttons()
 

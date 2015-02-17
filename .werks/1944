@@ -1,0 +1,13 @@
+Title: hr_mem: no longer reports incorrect memory values when cached memory values are broken
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424162791
+Class: fix
+
+Some devices reported negative used cached values. As a result the
+cached memory was added to to the total memory - instead of substracted.
+This has been fixed. If the value for the used cache seems to be broken,
+the check uses the total cache value instead.
+This new behaviour also applies to the memory buffers data.

@@ -32,7 +32,7 @@
 # 3:host106:2:2:online
 
 def inventory_ibm_svc_host(info):
-    return [(None, None)]
+    return [(None, {})]
 
 def check_ibm_svc_host(item, params, info):
     degraded = 0
@@ -40,6 +40,11 @@ def check_ibm_svc_host(item, params, info):
     active   = 0
     inactive = 0
     other    = 0
+
+    if params == None:
+        # Old inventory rule until version 1.2.7
+        # params were None instead of empty dictionary
+        params = { 'always_ok': False }
 
     for line in info:
         if line[4] == 'degraded':
@@ -102,3 +107,4 @@ check_info["ibm_svc_host"] = {
     "has_perfdata"          : True,
     "group"                 : "ibm_svc_host",
 }
+

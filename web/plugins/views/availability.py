@@ -850,7 +850,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode, fetch=
     if timeline:
         if not fetch: # Timeline does not support fetch
             render_timeline(timeline_rows, from_time, until_time, total_duration,
-                            timeline, range_title, render_number, what, timewarpcode, avoptions, style="standalone")
+                            timeline, range_title, render_number, what, timewarpcode, avoptions, False, style="standalone")
     else:
         fetch_data["table"] = render_availability_table(availability, from_time, until_time, range_title,
                                                         what, avoptions, render_number, fetch)
@@ -890,10 +890,14 @@ def render_number_function(avoptions):
 
 # style is either inline (just the timeline bar) or "standalone" (the complete page)
 def render_timeline(timeline_rows, from_time, until_time, considered_duration,
-                    timeline, range_title, render_number, what, timewarpcode, avoptions, style):
+                    timeline, range_title, render_number, what, timewarpcode, avoptions, fetch, style):
+
     if not timeline_rows:
-        html.write('<div class=info>%s</div>' % _("No information available"))
-        return
+        if fetch:
+            return []
+        else:
+            html.write('<div class=info>%s</div>' % _("No information available"))
+            return
 
     # Timeformat: show date only if the displayed time range spans over
     # more than one day.
@@ -919,25 +923,30 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
     # Make sure that each cell is visible, if possible
     min_percentage = min(100.0 / len(timeline_rows), style == "inline" and 0.0 or 0.5)
     rest_percentage = 100 - len(timeline_rows) * min_percentage
-    html.write('<div class="timelinerange %s">' % style)
+    if not fetch:
+        html.write('<div class="timelinerange %s">' % style)
     if style == "standalone":
         html.write('<div class=from>%s</div><div class=until>%s</div></div>' % (
             render_date(from_time), render_date(until_time)))
 
-    html.write('<table class="timeline %s">' % style)
-    html.write('<tr class=timeline>')
+    if not fetch:
+        html.write('<table class="timeline %s">' % style)
+        html.write('<tr class=timeline>')
     chaos_begin = None
     chaos_end = None
     chaos_count = 0
     chaos_width = 0
 
     def output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width):
-        title = _("%d chaotic state changes from %s until %s (%s)") % (
-            chaos_count,
-            render_date(chaos_begin), render_date(chaos_end),
-            render_number(chaos_end - chaos_begin, considered_duration))
-        html.write('<td style="width: %.3f%%" title="%s" class="chaos"></td>' % (
-                   max(0.2, chaos_width), html.attrencode(title)))
+        if fetch:
+            html.write("|chaos:%s" % chaos_width)
+        else:
+            title = _("%d chaotic state changes from %s until %s (%s)") % (
+                chaos_count,
+                render_date(chaos_begin), render_date(chaos_end),
+                render_number(chaos_end - chaos_begin, considered_duration))
+            html.write('<td style="width: %.3f%%" title="%s" class="chaos"></td>' % (
+                       max(0.2, chaos_width), html.attrencode(title)))
 
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         for sid, css, sname, help in availability_columns:
@@ -946,7 +955,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                     render_date(row["from"]), render_date(row["until"]),
                     render_number(row["duration"], considered_duration),
                     help and help or sname)
-                if row["log_output"]:
+                if "log_output" in row and row["log_output"]:
                     title += " - " + row["log_output"]
                 width = rest_percentage * row["duration"] / considered_duration
 
@@ -971,15 +980,21 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                     chaos_width = 0
 
                 width += min_percentage
-                html.write('<td onmouseover="timeline_hover(%d, 1);" onmouseout="timeline_hover(%d, 0);" '
-                           'style="width: %.3f%%" title="%s" class="%s"></td>' % (
-                           row_nr, row_nr, width, html.attrencode(title), css))
+                if fetch:
+                    html.write("|%s:%s" % (css, width))
+                else:
+                    html.write('<td onmouseover="timeline_hover(%d, 1);" onmouseout="timeline_hover(%d, 0);" '
+                               'style="width: %.3f%%" title="%s" class="%s"></td>' % (
+                               row_nr, row_nr, width, html.attrencode(title), css))
+
     if chaos_count > 1:
         output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width)
-    html.write('</tr></table>')
+    if not fetch:
+        html.write('</tr></table>')
 
     if style == "inline":
-        render_timeline_choords(from_time, until_time, width=500)
+        if not fetch:
+            render_timeline_choords(from_time, until_time, width=500)
         return
 
     # Render timewarped BI aggregate (might be empty)
@@ -1381,11 +1396,13 @@ def render_availability_group(group_title, range_title, group_id, availability,
             else:
                 availability_columns = host_availability_columns
 
-        if show_timeline and not no_html:
+        if show_timeline:
             table.cell(_("Timeline"), css="timeline")
-            html.write('<a href="%s">' % timeline_url)
-            render_timeline(timeline_rows, from_time, until_time, total_duration, (site, host, service), range_title, render_number, what, "", avoptions, style="inline")
-            html.write('</a>')
+            if not no_html:
+                html.write('<a href="%s">' % timeline_url)
+            render_timeline(timeline_rows, from_time, until_time, total_duration, (site, host, service), range_title, render_number, what, "", avoptions, fetch, style="inline")
+            if not no_html:
+                html.write('</a>')
 
         for sid, css, sname, help in availability_columns:
             if not cell_active(sid):
@@ -1441,7 +1458,7 @@ def render_availability_group(group_title, range_title, group_id, availability,
         if what == "service":
             table.cell("", "")
 
-        if show_timeline and not no_html:
+        if show_timeline and not do_csv:
             table.cell("")
 
         for sid, css, sname, help in availability_columns:

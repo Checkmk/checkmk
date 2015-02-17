@@ -2034,7 +2034,7 @@ register_check_parameters(
          ),
     TextAscii(
         title = _("Explicit Queue Names"),
-        help = _("Specify queue names that the rule should apply"),
+        help = _("Specify queue names that the rule should apply to"),
     ),
     "first"
 )
@@ -3841,7 +3841,7 @@ register_check_parameters(
             )),]),
     TextAscii(
         title = _("Scheduler Job Name"),
-        help = _("Here you can set explicit Scheduler-Jobs  by defining them via SID, Job-Owner "
+        help = _("Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
                  "and Job-Name, separated by a dot, for example <b>TUX12C.SYS.PURGE_LOG</b>"),
         regex = '.+\..+',
         allow_empty = False),
@@ -4847,7 +4847,7 @@ register_rule(group + '/' + subgroup_networking,
                             )),
                             ("include_items", ListOfStrings(
                                 title = _("Restrict interface items"),
-                                help = _("Only interface with this item names are put into this group."),
+                                help = _("Only interface with these item names are put into this group."),
                             )),
                             ("single", Checkbox(
                                 title = _("Group separately"),
@@ -5940,8 +5940,8 @@ register_check_parameters(
                Tuple(
                    title = _("Levels on trends in degrees Celsius per time range"),
                    elements = [
-                       Integer(title = _("Warning at"), unit = _("C / range"), default_value = 5),
-                       Integer(title = _("Critical at"), unit = _("C / range"), default_value = 10)
+                       Integer(title = _("Warning at"), unit = _(u"°C / range"), default_value = 5),
+                       Integer(title = _("Critical at"), unit = _(u"°C / range"), default_value = 10)
                    ]
                 )
             ),

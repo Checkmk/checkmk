@@ -974,7 +974,7 @@ register_configvar(group,
     "password_policy",
     Dictionary(
         title = _('htpasswd: Password Policy'),
-        help  = _('You can define some rules to which each user password aher. By default '
+        help  = _('You can define some rules to which each user password ahers. By default '
                   'all passwords are accepted, even ones which are made of only a single character, '
                   'which is obviously a bad idea. Using this option you can enforce your users '
                   'to choose more secure passwords.'),

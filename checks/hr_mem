@@ -60,7 +60,10 @@ def check_hr_mem(_no_item, params, info):
     cached_mb = 0
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         if hrdescr in [ "Cached memory", "Memory buffers" ]:
-            cached_mb += saveint(hrused) * saveint(hrunits) / 1048576.0
+            hr_mem = saveint(hrused)
+            if hr_mem < 0: # some devices report negative used cache values...
+                hr_mem = saveint(hrsize)
+            cached_mb += hr_mem * saveint(hrunits) / 1048576.0
 
     totalram_mb,  ramused_mb   = usage.get(".1.3.6.1.2.1.25.2.1.2", (0,0))
     ramused_mb -= cached_mb

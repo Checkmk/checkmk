@@ -4651,6 +4651,11 @@ register_check_parameters(
 )
 
 def transform_ibm_svc_host(params):
+    if params == None:
+        # Old inventory rule until version 1.2.7
+        # params were None instead of emtpy dictionary
+        params = { 'always_ok': False }
+
     if 'always_ok' in params:
         if params['always_ok'] == False:
             params = { 'degraded_hosts': (1,1), 'offline_hosts': (1,1), 'other_hosts': (1,1) }
@@ -4661,13 +4666,13 @@ def transform_ibm_svc_host(params):
 register_check_parameters(
     subgroup_storage,
     "ibm_svc_host",
-    _("IBM SVC: Options for SVC Hosts Check "),
+    _("IBM SVC: Options for SVC Hosts Check"),
     Transform(
         Dictionary(
             elements = [
                 ( "active_hosts",
                     Tuple(
-                        title = _("Absolute amount of active hosts"),
+                        title = _("Count of active hosts"),
                         elements = [
                             Integer(title = _("Warning at or below"), minvalue = 0, unit = _("active hosts")),
                             Integer(title = _("Critical at or below"), minvalue = 0, unit = _("active hosts")),
@@ -4676,7 +4681,7 @@ register_check_parameters(
                 ),
                 ( "inactive_hosts",
                     Tuple(
-                        title = _("Absolute amount of inactive hosts"),
+                        title = _("Count of inactive hosts"),
                         elements = [
                             Integer(title = _("Warning at or above"), minvalue = 0, unit = _("inactive hosts")),
                             Integer(title = _("Critical at or above"), minvalue = 0, unit = _("inactive hosts")),
@@ -4685,7 +4690,7 @@ register_check_parameters(
                 ),
                 ( "degraded_hosts",
                     Tuple(
-                        title = _("Absolute amount of degraded hosts"),
+                        title = _("Count of degraded hosts"),
                         elements = [
                             Integer(title = _("Warning at or above"), minvalue = 0, unit = _("degraded hosts")),
                             Integer(title = _("Critical at or above"), minvalue = 0, unit = _("degraded hosts")),
@@ -4694,7 +4699,7 @@ register_check_parameters(
                 ),
                 ( "offline_hosts",
                     Tuple(
-                        title = _("Absolute amount of offline hosts"),
+                        title = _("Count of offline hosts"),
                         elements = [
                             Integer(title = _("Warning at or above"), minvalue = 0, unit = _("offline hosts")),
                             Integer(title = _("Critical at or above"), minvalue = 0, unit = _("offline hosts")),
@@ -4703,7 +4708,7 @@ register_check_parameters(
                 ),
                 ( "other_hosts",
                     Tuple(
-                        title = _("Absolute amount of other hosts"),
+                        title = _("Count of other hosts"),
                         elements = [
                             Integer(title = _("Warning at or above"), minvalue = 0, unit = _("other hosts")),
                             Integer(title = _("Critical at or above"), minvalue = 0, unit = _("other hosts")),

@@ -156,8 +156,9 @@
 #                     'Status': 'Off',
 #                     'Value': '0'},
 
+# TODO: re.blub-Methoden ersetzen. Siehe Guidelines.
 
-def parse_cmciii_inputs(info):
+def parse_cmciii_inputs(info): # Caveat: info ist hier nicht SNMP-info, sondern SNMP-info[0]
     parsed = {}
     for endoid, varname, value in info:
         unit, eid = endoid.split(".") # "1.8" -> "1"
@@ -166,7 +167,8 @@ def parse_cmciii_inputs(info):
         parsed.setdefault(item, {})[key] = value
     return parsed
 
-def parse_units(info):
+# TODO: Umbenennen something cmciii
+def parse_units(info):      # Caveat: info ist hier nicht SNMP-info, sondern SNMP-info[1]
     units = []
     num = 0
     for unit_type, descname, state in info:
@@ -179,6 +181,7 @@ def parse_units(info):
         units.append((unit_type, descname, state))
     return units
 
+# TODO: Umbenennen something cmciii
 def get_unit_number(units,unit_name):
     namelist = map(list, zip(*units))[1]
     if unit_name in namelist:
@@ -458,16 +461,6 @@ def inventory_cmciii_temp(info):
             inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
     return inventory
 
-def parse_temp(val):
-    if re.search(" B0 ", val):
-        # is encoded string
-        val = re.sub(" ","", val).decode("hex")
-    val, t_unit = val.split(" ", 1)
-    # omit special characters in unit, because they
-    # cause problems in rrdtools
-    t_unit = re.sub("[^\w]","", t_unit)
-    return val, t_unit
-
 def check_cmciii_temp(item, params, info):
     unit_name, item_name = item.split(" ", 1)
     parsed = parse_cmciii_inputs(info[0])
@@ -479,6 +472,16 @@ def check_cmciii_temp(item, params, info):
     descr = entry.get('DescName')
     status = entry.get('Status')
     offset = entry.get('Offset')
+
+    def parse_temp(val):
+        if re.search(" B0 ", val):
+            # is encoded string
+            val = re.sub(" ","", val).decode("hex")
+        val, t_unit = val.split(" ", 1)
+        # omit special characters in unit, because they
+        # cause problems in rrdtools
+        t_unit = re.sub("[^\w]","", t_unit)
+        return val, t_unit
 
     value, t_unit = parse_temp(entry.get('Value'))
     highalarm = parse_temp(entry.get('SetPtHighAlarm'))[0]

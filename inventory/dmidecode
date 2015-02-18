@@ -130,7 +130,7 @@ def inv_dmidecode_parse_system(lines):
 def inv_dmidecode_parse_chassis(lines):
     inv_dmidecode_parse_generic("hardware.chassis.", lines, {
         "Manufacturer" : "manufacturer",
-        "Type" : "type",
+        "Type"         : "type",
     })
 
 # Note: This node is also being filled by lnx_cpuinfo
@@ -185,10 +185,16 @@ def inv_dmidecode_parse_processor(lines):
 def inv_dmidecode_parse_physical_mem_array(lines):
     # We expect several possible arrays
     node = inv_tree("hardware.memory.arrays:")
-    array = {
-        "devices" : []
-    }
-    node.append(array)
+
+    # If we have a dummy entry from previous Memory Devices (see below)
+    # then we fill that entry rather than creating a new one
+    if len(node) == 1 and node[0].keys() == [ "devices" ]:
+        array = node[0]
+    else:
+        array = {
+            "devices" : []
+        }
+        node.append(array)
     for line in lines:
          if line[0] == "Location":
              array["location"] = line[1]
@@ -200,10 +206,17 @@ def inv_dmidecode_parse_physical_mem_array(lines):
              array["maximum_capacity"] = dmidecode_parse_size(line[1])
 
 def inv_dmidecode_parse_mem_device(lines):
-    # We assume that this devices belongs to an array
-    # that we've just found
+    # Do we already have an entry for a memory array? Then
+    # we assume that this device belongs to the most recently
+    # read array. Otherwise we create a dummy entry and replace
+    # that later with actual information
     node = inv_tree("hardware.memory.arrays:")
-    array = node[-1]
+    if node:
+        array = node[-1]
+    else:
+        array = { "devices": []}
+        node.append(array)
+
     device = {}
     inv_dmidecode_parse_generic(device, lines, {
         "Total Width"   : "total_width",  # 64 bits

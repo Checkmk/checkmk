@@ -1,0 +1,10 @@
+Title: dmidecode: Fix parsing when memory devices are listed before controller
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424274114
+
+

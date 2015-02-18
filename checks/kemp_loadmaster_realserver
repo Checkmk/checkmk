@@ -37,7 +37,7 @@
 def inventory_kemp_loadmaster_realserver(info):
     for line in info:
         if line[2] != '4': # Skip disabled servers
-            yield line[1], None
+            yield line[0], None
 
 
 def check_kemp_loadmaster_realserver(item, _no_params, info):
@@ -50,9 +50,9 @@ def check_kemp_loadmaster_realserver(item, _no_params, info):
     }
 
     for ipaddress, server_id, state_id in info:
-        if item == server_id:
+        if item == ipaddress:
             state, state_name = states[state_id]
-            return state, "State: %s, IP: %s" % (state_name, ipaddress)
+            return state, "State: %s" % state_name
 
 
 check_info["kemp_loadmaster_realserver"] = {

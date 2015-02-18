@@ -1,0 +1,11 @@
+Title: Fixed loosing sidebar after switching to/from edit mode in dashboard edior on page reload
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424255344
+
+When switching to/from edit mode in the dashboard editor, the URL was changed from index.py?...
+to dashboard.py?... which made the sidebar disappear after reloading the page manually.

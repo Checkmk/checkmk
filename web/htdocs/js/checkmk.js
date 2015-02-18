@@ -409,8 +409,10 @@ function getUrlParam(name, url) {
  * - Can add/overwrite parameters
  * - Removes _* parameters
  */
-function makeuri(addvars) {
-    var tmp = window.location.href.split('?');
+function makeuri(addvars, url) {
+    var url = (typeof(url) === 'undefined') ? window.location.href : url;
+
+    var tmp = url.split('?');
     var base = tmp[0];
     if(tmp.length > 1) {
         // Remove maybe existing anchors

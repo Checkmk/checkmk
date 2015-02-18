@@ -1,0 +1,11 @@
+Title: PNP graph dashlet handles graphs in distributed setups correctly
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424255974
+
+The PNP graph dashlet now automatically detects the site a host is located
+on and shows the PNP graph from this site.

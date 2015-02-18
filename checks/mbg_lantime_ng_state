@@ -24,9 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_mbg_lantime_nb_state(_no_item, params, info):
+def check_mbg_lantime_ng_state(_no_item, params, info):
     states = {
-        '0': (2, 'not aailable'),
+        '0': (2, 'not available'),
         '1': (2, 'not synchronized'),
         '2': (0, 'synchronized'),
     }
@@ -37,7 +37,7 @@ def check_mbg_lantime_nb_state(_no_item, params, info):
 
 
 check_info["mbg_lantime_ng_state"] = {
-    'check_function'            : check_mbg_lantime_nb_state,
+    'check_function'            : check_mbg_lantime_ng_state,
     'inventory_function'        : inventory_mbg_lantime_state_common,
     'service_description'       : 'LANTIME State',
     'has_perfdata'              : True,

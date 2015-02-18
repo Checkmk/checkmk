@@ -13,6 +13,7 @@
 
     HW/SW-Inventory:
     * 1943 FIX: inventory plugin win_os: no longer detects incorrect i386 architecture...
+    * 1995 FIX: dmidecode: Fix parsing when memory devices are listed before controller
 
 
 1.2.6b9:

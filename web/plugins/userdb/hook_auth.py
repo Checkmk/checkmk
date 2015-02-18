@@ -89,9 +89,12 @@ def format_php(data, lvl = 1):
 
 
 def create_php_file(callee, users, role_permissions, groups, folder_permissions):
+    # Do not change WATO internal objects
+    nagvis_users = copy.deepcopy(users)
+
     # Set a language for all users
-    for username in users:
-        users[username].setdefault('language', config.default_language)
+    for user in nagvis_users.values():
+        user.setdefault('language', config.default_language)
 
     # need an extra lock file, since we move the auth.php.tmp file later
     # to auth.php. This move is needed for not having loaded incomplete
@@ -224,7 +227,9 @@ function permitted_maps($username) {
 }
 
 ?>
-''' % (callee, format_php(users), format_php(role_permissions), format_php(groups), format_php(folder_permissions)))
+''' % (callee, format_php(nagvis_users), format_php(role_permissions),
+       format_php(groups), format_php(folder_permissions)))
+
     # Now really replace the file
     os.rename(tempfile, g_auth_base_dir + '/auth.php')
 

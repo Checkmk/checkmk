@@ -11991,9 +11991,9 @@ def mode_edit_user(phase):
                                    roles.keys())
 
         # Language configuration
-        set_lang = html.var('_set_lang')
+        set_lang = html.get_checkbox('_set_lang')
         language = html.var('language')
-        if set_lang and language != config.default_language:
+        if set_lang:
             if language == '':
                 language = None
             new_user['language'] = language
@@ -12272,7 +12272,7 @@ def mode_edit_user(phase):
         custom_user_attributes('notify')
 
     forms.header(_("Personal Settings"), isopen = False)
-    select_language(user.get('language', ''))
+    select_language(user)
     custom_user_attributes('personal')
 
     # TODO: Later we could add custom macros here, which
@@ -15675,20 +15675,16 @@ def verify_password_policy(password):
                 'set a password which uses at least %d of them.') % num_groups)
 
 
-def select_language(user_language):
+def select_language(user):
     languages = [ l for l in get_languages() if not config.hide_language(l[0]) ]
-    inactive = not not user_language
-
     if languages:
-        forms.section(_("Language"),
-                      checkbox = ('_set_lang', inactive, 'language'))
-        # html.checkbox('_set_lang', inactive, onclick = 'wato_toggle_attribute(this, \'language\')')
-        # html.write(" ")
+        active = 'language' in user
+        forms.section(_("Language"), checkbox = ('_set_lang', active, 'language'))
         default_label = _('Default: %s') % (get_language_alias(config.default_language) or _('English'))
         html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
-                                            (inactive and "display: none" or "", default_label))
-        html.write('<div id="attr_entry_language" style="%s">' % ((not inactive) and "display: none" or ""))
-        html.select("language", languages, user_language)
+                                            ((active) and "display: none" or "", default_label))
+        html.write('<div id="attr_entry_language" style="%s">' % ((not active) and "display: none" or ""))
+        html.select("language", languages, user.get('language') or '')
         html.write("</div>")
         html.help(_('Configure the default language '
                     'to be used by the user in the user interface here. If you do not check '
@@ -15773,16 +15769,16 @@ def page_user_profile(change_pw=False):
 
     success = None
     if html.has_var('_save') and html.check_transaction():
-        try:
-            users = userdb.load_users(lock = True)
+        users = userdb.load_users(lock = True)
 
+        try:
             # Profile edit (user options like language etc.)
             if config.may('general.edit_profile'):
                 if not change_pw:
-                    set_lang = html.var('_set_lang')
+                    set_lang = html.get_checkbox('_set_lang')
                     language = html.var('language')
                     # Set the users language if requested
-                    if set_lang and language != config.get_language():
+                    if set_lang:
                         if language == '':
                             language = None
                         # Set custom language
@@ -15862,6 +15858,8 @@ def page_user_profile(change_pw=False):
             success = True
         except MKUserError, e:
             html.add_user_error(e.varname, e.message)
+    else:
+        users = userdb.load_users()
 
     # When in distributed setup, display the replication dialog instead of the normal
     # profile edit dialog after changing the password.
@@ -15904,7 +15902,6 @@ def page_user_profile(change_pw=False):
     if html.has_user_errors():
         html.show_user_errors()
 
-    users = userdb.load_users()
     user = users.get(config.user_id)
     if user == None:
         html.show_warning(_("Sorry, your user account does not exist."))
@@ -15936,7 +15933,7 @@ def page_user_profile(change_pw=False):
         html.password_input('password2', autocomplete = "off")
 
     if not change_pw and config.may('general.edit_profile'):
-        select_language(config.get_language(''))
+        select_language(user)
 
         # Let the user configure how he wants to be notified
         if not rulebased_notifications \

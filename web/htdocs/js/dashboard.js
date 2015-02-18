@@ -434,7 +434,7 @@ function toggle_dashboard_edit() {
     // Only a solution for browsers with history.replaceState support. Sadly
     // we have no F5/reload fix for others...
     if (window.parent.history.replaceState) {
-        new_url = makeuri({'edit': g_editing ? '1' : '0'});
+        new_url = makeuri({'edit': g_editing ? '1' : '0'}, window.parent.location.href);
         window.parent.history.replaceState({}, document.title, new_url);
     }
 

@@ -307,7 +307,7 @@ register_rule(group + '/' + subgroup_inventory,
                 help = _("This option lets Check_MK add the string \"ISL\" to the service "
                          "description for interswitch links."))),
         ("admstates", ListChoice(title = _("Administrative port states to inventorize"),
-                help = _("When doing inventory on brocade switches only ports with the given administrative "
+                help = _("When doing service discovery on brocade switches only ports with the given administrative "
                          "states will be added to the monitoring system."),
                 choices = _brocade_fcport_adm_choices,
                 columns = 1,
@@ -315,7 +315,7 @@ register_rule(group + '/' + subgroup_inventory,
                 default_value = ['1', '3', '4' ],
         )),
         ("phystates", ListChoice(title = _("Physical port states to inventorize"),
-                help = _("When doing inventory on brocade switches only ports with the given physical "
+                help = _("When doing service discovery on brocade switches only ports with the given physical "
                          "states will be added to the monitoring system."),
                 choices = _brocade_fcport_phy_choices,
                 columns = 1,
@@ -323,7 +323,7 @@ register_rule(group + '/' + subgroup_inventory,
                 default_value =  [ 3, 4, 5, 6, 7, 8, 9, 10 ]
         )),
         ("opstates", ListChoice(title = _("Operational port states to inventorize"),
-                help = _("When doing inventory on brocade switches only ports with the given operational "
+                help = _("When doing service discovery on brocade switches only ports with the given operational "
                          "states will be added to the monitoring system."),
                 choices = _brocade_fcport_op_choices,
                 columns = 1,
@@ -331,7 +331,7 @@ register_rule(group + '/' + subgroup_inventory,
                 default_value = [ 1, 2, 3, 4 ]
         )),
         ],
-        help = _('This rule can be used to control the inventory for brocade ports. '
+        help = _('This rule can be used to control the service discovery for brocade ports. '
                  'You can configure the port states for inventory '
                  'and the use of the description as service name.'),
     ),
@@ -665,8 +665,7 @@ register_rule(group + '/' + subgroup_inventory,
     title     = _('SAP Value Grouping Patterns'),
     help      = _('The check <tt>sap.value</tt> normally creates one service for each SAP value. '
                   'By defining grouping patterns, you can switch to the check <tt>sap.value-groups</tt>. '
-                  'That check monitors a list of SAP values at once. This is useful if you have '
-                  'a very big list of values which do you want to monitor'),
+                  'That check monitors a list of SAP values at once.'),
     valuespec = ListOf(
         Tuple(
             help = _("This defines one value grouping pattern"),
@@ -2020,38 +2019,38 @@ def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
 
 
     vs_subgroup =  [
-                    Tuple( title = _("Percentage %s") % title,
-                        elements = [
-                            Percentage(title = _("Warning if %s") % course, unit = "%", minvalue = 0.0),
-                            Percentage(title = _("Critical if %s") % course, unit = "%", minvalue = 0.0),
-                        ]
-                    ),
-                    Tuple( title = _("Absolute %s") % title,
-                        elements = [
-                            Integer(title = _("Warning if %s") % course, unit = _("MB"), minvalue = 0),
-                            Integer(title = _("Critical if %s") % course, unit = _("MB"), minvalue = 0),
-                        ]
-                    )
-                   ]
+        Tuple( title = _("Percentage %s") % title,
+            elements = [
+                Percentage(title = _("Warning if %s") % course, unit = "%", minvalue = 0.0),
+                Percentage(title = _("Critical if %s") % course, unit = "%", minvalue = 0.0),
+            ]
+        ),
+        Tuple( title = _("Absolute %s") % title,
+            elements = [
+                Integer(title = _("Warning if %s") % course, unit = _("MB"), minvalue = 0),
+                Integer(title = _("Critical if %s") % course, unit = _("MB"), minvalue = 0),
+            ]
+        )
+    ]
 
     return Alternative(
-            title = _("Levels for %s %s") % (name, title),
-            show_alternative_title = True,
-            default_value = default_value,
-                    elements = vs_subgroup + [
-                                ListOf(
-                                    Tuple(
-                                        orientation = "horizontal",
-                                        elements = [
-                                            Filesize(title = _("%s larger than") % name.title()),
-                                            Alternative(
-                                                elements = vs_subgroup
-                                            )
-                                        ]
-                                    ),
-                                    title = _('Dynamic levels'),
-                                )],
-                    )
+        title = _("Levels for %s %s") % (name, title),
+        show_alternative_title = True,
+        default_value = default_value,
+        elements = vs_subgroup + [
+            ListOf(
+                Tuple(
+                    orientation = "horizontal",
+                    elements = [
+                        Filesize(title = _("%s larger than") % name.title()),
+                        Alternative(
+                            elements = vs_subgroup
+                        )
+                    ]
+                ),
+                title = _('Dynamic levels'),
+            )],
+        )
 
 
 # Match and transform functions for level configurations like
@@ -2675,13 +2674,12 @@ register_check_parameters(
                         show_alternative_title = True,
                         default_value = (150.0, 200.0),
                         match = match_dual_level_type,
-                        help = _("The used and free levels for the memory on Linux and UNIX systems take into account the "
+                        help = _("The used and free levels for the memory on UNIX systems take into account the "
                                "currently used memory (RAM or SWAP) by all processes and sets this in relation "
                                "to the total RAM of the system. This means that the memory usage can exceed 100%. "
                                "A usage of 200% means that the total size of all processes is twice as large as "
-                               "the main memory, so <b>at least</b> half of it is currently swapped out. "
-                               "Besides Linux and UNIX systems, these parameters are also used for memory checks "
-                               "of other devices, like Fortigate devices."),
+                               "the main memory, so <b>at least</b> half of it is currently swapped out. For systems "
+                               "without Swap space you should choose levels below 100%."),
                         elements = [
                             Alternative(
                                 title = _("Levels for used memory"),
@@ -5826,7 +5824,7 @@ register_check_parameters(
     _("JVM threads"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number of threads "
-                 "running in a JVM. Other keywords for this rule: Tomcat, Jolokia, JMX."),
+                 "running in a JVM."),
         elements = [
             Integer(
                 title = _("Warning at"),
@@ -5888,8 +5886,7 @@ register_check_parameters(
     _("JVM session count"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number of current "
-                 "connections to a JVM application on the servlet level. "
-                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+                 "connections to a JVM application on the servlet level."),
         elements = [
             Integer(
                 title = _("Warning if below"),
@@ -5927,8 +5924,7 @@ register_check_parameters(
     _("JVM request count"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number "
-                 "of incoming requests to a JVM application server "
-                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+                 "of incoming requests to a JVM application server."),
         elements = [
             Integer(
                 title = _("Warning if below"),
@@ -5968,8 +5964,7 @@ register_check_parameters(
         help = _("The BEA application servers have 'Execute Queues' "
                  "in which requests are processed. This rule allows to set "
                  "warn and crit levels for the number of requests that are "
-                 "being queued for processing. "
-                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+                 "being queued for processing."),
         elements = [
             Integer(
                 title = _("Warning at"),
@@ -6692,7 +6687,7 @@ register_check_parameters(
         elements = [
             ( "oper_states",
                 Dictionary(
-                    title = _("Oper States"),
+                    title = _("Operations States"),
                     elements = [
                         ( "warning",
                             ListChoice(
@@ -6734,7 +6729,7 @@ register_check_parameters(
         elements = [
             ( "oper_states",
                 Dictionary(
-                    title = _("Oper States"),
+                    title = _("Operations States"),
                     elements = [
                         ( "warning",
                             ListChoice(
@@ -6769,7 +6764,7 @@ register_check_parameters(
         elements = [
             ( "oper_states",
                 Dictionary(
-                    title = _("Oper States"),
+                    title = _("Operations States"),
                     elements = [
                         ( "warning",
                             ListChoice(
@@ -6804,7 +6799,7 @@ register_check_parameters(
         elements = [
             ( "oper_states",
                 Dictionary(
-                    title = _("Oper States"),
+                    title = _("Operations States"),
                     elements = [
                         ( "warning",
                             ListChoice(
@@ -6850,7 +6845,7 @@ register_check_parameters(
         elements = [
             ( "oper_states",
                 Dictionary(
-                    title = _("Oper States"),
+                    title = _("Operations States"),
                     elements = [
                         ( "warning",
                             ListChoice(

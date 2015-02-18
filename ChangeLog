@@ -160,6 +160,7 @@
     * 1942 FIX: netapp_api_volumes: fixed exception when performance data generation was enabled
     * 1993 FIX: solaris_multipath: Fix detection of expected number of paths
     * 1944 FIX: hr_mem: no longer reports incorrect memory values when cached memory values are broken...
+    * 1994 FIX: lparstat: Support new AIX version with two new columns nsp and utctc
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

@@ -3286,7 +3286,7 @@ def show_service_table(host, firsttime):
                 params_url = make_link([("mode", "object_parameters"),
                                         ("host", hostname),
                                         ("service", descr)])
-                html.icon_button(params_url, _("View and modify the parameters for this service"), "rulesets")
+                html.icon_button(params_url, _("View and edit the parameters for this service"), "rulesets")
 
                 url = make_link([("mode", "edit_ruleset"),
                                  ("varname", varname),

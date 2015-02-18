@@ -209,7 +209,7 @@ def evaluate_rpn(expression, translated_metrics):
             stack.append(evaluate_literal(operator_name, translated_metrics))
 
     if len(stack) != 1:
-        raise MKGeneralException("Syntax error in expression '%s': too much operands left" % expression)
+        raise MKGeneralException("Syntax error in expression '%s': too many operands left" % expression)
 
     return stack[0]
 

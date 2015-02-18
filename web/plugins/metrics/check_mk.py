@@ -449,7 +449,7 @@ perfometer_info.append(("linear",      ( [ "user", "system", "io_wait" ],       
 perfometer_info.append(("linear",      ( [ "util", ],                                                   100.0,       None)))
 perfometer_info.append(("linear",      ( [ "fs_used(%)" ],                                              100.0,       None)))
 perfometer_info.append(("linear",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None,
-("mem_total,mem_used,swap_used,+,/", "ratio"))))
+("mem_total,mem_used,+,swap_used,/", "ratio"))))
 perfometer_info.append(("linear",      ( [ "mem_used" ],                                                "mem_total", None)))
 perfometer_info.append(("linear",      ( [ "mem_used(%)" ],                                              100.0, None)))
 perfometer_info.append(("logarithmic",  ( "time_offset",  1.0, 10.0)))

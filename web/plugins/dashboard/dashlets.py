@@ -324,17 +324,29 @@ if (has_canvas_support()) {
 #   '----------------------------------------------------------------------'
 
 def make_pnp_url(dashlet, what):
-    if not dashlet['context'].get('host'):
+    host = dashlet['context'].get('host')
+    if not host:
         raise MKUserError('host', _('Missing needed host parameter.'))
+
     service = dashlet['context'].get('service')
     if not service:
         service = "_HOST_"
 
-    site = html.var('site')
+    # When the site is available via URL context, use it. Otherwise it is needed
+    # to check all sites for the requested host
+    if html.has_var('site'):
+        site = html.var('site')
+    else:
+        html.live.set_prepend_site(True)
+        query = "GET hosts\nFilter: name = %s\nColumns: name" % lqencode(host)
+        site = html.live.query_column(query)[0]
+        html.live.set_prepend_site(False)
+
     if not site:
         base_url = defaults.url_prefix
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
+
     base_url += "pnp4nagios/index.php/"
     var_part = "?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \
             (pnp_cleanup(dashlet['context']['host']), pnp_cleanup(service),

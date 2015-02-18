@@ -220,8 +220,8 @@ def section(title = None, checkbox = None, id = "", simple=False, hide = False, 
             if type(checkbox) == str:
                 html.write(checkbox)
             else:
-                name, inactive, attrname = checkbox
-                html.checkbox(name, inactive, onclick = 'wato_toggle_attribute(this, \'%s\')' % attrname)
+                name, active, attrname = checkbox
+                html.checkbox(name, active, onclick = 'wato_toggle_attribute(this, \'%s\')' % attrname)
             html.write('</div>')
         html.write('</td>')
     html.write('<td class="content%s">' % (simple and " simple" or ""))

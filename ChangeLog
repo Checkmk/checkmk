@@ -199,6 +199,7 @@
     * 1978 FIX: Fixed linking to other views using "joined columns"...
     * 1980 FIX: logwatch: Fixed exception when acknowledging errors of a single logfile on a single host
     * 1981 FIX: Not trying to render view in view editor when the view is not valid
+    * 1983 FIX: Fixed special case in language configuration via user profile...
 
     WATO:
     * 1760 Added search form to manual checks page

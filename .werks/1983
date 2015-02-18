@@ -1,0 +1,13 @@
+Title: Fixed special case in language configuration via user profile
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424243612
+
+When a user explicitly configured "english" as language in it's user
+profile, this setting was not saved correctly. Instead the former
+configured language or the default configured language was selected
+again after saving.

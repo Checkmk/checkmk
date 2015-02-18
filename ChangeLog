@@ -160,6 +160,7 @@
     * 1942 FIX: netapp_api_volumes: fixed exception when performance data generation was enabled
     * 1993 FIX: solaris_multipath: Fix detection of expected number of paths
     * 1944 FIX: hr_mem: no longer reports incorrect memory values when cached memory values are broken...
+    * 1994 FIX: lparstat: Support new AIX version with two new columns nsp and utctc
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
@@ -259,6 +260,7 @@
     * 1855 esx_systeminfo: new inventory plugin to retrieve info about the host operating system for ESX servers
     * 1851 FIX: win_exefiles: inventory check can now handle time stamps in us english locale
     * 1943 FIX: inventory plugin win_os: no longer detects incorrect i386 architecture...
+    * 1995 FIX: dmidecode: Fix parsing when memory devices are listed before controller
 
 
 1.2.6b1:

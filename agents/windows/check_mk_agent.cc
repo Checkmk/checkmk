@@ -2805,7 +2805,7 @@ bool banned_exec_name(char *name)
                 return false;
         return true;
     }
-    else{
+    else {
         return  ( !strcasecmp(extension, ".dir")
                 || !strcasecmp(extension, ".txt"));
     }

@@ -56,7 +56,11 @@ def check_lparstat(item, params, info):
     if len(info) == 1:
         # Old agent provided only the values in a single line
         line = info[0]
-        if len(line) == 10:
+        if len(line) == 12:
+            cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint', 'nsp', 'utcyc' ]
+            uom    = [ '',      '%',    '',      '',    '',     '',       '%',  '%' ]
+            values = line[-8:]
+        elif len(line) == 10:
             cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint' ]
             uom    = [ '',      '%',    '',      '',    '',     '' ]
             values = line[-6:]
@@ -68,8 +72,8 @@ def check_lparstat(item, params, info):
             cols   = [ 'nsp', 'utcyc' ]
             uom    = [ '%',   '%' ]
             values = line[-2:]
-        else:
-            return 3, "Invalid output from agent"
+        # else:
+            # Invalid output, let exception happen
     else:
         # The new agent provides three lines, the title line, spacer line and the values
         cols   = [ c.replace('%', '') for c in info[-3] ]

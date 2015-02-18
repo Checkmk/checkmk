@@ -87,6 +87,8 @@ def check_cpu_util(util, params, this_time = None):
 # - 5 - irq: servicing interrupts
 # - 6 - softirq: servicing softirqs
 # - 7 - steal: involuntary wait
+# - 8 - guest: time spent in guest OK
+# - 9 - guest_nice: time spent in niced guest OK
 def check_cpu_util_unix(values, params):
     this_time = int(time.time())
     # Compute jiffi-differences of all relevant counters
@@ -127,8 +129,26 @@ def check_cpu_util_unix(values, params):
             state = 1
     yield state, "wait: %.1f%%" % (wait_perc)
 
+    # Compute values used in virtualized environments (Xen, etc.)
+    # Only do this for counters that have counted at least one tick
+    # since the system boot. This avoids silly output in systems
+    # where these counters are not being used
+    if len(values) >= 8: #  and values[7]:
+        steal = diff_values[7]
+        steal_perc = 100.0 * float(steal) / float(sum_jiffies)
+        yield 0, "steal: %.1f%%" % steal_perc, [ ("steal", steal_perc) ]
+    else:
+        steal_perc = 0
+
+    if len(values) >= 10: # and (values[8] or values[9]):
+        guest = diff_values[8] + diff_values[9]
+        guest_perc = 100.0 * float(guest) / float(sum_jiffies)
+        yield 0, "guest: %.1f%%" % guest_perc, [ ("guest", guest_perc) ]
+    else:
+        guest_perc = 0
+
     # Total utilization
-    util_total_perc = user_perc + system_perc + wait_perc
+    util_total_perc = user_perc + system_perc + wait_perc + steal_perc + guest_perc
     state = 0
     levelstext = ""
     if "util" in params:

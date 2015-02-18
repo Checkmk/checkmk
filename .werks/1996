@@ -1,0 +1,9 @@
+Title: kernel.util: Also output values for steal and guest (no PNP template yet)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424275634
+Class: feature
+
+

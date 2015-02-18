@@ -120,9 +120,12 @@ def inventory_cpu_utilization(info):
 # - iowait: waiting for I/O to complete
 # - irq: servicing interrupts
 # - softirq: servicing softirqs
-# - steal: involuntary wait
-def kernel_check_cpu_utilization(item, params, info):
+# - steal: Stolen time, which is the time spent in other operating systems
+#          when running in a virtualized environment (since Linux 2.6.11)
+# - guest: Time spent running a virtual CPU for guest operating systems (since Linux 2.6.24)
+# - guest_nice: Time spent running a niced guest (since Linux 2.6.33)
 
+def kernel_check_cpu_utilization(item, params, info):
     # Convert old style tuple-parameter to new dict
     if type(params) != dict:
         params = { "iowait": params }
@@ -139,7 +142,7 @@ def kernel_check_cpu_utilization(item, params, info):
     # line contains now the following columns:
     # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
     # convert number to int
-    values = [ int(x) for x in line[1:8] ]
+    values = [ int(x) for x in line[1:] ]
     return check_cpu_util_unix(values, params)
 
 check_info["kernel.util"] = {

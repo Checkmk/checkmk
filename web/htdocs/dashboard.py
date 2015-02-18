@@ -876,7 +876,7 @@ def page_edit_dashlet():
         ident = None
 
     if ident == None and not ty:
-        raise MKGeneralException(_('The ident of the dashlet is missing.'))
+        raise MKGeneralException(_('The ID of the dashlet is missing.'))
 
     load_dashboards()
 

@@ -48,6 +48,16 @@ relay_states = {
     "9" : (0, "relay off"     ),
 }
 
+# States for dry contact sensors as they are defined in SPAGENT-MIB
+drycontact_states = {
+    "1" : (2, "no status"     ),
+    "2" : (0, "normal"        ),
+    "4" : (2, "high critical" ),
+    "6" : (2, "low critical"  ),
+    "7" : (2, "sensor error"  ),
+    "8" : (2, "output low"    ),
+    "9" : (2, "output high"   ),
+}
 
 # States for sensors with levels as they are defined in SPAGENT-MIB
 level_states = {
@@ -78,14 +88,14 @@ def inventory_akcp_sensor(info, default_levels_name = None):
             yield line[0], default_levels_name
 
 
-def check_akcp_sensor_relay(item, _no_params, info):
+def check_akcp_sensor_drycontact(item, _no_params, info):
     for description, status, online in info:
         if description == item:
             # Online is set to "2" if sensor is offline
             if online != "1":
                 return 2, "sensor is offline"
 
-            state, state_name = relay_states[status]
+            state, state_name = drycontact_states[status]
             return state, "State: %s" % state_name
 
 
@@ -119,6 +129,17 @@ def check_akcp_sensor_humidity(item, params, info):
                 return 2, infotext + abovetext, perfdata
             else:
                 return 0, infotext, perfdata
+
+
+def check_akcp_sensor_relay(item, _no_params, info):
+    for description, status, online in info:
+        if description == item:
+            # Online is set to "2" if sensor is offline
+            if online != "1":
+                return 2, "sensor is offline"
+
+            state, state_name = relay_states[status]
+            return state, "State: %s" % state_name
 
 
 def check_akcp_sensor_temperature(item, params, info):

@@ -1557,7 +1557,7 @@ register_check_parameters(
     Dictionary(
         elements = [
             ( "power", Tuple(
-                title = _("Power"),
+                title = _("Transmit Power"),
                 help = _("The operational transmit power"),
                 elements = [
                     Float(title = _("warning at or below"), unit = "dBmV", default_value = 5.0 ),
@@ -1597,8 +1597,8 @@ register_check_parameters(
                 default_value = [ 1, 2, 13 ],
                 )),
             ( "tx_power", Tuple(
-                title = _("Power"),
-                help = _(" The operational transmit power"),
+                title = _("Transmit Power"),
+                help = _("The operational transmit power"),
                 elements = [
                     Float(title = _("warning at"), unit = "dBmV", default_value = 20.0 ),
                     Float(title = _("critical at"), unit = "dBmV", default_value = 10.0 ),
@@ -1984,7 +1984,6 @@ register_check_parameters(
                      ( 'levels',
                             Tuple(
                                 title = _("Maximum Number of E-Mails in Queue"),
-                                help = _("This rule applies to the number of e-mails in the various Exchange Message Queues"),
                                 elements = [
                                     Integer(title = _("Warning at"), unit = _("E-Mails")),
                                     Integer(title = _("Critical at"), unit = _("E-Mails"))

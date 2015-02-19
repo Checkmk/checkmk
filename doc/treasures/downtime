@@ -154,19 +154,20 @@ variables = [
     ( "_transid",       "-1" ),
     ( "_do_confirm",    "yes" ),
     ( "_do_actions",    "yes" ),
-    ( "host",           arg_host ),
 ]
 
 if opt_mode == 'remove':
     variables += [
         ("view_name",   "downtimes"),
         ("_remove_downtimes", "Remove"),
+        ("host_regex",   arg_host + "$" ),
     ]
 else:
     variables += [
         ( "_down_from_now", "yes" ),
         ( "_down_minutes",  opt_duration ),
         ( "_down_comment",  opt_comment ),
+        ("host",   arg_host ),
     ]
     if arg_services:
         variables.append(("view_name", "service"))
@@ -192,7 +193,10 @@ def set_downtime(variables, add_vars):
 
 if arg_services:
     for service in arg_services:
-        set_downtime(variables, [("service", service + "$")])
+        if opt_mode == "remove":
+            set_downtime(variables, [("service_regex", service + "$")])
+        else:
+            set_downtime(variables, [("service", service)])
 else:
     set_downtime(variables, [])
     if opt_all:

@@ -1,0 +1,10 @@
+Title: doc/treasures/downtime script: was no longer working because of latest changes in the GUI
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424337912
+Class: fix
+
+This little helper script used the wrong multisite filter elements.
+Some of them have been renamed, e.g. from host to host_regex.

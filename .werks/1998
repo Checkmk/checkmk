@@ -1,0 +1,18 @@
+Title: statgrab_net: New implementation of network interface monitoring via statgrab
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1424349067
+Class: feature
+
+Previously when monitoring network interfaces on Solaris and HP-UX you would have
+tree checks per Interface: For state, counters, and speed. These three have now
+been replaced by one new check simply named {Interface}. This uses the same implementation
+as all other interface checks in Check_MK now. This means that you can do configuration
+via WATO, have all features like averaging and predictive monitoring, interface grouping
+and much more.
+
+Note: This is an incompatible change. You will have to redo service discovery on the
+machines using statgrab. The old services will then vanish. New ones will appear. As
+long as you do not do this, the existing checks will go to UNKNOWN.

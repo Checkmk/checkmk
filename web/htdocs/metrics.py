@@ -147,7 +147,7 @@ def translate_metrics(perf_data, check_command):
         scale = translation_entry.get("scale", 1)
 
         new_entry = {
-            "value"     : float_or_int(entry[1]),
+            "value"     : float_or_int(entry[1]) * scale,
             "orig_name" : varname,
             "scalar"    : {},
         }

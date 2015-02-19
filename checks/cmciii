@@ -728,3 +728,57 @@ check_info['cmciii.humidity'] = {
     "has_perfdata"        : True,
 }
 #.
+#   .--phase---------------------------------------------------------------.
+#   |                           _                                          |
+#   |                     _ __ | |__   __ _ ___  ___                       |
+#   |                    | '_ \| '_ \ / _` / __|/ _ \                      |
+#   |                    | |_) | | | | (_| \__ \  __/                      |
+#   |                    | .__/|_| |_|\__,_|___/\___|                      |
+#   |                    |_|                                               |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_cmciii_phase(info):
+    phases = {}
+    parsed = parse_cmciii_inputs(info[0])
+    units = parse_units(info[1])
+    for (unit, raw_item_name), entry in parsed.iteritems():
+        unit_type, unit_name = units[int(unit)-1][0:2]
+        if 'Phase' in raw_item_name:
+            item_name = raw_item_name.split(".")[1]
+            phases["%s Phase %s" % (unit_name, item_name[-1])] = {}
+        elif 'Unit.General' in raw_item_name:
+            phases["%s Summary" % unit_name] = {}
+    return phases.items()
+
+def check_cmciii_phase(item, params, info):
+    unit_name = item.split(" ")[0]
+    item_name = item.split(" ")[-1]
+    semiparsed = parse_cmciii_inputs(info[0])
+    unit = get_unit_number(parse_units(info[1]), unit_name)
+    parsed = {}
+    parsed[item] = {}
+    if "Phase" in item:
+        parsed[item]["voltage"] = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Voltage")]["Value"].split()[0]), None
+        parsed[item]["current"] = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Current")]["Value"].split()[0]), None
+        parsed[item]["power"]   = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Power.Active")]["Value"].split()[0]), None
+        parsed[item]["appower"] = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Power.Apparent")]["Value"].split()[0]), None
+        parsed[item]["energy"]  = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Energy.Active")]["Value"].split()[0]), None
+    elif "Summary" in item:
+        parsed[item]["power"]   = float(semiparsed[(unit, "Unit.General.Power")]["Value"].split()[0]), None
+        parsed[item]["energy"]  = float(semiparsed[(unit, "Unit.General.Energy.Active")]["Value"].split()[0]), None
+
+    return check_elphase(item, params, parsed)
+
+check_info['cmciii.phase'] = {
+    "check_function"      : check_cmciii_phase,
+    "inventory_function"  : inventory_cmciii_phase,
+    "service_description" : "Input %s",
+    "has_perfdata"        : True,
+    "snmp_scan_function"  : cmciii_scan,
+    "snmp_info"           : cmciii_snmp_info,
+    "includes"            : [ "elphase.include" ],
+    "group"               : "el_inphase",
+}
+#.

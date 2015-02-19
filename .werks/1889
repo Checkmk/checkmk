@@ -1,0 +1,9 @@
+Title: cmciii.phase: New check to monitor input phases for Raritan PDUs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424363018
+Class: feature
+
+

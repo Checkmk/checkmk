@@ -416,6 +416,7 @@ check_metrics["check_mk-sensatronics_temp"]                     = {}
 check_metrics["check_mk-smart.temp"]                            = {}
 check_metrics["check_mk-viprinet_temp"]                         = {}
 check_metrics["check_mk-wagner_titanus_topsense.temp"]          = {}
+check_metrics["check_mk-cmciii.phase"]                          = {}
 
 check_metrics["check_mk-kernel"]                                = { "processes" : { "name" : "proc_creat", } }
 

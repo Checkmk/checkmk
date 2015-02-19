@@ -1,0 +1,30 @@
+title: Rittal CMC-III PDUs: Input Phases
+agents: snmp
+catalog: hw/power/rittal
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the input power phases for Rittal CMC-III PDUs.
+
+item:
+ The unit name and the phase identifier ("Phase 1"), or Summary for overall
+ power and energy.
+
+perfdata:
+ Voltage in Volt, power in Watt, current in Ampère, energy in Wh, apparent power in VA.
+ Only Power and Energy for the summary Item.
+
+inventory:
+ One item per phase and one summary item is added.
+
+[parameters]
+parameters (dict): This check supports four types of parameters,
+none of which have default values. It is a dictionary with the following keys:
+
+ {"voltage"}: Warning and critical levels for voltage in int, denoting the minimum required voltage in volt.
+
+ {"current"}: Warning and critical levels for current in int, denoted in Ampère
+
+ {"power"}: Warning and critical levels for power in int, denoted in Watt.
+
+ {"appower"}: Warning and critical levels for apparent power in int, denoted in AV.

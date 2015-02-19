@@ -5,6 +5,7 @@
     * 1993 FIX: solaris_multipath: Fix detection of expected number of paths
     * 1944 FIX: hr_mem: no longer reports incorrect memory values when cached memory values are broken...
     * 1994 FIX: lparstat: Support new AIX version with two new columns nsp and utctc
+    * 1997 FIX: checkpoint_connections, checkpoint_packets: Detect more recent devices
 
     Multisite:
     * 1983 FIX: Fixed special case in language configuration via user profile...

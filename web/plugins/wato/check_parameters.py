@@ -5702,7 +5702,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_environment,
     "ups_outphase",
-    _("Parameters for output phases of UPSs and PDUs"),
+    _("Parameters for output phases of UPSs"),
     Dictionary(
         elements = [
             ( "voltage",
@@ -5721,8 +5721,8 @@ register_check_parameters(
                   ])),
             ]),
     TextAscii(
-        title = _("Phase Number"),
-        help = _("The number of the phase (usually <tt>1</tt>,<tt>2</tt>,<tt>3</tt>).")),
+        title = _("Output Name"),
+        help = _("The name of the output, e.g. <tt>Phase 1</tt>")),
     "dict"
 )
 
@@ -5767,8 +5767,8 @@ register_check_parameters(
         ]
     ),
     TextAscii(
-        title = _("Phase Number"),
-        help = _("The number of the phase (usually <tt>1</tt>,<tt>2</tt>,<tt>3</tt>).")),
+        title = _("Input Name"),
+        help = _("The name of the input, e.g. <tt>Phase 1</tt>")),
     "dict"
 )
 

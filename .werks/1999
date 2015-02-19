@@ -1,0 +1,14 @@
+Title: raritan_pdu_inlet_summary, raritan_pdu_inlet, ups_socomec_outphase: renamed services to be consistent
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1424361455
+Class: fix
+
+These three checks have been converted to the new generic implementation
+for electrical phases. That way the service descriptions have been renamed
+to consistently begin with <tt>Input</tt> or <tt>Output</tt>.  Also the word
+<tt>Phase</tt> has been moved into the item. And the name of the performance
+value <tt>load</tt> has been renamed to <tt>output_load</tt>. This means
+that you need to redo service discovery and new RRD databases will be created.

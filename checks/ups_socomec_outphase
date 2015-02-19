@@ -26,18 +26,18 @@
 
 
 factory_settings["socomec_outphase_default_levels"] = {
-    "voltage" : (210, 200),
-    "load"    : (80, 90)
+    "voltage"      : (210, 200),
+    "output_load"  : (80, 90),
 }
 
 
 def parse_ups_socomec_outphase(info):
     parsed = {}
     for index, rawvolt, rawcurr, rawload in info:
-        parsed[index] = {
-            "voltage" : (int(rawvolt) / 10, None), # The actual precision does not appear to
-            "current" : (int(rawcurr) / 10, None), # go beyond degrees, thus we drop the trailing 0
-            "load"    : (int(rawload), None),
+        parsed["Phase " + index] = {
+            "voltage"     : (int(rawvolt) / 10, None), # The actual precision does not appear to
+            "current"     : (int(rawcurr) / 10, None), # go beyond degrees, thus we drop the trailing 0
+            "output_load" : (int(rawload), None),
         }
     return parsed
 
@@ -47,7 +47,7 @@ check_info['ups_socomec_outphase'] = {
     "inventory_function"       : inventory_elphase,
     "check_function"           : check_elphase,
     "default_levels_variable"  : "socomec_outphase_default_levels",
-    "service_description"      : "Output Phase %s",
+    "service_description"      : "Output %s",
     "has_perfdata"             : True,
     "group"                    : "ups_outphase",
     "includes"                 : [ 'elphase.include' ],

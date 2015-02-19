@@ -105,6 +105,18 @@ unit_info["w"] = {
     "render" : lambda v: physical_precision(v, 3, _("W")),
 }
 
+unit_info["va"] = {
+    "title"  : _("Electrical Apparent Power"),
+    "symbol" : _("VA"),
+    "render" : lambda v: physical_precision(v, 3, _("VA")),
+}
+
+unit_info["wh"] = {
+    "title"  : _("Electrical Energy"),
+    "symbol" : _("Wh"),
+    "render" : lambda v: physical_precision(v, 3, _("Wh")),
+}
+
 unit_info["dbm"] = {
     "title" : _("Decibel-milliwatts"),
     "symbol" : _("dBm"),
@@ -260,10 +272,28 @@ metric_info["voltage"] = {
     "color" : "#ffc060",
 }
 
-metric_info["output_power"] = {
-    "title" : _("Eletrical Output power"),
+metric_info["output_load"] = {
+    "title" : _("Output Load"),
+    "unit"  : "%",
+    "color" : "#c080a0",
+}
+
+metric_info["power"] = {
+    "title" : _("Electrical Power"),
     "unit"  : "w",
     "color" : "#8848c0",
+}
+
+metric_info["appower"] = {
+    "title" : _("Electrical Apparent Power"),
+    "unit"  : "va",
+    "color" : "#aa68d80",
+}
+
+metric_info["energy"] = {
+    "title" : _("Electrical Energy"),
+    "unit"  : "wh",
+    "color" : "#aa80b0",
 }
 
 metric_info["output_load"] = {
@@ -413,9 +443,13 @@ check_metrics["check_mk-apc_humidity"]                          = {}
 check_metrics["check_mk-apache_status"]                         = { "ReqPerSec" : { "name" : "requests_per_second" }, "BusyWorkers" : { "name" : "busy_workers" }}
 
 check_metrics["check_mk-bintec_sensors.voltage"]                = {}
-check_metrics["check_mk-hp_blade_psu"]                          = { "output" : { "name" : "output_power" }}
+check_metrics["check_mk-hp_blade_psu"]                          = { "output" : { "name" : "power" }}
 check_metrics["check_mk-apc_rackpdu_power"]                     = { "amperage" : { "name" : "current" }}
-check_metrics["check_mk-apc_ats_output"]                        = { "volt" : { "name" : "voltage" }, "watt" : { "name" : "output_power"}, "ampere": { "name": "current"}, "load_perc" : { "name": "output_load" }}
+check_metrics["check_mk-apc_ats_output"]                        = { "volt" : { "name" : "voltage" }, "watt" : { "name" : "power"}, "ampere": { "name": "current"}, "load_perc" : { "name": "output_load" }}
+check_metrics["check_mk-raritan_pdu_inlet"]                     = {}
+check_metrics["check_mk-raritan_pdu_inlet_summary"]             = {}
+check_metrics["check_mk-ups_socomec_outphase"]                  = {}
+
 
 check_metrics["check_mk-bluecoat_sensors"]                      = {}
 
@@ -460,9 +494,9 @@ perfometer_info.append(("dual", [
 ]))
 
 perfometer_info.append(("linear",      ( [ "output_load" ], 100.0, None)))
+perfometer_info.append(("logarithmic", ( "power", 1000, 2)))
 perfometer_info.append(("logarithmic", ( "current", 10, 4)))
 perfometer_info.append(("logarithmic", ( "voltage", 220.0, 2)))
-perfometer_info.append(("logarithmic", ( "output_power", 1000, 2)))
 perfometer_info.append(("linear",      ( [ "voltage_percent" ], 100.0, None)))
 perfometer_info.append(("linear",      ( [ "humidity" ], 100.0, None)))
 

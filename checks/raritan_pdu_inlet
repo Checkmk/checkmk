@@ -28,7 +28,8 @@ def parse_raritan_pdu_inlet(info):
     parsed = {}
     for oid_end, availability, sensor_state, value in info:
         if availability == '1':
-            phase, sensor_type = oid_end.split('.')[2:4]
+            phase_id, sensor_type = oid_end.split('.')[2:4]
+            phase = "Phase " + phase_id
             if int(sensor_type) in raritan_pdu_sensor_types:
                 parsed.setdefault(phase, {})
                 key = raritan_pdu_sensor_types[int(sensor_type)] # get key for elphase.include
@@ -52,7 +53,7 @@ check_info['raritan_pdu_inlet'] = {
   "parse_function"      : parse_raritan_pdu_inlet,
   "inventory_function"  : inventory_elphase,
   "check_function"      : check_elphase,
-  "service_description" : "Inlet Phase %s",
+  "service_description" : "Input %s",
   "has_perfdata"        : True,
   "group"               : "el_inphase",
   "snmp_info"           : ( #".1.3.6.1.4.1.13742.6.5.2.4.1.4.1.1",

@@ -29,6 +29,13 @@ def inventory_elphase(parsed):
         yield item, {}
 
 
+# Parsed has the following form:
+# parsed = {
+#    "Phase 1" : {
+#        "voltage" : (220.17, (1, "Voltage is too low")),
+#        "current" : 12.0,
+#     }
+# }
 def check_elphase(item, params, parsed):
 
     def tostring(value):
@@ -37,133 +44,40 @@ def check_elphase(item, params, parsed):
         else:
             return "%.1f" % value
 
-    if "voltage" in parsed[item]:
-        volt, state_info = parsed[item]["voltage"]
-        infotext = "Voltage: %s V" % tostring(volt)
-        if "voltage" in params:
-            warn, crit = params["voltage"]
-            levelstext = " (warn/crit below %s/%s V)" % (tostring(warn), tostring(crit))
-            perfdata = [ ("voltage", volt, warn, crit) ]
-            if volt < crit:
-                status = 2
-                infotext += levelstext
-            elif volt < warn:
-                status = 1
-                infotext += levelstext
+    for what, title, unit, lower_is_good in [
+        ( "voltage",        "Voltage",        " V",  False,),
+        ( "current",        "Current",        " A",  True, ),
+        ( "output_load",    "Load",           "%",   True, ),
+        ( "power",          "Power",          " W",  True, ),
+        ( "appower",        "Apparent Power", " W",  True  ),
+        ( "energy",         "Energy",         " Wh", True ),
+    ]:
+
+        if what in parsed[item]:
+            entry = parsed[item][what]
+            if type(entry) == tuple:
+                value, state_info = entry # (220.17, (1, "Voltage is too low"))
             else:
-                status = 0
-        else:
+                value = entry             # 12.0
+                state_info = None
+            infotext = "%s: %s%s" % (title, tostring(value), unit)
+
             status = 0
-            perfdata = [ ("voltage", volt) ]
+            if what in params:
+                warn, crit = params[what]
+                levelstext = " (warn/crit %s %s/%s%s)" % (
+                        (lower_is_good and "at" or "below"), tostring(warn), tostring(crit), unit)
+                perfdata = [ (what, value, warn, crit) ]
+                if (value < crit) != lower_is_good:
+                    status = 2
+                    infotext += levelstext
+                elif (value < warn) != lower_is_good:
+                    status = 1
+                    infotext += levelstext
 
-        yield status, infotext, perfdata
-        if state_info:
-            yield state_info
-
-    if "current" in parsed[item]:
-        current, state_info = parsed[item]["current"]
-        perfdata = [ ("current", current) ]
-        infotext = "Current: %s A" % tostring(current)
-
-        if "current" in params:
-            warn, crit = params["current"]
-            levelstext = " (warn/crit at %s/%s A)" % (tostring(warn), tostring(crit))
-            perfdata = [ ("current", current, warn, crit) ]
-            if current >= crit:
-                status = 2
-                infotext += levelstext
-            elif current >= warn:
-                status = 1
-                infotext += levelstext
             else:
-                status = 0
+                perfdata = [ (what, value) ]
 
-        else:
-            status = 0
-            perfdata = [ ("current", current) ]
-
-        yield status, infotext, perfdata
-        if state_info:
-            yield state_info
-
-    if "load" in parsed[item]:
-        load, state_info = parsed[item]["load"]
-        infotext = "Load: %s%%" % tostring(load)
-        if "load" in params:
-            warn, crit = params["load"]
-            levelstext = " (warn/crit at %s/%s%%)" % (tostring(warn), tostring(crit))
-            perfdata = [ ("load", load, warn, crit) ]
-            if load >= crit:
-                status = 2
-                infotext += levelstext
-            elif load >= warn:
-                status = 1
-                infotext += levelstext
-            else:
-                status = 0
-
-        else:
-            status = 0
-            perfdata = [ ("load", load) ]
-
-        yield status, infotext, perfdata
-
-        if state_info:
-            yield state_info
-
-    if "power" in parsed[item]:
-        power, state_info = parsed[item]["power"]
-        infotext = "Power: %s W" % tostring(power)
-        if "power" in params:
-            warn, crit = params["power"]
-            levelstext = " (warn/crit at %s/%s W)" % (tostring(warn), tostring(crit))
-            perfdata = [ ("power", power, warn, crit) ]
-            if power >= crit:
-                status = 2
-                infotext += levelstext
-            elif power >= warn:
-                status = 1
-                infotext += levelstext
-            else:
-                status = 0
-
-        else:
-            status = 0
-            perfdata = [ ("power", power) ]
-
-        yield status, infotext, perfdata
-        if state_info:
-            yield state_info
-
-    if "appower" in parsed[item]:
-        appower, state_info = parsed[item]["appower"]
-        infotext = "Apparent Power: %s VA" % tostring(appower)
-        if "appower" in params:
-            warn, crit = params["appower"]
-            levelstext = " (warn/crit at %s/%s VA)" % (tostring(warn), tostring(crit))
-            perfdata = [ ("appower", appower, warn, crit) ]
-            if appower >= crit:
-                status = 2
-                infotext += levelstext
-            elif appower >= warn:
-                status = 1
-                infotext += levelstext
-            else:
-                status = 0
-
-        else:
-            status = 0
-            perfdata = [ ("appower", appower) ]
-
-        yield status, infotext, perfdata
-        if state_info:
-            yield state_info
-
-    if "energy" in parsed[item]:
-        current, state_info = parsed[item]["energy"]
-        perfdata = [ ("energy", current) ]
-        infotext = "Energy: %s Wh" % tostring(current)
-
-        yield 0, infotext, perfdata
-        if state_info:
-            yield state_info
+            yield status, infotext, perfdata
+            if state_info:
+                yield state_info

@@ -1315,7 +1315,7 @@ register_configvar(group,
         label = _("Automatically schedule service discovery check after service configuration changes"),
         help = _("When this option is enabled then after each change of the service "
                  "configuration of a host via WATO - may it be via manual changes or a bulk "
-                 "discovry - the service discovery check is automatically rescheduled in order "
+                 "discovery - the service discovery check is automatically rescheduled in order "
                  "to reflect the new service state correctly immediately."),
         default_value = True,
     ))
@@ -2485,9 +2485,9 @@ register_rule(group,
     Transform(
         CascadingDropdown(
             title = _("Check for correct version of Check_MK agent"),
-            help = _("If you want to make sure all of your Check_MK agents are running"
-                     " one specific version, you may set it by this rule. Agents running "
-                     " some different version return a none ok state then"),
+            help = _("Here you can make sure that all of your Check_MK agents are running"
+                     " one specific version. Agents running "
+                     " a different version return a non-OK state."),
             choices = [
                 ("ignore",   _("Ignore the version")),
                 ("site",     _("Same version as the monitoring site")),

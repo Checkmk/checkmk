@@ -933,7 +933,7 @@ def page_edit_dashlet():
     html.end_context_buttons()
 
     vs_general = Dictionary(
-        title = _('General'),
+        title = _('General Settings'),
         render = 'form',
         optional_keys = ['title', 'title_url'],
         elements = [

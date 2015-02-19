@@ -3870,7 +3870,7 @@ def mode_bulk_inventory(phase):
         if not complete_folder:
             html.write(_("You have selected <b>%d</b> hosts for bulk discovery. ") % len(hostnames))
         html.write(_("Check_MK service discovery will automatically find and configure "
-                     "services to be checked on your hosts.</p>"))
+                     "services to be checked on your hosts."))
         forms.header(_("Bulk discovery"))
         forms.section(_("Mode"))
         html.radiobutton("how", "new",     True,  _("Find only new services") + "<br>")
@@ -6830,12 +6830,12 @@ def mode_snapshot(phase):
                                                                             status.get("broken_text"))
                 elif not status.get("checksums") and not config.wato_upload_insecure_snapshots:
                     if status["type"] == "legacy":
-                        raise MKUserError("_upload_file", _('The integrity of this snapshot could not be verified.<br><br>'
+                        raise MKUserError("_upload_file", _('The integrity of this snapshot could not be verified. '
                                           'You are restoring a legacy snapshot which can not be verified. The snapshot contains '
-                                          'files which contain code that will be executed during runtime of the monitoring.<br><br>'
+                                          'files which contain code that will be executed during runtime of the monitoring. '
                                           'The upload of insecure snapshots is currently disabled in WATO. If you want to allow '
-                                          'the upload of insecure snapshots you can activate it in the Global Settings under<br>'
-                                          '<tt>Configuration GUI (WATO) -> Allow upload of insecure WATO snapshots</tt>'))
+                                          'the upload of insecure snapshots you can activate it in the Global Settings under '
+                                          '<i>Configuration GUI (WATO) -> Allow upload of insecure WATO snapshots</i>'))
                     else:
                        raise MKUserError("_upload_file", _('The integrity of this snapshot could not be verified.<br><br>'
                                           'If you restore a snapshot on the same site as where it was created, the checksum should '
@@ -6945,7 +6945,7 @@ def mode_snapshot(phase):
 
         html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
         html.write(_("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites "
-                   "backup directory <tt>%s/wato/snapshots</tt>. It will then show up in the snapshots table.<br><br>") % defaults.var_dir)
+                   "backup directory <tt>%s/wato/snapshots</tt>. It will then show up in the snapshots table.") % defaults.var_dir)
         html.begin_form("upload_form", method = "POST")
         html.upload_file("_upload_file")
         html.button("upload_button", _("Restore from file"), "submit")

@@ -397,7 +397,7 @@ check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "
 check_metrics["check_mk-vms_sys.util"]                          = { "wait" : { "name" : "io_wait" } }
 
 check_metrics["check_mk-mbg_lantime_state"]                     = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
-check_metrics["check_mk-mbg_lantime_nb_state"]                  = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
+check_metrics["check_mk-mbg_lantime_ng_state"]                  = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
 check_metrics["check_mk-systemtime"]                            = { "offset" : { "name" : "time_offset" }}
 
 check_metrics["check_mk-adva_fsp_if"]                           = { "output_power" : { "name" : "output_signal_power_dbm" },

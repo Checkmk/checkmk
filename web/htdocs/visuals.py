@@ -302,7 +302,7 @@ def page_list(what, title, visuals, custom_columns = [],
             table.row(css = 'data')
 
             # Actions
-            table.cell(_('Actions'), css = 'buttons')
+            table.cell(_('Actions'), css = 'buttons visuals')
 
             # Edit
             if owner == config.user_id:

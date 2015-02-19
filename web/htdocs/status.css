@@ -310,6 +310,9 @@ table.data td.buttons {
     width: 1%;
 }
 
+table.data td.buttons.visuals {
+    width: 75px;
+}
 table.data td.count {
     text-align: right;
     font-weight: bold;

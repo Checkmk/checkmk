@@ -2217,6 +2217,10 @@ def check_edit_host_permissions(folder, host, hostname):
 
 def mode_rename_host(phase):
     hostname = html.var("host")
+
+    if hostname not in g_folder[".hosts"]:
+        raise MKGeneralException(_("You called this page with an invalid host name."))
+
     host = g_folder[".hosts"][hostname]
     is_cluster = ".nodes" in host
 

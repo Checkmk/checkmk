@@ -238,6 +238,7 @@
     * 1925 FIX: Fix missing auxilliary tags that have their own topic...
     * 1927 FIX: Fixed level description in WATO rules, change from if above into at
     * 1976 FIX: Sorting BI rule choice dropdown field entries now
+    * 1986 FIX: Added nicer error message when calling the rename host page with a non existant host
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

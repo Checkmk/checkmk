@@ -1,0 +1,10 @@
+Title: Added nicer error message when calling the rename host page with a non existant host
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424423142
+
+

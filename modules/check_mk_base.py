@@ -609,6 +609,11 @@ def translate_piggyback_host(sourcehost, backedhost):
     if translation.get("drop_domain") and not backedhost[0].isdigit():
         backedhost = backedhost.split(".", 1)[0]
 
+    # To make it possible to match umlauts we need to change the backendhost
+    # to a unicode string which can then be matched with regexes etc.
+    # We assume the incoming name is correctly encoded in UTF-8
+    backedhost = backedhost.decode('utf-8')
+
     # 3. Regular expression conversion
     if "regex" in translation:
         regex, subst = translation.get("regex")
@@ -627,8 +632,7 @@ def translate_piggyback_host(sourcehost, backedhost):
             backedhost = to_host
             break
 
-    return backedhost
-
+    return backedhost.encode('utf-8') # change back to UTF-8 encoded string
 
 
 def read_cache_file(relpath, max_cache_age):

@@ -1,4 +1,7 @@
 1.2.6b10:
+    Core & Setup:
+    * 2012 FIX: Piggyback hostname translation can now deal correctly with umlauts
+
     Checks & Agents:
     * 2005 services: change service description from service_ to Service or new installations
     * 1859 FIX: cups_queues: linux agent now runs section cups_queues in cached mode...

@@ -230,6 +230,7 @@ old_service_descriptions = {
     "ps"                     : "proc_%s",
     "ps.perf"                : "proc_%s",
     "wmic_process"           : "proc_%s",
+    "services"               : "service_%s",
     "logwatch"               : "LOG %s",
     "hyperv_vm"              : "hyperv_vms",
 }

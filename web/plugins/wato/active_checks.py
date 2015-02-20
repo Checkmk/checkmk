@@ -1662,7 +1662,7 @@ register_rule(group,
             )),
         ] + mail_receiving_params + [
             ('mail_from', EmailAddress(
-                title = _('Sender email address'),
+                title = _('From: email address'),
             )),
             ('mail_to', EmailAddress(
                 title = _('Destination email address'),

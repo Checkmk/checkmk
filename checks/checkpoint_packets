@@ -70,16 +70,14 @@ check_info["checkpoint_packets"] = {
     "service_description"     : "Packet Statistics",
     "has_perfdata"            : True,
     "group"                   : "checkpoint_packets",
+    "snmp_scan_function"      : scan_checkpoint,
     "default_levels_variable" : "checkpoint_packets_default_levels",
-    # detect a checkpoint kernel
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.1.0").split(" ")[2].endswith("cp")\
-                                        and oid(".1.3.6.1.4.1.2620.1.1.21.0").lower().startswith('firewall'),
-    # checkpoint.products.fw.fwPolicyStat.fwNumConn
     "snmp_info"		      : ( ".1.3.6.1.4.1.2620.1.1",
                                                 [ 4, # fwAccepted
                                                   5, # fwRejected
                                                   6, # fwDropped
                                                   7, # fwLogged
                                                 ]),
+    "includes"                : [ "checkpoint.include" ],
 }
 

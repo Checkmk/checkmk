@@ -1,3 +1,5 @@
+1.2.6b11:
+
 1.2.6b10:
     Core & Setup:
     * 2012 FIX: Piggyback hostname translation can now deal correctly with umlauts

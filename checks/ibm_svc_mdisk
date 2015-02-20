@@ -59,35 +59,9 @@ def check_ibm_svc_mdisk(item, params, info):
             mdisk_status = line[2]
             mdisk_mode = line[3]
 
-            if mdisk_status == "online":
-                if 'online_state' in params:
-                    yield params['online_state'], "Status: %s" % mdisk_status
-            elif mdisk_status == "degraded":
-                if 'degraded_state' in params:
-                    yield params['degraded_state'], "Status: %s" % mdisk_status
-            elif mdisk_status == "offline":
-                if 'offline_state' in params:
-                    yield params['offline_state'], "Status: %s" % mdisk_status
-            elif mdisk_status == "excluded":
-                if 'excluded_state' in params:
-                    yield params['excluded_state'], "Status: %s" % mdisk_status
-            else:
-                yield 1, "Status: %s" % mdisk_status
+            yield params.get("%s_state" % mdisk_status, 1), "Status: %s" % mdisk_status
+            yield params.get("%s_mode" % mdisk_mode, 1),    "Mode: %s" % mdisk_status
 
-            if mdisk_mode == "managed":
-                if 'managed_mode' in params:
-                    yield params['managed_mode'], "Mode: %s" % mdisk_mode
-            elif mdisk_mode == "array":
-                if 'array_mode' in params:
-                    yield params['array_mode'], "Mode: %s" % mdisk_mode
-            elif mdisk_mode == "image":
-                if 'image_mode' in params:
-                    yield params['image_mode'], "Mode: %s" % mdisk_mode
-            elif mdisk_mode == "unmanaged":
-                if 'unmanaged_mode' in params:
-                    yield params['unmanaged_mode'], "Mode: %s" % mdisk_mode
-            else:
-                yield 1, "Mode: %s" % mdisk_mode
 
 check_info["ibm_svc_mdisk"] = {
     "check_function"          : check_ibm_svc_mdisk,

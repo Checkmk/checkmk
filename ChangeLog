@@ -242,6 +242,7 @@
     * 1986 FIX: Added nicer error message when calling the rename host page with a non existant host
     * 1987 FIX: Editing auxtags shows existing topics in dropdown instead of as "create new topic"
     * 2001 FIX: Fix exception of missing .site when editing a non-existing host
+    * 2002 FIX: Mark slave sites as dirty if BI aggregates are changes and login is allowed...
     * 2009 FIX: Fixed styling of site login page for establishing a distributed monitoring WATO sync...
 
     Notifications:

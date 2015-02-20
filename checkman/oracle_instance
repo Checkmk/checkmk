@@ -88,7 +88,7 @@ description:
  https://mathias-kettner.de/checkmk_oracle.html
 
 examples:
- factory_settings["oracle_instance_defaults"] = {
+ oracle_instance_defaults = {
     "logins"         : 2,
     "noforcelogging" : 1,
     "noarchivelog"   : 1,
@@ -101,22 +101,22 @@ item:
 parameters (dict):
 
  "archivelog":  (int) - State if Archive Logmode is enabled. No check is
- done by default. 0 OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+ done by default. 0 OK, 1 WARNING, 2 CRITICAL or 3 UNKNOWN
 
  "noarchivelog":  (int) -  State in  if Archive Logmode is  disabled. 1 is
- default. 0 OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+ default. 0 OK, 1 WARNING, 2 CRITICAL or 3 UNKNOWN
 
  "forcelogging": (int) - State if of Force Logging is enabled. No check is
- done by default. 0 OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+ done by default. 0 OK, 1 WARNING, 2 CRITICAL or 3 UNKNOWN
 
  "noforcelogging":  (int) - State if Force Logging is disabled. 1 is
- default. 0 OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+ default. 0 OK, 1 WARNING, 2 CRITICAL or 3 UNKNOWN
 
  "primarynotopen":  (int) - State if Database is Primary and not OPEN. 2 is
- default. 0 OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+ default. 0 OK, 1 WARNING, 2 CRITICAL or 3 UNKNOWN
 
  "logins":  (int) - State if logins are not possible. 3 is default. 0
- OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+ OK, 1 WARNING, 2 CRITICAL or 3 UNKNOWN
 
  "uptime_min": (int, int) - Minimum required uptime (warn, crit) in seconds.
 

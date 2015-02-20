@@ -1,0 +1,9 @@
+Title: Fix saving of "Users are allowed to directly login into the Web GUI of this site"
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b10
+Date: 1424430940
+Class: fix
+
+This checkbox was never saved and always set to checked. This has been fixed.

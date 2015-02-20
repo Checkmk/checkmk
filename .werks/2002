@@ -1,0 +1,11 @@
+Title: Mark slave sites as dirty if BI aggregates are changes and login is allowed
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b10
+Date: 1424430866
+Class: fix
+
+If you have remote sites that are connected via distributed WATO and user login
+is allowed on that sites then now changes to BI aggregates will correctly set
+these sites to <i>Sync required</i>.

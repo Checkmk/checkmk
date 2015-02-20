@@ -4722,6 +4722,70 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "ibm_svc_mdisk",
+    _("IBM SVC: Options for SVC Disk Check"),
+    Dictionary(
+        optional_keys = False,
+        elements = [
+            ( "online_state",
+                MonitoringState(
+                    title = _("Resulting state if disk is online"),
+                    default_value = 0,
+                ),
+            ),
+            ( "degraded_state",
+                MonitoringState(
+                    title = _("Resulting state if disk is degraded"),
+                    default_value = 1,
+                ),
+            ),
+            ( "offline_state",
+                MonitoringState(
+                    title = _("Resulting state if disk is offline"),
+                    default_value = 2,
+                ),
+            ),
+            ( "excluded_state",
+                MonitoringState(
+                    title = _("Resulting state if disk is excluded"),
+                    default_value = 2,
+                ),
+            ),
+            ( "managed_mode",
+                MonitoringState(
+                    title= _("Resulting state if disk is in managed mode"),
+                    default_value = 0,
+                ),
+            ),
+            ( "array_mode",
+                MonitoringState(
+                    title = _("Resulting state if disk is in array mode"),
+                    default_value = 0,
+                ),
+            ),
+            ( "image_mode",
+                MonitoringState(
+                    title = _("Resulting state if disk is in image mode"),
+                    default_value = 0,
+                ),
+            ),
+            ( "unmanaged_mode",
+                MonitoringState(
+                    title = _("Resulting state if disk is in unmanaged mode"),
+                    default_value = 1,
+                ),
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("IBM SVC disk"),
+        help = _("Name of the disk, e.g. mdisk0"),
+    ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_storage,
     "disk_io",
     _("Levels on disk IO (throughput)"),
     Dictionary(

@@ -1,0 +1,9 @@
+Title: Piggyback hostname translation can now deal correctly with umlauts
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b10
+Date: 1424442762
+Class: fix
+
+

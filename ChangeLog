@@ -243,6 +243,7 @@
     * 1987 FIX: Editing auxtags shows existing topics in dropdown instead of as "create new topic"
     * 2001 FIX: Fix exception of missing .site when editing a non-existing host
     * 2009 FIX: Fixed styling of site login page for establishing a distributed monitoring WATO sync...
+    * 2010 FIX: Improved error message when trying to add group assignment rule without having a group configured
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

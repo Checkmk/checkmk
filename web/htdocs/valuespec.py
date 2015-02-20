@@ -2930,6 +2930,7 @@ class ElementSelection(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._loaded_at = None
         self._label = kwargs.get("label")
+        self._empty_text = kwargs.get("empty_text", _("There are not defined any elements for this selection yet."))
 
     def load_elements(self):
         if self._loaded_at != id(html):
@@ -2944,7 +2945,7 @@ class ElementSelection(ValueSpec):
     def render_input(self, varprefix, value):
         self.load_elements()
         if len(self._elements) == 0:
-            html.write(_("There are not defined any elements for this selection yet."))
+            html.write(self._empty_text)
         else:
             if self._label:
                 html.write("%s&nbsp;" % self._label)
@@ -2960,8 +2961,7 @@ class ElementSelection(ValueSpec):
     def validate_value(self, value, varprefix):
         self.load_elements()
         if len(self._elements) == 0:
-            raise MKUserError(varprefix,
-              _("You cannot save this rule. There are not defined any elements for this selection yet."))
+            raise MKUserError(varprefix, _("You cannot save this rule.") + ' ' + self._empty_text)
         if value not in self._elements:
             raise MKUserError(varprefix, _("%s is not an existing element in this selection.") % (value,))
         ValueSpec.custom_validate(self, value, varprefix)

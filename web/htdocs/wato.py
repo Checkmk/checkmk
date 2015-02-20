@@ -1986,6 +1986,7 @@ def mode_edithost(phase, new, cluster):
             title = _("Create new host")
             host = {}
         mode = "new"
+        new = True
 
     if phase == "title":
         return title

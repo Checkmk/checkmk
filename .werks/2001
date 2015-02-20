@@ -1,0 +1,9 @@
+Title: Fix exception of missing .site when editing a non-existing host
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b10
+Date: 1424428557
+Class: fix
+
+

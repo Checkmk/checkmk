@@ -1,0 +1,12 @@
+Title: hyperv_vms: new plugin that allows spaces in VM names
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424440111
+
+The new plugin uses a vertical tabulator (Ascii 9) instead of spaces as
+separators.  By that way spaces in VM names are now allowed. Such names are
+e.g. used by snapshot VMs.

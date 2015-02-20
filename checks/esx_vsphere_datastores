@@ -37,7 +37,6 @@
 def esx_vsphere_datastores_parse(info):
     stores = {}
     for line in info:
-        print line
         if line[0].startswith('['):
             name = line[0][1:-1]
             store = {}

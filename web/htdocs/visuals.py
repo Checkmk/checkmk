@@ -247,7 +247,8 @@ def available(what, all_visuals):
 def page_list(what, title, visuals, custom_columns = [],
     render_custom_buttons = None,
     render_custom_columns = None,
-    render_custom_context_buttons = None):
+    render_custom_context_buttons = None,
+    check_deletable_handler = None):
 
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
@@ -268,14 +269,22 @@ def page_list(what, title, visuals, custom_columns = [],
     delname  = html.var("_delete")
     if delname and html.transaction_valid():
         deltitle = visuals[(config.user_id, delname)]['title']
-        c = html.confirm(_("Please confirm the deletion of \"%s\".") % deltitle)
-        if c:
-            del visuals[(config.user_id, delname)]
-            save(what, visuals)
-            html.reload_sidebar()
-        elif c == False:
-            html.footer()
-            return
+
+        try:
+            if check_deletable_handler:
+                check_deletable_handler(visuals, delname)
+
+            c = html.confirm(_("Please confirm the deletion of \"%s\".") % deltitle)
+            if c:
+                del visuals[(config.user_id, delname)]
+                save(what, visuals)
+                html.reload_sidebar()
+            elif c == False:
+                html.footer()
+                return
+        except MKUserError, e:
+            html.write("<div class=error>%s</div>\n" % e.message)
+            html.add_user_error(e.varname, e.message)
 
     keys_sorted = visuals.keys()
     keys_sorted.sort(cmp = lambda a,b: -cmp(a[0],b[0]) or cmp(a[1], b[1]))

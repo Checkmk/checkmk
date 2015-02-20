@@ -6,14 +6,14 @@ distribution: check_mk
 description:
  Checks the status of hosts on IBM SVC / Storwize V3700 / V7000 presents volumes to.
 
- For every host category {active}, {inactive}, {degraded}, {offline}, {other} the
+ For every host category {active}, {inactive}, {degraded}, {offline} and {other} the
  amount of hosts is compared to the configured limits.
 
  For host category {active} the check returns {CRIT} if the amount of hosts is
  equal or below the critical limit. The check returns {WARN} if the amount of hosts
  is above critical limit and equal or below warning level. Otherwise the check returns {OK}.
 
- For host categories {inactive}, {degraded}, {offline}, {other} the check return {CRIT} if
+ For host categories {inactive}, {degraded}, {offline} and {other} the check return {CRIT} if
  the amount of hosts is equal or above the critical limit. The check return {WARN} if
  the amount of hosts is below critical limit and equal or above warning limit. Otherwise
  the check return {OK}.

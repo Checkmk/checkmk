@@ -1,0 +1,10 @@
+Title: Improved error message when trying to add group assignment rule without having a group configured
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6b10
+Date: 1424437663
+
+

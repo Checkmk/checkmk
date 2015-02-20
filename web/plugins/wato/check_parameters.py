@@ -103,7 +103,7 @@ register_rule(group + '/' + subgroup_applications,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_services_rules",
-    title     = _("Windows Service Inventory"),
+    title     = _("Windows Service Discovery"),
     valuespec = Dictionary(
         elements = [
             ('services', ListOfStrings(
@@ -5402,7 +5402,6 @@ register_check_parameters(
          "The latter one is just being displayed as a further information."),
         allow_empty = False),
     "first",
-    False,
 )
 
 register_check_parameters(

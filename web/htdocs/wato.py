@@ -16005,6 +16005,7 @@ def create_sample_config():
             "ps",
             "ps.perf",
             "wmic_process",
+            "services",
             "logwatch",
             "cmk-inventory",
             "hyperv_vms",

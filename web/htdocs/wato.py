@@ -2733,7 +2733,12 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         pass
 
     elif known_settings is not PARAMETERS_UNKNOWN:
-        html.write(valuespec.value_to_text(known_settings))
+        try:
+            html.write(valuespec.value_to_text(known_settings))
+        except Exception, e:
+            if config.debug:
+                raise
+            html.write(_("Invalid parameter %r: %s") % (known_settings, e))
 
     else:
         # For match type "dict" it can be the case the rule define some of the keys

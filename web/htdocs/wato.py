@@ -2569,7 +2569,7 @@ def mode_object_parameters(phase):
             }[origin]
             render_rule_reason(_("Type of check"), None, "", "", False, origin_txt)
 
-            # First case: inventorized checks. They come from var/check_mk/autochecks/HOST.
+            # First case: discovered checks. They come from var/check_mk/autochecks/HOST.
             if origin ==  "auto":
                 checkgroup = serviceinfo["checkgroup"]
                 checktype = serviceinfo["checktype"]
@@ -2585,8 +2585,8 @@ def mode_object_parameters(phase):
                                             serviceinfo["item"], serviceinfo["parameters"])
 
                 else:
-                    # Note: some inventorized checks have a check group but
-                    # *no* ruleset for inventorized checks. One example is "ps".
+                    # Note: some discovered checks have a check group but
+                    # *no* ruleset for discovered checks. One example is "ps".
                     # That can be configured as a manual check or created by
                     # inventory. But in the later case all parameters are set
                     # by the inventory. This will be changed in a later version,
@@ -15324,7 +15324,7 @@ def register_rule(group, varname, valuespec = None, title = None,
 # modular here, but we cannot put this function into the plugins file because
 # the order is not defined there.
 def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, matchtype, has_inventory=True, register_static_check=True):
-    # Register rule for inventorized checks
+    # Register rule for discovered checks
     if valuespec and has_inventory: # would be useless rule if check has no parameters
         itemenum = None
         if itemspec:

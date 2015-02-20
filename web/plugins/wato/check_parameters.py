@@ -26,7 +26,7 @@
 
 # Rules for configuring parameters of checks (services)
 
-register_rulegroup("checkparams", _("Parameters for Inventorized Checks"),
+register_rulegroup("checkparams", _("Parameters for discovered checks"),
     _("Levels and other parameters for checks found by the Check_MK service discovery.\n"
       "Use these rules in order to define parameters like filesystem levels, "
       "levels for CPU load and other things for services that have been found "
@@ -5077,11 +5077,11 @@ register_check_parameters(
         help = _("State the disk is expected to be in. Typical good states "
             "are online, host spare, OK and the like. The exact way of how "
             "to specify a state depends on the check and hard type being used. "
-            "Please take examples from inventorized checks for reference.")),
+            "Please take examples from discovered checks for reference.")),
     TextAscii(
         title = _("Number or ID of the disk"),
         help = _("How the disks are named depends on the type of hardware being "
-                 "used. Please look at already inventorized checks for examples.")),
+                 "used. Please look at already discovered checks for examples.")),
     "first"
 )
 

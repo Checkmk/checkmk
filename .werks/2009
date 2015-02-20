@@ -1,0 +1,9 @@
+Title: Fixed styling of site login page for establishing a distributed monitoring WATO sync
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b10
+Date: 1424430878
+Class: fix
+
+This page was not fitting our current form styling. This has been consolidated now.

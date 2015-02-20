@@ -9966,33 +9966,26 @@ def mode_sites(phase):
             wato_html_head(_("Login into site '%s'") % site["alias"])
             if error:
                 html.show_error(error)
-            html.write("<div class=message>")
-            html.write("<h3>%s</h3>" % _("Login credentials"))
-            html.write(_("For the initial login into the slave site %s "
+
+            html.write('<p>%s</p>' % (_("For the initial login into the slave site %s "
                          "we need once your administration login for the Multsite "
                          "GUI on that site. Your credentials will only be used for "
                          "the initial handshake and not be stored. If the login is "
                          "successful then both side will exchange a login secret "
-                         "which is used for the further remote calls.") % site["alias"])
+                         "which is used for the further remote calls.") % site["alias"]))
             html.begin_form("login", method="POST")
-            html.write("<table class=form>")
-            html.write("<tr><td class=legend>%s</td>" % _("Administrator login"))
-            html.write("<td class=content>")
-            html.write("<table><tr><td>%s</td><td>" % _("Adminstrator name:"))
+            forms.header(_('Login credentials'))
+            forms.section(_('Adminstrator name:'))
             html.text_input("_name")
             html.set_focus("_name")
-            html.write("</td></tr><tr><td>%s</td><td>" % _("Administrator password:"))
+            forms.section(_('Adminstrator password:'))
             html.password_input("_passwd")
-            html.write("</td></tr></table>")
-            html.write("</td></tr>")
-            html.write("<tr><td class=buttons colspan=2>")
+            forms.end()
             html.button("_do_login", _("Login"))
             html.button("_abort", _("Abort"))
-            html.write("</td></tr></table>")
             html.hidden_field("_login", login_id)
             html.hidden_fields()
             html.end_form()
-            html.write("</div>")
             return ""
         return
 

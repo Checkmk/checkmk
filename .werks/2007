@@ -1,0 +1,10 @@
+Title: md: Handle rebuild of RAID 5 correctly, handle sitatuation of replacement correctly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424438503
+
+Thanks to Maarten Vanraes for his two patches!

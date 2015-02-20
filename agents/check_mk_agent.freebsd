@@ -375,8 +375,9 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
 fi
 
 
-# Plugins
-if cd $PLUGINSDIR ; then
+# Local checks
+echo '<<<local>>>'
+if cd $LOCALDIR ; then
     for skript in $(ls) ; do
         if [ -f "$skript" -a -x "$skript" ] ; then
             ./$skript
@@ -385,7 +386,7 @@ if cd $PLUGINSDIR ; then
     # Call some plugins only every X'th minute
     for skript in [1-9]*/* ; do
         if [ -x "$skript" ] ; then
-            run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
+            run_cached local_${skript//\//\\} ${skript%/*} "$skript"
         fi
     done
 fi

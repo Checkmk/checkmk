@@ -1,0 +1,10 @@
+Title: check_mk_agent.freebsd: Add missing <<<local>>> section, plugins was twice instead
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424420058
+
+Thanks to Aran Cox!

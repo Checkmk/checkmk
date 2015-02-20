@@ -38,7 +38,7 @@
 
 import datetime
 
-windows_updates_default_params = (None, None, None, None, None, None, True)
+windows_updates_default_params = (0, 0, 0, 0, 604800, 172800, True)
 
 def inventory_windows_updates(info):
     if info and len(info[0]) == 3:
@@ -99,7 +99,7 @@ def check_windows_updates(_unused, params, info):
             date, time = forced_reboot
             year, month, day = map(int, date.split("-"))
             hour, minute, second = map(int, time.split(":"))
-            force_date = datetime.datetime( year, month, day, hour, minute, second)
+            force_date = datetime.datetime(year, month, day, hour, minute, second)
             now = datetime.datetime.now()
             nix = datetime.timedelta(seconds=0)
             # check if force_date is in the future

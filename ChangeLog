@@ -7,6 +7,7 @@
     * 1994 FIX: lparstat: Support new AIX version with two new columns nsp and utctc
     * 1997 FIX: checkpoint_connections, checkpoint_packets: Detect more recent devices
     * 2000 FIX: check_mk_agent.freebsd: Add missing <<<local>>> section, plugins was twice instead...
+    * 2004 FIX: windows_updates: fix exception in WATO when displaying default levels
 
     Multisite:
     * 1983 FIX: Fixed special case in language configuration via user profile...

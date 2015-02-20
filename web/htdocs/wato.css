@@ -807,6 +807,11 @@ div.varname {
     padding-bottom: 18px;
     padding: 1px 4px 2px 4px;
 }
+
+.wato div.globalvars a.modified table.vs_dict_text {
+    border-collapse: separate;
+}
+
 .wato div.globalvars div.title a.modified {
     box-shadow: none;
     border: none;

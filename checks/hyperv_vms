@@ -45,6 +45,17 @@
 # z4065084                        Running 1.10:28:39          Operating normally
 # z4133235                        Running 1.03:38:23          Operating normally
 
+# A Version with a plugin that uses tab as seperator and quotes the strings:
+# <<<hyperv_vms:sep(9)>>>
+# "Name"  "State" "Uptime"        "Status"
+# "z4058013"      "Running"       "06:05:16"      "Operating normally"
+# "z4058020"      "Running"       "01:01:57"      "Operating normally"
+# "z4058021"      "Running"       "01:02:11"      "Operating normally"
+# "z4065012"      "Running"       "01:02:04"      "Operating normally"
+# "z4065013"      "Running"       "07:47:27"      "Operating normally"
+# "z4065020"      "Running"       "01:02:09"      "Operating normally"
+# "z4065025"      "Running"       "01:02:05"      "Operating normally"
+# "z4133199"      "Running"       "00:57:23"      "Operating normally"
 
 # result:
 # {
@@ -58,6 +69,8 @@
 def parse_hyperv_vms(info):
     parsed = {}
     for line in info:
+        # Remove quotes
+        line = [ x.strip('"') for x in line ]
         if line[1].endswith("..."): # broken output
             vm_name = line[0]
             line = line[2:]
@@ -73,11 +86,12 @@ def parse_hyperv_vms(info):
             vm_name = line[0]
             line = line[1:]
 
-        parsed[vm_name] = {
-            "state"  : line[0],
-            "uptime" : line[1],
-            "state_msg" : " ".join(line[2:]),
-        }
+        if ':' in line[1]: # skip heading line
+            parsed[vm_name] = {
+                "state"  : line[0],
+                "uptime" : line[1],
+                "state_msg" : " ".join(line[2:]),
+            }
     return parsed
 
 

@@ -1,0 +1,9 @@
+Title: stulz_pump: Fixed exception during checking for some devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b10
+Date: 1424443762
+Class: fix
+
+

@@ -8117,6 +8117,9 @@ def save_group_information(all_groups):
 
 class GroupSelection(ElementSelection):
     def __init__(self, what, **kwargs):
+        kwargs.setdefault('empty_text', _('You have not defined any %s group yet. Please '
+                                          '<a href="wato.py?mode=edit_%s_group">create</a> at least one first.') %
+                                                                                                    (what, what))
         ElementSelection.__init__(self, **kwargs)
         self._what = what
         # Allow to have "none" entry with the following title

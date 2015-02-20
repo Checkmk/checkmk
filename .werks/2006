@@ -1,0 +1,11 @@
+Title: services: Add WATO rule for configuring parameters of discovered checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b10
+Date: 1424437361
+Class: fix
+
+Up to now you could only select under which conditions a Windows service would
+be discovered - but later it would be checked for <tt>running</tt> / <tt>auto</tt>.
+Now you can select the target state via a new WATO rule set <i>Windows Services</i>.

@@ -1,0 +1,11 @@
+Title: mount check should ignore bind mounts
+Component: checks
+State: open
+Date: 2015-02-20 09:25:31
+Targetversion: 1.2.7
+Class: bug
+
+With the new feature extra_sections, the df check should read the
+mounts section and do the checking of the mount options here.
+By that way we only check real filesystems and no duplicates. Also
+this will reduce the number of checks.

@@ -1,0 +1,145 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+###############################################################################
+# name       : ClusterNodesState.py
+# to do      : check state of all cluster nodes
+# start      : nagios plugin
+# docu       : needs a check_mk environment
+# parameter  : -n Clustername (use -h to see all posibilities)
+# created    :
+# created by :
+#
+# modifed by        date         comment
+###############################################################################
+
+import os, sys, getopt
+import livestatus
+
+def usage():
+    usage = """
+    -h --help                 Prints this
+    -n --clustername          cluster name
+    -w --warning              warning at % of lost hosts
+    -c --critical             critical at % of  lost hosts
+    """
+    print usage
+
+def main(argv):
+    clustername = 'NoClusterName'
+    warning     = float(5)
+    critical    = float(50)
+
+    if len(argv) == 0 or not sys.argv[1].startswith('-'):
+        usage()
+        sys.exit(2)
+
+    try:
+        opt, args = getopt.getopt(argv, "h:n:w:c:", [ 'help', 'clustername=', 'warning=', 'critical=' ] )
+    except getopt.GetoptError, err:
+        print str(err)
+        usage()
+        sys.exit(2)
+    output = None
+    verbose = False
+    for o, a in opt:
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif o in ("-n", "--clustername"):
+            clustername = a
+        elif o in ("-w", "--warning"):
+            warning = float(a)
+        elif o in ("-c", "--critical"):
+            critical = float(a)
+        else:
+            assert False, "unhandled option"
+
+    try:
+        omd_root = os.getenv("OMD_ROOT")
+        socket_path = "unix:" + omd_root + "/tmp/run/live"
+    except:
+        sys.stderr.write("This example is indented to run in an OMD site\n")
+        sys.stderr.write("Please change socket_path in this example, if you are\n")
+        sys.stderr.write("not using OMD.\n")
+        sys.exit(1)
+
+    try:
+        clusternodes = {}
+        up_list = []
+        unreachable_list = []
+        down_list = []
+        unknown_list = []
+
+        parents = livestatus.SingleSiteConnection(socket_path).query_table("GET hosts\nColumns: parents\nFilter: host_name = %s\n" % clustername)
+        for i in range(len(parents[0][0])):
+            state = livestatus.SingleSiteConnection(socket_path).query_table("GET hosts\nColumns: name hard_state\nFilter: host_name = %s\n" % parents[0][0][i])
+            cmk_state = livestatus.SingleSiteConnection(socket_path).query_table("GET services\nColumns: host_name description state\nFilter: description ~ Check_MK$\nFilter: host_name = %s\n" % parents[0][0][i])
+            nodename = state[0][0]
+            if state[0][1] == 0 and cmk_state[0][2] == 0:
+                nodestate = "up"
+            elif state[0][1] == 1:
+                nodestate = "unreachable"
+            elif state[0][1] == 2:
+                nodestate = "down"
+            elif cmk_state[0][2] == 2:
+                nodestate = "unknown"
+            clusternodes[nodename] = nodestate
+
+        #clusternodes['zbghvm42'] = 'unknown'
+        #clusternodes['zbghvm43'] = 'unreachable'
+        #clusternodes['zbghvm44'] = 'up'
+        #clusternodes['zbghvm45'] = 'up'
+        #clusternodes['zbghvm46'] = 'down'
+        #clusternodes['zbghvm47'] = 'down'
+        #clusternodes['zbghvm48'] = 'up'
+        #clusternodes['zbghvm49'] = 'unknown'
+
+        for key, value in clusternodes.items():
+            if value.count('up') > 0:
+                up_list.append(key)
+            if value.count('unreachable') > 0:
+                unreachable_list.append(key)
+            if value.count('down') > 0:
+                down_list.append(key)
+            if value.count('unknown') > 0:
+                unknown_list.append(key)
+
+        all_nodes         = float(len(clusternodes))
+        up_nodes          = float(len(up_list))
+        unreachable_nodes = float(len(unreachable_list))
+        down_nodes        = float(len(down_list))
+        unknown_nodes     = float(len(unknown_list))
+
+        failedpercent = ((down_nodes + unreachable_nodes + unknown_nodes) / all_nodes) * 100.0
+
+        str_up = ""
+        str_down = ""
+        str_unreachable = ""
+        str_unknown = ""
+        if len(up_list) > 0:
+            str_up = (" %s " % ([str(item) for item in up_list])).translate(None, "'[,]")
+        if len(down_list) > 0:
+            str_down = ("(!!)%s " % ([str(item) for item in down_list])).translate(None, "'[,]")
+        if len(unreachable_list) > 0:
+            str_unreachable = ("(ur)%s " % ([str(item) for item in unreachable_list])).translate(None, "'[,]")
+        if len(unknown_list) > 0:
+            str_unknown = ("(?)%s " % ([str(item) for item in unknown_list])).translate(None, "'[,]")
+
+        if failedpercent > warning and failedpercent < critical:
+            print "WARN - (.)" + str_up + str_down + str_unreachable + str_unknown
+            sys.exit(1)
+        elif failedpercent >= critical:
+            if str_up == "":
+                print "CRIT - " + str_up + str_down + str_unreachable + str_unknown
+            else:
+                print "CRIT - (.)" + str_up + str_down + str_unreachable + str_unknown
+            sys.exit(2)
+        else:
+            print "OK - (.)" + str_up
+            sys.exit(0)
+
+    except Exception, e: # livestatus.MKLivestatusException, e:
+        print "Livestatus error: %s" % str(e)
+
+if __name__ == "__main__":
+    main(sys.argv[1:]) # [1:] slices off the first argument which is the name of the program

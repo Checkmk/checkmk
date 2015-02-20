@@ -1,3 +1,3 @@
-Write-Host -NoNewLine "<<<hyperv_vms>>>"
-Get-VM | format-table -HideTableHeaders -Autosize -property Name, State, Uptime, Status
-Write-Host
+Write-Host "<<<hyperv_vms:sep(9)>>>"
+
+Get-VM | select Name, State, Uptime, Status | ConvertTo-Csv -Delimiter "`t" -NoTypeInformation

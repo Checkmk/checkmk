@@ -11,6 +11,9 @@
     * 1984 FIX: Fixed loosing sidebar after switching to/from edit mode in dashboard edior on page reload...
     * 1985 FIX: PNP graph dashlet handles graphs in distributed setups correctly...
 
+    WATO:
+    * 1986 FIX: Added nicer error message when calling the rename host page with a non existant host
+
     HW/SW-Inventory:
     * 1943 FIX: inventory plugin win_os: no longer detects incorrect i386 architecture...
     * 1995 FIX: dmidecode: Fix parsing when memory devices are listed before controller

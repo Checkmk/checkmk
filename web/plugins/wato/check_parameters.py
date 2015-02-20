@@ -26,7 +26,7 @@
 
 # Rules for configuring parameters of checks (services)
 
-register_rulegroup("checkparams", _("Parameters for Inventorized Checks"),
+register_rulegroup("checkparams", _("Parameters for discovered checks"),
     _("Levels and other parameters for checks found by the Check_MK service discovery.\n"
       "Use these rules in order to define parameters like filesystem levels, "
       "levels for CPU load and other things for services that have been found "
@@ -103,7 +103,7 @@ register_rule(group + '/' + subgroup_applications,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_services_rules",
-    title     = _("Windows Service Inventory"),
+    title     = _("Windows Service Discovery"),
     valuespec = Dictionary(
         elements = [
             ('services', ListOfStrings(
@@ -4722,6 +4722,70 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "ibm_svc_mdisk",
+    _("IBM SVC: Options for SVC Disk Check"),
+    Dictionary(
+        optional_keys = False,
+        elements = [
+            ( "online_state",
+                MonitoringState(
+                    title = _("Resulting state if disk is online"),
+                    default_value = 0,
+                ),
+            ),
+            ( "degraded_state",
+                MonitoringState(
+                    title = _("Resulting state if disk is degraded"),
+                    default_value = 1,
+                ),
+            ),
+            ( "offline_state",
+                MonitoringState(
+                    title = _("Resulting state if disk is offline"),
+                    default_value = 2,
+                ),
+            ),
+            ( "excluded_state",
+                MonitoringState(
+                    title = _("Resulting state if disk is excluded"),
+                    default_value = 2,
+                ),
+            ),
+            ( "managed_mode",
+                MonitoringState(
+                    title= _("Resulting state if disk is in managed mode"),
+                    default_value = 0,
+                ),
+            ),
+            ( "array_mode",
+                MonitoringState(
+                    title = _("Resulting state if disk is in array mode"),
+                    default_value = 0,
+                ),
+            ),
+            ( "image_mode",
+                MonitoringState(
+                    title = _("Resulting state if disk is in image mode"),
+                    default_value = 0,
+                ),
+            ),
+            ( "unmanaged_mode",
+                MonitoringState(
+                    title = _("Resulting state if disk is in unmanaged mode"),
+                    default_value = 1,
+                ),
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("IBM SVC disk"),
+        help = _("Name of the disk, e.g. mdisk0"),
+    ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_storage,
     "disk_io",
     _("Levels on disk IO (throughput)"),
     Dictionary(
@@ -5338,7 +5402,6 @@ register_check_parameters(
          "The latter one is just being displayed as a further information."),
         allow_empty = False),
     "first",
-    False,
 )
 
 register_check_parameters(
@@ -5396,11 +5459,11 @@ register_check_parameters(
         help = _("State the disk is expected to be in. Typical good states "
             "are online, host spare, OK and the like. The exact way of how "
             "to specify a state depends on the check and hard type being used. "
-            "Please take examples from inventorized checks for reference.")),
+            "Please take examples from discovered checks for reference.")),
     TextAscii(
         title = _("Number or ID of the disk"),
         help = _("How the disks are named depends on the type of hardware being "
-                 "used. Please look at already inventorized checks for examples.")),
+                 "used. Please look at already discovered checks for examples.")),
     "first"
 )
 
@@ -6639,16 +6702,17 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "windows_updates",
-    _("WSUS"),
+    _("WSUS (Windows Updates)"),
     Tuple(
         title = _("Parameters for the Windows Update Check with WSUS"),
+        help = _("Set the according numbers to 0 if you want to disable alerting."),
         elements = [
-                Integer(title = _("Warning level for important updates")),
-                Integer(title = _("Critical level for important updates")),
-                Integer(title = _("Warning level for optional updates")),
-                Integer(title = _("Critical level for optional updates")),
-                Age(title = _("Warning level for time until forced reboot"), default_value = 604800),
-                Age(title = _("Critical level for time until forced reboot"), default_value = 172800),
+                Integer(title = _("Warning if at least this number of important updates are pending")),
+                Integer(title = _("Critical if at least this number of important updates are pending")),
+                Integer(title = _("Warning if at least this number of optional updates are pending")),
+                Integer(title = _("Critical if at least this number of optional updates are pending")),
+                Age(title = _("Warning if time until forced reboot is less then"), default_value = 604800),
+                Age(title = _("Critical if time time until forced reboot is less then"), default_value = 172800),
                 Checkbox(title = _("display all important updates verbosely"), default_value = True),
               ],
     ),

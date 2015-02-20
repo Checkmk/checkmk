@@ -1,0 +1,23 @@
+Title: ibm_svc_mdisk / disk checks: now able to configure the return state for state and mode of disk
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424430703
+Class: feature
+
+The check ibm_svc_mdisk now has configurable result states for states and modes of hard disk via WATO.
+
+New limits:
+<ul>
+<li>State online</li>
+<li>State degraded</li>
+<li>State offline</li>
+<li>State excluded</li>
+<li>Mode managed</li>
+<li>Mode array</li>
+<li>Mode image</li>
+<li>Mode unmanaged</li>
+</ul>
+
+The result state can be configured independently for every state and mode to all monitoring states.

@@ -232,7 +232,7 @@ factory_settings["services_default_levels"] = {
 check_info['services'] = {
     "check_function"          : check_windows_services,
     "inventory_function"      : inventory_windows_services,
-    "service_description"     : "service_%s",
+    "service_description"     : "Service %s",
     "has_perfdata"            : False,
     "node_info"               : True,
     "group"                   : "services",

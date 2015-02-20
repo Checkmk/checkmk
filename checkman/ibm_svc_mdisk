@@ -7,12 +7,8 @@ description:
  Checks the status and mode of MDisks in an IBM SVC / Storwize V3700 / V7000
  device.
 
- Status {online} is {OK}, status {offline} and {excluded} are {CRIT} and
- every other status is {WARN}.
-
- Modes {managed} and {array} are {OK} and every other mode is {WARN}.
-
- The worst of both is returned as check result.
+ The state and mode will be checked against the specified level and the
+ status is returned.
 
  Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
  data from the device. Your monitoring user must be able to SSH to the device
@@ -23,4 +19,47 @@ item:
  The name of the MDisk.
 
 inventory:
- Creates one check for every MDisk in th IBM SVC / Storwize V3700 / V7000 device.
+ Creates one check for every MDisk in the IBM SVC / Storwize V3700 / V7000 device.
+
+examples:
+ # Set the levels for all checks to:
+ ibm_svc_mdisk_default_levels = {
+    'online_state'   : 0,
+    'degraded_state' : 1,
+    'offline_state'  : 2,
+    'excluded_state' : 2,
+    'managed_mode'   : 0,
+    'array_mode'     : 0,
+    'image_mode'     : 0,
+    'unmanaged_mode' : 1 }
+
+[parameters]
+parameters (dict): parameters is a dictionary with eight keys
+
+    (int) is in range [0 ... 3]. Sense of value: 0 OK, 1 WARNING, 2 CRITICAL or 3 UNKNOWN
+
+    {'online_state'}: (int) - Resulting state if disk is online.
+
+    {'degraded_state'}: (int) - Resulting state if disk is degraded.
+
+    {'offline_state'}: (int) - Resulting state if disk is offline.
+
+    {'excluded_state'}: (int) - Resulting state if disk is excluded.
+
+    {'managed_mode'}: (int) - Resulting state if disk is in managed mode.
+
+    {'array_mode'}: (int) - Resulting state if disk is in array mode.
+
+    {'image_mode'}: (int) - Resulting state if disk is in image mode.
+
+    {'unmanaged_mode'}: (int) - Resulting state if disk is in unmanaged mode.
+
+[configuration]
+ibm_svc_mdisk_default_levels (dict): This variable is preset to {{ 'online_state' : 0,
+    'degraded_state' : 1,
+    'offline_state'  : 2,
+    'excluded_state' : 2,
+    'managed_mode'   : 0,
+    'array_mode'     : 0,
+    'image_mode'     : 0,
+    'unmanaged_mode' : 1 }}

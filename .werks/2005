@@ -1,0 +1,10 @@
+Title: services: change service description from service_ to Service or new installations
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424437340
+
+

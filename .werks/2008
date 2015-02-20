@@ -1,0 +1,11 @@
+Title: Users created during basic auth login get the role assigned configured in "default user profile"
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424424942
+
+Previously the role(s) configured in the default user profile were not used
+when a user which is not known to multisite logs in via basic auth.

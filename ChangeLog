@@ -15,6 +15,7 @@
 
     WATO:
     * 1986 FIX: Added nicer error message when calling the rename host page with a non existant host
+    * 1987 FIX: Editing auxtags shows existing topics in dropdown instead of as "create new topic"
 
     HW/SW-Inventory:
     * 1943 FIX: inventory plugin win_os: no longer detects incorrect i386 architecture...

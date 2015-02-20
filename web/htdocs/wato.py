@@ -12693,9 +12693,9 @@ def parse_hosttag_title(title):
     else:
         return None, title
 
-def hosttag_topics(hosttags):
+def hosttag_topics(hosttags, auxtags):
     names = set([])
-    for entry in hosttags:
+    for entry in hosttags + auxtags:
         topic, title = parse_hosttag_title(entry[1])
         if topic:
             names.add((topic, topic))
@@ -12905,7 +12905,7 @@ def mode_edit_auxtag(phase):
 
     vs_topic = OptionalDropdownChoice(
         title = _("Topic") + "<sup>*</sup>",
-        choices = hosttag_topics(hosttags),
+        choices = hosttag_topics(hosttags, auxtags),
         explicit = TextUnicode(),
         otherlabel = _("Create New Topic"),
         default_value = None,
@@ -13031,7 +13031,7 @@ def mode_edit_hosttag(phase):
 
     vs_topic = OptionalDropdownChoice(
         title = _("Topic"),
-        choices = hosttag_topics(hosttags),
+        choices = hosttag_topics(hosttags, auxtags),
         explicit = TextUnicode(),
         otherlabel = _("Create New Topic"),
         default_value = None,

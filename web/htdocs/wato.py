@@ -9966,33 +9966,26 @@ def mode_sites(phase):
             wato_html_head(_("Login into site '%s'") % site["alias"])
             if error:
                 html.show_error(error)
-            html.write("<div class=message>")
-            html.write("<h3>%s</h3>" % _("Login credentials"))
-            html.write(_("For the initial login into the slave site %s "
+
+            html.write('<p>%s</p>' % (_("For the initial login into the slave site %s "
                          "we need once your administration login for the Multsite "
                          "GUI on that site. Your credentials will only be used for "
                          "the initial handshake and not be stored. If the login is "
                          "successful then both side will exchange a login secret "
-                         "which is used for the further remote calls.") % site["alias"])
+                         "which is used for the further remote calls.") % site["alias"]))
             html.begin_form("login", method="POST")
-            html.write("<table class=form>")
-            html.write("<tr><td class=legend>%s</td>" % _("Administrator login"))
-            html.write("<td class=content>")
-            html.write("<table><tr><td>%s</td><td>" % _("Adminstrator name:"))
+            forms.header(_('Login credentials'))
+            forms.section(_('Adminstrator name:'))
             html.text_input("_name")
             html.set_focus("_name")
-            html.write("</td></tr><tr><td>%s</td><td>" % _("Administrator password:"))
+            forms.section(_('Adminstrator password:'))
             html.password_input("_passwd")
-            html.write("</td></tr></table>")
-            html.write("</td></tr>")
-            html.write("<tr><td class=buttons colspan=2>")
+            forms.end()
             html.button("_do_login", _("Login"))
             html.button("_abort", _("Abort"))
-            html.write("</td></tr></table>")
             html.hidden_field("_login", login_id)
             html.hidden_fields()
             html.end_form()
-            html.write("</div>")
             return ""
         return
 
@@ -10377,6 +10370,9 @@ def mode_edit_site(phase):
 
         # Handle the insecure replication flag
         new_site["insecure"] = html.get_checkbox("insecure")
+
+        # Allow direct user login
+        new_site["user_login"] = html.get_checkbox("user_login")
 
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
@@ -16348,7 +16344,7 @@ def mode_bi_rules(phase):
                   "the id <b>%s</b>?") % ruleid)
             if c:
                 del aggregation_rules[ruleid]
-                log_audit(None, "bi-delete-rule", _("Deleted BI rule with id %s") % ruleid)
+                log_pending(SYNC, None, "bi-delete-rule", _("Deleted BI rule with id %s") % ruleid)
                 save_bi_rules(aggregations, aggregation_rules)
             elif c == False: # not yet confirmed
                 return ""
@@ -16360,7 +16356,7 @@ def mode_bi_rules(phase):
                 _("Do you really want to delete the aggregation number <b>%s</b>?") % (nr+1))
             if c:
                 del aggregations[nr]
-                log_audit(None, "bi-delete-aggregation", _("Deleted BI aggregation number %d") % (nr+1))
+                log_pending(SYNC, None, "bi-delete-aggregation", _("Deleted BI aggregation number %d") % (nr+1))
                 save_bi_rules(aggregations, aggregation_rules)
             elif c == False: # not yet confirmed
                 return ""
@@ -16634,6 +16630,10 @@ def save_bi_rules(aggregations, aggregation_rules):
             out.write("aggregations.append(\n")
         out.write(replace_constants(pprint.pformat(convert_aggregation_to_bi(aggregation))))
         out.write(")\n")
+
+    # Make sure that BI aggregates are replicated to all other sites that allow
+    # direct user login
+    update_login_sites_replication_status()
 
 def rename_host_in_bi(oldname, newname):
     renamed = 0
@@ -17031,10 +17031,10 @@ def mode_bi_edit_aggregation(phase):
                 raise MKUserError('rule_p_groups_0', _("Please define at least one aggregation group"))
             if new:
                 aggregations.append(new_aggr)
-                log_audit(None, "bi-new-aggregation", _("Created new BI aggregation %d") % (len(aggregations)))
+                log_pending(SYNC, None, "bi-new-aggregation", _("Created new BI aggregation %d") % (len(aggregations)))
             else:
                 aggregations[nr] = new_aggr
-                log_audit(None, "bi-new-aggregation", _("Modified BI aggregation %d") % (nr + 1))
+                log_pending(SYNC, None, "bi-new-aggregation", _("Modified BI aggregation %d") % (nr + 1))
             save_bi_rules(aggregations, aggregation_rules)
         return "bi_rules"
 
@@ -17171,14 +17171,14 @@ def mode_bi_edit_rule(phase):
             if new:
                 del new_rule["id"]
                 aggregation_rules[ruleid] = new_rule
-                log_audit(None, "bi-new-rule", _("Create new BI rule %s") % ruleid)
+                log_pending(SYNC, None, "bi-new-rule", _("Create new BI rule %s") % ruleid)
             else:
                 aggregation_rules[ruleid].update(new_rule)
                 new_rule["id"] = ruleid
                 if bi_rule_uses_rule(aggregation_rules, new_rule, new_rule["id"]):
                     raise MKUserError(None, _("There is a cycle in your rules. This rule calls itself - "
                                               "either directly or indirectly."))
-                log_audit(None, "bi-edit-rule", _("Modified BI rule %s") % ruleid)
+                log_pending(SYNC, None, "bi-edit-rule", _("Modified BI rule %s") % ruleid)
 
             save_bi_rules(aggregations, aggregation_rules)
         return "bi_rules"

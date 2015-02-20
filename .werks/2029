@@ -1,0 +1,11 @@
+Title: fortigate_cpu, fortigate_memory, fortigate_session: fix SNMP scan function, add WATO rule set for sessions
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b10
+Date: 1424443460
+Class: fix
+
+The SNMP scan for these checks does not fetch non-standard OIDs anymore. This
+is not neccessary since the word "Fortigate" appears in the SNMP sysDescr. The
+sessions check is now configurable via WATO.

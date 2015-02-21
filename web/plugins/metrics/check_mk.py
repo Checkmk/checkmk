@@ -136,6 +136,18 @@ unit_info["dbm"] = {
 #   |  Definitions of metrics                                              |
 #   '----------------------------------------------------------------------'
 
+metric_info["rta"] = {
+    "title" : _("Round Trip Average"),
+    "unit"  : "s",
+    "color" : "#40a0b0",
+}
+
+metric_info["pl"] = {
+    "title" : _("Packet loss"),
+    "unit"  : "%",
+    "color" : "#ffc030",
+}
+
 metric_info["mem_used"] = {
     "title" : _("Used RAM"),
     "unit"  : "bytes",
@@ -187,7 +199,7 @@ metric_info["fs_used"] = {
 metric_info["temp"] = {
     "title" : _("Temperature"),
     "unit"  : "c",
-    "color" : "#80a0c0",
+    "color" : "#f0a040"
 }
 
 metric_info["ctxt"] = {
@@ -340,6 +352,7 @@ metric_info["busy_workers"] = {
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
 
+check_metrics["check-mk-ping"]                                  = {}
 check_metrics["check-mk"]                                       = {}
 
 check_metrics["check_mk-cpu.loads"]                             = {}
@@ -374,6 +387,7 @@ check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = { 0: { "name":
 check_metrics["check_mk-fast_lta_volumes"]                      = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = { 0: { "name": "fs_used", "scale" : MB } }
 
+check_metrics["check_mk-apc_symmetra_ext_temp"]                 = {}
 check_metrics["check_mk-adva_fsp_temp"]                         = {}
 check_metrics["check_mk-akcp_daisy_temp"]                       = {}
 check_metrics["check_mk-akcp_exp_temp"]                         = {}
@@ -383,6 +397,7 @@ check_metrics["check_mk-apc_inrow_temperature"]                 = {}
 check_metrics["check_mk-apc_symmetra_temp"]                     = {}
 check_metrics["check_mk-arris_cmts_temp"]                       = {}
 check_metrics["check_mk-bintec_sensors.temp"]                   = {}
+check_metrics["check_mk-brocade_mlx_temp"]                      = {}
 check_metrics["check_mk-carel_sensors"]                         = {}
 check_metrics["check_mk-casa_cpu_temp"]                         = {}
 check_metrics["check_mk-cisco_temp_perf"]                       = {}
@@ -394,6 +409,7 @@ check_metrics["check_mk-cmctc_lcp.temp"]                        = {}
 check_metrics["check_mk-dell_chassis_temp"]                     = {}
 check_metrics["check_mk-dell_om_sensors"]                       = {}
 check_metrics["check_mk-dell_poweredge_temp"]                   = {}
+check_metrics["check_mk-decru_temps"]                           = {}
 check_metrics["check_mk-emc_datadomain_temps"]                  = {}
 check_metrics["check_mk-enterasys_temp"]                        = {}
 check_metrics["check_mk-f5_bigip_chassis_temp"]                 = {}
@@ -408,8 +424,10 @@ check_metrics["check_mk-juniper_screenos_temp"]                 = {}
 check_metrics["check_mk-kentix_temp"]                           = {}
 check_metrics["check_mk-knuerr_rms_temp"]                       = {}
 check_metrics["check_mk-lnx_thermal"]                           = {}
+check_metrics["check_mk-netapp_api_temp"]                       = {}
 check_metrics["check_mk-netscaler_health.temp"]                 = {}
 check_metrics["check_mk-nvidia.temp"]                           = {}
+check_metrics["check_mk-ups_bat_temp"]                          = {}
 check_metrics["check_mk-qlogic_sanbox.temp"]                    = {}
 check_metrics["check_mk-rms200_temp"]                           = {}
 check_metrics["check_mk-sensatronics_temp"]                     = {}
@@ -473,6 +491,7 @@ check_metrics["check_mk-bluecoat_sensors"]                      = {}
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
+perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
 perfometer_info.append(("linear",      ( ["execution_time"], 90.0, None)))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "temp",         40.0, 1.2)))

@@ -99,7 +99,7 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
             swap_total  = float(entry[1]) # mem.linux
 
     if not ram_used:
-        return
+        return "",""
 
     virt_total = ram_total + swap_total
     virt_used  = ram_used + swap_used
@@ -910,6 +910,9 @@ def perfometer_check_mk_arcserve_backup(row, check_command, perf_data):
 perfometers["check_mk-arcserve_backup"] = perfometer_check_mk_arcserve_backup
 
 def perfometer_check_mk_ibm_svc_host(row, check_command, perf_data):
+    if len(perf_data) < 5:
+        return "", ""
+
     h = '<table><tr>'
     active   = int(perf_data[0][1])
     inactive = int(perf_data[1][1])
@@ -940,6 +943,9 @@ def perfometer_check_mk_ibm_svc_host(row, check_command, perf_data):
 perfometers["check_mk-ibm_svc_host"] = perfometer_check_mk_ibm_svc_host
 
 def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
+    if len(perf_data) < 2:
+        return "", ""
+
     licensed = float(perf_data[0][1])
     used     = float(perf_data[1][1])
     if used == 0 and licensed == 0:

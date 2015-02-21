@@ -114,7 +114,7 @@ check_info["hpux_tunables.maxfiles_lim"] = {
 }
 
 check_info["hpux_tunables.semmni"] = {
-    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "semmni", "semaphore ids"),
+    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "semmni", "semaphore_ids"),
     "inventory_function"   : lambda i: inventory_hpux_tunables(i, "semmni"),
     "service_description"  : "Number of IPC Semaphore IDs",
     "has_perfdata"         : True,

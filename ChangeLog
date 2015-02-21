@@ -182,6 +182,7 @@
             NOTE: Please refer to the migration notes!
     * 2032 FIX: brocade.temp: use new generic WATO rule, add Perf-O-Meter...
             NOTE: Please refer to the migration notes!
+    * 2033 FIX: check_mk-zfs_arc_cache: add Perf-O-Meter
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

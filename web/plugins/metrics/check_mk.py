@@ -148,6 +148,12 @@ metric_info["pl"] = {
     "color" : "#ffc030",
 }
 
+metric_info["hit_ratio"] = {
+    "title" : _("Cache Hit Ratio"),
+    "unit"  : "ratio",
+    "color" : "#60c0c0",
+}
+
 metric_info["mem_used"] = {
     "title" : _("Used RAM"),
     "unit"  : "bytes",
@@ -397,7 +403,7 @@ check_metrics["check_mk-apc_inrow_temperature"]                 = {}
 check_metrics["check_mk-apc_symmetra_temp"]                     = {}
 check_metrics["check_mk-arris_cmts_temp"]                       = {}
 check_metrics["check_mk-bintec_sensors.temp"]                   = {}
-check_metrics["check_mk-brocade.temp"]                      = {}
+check_metrics["check_mk-brocade.temp"]                          = {}
 check_metrics["check_mk-brocade_mlx_temp"]                      = {}
 check_metrics["check_mk-carel_sensors"]                         = {}
 check_metrics["check_mk-casa_cpu_temp"]                         = {}
@@ -473,6 +479,8 @@ check_metrics["check_mk-ups_socomec_outphase"]                  = {}
 
 check_metrics["check_mk-bluecoat_sensors"]                      = {}
 
+check_metrics["check_mk-zfs_arc_cache"]                         = { "hit_ratio" : { "scale" : 0.01 }}
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -525,6 +533,7 @@ perfometer_info.append(("stacked",    [
   ( "logarithmic", ( "requests_per_second", 10, 5)),
   ( "logarithmic", ( "busy_workers",        10, 2))]))
 
+perfometer_info.append(("linear",      ( [ "hit_ratio" ], 1.0, None)))
 
 #.
 #   .--Graphs--------------------------------------------------------------.

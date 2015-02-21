@@ -24,6 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: This has to be split into three subchecks:
+# 1. Temperature
+# 2. Fans
+# 3. Door contacts
+#
+# Also:
+# - use temperature.include
+# - avoid SNMP variable names to be show to the user
+# - remove saveint
+# - add Perf-O-Meters
+
 raritan_emx_sensors = {
    0 : "Air Temperature",
    1 : "Water Temperature",

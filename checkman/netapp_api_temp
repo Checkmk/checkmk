@@ -11,10 +11,11 @@ description:
  and the temperature sensors also belong to the filer.
 
  The checks reports {WARN}/{CRIT} when the configured levels reported by the NetApp filer,
- (e.g. {temp-sensor-hi-critical}) have been breached.
+ (e.g. {temp-sensor-hi-critical}) have been breached. You also can override the levels
+ with the WATO rule set for tempereatures.
 
 inventory:
- Two checks are created for a filer. {Temperature Shelfes Internal} and {Temperature Shelfs Ambient}
+ Two checks are created for a filer. {Temperature Internal Shelfes} and {Temperature Ambient Shelfs}
 
 perfdata:
- The average temperature of all sensors combined.
+ The maximum temperature of all the sensors of the type in question.

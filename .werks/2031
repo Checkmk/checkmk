@@ -1,0 +1,10 @@
+Title: brocade_mlx_temp: make configurable via new WATO rule, add Perf-O-Meter, add default levels
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1424507184
+Class: fix
+
+This check has been converted to be consistent with all other temperature checks. Please redo
+the service discovery.

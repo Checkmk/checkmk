@@ -397,6 +397,7 @@ check_metrics["check_mk-apc_inrow_temperature"]                 = {}
 check_metrics["check_mk-apc_symmetra_temp"]                     = {}
 check_metrics["check_mk-arris_cmts_temp"]                       = {}
 check_metrics["check_mk-bintec_sensors.temp"]                   = {}
+check_metrics["check_mk-brocade.temp"]                      = {}
 check_metrics["check_mk-brocade_mlx_temp"]                      = {}
 check_metrics["check_mk-carel_sensors"]                         = {}
 check_metrics["check_mk-casa_cpu_temp"]                         = {}

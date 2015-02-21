@@ -88,7 +88,7 @@ def check_brocade_power(item, _no_params, info):
     converted = brocade_sensor_convert(info, "Power")
     for snmp_item, name, value in converted:
         if item == snmp_item:
-            value = saveint(value)
+            value = int(value)
             if value != 1:
                 return 2, "Error on supply %s" % name
             return 0, "No problems found"
@@ -104,7 +104,9 @@ check_info["brocade.power"] = {
     'snmp_scan_function'    : brocade_scan,
 }
 
-brocade_temp_default_levels = ( 30, 40 )
+factory_settings["brocade_temp_default_levels"] = {
+    "levels" : ( 35, 40 )
+}
 
 def inventory_brocade_temp(info):
     converted = brocade_sensor_convert(info, "SLOT")
@@ -118,12 +120,13 @@ def check_brocade_temp(item, params, info):
 
 
 check_info["brocade.temp"] = {
-    "check_function"        : check_brocade_temp,
-    "inventory_function"    : inventory_brocade_temp,
-    "service_description"   : "Temperature %s",
-    "has_perfdata"          : True,
-    "group"                 : "hw_temperature",
-    "snmp_info"             : brocade_info,
-    'snmp_scan_function'    : brocade_scan,
-    "includes"              : [ "temperature.include" ],
+    "check_function"          : check_brocade_temp,
+    "inventory_function"      : inventory_brocade_temp,
+    "service_description"     : "Temperature Ambient %s",
+    "has_perfdata"            : True,
+    "group"                   : "temperature",
+    "snmp_info"               : brocade_info,
+    'snmp_scan_function'      : brocade_scan,
+    "default_levels_variable" : "brocade_temp_default_levels",
+    "includes"                : [ "temperature.include" ],
 }

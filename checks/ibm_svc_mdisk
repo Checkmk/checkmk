@@ -60,8 +60,7 @@ def check_ibm_svc_mdisk(item, params, info):
             mdisk_mode = line[3]
 
             yield params.get("%s_state" % mdisk_status, 1), "Status: %s" % mdisk_status
-            yield params.get("%s_mode" % mdisk_mode, 1),    "Mode: %s" % mdisk_status
-
+            yield params.get("%s_mode" % mdisk_mode, 1),    "Mode: %s" % mdisk_mode
 
 check_info["ibm_svc_mdisk"] = {
     "check_function"          : check_ibm_svc_mdisk,

@@ -167,4 +167,4 @@ use_new_descriptions_for             = []
 
 # Rulesets for agent bakery
 agent_config                         = {}
-bake_agents_on_restart               = True
+bake_agents_on_restart               = False

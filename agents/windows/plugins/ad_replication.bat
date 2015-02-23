@@ -1,7 +1,7 @@
 @echo off
 
 REM ***
-REM * To be able to run this check you need apprpriate credentials
+REM * To be able to run this check you need appropriate credentials
 REM * in the target domain.
 REM *
 REM * Normally the Check_MK agent runs as sevice with local system

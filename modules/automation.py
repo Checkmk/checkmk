@@ -46,8 +46,6 @@ def do_automation(cmd, args):
         elif cmd == "update-dns-cache":
             read_config_files(with_autochecks=False)
             result = automation_update_dns_cache()
-        elif cmd == "bake-agents":
-            result = automation_bake_agents()
         else:
             read_config_files()
             if cmd == "try-inventory":
@@ -78,6 +76,8 @@ def do_automation(cmd, args):
 		result = automation_notification_replay(args)
 	    elif cmd == "notification-analyse":
 		result = automation_notification_analyse(args)
+            elif cmd == "bake-agents":
+                result = automation_bake_agents()
             else:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 

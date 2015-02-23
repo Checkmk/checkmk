@@ -95,6 +95,9 @@ def liveproxyd_run():
                 dump_state()
                 last_dump = now
 
+        except SystemExit:
+            # Python <2.5 compat: Simply let exit go through this level
+            raise
         except Exception, e:
             if opt_debug:
                 raise
@@ -926,7 +929,7 @@ def usage():
 
    -v, --verbose        Enable verbose output
    -g, --foreground     Do not daemonize, run in foreground
-   -c, --conifg CONFIG  Read configuration from file CONFIG
+   -c, --config CONFIG  Read configuration from file CONFIG
    --debug              Enable debug mode (let exceptions through)
    -h, --help           Show this help and exit
    -V, --version        Print version and exit
@@ -1084,7 +1087,7 @@ try:
             opt_debug = True
         elif o in [ '-g', '--foreground' ]:
             opt_foreground = True
-        elif o in [ '-c', '--conifg' ]:
+        elif o in [ '-c', '--config' ]:
             opt_config = a
 
     # now handle action options
@@ -1127,6 +1130,9 @@ try:
     os.remove(opt_pid_file)
     sys.exit(0)
 
+except SystemExit:
+    # Python <2.5 compat: Simply let exit go through this level
+    raise
 except Exception, e:
     if opt_debug:
         raise

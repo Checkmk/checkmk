@@ -575,7 +575,7 @@ function create_graph(data, params) {
 
         // Add the control for adding the graph to a dashboard
         var visualadd = document.createElement('a');
-        visualadd.title = 'Add this view to...';
+        visualadd.title = data['add_txt'];
         visualadd.className = 'visualadd';
         visualadd.onclick = function(host, service, view, source) {
             return function(event) {
@@ -605,14 +605,15 @@ function create_graph(data, params) {
     urlvars = null;
 }
 
-function render_pnp_graphs(container, site, host, service, pnpview, base_url, pnp_url, with_link, from_ts, to_ts) {
+function render_pnp_graphs(container, site, host, service, pnpview, base_url, pnp_url, with_link, add_txt, from_ts, to_ts) {
     from_ts = (typeof from_ts === 'undefined') ? null : from_ts;
     to_ts   = (typeof to_ts === 'undefined') ? null : to_ts;
 
     var data = { 'container': container, 'base_url': base_url,
                  'pnp_url':   pnp_url,   'site':     site,
                  'host':      host,      'service':  service,
-                 'with_link': with_link, 'view':     pnpview};
+                 'with_link': with_link, 'view':     pnpview,
+                 'add_txt':   add_txt};
 
     if (from_ts !== null && to_ts !== null) {
         data['start'] = from_ts;

@@ -9,5 +9,3 @@ if [ $(nmap -PN -p 32000 localhost | egrep "32000.*open" | wc -l) -gt 0 ]
 then
 	echo 'location.reload();' | nc -w 0 localhost 32000
 fi
-
-

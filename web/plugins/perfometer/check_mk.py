@@ -1085,12 +1085,6 @@ def perfometer_dbmv(row, check_command, perf_data):
 perfometers["check_mk-docsis_channels_downstream"] = perfometer_dbmv
 perfometers["check_mk-docsis_cm_status"] = perfometer_dbmv
 
-def perfometer_docsis_snr(row, check_command, perf_data):
-    dbmv = float(perf_data[0][1])
-    return "%.1f dB" % dbmv, perfometer_logarithmic(dbmv, 50, 2, "#ad6")
-
-perfometers["check_mk-docsis_channels_upstream"] = perfometer_docsis_snr
-
 def perfometer_veeam_client(row, check_command, perf_data):
     for graph in perf_data:
         if graph[0] == "avgspeed":
@@ -1241,6 +1235,7 @@ perfometers["check_mk-fast_lta_silent_cubes.capacity"] = perfometer_check_mk_df
 perfometers["check_mk-fast_lta_volumes"] = perfometer_check_mk_df
 perfometers["check_mk-libelle_business_shadow.archive_dir"] = perfometer_check_mk_df
 perfometers["check_mk-netapp_api_volumes"] = perfometer_check_mk_df
+perfometers["check_mk-df_zos"] = perfometer_check_mk_df
 
 def perfometer_check_mk_kernel_util(row, check_command, perf_data):
     h = '<table><tr>'
@@ -1263,3 +1258,9 @@ def perfometer_check_mk_cpu_threads(row, check_command, perf_data):
     return "%d" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 400, 2, color)
 
 perfometers["check_mk-cpu.threads"] = perfometer_check_mk_cpu_threads
+
+def perfometer_docsis_snr(row, check_command, perf_data):
+    dbmv = float(perf_data[0][1])
+    return "%.1f dB" % dbmv, perfometer_logarithmic(dbmv, 50, 2, "#ad6")
+
+perfometers["check_mk-docsis_channels_upstream"] = perfometer_docsis_snr

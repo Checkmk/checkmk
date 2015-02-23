@@ -194,12 +194,12 @@ register_rule(group,
             ),
             ("remote_version",
                TextAscii(
-                    title = _("Remote Version"),
+                    title = _("Version of Server"),
                     help = _("Warn if string doesn't match expected server version (ex: OpenSSH_3.9p1)"),
                )),
             ("remote_protocol",
                 TextAscii(
-                    title = _("Remote Protocol"),
+                    title = _("Protocol of Server"),
                     help = _("Warn if protocol doesn't match expected protocol version (ex: 2.0)"),
                 )),
         ]
@@ -1420,8 +1420,8 @@ register_rule(group,
                         default_value = 'cookie',
                         choices = [
                             ('cookie', _('Form (Cookie) based')),
-                            ('basic',  _('HTTP basic')),
-                            ('digest', _('HTTP digest')),
+                            ('basic',  _('HTTP Basic')),
+                            ('digest', _('HTTP Digest')),
                         ],
                     )),
                     ("timeout", Integer(

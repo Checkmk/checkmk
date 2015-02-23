@@ -254,7 +254,7 @@ config_variable_names = set(vars().keys()).difference(known_vars)
 
 # at check time (and many of what is also needed at administration time).
 try:
-    modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
+    modules = [ 'check_mk_base', 'discovery', 'snmp', 'agent_simulator', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         if os.path.exists(filename):
@@ -5321,9 +5321,6 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
         ('tcp_cache_dir',       tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
         ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
         ]
-
-    # Load agent simulator if enabled in configuration
-    execfile(modules_dir + "/agent_simulator.py", globals(), globals())
 
 
 # Compute parameters for a check honoring factory settings,

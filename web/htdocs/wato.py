@@ -5043,6 +5043,10 @@ def log_pending(status, linkinfo, what, message, user_id = None):
     log_audit(linkinfo, what, message, user_id)
     need_sidebar_reload()
 
+    # On each change to the Check_MK configuration mark the agents to be rebuild
+    if 'need_to_bake_agents' in globals():
+        need_to_bake_agents()
+
     if not is_distributed():
         if status != SYNC:
             log_entry(linkinfo, what, message, "pending.log", user_id)
@@ -16101,6 +16105,13 @@ def create_sample_config():
 
     # Global settings
     use_new_descriptions_for = [ "df", "ps" ]
+
+    # Initial baking of agents (when bakery is available)
+    if 'bake_agents' in globals():
+        try:
+            bake_agents()
+        except:
+            pass # silently ignore building errors here
 
 #.
 #   .--Pattern Editor------------------------------------------------------.

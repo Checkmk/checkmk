@@ -1,0 +1,9 @@
+Title: hostname in cmk -vII often unreadable
+Component: core
+State: open
+Date: 2015-02-23 12:20:50
+Targetversion: 1.2.6
+Class: bug
+
+When doing a bulk inventory on the CLI with cmk -vII the hostnames are printed
+in "tty_white", which is unreadable on any terminals with a whitish background.

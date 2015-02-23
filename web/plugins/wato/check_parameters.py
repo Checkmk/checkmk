@@ -300,7 +300,7 @@ register_rule(group + '/' + subgroup_inventory,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "brocade_fcport_inventory",
-    title     = _("Brocade Port Inventory"),
+    title     = _("Brocade Port Discovery"),
     valuespec = Dictionary(
         elements = [
          ("use_portname", Checkbox(
@@ -3091,7 +3091,7 @@ register_check_parameters(
             ),
              ( "guestToolsNotInstalled",
                MonitoringState(
-                   title = _("VMware Tools has never been installed"),
+                   title = _("VMware Tools have never been installed"),
                    default_value = 2,
                )
             ),
@@ -3839,7 +3839,7 @@ register_check_parameters(
     TextAscii(
         title = _("Scheduler Job Name"),
         help = _("Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
-                 "and Job-Name, separated by a dot, for example <b>TUX12C.SYS.PURGE_LOG</b>"),
+                 "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"),
         regex = '.+\..+',
         allow_empty = False),
     None
@@ -5128,7 +5128,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_storage,
     "drbd",
-    _("DRBD roles and diskstates"),
+    _("DR:BD roles and diskstates"),
     Dictionary(
         elements = [
             ( "roles",

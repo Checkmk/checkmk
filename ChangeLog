@@ -1,4 +1,7 @@
 1.2.6b11:
+    WATO:
+    * 1946 FIX: WATO Web-API: edit host action does no longer unset all unspecified attributes...
+
 
 1.2.6b10:
     Core & Setup:

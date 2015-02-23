@@ -5,6 +5,9 @@
     WATO:
     * 1946 FIX: WATO Web-API: edit host action does no longer unset all unspecified attributes...
 
+    Notifications:
+    * 2015 FIX: Fixed sending notifications for services with umlauts in names...
+
 
 1.2.6b10:
     Core & Setup:

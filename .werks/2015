@@ -1,0 +1,14 @@
+Title: Fixed sending notifications for services with umlauts in names
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424696700
+
+Previous versions were unable to send notifications for services with
+umlauts in their service descriptions. This issue has been fixed now.
+If you miss notifications, take a look at the notification log at
+<tt>var/log/notify.log</tt> (in your OMD sites) and search for
+exception tracebacks.

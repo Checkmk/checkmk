@@ -1358,7 +1358,7 @@ def call_notification_script(plugin, plugin_context):
     notify_log("     executing %s" % path)
     out = os.popen(path + " 2>&1 </dev/null")
     for line in out:
-        notify_log("Output: %s" % line.rstrip())
+        notify_log("Output: %s" % line.rstrip().decode('utf-8'))
     exitcode = out.close()
     if exitcode:
         notify_log("Plugin exited with code %d" % (exitcode >> 8))

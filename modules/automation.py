@@ -46,6 +46,8 @@ def do_automation(cmd, args):
         elif cmd == "update-dns-cache":
             read_config_files(with_autochecks=False)
             result = automation_update_dns_cache()
+        elif cmd == "bake-agents":
+            result = automation_bake_agents()
         else:
             read_config_files()
             if cmd == "try-inventory":
@@ -1124,3 +1126,6 @@ def execute_check_plugin(commandline):
 def automation_update_dns_cache():
     return do_update_dns_cache()
 
+def automation_bake_agents():
+    if "do_bake_agents" in globals():
+        return do_bake_agents()

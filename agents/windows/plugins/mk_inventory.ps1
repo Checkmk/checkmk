@@ -1,3 +1,7 @@
+# Configuration
+$delay = 14400 # execute agent only every $delay seconds
+$exe_paths = @("c:\Program Files (x86)")
+
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 write-output "" # workaround to prevent the byte order mark to be at the beginning of the first section
 $name = (Get-Item env:\Computername).Value
@@ -13,8 +17,6 @@ if (!$agent_dir) {
 
 $timestamp = $agent_dir + "\timestamp."+ $remote_host
 
-# execute agent only every $delay seconds
-$delay = 14400
 
 # does $timestamp exist?
 If (Test-Path $timestamp){
@@ -87,8 +89,7 @@ foreach ($path in $paths) {
 
 # Search exes
 write-host "<<<win_exefiles:sep(124):persist($until)>>>"
-$paths = @("c:\Program Files (x86)")
-foreach ($item in $paths)
+foreach ($item in $exe_paths)
 {
     if ((Test-Path $item -pathType container))
     {

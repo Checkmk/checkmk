@@ -25,7 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["docsis_channels_upstream_default_levels"] = {
-    "signal_noise"  : ( 10.0, 5.0 ), # dB
+    "signal_noise"   : ( 10.0, 5.0 ), # dB
+    "corrected"      : ( 5.0, 8.0 ), # Percent
+    "uncorrectable"  : ( 1.0, 2.0 ), # Percent
 }
 
 def docsis_channels_upstream_convert(info):
@@ -80,9 +82,6 @@ def check_docsis_channels_upstream(item, params, info):
 
         fields = [
             ( "frequency",      float(mhz) / 1000000, "Frequency",          "%.2f", " MHz"),
-            ( "unerroreds",     int(unerroreds),      "codewords without errors", "%d", "" ),
-            ( "correcteds",     int(correcteds),      "corrected errors",         "%d", "" ),
-            ( "uncorrectables", int(uncorrectables),  "uncorrectable errors",     "%d", "" ),
         ]
         if len(entry) >= 10:
             total, active, registered, avg_util = entry[6:10]
@@ -96,6 +95,37 @@ def check_docsis_channels_upstream(item, params, info):
         for varname, value, title, form, unit in fields:
             yield 0, title + ": " + (form + "%s") % (value, unit), [ (varname, value) ]
 
+        # Handle codewords. These are counters.
+        now = time.time()
+        rates = {}
+        total_rate = 0.0
+        for what, counter in [
+            ( "unerrored",     int(unerroreds),   ),
+            ( "corrected",     int(correcteds),   ),
+            ( "uncorrectable", int(uncorrectables)),
+        ]:
+            rate = get_rate("docsis_channels_upstream.%s.%s" % (item, what), now, counter)
+            rates[what] = rate
+            total_rate += rate
+
+        if total_rate:
+            for what, title in [
+                ( "corrected",     "corrected errors",     ),
+                ( "uncorrectable", "uncorrectable errors", )]:
+                ratio = rates[what] / total_rate
+                perc = 100.0 * ratio
+                warn, crit = params[what]
+                infotext = "%s %s" % (get_percent_human_readable(perc), title)
+                levelstext = " (warn/crit at %.1f/%.1f%%)" % (warn, crit)
+                if perc >= crit:
+                    state = 2
+                    infotext += levelstext
+                elif perc >= crit:
+                    state = 1
+                    infotext += levelstext
+                else:
+                    state = 0
+                yield state, infotext, [ ("codewords_" + what, ratio, warn/100.0, crit/100.0) ]
 
         return
 

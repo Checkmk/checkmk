@@ -938,6 +938,11 @@ def clear_counters(pattern, older_than):
         del g_counters[name]
 
 
+# Idea (1): We could keep global variables for the name of the checktype and item
+# during a check and that way "countername" would need to be unique only
+# within one checked item. So e.g. you could use "bcast" as name and not "if.%s.bcast" % item
+# Idea (2): Check_MK should fetch a time stamp for each info. This should also be
+# available as a global variable, so that this_time would be an optional argument.
 def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP):
     try:
         timedif, rate = get_counter(countername, this_time, this_val, allow_negative)
@@ -1903,6 +1908,17 @@ def get_age_human_readable(secs):
     if days < 7 and hours > 0:
         return "%d days %d hours" % (days, hours)
     return "%d days" % days
+
+# Format perc (0 <= perc <= 100 + x) so that precision
+# digits are being displayed. This avoids a "0.00%" for
+# very small numbers
+def get_percent_human_readable(perc, precision=2):
+    if perc > 0:
+        perc_precision = max(1, 2 - int(round(math.log(perc, 10))))
+    else:
+        perc_precision = 1
+    return "%%.%df%%%%" % perc_precision % perc
+
 
 # Quote string for use as arguments on the shell
 def quote_shell_string(s):

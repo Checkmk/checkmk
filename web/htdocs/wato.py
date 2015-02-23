@@ -17848,7 +17848,11 @@ class API:
                 self.__validate_host_parameters(None, hostname, attributes, all_hosts, True,
                                            ["host_missing", "tags", "site", "permissions_edit"])
             host_foldername = all_hosts[hostname][".folder"][".path"]
-            target_folders.setdefault(host_foldername, {})[hostname] = {"set":   attributes,
+            new_attr = dict([(k, v) for (k, v) in all_hosts[hostname].iteritems() \
+                                    if (not k.startswith('.'))])
+            new_attr.update(attributes)
+
+            target_folders.setdefault(host_foldername, {})[hostname] = {"set":   new_attr,
                                                                         "unset": host_unset_attr}
 
         for target_foldername, update_hosts in target_folders.items():

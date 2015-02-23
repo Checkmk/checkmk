@@ -1241,6 +1241,7 @@ perfometers["check_mk-fast_lta_silent_cubes.capacity"] = perfometer_check_mk_df
 perfometers["check_mk-fast_lta_volumes"] = perfometer_check_mk_df
 perfometers["check_mk-libelle_business_shadow.archive_dir"] = perfometer_check_mk_df
 perfometers["check_mk-netapp_api_volumes"] = perfometer_check_mk_df
+perfometers["check_mk-df_zos"] = perfometer_check_mk_df
 
 def perfometer_check_mk_kernel_util(row, check_command, perf_data):
     h = '<table><tr>'

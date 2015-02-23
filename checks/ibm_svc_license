@@ -78,5 +78,6 @@ check_info["ibm_svc_license"] = {
     "service_description"   : "License %s",
     "group"                 : "ibmsvc_licenses",
     "has_perfdata"          : True,
+    "includes"              : [ "license.include" ]
 }
 

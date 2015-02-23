@@ -24,71 +24,42 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-brocade_mlx_temperature_default_levels = (50, 60)
+factory_settings["brocade_mlx_temperature_default_levels"] = {
+    "levels" : (105, 110)
+}
 
-def compose_item(id, name):
-    id = re.sub("\.[0-9]+", "", id)
-    name = re.sub(" *temperature", "", name)
-    name = re.sub(", sensor [0-9]+", "", name)
-    name = re.sub("module ?[0-9]*", "Module %s" % id, name)
-    return name
+def parse_brocade_mlx_temp(info):
+    parsed = {}
+    for temp_descr, temp_value in info:
+        if temp_value:
+            item = temp_descr.replace("temperature", "")\
+                    .replace("module", "Module")\
+                    .replace("sensor", "Sensor")\
+                    .replace(",", "")\
+                    .strip()
+            parsed[item] = int(temp_value)
+    return parsed
 
-def inventory_brocade_mlx_temp(info):
-    inventory = []
-    for temp_descr, temp_id, temp_value in info:
-        temp_descr = compose_item(temp_id, temp_descr)
-        # BigIron RX devices have problems when queried by SNMPv2c bulk walk and
-        # do not deliver values. So in this case we do not inventorize them to
-        # avoid the check to break
-        if ((temp_descr, "brocade_mlx_temperature_default_levels") not in inventory and \
-            temp_value != ""):
-            inventory.append( (temp_descr, "brocade_mlx_temperature_default_levels") )
-    return inventory
 
-def check_brocade_mlx_temp(item, params, info):
-    warn, crit = params
-    status = 0
-    message = []
-    perfdata = []
+def inventory_brocade_mlx_temp(parsed):
+    for item in parsed:
+        yield item, {}
 
-    for temp_descr, temp_id, temp_value in info:
-        current_item = compose_item(temp_id, temp_descr)
-        if current_item == item:
-            # OID_END needs to be used for sensor id because especially
-            # Active management modules may have more temperature sensors
-            # with the same description
-            temp_id = re.sub("[0-9]+\.", "", temp_id)
 
-            # some devices do not deliver values on one single check in
-            # between - setting to unknown in this case
-            if temp_value == "":
-               return 3, "No temperature value delivered by SNMP for sensor " + temp_id
+def check_brocade_mlx_temp(item, params, parsed):
+    if item in parsed:
+        return check_temperature(parsed[item], params)
 
-            # Info from the MIB: "Each unit is 0.5 degrees Celcius."
-            temp_value = int(temp_value) / 2
-
-            txt = "Sensor %s: %s°C" % (temp_id, temp_value)
-            if temp_value > crit:
-                status = max(status, 2)
-                txt += "(!!)"
-            elif temp_value > warn:
-                status = max(status, 1)
-                txt += "(!)"
-
-            perfdata.append(('sensor%s' % temp_id, temp_value, warn, crit))
-            message.append(txt)
-
-    if not message:
-        return 3, "Temperature sensor not found"
-    else:
-        return status, ', '.join(message), perfdata
 
 check_info["brocade_mlx_temp"] = {
-    "check_function"        : check_brocade_mlx_temp,
-    "inventory_function"    : inventory_brocade_mlx_temp,
-    "service_description"   : "Temperature %s",
-    "snmp_info"             : ('.1.3.6.1.4.1.1991.1.1.2.13.1.1', [ 3, OID_END, 4 ]), # descr, sensor ID, temperature
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
-    "has_perfdata"          : True,
-    "group"                 : "hw_temperature",
+    "parse_function"          : parse_brocade_mlx_temp,
+    "check_function"          : check_brocade_mlx_temp,
+    "inventory_function"      : inventory_brocade_mlx_temp,
+    "service_description"     : "Temperature %s",
+    "snmp_info"               : ('.1.3.6.1.4.1.1991.1.1.2.13.1.1', [ 3, 4 ]), # descr, temperature
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
+    "has_perfdata"            : True,
+    "default_levels_variable" : "brocade_mlx_temperature_default_levels",
+    "group"                   : "temperature",
+    "includes"                : [ "temperature.include" ],
 }

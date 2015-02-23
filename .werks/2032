@@ -1,0 +1,11 @@
+Title: brocade.temp: use new generic WATO rule, add Perf-O-Meter
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1424509362
+Class: fix
+
+The service description of this check has changed. Also you need to
+rediscover this check in order to make use of the new generic WATO rule
+for temperatures.

@@ -99,7 +99,7 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
             swap_total  = float(entry[1]) # mem.linux
 
     if not ram_used:
-        return
+        return "",""
 
     virt_total = ram_total + swap_total
     virt_used  = ram_used + swap_used
@@ -376,6 +376,8 @@ perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
 perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
 perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
 perfometers["check_mk-statgrab_net"] = perfometer_check_mk_if
+perfometers["check_mk-netapp_api_if"] = perfometer_check_mk_if
+perfometers["check_mk-if_brocade"] = perfometer_check_mk_if
 
 def perfometer_check_mk_fc_port(row, check_command, perf_data):
     unit = "B"
@@ -910,6 +912,9 @@ def perfometer_check_mk_arcserve_backup(row, check_command, perf_data):
 perfometers["check_mk-arcserve_backup"] = perfometer_check_mk_arcserve_backup
 
 def perfometer_check_mk_ibm_svc_host(row, check_command, perf_data):
+    if len(perf_data) < 5:
+        return "", ""
+
     h = '<table><tr>'
     active   = int(perf_data[0][1])
     inactive = int(perf_data[1][1])
@@ -940,6 +945,9 @@ def perfometer_check_mk_ibm_svc_host(row, check_command, perf_data):
 perfometers["check_mk-ibm_svc_host"] = perfometer_check_mk_ibm_svc_host
 
 def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
+    if len(perf_data) < 2:
+        return "", ""
+
     licensed = float(perf_data[0][1])
     used     = float(perf_data[1][1])
     if used == 0 and licensed == 0:
@@ -1232,6 +1240,7 @@ perfometers["check_mk-ibm_svc_mdiskgrp"] = perfometer_check_mk_df
 perfometers["check_mk-fast_lta_silent_cubes.capacity"] = perfometer_check_mk_df
 perfometers["check_mk-fast_lta_volumes"] = perfometer_check_mk_df
 perfometers["check_mk-libelle_business_shadow.archive_dir"] = perfometer_check_mk_df
+perfometers["check_mk-netapp_api_volumes"] = perfometer_check_mk_df
 
 def perfometer_check_mk_kernel_util(row, check_command, perf_data):
     h = '<table><tr>'

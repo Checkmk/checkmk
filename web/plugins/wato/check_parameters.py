@@ -5569,7 +5569,8 @@ register_check_parameters(
                           ( "worst", _("Use most critical of your and device's levels") ),
                           ( "devdefault", _("Use device's levels if present, otherwise yours") ),
                           ( "usrdefault", _("Use your own levels if present, otherwise the device's") ),
-                      ]
+                      ],
+                      default_value = "usrdefault",
                 )),
 
             ]

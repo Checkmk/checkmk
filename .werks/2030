@@ -1,0 +1,12 @@
+Title: netapp_api_temp: add Perf-O-Meter, make configurable via WATO
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1424505260
+Class: fix
+
+Note: In order to make this check consistent with the other temperature
+checks the service name and the name of the performance variable had to
+be renamed. This means that you need to redo service discovery and that
+the RRD will be created new.

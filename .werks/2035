@@ -1,0 +1,9 @@
+Title: check_mk-netapp_api_if, check_mk-if_brocade: added missing Perf-O-Meters
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424511161
+Class: fix
+
+

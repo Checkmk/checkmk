@@ -4085,13 +4085,29 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "fortigate_sessions",
+    _("Fortigate Firewall Sessions"),
+    Tuple(
+        title = _("Levels for number of active sessions"),
+        elements = [
+            Integer(title = _("Warning at"), unit=_("sessions"), size=10, default_value = 100000),
+            Integer(title = _("Critical at"), unit=_("sessions"), size=10, default_value = 150000),
+        ]
+    ),
+    None,
+    "first",
+)
+
+
+register_check_parameters(
+    subgroup_applications,
     "f5_pools",
     _("F5 Loadbalancer Pools"),
     Tuple(
        title = _("Minimum number of pool members"),
        elements = [
-           Integer( title = _("Warning if below"), unit=_("Members ")),
-           Integer( title = _("Critical if below"), unit=_("Members")),
+           Integer( title = _("Warning if below"), unit=_("members")),
+           Integer( title = _("Critical if below"), unit=_("members")),
        ],
     ),
     TextAscii(title = _("Name of pool")),

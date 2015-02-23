@@ -1,0 +1,11 @@
+Title: WATO Web-API: edit host action does no longer unset all unspecified attributes
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b11
+Date: 1424679033
+Class: fix
+
+The edit_host call is able to set and unset the attributes of a specific hosts without errors.
+Previously any unmentioned attributes got automatically unset.
+

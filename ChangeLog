@@ -1,3 +1,8 @@
+1.2.6b11:
+    WATO:
+    * 1946 FIX: WATO Web-API: edit host action does no longer unset all unspecified attributes...
+
+
 1.2.6b10:
     Core & Setup:
     * 2012 FIX: Piggyback hostname translation can now deal correctly with umlauts
@@ -16,7 +21,11 @@
     * 2006 FIX: services: Add WATO rule for configuring parameters of discovered checks...
     * 2007 FIX: md: Handle rebuild of RAID 5 correctly, handle sitatuation of replacement correctly...
     * 2028 FIX: hyperv_vms: new plugin that allows spaces in VM names...
+<<<<<<< HEAD
     * 2013 FIX: stulz_pump: Fixed exception during checking for some devices
+=======
+    * 2029 FIX: fortigate_cpu, fortigate_memory, fortigate_session: fix SNMP scan function, add WATO rule set for sessions...
+>>>>>>> 3126b504701362f7c5e4e377686549f228d5347d
 
     Multisite:
     * 1983 FIX: Fixed special case in language configuration via user profile...

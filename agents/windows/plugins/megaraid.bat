@@ -9,10 +9,10 @@ REM * Details: get the status of megaraid adapters
 REM *
 REM * To be able to run this check you need to install MegaCli.exe on your windows client.
 REM *
-REM * You can download MegaCli.exe for windows from 
+REM * You can download MegaCli.exe for windows from
 REM * http://www.lsi.com/
 REM *
-REM * after install MegaCli.exe modify the Path in the MegaCli Variable 
+REM * after install MegaCli.exe modify the Path in the MegaCli Variable
 REM *
 REM **********************************************************************
 
@@ -42,17 +42,17 @@ REM get physical disc info
 ECHO ^<^<^<megaraid_pdisks^>^>^>
 "!MegaCli!"  -EncInfo -aALL -NoLog | FINDSTR /g:!enclist! > !tmpfile!
 FOR /F "tokens=1,2,3,4,5,6* delims=:+ " %%h in (!tmpfile!) do (
-	
+
 	IF "%%h" == "Enclosure"  (
 		ECHO %%i|FINDSTR /r "[^0-9]" > NUL
 		IF ERRORLEVEL 1 (
 			SET part_a=%%h %%i
 		)
-	) 
+	)
 	IF "%%h" == "Device"  (
 		ECHO dev2enc !part_a! %%h %%i %%j
 		SET part_a=
-	) 
+	)
  )
 "!MegaCli!" -PDList -aALL -NoLog  | FINDSTR /g:!pdlist!
 
@@ -65,4 +65,4 @@ DEL "!tmpfile!"
 DEL "!enclist!"
 DEL "!pdlist!"
 
-:END
+:END

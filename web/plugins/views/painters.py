@@ -713,9 +713,9 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
             pnpview = pnp_timerange[1]
 
     return "pnpgraph", "<div id=\"%s\"></div>" \
-                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s)</script>" % \
+                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s)</script>" % \
                           (container_id, container_id, sitename, host, service, pnpview,
-                           defaults.url_prefix + "check_mk/", pnp_url, with_link, from_ts, to_ts)
+                           defaults.url_prefix + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts)
 
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : _("PNP service graph"),

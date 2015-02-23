@@ -1322,7 +1322,7 @@ def ajax_popup_add():
             visual_module = __import__(module_name)
             handler = visual_module.__dict__[visual_type["popup_add_handler"]]
             visuals = handler()
-            html.write('<li><span>Add to %s:</span></li>' % visual_type["title"])
+            html.write('<li><span>%s %s:</span></li>' % (_('Add to'), visual_type["title"]))
             for name, title in sorted(handler(), key=lambda x: x[1]):
                 html.write('<li><a href="javascript:void(0)" '
                            'onclick="add_to_visual(\'%s\', \'%s\')"><img src="images/icon_%s.png"> %s</a></li>' %

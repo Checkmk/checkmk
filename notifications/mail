@@ -395,15 +395,15 @@ def send_mail(m, target, from_address):
 def fetch_pnp_data(context, params):
     try:
         # Autodetect the path in OMD environments
-        path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT']
-        php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT']
+        path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT'].encode('utf-8')
+        php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT'].encode('utf-8')
         env = 'REMOTE_USER="check-mk" SKIP_AUTHORIZATION=1'
     except:
         # Non-omd environment - use plugin argument 1
         path = context.get('PARAMETER_1', '')
         php_save_path = "" # Using default path
         skip_authorization = False
-        env = 'REMOTE_USER="%s"' % context['CONTACTNAME']
+        env = 'REMOTE_USER="%s"' % context['CONTACTNAME'].encode('utf-8')
 
     if not os.path.exists(path):
         raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
@@ -413,7 +413,7 @@ def fetch_pnp_data(context, params):
 def fetch_num_sources(context):
     svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
     infos = fetch_pnp_data(context, '/json?host=%s&srv=%s&view=0' %
-                                     (context['HOSTNAME'], svc_desc))
+                                     (context['HOSTNAME'].encode('utf-8'), svc_desc.encode('utf-8')))
     if not infos.startswith('[{'):
         raise GraphException('Unable to fetch graph infos: %s' % extract_graph_error(infos))
 
@@ -422,7 +422,7 @@ def fetch_num_sources(context):
 def fetch_graph(context, source, view = 1):
     svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
     graph = fetch_pnp_data(context, '/image?host=%s&srv=%s&view=%d&source=%d' %
-                                    (context['HOSTNAME'], svc_desc, view, source))
+                                    (context['HOSTNAME'], svc_desc.encode('utf-8'), view, source))
 
     if graph[:8] != '\x89PNG\r\n\x1a\n':
         raise GraphException('Unable to fetch the graph: %s' % extract_graph_error(graph))

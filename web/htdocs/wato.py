@@ -3181,7 +3181,7 @@ def show_service_table(host, firsttime):
     except Exception, e:
         if config.debug:
             raise
-        html.show_error(_("Inventory failed for this host: %s") % e)
+        html.show_error(_("Service discovery failed for this host: %s") % e)
         return
 
     checktable.sort()
@@ -3676,7 +3676,7 @@ def mode_bulk_import(phase):
         html.text_area('_hosts', cols = 70, rows = 10)
 
         forms.section(_('Options'))
-        html.checkbox('_do_service_detection', False, label = _('Perform automatic service detection'))
+        html.checkbox('_do_service_detection', False, label = _('Perform automatic service discovery'))
         forms.end()
 
         html.button('_import', _('Import'))
@@ -3881,7 +3881,7 @@ def mode_bulk_inventory(phase):
             html.write(_("You have selected <b>%d</b> hosts for bulk discovery. ") % len(hostnames))
         html.write(_("Check_MK service discovery will automatically find and configure "
                      "services to be checked on your hosts."))
-        forms.header(_("Bulk discovery"))
+        forms.header(_("Bulk Discovery"))
         forms.section(_("Mode"))
         html.radiobutton("how", "new",     True,  _("Find only new services") + "<br>")
         html.radiobutton("how", "remove",  False, _("Remove obsolete services") + "<br>")
@@ -11626,8 +11626,8 @@ def load_notification_table():
                                   ( "only_hosts",
                                     ListOfStrings(
                                         title = _("Limit to the following hosts"),
-                                        help = _("Configure the hosts for this notification. Without prefix, only exact, case sensitive matches,"
-                                                 "! for negation and ~ for regex matches " ),
+                                        help = _("Configure the hosts for this notification. Without prefix, only exact, case sensitive matches, "
+                                                 "<tt>!</tt> for negation and <tt>~</tt> for regex matches."),
                                         orientation = "horizontal",
                                         valuespec = RegExp(size = 20),
                                     ),

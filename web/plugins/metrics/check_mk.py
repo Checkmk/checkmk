@@ -123,6 +123,13 @@ unit_info["dbm"] = {
     "render" : lambda v: "%s %s" % (drop_dotzero(v), _("dBm")),
 }
 
+unit_info["db"] = {
+    "title" : _("Decibel"),
+    "symbol" : _("dB"),
+    "render" : lambda v: physical_precision(v, 3, _("dB")),
+}
+
+
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -344,6 +351,24 @@ metric_info["busy_workers"] = {
     "color" : "#a080b0",
 }
 
+metric_info["signal_noise"] = {
+    "title" : _("Signal/Noise Ratio"),
+    "unit"  : "db",
+    "color" : "#aadd66",
+}
+
+metric_info["codewords_corrected"] = {
+    "title" : _("Corrected Codewords"),
+    "unit"  : "ratio",
+    "color" : "#ff8040",
+}
+
+metric_info["codewords_uncorrectable"] = {
+    "title" : _("Uncorrectable Codewords"),
+    "unit"  : "ratio",
+    "color" : "#ff4020",
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -480,6 +505,7 @@ check_metrics["check_mk-ups_socomec_outphase"]                  = {}
 check_metrics["check_mk-bluecoat_sensors"]                      = {}
 
 check_metrics["check_mk-zfs_arc_cache"]                         = { "hit_ratio" : { "scale" : 0.01 }}
+check_metrics["check_mk-docsis_channels_upstream"]              = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -534,6 +560,11 @@ perfometer_info.append(("stacked",    [
   ( "logarithmic", ( "busy_workers",        10, 2))]))
 
 perfometer_info.append(("linear",      ( [ "hit_ratio" ], 1.0, None)))
+perfometer_info.append(("stacked",  [
+   ("logarithmic",  ( "signal_noise", 50.0, 2.0)),
+   ("linear",       ( [ "codewords_corrected", "codewords_uncorrectable" ], 1.0, None)),
+]))
+perfometer_info.append(("logarithmic",  ( "signal_noise", 50.0, 2.0))) # Fallback if no codewords are available
 
 #.
 #   .--Graphs--------------------------------------------------------------.

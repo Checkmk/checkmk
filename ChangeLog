@@ -14,6 +14,7 @@
     * 1977 FIX: Dramatically reduced size of Check_MK check helper processes...
     * 1982 FIX: Fixed exception during checking regular checking when having checks without discovery function
     * 2012 FIX: Piggyback hostname translation can now deal correctly with umlauts
+    * 2014 FIX: Fixed different issues running Check_MK on CentOS 5.x
 
     Checks & Agents:
     * 1665 agent_netapp: New special agent for NetApp monitoring via Web-API...

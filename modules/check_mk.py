@@ -250,7 +250,7 @@ old_service_descriptions = {
 known_vars = set(vars().keys())
 known_vars.add('known_vars')
 execfile(modules_dir + '/config.py')
-config_variable_names = set.difference(set(vars().keys()) - known_vars)
+config_variable_names = set(vars().keys()).difference(known_vars)
 
 # at check time (and many of what is also needed at administration time).
 try:

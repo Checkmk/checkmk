@@ -1,0 +1,10 @@
+Title: Fixed different issues running Check_MK on CentOS 5.x
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424679971
+
+

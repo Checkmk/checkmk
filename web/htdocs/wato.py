@@ -6819,7 +6819,6 @@ def mode_snapshot(phase):
                 snapshot_data["type"]          = "manual"
                 snapshot_data["snapshot_name"] = snapshot_name
                 snapshot_data["domains"]       = store_domains
-                snapshot_data["wait"]          = False
 
                 return None, _("Created snapshot <tt>%s</tt>.") % create_snapshot(snapshot_data)
 
@@ -7036,7 +7035,6 @@ def create_snapshot(data = {}):
     snapshot_data["type"]          = data.get("type", "automatic")
     snapshot_data["snapshot_name"] = snapshot_name
     snapshot_data["domains"]       = remove_functions(data.get("domains", get_backup_domains(["default"])))
-    snapshot_data["wait"]          = data.get("wait", False)
 
     check_mk_local_automation("create-snapshot", [], snapshot_data)
 

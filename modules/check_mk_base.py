@@ -938,6 +938,11 @@ def clear_counters(pattern, older_than):
         del g_counters[name]
 
 
+# Idea (1): We could keep global variables for the name of the checktype and item
+# during a check and that way "countername" would need to be unique only
+# within one checked item. So e.g. you could use "bcast" as name and not "if.%s.bcast" % item
+# Idea (2): Check_MK should fetch a time stamp for each info. This should also be
+# available as a global variable, so that this_time would be an optional argument.
 def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP):
     try:
         timedif, rate = get_counter(countername, this_time, this_val, allow_negative)

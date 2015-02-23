@@ -1,6 +1,7 @@
 1.2.6b10:
     Core & Setup:
     * 2012 FIX: Piggyback hostname translation can now deal correctly with umlauts
+    * 2014 FIX: Fixed different issues running Check_MK on CentOS 5.x
 
     Checks & Agents:
     * 2005 services: change service description from service_ to Service or new installations

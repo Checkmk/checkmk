@@ -36,10 +36,20 @@
 
 
 import os, re, sys, subprocess
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
-from email.mime.image import MIMEImage
+
+try:
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.mime.application import MIMEApplication
+    from email.mime.image import MIMEImage
+except ImportError:
+    # python <2.5 compat
+    from email.MIMEMultipart import MIMEMultipart
+    from email.MIMEText import MIMEText
+    from email.MIMEImage import MIMEImage
+    from email.MIMEBase import MIMEBase
+    from email import Encoders
+    MIMEApplication = None
 
 tmpl_head_html = '''
 <html>
@@ -346,7 +356,14 @@ def multipart_mail(target, subject, from_address, reply_to, content_txt, content
         if what == 'img':
             part = MIMEImage(contents, name = name)
         else:
-            part = MIMEApplication(contents, name = name)
+            if MIMEApplication != None:
+                part = MIMEApplication(contents, name = name)
+            else:
+                # python <2.5 compat
+                part = MimeBase('application', 'octet-stream')
+                part.set_payload(contents)
+                Encoders.encode_base64(part)
+
         part.add_header('Content-ID', '<%s>' % name)
         # how must be inline or attachment
         part.add_header('Content-Disposition', how, filename = name)

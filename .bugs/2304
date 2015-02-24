@@ -1,0 +1,9 @@
+Title: Process piggyback data even if "no agent" is selected
+Component: core
+State: open
+Date: 2015-02-24 10:18:14
+Targetversion: 1.2.6
+Class: bug
+
+If you just get Piggy data for a host you must be able to select 'no agent'. But
+in that case the piggy data is not being processed - at least not by the inventory.

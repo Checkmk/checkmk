@@ -645,7 +645,7 @@ register_configvar(group,
         default_value = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ],
         choices       = [
             ('page',                      _('During regular page processing')),
-            ('wato_users',                _('When opening the users configuration page')),
+            ('wato_users',                _('When opening the users\' configuration page')),
             ('wato_pre_activate_changes', _('Before activating the changed configuration')),
             ('wato_snapshot_pushed',      _('On a remote site, when it receives a new configuration')),
         ],

@@ -475,8 +475,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     elif len(output) < 16:
         raise MKAgentError("Too short output from agent: '%s'" % output)
 
-    lines = [ l.strip() for l in output.split('\n') ]
-    info, piggybacked, persisted = parse_info(lines, hostname)
+    info, piggybacked, persisted = parse_info(output.split("\n"), hostname)
     store_piggyback_info(hostname, piggybacked)
     store_persisted_info(hostname, persisted)
     store_cached_hostinfo(hostname, info)
@@ -794,7 +793,6 @@ def store_cached_checkinfo(hostname, checkname, table):
 # 2. piggy-backed data for other hosts
 # 3. Sections to be persisted for later usage
 def parse_info(lines, hostname):
-
     info = {}
     piggybacked = {} # unparsed info for other hosts
     persist = {} # handle sections with option persist(...)
@@ -804,8 +802,10 @@ def parse_info(lines, hostname):
     separator = None
     encoding  = None
     for line in lines:
-        if line[:4] == '<<<<' and line[-4:] == '>>>>':
-            host = line[4:-4]
+        line = line.rstrip("\r")
+        stripped_line = line.strip()
+        if stripped_line[:4] == '<<<<' and stripped_line[-4:] == '>>>>':
+            host = stripped_line[4:-4]
             if not host:
                 host = None
             else:
@@ -817,8 +817,8 @@ def parse_info(lines, hostname):
 
         # Found normal section header
         # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
-        elif line[:3] == '<<<' and line[-3:] == '>>>':
-            section_header = line[3:-3]
+        elif stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
+            section_header = stripped_line[3:-3]
             headerparts = section_header.split(":")
             section_name = headerparts[0]
             section_options = {}
@@ -848,7 +848,10 @@ def parse_info(lines, hostname):
             # The section data might have a different encoding
             encoding = section_options.get("encoding")
 
-        elif line != '':
+        elif stripped_line != '':
+            if "nostrip" not in section_options:
+                line = stripped_line
+
             if encoding:
                 try:
                     decoded_line = line.decode(encoding)
@@ -856,6 +859,7 @@ def parse_info(lines, hostname):
                 except:
                     pass
             section.append(line.split(separator))
+
     return info, piggybacked, persist
 
 

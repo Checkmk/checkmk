@@ -34,16 +34,14 @@
 # 50:05:0c:c0:02:20:d1:16 temp-sensor-low-critical 0   0   0
 
 def inventory_netapp_api_temp(parsed):
-    yield "Internal", None
-    yield "Ambient", None
+    yield "Internal", {}
+    yield "Ambient", {}
 
-def check_netapp_api_temp(item, _no_params, parsed):
+
+def check_netapp_api_temp(item, params, parsed):
     is_ambient = item == "Ambient" and "true" or "false"
 
-    sensor_count  = 0
-    sum_temp      = []
-
-    sensor_errors = []
+    sensorlist = []
     for shelf, sensors in parsed.items():
         if sensors["shelf-owned"][0] != "true":
             continue
@@ -52,38 +50,21 @@ def check_netapp_api_temp(item, _no_params, parsed):
             if ambient != is_ambient:
                 continue
 
-            sensor_count += 1
             current_temp = int(sensors["temp-sensor-current-temperature"][idx])
-            sum_temp.append(current_temp)
+            sensor_no = sensors["temp-sensor-element-no"][idx]
+            warn_low  = int(sensors["temp-sensor-low-warning"][idx])
+            crit_low  = int(sensors["temp-sensor-low-critical"][idx])
+            warn_high = int(sensors["temp-sensor-hi-warning"][idx])
+            crit_high = int(sensors["temp-sensor-hi-critical"][idx])
 
-            # Check built-in levels
-            if sensors["temp-sensor-is-error"][idx] == "true":
-                sensor_no = sensors["temp-sensor-element-no"][idx]
-                warn_low  = int(sensors["temp-sensor-low-warning"][idx])
-                crit_low  = int(sensors["temp-sensor-low-critical"][idx])
-                warn_high = int(sensors["temp-sensor-hi-warning"][idx])
-                crit_high = int(sensors["temp-sensor-hi-critical"][idx])
-                if current_temp >= crit_high:
-                    sensor_errors.append((2, "Shelf %s(%s) too high (warn/crit at %s/%s)" % (shelf, sensor_no, warn_high, crit_high)))
-                elif current_temp >= warn_high:
-                    sensor_errors.append((1, "Shelf %s(%s) too high (warn/crit at %s/%s)" % (shelf, sensor_no, warn_high, crit_high)))
-                elif current_temp <= crit_low:
-                    sensor_errors.append((2, "Shelf %s(%s) too low (warn/crit at %s/%s)" % (shelf, sensor_no, warn_low, crit_low)))
-                elif current_temp <= warn_low:
-                    sensor_errors.append((1, "Shelf %s(%s) too low (warn/crit at %s/%s)" % (shelf, sensor_no, warn_low, crit_low)))
+            kwargs = {
+                "dev_levels"         : (warn_high, crit_high),
+                "dev_levels_lower"   : (warn_low, crit_low),
+            }
 
-    yield 0, "%s Temperature sensors" % sensor_count
+            sensorlist.append( (shelf + "/" + sensor_no, current_temp, kwargs) )
 
-    if sum_temp:
-        temp_avg = float(sum(sum_temp)) / len(sum_temp)
-        perfdata = [ (item.lower(), temp_avg) ]
-        yield 0, "Average Temp: %.1f °C" % temp_avg, perfdata
-
-    max_sensors = 5
-    for state, text in sensor_errors[:max_sensors]:
-        yield state, text
-    if len(sensor_errors) > max_sensors:
-        yield 0, "more sensors failed (%d total) - only the first %d errors are shown..." % (len(sensor_errors), max_sensors)
+    return check_temperature_list(sensorlist, params)
 
 
 check_info["netapp_api_temp"] = {
@@ -91,7 +72,8 @@ check_info["netapp_api_temp"] = {
     'inventory_function'  : inventory_netapp_api_temp,
     'parse_function'      : netapp_api_parse_info_environ,
     'has_perfdata'        : True,
-    'service_description' : 'Temperature Shelfes %s',
-    'includes'            : ["netapp_api.include"]
+    'group'               : "temperature",
+    'service_description' : 'Temperature %s Shelfes',
+    'includes'            : ["netapp_api.include", "temperature.include"]
 }
 

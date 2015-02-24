@@ -377,7 +377,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
         info = None # default in case of exception
         info = get_info_for_discovery(hostname, ipaddress, section_name, use_caches)
     except MKAgentError, e:
-        if str(e):
+        if str(e) and str(e) != "Cannot get information from agent, processing only piggyback data.":
             raise
     except MKSNMPError, e:
         if str(e):

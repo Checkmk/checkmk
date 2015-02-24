@@ -26,7 +26,7 @@
 
 # Rules for configuring parameters of checks (services)
 
-register_rulegroup("checkparams", _("Parameters for discovered checks"),
+register_rulegroup("checkparams", _("Parameters for discovered services"),
     _("Levels and other parameters for checks found by the Check_MK service discovery.\n"
       "Use these rules in order to define parameters like filesystem levels, "
       "levels for CPU load and other things for services that have been found "
@@ -271,7 +271,7 @@ register_rule(group + '/' + subgroup_inventory,
               default_value = ['1'],
         )),
         ( "porttypes",
-          ListChoice(title = _("Network interface port types to discovery"),
+          ListChoice(title = _("Network interface port types to discover"),
               help = _("When doing discovery on switches or other devices with network interfaces "
                        "then only ports of the specified types will be created services for."),
               choices = _if_porttype_choices,
@@ -316,7 +316,7 @@ register_rule(group + '/' + subgroup_inventory,
                 default_value = True,
                 help = _("This option lets Check_MK add the string \"ISL\" to the service "
                          "description for interswitch links."))),
-        ("admstates", ListChoice(title = _("Administrative port states to inventorize"),
+        ("admstates", ListChoice(title = _("Administrative port states to discover"),
                 help = _("When doing service discovery on brocade switches only ports with the given administrative "
                          "states will be added to the monitoring system."),
                 choices = _brocade_fcport_adm_choices,
@@ -324,7 +324,7 @@ register_rule(group + '/' + subgroup_inventory,
                 toggle_all = True,
                 default_value = ['1', '3', '4' ],
         )),
-        ("phystates", ListChoice(title = _("Physical port states to inventorize"),
+        ("phystates", ListChoice(title = _("Physical port states to discover"),
                 help = _("When doing service discovery on brocade switches only ports with the given physical "
                          "states will be added to the monitoring system."),
                 choices = _brocade_fcport_phy_choices,
@@ -332,7 +332,7 @@ register_rule(group + '/' + subgroup_inventory,
                 toggle_all = True,
                 default_value =  [ 3, 4, 5, 6, 7, 8, 9, 10 ]
         )),
-        ("opstates", ListChoice(title = _("Operational port states to inventorize"),
+        ("opstates", ListChoice(title = _("Operational port states to discover"),
                 help = _("When doing service discovery on brocade switches only ports with the given operational "
                          "states will be added to the monitoring system."),
                 choices = _brocade_fcport_op_choices,
@@ -2546,8 +2546,8 @@ register_check_parameters(
     _("Signal quality of Wireless device"),
     Tuple(
         elements=[
-            Percentage( title = _( "Warning if under"), maxvalue=100 ),
-            Percentage( title = _( "Critical if under"), maxvalue=100 ),
+            Percentage(title = _("Warning if under"), maxvalue=100 ),
+            Percentage(title = _("Critical if under"), maxvalue=100 ),
     ]),
     TextAscii(
         title = _("Network specification"),
@@ -3637,8 +3637,8 @@ register_check_parameters(
                   help = "")),
             ( "defaultincrement",
                 Checkbox(
-                  title = _("Detault Increment"),
-                  label = _("State is WARNING in case of next extent is default."),
+                  title = _("Default Increment"),
+                  label = _("State is WARNING in case the next extent has the default size."),
                   help = "")),
                    ]),
     TextAscii(
@@ -4062,7 +4062,7 @@ register_check_parameters(
           )
         )]
     ),
-    TextAscii(title=_("Jobname")),
+    TextAscii(title=_("Job name")),
     "first"
 )
 
@@ -4900,7 +4900,7 @@ register_rule(
 register_rule(group + '/' + subgroup_networking,
     varname   = "if_groups",
     title     = _('Network interface groups'),
-    help      = _('Normally the if checks create a single service for interface. '
+    help      = _('Normally the Interface checks create a single service for interface. '
                   'By defining if-group patterns multiple interfaces can be combined together. '
                   'A single service is created for this interface group showing the total traffic amount '
                   'of its members. You can configure if interfaces which are identified as group interfaces '
@@ -6003,7 +6003,7 @@ register_check_parameters(
         title = _("Temperature Trend Analysis"),
         help = _("This rule enables and configures a trend analysis and corresponding limits for devices, "
                  "which have their own limits configured on the device. It will only work for supported "
-                 "checks, right now the <tt>adva_fsp_temp</tt> check"),
+                 "checks, right now the <tt>adva_fsp_temp</tt> check."),
         elements = [
             (  "trend_range",
                Optional(
@@ -7646,7 +7646,7 @@ register_check_parameters(
     "plug_count",
     _("Number of active Plugs"),
     Tuple(
-        help = _("Levels for the number of active plugs in a devices."),
+        help = _("Levels for the number of active plugs in a devics."),
         elements = [
             Integer(title = _("critical if below or equal"), default_value = 30),
             Integer(title = _("warning if below or equal"), default_value = 32),

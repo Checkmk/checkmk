@@ -183,7 +183,7 @@ register_rule(group,
         elements = [
             ("port",
                Integer(
-                    title = _("Port number to be used"),
+                    title = _("TCP port number"),
                     default_value = 22),
             ),
             ("timeout",
@@ -345,8 +345,6 @@ register_rule(group,
                          value  = True,
                          title  = _("Expect Authoritative DNS Server"),
                          totext = _("Expect Authoritative"),
-                         help   = _("Optional expect the DNS server to be authoriative "
-                                    "for the lookup")),
                    ),
                    ( "response_time",
                      Tuple(
@@ -621,10 +619,11 @@ register_rule(group,
     "active_checks:uniserv", Dictionary(
         title = _("Check uniserv service"), optional_keys = False, elements = [
             ("port",
-                Integer( title = _("Port") )),
+                Integer(title = _("Port") )),
             ("service",
-                TextAscii( title = _("Service String"),
-                           help = _("Enter here the uniserve service name. (Has nothing to do with service description)")
+              TextAscii(
+                  title = _("Service Name"),
+                  help = _("Enter the uniserve service name here (has nothing to do with service description).")
             )),
             ("job",
                 CascadingDropdown(
@@ -661,7 +660,7 @@ register_rule(group,
     Tuple(
         title = _("Check HTTP service"),
         help = _("Check HTTP/HTTPS service using the plugin <tt>check_http</tt> "
-                 "from the standard Nagios Plugins. "
+                 "from the standard Monitoring Plugins. "
                  "This plugin tests the HTTP service on the specified host. "
                  "It can test normal (HTTP) and secure (HTTPS) servers, follow "
                  "redirects, search for strings and regular expressions, check "
@@ -921,7 +920,7 @@ register_rule(group,
                             ),
                             ( "cert_host",
                                 TextAscii(
-                                    title = _("Check Cerficate on different IP / DNS Name"),
+                                    title = _("Check Cerficate of different IP / DNS Name"),
                                     help = _("For each SSL cerficate on a host, a different IP address is needed. "
                                              "Here, you can specify the address if it differs from the  "
                                              "address from the host primary address."),

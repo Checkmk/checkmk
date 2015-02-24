@@ -64,7 +64,7 @@ register_rule(group,
                 ( "tcp_port",
                   Integer(
                        title = _("TCP Port number"),
-                       help = _("Port number for https connection to vSphere"),
+                       help = _("Port number for HTTPS connection to vSphere"),
                        default_value = 443,
                        minvalue = 1,
                        maxvalue = 65535,

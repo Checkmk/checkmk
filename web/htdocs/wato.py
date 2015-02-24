@@ -9111,7 +9111,7 @@ def mode_user_notifications(phase, profilemode):
                              _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?" %
                                (nr, rule.get("description",""))))
             if c:
-                log_pending(SYNC, None, "notification-delete-user-rule", _("Deleted notification rule %d or user %s") %
+                log_pending(SYNC, None, "notification-delete-user-rule", _("Deleted notification rule %d of user %s") %
                             (nr, userid))
                 del rules[nr]
                 userdb.save_users(users)

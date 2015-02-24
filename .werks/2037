@@ -1,0 +1,10 @@
+Title: Inventorize piggy back data even if access to normal agent fails
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424769389
+
+

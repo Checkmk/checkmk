@@ -1,6 +1,6 @@
 title: F5 BIG-IP load balancer: CPU temperature
 agents: snmp
-catalog: hw/environment/hwg
+catalog: hw/network/f5
 license: GPL
 distribution: check_mk
 description:

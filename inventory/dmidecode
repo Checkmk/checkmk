@@ -62,11 +62,17 @@
 #
 # ... any many other sections...
 
-
+# Note: on Linux \t is replaced by : and then the split
+# is done by :. On Windows the \t comes 1:1 and no splitting
+# is being done. So we need to split manually here
 def inv_dmidecode(info):
     section_name = None
     section_lines = []
     for line in info:
+        # Windows plugin keeps tabs and has no separator
+        if len(line) == 1:
+            parts = line[0].replace("\t", ":").split(":")
+            line = [ x.strip() for x in parts ]
         if len(line) == 1:
             if section_name:
                 inv_dmidecode_parse_section(section_name, section_lines)

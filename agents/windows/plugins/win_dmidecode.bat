@@ -11,5 +11,5 @@ REM * This plugin should work out of the box if you install dmidecode
 REM * to the default location.
 REM ***
 
-echo ^<^<^<dmidecode^>^>^>
-C:\Programme\GnuWin32\sbin\dmidecode.exe -t 1 -q
+echo ^<^<^<dmidecode:sep(0):nostrip^>^>^>
+C:\Programme\GnuWin32\sbin\dmidecode.exe -q

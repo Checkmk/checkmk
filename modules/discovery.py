@@ -360,7 +360,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
                use_caches and inventory_max_cachefile_age or 0, ignore_check_interval=True)
 
     except MKAgentError, e:
-        if str(e):
+        if str(e) and str(e) != "Cannot get information from agent, processing only piggyback data.":
             raise
 
     except MKSNMPError, e:

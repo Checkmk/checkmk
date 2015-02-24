@@ -262,6 +262,12 @@ def check_temperature(reading, params, dev_unit = "c",
 
     return status, infotext, perfdata
 
+# Wraps around check_temperature to check a list of sensors.
+# sensorlist is a list of tuples:
+# (subitem, temp, kwargs) or (subitem, temp)
+# where subitem is a string (sensor-id)
+# temp is a string, float or int temperature value
+# and kwargs a dict of keyword arguments for check_temperature
 
 def check_temperature_list(sensorlist, params):
 

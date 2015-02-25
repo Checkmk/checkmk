@@ -1,0 +1,15 @@
+Title: Fixed service discovery / monitoring on hosts which have only piggyback data (e.g. ESX VMs)
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424856806
+
+When having hosts configured which have no agent on their own ("No agent" configured via WATO),
+but get piggyback data from another host, could not be inventorized. This has been fixed now.
+
+So if you have, for example, an ESX server with several VMs, you configured each VM as host
+in WATO and set <i>Agent type</i> to <i>No Agent</i>, you can now discover the services
+based on the piggyback data again.

@@ -290,7 +290,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, ipaddress
                     if check_type not in check_types and check_uses_snmp(check_type):
                         check_types.append(check_type)
 
-        if is_tcp_host(hostname):
+        if is_tcp_host(hostname) or has_piggyback_info(hostname):
             check_types += discoverable_check_types('tcp')
 
     # Make hostname available as global variable in discovery functions

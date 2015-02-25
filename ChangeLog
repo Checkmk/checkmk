@@ -195,6 +195,7 @@
     * 1890 FIX: cisco_temperature: Replaces cisco_temp_perf and cisco_temp_sensor...
             NOTE: Please refer to the migration notes!
     * 2018 FIX: ibm_imm_health: Fixed exception when host does provides empty SNMP data
+    * 2019 FIX: heartbeat_crm: Be compatible to yet unknown crm_mon output format
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

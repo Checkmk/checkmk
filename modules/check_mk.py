@@ -1250,6 +1250,12 @@ def output_conf_header(outfile):
 
 """)
 
+# Returns a list of all host names, regardless if currently
+# disabled or monitored on a remote site. Does not return
+# cluster hosts.
+def all_configured_physical_hosts():
+    return strip_tags(all_hosts)
+
 def all_active_hosts():
     return filter_active_hosts(all_hosts)
 
@@ -1278,8 +1284,11 @@ def host_is_member_of_site(hostname, site):
     # hosts without a site: tag belong to all sites
     return True
 
-def parse_hostname_list(args, with_clusters = True):
-    valid_hosts = all_active_hosts()
+def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
+    if with_foreign_hosts:
+        valid_hosts = all_configured_physical_hosts()
+    else:
+        valid_hosts = all_active_hosts()
     if with_clusters:
         valid_hosts += all_active_clusters()
     hostlist = []
@@ -5673,7 +5682,7 @@ try:
             if 'do_bake_agents' not in globals():
                 bail_out("Agent baking is not implemented in your version of Check_MK. Sorry.")
             if args:
-                hostnames = parse_hostname_list(args, with_clusters = False)
+                hostnames = parse_hostname_list(args, with_clusters = False, with_foreign_hosts = True)
             else:
                 hostnames = None
             do_bake_agents(hostnames)

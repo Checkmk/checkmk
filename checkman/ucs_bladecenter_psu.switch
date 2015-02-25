@@ -1,0 +1,28 @@
+title: UCS Bladecenter: Power Supply Switch
+agents: agent_ucs_bladecenter
+catalog: hw/server/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the power supply of the switches in a UCS bladecenter.
+ For each switch module a service with informations regarding voltage, current and
+ watt is created.
+
+item:
+ The component where the fans are located, e.g chassis or switch
+
+perfdata:
+ Three values: Voltage, current and power
+
+inventory:
+ Creates on service per switch module
+
+[parameters]
+parameters (dict): This check supports three types of parameters,
+none of which have default values. It is a dictionary with the following keys:
+
+ {"voltage"}: Warning and critical levels for voltage in int, denoting the minimum required voltage in volt.
+
+ {"current"}: Warning and critical levels for current in int, denoted in Ampère
+
+ {"power"}: Warning and critical levels for power in int, denoted in Watt.

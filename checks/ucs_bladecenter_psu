@@ -1,0 +1,196 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<ucs_bladecenter_psu:sep(9)>>>
+# equipmentPsuInputStats  Dn sys/switch-A/psu-2/input-stats       Current 0.656250        PowerAvg 153.335938     Voltage 231.500000
+# equipmentPsuStats       Dn sys/chassis-1/psu-1/stats    AmbientTemp 17.000000   Output12vAvg 12.008000  Output3v3Avg 3.336000
+
+def ucs_bladecenter_psu_parse(info):
+    data = ucs_bladecenter_convert_info(info)
+    psu = {}
+
+    def get_item_name(key):
+        tokens = key.split("/")
+        tokens[1] = tokens[1].replace("psu-", " Module ")
+        tokens = map(lambda x: x[0].upper() + x[1:], tokens)
+        return "".join(tokens).replace("-", " ")
+
+    for component, key_low, key_high in [
+        ("equipmentPsuInputStats", 4, -12),
+        ("equipmentPsuStats",      4, -6),
+    ]:
+        for key, values in data.get(component, {}).items():
+            name = get_item_name(key[key_low:key_high])
+            del values["Dn"]
+            psu.setdefault(name, {}).update(values)
+
+    return psu
+
+
+#.
+#   .--Chassis Volt.-------------------------------------------------------.
+#   |         ____ _                   _      __     __    _ _             |
+#   |        / ___| |__   __ _ ___ ___(_)___  \ \   / /__ | | |_           |
+#   |       | |   | '_ \ / _` / __/ __| / __|  \ \ / / _ \| | __|          |
+#   |       | |___| | | | (_| \__ \__ \ \__ \   \ V / (_) | | |_ _         |
+#   |        \____|_| |_|\__,_|___/___/_|___/    \_/ \___/|_|\__(_)        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings["ucs_bladecenter_psu_default_levels"] = {
+    "levels_3v_lower"  : (3.25, 3.20),
+    "levels_3v_upper"  : (3.4 , 3.45),
+    "levels_12v_lower" : (11.9, 11.8),
+    "levels_12v_upper" : (12.1, 12.2)
+}
+
+def inventory_ucs_bladecenter_psu(parsed):
+    items = set([])
+    for key, values in parsed.items():
+        if key.startswith("Chassis"):
+            yield key, {}
+
+def check_ucs_bladecenter_psu(item, params, parsed):
+    psu  = parsed.get(item)
+    if not psu:
+        yield 3, "Chassis voltage info not available"
+        return
+
+    info_texts = []
+    state = 0
+    for param_key, perfname, key, text in [ ("levels_3v_", "3_3v", "Output3v3Avg", "Output 3.3V-Average"),
+                                            ("levels_12v_", "12v", "Output12vAvg", "Output 12V-Average") ]:
+        voltage = float(psu[key])
+        yield 0, "%s: %.2f V" % (text, voltage), [(perfname, voltage)]
+        if key in psu.keys():
+            warn_lower, crit_lower = params[param_key + "lower"]
+            if voltage <= crit_lower:
+                yield 2, "too low (levels at %.2f/%.2f V)" % params[param_key + "lower"]
+            elif voltage <= warn_lower:
+                yield 1, "too low (levels at %.2f/%.2f V)" % params[param_key + "lower"]
+
+            warn_upper, crit_upper = params[param_key + "upper"]
+            if voltage >= crit_upper:
+                yield 2, "too high (levels at %.2f/%.2f V)" % params[param_key + "upper"]
+            elif voltage >= warn_upper:
+                yield 1, "too high (levels at %.2f/%.2f V)" % params[param_key + "upper"]
+
+
+check_info["ucs_bladecenter_psu"] = {
+    'parse_function'          : ucs_bladecenter_psu_parse,
+    'inventory_function'      : inventory_ucs_bladecenter_psu,
+    'check_function'          : check_ucs_bladecenter_psu,
+    'service_description'     : 'Voltage %s',
+    'group'                   : 'ucs_bladecenter_chassis_voltage',
+    'includes'                : [ 'ucs_bladecenter.include' ],
+    'has_perfdata'            : True,
+    'default_levels_variable' : "ucs_bladecenter_psu_default_levels",
+}
+
+#.
+#   .--Power Supply--------------------------------------------------------.
+#   |    ____                          ____                    _           |
+#   |   |  _ \ _____      _____ _ __  / ___| _   _ _ __  _ __ | |_   _     |
+#   |   | |_) / _ \ \ /\ / / _ \ '__| \___ \| | | | '_ \| '_ \| | | | |    |
+#   |   |  __/ (_) \ V  V /  __/ |     ___) | |_| | |_) | |_) | | |_| |    |
+#   |   |_|   \___/ \_/\_/ \___|_|    |____/ \__,_| .__/| .__/|_|\__, |    |
+#   |                                             |_|   |_|      |___/     |
+#   '----------------------------------------------------------------------'
+
+def inventory_ucs_bladecenter_psu_switch_power(parsed):
+    items = set([])
+    for key, values in parsed.items():
+        if key.startswith("Switch"):
+            yield key, {}
+
+
+def check_ucs_bladecenter_psu_switch_power(item, params, parsed):
+    psu = parsed.get(item)
+    if not psu:
+        return 3, "Switch power info not available"
+
+    # Convert fields
+    for old, new in [ ("Current", "current"),
+                      ("PowerAvg", "power"),
+                      ("Voltage", "voltage") ]:
+        psu[new] = (float(psu[old]), None)
+        del psu[old]
+
+    return check_elphase(item, params, {item: psu})
+
+check_info["ucs_bladecenter_psu.switch_power"] = {
+    'inventory_function':      inventory_ucs_bladecenter_psu_switch_power,
+    'check_function':          check_ucs_bladecenter_psu_switch_power,
+    'service_description':     'Power Supply %s',
+    'includes':                [ 'ucs_bladecenter.include', 'elphase.include' ],
+    'has_perfdata':            True,
+    'group':                   "el_inphase"
+}
+
+
+#.
+#   .--Temperature---------------------------------------------------------.
+#   |     _____                                   _                        |
+#   |    |_   _|__ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |      | |/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |      | |  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      |_|\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   '----------------------------------------------------------------------'
+
+factory_settings["ucs_bladecenter_psu_chassis_temp_default_levels"] = {
+    "levels" : (35, 40),
+}
+
+def inventory_ucs_bladecenter_psu_chassis_temp(parsed):
+    for key, values in parsed.items():
+        if key.startswith("Chassis") and values.get("AmbientTemp"):
+            yield "Ambient " + " ".join(key.split()[:2]), {}
+
+
+def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
+    sensor_item = item[8:] # drop "Ambient "
+    sensor_list = []
+
+    for key, values in sorted(parsed.items()):
+        if key.startswith(sensor_item) and "AmbientTemp" in values:
+            sensor_list.append((
+                "Module %s" % key.split()[-1],
+                float(values.get("AmbientTemp")),
+            ))
+    return check_temperature_list(sensor_list, params)
+
+
+check_info["ucs_bladecenter_psu.chassis_temp"] = {
+    'inventory_function'      : inventory_ucs_bladecenter_psu_chassis_temp,
+    'check_function'          : check_ucs_bladecenter_psu_chassis_temp,
+    'service_description'     : 'Temperature %s',
+    'group'                   : 'temperature',
+    'has_perfdata'            : True,
+    'default_levels_variable' : "ucs_bladecenter_psu_chassis_temp_default_levels",
+    'includes'                : [ 'ucs_bladecenter.include' ],
+}
+

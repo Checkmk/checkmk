@@ -349,6 +349,8 @@ perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
 perfometers["check_mk-lnx_thermal"] = perfometer_temperature
 perfometers["check_mk-climaveneta_temp"] = perfometer_temperature
 perfometers["check_mk-carel_sensors"] = perfometer_temperature
+perfometers["check_mk-ucs_bladecenter_fans.temp"] = perfometer_temperature
+perfometers["check_mk-ucs_bladecenter_psu.chassis_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -476,6 +478,7 @@ perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
 perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
 perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
 perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
+perfometers["check_mk-ucs_bladecenter_if"] = perfometer_check_mk_if
 
 def perfometer_check_mk_fc_port(row, check_command, perf_data):
     unit = "B"
@@ -1211,6 +1214,7 @@ def perfometer_el_inphase(row, check_command, perf_data):
 
 perfometers["check_mk-raritan_pdu_inlet"] = perfometer_el_inphase
 perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_el_inphase
+perfometers["check_mk-ucs_bladecenter_psu.switch_power"] = perfometer_el_inphase
 
 def perfometer_f5_bigip_vserver(row, check_command, perf_data):
     connections = int(perf_data[0][1])

@@ -190,6 +190,7 @@
     * 2033 FIX: check_mk-zfs_arc_cache: add Perf-O-Meter
     * 2034 FIX: netapp_api_volumes: added Perf-O-Meter
     * 2035 FIX: check_mk-netapp_api_if, check_mk-if_brocade: added missing Perf-O-Meters
+    * 2017 FIX: Solaris-Agent: Prevent hanging agent in uptime section...
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

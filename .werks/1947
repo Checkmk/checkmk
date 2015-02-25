@@ -16,9 +16,9 @@ The following checks are currently supported
 <tr><th>Check</th><th>Description</th></tr>
 <tr><td>ucs_bladecenter_fans</td><td>Operate status of fans</td></tr>
 <tr><td>ucs_bladecenter_fans.temp</td><td>Temperature at fans sensors</td></tr>
-<tr><td>ucs_bladecenter_fans.temp</td><td>Temperature at chassis sensors</td></tr>
-<tr><td>ucs_bladecenter_psu</td><td>Chassis voltage levels</td></tr>
+<tr><td>ucs_bladecenter_psu.chassis_temp</td><td>Temperature at chassis sensors</td></tr>
 <tr><td>ucs_bladecenter_psu.switch_power</td><td>Switch Voltage, Current and Power.</td></tr>
+<tr><td>ucs_bladecenter_psu</td><td>Chassis voltage levels</td></tr>
 <tr><td>ucs_bladecenter_if</td><td>Traffic and bandwidth for Ethernet, Interconnect and Fibrechannel Ports.
 Automatically groups portchannel interfaces.</td></tr>
 </table>

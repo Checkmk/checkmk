@@ -1,0 +1,10 @@
+Title: netapp_api_fan, netapp_api_psu, netapp_api_temp: fixed typo in service description Shelfes -> Shelves
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.2.7i1
+Date: 1424880096
+
+

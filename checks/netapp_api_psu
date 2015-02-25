@@ -49,7 +49,7 @@ def check_netapp_api_psu(_no_item, _no_params, parsed):
             if psus["power-supply-is-error"][idx] == "true":
                 psu_errors.append((2, "Error in Shelf %s PSU %s" % (shelf, psus["power-supply-element-number"][idx])))
 
-    yield 0, "%s Power supplies installed" % psu_count
+    yield 0, "%s power supplies assigned to this filer" % psu_count
 
     for state, text in psu_errors:
         yield state, text
@@ -59,6 +59,6 @@ check_info["netapp_api_psu"] = {
     'check_function'      : check_netapp_api_psu,
     'inventory_function'  : inventory_netapp_api_psu,
     'parse_function'      : netapp_api_parse_info_environ,
-    'service_description' : 'Power Supplies Shelfes',
+    'service_description' : 'Power Supplies Shelves',
     'includes'            : ["netapp_api.include"]
 }

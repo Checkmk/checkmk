@@ -1,4 +1,8 @@
 1.2.6b12:
+    Checks & Agents:
+    * 2048 FIX: netapp_api_fan, netapp_api_psu, netapp_api_temp: fixed typo in service description Shelfes -> Shelves
+            NOTE: Please refer to the migration notes!
+
 
 1.2.6b11:
     Core & Setup:

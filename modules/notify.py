@@ -571,7 +571,7 @@ def user_notification_rules():
 
 def rbn_fake_email_contact(email):
     return {
-        "name"  : email.split("@")[0],
+        "name"  : email,
         "alias" : "Explicit email adress " + email,
         "email" : email,
         "pager" : "",
@@ -588,7 +588,7 @@ def rbn_add_contact_information(plugin_context, contact):
     else:
         if contact.startswith("mailto:"): # Fake contact
             contact_dict = {
-                "name"  : contact[7:].split("@")[0],
+                "name"  : contact[7:],
                 "alias" : "Email address " + contact,
                 "email" : contact[7:],
                 "pager" : "" }

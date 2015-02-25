@@ -533,10 +533,8 @@ def add_persisted_info(hostname, info):
         store_persisted_info(hostname, persisted)
 
 
-def get_piggyback_info(hostname):
-    output = ""
-    if not hostname:
-        return output
+def get_piggyback_files(hostname):
+    files = []
     dir = tmp_dir + "/piggyback/" + hostname
     if os.path.exists(dir):
         for sourcehost in os.listdir(dir):
@@ -550,9 +548,21 @@ def get_piggyback_info(hostname):
                     os.remove(file_path)
                     continue
 
-                verbose("Using piggyback information from host %s.\n" % sourcehost)
+                files.append((sourcehost, file_path))
+    return files
 
-                output += file(file_path).read()
+
+def has_piggyback_info(hostname):
+    return get_piggyback_files(hostname) != []
+
+
+def get_piggyback_info(hostname):
+    output = ""
+    if not hostname:
+        return output
+    for sourcehost, file_path in get_piggyback_files(hostname):
+        verbose("Using piggyback information from host %s.\n" % sourcehost)
+        output += file(file_path).read()
     return output
 
 

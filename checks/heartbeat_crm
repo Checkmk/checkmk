@@ -78,9 +78,9 @@ def heartbeat_crm_parse_general(info):
             last_updated = ' '.join(line[2:])
         elif ' '.join(line[0:2]) == 'Current DC:':
             dc = line[2]
-        elif ' '.join(line[1:3])[:-1] == 'Nodes configured':
+        elif ' '.join(line[1:3]).rstrip('.,') == 'Nodes configured':
             num_nodes = int(line[0])
-        elif ' '.join(line[1:3]) == 'Resources configured.':
+        elif ' '.join(line[1:3]).rstrip('.,') == 'Resources configured':
             num_resources = int(line[0])
     return (last_updated, dc, num_nodes, num_resources)
 
@@ -97,17 +97,14 @@ def inventory_heartbeat_crm(info):
     # - Check the number of nodes/resources
     # - Check the age of "last updated"
     settings = host_extra_conf_merged(g_hostname, inventory_heartbeat_crm_rules)
-    try:
-        last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
-        params = {
-            'num_nodes'     : num_nodes,
-            'num_resources' : num_resources,
-        }
-        if settings.get('naildown_dc', False):
-            params['dc'] = dc
-        return [(None, params)]
-    except:
-        return # No useful information found
+    last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
+    params = {
+        'num_nodes'     : num_nodes,
+        'num_resources' : num_resources,
+    }
+    if settings.get('naildown_dc', False):
+        params['dc'] = dc
+    return [(None, params)]
 
 def check_heartbeat_crm(item, params, info):
     if len(info) > 0:

@@ -6,6 +6,7 @@
 
     Checks & Agents:
     * 2017 FIX: Solaris-Agent: Prevent hanging agent in uptime section...
+    * 2019 FIX: heartbeat_crm: Be compatible to yet unknown crm_mon output format
 
     WATO:
     * 1946 FIX: WATO Web-API: edit host action does no longer unset all unspecified attributes...

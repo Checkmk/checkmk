@@ -1,0 +1,9 @@
+Title: heartbeat_crm: Be compatible to yet unknown crm_mon output format
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b11
+Date: 1424876750
+Class: fix
+
+

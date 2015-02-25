@@ -221,10 +221,9 @@ fi
 # /proc/uptime
 # Simulated output of Linux /proc/uptime
 echo '<<<uptime>>>'
-proc0=$(ls -td  /proc/* | tail -1)
-ctime=$(nawk 'BEGIN{print srand()}')
-btime=$(truss -v lstat -t lstat ls -d $proc0 2>&1 | nawk '/ct = /{printf "%d\n", $9}')
-echo $(($ctime - $btime))
+ctime=`nawk 'BEGIN{print srand()}'`;
+btime=`kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}'`;
+echo $(($ctime - $btime));
 
 
 # NTP

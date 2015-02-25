@@ -1,0 +1,17 @@
+Title: Solaris-Agent: Prevent hanging agent in uptime section
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424861065
+
+It happened running on a Solaris 8 zone, on a Solaris 10 LDOM, on Sun/Oracle T5
+that the agent hung while processing the <tt>uptime</tt> section of the agent.
+Many hanging truss and nawk processes were found, which can lead to a unresponsive
+and/or crashed system.
+
+The uptime section generating code has been changed and replaced by another mechanism.
+
+Thanks to Clint Squires for analyzing the problem and providing a fix!

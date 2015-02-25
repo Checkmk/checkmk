@@ -134,39 +134,40 @@ def parse_cisco_temp_sensor(info):
     return sensors
 
 def inventory_cisco_temp_sensor(info):
-    sensors = parse_cisco_temp_sensor(info)
+#    sensors = parse_cisco_temp_sensor(info)
     inventory = []
-    for id, descr, sensortype, scale, value, sensorstate, levels in sensors:
-        # Use all temperature sensors with a non-empty description and valid threshold
-        if descr != None and sensortype == '8' and len(levels) in [ 2, 4 ]:
-            warn, crit = saveint(levels[0]), saveint(levels[1])
-            inventory.append(( descr, (warn, crit) ))
+#    for id, descr, sensortype, scale, value, sensorstate, levels in sensors:
+#        # Use all temperature sensors with a non-empty description and valid threshold
+#        if descr != None and sensortype == '8' and len(levels) in [ 2, 4 ]:
+#            warn, crit = saveint(levels[0]), saveint(levels[1])
+#            inventory.append(( descr, (warn, crit) ))
     return inventory
 
 def check_cisco_temp_sensor(item, params, info):
     sensors = parse_cisco_temp_sensor(info)
     for id, descr, sensortype, scale, temp, sensorstate, levels in sensors:
         if item == descr:
-            # Use built in levels if no levels are configured
-            if params:
-                warn, crit = params
-            else:
-                warn, crit = levels[0:2]
-                # convert threshold milli values to native unit
-                if scale == "8":
-                    temp = temp/1000
-                    warn = warn/1000
-
-            # convert milli temperature to native unit
-            if scale == "8":
-                crit = crit/1000
-
-            if sensorstate == "2":
-                return (3, "Data from sensor currently not available")
-            elif sensorstate == "3":
-                return (3, "Sensor is broken")
-
-            return check_temperature(temp, (warn, crit))
+#            # Use built in levels if no levels are configured
+#            if params:
+#                warn, crit = params
+#            else:
+#                warn, crit = levels[0:2]
+#                # convert threshold milli values to native unit
+#                if scale == "8":
+#                    temp = temp/1000
+#                    warn = warn/1000
+#
+#            # convert milli temperature to native unit
+#            if scale == "8":
+#                crit = crit/1000
+#
+#            if sensorstate == "2":
+#                return (3, "Data from sensor currently not available")
+#            elif sensorstate == "3":
+#                return (3, "Sensor is broken")
+#
+#            return check_temperature(temp, (warn, crit))
+            return 3, "This check is obsolete, please re-inventorize this host"
 
 
 check_info['cisco_temp_sensor'] = {

@@ -1,0 +1,45 @@
+title: Temperature sensors (by CISCO-ENVMON-MIB or CISCO-ENTITY-SENSOR-MIB)
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of temperature sensors
+ on older Cisco devices using data from the
+ {CISCO-ENVMON-MIB} or the {CISCO-ENTITY-SENSOR-MIB}.
+
+ The check supports both sensor status and device levels provided, if
+ existent.
+
+perfdata:
+ The current temperature in degrees celsius
+
+item:
+ The description of the sensor as provided by the device.
+
+inventory:
+ One check for each available sensor is created.
+
+[parameters]
+parameters(dict): This checks parameters are a dictionary with the
+ following (optional) keys:
+
+  {"levels"}: A tuple (warn, crit) containing the upper levels. No defaults.
+
+  {"levels_lower"}: A tuple (warn, crit) containing the lower levels. No defaults.
+
+  {"output_unit"}: "c", "f" or "k", the check will output the temperature in the
+ specified unit. If this is not set, output is in degrees Celsius.
+
+  {"input_unit"}: "c, "f" or "k". By default, the check interprets the sensor value
+ according to the unit sent by the device. This key allows to override that. Tread
+ lightly, as this may lead to a misinterpreted temperature. Should only be used if
+ the device reports its unit incorrectly.
+
+  {"device_levels_handling"}: Specifies how the temperature status
+  (too hot/too cold) provided by the device, respectively the device's levels are
+  handled compared to levels set by the user. Options are "usr", "dev",
+  "best", "worst", "devdefault", "usrdefault". "usr" and "dev" means respecting
+  only the user's resp. the device's levels, wheras "usrdefault" and "devdefault"
+  take the user's resp. the device's levels if present, otherwise try to use the
+  device's resp. the user's levels.

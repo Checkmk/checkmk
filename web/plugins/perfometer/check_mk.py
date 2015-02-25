@@ -250,6 +250,7 @@ perfometers["check_mk-netscaler_health.temp"]  = perfometer_temperature
 perfometers["check_mk-kentix_temp"] = perfometer_temperature
 perfometers["check_mk-ucs_bladecenter_fans.temp"] = perfometer_temperature
 perfometers["check_mk-ucs_bladecenter_psu.chassis_temp"] = perfometer_temperature
+perfometers["check_mk-cisco_temperature"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1

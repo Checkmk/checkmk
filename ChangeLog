@@ -191,6 +191,7 @@
     * 2034 FIX: netapp_api_volumes: added Perf-O-Meter
     * 2035 FIX: check_mk-netapp_api_if, check_mk-if_brocade: added missing Perf-O-Meters
     * 2017 FIX: Solaris-Agent: Prevent hanging agent in uptime section...
+    * 2018 FIX: ibm_imm_health: Fixed exception when host does provides empty SNMP data
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

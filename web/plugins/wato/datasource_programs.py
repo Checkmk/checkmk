@@ -441,4 +441,27 @@ register_rule(group,
     match = 'first')
 
 
+register_rule(group,
+    "special_agents:ucs_bladecenter",
+    Dictionary(
+        elements = [
+            ( "username",
+              TextAscii(
+                  title = _("Username"),
+                  allow_empty = False,
+              )
+            ),
+            ( "password",
+              Password(
+                  title = _("Password"),
+                  allow_empty = False,
+              )
+            ),
+        ],
+        optional_keys = False
+    ),
+    title = _("Check state of UCS Bladecenter"),
+    help = _("This rule selects the UCS Bladecenter agent instead of the normal Check_MK Agent "
+             "which collects the data through the UCS Bladecenter Web API"),
+    match = 'first')
 

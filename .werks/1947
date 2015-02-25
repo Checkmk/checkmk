@@ -1,0 +1,26 @@
+Title: agent_ucs_bladecenter: Monitors UCS Bladecenter via Web-API
+Level: 2
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424866234
+
+The new agent_ucs_bladecenter allows you to collect data from a
+UCS Bladecenter via its web-API.
+
+The following checks are currently supported
+
+<table>
+<tr><th>Check</th><th>Description</th></tr>
+<tr><td>ucs_bladecenter_fans</td><td>Operate status of fans</td></tr>
+<tr><td>ucs_bladecenter_fans.temp</td><td>Temperature at fans sensors</td></tr>
+<tr><td>ucs_bladecenter_psu.chassis_temp</td><td>Temperature at chassis sensors</td></tr>
+<tr><td>ucs_bladecenter_psu.switch_power</td><td>Switch Voltage, Current and Power</td></tr>
+<tr><td>ucs_bladecenter_psu</td><td>Chassis voltage levels</td></tr>
+<tr><td>ucs_bladecenter_if</td><td>Traffic and bandwidth for Ethernet, Interconnect and Fibrechannel Ports.
+Automatically groups portchannel interfaces.</td></tr>
+</table>
+
+Note: Portchannels for fibrechannel interfaces are not supported yet. It will be available soon.

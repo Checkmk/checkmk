@@ -1,0 +1,10 @@
+Title: Log complete Email address into monitoring history when notifying explicity addresses
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424870328
+
+

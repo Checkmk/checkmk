@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def parse_cisco_temp_temperature(info):
+def parse_cisco_temperature(info):
     description_info, state_info, levels_info, perfstuff = info
 
     # Parse OIDs described by CISCO-ENTITY-SENSOR-MIB
@@ -39,7 +39,6 @@ def parse_cisco_temp_temperature(info):
         thresholds.setdefault(sensor_id, [])
 
     for endoid, level in levels_info:
-        level = float(level) / (10 ** int(magnitude))
         # endoid is e.g. 21549.9 or 21459.10
         sensor_id, subid = endoid.split('.')
         thresholds.setdefault(sensor_id, []).append(level)
@@ -83,6 +82,8 @@ def parse_cisco_temp_temperature(info):
         parsed[item]['temp'] = int(temp)
         if state in ['5', '6']:
             parsed[item]['unknown'] = (3, "Sensor %s" % envmon_states[state])
+        elif int(temp) == 0:
+            parsed[item]['unknown'] = (3, "Sensor defect")
         elif max_temp and int(max_temp):
             parsed[item]['dev_status'] = None
             parsed[item]['dev_levels'] = (int(max_temp), int(max_temp))
@@ -103,12 +104,12 @@ def parse_cisco_temp_temperature(info):
     return parsed
 
 
-def inventory_cisco_temp_temperature(parsed):
+def inventory_cisco_temperature(parsed):
     for item in parsed.keys():
         yield item, None
 
 
-def check_cisco_temp_temperature(item, params, parsed):
+def check_cisco_temperature(item, params, parsed):
     if item in parsed:
         if parsed[item].get('unknown', None):
             return parsed[item]['unknown']
@@ -118,17 +119,16 @@ def check_cisco_temp_temperature(item, params, parsed):
                         dev_status = parsed[item]['dev_status'])
 
 
-check_info['cisco_temp_temperature'] = {
-    "parse_function"     : parse_cisco_temp_temperature,
-    "inventory_function" : inventory_cisco_temp_temperature,
-    "check_function"     : check_cisco_temp_temperature,
+check_info['cisco_temperature'] = {
+    "parse_function"     : parse_cisco_temperature,
+    "inventory_function" : inventory_cisco_temperature,
+    "check_function"     : check_cisco_temperature,
     "service_description": "Temperature %s",
     "group"              : "temperature",
     "has_perfdata"       : True,
-    "snmp_scan_function" : lambda oid: False,
-#    "snmp_scan_function" : lambda oid: True, #lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-#                                   # ( oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") != None or
-#                                   #   oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*") != None ),
+    "snmp_scan_function" : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
+                                    ( oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") != None or
+                                      oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*") != None ),
     "snmp_info"          : [
                                # cisco_temp_sensor data
                                ( ".1.3.6.1.2.1.47.1.1.1.1", [

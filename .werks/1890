@@ -1,0 +1,15 @@
+Title: cisco_temperature: Replaces cisco_temp_perf and cisco_temp_sensor
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.2.7i1
+Date: 1424871909
+
+This fixes an old issue with certain sensors not being detected on some
+Cisco devices.
+All services of cisco_temp_perf and cisco_temp_sensor will go unknown,
+these hosts will need to be re-inventorized. Rules set to configure
+cisco_temp_sensor will no longer apply to cisco_temperature, so these
+services will need to be reconfigured.

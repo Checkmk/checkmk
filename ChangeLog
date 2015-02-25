@@ -94,6 +94,7 @@
     * 2005 services: change service description from service_ to Service or new installations
     * 1862 netscaler_vserver: new check to monitor VServers on Citrix Netscaler Appliance
     * 2036 docsis_channels_upstream: Add handling for codewords (WATO rule, rate computation, Perf-O-Meter)
+    * 1947 agent_ucs_bladecenter: Monitors UCS Bladecenter via Web-API...
     * 1457 FIX: logins: new check renamed from "users" check...
             NOTE: Please refer to the migration notes!
     * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...
@@ -191,6 +192,8 @@
     * 2034 FIX: netapp_api_volumes: added Perf-O-Meter
     * 2035 FIX: check_mk-netapp_api_if, check_mk-if_brocade: added missing Perf-O-Meters
     * 2017 FIX: Solaris-Agent: Prevent hanging agent in uptime section...
+    * 1890 FIX: cisco_temperature: Replaces cisco_temp_perf and cisco_temp_sensor...
+            NOTE: Please refer to the migration notes!
     * 2018 FIX: ibm_imm_health: Fixed exception when host does provides empty SNMP data
 
     Multisite:
@@ -282,6 +285,7 @@
     * 1810 FIX: Rule based notifications: Fixed output of non contact mail recipient address in analyze table...
     * 1988 FIX: Gracefully handle invalid empty bulk notification files from previous buggy versions
     * 2015 FIX: Fixed sending notifications for services with umlauts in names...
+    * 2038 FIX: Log complete Email address into monitoring history when notifying explicity addresses
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used

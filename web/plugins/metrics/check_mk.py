@@ -467,6 +467,8 @@ check_metrics["check_mk-smart.temp"]                            = {}
 check_metrics["check_mk-viprinet_temp"]                         = {}
 check_metrics["check_mk-wagner_titanus_topsense.temp"]          = {}
 check_metrics["check_mk-cmciii.phase"]                          = {}
+check_metrics["check_mk-ucs_bladecenter_fans.temp"]             = {}
+check_metrics["check_mk-ucs_bladecenter_psu.chassis_temp"]      = {}
 
 check_metrics["check_mk-kernel"]                                = { "processes" : { "name" : "proc_creat", } }
 
@@ -500,7 +502,7 @@ check_metrics["check_mk-apc_ats_output"]                        = { "volt" : { "
 check_metrics["check_mk-raritan_pdu_inlet"]                     = {}
 check_metrics["check_mk-raritan_pdu_inlet_summary"]             = {}
 check_metrics["check_mk-ups_socomec_outphase"]                  = {}
-
+check_metrics["check_mk-ucs_bladecenter_psu.switch_power"]      = {}
 
 check_metrics["check_mk-bluecoat_sensors"]                      = {}
 

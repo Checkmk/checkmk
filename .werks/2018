@@ -1,0 +1,9 @@
+Title: ibm_imm_health: Fixed exception when host does provides empty SNMP data
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424874548
+Class: fix
+
+

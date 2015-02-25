@@ -345,6 +345,7 @@ register_rule(group,
                          value  = True,
                          title  = _("Expect Authoritative DNS Server"),
                          totext = _("Expect Authoritative"),
+                     )
                    ),
                    ( "response_time",
                      Tuple(
@@ -352,11 +353,11 @@ register_rule(group,
                          elements = [
                              Float(
                                  title = _("Warning if above"),
-                                 unit = "sec",
+                                 unit = _("sec"),
                                  default_value = 1),
                              Float(
                                  title = _("Critical if above"),
-                                 unit = "sec",
+                                 unit = _("sec"),
                                  default_value = 2),
                          ])
                     ),
@@ -1182,11 +1183,11 @@ register_rule(group,
                          elements = [
                              Integer(
                                  title = _("Warning if above"),
-                                 unit = "sec"
+                                 unit = _("sec")
                              ),
                              Integer(
                                  title = _("Critical if above"),
-                                 unit = "sec"
+                                 unit = _("sec")
                              ),
                          ])
                     ),

@@ -1,0 +1,141 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<ucs_bladecenter_fans:sep(9)>>>
+# equipmentNetworkElementFanStats Dn sys/switch-A/fan-module-1-1/fan-1/stats      SpeedAvg 8542
+# equipmentFanModuleStats Dn sys/chassis-2/fan-module-1-1/stats   AmbientTemp 29.000000
+# equipmentFan    Dn sys/chassis-1/fan-module-1-1/fan-1   Model N20-FAN5  OperState operable
+# equipmentFanStats       Dn sys/chassis-2/fan-module-1-1/fan-1/stats     SpeedAvg 3652
+
+def parse_ucs_bladecenter_fans(info):
+    data = ucs_bladecenter_convert_info(info)
+    fans = {}
+
+    def get_item_name(key):
+        tokens = key.split("/")
+        tokens[1] = tokens[1].replace("fan-module-", "Module ").replace("-", ".")
+        tokens = map(lambda x: x[0].upper() + x[1:], tokens)
+        if len(tokens) > 2:
+            tokens[2] = tokens[2].replace("fan-", ".")
+        return " ".join(tokens).replace("-", " ")
+
+    for component, key_low, key_high in [
+        ("equipmentNetworkElementFanStats",   4,   -6),
+        ("equipmentFanModuleStats",           4,   -6),
+        ("equipmentFan",                      4,  100),
+        ("equipmentFanStats",                 4,   -6),
+    ]:
+        for key, values in data.get(component, {}).items():
+            fan = key[key_low:key_high]
+            del values["Dn"]
+            name = get_item_name(fan)
+            fans.setdefault(name, {}).update(values)
+
+    return fans
+
+#   .--Fans----------------------------------------------------------------.
+#   |                         _____                                        |
+#   |                        |  ___|_ _ _ __  ___                          |
+#   |                        | |_ / _` | '_ \/ __|                         |
+#   |                        |  _| (_| | | | \__ \                         |
+#   |                        |_|  \__,_|_| |_|___/                         |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_ucs_bladecenter_fans(parsed):
+    items = set()
+    for key, values in parsed.items():
+        if "SpeedAvg" in values:
+            yield " ".join(key.split()[:2]), None
+
+
+def check_ucs_bladecenter_fans(item, _no_params, parsed):
+    my_fans = {}
+    for key, values in parsed.items():
+        if key.startswith(item) and "OperState" in values:
+            my_fans[key] = values
+
+    if not my_fans:
+        yield 3, "Fan statistics not available"
+        return
+
+    yield 0, "%d Fans" % len(my_fans)
+    for key, fan in sorted(my_fans.items()):
+        if fan["OperState"] != "operable":
+            yield 2, "Fan %s %s: average speed %s RPM" % \
+                  (key.split()[-1][2:], fan["OperState"], fan.get("SpeedAvg"))
+
+
+check_info["ucs_bladecenter_fans"] = {
+    'parse_function':          parse_ucs_bladecenter_fans,
+    'inventory_function':      inventory_ucs_bladecenter_fans,
+    'check_function':          check_ucs_bladecenter_fans,
+    'service_description':     'Fans %s',
+    'includes':                [ 'ucs_bladecenter.include' ],
+}
+
+#.
+#   .--Temperature---------------------------------------------------------.
+#   |     _____                                   _                        |
+#   |    |_   _|__ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |      | |/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |      | |  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      |_|\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   '----------------------------------------------------------------------'
+
+ucs_bladecenter_fans_temp_default_levels = {
+    "levels" : (40, 50),
+}
+
+# Fans are grouped per module, usually 8 components
+def inventory_ucs_bladecenter_fans_temp(parsed):
+    for key, values in parsed.items():
+        if "AmbientTemp" in values:
+            yield "Ambient " + " ".join(key.split()[:2]), {}
+
+
+def check_ucs_bladecenter_fans_temp(item, params, parsed):
+    sensor_item = item[8:] # drop "Ambient "
+    sensor_list = []
+    for key, values in parsed.items():
+        if key.startswith(sensor_item) and "AmbientTemp" in values:
+            loc = key.split()[-1].split(".")
+            sensor_list.append((
+                "Module %s Fan %s" % (loc[0], loc[1]),
+                float(values.get("AmbientTemp")),
+            ))
+    return check_temperature_list(sensor_list, params)
+
+
+check_info["ucs_bladecenter_fans.temp"] = {
+    'inventory_function'  : inventory_ucs_bladecenter_fans_temp,
+    'check_function'      : check_ucs_bladecenter_fans_temp,
+    'service_description' : 'Temperature %s FAN',
+    'has_perfdata'        : True,
+    'includes'            : [ 'ucs_bladecenter.include' ],
+    'default_levels_variable' :'ucs_bladecenter_fans_temp_default_levels'
+}

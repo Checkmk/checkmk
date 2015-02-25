@@ -8,6 +8,7 @@
 
     Notifications:
     * 2015 FIX: Fixed sending notifications for services with umlauts in names...
+    * 2038 FIX: Log complete Email address into monitoring history when notifying explicity addresses
 
 
 1.2.6b10:

@@ -670,7 +670,7 @@ register_rule(group,
             TextUnicode(
                 title = _("Name"),
                 help = _("Will be used in the service description. If the name starts with "
-                         "a caret (^), the service description will not be prefixed with HTTP." ),
+                         "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>HTTP</tt>." ),
                 allow_empty = False),
             Alternative(
                 title = _("Mode of the Check"),
@@ -1274,7 +1274,7 @@ def PluginCommandLine(addhelp = ""):
     return TextAscii(
           title = _("Command line"),
           help = _("Please enter the complete shell command including "
-                   "path name and arguments to execute. You can use Nagios "
+                   "path name and arguments to execute. You can use monitoring "
                    "macros here. The most important are:<ul>"
                    "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
                    "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
@@ -1292,12 +1292,12 @@ def PluginCommandLine(addhelp = ""):
 register_rule(group,
     "custom_checks",
     Dictionary(
-        title = _("Classical active and passive Nagios checks"),
-        help = _("With this ruleset you can configure &quot;classical Nagios checks&quot; "
+        title = _("Classical active and passive Monitoring checks"),
+        help = _("With this ruleset you can configure &quot;classical Monitoring checks&quot; "
                  "to be executed directly on your monitoring server. These checks "
                  "will not use Check_MK. It is also possible to configure passive "
-                 "checks that are fed with data from external sources via the Nagios "
-                 "command pipe."),
+                 "checks that are fed with data from external sources via the "
+                 "command pipe of the monitoring core."),
         elements = [
             ( "service_description",
               TextUnicode(
@@ -1682,8 +1682,8 @@ register_rule(group,
             ("duration", Tuple(
                 title = _("Loop duration"),
                 elements = [
-                    Age(title = _("Warning if above or equal")),
-                    Age(title = _("Critical if above or equal")),
+                    Age(title = _("Warning at")),
+                    Age(title = _("Critical at")),
                 ])
             ),
             ('delete_messages', FixedValue(True,

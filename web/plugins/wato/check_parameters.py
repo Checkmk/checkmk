@@ -7039,7 +7039,7 @@ register_check_parameters(
     "plug_count",
     _("Number of active Plugs"),
     Tuple(
-        help = _("Levels for the number of active plugs in a devics."),
+        help = _("Levels for the number of active plugs in a device."),
         elements = [
             Integer(title = _("critical if below or equal"), default_value = 30),
             Integer(title = _("warning if below or equal"), default_value = 32),

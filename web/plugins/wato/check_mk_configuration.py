@@ -1280,7 +1280,7 @@ register_configvar(group,
                 min_value = 1,
                 default_value = 720),
         title = _("Enable regular service discovery checks"),
-        help = _("If enabled, Check_MK will create one additional check per host "
+        help = _("If enabled, Check_MK will create one additional service per host "
                  "that does a regular check, if the service discovery would find new services "
                  "currently un-monitored.")),
     need_restart = True)

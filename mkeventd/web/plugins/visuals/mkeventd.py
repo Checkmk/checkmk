@@ -62,7 +62,7 @@ if mkeventd_enabled:
                 title = _('Event ID'),
             )),
             ('history_line', Integer(
-                title = _('History Line'),
+                title = _('History Line Number'),
             )),
         ]
     }

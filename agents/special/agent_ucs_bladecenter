@@ -1,0 +1,240 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# This agent uses UPNP API calls to the Fritz!Box to gather information
+# about connection configuration and status.
+
+
+import sys, getopt, httplib, socket, pprint, re
+
+def usage():
+    sys.stderr.write("""Check_MK UCS Bladecenter Agent
+
+USAGE: agent_ucs_bladecenter -u [username] -p [password] HOST
+       agent_ucs_bladecenter -h
+
+ARGUMENTS:
+  HOST                          Host name or IP address of the UCS Bladecenter
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -u, --username                Sets the username
+  -p, --password                Sets the password
+  --debug                       Debug mode: let Python exceptions come through
+""")
+
+short_options = 'hu:p:'
+long_options  = [
+    'help', 'username=', 'password=', 'debug', 'ucssdk'
+]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+opt_debug    = False
+opt_username = ""
+opt_password = ""
+opt_ucssdk   = False
+
+for o,a in opts:
+    if o in [ '--debug' ]:
+        opt_debug = True
+    elif o in [ '-u', '--username' ]:
+        opt_username = a
+    elif o in [ '--ucssdk' ]:
+        opt_ucssdk = True
+        from UcsSdk import *
+    elif o in [ '-p', '--password' ]:
+        opt_password = a
+    elif o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+
+if len(args) == 1:
+    host_address = args[0]
+elif not args:
+    sys.stderr.write("ERROR: No host given.\n")
+    sys.exit(1)
+else:
+    sys.stderr.write("ERROR: Please specify exactly one host.\n")
+    sys.exit(1)
+
+def get_pattern(pattern, line):
+    if not line:
+        return []
+    p = re.compile(pattern)
+    return p.findall(line)
+
+class Server:
+    def __init__(self, host_address):
+        self.netloc       = host_address
+        self.conn_handle  = httplib.HTTPSConnection(self.netloc)
+        self.cookie       = None
+
+        if opt_debug:
+            sys.stderr.write("Connecting to %s...\n" % self.netloc)
+            sys.stderr.flush()
+
+    def communicate(self, payload, params = {}):
+        params.update({"cookie": self.cookie})
+        payload = payload % params
+        if opt_debug:
+            sys.stderr.write("====> %s\n" % payload)
+
+        self.conn_handle.putrequest("POST", "/nuova")
+        self.conn_handle.putheader("Content-Length", "%d" % len(payload))
+        self.conn_handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
+        self.conn_handle.endheaders()
+        self.conn_handle.send(payload)
+        response = self.conn_handle.getresponse()
+        data = response.read()
+        if opt_debug:
+            sys.stderr.write("<==== %s\n" % data)
+        return data
+
+    def login(self, user, password):
+        payload = '<?xml version="1.0" ?><aaaLogin inName="%s" inPassword="%s"/>' % (user, password)
+        response = self.communicate(payload)
+        if "errorDescr" in response:
+            elements = get_pattern('errorDescr="(.*?)"', response)
+            sys.stderr.write("Cannot connect to UCS Bladecenter. Maybe you provided " \
+                             "the wrong credentials. Please check your connection settings " \
+                             "and try again. Server response: %s" % elements[0])
+            sys.exit(1)
+        self.cookie = get_pattern('outCookie="(.*?)"', response)[0]
+
+
+    # wrapper to circumvent some if/else
+    def Logout(self):
+        self.logout()
+
+    def logout(self):
+        payload = '<?xml version="1.0" ?><aaaLogout inCookie="%(cookie)s"/>'
+        response = self.communicate(payload)
+
+    def get_class(self, classname):
+        payload = '<?xml version="1.0" ?><configResolveClass classId="%(classname)s"' \
+                        ' cookie="%(cookie)s" inHierarchical="false"/>'
+        return self.communicate(payload, {"classname": classname})
+
+
+if not opt_ucssdk:
+    handle = Server(host_address)
+    handle.login(opt_username, opt_password)
+else:
+    # Use the UcsSdk to query the data. This loads 35MB(!) of python code...
+    try:
+        handle = UcsHandle()
+        if opt_debug:
+            handle.SetDumpXml() # Debug telegrams
+        handle.Login(host_address, username = opt_username, password = opt_password)
+    except:
+        sys.stderr.write("Cannot connect to UCS Bladecenter. Maybe you provided " \
+                         "the wrong credentials. Please check your connection settings " \
+                         "and try again")
+
+
+for entry, fields in [
+        ## FANS
+        ("<<<ucs_bladecenter_fans:sep(9)>>>", None),
+        ("equipmentFan",                    ["Dn", "Model", "OperState"]),
+        ("equipmentFanModuleStats",         ["Dn", "AmbientTemp"]),
+        ("equipmentNetworkElementFanStats", ["Dn", "SpeedAvg"]),
+        ("equipmentRackUnitFanStats",       ["Dn", "SpeedAvg"]),
+        ("equipmentFanStats",               ["Dn", "SpeedAvg"]),
+
+        ### PSU
+        ("<<<ucs_bladecenter_psu:sep(9)>>>", None),
+        ("equipmentPsuInputStats",  ["Dn", "Current", "PowerAvg", "Voltage"]),
+        ("equipmentPsuStats",       ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),
+
+        # NETWORK
+        ("<<<ucs_bladecenter_if:sep(9)>>>", None),
+
+        # Fibrechannel
+        ("fcStats",    ["Dn", "BytesRx", "BytesTx", "PacketsRx", "PacketsTx", "Suspect"]),
+        ("fcErrStats", ["Dn", "Rx", "Tx", "CrcRx", "DiscardRx", "DiscardTx"]),
+        ("fabricFcSanEp",   ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
+        ("fabricFcSanPc",   ["Dn",         "AdminState", "OperState", "OperSpeed"]),
+        ("fabricFcSanPcEp", ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
+
+        # Errors stats. These are also used by interconnects
+        ("etherTxStats", ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"]),
+        ("etherRxStats", ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"]),
+        ("etherErrStats", ["Dn", "OutDiscard", "Rcv"]),
+
+        # Ethernet
+        ("fabricEthLanEp",     ["Dn", "EpDn", "AdminState", "OperState", "AdminSpeed", "PortId", "SwitchId", "SlotId"]),
+        ("fabricEthLanPc",     ["Dn",         "AdminState", "OperState", "AdminSpeed", "OperSpeed", "Name", "PortId"]),
+        ("fabricEthLanPcEp",   ["Dn", "EpDn", "AdminState", "OperState",               "PortId", "SwitchId", "SlotId"]),
+
+        # Interconnects
+        ("fabricDceSwSrvEp",   ["Dn", "EpDn", "AdminState", "OperState",               "PortId", "SwitchId", "SlotId"]),
+        ("fabricDceSwSrvPc",   ["Dn",         "AdminState", "OperState",               "OperSpeed", "Name", "PortId"]),
+        ("fabricDceSwSrvPcEp", ["Dn", "EpDn", "AdminState", "OperState",               "PortId", "SwitchId", "SlotId"]),
+
+        ]:
+    try:
+        if fields == None:
+            # Just a new section header...
+            print entry
+            continue
+
+        if not opt_ucssdk:
+            response = handle.get_class(entry)
+            elements = get_pattern('<%(entry)s (.*?)/>' % {"entry": entry}, response)
+            for element in elements:
+                sys.stdout.write("%s\t" % entry)
+                values = []
+                for field in fields:
+                    tmp_field = field[0].lower()+ field[1:] # workaround
+                    value = get_pattern('%s="(.*?)"' % tmp_field, element)[0]
+                    if value:
+                        values.append("%s %s" % (field, value))
+                print "\t".join(values)
+        else:
+            # Use UcsSdk to query the data (used for debugging)
+            for obj in handle.GetManagedObject(None, entry):
+                sys.stdout.write("%s\t" % entry)
+                values = []
+                for field in fields:
+                    value = getattr(obj, field)
+                    if value:
+                        values.append("%s %s" % (field, value))
+                print "\t".join(values)
+    except Exception, e:
+        print e
+        if opt_debug:
+            try:
+                handle.Logout()
+            except:
+                pass
+            raise
+
+handle.Logout()

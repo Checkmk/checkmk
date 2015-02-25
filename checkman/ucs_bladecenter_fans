@@ -1,0 +1,16 @@
+title: UCS Bladecenter Fans: Health status of fans
+agents: agent_ucs_bladecenter
+catalog: hw/server/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the fans of the various components inside
+ an UCS bladecenter. For each chassis and each switch a fan summary check is created.
+ If one of the fans fails the summary check will point out its location.
+
+item:
+ The component where the fans are located, e.g chassis or switch
+
+inventory:
+ One summary check for each component is created
+

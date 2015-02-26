@@ -293,6 +293,7 @@
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used
+    * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules
 
     Reporting & Availability:
     * 1990 FIX: Fix two exceptions in PDF exports of host group views

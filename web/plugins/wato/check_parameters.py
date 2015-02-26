@@ -6159,17 +6159,17 @@ register_check_parameters(
             Tuple(
                 title = _("Time left on battery"),
                 elements = [
-                    Integer(
+                    Age(
                         title = _("Warning at"),
                         help = _("Time left on Battery at and below which a warning state is triggered"),
-                        unit = _("min"),
                         default_value = 0,
+                        display = [ "hours", "minutes" ]
                     ),
-                    Integer(
+                    Age(
                         title = _("Critical at"),
                         help = _("Time Left on Battery at and below which a critical state is triggered"),
-                        unit = _("min"),
                         default_value = 0,
+                        display = [ "hours", "minutes" ]
                     ),
                 ],
             ),

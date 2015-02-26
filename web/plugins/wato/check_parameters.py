@@ -676,7 +676,7 @@ register_rule(group + '/' + subgroup_inventory,
         ],
         optional_keys = ['limit_item_levels'],
     ),
-    match = 'list',
+    match = 'all',
 )
 
 register_rule(group + '/' + subgroup_inventory,

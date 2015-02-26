@@ -1,0 +1,12 @@
+Title: Allow commands for setting downtimes and acknowledging on BI aggregates
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424964766
+Class: feature
+
+The commands for scheduling downtimes and for acknowledging problems and removing
+acknowledgements now can be done on BI aggregates. This is the same as performing
+these commands on all hosts and services that are contained in the selected
+BI aggregates. Note: removing downtimes currently does not work that way.

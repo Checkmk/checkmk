@@ -1896,6 +1896,7 @@ _("services")
 _("hosts")
 _("commands")
 _("downtimes")
+_("aggregations")
 
 # Returns:
 # True -> Actions have been done
@@ -1918,19 +1919,27 @@ def do_actions(view, what, action_rows, backurl):
     command = None
     title, executor = core_command(what, action_rows[0], 0, len(action_rows))[1:3] # just get the title and executor
     if not html.confirm(_("Do you really want to %(title)s the following %(count)d %(what)s?") %
-            { "title" : title, "count" : len(action_rows), "what" : _(what + "s"), }, method = 'GET'):
+            { "title" : title, "count" : len(action_rows), "what" : visuals.infos[what]["title_plural"], }, method = 'GET'):
         return False
 
     count = 0
     already_executed = set([])
     for nr, row in enumerate(action_rows):
         core_commands, title, executor = core_command(what, row, nr, len(action_rows))
-        for command in core_commands:
-            if command not in already_executed:
+        for command_entry in core_commands:
+            if command_entry not in already_executed:
+                # Some command functions return the information about the site per-command (e.g. for BI)
+                if type(command_entry) == tuple:
+                    site, command = command_entry
+                else:
+                    command = command_entry
+                    site = row["site"]
+
                 if type(command) == unicode:
                     command = command.encode("utf-8")
-                executor(command, row["site"])
-                already_executed.add(command)
+
+                executor(command, site)
+                already_executed.add(command_entry)
                 count += 1
 
     message = None

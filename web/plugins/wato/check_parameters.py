@@ -6155,8 +6155,26 @@ register_check_parameters(
                     ],
                     optional_keys = False,
                 )),
-            ],
-            optional_keys = ['post_calibration_levels', 'output_load'],
+            ("battime",
+            Tuple(
+                title = _("Time left on battery"),
+                elements = [
+                    Age(
+                        title = _("Warning at"),
+                        help = _("Time left on Battery at and below which a warning state is triggered"),
+                        default_value = 0,
+                        display = [ "hours", "minutes" ]
+                    ),
+                    Age(
+                        title = _("Critical at"),
+                        help = _("Time Left on Battery at and below which a critical state is triggered"),
+                        default_value = 0,
+                        display = [ "hours", "minutes" ]
+                    ),
+                ],
+            ),
+        )],
+            optional_keys = ['post_calibration_levels', 'output_load', 'battime'],
         ),
         forth = apc_convert_from_tuple
     ),

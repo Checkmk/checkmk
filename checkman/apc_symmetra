@@ -71,7 +71,7 @@ inventory:
  and if the name of this OID is known to the test. If this is true the system is inventorized.
 
 [parameters]
-parameters(dict): parameters is a dictionary with two keys
+parameters(dict): parameters is a dictionary with the following keys:
 
  {"levels"}: a tuple of critical levels for battery capacity, temperature, current and output
  voltage. The numbers are integers.
@@ -79,6 +79,9 @@ parameters(dict): parameters is a dictionary with two keys
  {"post_calibration_levels"}: a dictionary of two parameters: {"altcapacity"} is the alternative
  critical level for the battery capacity in the post-calibration phase in precent.  {"additional_time_span"}
  is a time span the post-calibration phase is extended past the day of the calibration in minutes.
+
+ {"battime"}: A tuple (warn(int), crit(int)) of levels for the remaining battery time in seconds.
+ This key is optional.
 
 parameters(tuple): The old format of a tuple of 4 values is also still supported, containing what
  is found in the key {"levels"} in the dictionary.

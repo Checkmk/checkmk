@@ -1,0 +1,13 @@
+title: Sansymphony: Alerts
+agents: windows
+catalog: app/sansymphony
+license: GPL
+distribution: check_mk
+description:
+ This check measures the current amount of unacknowlegded alerts reported by the sansymphony management. 
+ Levels for {WARN} and {CRIT} can be specified for the number of alerts. 
+ 
+ The windows agent needs to be extended with the sansymphony.ps1 provided in agents/windows/plugins. 
+
+inventory:
+ One service will be created

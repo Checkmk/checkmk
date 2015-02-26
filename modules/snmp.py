@@ -41,7 +41,11 @@ def strip_snmp_value(value, hex_plain = False):
         if len(v) > 2 and is_hex_string(v):
             return not hex_plain and convert_from_hex(v) or value
         else:
-            return v.strip()
+            # Fix for non hex encoded string which have been somehow encoded by the
+            # netsnmp command line tools. An example:
+            # Checking windows systems via SNMP with hr_fs: disk names like c:\
+            # are reported as c:\\, fix this to single \
+            return v.strip().replace('\\\\', '\\')
     else:
         return v
 

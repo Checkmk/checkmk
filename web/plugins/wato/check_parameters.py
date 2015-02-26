@@ -6041,11 +6041,7 @@ register_check_parameters(
         help = _("The identifier of the thermal sensor.")),
     "dict"
 )
-
-register_check_parameters(
-   subgroup_os,
-    "ntp_time",
-    _("State of NTP time synchronisation"),
+ntp_params = \
     Tuple(
         elements = [
             Integer(
@@ -6066,8 +6062,24 @@ register_check_parameters(
                 help = _("The offset in ms at which a critical state is triggered."),
             ),
         ]
-    ),
+    )
+
+register_check_parameters(
+   subgroup_os,
+    "ntp_time",
+    _("State of NTP time synchronisation"),
+    ntp_params,
     None,
+    "first"
+)
+
+register_check_parameters(
+   subgroup_os,
+    "ntp_peer",
+    _("State of NTP peer"),
+    ntp_params,
+    TextAscii(
+        title = _("Name of the peer")),
     "first"
 )
 

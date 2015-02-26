@@ -201,6 +201,8 @@
     * 2048 FIX: netapp_api_fan, netapp_api_psu, netapp_api_temp: fixed typo in service description Shelfes -> Shelves
             NOTE: Please refer to the migration notes!
     * 2021 FIX: if_lancom: Also used for checking ELSA/T-Systems branded devices
+    * 2022 FIX: SNMP: Fixed handling of backslashes in SNMP data...
+            NOTE: Please refer to the migration notes!
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
@@ -282,6 +284,7 @@
     * 2003 FIX: Fix saving of "Users are allowed to directly login into the Web GUI of this site"...
     * 2010 FIX: Improved error message when trying to add group assignment rule without having a group configured
     * 1946 FIX: WATO Web-API: edit host action does no longer unset all unspecified attributes...
+    * 1223 FIX: Fixed manual configuration of ntp peer check...
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

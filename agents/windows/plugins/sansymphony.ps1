@@ -1,6 +1,30 @@
 # check_datacore.ps1
 # Version 0.2
 # Author : Andre Eckstein, Andre.Eckstein@Bechtle.com
+# Prerequisites
+# -------------
+# 1. Datacore SANsymphony V8 or V9 must be installed 
+# SANmelody and Sansymphony are not supported.
+# 
+# 2. The SANsymphony CMDlets need to be installed on the monitored Datacore Server
+# If not installed you need to install the CMDlets with the SANsymphony V installation routine.
+# - Enabling of .net 4 Framwork support in PowerShell
+# Support for .net 4 must be enabled. To achieve this, create a file with the name powershell.exe.config with the following content:
+# 
+# <?xml version="1.0" encoding="utf-8" ?>
+# <configuration>
+#   <startup useLegacyV2RuntimeActivationPolicy="true">
+#         <supportedRuntime version="v4.0"/>
+#         <supportedRuntime version="v2.0.50727" />
+#     </startup>
+# </configuration>
+# 
+# And just put that file into the following directories: 
+# c:\windows\system32\WindowsPowerShell\v1.0\ and c:\windows\sysWOW64\WindowsPowerShell\v1.0\
+# 
+# 3. A working Check_MK agent on the monitored host
+# Be sure that the Check_MK agent is working without the sansymphony.ps1 plugin. You can verify this by calling telnet <servername or ip> 6556.
+# There should be a lot text output showing the different sections.
 
 #configuration:
 

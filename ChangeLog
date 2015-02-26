@@ -1,5 +1,6 @@
 1.2.6b12:
     Checks & Agents:
+    * 2039 mk_logwatch: new per-logfile-options maxfilesize and maxlinesize...
     * 2048 FIX: netapp_api_fan, netapp_api_psu, netapp_api_temp: fixed typo in service description Shelfes -> Shelves
             NOTE: Please refer to the migration notes!
 

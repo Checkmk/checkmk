@@ -2987,6 +2987,44 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_networking,
+    "memory_simple",
+    _("Main memory usage of simple devices"),
+    Transform(
+        Dictionary(
+            help = _("Memory levels for simple devices not running more complex OSs"),
+            elements = [
+                ("levels", CascadingDropdown(
+                    title = _("Levels for memory usage"),
+                    choices = [
+                        ( "perc_used",
+                        _("Percentual levels for used memory"),
+                        Tuple(
+                            elements = [
+                                 Percentage(title = _("Warning at a memory usage of"), default_value = 80.0, maxvalue = None),
+                                 Percentage(title = _("Critical at a memory usage of"), default_value = 90.0, maxvalue = None)
+                            ]
+                        )),
+                        ( "abs_free",
+                        _("Absolute levels for free memory"),
+                        Tuple(
+                            elements = [
+                               Filesize(title = _("Warning below")),
+                               Filesize(title = _("Critical below"))
+                            ]
+                        )),
+                        ( "ignore", _("Do not impose levels")),
+                    ])
+                ),
+            ],
+            optional_keys = [],
+        ),
+        forth = lambda old: type(old) != dict and { "levels" : ( "perc_used", old) },
+    ),
+    None, None
+)
+
+register_check_parameters(
     subgroup_os,
     "memory_multiitem",
     _("Main memory usage of devices with modules"),

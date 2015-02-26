@@ -1,0 +1,10 @@
+Title: Fixed manual configuration of ntp peer check
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b12
+Date: 1424959497
+Class: fix
+
+The ntp peer check can now be configured using wato. Just use the rule "State of NTP peer" instead "State of NTP time synchronisation".
+

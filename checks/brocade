@@ -38,6 +38,7 @@
 def brocade_sensor_convert(info, what):
     return_list = []
     for presence, state, name in info:
+        name = name.lstrip() # remove leading spaces provided via SNMP
         if name.startswith(what) and presence != "6" and (saveint(state) > 0 or what == "Power"):
             sensor_id  = name.split('#')[-1]
             return_list.append([sensor_id, name, state])

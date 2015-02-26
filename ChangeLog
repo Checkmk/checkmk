@@ -95,6 +95,7 @@
     * 1862 netscaler_vserver: new check to monitor VServers on Citrix Netscaler Appliance
     * 2036 docsis_channels_upstream: Add handling for codewords (WATO rule, rate computation, Perf-O-Meter)
     * 1947 agent_ucs_bladecenter: Monitors UCS Bladecenter via Web-API...
+    * 2039 mk_logwatch: new per-logfile-options maxfilesize and maxlinesize...
     * 1457 FIX: logins: new check renamed from "users" check...
             NOTE: Please refer to the migration notes!
     * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...
@@ -198,6 +199,7 @@
     * 2019 FIX: heartbeat_crm: Be compatible to yet unknown crm_mon output format
     * 2048 FIX: netapp_api_fan, netapp_api_psu, netapp_api_temp: fixed typo in service description Shelfes -> Shelves
             NOTE: Please refer to the migration notes!
+    * 2021 FIX: if_lancom: Also used for checking ELSA/T-Systems branded devices
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
@@ -292,6 +294,7 @@
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used
+    * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules
 
     Reporting & Availability:
     * 1990 FIX: Fix two exceptions in PDF exports of host group views

@@ -1,0 +1,13 @@
+Title: mk_logwatch: new per-logfile-options maxfilesize and maxlinesize
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424944221
+
+These options allow you to truncated too long lines (in order to save space
+and processing time for excessivly long lines) and to get a warning if the
+size of a logfile is too large. Please refer to the online documentation
+for details.

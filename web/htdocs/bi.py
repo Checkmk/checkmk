@@ -575,14 +575,14 @@ def find_matching_services(aggr_type, what, calllist):
         if host_matches != None:
             if what == config.FOREACH_CHILD:
                 list_of_matches  = [ host_matches + (child,) for child in childs ]
-            if what == config.FOREACH_PARENT:
+            elif what == config.FOREACH_PARENT:
                 list_of_matches  = [ host_matches + (parent,) for parent in parents ]
             else:
                 list_of_matches = [ host_matches ]
 
-            for host_matches in list_of_matches:
+            for matched_host in list_of_matches:
                 if service_re == config.HOST_STATE:
-                    matches.add(host_matches)
+                    matches.add(matched_host)
                 else:
                     for service in services:
                         mo = (service_re, service)
@@ -591,7 +591,7 @@ def find_matching_services(aggr_type, what, calllist):
                         m = regex(service_re).match(service)
                         if m:
                             svc_matches = tuple(m.groups())
-                            matches.add(host_matches + svc_matches)
+                            matches.add(matched_host + svc_matches)
                         else:
                             service_nomatch_cache.add(mo)
 

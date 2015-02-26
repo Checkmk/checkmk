@@ -44,6 +44,8 @@ def check_if64(item, params, info):
 def if64_scan_function(oid):
     ignored_strings = [
         "LANCOM",
+        "ELSA",
+        "T-Systems",
         "Brocade VDX Switch",
     ]
     for string in ignored_strings:

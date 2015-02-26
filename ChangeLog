@@ -5,6 +5,9 @@
             NOTE: Please refer to the migration notes!
     * 2021 FIX: if_lancom: Also used for checking ELSA/T-Systems branded devices
 
+    WATO:
+    * 1223 FIX: Fixed manual configuration of ntp peer check...
+
     BI:
     * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules
 

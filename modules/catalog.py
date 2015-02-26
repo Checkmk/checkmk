@@ -106,6 +106,7 @@ manpage_catalog_titles = {
         "sap"           : "SAP R/3",
         "tsm"           : "IBM Tivoli Storage Manager (TSM)",
         "unitrends"     : "Unitrends",
+        "sansymphony"   : "Datacore SANsymphony",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",

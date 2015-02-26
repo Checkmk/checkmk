@@ -1,0 +1,19 @@
+title: Sansymphony: Pool
+catalog: app/sansymphony
+agents: windows
+distribution: check_mk
+license: GPL
+description:
+
+ This check measures if the dynamic pool is running, if the cache is in ReadWrite mode and the filling rate of the reported pool allocation. 
+ If the dynamic pool not running, {CRIT} will be reported.
+ If the cache is not in ReadWrite mode, also {CRIT} will be reported.
+ Also it is possible to set levels to the measured filling rate of the disk pool allocation.
+ 
+ The windows agent needs to be extended with the sansymphony.ps1 provided in agents/windows/plugins. 
+
+Performance data:
+ The check outputs the disk pool allocation in percent.
+
+Inventory:
+ One service will be created

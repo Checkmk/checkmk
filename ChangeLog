@@ -3,6 +3,9 @@
     * 2048 FIX: netapp_api_fan, netapp_api_psu, netapp_api_temp: fixed typo in service description Shelfes -> Shelves
             NOTE: Please refer to the migration notes!
 
+    BI:
+    * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules
+
 
 1.2.6b11:
     Core & Setup:

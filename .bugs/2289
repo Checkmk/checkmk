@@ -1,0 +1,10 @@
+Title: "Host is not managed by WATO" link to other WATO in non distributed WATO setup
+Component: multisite
+State: open
+Date: 2015-02-26 14:48:24
+Targetversion: future
+Class: feature
+
+In distributed multisite setups, but non distributed WATO setups it would
+be nice to have a link to the remote WATO instead of a simple exception
+that the host is not managed by the local WATO.

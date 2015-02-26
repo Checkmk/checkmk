@@ -48,7 +48,8 @@ def check_netapp_api_fan(_no_item, _no_params, parsed):
             if fans["cooling-element-is-error"][idx] == "true":
                 fan_errors.append((2, "Error in Shelf %s Fan %s" % (shelf, fans["cooling-element-number"][idx])))
 
-    yield 0, "%s Fans installed" % fan_count
+
+    yield 0, "%s fans assigned to this filer" % fan_count
 
     max_fans = 5
     for state, text in fan_errors[:max_fans]:
@@ -62,7 +63,7 @@ check_info["netapp_api_fan"] = {
     'check_function'      : check_netapp_api_fan,
     'parse_function'      : netapp_api_parse_info_environ,
     'inventory_function'  : inventory_netapp_api_fan,
-    'service_description' : 'Fan Status Shelfes',
+    'service_description' : 'Fan Status Shelves',
     'includes'            : ["netapp_api.include"]
 }
 

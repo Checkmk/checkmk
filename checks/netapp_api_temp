@@ -64,7 +64,10 @@ def check_netapp_api_temp(item, params, parsed):
 
             sensorlist.append( (shelf + "/" + sensor_no, current_temp, kwargs) )
 
-    return check_temperature_list(sensorlist, params)
+    if not sensorlist:
+        return 0, "No temperature sensors assigned to this filer"
+    else:
+        return check_temperature_list(sensorlist, params)
 
 
 check_info["netapp_api_temp"] = {
@@ -73,7 +76,7 @@ check_info["netapp_api_temp"] = {
     'parse_function'      : netapp_api_parse_info_environ,
     'has_perfdata'        : True,
     'group'               : "temperature",
-    'service_description' : 'Temperature %s Shelfes',
+    'service_description' : 'Temperature %s Shelves',
     'includes'            : ["netapp_api.include", "temperature.include"]
 }
 

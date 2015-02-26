@@ -34,7 +34,7 @@ def if_lancom_convert(info):
     ssid_dict = dict(ssidtab)
     new_info = []
     for line in iftab:
-        if line[20].startswith("Point-2-Point"):
+        if line[20].startswith("P2P") or line[20].startswith("Point-2-Point"):
            continue
         else:
             ifName = line[1]

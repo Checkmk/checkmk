@@ -65,14 +65,12 @@ def inventory_cisco_power(info):
             yield name, None
         else:
             for entry in entries:
-                yield ("%s/%s" % (name, entry)), None
+                yield ("%s %s" % (name, entry)), None
 
 
 def check_cisco_power(item, no_params, info):
-    if "/" in item:
-        item = item.split("/")[1]
     for sid, textinfo, state, source in info:
-        if sid == item or cisco_sensor_item(textinfo, sid) == item:
+        if cisco_sensor_item(textinfo, sid) == item or cisco_sensor_item(textinfo, sid)+" "+sid == item:
             state = int(state)
             source = int(source)
             output = 'state: %s, source: %s' % \

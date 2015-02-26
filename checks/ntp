@@ -159,7 +159,7 @@ check_info["ntp"] = {
     'inventory_function':      inventory_ntp,
     'service_description':     'NTP Peer %s',
     'has_perfdata':            True,
-    'group':                   'ntp_time',
+    'group':                   'ntp_peer',
 }
 
 check_info["ntp.time"] = {

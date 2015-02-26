@@ -1,0 +1,9 @@
+Title: if_lancom: Also used for checking ELSA/T-Systems branded devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b12
+Date: 1424947137
+Class: fix
+
+

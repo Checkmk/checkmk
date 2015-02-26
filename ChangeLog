@@ -3,6 +3,7 @@
     * 2039 mk_logwatch: new per-logfile-options maxfilesize and maxlinesize...
     * 2048 FIX: netapp_api_fan, netapp_api_psu, netapp_api_temp: fixed typo in service description Shelfes -> Shelves
             NOTE: Please refer to the migration notes!
+    * 2021 FIX: if_lancom: Also used for checking ELSA/T-Systems branded devices
 
     BI:
     * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules

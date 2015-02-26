@@ -1,0 +1,10 @@
+Title: apc_symmetra: Now supports setting levels on remaining battery time
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424948572
+Class: feature
+
+The WATO rule and check have been extended to allow setting levels on remaining
+battery time. Doing so is optional.

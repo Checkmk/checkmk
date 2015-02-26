@@ -202,10 +202,10 @@ def check_apc(item, params, info):
     label = ""
     if params.get('battime'):
         battime_warn, battime_crit = params['battime']
-        if int(RunTimeRemaining) / 60 <= battime_crit:
+        if int(RunTimeRemaining) <= battime_crit:
             battime_state = 2
             label = "(!!)"
-        elif int(RunTimeRemaining) / 60 <= battime_warn:
+        elif int(RunTimeRemaining) <= battime_warn:
             battime_state = 1
             label = "(!)"
 

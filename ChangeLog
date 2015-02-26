@@ -199,6 +199,7 @@
     * 2019 FIX: heartbeat_crm: Be compatible to yet unknown crm_mon output format
     * 2048 FIX: netapp_api_fan, netapp_api_psu, netapp_api_temp: fixed typo in service description Shelfes -> Shelves
             NOTE: Please refer to the migration notes!
+    * 2021 FIX: if_lancom: Also used for checking ELSA/T-Systems branded devices
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

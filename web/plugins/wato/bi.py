@@ -138,6 +138,7 @@ aggregation_rules["filesystems"] = (
       ( "$HOST$", "Disk|MD" ),
       ( "multipathing", [ "$HOST$" ]),
       ( FOREACH_SERVICE, "$HOST$", "fs_(.*)", "filesystem", [ "$HOST$", "$1$" ] ),
+      ( FOREACH_SERVICE, "$HOST$", "Filesystem(.*)", "filesystem", [ "$HOST$", "$1$" ] ),
   ]
 )
 
@@ -147,6 +148,7 @@ aggregation_rules["filesystem"] = (
   "worst",
   [
       ( "$HOST$", "fs_$FS$$" ),
+      ( "$HOST$", "Filesystem$FS$$" ),
       ( "$HOST$", "Mount options of $FS$$" ),
   ]
 )

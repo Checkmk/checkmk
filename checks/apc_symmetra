@@ -196,10 +196,22 @@ def check_apc(item, params, info):
 
     # 9. run time remaining
     # RunTimeRemaining formatiert == "26:00.00"
+    battime_state = 0
     hrs = int(RunTimeRemaining) / 3600
     mins, secs = divmod(int(RunTimeRemaining) % 3600, 60)
-    single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs),
-                            ("runtime", RunTimeRemaining/60)) )
+    battime_warn, battime_crit = None, None
+    label = ""
+    if params.get('battime'):
+        battime_warn, battime_crit = params['battime']
+        if int(RunTimeRemaining) <= battime_crit:
+            battime_state = 2
+            label = "(!!)"
+        elif int(RunTimeRemaining) <= battime_warn:
+            battime_state = 1
+            label = "(!)"
+
+    single_states.append( (battime_state, "run time remaining: %02d:%02d:%02d%s" % (hrs, mins, secs, label),
+                            ("runtime", RunTimeRemaining/60, battime_warn, battime_crit)) )
 
     # 10. Adv Output load (load in percent)
     load_state = 0

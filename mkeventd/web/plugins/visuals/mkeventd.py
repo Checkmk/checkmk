@@ -48,6 +48,7 @@ if mkeventd_enabled:
 
     infos['event'] = {
         'title'       : _('Event Console Event'),
+        'title_plural': _('Event Console Events'),
         'single_spec' : [
             ('event_id', Integer(
                 title = _('Event ID'),
@@ -57,6 +58,7 @@ if mkeventd_enabled:
 
     infos['history'] = {
         'title'       : _('Historic Event Console Event'),
+        'title_plural': _('Historic Event Console Events'),
         'single_spec' : [
             ('event_id', Integer(
                 title = _('Event ID'),

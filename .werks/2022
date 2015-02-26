@@ -1,0 +1,19 @@
+Title: SNMP: Fixed handling of backslashes in SNMP data
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1424962027
+Class: fix
+
+Some checks like the hr_fs checks e.g. create services with
+backslashes in the service descriptions when monitoring
+windows filesystems. Those services were named "Filesystem c:\\..."
+for example, which was using a double backslash which is wrong.
+This behaviour has now been changed to just use a single slash.
+
+With this change your services will be reported as UNKNOWN when
+you have such services with double backslashes in their names.
+You will then need to rediscover the services to get them with
+just a single slash. If you like to keep the performance graph
+history, you will need to migrate them on your own.

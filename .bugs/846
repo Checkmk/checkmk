@@ -1,0 +1,8 @@
+Title: Manual Checks -> ntp (peers)
+Component: wato
+State: done
+Date: 2015-02-26 14:27:53
+Targetversion: 1.2.6
+Class: bug
+
+It is possible to configure the Checktype ntp (NTP peers) manualy in Wato, but then the item is missing. ntp.time etc dond need a item, what leads to his issue.

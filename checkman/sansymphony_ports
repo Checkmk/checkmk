@@ -1,0 +1,14 @@
+title: Sansymphony: Ports
+agents: windows
+catalog: app/sansymphony
+distribution: check_mk
+license: GPL
+description:
+ This check measures the port status of the reported port states by the sansymphony management.  
+ If the port state is up, {OK} will be reported.
+ If the port state is down, {CRIT} will be reported.
+
+ The windows agent needs to be extended with the sansymphony.ps1 provided in agents/windows/plugins. 
+
+Inventory:
+ One service will be created

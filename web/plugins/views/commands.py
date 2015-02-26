@@ -266,6 +266,17 @@ config.declare_permission("action.acknowledge",
         [ "user", "admin" ])
 
 def command_acknowledgement(cmdtag, spec, row):
+    if "aggr_tree" in row: # BI mode
+        specs = []
+        for site, host, service in bi.find_all_leaves(row["aggr_tree"]):
+            if service:
+                spec = "%s;%s" % (host, service)
+                cmdtag = "SVC"
+            else:
+                spec = host
+                cmdtag = "HOST"
+            specs.append((site, spec, cmdtag))
+
     if html.var("_acknowledge"):
         comment = html.var_utf8("_ack_comment")
         if not comment:
@@ -282,21 +293,34 @@ def command_acknowledgement(cmdtag, spec, row):
         else:
             expire = 0
 
-        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
-                      (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % lqencode(comment)) \
-                      + (";%d" % expire)
+        def make_command(spec, cmdtag):
+            return "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
+                          (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % lqencode(comment)) \
+                          + (";%d" % expire)
+
+        if "aggr_tree" in row: # BI mode
+            commands = [(site, make_command(spec, cmdtag)) for (site, spec, cmdtag) in specs ]
+        else:
+            commands = [ make_command(spec, cmdtag) ]
+
         title = _("<b>acknowledge the problems%s</b> of") % \
                     (expire and (_(" for a period of %s") % Age().value_to_text(expire_secs)) or "")
-        return command, title
+        return commands, title
 
     elif html.var("_remove_ack"):
-        command = "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
+        def make_command(spec, cmdtag):
+            return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
+
+        if "aggr_tree" in row: # BI mode
+            commands = [(site, make_command(spec, cmdtag)) for (site, spec, cmdtag) in specs ]
+        else:
+            commands = [ make_command(spec, cmdtag) ]
         title = _("<b>remove acknowledgements</b> from")
-        return command, title
+        return commands, title
 
 
 multisite_commands.append({
-    "tables"      : [ "host", "service" ],
+    "tables"      : [ "host", "service", "aggr" ],
     "permission"  : "action.acknowledge",
     "title"       : _("Acknowledge Problems"),
     "render"      : lambda: \
@@ -449,18 +473,33 @@ def command_downtime(cmdtag, spec, row):
             fixed = 1
             duration = 0
 
-        if html.var("_include_childs"): # only for hosts
-            specs = [ spec ] + get_child_hosts(row["site"], [spec], recurse = not not html.var("_include_childs_recurse"))
-        elif html.var("_on_hosts"): # set on hosts instead of services
-            specs = [ spec.split(";")[0] ]
-            title += " the hosts of"
-            cmdtag = "HOST"
-        else:
-            specs = [ spec ]
-
-        commands = [(("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec ) \
+        def make_command(spec, cmdtag):
+            return ("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec ) \
                    + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, config.user_id)) \
-                   + lqencode(comment)) for spec in specs]
+                   + lqencode(comment)
+
+        if "aggr_tree" in row: # BI mode
+            commands = []
+            for site, host, service in bi.find_all_leaves(row["aggr_tree"]):
+                if service:
+                    spec = "%s;%s" % (host, service)
+                    cmdtag = "SVC"
+                else:
+                    spec = host
+                    cmdtag = "HOST"
+                commands.append((site, make_command(spec, cmdtag)))
+        else:
+            if html.var("_include_childs"): # only for hosts
+                specs = [ spec ] + get_child_hosts(row["site"], [spec], recurse = not not html.var("_include_childs_recurse"))
+            elif html.var("_on_hosts"): # set on hosts instead of services
+                specs = [ spec.split(";")[0] ]
+                title += " the hosts of"
+                cmdtag = "HOST"
+            else:
+                specs = [ spec ]
+
+            commands = [ make_command(spec, cmdtag) for spec in  specs ]
+
         return commands, title
 
 
@@ -497,8 +536,9 @@ def paint_downtime_buttons(what):
     html.button("_down_week", _("This week"))
     html.button("_down_month", _("This month"))
     html.button("_down_year", _("This year"))
-    html.write(" &nbsp; - &nbsp;")
-    html.button("_down_remove", _("Remove all"))
+    if what != "aggr":
+        html.write(" &nbsp; - &nbsp;")
+        html.button("_down_remove", _("Remove all"))
     html.write("<hr>")
     if config.adhoc_downtime and config.adhoc_downtime.get("duration"):
         adhoc_duration = config.adhoc_downtime.get("duration")
@@ -517,12 +557,13 @@ def paint_downtime_buttons(what):
     html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ")
     html.time_input("_down_duration", 2, 0)
     html.write(" "+_('(HH:MM)'))
-    html.write("<hr>")
     if what == "host":
+        html.write("<hr>")
         html.checkbox("_include_childs", False, label=_('Also set downtime on child hosts'))
         html.write("  ")
         html.checkbox("_include_childs_recurse", False, label=_('Do this recursively'))
-    else:
+    elif what == "service":
+        html.write("<hr>")
         html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected <b>hosts</b> instead of their services'))
 
 
@@ -541,6 +582,15 @@ multisite_commands.append({
     "permission"  : "action.downtimes",
     "title"       : _("Schedule downtimes"),
     "render"      : lambda: paint_downtime_buttons("service"),
+    "action"      : command_downtime,
+    "group"       : _("Downtimes"),
+})
+
+multisite_commands.append({
+    "tables"      : [ "aggr" ],
+    "permission"  : "action.downtimes",
+    "title"       : _("Schedule downtimes"),
+    "render"      : lambda: paint_downtime_buttons("aggr"),
     "action"      : command_downtime,
     "group"       : _("Downtimes"),
 })

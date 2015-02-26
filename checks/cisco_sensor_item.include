@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 def cisco_sensor_item(trial_string, fall_back):
+    trial_string = trial_string.lstrip() # remove leading spaces which might be provided via SNMP
+
     # trial_string can be:
     # Empty
     # A single string

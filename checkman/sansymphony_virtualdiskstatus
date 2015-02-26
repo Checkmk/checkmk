@@ -1,0 +1,14 @@
+title: Sansymphony: Virtualdiskstatus
+agents: windows
+catalog: app/sansymphony
+distribution: check_mk
+license: GPL
+description:
+
+ This check measures the state of the virtualdiskstatus reported by the sansymphony management.  
+ If the virtualdiskstatus is Online, {OK} will be reported. Otherwise the check reports a {CRIT} state.
+ 
+ The windows agent needs to be extended with the sansymphony.ps1 provided in agents/windows/plugins. 
+
+Inventory:
+ One service will be created

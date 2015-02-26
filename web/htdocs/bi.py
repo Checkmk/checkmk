@@ -718,13 +718,13 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
         )
 
     if len(rule) != 4:
-        raise MKConfigError(_("<h3>Invalid aggregation rule</h1>"
+        raise MKConfigError(_("<b>Invalid aggregation rule</b><br><br>"
                 "Aggregation rules must contain four elements: description, argument list, "
                 "aggregation function and list of nodes. Your rule has %d elements: "
                 "<pre>%s</pre>") % (len(rule), pprint.pformat(rule)))
 
     if lvl == 50:
-        raise MKConfigError(_("<h3>Depth limit reached</h3>"
+        raise MKConfigError(_("<b>Depth limit reached</b><br><br>"
                 "The nesting level of aggregations is limited to 50. You either configured "
                 "too many levels or built an infinite recursion. This happened in rule <pre>%s</pre>")
                   % pprint.pformat(rule))
@@ -733,7 +733,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
 
     # check arguments and convert into dictionary
     if len(arglist) != len(args):
-        raise MKConfigError(_("<h1>Invalid rule usage</h1>"
+        raise MKConfigError(_("<b>Invalid rule usage</b><br><br>"
                 "The rule '%s' needs %d arguments: <tt>%s</tt><br>"
                 "You've specified %d arguments: <tt>%s</tt>") % (
                     description, len(arglist), repr(arglist), len(args), repr(args)))
@@ -1331,8 +1331,6 @@ def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
 
 config.aggregation_functions["count_ok"] = aggr_countok
 
-
-import re
 
 def aggr_running_on(nodes, regex):
     first_check = nodes[0]

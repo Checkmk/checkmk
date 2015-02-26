@@ -1,0 +1,15 @@
+title: Sansymphony: Serverstatus
+agents: windows
+catalog: app/sansymphony
+distribution: check_mk
+license: GPL
+description:
+
+ This check measures the status of the server and cache state reported by the sansymphony management.  
+ If the serverstatus is Online, {OK} will be reported. Offline will lead to a {CRIT} state.
+ If the cache not is in WritebackGlobal mode, {CRIT} will be reported.
+ 
+ The windows agent needs to be extended with the sansymphony.ps1 provided in agents/windows/plugins. 
+
+Inventory:
+ One service will be created

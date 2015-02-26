@@ -26,6 +26,7 @@
 
 infos['host'] = {
     'title'       : _('Host'),
+    'title_plural': _('Hosts'),
     'single_spec' : [
         ('host', TextUnicode(
             title = _('Hostname'),
@@ -35,6 +36,7 @@ infos['host'] = {
 
 infos['service'] = {
     'title'       : _('Service'),
+    'title_plural': _('Services'),
     'single_spec' : [
         ('service', TextUnicode(
             title = _('Service Description'),
@@ -44,6 +46,7 @@ infos['service'] = {
 
 infos['hostgroup'] = {
     'title'       : _('Host Group'),
+    'title_plural': _('Host Groups'),
     'single_spec' : [
         ('hostgroup', TextUnicode(
             title = _('Host Group Name'),
@@ -53,6 +56,7 @@ infos['hostgroup'] = {
 
 infos['servicegroup'] = {
     'title'       : _('Service Group'),
+    'title_plural': _('Service Groups'),
     'single_spec' : [
         ('servicegroup', TextUnicode(
             title = _('Service Group Name'),
@@ -62,11 +66,13 @@ infos['servicegroup'] = {
 
 infos['log'] = {
     'title'       : _('Log Entry'),
+    'title_plural': _('Log Entries'),
     'single_spec' : None,
 }
 
 infos['comment'] = {
     'title'       : _('Comment'),
+    'title_plural': _('Comments'),
     'single_spec' : [
         ('comment_id', Integer(
             title = _('Comment ID'),
@@ -76,6 +82,7 @@ infos['comment'] = {
 
 infos['downtime'] = {
     'title'       : _('Downtime'),
+    'title_plural': _('Downtimes'),
     'single_spec' : [
         ('downtime_id', Integer(
             title = _('Downtime ID'),
@@ -85,6 +92,7 @@ infos['downtime'] = {
 
 infos['contact'] = {
     'title'       : _('Contact'),
+    'title_plural': _('Contacts'),
     'single_spec' : [
         ('log_contact_name', TextUnicode(
             title = _('Contact Name'),
@@ -94,6 +102,7 @@ infos['contact'] = {
 
 infos['command'] = {
     'title'       : _('Command'),
+    'title_plural': _('Commands'),
     'single_spec' : [
         ('command_name', TextUnicode(
             title = _('Command Name'),
@@ -103,6 +112,7 @@ infos['command'] = {
 
 infos['aggr'] = {
     'title'       : _('BI Aggregation'),
+    'title_plural': _('BI Aggregations'),
     'single_spec' : [
         ('aggr_name', TextAscii(
             title = _('Aggregation Name'),
@@ -112,10 +122,12 @@ infos['aggr'] = {
 
 infos['invswpac'] = {
     'title'       : _('Software Package'),
+    'title_plural': _('Software Packages'),
     'single_spec' : None,
 }
 
 infos['invhist'] = {
     'title'       : _('Inventory History'),
+    'title_plural': _('Inventory Historys'),
     'single_spec' : None,
 }

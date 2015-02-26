@@ -1,0 +1,18 @@
+Title: cisco_power: fix for cases with a slash in the device description of a power supply
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1424964446
+Class: fix
+
+Power Supplies with a slash in the device description were added in service discovery,
+but could not be found when carrying out the check. This problem has been fixed.
+
+In addition, when you have power supplies which have a service description
+containing the ID of the power supply at the end like "<power supply
+name>/<ID>", i.e. with a SLASH, you have to redo the service discovery
+and the service description will then contain the ID added with a blank
+instead, i.e. "<power supply name> <ID>". This is a rare case only relevant
+for versions of cisco_power younger than 2015/01/30, and only if you have
+non-unique power supply names with trailing digits in the name.

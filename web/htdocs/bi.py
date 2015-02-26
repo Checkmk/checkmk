@@ -1332,8 +1332,6 @@ def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
 config.aggregation_functions["count_ok"] = aggr_countok
 
 
-import re
-
 def aggr_running_on(nodes, regex):
     first_check = nodes[0]
 

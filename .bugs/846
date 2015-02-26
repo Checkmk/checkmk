@@ -1,6 +1,6 @@
 Title: Manual Checks -> ntp (peers)
 Component: wato
-State: open
+State: done
 Date: 2015-02-26 14:27:53
 Targetversion: 1.2.6
 Class: bug

@@ -6615,7 +6615,7 @@ def get_snapshot_status(snapshot, validate_checksums = False):
             status["broken_text"] = traceback.format_exc()
             status["broken"]      = True
         else:
-            status["broken_text"] = str(e)
+            status["broken_text"] = '%s' % e
             status["broken"]      = True
     return status
 

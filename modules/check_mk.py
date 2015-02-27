@@ -739,6 +739,9 @@ def get_single_oid(hostname, ipaddress, oid):
     # we do a snmpgetnext and try to find an OID with the prefix
     # in question. The *cache* is working including the X, however.
 
+    if oid[0] != '.':
+        raise MKGeneralException("OID definition '%s' does not begin with ." % oid)
+
     global g_single_oid_hostname
     global g_single_oid_cache
 

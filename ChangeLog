@@ -6,6 +6,7 @@
     * 2021 FIX: if_lancom: Also used for checking ELSA/T-Systems branded devices
     * 2023 FIX: if_lancom: Handle point-2-point interfaces of newer firmwares correctly
     * 2027 FIX: fc_port: Fixed exception when wirespeed is reported as 0 by the device
+    * 2079 FIX: freebsd agent: Was unable to find ntpq command with FreeBSD10...
 
     Multisite:
     * 2024 FIX: Views: Fixed problem when filtering views by strings containing umlauts...

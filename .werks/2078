@@ -1,0 +1,11 @@
+Title: Fixed exception with some snapshots when using a localized GUI
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b12
+Date: 1425030623
+Class: fix
+
+When opening the backup / restore page while using a localized GUI,
+this could result in an exception while displaying snapshot error
+messages.

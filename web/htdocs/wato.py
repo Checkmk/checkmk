@@ -16898,7 +16898,16 @@ def declare_bi_valuespecs(aggregation_rules):
                             ( 'host',   _("The found hosts themselves") ),
                             ( 'child',  _("The found hosts' childs") ),
                             ( 'parent', _("The found hosts' parents") ),
-                        ]
+                        ],
+                        help = _('When refering to the found hosts childs, this means you '
+                          'configure the conditions (tags and host name) below to match '
+                          'a host, but you will get one node created for each child host. The'
+                          'place holder <tt>$1$</tt> contains the name of the found child.<br><br>'
+                          'When refering to the found hosts parents, you use the conditions '
+                          'to match a host, but you will get one node created for each of the '
+                          'parent hosts of this found host. The conditions are used to match '
+                          'the child hosts. The place holder <tt>$1$</tt> contains the name '
+                          'of the child host and <tt>$2$</tt> the name of the parent host.'),
                     ),
                     HostTagCondition(
                         title = _("Host Tags:")

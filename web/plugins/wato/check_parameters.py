@@ -3019,9 +3019,13 @@ register_check_parameters(
             ],
             optional_keys = [],
         ),
-        forth = lambda old: type(old) != dict and { "levels" : ( "perc_used", old) },
+        forth = lambda v: type(v) != dict and { "levels" : ( "perc_used", v) } or v,
     ),
-    None, None
+    TextAscii(
+        title = _("Module name"),
+        allow_empty = False
+    ),
+    "dict",
 )
 
 register_check_parameters(

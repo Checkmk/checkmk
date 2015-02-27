@@ -1,0 +1,10 @@
+Title: hp_procurve_mem: Now supports setting levels in WATO
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1425037947
+Class: feature
+
+To make the WATO rule applicable to the check, it now has a generic "" item.
+Re-inventory required.

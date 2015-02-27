@@ -290,6 +290,7 @@
     * 2010 FIX: Improved error message when trying to add group assignment rule without having a group configured
     * 1946 FIX: WATO Web-API: edit host action does no longer unset all unspecified attributes...
     * 1223 FIX: Fixed manual configuration of ntp peer check...
+    * 2025 FIX: Fixed exception when synchronising custom ldap attributes in distributed WATO setup
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

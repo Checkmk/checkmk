@@ -1,0 +1,9 @@
+Title: Fixed exception when synchronising custom ldap attributes in distributed WATO setup
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b12
+Date: 1425025584
+Class: fix
+
+

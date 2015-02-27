@@ -162,6 +162,10 @@ def handler(req, fields = None, profiling = True):
         # here. Automation calls bybass the normal authentication stuff
         if html.myfile in [ "automation", "run_cron" ]:
             try:
+                # Call userdb page hooks which are executed on a regular base to e.g. syncronize
+                # information withough explicit user triggered actions
+                userdb.hook_page()
+
                 handler()
             except Exception, e:
                 html.write(str(e))

@@ -1,4 +1,4 @@
-Title: check_mk_agent.linux: integrated runas plugin in check_mk_agent.linux
+Title: check_mk_agent.linux: integrated runas plugin into check_mk_agent.linux
 Level: 1
 Component: checks
 Compatible: compat

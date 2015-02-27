@@ -1,0 +1,11 @@
+Title: freebsd agent: Was unable to find ntpq command with FreeBSD10
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425042218
+
+Added /usr/local/sbin to solve the issue. Seems ntpq has been moved
+to this directory.

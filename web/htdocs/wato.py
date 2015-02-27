@@ -6615,7 +6615,7 @@ def get_snapshot_status(snapshot, validate_checksums = False):
             status["broken_text"] = traceback.format_exc()
             status["broken"]      = True
         else:
-            status["broken_text"] = str(e)
+            status["broken_text"] = '%s' % e
             status["broken"]      = True
     return status
 
@@ -11474,7 +11474,7 @@ def load_notification_scripts():
 def notification_script_choices():
     scripts = load_notification_scripts()
 
-    choices = [ (name, info["title"]) for (name, info) in scripts.items() ]
+    choices = [ (name, info["title"].decode('utf-8')) for (name, info) in scripts.items() ]
     choices.append((None, _("ASCII Email (legacy)")))
     choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
     # Make choices localizable
@@ -16899,7 +16899,16 @@ def declare_bi_valuespecs(aggregation_rules):
                             ( 'host',   _("The found hosts themselves") ),
                             ( 'child',  _("The found hosts' childs") ),
                             ( 'parent', _("The found hosts' parents") ),
-                        ]
+                        ],
+                        help = _('When refering to the found hosts childs, this means you '
+                          'configure the conditions (tags and host name) below to match '
+                          'a host, but you will get one node created for each child host. The'
+                          'place holder <tt>$1$</tt> contains the name of the found child.<br><br>'
+                          'When refering to the found hosts parents, you use the conditions '
+                          'to match a host, but you will get one node created for each of the '
+                          'parent hosts of this found host. The conditions are used to match '
+                          'the child hosts. The place holder <tt>$1$</tt> contains the name '
+                          'of the child host and <tt>$2$</tt> the name of the parent host.'),
                     ),
                     HostTagCondition(
                         title = _("Host Tags:")

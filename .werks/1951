@@ -1,0 +1,10 @@
+Title: check_http: now able to configure warning and critical limit for certificate age
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1424976900
+Class: feature
+
+The check check_http has now configurable limits for warning and critical limits
+of SSL certificate age.

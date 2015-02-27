@@ -1,0 +1,10 @@
+Title: if_lancom: Handle point-2-point interfaces of newer firmwares correctly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424964951
+
+

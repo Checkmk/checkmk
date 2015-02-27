@@ -1,0 +1,14 @@
+Title: Views: Fixed problem when filtering views by strings containing umlauts
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425023576
+
+When filtering for example a host view by host aliases with a search term which
+contains at least one umlaut, this might have lead into an exception in some
+cases.
+
+These days we have super encoding power, so we fixed it.

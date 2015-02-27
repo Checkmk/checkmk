@@ -164,6 +164,10 @@ def handler(req, fields = None, profiling = True):
             handler = pagehandlers.get("noauth:" + html.myfile, page_not_found)
             if handler != page_not_found:
                 try:
+                    # Call userdb page hooks which are executed on a regular base to e.g. syncronize
+                    # information withough explicit user triggered actions
+                    userdb.hook_page()
+
                     handler()
                 except Exception, e:
                     html.write(str(e))

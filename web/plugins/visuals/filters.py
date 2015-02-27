@@ -37,22 +37,26 @@ class FilterText(Filter):
         self.column = column
         self.negateable = negateable
 
-    def display(self):
+    def _current_value(self):
         htmlvar = self.htmlvars[0]
-        current_value = html.var(htmlvar, "")
-        html.text_input(htmlvar, current_value, self.negateable and 'neg' or '')
+        return html.var(htmlvar, "")
+
+    def display(self):
+        current_value = self._current_value()
+        html.text_input(self.htmlvars[0], current_value, self.negateable and 'neg' or '')
         if self.negateable:
             html.write(" <nobr>")
             html.checkbox(self.htmlvars[1], label=_("negate"))
             html.write("</nobr>")
 
     def filter(self, infoname):
-        htmlvar = self.htmlvars[0]
-        current_value = html.var(htmlvar)
+        current_value = self._current_value()
+
         if self.negateable and html.get_checkbox(self.htmlvars[1]):
             negate = "!"
         else:
             negate = ""
+
         if current_value:
             return "Filter: %s %s%s %s\n" % (self.column, negate, self.op, lqencode(current_value))
         else:
@@ -62,9 +66,20 @@ class FilterText(Filter):
         return [ (self.htmlvars[0], row[self.column]) ]
 
     def heading_info(self):
-        return html.var(self.htmlvars[0])
+        return self._current_value()
 
 
+class FilterUnicode(FilterText):
+    def _current_value(self):
+        htmlvar = self.htmlvars[0]
+        return html.var_utf8(htmlvar, "")
+
+    def filter(self, infoname):
+        current_value = self._current_value()
+        if current_value:
+            return "Filter: %s %s %s\n" % (self.column, self.op, lqencode(current_value.encode('utf-8')))
+        else:
+            return ""
 
 #                               filter          title              info       column           htmlvar
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host_regex",    "~~"),
@@ -73,19 +88,19 @@ declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    
 declare_filter(101, FilterText("host",    _("Hostname (exact match)"),             "host",    "host_name",          "host",    "="),
                           _("Exact match, used for linking"))
 
-declare_filter(102, FilterText("hostalias",   _("Hostalias"),      "host",     "host_alias",      "hostalias",    "~~"),
+declare_filter(102, FilterUnicode("hostalias",   _("Hostalias"),      "host",     "host_alias",      "hostalias",    "~~"),
                           _("Search field allowing regular expressions and partial matches"))
 
-declare_filter(200, FilterText("serviceregex", _("Service"),         "service", "service_description",   "service_regex", "~~"),
+declare_filter(200, FilterUnicode("serviceregex", _("Service"),         "service", "service_description",   "service_regex", "~~"),
                           _("Search field allowing regular expressions and partial matches"))
 
-declare_filter(201, FilterText("service", _("Service (exact match)"),              "service", "service_description",   "service", "="),
+declare_filter(201, FilterUnicode("service", _("Service (exact match)"),              "service", "service_description",   "service", "="),
                           _("Exact match, used for linking"))
 
-declare_filter(202, FilterText("service_display_name", _("Service alternative display name"),   "service", "service_display_name",   "service_display_name", "~~"),
+declare_filter(202, FilterUnicode("service_display_name", _("Service alternative display name"),   "service", "service_display_name",   "service_display_name", "~~"),
                           _("Alternative display name of the service, regex match"))
 
-declare_filter(202, FilterText("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
+declare_filter(202, FilterUnicode("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
 
 class FilterIPAddress(Filter):
     def __init__(self):
@@ -747,7 +762,7 @@ class FilterLogClass(Filter):
 
 declare_filter(255, FilterLogClass())
 #                               filter          title              info       column           htmlvar
-declare_filter(202, FilterText("log_plugin_output",  _("Log: plugin output"), "log", "log_plugin_output", "log_plugin_output", "~~"))
+declare_filter(202, FilterUnicode("log_plugin_output",  _("Log: plugin output"), "log", "log_plugin_output", "log_plugin_output", "~~"))
 declare_filter(203, FilterText("log_type",           _("Log: message type"), "log", "log_type", "log_type", "~~"))
 declare_filter(204, FilterText("log_state_type",     _("Log: state type"), "log", "log_state_type", "log_state_type", "~~"))
 declare_filter(260, FilterText("log_contact_name",   _("Log: contact name (exact match)"),  "log", "log_contact_name",  "log_contact_name",  "="),

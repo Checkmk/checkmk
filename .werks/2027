@@ -1,0 +1,10 @@
+Title: fc_port: Fixed exception when wirespeed is reported as 0 by the device
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425027561
+
+

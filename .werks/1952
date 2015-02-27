@@ -1,0 +1,10 @@
+Title: check_mk_agent.linux: integrated runas plugin in check_mk_agent.linux
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425052736
+Class: feature
+
+Integrated runas plugin into check_mk_agent.linux. Installation of Monitoring
+Agents can be customized with WATO Monitoring Agents.

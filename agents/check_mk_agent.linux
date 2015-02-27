@@ -597,6 +597,56 @@ then
     done
 fi
 
+# MK's runas Executor
+if [ -e "$MK_CONFDIR/runas.cfg" ]
+then
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" | \
+    while read type user include
+    do
+        if [ -d $include -o \( "$type" == "mrpe" -a -f $include \) ] ; then
+            PREFIX=""
+            if [ "$user" != "-" ] ; then
+                PREFIX="su $user -c "
+            fi
+
+            # mrpe includes
+            if [ "$type" == "mrpe" ] ; then
+                echo "<<<mrpe>>>"
+                grep -Ev '^[[:space:]]*($|#)' "$include" | \
+                while read descr cmdline
+                do
+                    PLUGIN=${cmdline%% *}
+
+                    if [ -n "$PREFIX" ] ; then
+                        cmdline="$PREFIX\"$cmdline\""
+                    fi
+
+                    OUTPUT=$(eval "$cmdline")
+                    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+                    echo
+                done
+
+            # local and plugin includes
+            elif [ "$type" == "local" -o "$type" == "plugin" ] ; then
+                if [ "$type" == "local" ] ; then
+                    echo "<<<local>>>"
+                fi
+
+                find $include -executable -type f | \
+                while read filename
+                do
+                    if [ -n "$PREFIX" ] ; then
+                        cmdline="$PREFIX\"$filename\""
+                    else
+                        cmdline=$filename
+                    fi
+
+                    $cmdline
+                done
+            fi
+        fi
+    done
+fi
 
 # Local checks
 echo '<<<local>>>'

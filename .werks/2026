@@ -1,0 +1,12 @@
+Title: Fixed exception when using umlauts in notification plugin descriptions
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425027302
+Class: fix
+
+This happened only when using an umlaut in notification plugin descriptions
+together with a localized Multisite GUI.
+
+Again, fixed with super encoding power!

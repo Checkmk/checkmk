@@ -206,6 +206,7 @@
     * 1863 FIX: cisco_power: fix for cases with a slash in the device description of a power supply...
             NOTE: Please refer to the migration notes!
     * 2023 FIX: if_lancom: Handle point-2-point interfaces of newer firmwares correctly
+    * 2027 FIX: fc_port: Fixed exception when wirespeed is reported as 0 by the device
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

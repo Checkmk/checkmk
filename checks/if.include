@@ -697,6 +697,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
     # which is master
     if cluster_items:
         maxval = 0
+        choosen_node = None
         for node, result in cluster_items.items():
             state, infotext, perfdata = result
             for entry in perfdata:
@@ -705,6 +706,10 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                     maxval = max(maxval, value)
                     if maxval == value:
                         choosen_node = node
+        # In case that each node has a counter wrap for
+        # out, we use the last note from the list as source
+        if not choosen_node:
+            choosen_node = node
         return cluster_items[choosen_node]
 
     return (3, "no such interface")

@@ -326,6 +326,10 @@ def snmp_scan(hostname, ipaddress):
                 elif result:
                     found.append(check_type)
                     vverbose(" " + check_type)
+            except MKGeneralException:
+                # some error messages which we explicitly want to show to the user
+                # should be raised through this
+                raise
             except:
                 pass
         else:

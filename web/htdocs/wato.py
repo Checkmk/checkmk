@@ -11474,7 +11474,7 @@ def load_notification_scripts():
 def notification_script_choices():
     scripts = load_notification_scripts()
 
-    choices = [ (name, info["title"]) for (name, info) in scripts.items() ]
+    choices = [ (name, info["title"].decode('utf-8')) for (name, info) in scripts.items() ]
     choices.append((None, _("ASCII Email (legacy)")))
     choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
     # Make choices localizable

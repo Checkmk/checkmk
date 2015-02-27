@@ -12,6 +12,7 @@
     WATO:
     * 1223 FIX: Fixed manual configuration of ntp peer check...
     * 2025 FIX: Fixed exception when synchronising custom ldap attributes in distributed WATO setup
+    * 2026 FIX: Fixed exception when using umlauts in notification plugin descriptions...
 
     BI:
     * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules

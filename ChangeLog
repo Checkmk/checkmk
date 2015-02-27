@@ -6,6 +6,9 @@
     * 2021 FIX: if_lancom: Also used for checking ELSA/T-Systems branded devices
     * 2023 FIX: if_lancom: Handle point-2-point interfaces of newer firmwares correctly
 
+    Multisite:
+    * 2024 FIX: Views: Fixed problem when filtering views by strings containing umlauts...
+
     WATO:
     * 1223 FIX: Fixed manual configuration of ntp peer check...
 

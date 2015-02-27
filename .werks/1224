@@ -1,0 +1,10 @@
+Title: Fixed rare Bug in case of clusterd network interfaces
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b12
+Date: 1425041662
+Class: fix
+
+In case that all network interfaces don't have traffic for a moment (or counter wraps), Check_MK was unable to determine the active one.
+The only solution is to use a random one here. 

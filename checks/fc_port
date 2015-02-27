@@ -144,7 +144,7 @@ def check_fc_port(item, params, info):
     if wirespeed == 0:
         # let user specify assumed speed via check parameter, default is 16.0 GBit/sec
         gbit = params.get("assumed_speed", 16.0)
-        wirespeed = gb * 1000.0 * 1000.0 * 1000.0 / 8.0 # in Bytes/sec
+        wirespeed = gbit * 1000.0 * 1000.0 * 1000.0 / 8.0 # in Bytes/sec
         speedmsg  = "assuming %g GBit/s" % gbit
     else:
         gbit = wirespeed * 8.0 / ( 1000.0 * 1000.0 * 1000.0 ) # in GBit/sec

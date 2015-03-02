@@ -154,12 +154,15 @@ class html:
         for tf in self.transformations:
             text = tf(text)
 
-        if type(text) == unicode:
-	    text = text.encode("utf-8")
-
         if self.plugged:
             self.plugged_text += text
         else:
+            # encode when really writing out the data. Not when writing plugged,
+            # because the plugged code will be handled somehow by our code. We
+            # only encode when leaving the pythonic world.
+            if type(text) == unicode:
+	        text = text.encode("utf-8")
+
             self.lowlevel_write(text)
 
     def plug(self):
@@ -1270,7 +1273,7 @@ class html:
     def debug(self, *x):
         import pprint
         for element in x:
-            self.lowlevel_write("<pre>%s</pre>\n" % pprint.pformat(element))
+            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(pprint.pformat(element)))
 
 
     def has_cookie(self, varname):

@@ -1,0 +1,9 @@
+Title: jolokia_metrics.mem: Fixed levels on total memory usage
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b12
+Date: 1425289660
+Class: fix
+
+

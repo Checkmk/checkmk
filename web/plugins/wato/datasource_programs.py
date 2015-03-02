@@ -72,7 +72,7 @@ register_rule(group,
                 ),
                 ( "timeout",
                   Integer(
-                      title = _("Connection timeout"),
+                      title = _("Connect Timeout"),
                       help = _("The network timeout in seconds when communicating with vSphere or "
                                "to the Check_MK Agent. The default is 60 seconds. Please note that this "
                                "is not a total timeout but is applied to each individual network transation."),
@@ -366,7 +366,7 @@ register_rule(group,
         elements = [
             ( "timeout",
               Integer(
-                  title = _("Connection timeout"),
+                  title = _("Connect Timeout"),
                   help = _("The network timeout in seconds when communicating via UPNP. "
                            "The default is 10 seconds. Please note that this "
                            "is not a total timeout, instead it is applied to each API call."),
@@ -425,7 +425,7 @@ register_rule(group,
         elements = [
             ( "timeout",
               Integer(
-                  title = _("Connection timeout"),
+                  title = _("Connect Timeout"),
                   help = _("The network timeout in seconds when communicating via HTTP. "
                            "The default is 10 seconds."),
                   default_value = 10,
@@ -463,4 +463,3 @@ register_rule(group,
     help = _("This rule selects the UCS Bladecenter agent instead of the normal Check_MK Agent "
              "which collects the data through the UCS Bladecenter Web API"),
     match = 'first')
-

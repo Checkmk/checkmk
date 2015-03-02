@@ -1,0 +1,11 @@
+Title: window agents: prevent errors with invalid plugin output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425299233
+Class: fix
+
+Plugins with invalid output no longer impair preceding (usually logwatch)
+and following (usually local) sections.
+

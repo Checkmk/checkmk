@@ -1733,8 +1733,8 @@ if mkeventd_enabled:
                     ),
                     ( "connect_timeout",
                       Integer(
-                          title = _("Connection timeout"),
-                          help = _("TCP connection timeout for connecting to the master"),
+                          title = _("Connect Timeout"),
+                          help = _("TCP connect timeout for connecting to the master"),
                           label = _("Try bringing up TCP connection for"),
                           unit = _("sec"),
                           minvalue = 1,

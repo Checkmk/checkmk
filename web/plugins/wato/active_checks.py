@@ -188,7 +188,7 @@ register_rule(group,
             ),
             ("timeout",
                 Integer(
-                    title = _("Connection timeout"),
+                    title = _("Connect Timeout"),
                     help = _("Seconds before connection times out"),
                     default_value = 10),
             ),

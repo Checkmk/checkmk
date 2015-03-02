@@ -299,6 +299,7 @@
     * 2025 FIX: Fixed exception when synchronising custom ldap attributes in distributed WATO setup
     * 2026 FIX: Fixed exception when using umlauts in notification plugin descriptions...
     * 2078 FIX: Fixed exception with some snapshots when using a localized GUI...
+    * 2080 FIX: Fixed UnicodeDecodeError when using a localized GUI on notification configuration page
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

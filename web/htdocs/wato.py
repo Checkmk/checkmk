@@ -11787,9 +11787,12 @@ def mode_users(phase):
             auth_method = "<i>%s</i>" % _("none")
         table.cell(_("Authentication"), auth_method)
 
-        # Locked
+        table.cell(_("State"))
         locked = user.get("locked", False)
-        table.cell(_("Locked"), (locked and ("<b>" + _("yes") + "</b>") or _("no")))
+        if user.get("locked", False):
+            html.icon(_('The login is currently locked'), 'user_locked')
+        if user.get("disable_notifications", False):
+            html.icon(_('Notifications are disabled'), 'notif_disabled')
 
         # Full name / Alias
         table.cell(_("Alias"), user.get("alias", ""))
@@ -11894,18 +11897,17 @@ def mode_edit_user(phase):
             if topic is not None and topic != attr['topic']:
                 continue # skip attrs of other topics
 
-            if not userid or not attr.get("permission") or config.user_may(userid, attr["permission"]):
-                vs = attr['valuespec']
-                forms.section(_u(vs.title()))
-                if attr['user_editable'] and not is_locked(name):
-                    vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                else:
-                    html.write(vs.value_to_text(user.get(name, vs.default_value())))
-                    # Render hidden to have the values kept after saving
-                    html.write('<div style="display:none">')
-                    vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                    html.write('</div>')
-                html.help(_u(vs.help()))
+            vs = attr['valuespec']
+            forms.section(_u(vs.title()))
+            if attr['user_editable'] and not is_locked(name):
+                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+            else:
+                html.write(vs.value_to_text(user.get(name, vs.default_value())))
+                # Render hidden to have the values kept after saving
+                html.write('<div style="display:none">')
+                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                html.write('</div>')
+            html.help(_u(vs.help()))
 
     # Load data that is referenced - in order to display dropdown
     # boxes and to check for validity.
@@ -15959,11 +15961,14 @@ def page_user_profile(change_pw=False):
         if config.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
                 if attr['user_editable']:
+                    vs = attr['valuespec']
+                    forms.section(_u(vs.title()))
+                    value = user.get(name, vs.default_value())
                     if not attr.get("permission") or config.may(attr["permission"]):
-                        vs = attr['valuespec']
-                        forms.section(_u(vs.title()))
-                        vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                        vs.render_input("ua_" + name, value)
                         html.help(_u(vs.help()))
+                    else:
+                        html.write(vs.value_to_text(value))
 
     # Save button
     forms.end()

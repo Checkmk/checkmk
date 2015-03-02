@@ -48,7 +48,7 @@ fi
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.6b12
+echo Version: 1.2.6b13
 echo AgentOS: hpux
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR

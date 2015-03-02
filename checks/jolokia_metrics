@@ -238,6 +238,7 @@ def check_jolokia_metrics_mem(item, params, info):
     # rename totalheap to total
     # this block can be removed in the future (today 22.02.13)
     if "totalheap" in params:
+        params = params.copy()
         params["total"] = params["totalheap"]
         del params["totalheap"]
 
@@ -271,11 +272,13 @@ def check_jolokia_metrics_mem(item, params, info):
             warn_level = 0
             crit_level = 0
             if type(params[what][0]) == int:
+                if value_max:
+                    warn_level = value_max - params[what][0]
+                    crit_level = value_max - params[what][1]
+
                 if what != "total":
-                    if value_max:
-                        warn_level = value_max - params[what][0]
-                        crit_level = value_max - params[what][1]
                     perfdata.append((what, value, warn_level, crit_level, "", value_max))
+
                 if not value_max:
                     param_state = 0
                 elif value >= crit_level:
@@ -285,11 +288,13 @@ def check_jolokia_metrics_mem(item, params, info):
                     param_state = 1
                     level_info = "%s(warn at %sMB free)" % (state_markers[1], params[what][0])
             else:
+                if value_max:
+                    warn_level = value_max * params[what][0] / 100.0
+                    crit_level = value_max * params[what][1] / 100.0
+
                 if what != "total":
-                    if value_max:
-                        warn_level = value_max * params[what][0] / 100.0
-                        crit_level = value_max * params[what][1] / 100.0
                     perfdata.append((what, value, warn_level, crit_level, "", value_max))
+
                 if not value_max:
                     param_state = 0
                 elif value >= crit_level:

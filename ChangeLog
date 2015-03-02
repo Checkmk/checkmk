@@ -311,6 +311,7 @@
     * 1988 FIX: Gracefully handle invalid empty bulk notification files from previous buggy versions
     * 2015 FIX: Fixed sending notifications for services with umlauts in names...
     * 2038 FIX: Log complete Email address into monitoring history when notifying explicity addresses
+    * 2081 FIX: Improved logging of mkeventd in error cases
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used

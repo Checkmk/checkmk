@@ -136,6 +136,7 @@ class SpoolfilesHandler:
                 if file_age < files_older_than:
                     continue
 
+                verbose("Processing spoolfile: %s" % spoolfile_path)
                 try:
                     content = eval(file(spoolfile_path).read())
                     if not content.get("context"):
@@ -152,7 +153,7 @@ class SpoolfilesHandler:
                     try:
                         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         sock.settimeout(10)
-                        host, port = content.get("forward").split(':',1)
+                        host, port = content["forward"].split(':',1)
                         del content["forward"]
                         verbose("Forward notification to %s %s" % (host, port), 2)
                         sock.connect((host, int(port)))
@@ -173,6 +174,7 @@ class SpoolfilesHandler:
                                 break # Error while reading
                     except Exception, e:
                         # Connection problems
+                        log("Failed to forward notification %s to %s:%s: %s" % (spoolfile_path, host, port, e))
                         verbose(format_exception(), 2)
                     spoolfile_process_result = response_text != "OK" and 1 or 0
 
@@ -395,7 +397,7 @@ def cmp_config_paths(a, b):
 def usage():
     sys.stdout.write("""Usage: mknotifyd [OPTIONS]
 
-   -v, --verbose        Enable verbose output
+   -v, --verbose        Enable verbose output, twice for more details
    -g, --foreground     Do not daemonize, run in foreground
    -s, --single         Single shot, exit after one cycle
 

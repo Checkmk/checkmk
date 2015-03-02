@@ -1,0 +1,10 @@
+Title: Improved logging of mkeventd in error cases
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425288608
+
+

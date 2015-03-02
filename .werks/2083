@@ -1,0 +1,15 @@
+Title: Added Siemens PLC (SPS) monitoring
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425295438
+Class: feature
+
+We added a special agent {agent_siemens_plc} which is using SNAP7 to fetch
+data from a Siemens PLC (SPS) device. You can use it do read memory areas
+from the agent, parse and interpret them, for example you can configure
+to read and integer from memory location X and handle it as temperature
+value in celsius.
+
+For the moment we added a temperature check, others will follow.

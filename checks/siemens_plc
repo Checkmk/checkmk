@@ -1,0 +1,67 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<siemens_plc>>>
+# hours Gesamt 123
+# hours Fahren 56
+# hours Hub 48
+# temp Extern 18.7000007629
+# temp RBG_SCH1 21.2999992371
+# temp RBG_SCH2 22.5
+# None Fahren 31450
+# None Hub 8100
+# None LAM 5002
+# hours LAM1 13
+# None Lastzyklen 78
+# None LAM1_Zyklen 115
+# hours Service 109
+# hours Serviceintervall 700
+
+factory_settings["siemens_plc_temp_default_levels"] = {
+    "levels"                    : (70, 80),
+    "device_levels_handling"    : "devdefault",
+}
+
+def inventory_siemens_plc_temp(info):
+    return [ (l[1], {}) for l in info if l[0] == "temp" ]
+
+
+def check_siemens_plc_temp(item, params, info):
+    for line in info:
+        if line[0] == "temp" and line[1] == item:
+            temp = float(line[-1])
+            return check_temperature(temp, params)
+
+
+check_info['siemens_plc.temp'] = {
+    "inventory_function"      : inventory_siemens_plc_temp,
+    "check_function"          : check_siemens_plc_temp,
+    "service_description"     : "Temperature %s",
+    "has_perfdata"            : True,
+    "group"                   : "temperature",
+    "default_levels_variable" : "siemens_plc_temp_default_levels",
+    "includes"                : [ "temperature.include" ],
+}

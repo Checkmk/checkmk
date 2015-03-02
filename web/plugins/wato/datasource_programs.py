@@ -465,3 +465,88 @@ register_rule(group,
              "which collects the data through the UCS Bladecenter Web API"),
     match = 'first')
 
+
+def validate_siemens_plc_values(value, varprefix):
+    valuetypes = {}
+    for index, (db_number, address, datatype, valuetype, ident) in enumerate(value):
+        valuetypes.setdefault(valuetype, [])
+        if ident in valuetypes[valuetype]:
+            raise MKUserError("%s_%d_%d" % (varprefix, index+1, 4),
+                              _("The ident of a value needs to be unique per valuetype."))
+        valuetypes[valuetype].append(ident)
+
+group = "datasource_programs"
+register_rule(group,
+    "special_agents:siemens_plc",
+    Dictionary(
+        elements = [
+            ("rack", Integer(
+                title = _("Number of the Rack"),
+                minvalue = 0,
+            )),
+            ("slot", Integer(
+                title = _("Number of the Slot"),
+                minvalue = 0,
+            )),
+            ("tcp_port", Integer(
+                title = _("TCP Port number"),
+                help = _("Port number for communicating with the PLC"),
+                default_value = 102,
+                minvalue = 1,
+                maxvalue = 65535,
+            )),
+            ("timeout", Integer(
+                title = _("Connection timeout"),
+                help = _("The connect timeout in seconds when establishing a connection "
+                         "with the PLC."),
+                default_value = 60,
+                minvalue = 1,
+                unit = _("seconds"),
+            )),
+            ("values", ListOf(
+                Tuple(
+                    elements = [
+                        Integer(
+                            title = "<nobr>%s</nobr>" % _("DB Number"),
+                            minvalue = 1,
+                        ),
+                        Integer(
+                            title = _("Address"),
+                        ),
+                        DropdownChoice(
+                            title = _("Datatype"),
+                            choices = [
+                                ("dint", _("Double Integer (DINT)")),
+                                ("real", _("Real Number (REAL)")),
+                            ],
+                        ),
+                        DropdownChoice(
+                            title = _("Type of the value"),
+                            choices = [
+                                (None,    _("Unclassified")),
+                                ("temp",  _("Temperature")),
+                                ("hours", _("Hours")),
+                            ],
+                        ),
+                        ID(
+                            title = _("Ident of the value"),
+                            help = _(" An identifier of your choice. This identifier "
+                                     "is used by the Check_MK checks to access "
+                                     "and identify the single values. The identifier "
+                                     "needs to be unique within a group of VALUETYPES."),
+                        ),
+                    ],
+                    orientation = "horizontal",
+                ),
+                title = _("Values to fetch"),
+                validate = validate_siemens_plc_values,
+            )),
+        ],
+        optional_keys = ["timeout"],
+        title = _("Siemens PLC (SPS)"),
+        help = _("This rule selects the Siemens PLC agent instead of the normal Check_MK Agent "
+                 "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
+                 "your connection settings and values to fetch here."),
+    ),
+    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    match = 'first')

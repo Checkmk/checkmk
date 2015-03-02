@@ -1,0 +1,162 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import getopt, sys, socket, traceback, re, pprint
+import snap7
+from snap7.util import *
+
+def usage():
+    sys.stderr.write("""Check_MK Siemens PLC Agent
+
+USAGE: agent_siemens_plc [OPTIONS] HOST RACK SLOT PORT VALUES...
+       agent_siemens_plc -h
+
+ARGUMENTS:
+  HOST                          Host name or IP address of the PLC
+  RACK
+  SLOT
+  PORT                          The TCP port to communicate with
+
+VALUES:
+  A value is specified by the following single data fields, which are
+  concatenated by a ",":
+
+    DB_NUMBER                   Numeric identified of the DB
+    ADDRESS                     Memory address to read
+    DATATYPE                    The datatype of the value to read
+    VALUETYPE                   The logical type of the value
+    IDENT                       An identifier of your choice. This identifier
+                                is used by the Check_MK checks to access
+                                and identify the single values. The identifier
+                                needs to be unique within a group of VALUETYPES.
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -t, --timeout SEC             Set the network timeout to <SEC> seconds.
+                                Default is 10 seconds. Note: the timeout is not
+                                applied to the whole check, instead it is used for
+                                each network connect.
+  --debug                       Debug mode: let Python exceptions come through
+""")
+
+short_options = 'h:t:d'
+long_options  = [
+    'help', 'timeout=', 'debug'
+]
+
+host_address      = None
+rack              = None
+slot              = None
+port              = None
+values            = []
+opt_debug         = False
+opt_timeout       = 10
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+for o,a in opts:
+    if o in [ '--debug' ]:
+        opt_debug = True
+    elif o in [ '-t', '--timeout' ]:
+        opt_timeout = int(a)
+    elif o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+
+if len(args) >= 4:
+    host_address = args[0]
+    rack, slot, port = map(int, args[1:4])
+
+    for spec in args[4:]:
+        p = spec.split(',')
+        values.append((int(p[0]), int(p[1]), p[2], p[3], p[4])) 
+else:
+    sys.stderr.write("ERROR: You missed to provide the needed arguments.\n")
+    usage()
+    sys.exit(1)
+
+socket.setdefaulttimeout(opt_timeout)
+
+def get_dint(_bytearray, byte_index):
+    """
+    Get int value from bytearray.
+
+    double int are represented in four bytes
+    """
+    byte3 = _bytearray[byte_index + 3]
+    byte2 = _bytearray[byte_index + 2]
+    byte1 = _bytearray[byte_index + 1]
+    byte0 = _bytearray[byte_index]
+    return byte3 + (byte2 << 8) + (byte1 << 16) + (byte0 << 32)
+
+datatypes = {
+    # type-name   size(bytes) parse-function
+    'dint':      (4,          get_dint),
+    'real':      (8,          get_real),
+}
+
+try:
+    client = snap7.client.Client()
+    client.connect(host_address, rack, slot, port)
+
+    # We want to have a minimum number of reads. We try to only use
+    # a single read and detect the memory area to fetch dynamically
+    # based on the configured values
+    addresses = {}
+    start_address = None
+    end_address   = None
+    for db_number, address, datatype, valuetype, ident in values:
+        addresses.setdefault(db_number, [None, None])
+        start_address, end_address = addresses[db_number]
+
+        if start_address == None or address < start_address:
+            addresses[db_number][0] = address
+        end = address + datatypes[datatype][0]
+        if end_address == None or end > end_address:
+            addresses[db_number][1] = address
+
+    # Now fetch the data from each db number
+    data = {}
+    for db_number, (start, end) in addresses.items():
+        data[db_number] = client.db_read(db_number, start, size=end-start)
+
+    # Now loop all values to be fetched and extract the data
+    # from the bytes fetched above
+    sys.stdout.write("<<<siemens_plc>>>\n")
+    for db_number, address, datatype, valuetype, ident in values:
+        size, parse_func = datatypes[datatype]
+        data_offset = addresses[db_number][0]
+        data  = client.db_read(db_number, address-data_offset, size)
+        value = parse_func(data, 0)
+        sys.stdout.write("%s %s %s\n" % (valuetype, ident, value))
+except:
+    if opt_debug:
+        raise
+    sys.stderr.write('Unhandled error: %s' % traceback.format_exc())

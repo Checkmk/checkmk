@@ -1,0 +1,23 @@
+title: Siemens PLC: Temperature values
+agents: siemens_plc
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ The check monitors the state of the temperature values reported by Siemens PLC (SPS) devices.
+
+ You need to use and configure the special agent {agent_siemens_plc} which is using the SNAP7
+ library to communicate with the Siemens PLC. When you are using OMD, everything is already
+ installed and configured. In manual setups, you will need to ensure that the snap7 library
+ and python module {snap7} are installed.
+ To make temperature values available for the check, you need to configure the memory addresses
+ and data types to read from the device as temperature values.
+
+ The checks does not {WARN}/{CRIT} unless you configure the thresholds for the check, as the
+ device does not report any thresholds.
+
+inventory:
+ One check for each configured temperature value is created automatically.
+
+perfdata:
+ The current temperature in celsius

@@ -19,6 +19,9 @@
     * 2078 FIX: Fixed exception with some snapshots when using a localized GUI...
     * 2080 FIX: Fixed UnicodeDecodeError when using a localized GUI on notification configuration page
 
+    Notifications:
+    * 2081 FIX: Improved logging of mkeventd in error cases
+
     BI:
     * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules
 

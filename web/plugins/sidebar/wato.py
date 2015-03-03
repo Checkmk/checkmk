@@ -227,6 +227,8 @@ def render_wato_foldertree():
     # Render link target selection
     #
     selected_topic, selected_target = config.load_user_file("foldertree", (_('Hosts'), 'allhosts'))
+    if type(selected_topic) == unicode:
+        selected_topic = selected_topic.encode("utf-8")
 
     views.load_views()
     dashboard.load_dashboards()

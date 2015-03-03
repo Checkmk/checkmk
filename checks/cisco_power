@@ -56,7 +56,7 @@ def inventory_cisco_power(info):
     # by appending a "/4" for ID 4 if the name is not unique
     discovered = {}
     for sid, textinfo, state, source in info:
-        if 'RPS NotExist' not in textinfo and state != '5':
+        if state != '5':
             name = cisco_sensor_item(textinfo, sid)
             discovered.setdefault(name, []).append(sid)
 

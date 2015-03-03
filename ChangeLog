@@ -1,4 +1,7 @@
 1.2.6b13:
+    Checks & Agents:
+    * 2050 FIX: netapp_api_if: Fixed invalid speed warning for virtual interface groups...
+
 
 1.2.6b12:
     Checks & Agents:

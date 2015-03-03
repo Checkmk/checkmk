@@ -1,0 +1,12 @@
+Title: netapp_api_if: Fixed invalid speed warning for virtual interface groups
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425381040
+
+The check incorrectly reported "Interfaces do not have the same speed" when
+multiple virtual interfaces shared the same MAC address.
+

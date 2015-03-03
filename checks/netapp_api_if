@@ -100,8 +100,6 @@ def netapp_convert_to_if64(info):
         # speed as the virtual speed. Note: Depending on the configuration this behaviour might
         # differ, e.g. the speed of all interfaces might get accumulated..
         # Additionally, we check if not all interfaces of the virtual group share the same connection speed
-        max_speed = 0
-        min_speed = 0
         if not speed:
             if "mac-address" in values:
                 mac_list = if_mac_list[values["mac-address"]]
@@ -109,13 +107,16 @@ def netapp_convert_to_if64(info):
                     extra_info.setdefault(nic_name, {})
                     extra_info[nic_name]["grouped_if"] = [ x for x in mac_list if x not in vif_list ]
 
+                    max_speed = 0
+                    min_speed = 1024**5
                     for tmp_if in mac_list:
-                        if tmp_if == nic_name:
+                        if tmp_if == nic_name or "speed" not in interfaces[tmp_if]:
                             continue
-                        max_speed = max(max_speed, interfaces[tmp_if].get("speed", 0))
-                        min_speed = min(max_speed, interfaces[tmp_if].get("speed", 0))
+                        check_speed = interfaces[tmp_if]["speed"]
+                        max_speed = max(max_speed, check_speed)
+                        min_speed = min(min_speed, check_speed)
                     if max_speed != min_speed:
-                        extra_info[nic_name]["speed_differs"] = True
+                        extra_info[nic_name]["speed_differs"] = (max_speed, min_speed)
                     speed = max_speed
 
         # Virtual interfaces is "Up" if at least one physical interface is up

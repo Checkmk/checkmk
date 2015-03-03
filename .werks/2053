@@ -1,0 +1,11 @@
+Title: New windows plugin: windows_if.ps1, renders wmic_if.ps1 obsolete
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425392870
+Class: feature
+
+The wmic_if.ps1 has been replaced by windows_if.ps1.
+The latter one provides the same information as the previous version, but
+does additionally report interface teaming information, if applicable.

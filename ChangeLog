@@ -1,5 +1,7 @@
 1.2.6:
     Checks & Agents:
+    * 2050 FIX: netapp_api_if: Fixed invalid speed warning for virtual interface groups...
+    * 2086 FIX: apc_ats_status: Fixed exception when source different than selected source
     * 2087 FIX: netapp_api_temp: Fixed exception when dealing with old discovered checks...
 
 

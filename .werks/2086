@@ -2,7 +2,7 @@ Title: apc_ats_status: Fixed exception when source different than selected sourc
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.6b13
+Version: 1.2.6
 Date: 1425384603
 Class: fix
 

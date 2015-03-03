@@ -1,4 +1,7 @@
 1.2.6p1:
+    Checks & Agents:
+    * 2051 FIX: windows agent: no longer outputs stderr of local and plugin scripts...
+
 
 1.2.6:
     Checks & Agents:

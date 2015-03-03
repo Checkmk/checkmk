@@ -2746,7 +2746,15 @@ int launch_program(script_container* cont)
     si.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
     si.hStdOutput = newstdout;
-    si.hStdError = newstdout;
+
+
+    // Redirect sterr to NUL device
+    SECURITY_ATTRIBUTES secattr;
+    secattr.nLength = sizeof secattr;
+    secattr.lpSecurityDescriptor = NULL;
+    secattr.bInheritHandle = TRUE;
+    HANDLE hnul = CreateFile("NUL", GENERIC_WRITE, 0, &secattr, OPEN_EXISTING, 0, NULL);
+    si.hStdError = hnul;
 
     // spawn the child process
     if (!CreateProcess(NULL,cont->path,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
@@ -2827,6 +2835,7 @@ int launch_program(script_container* cont)
     CloseHandle(pi.hProcess);
     CloseHandle(newstdout);
     CloseHandle(read_stdout);
+    CloseHandle(hnul);
     return exit_code;
 }
 

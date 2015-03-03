@@ -3563,7 +3563,7 @@ register_check_parameters(
     "humidity",
     _("Humidity Levels"),
     Tuple(
-          help = _("This Rulset sets the threshold limits for humidity sensors"),
+          help = _("This Ruleset sets the threshold limits for humidity sensors"),
           elements = [
               Integer(title = _("Critical at or below"), unit="%" ),
               Integer(title = _("Warning at or below"), unit="%" ),
@@ -3581,7 +3581,7 @@ register_check_parameters(
     "single_humidity",
     _("Humidity Levels for devices with a single sensor"),
     Tuple(
-          help = _("This Rulset sets the threshold limits for humidity sensors"),
+          help = _("This Ruleset sets the threshold limits for humidity sensors"),
           elements = [
               Integer(title = _("Critical at or below"), unit="%" ),
               Integer(title = _("Warning at or below"), unit="%" ),
@@ -3974,7 +3974,7 @@ register_check_parameters(
              title = _("Handling for required mirror space"),
              totext = "",
              choices = [
-                 ( False, _("Disregard required mirror space as free space")),
+                 ( False, _("Do not regard required mirror space as free space")),
                  ( True, _("Regard required mirror space as free space")),],
              help = _("ASM calculates the free space depending on free_mb or required mirror "
                       "free space. Enable this option to set the check against required "

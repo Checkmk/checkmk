@@ -1,0 +1,27 @@
+Title: winperf_if: Now able to automatically group teamed interfaces and more
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1425390249
+Class: feature
+
+The winperf_if check is now able to detect teamed interfaces.
+This information is provided by the updated wmic_if.ps1 plugin.
+
+Right now, the teamed interfaces are no longer listed separately.
+There will be a configuration option soon which allows you to configure
+this behaviour.
+
+H2: Incompatible change
+The service descriptions for this check did never show the human
+readable/editable interface name - the <i>NetConnectionID</i>.
+This has been fixed. This information is now provided in the alias information
+of each interface.<br>
+If you have used the configuration option <tt>if_inventory_uses_alias</tt>, the
+interface will now have a different name. Therefore the service description changes
+and the performance data will get lost.<br>
+A workaround for this problem is to use <tt>if_inventory_uses_description</tt> instead.<br>
+For windows hosts the setting <tt>if_inventory_uses_alias</tt> and <tt>if_inventory_uses_description</tt>
+meant the same in previous versions. With this update only the meaning of <tt>if_inventory_uses_alias</tt> has changed.
+

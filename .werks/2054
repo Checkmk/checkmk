@@ -1,0 +1,18 @@
+Title: Sidebar snapin "Tree of folders": fixed exception when using localized default value
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425397160
+
+The sidebar snapin "Tree of folders" had an encoding exception in the following setting
+
+<ul>
+<li>The user never changed the default values for this snapin</li>
+<li>The interface language was different from the default language</li>
+<li>The translated text in the snapin contained umlauts like ä, ö, ü</li>
+</ul>
+
+This has been fixed.

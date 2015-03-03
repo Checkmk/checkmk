@@ -1,0 +1,10 @@
+Title: windows agent: no longer outputs stderr of local and plugin scripts
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425388179
+Class: fix
+
+Unlike the linux agents, the windows agent did output data from stderr.
+This caused invalid formatted sections in case of (tolerable) errors.

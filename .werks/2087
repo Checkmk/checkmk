@@ -1,0 +1,12 @@
+Title: netapp_api_temp: Fixed exception when dealing with old discovered checks
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425385145
+
+When services have been discovered with old versions, the discovered parameters
+were None, which lead to an exception with the current check during checking.
+Handling this kind of data now for compatiblity reasons.

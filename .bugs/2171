@@ -1,0 +1,7 @@
+Title: windows agent: able to handle extensions with 2 characters (.py)
+Component: checks
+State: open
+Date: 2015-03-03 13:23:38
+Targetversion: future
+Class: bug
+

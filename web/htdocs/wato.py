@@ -16583,16 +16583,17 @@ class HostTagCondition(ValueSpec):
 # that we can replace back after writing the BI-Rules out
 # with pprint.pformat
 bi_constants = {
-  'ALL_HOSTS'       : 'ALL_HOSTS-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'HOST_STATE'      : 'HOST_STATE-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'HIDDEN'          : 'HIDDEN-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'FOREACH_HOST'    : 'FOREACH_HOST-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'FOREACH_CHILD'   : 'FOREACH_CHILD-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'FOREACH_PARENT'  : 'FOREACH_PARENT-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'FOREACH_SERVICE' : 'FOREACH_SERVICE-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'REMAINING'       : 'REMAINING-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'DISABLED'        : 'DISABLED-f41e728b-0bce-40dc-82ea-51091d034fc3',
-  'HARD_STATES'     : 'HARD_STATES-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'ALL_HOSTS'          : 'ALL_HOSTS-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'HOST_STATE'         : 'HOST_STATE-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'HIDDEN'             : 'HIDDEN-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'FOREACH_HOST'       : 'FOREACH_HOST-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'FOREACH_CHILD'      : 'FOREACH_CHILD-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'FOREACH_CHILD_WITH' : 'FOREACH_CHILD_WITH-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'FOREACH_PARENT'     : 'FOREACH_PARENT-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'FOREACH_SERVICE'    : 'FOREACH_SERVICE-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'REMAINING'          : 'REMAINING-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'DISABLED'           : 'DISABLED-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'HARD_STATES'        : 'HARD_STATES-f41e728b-0bce-40dc-82ea-51091d034fc3',
 }
 
 # returns aggregations, aggregation_rules
@@ -16734,27 +16735,41 @@ def convert_node_from_bi(node):
 
     else: # FOREACH_...
 
+        foreach_spec = node[0]
+        if foreach_spec == bi_constants['FOREACH_CHILD_WITH']:
+            # extract the conditions meant for matching the childs
+            child_conditions = list(node[1:3])
+            if child_conditions[1] == bi_constants['ALL_HOSTS']:
+                child_conditions[1] = None
+            node = node[0:1] + node[3:]
+
+        # Extract the list of tags
         if type(node[1]) == list:
             tags = node[1]
             node = node[0:1] + node[2:]
         else:
             tags = []
-        spec = node[1]
-        if spec == bi_constants['ALL_HOSTS']:
-            spec = None
-        if node[0] == bi_constants['FOREACH_SERVICE']:
+
+        hostspec = node[1]
+        if hostspec == bi_constants['ALL_HOSTS']:
+            hostspec = None
+
+        if foreach_spec == bi_constants['FOREACH_SERVICE']:
             service = node[2]
             subnode = convert_node_from_bi(node[3:])
-            return ("foreach_service", (tags, spec, service, subnode))
+            return ("foreach_service", (tags, hostspec, service, subnode))
         else:
+
             subnode = convert_node_from_bi(node[2:])
-            if node[0] == bi_constants['FOREACH_HOST']:
+            if foreach_spec == bi_constants['FOREACH_HOST']:
                 what = "host"
-            elif node[0] == bi_constants['FOREACH_CHILD']:
+            elif foreach_spec == bi_constants['FOREACH_CHILD']:
                 what = "child"
-            elif node[0] == bi_constants['FOREACH_PARENT']:
+            elif foreach_spec == bi_constants['FOREACH_CHILD_WITH']:
+                what = ("child_with", child_conditions)
+            elif foreach_spec == bi_constants['FOREACH_PARENT']:
                 what = "parent"
-            return ("foreach_host", (what, tags, spec, subnode))
+            return ("foreach_host", (what, tags, hostspec, subnode))
 
 
 def convert_node_to_bi(node):
@@ -16768,12 +16783,22 @@ def convert_node_to_bi(node):
         return node[1]
     elif node[0] == "foreach_host":
         what = node[1][0]
+
         tags = node[1][1]
         if node[1][2]:
-            spec = node[1][2]
+            hostspec = node[1][2]
         else:
-            spec = bi_constants['ALL_HOSTS']
-        return (bi_constants["FOREACH_" + what.upper()], tags, spec) + convert_node_to_bi(node[1][3])
+            hostspec = bi_constants['ALL_HOSTS']
+
+        if type(what == tuple) and what[0] == 'child_with':
+            child_conditions = what[1]
+            what             = what[0]
+            child_tags       = child_conditions[0]
+            child_hostspec   = child_conditions[1] and child_conditions[1] or bi_constants['ALL_HOSTS']
+            return (bi_constants["FOREACH_" + what.upper()], child_tags, child_hostspec, tags, hostspec) \
+                   + convert_node_to_bi(node[1][3])
+        else:
+            return (bi_constants["FOREACH_" + what.upper()], tags, hostspec) + convert_node_to_bi(node[1][3])
     elif node[0] == "foreach_service":
         tags = node[1][0]
         if node[1][1]:
@@ -16898,12 +16923,28 @@ def declare_bi_valuespecs(aggregation_rules):
           ( "foreach_host", _("Create nodes based on a host search"),
              Tuple(
                  elements = [
-                    DropdownChoice(
+                    CascadingDropdown(
                         title = _("Refer to:"),
                         choices = [
-                            ( 'host',   _("The found hosts themselves") ),
-                            ( 'child',  _("The found hosts' childs") ),
-                            ( 'parent', _("The found hosts' parents") ),
+                            ( 'host',       _("The found hosts themselves") ),
+                            ( 'child',      _("The found hosts' childs") ),
+                            ( 'child_with', _("The found hosts' childs (with child filtering)"),
+                                Tuple(elements = [
+                                    HostTagCondition(
+                                        title = _("Child Host Tags:")
+                                    ),
+                                    OptionalDropdownChoice(
+                                        title = _("Child Host Name:"),
+                                        choices = [
+                                            ( None, _("All Hosts")),
+                                        ],
+                                        explicit = TextAscii(size = 60),
+                                        otherlabel = _("Regex for host name"),
+                                        default_value = None,
+                                    ),
+                                ]),
+                            ),
+                            ( 'parent',     _("The found hosts' parents") ),
                         ],
                         help = _('When refering to the found hosts childs, this means you '
                           'configure the conditions (tags and host name) below to match '

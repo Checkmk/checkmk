@@ -1,0 +1,12 @@
+Title: Host search for child nodes can now filter child nodes by tags or patterns
+Level: 1
+Component: bi
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425368497
+Class: fix
+
+Rules in Check_MK BI can be configured to iterate over the childs of parent
+nodes for a long time now. But it was not possible to filter the found child
+hosts by tags or patterns. The tags which could be configured were only affecting
+the parent host. Now it possible to filter the childs by tags or regex patterns.

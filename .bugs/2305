@@ -1,9 +1,9 @@
 Title: User setting Disable Notifications vanishes also for admin for permission is missing
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2015-02-24 11:43:13
 Targetversion: 1.2.6
-Class: bug
 
 If a user does not have the permission general.disable_notifications, then the checkbox
 in his personal settings for this option is not visible. Even if the user settings are edited
@@ -19,3 +19,6 @@ Solution:
 
 In our case the notifications were disabled but this was completely hidden and only
 visible in users.mk.
+
+2015-03-02 15:11:35: changed state open -> done
+Fixed

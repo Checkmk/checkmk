@@ -1,0 +1,13 @@
+Title: Disabled notification for a user is now shown on profile page even when not permitted to edit
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425305351
+
+When all notifications have been disabled for a user this is shown on the user profile page
+and user edit page even when the user is not able to edit this value.
+
+The locking / disabled notification state is shown in the WATOs user list as icons now.

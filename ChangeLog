@@ -303,6 +303,7 @@
     * 2026 FIX: Fixed exception when using umlauts in notification plugin descriptions...
     * 2078 FIX: Fixed exception with some snapshots when using a localized GUI...
     * 2080 FIX: Fixed UnicodeDecodeError when using a localized GUI on notification configuration page
+    * 2084 FIX: Disabled notification for a user is now shown on profile page even when not permitted to edit...
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications
@@ -319,6 +320,7 @@
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used
     * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules
+    * 2085 FIX: Host search for child nodes can now filter child nodes by tags or patterns...
 
     Reporting & Availability:
     * 1990 FIX: Fix two exceptions in PDF exports of host group views

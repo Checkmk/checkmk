@@ -25,46 +25,52 @@
 # Boston, MA 02110-1301 USA.
 
 def check_memory(used, total, params):
-
+    # Convert old-style tuple params to dict
     if params:
         if type(params) == tuple:
             params = { "levels" : ("perc_used", params) }
     else:
         params = { "levels" : ("ignore") }
 
+
     perc_used = (float(used) / total) * 100
     infotext = "Memory usage: %s (Used: %s, Total: %s)" % (
-                                            get_percent_human_readable(perc_used),
-                                            get_bytes_human_readable(used),
-                                            get_bytes_human_readable(total))
+               get_percent_human_readable(perc_used),
+               get_bytes_human_readable(used),
+               get_bytes_human_readable(total))
 
     levelstext = ""
+
+    # No levels imposed
     if params["levels"][0] == "ignore":
         warn_abs, crit_abs = None, None
         status = 0
 
-    elif params["levels"][0] == "perc_used":
-        warn_rel, crit_rel = params["levels"][1]
-        warn_abs, crit_abs = (warn_rel/100.0) * total, (crit_rel/100.0) * total
-        levelstext = " (warn/crit at %s/%s used)" % (get_percent_human_readable(warn_rel),
-                                                get_percent_human_readable(crit_rel))
-    elif params["levels"][0] == "abs_free":
-        warn_abs_free, crit_abs_free = params["levels"][1]
-        warn_abs, crit_abs = total - warn_abs_free, total - crit_abs_free
-        levelstext = " (warn/crit below %s/%s free)" % (
-                                            get_bytes_human_readable(warn_abs_free),
-                                            get_bytes_human_readable(crit_abs_free))
+    # Absolute or percentual levels
+    else:
+        if params["levels"][0] == "perc_used":
+            warn_perc, crit_perc = params["levels"][1]
+            warn_abs = (warn_perc / 100.0) * total
+            crit_abs = (crit_perc / 100.0) * total
+            levelstext = " (warn/crit at %s/%s used)" % (
+                         get_percent_human_readable(warn_perc),
+                         get_percent_human_readable(crit_perc))
 
-    if warn_abs and crit_abs:
+        elif params["levels"][0] == "abs_free":
+            warn_abs_free, crit_abs_free = params["levels"][1]
+            warn_abs = total - warn_abs_free
+            crit_abs = total - crit_abs_free
+            levelstext = " (warn/crit below %s/%s free)" % (
+                         get_bytes_human_readable(warn_abs_free),
+                         get_bytes_human_readable(crit_abs_free))
+
         if used >= crit_abs:
             status = 2
         elif used >= warn_abs:
             status = 1
-        else:
-            status = 0
 
-    if status:
-        infotext += levelstext
+        if status:
+            infotext += levelstext
 
     perfdata = [ ("memory_used", used, warn_abs, crit_abs, 0, total) ]
     return status, infotext, perfdata

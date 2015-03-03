@@ -62,7 +62,7 @@
 
 def convert_winperf_if(info):
     def canonize_nic_name(n):
-        return n.replace("_", " ").replace("  ", " ")
+        return n.replace("_", " ").replace("  ", " ").rstrip()
 
     lines = iter(info)
     lines.next() # skip line with timestamp and counter number
@@ -70,9 +70,28 @@ def convert_winperf_if(info):
     nics = dict([(n, {}) for n in nic_names])
 
     # Scan lines with counters
+    is_teaming_line = False
+    teaming_headers = []
+    teaming_info = {}
+
     try:
         while True:
             line = lines.next()
+
+            # Process teaming information
+            if line[0].startswith("[teaming_start]"):
+                is_teaming_line = True
+                teaming_headers = lines.next()
+                continue
+            elif line[0].startswith("[teaming_end]"):
+                is_teaming_line = False
+                continue
+            if is_teaming_line:
+                as_dict = dict(zip(teaming_headers, map(lambda x: x.rstrip(), line)))
+                for guid in as_dict["GUID"].split(";"):
+                    teaming_info[guid] = as_dict
+                continue
+
             counter = saveint(line[0])
             if counter:
                 for nr, value in enumerate(line[1:len(nic_names)+1]):
@@ -83,14 +102,24 @@ def convert_winperf_if(info):
                 headers = line
                 while True:
                     line = lines.next()
-                    as_dict = dict(zip(headers, line))
-                    nic_name = canonize_nic_name(as_dict["Name"])
-                    try:
-                        conn_id = int(as_dict["NetConnectionID"].split()[-1])
-                        nic_name += " " + str(conn_id)
-                    except:
-                        pass
+                    if line[0].startswith("[teaming_start]"):
+                        is_teaming_line = True
+                        teaming_headers = lines.next()
+                        break
 
+                    as_dict = dict(zip(headers, map(lambda x: x.rstrip(), line)))
+
+                    # Unfortunately teamed interfaces loose their #x index and are no longer
+                    # distinguishable with the data from the Win32_NetworkAdapter.
+                    # Fortunately this index information is still available in the teaming section
+                    # The GUID is used to combine the two datasets
+                    guid = as_dict.get("GUID")
+                    if guid in teaming_info:
+                        guid_to_name = dict(zip(teaming_info[guid]["GUID"].split(";"),
+                                                teaming_info[guid]["MemberDescriptions"].split(";")))
+                        nic_name = canonize_nic_name(guid_to_name[guid])
+                    else:
+                        nic_name = canonize_nic_name(as_dict["Name"])
 
                     def transform_name(name):
                         # Intel[R] PRO 1000 MT-Desktopadapter__3   (perf counter)
@@ -127,17 +156,8 @@ def convert_winperf_if(info):
                                         found_match = True
                                         break
                         else:
+                            found_match = True
                             nic_name = mod_nic_name
-
-                    # The last straw. Try to find this the name as exact match in other fields
-                    if not found_match:
-                        for entry in [ "NetConnectionID", "InterfaceDescription" ]:
-                            if as_dict.get(entry):
-                                mod_nic_name = transform_name(as_dict.get(entry))
-                                if mod_nic_name in nic_names:
-                                    nic_name = mod_nic_name
-                                    found_match = True
-                                    break
 
                     if not found_match:
                         # Ignore interfaces that do not have counters
@@ -147,10 +167,11 @@ def convert_winperf_if(info):
     except StopIteration:
         pass
 
+
     # Now convert the dicts into the format that is needed by if.include
     converted = []
 
-    # Sort NIC names are create artifical index
+    # Sort NIC names and create artifical index
     nic_index = dict(map(lambda x: (x[1], x[0] + 1), enumerate(nic_names)))
     nic_names.sort(reverse=True)
 
@@ -158,17 +179,28 @@ def convert_winperf_if(info):
         nic = nics[nic_name]
         mac_txt = nic.get('MACAddress')
         bandwidth = saveint(nic.get('Speed'))
+        # Some interfaces report several exabyte as bandwidth when down..
+        if bandwidth > 1024**5:
+            # Greater than petabyte
+            bandwidth = 0
+
         if mac_txt:
             mac = "".join(map(lambda x: chr(int(x, 16)), mac_txt.split(':')))
         else:
             mac = ''
+
+        index_info = str(nic_index[nic_name])
+        # Automatically group teamed interfaces
+        if nic.get("GUID") in teaming_info:
+            index_info = ( teaming_info[nic.get("GUID")]["TeamName"], index_info )
+
         converted.append((
-           str(nic_index[nic_name]),
+           index_info,
            nic_name,
            "loopback" in nic_name.lower() and '24' or '6',
-           bandwidth or nic[10], # Aktuelle Bandbreite
-           # NetConnectionStatus: 2 st up, 7 ist 'not connected'. If the plugin
-           # wmic_if is missing and we have link information we need to assume 'up':
+           bandwidth or nic[10], # Bandwidth
+           # NetConnectionStatus: 2 means 'up', 7 is 'not connected'. If the plugin
+           # wmic_if is missing and we have link information we have to assume 'up':
            nic.get('NetConnectionStatus', '2') == '2' and '1' or '2',
            nic[-246], # ifInOctets,
            nic[14], # inucast
@@ -183,7 +215,7 @@ def convert_winperf_if(info):
            nic[30], # ifOutDiscards
            nic[32], # ifOutErrors
            nic[34], # ifOutQLen
-           nic_name,
+           nic.get('NetConnectionID', nic_name),
            mac,
         ))
 

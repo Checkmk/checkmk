@@ -273,7 +273,7 @@ def check_temperature_list(sensorlist, params):
 
     if type(params) == tuple:
         params = { "levels" : params }
-    elif type(params) == None:
+    elif params == None:
         params = {}
 
     output_unit = params.get("output_unit", "c")

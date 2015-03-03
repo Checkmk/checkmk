@@ -21,6 +21,7 @@ of each interface.<br>
 If you have used the configuration option <tt>if_inventory_uses_alias</tt>, the
 interface will now have a different name. Therefore the service description changes
 and the performance data will get lost.<br>
-A workaround for this problem is to use <tt>if_inventory_uses_description</tt> instead....
-For windows hosts the settings <tt>if_inventory_uses_alias</tt> and <tt>if_inventory_uses_description</tt>
-meant the same in previous version. With this update the meaning of <tt>if_inventory_uses_alias</tt> has changed.
+A workaround for this problem is to use <tt>if_inventory_uses_description</tt> instead.<br>
+For windows hosts the setting <tt>if_inventory_uses_alias</tt> and <tt>if_inventory_uses_description</tt>
+meant the same in previous versions. With this update only the meaning of <tt>if_inventory_uses_alias</tt> has changed.
+

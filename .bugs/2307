@@ -1,0 +1,26 @@
+Title: Automatic removal of duplicate services SNMP vs. Agent can fail
+Component: core
+State: open
+Date: 2015-03-03 10:32:56
+Targetversion: 1.2.6
+Class: bug
+
+Situtation:
+
+Host is declared TCP + SNMP
+Discovery is done -> df and hr_fs checks for the same filesystems
+Duplicates are correctly removed
+
+Later the host is redeclared as TCP-only
+Checks hr_fs remain in autochecks
+
+get_check_table() now does *not* remove the duplicates since host_is_dual()
+does not hold anymore.
+Config generation runs into an exception because of duplicate checks.
+
+Proposed resolution: If a is is *not* snmp, get_check_table should
+remove *all* SNMP checks. Same holds for TCP.
+
+Note: This does change the semantics a bit but is more clean. A
+host cannot try to access an agent anymore if it is not tagged
+SNMP or TCP resp.

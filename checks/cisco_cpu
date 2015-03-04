@@ -30,10 +30,13 @@
 cisco_cpu_default_levels = (80.0, 90.0)
 
 def inventory_cisco_cpu(info):
-    if info:
+    if info and info[0] != [None, None]:
         return [( None, 'cisco_cpu_default_levels') ]
 
 def check_cisco_cpu(item, params, info):
+    if info[0] == [None, None]:
+        return 3, 'No information about the CPU utilization available'
+
     if info[0][1]:
         util = float(info[0][1])
     else:

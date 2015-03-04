@@ -205,9 +205,11 @@ def notify_notify(raw_context, analyse=False):
 
     notify_log("----------------------------------------------------------------------")
     if analyse:
-        notify_log("Analysing notification context with %s variables" % len(raw_context))
+        notify_log("Analysing notification (%s) context with %s variables" % (
+            find_host_service(raw_context), len(raw_context)))
     else:
-        notify_log("Got raw notification context with %s variables" % len(raw_context))
+        notify_log("Got raw notification (%s) context with %s variables" % (
+            find_host_service(raw_context), len(raw_context)))
 
     # Add some further variable for the conveniance of the plugins
 
@@ -1400,13 +1402,14 @@ def create_spoolfile(data):
 # 3. Notifications to *got* forwarded. Contain neither of both.
 # Spool files of type 1 are not handled here!
 def handle_spoolfile(spoolfile):
+    notify_log("----------------------------------------------------------------------")
     try:
         data = eval(file(spoolfile).read())
         if "plugin" in data:
             plugin_context = data["context"]
             plugin = data["plugin"]
-            notify_log("Got spool file for local delivery via %s" % (
-                plugin or "plain mail"))
+            notify_log("Got spool file (%s) for local delivery via %s" % (
+                find_host_service(plugin_context), (plugin or "plain mail")))
             return call_notification_script(plugin, plugin_context)
 
         else:
@@ -1873,6 +1876,13 @@ def substitute_context(template, context):
 #   |  Some generic helper functions                                       |
 #   '----------------------------------------------------------------------'
 
+def find_host_service(context):
+    host = context.get("HOSTNAME", "UNKNOWN")
+    service = context.get("SERVICEDESC")
+    if service:
+        return host + ";" + service
+    else:
+        return host
 
 def livestatus_fetch_query(query):
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

@@ -142,11 +142,8 @@ def cmp_service_name_equiv(r):
         return 0
 
 def cmp_service_name(column, r1, r2):
-    o = cmp(cmp_service_name_equiv(r1[column]), cmp_service_name_equiv(r2[column]))
-    if o == 0:
-        return cmp_simple_string(column, r1, r2)
-    else:
-        return o
+    return cmp(cmp_service_name_equiv(r1[column]), cmp_service_name_equiv(r2[column])) or \
+           cmp_num_split(column, r1, r2)
 
 #                      name                      title                              column                       sortfunction
 declare_simple_sorter("svcdescr",                _("Service description"),         "service_description",        cmp_service_name)

@@ -1,0 +1,13 @@
+Title: Services are now sorted in a natural way, this affects services containing numbers
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425477221
+Class: feature
+
+Previously services would be sorted alphabetically, e.g. <tt>foo1</tt>,
+<tt>foo10</tt>, <tt>foo11</tt>, ... <tt>foo2</tt>, <tt>foo3</tt>, etc.
+Now numbers within the descriptions are being detected by a smart algorithm
+and the sorting is then <tt>foo1</tt>, <tt>foo2</tt>, ... , <tt>foo9</tt>,
+<tt>foo10</tt>, <tt>foo11</tt>, just as you would expect.

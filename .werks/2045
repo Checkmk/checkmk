@@ -1,0 +1,10 @@
+Title: Avoid fetching SNMP data when showing service list in WATO - unless Full Scan is pressed
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425487004
+
+

@@ -320,6 +320,7 @@
     * 2078 FIX: Fixed exception with some snapshots when using a localized GUI...
     * 2080 FIX: Fixed UnicodeDecodeError when using a localized GUI on notification configuration page
     * 2084 FIX: Disabled notification for a user is now shown on profile page even when not permitted to edit...
+    * 2045 FIX: Avoid fetching SNMP data when showing service list in WATO - unless Full Scan is pressed
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

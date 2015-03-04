@@ -1,0 +1,9 @@
+Title: mkeventd: fixed exception when executing a shell script as action
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425486701
+Class: fix
+
+

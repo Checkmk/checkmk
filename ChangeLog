@@ -347,6 +347,7 @@
     * 1813 FIX: Fixed bug in event console rule editor when no contact groups configured
     * 1974 FIX: Event console views were randomly ignoring host filters...
     * 1861 FIX: exception in mkeventd when archiving certain event log lines
+    * 1865 FIX: mkeventd: fixed exception when executing a shell script as action
 
     HW/SW-Inventory:
     * 1846 Keep track of changes of software and hardware...

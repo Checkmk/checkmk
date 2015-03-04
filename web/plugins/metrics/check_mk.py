@@ -491,6 +491,7 @@ check_metrics["check_mk-adva_fsp_current"]                      = {}
 
 check_metrics["check_mk-akcp_exp_humidity"]                     = {}
 check_metrics["check_mk-apc_humidity"]                          = {}
+check_metrics["check_mk-hwg_humidity"]                          = {}
 
 
 check_metrics["check_mk-apache_status"]                         = { "ReqPerSec" : { "name" : "requests_per_second" }, "BusyWorkers" : { "name" : "busy_workers" }}

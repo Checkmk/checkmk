@@ -1,0 +1,23 @@
+title: HWg-STE Ethernet Thermometer: Humidity
+agents: snmp
+catalog: hw/environment/hwg
+license: GPL
+distribution: check_mk
+description:
+ This check monitors humidity via an accessory humidity sensor attached to
+ the HWg-STE Ethernet thermometer.
+
+item:
+ The name of the sensor "a string".
+
+perfdata:
+ One variable: the current humidity.
+
+inventory:
+ All available humidity sensors are automatically inventorized.
+
+[parameters]
+critical low (int): lower border for triggering critical level
+warning low (int): lower border for warning level
+warning high (int): upper border for triggering warning level
+critical high (int): upper border for critical level

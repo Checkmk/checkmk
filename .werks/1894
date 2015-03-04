@@ -1,0 +1,10 @@
+Title: hwg_humidity: New check to monitor humidity sensors attached to HWg-STE
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425489361
+Class: feature
+
+Accessory humidity sensors attached to HWg-STE ethernet thermometers are now
+inventorized and checked.

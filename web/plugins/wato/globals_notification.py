@@ -26,6 +26,9 @@
 
 # Configuration variables for the notification via cmk --notify
 
+# TODO: Remove all configuration for legacy-Email to deprecated, or completely
+# remove from WATO.
+
 group = _("Notification")
 
 register_configvar(group,

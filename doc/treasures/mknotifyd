@@ -24,8 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO:
+# - Plugin omdstatus erweitern um die Überwachung des Spoolers. Oder eigenen
+#   Check dafür machen.
+# - Ordentlicher Endtest
 
-import socket, os, time, sys, getopt, signal, thread, pprint, re, select, subprocess, stat, pickle, uuid
+import socket, os, time, sys, getopt, signal, pprint, re, select, subprocess, stat, pickle, uuid
 from pwd import getpwnam
 from grp import getgrnam
 
@@ -39,8 +43,9 @@ VERSION="1.2.7i1"
 #   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
 #   |                              |_|                                     |
 #   +----------------------------------------------------------------------+
-#   |  Various helper functions                                            |
+#   |  Various helper functions, logging                                   |
 #   '----------------------------------------------------------------------'
+
 def format_exception():
     import StringIO, traceback
     txt = StringIO.StringIO()
@@ -49,8 +54,10 @@ def format_exception():
     return txt.getvalue()
 
 def bail_out(reason):
-    log("FATAL ERROR: %s" % reason)
-    log("%s" % format_exception())
+    log(EMERG, "FATAL ERROR: %s" % reason)
+    fe = format_exception()
+    if fe:
+        log(EMERG, "%s" % fe)
     sys.exit(1)
 
 def make_parentdirs(file_path):
@@ -69,234 +76,794 @@ def open_logfile():
     global g_logfile
     g_logfile = file(g_logfile_path, "a")
 
-def log(text):
+
+# Loglevel
+EMERG   = 0
+ALERT   = 1
+CRIT    = 2
+ERR     = 3
+WARNING = 4
+NOTICE  = 5
+INFO    = 6
+DEBUG   = 7
+
+def log(level, text):
     global g_logfile
     if type(text) == unicode:
         text = text.encode("utf-8")
     try:
-        g_logfile.write('%s %s\n' % (time.strftime("%F %T", time.localtime()), text))
+        g_logfile.write('%s [%d] %s\n' % (time.strftime("%F %T", time.localtime()), level, text))
         g_logfile.flush()
     except:
         sys.stderr.write("%s\n" % text)
 
-def verbose(text, level = 1):
-   if opt_verbose >= level:
-       log(text)
+def verbose(text):
+   if opt_verbose >= 1 or g_config["log_level"] >= 1:
+       log(INFO, text)
+
+def vverbose(text):
+   if opt_verbose >= 2 or g_config["log_level"] >= 2:
+       log(DEBUG, text)
+
 
 #.
-#   .--Spoolfiles Handler--------------------------------------------------.
+#   .--Configuration-------------------------------------------------------.
+#   |    ____             __ _                       _   _                 |
+#   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
+#   |  | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \     |
+#   |  | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |    |
+#   |   \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|    |
+#   |                          |___/                                       |
+#   +----------------------------------------------------------------------+
+#   |  Read configuration, detect config changes, handle legacy config     |
+#   '----------------------------------------------------------------------'
+
+# Example for content of configuration file:
+# config = {
+#  'log_level': 1,
+#  'deferred_cooldown': 180,
+#  'incoming': {
+#      'heartbeat_interval': 10,
+#      'listen_port': 2345,
+#  },
+#  'outgoing': [{'address': '1.2.3.4',
+#                'cooldown': 20,
+#                'heartbeat_interval': 10,
+#                'heartbeat_timeout': 3,
+#                'port': 6555}],
+# }
+
+
+def load_configuration():
+    global g_config, g_role, g_last_config_reload, g_wato_configtime
+
+    last_config = g_config.copy()
+    g_wato_configtime = wato_config_mtime()
+    config_vars = {}
+
+    config_dir = "%s/mknotifyd.d" % g_config_dir
+    try:
+        list_of_files = reduce(lambda a,b: a+b,
+           [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
+             for d, sb, fs in os.walk(config_dir) ], [])
+        list_of_files.sort(cmp = cmp_config_paths)
+        for path in list_of_files:
+            vverbose("Reading configuration file %s" % path)
+            execfile(path, {}, config_vars)
+    except:
+        if opt_debug:
+            raise
+        g_config = last_config
+
+    g_last_config_reload = time.time()
+
+    # Convert old configuration into new one, if found
+    # TODO: Das hier kann ich mir sparen. Denn das wichtigste - die
+    # Spoolkonfiguration - geht sowie verloren!
+    if "config" in config_vars:
+        g_config = config_vars["config"]
+
+    else:
+        g_config = {
+            "log_level"       : 0,
+            "deferred_cooldown"  : 180,
+            "outgoing"        : [],
+        }
+
+        # In older versions the setting for remoting spooling was done in
+        # the check_mk config domain via notification_spool_to = ('5.6.7.8', 5678, True).
+        # We want to regard this setting - at least if the user has used WATO.
+        legacy_vars = {}
+        try:
+            execfile(g_config_dir + "/conf.d/wato/global.mk", {}, legacy_vars)
+            spool_to_address, spool_to_port, also_locally = legacy_vars["notification_spool_to"]
+
+            g_config["outgoing"] = [{
+                "address"            : spool_to_address,
+                "port"               : spool_to_port,
+                "cooldown"           : 10,
+                "heartbeat_interval" : 10,
+                "heartbeat_timeout"  : 3,
+            }]
+        except:
+            vverbose("No legacy configuration to regard.")
+
+        # Also migrate settings that are in old style in mknotifyd.d
+        if "notification_deferred_retention_time" in config_vars:
+            g_config["deferred_cooldown"] = config_vars["notification_deferred_retention_time"]
+        if "notification_daemon_listen_port" in config_vars:
+            g_config["incoming"] = {
+                "listen_port" : config_vars["notification_daemon_listen_port"],
+                "heartbeat_interval" : 10,
+            }
+
+    return last_config != g_config
+
+
+# This function has been stolen from check_mk.py.
+# Helper function that determines the sort order of the
+# configuration files. The following two rules are implemented:
+# 1. *.mk files in the same directory will be read
+#    according to their lexical order.
+# 2. subdirectories in the same directory will be
+#    scanned according to their lexical order.
+# 3. subdirectories of a directory will always be read *after*
+#    the *.mk files in that directory.
+def cmp_config_paths(a, b):
+    pa = a.split('/')
+    pb = b.split('/')
+    return cmp(pa[:-1], pb[:-1]) or \
+           cmp(len(pa), len(pb)) or \
+           cmp(pa, pb)
+
+
+def wato_config_mtime():
+    try:
+        return os.stat(g_config_dir + "/mknotifyd.d/wato/global.mk").st_mtime
+    except 1:
+        return None
+
+
+def check_config_change():
+    new_wato_time = wato_config_mtime()
+    if new_wato_time != g_wato_configtime:
+        verbose("Detected updated configuration by WATO.")
+        if load_configuration():
+            log(NOTICE, "Configuration has changed.")
+            return True
+
+#.
+#   .--Spoolfiles----------------------------------------------------------.
 #   |             ____                    _  __ _ _                        |
 #   |            / ___| _ __   ___   ___ | |/ _(_) | ___  ___              |
 #   |            \___ \| '_ \ / _ \ / _ \| | |_| | |/ _ \/ __|             |
 #   |             ___) | |_) | (_) | (_) | |  _| | |  __/\__ \             |
 #   |            |____/| .__/ \___/ \___/|_|_| |_|_|\___||___/             |
 #   |                  |_|                                                 |
-#   |                 _   _                 _ _                            |
-#   |                | | | | __ _ _ __   __| | | ___ _ __                  |
-#   |                | |_| |/ _` | '_ \ / _` | |/ _ \ '__|                 |
-#   |                |  _  | (_| | | | | (_| | |  __/ |                    |
-#   |                |_| |_|\__,_|_| |_|\__,_|_|\___|_|                    |
-#   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Processes the spoolfiles in the spool and deferred directories       |
-#   | by processing them with 'cmk --notify spoolfile {name}' or           |
-#   | forwarding them to another mknotifyd instance if applicable          |
+#   |  Handle spool directories                                            |
 #   '----------------------------------------------------------------------'
 
-class SpoolfilesHandler:
-    def __init__(self):
-        self._should_terminate = False
-        self._is_running = False
+def handle_spool_files():
+    process_spool_directory(g_spool_dir, 0)
+    process_spool_directory(g_deferred_dir, g_config["deferred_cooldown"])
 
-    def run(self):
-        log("Starting SpoolfilesHandler")
-        self._is_running = True
+
+def defer_spool_file(spool_dir, spoolfile):
+    deferredfile_path = g_deferred_dir + "/" + spoolfile
+    os.rename(spool_dir + "/" + spoolfile, deferredfile_path)
+    now = time.time()
+    os.utime(deferredfile_path, (now, now))
+
+
+def forward_notification(notif_uuid, content):
+    content["uuid"] = notif_uuid
+    message = pickle.dumps(content)
+    for connection in g_connections:
+        if connection["state"] == "established":
+            verbose("Spooling notification %s to connection %s:%d" % ((notif_uuid[:8],) + connection["target"]))
+            send_message(connection, message)
+            connection["notifications_sent"] += 1
+
+
+def send_message(connection, message):
+    telegram = "%10d%s" % (len(message), message)
+    connection["outgoing_data"] += telegram
+
+
+def process_spool_directory(dir_path, files_older_than):
+    for spoolfile in os.listdir(dir_path):
+        now = time.time()
+        spoolfile_process_result = -1
+        # Check spoolfile type
+        # Spoolfiles with the key forward are handled locally
+        spoolfile_path = "%s/%s" % (dir_path, spoolfile)
+        file_age = now - os.stat(spoolfile_path).st_mtime
+
+        if file_age < files_older_than:
+            continue
+
+        verbose("Processing spoolfile: %s" % spoolfile_path)
         try:
-            while not self._should_terminate:
-                self.process_directory(g_spool_dir)
-                self.process_directory(g_deferred_dir, g_config["notification_deferred_retention_time"])
-                time.sleep(1)
+            content = eval(file(spoolfile_path).read())
+            if not content.get("context"):
+                raise Exception("Unable to find key context")
         except Exception, e:
-            log("Error processing spoolfile %s" % format_exception())
+            # Move unreadable files out of the way
+            log(ERR, "Corrupted spoolfile %s\n%s" % (spoolfile_path, e))
+            os.rename(spoolfile_path, g_corrupted_dir + "/" + spoolfile)
+            continue
 
-        log("Stopping SpoolfilesHandler")
-        self._is_running = False
+        # Spool file for forwarding to remote host. Contains a raw context
+        if content.get("forward"):
+            # Spool for remote delivery. Also move into the deferred directory.
+            # At least one positive acknowledgement from the remote site will
+            # remove the spool file from there. Otherwise it will be processed
+            # again later.
+            forward_notification(spoolfile, content)
+            defer_spool_file(dir_path, spoolfile)
 
+        # Spool file for asynchronous local delivery. Contains a plugin context
+        else:
+            vverbose("process result <%d> of file %s " % (spoolfile_process_result, spoolfile_path))
+            if 1 == os.system("cmk --notify spoolfile %s" % spoolfile_path):
+                # Moving logfile to deferred and retry later
+                defer_spool_file(dir_path, spoolfile)
+            else:
+                os.remove(spoolfile_path)
 
-    def process_directory(self, dir_path, files_older_than = 3):
-        for root, dirs, files in os.walk(dir_path):
-            for spoolfile in files:
-                now = time.time()
-                spoolfile_process_result = -1
-                # Check spoolfile type
-                # Spoolfiles with the key forward are handled locally
-                spoolfile_path = "%s/%s" % (root, spoolfile)
-                file_age = now - os.stat(spoolfile_path)[8]
-
-                if file_age < files_older_than:
-                    continue
-
-                verbose("Processing spoolfile: %s" % spoolfile_path)
-                try:
-                    content = eval(file(spoolfile_path).read())
-                    if not content.get("context"):
-                        raise Exception("Unable to find key context")
-                except Exception, e:
-                    log("Invalid spoolfile %s\n%s" % (spoolfile_path,e))
-                    now = time.time()
-                    os.utime(spoolfile_path, (now, now))
-                    continue
-
-                # Spool file for forwarding to remote host. Contains a raw context
-                if content.get("forward"):
-                    response_text = ""
-                    try:
-                        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        sock.settimeout(10)
-                        host, port = content["forward"].split(':',1)
-                        del content["forward"]
-                        verbose("Forward notification to %s %s" % (host, port), 2)
-                        sock.connect((host, int(port)))
-                        data_to_send = pickle.dumps(content)
-                        sock.send("%10d" % len(data_to_send))
-                        sock.send(data_to_send)
-
-                        # Wait for OK response
-                        while True:
-                            readable = select.select([sock], [], [], 5)[0]
-                            data = None
-                            try:
-                               chunk = sock.recv(16)
-                               response_text += chunk
-                               if not chunk:
-                                   break
-                            except:
-                                break # Error while reading
-                    except Exception, e:
-                        # Connection problems
-                        log("Failed to forward notification %s to %s:%s: %s" % (spoolfile_path, host, port, e))
-                        verbose(format_exception(), 2)
-                    spoolfile_process_result = response_text != "OK" and 1 or 0
-
-                # Spool file for asynchronous local delivery. Contains a plugin context
-                else:
-                    spoolfile_process_result = os.system("cmk --notify spoolfile %s" % spoolfile_path)
-
-                verbose("process result <%d> of file %s " % (spoolfile_process_result, spoolfile_path), 2)
-                if spoolfile_process_result == 1:
-                    # Moving logfile to deferred and retry later
-                    deferredfile_path = "%s/%s" % (g_deferred_dir, spoolfile)
-                    os.rename(spoolfile_path, deferredfile_path)
-                    now = time.time()
-                    os.utime(deferredfile_path, (now, now))
-                else:
-                    os.remove(spoolfile_path)
 
 #.
-#   .--TCP-Server----------------------------------------------------------.
-#   |         _____ ____ ____      ____                                    |
-#   |        |_   _/ ___|  _ \    / ___|  ___ _ ____   _____ _ __          |
-#   |          | || |   | |_) |___\___ \ / _ \ '__\ \ / / _ \ '__|         |
-#   |          | || |___|  __/_____|__) |  __/ |   \ V /  __/ |            |
-#   |          |_| \____|_|       |____/ \___|_|    \_/ \___|_|            |
-#   |                                                                      |
+#   .--Networking----------------------------------------------------------.
+#   |        _   _      _                      _    _                      |
+#   |       | \ | | ___| |___      _____  _ __| | _(_)_ __   __ _          |
+#   |       |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ / | '_ \ / _` |         |
+#   |       | |\  |  __/ |_ \ V  V / (_) | |  |   <| | | | | (_| |         |
+#   |       |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\_|_| |_|\__, |         |
+#   |                                                       |___/          |
 #   +----------------------------------------------------------------------+
-#   |  Receives TCP Messages from foreign mknotifyd instances and creates  |
-#   |  spoolfiles out of it                                                |
+#   | Handling of sockets, passing of messages                             |
 #   '----------------------------------------------------------------------'
 
-class TcpServer:
-    def __init__(self):
-        self._tcp_socket = None
-        self._should_terminate = False
-        self._is_running = False
-        self._reopen_sockets = False
+# Note: heartbeats are always being sent by the host that
+# has accepted the connection. This can be either a notification
+# sink or source.
 
-    def open_sockets(self):
-        listen_port = g_config["notification_daemon_listen_port"]
-        log("Listen for remote notifications at port %d" % listen_port)
+# g_connections = [
+#     {
+#         "type"               : "outgoing",
+#         "target"             : ("12.3.45.7", 6678),
+#         "state"              : "established", # Ready for use
+#         "since"              : 1257555656.0, # last state change
+#         "last_heartbeat"     : 123455555.0, # last HB received,
+#         "heartbeat_interval" : 15,
+#         "heartbeat_timeout"  : 3, # config value
+#         "cooldown"           : 4,
+#         "socket"             : <socket>,
+#         "incoming_data"      : "",
+#         "outgoing_data"      : "",
+#         "notifications_sent" : 0,
+#         "notifications_received" : 17,
+#     },
+#     {
+#         "type"               : "incoming",
+#         "target"             : ("12.3.45.7", 5543), # they connected to us
+#         "state"              : "established",
+#         "last_heartbeat"     : 123455555.0, # last HB sent
+#         "heartbeat_interval" : 10, # interval for sending HBs
+#         "socket"             : <socket>,
+#         "incoming_data"      : "", # already read bytes of incomplete message
+#         "outgoing_data"      : "",
+#         "notifications_sent" : 0,
+#         "notifications_received" : 8,
+#     }
+# ]
+
+
+def open_incoming_socket():
+    global g_listen_socket, g_listen_socket_error
+    g_listen_socket = None
+    g_listen_socket_error = None
+
+    if "incoming" in g_config:
+        port = g_config["incoming"]["listen_port"]
+        log(NOTICE, "Listening for remote connections at port %d" % port)
         try:
-            self._tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self._tcp_socket.bind(("0.0.0.0", listen_port))
-            self._tcp_socket.listen(200)
+            g_listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            g_listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            g_listen_socket.bind(("0.0.0.0", port))
+            g_listen_socket.listen(10)
+        except Exception, e:
+            if opt_debug:
+                raise
+            log(EMERG, "Error opening socket: %s" % e)
+            g_listen_socket = None
+            g_listen_socket_error = str(e)
+
+
+# Create g_connections from the configuration. Add one entry for each
+# outgoing connection
+def initialize_connections():
+    global g_connections
+    g_connections = []
+
+    # Add one entry for each outgoing connection
+    for outgoing in g_config["outgoing"]:
+        connection = {
+            "type"                   : "outgoing",
+            "state"                  : "initial",
+            "incoming_data"          : "",
+            "outgoing_data"          : "",
+            "notifications_sent"     : 0,
+            "notifications_received" : 0,
+            "target"                 : (outgoing["address"], outgoing["port"]),
+            "heartbeat_interval"     : outgoing["heartbeat_interval"],
+            "heartbeat_timeout"      : outgoing["heartbeat_timeout"],
+            "cooldown"               : outgoing["cooldown"],
+        }
+        g_connections.append(connection)
+
+
+def maintain_connections():
+    now = time.time()
+    for connection in g_connections:
+        if connection["type"] == "outgoing":
+
+            # (Re-)connect new and dead connections
+            if connection["state"] == "initial" or \
+                (connection["state"] == "cooldown" and
+                  now - connection["since"] > connection["cooldown"]):
+                  connect_outgoing(connection)
+
+
+def connect_outgoing(connection):
+    verbose("Trying to connect to %s:%d" % connection["target"])
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setblocking(0)
+    connection["since"] = time.time()
+    connection["socket"] = s
+
+    try:
+        s.connect(connection["target"])
+        connection["state"] = "established"
+    except socket.error, e:
+        try:
+            errno = e.errno
         except:
-            log("Error opening socket.\n%s" % format_exception())
-            self._should_terminate = True
+            errno = None
 
-    def close_sockets(self):
-        if self._tcp_socket:
-            self._tcp_socket.close()
-            self._tcp_socket = None
-            log("No longer listen for remote notificiations")
+        if e.errno == 115: # "Operation now in progress"
+            connection["state"] = "connecting"
 
-    def run(self):
-        self._should_terminate = False
-        self._is_running = True
-        log("Starting TcpServer")
-        self.open_sockets()
+        else:
+            connecting["state"] = "cooldown"
+            log(WARNING, "Error: cannot create TCP channel to %s:%d: %s" %
+                (connection["target"] + (e,)))
 
-        handled_connections = 0 # Debug info
-        while not self._should_terminate:
-            readable = select.select([self._tcp_socket], [], [], 0.2)[0]
-            for s in readable:
-                client_data = ""
-                chunk_count = 0
-                client_socket, addr_info = s.accept()
-                from_name   = "%s:%s" % addr_info
-                data_ready  = True
-                data_header = client_socket.recv(10)
-                data_size   = int(data_header)
-                while True:
-                    try:
-                        chunk = client_socket.recv(data_size)
-                        chunk_count += 1
-                        client_data += chunk
-                        if len(client_data) >= data_size:
-                            break
+    except Exception, e:
+        connecting["state"] = "cooldown"
+        log(EMERG, "Error: cannot create TCP channel to %s:%d: %s" %
+            (connection["target"] + (e,)))
 
-                        # Break if not data was received for the last 5 seconds
-                        data_ready = select.select([client_socket], [], [], 5)[0]
-                        if not data_ready:
-                            break
-                    except:
-                        break # Error while reading
 
-                if opt_verbose > 1:
-                    verbose("Received notification %d from %s in %d chunks" % ( handled_connections, from_name, chunk_count), 2)
-                    handled_connections = handled_connections + 1
+def complete_connections(writable):
+    for connection in g_connections:
+        if connection["state"] == "connecting" and connection["socket"].fileno() in writable:
+            try:
+                connection["since"] = time.time()
+                connection["socket"].send("")
+                connection["socket"].setblocking(1)
+                verbose("Successfully connected to %s:%d" % connection["target"])
+                connection["state"] = "established"
+            except Exception, e:
+                if opt_debug:
+                    raise
+                log(WARNING, "Failed to connect to %s:%d: %s" % (connection["target"] + (e,)))
+                connection["state"] = "cooldown"
 
+
+def accept_new_connections(readable):
+    if g_listen_socket and g_listen_socket.fileno() in readable:
+        sock, addrinfo = g_listen_socket.accept()
+        sock.setblocking(1)
+        g_connections.append({
+            "type"                   : "incoming",
+            "state"                  : "established",
+            "since"                  : time.time(),
+            "socket"                 : sock,
+            "target"                 : addrinfo,
+            "incoming_data"          : "",
+            "outgoing_data"          : "",
+            "notifications_sent"     : 0,
+            "notifications_received" : 0,
+            "heartbeat_interval"     : g_config["incoming"]["heartbeat_interval"],
+        })
+        log(NOTICE, "Accepted new remote connection from %s:%d" % addrinfo)
+
+
+# Read data from all sockets that are readable. Note: we must do
+# only one recv() here in order not to block.
+def receive_data(readable):
+    to_remove = []
+    for connection in g_connections:
+        if connection["state"] == "established":
+            sock = connection["socket"]
+            if sock.fileno() in readable:
                 try:
-                    content = pickle.loads(client_data)
-                    if content:
-                        if not os.path.exists(g_spool_dir):
-                            os.makedirs(g_spool_dir)
-                        spoolfile = "%s/%s" % (g_spool_dir, uuid.uuid1())
-                        file(spoolfile,"w").write(pprint.pformat(content))
-                    verbose("client data processed - sending OK", 2)
-                    client_socket.send("OK")
+                    chunk = sock.recv(4096)
+                    if chunk: # Foreign side closed
+                        connection["incoming_data"] += chunk
+                        handle_incoming_data(connection)
+                    else:
+                        if connection["incoming_data"]:
+                            log(ERR, "Remote site %s:%d closed connection with %d of unprocessed data" % (
+                                connection["target"] + (len(connection["incoming_data"]),)))
+                        else:
+                            log(WARNING, "Remote side %s:%d closed connection." % connection["target"])
+                        raise Exception()
 
-                    client_socket.close()
                 except Exception, e:
-                    log("Error processing data from %s: %s\n%s" % (from_name, e, format_exception()))
-                    try:
-                        if client_socket:
-                            client_socket.send("ERROR")
-                            client_socket.close()
-                            client_socket = None
-                    except:
-                        pass
-                client_socket = None
-            if self._reopen_sockets:
-                log("Reopen TCP socket")
-                self.close_sockets()
-                self.open_sockets()
-                self._reopen_sockets = False
+                    if opt_debug:
+                        raise
 
-        log("Stopping TcpServer")
-        self.close_sockets()
-        self._is_running = False
+                    if str(e):
+                        log(ERR, "Error reading data from %s:%d: %s" % (connection["target"] + (e,)))
+                    if connection["type"] == "incoming":
+                        to_remove.append(connection)
+                    else:
+                        close_outgoing_connection(connection)
 
+    for connection in to_remove:
+        g_connections.remove(connection)
+
+
+# Write data to connections where there is data to be written to
+# and where the is space in the buffer
+def send_pending_data(writable):
+    to_remove = []
+    for connection in g_connections:
+        if connection["state"] == "established" and connection["outgoing_data"]:
+            sock = connection["socket"]
+            if sock.fileno() in writable:
+                try:
+                    sent_bytes = sock.send(connection["outgoing_data"])
+                    connection["outgoing_data"] = connection["outgoing_data"][sent_bytes:]
+                    vverbose("Successfully sent %d bytes to %s:%d" % ((sent_bytes,) + connection["target"]))
+                except Exception, e:
+                    log(ERR, "Cannot send data to %s:%d: %s. Regarding connection as dead." % (
+                        connection["target"] + (e,)))
+                    if connection["type"] == "outgoing":
+                        close_outgoing_connection()
+                    else:
+                        to_remove.append(connection)
+
+    for connection in to_remove:
+        g_connections.remove(connection)
+
+
+def close_outgoing_connection(connection):
+    if "socket" in connection:
+        del connection["socket"]
+        connection["outgoing_data"] = ""
+        connection["incoming_data"] = ""
+        connection["notifications_sent"] = 0
+        connection["notifications_received"] = 0
+        connection["state"] = "cooldown"
+        connection["since"] = time.time()
+
+
+# Try to parse incoming message. Format is 10 Bytes ASCII with
+# the length of the message and then the message in pickel format.
+def handle_incoming_data(connection):
+    while len(connection["incoming_data"]) >= 10: # have enough bytes for reading the length
+        data = connection["incoming_data"]
+        try:
+            length = int(data[:10])
+        except:
+            log(CRIT, "Bogus message header '%s': should be an int. Closing connection" % (data[:10]))
+            close_outgoing_connection(connection)
+            return
+
+        if len(data) >= length + 10: # message complete!
+            message = data[10:10+length]
+            # Shift left over data to the beginning of the buffer
+            connection["incoming_data"] = data[10 + length:]
+            verbose("Got %d bytes of new data from %s:%d" % ((length,) + connection["target"]))
+            connection["last_message"] = time.time()
+            if len(message) == 0: # Heartbeat
+                connection["last_heartbeat"] = connection["last_message"]
+                verbose("Got heartbeat from %s:%d" % connection["target"])
+            else:
+                handle_received_message(connection, message)
+        else:
+            break
+
+# There are two types of messages (besides heartbeats)
+# 1. Notifications
+# 2. Acknowledgements
+def handle_received_message(connection, message):
+    try:
+        content = pickle.loads(message)
+    except Exception, e:
+        if opt_debug:
+            raise
+        log(CRIT, "Bogus message '%s...', cannot decode: %s" % (message[:32], e))
+
+    if "acknowledge" in content:
+        notif_uuid = content["acknowledge"]
+        acknowledge_notification(notif_uuid)
+    else:
+        receive_notification(content, connection)
+
+
+def receive_notification(content, connection):
+    try:
+        # UUID is contained in packet. Just for legacy spool files not
+        notif_uuid = content.get("uuid", uuid.uuid1())
+        verbose("Received notification %s" % notif_uuid[:8])
+        # Remove "forward" flag in order to avoid bouncing
+        # back and forth of notifications!
+        if "forward" in content:
+            del content["forward"]
+        spoolfile = "%s/%s" % (g_spool_dir, notif_uuid)
+        if os.path.exists(spoolfile):
+            log(WARNING, "Got notification %s again (maybe lost acknowledgement?)" % notif_uuid)
+        file(spoolfile,"w").write(pprint.pformat(content))
+    except Exception, e:
+        if opt_debug:
+            raise
+        log(ERR, "Cannot write notification % to local spool: %s" % (notif_uuid[:8], e))
+
+    connection["notifications_received"] += 1
+
+    # send acknowledgement
+    vverbose("Sending acknowledgement for %s to %s:%d" % ((notif_uuid[:8],) + connection["target"]))
+    acknowledgement = { "acknowledge" : notif_uuid }
+    message = pickle.dumps(acknowledgement)
+    send_message(connection, message)
+
+
+
+def acknowledge_notification(notif_uuid):
+    # When we get a notification from the other side then remove this
+    # spool file from the deferred dir.
+    if "/" in notif_uuid:
+        log(ERR, "Security violation, / found in UUID '%s'" % notif_uuid[:8])
+        return
+
+    spoolfile = "%s/%s" % (g_deferred_dir, notif_uuid)
+    if os.path.exists(spoolfile):
+        verbose("Got acknowledgement for %s, removing deferred spool file." % notif_uuid[:8])
+        os.remove(spoolfile)
+    else:
+        if len(g_connections) == 1:
+            log(WARNING, "Got acknowledgement for %s, but deferred file missing." % notif_uuid[:8])
+        else:
+            vverbose("Ignoring duplicate acknowledgement for %s" % notif_uuid[:8])
+
+
+def handle_heartbeat_timeouts():
+    now = time.time()
+    for connection in g_connections:
+        if connection["state"] == "established":
+
+            # Outgoing connections expect heartbeats
+            if connection["type"] == "outgoing":
+                ref_time = max(connection.get("last_heartbeat"), connection["since"])
+                if now - ref_time > connection["heartbeat_interval"] + connection["heartbeat_timeout"]:
+                    log(ERR, "No heartbeat from %s:%d for %d seconds! Declaring as dead." % (
+                        connection["target"] + (now - ref_time,)))
+                    del connection["socket"]
+                    connection["since"] = now
+                    connection["state"] = "cooldown"
+
+            # Incoming connections send heartbeats
+            else:
+                ref_time = max(connection.get("last_heartbeat"), connection["since"])
+                if now - ref_time > connection["heartbeat_interval"]:
+                    verbose("Going to send heartbeat to %s:%d" % connection["target"])
+                    send_message(connection, "")
+                    connection["last_heartbeat"] = now
+
+
+def send_message(connection, message):
+    connection["outgoing_data"] += "%10d%s" % (len(message), message)
+
+
+#.
+#   .--Statistics----------------------------------------------------------.
+#   |               ____  _        _   _     _   _                         |
+#   |              / ___|| |_ __ _| |_(_)___| |_(_) ___ ___                |
+#   |              \___ \| __/ _` | __| / __| __| |/ __/ __|               |
+#   |               ___) | || (_| | |_| \__ \ |_| | (__\__ \               |
+#   |              |____/ \__\__,_|\__|_|___/\__|_|\___|___/               |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Write mknotifyd.stats file                                          |
+#   '----------------------------------------------------------------------'
+
+
+def format_date(ts, relative=True):
+    if ts:
+        if relative:
+            reltime = ", %d sec ago" % (time.time() - ts)
+        else:
+            reltime = ""
+        return "%d (%s%s) " % (
+            ts, time.strftime("%F %T", time.localtime(ts)), reltime)
+    else:
+        return ""
+
+def directory_stats(title, path):
+    count = 0
+    oldest = None
+    youngest = None
+
+    for entry in os.listdir(path):
+        count += 1
+        st = os.stat(path + "/" + entry)
+        size = st.st_size
+        mtime = st.st_mtime
+        if oldest == None:
+            oldest = mtime
+            youngest = mtime
+        else:
+            oldest = min(oldest, mtime)
+            youngest = min(youngest, mtime)
+
+    text = "\n"
+    for name, output in [
+        ( "Spool",    title ),
+        ( "Count",    count ),
+        ( "Oldest",   format_date(oldest) ),
+        ( "Youngest", format_date(youngest) ),
+    ]:
+        text += "%-16s %s\n" % (name + ":", output)
+
+    return text
+
+
+def connection_stats(connection):
+    text = "\n"
+    text += "Connection:             %s:%d\n" % connection["target"]
+    text += "Type:                   %s\n" % connection["type"]
+    text += "State:                  %s\n" % connection["state"]
+    text += "Since:                  %s\n" % format_date(connection["since"])
+    text += "Notifications Sent:     %d\n" % connection["notifications_sent"]
+    text += "Notifications Received: %d\n" % connection["notifications_received"]
+    text += "Socket FD:              %s\n" % (connection.get("socket") and connection["socket"].fileno() or "")
+    text += "HB. Interval:           %d sec\n" % connection["heartbeat_interval"]
+    if connection["type"] == "outgoing":
+        text += "HB. Timeout:            %d sec\n" % connection["heartbeat_timeout"]
+    text += "LastHeartbeat:          %s\n" % format_date(connection.get("last_heartbeat"))
+    text += "InputBuffer:            %d Bytes\n" % len(connection["incoming_data"])
+    text += "OutputBuffer:           %d Bytes\n" % len(connection["outgoing_data"])
+    return text
+
+
+g_last_state_update = None
+
+def update_state_file():
+    global g_last_state_update
+    now = time.time()
+    if now - 20 > g_last_state_update:
+        f = file(g_statefile_path + ".new", "w")
+        f.write("# mknotifyd - current state\n")
+        f.write("Version:         %s\n" % VERSION)
+        f.write("Updated:         %s\n" % format_date(now, relative=False))
+        f.write("Started:         %s\n" % format_date(g_start_time))
+        f.write("Configuration:   %s\n" % format_date(g_last_config_reload))
+        f.write("Listening FD:    %s\n" % (g_listen_socket and g_listen_socket.fileno() or g_listen_socket_error))
+        f.write(directory_stats("New",       g_spool_dir))
+        f.write(directory_stats("Deferred",  g_deferred_dir))
+        f.write(directory_stats("Corrupted", g_corrupted_dir))
+        for connection in g_connections:
+            f.write(connection_stats(connection))
+
+        f.close()
+        os.rename(g_statefile_path + ".new", g_statefile_path)
+        g_last_state_update = now
+
+
+#.
+#   .--Main Loop-----------------------------------------------------------.
+#   |            __  __       _         _                                  |
+#   |           |  \/  | __ _(_)_ __   | |    ___   ___  _ __              |
+#   |           | |\/| |/ _` | | '_ \  | |   / _ \ / _ \| '_ \             |
+#   |           | |  | | (_| | | | | | | |__| (_) | (_) | |_) |            |
+#   |           |_|  |_|\__,_|_|_| |_| |_____\___/ \___/| .__/             |
+#   |                                                   |_|                |
+#   +----------------------------------------------------------------------+
+#   |  Main loop and central select()                                      |
+#   '----------------------------------------------------------------------'
+
+def run_notifyd():
+    while True:
+        initialize_connections()
+        open_incoming_socket()
+
+        # Things to do in the main loop
+        # - Maintain outgoing connections (wait for heartbeat, close, rebuild)
+        # - Maintain incoing connections (send heartbeat, close if deaa)
+        # - Accept new incoming connections (accept())
+        # - Look for new spool notifications, distribute to connections
+        # - Look for changed configuration, restart gracefully
+        # - Write out state file
+        # - Wait for termination
+
+        while True:
+            try:
+                maintain_connections()
+                readable, writable = do_select(1.0) # wait at most 1 secs for networking
+                accept_new_connections(readable)
+                complete_connections(writable)
+                receive_data(readable)
+                send_pending_data(writable)
+                handle_heartbeat_timeouts()
+                handle_spool_files()
+                update_state_file()
+                if check_config_change():
+                    break
+
+            except MKSignalException, e:
+                verbose("Exiting main loop...")
+                return
+
+            except Exception, e:
+                if opt_debug:
+                    raise
+                log(ALERT, "Unhandled exception %s" % format_exception())
+                time.sleep(10)
+
+
+def do_select(timeout):
+    polls = select.poll()
+    if g_listen_socket:
+        polls.register(g_listen_socket, select.POLLIN)
+
+    for connection in g_connections:
+        if connection.get("socket"):
+            # Listen for new data on all connections. Note: on some
+            # connections we do not *expect* any data. We watch them
+            # nevertheless in order to detect bogus configuration.
+            if connection["state"] == "established":
+                polls.register(connection["socket"], select.POLLIN)
+                # Wait for outgoing data to be sent
+                if connection["outgoing_data"]:
+                    polls.register(connection["socket"], select.POLLOUT)
+
+            # Wait for connect() calls to be finished
+            elif connection["state"] == "connecting":
+                polls.register(connection["socket"], select.POLLOUT)
+
+    try:
+        readylist = polls.poll(timeout * 1000)
+        r_able = []
+        w_able = []
+        for fd, event in readylist:
+            if event & select.POLLIN:
+                r_able.append(fd)
+            if event & select.POLLOUT:
+                w_able.append(fd)
+            if event & select.POLLHUP:
+                r_able.append(fd) # Handle EOF as readable
+
+        return r_able, w_able
+
+    except select.error, e:
+        log(ALERT,"Error during poll(): %s" % e)
+        return [], []
+
+
+
+class MKSignalException(Exception):
+    def __init__(self, signum):
+        Exception.__init__(self, "Got signal %d" % signum)
+        self._signum = signum
+
+def signal_handler(signum, stack_frame):
+    verbose("Got signal %d" % signum)
+    raise MKSignalException(signum)
 
 #.
 #   .--Daemonize-----------------------------------------------------------.
@@ -355,140 +922,9 @@ def daemonize(user=0, group=0):
     os.close(si)
     os.close(so)
 
-    log("Daemonized with PID %d." % os.getpid())
+    log(NOTICE, "Daemonized with PID %d." % os.getpid())
 
 
-def load_configuration():
-    global g_config, g_config_changed
-    last_config = g_config.copy()
-    config_dir = "%s/mknotifyd.d" % g_config_dir
-
-    try:
-        list_of_files = reduce(lambda a,b: a+b,
-           [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
-             for d, sb, fs in os.walk(config_dir) ], [])
-        list_of_files.sort(cmp = cmp_config_paths)
-        for path in list_of_files:
-            verbose("Reading configuration file %s" % path, 3)
-            execfile(path, {}, g_config)
-    except:
-        g_config = last_config
-
-    if last_config != g_config:
-        log("Configuration has changed")
-        g_config_changed = True
-
-# This function has been stolen from check_mk.py.
-# Helper function that determines the sort order of the
-# configuration files. The following two rules are implemented:
-# 1. *.mk files in the same directory will be read
-#    according to their lexical order.
-# 2. subdirectories in the same directory will be
-#    scanned according to their lexical order.
-# 3. subdirectories of a directory will always be read *after*
-#    the *.mk files in that directory.
-def cmp_config_paths(a, b):
-    pa = a.split('/')
-    pb = b.split('/')
-    return cmp(pa[:-1], pb[:-1]) or \
-           cmp(len(pa), len(pb)) or \
-           cmp(pa, pb)
-
-def usage():
-    sys.stdout.write("""Usage: mknotifyd [OPTIONS]
-
-   -v, --verbose        Enable verbose output, twice for more details
-   -g, --foreground     Do not daemonize, run in foreground
-   -s, --single         Single shot, exit after one cycle
-
-""")
-    if os.getenv("OMD_ROOT"):
-        sys.stdout.write("""You are running OMD, which is generally a good idea.
-The following defaults are set:
-
-  Config dir:  %(g_config_dir)s
-  Var dir:     %(g_var_dir)s
-  PID file:    %(g_pid_file)s
-  Log file:    %(g_logfile_path)s
-
-""" % globals())
-
-
-def run_thread(run_function, args=()):
-    return thread.start_new_thread(run_function, args)
-
-def run_notifyd():
-    global g_tpc_server, g_spoolfiles_handler
-    global g_spool_dir, g_deferred_dir
-    global g_config_changed
-
-    g_spool_dir    = "%s/notify/spool" % g_var_dir
-    g_deferred_dir = "%s/notify/deferred" % g_var_dir
-
-    if not os.path.exists(g_spool_dir):
-        os.makedirs(g_spool_dir)
-
-    if not os.path.exists(g_deferred_dir):
-        os.makedirs(g_deferred_dir)
-
-    # Start worker threads
-    if g_config["notification_daemon_listen_port"]:
-        run_thread(g_tcp_server.run)
-
-    run_thread(g_spoolfiles_handler.run)
-
-    while True:
-        try:
-            time.sleep(1)
-            # Read configuration again an check for changes
-            # Our tcp server might need a restart after its config has changed
-            load_configuration()
-            if g_config_changed:
-                if g_config["notification_daemon_listen_port"]:
-                    if not g_tcp_server._is_running:
-                        run_thread(g_tcp_server.run)
-                    else:
-                        g_tcp_server._reopen_sockets = True
-                else:
-                    g_tcp_server._should_terminate = True
-                g_config_changed = False
-                time.sleep(0.2)
-
-            # Check if worker threads are still running
-            if g_config["notification_daemon_listen_port"] and not g_tcp_server._is_running:
-                log("TcpServer thread crashed. Restarting...")
-                run_thread(g_tcp_server.run)
-
-            if not g_spoolfiles_handler._is_running:
-                log("SpoolfilesHandler thread crashed. Restarting...")
-                run_thread(g_spoolfiles_handler.run)
-
-            if opt_single_cycle:
-                raise MKSignalException(1)
-
-        except MKSignalException, e:
-            # Initiate shutdown
-            g_tcp_server._should_terminate         = True
-            g_spoolfiles_handler._should_terminate = True
-            now = time.time()
-            while (g_tcp_server._is_running or g_spoolfiles_handler._is_running) \
-                and time.time() - now < 6:
-                time.sleep(0.1)
-
-            if g_tcp_server._is_running:
-                log("Error: Couldn't stop TcpServer thread")
-            if g_spoolfiles_handler._is_running:
-                log("Error: Couldn't stop SpoolfilesHandler thread")
-            break
-
-class MKSignalException(Exception):
-    def __init__(self, signum):
-        Exception.__init__(self, "Got signal %d" % signum)
-        self._signum = signum
-
-def signal_handler(signum, stack_frame):
-    log("Got signal %d" % signum)
-    raise MKSignalException(signum)
 
 
 #.
@@ -503,33 +939,59 @@ def signal_handler(signum, stack_frame):
 #   |  Main entry and option parsing                                       |
 #   '----------------------------------------------------------------------'
 
+
+def usage():
+    sys.stdout.write("""Usage: mknotifyd [OPTIONS]
+
+   -v, --verbose        Enable verbose output, twice for more details
+   -g, --foreground     Do not daemonize, run in foreground
+   -s, --single         Single shot, exit after one cycle
+       --debug          Let Python exceptinos come through
+
+""")
+    if os.getenv("OMD_ROOT"):
+        sys.stdout.write("""You are running OMD, which is generally a good idea.
+The following defaults are set:
+
+  Config dir:  %(g_config_dir)s
+  Var dir:     %(g_var_dir)s
+  PID file:    %(g_pid_file)s
+  Log file:    %(g_logfile_path)s
+
+""" % globals())
+
+
+
+g_start_time = time.time() # remember uptime
+g_config = { "log_level" : 0 }
+
 os.unsetenv("LANG")
-opt_verbose      = False
+opt_verbose      = 0
 opt_foreground   = False
 opt_single_cycle = False
+opt_debug        = False
 
-# Set default values for options
+# Set paths
 omd_root = os.getenv("OMD_ROOT")
 if omd_root:
     g_config_dir      = omd_root + "/etc/check_mk"
     g_var_dir         = omd_root + "/var/check_mk"
     g_pid_file        = omd_root + "/tmp/run/mknotifyd/pid"
-    g_logfile_path    = omd_root + "/var/log/mknotifyd.log"
+    g_log_dir         = omd_root + "/var/log"
 else:
     g_config_dir      = "/etc/check_mk"
     g_var_dir         = "/var/check_mk"
     g_pid_file        = "/var/run/mknotifyd.pid"
-    g_logfile_path    = "/var/log/mknotifyd.log"
+    g_log_dir         = "/var/log"
 
-
-g_config = {
-    "notification_daemon_listen_port": None,
-    "notification_deferred_retention_time": 180,
-    "notification_forward_to": "",
-}
+g_spool_dir      = "%s/notify/spool"     % g_var_dir
+g_deferred_dir   = "%s/notify/deferred"  % g_var_dir
+g_corrupted_dir  = "%s/notify/corrupted" % g_var_dir
+g_logfile_path   = "%s/mknotifyd.log"    % g_log_dir
+g_statefile_path = "%s/mknotifyd.state"  % g_log_dir
 
 short_options = "hVvgs"
-long_options = [ "help", "version", "verbose", "foreground", "single" ]
+long_options = [ "help", "version", "verbose", "foreground", "single", "debug" ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -542,6 +1004,8 @@ try:
             opt_foreground = True
         elif o in [ '-s', '--single' ]:
             opt_single_cycle = True
+        elif o == '--debug':
+            opt_debug = True
 
     # now handle action options
     for o, a in opts:
@@ -556,11 +1020,10 @@ try:
     if not opt_foreground:
         open_logfile()
 
-    log("-" * 65)
-    log("mknotifyd version %s starting" % VERSION)
+    log(NOTICE, "-" * 65)
+    log(NOTICE, "Check_MK Notification Spooler version %s starting" % VERSION)
 
     load_configuration()
-    g_config_changed = False # Of course its changed on startup...
 
     if os.path.exists(g_pid_file):
         old_pid = int(file(g_pid_file).read())
@@ -568,15 +1031,11 @@ try:
             bail_out("Old PID file %s still existing and mknotifyd still running with PID %d." %
                 (g_pid_file, old_pid))
         os.remove(g_pid_file)
-        log("Removed orphaned PID file %s (process %d not running anymore)." % (g_pid_file, old_pid))
+        log(WARNING, "Removed orphaned PID file %s (process %d not running anymore)." % (g_pid_file, old_pid))
 
     # Make sure paths exist
     make_parentdirs(g_logfile_path)
     make_parentdirs(g_pid_file)
-
-    # Create worker classes
-    g_tcp_server         = TcpServer()
-    g_spoolfiles_handler = SpoolfilesHandler()
 
     # Daemonize
     if not opt_foreground:
@@ -592,13 +1051,21 @@ try:
     signal.signal(3,  signal_handler)  # QUIT
     signal.signal(15, signal_handler)  # TERM
 
+    # Make sure that all directories exist
+    for dirpath in g_spool_dir, g_deferred_dir, g_corrupted_dir:
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+
     # Now let's go...
     run_notifyd()
+
+    # Remote state file. That way the monitoring learns faster that we are down.
+    os.remove(g_statefile_path)
 
     # We reach this point, if the server has been killed by
     # a signal or hitting Ctrl-C (in foreground mode)
     os.remove(g_pid_file)
-    log("Successfully shut down.")
+    log(NOTICE, "Successfully shut down.")
     sys.exit(0)
 
 except Exception, e:

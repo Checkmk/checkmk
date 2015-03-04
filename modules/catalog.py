@@ -99,6 +99,7 @@ manpage_catalog_titles = {
         "mssql"         : "Microsoft SQL Server",
         "mysql"         : "MySQL",
         "omd"           : "Open Monitoring Distribution (OMD)",
+        "check_mk"      : "Check_MK Monitoring System",
         "oracle"        : "ORACLE Database",
         "postfix"       : "Postfix",
         "postgresql"    : "PostgreSQL",

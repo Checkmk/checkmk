@@ -1,0 +1,16 @@
+title: Check_MK Notification Spooler
+agents: linux
+catalog: app/check_mk
+license: GPL
+distribution: check_mk
+description:
+ This check checks the status of Check_MK Notification Spooler. It will warn
+ if deferred spool files lie around too long or if any corrupted spool
+ files are found. And it will of course get critical if the spooler does
+ not run.
+
+item:
+ The name of the site (string).
+
+inventory:
+ One sevice per site will be created.

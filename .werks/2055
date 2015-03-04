@@ -1,0 +1,9 @@
+Title: agent_vsphere, licenses check: now really configurable on / off
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1425473556
+Class: fix
+
+The licenses of the ESX systems were always checked, regardless of the configuration option.

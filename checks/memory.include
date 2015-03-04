@@ -41,10 +41,10 @@ def check_memory(used, total, params):
 
     levelstext = ""
 
+    status = 0
     # No levels imposed
     if params["levels"][0] == "ignore":
         warn_abs, crit_abs = None, None
-        status = 0
 
     # Absolute or percentual levels
     else:

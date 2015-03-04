@@ -1,0 +1,10 @@
+Title: load_user_file/save_user_file should handle encoding correctly
+Component: multisite
+State: open
+Date: 2015-03-04 09:42:59
+Targetversion: 1.2.7
+Class: bug
+
+Currently in all saved userfiles unicode strings are converted to utf-8 encoding ascii strings.
+These strings are not converted back to unicode strings during load_user_file(..).
+All strings with umlauts need to be unicode strings within multisite code.

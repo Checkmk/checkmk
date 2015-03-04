@@ -2309,6 +2309,30 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "ibm_svc_mdiskgrp",
+    _("IBM SVC Pool Capacity"),
+    Dictionary(
+        elements = filesystem_elements + [
+            ( "provisioning_levels", Tuple(
+                title = _("Provisioning Levels"),
+                help = _("A provisioning of over 100% means over provisioning."),
+                elements = [
+                    Percentage(title = _("Warning at provisioning of"), default_value = 110.0, maxvalue = None),
+                    Percentage(title = _("Critical at provisioning of"), default_value = 120.0, maxvalue = None),
+                ]
+            )),
+        ],
+        hidden_keys = ["flex_levels"],
+    ),
+    TextAscii(
+        title = _("Name of the pool"),
+        allow_empty = False
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
     "esx_vsphere_datastores",
     _("ESX Datastores (used space and growth)"),
     Dictionary(

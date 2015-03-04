@@ -1,0 +1,14 @@
+Title: IBM SVC checks: renamed services, remove bogus IBM SVC
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425482277
+Class: feature
+
+A couple of IBM SVC checks have been renamed. Note: this only hold for
+new installations. Existing installations will not be touched. You can activate
+the new names nevertheless by activating them in your global settings
+in <i>Operation Mode of Check_MK / Use new service descriptions</i>. If you
+do this then RRD files will be created from scratch and existing rules
+might now match anymore.

@@ -1,0 +1,13 @@
+Title: ibm_svc_mdiskgrp: Fix computation of capacity, show and check provisioning
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1425482173
+Class: feature
+
+The check <tt>ibm_svc_mdiskgrp</tt> now also shows the provisioning. You can
+now set levels on the provisioning. Note: This is an incompatible change since
+a new WATO rule set has been introduced in order to add the new parameter
+for the provisioning levels. So if you already have configured levels for
+your checks you need to re-do this configuration with the new WATO rule set.

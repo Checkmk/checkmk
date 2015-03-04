@@ -125,7 +125,7 @@ def check_ibm_svc_systemstats_diskio(item, _no_params, info):
 check_info["ibm_svc_systemstats.diskio"] = {
     "check_function"        : check_ibm_svc_systemstats_diskio,
     "inventory_function"    : inventory_ibm_svc_systemstats_diskio,
-    "service_description"   : "IBM SVC Throughput %s Total",
+    "service_description"   : "Throughput %s Total",
     "has_perfdata"          : True,
 }
 
@@ -161,7 +161,7 @@ def check_ibm_svc_systemstats_iops(item, _no_params, info):
 check_info["ibm_svc_systemstats.iops"] = {
     "check_function"        : check_ibm_svc_systemstats_iops,
     "inventory_function"    : inventory_ibm_svc_systemstats_iops,
-    "service_description"   : "IBM SVC IOPS %s Total",
+    "service_description"   : "IOPS %s Total",
     "has_perfdata"          : True,
 }
 
@@ -205,7 +205,7 @@ def check_ibm_svc_systemstats_disk_latency(item, params, info):
 check_info["ibm_svc_systemstats.disk_latency"] = {
     "check_function"        : check_ibm_svc_systemstats_disk_latency,
     "inventory_function"    : inventory_ibm_svc_systemstats_disk_latency,
-    "service_description"   : "IBM SVC Latency %s Total",
+    "service_description"   : "Latency %s Total",
     "has_perfdata"          : True,
     "group"                 : "ibm_svc_total_latency",
 }
@@ -286,7 +286,7 @@ def check_ibm_svc_systemstats_cache(item, _no_params, info):
 check_info["ibm_svc_systemstats.cache"] = {
     "check_function"        : check_ibm_svc_systemstats_cache,
     "inventory_function"    : inventory_ibm_svc_systemstats_cache,
-    "service_description"   : "IBM SVC Cache Total",
+    "service_description"   : "Cache Total",
     "has_perfdata"          : True,
 }
 

@@ -220,19 +220,25 @@ NEGATE         = '@negate'       # negation in boolean lists
 # Renaming of service descriptions while keeping backward compatibility with
 # existing installations.
 old_service_descriptions = {
-    "df"                     : "fs_%s",
-    "df_netapp"              : "fs_%s",
-    "df_netapp32"            : "fs_%s",
-    "esx_vsphere_datastores" : "fs_%s",
-    "hr_fs"                  : "fs_%s",
-    "vms_diskstat.df"        : "fs_%s",
-    "zfsget"                 : "fs_%s",
-    "ps"                     : "proc_%s",
-    "ps.perf"                : "proc_%s",
-    "wmic_process"           : "proc_%s",
-    "services"               : "service_%s",
-    "logwatch"               : "LOG %s",
-    "hyperv_vm"              : "hyperv_vms",
+    "df"                               : "fs_%s",
+    "df_netapp"                        : "fs_%s",
+    "df_netapp32"                      : "fs_%s",
+    "esx_vsphere_datastores"           : "fs_%s",
+    "hr_fs"                            : "fs_%s",
+    "vms_diskstat.df"                  : "fs_%s",
+    "zfsget"                           : "fs_%s",
+    "ps"                               : "proc_%s",
+    "ps.perf"                          : "proc_%s",
+    "wmic_process"                     : "proc_%s",
+    "services"                         : "service_%s",
+    "logwatch"                         : "LOG %s",
+    "hyperv_vm"                        : "hyperv_vms",
+    "ibm_svc_mdiskgrp"                 : "MDiskGrp %s",
+    "ibm_svc_system"                   : "IBM SVC Info",
+    "ibm_svc_systemstats.diskio"       : "IBM SVC Throughput %s Total",
+    "ibm_svc_systemstats.iops"         : "IBM SVC IOPS %s Total",
+    "ibm_svc_systemstats.disk_latency" : "IBM SVC Latency %s Total",
+    "ibm_svc_systemstats.cache"        : "IBM SVC Cache Total",
 }
 
 #.

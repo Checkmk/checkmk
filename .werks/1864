@@ -1,0 +1,9 @@
+Title: akcp_exp_drycontact, akcp_exp_temp : change to service output and levels
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425480348
+Class: feature
+
+akcp_exp_drycontact now displays the status message as configured on the device itself, if available.  akcp_exp_temp now uses the correct scaling for the temperature levels extracted from the device.

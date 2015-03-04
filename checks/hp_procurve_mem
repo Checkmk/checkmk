@@ -42,7 +42,7 @@ def inventory_hp_procurve_mem(info):
 def check_hp_procurve_mem(item, params, info):
     if len(info) == 1:
         mem_total, mem_used = [ int(mem) for mem in info[0] ]
-        return check_memory(mem_used, mem_total, params)
+        return check_memory_simple(mem_used, mem_total, params)
 
 
 check_info["hp_procurve_mem"] = {

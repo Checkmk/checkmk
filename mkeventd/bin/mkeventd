@@ -3208,7 +3208,7 @@ def substitute_event_tags(text, event):
 
     for key, value in substs:
         if type(value) == tuple:
-            value = " ".join(value)
+            value = " ".join(map(str,value))
         elif type(value) not in [ str, unicode ]:
             value = str(value)
 

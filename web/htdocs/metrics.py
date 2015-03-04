@@ -176,26 +176,28 @@ def translate_metrics(perf_data, check_command):
     return translated_metrics
 
 
-# e.g. "fs_used:max"    -> 12.455
-# e.g. "fs_used(%)"     -> 17.5
-# e.g. "fs_used:max(%)" -> 100.0
+# Evaluates an expression, returns the value and the unit.
+# e.g. "fs_used:max"    -> 12.455, "b"
+# e.g. "fs_used(%)"     -> 17.5,   "%"
+# e.g. "fs_used:max(%)" -> 100.0,  "%"
 def evaluate(expression, translated_metrics):
     if type(expression) in (float, int) or "," not in expression:
         return evaluate_literal(expression, translated_metrics)
     else:
         return evaluate_rpn(expression, translated_metrics)
 
+# TODO: Do real unit computation, detect non-matching units
 rpn_operators = {
-    "+" : lambda a, b: (a + b),
-    "-" : lambda a, b: (a - b),
-    "*" : lambda a, b: (a * b),
-    "/" : lambda a, b: (a / b),
+    "+" : lambda a, b: ((a[0] + b[0]), a[1]),
+    "-" : lambda a, b: ((a[0] - b[0]), a[1]),
+    "*" : lambda a, b: ((a[0] * b[0]), a[1]+b[1]),
+    "/" : lambda a, b: ((a[0] / b[0]), ""),
 }
 
 
 def evaluate_rpn(expression, translated_metrics):
     parts = expression.split(",")
-    stack = []
+    stack = [] # stack pairs of (value, unit)
     while parts:
         operator_name = parts[0]
         parts = parts[1:]
@@ -215,8 +217,10 @@ def evaluate_rpn(expression, translated_metrics):
 
 
 def evaluate_literal(expression, translated_metrics):
-    if type(expression) in (int, float):
-        return expression
+    if type(expression) == int:
+        return expression, "count"
+    elif type(expression) == float:
+        return expression, None
 
     # TODO: Error handling with useful exceptions
     if expression.endswith("(%)"):
@@ -233,9 +237,14 @@ def evaluate_literal(expression, translated_metrics):
         value = translated_metrics[varname]["value"]
 
     if percent:
-        value = value / translated_metrics[varname]["scalar"]["max"] * 100.0
+        value = float(value) / translated_metrics[varname]["scalar"]["max"] * 100.0
+        unit = "%"
 
-    return value
+    else:
+        unit = translated_metrics[varname]["unit"]
+
+    return value, unit
+
 
 # e.g. "fs_used:max(%)" -> "fs_used"
 def get_name(expression):
@@ -291,7 +300,7 @@ def perfometer_possible(perfometer, translated_metrics):
 
     for req in required:
         try:
-            x = evaluate(req, translated_metrics)
+            evaluate(req, translated_metrics)
         except:
             return False
     return True
@@ -418,10 +427,11 @@ def build_perfometer(perfometer, translated_metrics):
     perfometer_type, definition = perfometer
 
     if perfometer_type == "logarithmic":
-        metrics_name, median, exponent = definition
-        metric = translated_metrics[metrics_name]
-        label = metric_to_text(metric)
-        stack = [ metricometer_logarithmic(metric["value"], median, exponent, metric["color"]) ]
+        expression, median, exponent = definition
+        value, unit = evaluate(expression, translated_metrics)
+        color = get_color(expression)
+        label = value_to_text(value, unit)
+        stack = [ metricometer_logarithmic(value, median, exponent, color) ]
 
     elif perfometer_type == "linear":
         entry = []
@@ -432,16 +442,16 @@ def build_perfometer(perfometer, translated_metrics):
         summed = 0.0
 
         for ex in metrics_expressions:
-            value = evaluate(ex, translated_metrics)
+            value, unit = evaluate(ex, translated_metrics)
             summed += value
 
         if total_spec == None:
             total = summed
         else:
-            total = evaluate(total_spec, translated_metrics)
+            total, unit = evaluate(total_spec, translated_metrics)
 
         for ex in metrics_expressions:
-            value = evaluate(ex, translated_metrics)
+            value, unit = evaluate(ex, translated_metrics)
             color = get_color(ex)
             entry.append((100.0 * value / total, color))
 
@@ -453,7 +463,7 @@ def build_perfometer(perfometer, translated_metrics):
         # stackes metrics have the same unit anyway
         if label_expression:
             expr, unit = label_expression
-            value = evaluate(expr, translated_metrics)
+            value, unit = evaluate(expr, translated_metrics)
             label = value_to_text(value, unit)
         else: # absolute
             unit = get_unit(metrics_expressions[0])

@@ -110,7 +110,7 @@ def check_ibm_svc_system(item, _no_params, info):
 check_info["ibm_svc_system"] = {
     "check_function"        : check_ibm_svc_system,
     "inventory_function"    : inventory_ibm_svc_system,
-    "service_description"   : "IBM SVC Info",
+    "service_description"   : "Info",
     "has_perfdata"          : False,
 }
 

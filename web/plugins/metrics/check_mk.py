@@ -37,7 +37,7 @@
 #   |  Definition of units of measurement.                                 |
 #   '----------------------------------------------------------------------'
 
-unit_info[None] = {
+unit_info[""] = {
     "title"  : "",
     "symbol" : "",
     "render" : lambda v: "%.1f" % v,
@@ -199,7 +199,7 @@ metric_info["execution_time"] = {
 
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
-    "unit"  : None,
+    "unit"  : "",
     "color" : "#6688ff",
 }
 
@@ -208,6 +208,13 @@ metric_info["fs_used"] = {
     "unit"  : "bytes",
     "color" : "#00ffc6",
 }
+
+metric_info["fs_provisioning"] = {
+    "title" : _("Provisioned filesystem space"),
+    "unit"  : "bytes",
+    "color" : "#98f8fa",
+}
+
 
 metric_info["temp"] = {
     "title" : _("Temperature"),
@@ -538,7 +545,15 @@ perfometer_info.append(("logarithmic",  ( "proc_creat", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
 perfometer_info.append(("linear",      ( [ "user", "system", "io_wait" ],                               100.0,       None)))
 perfometer_info.append(("linear",      ( [ "util", ],                                                   100.0,       None)))
+# Filesystem check with provisioning
+perfometer_info.append(("stacked", [
+  ("linear",      ( [ "fs_used(%)" ],     100.0, None)),
+  # ("linear",      ( [ "fs_provisioning(%)" ],     100.0, None)),
+  ("logarithmic", ( "fs_provisioning(%)", 100.0, 1.2)),
+]))
+# and without
 perfometer_info.append(("linear",      ( [ "fs_used(%)" ],                                              100.0,       None)))
+
 perfometer_info.append(("linear",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None,
 ("mem_total,mem_used,+,swap_used,/", "ratio"))))
 perfometer_info.append(("linear",      ( [ "mem_used" ],                                                "mem_total", None)))

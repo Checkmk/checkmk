@@ -66,26 +66,58 @@ def check_ibm_svc_mdiskgrp(item, params, info):
             mgrp_status = line[2]
 
             if mgrp_status != "online":
-                return 2, "Status: %s" % mgrp_status
+                yield 2, "Status: %s" % mgrp_status
+                return
 
             fslist = []
-            capacity = line[5]
-            free_capacity = line[7]
-            size_mb   = ibm_svc_mdiskgrp_to_mb(capacity)
-            avail_mb  = ibm_svc_mdiskgrp_to_mb(free_capacity)
-            fslist.append((item, size_mb, avail_mb, 0))
-            status, message, perfdata = df_check_filesystem_list(item, params, fslist)
-            message += ", Status: %s" % mgrp_status
 
-            return status, message, perfdata
+            # Names of the fields are a bit confusing and not what you would
+            # expect.
+
+            # 1. Physical size of the pool
+            capacity = ibm_svc_mdiskgrp_to_mb(line[5]) # physikalische Kapazitat
+
+            # 2. Part of that that is physically in use
+            real_capacity = ibm_svc_mdiskgrp_to_mb(line[10]) # aktuell belegt
+
+            # 3. Provisioned space - can be more than physical size
+            virtual_capacity = ibm_svc_mdiskgrp_to_mb(line[8]) # provisioniert
+
+            # free_capacity = line[7] # brauchen wir nicht?
+            used_capacity = ibm_svc_mdiskgrp_to_mb(line[9])
+
+            # Compute available (do not use free_capacity, it's something different)
+            avail_mb = capacity - real_capacity
+
+            fslist.append((item, capacity, avail_mb, 0))
+            status, message, perfdata = df_check_filesystem_list(item, params, fslist)
+            yield status, message, perfdata
+
+            # Compute provisioning
+            provisioning = 100.0 * virtual_capacity / capacity
+            if "provisioning_levels" in params:
+                warn, crit = params["provisioning_levels"]
+                if provisioning >= crit:
+                    state = 2
+                elif provisioning >= warn:
+                    state = 1
+                else:
+                    state = 0
+
+            # Note: Performance data is now (with new metric system) normed to
+            # canonical units - i.e. 1 byte in this case.
+            mb = 1024 * 1024
+            yield 0, "Provisioning: %s" % get_percent_human_readable(provisioning), \
+              [ ( "fs_provisioning", virtual_capacity*mb, capacity * mb * warn / 100, capacity * mb * crit / 100, 0, capacity * mb) ]
+
 
 
 check_info["ibm_svc_mdiskgrp"] = {
     "check_function"          : check_ibm_svc_mdiskgrp,
     "inventory_function"      : inventory_ibm_svc_mdiskgrp,
-    "service_description"     : "MDiskGrp %s",
+    "service_description"     : "Pool Capacity %s",
     "has_perfdata"            : True,
-    "group"                   : "filesystem",
+    "group"                   : "ibm_svc_mdiskgrp",
     "includes"                : [ "df.include" ],
     "default_levels_variable" : "filesystem_default_levels",
 }

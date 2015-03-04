@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_memory(used, total, params):
+def check_memory_simple(used, total, params):
     # Convert old-style tuple params to dict
     if params:
         if type(params) == tuple:

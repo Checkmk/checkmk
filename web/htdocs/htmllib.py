@@ -1069,8 +1069,10 @@ class html:
 
     def var_utf8(self, varname, deflt = None):
         val = self.vars.get(varname, deflt)
-        if val != None:
+        if val != None and type(val) != unicode:
             return val.decode("utf-8")
+        else:
+            return val
 
     # Return all values of a variable that possible occurs more
     # than once in the URL. note: self.listvars does contain those

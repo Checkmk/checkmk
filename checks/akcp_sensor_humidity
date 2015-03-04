@@ -29,10 +29,10 @@
 #      description       percent  status  online
 # ["Humdity1 Description", "0",    "0",    "2"]
 
+
 check_info["akcp_sensor_humidity"] = {
-    "check_function"      : check_akcp_sensor_humidity,
-    "inventory_function"  : lambda info: inventory_akcp_sensor(info, \
-                                            "akcp_sensor_humidity_defaultlevels"),
+    "check_function"      : check_akcp_humidity,
+    "inventory_function"  : inventory_akcp_humidity,
     "service_description" : "Humidity %s",
     "has_perfdata"        : True,
     "snmp_scan_function"  : snmp_scan_akcp_sensor,

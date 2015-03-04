@@ -29,6 +29,7 @@
     * 2047 FIX: Allow overriding existing WATO rules by own files in local/ hierarchy...
 
     Event Console:
+    * 1865 FIX: mkeventd: fixed exception when executing a shell script as action
     * 2133 FIX: Fix visualization of global EC setting for Rule Optimizer...
     * 2139 FIX: Fix exception in Event Console when archiving events with match groups and non ASCII characters
 

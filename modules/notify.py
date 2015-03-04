@@ -145,6 +145,8 @@ Available commands:
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
 def do_notify(args):
+    convert_legacy_configuration()
+
     global notify_mode, notification_logging
     if notification_logging == 0:
         notification_logging = 1 # transform deprecated value 0 to 1
@@ -229,8 +231,6 @@ def convert_legacy_configuration():
 def notify_notify(raw_context, analyse=False):
     if not analyse:
         store_notification_backlog(raw_context)
-
-    convert_legacy_configuration()
 
     notify_log("----------------------------------------------------------------------")
     if analyse:

@@ -1,0 +1,11 @@
+Title: cisco_cpu: Dealing with non CPU utilization information correctly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425454581
+
+The check resulted in an exception when the host could be contacted
+via SNMP, but the host did not provide a value for the CPU utilization.

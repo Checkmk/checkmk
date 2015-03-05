@@ -1,0 +1,13 @@
+Title: Fixed errors when editing / rendering custom url dashlets in some cases
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425558851
+
+It was allowed to configure empty URL or empty URL function which lead to an
+exception when rendering the dashlet.
+
+A wrong URL was constructed for URLs which have no URL parameters.

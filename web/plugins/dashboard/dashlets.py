@@ -613,10 +613,12 @@ dashlet_types["url"] = {
         ("url", TextAscii(
             title = _('URL'),
             size = 50,
+            allow_empty = False,
         )),
         ("urlfunc", TextAscii(
             title = _('Dynamic URL rendering function'),
             size = 50,
+            allow_empty = False,
         )),
         ("show_in_iframe", Checkbox(
             title = _('Render in iframe'),

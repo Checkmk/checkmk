@@ -326,7 +326,11 @@ function dashboard_scheduler(initial) {
         if ((initial && document.getElementById("dashlet_inner_" + nr).innerHTML == '')
                 || (refresh > 0 && timestamp % refresh == 0)) {
             if (typeof(url) === 'string') {
-                get_url(url + "&mtime=" + dashboard_mtime, dashboard_update_contents, "dashlet_inner_" + nr);
+                if (url.indexOf('\?') !== -1)
+                    url += "&mtime=" + dashboard_mtime;
+                else
+                    url += "?mtime=" + dashboard_mtime;
+                get_url(url, dashboard_update_contents, "dashlet_inner_" + nr);
             }
             else {
                 url(); // Execute "on_refresh" javascript function

@@ -9,6 +9,7 @@
 
     Multisite:
     * 2054 FIX: Sidebar snapin "Tree of folders": fixed exception when using localized default value...
+    * 2090 FIX: Fixed errors when editing / rendering custom url dashlets in some cases...
 
     WATO:
     * 2045 FIX: Avoid fetching SNMP data when showing service list in WATO - unless Full Scan is pressed

@@ -64,8 +64,20 @@ notification_fallback_email    = ""
 notification_rules             = []
 notification_bulk_interval     = 10 # Check every 10 seconds for ripe bulks
 
-# Notification Spooling
-notification_spooling = False
+# Notification Spooling.
+
+# Possible values for notification_spooling
+# "off"    - Direct local delivery without spooling
+# "local"  - Asynchronous local delivery by notification spooler
+# "remote" - Forward to remote site by notification spooler
+# "both"   - Asynchronous local delivery plus remote forwarding
+# False    - legacy: sync delivery  (and notification_spool_to)
+# True     - legacy: async delivery (and notification_spool_to)
+notification_spooling = "off"
+
+# Legacy setting. The spool target is now specified in the
+# configuration of the spooler. notification_spool_to has
+# the tuple format (remote_host, tcp_port, also_local)
 notification_spool_to = None
 
 
@@ -133,6 +145,8 @@ Available commands:
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
 def do_notify(args):
+    convert_legacy_configuration()
+
     global notify_mode, notification_logging
     if notification_logging == 0:
         notification_logging = 1 # transform deprecated value 0 to 1
@@ -196,6 +210,21 @@ def do_notify(args):
             (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception()))
 
 
+def convert_legacy_configuration():
+    global notification_spooling
+    # Convert legacy spooling configuration to new one (see above)
+    if notification_spooling in (True, False):
+        if notification_spool_to:
+            remote_host, tcp_port, also_local = notification_spool_to
+            if also_local:
+                notification_spooling = "both"
+            else:
+                notification_spooling = "remote"
+        elif notification_spooling:
+            notification_spooling = "local"
+        else:
+            notification_spooling = "remote"
+
 # This function processes one raw notification and decides wether it
 # should be spooled or not. In the latter cased a local delivery
 # is being done.
@@ -230,14 +259,11 @@ def notify_notify(raw_context, analyse=False):
                    + "\n".join(sorted(["                    %s=%s" % (k, raw_context[k]) for k in raw_context if k not in raw_keys])))
 
     # Spool notification to remote host, if this is enabled
-    if notification_spool_to:
-        remote_host, tcp_port, also_local = notification_spool_to
-        target_site = "%s:%s" % (remote_host, tcp_port)
-        create_spoolfile({"context": raw_context, "forward": target_site})
-        if not also_local:
-            return
+    if notification_spooling in ("remote", "both"):
+        create_spoolfile({"context": raw_context, "forward": True})
 
-    return locally_deliver_raw_context(raw_context, analyse=analyse)
+    if notification_spooling != "remote":
+        return locally_deliver_raw_context(raw_context, analyse=analyse)
 
 
 # Here we decide which notification implementation we are using.
@@ -511,7 +537,7 @@ def notify_rulebased(raw_context, analyse=False):
                 if not analyse:
                     if bulk:
                         do_bulk_notify(contact, plugin, params, plugin_context, bulk)
-                    elif notification_spooling:
+                    elif notification_spooling in ("local", "both"):
                         create_spoolfile({"context": plugin_context, "plugin": plugin})
                     else:
                         call_notification_script(plugin, plugin_context)
@@ -1033,7 +1059,7 @@ def notify_flexible(raw_context, notification_table):
 
         plugin_context = create_plugin_context(raw_context, entry.get("parameters", []))
 
-        if notification_spooling:
+        if notification_spooling in ("local", "both"):
             create_spoolfile({"context": plugin_context, "plugin": plugin})
         else:
             call_notification_script(plugin, plugin_context)
@@ -1192,7 +1218,7 @@ def check_notification_type(context, host_events, service_events):
 def notify_plain_email(raw_context):
     plugin_context = create_plugin_context(raw_context, [])
 
-    if notification_spooling:
+    if notification_spooling in ("local", "both"):
         create_spoolfile({"context": plugin_context, "plugin" : None})
     else:
         notify_log("Sending plain email to %s" % plugin_context["CONTACTNAME"])

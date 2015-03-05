@@ -1,0 +1,226 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | "_ \ / _ \/ __| |/ /   | |\/| | " /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<mknotifyd:sep(0)>>>
+# [mysite]
+# Version:         1.2.7i1
+# Updated:         1425389753 (2015-03-03 14:35:53)
+# Started:         1425388950 (2015-03-03 14:22:30, 803 sec ago)
+# Configuration:   1425388950 (2015-03-03 14:22:30, 803 sec ago)
+# Listening FD:    4
+#
+# Spool:           New
+# Count:           0
+# Oldest:
+#
+# Spool:           Deferred
+# Count:           0
+# Oldest:
+#
+# Spool:           Corrupted
+# Count:           4
+# Oldest:          1425305956 (2015-03-02 15:19:16, 83797 sec ago)
+#
+# Connection:      127.0.0.1:46906
+# Type:            incoming
+# State:           established
+# Since:           1425389490 (2015-03-03 14:31:30, 263 sec ago)
+# Socket FD:       5
+# HB. Interval:    10 sec
+# LastHeartbeat:   1425389750 (2015-03-03 14:35:50, 3 sec ago)
+# InputBuffer:     0 Bytes
+# OutputBuffer:    0 Bytes
+
+def parse_mknotifyd(info):
+    parsed = {}
+    for line in info:
+        if line[0].startswith('['):
+            site = line[0][1:-1]
+            site_entry = {
+                "spools"      : {},
+                "connections" : {},
+            }
+            sub_entry = site_entry
+            parsed[site] = site_entry
+        else:
+            varname, value = line[0].split(":", 1)
+            value = value.strip()
+            if varname == "Spool":
+                sub_entry = {}
+                site_entry["spools"][value] = sub_entry
+
+            elif varname == "Connection":
+                sub_entry = {}
+                site_entry["connections"][value] = sub_entry
+
+            else:
+                if value == "None":
+                    value = None
+                elif value and varname not in [ "Type", "State", "Version" ]:
+                    value = int(value.split()[0])
+                sub_entry[varname] = value
+
+    # Fixup names of the connections. For incoming connections the remote
+    # port is irrelevant. It changes randomly. But there might anyway be
+    # more than one connection from the same remote host, so we are forced
+    # to create artificial numbers if that is the case
+    for site_name, stats in parsed.items():
+        remote_addresses = {}
+        for connection_name, connection in stats["connections"].items():
+            if connection["Type"] == "incoming":
+                remote_address = connection_name.split(":")[0]
+                remote_addresses.setdefault(remote_address, []).append(connection)
+                del stats["connections"][connection_name]
+
+        for address, connections in remote_addresses.items():
+            if len(connections) == 1:
+                stats["connections"][address] = connection
+            else:
+                for nr, connection in enumerate(connections):
+                    stats["connections"][address + "/" + str(nr+1)] = connection
+
+    return parsed
+
+
+#.
+#   .--Spooler Status------------------------------------------------------.
+#   | ____                    _             ____  _        _               |
+#   |/ ___| _ __   ___   ___ | | ___ _ __  / ___|| |_ __ _| |_ _   _ ___   |
+#   |\___ \| '_ \ / _ \ / _ \| |/ _ \ '__| \___ \| __/ _` | __| | | / __|  |
+#   | ___) | |_) | (_) | (_) | |  __/ |     ___) | || (_| | |_| |_| \__ \  |
+#   ||____/| .__/ \___/ \___/|_|\___|_|    |____/ \__\__,_|\__|\__,_|___/  |
+#   |      |_|                                                             |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_mknotifyd(parsed):
+    return [ (p, {}) for p in parsed ]
+
+def check_mknotifyd(item, _no_params, parsed):
+    if item not in parsed:
+        yield 2, "No status information, Spooler not running"
+        return
+
+    now = time.time()
+    stat = parsed[item]
+    version = stat["Version"]
+
+    # Output Version
+    yield 0, "Version: " + version
+
+    # Check age of status file. It's updated every 20 seconds
+    status_age = now - stat["Updated"]
+    if status_age > 30:
+        yield 2, "Status last updated %s ago, spooler seems crashed" % get_age_human_readable(status_age)
+    else:
+        yield 0, "Spooler running"
+
+    # Are there any corrupted files
+    corrupted = stat["spools"]["Corrupted"]
+    if corrupted["Count"]:
+        yield 1, "%d corrupted files: youngest %s ago" % (corrupted["Count"], get_age_human_readable(now - corrupted["Youngest"]))
+
+    # Are there deferred files that are too old?
+    deferred = stat["spools"]["Deferred"]
+    if deferred["Count"]:
+        age = now - deferred["Oldest"]
+        count = deferred["Count"]
+        if age > 5:
+            state = 1
+        elif age > 600:
+            state = 2
+        else:
+            state = 0
+        yield state, "%d deferred files: oldest %s ago" % (count, get_age_human_readable(age))
+
+    return
+
+check_info["mknotifyd"] = {
+    "parse_function"      : parse_mknotifyd,
+    "inventory_function"  : inventory_mknotifyd,
+    "check_function"      : check_mknotifyd,
+    "service_description" : "Notification Spooler %s",
+}
+
+
+
+#.
+#   .--Connections---------------------------------------------------------.
+#   |        ____                            _   _                         |
+#   |       / ___|___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
+#   |      | |   / _ \| '_ \| '_ \ / _ \/ __| __| |/ _ \| '_ \/ __|        |
+#   |      | |__| (_) | | | | | | |  __/ (__| |_| | (_) | | | \__ \        |
+#   |       \____\___/|_| |_|_| |_|\___|\___|\__|_|\___/|_| |_|___/        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_mknotifyd_connection(parsed):
+    for site_name, stats in parsed.items():
+        for connection_name in stats["connections"]:
+            yield site_name + "-" + connection_name, {}
+
+
+def check_mknotifyd_connection(item, _no_params, parsed):
+    states = {
+        "established" : (0, "Alive"),
+        "cooldown"    : (2, "Connection failed or terminated"),
+        "initial"     : (1, "Initialized"),
+        "connecting"  : (2, "Trying to connect"),
+    }
+
+    site_name, connection_name = item.split('-')
+    if site_name not in parsed:
+        raise MKCounterWrapped("No status information about spooler available")
+
+    if connection_name in parsed[site_name]["connections"]:
+        connection = parsed[site_name]["connections"][connection_name]
+
+        # First check state
+        state, state_name = states[connection["State"]]
+        yield state, state_name
+
+        # Show uptime
+        if connection["State"] == "established":
+            now = time.time()
+            age = now - connection["Since"]
+            yield 0, "Uptime: %s" % get_age_human_readable(age)
+
+        # Stats
+        for what in ( "Sent", "Received" ):
+            num = connection["Notifications " + what]
+            if num:
+                yield 0, "%d Notifications %s" % (num, what.lower())
+
+
+
+check_info["mknotifyd.connection"] = {
+    "inventory_function"  : inventory_mknotifyd_connection,
+    "check_function"      : check_mknotifyd_connection,
+    "service_description" : "Notification Connection %s",
+}
+

@@ -1,0 +1,34 @@
+Title: Notification Spooler can now handle incoming and outgoing persistent TCP connections
+Level: 2
+Component: notifications
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425463954
+Class: feature
+
+The Check_MK Notification Spooler (<tt>mknotifyd</tt>) has completely been rewritten. It
+now:
+
+<ul>
+<li>uses persistent TCP connections instead of connecting for each notifiction</li>
+<li>can use outgoing TCP connections for <i>receiving</i> notifictions</li>
+<li>can handle an arbitrary number of parallel connctions</li>
+<li>monitors connections with heart beats</li>
+<li>is being monitored by two new checks for the general state and for each connection</li>
+</ul>
+
+The global configuration for the spooler has changed. Your existing settings
+are still supported but have vanished from WATO. As soon as you create a
+new configuration that will override your legacy configuration.
+
+The new checks that monitor the spooler require an update of the Check_MK
+Agent for Linux on the Check_MK server. It needs OMD based installaions
+paths. All spoolers will automatically be discovered. The new checks are
+<tt>mknotifyd</tt> and <tt>mknotifyd.connection</tt>.
+
+The spooler write messages into <tt>var/log/mknotifyd.log</tt>. There are
+three log levels, which can be configured in the global settings of the
+spooler. We propose starting with the highest log level. Also a file
+<tt>var/log/mknotifyd.log</tt> is being written every 20 seconds. It
+shows the state of the spooler and its connections. This is being used
+for the monitoring of the spooler.

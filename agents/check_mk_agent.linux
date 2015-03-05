@@ -504,18 +504,28 @@ elif [ -x /usr/sbin/ssmtp ] ; then
     mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
 fi
 
-#Check status of qmail mailqueue
+# Check status of qmail mailqueue
 if type qmail-qstat >/dev/null
 then
    echo "<<<qmail_stats>>>"
    qmail-qstat
 fi
 
-# Check status of OMD sites
+# Check status of OMD sites and Check_MK Notification spooler
 if type omd >/dev/null
 then
     run_cached -s omd_status 60 "omd status --bare --auto || true"
+    echo '<<<mknotifyd:sep(0)>>>'
+    for statefile in /omd/sites/*/var/log/mknotifyd.state ; do
+        site=${statefile%/var/log*}
+        site=${site#/omd/sites/}
+        echo "[$site]"
+        grep -v '^#' < $statefile
+    done
 fi
+
+# Status of Check_MK Notification Spooler
+
 
 
 # Welcome the ZFS check on Linux

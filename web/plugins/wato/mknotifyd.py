@@ -35,84 +35,160 @@ except:
 mknotifyd_config_dir = defaults.default_config_dir + "/mknotifyd.d/wato/"
 
 if mknotifyd_enabled:
+    replication_paths.append(( "dir",  "mknotify",  mknotifyd_config_dir))
+    backup_paths.append(( "dir",  "mknotify",  mknotifyd_config_dir))
+
     group = _("Notification")
 
     # Check_MK var
     register_configvar(group,
         "notification_spooling",
-        Checkbox(
-            title = _("Deliver notifications asychronously"),
-            help = _("The option will make notifications handled asynchronously. For each notification a spool "
-                     "file will be created and later processes by the notification spooler. This avoids a hanging "
-                     "core in case of notifications that need very long to execute. It also enables a retry in "
-                     "case of failed notifications. Please note that this is not useful if you only use notification "
-                     "methods that have their own spooling (like email or SMS tools)."),
-            default_value = False),
-        domain = "check_mk"
+        Transform(
+            DropdownChoice(
+                title = _("Notification Spooling"),
+                choices = [
+                    ( "off",    _("Direct local delivery without spooling") ),
+                    ( "local",  _("Asynchronous local delivery by notification spooler") ),
+                    ( "remote", _("Forward to remote site by notification spooler") ),
+                    ( "both",   _("Asynchronous local delivery plus remote forwarding" ) ),
+                ],
+                default_value = False,
+                help = _("This option dedices how notifications will be processed. Without the "
+                         "notification spooler (<tt>mknotifyd</tt>) only direct local delivery "
+                         "is possible. Long lasting or excessive notifications might slow down "
+                         "the monitoring. If you select remote forwarding then make sure that "
+                         "your notification spooler is correctly setup for incoming and/or "
+                         "outgoing connections."),
+            ),
+            forth = lambda x: (x == False and "off" or (x == True and "local" or x)),
+        ),
+        domain = "check_mk",
     )
 
-    # Check_MK var
-    register_configvar(group,
-        "notification_spool_to",
-        Optional(
-            Tuple(
-                elements = [
-                    TextAscii(
-                        title = _("Remote host"),
-                    ),
-                    Integer(
-                        title = _("TCP port"),
-                        minvalue = 1024,
-                        maxvalue = 65535,
-                        default_value = 6555,
-                    ),
-                    Checkbox(
-                        title = _("Local processing"),
-                        label = _("Process notifications also locally"),
-                    ),
-                ]),
-            title = _("Forward all notifications to remote server"),
-            help = _("This option allows you to forward notifications to another Check_MK site. "
-                     "That site must have the notification spooler running and TCP listening enabled. "
-                     "This allows you to create a centralized notification handling."),
-            label = _("Spool notifications to remote site"),
-            none_label = _("(Do not spool to remote site)"),
-        ),
-        domain = "check_mk"
-    )
 
     # Daemon var
     register_configvar_domain("mknotifyd", mknotifyd_config_dir)
     register_configvar(group,
-        "notification_deferred_retention_time",
-            Integer(
-                title = _("Notification fail retry interval"),
-                help = _("If the processing of a notification fails, the notify daemon "
-                         "retries to send the notification again after this time"),
-                minvalue = 10,
-                maxvalue = 86400,
-                default_value = 180,
-                unit = _("Seconds")
-            ),
-        domain = "mknotifyd"
-    )
+        "config",
+        Dictionary(
+            title = _("Notification Spooler Configuration"),
+            elements = [
+                ( "log_level",
+                  DropdownChoice(
+                      title = _("Verbosity of logging"),
+                      choices = [
+                        ( 0, _("Normal logging (only startup, shutdown and errors)") ),
+                        ( 1, _("Verbose logging (also spooled notifications)") ),
+                        ( 2, _("Debugging (log every single action)") ),
+                      ],
+                      default_value = 0,
+                )),
+                ( "deferred_cooldown",
+                  Age(
+                      title = _("Cooldown time before retrying delivery"),
+                      minvalue = 1,
+                      maxvalue = 86400,
+                      default_value = 180,
+                )),
+                ( "incoming",
+                  Dictionary(
+                      columns = 2,
+                      title = _("Accept incoming TCP connections"),
+                      elements = [
+                          ( "listen_port",
+                            Integer(
+                                title = _("TCP Port"),
+                                minvalue = 1024,
+                                maxvalue = 65535,
+                                default_value = 6555,
+                          )),
+                          ( "heartbeat_interval",
+                            Age(
+                                title = _("Interval at which to <b>send</b> regular heart beats"),
+                                minvalue = 1,
+                                default_value = 10,
+                          )),
+                      ],
+                      optional_keys = None,
+                )),
+                ( "outgoing",
+                  ListOf(
+                      Dictionary(
+                          columns = 2,
+                          elements = [
+                              ( "address",
+                                IPv4Address(
+                                    title = _("Address of target notification spooler"),
+                              )),
+                              ( "port",
+                                Integer(
+                                    title = _("TCP Port"),
+                                    minvalue = 1024,
+                                    maxvalue = 65535,
+                                    default_value = 6555,
+                              )),
+                              ( "cooldown",
+                                Age(
+                                    title = _("Cooldown time before trying to reconnect after failure"),
+                                    minvalue = 1,
+                                    default_value = 20,
+                              )),
+                              ( "heartbeat_interval",
+                                Age(
+                                    title = _("Interval at which to <b>expect</b> regular beats"),
+                                    minvalue = 1,
+                                    default_value = 10,
+                              )),
+                              ( "heartbeat_timeout",
+                                Age(
+                                    title = _("Maximum expected run time for heart beat packet"),
+                                    minvalue = 1,
+                                    default_value = 3,
+                              )),
+                          ],
+                          optional_keys = None,
+                      ),
+                      title = _("Connect to remote sites"),
+                      add_label = _("Add connection"),
+                )),
 
-
-    # Daemon var
-    register_configvar(group,
-        "notification_daemon_listen_port",
-        Optional(
-            Integer(
-                minvalue = 1024,
-                maxvalue = 65535,
-                default_value = 6555,
-            ),
-            help = _("Here you can set the port at which the notification spooler listens for forwarded"
-                     "notification messages from spoolers on remote sites."),
-            title = _("Port for receiving notifications"),
-            label = _("Receive notifications from remote sites"),
-            none_label = _("(Do not receive notifications)"),
+            ],
+            optional_keys = [ "incoming", ],
         ),
-        domain = "mknotifyd"
+        domain = "mknotifyd",
     )
+
+
+    ### register_configvar(group,
+    ###     "notification_deferred_retention_time",
+    ###         Integer(
+    ###             title = _("Notification fail retry interval"),
+    ###             help = _("If the processing of a notification fails, the notify daemon "
+    ###                      "retries to send the notification again after this time"),
+    ###             minvalue = 10,
+    ###             maxvalue = 86400,
+    ###             default_value = 180,
+    ###             unit = _("Seconds")
+    ###         ),
+    ###     domain = "mknotifyd"
+    ### )
+
+
+    ### # Daemon var
+    ### register_configvar(group,
+    ###     "notification_daemon_listen_port",
+    ###     Optional(
+    ###         Integer(
+    ###             minvalue = 1024,
+    ###             maxvalue = 65535,
+    ###             default_value = 6555,
+    ###         ),
+    ###         help = _("Here you can set the port at which the notification spooler listens for forwarded"
+    ###                  "notification messages from spoolers on remote sites."),
+    ###         title = _("Port for receiving notifications"),
+    ###         label = _("Receive notifications from remote sites"),
+    ###         none_label = _("(Do not receive notifications)"),
+    ###     ),
+    ###     domain = "mknotifyd"
+    ### )
 

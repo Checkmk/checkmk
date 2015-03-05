@@ -1,0 +1,10 @@
+Title: Debug mode shows details about errors in autochecks as expected now
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425556119
+
+

@@ -3,7 +3,6 @@ agents: hpux, solaris
 catalog: os/networking
 license: GPL
 distribution: check_mk
-
 description:
  Reports the network traffic, the port state and the error counters for interfaces
  using the command line tool {statgrab} on Solaris and HP-UX.

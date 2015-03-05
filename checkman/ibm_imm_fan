@@ -1,0 +1,21 @@
+title: Fan rpm via IBM Integrated Management Module (IMM)
+agents: snmp
+catalog: hw/server/ibm
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the rpms of fans via a IBM Integrated Management Module
+ (IMM). It uses snmp and the IBM IMM MIB to gather and interpret the fan data.
+
+ The check uses the lower warning and critical levels extracted from the
+ device (OIDs {fanCritLimitLow}, {fanNonCritLimitLow}) to calculate the state
+ of the service.
+
+inventory:
+ The service discovery will find one service per fan
+
+item:
+ The name of the fan as extracted from the OID {fanDescr}
+
+perfdata:
+ The RPM of the fan

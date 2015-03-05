@@ -718,16 +718,16 @@ def read_autochecks_of(hostname, world="config"):
     try:
         autochecks_raw = eval(file(filepath).read())
     except SyntaxError,e:
-        if opt_verbose:
+        if opt_verbose or opt_debug:
             sys.stderr.write("Syntax error in file %s: %s\n" % (filepath, e))
         if opt_debug:
-            sys.exit(3)
+            raise
         return []
     except Exception, e:
-        if opt_verbose:
+        if opt_verbose or opt_debug:
             sys.stderr.write("Error in file %s:\n%s\n" % (filepath, e))
         if opt_debug:
-            sys.exit(3)
+            raise
         return []
 
     # Exchange inventorized check parameters with those configured by

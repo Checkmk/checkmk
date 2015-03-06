@@ -144,6 +144,7 @@ def inventory_fritz_wan_if(info):
     return inventory_if_common(fritz_wan_if_to_if64(data))
 
 def check_fritz_wan_if(item, params, info):
+    # TODO: This check modifies params!! This is strictly forbidden
     if not info:
         return 3, 'Interface info is missing'
     data = fritz_parse_info(info)

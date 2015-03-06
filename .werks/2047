@@ -1,0 +1,12 @@
+Title: Allow overriding existing WATO rules by own files in local/ hierarchy
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6p1
+Date: 1425659357
+Class: fix
+
+If you would define your own version of a check parameter rule set in a
+file in <tt>local/share/check_mk/web/plugin/wato/myfile.py</tt>, then the
+rule would appear twice in the rule search. This has been fixed. You
+can now safely override rules in your own extensions.

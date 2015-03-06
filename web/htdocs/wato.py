@@ -15316,6 +15316,13 @@ def register_rule(group, varname, valuespec = None, title = None,
         g_rulespec_groups.append((group, rulesets))
         g_rulespec_group[group] = rulesets
     else:
+        # If a ruleset for this variable already exist, then we need to replace
+        # it. How can this happen? If a user puts his own copy of the definition
+        # into some file below local/.
+        for nr, rs in enumerate(g_rulespec_group[group]):
+            if rs["varname"] == varname:
+                del g_rulespec_group[group][nr]
+                break # There cannot be two duplicates!
         g_rulespec_group[group].append(ruleset)
 
     g_rulespecs[varname] = ruleset

@@ -220,7 +220,7 @@ def cmp_config_paths(a, b):
 def wato_config_mtime():
     try:
         return os.stat(g_config_dir + "/mknotifyd.d/wato/global.mk").st_mtime
-    except 1:
+    except:
         return None
 
 

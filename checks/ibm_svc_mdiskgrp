@@ -103,12 +103,17 @@ def check_ibm_svc_mdiskgrp(item, params, info):
                     state = 1
                 else:
                     state = 0
+                warn_mb = capacity * mb * warn / 100
+                crit_mb = capacity * mb * crit / 100
+            else:
+                warn_mb = None
+                crit_mb = None
 
             # Note: Performance data is now (with new metric system) normed to
             # canonical units - i.e. 1 byte in this case.
             mb = 1024 * 1024
             yield 0, "Provisioning: %s" % get_percent_human_readable(provisioning), \
-              [ ( "fs_provisioning", virtual_capacity*mb, capacity * mb * warn / 100, capacity * mb * crit / 100, 0, capacity * mb) ]
+              [ ( "fs_provisioning", virtual_capacity*mb, warn_mb, crit_mb, 0, capacity * mb) ]
 
 
 

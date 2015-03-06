@@ -1,0 +1,12 @@
+Title: The check-mk-agent RPM packages can now update the old check_mk-agent named RPMs
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425641049
+
+We added the RPM header "Obsoletes" which marks the new packages named check-mk-agent
+as package updating the old named packages check_mk-agent. Updating the old agents
+is now possible with these packages.

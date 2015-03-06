@@ -1,0 +1,9 @@
+Title: ibm_imm_voltage: new check to monitor power supply and CMS battery voltages on servers via IBMs IMM
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425643084
+Class: feature
+
+

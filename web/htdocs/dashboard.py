@@ -572,7 +572,7 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
     if dashlet_type.get('title_func'):
         title = dashlet_type.get('title_func')(dashlet)
     title = dashlet.get('title', title)
-    if title and dashlet.get('show_title'):
+    if title != None and dashlet.get('show_title'):
         url = dashlet.get("title_url", None)
         if url:
             title = '<a href="%s">%s</a>' % (url, _u(title))

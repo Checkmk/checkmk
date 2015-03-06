@@ -1,0 +1,10 @@
+Title: ibm_svc_mdiskgrp: fix rounding bug, decimal digits of size (GB, TB) were always lost
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425660216
+
+

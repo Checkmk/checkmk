@@ -415,14 +415,30 @@ def output_check_info():
 #   |  Helper functions for dealing with host tags                         |
 #   '----------------------------------------------------------------------'
 
-def strip_tags(host_or_list):
-    if type(host_or_list) == list:
-        return [ strip_tags(h) for h in host_or_list ]
-    else:
-        return host_or_list.split("|")[0]
+def parse_negated(pattern):
+    # Allow negation of pattern with prefix '!'
+    try:
+        negate = pattern[0] == '!'
+        if negate:
+            pattern = pattern[1:]
+    except IndexError:
+        negate = False
+    return negate, pattern
+
+def strip_tags(tagged_hostlist):
+    return map(lambda h: h.split('|', 1)[0], tagged_hostlist)
 
 def tags_of_host(hostname):
-    return hosttags.get(hostname, [])
+    try:
+        return hosttags[hostname]
+    except KeyError:
+        return []
+
+hosttags = {}
+def collect_hosttags():
+    for taggedhost in all_hosts + clusters.keys():
+        parts = taggedhost.split("|")
+        hosttags[parts[0]] = parts[1:]
 
 # Check if a host fullfills the requirements of a tags
 # list. The host must have all tags in the list, except
@@ -435,7 +451,7 @@ def hosttags_match_taglist(hosttags, required_tags):
             tag = tag[1:]
         else:
             negate = False
-
+        #negate, tag = parse_negated(tag)
         if tag and tag[-1] == '+':
             tag = tag[:-1]
             matches = False
@@ -792,18 +808,14 @@ def get_single_oid(hostname, ipaddress, oid):
 #   '----------------------------------------------------------------------'
 
 
-# clusternames (keys into dictionary) might be tagged :-(
-# names of nodes not!
+# Checks whether or not the given host is a cluster host
 def is_cluster(hostname):
-    for tagged_hostname, nodes in clusters.items():
-        if hostname == strip_tags(tagged_hostname):
-            return True
-    return False
+    return hostname in all_active_clusters()
 
-# If host is node of one or more clusters, return a list of the clusters
-# (untagged). If not, return an empty list.
+# If host is node of one or more clusters, return a list of the cluster host names.
+# If not, return an empty list.
 def clusters_of(hostname):
-    return [ strip_tags(c) for c,n in clusters.items() if hostname in n ]
+    return [ c.split('|', 1)[0] for c,n in clusters.items() if hostname in n ]
 
 # Determine weather a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
@@ -901,9 +913,9 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
         if type(hostlist) == str:
             if hostlist != hostname:
                 return # optimize most common case: hostname mismatch
-            hostlist = [ strip_tags(hostlist) ]
+            hostlist = [ hostlist ]
         elif type(hostlist[0]) == str:
-            hostlist = strip_tags(hostlist)
+            hostlist = hostlist
         elif hostlist != []:
             raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname or list of hostnames" % hostlist)
 
@@ -1265,24 +1277,39 @@ def output_conf_header(outfile):
 def all_configured_physical_hosts():
     return strip_tags(all_hosts)
 
-def all_active_hosts():
-    return filter_active_hosts(all_hosts)
+def all_active_hosts_and_clusters():
+    return all_active_hosts() + all_active_clusters()
 
+# Returns a list of all host names to be handled by this site
+# hosts of other sitest or disabled hosts are excluded
+all_hosts_untagged = None
+def all_active_hosts():
+    global all_hosts_untagged
+    if all_hosts_untagged == None:
+        all_hosts_untagged = filter_active_hosts(strip_tags(all_hosts))
+    return all_hosts_untagged
+
+# Returns a list of all cluster host names to be handled by
+# this site hosts of other sitest or disabled hosts are excluded
+all_clusters_untagged = None
 def all_active_clusters():
-    return filter_active_hosts(clusters.keys())
+    global all_clusters_untagged
+    if all_clusters_untagged == None:
+        all_clusters_untagged = filter_active_hosts(strip_tags(clusters.keys()))
+    return all_clusters_untagged
 
 def filter_active_hosts(hostlist):
     if only_hosts == None and distributed_wato_site == None:
-        return strip_tags(hostlist)
+        return hostlist
     elif only_hosts == None:
-        return [ hostname for hostname in strip_tags(hostlist)
+        return [ hostname for hostname in hostlist
                  if host_is_member_of_site(hostname, distributed_wato_site) ]
     elif distributed_wato_site == None:
-        return [ hostname for hostname in strip_tags(hostlist)
+        return [ hostname for hostname in hostlist
                  if in_binary_hostlist(hostname, only_hosts) ]
     else:
         site_tag = "site:" + distributed_wato_site
-        return [ hostname for hostname in strip_tags(hostlist)
+        return [ hostname for hostname in hostlist
                  if in_binary_hostlist(hostname, only_hosts)
                  and host_is_member_of_site(hostname, distributed_wato_site) ]
 
@@ -1365,7 +1392,7 @@ def parents_of(hostname):
     for p in par:
         ps = p.split(",")
         for pss in ps:
-            if pss in all_hosts_untagged:
+            if pss in all_active_hosts():
                 used_parents.append(pss)
     return used_parents
 
@@ -1555,7 +1582,7 @@ def host_extra_conf_merged(hostname, conf):
 def in_binary_hostlist(hostname, conf):
     # if we have just a list of strings just take it as list of (may be tagged) hostnames
     if len(conf) > 0 and type(conf[0]) == str:
-        return hostname in strip_tags(conf)
+        return hostname in conf
 
     for entry in conf:
         entry, rule_options = get_rule_options(entry)
@@ -1733,7 +1760,7 @@ def in_extraconf_hostlist(hostlist, hostname):
                 hostentry = hostentry[1:]
                 use_regex = True
 
-        hostentry = strip_tags(hostentry)
+        hostentry = hostentry
         try:
             if not use_regex and hostname == hostentry:
                 return not negate
@@ -1755,7 +1782,7 @@ def in_extraconf_servicelist(list, item):
             negate = True
         else:
             negate = False
-
+        #negate, pattern = parse_negated(pattern)
         if regex(pattern).match(item):
             return not negate
 
@@ -1802,7 +1829,7 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
 
     output_conf_header(outfile)
     if hostnames == None:
-        hostnames = all_hosts_untagged + all_active_clusters()
+        hostnames = all_active_hosts_and_clusters()
 
     for hostname in hostnames:
         create_nagios_config_host(outfile, hostname)
@@ -1896,7 +1923,7 @@ def create_nagios_hostdefs(outfile, hostname):
     if is_clust:
         nodes = nodes_of(hostname)
         for node in nodes:
-            if node not in all_hosts_untagged:
+            if node not in all_active_hosts():
                 raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, hostname))
         node_ips = [ lookup_ipaddress(h) for h in nodes ]
         alias = "cluster of %s" % ", ".join(nodes)
@@ -2984,6 +3011,7 @@ skipped_config_variable_names = [
     "timeperiods",
     "host_attributes",
     "all_hosts_untagged",
+    "all_clusters_untagged",
     "extra_service_conf",
     "extra_host_conf",
     "extra_nagios_conf",
@@ -4044,7 +4072,7 @@ def show_paths():
 
 def dump_all_hosts(hostlist):
     if hostlist == []:
-        hostlist = all_hosts_untagged + all_active_clusters()
+        hostlist = all_active_hosts_and_clusters()
     hostlist.sort()
     for hostname in hostlist:
         dump_host(hostname)
@@ -4569,7 +4597,7 @@ def lock_objects_file():
 def do_donation():
     donate = []
     cache_files = os.listdir(tcp_cache_dir)
-    for host in all_hosts_untagged:
+    for host in all_active_hosts():
         if in_binary_hostlist(host, donation_hosts):
             for f in cache_files:
                 if f == host or f.startswith("%s." % host):
@@ -4600,7 +4628,7 @@ def find_bin_in_path(prog):
 def do_scan_parents(hosts):
     global max_num_processes
     if len(hosts) == 0:
-        hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_hosts_untagged)
+        hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_active_hosts())
 
     found = []
     parent_hosts = []
@@ -4852,7 +4880,7 @@ def ip_to_hostname(ip):
     global ip_to_hostname_cache
     if ip_to_hostname_cache == None:
         ip_to_hostname_cache = {}
-        for host in all_hosts_untagged:
+        for host in all_active_hosts():
             try:
                 ip_to_hostname_cache[lookup_ipaddress(host)] = host
             except:
@@ -5243,16 +5271,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
             else:
                 interactive_abort("Cannot read in configuration file %s: %s" % (_f, e))
 
-    # Strip off host tags from the list of all_hosts.  Host tags can be
-    # appended to the hostnames in all_hosts, separated by pipe symbols,
-    # e.g. "zbghlnx04|bgh|linux|test" and are stored in a separate
-    # dictionary called 'hosttags'
-    global hosttags, all_hosts_untagged
-    hosttags = {}
-    for taggedhost in all_hosts + clusters.keys():
-        parts = taggedhost.split("|")
-        hosttags[parts[0]] = parts[1:]
-    all_hosts_untagged = all_active_hosts()
+    collect_hosttags()
 
     # Sanity check for duplicate hostnames
     seen_hostnames = set([])
@@ -5310,7 +5329,8 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
     vars_after_config = all_nonfunction_vars()
     ignored_variables = set(['vars_before_config', 'parts',
                              'hosttags' ,'seen_hostnames',
-                             'all_hosts_untagged' ,'taggedhost' ,'hostname'])
+                             'all_hosts_untagged', 'all_clusters_untagged',
+                             'taggedhost' ,'hostname'])
     errors = 0
     for name in vars_after_config:
         if name not in ignored_variables and name not in vars_before_config:

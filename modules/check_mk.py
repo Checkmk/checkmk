@@ -444,14 +444,16 @@ def collect_hosttags():
 # list. The host must have all tags in the list, except
 # for those negated with '!'. Those the host must *not* have!
 # New in 1.1.13: a trailing + means a prefix match
+g_hosttag_taglist_cache = {}
 def hosttags_match_taglist(hosttags, required_tags):
+    try:
+        cache_id = tuple(hosttags)+tuple(required_tags)
+        return g_hosttag_taglist_cache[cache_id]
+    except KeyError:
+        pass
+
     for tag in required_tags:
-        if len(tag) > 0 and tag[0] == '!':
-            negate = True
-            tag = tag[1:]
-        else:
-            negate = False
-        #negate, tag = parse_negated(tag)
+        negate, tag = parse_negated(tag)
         if tag and tag[-1] == '+':
             tag = tag[:-1]
             matches = False
@@ -461,11 +463,13 @@ def hosttags_match_taglist(hosttags, required_tags):
                     break
 
         else:
-            matches = (tag in hosttags)
+            matches = tag in hosttags
 
         if matches == negate:
+            g_hosttag_taglist_cache[cache_id] = False
             return False
 
+    g_hosttag_taglist_cache[cache_id] = True
     return True
 
 #.
@@ -886,15 +890,18 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
             else:
                 g_multihost_checks.append(entry)
 
+    hosttags = tags_of_host(hostname)
+
     def handle_entry(entry):
-        if len(entry) == 3: # from autochecks
+        num_elements = len(entry)
+        if num_elements == 3: # from autochecks
             hostlist = hostname
             checkname, item, params = entry
             tags = []
-        elif len(entry) == 4:
+        elif num_elements == 4:
             hostlist, checkname, item, params = entry
             tags = []
-        elif len(entry) == 5:
+        elif num_elements == 5:
             tags, hostlist, checkname, item, params = entry
             if type(tags) != list:
                 raise MKGeneralException("Invalid entry '%r' in check table. First entry must be list of host tags." %
@@ -904,22 +911,21 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
             raise MKGeneralException("Invalid entry '%r' in check table. It has %d entries, but must have 4 or 5." %
                                      (entry, len(entry)))
 
-        # hostinfo list might be:
+        # hostlist list might be:
         # 1. a plain hostname (string)
         # 2. a list of hostnames (list of strings)
         # Hostnames may be tagged. Tags are removed.
-        # In autochecks there are always single untagged hostnames.
-        # We optimize for that. But: hostlist might be tagged hostname!
+        # In autochecks there are always single untagged hostnames. We optimize for that.
         if type(hostlist) == str:
             if hostlist != hostname:
                 return # optimize most common case: hostname mismatch
             hostlist = [ hostlist ]
         elif type(hostlist[0]) == str:
-            hostlist = hostlist
+            pass # regular case: list of hostnames
         elif hostlist != []:
             raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname or list of hostnames" % hostlist)
 
-        if hosttags_match_taglist(tags_of_host(hostname), tags) and \
+        if hosttags_match_taglist(hosttags, tags) and \
                in_extraconf_hostlist(hostlist, hostname):
             descr = service_description(checkname, item)
             if service_ignored(hostname, checkname, descr):
@@ -1150,7 +1156,7 @@ def do_update_dns_cache():
 
     if opt_verbose:
         print "Updating DNS cache..."
-    for hostname in all_active_hosts() + all_active_clusters():
+    for hostname in all_active_hosts_and_clusters():
         if opt_verbose:
             sys.stdout.write("%s..." % hostname)
             sys.stdout.flush()
@@ -1580,7 +1586,7 @@ def host_extra_conf_merged(hostname, conf):
     return rule_dict
 
 def in_binary_hostlist(hostname, conf):
-    # if we have just a list of strings just take it as list of (may be tagged) hostnames
+    # if we have just a list of strings just take it as list of hostnames
     if len(conf) > 0 and type(conf[0]) == str:
         return hostname in conf
 
@@ -1776,13 +1782,7 @@ def in_extraconf_hostlist(hostlist, hostname):
 
 def in_extraconf_servicelist(list, item):
     for pattern in list:
-        # Allow negation of pattern with prefix '!'
-        if len(pattern) > 0 and pattern[0] == '!':
-            pattern = pattern[1:]
-            negate = True
-        else:
-            negate = False
-        #negate, pattern = parse_negated(pattern)
+        negate, pattern = parse_negated(pattern)
         if regex(pattern).match(item):
             return not negate
 
@@ -4952,7 +4952,8 @@ def copy_globals():
                             "g_check_table_cache", "g_singlehost_checks",
                             "g_nodesof_cache", "g_compiled_regexes", "vars_before_config",
                             "g_initial_times", "g_keepalive_initial_memusage",
-                            "g_dns_cache", "g_ip_lookup_cache", "g_converted_rulesets_cache" ] \
+                            "g_dns_cache", "g_ip_lookup_cache", "g_converted_rulesets_cache",
+                            "g_hosttag_taglist_cache" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
             global_saved[varname] = copy.copy(value)
     return global_saved
@@ -5275,7 +5276,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
 
     # Sanity check for duplicate hostnames
     seen_hostnames = set([])
-    for hostname in strip_tags(all_hosts + clusters.keys()):
+    for hostname in all_active_hosts_and_clusters():
         if hostname in seen_hostnames:
             sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
             sys.exit(3)

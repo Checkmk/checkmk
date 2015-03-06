@@ -1,0 +1,23 @@
+title: Voltages of Power Supply and CMOS Battery via IBM Integrated Management Module (IMM)
+agents: snmp
+catalog: hw/server/ibm
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the voltages provided by the power supply and CMOS
+ battery of servers via a IBM Integrated Management Module (IMM). It uses
+ snmp and the IBM IMM MIB to gather the data.
+
+ The check uses the lower and upper warning and critical levels extracted
+ from the device (OIDs {voltCritLimitLow}, {voltNonCritLimitLow},
+ {voltCritLimitHigh} ,{voltNonCritLimitHigh}) to calculate the state of
+ the service.
+
+inventory:
+ The service discovery will find one service per voltage measurement channel
+
+item:
+ The name of the power supply measurement channel as extracted from the OID {voltDescr}
+
+perfdata:
+ The voltage of the measurement channel

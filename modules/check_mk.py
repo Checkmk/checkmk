@@ -1690,7 +1690,8 @@ def convert_service_ruleset(ruleset):
         elif num_elements == 4:
             item, tags, hostlist, servlist = rule
         else:
-            raise MKGeneralException("Invalid rule '%r' in service configuration list: must have 3 or 4 elements" % (rule,))
+            raise MKGeneralException("Invalid rule '%r' in service configuration "
+                                     "list: must have 3 or 4 elements" % (rule,))
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
@@ -1734,7 +1735,8 @@ def convert_boolean_service_ruleset(ruleset):
         elif len(entry) == 3:
             tags, hostlist, servlist = entry
         else:
-            raise MKGeneralException("Invalid entry '%r' in configuration: must have 2 or 3 elements" % (entry,))
+            raise MKGeneralException("Invalid entry '%r' in configuration: "
+                                     "must have 2 or 3 elements" % (entry,))
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
@@ -1856,13 +1858,22 @@ def in_extraconf_hostlist(hostlist, hostname):
     return False
 
 
-def in_extraconf_servicelist(list, item):
-    for pattern in list:
+g_extraconf_servicelist_cache = {}
+def in_extraconf_servicelist(servlist, item):
+    cache_id = tuple(servlist) + (item,)
+    try:
+        return g_extraconf_servicelist_cache[cache_id]
+    except:
+        pass
+
+    for pattern in servlist:
         negate, pattern = parse_negated(pattern)
         if intelligent_regex_match(pattern, item):
+            g_extraconf_servicelist_cache[cache_id] = not negate
             return not negate
 
     # no match in list -> negative answer
+    g_extraconf_servicelist_cache[cache_id] = False
     return False
 
 
@@ -5029,7 +5040,8 @@ def copy_globals():
                             "g_nodesof_cache", "g_compiled_regexes", "vars_before_config",
                             "g_initial_times", "g_keepalive_initial_memusage",
                             "g_dns_cache", "g_ip_lookup_cache", "g_converted_rulesets_cache",
-                            "g_hostlist_match_cache", "g_hosttag_taglist_cache" ] \
+                            "g_extraconf_servicelist_cache", "g_hostlist_match_cache",
+                            "g_hosttag_taglist_cache" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
             global_saved[varname] = copy.copy(value)
     return global_saved

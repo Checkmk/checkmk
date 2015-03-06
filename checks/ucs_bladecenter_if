@@ -180,7 +180,7 @@ def parse_ucs_bladecenter_if(info):
     #        [], #  0 ifIndex                   0
     #        [], #  1 ifDescr                   1
     #        [], #  2 ifType                    2
-    #        [], #  3 ifHighSpeed               .. 1000 means 1GBit
+    #        [], #  3 ifHighSpeed               .. 1000 means 1Gbit
     #        [], #  4 ifOperStatus              4
     #        [], #  5 ifHCInOctets              5
     #        [], #  6 ifHCInUcastPkts           6

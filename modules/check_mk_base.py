@@ -1924,19 +1924,19 @@ def get_nic_speed_human_readable(speed):
     try:
         speedi = int(speed)
         if speedi == 10000000:
-            speed = "10 MBit/s"
+            speed = "10 Mbit/s"
         elif speedi == 100000000:
-            speed = "100 MBit/s"
+            speed = "100 Mbit/s"
         elif speedi == 1000000000:
-            speed = "1 GBit/s"
+            speed = "1 Gbit/s"
         elif speed < 1500:
-            speed = "%d Bit/s" % speedi
+            speed = "%d bit/s" % speedi
         elif speed < 1000000:
-            speed = "%.1f KBit/s" % (speedi / 1000.0)
+            speed = "%.1f Kbit/s" % (speedi / 1000.0)
         elif speed < 1000000000:
-            speed = "%.2f MBit/s" % (speedi / 1000000.0)
+            speed = "%.2f Mbit/s" % (speedi / 1000000.0)
         else:
-            speed = "%.2f GBit/s" % (speedi / 1000000000.0)
+            speed = "%.2f Gbit/s" % (speedi / 1000000000.0)
     except:
         pass
     return speed

@@ -1524,7 +1524,7 @@ register_configvar(deprecated,
                       "(and switch ports) the current speed setting of the port will "
                       "automatically be coded as a check parameter into the check. That way the check "
                       "will get warning or critical when speed later changes (for example from "
-                      "100 MBit/s to 10 MBit/s). This setting can later "
+                      "100 Mbit/s to 10 Mbit/s). This setting can later "
                       "by overridden on a per-host and per-port base by defining special check "
                       "parameters via a rule.")))
 

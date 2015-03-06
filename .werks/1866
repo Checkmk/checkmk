@@ -1,0 +1,9 @@
+Title: ibm_imm_fan, ibm_imm_temp: new checks to monitor fans and temp sensors on IBM Servers via the IMM 
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425567845
+Class: feature
+
+

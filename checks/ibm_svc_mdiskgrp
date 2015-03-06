@@ -42,17 +42,17 @@
 
 def ibm_svc_mdiskgrp_to_mb(size):
     if size.endswith("MB"):
-       size = int(float(size.replace("MB", "")))
+       size = float(size.replace("MB", ""))
     elif size.endswith("GB"):
-       size = int(float(size.replace("GB", ""))) * 1024
+       size = float(size.replace("GB", "")) * 1024
     elif size.endswith("TB"):
-       size = int(float(size.replace("TB", ""))) * 1024 * 1024
+       size = float(size.replace("TB", "")) * 1024 * 1024
     elif size.endswith("PB"):
-       size = int(float(size.replace("PB", ""))) * 1024 * 1024 * 1024
+       size = float(size.replace("PB", "")) * 1024 * 1024 * 1024
     elif size.endswith("EB"):
-       size = int(float(size.replace("EB", ""))) * 1024 * 1024 * 1024 * 1024
+       size = float(size.replace("EB", "")) * 1024 * 1024 * 1024 * 1024
     else:
-       size = int(float(size))
+       size = float(size)
     return size
 
 def inventory_ibm_svc_mdiskgrp(info):

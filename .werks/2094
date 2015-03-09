@@ -1,0 +1,9 @@
+Title: Fixed missing agent section when ntpq times out after 5 seconds
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1425911550
+Class: fix
+
+

@@ -739,8 +739,8 @@ def read_autochecks_of(hostname, world="config"):
     for entry in autochecks_raw:
         if len(entry) == 4: # old format where hostname is at the first place
             entry = entry[1:]
-        ct, it, par = entry
-        autochecks.append( (ct, it, compute_check_parameters(hostname, ct, it, par)) )
+        check_type, item, parameters = entry
+        autochecks.append((check_type, item, compute_check_parameters(hostname, check_type, item, parameters)))
     return autochecks
 
 

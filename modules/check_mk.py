@@ -1701,7 +1701,6 @@ def convert_service_ruleset(ruleset):
     g_converted_rulesets_cache[id(ruleset)] = new_rules
     return new_rules
 
-
 # Compute outcome of a service rule set that has an item
 def service_extra_conf(hostname, service, ruleset):
     try:
@@ -1761,49 +1760,6 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
     return False # no match. Do not ignore
 
 
-def intelligent_regex_match(pattern, text):
-    def is_regex(pattern):
-        for c in pattern:
-            if c in '*$|[':
-                return True
-        return False
-
-    def is_infix_string_search(pattern):
-        return pattern.startswith('.*') and not is_regex(pattern[2:])
-
-    def is_exact_match(pattern):
-        return pattern[-1] == '$' and not is_regex(pattern[:-1])
-
-    if pattern == '':
-        return True # empty patterns match always
-
-    # FIXME: Autochecks contain UTF-8 encoded item strings
-    if type(text) == str:
-        text = text.decode('utf-8')
-
-    if is_exact_match(pattern):
-        # Exact string match
-        return pattern[:-1] == text
-
-    elif is_infix_string_search(pattern):
-        # Using regex to search a substring within text
-        return pattern[2:] in text
-
-    elif is_regex(pattern):
-        # Non specific regex. Use real prefix regex matching
-        return regex(pattern).match(text) != None
-
-    else:
-        # prefix string match
-        try:
-            return text.startswith(pattern)
-        except UnicodeDecodeError:
-            # FIXME: items in autochecks might contain umlauts, the strings
-            # are saved as UTF-8 encoded ascii strings. should be saved as
-            # unicode strings in this case or at least converted after reading.
-            return text.startswith(pattern)
-
-
 # Entries in list are hostnames that must equal the hostname.
 # Expressions beginning with ! are negated: if they match,
 # the item is excluded from the list. Expressions beginning
@@ -1849,7 +1805,7 @@ def in_extraconf_hostlist(hostlist, hostname):
                 return not negate
             # Handle Regex. Note: hostname == True -> generic unknown host
             elif use_regex and hostname != True:
-                if intelligent_regex_match(hostentry, hostname):
+                if regex(hostentry).match(hostname) != None:
                     return not negate
         except MKGeneralException:
             if opt_debug:
@@ -1868,7 +1824,7 @@ def in_extraconf_servicelist(servlist, item):
 
     for pattern in servlist:
         negate, pattern = parse_negated(pattern)
-        if intelligent_regex_match(pattern, item):
+        if regex(pattern).match(item) != None:
             g_extraconf_servicelist_cache[cache_id] = not negate
             return not negate
 
@@ -4549,7 +4505,6 @@ def do_update(with_precompile):
         if opt_debug:
             raise
         sys.exit(1)
-
 
 def do_check_nagiosconfig():
     if monitoring_core == 'nagios':

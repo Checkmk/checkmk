@@ -1,0 +1,27 @@
+Title: sansymphony_alerts,sansymphony_pool,sansymphony_ports,sansymphony_serverstatus,sansymphony_virtualdiskstatus: New Checks for Datacore Sansymphony
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425906288
+Class: feature
+
+The new Checks need the agent Plugin sansymphony.ps1 configured with username in password to work.
+
+Prerequisites
+-------------
+1. Datacore SANsymphony V8 or V9 must be installed 
+SANmelody and Sansymphony are not supported.
+
+2. The SANsymphony CMDlets need to be installed on the monitored Datacore Server
+If not installed you need to install the CMDlets with the SANsymphony V installation routine.
+- Enabling of .net 4 Framwork support in PowerShell
+Support for .net 4 must be enabled. To achieve this, create a file with the name powershell.exe.config with the following content:
+
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <startup useLegacyV2RuntimeActivationPolicy="true">
+        <supportedRuntime version="v4.0"/>
+        <supportedRuntime version="v2.0.50727" />
+    </startup>
+</configuration>

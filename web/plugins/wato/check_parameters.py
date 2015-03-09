@@ -6429,34 +6429,33 @@ register_check_parameters(
 
 register_check_parameters(
    subgroup_applications,
-    "datacore_poolallocation",
-    _("Datacore: pool allocation"),
+    "sansymphony_pool",
+    _("Sansymphony: pool allocation"),
     Tuple(
-        help = _("This rule sets the warn and crit levels for the number of allocated pools"),
+        help = _("This rule sets the warn and crit levels for the percentage of allocated pools"),
         elements = [
             Integer(
                 title = _("Warning at"),
-                unit = _("pools"),
+                unit = _("percent"),
                 default_value = 80,
             ),
             Integer(
                 title = _("Critical at"),
-                unit = _("pools"),
+                unit = _("percent"),
                 default_value = 90,
             ),
         ]
     ),
     TextAscii(
         title = _("Name of the pool"),
-        allow_empty = False,
     ),
     "first"
 )
 
 register_check_parameters(
    subgroup_applications,
-    "datacore_alerts",
-    _("Datacore: Number of unacknowlegded alerts"),
+    "sansymphony_alerts",
+    _("Sansymphony: Number of unacknowlegded alerts"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number of unacknowlegded alerts"),
         elements = [

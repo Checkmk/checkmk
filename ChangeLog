@@ -18,6 +18,7 @@
     * 2037 FIX: Inventorize piggy back data even if access to normal agent fails
     * 2016 FIX: Fixed service discovery / monitoring on hosts which have only piggyback data (e.g. ESX VMs)...
     * 2089 FIX: Debug mode shows details about errors in autochecks as expected now
+    * 2093 FIX: Fixed handling of check_mk commandline parameter "-c"
 
     Checks & Agents:
     * 1665 agent_netapp: New special agent for NetApp monitoring via Web-API...

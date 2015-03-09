@@ -424,8 +424,11 @@ def connect_outgoing(connection):
     connection["socket"] = s
 
     try:
-        s.connect(connection["target"])
+        host_name, port = connection["target"]
+        ipaddress = socket.gethostbyname(host_name)
+        s.connect((ipaddress, port))
         connection["state"] = "established"
+        connection["statustext"] = "Successfully connected to %s at port %d" % (ipaddress, port)
     except socket.error, e:
         try:
             errno = e.errno
@@ -434,14 +437,17 @@ def connect_outgoing(connection):
 
         if e.errno == 115: # "Operation now in progress"
             connection["state"] = "connecting"
+            connection["statustext"] = "Trying connecting to %s port %d" % (ipaddress, port)
 
         else:
-            connecting["state"] = "cooldown"
+            connection["state"] = "cooldown"
+            connection["statustext"] = str(e)
             log(WARNING, "Error: cannot create TCP channel to %s:%d: %s" %
                 (connection["target"] + (e,)))
 
     except Exception, e:
-        connecting["state"] = "cooldown"
+        connection["state"] = "cooldown"
+        connection["statustext"] = str(e)
         log(EMERG, "Error: cannot create TCP channel to %s:%d: %s" %
             (connection["target"] + (e,)))
 
@@ -453,13 +459,17 @@ def complete_connections(writable):
                 connection["since"] = time.time()
                 connection["socket"].send("")
                 connection["socket"].setblocking(1)
-                verbose("Successfully connected to %s:%d" % connection["target"])
+                msg = "Successfully connected to %s:%d" % connection["target"]
+                verbose(msg)
                 connection["state"] = "established"
+                connection["statustext"] = msg
             except Exception, e:
                 if opt_debug:
                     raise
-                log(WARNING, "Failed to connect to %s:%d: %s" % (connection["target"] + (e,)))
+                msg = "Failed to connect to %s:%d: %s" % (connection["target"] + (e,))
+                log(WARNING, msg)
                 connection["state"] = "cooldown"
+                connection["statustext"] = msg
 
 
 def accept_new_connections(readable):
@@ -507,11 +517,15 @@ def receive_data(readable):
                         raise
 
                     if str(e):
-                        log(ERR, "Error reading data from %s:%d: %s" % (connection["target"] + (e,)))
+                        msg = "Error reading data from %s:%d: %s" % (connection["target"] + (e,))
+                        log(ERR, msg)
+                    else:
+                        msg = "Error reading data"
+
                     if connection["type"] == "incoming":
                         to_remove.append(connection)
                     else:
-                        close_outgoing_connection(connection)
+                        close_outgoing_connection(connection, msg)
 
     for connection in to_remove:
         g_connections.remove(connection)
@@ -530,10 +544,11 @@ def send_pending_data(writable):
                     connection["outgoing_data"] = connection["outgoing_data"][sent_bytes:]
                     vverbose("Successfully sent %d bytes to %s:%d" % ((sent_bytes,) + connection["target"]))
                 except Exception, e:
-                    log(ERR, "Cannot send data to %s:%d: %s. Regarding connection as dead." % (
-                        connection["target"] + (e,)))
+                    msg = "Cannot send data to %s:%d: %s. Regarding connection as dead." % (
+                        connection["target"] + (e,))
+                    log(ERR, msg)
                     if connection["type"] == "outgoing":
-                        close_outgoing_connection()
+                        close_outgoing_connection(connection, msg)
                     else:
                         to_remove.append(connection)
 
@@ -541,7 +556,7 @@ def send_pending_data(writable):
         g_connections.remove(connection)
 
 
-def close_outgoing_connection(connection):
+def close_outgoing_connection(connection, statustext):
     if "socket" in connection:
         del connection["socket"]
         connection["outgoing_data"] = ""
@@ -549,6 +564,7 @@ def close_outgoing_connection(connection):
         connection["notifications_sent"] = 0
         connection["notifications_received"] = 0
         connection["state"] = "cooldown"
+        connection["statustext"] = statustext
         connection["since"] = time.time()
 
 
@@ -560,8 +576,9 @@ def handle_incoming_data(connection):
         try:
             length = int(data[:10])
         except:
-            log(CRIT, "Bogus message header '%s': should be an int. Closing connection" % (data[:10]))
-            close_outgoing_connection(connection)
+            msg = "Bogus message header '%s': should be an int. Closing connection" % (data[:10])
+            log(CRIT, msg)
+            close_outgoing_connection(connection, msg)
             return
 
         if len(data) >= length + 10: # message complete!
@@ -651,11 +668,13 @@ def handle_heartbeat_timeouts():
             if connection["type"] == "outgoing":
                 ref_time = max(connection.get("last_heartbeat"), connection["since"])
                 if now - ref_time > connection["heartbeat_interval"] + connection["heartbeat_timeout"]:
-                    log(ERR, "No heartbeat from %s:%d for %d seconds! Declaring as dead." % (
-                        connection["target"] + (now - ref_time,)))
+                    msg = "No heartbeat from %s:%d for %d seconds! Declaring as dead." % (
+                        connection["target"] + (now - ref_time,))
+                    log(ERR, msg)
                     del connection["socket"]
                     connection["since"] = now
                     connection["state"] = "cooldown"
+                    connection["statustext"] = msg
 
             # Incoming connections send heartbeats
             else:
@@ -728,6 +747,8 @@ def connection_stats(connection):
     text += "Connection:             %s:%d\n" % connection["target"]
     text += "Type:                   %s\n" % connection["type"]
     text += "State:                  %s\n" % connection["state"]
+    if connection.get("statustext"):
+        text += "Status Message:         %s\n" % connection["statustext"]
     text += "Since:                  %s\n" % format_date(connection["since"])
     text += "Notifications Sent:     %d\n" % connection["notifications_sent"]
     text += "Notifications Received: %d\n" % connection["notifications_received"]

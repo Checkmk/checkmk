@@ -80,7 +80,7 @@ def parse_mknotifyd(info):
             else:
                 if value == "None":
                     value = None
-                elif value and varname not in [ "Type", "State", "Version" ]:
+                elif value and varname not in [ "Type", "State", "Version", "Status Message" ]:
                     value = int(value.split()[0])
                 sub_entry[varname] = value
 
@@ -193,7 +193,7 @@ def check_mknotifyd_connection(item, _no_params, parsed):
         "connecting"  : (2, "Trying to connect"),
     }
 
-    site_name, connection_name = item.split('-')
+    site_name, connection_name = item.split('-', 1)
     if site_name not in parsed:
         raise MKCounterWrapped("No status information about spooler available")
 
@@ -203,6 +203,9 @@ def check_mknotifyd_connection(item, _no_params, parsed):
         # First check state
         state, state_name = states[connection["State"]]
         yield state, state_name
+
+        if "Status Message" in connection:
+            yield 0, connection["Status Message"]
 
         # Show uptime
         if connection["State"] == "established":

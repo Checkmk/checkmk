@@ -2422,16 +2422,16 @@ register_check_parameters(
                    title = _("Operating speed"),
                    help = _("If you use this parameter then the check goes warning if the "
                             "interface is not operating at the expected speed (e.g. it "
-                            "is working with 100MBit/s instead of 1GBit/s.<b>Note:</b> "
+                            "is working with 100Mbit/s instead of 1Gbit/s.<b>Note:</b> "
                             "some interfaces do not provide speed information. In such cases "
                             "this setting is used as the assumed speed when it comes to "
                             "traffic monitoring (see below)."),
                   choices = [
                      ( None,       _("ignore speed") ),
-                     ( 10000000,    "10 MBit/s" ),
-                     ( 100000000,   "100 MBit/s" ),
-                     ( 1000000000,  "1 GBit/s" ),
-                     ( 10000000000, "10 GBit/s" ) ],
+                     ( 10000000,    "10 Mbit/s" ),
+                     ( 100000000,   "100 Mbit/s" ),
+                     ( 1000000000,  "1 Gbit/s" ),
+                     ( 10000000000, "10 Gbit/s" ) ],
                   otherlabel = _("specify manually ->"),
                   explicit = \
                       Integer(title = _("Other speed in bits per second"),
@@ -2458,10 +2458,10 @@ register_check_parameters(
                                  "you can set the assumed speed here."),
                   choices = [
                      ( None,       _("ignore speed") ),
-                     ( 10000000,    "10 MBit/s" ),
-                     ( 100000000,   "100 MBit/s" ),
-                     ( 1000000000,  "1 GBit/s" ),
-                     ( 10000000000, "10 GBit/s" ) ],
+                     ( 10000000,    "10 Mbit/s" ),
+                     ( 100000000,   "100 Mbit/s" ),
+                     ( 1000000000,  "1 Gbit/s" ),
+                     ( 10000000000, "10 Gbit/s" ) ],
                   otherlabel = _("specify manually ->"),
                   default_value = 16000000,
                   explicit = \
@@ -2477,10 +2477,10 @@ register_check_parameters(
                                  "you can set the assumed speed here."),
                   choices = [
                      ( None,       _("ignore speed") ),
-                     ( 10000000,    "10 MBit/s" ),
-                     ( 100000000,   "100 MBit/s" ),
-                     ( 1000000000,  "1 GBit/s" ),
-                     ( 10000000000, "10 GBit/s" ) ],
+                     ( 10000000,    "10 Mbit/s" ),
+                     ( 100000000,   "100 Mbit/s" ),
+                     ( 1000000000,  "1 Gbit/s" ),
+                     ( 10000000000, "10 Gbit/s" ) ],
                   otherlabel = _("specify manually ->"),
                   default_value = 1500000,
                   explicit = \
@@ -7626,7 +7626,7 @@ register_check_parameters(
                     title = _("Assumed link speed"),
                     help = _("If the automatic detection of the link speed does "
                              "not work you can set the link speed here."),
-                    unit = _("GBit/s")
+                    unit = _("Gbit/s")
                 )
             ),
             ("rxcrcs",

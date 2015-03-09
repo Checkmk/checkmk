@@ -386,6 +386,9 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
     except MKSNMPError, e:
         if str(e):
             raise
+    except MKParseFunctionError, e:
+        if opt_debug:
+            raise
 
     if info == None: # No data for this check type
         return []

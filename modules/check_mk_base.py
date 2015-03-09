@@ -42,7 +42,7 @@ import sys
 # to python module names like "random"
 sys.path.pop(0)
 
-import socket, os, time, re, signal, math, tempfile
+import socket, os, time, re, signal, math, tempfile, traceback
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -235,6 +235,13 @@ class MKAgentError(Exception):
     def __str__(self):
         return self.reason
 
+class MKParseFunctionError(Exception):
+    def __init__(self, orig_exception, backtrace):
+        self.orig_exception = orig_exception
+        self.backtrace = backtrace
+    def __str__(self):
+        return str(str(self.orig_exception) + "\n" + self.backtrace)
+
 class MKSNMPError(Exception):
     def __init__(self, reason):
         self.reason = reason
@@ -268,7 +275,14 @@ def apply_parse_function(info, section_name):
     if info != None and section_name in check_info:
         parse_function = check_info[section_name]["parse_function"]
         if parse_function:
-            return parse_function(info)
+            try:
+                return parse_function(info)
+            except Exception, e:
+                if opt_debug:
+                    raise
+                # In case of a failed parse function return the exception instead of
+                # an empty result.
+                raise MKParseFunctionError(e, traceback.format_exc())
     return info
 
 def get_info_for_check(hostname, ipaddress, section_name, max_cachefile_age=None, ignore_check_interval=False):
@@ -1303,6 +1317,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
             g_broken_agent_hosts.add(hostname)
             continue
 
+        except MKParseFunctionError, e:
+            info = e
+
         if info or info == []:
             num_success += 1
             try:
@@ -1315,6 +1332,10 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
                 # Call the actual check function
                 reset_wrapped_counters()
+
+                if isinstance(info, MKParseFunctionError):
+                    raise Exception(str(info))
+
                 result = convert_check_result(check_function(item, params, info), check_uses_snmp(checkname))
                 if last_counter_wrap():
                     raise last_counter_wrap()
@@ -1330,7 +1351,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
             except Exception, e:
                 text = "check failed - please submit a crash report!"
                 try:
-                    import traceback, pprint, tarfile, base64
+                    import pprint, tarfile, base64
                     # Create a crash dump with a backtrace and the agent output.
                     # This is put into a directory per service. The content is then
                     # put into a tarball, base64 encoded and put into the long output
@@ -1887,19 +1908,19 @@ def get_nic_speed_human_readable(speed):
     try:
         speedi = int(speed)
         if speedi == 10000000:
-            speed = "10 MBit/s"
+            speed = "10 Mbit/s"
         elif speedi == 100000000:
-            speed = "100 MBit/s"
+            speed = "100 Mbit/s"
         elif speedi == 1000000000:
-            speed = "1 GBit/s"
+            speed = "1 Gbit/s"
         elif speed < 1500:
-            speed = "%d Bit/s" % speedi
+            speed = "%d bit/s" % speedi
         elif speed < 1000000:
-            speed = "%.1f KBit/s" % (speedi / 1000.0)
+            speed = "%.1f Kbit/s" % (speedi / 1000.0)
         elif speed < 1000000000:
-            speed = "%.2f MBit/s" % (speedi / 1000000.0)
+            speed = "%.2f Mbit/s" % (speedi / 1000000.0)
         else:
-            speed = "%.2f GBit/s" % (speedi / 1000000000.0)
+            speed = "%.2f Gbit/s" % (speedi / 1000000000.0)
     except:
         pass
     return speed

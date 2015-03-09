@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # Create message for HPOpenView
-# This notification plugin forwards the notification to the 
+# This notification plugin forwards the notification to the
 # local HPOpenView instance
 #
 # Note: Some paths are still hardcoded here.
 
 import os, sys, re
 
-def substitute_context(template, context): 
+def substitute_context(template, context):
     # First replace all known variables
     for varname, value in context.items():
         template = template.replace('$'+varname+'$', value)
@@ -39,7 +39,7 @@ def main():
                 severity = state_map[context["SERVICESTATEID"]]
             except:
                 severity = "normal"
-        
+
         # application
         application = "RWWS4.0"
 
@@ -56,7 +56,7 @@ def main():
         node = context['MONITORING_HOST']
 
         # Assemble the command
-        command = "%s severity=%s application=%s object=\"%s\" msg_grp=\"%s\" msg_t=\"%s\" node=%s" % ( 
+        command = "%s severity=%s application=%s object=\"%s\" msg_grp=\"%s\" msg_t=\"%s\" node=%s" % (
                    opcmsg_bin, severity, application, the_object, msg_grp, msg_t, node)
 
         # Execute the command

@@ -117,13 +117,13 @@ if mknotifyd_enabled:
                           columns = 2,
                           elements = [
                               ( "address",
-                                IPv4Address(
-                                    title = _("Address of target notification spooler"),
+                                Hostname(
+                                    title = _("DNS name or IP address of target notification spooler"),
                               )),
                               ( "port",
                                 Integer(
                                     title = _("TCP Port"),
-                                    minvalue = 1024,
+                                    minvalue = 1,
                                     maxvalue = 65535,
                                     default_value = 6555,
                               )),

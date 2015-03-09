@@ -212,7 +212,7 @@ metric_info["fs_used"] = {
 metric_info["fs_provisioning"] = {
     "title" : _("Provisioned filesystem space"),
     "unit"  : "bytes",
-    "color" : "#98f8fa",
+    "color" : "#ff8000",
 }
 
 
@@ -546,12 +546,40 @@ perfometer_info.append(("logarithmic",  ( "proc_creat", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
 perfometer_info.append(("linear",      ( [ "user", "system", "io_wait" ],                               100.0,       None)))
 perfometer_info.append(("linear",      ( [ "util", ],                                                   100.0,       None)))
-# Filesystem check with provisioning
+
+# Filesystem check with over-provisioning
+perfometer_info.append({
+    "type"      : "linear",
+    "condition" : "fs_provisioning(%),100,>",
+    "segments"  : [
+        "fs_used(%)",
+        "100,fs_used(%),-#FFFFFF",
+        "fs_provisioning(%),100.0,-#ffc030",
+    ],
+    "total"     : "fs_provisioning(%)",
+    "label"     : ( "fs_used(%)", "%" ),
+})
+
+# Filesystem check with provisioning, but not over-provisioning
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [
+        "fs_used(%)",
+        "fs_provisioning(%),fs_used(%),-#ffc030",
+    ],
+    "total"     : "100",
+    "label"     : ( "fs_used(%)", "%" ),
+})
+
+# perfometer_info.append(("linear",      ( [ "fs_used(%)", "fs_provisioning(%),100.0,-", ], 200.0, None))) # ("fs_used(%)", "%"))))
+# perfometer_info.append(("linear",      ( [ "fs_used(%)", ], "fs_provisioning(%)", ("fs_used(%)", "%"))))
+# perfometer_info.append(("linear",      ( [ "fs_used(%)", "100.0,fs_used(%),-", ], "fs_provisioning(%)", "fs_used(%)")))
+
 perfometer_info.append(("stacked", [
   ("linear",      ( [ "fs_used(%)" ],     100.0, None)),
-  # ("linear",      ( [ "fs_provisioning(%)" ],     100.0, None)),
   ("logarithmic", ( "fs_provisioning(%)", 100.0, 1.2)),
 ]))
+
 # and without
 perfometer_info.append(("linear",      ( [ "fs_used(%)" ],                                              100.0,       None)))
 

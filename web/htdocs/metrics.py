@@ -30,6 +30,8 @@
 # translated_metrics: Completely parsed and translated into metrics, e.g. { "foo" : { "value" : 17.0, "unit" : { "render" : ... }, ... } }
 # color:              RGB color representation ala HTML, e.g. "#ffbbc3" or "#FFBBC3", len() is always 7!
 # color_rgb:          RGB color split into triple (r, g, b), where r,b,g in (0.0 .. 1.0)
+# unit_name:          The ID of a unit, e.g. "%"
+# unit:               The definition-dict of a unit like in unit_info
 
 import math
 import config, defaults
@@ -92,9 +94,9 @@ def parse_perf_data(perf_data_string, check_command=None):
             i = 0
             while i < len(value) and (isdigit(value[i]) or value[i] in ['.', ',', '-']):
                 i += 1
-            unit = value[i:]
+            unit_name = value[i:]
             value = value[:i]
-            perf_data.append((varname, value, unit, warn, crit, min, max))
+            perf_data.append((varname, value, unit_name, warn, crit, min, max))
     except:
         if config.debug:
             raise
@@ -176,36 +178,58 @@ def translate_metrics(perf_data, check_command):
     return translated_metrics
 
 
-# Evaluates an expression, returns the value and the unit.
-# e.g. "fs_used:max"    -> 12.455, "b"
-# e.g. "fs_used(%)"     -> 17.5,   "%"
-# e.g. "fs_used:max(%)" -> 100.0,  "%"
+# Evaluates an expression, returns a triple of value, unit and color.
+# e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
+# e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
+# e.g. "fs_used:max(%)" -> 100.0,  "%", "#00ffc6",
+# e.g. 123.4            -> 123.4,  "",  None
+# e.g. "123.4#ff0000"   -> 123.4,  "",  "#ff0000",
 def evaluate(expression, translated_metrics):
     if type(expression) in (float, int) or "," not in expression:
         return evaluate_literal(expression, translated_metrics)
     else:
-        return evaluate_rpn(expression, translated_metrics)
+        if "#" in expression:
+            expression, explicit_color = expression.rsplit("#", 1) # drop appended color information
+        else:
+            explicit_color = None
+        value, unit, color = evaluate_rpn(expression, translated_metrics)
+        if explicit_color:
+            color = "#" + explicit_color
+        return value, unit, color
+
 
 # TODO: Do real unit computation, detect non-matching units
 rpn_operators = {
-    "+" : lambda a, b: ((a[0] + b[0]), a[1]),
-    "-" : lambda a, b: ((a[0] - b[0]), a[1]),
-    "*" : lambda a, b: ((a[0] * b[0]), a[1]+b[1]),
-    "/" : lambda a, b: ((a[0] / b[0]), ""),
+    "+"  : lambda a, b: ((a[0] +  b[0]),                a[1],         choose_operator_color(a[2], b[2])),
+    "-"  : lambda a, b: ((a[0] -  b[0]),                a[1],         choose_operator_color(a[2], b[2])),
+    "*"  : lambda a, b: ((a[0] *  b[0]),                a[1],         choose_operator_color(a[2], b[2])),
+    "/"  : lambda a, b: ((a[0] /  b[0]),                "",           choose_operator_color(a[2], b[2])),
+    ">"  : lambda a, b: ((a[0] >  b[0] and 1.0 or 0.0), "",           "#000000"),
+    "<"  : lambda a, b: ((a[0] <  b[0] and 1.0 or 0.0), "",           "#000000"),
+    ">=" : lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), "",           "#000000"),
+    "<=" : lambda a, b: ((a[0] <= b[0] and 1.0 or 0.0), "",           "#000000"),
 }
+
+def choose_operator_color(a, b):
+    if a == None:
+        return b
+    elif b == None:
+        return a
+    else:
+        return render_color(mix_colors(parse_color(a), parse_color(b)))
 
 
 def evaluate_rpn(expression, translated_metrics):
     parts = expression.split(",")
-    stack = [] # stack pairs of (value, unit)
+    stack = [] # stack tuples of (value, unit, color)
     while parts:
         operator_name = parts[0]
         parts = parts[1:]
         if operator_name in rpn_operators:
             if len(stack) < 2:
                 raise MKGeneralException("Syntax error in expression '%s': too few operands" % expression)
-            op1 = stack[-1]
-            op2 = stack[-2]
+            op1 = stack[-2]
+            op2 = stack[-1]
             stack = stack[:-2] + [ rpn_operators[operator_name](op1, op2) ]
         else:
             stack.append(evaluate_literal(operator_name, translated_metrics))
@@ -218,9 +242,13 @@ def evaluate_rpn(expression, translated_metrics):
 
 def evaluate_literal(expression, translated_metrics):
     if type(expression) == int:
-        return expression, "count"
+        return expression, "count", None
+
     elif type(expression) == float:
-        return expression, None
+        return expression, None, None
+
+    elif expression[0].isdigit() or expression[0] == '-':
+        return float(expression), "", None
 
     # TODO: Error handling with useful exceptions
     if expression.endswith("(%)"):
@@ -237,35 +265,18 @@ def evaluate_literal(expression, translated_metrics):
         value = translated_metrics[varname]["value"]
 
     if percent:
-        value = float(value) / translated_metrics[varname]["scalar"]["max"] * 100.0
-        unit = "%"
+        maxvalue = translated_metrics[varname]["scalar"]["max"]
+        if maxvalue != 0:
+           value = 100.0 * float(value) / maxvalue
+        else:
+           value = 0.0
+        unit = unit_info["%"]
 
     else:
         unit = translated_metrics[varname]["unit"]
 
-    return value, unit
-
-
-# e.g. "fs_used:max(%)" -> "fs_used"
-def get_name(expression):
-    if type(expression) in (int, float):
-        return None
-    if expression.endswith("(%)"):
-        expression = expression[:-3]
-    return expression.split(":")[0]
-
-def get_color(expression):
-    name = get_name(expression)
-    if name:
-        return metric_info[name]["color"]
-    else:
-        return "#808080"
-
-def get_unit(expression):
-    if expression.endswith("(%)"):
-        return unit_info["%"]
-    else:
-        return unit_info[metric_info[get_name(expression)]["unit"]]
+    color = metric_info[varname]["color"]
+    return value, unit, color
 
 
 def get_perfometers(translated_metrics):
@@ -276,7 +287,37 @@ def get_perfometers(translated_metrics):
 
 # TODO: We will run into a performance problem here when we
 # have more and more Perf-O-Meter definitions.
+# TODO: remove all tuple-perfometers and use dicts
 def perfometer_possible(perfometer, translated_metrics):
+
+    if type(perfometer) == dict:
+        if perfometer["type"] == "linear":
+            required = perfometer["segments"][:]
+        else:
+            required = [] # TODO: logarithmic, etc.
+        if "label" in perfometer:
+            required.append(perfometer["label"][0])
+        if "total" in perfometer:
+            required.append(perfometer["total"])
+
+        for req in required:
+            try:
+                evaluate(req, translated_metrics)
+            except:
+                return False
+
+        if "condition" in perfometer:
+            try:
+                value, color, unit = evaluate(perfometer["condition"], translated_metrics)
+                if value == 0.0:
+                    return False
+            except:
+                return False
+
+        return True
+
+
+
     perf_type, perf_args = perfometer
 
     if perf_type == "logarithmic":
@@ -324,9 +365,6 @@ def metric_to_text(metric, value=None):
         value = metric["value"]
     return metric["unit"]["render"](value)
 
-def value_to_text(value, unit):
-    return unit_info[unit]["render"](value)
-
 # A few helper function to be used by the definitions
 # 45.1 -> "45.1"
 # 45.0 -> "45"
@@ -357,11 +395,11 @@ def frexp10(x):
 
 # Note if the type of v is integer, then the precision cut
 # down to the precision of the actual number
-def physical_precision(v, precision, unit):
+def physical_precision(v, precision, unit_symbol):
     if v == 0:
         return "%%.%df" % (precision - 1) % v
     elif v < 0:
-        return "-" + physical_precision(-v, precision, unit)
+        return "-" + physical_precision(-v, precision, unit_symbol)
 
     # Splitup in mantissa (digits) an exponent to the power of 10
     # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
@@ -403,7 +441,7 @@ def physical_precision(v, precision, unit):
         places_before_comma = exponent + 1
         places_after_comma = precision - places_before_comma
     value = mantissa * 10**exponent
-    return u"%%.%df %%s%%s" % places_after_comma % (value, scale_symbols[scale], unit)
+    return u"%%.%df %%s%%s" % places_after_comma % (value, scale_symbols[scale], unit_symbol)
 
 
 def metricometer_logarithmic(value, half_value, base, color):
@@ -424,15 +462,60 @@ def metricometer_logarithmic(value, half_value, base, color):
 
 
 def build_perfometer(perfometer, translated_metrics):
+    # TODO: alle nicht-dict Perfometer umstellen
+    if type(perfometer) == dict:
+        if perfometer["type"] == "linear":
+            entry = []
+            stack = [entry]
+
+            summed = 0.0
+
+            for ex in perfometer["segments"]:
+                value, unit, color = evaluate(ex, translated_metrics)
+                summed += value
+
+            if "total" in perfometer:
+                total, unit, color = evaluate(perfometer["total"], translated_metrics)
+            else:
+                total = summed
+
+            if total == 0:
+                entry.append((100.0, "#ffffff"))
+
+            else:
+                for ex in perfometer["segments"]:
+                    value, unit, color = evaluate(ex, translated_metrics)
+                    entry.append((100.0 * value / total, color))
+
+                # Paint rest only, if it is positive and larger than one promille
+                if total - summed > 0.001:
+                    entry.append((100.0 * (total - summed) / total, "#ffffff"))
+
+            # Use unit of first metrics for output of sum. We assume that all
+            # stackes metrics have the same unit anyway
+            if "label" in perfometer:
+                expr, unit_name = perfometer["label"]
+                value, unit, color = evaluate(expr, translated_metrics)
+                if unit_name:
+                    unit = unit_info[unit_name]
+                label = unit["render"](summed)
+            else: # absolute
+                value, unit, color = evaluate(metrics_expressions[0], translated_metrics)
+                label = unit["render"](summed)
+
+            return label, stack
+
+
+
     perfometer_type, definition = perfometer
 
     if perfometer_type == "logarithmic":
         expression, median, exponent = definition
-        value, unit = evaluate(expression, translated_metrics)
-        color = get_color(expression)
-        label = value_to_text(value, unit)
+        value, unit, color = evaluate(expression, translated_metrics)
+        label = unit["render"](value)
         stack = [ metricometer_logarithmic(value, median, exponent, color) ]
 
+    # TODO: das hier fliegt raus
     elif perfometer_type == "linear":
         entry = []
         stack = [entry]
@@ -442,31 +525,36 @@ def build_perfometer(perfometer, translated_metrics):
         summed = 0.0
 
         for ex in metrics_expressions:
-            value, unit = evaluate(ex, translated_metrics)
+            value, unit_name, color = evaluate(ex, translated_metrics)
             summed += value
 
         if total_spec == None:
             total = summed
         else:
-            total, unit = evaluate(total_spec, translated_metrics)
+            total, unit_name, color = evaluate(total_spec, translated_metrics)
 
-        for ex in metrics_expressions:
-            value, unit = evaluate(ex, translated_metrics)
-            color = get_color(ex)
-            entry.append((100.0 * value / total, color))
+        if total == 0:
+            entry.append((100.0, "#ffffff"))
 
-        # Paint rest only, if it is positive and larger than one promille
-        if total - summed > 0.001:
-            entry.append((100.0 * (total - summed) / total, "#ffffff"))
+        else:
+            for ex in metrics_expressions:
+                value, unit_name, color = evaluate(ex, translated_metrics)
+                entry.append((100.0 * value / total, color))
+
+            # Paint rest only, if it is positive and larger than one promille
+            if total - summed > 0.001:
+                entry.append((100.0 * (total - summed) / total, "#ffffff"))
 
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
         if label_expression:
-            expr, unit = label_expression
-            value, unit = evaluate(expr, translated_metrics)
-            label = value_to_text(value, unit)
+            expr, unit_name = label_expression
+            value, unit, color = evaluate(expr, translated_metrics)
+            if unit_name:
+                unit = unit_info[unit_name]
+            label = unit["render"](summed)
         else: # absolute
-            unit = get_unit(metrics_expressions[0])
+            value, unit, color = evaluate(metrics_expressions[0], translated_metrics)
             label = unit["render"](summed)
 
     elif perfometer_type == "stacked":
@@ -615,3 +703,10 @@ def lighten_color(rgb, v):
     def lighten(x, v):
         return 1.0 - ((1.0 - x) * (1.0 - v))
     return tuple([ lighten(x, v) for x in rgb ])
+
+def mix_colors(a, b):
+    return tuple([
+       (ca + cb) / 2.0
+       for (ca, cb)
+       in zip(a, b)
+    ])

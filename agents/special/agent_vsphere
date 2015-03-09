@@ -522,6 +522,9 @@ socket.setdefaulttimeout(opt_timeout)
 def get_agent_info_tcp(hostname):
     output = ""
     try:
+        # TODO: gethostbyname() automatically detects IP addresses and does
+        # *not* contact any nameserver in that case. So the following two
+        # lines of code should not be neccessary:
         if hostname[0] in "123456789":
             ipaddress = hostname
         else:

@@ -53,25 +53,29 @@
 
 def inventory_ibm_svc_portfc(info):
     for line in info:
-        if len(line) in (11, 12, 14) and line[9] == "active":
-            yield line[0], None
+        if len(line) in (11, 12) and line[9] == "active":
+            item = "Port %s" % line[0]
+            yield item, None
+        elif len(line) == 14 and line[9] == "active":
+            item = "Node %s Slot %s Port %s" % (line[5], line[12], line[13])
+            yield item, None
 
 def check_ibm_svc_portfc(item, _no_params, info):
     for line in info:
-        if len(line) in (11, 12, 14):
-            if line[0] == item:
-                fc_port_status = line[9]
+        if ( len(line) in (11, 12) and "Port %s" % line[0] == item) or \
+                ( len(line) == 14 and  "Node %s Slot %s Port %s" % (line[5], line[12], line[13]) ) == item:
+            infotext = "Status: %s, Speed: %s, WWPN: %s" % (line[9], line[4], line[7])
 
-                if fc_port_status == "active":
-                    state = 0
-                else:
-                    state = 2
+            if line[9] == "active":
+                state = 0
+            else:
+                state = 2
 
-                return state, fc_port_status
+            return state, infotext
 
 check_info["ibm_svc_portfc"] = {
     "check_function"        : check_ibm_svc_portfc,
     "inventory_function"    : inventory_ibm_svc_portfc,
-    "service_description"   : "FC Port %s",
+    "service_description"   : "FC %s",
 }
 

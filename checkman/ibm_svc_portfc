@@ -15,7 +15,9 @@ description:
  can be configured by WATO.
 
 item:
- The ID of the FC Port.
+ The item name is "Node <node_id> Slot <adapter_location> Port <adapter_port_id>"
+ or "Port <port_id>" for older versions of the device.
+
 
 inventory:
  Creates one check for every FC Port in the IBM SVC / Storwize V3700 / V7000 device

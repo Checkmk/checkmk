@@ -1,0 +1,10 @@
+Title: ibm_svc_portsas, ibm_svc_portfc: checks now have a more meaningful service description if the device firmware supports it
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1425899308
+Class: feature
+
+Please redo a service discovery
+

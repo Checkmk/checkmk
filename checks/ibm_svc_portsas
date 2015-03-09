@@ -25,10 +25,37 @@
 # Boston, MA 02110-1301 USA.
 
 
+# Example agent output:
+# <<<ibm_svc_portsas:sep(58)>>>
+# 0:1:6Gb:1:node1:500507680305D3C0:online::host:host_controller:0:1
+# 1:2:6Gb:1:node1:500507680309D3C0:online::host:host_controller:0:2
+# 2:3:6Gb:1:node1:50050768030DD3C0:online::host:host_controller:0:3
+# 3:4:6Gb:1:node1:500507680311D3C0:offline:500507680474F03F:none:enclosure:0:4
+# 4:5:N/A:1:node1:500507680315D3C0:offline_unconfigured::none:host_controller:1:1
+# 5:6:N/A:1:node1:500507680319D3C0:offline_unconfigured::none:host_controller:1:2
+# 6:7:N/A:1:node1:50050768031DD3C0:offline_unconfigured::none:host_controller:1:3
+# 7:8:N/A:1:node1:500507680321D3C0:offline_unconfigured::none:host_controller:1:4
+# 8:1:6Gb:2:node2:500507680305D3C1:online::host:host_controller:0:1
+# 9:2:6Gb:2:node2:500507680309D3C1:online::host:host_controller:0:2
+# 10:3:6Gb:2:node2:50050768030DD3C1:online::host:host_controller:0:3
+# 11:4:6Gb:2:node2:500507680311D3C1:offline:500507680474F07F:none:enclosure:0:4
+# 12:5:N/A:2:node2:500507680315D3C1:offline_unconfigured::none:host_controller:1:1
+# 13:6:N/A:2:node2:500507680319D3C1:offline_unconfigured::none:host_controller:1:2
+# 14:7:N/A:2:node2:50050768031DD3C1:offline_unconfigured::none:host_controller:1:3
+# 15:8:N/A:2:node2:500507680321D3C1:offline_unconfigured::none:host_controller:1:4
+
+# the corresponding header line
+#id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
+
 def inventory_ibm_svc_portsas(info):
     for line in info:
-        if len(line) in (10, 12) and line[6] != "offline_unconfigured":
-            yield line[0], {'current_state' : line[6]}
+        if line[6] != "offline_unconfigured":
+            if len(line) == 12:
+                item = "Node %s Slot %s Port %s" % (line[3], line[10], line[11])
+                yield item, {'current_state' : line[6]}
+            elif len(line) == 10:
+                item = "Port %s" % line[0]
+                yield item, {'current_state' : line[6]}
 
 def check_ibm_svc_portsas(item, params, info):
     # This can be removed soon, because the age of the check
@@ -36,7 +63,8 @@ def check_ibm_svc_portsas(item, params, info):
     if not params:
         params = { 'current_state' : 'offline' }
     for line in info:
-        if len(line) in (10, 12) and line[0] == item:
+        if ( len(line) == 12 and item == "Node %s Slot %s Port %s" % (line[3], line[10], line[11]) ) or \
+                ( len(line) == 10 and item == "Port %s" % line[0] ):
             sasport_status = line[6]
             sasport_speed = line[2]
             sasport_type = line[9]
@@ -54,5 +82,5 @@ def check_ibm_svc_portsas(item, params, info):
 check_info["ibm_svc_portsas"] = {
     "check_function"        : check_ibm_svc_portsas,
     "inventory_function"    : inventory_ibm_svc_portsas,
-    "service_description"   : "SAS Port %s",
+    "service_description"   : "SAS %s",
 }

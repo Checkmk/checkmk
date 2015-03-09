@@ -85,7 +85,7 @@ function printcrsdata() {
     echo $crs_version
 
     echo "<<<oracle_crs_voting>>>"
-    $CRSCTL query css votedisk | grep "^ [1-9]"
+    $CRSCTL query css votedisk | grep "^ [0-9]"
 
     ps -e | grep crsd.bin > /dev/null || exit 0
     echo "<<<oracle_crs_res:sep(124)>>>"

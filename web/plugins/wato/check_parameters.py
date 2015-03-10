@@ -6186,7 +6186,7 @@ register_check_parameters(
                         Integer(
                             title = _("Critical System Temperature"),
                             help = _("The critical temperature of the System"),
-                            unit = _("C"),
+                            unit = u"°C",
                             default_value = 55,
                         ),
                         Integer(

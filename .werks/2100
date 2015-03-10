@@ -1,0 +1,9 @@
+Title: if64: check can now impose limits on the number of outgoing and incoming non-unicast packets per second
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425989574
+Class: feature
+
+

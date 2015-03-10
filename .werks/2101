@@ -1,0 +1,9 @@
+Title: cisco_temperature: check can now handle cases when no description of the sensor is available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425991259
+Class: fix
+
+

@@ -847,6 +847,7 @@ def mode_mkeventd_rules(phase):
 
     elif phase == "buttons":
         home_button()
+        changelog_button()
         mkeventd_changes_button()
         if config.may("mkeventd.edit"):
             html.context_button(_("New Rule"), make_link([("mode", "mkeventd_edit_rule")]), "new")
@@ -1091,6 +1092,7 @@ def mode_mkeventd_edit_rule(phase):
 
     elif phase == "buttons":
         home_button()
+        changelog_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
         if clone_nr >= 0:
@@ -1231,14 +1233,28 @@ def log_mkeventd(what, message):
     log_entry(None, what, message, "audit.log")    # central WATO audit log
     log_entry(None, what, message, "mkeventd.log")  # pending changes for mkeventd
 
+    # Mark all sites as "need sync" that have opted for EC replication
+    at_least_one = False
+    if is_distributed():
+        for site_id, site in config.sites.items():
+            if site.get("replicate_ec") and not site_is_local(site_id):
+                update_replication_status(site_id, { "need_sync" : True })
+                remove_sync_snapshot(site_id)
+                at_least_one = True
+
+    if at_least_one:
+        log_entry(None, what, message, "pending.log")
+
+
+
 def mkeventd_changes_button():
     pending = parse_audit_log("mkeventd")
     if len(pending) > 0:
-        buttontext = "%d " % len(pending) + _("Changes")
+        buttontext = "%d " % len(pending) + _("EC-Changes")
         hot = True
         icon = "mkeventd"
     else:
-        buttontext = _("No Changes")
+        buttontext = _("No EC-Changes")
         hot = False
         icon = "mkeventd"
     html.context_button(buttontext, make_link([("mode", "mkeventd_changes")]), icon, hot)
@@ -1331,6 +1347,7 @@ def mode_mkeventd_edit_configvar(phasee):
 
     elif phase == 'buttons':
         home_button()
+        changelog_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
         mkeventd_status_button()
@@ -1370,6 +1387,7 @@ def mode_mkeventd_config(phase):
 
     elif phase == 'buttons':
         home_button()
+        changelog_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
         html.context_button(_("Server Status"), make_link([("mode", "mkeventd_status")]), "status")
@@ -1456,6 +1474,7 @@ def mode_mkeventd_mibs(phase):
 
     elif phase == 'buttons':
         home_button()
+        changelog_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
         mkeventd_status_button()

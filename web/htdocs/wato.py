@@ -90,6 +90,10 @@
 #
 # g_html_head_open -> True, if the HTML head has already been rendered.
 
+# Convention for variable names:
+# site_id --> The id of a site, None for the local site in non-distributed setup
+# site    --> The dictionary datastructure of a site
+
 
 #.
 #   .--Init----------------------------------------------------------------.
@@ -10064,8 +10068,10 @@ def mode_sites(phase):
             table.cell(_("Pers."), _("no"))
 
         # Replication
-        if site.get("replication") == "slave":
+        if site.get("replication"):
             repl = _("Slave")
+            if site.get("replicate_ec"):
+                repl += ", " + _("EC")
         else:
             repl = ""
         table.cell(_("Replication"), repl)
@@ -10353,8 +10359,8 @@ def mode_edit_site(phase):
         repl = html.var("replication")
         if repl == "none":
             repl = None
-        if repl:
-            new_site["replication"] = repl
+        new_site["replication"] = repl
+
 
         multisiteurl = html.var("multisiteurl", "").strip()
         if repl:
@@ -10383,6 +10389,9 @@ def mode_edit_site(phase):
 
         # Allow direct user login
         new_site["user_login"] = html.get_checkbox("user_login")
+
+        # Event Console Replication
+        new_site["replicate_ec"] = html.get_checkbox("replicate_ec")
 
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
@@ -10511,9 +10520,9 @@ def mode_edit_site(phase):
     forms.header(_("Configuration Replication (Distributed WATO)"))
     forms.section(_("Replication method"))
     html.select("replication",
-        [ ("none",  _("No replication with this site")),
+        [ (None,  _("No replication with this site")),
           ("slave", _("Slave: push configuration to this site"))
-        ], site.get("replication", "none"))
+        ], site.get("replication"))
     html.help( _("WATO replication allows you to manage several monitoring sites with a "
                 "logically centralized WATO. Slave sites receive their configuration "
                 "from master sites. <br><br>Note: Slave sites "
@@ -10544,6 +10553,15 @@ def mode_edit_site(phase):
                   label = _('Users are allowed to directly login into the Web GUI of this site'))
     html.help(_('When enabled, this site is marked for synchronisation every time a Web GUI '
                 'related option is changed in the master site.'))
+
+    if config.mkeventd_enabled:
+        forms.section(_('Event Console'), simple=True)
+        html.checkbox('replicate_ec', site.get("replicate_ec", False), label = _("Replicate Event Console configuration to this site"))
+        html.help(_("This option enables the distribution of global settings and rules of the Event Console "
+                    "to the remote site. Any change in the local Event Console settings will mark the site "
+                    "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
+                    "the remote site."))
+
 
     forms.end()
     html.button("save", _("Save"))
@@ -10994,19 +11012,26 @@ def remove_sync_snapshot(siteid):
 def sync_snapshot_file(siteid):
     return defaults.tmp_dir + "/sync-%s.tar.gz" % siteid
 
-def create_sync_snapshot(siteid):
-    path = sync_snapshot_file(siteid)
+def create_sync_snapshot(site_id):
+    path = sync_snapshot_file(site_id)
     if not os.path.exists(path):
         tmp_path = "%s-%s" % (path, id(html))
 
         # Add site-specific global settings.
-        site_tmp_dir = defaults.tmp_dir + "/sync-%s-specific-%s" % (siteid, id(html))
-        create_site_globals_file(siteid, site_tmp_dir)
+        site_tmp_dir = defaults.tmp_dir + "/sync-%s-specific-%s" % (site_id, id(html))
+        create_site_globals_file(site_id, site_tmp_dir)
 
         paths = replication_paths + [("dir", "sitespecific", site_tmp_dir)]
+
+        # Remove Event Console settings, if this site does not want it (might
+        # be removed in some future day)
+        if not config.sites[site_id].get("replicate_ec"):
+            paths = [ e for e in paths if e[1] != "mkeventd" ]
+
         multitar.create(tmp_path, paths)
         shutil.rmtree(site_tmp_dir)
         os.rename(tmp_path, path)
+
 
 def synchronize_site(site, restart):
     if site_is_local(site["id"]):
@@ -11372,8 +11397,15 @@ def automation_push_snapshot():
         # Create rule making this site only monitor our hosts
         create_distributed_wato_file(site_id, mode)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
+
+        # Restart monitoring core, if neccessary
         if html.var("restart", "no") == "yes":
             check_mk_local_automation(config.wato_activation_method)
+
+        # Reload event console, if we have one
+        if config.mkeventd_enabled:
+            mkeventd_reload()
+
         return True
     except Exception, e:
         if config.debug:

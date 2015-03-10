@@ -1,10 +1,21 @@
-Title: ibm_svc_portsas, ibm_svc_portfc: checks now have a more meaningful service description if the device firmware supports it
-Level: 1
-Component: checks
-Compatible: incomp
+Title: Allow replication of Event Console rule and settings
+Level: 2
+Component: ec
+Compatible: compat
 Version: 1.2.7i1
-Date: 1425899308
+Date: 1425995002
 Class: feature
 
-Please redo a service discovery
+The Event Console can now be configured in a distributed setup via WATO. This means
+that if you have several Event Consoles then you can have the settings of the central
+WATO site be replicated to the decentral Event Consoles and their changes being
+activate by using the usual <i>Active Changes</i> mechanism.
 
+In the site configuration there is a new checkbox that activates the
+replication of the configuration.
+
+Notes: In previous versions the configuration was also replicated, but not
+activated.  And you could not select sites for which not to replicate the
+configuration. The local Event Console is being handled like it was. This
+means that changes are activated via the special button in the Event Console
+settings page.

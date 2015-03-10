@@ -1,0 +1,19 @@
+Title: WATO backup: Do not save configuration files which are derived from omd configs
+Component: wato
+State: open
+Date: 2015-03-10 11:30:33
+Targetversion: 1.2.7
+Class: bug
+
+Example:
+Currently the file ~/etc/check_mk/multisite.d/mkeventd.mk can be stored in a WATO backup.
+This file is automatically created by the OMD hook MKEVENTD.
+If the snapshot is extracted on a site with a different configuration setting
+there is a discrepancy, leading to errors....
+
+Fix:
+- OMD generated files are NEVER put into a WATO snapshot
+- When creating a backup, each backup domain stores informations regarding the required
+  OMD configuration into a info file
+- Upon snapshot restore, each backup domain checks if the requirements of this info file
+  are fulfilled. If not, it raises a warning and the snapshot can not get applied.

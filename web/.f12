@@ -12,5 +12,6 @@ echo "$C files copied"
 if [ "$SITE" != - ] ; then
     sudo omd restart $SITE apache
 fi
-echo "Using RemoteControl..."
-echo 'reload' | nc -w 0 localhost 32000 || true
+
+# Gecache PNP-Schablonen entfernen
+sudo rm -f /omd/sites/$SITE/var/check_mk/pnp_template_cache/*

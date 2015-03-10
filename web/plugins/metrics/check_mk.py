@@ -563,6 +563,7 @@ perfometer_info.append({
 # Filesystem check with provisioning, but not over-provisioning
 perfometer_info.append({
     "type"      : "linear",
+    "condition" : "fs_provisioning(%),100,<=",
     "segments"  : [
         "fs_used(%)",
         "fs_provisioning(%),fs_used(%),-#ffc030",
@@ -624,7 +625,7 @@ perfometer_info.append(("logarithmic",  ( "signal_noise", 50.0, 2.0))) # Fallbac
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 graph_info.append({
-    # "title"          : _("Das ist der Titel"),       # Wenn fehlt, dann nimmer er den Titel der ersten Metrik
+    # "title"          : _("Das ist der Titel"),       # Wenn fehlt, dann nimmt er den Titel der ersten Metrik
     # "vertical_label" : _("Das hier kommt vertikal"), # Wenn fehlt, dann nimmt er die Unit der ersten Metrik
     "metrics" : [
         ( "fs_used", "area" ),
@@ -634,10 +635,13 @@ graph_info.append({
 graph_info.append({
     "title"   : _("CPU utilization"),
     "metrics" : [
-        ( "user",    "area" ),
-        ( "system",  "stack" ),
-        ( "io_wait", "stack" ),
-    ]
+        ( "user",                           "area"  ),
+        ( "system",                         "stack" ),
+        ( "io_wait",                        "stack" ),
+        ( "user,system,io_wait,+,+#004080", "line", _("Total") ),
+    ],
+    "mirror_legend" : True,
+    "range" : (0, 100),
 })
 
 graph_info.append({

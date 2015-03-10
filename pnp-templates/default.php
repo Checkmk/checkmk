@@ -1,13 +1,77 @@
 <?php
 
-# Perfdaten plus Hostname, servicedesc, etc. zu
-# lokalem Multisite-Webservice senden. Antwort ist
-# die Liste von allen Graphen, mit jeweils Kommandzeile und Graph-Befehl
-# $opt[], $def[]. Oder None -> Kein Graph vorhanden. Fallback
-# auf PNP-Template. Auch bei HTTP-Fehler Fallbacken.
-# URL, die von localhost
-# bei OMD: /site/....
-# bei Handinstallation localhost:/check_mk/
+# Fetch dynamic PNP template from Check_MK's new metrics system
+
+$omd_site = getenv("OMD_SITE");
+if ($omd_site) {
+    $url = "http://localhost/$omd_site/check_mk/";
+    $template_cache_dir = getenv("OMD_ROOT") . "/var/check_mk/pnp_template_cache";
+}
+else {
+    $url = "http://localhost/check_mk/";
+    $template_cache_dir = "/temp/check_mk_pnp_template_cache";
+}
+
+if (!file_exists($template_cache_dir))
+    mkdir($template_cache_dir, 0755, TRUE);
+
+# Get the list of performance variables and convert them to a string,
+# prepend the command name, # e.g. "check_mk-hr_fs:fs_trend,fs_used,zabelfoobar"
+$perf_vars = Array();
+foreach ($NAME as $i => $n) {
+    $perf_vars[] = $n;
+}
+sort($perf_vars);
+$id_string = $NAGIOS_CHECK_COMMAND . ":" . implode(",", $perf_vars);
+
+# Get current state of previously cached template data for this ID
+$template_cache_path = $template_cache_dir . "/" . $id_string;
+if (file_exists($template_cache_path)) {
+    $age = time() - filemtime($template_cache_path);
+    if ($age < 60 * 10)
+        $cache_state = "uptodate";
+    else
+        $cache_state = "stale";
+}
+else
+    $cache_state = "missing";
+
+# cache file missing or stale: try to fetch live template via HTTP
+if ($cache_state != "uptodate")
+{
+    $fd = @fopen($url . "pnp_template.py?id=" . $id_string, "r");
+    if ($fd) {
+        $data = "";
+        while (!feof($fd)) {
+            $data .= fread($fd, 4096);
+        }
+        fclose($fd);
+        if ($data) {
+            $fd = fopen($template_cache_path, "w");
+            fwrite($fd, $data);
+            fclose($fd);
+            $cache_state = "uptodate";
+        }
+    }
+}
+
+# Now read template information from cache file, if present
+if ($cache_state == "uptodate") {
+    $rrdbase = substr($NAGIOS_XMLFILE, 0, strlen($NAGIOS_XMLFILE) - 4);
+    $fd = fopen($template_cache_path, "r");
+    while (!feof($fd)) {
+        $option_line = trim(fgets($fd));
+        $graph_line = str_replace('$RRDBASE$', $rrdbase, fgets($fd));
+        if ($option_line && $graph_line) {
+            $opt[] = $option_line;
+            $def[] = $graph_line;
+        }
+    }
+    fclose($fd);
+}
+
+
+# PNP Default template starts here...
 #
 # Copyright (c) 2006-2010 Joerg Linge (http://www.pnp4nagios.org)
 # Default Template used if no other template is found.
@@ -15,30 +79,7 @@
 #
 # Define some colors ..
 #
-
-$omd_site = getenv("OMD_SITE");
-if ($omd_site)
-    $url = "http://localhost/$omd_site/check_mk/";
 else
-    $url = "http://localhost/check_mk/";
-
-# TODO: Timeout handling.
-$fd = @fopen($url . "pnp_template.py"
-                  . "?host="          . urlencode($hostname)
-                  . "&service="       . urlencode($servicedesc)
-                  . "&perfdata="      . urlencode($NAGIOS_PERFDATA)
-                  . "&check_command=" . urlencode($NAGIOS_CHECK_COMMAND), "r");
-
-$use_legacy_template = True;
-if ($fd) {
-    while (!feof($fd)) {
-        $use_legacy_template = False;
-        $opt[] = trim(fgets($fd));
-        $def[] = trim(fgets($fd));
-    }
-}
-
-if ($use_legacy_template)
 {
     $_WARNRULE = '#FFFF00';
     $_CRITRULE = '#FF0000';

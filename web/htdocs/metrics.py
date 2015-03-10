@@ -146,12 +146,13 @@ def translate_metrics(perf_data, check_command):
             mi = metric_info[metric_name]
 
         # Optional scaling
-        scale = translation_entry.get("scale", 1)
+        scale = translation_entry.get("scale", 1.0)
 
         new_entry = {
-            "value"     : float_or_int(entry[1]) * scale,
-            "orig_name" : varname,
-            "scalar"    : {},
+            "value"      : float_or_int(entry[1]) * scale,
+            "orig_name"  : varname,
+            "scale"      : scale, # needed for graph definitions
+            "scalar"     : {},
         }
 
         # Add warn, crit, min, max
@@ -604,50 +605,70 @@ def build_perfometer(perfometer, translated_metrics):
 
 
 
+# Called with exactly one variable: the template ID. Example:
+# "check_mk-kernel.util:guest,steal,system,user,wait".
 def page_pnp_template():
-    # Beware! We run in unauthenticated context!!
-    host_name        = html.var("host")
-    service_desc     = html.var("service")
-    perf_data_string = html.var("perfdata")
-    check_command    = html.var("check_command")
 
-    perf_data, check_command = parse_perf_data(perf_data_string, check_command)
-    if not perf_data or not check_command:
-        return
+    template_id = html.var("id")
+    check_command, perf_var_string = template_id.split(":", 1)
+    perf_var_names = perf_var_string.split(",")
 
+    # Fake performance values in order to be able to find possible graphs
+    perf_data = [ ( varname, 1, "", 1, 1, 1, 1 ) for varname in perf_var_names ]
     translated_metrics = translate_metrics(perf_data, check_command)
     if not translated_metrics:
         return # check not supported
 
     graphs = get_graphs(translated_metrics)
+
+    # Collect output in string. In case of an exception to not output
+    # any definitions
+    output = ""
     for graph in graphs:
-        output_pnp_graph(graph, host_name, service_desc, translated_metrics)
+        output += render_pnp_graph(graph, translated_metrics)
+    html.write(output)
 
 
-def output_pnp_graph(graph, host_name, service_desc, translated_metrics):
-    first_metric_info = metric_info[graph["metrics"][0][0]]
 
-    title = graph.get("title")
-    # If the graph does not provide a title then take the title of the
-    # first (and possibly only) metric
-    if title == None:
-        title = first_metric_info["title"]
+def render_pnp_graph(graph, translated_metrics):
 
-    vertical_label = graph.get("vertical_label")
-    # If the graph does not provide a vertical label then take the unit
-    # of the first metric
-    if vertical_label == None:
-        unit_name = first_metric_info["unit"]
-        vertical_label = unit_info[unit_name]["title"]
-
-    html.write("--vertical-label %s --title %s\n" % (
-        quote_shell_string(vertical_label),
-        quote_shell_string(title)))
+    graph_title = None
+    vertical_label = None
 
     rrdgraph_commands = ""
-    for metric_definition in graph["metrics"]:
+
+    # Define one RRD variable for each of the available metrics.
+    # Note: We need to use the original name, not the translated one.
+    for var_name, metrics in translated_metrics.items():
+        rrd = "$RRDBASE$_" + pnp_cleanup(metrics["orig_name"]) + ".rrd"
+        scale = metrics["scale"]
+        if scale != 1.0:
+            rrdgraph_commands += "DEF:%s_UNSCALED=%s:1:MAX " % (var_name, rrd)
+            rrdgraph_commands += "CDEF:%s=%s_UNSCALED,%f,* " % (var_name, var_name, scale)
+
+        else:
+            rrdgraph_commands += "DEF:%s=%s:1:MAX " % (var_name, rrd)
+
+    # Compute width of columns in case of mirrored legend
+
+    mirror_legend = graph.get("mirror_legend")
+    total_width = 89 # characters
+    left_width = max([len(_("Average")), len(_("Maximum")), len(_("Last"))]) + 2
+    column_width = (total_width - left_width) / len(graph["metrics"]) - 2
+
+    # Now add areas and lines to the graph
+    graph_metrics = []
+
+    for nr, metric_definition in enumerate(graph["metrics"]):
         metric_name = metric_definition[0]
         line_type = metric_definition[1] # "line", "area", "stack"
+
+        # Optional title, especially for derived values
+        if len(metric_definition) >= 3:
+            title = metric_definition[2]
+        else:
+            title = ""
+
         if line_type == "line":
             draw_type = "LINE"
             draw_stack = ""
@@ -658,28 +679,98 @@ def output_pnp_graph(graph, host_name, service_desc, translated_metrics):
             draw_type = "AREA"
             draw_stack = ":STACK"
 
-        mi = metric_info[metric_name]
-        unit = unit_info[mi["unit"]]
-        rrd = rrd_path(host_name, service_desc, translated_metrics[metric_name]["orig_name"])
-        rrdgraph_commands += "DEF:%s=%s:1:MAX " % (metric_name, rrd)
-        # TODO: Hier muss noch die Skalierung rein!!!
-        rrdgraph_commands += "%s:%s%s:\"%s\"%s " % (draw_type, metric_name, mi["color"], ("%-20s" % mi["title"]), draw_stack)
-        rrdgraph_commands += "GPRINT:%s:AVERAGE:\"avg\\: %%8.2lf %s\" "  % (metric_name, unit["symbol"].replace("%", "%%"))
-        rrdgraph_commands += "GPRINT:%s:MAX:\"max\\: %%8.2lf %s\" "      % (metric_name, unit["symbol"].replace("%", "%%"))
-        rrdgraph_commands += "GPRINT:%s:LAST:\"last\\: %%8.2lf %s\\n\" " % (metric_name, unit["symbol"].replace("%", "%%"))
+        # User can specify alternative color using a suffixed #aabbcc
+        if '#' in metric_name:
+            metric_name, custom_color = metric_name.split("#", 1)
+        else:
+            custom_color = None
+
+        commands = ""
+        # Derived value with RBN syntax (evaluated by RRDTool!).
+        if "," in metric_name:
+            # We evaluate just in order to get color and unit.
+            # TODO: beware of division by zero. All metrics are set to 1 here.
+            value, unit, color = evaluate(metric_name, translated_metrics)
+
+            # Choose a unique name for the derived variable and compute it
+            commands += "CDEF:DERIVED%d=%s " % (nr , metric_name)
+            metric_name = "DERIVED%d" % nr
+
+        else:
+            mi = metric_info[metric_name]
+            title = mi["title"]
+            color = mi["color"]
+            unit = unit_info[mi["unit"]]
+
+        if custom_color:
+            color = "#" + custom_color
+
+        # Paint the graph itself
+        # TODO: Die Breite des Titels intelligent berechnen. Bei legend = "mirrored" muss man die
+        # Vefügbare Breite ermitteln und aufteilen auf alle Titel
+        if mirror_legend:
+            left_pad = " " * int((column_width - len(title) - 4 + (nr*0.63)))
+            commands += "COMMENT:\"%s\" " % left_pad
+            right_pad = ""
+        else:
+            right_pad = " " * (left_width - len(title))
+        commands += "%s:%s%s:\"%s%s\"%s " % (draw_type, metric_name, color, title, right_pad, draw_stack)
         if line_type == "area":
-            rrdgraph_commands += "LINE:%s%s " % (metric_name, render_color(darken_color(parse_color(mi["color"]), 0.2)))
+            commands += "LINE:%s%s " % (metric_name, render_color(darken_color(parse_color(color), 0.2)))
 
-    html.write(rrdgraph_commands + "\n")
+        unit_symbol = unit["symbol"]
+        if unit_symbol == "%":
+            unit_symbol = "%%"
+        else:
+            unit_symbol = " " + unit_symbol
+
+        graph_metrics.append((metric_name, unit_symbol, commands))
+
+        # Use title and label of this metrics as default for the graph
+        if title and not graph_title:
+            graph_title = title
+        if not vertical_label:
+            vertical_label = unit["title"]
+
+
+    # Now create the rrdgraph commands for all metrics - according to the choosen layout
+    if mirror_legend:
+        for what, title in [ ("command", ""), ("AVERAGE", _("Average") + "\\:"), ("MAX", _("Maximum") + "\\:"), ("LAST", _("Last") + "\\:") ]:
+            rrdgraph_commands += "COMMENT:\"%%-%ds\" " % left_width % title
+            for metric_name, unit_symbol, commands in graph_metrics:
+                if what == "command":
+                    rrdgraph_commands += commands
+                else:
+                    rrdgraph_commands += "GPRINT:%%s:%%s:\"%%%%%d.2lf%%s\" " % column_width % (metric_name, what, unit_symbol)
+            rrdgraph_commands += "COMMENT:\"\\n\" "
+    else:
+        for metric_name, unit_symbol, commands in graph_metrics:
+            rrdgraph_commands += commands
+            rrdgraph_commands += "GPRINT:%s:AVERAGE:\"%%8.2lf%s %s\" "  % (metric_name, unit_symbol, _("average"))
+            rrdgraph_commands += "GPRINT:%s:MAX:\"%%8.2lf%s %s\" "          % (metric_name, unit_symbol, _("max"))
+            rrdgraph_commands += "GPRINT:%s:LAST:\"%%8.2lf%s %s\\n\" "     % (metric_name, unit_symbol, _("last"))
 
 
 
-def rrd_path(host_name, service_desc, varname):
-    return "%s/%s/%s_%s.rrd" % (
-        defaults.rrd_path,
-        pnp_cleanup(host_name),
-        pnp_cleanup(service_desc),
-        pnp_cleanup(varname))
+
+    # Now compute the arguments for the command line of rrdgraph
+    rrdgraph_arguments = ""
+
+    graph_title = graph.get("title", graph_title)
+    vertical_label = graph.get("vertical_label", vertical_label)
+
+    rrdgraph_arguments += "--vertical-label %s --title %s -L 4" % (
+        quote_shell_string(vertical_label),
+        quote_shell_string(title))
+
+    if "range" in graph:
+        rrdgraph_arguments += " -l %f -u %f" % graph["range"]
+
+    # Some styling options, currently hardcoded
+    rrdgraph_arguments += " --color MGRID\"#cccccc\" --color GRID\"#dddddd\" --width=600";
+    rrdgraph_arguments += "\n"
+
+    return rrdgraph_arguments + rrdgraph_commands
 
 
 # "#ff0080" -> (1.0, 0.0, 0.5)

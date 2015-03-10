@@ -1687,6 +1687,9 @@ def convert_pattern(pattern):
     def is_exact_match(pattern):
         return pattern[-1] == '$' and not is_regex(pattern[:-1])
 
+    def is_prefix_match(pattern):
+        return pattern[-2:] == '.*' and not is_regex(pattern[:-2])
+
     if pattern == '':
         return False, lambda txt: True # empty patterns match always
 
@@ -1700,17 +1703,22 @@ def convert_pattern(pattern):
         # Using regex to search a substring within text
         return negate, lambda txt: pattern[2:] in txt
 
+    elif is_prefix_match(pattern):
+        # prefix match with tailing .*
+        pattern = pattern[:-2]
+        return negate, lambda txt: txt[:len(pattern)] == pattern
+
     elif is_regex(pattern):
         # Non specific regex. Use real prefix regex matching
         return negate, lambda txt: regex(pattern).match(txt) != None
 
     else:
-        # prefix match
-        return negate, lambda txt: txt.startswith(pattern)
+        # prefix match without any regex chars
+        return negate, lambda txt: txt[:len(pattern)] == pattern
 
 
 def convert_pattern_list(patterns):
-    return [ convert_pattern(p) for p in patterns ]
+    return tuple([ convert_pattern(p) for p in patterns ])
 
 
 g_hostlist_match_cache = {}
@@ -1763,6 +1771,7 @@ def convert_service_ruleset(ruleset):
 
 
 # Compute outcome of a service rule set that has an item
+g_extraconf_servicelist_cache = {}
 def service_extra_conf(hostname, service, ruleset):
     try:
         ruleset = g_converted_rulesets_cache[id(ruleset)]
@@ -1771,8 +1780,16 @@ def service_extra_conf(hostname, service, ruleset):
 
     entries = []
     for item, hosts, service_matchers in ruleset:
-        if hostname in hosts and in_extraconf_servicelist(service_matchers, service):
-            entries.append(item)
+        if hostname in hosts:
+            cache_id = service_matchers, service
+            try:
+                match = g_extraconf_servicelist_cache[cache_id]
+            except:
+                match = in_extraconf_servicelist(service_matchers, service)
+                g_extraconf_servicelist_cache[cache_id] = match
+
+            if match:
+                entries.append(item)
     return entries
 
 
@@ -1815,9 +1832,16 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
         ruleset = convert_boolean_service_ruleset(ruleset)
 
     for negate, hosts, service_matchers in ruleset:
-        if hostname in hosts and \
-           in_extraconf_servicelist(service_matchers, service_description):
-            return not negate
+        if hostname in hosts:
+            cache_id = service_matchers, service_description
+            try:
+                match = g_extraconf_servicelist_cache[cache_id]
+            except:
+                match = in_extraconf_servicelist(service_matchers, service_description)
+                g_extraconf_servicelist_cache[cache_id] = match
+
+            if match:
+                return not negate
     return False # no match. Do not ignore
 
 
@@ -1875,14 +1899,7 @@ def in_extraconf_hostlist(hostlist, hostname):
     return False
 
 
-g_extraconf_servicelist_cache = {}
 def in_extraconf_servicelist(service_matchers, item):
-    cache_id = tuple(service_matchers), item
-    try:
-        return g_extraconf_servicelist_cache[cache_id]
-    except:
-        pass
-
     for negate, func in service_matchers:
         try:
             result = func(item)
@@ -1893,11 +1910,9 @@ def in_extraconf_servicelist(service_matchers, item):
             result = func(item.decode('utf-8'))
 
         if result:
-            g_extraconf_servicelist_cache[cache_id] = not negate
             return not negate
 
     # no match in list -> negative answer
-    g_extraconf_servicelist_cache[cache_id] = False
     return False
 
 

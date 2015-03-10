@@ -47,8 +47,8 @@
 #   |                              |_|                                     |
 #   '----------------------------------------------------------------------'
 
-def inventory_mysql(info):
-    if len(info) > 200: # should be at least 321 line
+def inventory_mysql(parsed):
+    if len(parsed.keys()) > 200: # should be at least 321 line
         return [(None, {})]
 
 def parse_mysql(info):
@@ -67,6 +67,21 @@ def parse_mysql(info):
         values[varname] = value
     return values
 
+
+def check_mysql_version(_no_item, _no_params, parsed):
+    return 0, "Version: "+parsed['version']
+
+
+check_info['mysql'] = {
+    "check_function"          : check_mysql_version,
+    "inventory_function"      : inventory_mysql,
+    "service_description"     : "MySQL Version",
+    "has_perfdata"            : True,
+    "group"                   : "mysql_sessions",
+    "parse_function"          : parse_mysql,
+}
+
+
 #.
 #   .--Sessions------------------------------------------------------------.
 #   |                ____                _                                 |
@@ -84,11 +99,10 @@ def parse_mysql(info):
 # }
 
 
-def check_mysql_sessions(_no_item, params, info):
-    values = parse_mysql(info)
-    total_sessions = values["Threads_connected"]
-    running_sessions = values["Threads_running"]
-    connections = get_rate("mysql.sessions", time.time(), values["Connections"])
+def check_mysql_sessions(_no_item, params, parsed):
+    total_sessions = parsed["Threads_connected"]
+    running_sessions = parsed["Threads_running"]
+    connections = get_rate("mysql.sessions", time.time(), parsed["Connections"])
 
     infotext = " - %d sessions (%d running), %.2f connections/s" % (
         total_sessions, running_sessions, connections)
@@ -114,7 +128,7 @@ def check_mysql_sessions(_no_item, params, info):
             warn, crit = None, None
         perfdata.append((what, value, warn, crit))
 
-    return (status, ", ".join(infos), perfdata)
+    return status, ", ".join(infos), perfdata
 
 
 check_info['mysql.sessions'] = {
@@ -135,14 +149,12 @@ check_info['mysql.sessions'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_mysql_iostat(info):
-    values = parse_mysql(info)
-    if "Innodb_data_read" in values.keys():
+def inventory_mysql_iostat(parsed):
+    if "Innodb_data_read" in parsed.keys():
         return [(None, {})]
 
-def check_mysql_iostat(item, params, info):
-    values = parse_mysql(info)
-    line = [ None, None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
+def check_mysql_iostat(item, params, parsed):
+    line = [ None, None, parsed["Innodb_data_read"] / 512, parsed["Innodb_data_written"] / 512]
     return check_diskstat_line(time.time(), 'innodb_io', params, line)
 
 
@@ -165,21 +177,19 @@ check_info['mysql.innodb_io'] = {
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def inventory_mysql_connections(info):
-    values = parse_mysql(info)
-    if 'Max_used_connections' in values and 'max_connections' in values:
+def inventory_mysql_connections(parsed):
+    if 'Max_used_connections' in parsed and 'max_connections' in parsed:
         return [(None, {})]
 
-def check_mysql_connections(item, params, info):
-    values = parse_mysql(info)
-    if 'Max_used_connections' not in values:
+def check_mysql_connections(item, params, parsed):
+    if 'Max_used_connections' not in parsed:
         return (3, 'Connection information are missing')
 
     # The maximum number of connections that have been in use simultaneously
     # since the server started.
-    conn = float(values['Max_used_connections'])
+    conn = float(parsed['Max_used_connections'])
     # Maximum number of possible parallel connections
-    max_conn = float(values['max_connections'])
+    max_conn = float(parsed['max_connections'])
 
     perc_used = conn / max_conn * 100
 

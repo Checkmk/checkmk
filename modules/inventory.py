@@ -162,7 +162,7 @@ def do_inv(hostnames):
 
     # No hosts specified: do all hosts and force caching
     if hostnames == None:
-        hostnames = all_active_hosts()
+        hostnames = all_active_realhosts()
         global opt_use_cachefile
         opt_use_cachefile = True
 

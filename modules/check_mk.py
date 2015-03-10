@@ -24,8 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Future convention within all Check_MK modules for variable names:
+#
+# - host_name     - Monitoring name of a host (string)
+# - node_name     - Name of cluster member (string)
+# - cluster_name  - Name of a cluster (string)
+# - realhost_name - Name of a *real* host, not a cluster (string)
+
 import os, sys, socket, time, getopt, glob, re, stat, py_compile, urllib, inspect
 import subprocess
+
+# Hack needed to fix UnicodeWarning in in_extraconf_servicelist(). This
+# can be removed once the encoding of autocheck's items are handled correctly
+# as unicode strings
+import warnings
+warnings.simplefilter("error", UnicodeWarning)
 
 # These variable will be substituted at 'make dist' time
 check_mk_version  = '(inofficial)'
@@ -415,27 +428,45 @@ def output_check_info():
 #   |  Helper functions for dealing with host tags                         |
 #   '----------------------------------------------------------------------'
 
-def strip_tags(host_or_list):
-    if type(host_or_list) == list:
-        return [ strip_tags(h) for h in host_or_list ]
-    else:
-        return host_or_list.split("|")[0]
+def parse_negated(pattern):
+    # Allow negation of pattern with prefix '!'
+    try:
+        negate = pattern[0] == '!'
+        if negate:
+            pattern = pattern[1:]
+    except IndexError:
+        negate = False
+    return negate, pattern
+
+def strip_tags(tagged_hostlist):
+    return map(lambda h: h.split('|', 1)[0], tagged_hostlist)
 
 def tags_of_host(hostname):
-    return hosttags.get(hostname, [])
+    try:
+        return hosttags[hostname]
+    except KeyError:
+        return []
+
+hosttags = {}
+def collect_hosttags():
+    for taggedhost in all_hosts + clusters.keys():
+        parts = taggedhost.split("|")
+        hosttags[parts[0]] = parts[1:]
 
 # Check if a host fullfills the requirements of a tags
 # list. The host must have all tags in the list, except
 # for those negated with '!'. Those the host must *not* have!
 # New in 1.1.13: a trailing + means a prefix match
+g_hosttag_taglist_cache = {}
 def hosttags_match_taglist(hosttags, required_tags):
-    for tag in required_tags:
-        if len(tag) > 0 and tag[0] == '!':
-            negate = True
-            tag = tag[1:]
-        else:
-            negate = False
+    try:
+        cache_id = tuple(hosttags)+tuple(required_tags)
+        return g_hosttag_taglist_cache[cache_id]
+    except KeyError:
+        pass
 
+    for tag in required_tags:
+        negate, tag = parse_negated(tag)
         if tag and tag[-1] == '+':
             tag = tag[:-1]
             matches = False
@@ -445,11 +476,13 @@ def hosttags_match_taglist(hosttags, required_tags):
                     break
 
         else:
-            matches = (tag in hosttags)
+            matches = tag in hosttags
 
         if matches == negate:
+            g_hosttag_taglist_cache[cache_id] = False
             return False
 
+    g_hosttag_taglist_cache[cache_id] = True
     return True
 
 #.
@@ -792,18 +825,14 @@ def get_single_oid(hostname, ipaddress, oid):
 #   '----------------------------------------------------------------------'
 
 
-# clusternames (keys into dictionary) might be tagged :-(
-# names of nodes not!
+# Checks whether or not the given host is a cluster host
 def is_cluster(hostname):
-    for tagged_hostname, nodes in clusters.items():
-        if hostname == strip_tags(tagged_hostname):
-            return True
-    return False
+    return hostname in all_active_clusters()
 
-# If host is node of one or more clusters, return a list of the clusters
-# (untagged). If not, return an empty list.
+# If host is node of one or more clusters, return a list of the cluster host names.
+# If not, return an empty list.
 def clusters_of(hostname):
-    return [ strip_tags(c) for c,n in clusters.items() if hostname in n ]
+    return [ c.split('|', 1)[0] for c,n in clusters.items() if hostname in n ]
 
 # Determine weather a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
@@ -874,15 +903,18 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
             else:
                 g_multihost_checks.append(entry)
 
+    hosttags = tags_of_host(hostname)
+
     def handle_entry(entry):
-        if len(entry) == 3: # from autochecks
+        num_elements = len(entry)
+        if num_elements == 3: # from autochecks
             hostlist = hostname
             checkname, item, params = entry
             tags = []
-        elif len(entry) == 4:
+        elif num_elements == 4:
             hostlist, checkname, item, params = entry
             tags = []
-        elif len(entry) == 5:
+        elif num_elements == 5:
             tags, hostlist, checkname, item, params = entry
             if type(tags) != list:
                 raise MKGeneralException("Invalid entry '%r' in check table. First entry must be list of host tags." %
@@ -892,22 +924,21 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
             raise MKGeneralException("Invalid entry '%r' in check table. It has %d entries, but must have 4 or 5." %
                                      (entry, len(entry)))
 
-        # hostinfo list might be:
+        # hostlist list might be:
         # 1. a plain hostname (string)
         # 2. a list of hostnames (list of strings)
         # Hostnames may be tagged. Tags are removed.
-        # In autochecks there are always single untagged hostnames.
-        # We optimize for that. But: hostlist might be tagged hostname!
+        # In autochecks there are always single untagged hostnames. We optimize for that.
         if type(hostlist) == str:
             if hostlist != hostname:
                 return # optimize most common case: hostname mismatch
-            hostlist = [ strip_tags(hostlist) ]
+            hostlist = [ hostlist ]
         elif type(hostlist[0]) == str:
-            hostlist = strip_tags(hostlist)
+            pass # regular case: list of hostnames
         elif hostlist != []:
             raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname or list of hostnames" % hostlist)
 
-        if hosttags_match_taglist(tags_of_host(hostname), tags) and \
+        if hosttags_match_taglist(hosttags, tags) and \
                in_extraconf_hostlist(hostlist, hostname):
             descr = service_description(checkname, item)
             if service_ignored(hostname, checkname, descr):
@@ -1138,7 +1169,7 @@ def do_update_dns_cache():
 
     if opt_verbose:
         print "Updating DNS cache..."
-    for hostname in all_active_hosts() + all_active_clusters():
+    for hostname in all_active_hosts():
         if opt_verbose:
             sys.stdout.write("%s..." % hostname)
             sys.stdout.flush()
@@ -1262,27 +1293,42 @@ def output_conf_header(outfile):
 # Returns a list of all host names, regardless if currently
 # disabled or monitored on a remote site. Does not return
 # cluster hosts.
-def all_configured_physical_hosts():
+def all_configured_realhosts():
     return strip_tags(all_hosts)
 
 def all_active_hosts():
-    return filter_active_hosts(all_hosts)
+    return all_active_realhosts() + all_active_clusters()
 
+# Returns a list of all host names to be handled by this site
+# hosts of other sitest or disabled hosts are excluded
+all_hosts_untagged = None
+def all_active_realhosts():
+    global all_hosts_untagged
+    if all_hosts_untagged == None:
+        all_hosts_untagged = filter_active_hosts(strip_tags(all_hosts))
+    return all_hosts_untagged
+
+# Returns a list of all cluster host names to be handled by
+# this site hosts of other sitest or disabled hosts are excluded
+all_clusters_untagged = None
 def all_active_clusters():
-    return filter_active_hosts(clusters.keys())
+    global all_clusters_untagged
+    if all_clusters_untagged == None:
+        all_clusters_untagged = filter_active_hosts(strip_tags(clusters.keys()))
+    return all_clusters_untagged
 
 def filter_active_hosts(hostlist):
     if only_hosts == None and distributed_wato_site == None:
-        return strip_tags(hostlist)
+        return hostlist
     elif only_hosts == None:
-        return [ hostname for hostname in strip_tags(hostlist)
+        return [ hostname for hostname in hostlist
                  if host_is_member_of_site(hostname, distributed_wato_site) ]
     elif distributed_wato_site == None:
-        return [ hostname for hostname in strip_tags(hostlist)
+        return [ hostname for hostname in hostlist
                  if in_binary_hostlist(hostname, only_hosts) ]
     else:
         site_tag = "site:" + distributed_wato_site
-        return [ hostname for hostname in strip_tags(hostlist)
+        return [ hostname for hostname in hostlist
                  if in_binary_hostlist(hostname, only_hosts)
                  and host_is_member_of_site(hostname, distributed_wato_site) ]
 
@@ -1295,9 +1341,9 @@ def host_is_member_of_site(hostname, site):
 
 def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
     if with_foreign_hosts:
-        valid_hosts = all_configured_physical_hosts()
+        valid_hosts = all_configured_realhosts()
     else:
-        valid_hosts = all_active_hosts()
+        valid_hosts = all_active_realhosts()
     if with_clusters:
         valid_hosts += all_active_clusters()
     hostlist = []
@@ -1365,7 +1411,7 @@ def parents_of(hostname):
     for p in par:
         ps = p.split(",")
         for pss in ps:
-            if pss in all_hosts_untagged:
+            if pss in all_active_realhosts():
                 used_parents.append(pss)
     return used_parents
 
@@ -1505,7 +1551,8 @@ def service_deps(hostname, servicedesc):
         elif len(entry) == 4:
             depname, tags, hostlist, patternlist = entry
         else:
-            raise MKGeneralException("Invalid entry '%r' in service dependencies: must have 3 or 4 entries" % entry)
+            raise MKGeneralException("Invalid entry '%r' in service dependencies: "
+                                     "must have 3 or 4 entries" % entry)
 
         if hosttags_match_taglist(tags_of_host(hostname), tags) and \
            in_extraconf_hostlist(hostlist, hostname):
@@ -1520,30 +1567,46 @@ def service_deps(hostname, servicedesc):
     return deps
 
 
-def host_extra_conf(hostname, conf):
-    items = []
-    if len(conf) == 1 and conf[0] == "":
+def convert_host_ruleset(ruleset):
+    new_rules = []
+    if len(ruleset) == 1 and ruleset[0] == "":
         sys.stderr.write('WARNING: deprecated entry [ "" ] in host configuration list\n')
 
-    for entry in conf:
-        entry, rule_options = get_rule_options(entry)
+    for rule in ruleset:
+        rule, rule_options = get_rule_options(rule)
         if rule_options.get("disabled"):
             continue
 
-        if len(entry) == 2:
-            item, hostlist = entry
+        num_elements = len(rule)
+        if num_elements == 2:
+            item, hostlist = rule
             tags = []
-        elif len(entry) == 3:
-            item, tags, hostlist = entry
+        elif num_elements == 3:
+            item, tags, hostlist = rule
         else:
-            raise MKGeneralException("Invalid entry '%r' in host configuration list: must have 2 or 3 entries" % (entry,))
+            raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
+                                     "have 2 or 3 entries" % (rule,))
 
-        # Note: hostname may be True. This is an unknown generic host, that has
-        # no tags and that does not match any positive criteria in any rule.
-        if hosttags_match_taglist(tags_of_host(hostname), tags) and \
-           in_extraconf_hostlist(hostlist, hostname):
-            items.append(item)
-    return items
+        # Directly compute set of all matching hosts here, this
+        # will avoid recomputation later
+        new_rules.append((item, all_matching_hosts(tags, hostlist)))
+
+    g_converted_rulesets_cache[id(ruleset)] = new_rules
+    return new_rules
+
+
+def host_extra_conf(hostname, ruleset):
+    try:
+        ruleset = g_converted_rulesets_cache[id(ruleset)]
+    except KeyError:
+        ruleset = convert_host_ruleset(ruleset)
+
+    entries = []
+    for item, hostname_list in ruleset:
+        if hostname in hostname_list:
+            entries.append(item)
+    return entries
+
 
 def host_extra_conf_merged(hostname, conf):
     rule_dict = {}
@@ -1553,9 +1616,9 @@ def host_extra_conf_merged(hostname, conf):
     return rule_dict
 
 def in_binary_hostlist(hostname, conf):
-    # if we have just a list of strings just take it as list of (may be tagged) hostnames
-    if len(conf) > 0 and type(conf[0]) == str:
-        return hostname in strip_tags(conf)
+    # if we have just a list of strings just take it as list of hostnames
+    if conf and type(conf[0]) == str:
+        return hostname in conf
 
     for entry in conf:
         entry, rule_options = get_rule_options(entry)
@@ -1587,7 +1650,8 @@ def in_binary_hostlist(hostname, conf):
                 return not negate
 
         except:
-            MKGeneralException("Invalid entry '%r' in host configuration list: must be tupel with 1 or 2 entries" % (entry,))
+            MKGeneralException("Invalid entry '%r' in host configuration list: "
+                               "must be tupel with 1 or 2 entries" % (entry,))
 
     return False
 
@@ -1603,16 +1667,77 @@ def get_rule_options(entry):
         return entry, {}
 
 
-def all_matching_hosts(tags, hostlist):
-    matching = set([])
-    for taggedhost in all_hosts + clusters.keys():
-        parts = taggedhost.split("|")
-        hostname = parts[0]
-        hosttags = parts[1:]
+# Converts a regex pattern which is used to e.g. match services within Check_MK
+# to a function reference to a matching function which takes one parameter to
+# perform the matching and returns a two item tuple where the first element
+# tells wether or not the pattern is negated and the second element the outcome
+# of the match.
+# This function tries to parse the pattern and return different kind of matching
+# functions which can then be performed faster than just using the regex match.
+def convert_pattern(pattern):
+    def is_regex(pattern):
+        for c in pattern:
+            if c in '*$|[':
+                return True
+        return False
 
-        if hosttags_match_taglist(hosttags, tags) and \
+    def is_infix_string_search(pattern):
+        return pattern.startswith('.*') and not is_regex(pattern[2:])
+
+    def is_exact_match(pattern):
+        return pattern[-1] == '$' and not is_regex(pattern[:-1])
+
+    def is_prefix_match(pattern):
+        return pattern[-2:] == '.*' and not is_regex(pattern[:-2])
+
+    if pattern == '':
+        return False, lambda txt: True # empty patterns match always
+
+    negate, pattern = parse_negated(pattern)
+
+    if is_exact_match(pattern):
+        # Exact string match
+        return negate, lambda txt: pattern[:-1] == txt
+
+    elif is_infix_string_search(pattern):
+        # Using regex to search a substring within text
+        return negate, lambda txt: pattern[2:] in txt
+
+    elif is_prefix_match(pattern):
+        # prefix match with tailing .*
+        pattern = pattern[:-2]
+        return negate, lambda txt: txt[:len(pattern)] == pattern
+
+    elif is_regex(pattern):
+        # Non specific regex. Use real prefix regex matching
+        return negate, lambda txt: regex(pattern).match(txt) != None
+
+    else:
+        # prefix match without any regex chars
+        return negate, lambda txt: txt[:len(pattern)] == pattern
+
+
+def convert_pattern_list(patterns):
+    return tuple([ convert_pattern(p) for p in patterns ])
+
+
+g_hostlist_match_cache = {}
+def all_matching_hosts(tags, hostlist):
+    cache_id = tuple(tags), tuple(hostlist)
+    try:
+        return g_hostlist_match_cache[cache_id]
+    except KeyError:
+        pass
+
+    matching = set([])
+    for hostname in all_active_hosts():
+        # When no tag matching is requested, do not filter by tags. Accept all hosts
+        # and filter only by hostlist
+        if (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)) and \
            in_extraconf_hostlist(hostlist, hostname):
            matching.add(hostname)
+
+    g_hostlist_match_cache[cache_id] = matching
     return matching
 
 g_converted_rulesets_cache = {}
@@ -1624,35 +1749,47 @@ def convert_service_ruleset(ruleset):
         if rule_options.get("disabled"):
             continue
 
-        if len(rule) == 3:
+        num_elements = len(rule)
+        if num_elements == 3:
             item, hostlist, servlist = rule
             tags = []
-        elif len(rule) == 4:
+        elif num_elements == 4:
             item, tags, hostlist, servlist = rule
         else:
-            raise MKGeneralException("Invalid rule '%r' in service configuration list: must have 3 or 4 elements" % (rule,))
+            raise MKGeneralException("Invalid rule '%r' in service configuration "
+                                     "list: must have 3 or 4 elements" % (rule,))
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
         hosts = all_matching_hosts(tags, hostlist)
-        new_rules.append((item, hosts, servlist))
+
+        # And now preprocess the configured patterns in the servlist
+        new_rules.append((item, hosts, convert_pattern_list(servlist)))
 
     g_converted_rulesets_cache[id(ruleset)] = new_rules
-
-
-def serviceruleset_is_converted(ruleset):
-    return id(ruleset) in g_converted_rulesets_cache
+    return new_rules
 
 
 # Compute outcome of a service rule set that has an item
+g_extraconf_servicelist_cache = {}
 def service_extra_conf(hostname, service, ruleset):
-    if not serviceruleset_is_converted(ruleset):
-        convert_service_ruleset(ruleset)
+    try:
+        ruleset = g_converted_rulesets_cache[id(ruleset)]
+    except KeyError:
+        ruleset = convert_service_ruleset(ruleset)
 
     entries = []
-    for item, hosts, servlist in g_converted_rulesets_cache[id(ruleset)]:
-        if hostname in hosts and in_extraconf_servicelist(servlist, service):
-            entries.append(item)
+    for item, hosts, service_matchers in ruleset:
+        if hostname in hosts:
+            cache_id = service_matchers, service
+            try:
+                match = g_extraconf_servicelist_cache[cache_id]
+            except:
+                match = in_extraconf_servicelist(service_matchers, service)
+                g_extraconf_servicelist_cache[cache_id] = match
+
+            if match:
+                entries.append(item)
     return entries
 
 
@@ -1675,42 +1812,56 @@ def convert_boolean_service_ruleset(ruleset):
         elif len(entry) == 3:
             tags, hostlist, servlist = entry
         else:
-            raise MKGeneralException("Invalid entry '%r' in configuration: must have 2 or 3 elements" % (entry,))
+            raise MKGeneralException("Invalid entry '%r' in configuration: "
+                                     "must have 2 or 3 elements" % (entry,))
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
         hosts = all_matching_hosts(tags, hostlist)
-        new_rules.append((negate, hosts, servlist))
+        new_rules.append((negate, hosts, convert_pattern_list(servlist)))
 
     g_converted_rulesets_cache[id(ruleset)] = new_rules
+    return new_rules
 
 
 # Compute outcome of a service rule set that just say yes/no
 def in_boolean_serviceconf_list(hostname, service_description, ruleset):
-    if not serviceruleset_is_converted(ruleset):
-        convert_boolean_service_ruleset(ruleset)
+    try:
+        ruleset = g_converted_rulesets_cache[id(ruleset)]
+    except KeyError:
+        ruleset = convert_boolean_service_ruleset(ruleset)
 
-    for negate, hosts, servlist in g_converted_rulesets_cache[id(ruleset)]:
-        if hostname in hosts and \
-           in_extraconf_servicelist(servlist, service_description):
-            return not negate
+    for negate, hosts, service_matchers in ruleset:
+        if hostname in hosts:
+            cache_id = service_matchers, service_description
+            try:
+                match = g_extraconf_servicelist_cache[cache_id]
+            except:
+                match = in_extraconf_servicelist(service_matchers, service_description)
+                g_extraconf_servicelist_cache[cache_id] = match
+
+            if match:
+                return not negate
     return False # no match. Do not ignore
 
 
-
-# Entries in list are (tagged) hostnames that must equal the
-# (untagged) hostname. Expressions beginning with ! are negated: if
-# they match, the item is excluded from the list. Expressions beginning
+# Entries in list are hostnames that must equal the hostname.
+# Expressions beginning with ! are negated: if they match,
+# the item is excluded from the list. Expressions beginning
 # withy ~ are treated as Regular Expression. Also the three
 # special tags '@all', '@clusters', '@physical' are allowed.
 def in_extraconf_hostlist(hostlist, hostname):
 
     # Migration help: print error if old format appears in config file
-    if len(hostlist) == 1 and hostlist[0] == "":
-        raise MKGeneralException('Invalid empty entry [ "" ] in configuration')
+    # FIXME: When can this be removed?
+    try:
+        if hostlist[0] == "":
+            raise MKGeneralException('Invalid empty entry [ "" ] in configuration')
+    except IndexError:
+        pass # Empty list, no problem.
 
     for hostentry in hostlist:
-        if len(hostentry) == 0:
+        if hostentry == '':
             raise MKGeneralException('Empty hostname in host list %r' % hostlist)
         negate = False
         use_regex = False
@@ -1733,13 +1884,14 @@ def in_extraconf_hostlist(hostlist, hostname):
                 hostentry = hostentry[1:]
                 use_regex = True
 
-        hostentry = strip_tags(hostentry)
+        hostentry = hostentry
         try:
             if not use_regex and hostname == hostentry:
                 return not negate
             # Handle Regex. Note: hostname == True -> generic unknown host
-            elif use_regex and hostname != True and regex(hostentry).match(hostname):
-                return not negate
+            elif use_regex and hostname != True:
+                if regex(hostentry).match(hostname) != None:
+                    return not negate
         except MKGeneralException:
             if opt_debug:
                 raise
@@ -1747,16 +1899,17 @@ def in_extraconf_hostlist(hostlist, hostname):
     return False
 
 
-def in_extraconf_servicelist(list, item):
-    for pattern in list:
-        # Allow negation of pattern with prefix '!'
-        if len(pattern) > 0 and pattern[0] == '!':
-            pattern = pattern[1:]
-            negate = True
-        else:
-            negate = False
+def in_extraconf_servicelist(service_matchers, item):
+    for negate, func in service_matchers:
+        try:
+            result = func(item)
+        except (UnicodeDecodeError, UnicodeWarning), e:
+            # FIXME: items in autochecks might contain umlauts, the strings
+            # are saved as UTF-8 encoded ascii strings. should be saved as
+            # unicode strings in this case or at least converted after reading.
+            result = func(item.decode('utf-8'))
 
-        if regex(pattern).match(item):
+        if result:
             return not negate
 
     # no match in list -> negative answer
@@ -1802,7 +1955,7 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
 
     output_conf_header(outfile)
     if hostnames == None:
-        hostnames = all_hosts_untagged + all_active_clusters()
+        hostnames = all_active_hosts()
 
     for hostname in hostnames:
         create_nagios_config_host(outfile, hostname)
@@ -1896,7 +2049,7 @@ def create_nagios_hostdefs(outfile, hostname):
     if is_clust:
         nodes = nodes_of(hostname)
         for node in nodes:
-            if node not in all_hosts_untagged:
+            if node not in all_active_realhosts():
                 raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, hostname))
         node_ips = [ lookup_ipaddress(h) for h in nodes ]
         alias = "cluster of %s" % ", ".join(nodes)
@@ -2619,7 +2772,7 @@ def get_precompiled_check_table(hostname):
 def precompile_hostchecks():
     if not os.path.exists(precompiled_hostchecks_dir):
         os.makedirs(precompiled_hostchecks_dir)
-    for host in all_active_hosts() + all_active_clusters():
+    for host in all_active_hosts():
         try:
             precompile_hostcheck(host)
         except Exception, e:
@@ -2984,6 +3137,7 @@ skipped_config_variable_names = [
     "timeperiods",
     "host_attributes",
     "all_hosts_untagged",
+    "all_clusters_untagged",
     "extra_service_conf",
     "extra_host_conf",
     "extra_nagios_conf",
@@ -3719,8 +3873,8 @@ def do_restore(tarname):
 
 
 def do_flush(hosts):
-    if len(hosts) == 0:
-        hosts = all_active_hosts() + all_active_clusters()
+    if not hosts:
+        hosts = all_active_hosts()
     for host in hosts:
         sys.stdout.write("%-20s: " % host)
         sys.stdout.flush()
@@ -3807,7 +3961,7 @@ def do_flush(hosts):
 # option --list-hosts
 def list_all_hosts(hostgroups):
     hostlist = []
-    for hn in all_active_hosts() + all_active_clusters():
+    for hn in all_active_hosts():
         if len(hostgroups) == 0:
             hostlist.append(hn)
         else:
@@ -3821,7 +3975,7 @@ def list_all_hosts(hostgroups):
 # Same for host tags, needed for --list-tag
 def list_all_hosts_with_tags(tags):
     hosts = []
-    for h in all_active_hosts() + all_active_clusters():
+    for h in all_active_hosts():
         if hosttags_match_taglist(tags_of_host(h), tags):
             hosts.append(h)
     return hosts
@@ -3950,7 +4104,7 @@ def do_snmpwalk_on(hostname, filename):
 
 def do_snmpget(oid, hostnames):
     if len(hostnames) == 0:
-        for host in all_active_hosts():
+        for host in all_active_realhosts():
             if is_snmp_host(host):
                 hostnames.append(host)
 
@@ -4044,7 +4198,7 @@ def show_paths():
 
 def dump_all_hosts(hostlist):
     if hostlist == []:
-        hostlist = all_hosts_untagged + all_active_clusters()
+        hostlist = all_active_hosts()
     hostlist.sort()
     for hostname in hostlist:
         dump_host(hostname)
@@ -4435,7 +4589,6 @@ def do_update(with_precompile):
             raise
         sys.exit(1)
 
-
 def do_check_nagiosconfig():
     if monitoring_core == 'nagios':
         command = nagios_binary + " -vp "  + nagios_config_file + " 2>&1"
@@ -4569,7 +4722,7 @@ def lock_objects_file():
 def do_donation():
     donate = []
     cache_files = os.listdir(tcp_cache_dir)
-    for host in all_hosts_untagged:
+    for host in all_active_realhosts():
         if in_binary_hostlist(host, donation_hosts):
             for f in cache_files:
                 if f == host or f.startswith("%s." % host):
@@ -4600,7 +4753,7 @@ def find_bin_in_path(prog):
 def do_scan_parents(hosts):
     global max_num_processes
     if len(hosts) == 0:
-        hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_hosts_untagged)
+        hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_active_realhosts())
 
     found = []
     parent_hosts = []
@@ -4852,7 +5005,7 @@ def ip_to_hostname(ip):
     global ip_to_hostname_cache
     if ip_to_hostname_cache == None:
         ip_to_hostname_cache = {}
-        for host in all_hosts_untagged:
+        for host in all_active_realhosts():
             try:
                 ip_to_hostname_cache[lookup_ipaddress(host)] = host
             except:
@@ -4924,7 +5077,9 @@ def copy_globals():
                             "g_check_table_cache", "g_singlehost_checks",
                             "g_nodesof_cache", "g_compiled_regexes", "vars_before_config",
                             "g_initial_times", "g_keepalive_initial_memusage",
-                            "g_dns_cache", "g_ip_lookup_cache", "g_converted_rulesets_cache" ] \
+                            "g_dns_cache", "g_ip_lookup_cache", "g_converted_rulesets_cache",
+                            "g_extraconf_servicelist_cache", "g_hostlist_match_cache",
+                            "g_hosttag_taglist_cache" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
             global_saved[varname] = copy.copy(value)
     return global_saved
@@ -5243,20 +5398,11 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
             else:
                 interactive_abort("Cannot read in configuration file %s: %s" % (_f, e))
 
-    # Strip off host tags from the list of all_hosts.  Host tags can be
-    # appended to the hostnames in all_hosts, separated by pipe symbols,
-    # e.g. "zbghlnx04|bgh|linux|test" and are stored in a separate
-    # dictionary called 'hosttags'
-    global hosttags, all_hosts_untagged
-    hosttags = {}
-    for taggedhost in all_hosts + clusters.keys():
-        parts = taggedhost.split("|")
-        hosttags[parts[0]] = parts[1:]
-    all_hosts_untagged = all_active_hosts()
+    collect_hosttags()
 
     # Sanity check for duplicate hostnames
     seen_hostnames = set([])
-    for hostname in strip_tags(all_hosts + clusters.keys()):
+    for hostname in all_active_hosts():
         if hostname in seen_hostnames:
             sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
             sys.exit(3)
@@ -5310,7 +5456,8 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
     vars_after_config = all_nonfunction_vars()
     ignored_variables = set(['vars_before_config', 'parts',
                              'hosttags' ,'seen_hostnames',
-                             'all_hosts_untagged' ,'taggedhost' ,'hostname'])
+                             'all_hosts_untagged', 'all_clusters_untagged',
+                             'taggedhost' ,'hostname'])
     errors = 0
     for name in vars_after_config:
         if name not in ignored_variables and name not in vars_before_config:
@@ -5394,7 +5541,7 @@ def compute_check_parameters(host, checktype, item, params):
     # Get parameters configured via check_parameters
     entries += service_extra_conf(host, descr, check_parameters)
 
-    if len(entries) > 0:
+    if entries:
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:
             if type(params) == dict and type(entry) == dict:

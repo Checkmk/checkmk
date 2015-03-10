@@ -24,6 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Future convention within all Check_MK modules for variable names:
+#
+# - host_name     - Monitoring name of a host (string)
+# - node_name     - Name of cluster member (string)
+# - cluster_name  - Name of a cluster (string)
+# - realhost_name - Name of a *real* host, not a cluster (string)
+
 import os, sys, socket, time, getopt, glob, re, stat, py_compile, urllib, inspect
 import subprocess
 
@@ -1156,7 +1163,7 @@ def do_update_dns_cache():
 
     if opt_verbose:
         print "Updating DNS cache..."
-    for hostname in all_active_hosts_and_clusters():
+    for hostname in all_active_hosts():
         if opt_verbose:
             sys.stdout.write("%s..." % hostname)
             sys.stdout.flush()
@@ -1280,16 +1287,16 @@ def output_conf_header(outfile):
 # Returns a list of all host names, regardless if currently
 # disabled or monitored on a remote site. Does not return
 # cluster hosts.
-def all_configured_physical_hosts():
+def all_configured_realhosts():
     return strip_tags(all_hosts)
 
-def all_active_hosts_and_clusters():
-    return all_active_hosts() + all_active_clusters()
+def all_active_hosts():
+    return all_active_realhosts() + all_active_clusters()
 
 # Returns a list of all host names to be handled by this site
 # hosts of other sitest or disabled hosts are excluded
 all_hosts_untagged = None
-def all_active_hosts():
+def all_active_realhosts():
     global all_hosts_untagged
     if all_hosts_untagged == None:
         all_hosts_untagged = filter_active_hosts(strip_tags(all_hosts))
@@ -1328,9 +1335,9 @@ def host_is_member_of_site(hostname, site):
 
 def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
     if with_foreign_hosts:
-        valid_hosts = all_configured_physical_hosts()
+        valid_hosts = all_configured_realhosts()
     else:
-        valid_hosts = all_active_hosts()
+        valid_hosts = all_active_realhosts()
     if with_clusters:
         valid_hosts += all_active_clusters()
     hostlist = []
@@ -1398,7 +1405,7 @@ def parents_of(hostname):
     for p in par:
         ps = p.split(",")
         for pss in ps:
-            if pss in all_active_hosts():
+            if pss in all_active_realhosts():
                 used_parents.append(pss)
     return used_parents
 
@@ -1655,16 +1662,14 @@ def get_rule_options(entry):
 
 g_hostlist_match_cache = {}
 def all_matching_hosts(tags, hostlist):
-    cache_id = tuple(tags)+tuple(hostlist)
+    cache_id = tuple(tags), tuple(hostlist)
     try:
         return g_hostlist_match_cache[cache_id]
     except KeyError:
         pass
 
     matching = set([])
-    # FIXME: lm: replaced all_hosts + clusters.keys() with all_active_hosts_and_clusters()
-    # because I think we only need to active hosts/clusters here!
-    for hostname in all_active_hosts_and_clusters():
+    for hostname in all_active_hosts():
         # When no tag matching is requested, do not filter by tags. Accept all hosts
         # and filter only by hostlist
         if (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)) and \
@@ -1816,7 +1821,7 @@ def in_extraconf_hostlist(hostlist, hostname):
 
 g_extraconf_servicelist_cache = {}
 def in_extraconf_servicelist(servlist, item):
-    cache_id = tuple(servlist) + (item,)
+    cache_id = tuple(servlist), item
     try:
         return g_extraconf_servicelist_cache[cache_id]
     except:
@@ -1872,7 +1877,7 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
 
     output_conf_header(outfile)
     if hostnames == None:
-        hostnames = all_active_hosts_and_clusters()
+        hostnames = all_active_hosts()
 
     for hostname in hostnames:
         create_nagios_config_host(outfile, hostname)
@@ -1966,7 +1971,7 @@ def create_nagios_hostdefs(outfile, hostname):
     if is_clust:
         nodes = nodes_of(hostname)
         for node in nodes:
-            if node not in all_active_hosts():
+            if node not in all_active_realhosts():
                 raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, hostname))
         node_ips = [ lookup_ipaddress(h) for h in nodes ]
         alias = "cluster of %s" % ", ".join(nodes)
@@ -2689,7 +2694,7 @@ def get_precompiled_check_table(hostname):
 def precompile_hostchecks():
     if not os.path.exists(precompiled_hostchecks_dir):
         os.makedirs(precompiled_hostchecks_dir)
-    for host in all_active_hosts_and_clusters():
+    for host in all_active_hosts():
         try:
             precompile_hostcheck(host)
         except Exception, e:
@@ -3791,7 +3796,7 @@ def do_restore(tarname):
 
 def do_flush(hosts):
     if not hosts:
-        hosts = all_active_hosts_and_clusters()
+        hosts = all_active_hosts()
     for host in hosts:
         sys.stdout.write("%-20s: " % host)
         sys.stdout.flush()
@@ -3878,7 +3883,7 @@ def do_flush(hosts):
 # option --list-hosts
 def list_all_hosts(hostgroups):
     hostlist = []
-    for hn in all_active_hosts_and_clusters():
+    for hn in all_active_hosts():
         if len(hostgroups) == 0:
             hostlist.append(hn)
         else:
@@ -3892,7 +3897,7 @@ def list_all_hosts(hostgroups):
 # Same for host tags, needed for --list-tag
 def list_all_hosts_with_tags(tags):
     hosts = []
-    for h in all_active_hosts_and_clusters():
+    for h in all_active_hosts():
         if hosttags_match_taglist(tags_of_host(h), tags):
             hosts.append(h)
     return hosts
@@ -4021,7 +4026,7 @@ def do_snmpwalk_on(hostname, filename):
 
 def do_snmpget(oid, hostnames):
     if len(hostnames) == 0:
-        for host in all_active_hosts():
+        for host in all_active_realhosts():
             if is_snmp_host(host):
                 hostnames.append(host)
 
@@ -4115,7 +4120,7 @@ def show_paths():
 
 def dump_all_hosts(hostlist):
     if hostlist == []:
-        hostlist = all_active_hosts_and_clusters()
+        hostlist = all_active_hosts()
     hostlist.sort()
     for hostname in hostlist:
         dump_host(hostname)
@@ -4639,7 +4644,7 @@ def lock_objects_file():
 def do_donation():
     donate = []
     cache_files = os.listdir(tcp_cache_dir)
-    for host in all_active_hosts():
+    for host in all_active_realhosts():
         if in_binary_hostlist(host, donation_hosts):
             for f in cache_files:
                 if f == host or f.startswith("%s." % host):
@@ -4670,7 +4675,7 @@ def find_bin_in_path(prog):
 def do_scan_parents(hosts):
     global max_num_processes
     if len(hosts) == 0:
-        hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_active_hosts())
+        hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_active_realhosts())
 
     found = []
     parent_hosts = []
@@ -4922,7 +4927,7 @@ def ip_to_hostname(ip):
     global ip_to_hostname_cache
     if ip_to_hostname_cache == None:
         ip_to_hostname_cache = {}
-        for host in all_active_hosts():
+        for host in all_active_realhosts():
             try:
                 ip_to_hostname_cache[lookup_ipaddress(host)] = host
             except:
@@ -5319,7 +5324,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
 
     # Sanity check for duplicate hostnames
     seen_hostnames = set([])
-    for hostname in all_active_hosts_and_clusters():
+    for hostname in all_active_hosts():
         if hostname in seen_hostnames:
             sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
             sys.exit(3)

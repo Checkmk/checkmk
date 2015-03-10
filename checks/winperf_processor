@@ -42,16 +42,22 @@ def inventory_winperf_util(info):
 # params: levels for warn / crit in percentage
 def check_winperf_util(_no_item, params, info):
     if not info:
-        return 3, "Got no information from agent"
+        yield 3, "Got no information from agent"
+        return
+
     this_time = int(float(info[0][0]))
 
+    what_map = { "-232": "util",
+                  "-96": "user",
+                  "-94": "privileged"}
     for line in info[1:]:
-        if line[0] == '-232':
+        if line[0] in what_map:
+            what = what_map[line[0]]
             # Windows sends one counter for each CPU plus one counter that
             # sums up to total (called _Total). We only need that last value.
             ticks = int(line[-2])
             num_cpus = len(line) - 3
-            ticks_per_sec = get_rate("winperf_util", this_time, ticks, onwrap = RAISE)
+            ticks_per_sec = get_rate("winperf_util.%s" % what, this_time, ticks, onwrap = RAISE)
             # We get the value of the PERF_100NSEC_TIMER_INV here.
             # This counter type shows the average percentage of active time observed
             # during the sample interval. This is an inverse counter. Counters of this
@@ -60,7 +66,11 @@ def check_winperf_util(_no_item, params, info):
             #
             # 1 tick = 100ns, convert to seconds
             cpusecs_per_sec = ticks_per_sec / 10000000.0
-            used_perc = 100.0 * (1 - cpusecs_per_sec)
+
+            if what == "util":
+                used_perc = 100.0 * (1 - cpusecs_per_sec)
+            else:
+                used_perc = 100.0 * cpusecs_per_sec
 
             # Due to timeing invariancies the measured level can become > 100%.
             # This makes users unhappy, so cut it off.
@@ -69,12 +79,16 @@ def check_winperf_util(_no_item, params, info):
             elif used_perc > 100:
                 used_perc = 100
 
-            state, infotext, perfdata = check_cpu_util(used_perc, params, this_time)
-            perfdata[0] = perfdata[0][:5] + (num_cpus,)
-            infotext += ", %d CPUs" % num_cpus
-            return state, infotext, perfdata
+            if what == "util":
+                state, infotext, perfdata = check_cpu_util(used_perc, params, this_time)
+                perfdata[0] = perfdata[0][:5] + (num_cpus,)
+                yield state, infotext, perfdata
+            elif what == "user":
+                yield 0, "%s perc: %.1f %%" % (what, used_perc), [(what, used_perc)]
+            else: # privileged
+                yield 0, "%s perc: %.1f %%" % (what, used_perc)
 
-    return (3, "counter for CPU (6) not found")
+    yield 0, "%d CPUs" % num_cpus
 
 
 check_info["winperf_processor.util"] = {

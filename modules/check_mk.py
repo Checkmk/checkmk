@@ -34,6 +34,12 @@
 import os, sys, socket, time, getopt, glob, re, stat, py_compile, urllib, inspect
 import subprocess
 
+# Hack needed to fix UnicodeWarning in in_extraconf_servicelist(). This
+# can be removed once the encoding of autocheck's items are handled correctly
+# as unicode strings
+import warnings
+warnings.simplefilter("error", UnicodeWarning)
+
 # These variable will be substituted at 'make dist' time
 check_mk_version  = '(inofficial)'
 
@@ -1881,7 +1887,6 @@ def in_extraconf_servicelist(service_matchers, item):
         try:
             result = func(item)
         except (UnicodeDecodeError, UnicodeWarning), e:
-            print 'catched', type(e), item
             # FIXME: items in autochecks might contain umlauts, the strings
             # are saved as UTF-8 encoded ascii strings. should be saved as
             # unicode strings in this case or at least converted after reading.

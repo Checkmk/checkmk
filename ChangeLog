@@ -119,6 +119,7 @@
     * 1226 mysql: New check to show the version of the mysql deamon
     * 2100 if64: check can now impose limits on the number of outgoing and incoming non-unicast packets per second
     * 1227 mysql_ping: New Check to detect misconfiguration of the mk_mysql plugin
+    * 2102 mbg_lantime_ng_fan, mbg_lantime_ng_state, mbg_lantime_state: new checks for Meinberg LANTIME Clocks supporting the new MBG-LANTIME-NG-MIB
     * 1457 FIX: logins: new check renamed from "users" check...
             NOTE: Please refer to the migration notes!
     * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...

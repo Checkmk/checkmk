@@ -4961,7 +4961,7 @@ register_rule(
     group + '/' + subgroup_storage,
     "diskstat_inventory",
     ListChoice(
-        title = _("Inventory mode for Disk IO check"),
+        title = _("Discovery mode for Disk IO check"),
         help = _("This rule controls which and how many checks will be created "
                  "for monitoring individual physical and logical disks."),
         choices = [
@@ -5020,7 +5020,7 @@ register_rule(group + '/' + subgroup_networking,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "winperf_msx_queues_inventory",
-    title     = _('MS Exchange Message Queues Inventory'),
+    title     = _('MS Exchange Message Queues Discovery'),
     help      = _('Per default the offsets of all Windows performance counters are preconfigured in the check. '
                   'If the format of your counters object is not compatible then you can adapt the counter '
                   'offsets manually.'),
@@ -6099,8 +6099,8 @@ register_check_parameters(
                Tuple(
                    title = _("Levels on trends in degrees Celsius per time range"),
                    elements = [
-                       Integer(title = _("Warning at"), unit = _(u"°C / range"), default_value = 5),
-                       Integer(title = _("Critical at"), unit = _(u"°C / range"), default_value = 10)
+                       Integer(title = _("Warning at"), unit = u"°C / " + _("range"), default_value = 5),
+                       Integer(title = _("Critical at"), unit = u"°C / " + _("range"), default_value = 10)
                    ]
                 )
             ),
@@ -6186,7 +6186,7 @@ register_check_parameters(
                         Integer(
                             title = _("Critical System Temperature"),
                             help = _("The critical temperature of the System"),
-                            unit = _("C"),
+                            unit = u"°C",
                             default_value = 55,
                         ),
                         Integer(

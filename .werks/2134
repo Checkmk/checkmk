@@ -1,0 +1,11 @@
+Title: winperf_phydisk: allow device to appear more than one time in agent output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426000114
+Class: feature
+
+This can e.g. be the case in Windows clusters, where the drive letter <tt>E:</tt> appears
+three times. The check now adds up all counters of the three devices - just like in the
+summary check.

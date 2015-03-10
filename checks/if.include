@@ -422,6 +422,12 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
     else:
         err_warn, err_crit = None, None
 
+    # broadcast storm detection is turned off by default
+    if "nucasts" in params:
+        nucast_warn, nucast_crit = params["nucasts"]
+    else:
+        nucast_warn, nucast_crit = None, None
+
     # Traffic checking might be turned off
     if "traffic" in params:
         bw_warn_param, bw_crit_param = params["traffic"]
@@ -595,13 +601,13 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
             for name, counter, warn, crit, mmin, mmax in [
                 ( "in",        ifInOctets, bw_warn_in, bw_crit_in, 0, speed_b_in),
                 ( "inucast",   inucast, None, None, None, None),
-                ( "innucast",  saveint(inmcast) + saveint(inbcast), None, None, None, None),
+                ( "innucast",  saveint(inmcast) + saveint(inbcast), nucast_warn, nucast_crit, None, None),
                 ( "indisc",    ifInDiscards, None, None, None, None),
                 ( "inerr",     ifInErrors, err_warn, err_crit, None, None),
 
                 ( "out",       ifOutOctets, bw_warn_out, bw_crit_out, 0, speed_b_out),
                 ( "outucast",  outucast, None, None, None, None),
-                ( "outnucast", saveint(outmcast) + saveint(outbcast), None, None, None, None),
+                ( "outnucast", saveint(outmcast) + saveint(outbcast), nucast_warn, nucast_crit, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
                 ( "outerr",    ifOutErrors, err_warn, err_crit, None, None) ]:
 
@@ -636,9 +642,10 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                     else:
                         return "%s/s" % get_bytes_human_readable(value)
 
-                for what, errorrate, okrate, traffic, speed, bw_warn, bw_crit, bw_warn_min, bw_crit_min in \
-                   [ ("in",  rates[4], rates[1] + rates[2], rates[0], speed_in, bw_warn_in, bw_crit_in, bw_warn_min_in, bw_crit_min_in),
-                     ("out", rates[9], rates[6] + rates[7], rates[5], speed_out, bw_warn_out, bw_crit_out, bw_warn_min_out, bw_crit_min_out) ]:
+                # loop over incoming and outgoing traffic
+                for what, errorrate, urate, nurate, traffic, speed, bw_warn, bw_crit, bw_warn_min, bw_crit_min in \
+                   [ ("in",  rates[4], rates[1], rates[2], rates[0], speed_in, bw_warn_in, bw_crit_in, bw_warn_min_in, bw_crit_min_in),
+                     ("out", rates[9], rates[6], rates[7], rates[5], speed_out, bw_warn_out, bw_crit_out, bw_warn_min_out, bw_crit_min_out) ]:
 
                     infotext += ", %s: %s" % (what, format_value(traffic))
 
@@ -671,9 +678,10 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                         state = max(state, 1)
                         infotext += ' (!) >= ' + format_value(bw_warn_min)
 
-                    pacrate = okrate + errorrate
+                    # check percentage of error packets
+                    pacrate = urate + nurate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
-                        errperc = 100.0 * errorrate / (okrate + errorrate)
+                        errperc = 100.0 * errorrate / pacrate
 
                         if errperc > 0:
                             infotext += ", %s-errors: %.2f%%" % (what, errperc)
@@ -684,6 +692,17 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                         elif err_warn != None and errperc >= err_warn:
                             state = max(state, 1)
                             infotext += "(!) >= " + str(err_warn)
+
+                    # check rate of non-unicast packets
+                    if nucast_crit or nucast_warn:
+                        infotext += ", %s non-unicast packets %.2f/s" % (what, nurate)
+
+                        if nucast_crit and nurate >= nucast_crit:
+                            state = 2
+                            infotext += "(!!) >= " + str(nucast_crit)
+                        elif nucast_warn and nurate >= nucast_warn:
+                            state = max(state,1)
+                            infotext += "(!) >= " + str(nucast_warn)
 
             if node:
                 cluster_items[node] = ( state, infotext, perfdata )

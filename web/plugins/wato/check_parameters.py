@@ -2500,7 +2500,7 @@ register_check_parameters(
              ( "traffic",
                Alternative(
                    title = _("Used bandwidth (maximum traffic)"),
-                   help = _("Settings levels on the used bandwidth is optional. If you do set "
+                   help = _("Setting levels on the used bandwidth is optional. If you do set "
                             "levels you might also consider using an averaging."),
                    elements = [
                        Tuple(
@@ -2519,11 +2519,11 @@ register_check_parameters(
                            ]
                         )
                    ])
-               ),
+             ),
              ( "traffic_minimum",
                Alternative(
                    title = _("Used bandwidth (minimum traffic)"),
-                   help = _("Settings levels on the used bandwidth is optional. If you do set "
+                   help = _("Setting levels on the used bandwidth is optional. If you do set "
                             "levels you might also consider using an averaging."),
                    elements = [
                        Tuple(
@@ -2542,9 +2542,20 @@ register_check_parameters(
                            ]
                         )
                    ])
-               ),
+             ),
+             ( "nucasts",
+                   Tuple(
+                       title = _("Non-unicast packet rates"),
+                       help = _("Setting levels on non-unicast packet rates is optional. This may help "
+                            "to detect broadcast storms and other unwanted traffic."),
+                       elements = [
+                           Integer(title = _("Warning at"), unit = _("pkts / sec")),
+                           Integer(title = _("Critical at"), unit = _("pkts / sec")),
+                       ]
+                   ),
+             ),
 
-               ( "average",
+             ( "average",
                  Integer(
                      title = _("Average values"),
                      help = _("By activating the computation of averages, the levels on "
@@ -2555,10 +2566,9 @@ register_check_parameters(
                      minvalue = 1,
                      default_value = 15,
                  )
-               ),
+             ),
 
-
-           ]),
+         ]),
     TextAscii(
         title = _("port specification"),
         allow_empty = False),

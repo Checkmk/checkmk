@@ -150,6 +150,10 @@ parameters (dict): Due to its complexity, this check now uses a dictionary as
                    as bits or bytes, too. When this parameter is set to "bit" any traffic related plugin output
                    is reported in bits instead of bytes(default).
 
+                   {"nucasts"} - a pair of two float values to be used as WARN/CRIT
+                   level for the number of non-unicast packets per second. If this value is not set,
+                   no levels are imposed, which is also the default.
+
 [configuration]
 if_inventory_porttypes (list of strings): List of interface types the inventory should create checks for.
   Default is {[ '6', '32', '117' ]}, which means that all Ethernet, Frame Relay and Gigabit Ethernet ports

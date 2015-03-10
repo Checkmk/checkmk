@@ -1,0 +1,9 @@
+Title: mbg_lantime_ng_fan, mbg_lantime_ng_state, mbg_lantime_state: new checks for Meinberg LANTIME Clocks supporting the new MBG-LANTIME-NG-MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426008926
+Class: feature
+
+

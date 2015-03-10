@@ -1,0 +1,17 @@
+title: Meinberg LANTIME devices: Power Supply (NG MIB)
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the power supplies of Meinberg LANTIME clocks supporting the
+ new MBG-LANTIME-NG-MIB.
+
+ The check handles the state of all power supplies present.
+ All states other than "up" raise CRIT.
+
+inventory:
+ One service per power supply is created.
+
+item:
+ The index number of the power supply.

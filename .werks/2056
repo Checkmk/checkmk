@@ -1,0 +1,13 @@
+Title: winperf_processor: additionally reports user and privileged(system) time
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425916010
+Class: feature
+
+The windows performance counter already provided this information, so there is
+no need to update anything. The check itself now reports the total utilization, as
+well as the user and privileged percentages. The pnp template has been updated
+accordingly.
+

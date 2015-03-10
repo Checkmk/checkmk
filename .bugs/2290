@@ -1,0 +1,11 @@
+Title: Clarify encoding within Check_MK (core)
+Component: core
+State: open
+Date: 2015-03-10 09:24:00
+Targetversion: 1.2.7
+Class: nastiness
+
+We need to deal correctly with encoding within Check_MK. In Multisite we
+have a clear situation. Everything is decoded to unicode strings when
+reading into Check_MK. When writing out to external programs it's encoded
+with UTF-8 again.

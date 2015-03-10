@@ -1,0 +1,12 @@
+Title: oracle_crs_voting: Also handling voting disks with id 0 (seen on old CRS 10.2.0.5.0)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1425911976
+
+Current CRS versions start enumerating the voting disks with number 1. These were
+handled by the agent before. We spotted a voting disk numbered with 0, this was
+detected with version 10.2.0.5.0.

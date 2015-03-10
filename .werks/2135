@@ -1,0 +1,19 @@
+Title: Allow to filter notification contacts based on values of custom macros
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426009795
+Class: feature
+
+You can now use custom user attributes (macros) for deciding which users should
+be notified. For that purpose there is a new check box in the contact selection
+of the rule based notifications called <i>Restrict by custom macros</i>.
+Here you can specify the name of custom macros and regular expressions for
+the allowed values. Users whose macros do not match are being removed from
+the list of contacts. Note: You first need to select contacts, the options
+just <i>removes</i> contacts, never adds ones.
+
+Custom user attributes can be defined WATO's users module. Please make
+sure that you add your macros to the monitoring configuration by selecting
+<i>Make this variable available in notifications</i>.

@@ -8250,7 +8250,7 @@ def vs_notification_rule(userid = None):
     else:
         contact_headers = [
             ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object",
-                                        "contact_users", "contact_groups", "contact_emails" ] ),
+                                        "contact_users", "contact_groups", "contact_emails", "contact_match_macros" ] ),
         ]
         section_contacts = [
             # Contact selection
@@ -8294,6 +8294,31 @@ def vs_notification_rule(userid = None):
                   valuespec = EmailAddress(size = 44),
                   title = _("The following explicit email addresses"),
                   orientation = "vertical",
+              )
+            ),
+            ( "contact_match_macros",
+              ListOf(
+                  Tuple(
+                      elements = [
+                          TextAscii(
+                              title = _("Name of the macro"),
+                              help = _("As configured in the users settings. Do not add a leading underscore."),
+                              allow_empty = False,
+                          ),
+                          RegExp(
+                              title = _("Required match (regular expression)"),
+                              help = _("This expression must complete match the value of the variable"),
+                              allow_empty = False,
+                         ),
+                      ]
+                  ),
+                  title = _("Restrict by custom macros"),
+                  help = _("Here you can <i>restrict</i> the list of contacts that has been "
+                           "built up by the previous options to those who have certain values "
+                           "in certain custom macros. If you add more than one macro here then "
+                           "<i>all</i> macros must match. The matches are regular expressions "
+                           "that must fully match the value of the macro."),
+                  add_label = _("Add condition"),
               )
             ),
         ]
@@ -8667,7 +8692,7 @@ def vs_notification_rule(userid = None):
                           "match_services", "match_servicegroups", "match_contactgroups", "match_exclude_services", "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
                           "match_sl", "match_host_event", "match_service_event", "match_ec",
-                          "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
+                          "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails", "contact_match_macros" ],
         headers = [
             ( _("General Properties"), [ "description", "comment", "disabled", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
@@ -17460,17 +17485,20 @@ def mode_edit_custom_attr(phase, what):
 
     forms.section(_('Editable by Users'))
     html.help(_('It is possible to let users edit their custom attributes.'))
-    html.checkbox('user_editable', attr.get('user_editable', True))
+    html.checkbox('user_editable', attr.get('user_editable', True),
+                  label = _("Users can change this attribute in their personal settings"))
 
     forms.section(_('Show in Table'))
     html.help(_('This attribute is only visibile on the detail pages by default, but '
                 'you can also make it visible in the overview tables.'))
-    html.checkbox('show_in_table', attr.get('show_in_table', False))
+    html.checkbox('show_in_table', attr.get('show_in_table', False),
+                  label = _("Show the setting of the attribute in the user table"))
 
-    forms.section(_('Add as Custom Macro'))
+    forms.section(_('Add as custom macro'))
     html.help(_('The attribute can be added to the contact definiton in order  '
                 'to use it for notifications.'))
-    html.checkbox('add_custom_macro', attr.get('add_custom_macro', False))
+    html.checkbox('add_custom_macro', attr.get('add_custom_macro', False),
+              label = _("Make this variable available in notifications"))
 
     forms.end()
     html.show_localization_hint()

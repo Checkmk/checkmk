@@ -949,10 +949,25 @@ def rbn_rule_contacts(rule, context):
     all_enabled = []
     for contactname in the_contacts:
         contact = contacts.get(contactname)
-        if contact and contact.get("disable_notifications", False):
-            notify_log("   - skipping contact %s: he/she has disabled notifications" % contactname)
-        else:
-            all_enabled.append(contactname)
+        if contact:
+            if contact.get("disable_notifications", False):
+                notify_log("   - skipping contact %s: he/she has disabled notifications" % contactname)
+                continue
+
+            if "contact_match_macros" in rule:
+                match = True
+                for macro_name, regexp in rule["contact_match_macros"]:
+                    value = contact.get("_" + macro_name, "")
+                    if not regexp.endswith("$"):
+                        regexp = regexp + "$"
+                    if not regex(regexp).match(value):
+                        notify_log("   - skipping contact %s: value '%s' for macro '%s' does not match '%s'" % (
+                                contactname, value, macro_name, regexp))
+                        match = False
+                        break
+                if not match:
+                    continue
+        all_enabled.append(contactname)
 
     return all_enabled
 

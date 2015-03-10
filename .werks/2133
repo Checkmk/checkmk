@@ -1,0 +1,10 @@
+Title: Fix visualization of global EC setting for Rule Optimizer
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i1
+Date: 1425995220
+Class: fix
+
+The toggle-button for the setting <i>Optimize rule execution</i> did not
+show the current setting, but alwas showed <i>on</i>. This has been fixed.

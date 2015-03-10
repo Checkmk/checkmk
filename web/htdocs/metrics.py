@@ -735,8 +735,8 @@ def render_pnp_graph(graph, translated_metrics):
 
     # Now create the rrdgraph commands for all metrics - according to the choosen layout
     if mirror_legend:
-        for what, title in [ ("command", ""), ("AVERAGE", _("Average") + "\\:"), ("MAX", _("Maximum") + "\\:"), ("LAST", _("Last") + "\\:") ]:
-            rrdgraph_commands += "COMMENT:\"%%-%ds\" " % left_width % title
+        for what, what_title in [ ("command", ""), ("AVERAGE", _("Average") + "\\:"), ("MAX", _("Maximum") + "\\:"), ("LAST", _("Last") + "\\:") ]:
+            rrdgraph_commands += "COMMENT:\"%%-%ds\" " % left_width % what_title
             for metric_name, unit_symbol, commands in graph_metrics:
                 if what == "command":
                     rrdgraph_commands += commands
@@ -761,7 +761,7 @@ def render_pnp_graph(graph, translated_metrics):
 
     rrdgraph_arguments += "--vertical-label %s --title %s -L 4" % (
         quote_shell_string(vertical_label),
-        quote_shell_string(title))
+        quote_shell_string(graph_title))
 
     if "range" in graph:
         rrdgraph_arguments += " -l %f -u %f" % graph["range"]

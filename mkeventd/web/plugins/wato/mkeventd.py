@@ -1418,7 +1418,7 @@ def mode_mkeventd_config(phase):
 
         if isinstance(valuespec, Checkbox):
             toggle_url = html.makeactionuri([("_action", "toggle"), ("_varname", varname)])
-            toggle_value = varname in current_settings and value or defaultvalue
+            toggle_value = current_settings.get(varname, defaultvalue)
             html.icon_button(toggle_url, _("Immediately toggle this setting"),
                 "snapin_switch_" + (toggle_value and "on" or "off"))
         else:

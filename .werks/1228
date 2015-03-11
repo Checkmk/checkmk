@@ -1,0 +1,11 @@
+Title: Linux Agent: Now supports systemd
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426078879
+Class: feature
+
+The Check_MK Linux Agent installation packet now supports systemd based systems.
+
+

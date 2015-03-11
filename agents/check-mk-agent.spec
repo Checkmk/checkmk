@@ -49,8 +49,13 @@ R=$RPM_BUILD_ROOT
 rm -rf $R
 
 # install agent
+# xinitd
 mkdir -p $R/etc/xinetd.d
 install -m 644 xinetd.conf $R/etc/xinetd.d/check_mk
+# Systemd
+mkdir -p $R/etc/systemd/system
+install -m 644 systemd/check_mk\@.service $R/etc/systemd/system
+install -m 644 systemd/check_mk.socket $R/etc/systemd/system
 mkdir -p $R/etc/check_mk
 mkdir -p $R/usr/bin
 install -m 755 check_mk_agent.linux $R/usr/bin/check_mk_agent
@@ -67,6 +72,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %config(noreplace) /etc/xinetd.d/check_mk
+%config(noreplace) /etc/systemd/system/check_mk@.service
+%config(noreplace) /etc/systemd/system/check_mk.socket
 /etc/check_mk
 /usr/bin/*
 /usr/lib/check_mk_agent
@@ -74,11 +81,15 @@ rm -rf $RPM_BUILD_ROOT
 
 %define reload_xinetd if [ -x /etc/init.d/xinetd ] ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; /etc/init.d/xinetd reload ; else echo "Starting xinetd..." ; /etc/init.d/xinetd start ; fi ; fi
 
-%define activate_xinetd if which chkconfig >/dev/null 2>&1 ; then echo "Activating startscript of xinetd" ; chkconfig xinetd on ; fi
+%define reload_xinetd_systemd if [ ! -x /etc/init.d/xinetd ] && [ -x /usr/sbin/xinetd ]; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; service xinetd reload ; else echo "Starting xinetd..." ; service init.d/xinetd start ; fi ; fi
+
+%define activate_xinetd if [ -x /usr/bin/xinted ] && [ which chkconfig >/dev/null 2>&1 ] ; then echo "Activating startscript of xinetd" ; chkconfig xinetd on ; fi
 %define cleanup_rpmnew if [ -f /etc/xinetd.d/check_mk.rpmnew ] ; then rm /etc/xinetd.d/check_mk.rpmnew ; fi
 
+%define systemd_enable if [ -x /usr/bin/systemctl ] && [ ! -x /usr/sbin/xinetd ] ; then echo "Enable Check_MK_Agent in systemd..." ; systemctl enable check_mk.socket ; systemctl restart sockets.target ; fi
+
 %pre
-if [ ! -x /etc/init.d/xinetd ] ; then
+if [ ! -x /usr/sbin/xinetd ] && [ ! -x /usr/bin/systemctl ] ; then
     echo
     echo "---------------------------------------------"
     echo "WARNING"
@@ -98,6 +109,8 @@ fi
 %cleanup_rpmnew
 %activate_xinetd
 %reload_xinetd
+%reload_xinetd_systemd
+%systemd_enable
 
 %postun
 %reload_xinetd

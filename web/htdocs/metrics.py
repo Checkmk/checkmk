@@ -71,12 +71,12 @@ P = T * 1000
 
 scale_symbols = {
   1  : "",
-  KB : "K",
+  KB : "k",
   MB : "M",
   GB : "G",
   TB : "T",
   PB : "P",
-  K  : "K",
+  K  : "k",
   M  : "M",
   G  : "G",
   T  : "T",
@@ -769,15 +769,21 @@ def render_pnp_graph(graph, translated_metrics):
                 if what == "command":
                     rrdgraph_commands += commands
                 else:
+                    legend_symbol = unit_symbol
+                    if unit_symbol and unit_symbol[0] == " ":
+                        legend_symbol = " %s%s" % (legend_scale_symbol, unit_symbol[1:])
                     rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%%d.%dlf%%s\" " % (column_width - len(legend_scale_symbol), legend_precision) \
-                           % (metric_name, what, legend_scale_symbol + unit_symbol)
+                           % (metric_name, what, legend_symbol)
             rrdgraph_commands += "COMMENT:\"\\n\" "
     else:
         for metric_name, unit_symbol, commands in graph_metrics:
             rrdgraph_commands += commands
+            legend_symbol = unit_symbol
+            if unit_symbol and unit_symbol[0] == " ":
+                legend_symbol = " %s%s" % (legend_scale_symbol, unit_symbol[1:])
             for what, what_title in [ ("AVERAGE", _("average")), ("MAX", _("max")), ("LAST", _("last")) ]:
                 rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%8.%dlf%%s %%s\" "  % legend_precision % \
-                            (metric_name, what, legend_scale_symbol + unit_symbol, what_title)
+                            (metric_name, what, legend_symbol, what_title)
 
 
     # Now compute the arguments for the command line of rrdgraph

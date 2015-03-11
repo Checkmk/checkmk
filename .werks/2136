@@ -1,0 +1,14 @@
+Title: Unify headers of Host/Service rules, EC rules and notification rules
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426078384
+Class: feature
+
+All three types of rules now have a common header with description,
+command and documentation URL. The section has been renamed from <i>General
+Properties</i> or <i>Additional options</i> to <i>Rule Properties</i>. In
+the host and service rules the existing comment information is being used as
+description if the description is empty. This is in order to be compatible
+with the existing configuration where no description field existed.

@@ -375,19 +375,18 @@ class TextAscii(ValueSpec):
         if self._prefix_buttons:
             html.write('<div style="white-space: nowrap;">')
         html.text_input(varprefix, value, size = self._size, read_only = self._read_only, cssclass = self._cssclass)
-        self.render_buttons()
         if self._prefix_buttons:
+            self.render_buttons()
             html.write('</div>')
 
     def render_buttons(self):
-        if self._prefix_buttons:
-            html.write("&nbsp;")
-            for icon, textfunc, help in self._prefix_buttons:
-                try:
-                    text = textfunc()
-                except:
-                    text = textfunc
-                html.icon_button("#", help, icon, onclick="vs_textascii_button(this, '%s', 'prefix');" % text)
+        html.write("&nbsp;")
+        for icon, textfunc, help in self._prefix_buttons:
+            try:
+                text = textfunc()
+            except:
+                text = textfunc
+            html.icon_button("#", help, icon, onclick="vs_textascii_button(this, '%s', 'prefix');" % text)
 
 
     def value_to_text(self, value):
@@ -660,7 +659,12 @@ class TextAreaUnicode(TextUnicode):
         if self._monospaced:
             attrs["class"] = "tt"
 
+        if self._prefix_buttons:
+            html.write('<div style="white-space: nowrap;">')
         html.text_area(varprefix, value, rows=rows, cols=self._cols, attrs = attrs)
+        if self._prefix_buttons:
+            self.render_buttons()
+            html.write('</div>')
 
 
     # Overridded because we do not want to strip() here and remove '\r'

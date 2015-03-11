@@ -253,21 +253,8 @@ vs_mkeventd_rule = Dictionary(
             allow_empty = False,
             size = 12,
         )),
-        ( "description",
-          TextUnicode(
-            title = _("Description"),
-            help = _("You can use this description for commenting your rules. It "
-                     "will not be attached to the event this rule classifies."),
-            size = 64,
-            attrencode = True,
-        )),
-        ( "disabled",
-          Checkbox(
-            title = _("Rule activation"),
-            help = _("Disabled rules are kept in the configuration but are not applied."),
-            label = _("do not apply this rule"),
-          )
-        ),
+    ] + rule_option_elements() +
+    [
         ( "drop",
           Checkbox(
             title = _("Drop Message"),
@@ -699,7 +686,7 @@ vs_mkeventd_rule = Dictionary(
                       "set_text", "set_host", "set_application", "set_comment",
                       "set_contact", "cancel_priority", "match_ok", "contact_groups" ],
     headers = [
-        ( _("General Properties"), [ "id", "description", "disabled" ] ),
+        ( _("Rule Properties"), [ "id", "description", "comment", "docu_url", "disabled" ] ),
         ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
                                     "match_sl", "match_ok", "cancel_priority", "match_timeperiod" ]),
         ( _("Outcome &amp; Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "drop", "autodelete" ]),
@@ -1057,8 +1044,18 @@ def mode_mkeventd_rules(phase):
             if defaults.omd_root:
                 hits = rule.get('hits')
                 table.cell(_("Hits"), hits != None and hits or '', css="number")
-            table.cell(_("Description"), rule.get("description"))
+
+            # Text to match
             table.cell(_("Text to match"), rule.get("match"))
+
+            # Description
+            table.cell(_("Description"))
+            url = rule.get("docu_url")
+            if url:
+                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+                html.write("&nbsp;")
+            html.write(html.attrencode(rule.get("description", "")))
+
         table.end()
 
 

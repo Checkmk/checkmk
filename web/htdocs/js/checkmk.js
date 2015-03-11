@@ -1668,7 +1668,7 @@ function vs_textascii_button(img, text, how) {
     var oInput = img.previousElementSibling;
     while (oInput.tagName == "A")
         oInput = oInput.previousElementSibling;
-    if (oInput.tagName != "INPUT")
+    if (oInput.tagName != "INPUT" && oInput.tagName != "TEXTAREA")
         oInput = oInput.firstChild; // complain mode
     oInput.value = text + oInput.value; // TODO: how
     oInput.focus();

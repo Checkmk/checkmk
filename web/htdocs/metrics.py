@@ -58,10 +58,30 @@ def load_plugins():
 # Definitions to be used in the actual metric declarations
 
 KB = 1024
-MB = 1024 * 1024
-GB = 1024 * 1024 * 1024
-TB = 1024 * 1024 * 1024 * 1024
-PB = 1024 * 1024 * 1024 * 1024 * 1024
+MB = KB * 1024
+GB = MB * 1024
+TB = GB * 1024
+PB = TB * 1024
+
+K = 1000
+M = K * 1000
+G = M * 1000
+T = G * 1000
+P = T * 1000
+
+scale_symbols = {
+  1  : "",
+  KB : "K",
+  MB : "M",
+  GB : "G",
+  TB : "T",
+  PB : "P",
+  K  : "K",
+  M  : "M",
+  G  : "G",
+  T  : "T",
+  P  : "P",
+}
 
 
 # Convert perf_data_string into perf_data, extract check_command
@@ -637,6 +657,10 @@ def render_pnp_graph(graph, translated_metrics):
 
     rrdgraph_commands = ""
 
+    legend_precision    = graph.get("legend_precision", 2)
+    legend_scale        = graph.get("legend_scale", 1)
+    legend_scale_symbol = scale_symbols[legend_scale]
+
     # Define one RRD variable for each of the available metrics.
     # Note: We need to use the original name, not the translated one.
     for var_name, metrics in translated_metrics.items():
@@ -648,6 +672,9 @@ def render_pnp_graph(graph, translated_metrics):
 
         else:
             rrdgraph_commands += "DEF:%s=%s:1:MAX " % (var_name, rrd)
+
+        # Scaling for legend
+        rrdgraph_commands += "CDEF:%s_LEGSCALED=%s,%f,/ " % (var_name, var_name, legend_scale)
 
     # Compute width of columns in case of mirrored legend
 
@@ -695,6 +722,8 @@ def render_pnp_graph(graph, translated_metrics):
             # Choose a unique name for the derived variable and compute it
             commands += "CDEF:DERIVED%d=%s " % (nr , metric_name)
             metric_name = "DERIVED%d" % nr
+            # Scaling for legend
+            commands += "CDEF:%s_LEGSCALED=%s,%f,/ " % (metric_name, metric_name, legend_scale)
 
         else:
             mi = metric_info[metric_name]
@@ -732,7 +761,6 @@ def render_pnp_graph(graph, translated_metrics):
         if not vertical_label:
             vertical_label = unit["title"]
 
-
     # Now create the rrdgraph commands for all metrics - according to the choosen layout
     if mirror_legend:
         for what, what_title in [ ("command", ""), ("AVERAGE", _("Average") + "\\:"), ("MAX", _("Maximum") + "\\:"), ("LAST", _("Last") + "\\:") ]:
@@ -741,16 +769,15 @@ def render_pnp_graph(graph, translated_metrics):
                 if what == "command":
                     rrdgraph_commands += commands
                 else:
-                    rrdgraph_commands += "GPRINT:%%s:%%s:\"%%%%%d.2lf%%s\" " % column_width % (metric_name, what, unit_symbol)
+                    rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%%d.%dlf%%s\" " % (column_width - len(legend_scale_symbol), legend_precision) \
+                           % (metric_name, what, legend_scale_symbol + unit_symbol)
             rrdgraph_commands += "COMMENT:\"\\n\" "
     else:
         for metric_name, unit_symbol, commands in graph_metrics:
             rrdgraph_commands += commands
-            rrdgraph_commands += "GPRINT:%s:AVERAGE:\"%%8.2lf%s %s\" "  % (metric_name, unit_symbol, _("average"))
-            rrdgraph_commands += "GPRINT:%s:MAX:\"%%8.2lf%s %s\" "          % (metric_name, unit_symbol, _("max"))
-            rrdgraph_commands += "GPRINT:%s:LAST:\"%%8.2lf%s %s\\n\" "     % (metric_name, unit_symbol, _("last"))
-
-
+            for what, what_title in [ ("AVERAGE", _("average")), ("MAX", _("max")), ("LAST", _("last")) ]:
+                rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%8.%dlf%%s %%s\" "  % legend_precision % \
+                            (metric_name, what, legend_scale_symbol + unit_symbol, what_title)
 
 
     # Now compute the arguments for the command line of rrdgraph
@@ -765,6 +792,9 @@ def render_pnp_graph(graph, translated_metrics):
 
     if "range" in graph:
         rrdgraph_arguments += " -l %f -u %f" % graph["range"]
+    else:
+        rrdgraph_arguments += " -l 0"
+
 
     # Some styling options, currently hardcoded
     rrdgraph_arguments += " --color MGRID\"#cccccc\" --color GRID\"#dddddd\" --width=600";

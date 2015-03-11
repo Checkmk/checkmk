@@ -8336,33 +8336,9 @@ def vs_notification_rule(userid = None):
 
     return Dictionary(
         title = _("Rule Properties"),
-        elements = [
-            # General Properties
-            ( "description",
-              TextUnicode(
-                title = _("Description"),
-                help = _("You can use this description for commenting your rules. It has no influence on the notification."),
-                size = 64,
-                attrencode = True,
-                allow_empty = False,
-            )),
-            ( "comment",
-              TextAreaUnicode(
-                title = _("Comment"),
-                help = _("An optional comment that explains the purpose of this rule."),
-                rows = 5,
-              )
-            ),
-            ( "disabled",
-              Checkbox(
-                title = _("Rule activation"),
-                help = _("Disabled rules are kept in the configuration but are not applied."),
-                label = _("do not apply this rule"),
-              )
-            ),
-        ] + section_override +
+        elements = rule_option_elements()
+        + section_override +
         [
-
             # Matching
             ( "match_folder",
               FolderChoice(
@@ -8694,7 +8670,7 @@ def vs_notification_rule(userid = None):
                           "match_sl", "match_host_event", "match_service_event", "match_ec",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails", "contact_match_macros" ],
         headers = [
-            ( _("General Properties"), [ "description", "comment", "disabled", "allow_disable" ] ),
+            ( _("Rule Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
             + contact_headers
             + [
@@ -8828,8 +8804,12 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             if "bulk" in rule:
                 html.icon(_("This rule configures bulk notifications."), "bulk")
 
-            table.cell(_("Description"), rule["description"])
-
+            table.cell(_("Description"))
+            url = rule.get("docu_url")
+            if url:
+                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+                html.write("&nbsp;")
+            html.write(html.attrencode(rule["description"]))
             table.cell(_("Contacts"))
             infos = []
             if rule.get("contact_object"):
@@ -13897,40 +13877,7 @@ def mode_ineffective_rules(phase):
                 html.write(get_folder_aliaspath(f, show_main = False))
 
                 # Conditions
-                # YURKS. This is copy & pase from mode_edit_rule!
-                table.cell(_("Conditions"), css="condition")
-                render_conditions(rulespec, tag_specs, host_list, item_list, varname, f)
-
-                # Value
-                table.cell(_("Value"))
-                if rulespec["valuespec"]:
-                    try:
-                        value_html = rulespec["valuespec"].value_to_text(value)
-                    except Exception, e:
-                        try:
-                            reason = str(e)
-                            rulespec["valuespec"].validate_datatype(value, "")
-                        except Exception, e:
-                            reason = str(e)
-
-                        value_html = '<img src="images/icon_alert.png" class=icon>' \
-                                   + _("The value of this rule is not valid. ") \
-                                   + reason
-                else:
-                    img = value and "yes" or "no"
-                    title = value and _("This rule results in a positive outcome.") \
-                                  or  _("this rule results in a negative outcome.")
-                    value_html = '<img align=absmiddle class=icon title="%s" src="images/rule_%s.png">' \
-                                    % (title, img)
-                html.write(value_html)
-
-                # Comment
-                table.cell(_("Comment"))
-                url = rule_options.get("docu_url")
-                if url:
-                    html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-                    html.write("&nbsp;")
-                html.write(html.attrencode(rule_options.get("comment", "")))
+                show_rule_in_table(rulespec, tag_specs, host_list, item_list, varname, value, f, rule_options)
 
             table.end()
             html.write("</div>")
@@ -14416,55 +14363,50 @@ def mode_edit_ruleset(phase):
                         folder, rel_rulenr)
             rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
 
-
-            # Folder
-            # alias_path = get_folder_aliaspath(folder, show_main = False)
-            # classes = ""
-            # if first_in_group:
-            #     classes += "first"
-            # if last_in_group:
-            #     classes += " last"
-            # html.write('<td class="folder %s"><table><tr><td>%s</td></tr></table></td>' % (classes, alias_path))
-
-            # Conditions
-            table.cell(_("Conditions"), css="condition")
-            render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
-
-            # Value
-            table.cell(_("Value"))
-
-            if rulespec["valuespec"]:
-                try:
-                    value_html = rulespec["valuespec"].value_to_text(value)
-                except Exception, e:
-                    try:
-                        reason = str(e)
-                        rulespec["valuespec"].validate_datatype(value, "")
-                    except Exception, e:
-                        reason = str(e)
-
-                    value_html = '<img src="images/icon_alert.png" class=icon>' \
-                               + _("The value of this rule is not valid. ") \
-                               + reason
-            else:
-                img = value and "yes" or "no"
-                title = value and _("This rule results in a positive outcome.") \
-                              or  _("this rule results in a negative outcome.")
-                value_html = '<img align=absmiddle class=icon title="%s" src="images/rule_%s.png">' \
-                                % (title, img)
-            html.write(value_html)
-
-            # Comment
-            table.cell(_("Comment"))
-            url = rule_options.get("docu_url")
-            if url:
-                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-                html.write("&nbsp;")
-            html.write(html.attrencode(rule_options.get("comment", "")))
+            show_rule_in_table(rulespec, tag_specs, host_list, item_list, varname, value, folder, rule_options)
 
         table.end()
 
     create_new_rule_form(rulespec, hostname, item, varname)
+
+def show_rule_in_table(rulespec, tag_specs, host_list, item_list, varname, value, folder, rule_options):
+
+    # Conditions
+    table.cell(_("Conditions"), css="condition")
+    render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
+
+    # Value
+    table.cell(_("Value"))
+    if rulespec["valuespec"]:
+        try:
+            value_html = rulespec["valuespec"].value_to_text(value)
+        except Exception, e:
+            try:
+                reason = str(e)
+                rulespec["valuespec"].validate_datatype(value, "")
+            except Exception, e:
+                reason = str(e)
+
+            value_html = '<img src="images/icon_alert.png" class=icon>' \
+                       + _("The value of this rule is not valid. ") \
+                       + reason
+    else:
+        img = value and "yes" or "no"
+        title = value and _("This rule results in a positive outcome.") \
+                      or  _("this rule results in a negative outcome.")
+        value_html = '<img align=absmiddle class=icon title="%s" src="images/rule_%s.png">' \
+                        % (title, img)
+    html.write(value_html)
+
+    # Comment
+    table.cell(_("Description"))
+    url = rule_options.get("docu_url")
+    if url:
+        html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+        html.write("&nbsp;")
+
+    desc = rule_options.get("description") or rule_options.get("comment", "")
+    html.write(html.attrencode(desc))
 
 
 def folder_selection(folder, depth=0):
@@ -14649,6 +14591,8 @@ def construct_rule(ruleset, value, tag_specs, host_list, item_list, rule_options
     ro = {}
     if rule_options.get("disabled"):
         ro["disabled"] = True
+    if rule_options.get("description"):
+        ro["description"] = rule_options["description"]
     if rule_options.get("comment"):
         ro["comment"] = rule_options["comment"]
     if rule_options.get("docu_url"):
@@ -14656,7 +14600,7 @@ def construct_rule(ruleset, value, tag_specs, host_list, item_list, rule_options
 
     # Preserve other keys that we do not know of
     for k,v in rule_options.items():
-        if k not in [ "disabled", "comment", "docu_url"]:
+        if k not in [ "disabled", "description", "comment", "docu_url"]:
             ro[k] = v
     if ro:
         rule.append(ro)
@@ -14804,40 +14748,6 @@ def date_and_user():
 
 def mode_edit_rule(phase, new = False):
     # Due to localization this cannot be defined in the global context!
-    vs_rule_options = Dictionary(
-        title = _("Additional options"),
-        optional_keys = False,
-        render = "form",
-        elements = [
-            ( "comment",
-              TextUnicode(
-                title = _("Comment"),
-                help = _("An optional comment that helps you document the purpose of  "
-                         "this rule"),
-                size = 80,
-                attrencode = True,
-                prefix_buttons = [ ("insertdate", date_and_user, _("Prefix date and your name to the comment")) ]
-              )
-            ),
-            ( "docu_url",
-              TextAscii(
-                title = _("Documentation-URL"),
-                help = _("An optional URL pointing to documentation or any other page. This will be displayed "
-                         "as an icon <img class=icon src='images/button_url_lo.png'> and open a new page when clicked. "
-                         "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
-                         "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
-                size = 80,
-              ),
-            ),
-            ( "disabled",
-              Checkbox(
-                  title = _("Rule activation"),
-                  help = _("Disabled rules are kept in the configuration but are not applied."),
-                  label = _("do not apply this rule"),
-              )
-            ),
-        ]
-    )
 
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
@@ -14886,8 +14796,8 @@ def mode_edit_rule(phase, new = False):
     if phase == "action":
         if html.check_transaction():
             # Additional options
-            rule_options = vs_rule_options.from_html_vars("options")
-            vs_rule_options.validate_value(rule_options, "options")
+            rule_options = vs_rule_options().from_html_vars("options")
+            vs_rule_options().validate_value(rule_options, "options")
 
             # CONDITION
             tag_specs, host_list, item_list = get_rule_conditions(rulespec)
@@ -14944,6 +14854,37 @@ def mode_edit_rule(phase, new = False):
 
     html.begin_form("rule_editor", method="POST")
 
+
+    # Additonal rule options
+    vs_rule_options().render_input("options", rule_options)
+
+    # Value
+    if valuespec:
+        forms.header(valuespec.title() or _("Value"))
+        value = rule[0]
+        forms.section()
+        try:
+            valuespec.validate_datatype(value, "ve")
+            valuespec.render_input("ve", value)
+        except Exception, e:
+            if config.debug:
+                raise
+            else:
+                html.show_warning(_('Unable to read current options of this rule. Falling back to '
+                                    'default values. When saving this rule now, your previous settings '
+                                    'will be overwritten. Problem was: %s.') % e)
+
+            # In case of validation problems render the input with default values
+            valuespec.render_input("ve", valuespec.default_value())
+
+        valuespec.set_focus("ve")
+    else:
+        forms.header(_("Positive / Negative"))
+        forms.section("")
+        for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
+            val = img == "yes"
+            html.write('<img class=ruleyesno align=top src="images/rule_%s.png"> ' % img)
+            html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
     # Conditions
     forms.header(_("Conditions"))
 
@@ -15035,41 +14976,11 @@ def mode_edit_rule(phase, new = False):
                              "For example C:\\\\tmp\\\\message.log"))
                 html.write("</div>")
 
-    # Value
-    if valuespec:
-        forms.header(valuespec.title() or _("Value"))
-        value = rule[0]
-        forms.section()
-        try:
-            valuespec.validate_datatype(value, "ve")
-            valuespec.render_input("ve", value)
-        except Exception, e:
-            if config.debug:
-                raise
-            else:
-                html.show_warning(_('Unable to read current options of this rule. Falling back to '
-                                    'default values. When saving this rule now, your previous settings '
-                                    'will be overwritten. Problem was: %s.') % e)
-
-            # In case of validation problems render the input with default values
-            valuespec.render_input("ve", valuespec.default_value())
-
-        valuespec.set_focus("ve")
-    else:
-        forms.header(_("Positive / Negative"))
-        forms.section("")
-        for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
-            val = img == "yes"
-            html.write('<img class=ruleyesno align=top src="images/rule_%s.png"> ' % img)
-            html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
-
-    # Additonal rule options
-    vs_rule_options.render_input("options", rule_options)
 
     forms.end()
     html.button("save", _("Save"))
     html.hidden_fields()
-    vs_rule_options.set_focus("options")
+    vs_rule_options().set_focus("options")
     html.end_form()
 
 # Render HTML input fields for editing a tag based condition
@@ -16133,7 +16044,7 @@ def create_sample_config():
         # Make the tag 'offline' remove hosts from the monitoring
         'only_hosts': [
             (['!offline'], ['@all'],
-            {'comment': u'Do not monitor hosts with the tag "offline"'})],
+            {'description': u'Do not monitor hosts with the tag "offline"'})],
 
         # Rule for WAN hosts with adapted PING levels
         'ping_levels': [
@@ -16141,20 +16052,20 @@ def create_sample_config():
               'packets': 6,
               'rta': (1500.0, 3000.0),
               'timeout': 20}, ['wan'], ['@all'],
-              {'comment': u'Allow longer round trip times when pinging WAN hosts'})],
+              {'description': u'Allow longer round trip times when pinging WAN hosts'})],
 
         # All hosts should use SNMP v2c if not specially tagged
         'bulkwalk_hosts': [
-            (['snmp', '!snmp-v1'], ['@all'], {'comment': u'Hosts with the tag "snmp-v1" must not use bulkwalk'})],
+            (['snmp', '!snmp-v1'], ['@all'], {'description': u'Hosts with the tag "snmp-v1" must not use bulkwalk'})],
 
         # Put all hosts and the contact group 'all'
         'host_contactgroups': [
-            ('all', [], ALL_HOSTS, {'comment': u'Put all hosts into the contact group "all"'} ),
+            ('all', [], ALL_HOSTS, {'description': u'Put all hosts into the contact group "all"'} ),
         ],
 
         # Interval for HW/SW-Inventory check
         'extra_service_conf:check_interval': [
-          ( 1440, [], ALL_HOSTS, [ "Check_MK HW/SW Inventory$" ], {'comment': u'Restrict HW/SW-Inventory to once a day'} ),
+          ( 1440, [], ALL_HOSTS, [ "Check_MK HW/SW Inventory$" ], {'description': u'Restrict HW/SW-Inventory to once a day'} ),
         ],
     }
 
@@ -16175,9 +16086,6 @@ def create_sample_config():
     # Make sure the host tag attributes are immediately declared!
     config.wato_host_tags = wato_host_tags
     config.wato_aux_tags = wato_aux_tags
-
-    # Global settings
-    use_new_descriptions_for = [ "df", "ps" ]
 
     # Initial baking of agents (when bakery is available)
     if 'bake_agents' in globals():
@@ -18534,6 +18442,54 @@ syslog_facilities = [
     (23, "local7"),
 ]
 
+def vs_rule_options(disabling=True):
+    return Dictionary(
+        title = _("Rule Options"),
+        optional_keys = False,
+        render = "form",
+        elements = rule_option_elements(disabling),
+    )
+
+def rule_option_elements(disabling=True):
+    elements = [
+        ( "description",
+          TextUnicode(
+            title = _("Description"),
+            help = _("A description or title of this rule"),
+            size = 80,
+          )
+        ),
+        ( "comment",
+          TextAreaUnicode(
+            title = _("Comment"),
+            help = _("An optional comment that explains the purpose of this rule."),
+            rows = 4,
+            cols = 80,
+            prefix_buttons = [ ("insertdate", date_and_user, _("Prefix date and your name to the comment")) ]
+          )
+        ),
+        ( "docu_url",
+          TextAscii(
+            title = _("Documentation-URL"),
+            help = _("An optional URL pointing to documentation or any other page. This will be displayed "
+                     "as an icon <img class=icon src='images/button_url_lo.png'> and open a new page when clicked. "
+                     "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
+                     "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
+            size = 80,
+          ),
+        ),
+    ]
+    if disabling:
+        elements += [
+            ( "disabled",
+              Checkbox(
+                  title = _("Rule activation"),
+                  help = _("Disabled rules are kept in the configuration but are not applied."),
+                  label = _("do not apply this rule"),
+              )
+            ),
+        ]
+    return elements
 
 #.
 #   .--Plugins-------------------------------------------------------------.

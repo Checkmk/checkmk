@@ -534,8 +534,8 @@ class html:
             self.write("<x class=inputerror>")
 
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
-        self.write("<textarea rows=%d cols=%d name=\"%s\"%s>%s</textarea>\n" % (
-            rows, cols, varname, attributes, self.attrencode(value)))
+        self.write("<textarea style=\"width: %d.8ex\" rows=%d cols=%d name=\"%s\"%s>%s</textarea>\n" % (
+            cols, rows, cols, varname, attributes, self.attrencode(value)))
         if error:
             self.write("</x>")
             self.set_focus(varname)

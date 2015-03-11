@@ -312,8 +312,9 @@ def process_logfile(logfile, patterns):
         sys.stdout.flush()
 
     # Handle option maxfilesize, regardless of warning or errors that have happened
-    if opt_maxfilesize != None and offset <= opt_maxfilesize and new_offset > opt_maxfilesize:
-        sys.stdout.write("%sW Maximum allowed logfile size (%d bytes) exceeded.%s\n" % (tty_yellow, opt_maxfilesize, tty_normal))
+    if opt_maxfilesize != None and (offset / opt_maxfilesize) < (new_offset / opt_maxfilesize):
+        sys.stdout.write("%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
+                  (tty_yellow, opt_maxfilesize, new_offset / opt_maxfilesize, tty_normal))
 
 
 try:

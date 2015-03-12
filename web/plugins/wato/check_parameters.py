@@ -5637,8 +5637,8 @@ register_check_parameters(
                Tuple(
                    title = _("Levels on trends in degrees Celsius per time range"),
                    elements = [
-                       Integer(title = _("Warning at"), unit = _(u"°C / range"), default_value = 5),
-                       Integer(title = _("Critical at"), unit = _(u"°C / range"), default_value = 10)
+                       Integer(title = _("Warning at"), unit = u"°C / " + _("range"), default_value = 5),
+                       Integer(title = _("Critical at"), unit = u"°C / " + _("range"), default_value = 10)
                    ]
                 )
             ),

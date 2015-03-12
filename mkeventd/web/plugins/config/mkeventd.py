@@ -32,6 +32,8 @@ mkeventd_notify_remotehost   = None
 mkeventd_connect_timeout     = 10
 debug_mkeventd_queries       = False
 log_rulehits                 = False
+rule_optimizer               = True
+
 mkeventd_service_levels = [
     (0,  _("(no Service level)")),
     (10, _("Silver")),

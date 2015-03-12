@@ -786,6 +786,7 @@ def render_pnp_graph(graph, translated_metrics):
             for what, what_title in [ ("AVERAGE", _("average")), ("MAX", _("max")), ("LAST", _("last")) ]:
                 rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%8.%dlf%%s %%s\" "  % legend_precision % \
                             (metric_name, what, legend_symbol, what_title)
+            rrdgraph_commands += "COMMENT:\"\\n\" "
 
 
     # Now compute the arguments for the command line of rrdgraph

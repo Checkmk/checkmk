@@ -25,20 +25,20 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["mbg_lantime_ng_temp_default_levels"] = {
-    "levels": (90, 95),
+    "levels": (80, 90), # levels for system temperature
 }
 
 def inventory_mbg_lantime_ng_temp(info):
     if info:
-        return[ (None, {}) ]
+        return[ ("System", {}) ]
 
-def check_mbg_lantime_ng_temp(_no_item, params, info):
+def check_mbg_lantime_ng_temp(item, params, info):
     return check_temperature(float(info[0][0]), params)
 
 check_info["mbg_lantime_ng_temp"] = {
     "check_function"          : check_mbg_lantime_ng_temp,
     "inventory_function"      : inventory_mbg_lantime_ng_temp,
-    "service_description"     : "Temperature",
+    "service_description"     : "Temperature %s",
     "default_levels_variable" : "mbg_lantime_ng_temp_default_levels",
     "has_perfdata"            : True,
     "group"                   : "temperature",

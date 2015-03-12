@@ -976,9 +976,9 @@ def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP
         timedif, rate = get_counter(countername, this_time, this_val, allow_negative)
         return rate
     except MKCounterWrapped, e:
-        if onwrap == RAISE:
+        if onwrap is RAISE:
             raise
-        elif onwrap == SKIP:
+        elif onwrap is SKIP:
             global g_last_counter_wrap
             g_last_counter_wrap = e
             return 0.0

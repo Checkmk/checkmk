@@ -49,6 +49,18 @@ unit_info["count"] = {
     "render" : lambda v: "%d" % v,
 }
 
+unit_info["sessions"] = {
+    "title"  : _("Sessions"),
+    "symbol" : "",
+    "render" : lambda v: "%d" % v,
+}
+
+unit_info["locks"] = {
+    "title"  : _("Locks"),
+    "symbol" : "",
+    "render" : lambda v: "%d" % v,
+}
+
 # value ranges from 0.0 ... 100.0
 unit_info["%"] = {
     "title"  : _("%"),
@@ -280,6 +292,12 @@ metric_info["time_offset"] = {
     "color" : "#9a52bf",
 }
 
+metric_info["connection_time"] = {
+    "title" : _("Connection time"),
+    "unit"  : "s",
+    "color" : "#94b65a",
+}
+
 metric_info["input_signal_power_dbm"] = {
     "title" : _("Input Power"),
     "unit"  : "dbm",
@@ -290,6 +308,18 @@ metric_info["output_signal_power_dbm"] = {
     "title" : _("Output Power"),
     "unit"  : "dbm",
     "color" : "#2080c0",
+}
+
+metric_info["tablespace_wasted"] = {
+    "title" : _("Tablespace wasted"),
+    "unit"  : "bytes",
+    "color" : "#a02020",
+}
+
+metric_info["indexspace_wasted"] = {
+    "title" : _("Indexspace wasted"),
+    "unit"  : "bytes",
+    "color" : "#20a080",
 }
 
 metric_info["current"] = {
@@ -358,6 +388,12 @@ metric_info["busy_workers"] = {
     "color" : "#a080b0",
 }
 
+metric_info["connections"] = {
+    "title" : _("Connections"),
+    "unit"  : "count",
+    "color" : "#a080b0",
+}
+
 metric_info["signal_noise"] = {
     "title" : _("Signal/Noise Ratio"),
     "unit"  : "db",
@@ -376,6 +412,29 @@ metric_info["codewords_uncorrectable"] = {
     "color" : "#ff4020",
 }
 
+metric_info["total_sessions"] = {
+    "title" : _("Total"),
+    "unit"  : "sessions",
+    "color" : "#94b65a",
+}
+
+metric_info["running_sessions"] = {
+    "title" : _("Running"),
+    "unit"  : "sessions",
+    "color" : "#999b94",
+}
+
+metric_info["shared_locks"] = {
+    "title" : _("Shared"),
+    "unit"  : "locks",
+    "color" : "#92ec89",
+}
+
+metric_info["exclusive_locks"] = {
+    "title" : _("Exclusive"),
+    "unit"  : "locks",
+    "color" : "#ca5706",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -517,6 +576,12 @@ check_metrics["check_mk-bluecoat_sensors"]                      = {}
 check_metrics["check_mk-zfs_arc_cache"]                         = { "hit_ratio" : { "scale" : 0.01 }}
 check_metrics["check_mk-docsis_channels_upstream"]              = {}
 
+check_metrics["check_mk-postgres_bloat"]                        = {}
+check_metrics["check_mk-postgres_connections"]                  = {}
+check_metrics["check_mk-postgres_locks"]                        = {}
+check_metrics["check_mk-postgres_conn_time"]                    = {}
+check_metrics["check_mk-postgres_sessions"]                     = { "total": {"name": "total_sessions"}, "running": {"name": "running_sessions"} }
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -590,6 +655,17 @@ perfometer_info.append(("linear",      ( [ "mem_used" ],                        
 perfometer_info.append(("linear",      ( [ "mem_used(%)" ],                                              100.0, None)))
 perfometer_info.append(("logarithmic",  ( "time_offset",  1.0, 10.0)))
 
+perfometer_info.append(("stacked", [
+   ( "logarithmic", ( "tablespace_wasted", 1000000, 2)),
+   ( "logarithmic", ( "indexspace_wasted", 1000000, 2)),
+]))
+
+perfometer_info.append(("linear",      ( [ "running_sessions" ],                                        "total_sessions", None)))
+perfometer_info.append(("linear",      ( [ "shared_locks", "exclusive_locks" ],                         None, None)))
+
+perfometer_info.append(("linear",      ( [ "connections" ], 100, None)))
+perfometer_info.append(("logarithmic", ( "connection_time", 0.2, 2)))
+
 perfometer_info.append(("dual", [
    ( "logarithmic", ( "input_signal_power_dbm", 4, 2)),
    ( "logarithmic", ( "output_signal_power_dbm", 4, 2)),
@@ -648,4 +724,47 @@ graph_info.append({
     "metrics" : [
         ( "time_offset", "area" ),
     ]
+})
+
+graph_info.append({
+    "title"   : _("Wasted space of tables and indexes"),
+    "metrics" : [
+        ( "tablespace_wasted", "area" ),
+        ( "indexspace_wasted", "stack" ),
+    ],
+    "legend_scale" : MB,
+    "legend_precision" : 2,
+})
+
+graph_info.append({
+    "title": _("Time to connect"),
+    "metrics" : [
+        ( "connection_time", "area" ),
+    ],
+    "legend_scale" : m,
+})
+
+graph_info.append({
+    "title": _("Number of connections"),
+    "metrics" : [
+        ( "connections", "line" ),
+    ],
+})
+
+graph_info.append({
+    "title": _("Number of total and running sessions"),
+    "metrics" : [
+        ( "running_sessions", "line" ),
+        ( "total_sessions",   "line" ),
+    ],
+    "legend_precision" : 0
+})
+
+graph_info.append({
+    "title": _("Number of shared and exclusive locks"),
+    "metrics" : [
+        ( "shared_locks",    "area" ),
+        ( "exclusive_locks", "stack" ),
+    ],
+    "legend_precision" : 0
 })

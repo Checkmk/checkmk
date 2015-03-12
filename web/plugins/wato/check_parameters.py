@@ -4345,6 +4345,140 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "db_bloat",
+    _("Database Bloat (PostgreSQL)"),
+    Dictionary(
+        help = _("This rule allows you to configure bloat levels for a databases tablespace and "
+                 "indexspace."),
+        elements = [
+            ("table_bloat_abs", Tuple(
+                title = _("Table absolute bloat levels"),
+                elements = [
+                    Filesize(title = _("Warning at")),
+                    Filesize(title = _("Critical at")),
+            ])),
+            ("table_bloat_perc", Tuple(
+                title = _("Table percentage bloat levels"),
+                help = _("Percentage in respect to the optimal utilization. "
+                         "For example if an alarm should raise at 50% wasted space, you need "
+                         "to configure 150%"),
+                elements = [
+                    Percentage(title = _("Warning at"), maxvalue = None),
+                    Percentage(title = _("Critical at"), maxvalue = None),
+            ])),
+            ("index_bloat_abs", Tuple(
+                title = _("Index absolute levels"),
+                elements = [
+                    Filesize(title = _("Warning at")),
+                    Filesize(title = _("Critical at")),
+            ])),
+            ("index_bloat_perc", Tuple(
+                title = _("Index percentage bloat levels"),
+                help = _("Percentage in respect to the optimal utilization. "
+                         "For example if an alarm should raise at 50% wasted space, you need "
+                         "to configure 150%"),
+                elements = [
+                    Percentage(title = _("Warning at"), maxvalue = None),
+                    Percentage(title = _("Critical at"), maxvalue = None),
+            ])),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "db_connections",
+    _("Database Connections (PostgreSQL)"),
+    Dictionary(
+        help = _("This rule allows you to configure the number of maximum concurrent "
+                "connections for a given database."),
+        elements = [
+            ("levels_perc", Tuple(
+                title = _("Percentage of maximum available connections"),
+                elements = [
+                    Percentage(title = _("Warning at"),  unit=_("% of maximum connections")),
+                    Percentage(title = _("Critical at"), unit=_("% of maximum connections")),
+            ])),
+            ("levels_abs", Tuple(
+                title = _("Absolute number of connections"),
+                elements = [
+                    Integer(title = _("Warning at"),  minvalue = 0, unit=_("connections")),
+                    Integer(title = _("Critical at"), minvalue = 0, unit=_("connections")),
+            ])),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "dict"
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    "postgres_locks",
+    _("PostgreSQL Locks"),
+    Dictionary(
+        help = _("This rule allows you to configure the limits for the SharedAccess and Exclusive Locks "
+                 "for a PostgreSQL database."),
+        elements = [
+            ("levels_shared", Tuple(
+                title = _("Shared Access Locks"),
+                elements = [
+                    Integer(title = _("Warning at"),  minvalue = 0),
+                    Integer(title = _("Critical at"), minvalue = 0),
+            ])),
+            ("levels_exclusive", Tuple(
+                title = _("Exclusive Locks"),
+                elements = [
+                    Integer(title = _("Warning at"),  minvalue = 0),
+                    Integer(title = _("Critical at"), minvalue = 0),
+            ])),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "postgres_maintenance",
+    _("PostgreSQL VACUUM and ANALYZE"),
+    Dictionary(
+        help = _("With this rule you can set limits for the VACUUM and ANALYZE operation of "
+                 "a PostgreSQL database. Keep in mind that each table within a database is checked "
+                 "with this limits."),
+        elements = [
+            ("last_vacuum", Tuple(
+                title = _("Time since the last VACUUM"),
+                elements = [
+                    Age(title = _("Warning if older than"), default_value = 86400 * 7),
+                    Age(title = _("Critical if older than"), default_value = 86400 * 14)
+                ])
+            ),
+            ("last_analyze", Tuple(
+                title = _("Time since the last ANALYZE"),
+                elements = [
+                    Age(title = _("Warning if older than"), default_value = 86400 * 7),
+                    Age(title = _("Critical if older than"), default_value = 86400 * 14)
+                ])
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
     "f5_connections",
     _("F5 Loadbalancer Connections"),
     Dictionary(
@@ -4446,7 +4580,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "dbsize",
-    _("Size of MySQL/PostgresQL databases"),
+    _("Size of MySQL/PostgreSQL databases"),
     Optional(
         Tuple(
             elements = [

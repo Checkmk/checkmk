@@ -49,9 +49,9 @@ def check_mbg_lantime_state_common(states, _no_item, params, info):
     state = 0
     levels_text = ""
     warn, crit = params["stratum"]
-    if int(stratum) > crit:
+    if int(stratum) >= crit:
         state = 2
-    elif int(stratum) > warn:
+    elif int(stratum) >= warn:
         state = 1
     if state != 0:
         levels_text = " (warn/crit at %d/%d)" % (warn, crit)

@@ -220,17 +220,29 @@ def evaluate(expression, translated_metrics):
             color = "#" + explicit_color
         return value, unit, color
 
+# TODO: real unit computation!
+def unit_mult(u1, u2):
+    if u1 == unit_info[""] or u1 == unit_info["count"]:
+        return u2
+    else:
+        return u1
+
+def unit_add(u1, u2):
+    return unit_mult(u1, u2)
+
+def unit_sub(u1, u2):
+    return unit_mult(u1, u2)
 
 # TODO: Do real unit computation, detect non-matching units
 rpn_operators = {
-    "+"  : lambda a, b: ((a[0] +  b[0]),                a[1],         choose_operator_color(a[2], b[2])),
-    "-"  : lambda a, b: ((a[0] -  b[0]),                a[1],         choose_operator_color(a[2], b[2])),
-    "*"  : lambda a, b: ((a[0] *  b[0]),                a[1],         choose_operator_color(a[2], b[2])),
-    "/"  : lambda a, b: ((a[0] /  b[0]),                "",           choose_operator_color(a[2], b[2])),
-    ">"  : lambda a, b: ((a[0] >  b[0] and 1.0 or 0.0), "",           "#000000"),
-    "<"  : lambda a, b: ((a[0] <  b[0] and 1.0 or 0.0), "",           "#000000"),
-    ">=" : lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), "",           "#000000"),
-    "<=" : lambda a, b: ((a[0] <= b[0] and 1.0 or 0.0), "",           "#000000"),
+    "+"  : lambda a, b: ((a[0] +  b[0]),                unit_mult(a[1], b[1]), choose_operator_color(a[2], b[2])),
+    "-"  : lambda a, b: ((a[0] -  b[0]),                unit_mult(a[1], b[1]), choose_operator_color(a[2], b[2])),
+    "*"  : lambda a, b: ((a[0] *  b[0]),                unit_mult(a[1], b[1]), choose_operator_color(a[2], b[2])),
+    "/"  : lambda a, b: ((a[0] /  b[0]),                unit_info[""],         choose_operator_color(a[2], b[2])),
+    ">"  : lambda a, b: ((a[0] >  b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
+    "<"  : lambda a, b: ((a[0] <  b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
+    ">=" : lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
+    "<=" : lambda a, b: ((a[0] <= b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
 }
 
 def choose_operator_color(a, b):
@@ -253,7 +265,8 @@ def evaluate_rpn(expression, translated_metrics):
                 raise MKGeneralException("Syntax error in expression '%s': too few operands" % expression)
             op1 = stack[-2]
             op2 = stack[-1]
-            stack = stack[:-2] + [ rpn_operators[operator_name](op1, op2) ]
+            result = rpn_operators[operator_name](op1, op2)
+            stack = stack[:-2] + [ result ]
         else:
             stack.append(evaluate_literal(operator_name, translated_metrics))
 
@@ -265,13 +278,13 @@ def evaluate_rpn(expression, translated_metrics):
 
 def evaluate_literal(expression, translated_metrics):
     if type(expression) == int:
-        return expression, "count", None
+        return expression, unit_info["count"], None
 
     elif type(expression) == float:
-        return expression, None, None
+        return expression, unit_info[""], None
 
     elif expression[0].isdigit() or expression[0] == '-':
-        return float(expression), "", None
+        return float(expression), unit_info[""], None
 
     # TODO: Error handling with useful exceptions
     if expression.endswith("(%)"):
@@ -374,11 +387,12 @@ def get_graphs(translated_metrics):
         if graph_possible(graph, translated_metrics):
             yield graph
 
+
 def graph_possible(graph, translated_metrics):
     for metric_definition in graph["metrics"]:
         try:
             evaluate(metric_definition[0], translated_metrics)
-        except:
+        except Exception, e:
             return False
     return True
 
@@ -647,7 +661,9 @@ def page_pnp_template():
     # any definitions
     output = ""
     for graph in graphs:
-        output += render_pnp_graph(graph, translated_metrics)
+        graph_code = render_pnp_graph(graph, translated_metrics)
+        output += graph_code
+
     html.write(output)
 
 
@@ -668,15 +684,23 @@ def render_pnp_graph(graph, translated_metrics):
     for var_name, metrics in translated_metrics.items():
         rrd = "$RRDBASE$_" + pnp_cleanup(metrics["orig_name"]) + ".rrd"
         scale = metrics["scale"]
-        if scale != 1.0:
+        unit = metrics["unit"]
+        render_scale = unit.get("render_scale", 1)
+
+        if scale != 1.0 or render_scale != 1.0:
             rrdgraph_commands += "DEF:%s_UNSCALED=%s:1:MAX " % (var_name, rrd)
-            rrdgraph_commands += "CDEF:%s=%s_UNSCALED,%f,* " % (var_name, var_name, scale)
+            rrdgraph_commands += "CDEF:%s=%s_UNSCALED,%f,* " % (var_name, var_name, scale * render_scale)
 
         else:
             rrdgraph_commands += "DEF:%s=%s:1:MAX " % (var_name, rrd)
 
         # Scaling for legend
         rrdgraph_commands += "CDEF:%s_LEGSCALED=%s,%f,/ " % (var_name, var_name, legend_scale)
+
+        # Prepare negative variants for upside-down graph
+        rrdgraph_commands += "CDEF:%s_NEG=%s,-1,* " % (var_name, var_name)
+        rrdgraph_commands += "CDEF:%s_LEGSCALED_NEG=%s_LEGSCALED,-1,* " % (var_name, var_name)
+
 
     # Compute width of columns in case of mirrored legend
 
@@ -688,6 +712,22 @@ def render_pnp_graph(graph, translated_metrics):
     # Now add areas and lines to the graph
     graph_metrics = []
 
+    # Graph with upside down metrics? (e.g. for Disk IO)
+    have_upside_down = False
+
+    # Compute width of the right column of the legend
+    if not mirror_legend:
+        max_title_length = 0
+        for nr, metric_definition in enumerate(graph["metrics"]):
+            if len(metric_definition) >= 3:
+                title = metric_definition[2]
+            elif not "," in metric_definition:
+                title = metric_info[metric_definition[0].split("#")[0]]["title"]
+            else:
+                title = ""
+            max_title_length = max(max_title_length, len(title))
+
+
     for nr, metric_definition in enumerate(graph["metrics"]):
         metric_name = metric_definition[0]
         line_type = metric_definition[1] # "line", "area", "stack"
@@ -697,6 +737,18 @@ def render_pnp_graph(graph, translated_metrics):
             title = metric_definition[2]
         else:
             title = ""
+
+        # Prefixed minus renders the metrics in negative direction
+        if line_type[0] == '-':
+            have_upside_down = True
+            upside_down = True
+            upside_down_factor = -1
+            line_type = line_type[1:]
+            upside_down_suffix = "_NEG"
+        else:
+            upside_down = False
+            upside_down_factor = 1
+            upside_down_suffix = ""
 
         if line_type == "line":
             draw_type = "LINE"
@@ -723,13 +775,17 @@ def render_pnp_graph(graph, translated_metrics):
 
             # Choose a unique name for the derived variable and compute it
             commands += "CDEF:DERIVED%d=%s " % (nr , metric_name)
+            if upside_down:
+                commands += "CDEF:DERIVED%d_NEG=DERIVED%d,-1,* " % (nr, nr)
+
             metric_name = "DERIVED%d" % nr
-            # Scaling for legend
-            commands += "CDEF:%s_LEGSCALED=%s,%f,/ " % (metric_name, metric_name, legend_scale)
+            # Scaling and upsidedown handling for legend
+            commands += "CDEF:%s_LEGSCALED%s=%s,%f,/ " % (metric_name, upside_down_suffix, metric_name, legend_scale * upside_down_factor)
 
         else:
             mi = metric_info[metric_name]
-            title = mi["title"]
+            if not title:
+                title = mi["title"]
             color = mi["color"]
             unit = unit_info[mi["unit"]]
 
@@ -744,10 +800,10 @@ def render_pnp_graph(graph, translated_metrics):
             commands += "COMMENT:\"%s\" " % left_pad
             right_pad = ""
         else:
-            right_pad = " " * (left_width - len(title))
-        commands += "%s:%s%s:\"%s%s\"%s " % (draw_type, metric_name, color, title, right_pad, draw_stack)
+            right_pad = " " * (max_title_length - len(title))
+        commands += "%s:%s%s%s:\"%s%s\"%s " % (draw_type, metric_name, upside_down_suffix, color, title, right_pad, draw_stack)
         if line_type == "area":
-            commands += "LINE:%s%s " % (metric_name, render_color(darken_color(parse_color(color), 0.2)))
+            commands += "LINE:%s%s%s " % (metric_name, upside_down_suffix, render_color(darken_color(parse_color(color), 0.2)))
 
         unit_symbol = unit["symbol"]
         if unit_symbol == "%":
@@ -763,6 +819,7 @@ def render_pnp_graph(graph, translated_metrics):
         if not vertical_label:
             vertical_label = unit["title"]
 
+
     # Now create the rrdgraph commands for all metrics - according to the choosen layout
     if mirror_legend:
         for what, what_title in [ ("command", ""), ("AVERAGE", _("Average") + "\\:"), ("MAX", _("Maximum") + "\\:"), ("LAST", _("Last") + "\\:") ]:
@@ -777,6 +834,8 @@ def render_pnp_graph(graph, translated_metrics):
                     rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%%d.%dlf%%s\" " % (column_width - len(legend_scale_symbol), legend_precision) \
                            % (metric_name, what, legend_symbol)
             rrdgraph_commands += "COMMENT:\"\\n\" "
+
+    # Normal legend where for each metric there is one line containing average, max and last
     else:
         for metric_name, unit_symbol, commands in graph_metrics:
             rrdgraph_commands += commands
@@ -788,6 +847,10 @@ def render_pnp_graph(graph, translated_metrics):
                             (metric_name, what, legend_symbol, what_title)
             rrdgraph_commands += "COMMENT:\"\\n\" "
 
+
+    # For graphs with both up and down, paint a gray rule at 0
+    if have_upside_down:
+        rrdgraph_commands += "HRULE:0#c0c0c0 "
 
     # Now compute the arguments for the command line of rrdgraph
     rrdgraph_arguments = ""
@@ -807,9 +870,8 @@ def render_pnp_graph(graph, translated_metrics):
 
     # Some styling options, currently hardcoded
     rrdgraph_arguments += " --color MGRID\"#cccccc\" --color GRID\"#dddddd\" --width=600";
-    rrdgraph_arguments += "\n"
 
-    return rrdgraph_arguments + rrdgraph_commands
+    return graph_title + "\n" + rrdgraph_arguments + "\n" + rrdgraph_commands + "\n"
 
 
 # "#ff0080" -> (1.0, 0.0, 0.5)

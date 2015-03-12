@@ -37,6 +37,8 @@
 #   |  Definition of units of measurement.                                 |
 #   '----------------------------------------------------------------------'
 
+# TODO: Move fundamental units like "" to main file.
+
 unit_info[""] = {
     "title"  : "",
     "symbol" : "",
@@ -70,8 +72,9 @@ unit_info["%"] = {
 
 # Similar as %, but value ranges from 0.0 ... 1.0
 unit_info["ratio"] = {
-    "title"  : _("Ratio"),
+    "title"  : _("%"),
     "symbol" : _("%"),
+    "render_scale" : 100.0, # Scale by this before rendering if "render" not being used
     "render" : lambda v: "%s%%" % drop_dotzero(100.0 * v),
 }
 
@@ -91,6 +94,12 @@ unit_info["bytes"] = {
     "title"  : _("Bytes"),
     "symbol" : _("B"),
     "render" : bytes_human_readable,
+}
+
+unit_info["bytes/s"] = {
+    "title"  : _("Bytes per second"),
+    "symbol" : _("B/s"),
+    "render" : lambda v: bytes_human_readable(v) + _("/s"),
 }
 
 unit_info["c"] = {
@@ -436,6 +445,85 @@ metric_info["exclusive_locks"] = {
     "color" : "#ca5706",
 }
 
+metric_info["disk_read_throughput"] = {
+    "title" : _("Read Throughput"),
+    "unit"  : "bytes/s",
+    "color" : "#40c080",
+}
+
+metric_info["disk_write_throughput"] = {
+    "title" : _("Write Throughput"),
+    "unit"  : "bytes/s",
+    "color" : "#4080c0",
+}
+
+metric_info["disk_read_ios"] = {
+    "title" : _("Read Operations"),
+    "unit"  : "1/s",
+    "color" : "#60e0a0",
+}
+
+metric_info["disk_write_ios"] = {
+    "title" : _("Write Operations"),
+    "unit"  : "1/s",
+    "color" : "#60a0e0",
+}
+
+metric_info["disk_average_read_wait"] = {
+    "title" : _("Read Wait time"),
+    "unit"  : "s",
+    "color" : "#20e8c0",
+}
+
+metric_info["disk_average_write_wait"] = {
+    "title" : _("Write Wait Time"),
+    "unit"  : "s",
+    "color" : "#20c0e8",
+}
+
+metric_info["disk_average_wait"] = {
+    "title" : _("Request Wait Time"),
+    "unit"  : "s",
+    "color" : "#4488cc",
+}
+
+metric_info["disk_average_read_request_size"] = {
+    "title" : _("Average Read Request Size"),
+    "unit"  : "bytes",
+    "color" : "#409c58",
+}
+
+metric_info["disk_average_write_request_size"] = {
+    "title" : _("Average Write Request Size"),
+    "unit"  : "bytes",
+    "color" : "#40589c",
+}
+
+metric_info["disk_average_request_size"] = {
+    "title" : _("Average Request Size"),
+    "unit"  : "bytes",
+    "color" : "#4488cc",
+}
+
+metric_info["disk_latency"] = {
+    "title" : _("Average Disk Latency"),
+    "unit"  : "s",
+    "color" : "#c04080",
+}
+
+metric_info["disk_queue_length"] = {
+    "title" : _("Disk IO-Queue Length"),
+    "unit"  : "",
+    "color" : "#7060b0",
+}
+
+metric_info["disk_utilization"] = {
+    "title" : _("Disk Utilization"),
+    "unit"  : "ratio",
+    "color" : "#a05830",
+}
+
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -483,6 +571,8 @@ check_metrics["check_mk-ibm_svc_mdiskgrp"]                      = { 0: { "name":
 check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-fast_lta_volumes"]                      = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = { 0: { "name": "fs_used", "scale" : MB } }
+
+check_metrics["check_mk-diskstat"]                              = {}
 
 check_metrics["check_mk-apc_symmetra_ext_temp"]                 = {}
 check_metrics["check_mk-adva_fsp_temp"]                         = {}
@@ -689,6 +779,11 @@ perfometer_info.append(("stacked",  [
 ]))
 perfometer_info.append(("logarithmic",  ( "signal_noise", 50.0, 2.0))) # Fallback if no codewords are available
 
+perfometer_info.append(("dual", [
+   ( "logarithmic", ( "disk_read_throughput", 5000000, 10)),
+   ( "logarithmic", ( "disk_write_throughput", 5000000, 10)),
+]))
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -768,3 +863,60 @@ graph_info.append({
     ],
     "legend_precision" : 0
 })
+
+# diskstat checks
+
+graph_info.append({
+    "metrics" : [
+        ( "disk_utilization",  "area" ),
+    ],
+    "range" : (0, 1),
+})
+
+graph_info.append({
+    "title" : _("Disk Throughput"),
+    "metrics" : [
+        ( "disk_read_throughput",  "area" ),
+        ( "disk_write_throughput", "-area" ),
+    ],
+    "legend_scale" : MB,
+})
+
+graph_info.append({
+    "title" : _("Disk I/O Operations"),
+    "metrics" : [
+        ( "disk_read_ios",  "area" ),
+        ( "disk_write_ios", "-area" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Average request size"),
+    "metrics" : [
+        ( "disk_average_read_request_size",  "area" ),
+        ( "disk_average_write_request_size", "-area" ),
+    ],
+    "legend_scale" : KB,
+})
+
+
+graph_info.append({
+    "title" : _("Average end to end wait time"),
+    "metrics" : [
+        ( "disk_average_read_wait",  "area" ),
+        ( "disk_average_write_wait", "-area" ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "disk_latency",  "area" ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "disk_queue_length",  "area" ),
+    ],
+})
+

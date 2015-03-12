@@ -1567,6 +1567,7 @@ def service_deps(hostname, servicedesc):
     return deps
 
 
+g_converted_host_rulesets_cache = {}
 def convert_host_ruleset(ruleset):
     new_rules = []
     if len(ruleset) == 1 and ruleset[0] == "":
@@ -1591,13 +1592,13 @@ def convert_host_ruleset(ruleset):
         # will avoid recomputation later
         new_rules.append((item, all_matching_hosts(tags, hostlist)))
 
-    g_converted_rulesets_cache[id(ruleset)] = new_rules
+    g_converted_host_rulesets_cache[id(ruleset)] = new_rules
     return new_rules
 
 
 def host_extra_conf(hostname, ruleset):
     try:
-        ruleset = g_converted_rulesets_cache[id(ruleset)]
+        ruleset = g_converted_host_rulesets_cache[id(ruleset)]
     except KeyError:
         ruleset = convert_host_ruleset(ruleset)
 
@@ -1740,8 +1741,8 @@ def all_matching_hosts(tags, hostlist):
     g_hostlist_match_cache[cache_id] = matching
     return matching
 
-g_converted_rulesets_cache = {}
 
+g_converted_service_rulesets_cache = {}
 def convert_service_ruleset(ruleset):
     new_rules = []
     for rule in ruleset:
@@ -1766,7 +1767,7 @@ def convert_service_ruleset(ruleset):
         # And now preprocess the configured patterns in the servlist
         new_rules.append((item, hosts, convert_pattern_list(servlist)))
 
-    g_converted_rulesets_cache[id(ruleset)] = new_rules
+    g_converted_service_rulesets_cache[id(ruleset)] = new_rules
     return new_rules
 
 
@@ -1774,7 +1775,7 @@ def convert_service_ruleset(ruleset):
 g_extraconf_servicelist_cache = {}
 def service_extra_conf(hostname, service, ruleset):
     try:
-        ruleset = g_converted_rulesets_cache[id(ruleset)]
+        ruleset = g_converted_service_rulesets_cache[id(ruleset)]
     except KeyError:
         ruleset = convert_service_ruleset(ruleset)
 
@@ -1820,14 +1821,14 @@ def convert_boolean_service_ruleset(ruleset):
         hosts = all_matching_hosts(tags, hostlist)
         new_rules.append((negate, hosts, convert_pattern_list(servlist)))
 
-    g_converted_rulesets_cache[id(ruleset)] = new_rules
+    g_converted_service_rulesets_cache[id(ruleset)] = new_rules
     return new_rules
 
 
 # Compute outcome of a service rule set that just say yes/no
 def in_boolean_serviceconf_list(hostname, service_description, ruleset):
     try:
-        ruleset = g_converted_rulesets_cache[id(ruleset)]
+        ruleset = g_converted_service_rulesets_cache[id(ruleset)]
     except KeyError:
         ruleset = convert_boolean_service_ruleset(ruleset)
 
@@ -5077,7 +5078,8 @@ def copy_globals():
                             "g_check_table_cache", "g_singlehost_checks",
                             "g_nodesof_cache", "g_compiled_regexes", "vars_before_config",
                             "g_initial_times", "g_keepalive_initial_memusage",
-                            "g_dns_cache", "g_ip_lookup_cache", "g_converted_rulesets_cache",
+                            "g_dns_cache", "g_ip_lookup_cache",
+                            "g_converted_host_rulesets_cache", "g_converted_service_rulesets_cache",
                             "g_extraconf_servicelist_cache", "g_hostlist_match_cache",
                             "g_hosttag_taglist_cache" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:

@@ -32,6 +32,7 @@
 # performance_schema  0   0
 # wa-confluence   15499264    13805551616
 
+
 def parse_mysql_capacity(info):
     instances = {}
     instance = False
@@ -49,15 +50,18 @@ def parse_mysql_capacity(info):
 
     return instances
 
+
 def inventory_mysql_size(parsed):
     for instance, values in parsed.items():
         for dbname, used, avail in values:
             if dbname not in [ "information_schema", "mysql", "performance_schema" ]:
                 yield "%s:%s" % (instance, dbname), None
 
+
 def check_mysql_size(item, params, parsed):
     instance, dbname = item.split(':')
     dbs = parsed[instance]
+
     # size and avail are given as bytes
     for db, size, avail in dbs:
         if db == dbname:
@@ -65,10 +69,11 @@ def check_mysql_size(item, params, parsed):
             infotext = "Size is %s" % get_bytes_human_readable(size)
             if params:
                 state = 0
+                # TODO: Schwellen in Bytes, mit Filesize() Valuespec
                 warn, crit = params # in MB
                 warn_b = warn * 1048576
                 crit_b = crit * 1048576
-                perfdata = [("size", size, warn_b, crit_b)]
+                perfdata = [("database_size", size, warn_b, crit_b)]
 		if size > crit_b:
                    state = 2
                    infotext += " (critical at %s)" % get_bytes_human_readable(crit_b)
@@ -77,16 +82,15 @@ def check_mysql_size(item, params, parsed):
                    infotext += " (warning at %s)" % get_bytes_human_readable(crit_b)
             else:
                 state = 0
-                perfdata = [("size", size)]
+                perfdata = [("database_size", size)]
             return (state, infotext, perfdata)
-    return (3, "Database not found in Agent output")
 
 
 check_info['mysql_capacity'] = {
-    "check_function"          : check_mysql_size,
+    "parse_function"          : parse_mysql_capacity,
     "inventory_function"      : inventory_mysql_size,
-    "service_description"     : "MySQL DB %s Size",
+    "check_function"          : check_mysql_size,
+    "service_description"     : "MySQL DB Size %s",
     "has_perfdata"            : True,
     "group"                   : "dbsize",
-    "parse_function"          : parse_mysql_capacity,
 }

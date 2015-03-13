@@ -24,38 +24,46 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: Exampe outputs from agents (for OK and non-OK)
+# Example of format of result!
+# parsed = {
+#   "foo" : [ "mysqld is alive" ],
+# }
 def parse_mysql_ping(info):
-    instances = {}
+    parsed = {}
     instance = False
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
-            instances[instance] = []
+            parsed[instance] = []
         elif instance:
-            instances[instance].append(" ".join(line))
+            parsed[instance].append(" ".join(line))
 
     # Support for the old plugin version without instances
-    if len(instances) == 0:
-        instances['mysql'] = [ " ".join(x) for x in info ]
+    if len(parsed) == 0:
+        parsed['mysql'] = [ " ".join(x) for x in info ]
 
-    return instances
+    return parsed
+
 
 def inventory_mysql_ping(parsed):
     for instance in parsed.keys():
         yield instance, None
-    
+
 
 def check_mysql_ping(item, _no_params, parsed):
-    message = parsed[item][0]
-    if message == "mysqld is alive":
-        return 0, "MySQL Deamon is alive"
-    else:
-        return 2, message
+    if item in parsed:
+        message = parsed[item][0]
+        if message == "mysqld is alive":
+            return 0, "MySQL Deamon is alive"
+        else:
+            return 2, message
+
 
 check_info['mysql_ping'] = {
-    "check_function"          : check_mysql_ping,
-    "inventory_function"      : inventory_mysql_ping,
-    "service_description"     : "MySQL Daemon %s",
     "parse_function"          : parse_mysql_ping,
+    "inventory_function"      : inventory_mysql_ping,
+    "check_function"          : check_mysql_ping,
+    "service_description"     : "MySQL Instance %s",
 }
 

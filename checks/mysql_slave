@@ -63,6 +63,7 @@ def parse_mysql_slave(info):
 
     return instances
 
+
 def inventory_mysql_slave(parsed):
     for instance, values in parsed.items():
         if len(values) > 0:
@@ -70,6 +71,7 @@ def inventory_mysql_slave(parsed):
 
 
 def check_mysql_slave(item, params, parsed):
+    # TODO: item könnte fehlen!
     data = parsed[item]
 
     state = 0
@@ -99,7 +101,7 @@ def check_mysql_slave(item, params, parsed):
                 state = max(state, 1)
                 out += '(!)'
             output.append(out)
-            perfdata.append(('seconds_behind_master', data['Seconds_Behind_Master'], warn, crit))
+            perfdata.append(('sync_latency', data['Seconds_Behind_Master'], warn, crit))
     else:
         output.append('Slave-SQL: not running(!!)')
         state = 2
@@ -107,10 +109,10 @@ def check_mysql_slave(item, params, parsed):
     return state, ', '.join(output), perfdata
 
 check_info['mysql_slave'] = {
-    "check_function"          : check_mysql_slave,
+    "parse_function"          : parse_mysql_slave,
     "inventory_function"      : inventory_mysql_slave,
+    "check_function"          : check_mysql_slave,
     "service_description"     : "MySQL DB Slave %s",
     "has_perfdata"            : True,
-    "parse_function"          : parse_mysql_slave,
 }
 

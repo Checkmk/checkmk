@@ -180,7 +180,7 @@ def check_mysql_iostat(item, params, parsed):
     values = parsed[item]
     line = [ None, None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
     return check_diskstat_line(time.time(), 'innodb_io', params, line)
-t
+
 
 check_info['mysql.innodb_io'] = {
     "inventory_function"      : inventory_mysql_iostat,

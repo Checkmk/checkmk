@@ -1,0 +1,9 @@
+Title: df: Filesystem check now outputs performance data for inodes (and shows a graph)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426243919
+Class: feature
+
+

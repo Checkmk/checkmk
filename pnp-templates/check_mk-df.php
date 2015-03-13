@@ -180,4 +180,20 @@ if (isset($RRD['trend_hoursleft'])) {
         $def[4] .= "GPRINT:days_left:LAST:\"%7.2lf days\" ";
     }
 }
+
+if (isset($RRD['inodes_used'])) {
+    $opt[5] = "--vertical-label 'Inode usage' -l 0 -u $MAX[inodes_used] --title '$hostname: Inodes usage for $fstitle' ";
+    $def[5] = "DEF:inodes_used=${RRD['inodes_used']} ";
+    $def[5] .= "AREA:inodes_used#a0608f:\"Inodes used\:\" ";
+    $def[5] .= "GPRINT:inodes_used:LAST:\"%2.0lf\" ";
+    $def[5] .= "LINE1:inodes_used#c00080:\"\" ";
+    $def[5] .= "GPRINT:inodes_used:MAX:\"Max\: %2.0lf\" ";
+    $def[5] .= "GPRINT:inodes_used:AVERAGE:\"Average\: %2.0lf\\n\" ";
+    $def[5] .= "HRULE:$MAX[inodes_used]#000000:\"Total Inodes \" ";
+    if (isset($WARN['inodes_used'])) {
+        $def[5] .= "HRULE:$WARN[inodes_used]#ffff00:\"Warning at $WARN[inodes_used] \" ";
+        $def[5] .= "HRULE:$CRIT[inodes_used]#ff0000:\"Critical at $CRIT[inodes_used]\\n\" ";
+    }
+}
+
 ?>

@@ -492,20 +492,32 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
         inodes_avail_perc = 100.0 * inodes_avail / inodes_total
         inodes_warn, inodes_crit = levels["inodes_levels"]
         if inodes_warn != None:
-            if type(inodes_warn) == int: # Absolute levels
+            # Levels in absolute numbers
+            if type(inodes_warn) == int:
                 if inodes_crit > inodes_avail:
                     inode_status = 2
                     problems.append("less than %dk inodes available(!!)" % (crit_inode / 1000))
                 elif inodes_warn > inodes_avail:
                     inode_status = 1
                     problems.append("less than %dk inodes available(!)" % (warn_inode / 1000))
-            else:                       # Percentage levels
+                inodes_warn_abs = inodes_warn
+                inodes_crit_abs = inodes_crit
+
+            # Levels in percent
+            else:
                 if inodes_crit > inodes_avail_perc:
                     inode_status = 2
                     problems.append("less than %0.2f%% inodes available(!!)" % inodes_crit)
                 elif inodes_warn > inodes_avail_perc:
                     inode_status = 1
                     problems.append("less than %.02f%% inodes available(!)" % inodes_warn)
+                inodes_warn_abs = (100 - inodes_warn) / 100.0 * inodes_total
+                inodes_crit_abs = (100 - inodes_crit) / 100.0 * inodes_total
+
+        else:
+            inodes_warn_abs = None
+            inodes_crit_abs = None
+
         # Only show inodes if they are at less then 50%
         status = max(status, inode_status)
         show_inodes = levels["show_inodes"]
@@ -513,6 +525,8 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
             (show_inodes == "onlow" and (inode_status or inodes_avail_perc < 50)) or \
             (show_inodes == "onproblem" and inode_status):
             infotext += ", inodes available: %dk/%0.2f%%" % (inodes_avail / 1000, inodes_avail_perc)
+
+        perfdata += [ ("inodes_used", inodes_total - inodes_avail, inodes_warn_abs, inodes_crit_abs, 0, inodes_total) ]
 
     if problems:
         infotext += " - %s" % ", ".join(problems)

@@ -32,17 +32,35 @@
 # performance_schema  0   0
 # wa-confluence   15499264    13805551616
 
-def inventory_mysql_size(info):
-    inventory = []
-    for dbname, used, avail in info:
-        if dbname not in [ "information_schema", "mysql", "performance_schema" ]:
-            inventory.append((dbname, None))
-    return inventory
+def parse_mysql_capacity(info):
+    instances = {}
+    instance = False
+    for line in info:
+        if line[0].startswith("[["):
+            instance = line[0][2:-2]
+            instances[instance] = []
+        elif instance:
+            instances[instance].append(line)
 
-def check_mysql_size(item, params, info):
+    if not instance:
+        instances['mysql'] = []
+        for line in info:
+            instances['mysql'].append(line)
+
+    return instances
+
+def inventory_mysql_size(parsed):
+    for instance, values in parsed.items():
+        for dbname, used, avail in values:
+            if dbname not in [ "information_schema", "mysql", "performance_schema" ]:
+                yield "%s:%s" % (instance, dbname), None
+
+def check_mysql_size(item, params, parsed):
+    instance, dbname = item.split(':')
+    dbs = parsed[instance]
     # size and avail are given as bytes
-    for dbname, size, avail in info:
-        if item == dbname:
+    for db, size, avail in dbs:
+        if db == dbname:
             size = int(size)
             infotext = "Size is %s" % get_bytes_human_readable(size)
             if params:
@@ -70,4 +88,5 @@ check_info['mysql_capacity'] = {
     "service_description"     : "MySQL DB %s Size",
     "has_perfdata"            : True,
     "group"                   : "dbsize",
+    "parse_function"          : parse_mysql_capacity,
 }

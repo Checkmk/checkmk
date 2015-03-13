@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<mysql>>>
+# [[mysql]]
 # Aborted_clients 0
 # Aborted_connects        15
 # Binlog_cache_disk_use   0
@@ -48,36 +49,56 @@
 #   '----------------------------------------------------------------------'
 
 def inventory_mysql(parsed):
-    if len(parsed.keys()) > 200: # should be at least 321 line
-        return [(None, {})]
+    for instance, values in parsed.items(): 
+        if len(values.keys()) > 200: # should be at least 321 line
+            return [(instance, {})]
 
 def parse_mysql(info):
-    values = {}
-    for line in info:
-        if len(line) == 2:
-            varname, value = line
-            try:
-                value = int(value)
-            except:
+    def parse_line(line):
+       if len(line) == 2:
+           varname, value = line
+           try:
+               value = int(value)
+           except:
                 pass
-        else:
-            varname = line[0]
-            value = None
+       else:
+           varname = line[0]
+           value = None
+       return varname, value
 
-        values[varname] = value
-    return values
+    instances = {}
+    instance = False
+    for line in info:
+        if line[0].startswith("[["):
+            instance = line[0][2:-2]
+            instances[instance] = {}
+        elif instance:
+            varname, value = parse_line(line)
+            instances[instance][varname] = value
+    
+    # Old Agent Plugin, no Instances in output
+    if not instance:
+        instances['mysql'] = {}
+        for line in info:
+            varname, value = parse_line(line)
+            instances['mysql'][varname] = value
 
+    return instances
 
-def check_mysql_version(_no_item, _no_params, parsed):
-    return 0, "Version: "+parsed['version']
+def inventory_mysql_version(parsed):
+    for instance, values in parsed.items(): 
+        if 'version' in values:
+            return [(instance, {})]
+
+def check_mysql_version(item, _no_params, parsed):
+    values = parsed[item]
+    return 0, "Version: " + values['version']
 
 
 check_info['mysql'] = {
     "check_function"          : check_mysql_version,
-    "inventory_function"      : inventory_mysql,
-    "service_description"     : "MySQL Version",
-    "has_perfdata"            : True,
-    "group"                   : "mysql_sessions",
+    "inventory_function"      : inventory_mysql_version,
+    "service_description"     : "MySQL Version %s",
     "parse_function"          : parse_mysql,
 }
 
@@ -99,10 +120,11 @@ check_info['mysql'] = {
 # }
 
 
-def check_mysql_sessions(_no_item, params, parsed):
-    total_sessions = parsed["Threads_connected"]
-    running_sessions = parsed["Threads_running"]
-    connections = get_rate("mysql.sessions", time.time(), parsed["Connections"])
+def check_mysql_sessions(item, params, parsed):
+    values = parsed[item]
+    total_sessions = values["Threads_connected"]
+    running_sessions = values["Threads_running"]
+    connections = get_rate("mysql.sessions", time.time(), values["Connections"])
 
     infotext = " - %d sessions (%d running), %.2f connections/s" % (
         total_sessions, running_sessions, connections)
@@ -134,7 +156,7 @@ def check_mysql_sessions(_no_item, params, parsed):
 check_info['mysql.sessions'] = {
     "check_function"          : check_mysql_sessions,
     "inventory_function"      : inventory_mysql,
-    "service_description"     : "MySQL Daemon Sessions",
+    "service_description"     : "MySQL Daemon Sessions %s",
     "has_perfdata"            : True,
     "group"                   : "mysql_sessions",
 }
@@ -150,11 +172,13 @@ check_info['mysql.sessions'] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_mysql_iostat(parsed):
-    if "Innodb_data_read" in parsed.keys():
-        return [(None, {})]
+    for instance, values in parsed.items():
+        if "Innodb_data_read" in values.keys():
+            yield instance, {}
 
 def check_mysql_iostat(item, params, parsed):
-    line = [ None, None, parsed["Innodb_data_read"] / 512, parsed["Innodb_data_written"] / 512]
+    values = parsed[item]
+    line = [ None, None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
     return check_diskstat_line(time.time(), 'innodb_io', params, line)
 
 
@@ -162,7 +186,7 @@ check_info['mysql.innodb_io'] = {
     "includes"                : [ "diskstat.include" ],
     "check_function"          : check_mysql_iostat,
     "inventory_function"      : inventory_mysql_iostat,
-    "service_description"     : "MySQL Daemon InnoDB IO",
+    "service_description"     : "MySQL Daemon InnoDB IO %s",
     "has_perfdata"            : True,
     "group"                   : "mysql_innodb_io",
 }
@@ -178,18 +202,20 @@ check_info['mysql.innodb_io'] = {
 #   +----------------------------------------------------------------------+
 
 def inventory_mysql_connections(parsed):
-    if 'Max_used_connections' in parsed and 'max_connections' in parsed:
-        return [(None, {})]
+    for instance, values in parsed.items():
+        if 'Max_used_connections' in values and 'max_connections' in values:
+            yield instance, {}
 
 def check_mysql_connections(item, params, parsed):
-    if 'Max_used_connections' not in parsed:
-        return (3, 'Connection information are missing')
+    values = parsed[item]
+    if 'Max_used_connections' not in values:
+        return 3, 'Connection information are missing'
 
     # The maximum number of connections that have been in use simultaneously
     # since the server started.
-    conn = float(parsed['Max_used_connections'])
+    conn = float(values['Max_used_connections'])
     # Maximum number of possible parallel connections
-    max_conn = float(parsed['max_connections'])
+    max_conn = float(values['max_connections'])
 
     perc_used = conn / max_conn * 100
 
@@ -206,15 +232,14 @@ def check_mysql_connections(item, params, parsed):
             status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
                          'has been reached at least once since program start)' % warn
 
-    return (status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' %
-        (conn, max_conn, perc_used, status_txt))
+    return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
+        (conn, max_conn, perc_used, status_txt)
 
 
 check_info['mysql.connections'] = {
     "check_function"          : check_mysql_connections,
     "inventory_function"      : inventory_mysql_connections,
-    "service_description"     : "MySQL Daemon Connections",
-    "has_perfdata"            : False,
+    "service_description"     : "MySQL Daemon Connections %s",
     "group"                   : "mysql_connections",
 }
 

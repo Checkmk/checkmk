@@ -12,6 +12,6 @@ description:
   "Monitoring MySQL with Check_MK".
 
 inventory:
-  On each host where the agent plugin {mk_mysql} is being installed
+  On each instance on a host where the agent plugin {mk_mysql} is being installed
   and the MySQL daemon is running one service is being generated.
 

@@ -1,0 +1,11 @@
+Title: MySQL: The MySQL Plugin now supports multiple instances
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1426236379
+Class: feature
+
+For this new feature it was needed to pass the information about the used instance to the checks. Cause of this
+a re discovery is needed for all MySQL Hosts. Sorry for that. 
+

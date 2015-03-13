@@ -24,11 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_mysql_ping(info):
-    return [( None, None )]
+def parse_mysql_ping(info):
+    instances = {}
+    instance = False
+    for line in info:
+        if line[0].startswith("[["):
+            instance = line[0][2:-2]
+            instances[instance] = []
+        elif instance:
+            instances[instance].append(" ".join(line))
 
-def check_mysql_ping(_no_item, _no_params, info):
-    message = " ".join(info[0])
+    # Support for the old plugin version without instances
+    if len(instances) == 0:
+        instances['mysql'] = [ " ".join(x) for x in info ]
+
+    return instances
+
+def inventory_mysql_ping(parsed):
+    for instance in parsed.keys():
+        yield instance, None
+    
+
+def check_mysql_ping(item, _no_params, parsed):
+    message = parsed[item][0]
     if message == "mysqld is alive":
         return 0, "MySQL Deamon is alive"
     else:
@@ -37,6 +55,7 @@ def check_mysql_ping(_no_item, _no_params, info):
 check_info['mysql_ping'] = {
     "check_function"          : check_mysql_ping,
     "inventory_function"      : inventory_mysql_ping,
-    "service_description"     : "MySQL Deamon ",
+    "service_description"     : "MySQL Daemon %s",
+    "parse_function"          : parse_mysql_ping,
 }
 

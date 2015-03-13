@@ -15,5 +15,5 @@ description:
 
 inventory:
   On each host where the agent plugin {mk_mysql} is being installed
-  one service is being generated.
+  one service per instance is being generated.
 

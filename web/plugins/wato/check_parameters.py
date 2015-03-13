@@ -4281,8 +4281,11 @@ register_check_parameters(
             ),
          ]
     ),
-    None,
-    None
+    TextAscii( 
+        title = _("Instance"),
+        help = _("Only needed if you have multiple MySQL Instances on one server"),
+    ),
+    "dict",
 )
 
 register_check_parameters(
@@ -4314,8 +4317,11 @@ register_check_parameters(
                            "value."),
                  unit = "min"))
         ]),
-    None,
-    "dict"
+    TextAscii( 
+        title = _("Instance"),
+        help = _("Only needed if you have multiple MySQL Instances on one server"),
+    ),
+    "dict",
 )
 
 register_check_parameters(
@@ -4339,8 +4345,11 @@ register_check_parameters(
                 )
             ),
         ]),
-    None,
-    "dict"
+    TextAscii( 
+        title = _("Instance"),
+        help = _("Only needed if you have multiple MySQL Instances on one server"),
+    ),
+    "dict",
 )
 
 register_check_parameters(
@@ -4459,6 +4468,7 @@ register_check_parameters(
     ),
     TextAscii(
         title = _("Name of the database"),
+        help = _("Possibly with with instance: instance:dbname"),
     ),
     "first"
 )

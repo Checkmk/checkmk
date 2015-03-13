@@ -1,0 +1,23 @@
+title: PostgreSQL Database Connections
+agents: linux
+catalog: app/postgresql
+license: GPL
+distribution: check_mk
+description:
+ This check allows you to monitor the amount of active connections to a database.
+ You can configure limits for the absolute connection count or percentual
+ limits in respect to the maximum allowed connections.
+ This check relies on data reported by the agent-side plugin {mk_postgres}
+
+inventory:
+  The check generates one service for each database
+
+perfdata:
+  The current number of active connections
+
+[parameters]
+parameters(dict): The parameters are a dictionary with the following optional keys
+
+    {'levels_perc'}: A float tuple specifying a percentage of the maximum connection count
+
+    {'levels_abs'}: An int tuple specifying absolute levels

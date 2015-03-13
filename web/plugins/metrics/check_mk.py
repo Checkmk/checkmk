@@ -37,6 +37,8 @@
 #   |  Definition of units of measurement.                                 |
 #   '----------------------------------------------------------------------'
 
+# TODO: Move fundamental units like "" to main file.
+
 unit_info[""] = {
     "title"  : "",
     "symbol" : "",
@@ -45,6 +47,18 @@ unit_info[""] = {
 
 unit_info["count"] = {
     "title"  : _("Count"),
+    "symbol" : "",
+    "render" : lambda v: "%d" % v,
+}
+
+unit_info["sessions"] = {
+    "title"  : _("Sessions"),
+    "symbol" : "",
+    "render" : lambda v: "%d" % v,
+}
+
+unit_info["locks"] = {
+    "title"  : _("Locks"),
     "symbol" : "",
     "render" : lambda v: "%d" % v,
 }
@@ -58,8 +72,9 @@ unit_info["%"] = {
 
 # Similar as %, but value ranges from 0.0 ... 1.0
 unit_info["ratio"] = {
-    "title"  : _("Ratio"),
+    "title"  : _("%"),
     "symbol" : _("%"),
+    "render_scale" : 100.0, # Scale by this before rendering if "render" not being used
     "render" : lambda v: "%s%%" % drop_dotzero(100.0 * v),
 }
 
@@ -79,6 +94,12 @@ unit_info["bytes"] = {
     "title"  : _("Bytes"),
     "symbol" : _("B"),
     "render" : bytes_human_readable,
+}
+
+unit_info["bytes/s"] = {
+    "title"  : _("Bytes per second"),
+    "symbol" : _("B/s"),
+    "render" : lambda v: bytes_human_readable(v) + _("/s"),
 }
 
 unit_info["c"] = {
@@ -280,6 +301,12 @@ metric_info["time_offset"] = {
     "color" : "#9a52bf",
 }
 
+metric_info["connection_time"] = {
+    "title" : _("Connection time"),
+    "unit"  : "s",
+    "color" : "#94b65a",
+}
+
 metric_info["input_signal_power_dbm"] = {
     "title" : _("Input Power"),
     "unit"  : "dbm",
@@ -290,6 +317,18 @@ metric_info["output_signal_power_dbm"] = {
     "title" : _("Output Power"),
     "unit"  : "dbm",
     "color" : "#2080c0",
+}
+
+metric_info["tablespace_wasted"] = {
+    "title" : _("Tablespace wasted"),
+    "unit"  : "bytes",
+    "color" : "#a02020",
+}
+
+metric_info["indexspace_wasted"] = {
+    "title" : _("Indexspace wasted"),
+    "unit"  : "bytes",
+    "color" : "#20a080",
 }
 
 metric_info["current"] = {
@@ -358,6 +397,12 @@ metric_info["busy_workers"] = {
     "color" : "#a080b0",
 }
 
+metric_info["connections"] = {
+    "title" : _("Connections"),
+    "unit"  : "count",
+    "color" : "#a080b0",
+}
+
 metric_info["signal_noise"] = {
     "title" : _("Signal/Noise Ratio"),
     "unit"  : "db",
@@ -374,6 +419,108 @@ metric_info["codewords_uncorrectable"] = {
     "title" : _("Uncorrectable Codewords"),
     "unit"  : "ratio",
     "color" : "#ff4020",
+}
+
+metric_info["total_sessions"] = {
+    "title" : _("Total"),
+    "unit"  : "sessions",
+    "color" : "#94b65a",
+}
+
+metric_info["running_sessions"] = {
+    "title" : _("Running"),
+    "unit"  : "sessions",
+    "color" : "#999b94",
+}
+
+metric_info["shared_locks"] = {
+    "title" : _("Shared"),
+    "unit"  : "locks",
+    "color" : "#92ec89",
+}
+
+metric_info["exclusive_locks"] = {
+    "title" : _("Exclusive"),
+    "unit"  : "locks",
+    "color" : "#ca5706",
+}
+
+metric_info["disk_read_throughput"] = {
+    "title" : _("Read Throughput"),
+    "unit"  : "bytes/s",
+    "color" : "#40c080",
+}
+
+metric_info["disk_write_throughput"] = {
+    "title" : _("Write Throughput"),
+    "unit"  : "bytes/s",
+    "color" : "#4080c0",
+}
+
+metric_info["disk_read_ios"] = {
+    "title" : _("Read Operations"),
+    "unit"  : "1/s",
+    "color" : "#60e0a0",
+}
+
+metric_info["disk_write_ios"] = {
+    "title" : _("Write Operations"),
+    "unit"  : "1/s",
+    "color" : "#60a0e0",
+}
+
+metric_info["disk_average_read_wait"] = {
+    "title" : _("Read Wait time"),
+    "unit"  : "s",
+    "color" : "#20e8c0",
+}
+
+metric_info["disk_average_write_wait"] = {
+    "title" : _("Write Wait Time"),
+    "unit"  : "s",
+    "color" : "#20c0e8",
+}
+
+metric_info["disk_average_wait"] = {
+    "title" : _("Request Wait Time"),
+    "unit"  : "s",
+    "color" : "#4488cc",
+}
+
+metric_info["disk_average_read_request_size"] = {
+    "title" : _("Average Read Request Size"),
+    "unit"  : "bytes",
+    "color" : "#409c58",
+}
+
+metric_info["disk_average_write_request_size"] = {
+    "title" : _("Average Write Request Size"),
+    "unit"  : "bytes",
+    "color" : "#40589c",
+}
+
+metric_info["disk_average_request_size"] = {
+    "title" : _("Average Request Size"),
+    "unit"  : "bytes",
+    "color" : "#4488cc",
+}
+
+metric_info["disk_latency"] = {
+    "title" : _("Average Disk Latency"),
+    "unit"  : "s",
+    "color" : "#c04080",
+}
+
+metric_info["disk_queue_length"] = {
+    "title" : _("Disk IO-Queue Length"),
+    "unit"  : "",
+    "color" : "#7060b0",
+}
+
+metric_info["disk_utilization"] = {
+    "title" : _("Disk Utilization"),
+    "unit"  : "ratio",
+    "color" : "#a05830",
 }
 
 
@@ -424,6 +571,8 @@ check_metrics["check_mk-ibm_svc_mdiskgrp"]                      = { 0: { "name":
 check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-fast_lta_volumes"]                      = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = { 0: { "name": "fs_used", "scale" : MB } }
+
+check_metrics["check_mk-diskstat"]                              = {}
 
 check_metrics["check_mk-apc_symmetra_ext_temp"]                 = {}
 check_metrics["check_mk-adva_fsp_temp"]                         = {}
@@ -517,6 +666,12 @@ check_metrics["check_mk-bluecoat_sensors"]                      = {}
 check_metrics["check_mk-zfs_arc_cache"]                         = { "hit_ratio" : { "scale" : 0.01 }}
 check_metrics["check_mk-docsis_channels_upstream"]              = {}
 
+check_metrics["check_mk-postgres_bloat"]                        = {}
+check_metrics["check_mk-postgres_connections"]                  = {}
+check_metrics["check_mk-postgres_locks"]                        = {}
+check_metrics["check_mk-postgres_conn_time"]                    = {}
+check_metrics["check_mk-postgres_sessions"]                     = { "total": {"name": "total_sessions"}, "running": {"name": "running_sessions"} }
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -590,6 +745,17 @@ perfometer_info.append(("linear",      ( [ "mem_used" ],                        
 perfometer_info.append(("linear",      ( [ "mem_used(%)" ],                                              100.0, None)))
 perfometer_info.append(("logarithmic",  ( "time_offset",  1.0, 10.0)))
 
+perfometer_info.append(("stacked", [
+   ( "logarithmic", ( "tablespace_wasted", 1000000, 2)),
+   ( "logarithmic", ( "indexspace_wasted", 1000000, 2)),
+]))
+
+perfometer_info.append(("linear",      ( [ "running_sessions" ],                                        "total_sessions", None)))
+perfometer_info.append(("linear",      ( [ "shared_locks", "exclusive_locks" ],                         None, None)))
+
+perfometer_info.append(("linear",      ( [ "connections" ], 100, None)))
+perfometer_info.append(("logarithmic", ( "connection_time", 0.2, 2)))
+
 perfometer_info.append(("dual", [
    ( "logarithmic", ( "input_signal_power_dbm", 4, 2)),
    ( "logarithmic", ( "output_signal_power_dbm", 4, 2)),
@@ -612,6 +778,11 @@ perfometer_info.append(("stacked",  [
    ("linear",       ( [ "codewords_corrected", "codewords_uncorrectable" ], 1.0, None)),
 ]))
 perfometer_info.append(("logarithmic",  ( "signal_noise", 50.0, 2.0))) # Fallback if no codewords are available
+
+perfometer_info.append(("dual", [
+   ( "logarithmic", ( "disk_read_throughput", 5000000, 10)),
+   ( "logarithmic", ( "disk_write_throughput", 5000000, 10)),
+]))
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -649,3 +820,103 @@ graph_info.append({
         ( "time_offset", "area" ),
     ]
 })
+
+graph_info.append({
+    "title"   : _("Wasted space of tables and indexes"),
+    "metrics" : [
+        ( "tablespace_wasted", "area" ),
+        ( "indexspace_wasted", "stack" ),
+    ],
+    "legend_scale" : MB,
+    "legend_precision" : 2,
+})
+
+graph_info.append({
+    "title": _("Time to connect"),
+    "metrics" : [
+        ( "connection_time", "area" ),
+    ],
+    "legend_scale" : m,
+})
+
+graph_info.append({
+    "title": _("Number of connections"),
+    "metrics" : [
+        ( "connections", "line" ),
+    ],
+})
+
+graph_info.append({
+    "title": _("Number of total and running sessions"),
+    "metrics" : [
+        ( "running_sessions", "line" ),
+        ( "total_sessions",   "line" ),
+    ],
+    "legend_precision" : 0
+})
+
+graph_info.append({
+    "title": _("Number of shared and exclusive locks"),
+    "metrics" : [
+        ( "shared_locks",    "area" ),
+        ( "exclusive_locks", "stack" ),
+    ],
+    "legend_precision" : 0
+})
+
+# diskstat checks
+
+graph_info.append({
+    "metrics" : [
+        ( "disk_utilization",  "area" ),
+    ],
+    "range" : (0, 1),
+})
+
+graph_info.append({
+    "title" : _("Disk Throughput"),
+    "metrics" : [
+        ( "disk_read_throughput",  "area" ),
+        ( "disk_write_throughput", "-area" ),
+    ],
+    "legend_scale" : MB,
+})
+
+graph_info.append({
+    "title" : _("Disk I/O Operations"),
+    "metrics" : [
+        ( "disk_read_ios",  "area" ),
+        ( "disk_write_ios", "-area" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Average request size"),
+    "metrics" : [
+        ( "disk_average_read_request_size",  "area" ),
+        ( "disk_average_write_request_size", "-area" ),
+    ],
+    "legend_scale" : KB,
+})
+
+
+graph_info.append({
+    "title" : _("Average end to end wait time"),
+    "metrics" : [
+        ( "disk_average_read_wait",  "area" ),
+        ( "disk_average_write_wait", "-area" ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "disk_latency",  "area" ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "disk_queue_length",  "area" ),
+    ],
+})
+

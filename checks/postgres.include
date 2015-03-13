@@ -1,4 +1,5 @@
-<?php
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -23,42 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = "--vertical-label 'CPU utilization %' -l0  -u 100 --title \"CPU Utilization for $hostname\" ";
-#
-$def[1] =  "DEF:user=$RRDFILE[1]:$DS[1]:AVERAGE " ;
-$def[1] .= "DEF:system=$RRDFILE[2]:$DS[2]:AVERAGE " ;
-$def[1] .= "DEF:wait=$RRDFILE[3]:$DS[3]:AVERAGE " ;
-$def[1] .= "CDEF:us=user,system,+ ";
-$def[1] .= "CDEF:sum=us,wait,+ ";
-$def[1] .= "CDEF:idle=100,sum,- ";
+def parse_postgres_dbs(info):
+    dbs = {}
+    lines = iter(info)
+    try:
+        while True:
+            line = lines.next()
+            if line[0] == "[databases_start]":
+                while True:
+                    line = lines.next()
+                    if line[0] == "[databases_end]":
+                        headers = lines.next()[1:]
+                        break
+                    else:
+                        dbs[line[0]] = []
+                continue
+            else:
+                if line[0] in dbs: # Templates are ignored
+                    dbs[line[0]].append(dict(zip(headers, line[1:])))
+    except StopIteration:
+        pass
 
-if ($TEMPLATE[1] == "check_mk-decru_cpu")
-   $thirdname = "IRQs";
-else
-   $thirdname = "Wait";
-
-
-$def[1] .= ""
-        . "COMMENT:Average\:  "
-        . "AREA:system#ff6000:\"System\" "
-        . "GPRINT:system:AVERAGE:\"%4.1lf%%  \" "
-        . "AREA:user#60f020:\"User\":STACK "
-        . "GPRINT:user:AVERAGE:\"%4.1lf%%  \" "
-        . "AREA:wait#00b0c0:\"$thirdname\":STACK "
-        . "GPRINT:wait:AVERAGE:\"%4.1lf%%  \" "
-        . "LINE:sum#004080:\"Total\" "
-        . "GPRINT:sum:AVERAGE:\"%4.1lf%%  \\n\" "
-
-        . "COMMENT:\"Last\:   \" "
-        . "AREA:system#ff6000:\"System\" "
-        . "GPRINT:system:LAST:\"%4.1lf%%  \" "
-        . "AREA:user#60f020:\"User\":STACK "
-        . "GPRINT:user:LAST:\"%4.1lf%%  \" "
-        . "AREA:wait#00b0c0:\"$thirdname\":STACK "
-        . "GPRINT:wait:LAST:\"%4.1lf%%  \" "
-        . "LINE:sum#004080:\"Total\" "
-        . "GPRINT:sum:LAST:\"%4.1lf%%  \\n\" "
-
-        ."";
-
-?>
+    return dbs

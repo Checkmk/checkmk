@@ -4354,6 +4354,140 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "db_bloat",
+    _("Database Bloat (PostgreSQL)"),
+    Dictionary(
+        help = _("This rule allows you to configure bloat levels for a databases tablespace and "
+                 "indexspace."),
+        elements = [
+            ("table_bloat_abs", Tuple(
+                title = _("Table absolute bloat levels"),
+                elements = [
+                    Filesize(title = _("Warning at")),
+                    Filesize(title = _("Critical at")),
+            ])),
+            ("table_bloat_perc", Tuple(
+                title = _("Table percentage bloat levels"),
+                help = _("Percentage in respect to the optimal utilization. "
+                         "For example if an alarm should raise at 50% wasted space, you need "
+                         "to configure 150%"),
+                elements = [
+                    Percentage(title = _("Warning at"), maxvalue = None),
+                    Percentage(title = _("Critical at"), maxvalue = None),
+            ])),
+            ("index_bloat_abs", Tuple(
+                title = _("Index absolute levels"),
+                elements = [
+                    Filesize(title = _("Warning at")),
+                    Filesize(title = _("Critical at")),
+            ])),
+            ("index_bloat_perc", Tuple(
+                title = _("Index percentage bloat levels"),
+                help = _("Percentage in respect to the optimal utilization. "
+                         "For example if an alarm should raise at 50% wasted space, you need "
+                         "to configure 150%"),
+                elements = [
+                    Percentage(title = _("Warning at"), maxvalue = None),
+                    Percentage(title = _("Critical at"), maxvalue = None),
+            ])),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "db_connections",
+    _("Database Connections (PostgreSQL)"),
+    Dictionary(
+        help = _("This rule allows you to configure the number of maximum concurrent "
+                "connections for a given database."),
+        elements = [
+            ("levels_perc", Tuple(
+                title = _("Percentage of maximum available connections"),
+                elements = [
+                    Percentage(title = _("Warning at"),  unit=_("% of maximum connections")),
+                    Percentage(title = _("Critical at"), unit=_("% of maximum connections")),
+            ])),
+            ("levels_abs", Tuple(
+                title = _("Absolute number of connections"),
+                elements = [
+                    Integer(title = _("Warning at"),  minvalue = 0, unit=_("connections")),
+                    Integer(title = _("Critical at"), minvalue = 0, unit=_("connections")),
+            ])),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "dict"
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    "postgres_locks",
+    _("PostgreSQL Locks"),
+    Dictionary(
+        help = _("This rule allows you to configure the limits for the SharedAccess and Exclusive Locks "
+                 "for a PostgreSQL database."),
+        elements = [
+            ("levels_shared", Tuple(
+                title = _("Shared Access Locks"),
+                elements = [
+                    Integer(title = _("Warning at"),  minvalue = 0),
+                    Integer(title = _("Critical at"), minvalue = 0),
+            ])),
+            ("levels_exclusive", Tuple(
+                title = _("Exclusive Locks"),
+                elements = [
+                    Integer(title = _("Warning at"),  minvalue = 0),
+                    Integer(title = _("Critical at"), minvalue = 0),
+            ])),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "postgres_maintenance",
+    _("PostgreSQL VACUUM and ANALYZE"),
+    Dictionary(
+        help = _("With this rule you can set limits for the VACUUM and ANALYZE operation of "
+                 "a PostgreSQL database. Keep in mind that each table within a database is checked "
+                 "with this limits."),
+        elements = [
+            ("last_vacuum", Tuple(
+                title = _("Time since the last VACUUM"),
+                elements = [
+                    Age(title = _("Warning if older than"), default_value = 86400 * 7),
+                    Age(title = _("Critical if older than"), default_value = 86400 * 14)
+                ])
+            ),
+            ("last_analyze", Tuple(
+                title = _("Time since the last ANALYZE"),
+                elements = [
+                    Age(title = _("Warning if older than"), default_value = 86400 * 7),
+                    Age(title = _("Critical if older than"), default_value = 86400 * 14)
+                ])
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the database"),
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
     "f5_connections",
     _("F5 Loadbalancer Connections"),
     Dictionary(
@@ -4455,7 +4589,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "dbsize",
-    _("Size of MySQL/PostgresQL databases"),
+    _("Size of MySQL/PostgreSQL databases"),
     Optional(
         Tuple(
             elements = [
@@ -4887,10 +5021,64 @@ register_check_parameters(
     "dict",
 )
 
+
+
+register_check_parameters(
+    subgroup_storage,
+    "diskstat",
+    _("Levels for disk IO"),
+    Dictionary(
+        elements = [
+            ( "read",
+              Levels(
+                  title = _("Read throughput"),
+                  unit = _("MB/s"),
+                  default_levels = (50.0, 100.0),
+            )),
+            ( "write",
+              Levels(
+                  title = _("Write throughput"),
+                  unit = _("MB/s"),
+                  default_levels = (50.0, 100.0),
+            )),
+            ( "utilization",
+              Levels(
+                  title = _("Disk Utilization"),
+                  unit = _("%"),
+                  default_levels = (80.0, 90.0),
+            )),
+            ( "latency",
+              Levels(
+                  title = _("Disk Latency"),
+                  unit = _("ms"),
+                  default_levels = (80.0, 160.0),
+            )),
+            ( "average",
+              Age(
+                  title = _("Averaging"),
+                  help = _("When averaging is set, then all of the disk's metrics are averaged "
+                           "over the selected interval - rather then the check interval. This allows "
+                           "you to make your monitoring less reactive to short peaks. But it will also "
+                           "introduce a loss of accuracy in your graphs. "),
+                  default_value = 300,
+            )),
+        ]),
+    OptionalDropdownChoice(
+        choices = [ ( "SUMMARY",  _("Summary of all disks") ), ],
+        otherlabel = _("On explicit devices ->"),
+        explicit = TextAscii(allow_empty = False),
+        title = _("Device"),
+        help = _("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>,  "
+                 "a per-disk IO is specified by the drive letter, a colon and a slash on Windows "
+                 "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
+    "dict",
+)
+
+
 register_check_parameters(
     subgroup_storage,
     "disk_io",
-    _("Levels on disk IO (throughput)"),
+    _("Levels on disk IO (old style checks)"),
     Dictionary(
         elements = [
             ( "read",
@@ -4963,7 +5151,7 @@ register_check_parameters(
                  "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "
                  "A per-disk IO is specified by the drive letter, a colon and a slash on Windows "
                  "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
-    "first"
+    "dict"
 )
 
 
@@ -4973,10 +5161,15 @@ register_rule(
     ListChoice(
         title = _("Discovery mode for Disk IO check"),
         help = _("This rule controls which and how many checks will be created "
-                 "for monitoring individual physical and logical disks."),
+                 "for monitoring individual physical and logical disks. "
+                 "Note: the option <i>Create a summary for all read, one for "
+                 "write</i> has been removed. Some checks will still support "
+                 "this settings, but it will be removed there soon."),
         choices = [
            ( "summary",  _("Create a summary over all physical disks") ),
-           ( "legacy",   _("Create a summary for all read, one for write") ),
+           # This option is still supported by some checks, but is deprecated and
+           # we fade it out...
+           # ( "legacy",   _("Create a summary for all read, one for write") ),
            ( "physical", _("Create a separate check for each physical disk") ),
            ( "lvm",      _("Create a separate check for each LVM volume (Linux)") ),
            ( "vxvm",     _("Creata a separate check for each VxVM volume (Linux)") ),

@@ -1,0 +1,72 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<postgres_query_duration>>>
+# [databases_start]
+# postgres
+# testdb
+# datenbank
+# [databases_end]
+# datname;datid;usename;client_addr;state;seconds;pid;current_query
+# postgres;12068;postgres;;active;0;12631;SELECT datname, datid, usename, ....
+
+def inventory_postgres_query_duration(parsed):
+    for entry in parsed.keys():
+        yield entry, {}
+
+def check_postgres_query_duration(item, _no_params, parsed):
+    longest_time = -1
+    longest_info = None
+
+    database = parsed.get(item)
+    if database == None:
+        return
+
+    for element in database:
+        if int(element["seconds"]) > longest_time:
+            longest_info = element
+            longest_time = int(element["seconds"])
+
+    if longest_info:
+        yield 0, "Longest query is %s seconds" % longest_info["seconds"]
+        if longest_info["usename"]:
+            yield 0, "Username: %s" % longest_info["usename"]
+        if longest_info["client_addr"]:
+            yield 0, "Client: %s" % longest_info["client_addr"]
+        if longest_info["state"].lower() != "active":
+            yield 0, "Query state: %s" % longest_info["state"]
+        yield 0, "PID: %s" %   longest_info["pid"]
+        yield 0, "Query: %s" % longest_info["current_query"]
+    else:
+        yield 0, "No query is running"
+
+check_info['postgres_query_duration'] = {
+    "parse_function"          : parse_postgres_dbs,
+    "check_function"          : check_postgres_query_duration,
+    "inventory_function"      : inventory_postgres_query_duration,
+    "service_description"     : "PostgreSQL Query Duration %s",
+    "includes"                : [ "postgres.include" ]
+}

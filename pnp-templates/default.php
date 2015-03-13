@@ -25,7 +25,7 @@ sort($perf_vars);
 $id_string = $NAGIOS_CHECK_COMMAND . ":" . implode(",", $perf_vars);
 
 # Get current state of previously cached template data for this ID
-$template_cache_path = $template_cache_dir . "/" . $id_string;
+$template_cache_path = $template_cache_dir . "/" . md5($id_string);
 if (file_exists($template_cache_path)) {
     $age = time() - filemtime($template_cache_path);
     if ($age < 60 * 10)
@@ -60,9 +60,11 @@ if ($cache_state == "uptodate") {
     $rrdbase = substr($NAGIOS_XMLFILE, 0, strlen($NAGIOS_XMLFILE) - 4);
     $fd = fopen($template_cache_path, "r");
     while (!feof($fd)) {
+        $dsname_line = trim(fgets($fd));
         $option_line = trim(fgets($fd));
         $graph_line = str_replace('$RRDBASE$', $rrdbase, fgets($fd));
-        if ($option_line && $graph_line) {
+        if ($dsname_line && $option_line && $graph_line) {
+            $ds_name[] = $dsname_line;
             $opt[] = $option_line;
             $def[] = $graph_line;
         }

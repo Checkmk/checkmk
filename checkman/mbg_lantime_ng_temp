@@ -10,6 +10,9 @@ description:
 inventory:
  One check per device is created.
 
+item:
+ "System"
+
 perfdata:
  The temperature
 

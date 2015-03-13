@@ -435,6 +435,7 @@ def num_split(s):
         first_word = regex("[0-9]").split(s)[0]
         return ( first_word.lower(), ) + num_split(s[len(first_word):])
 
+
 def number_human_readable(n, precision=1, unit="B"):
     base = 1024.0
     if unit == "Bit":
@@ -450,6 +451,7 @@ def number_human_readable(n, precision=1, unit="B"):
         return (f + "k%s") % (n / base, unit)
     else:
         return (f + "%s") % (n, unit)
+
 
 def age_human_readable(secs, min_only=False):
     if secs < 0:
@@ -476,6 +478,7 @@ def age_human_readable(secs, min_only=False):
     days = hours / 24
     return "%d %s" % (days, _("days"))
 
+
 def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
     base = float(base)
     # Handle negative bytes correctly
@@ -484,19 +487,36 @@ def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
         prefix = '-'
         b *= -1
 
-    if b >= base * base * base * base:
-        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
-    elif b >= base * base * base:
-        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
-    elif b >= base * base:
-        return '%s%.2f M%s' % (prefix, b / base / base, unit)
-    elif b >= base:
-        return '%s%.2f k%s' % (prefix, b / base, unit)
-    elif bytefrac:
-        return '%s%.2f %s' % (prefix, b, unit)
-    else: # Omit byte fractions
-        return '%s%.0f %s' % (prefix, b, unit)
+    digits = 1
+    if b >= base ** 4:
+        symbol = "T"
+        b /= base ** 4
 
+    elif b >= base ** 3:
+        symbol = "G"
+        b /= base ** 3
+
+    elif b >= base ** 2:
+        symbol = "M"
+        b /= base ** 2
+
+    elif b >= base:
+        symbol = "k"
+        b /= base
+
+    else:
+        symbol = ""
+
+    if not bytefrac:
+        digits = 0
+    elif b >= 100:
+        digits = 0
+    elif b >= 10:
+        digits = 1
+    else:
+        digits = 2
+
+    return "%%s%%.%df %%s%%s" % digits % (prefix, b, symbol, unit)
 
 
 

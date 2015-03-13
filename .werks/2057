@@ -1,0 +1,23 @@
+Title: New checks for postgreSQL monitoring
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426153556
+Class: feature
+
+With this update the agent plugin <i>mk_postgres</i> now reports
+additional information, which will be processed by these new checks:
+
+<table>
+<tr><th>Check</th><th>Description</th><th>Limits configurable</th></tr>
+<tr><td>postgres_bloat</td><td>Size of wasted table- and indexspace</td><td>X</td></tr>
+<tr><td>postgres_connections</td><td>Number of connections to database</td><td>X</td></tr>
+<tr><td>postgres_locks</td><td>Number of SharedAccess and ExclusiveLocks</td><td>X</td></tr>
+<tr><td>postgres_stats</td><td>Time of last VACUUM and ANALYZE</td><td>X</td></tr>
+<tr><td>postgres_query_duration</td><td>Displays longest running query</td><td></td></tr>
+<tr><td>postgres_version</td><td>Displays PostgreSQL version</td><td></td></tr>
+<tr><td>postgres_conn_time</td><td>Time to connect to database</td><td></td></tr>
+</table>
+
+Note: You have to update the agent plugin <i>mk_postgres</i> on the target host.

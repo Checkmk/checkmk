@@ -550,7 +550,6 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
     return text, perfometer_logarithmic_dual(
             read_bytes, "#60e0a0", write_bytes, "#60a0e0", 5000000, 10)
 
-perfometers["check_mk-diskstat"] = perfometer_check_mk_diskstat
 perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
 perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
 perfometers["check_mk-aix_diskiod"] = perfometer_check_mk_diskstat

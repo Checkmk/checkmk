@@ -261,3 +261,161 @@ def check_diskstat_old(item, params, this_time, info):
     kb_per_s = per_sec / 2.0
     perfdata = [ (item, "%f" % kb_per_s ) ]
     return (0, "%.1f MB/s" % mb_per_s, perfdata)
+
+
+#.
+#   .--Dict based API------------------------------------------------------.
+#   |  ____  _      _     _                        _      _    ____ ___    |
+#   | |  _ \(_) ___| |_  | |__   __ _ ___  ___  __| |    / \  |  _ \_ _|   |
+#   | | | | | |/ __| __| | '_ \ / _` / __|/ _ \/ _` |   / _ \ | |_) | |    |
+#   | | |_| | | (__| |_  | |_) | (_| \__ \  __/ (_| |  / ___ \|  __/| |    |
+#   | |____/|_|\___|\__| |_.__/ \__,_|___/\___|\__,_| /_/   \_\_|  |___|   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  The newest generation of Disk IO checks parse all informatin info   |
+#   |  a dictionary, where counters are aleady resolved. Look at diskstat  |
+#   |  (the Linux diskstat check) for an example.                          |
+#   '----------------------------------------------------------------------'
+
+def diskstat_select_disk(disks, item):
+
+    # In summary mode we add up the throughput values, but
+    # we average the other values for disks that have a throughput
+    # > 0. Note: This is not very precise. Strictly spoken
+    # we would need to do the summarization directly in the
+    # parse function. But there we do not have information about
+    # the physical multipath devices and would add up the traffic
+    # of the paths with the traffice of the device itself....
+
+    if item == "SUMMARY":
+        summarized = {
+            "node"                       : None,
+            "read_ios"                   : 0.0,
+            "write_ios"                  : 0.0,
+            "read_throughput"            : 0.0,
+            "write_throughput"           : 0.0,
+            "utilization"                : 0.0,
+            "latency"                    : 0.0,
+            "average_request_size"       : 0.0,
+            "average_wait"               : 0.0,
+            "average_read_wait"          : 0.0,
+            "average_read_request_size"  : 0.0,
+            "average_write_wait"         : 0.0,
+            "average_write_request_size" : 0.0,
+            "queue_length"               : 0.0,
+        }
+
+        if disks:
+            num_averaged = 0
+            for device, disk in disks.items():
+                if disk["read_throughput"] + disk["write_throughput"] > 0: # skip idle disks
+                    num_averaged += 1
+                    for key, value in disk.items():
+                        if key.startswith("ave") or key in ("utilization", "latency", "queue_length"):
+                                summarized[key] += value
+                        elif key != "node":
+                            summarized[key] += value
+
+            if num_averaged:
+                for key, value in summarized.items():
+                    if key.startswith("ave") or key in ("utilization", "latency", "queue_length"):
+                        summarized[key] /= num_averaged
+
+        return summarized
+
+    elif item not in disks:
+        return None
+
+    else:
+        return disks[item]
+
+# New version for this diskstat checks that use the new dict
+# format. The first one is "diskstat" - the Linux version of
+# this check. Look there for examples of the format of the
+# dictionary "disks". Example:
+# disks = { "sda" : {
+#       'node'                       : None,
+#       'average_read_request_size'  : 0.0,
+#       'average_read_wait'          : 0.0,
+#       'average_request_size'       : 40569.90476190476,
+#       'average_wait'               : 0.761904761904762,
+#       'average_write_request_size' : 40569.90476190476,
+#       'average_write_wait'         : 0.0007619047619047619,
+#       'read_ios'                   : 0.0,
+#       'read_throughput'            : 0.0,
+#       'latency'                    : 0.00038095238095238096,
+#       'utilization'                : 0.0006153846153846154,
+#       'write_ios'                  : 1.6153846153846154,
+#       'write_throughput'           : 65536.0,
+#       'queue_length'               : 0.0,
+# }}
+def check_diskstat_dict(item, params, disks):
+
+    # Take care of previously discovered services
+    if item in ("read", "write"):
+        yield 3, "Sorry, the new version of this check does not " \
+                  "support one service for read and one for write anymore."
+        return
+
+    this_time = time.time()
+    disk = diskstat_select_disk(disks, item)
+    if not disk:
+        return
+
+    # Averaging
+    # Note: this check uses a simple method of averaging: As soon as averaging
+    # is turned on the actual metrics are *replaced* by the averaged ones. No
+    # duplication of performance data or check output here. This is because we
+    # have so many metrics...
+    prefix = ""
+    averaging = params.get("average") # in seconds here!
+    if averaging:
+        avg_disk = {} # Do not modify our arguments!!
+        for key, value in disk.items():
+            if type(value) in (int, float):
+                avg_disk[key] = get_average("diskstat.%s.%s.avg" % (item, key), this_time, value, averaging / 60.0)
+            else:
+                avg_disk[key] = value
+        disk = avg_disk
+        prefix = "%s average: " % get_age_human_readable(averaging)
+
+
+    # Utilization
+    util = disk["utilization"]
+    state, text, extraperf = check_levels(util, "disk_utilization", params.get("utilization"),
+                                          unit = "%", scale = 0.01, statemarkers=False)
+    yield state, "%sUtilization: %.1f%%%s" % (prefix, util * 100, text), extraperf
+
+
+    # Throughput
+    for what in "read", "write":
+        throughput = disk[what + "_throughput"]
+        state, text, extraperf = check_levels(throughput, "disk_" + what + "_throughput", params.get(what),
+                                              unit = "MB/s", scale = 1048576, statemarkers=False)
+        yield state, "%s: %s/s%s" % (what.title(), get_bytes_human_readable(throughput), text), extraperf
+
+
+    # Average wait from end to end (currently without level)
+    avg_wait = disk["average_wait"]
+    yield 0, "Wait: %.2f ms" % (avg_wait * 1000.0)
+
+
+    # Average disk latency
+    latency = disk["latency"]
+    state, text, extraperf = check_levels(latency, "disk_latency", params.get("latency"),
+                                          unit = "ms", scale = 0.001, statemarkers=False)
+    yield state, "Latency: %.2f ms%s" % (latency * 1000.0, text), extraperf
+
+    # All the other metrics are currenlty not output in the plugin output - simply because
+    # of their amount. They are present as performance data and will shown in graphs.
+
+    # Send everything as performance data now. Sort keys alphabetically
+    perfdata = []
+    for key in sorted(disk.keys()):
+        value = disk[key]
+        if type(value) in (int, float):
+            ## warn, crit = levels.get(key, (None, None))
+            ## perfdata.append(( "disk_" + key, value, warn, crit))
+            perfdata.append(("disk_" + key, value))
+
+    yield 0, None, perfdata

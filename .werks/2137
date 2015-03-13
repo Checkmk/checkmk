@@ -1,0 +1,16 @@
+Title: diskstat: new implementation of Linux Disk IO check
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1426173401
+Class: feature
+
+The <tt>diskstat</tt> check for Linux has been reimplemented from scratch. It now
+gets much more specific metrics information like average wait time, IO queue length,
+latency, IOs per seconds und more. Six graphs are being created.
+
+Note: this check is new parametrized by a new rule set in WATO. You need to
+redo your configuration of this check, sorry. Also if you have a very old legacy
+setup with two seperate checks for read and write, you also need to rediscover.
+These checks are not longer supported.

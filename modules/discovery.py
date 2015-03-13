@@ -230,10 +230,15 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
                 with_node_info = add_nodeinfo(bare_info, es)
                 parsed = apply_parse_function(with_node_info, es)
                 info.append(parsed)
+
+            except MKAgentError:
+                info.append(None)
+
             except:
                 if opt_debug:
                     raise
                 info.append(None)
+
     return info
 
 #.

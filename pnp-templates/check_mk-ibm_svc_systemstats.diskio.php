@@ -1,1 +1,1 @@
-check_mk-diskstat.php
+template-diskstat.php

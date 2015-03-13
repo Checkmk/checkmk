@@ -1,0 +1,10 @@
+Title: jolokia_metrics: Now deal with missing thread related infos (jboss might only send ThreadCount)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426233790
+
+

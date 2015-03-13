@@ -327,7 +327,10 @@ def check_jolokia_metrics_threads(item, params, info):
     output   = []
     status   = 0
     for key in [ 'ThreadCount', 'DeamonThreadCount', 'PeakThreadCount', 'TotalStartedThreadCount' ]:
-        val = saveint(d[key])
+        if key not in d:
+            continue # The keys might be optional (saw jboss only sending ThreadCount)
+
+        val = int(d[key])
         if key == 'ThreadCount':
             # Thread count might lead to a warn/crit state
             if val >= crit:

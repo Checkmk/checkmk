@@ -1,0 +1,11 @@
+Title: temperature.include: Fixed Fahrenheit handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426266810
+
+Fahrenheit device levels didn't work properly. This has been fixed.
+(Thanks to Rustam Akhmarov for this fix)

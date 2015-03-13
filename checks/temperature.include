@@ -41,10 +41,10 @@ def from_celsius(tempc, unit):
 
 def to_celsius(reading, unit):
     if type(reading) == tuple:
-        tuple([to_celsius(x, unit) for x in reading])
+        return tuple([to_celsius(x, unit) for x in reading])
     elif unit == "f":
         return fahrenheit_to_celsius(reading)
-    if unit == "k":
+    elif unit == "k":
         return reading - 273.15
     else:
         return reading

@@ -24,11 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# TODO: Exampe outputs from agents (for OK and non-OK)
-# Example of format of result!
+# <<<mysql_ping>>>
+# [[instance]]
+# mysqladmin: connect to server at 'localhost' failed
+# error: 'Access denied for user 'root'@'localhost' (using password: NO)'
+# 
 # parsed = {
-#   "foo" : [ "mysqld is alive" ],
+#   "instance1" : [ "mysqld is alive" ],
+#   "instance2" : [ "mysqladmin: connect to server at 'localhost' failed", 
+#                   "error: 'Access denied for user 'root'@'localhost' (using password: NO)'" ]
 # }
+
 def parse_mysql_ping(info):
     parsed = {}
     instance = False
@@ -40,7 +46,7 @@ def parse_mysql_ping(info):
             parsed[instance].append(" ".join(line))
 
     # Support for the old plugin version without instances
-    if len(parsed) == 0:
+    if not instance:
         parsed['mysql'] = [ " ".join(x) for x in info ]
 
     return parsed

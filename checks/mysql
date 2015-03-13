@@ -66,24 +66,24 @@ def parse_mysql(info):
            value = None
        return varname, value
 
-    instances = {}
+    parsed = {}
     instance = False
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
-            instances[instance] = {}
+            parsed[instance] = {}
         elif instance:
             varname, value = parse_line(line)
-            instances[instance][varname] = value
+            parsed[instance][varname] = value
 
     # Old Agent Plugin, no Instances in output
     if not instance:
-        instances['mysql'] = {}
+        parsed['mysql'] = {}
         for line in info:
             varname, value = parse_line(line)
-            instances['mysql'][varname] = value
+            parsed['mysql'][varname] = value
 
-    return instances
+    return parsed
 
 def inventory_mysql_version(parsed):
     for instance, values in parsed.items():
@@ -91,8 +91,9 @@ def inventory_mysql_version(parsed):
             return [(instance, {})]
 
 def check_mysql_version(item, _no_params, parsed):
-    values = parsed[item]
-    return 0, "Version: " + values['version']
+    if item in parsed:
+        values = parsed[item]
+        return 0, "Version: " + values['version']
 
 
 check_info['mysql'] = {
@@ -121,36 +122,37 @@ check_info['mysql'] = {
 
 
 def check_mysql_sessions(item, params, parsed):
-    values = parsed[item]
-    total_sessions = values["Threads_connected"]
-    running_sessions = values["Threads_running"]
-    connects = get_rate("mysql.sessions", time.time(), values["Connections"])
+    if item in parsed:
+        values = parsed[item]
+        total_sessions = values["Threads_connected"]
+        running_sessions = values["Threads_running"]
+        connects = get_rate("mysql.sessions", time.time(), values["Connections"])
 
-    infotext = " - %d sessions (%d running), %.2f connects/s" % \
-               (total_sessions, running_sessions, connects)
+        infotext = " - %d sessions (%d running), %.2f connects/s" % \
+                   (total_sessions, running_sessions, connects)
 
-    infos = []
-    perfdata = []
-    status = 0
+        infos = []
+        perfdata = []
+        status = 0
 
-    for value, perfvar, what, format, unit in [
-        ( total_sessions,   "total_sessions",   "total",       "%d",   "" ),
-        ( running_sessions, "running_sessions", "running",     "%d",   "" ),
-        ( connections,      "connect_rate",     "connections", "%.2f", "/s")]:
-        infos.append((format + " %s%s") % (value, what, unit))
-        if what in params:
-            warn, crit = params[what]
-            if value >= crit:
-                status = 2
-                infos[-1] += "(!!)"
-            elif value >= warn:
-                status = max(status, 1)
-                infos[-1] += "(!)"
-        else:
-            warn, crit = None, None
-        perfdata.append((perfvar, value, warn, crit))
+        for value, perfvar, what, format, unit in [
+            ( total_sessions,   "total_sessions",   "total",       "%d",   "" ),
+            ( running_sessions, "running_sessions", "running",     "%d",   "" ),
+            ( connects,         "connect_rate",     "connections", "%.2f", "/s")]:
+            infos.append((format + " %s%s") % (value, what, unit))
+            if what in params:
+                warn, crit = params[what]
+                if value >= crit:
+                    status = 2
+                    infos[-1] += "(!!)"
+                elif value >= warn:
+                    status = max(status, 1)
+                    infos[-1] += "(!)"
+            else:
+                warn, crit = None, None
+            perfdata.append((perfvar, value, warn, crit))
 
-    return status, ", ".join(infos), perfdata
+        return status, ", ".join(infos), perfdata
 
 
 check_info['mysql.sessions'] = {
@@ -177,9 +179,10 @@ def inventory_mysql_iostat(parsed):
             yield instance, {}
 
 def check_mysql_iostat(item, params, parsed):
-    values = parsed[item]
-    line = [ None, None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
-    return check_diskstat_line(time.time(), 'innodb_io', params, line)
+    if item in parsed:
+        values = parsed[item]
+        line = [ None, None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
+        return check_diskstat_line(time.time(), 'innodb_io'+item, params, line)
 
 
 check_info['mysql.innodb_io'] = {
@@ -209,35 +212,36 @@ def inventory_mysql_connections(parsed):
 # TODO: This check should rather output the current number of connections.
 # The historic maximum can be viewed in the RRD data...
 def check_mysql_connections(item, params, parsed):
-    values = parsed[item]
-    if 'Max_used_connections' not in values:
-        return 3, 'Connection information are missing'
+    if item in parsed:
+        values = parsed[item]
+        if 'Max_used_connections' not in values:
+            return 3, 'Connection information are missing'
 
-    # The maximum number of connections that have been in use simultaneously
-    # since the server started.
-    conn = float(values['Max_used_connections'])
+        # The maximum number of connections that have been in use simultaneously
+        # since the server started.
+        conn = float(values['Max_used_connections'])
 
-    # Maximum number of possible parallel connections
-    max_conn = float(values['max_connections'])
+        # Maximum number of possible parallel connections
+        max_conn = float(values['max_connections'])
 
-    perc_used = conn / max_conn * 100
+        perc_used = conn / max_conn * 100
 
-    status = 0
-    status_txt = ''
+        status = 0
+        status_txt = ''
 
-    if 'perc_used' in params:
-        warn, crit = params['perc_used']
-        if perc_used >= crit:
-            status = 2
-            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                         'has been reached at least once since program start' % crit
-        elif perc_used >= warn:
-            status = 1
-            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                         'has been reached at least once since program start' % warn
+        if 'perc_used' in params:
+            warn, crit = params['perc_used']
+            if perc_used >= crit:
+                status = 2
+                status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
+                             'has been reached at least once since program start' % crit
+            elif perc_used >= warn:
+                status = 1
+                status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
+                             'has been reached at least once since program start' % warn
 
-    return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
-            (conn, max_conn, perc_used, status_txt)
+        return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
+                (conn, max_conn, perc_used, status_txt)
 
 
 check_info['mysql.connections'] = {

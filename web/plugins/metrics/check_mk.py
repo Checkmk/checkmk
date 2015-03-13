@@ -182,6 +182,12 @@ metric_info["hit_ratio"] = {
     "color" : "#60c0c0",
 }
 
+metric_info["database_size"] = {
+    "title" : _("Database size"),
+    "unit"  : "bytes",
+    "color" : "#00868B",
+}
+
 metric_info["mem_used"] = {
     "title" : _("Used RAM"),
     "unit"  : "bytes",
@@ -561,7 +567,6 @@ check_metrics["check_mk-df_netapp32"]                           = { 0: { "name":
 check_metrics["check_mk-zfsget"]                                = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-hr_fs"]                                 = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-oracle_asm_diskgroup"]                  = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-mysql_capacity"]                        = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-esx_vsphere_counters.ramdisk"]          = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-hitachi_hnas_span"]                     = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-hitachi_hnas_volume"]                   = { 0: { "name": "fs_used", "scale" : MB } }
@@ -625,6 +630,7 @@ check_metrics["check_mk-wagner_titanus_topsense.temp"]          = {}
 check_metrics["check_mk-cmciii.phase"]                          = {}
 check_metrics["check_mk-ucs_bladecenter_fans.temp"]             = {}
 check_metrics["check_mk-ucs_bladecenter_psu.chassis_temp"]      = {}
+check_metrics["check_mk-mysql_capacity"]                        = {}
 
 check_metrics["check_mk-kernel"]                                = { "processes" : { "name" : "proc_creat", } }
 
@@ -692,15 +698,16 @@ check_metrics["check_mk-postgres_sessions"]                     = { "total": {"n
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
 perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
-perfometer_info.append(("linear",      ( ["execution_time"], 90.0, None)))
+perfometer_info.append(("linear",       ( ["execution_time"], 90.0, None)))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "temp",         40.0, 1.2)))
 perfometer_info.append(("logarithmic",  ( "ctxt",       1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "pgmajfault", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "proc_creat", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
-perfometer_info.append(("linear",      ( [ "user", "system", "io_wait" ],                               100.0,       None)))
-perfometer_info.append(("linear",      ( [ "util", ],                                                   100.0,       None)))
+perfometer_info.append(("linear",       ( [ "user", "system", "io_wait" ],                               100.0,       None)))
+perfometer_info.append(("linear",       ( [ "util", ],                                                   100.0,       None)))
+perfometer_info.append(("logarithmic",  ( "database_size", GB, 5.0 )))
 
 # Filesystem check with over-provisioning
 perfometer_info.append({
@@ -918,5 +925,12 @@ graph_info.append({
     "metrics" : [
         ( "disk_queue_length",  "area" ),
     ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "database_size",  "area" ),
+    ],
+    "legend_scale" : MB,
 })
 

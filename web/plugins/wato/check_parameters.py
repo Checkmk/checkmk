@@ -4588,13 +4588,13 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
-    "dbsize",
-    _("Size of MySQL/PostgreSQL databases"),
+    "mysql_db_size",
+    _("Size of MySQL databases"),
     Optional(
         Tuple(
             elements = [
-                Integer(title = _("warning at"), unit = _("MB")),
-                Integer(title = _("critical at"), unit = _("MB")),
+                Filesize(title = _("warning at")), 
+                Filesize(title = _("critical at")),
             ]),
         help = _("The check will trigger a warning or critical state if the size of the "
                  "database exceeds these levels."),
@@ -4602,7 +4602,7 @@ register_check_parameters(
     ),
     TextAscii(
         title = _("Name of the database"),
-        help = _("Possibly with with instance: instance:dbname"),
+        help = _("Don't forgett the instance: instance:dbname"),
     ),
     "first"
 )

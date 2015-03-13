@@ -34,21 +34,21 @@
 
 
 def parse_mysql_capacity(info):
-    instances = {}
+    parsed = {}
     instance = False
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
-            instances[instance] = []
+            parsed[instance] = []
         elif instance:
-            instances[instance].append(line)
+            parsed[instance].append(line)
 
     if not instance:
-        instances['mysql'] = []
+        parsed['mysql'] = []
         for line in info:
-            instances['mysql'].append(line)
+            parsed['mysql'].append(line)
 
-    return instances
+    return parsed
 
 
 def inventory_mysql_size(parsed):
@@ -69,10 +69,9 @@ def check_mysql_size(item, params, parsed):
             infotext = "Size is %s" % get_bytes_human_readable(size)
             if params:
                 state = 0
-                # TODO: Schwellen in Bytes, mit Filesize() Valuespec
-                warn, crit = params # in MB
-                warn_b = warn * 1048576
-                crit_b = crit * 1048576
+                warn, crit = params 
+                warn_b = warn * 1024
+                crit_b = crit * 1024
                 perfdata = [("database_size", size, warn_b, crit_b)]
 		if size > crit_b:
                    state = 2
@@ -83,7 +82,7 @@ def check_mysql_size(item, params, parsed):
             else:
                 state = 0
                 perfdata = [("database_size", size)]
-            return (state, infotext, perfdata)
+            return state, infotext, perfdata
 
 
 check_info['mysql_capacity'] = {
@@ -92,5 +91,5 @@ check_info['mysql_capacity'] = {
     "check_function"          : check_mysql_size,
     "service_description"     : "MySQL DB Size %s",
     "has_perfdata"            : True,
-    "group"                   : "dbsize",
+    "group"                   : "mysql_db_size",
 }

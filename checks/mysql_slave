@@ -41,27 +41,27 @@ def parse_mysql_slave(info):
                     val = None
             return val
 
-    instances = {}
+    parsed = {}
     instance = False
     data = {}
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
-            instances[instance] = []
+            parsed[instance] = []
         elif instance:
             value = parse_line(line)
             if value:
-                instances[instance][line[0][:-1]] = value
+                parsed[instance][line[0][:-1]] = value
 
     # Support for old Plugin version
     if not instance:
-        instances['mysql'] = {}
+        parsed['mysql'] = {}
         for line in info:
             value = parse_line(line)
             if value:
-                instances['mysql'][line[0][:-1]] = value
+                parsed['mysql'][line[0][:-1]] = value
 
-    return instances
+    return parsed
 
 
 def inventory_mysql_slave(parsed):
@@ -71,42 +71,42 @@ def inventory_mysql_slave(parsed):
 
 
 def check_mysql_slave(item, params, parsed):
-    # TODO: item könnte fehlen!
-    data = parsed[item]
+    if item in parsed:
+        data = parsed[item]
 
-    state = 0
-    perfdata = []
-    output = []
+        state = 0
+        perfdata = []
+        output = []
 
-    if data['Slave_IO_Running']:
-        output.append('Slave-IO: running')
-    else:
-        output.append('Slave-IO: not running(!!)')
-        state = 2
-
-    if data['Slave_SQL_Running']:
-        output.append('Slave-SQL: running')
-
-        # Makes only sense to monitor the age when the SQL slave is running
-        if data['Seconds_Behind_Master'] == 'NULL':
-            output.append('Time behind master: NULL (Lost connection?)(!!)')
-            state = 2
+        if data['Slave_IO_Running']:
+            output.append('Slave-IO: running')
         else:
-            out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
-            warn, crit = params.get('seconds_behind_master', (None, None))
-            if crit != None and data['Seconds_Behind_Master'] > crit:
-                state = 2
-                out += '(!!)'
-            elif warn != None and data['Seconds_Behind_Master'] > warn:
-                state = max(state, 1)
-                out += '(!)'
-            output.append(out)
-            perfdata.append(('sync_latency', data['Seconds_Behind_Master'], warn, crit))
-    else:
-        output.append('Slave-SQL: not running(!!)')
-        state = 2
+            output.append('Slave-IO: not running(!!)')
+            state = 2
 
-    return state, ', '.join(output), perfdata
+        if data['Slave_SQL_Running']:
+            output.append('Slave-SQL: running')
+
+            # Makes only sense to monitor the age when the SQL slave is running
+            if data['Seconds_Behind_Master'] == 'NULL':
+                output.append('Time behind master: NULL (Lost connection?)(!!)')
+                state = 2
+            else:
+                out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
+                warn, crit = params.get('seconds_behind_master', (None, None))
+                if crit != None and data['Seconds_Behind_Master'] > crit:
+                    state = 2
+                    out += '(!!)'
+                elif warn != None and data['Seconds_Behind_Master'] > warn:
+                    state = max(state, 1)
+                    out += '(!)'
+                output.append(out)
+                perfdata.append(('sync_latency', data['Seconds_Behind_Master'], warn, crit))
+        else:
+            output.append('Slave-SQL: not running(!!)')
+            state = 2
+
+        return state, ', '.join(output), perfdata
 
 check_info['mysql_slave'] = {
     "parse_function"          : parse_mysql_slave,

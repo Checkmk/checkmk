@@ -25,7 +25,11 @@
 #ifndef pnp4nagios_h
 #define pnp4nagios_h
 
+#include <string>
+using namespace std;
+
 int pnpgraph_present(const char *host, const char *service);
+string rrd_path(const char *host, const char *service, const char *varname);
 
 #endif // pnp4nagios_h
 

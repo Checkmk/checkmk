@@ -22,11 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include <errno.h>
+#include <math.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <stdlib.h>
 #include <sys/time.h>
-#include <errno.h>
 
 #include "logger.h"
 #include "opids.h"
@@ -168,18 +169,29 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
 
 Query::~Query()
 {
+    // delete dynamic columns
+    for (_columns_t::iterator it = _columns.begin();
+        it != _columns.end();
+        ++it)
+    {
+        Column *column = *it;
+        if (column->mustDelete()) {
+            delete column;
+        }
+    }
+
     // delete dummy-columns
     for (_columns_t::iterator it = _dummy_columns.begin();
-            it != _dummy_columns.end();
-            ++it)
+         it != _dummy_columns.end();
+         ++it)
     {
         delete *it;
     }
 
     // delete stats columns
     for (_stats_columns_t::iterator it = _stats_columns.begin();
-            it != _stats_columns.end();
-            ++it)
+         it != _stats_columns.end();
+         ++it)
     {
         delete *it;
     }
@@ -539,6 +551,7 @@ void Query::parseColumnsLine(char *line)
     }
     _show_column_headers = false;
 }
+
 
 void Query::parseSeparatorsLine(char *line)
 {
@@ -1039,9 +1052,20 @@ void Query::outputCounter(counter_t value)
 
 void Query::outputDouble(double value)
 {
-    char buf[64];
-    int l = snprintf(buf, sizeof(buf), "%.10e", value);
-    _output->addBuffer(buf, l);
+    if (isnan(value)) {
+        if (_output_format == OUTPUT_FORMAT_CSV) {
+            // output empty cell
+        }
+        else if (_output_format == OUTPUT_FORMAT_PYTHON)
+            _output->addBuffer("None", 4);
+        else
+            _output->addBuffer("null", 4); // JSON
+    }
+    else {
+        char buf[64];
+        int l = snprintf(buf, sizeof(buf), "%.10e", value);
+        _output->addBuffer(buf, l);
+    }
 }
 
 void Query::outputAsciiEscape(char value)

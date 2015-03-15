@@ -26,6 +26,7 @@
 
 #include "Table.h"
 #include "Column.h"
+#include "DynamicColumn.h"
 #include "Query.h"
 #include "logger.h"
 
@@ -44,11 +45,23 @@ void Table::addColumn(Column *col)
 }
 
 
+void Table::addDynamicColumn(DynamicColumn *dyncol)
+{
+    _dynamic_columns.insert(make_pair(dyncol->name(), dyncol));
+}
+
 
 Table::~Table()
 {
     for (_columns_t::iterator it = _columns.begin();
             it != _columns.end();
+            ++it)
+    {
+        delete it->second;
+    }
+
+    for (_dynamic_columns_t::iterator it = _dynamic_columns.begin();
+            it != _dynamic_columns.end();
             ++it)
     {
         delete it->second;
@@ -69,19 +82,46 @@ void Table::addAllColumnsToQuery(Query *q)
 
 Column *Table::column(const char *colname)
 {
+    // We allow the name of the table to be
+    // prefixed to the column name. So if we
+    // detect this prefix, we simply remove it.
+    int prefix_len = strlen(prefixname()); // replace 's' with '_'
+
+    // Multisite seems to query "service_service_description". We can fix this
+    // in newer versions, but need to be compatible. So we need a "while" here,
+    // not just an "if".
+    while (!strncmp(colname, prefixname(), prefix_len - 1) && colname[prefix_len - 1] == '_')
+    {
+        colname += prefix_len;
+    }
+
+    // If the colum name contains a ':' then we have a dynamic
+    // column with column arguments
+    if (strchr(colname, ':'))
+        return dynamicColumn(colname);
+
+
     // First try exact match
     _columns_t::iterator it = _columns.find(string(colname));
     if (it != _columns.end())
         return it->second;
+    else
+        return 0;
+}
 
-    // Second allow column names to bear prefix like
-    // the tablename (e.g. service_ for table services, or log_ for table log)
-    int prefix_len = strlen(prefixname()); // replace 's' with '_'
-    if (!strncmp(colname, prefixname(), prefix_len - 1) && \
-            colname[prefix_len - 1] == '_')
-    {
-        return column(colname + prefix_len);
-    }
+
+Column *Table::dynamicColumn(const char *colname_with_args)
+{
+    const char *sep_pos = strchr(colname_with_args, ':');
+    string name(colname_with_args, sep_pos - colname_with_args);
+
+    const char *argstring = sep_pos + 1;
+
+    logger(LOG_NOTICE, "Dynamic column %s with args [%s]", name.c_str(), argstring);
+    _dynamic_columns_t::iterator it = _dynamic_columns.find(name);
+    if (it != _dynamic_columns.end())
+        return it->second->createColumn(argstring);
+
     else
         return 0;
 }

@@ -34,19 +34,24 @@
 using namespace std;
 
 class Column;
+class DynamicColumn;
 class Query;
 
 class Table
 {
 public:
     typedef map<string, Column *> _columns_t;
+    typedef map<string, DynamicColumn *> _dynamic_columns_t;
+
 private:
     _columns_t _columns;
+    _dynamic_columns_t _dynamic_columns;
 
 public:
     Table() {}
     virtual ~Table();
     virtual Column *column(const char *name);
+    Column *dynamicColumn(const char *colname_with_args);
     virtual void answerQuery(Query *) = 0;
     virtual const char *name() = 0;
     virtual const char *prefixname() { return name(); }
@@ -54,6 +59,7 @@ public:
     virtual void *findObject(char *objectspec __attribute__ ((__unused__))) { return 0; } // objectspec may be modified while parsing
     void addColumn(Column *);
     bool hasColumn(Column *);
+    void addDynamicColumn(DynamicColumn *);
     void addAllColumnsToQuery(Query *);
     _columns_t *columns() { return &_columns; }
 };

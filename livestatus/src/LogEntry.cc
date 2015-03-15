@@ -156,6 +156,20 @@ inline bool LogEntry::handleStatusEntry()
         _comment      = next_token(&scan, ';');
         return true;
     }
+    else if (!strncmp(_text, "HOST ACKNOWLEDGE ALERT: ", 24))
+    {
+        _logclass = LOGCLASS_ALERT;
+        _type     = ACKNOWLEDGE_ALERT_HOST;
+        char *scan = _text;
+        _text = next_token(&scan, ':');
+        scan++;
+
+        _host_name    = next_token(&scan, ';');
+        _state_type   = next_token(&scan, ';');
+        _contact_name = next_token(&scan, ';');
+        _comment      = next_token(&scan, ';');
+        return true;
+    }
     else if (!strncmp(_text, "HOST FLAPPING ALERT: ", 21))
     {
         _logclass = LOGCLASS_ALERT;
@@ -199,6 +213,7 @@ inline bool LogEntry::handleStatusEntry()
         _check_output = next_token(&scan, ';');
         return true;
     }
+
     else if (!strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24))
     {
         _logclass = LOGCLASS_ALERT;
@@ -213,6 +228,23 @@ inline bool LogEntry::handleStatusEntry()
         _comment      = next_token(&scan, ';');
         return true;
     }
+
+    else if (!strncmp(_text, "SERVICE ACKNOWLEDGE ALERT: ", 27))
+    {
+        _logclass = LOGCLASS_ALERT;
+        _type     = ACKNOWLEDGE_ALERT_SERVICE;
+        char *scan = _text;
+        _text = next_token(&scan, ':');
+        scan++;
+
+        _host_name    = next_token(&scan, ';');
+        _svc_desc     = next_token(&scan, ';');
+        _state_type   = next_token(&scan, ';');
+        _contact_name = next_token(&scan, ';');
+        _comment      = next_token(&scan, ';');
+        return true;
+    }
+
     else if (!strncmp(_text, "SERVICE FLAPPING ALERT: ", 24))
     {
         _logclass = LOGCLASS_ALERT;
@@ -227,7 +259,6 @@ inline bool LogEntry::handleStatusEntry()
         _comment      = next_token(&scan, ';');
         return true;
     }
-
 
     else if (!strncmp(_text, "TIMEPERIOD TRANSITION: ", 23))
     {

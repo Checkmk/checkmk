@@ -287,7 +287,7 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
         return (3, "filesystem not found")
 
 
-def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params):
+def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params, this_time = None):
     if size_mb == 0:
         return (1, "size of filesystem is 0 MB", [])
 
@@ -370,7 +370,8 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
         try:
             range = levels["trend_range"] # in hours
             range_sec = range * 3600.0
-            this_time = time.time()
+            if not this_time:
+                this_time = time.time()
 
             # first compute current rate in MB/s by computing delta since last check
             rate = get_rate("df.%s.delta" % mountpoint, this_time, used_mb, allow_negative=True, onwrap=ZERO)

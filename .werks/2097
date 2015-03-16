@@ -1,0 +1,15 @@
+Title: apc_symmetra: Fixed false alert during self test
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426491048
+
+When performing a self test the check raise an alert that
+the device is "on battery". The check now checks the self
+test state and ignores the on battery state during this time.
+
+The check has been cleaned up a lot to be more maintainable and
+modern.

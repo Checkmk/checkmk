@@ -98,53 +98,6 @@ def inventory_oracle_tablespaces(info):
         inventory.append(("%s.%s" % t, parameters))
     return inventory
 
-
-def get_tablespace_levels_in_bytes(size_bytes, params):
-    # If the magic factor is used, take table size and magic factor
-    # into account in order to move levels
-    magic  = params.get("magic")
-
-    # Use tablespace size dependent dynamic levels or static levels
-    if type(params.get("levels")) == tuple:
-        warn, crit = params.get("levels")
-    else:
-        # A list of levels. Choose the correct one depending on the
-        # size of the current tablespace
-        for to_size, this_levels in params.get("levels"):
-            if size_bytes > to_size:
-                warn, crit = this_levels
-                break
-        else:
-            return None, None, "", False
-
-    # warn/crit level are float => percentages of max size, otherwise MB
-    if type(warn) == float:
-        output_as_percentage = True
-        if magic:
-            normsize = params["magic_normsize"] * 1024 * 1024
-            hbytes_size = size_bytes / float(normsize)
-            felt_size = hbytes_size ** magic
-            scale = felt_size / hbytes_size
-            warn *= scale
-            crit *= scale
-            max_warning_level, max_critical_level = params["magic_maxlevels"]
-            warn = min(warn, max_warning_level)
-            crit = min(crit, max_critical_level)
-        levels_text = " (levels at %.1f%%/%.1f%%)" % (warn, crit)
-        warn_bytes = warn * size_bytes / 100
-        crit_bytes = crit * size_bytes / 100
-
-    # Absolute free space in MB
-    else:
-        output_as_percentage = False
-        warn_bytes = warn * 1024 * 1024
-        crit_bytes = crit * 1024 * 1024
-        levels_text = " (levels at %s/%s)" % (get_bytes_human_readable(warn_bytes), get_bytes_human_readable(crit_bytes))
-
-
-    return warn_bytes, crit_bytes, levels_text, output_as_percentage
-
-
 def check_oracle_tablespaces(item, params, info):
     try:
         sid, tbsname = item.split('.')
@@ -224,7 +177,7 @@ def check_oracle_tablespaces(item, params, info):
         raise MKCounterWrapped("Login into database failed")
 
 
-    warn, crit, levels_text, output_as_percentage = get_tablespace_levels_in_bytes(max_size, params)
+    warn, crit, levels_text, output_as_percentage = db_get_tablespace_levels_in_bytes(max_size, params)
 
     infotext = "%s (%s), size: %s, free: " % \
        (ts_status,
@@ -290,5 +243,5 @@ check_info['oracle_tablespaces'] = {
     "has_perfdata"            : True,
     "group"                   : "oracle_tablespaces",
     "default_levels_variable" : "oracle_tablespaces_defaults",
-    "includes"                : [ "oracle.include" ]
+    "includes"                : [ "oracle.include", "db.include" ]
 }

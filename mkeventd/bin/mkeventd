@@ -681,7 +681,7 @@ def quote_tab(col):
     if type(col) in [ float, int ]:
         return str(col)
     elif type(col) in [ tuple, list ]:
-        col = "\1" + "\1".join(map(str, col))
+        col = "\1" + "\1".join(map(to_utf8, col))
     elif col == None:
         col = "\2"
 

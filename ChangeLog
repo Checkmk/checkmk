@@ -390,6 +390,7 @@
     * 1861 FIX: exception in mkeventd when archiving certain event log lines
     * 1865 FIX: mkeventd: fixed exception when executing a shell script as action
     * 2133 FIX: Fix visualization of global EC setting for Rule Optimizer...
+    * 2139 FIX: Fix exception in Event Console when archiving events with match groups and non ASCII characters
 
     HW/SW-Inventory:
     * 1846 Keep track of changes of software and hardware...

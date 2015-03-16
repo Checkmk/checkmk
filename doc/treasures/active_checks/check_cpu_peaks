@@ -26,6 +26,13 @@
 
 import sys, os, time, pprint, getopt
 
+class MKGeneralException(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+    def __str__(self):
+        return self.reason
+
+
 # Note: This check only works in an OMD environment!
 sys.path.append(os.path.expanduser("~/share/check_mk/modules"))
 execfile(os.path.expanduser("~/etc/check_mk/defaults"), globals())
@@ -46,21 +53,23 @@ ARGUMENTS:
   HOST                          Host
 
 OPTIONS:
-  -v   Verbose mode, Outputs RRD data
   -w   Return WARN if this value (integer) is never breached in the check period
   -c   Return CRIT if this value (integer) is never breached in the check period
   -u   Until time (unixtimestamp)
   -f   From time (unixtimestamp), default is until time minus 30 days
+  -v   Verbose mode, Outputs RRD data
+  -d   Debug mode - let Python exceptions come through
 """)
 
 if len(sys.argv) < 2:
     usage()
     sys.exit(1)
 
-short_options = "vw:c:f:u:"
+short_options = "vw:c:f:u:d"
 opts, args = getopt.getopt(sys.argv[1:], short_options)
 
 opt_verbose = False
+opt_debug   = False
 host        = None
 warn_level  = None
 crit_level  = None
@@ -70,6 +79,8 @@ untiltime   = None
 for o,a in opts:
     if o in [ '-v' ]:
         opt_verbose = True
+    elif o in [ '-d' ]:
+        opt_debug = True
     elif o in [ '-w' ]:
         warn_level = int(a)
     elif o in [ '-c' ]:
@@ -96,15 +107,17 @@ try:
     util_total = []
     is_windows = True
     try:
-        data = get_rrd_data(host, "CPU utilization", "util", "AVERAGE", fromtime, untiltime)
+        data = get_rrd_data(host, "CPU utilization", "util", "MAX", fromtime, untiltime)
         datasets.append(data[1])
         step_secs = data[0]
         util_total = [ x for x in datasets[0] if x != None ]
     except Exception, e:
+        if opt_debug:
+            raise
         # looks like this is not a windows rrd...
         is_windows = False
         for key in ["system", "user", "wait"]:
-            data = get_rrd_data(host, "CPU utilization", key, "AVERAGE", fromtime, untiltime)
+            data = get_rrd_data(host, "CPU utilization", key, "MAX", fromtime, untiltime)
             datasets.append(data[1])
             step_secs = data[0]
         util_total = map(lambda x: int(sum([y for y in x if y != None])),
@@ -141,9 +154,18 @@ try:
         state = 1
     print ", ".join(info)
     sys.exit(state)
+
+except MKGeneralException, e:
+    if opt_debug:
+        raise
+    print "OK - " + str(e)
+    sys.exit(0)
+
 except Exception, e:
-    # TODO: Exception handling could be improved. 
+    if opt_debug:
+        raise
+    # TODO: Exception handling could be improved.
     # Right now no handling of MKGeneralException, etc. is implemented
-    print "Exception while processing data.", e
-    sys.exit(2)
+    print "UNKNOWN - " + str(e)
+    sys.exit(3)
 

@@ -22,49 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef Column_h
-#define Column_h
+#ifndef DynamicColumn_h
+#define DynamicColumn_h
 
-#include "config.h"
-
-#include <stdio.h>
 #include <string>
 using namespace std;
 
-#define COLTYPE_INT     0
-#define COLTYPE_DOUBLE  1
-#define COLTYPE_STRING  2
-#define COLTYPE_LIST    3
-#define COLTYPE_TIME    4
-#define COLTYPE_DICT    5
-#define COLTYPE_BLOB    6
+class Column;
 
-class Filter;
-class Query;
-class Table;
-
-class Column
+class DynamicColumn
 {
     string _name;
     string _description;
+    int    _indirect_offset;
 public:
-    int _indirect_offset;
-    int _extra_offset;
-
-public:
-    Column(string name, string description, int indirect_offset);
-    virtual ~Column() {}
+    DynamicColumn(string name, string description, int indirect_offset) :
+        _name(name), _description(description), _indirect_offset(indirect_offset) {}
+    virtual ~DynamicColumn() {}
     const char *name() const { return _name.c_str(); }
     const char *description() const { return _description.c_str(); }
-    virtual string valueAsString(void *data __attribute__ ((__unused__)), Query *)
-        { return "invalid"; }
-    virtual int type() = 0;
-    virtual void output(void *data, Query *) = 0;
-    virtual bool mustDelete() { return false; } // true for dynamic Columns to be deleted after Query
-    virtual Filter *createFilter(int opid __attribute__ ((__unused__)), char *value __attribute__ ((__unused__))) { return 0; }
-    void *shiftPointer(void *data);
-    void setExtraOffset(int o) { _extra_offset = o; }
+    Column *createColumn(const char *arguments);
+    virtual Column *createColumn(int indirect_offset, const char *arguments) = 0;
 };
 
-#endif // Column_h
+#endif // DynamicColumn_h
 

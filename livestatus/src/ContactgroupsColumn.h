@@ -36,7 +36,6 @@ class ContactgroupsColumn : public ListColumn
 public:
     ContactgroupsColumn(string name, string description, int offset, int indirect_offset)
         : ListColumn(name, description, indirect_offset), _offset(offset) {}
-    int type() { return COLTYPE_LIST; }
     void output(void *, Query *);
     void *getNagiosObject(char *name); // return pointer to contact group
     bool isNagiosMember(void *data, void *nagobject);

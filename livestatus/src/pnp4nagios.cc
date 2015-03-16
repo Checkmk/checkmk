@@ -22,21 +22,29 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <unistd.h>
 
 #include "pnp4nagios.h"
 
-extern char g_pnp_path[];
 
-void cleanup_pnpname(char *p)
+extern char *g_pnp_path;
+
+char *cleanup_pnpname(char *name)
 {
+    char *p = name;
     while (*p) {
         if (*p == ' ' || *p == '/' || *p == '\\' || *p == ':')
             *p = '_';
         p++;
     }
+    return name;
 }
+
 
 int pnpgraph_present(const char *host, const char *service)
 {
@@ -70,3 +78,40 @@ int pnpgraph_present(const char *host, const char *service)
         return 0;
 }
 
+
+// Determines if a RRD database is existent and returns its path name.
+// Returns an empty string otherwise.
+// This assumes paths created in the PNP4Nagios style with storage type MULTIPLE.
+string rrd_path(const char *host, const char *service, const char *varname)
+{
+    if (!g_pnp_path[0])
+        return "";
+
+    string path = g_pnp_path;
+    path += "/";
+
+    char *cleaned_up;
+    cleaned_up = cleanup_pnpname(strdup(host));
+    path += cleaned_up;
+    free(cleaned_up);
+
+    path += "/";
+
+    cleaned_up = cleanup_pnpname(strdup(service));
+    path += cleaned_up;
+    free(cleaned_up);
+
+    path += "_";
+
+    cleaned_up = cleanup_pnpname(strdup(varname));
+    path += cleaned_up;
+    free(cleaned_up);
+
+    path += ".rrd";
+
+    struct stat st;
+    if (0 == stat(path.c_str(), &st))
+        return path;
+    else
+        return "";
+}

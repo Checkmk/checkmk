@@ -1,9 +1,0 @@
-Title: Fixed possible encoding problem with useres containing non ASCII Characters
-Level: 1
-Component: wato
-Compatible: compat
-Version: 1.2.6p1
-Date: 1426493622
-Class: fix
-
-

@@ -82,7 +82,6 @@ class MKInternalError(MKException):
 # Create directory owned by common group of Nagios and webserver,
 # and make it writable for the group
 def make_nagios_directory(path):
-    path = path.decode('utf-8')
     if not os.path.exists(path):
         parent_dir, lastpart = path.rstrip('/').rsplit('/', 1)
         make_nagios_directory(parent_dir)

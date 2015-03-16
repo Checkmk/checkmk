@@ -28,6 +28,7 @@
 
     Event Console:
     * 2133 FIX: Fix visualization of global EC setting for Rule Optimizer...
+    * 2139 FIX: Fix exception in Event Console when archiving events with match groups and non ASCII characters
 
 
 1.2.6:

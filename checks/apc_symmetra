@@ -24,52 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# We use the following OIDs:
-# PowerNet-MIB::upsBasicBatteryStatus.0    .1.3.6.1.4.1.318.1.1.1.2.1.1.0
-# PowerNet-MIB::upsBasicOutputStatus.0     .1.3.6.1.4.1.318.1.1.1.4.1.1.0
-# PowerNet-MIB::upsAdvBatteryCapacity.0    .1.3.6.1.4.1.318.1.1.1.2.2.1.0
-# PowerNet-MIB::upsAdvBatteryTemperature.0 .1.3.6.1.4.1.318.1.1.1.2.2.2.0
-# PowerNet-MIB::upsAdvBatteryReplaceIndicator.0 .1.3.6.1.4.1.318.1.1.1.2.2.4.0
-# PowerNet-MIB::upsAdvBatteryNumOfBadBattPacks.0 .1.3.6.1.4.1.318.1.1.1.2.2.6.0
-# PowerNet-MIB::upsAdvBatteryCurrent.0     .1.3.6.1.4.1.318.1.1.1.2.2.9.0
-# PowerNet-MIB::upsAdvOutputVoltage.0      .1.3.6.1.4.1.318.1.1.1.4.2.1.0
-# PowerNet-MIB::upsAdvOutputCurrent.0      .1.3.6.1.4.1.318.1.1.1.4.2.4.0
-# PowerNet-MIB::upsAdvBatteryRunTimeRemaining.0      .1.3.6.1.4.1.318.1.1.1.2.2.3.0
-# PowerNet-MIB::upsAdvTestCalibrationResults   .1.3.6.1.4.1.318.1.1.1.7.2.6
-
-# upsBasicBatteryStatus: unknown(1), batteryNormal(2), batteryLow(3)
-# upsBasicOutputStatus: unknown(1),  onLine(2), onBattery(3), onSmartBoost(4),
-#   timedSleeping(5), softwareBypass(6), off(7), rebooting(8), switchedBypass(9),
-#   hardwareFailureBypass(10), sleepingUntilPowerReturn(11), onSmartTrim(12)
-# upsAdvTestCalibrationResults: ok(1), invalidTest(2), calibrationInProgress(3)
-
-# PowerNet-MIB::upsAdvTestDiagnosticsResults   .1.3.6.1.4.1.318.1.1.1.7.2.3
-# upsAdvTestDiagnosticsResults OBJECT-TYPE
-#         SYNTAX INTEGER {
-#                 ok(1),
-#                 failed(2),
-#                 invalidTest(3),
-#                 testInProgress(4)
-#         }
-#         ACCESS read-only
-#         STATUS mandatory
-#         DESCRIPTION
-#                 "The results of the last UPS diagnostics test performed."
-#         ::= { upsAdvTest 3 }
-
-# PowerNet-MIB::upsAdvTestLastDiagnosticsDate  .1.3.6.1.4.1.318.1.1.1.7.2.4
-# upsAdvTestLastDiagnosticsDate OBJECT-TYPE
-#         SYNTAX DisplayString
-#         ACCESS read-only
-#         STATUS mandatory
-#         DESCRIPTION
-#                 "The date the last UPS diagnostics test was performed in
-#                  mm/dd/yy format."
-#         ::= { upsAdvTest 4 }
-#
-# AdvOutputLoad     1.3.6.1.4.1.318.1.1.1.4.2.3.0
-# Returns     The current UPS load expressed in percent of rated capacity.
-# Monitoring Condition    Pass if less than 50
+# upsBasicStateOutputState:
+# The flags are numbered 1 to 64, read from left to right. The flags are defined as follows:
+# 1: Abnormal Condition Present, 2: On Battery, 3: Low Battery, 4: On Line
+# 5: Replace Battery, 6: Serial Communication Established, 7: AVR Boost Active
+# 8: AVR Trim Active, 9: Overload, 10: Runtime Calibration, 11: Batteries Discharged
+# 12: Manual Bypass, 13: Software Bypass, 14: In Bypass due to Internal Fault
+# 15: In Bypass due to Supply Failure, 16: In Bypass due to Fan Failure
+# 17: Sleeping on a Timer, 18: Sleeping until Utility Power Returns
+# 19: On, 20: Rebooting, 21: Battery Communication Lost, 22: Graceful Shutdown Initiated
+# 23: Smart Boost or Smart Trim Fault, 24: Bad Output Voltage, 25: Battery Charger Failure
+# 26: High Battery Temperature, 27: Warning Battery Temperature, 28: Critical Battery Temperature
+# 29: Self Test In Progress, 30: Low Battery / On Battery, 31: Graceful Shutdown Issued by Upstream Device
+# 32: Graceful Shutdown Issued by Downstream Device, 33: No Batteries Attached
+# 34: Synchronized Command is in Progress, 35: Synchronized Sleeping Command is in Progress
+# 36: Synchronized Rebooting Command is in Progress, 37: Inverter DC Imbalance
+# 38: Transfer Relay Failure, 39: Shutdown or Unable to Transfer, 40: Low Battery Shutdown
+# 41: Electronic Unit Fan Failure, 42: Main Relay Failure, 43: Bypass Relay Failure
+# 44: Temporary Bypass, 45: High Internal Temperature, 46: Battery Temperature Sensor Fault
+# 47: Input Out of Range for Bypass, 48: DC Bus Overvoltage, 49: PFC Failure
+# 50: Critical Hardware Fault, 51: Green Mode/ECO Mode, 52: Hot Standby
+# 53: Emergency Power Off (EPO) Activated, 54: Load Alarm Violation, 55: Bypass Phase Fault
+# 56: UPS Internal Communication Failure, 57-64: <Not Used>
 
 # old format:
 # apc_default_levels = ( 95, 40, 1, 220 )
@@ -78,24 +54,29 @@ factory_settings["apc_default_levels"] = {
         "levels": ( 95, 60, 1, 220 )
 }
 
+def inventory_apc(info):
+    if len(info) > 0:
+        return [(None, "apc_default_levels")]
+
+
 def check_apc(item, params, info):
-    BasicBatteryStatus, BasicOutputStatus, AdvBatteryCapacity, \
-    AdvBatteryTemperature, AdvBatteryReplaceIndicator, AdvBatteryNumOfBadBattPacks, \
-    AdvBatteryCurrent, AdvInputVoltage, AdvOutputVoltage, \
-    AdvOutputCurrent, AdvBatteryRunTimeRemaining, AdvTestCalibrationResults, AdvOutputLoad \
-                                                = [ saveint(x) for x in info[0][:13] ]
+    battery_status, output_status, battery_capacity, system_temp, battery_replace, \
+    num_batt_packs, battery_current, input_voltage, output_voltage, output_current, \
+    time_remaining, calib_result, output_load = [ saveint(x) for x in info[0][:13] ]
+    last_diag_date = info[0][13]
 
-    last_diag_date = info[0][-1]
-    RunTimeRemaining = AdvBatteryRunTimeRemaining / 100
+    output_state_bitmask = int(info[0][14], 2) # string contains a bitmask, convert to int
+    self_test_in_progress = output_state_bitmask & (2^29) == 1
 
-    alt_crit_capacity = None
     # convert old format tuple to dict
     if type(params) is tuple:
         params = { "levels": params }
 
     # new format with up to 6 params in dict
+    alt_crit_capacity = None
     crit_capacity, crit_sys_temp, crit_batt_curr, crit_voltage = params['levels']
     if params.get("post_calibration_levels"):
+        # the last_diag_date is reported as %m/%d/%Y or %y
         if last_diag_date != 'Unknown' and len(last_diag_date) in [8, 10]:
             year_format = len(last_diag_date) == 8 and '%y' or '%Y'
             last_ts = time.mktime(time.strptime(last_diag_date, '%m/%d/'+year_format))
@@ -104,29 +85,19 @@ def check_apc(item, params, info):
             allowed_delay_sec = 86400 + params['post_calibration_levels']['additional_time_span']
             alt_crit_capacity = params['post_calibration_levels']['altcapacity']
 
-    single_states = []
-
     # 1. Check battery status
     status_text = { 1:"unknown", 2:"normal", 3:"low" }
-    infotxt = "Battery status: %s" % (status_text.get(BasicBatteryStatus))
-    if BasicBatteryStatus != 2:
-        state = 2
-        infotxt += "(!!)"
-        single_states.append( (state, infotxt, None) )
-    else:
-        state = 0
+    if battery_status != 2:
+        yield 2, "Battery status: %s" % (status_text.get(battery_status))
 
     # 2. Check battery replacement status
-    if AdvBatteryReplaceIndicator == 2:
-        if AdvBatteryNumOfBadBattPacks == 1:
-            infotxt = "one battery needs replacement(!)"
-            state = 1
-        elif AdvBatteryNumOfBadBattPacks > 1:
-            infotxt = "%i batteries need replacement(!!)" % AdvBatteryNumOfBadBattPacks
-            state = 2
-        single_states.append( (state, infotxt, None) )
-    elif state == 0: # if normal only print when replacement status is also OK, to save on service output text
-        single_states.append( (state, infotxt, None) )
+    if battery_replace == 2:
+        if num_batt_packs == 1:
+            yield 1, "one battery needs replacement"
+        elif num_batt_packs > 1:
+            yield 2, "%i batteries need replacement" % num_batt_packs
+    elif battery_status == 2:
+        yield 0, "Battery status: ok"
 
     # 3. Check basic output status
     status_text = { 1:"unknown", 2:"online", 3:"on battery", 4:"on smart boost", 5:"timed sleeping",
@@ -134,110 +105,84 @@ def check_apc(item, params, info):
                    10:"hardware failure bypass", 11:"sleeping until power return",
                    12:"on smart trim" }
     calib_text = { 1:"", 2:" (calibration invalid)", 3:" (calibration in progress)" }
-    infotxt = "output status: %s%s" % (status_text.get(BasicOutputStatus), calib_text.get(AdvTestCalibrationResults))
+    stest_text = self_test_in_progress and " (self-test running)" or ""
+    infotxt = "output status: %s%s%s" % (status_text.get(output_status), calib_text.get(calib_result), stest_text)
     # during calibration test is OK
-    if BasicOutputStatus not in [2, 4, 12] and AdvTestCalibrationResults != 3:
+    if output_status not in [2, 4, 12] and calib_result != 3 and not self_test_in_progress:
         state = 2
-        infotxt += "(!!)"
     else:
         state = 0
-    single_states.append( (state, infotxt, None) )
+    yield state, infotxt
 
     # 4. Check battery capacity
     state = 0
-    infotxt = "capacity %d%% (crit at " % AdvBatteryCapacity
-
-    if alt_crit_capacity != None and diff_sec < allowed_delay_sec:
+    infotxt = "capacity %d%% (crit at or below " % battery_capacity
+    if (alt_crit_capacity != None and diff_sec < allowed_delay_sec) or self_test_in_progress:
         infotxt += "%d%% in delay after calib.)" % alt_crit_capacity
-        if AdvBatteryCapacity <= alt_crit_capacity:
+        if battery_capacity <= alt_crit_capacity:
             state = 2
-            infotxt += "(!!)"
     else:
         infotxt += "%d%%)" % crit_capacity
-        if AdvBatteryCapacity <= crit_capacity:
+        if battery_capacity <= crit_capacity:
             state = 2
-            infotxt += "(!!)"
-
-    single_states.append( (state, infotxt, ("capacity", AdvBatteryCapacity, "", crit_capacity, 0, 100)) )
+    yield state, infotxt, [("capacity", battery_capacity, None, crit_capacity, 0, 100)]
 
     # 5. Check System temperature
-    # The Name AdvBatteryTemperature is a wrong naming in the vendor mib.
-    infotxt = "sys. temp. %d °C" % AdvBatteryTemperature
-    if AdvBatteryTemperature >= crit_sys_temp:
+    infotxt = "sys. temp. %d °C" % system_temp
+    if system_temp >= crit_sys_temp:
         state = 2
-        infotxt += "(!!)"
     else:
         state = 0
-    single_states.append( (state, infotxt, ("systemp", AdvBatteryTemperature, "", crit_sys_temp) ) )
+    yield state, infotxt, [("systemp", system_temp, None, crit_sys_temp)]
 
     # 6. Check battery current
-    infotxt = "bat. curr. %d A" % AdvBatteryCurrent
-    if AdvBatteryCurrent >= crit_batt_curr:
-        state = 2
-        infotxt += "(!!)"
-    else:
+    infotxt = "bat. curr. %d A" % battery_current
+    if (alt_crit_capacity != None and diff_sec < allowed_delay_sec) or self_test_in_progress:
         state = 0
-    single_states.append( (state, infotxt, ("batcurr", AdvBatteryCurrent, "", crit_batt_curr, 0) ) )
+    elif battery_current >= crit_batt_curr:
+        state = 2
+    yield state, infotxt, [("batcurr", battery_current, None, crit_batt_curr, 0)]
 
     # 6a. Simply show input voltage (no performance data)
-    single_states.append( (0, "input voltage %d V" % AdvInputVoltage, None) )
+    yield 0, "input voltage %d V" % input_voltage
 
     # 7. Check output voltage
-    infotxt = "output voltage %d V" % AdvOutputVoltage
-    if AdvOutputVoltage <= crit_voltage:
+    infotxt = "output voltage %d V" % output_voltage
+    if output_voltage <= crit_voltage:
         state = 2
-        infotxt += "(!!)"
     else:
         state = 0
-    single_states.append( (state, infotxt, ("voltage", AdvOutputVoltage, "", crit_voltage, 0) ) )
+    yield state, infotxt, [("voltage", output_voltage, None, crit_voltage, 0)]
 
     # 8. Simply add output current as perfdata
-    single_states.append( (0, "output current %d A" % AdvOutputCurrent, ("current", AdvOutputCurrent)) )
+    yield 0, "output current %d A" % output_current, [("current", output_current)]
 
     # 9. run time remaining
-    # RunTimeRemaining formatiert == "26:00.00"
-    battime_state = 0
-    hrs = int(RunTimeRemaining) / 3600
-    mins, secs = divmod(int(RunTimeRemaining) % 3600, 60)
+    state = 0
+    time_remaining /= 100
+    hrs = time_remaining / 3600
+    mins, secs = divmod(time_remaining % 3600, 60)
     battime_warn, battime_crit = None, None
-    label = ""
     if params.get('battime'):
         battime_warn, battime_crit = params['battime']
-        if int(RunTimeRemaining) <= battime_crit:
-            battime_state = 2
-            label = "(!!)"
-        elif int(RunTimeRemaining) <= battime_warn:
-            battime_state = 1
-            label = "(!)"
-
-    single_states.append( (battime_state, "run time remaining: %02d:%02d:%02d%s" % (hrs, mins, secs, label),
-                            ("runtime", RunTimeRemaining/60, battime_warn, battime_crit)) )
+        if time_remaining <= battime_crit:
+            state = 2
+        elif time_remaining <= battime_warn:
+            state = 1
+    yield state, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs), \
+                            [("runtime", time_remaining/60, battime_warn, battime_crit)]
 
     # 10. Adv Output load (load in percent)
     load_state = 0
     loadwarn, loadcrit = None, None
-    label = ""
     if params.get('output_load'):
         loadwarn, loadcrit = params['output_load']
-        if AdvOutputLoad >= loadcrit:
+        if output_load >= loadcrit:
             load_state = 2
-            label = "(!!)"
-        elif AdvOutputLoad >= loadwarn:
+        elif output_load >= loadwarn:
             load_state = 1
-            label = "(!)"
-    single_states.append( ( load_state, "current output load %d%%%s" % (AdvOutputLoad, label), \
-                        ( "OutputLoad", AdvOutputLoad, loadwarn, loadcrit ) ) )
-
-    # create summary state
-    worst_state = max([x[0] for x in single_states])
-    info_text = ", ".join([x[1] for x in single_states])
-
-    return (worst_state, info_text, [x[2] for x in single_states if x[2] != None])
-
-def inventory_apc(info):
-    if len(info) > 0:
-        return [(None, "apc_default_levels")]
-
+    yield load_state, "current output load %d%%" % output_load, \
+                        [("OutputLoad", output_load, loadwarn, loadcrit )]
 
 check_info['apc_symmetra'] = {
   "inventory_function"      : inventory_apc,
@@ -249,20 +194,20 @@ check_info['apc_symmetra'] = {
   "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
   "snmp_info"               : (".1.3.6.1.4.1.318.1.1.1",
                           [
-                            "2.1.1.0", # BasicBatteryStatus,
-                            "4.1.1.0", # BasicOutputStatus,
-                            "2.2.1.0", # AdvBatteryCapacity,
-                            "2.2.2.0", # AdvBatteryTemperature,
-                            "2.2.4.0", # AdvBatteryReplaceIndicator,
-                            "2.2.6.0", # AdvBatteryNumOfBadBattPacks,
-                            "2.2.9.0", # AdvBatteryCurrent,
-                            "3.2.1.0", # AdvInputVoltage,
-                            "4.2.1.0", # AdvOutputVoltage,
-                            "4.2.4.0", # AdvOutputCurrent,
-                            "2.2.3.0", # AdvBatteryRunTimeRemaining,
-                            "7.2.6.0", # AdvTestCalibrationResults
-                            "4.2.3.0", # AdvOutputLoad
-                            "7.2.4.0", # LastDiagnosticsDate
+                            "2.1.1.0",  # PowerNet-MIB::upsBasicBatteryStatus,
+                            "4.1.1.0",  # PowerNet-MIB::upsBasicOutputStatus,
+                            "2.2.1.0",  # PowerNet-MIB::upsAdvBatteryCapacity,
+                            "2.2.2.0",  # PowerNet-MIB::upsAdvBatteryTemperature,
+                            "2.2.4.0",  # PowerNet-MIB::upsAdvBatteryReplaceIndicator,
+                            "2.2.6.0",  # PowerNet-MIB::upsAdvBatteryNumOfBadBattPacks,
+                            "2.2.9.0",  # PowerNet-MIB::upsAdvBatteryCurrent,
+                            "3.2.1.0",  # PowerNet-MIB::upsAdvInputVoltage,
+                            "4.2.1.0",  # PowerNet-MIB::upsAdvOutputVoltage,
+                            "4.2.4.0",  # PowerNet-MIB::upsAdvOutputCurrent,
+                            "2.2.3.0",  # PowerNet-MIB::upsAdvBatteryRunTimeRemaining,
+                            "7.2.6.0",  # PowerNet-MIB::upsAdvTestCalibrationResults
+                            "4.2.3.0",  # PowerNet-MIB::upsAdvOutputLoad
+                            "7.2.4.0",  # PowerNet-MIB::upsLastDiagnosticsDate
+                            "11.1.1.0", # PowerNet-MIB::upsBasicStateOutputState
                         ] ),
 }
-

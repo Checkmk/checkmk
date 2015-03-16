@@ -4046,6 +4046,45 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "mssql_file_sizes",
+    _("MSSQL Log and Data File Sizes"),
+    Dictionary(
+        title = _("File Size Levels"),
+        elements = [
+            ("data_files",
+                Tuple(
+                    title = _("Levels for Datafiles"),
+                    elements = [
+                      Filesize(title = _("Warning if above")), 
+                      Filesize(title = _("Critical if above")), 
+                    ]
+            )),
+            ("log_files",
+                Tuple(
+                    title = _("Levels for Logfiles"),
+                    elements = [
+                      Filesize(title = _("Warning if above")), 
+                      Filesize(title = _("Critical if above")), 
+                    ]
+            )),
+            ("log_files_used",
+                Tuple(
+                    title = _("Levels for used Logfiles"),
+                    elements = [
+                      Filesize(title = _("Warning if above")), 
+                      Filesize(title = _("Critical if above")), 
+                    ]
+            )),
+        ]
+    ),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+     "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
     "mssql_tablespaces",
     _("MSSQL Size of Tablespace"),
     Dictionary(

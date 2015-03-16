@@ -150,7 +150,7 @@ if type zfs &>/dev/null
 then
     echo '<<<zfsget>>>'
     echo '[zfs]'
-    zfs get -Hp name,quota,used,avail,mountpoint,type -t filesystem,volume || \
+    zfs get -Hp name,quota,used,avail,mountpoint,type -t filesystem,volume 2>/dev/null || \
        zfs get -Hp name,quota,used,avail,mountpoint,type
     echo '[df]'
     df -l -k -F zfs 2>/dev/null | sed 1d

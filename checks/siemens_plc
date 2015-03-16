@@ -25,20 +25,20 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<siemens_plc>>>
-# hours Gesamt 123
-# hours Fahren 56
-# hours Hub 48
-# temp Extern 18.7000007629
-# temp RBG_SCH1 21.2999992371
-# temp RBG_SCH2 22.5
-# None Fahren 31450
-# None Hub 8100
-# None LAM 5002
-# hours LAM1 13
-# None Lastzyklen 78
-# None LAM1_Zyklen 115
-# hours Service 109
-# hours Serviceintervall 700
+# 192.168.0.20 hours Gesamt 123
+# 192.168.0.20 hours Fahren 56
+# 192.168.0.20 hours Hub 48
+# 192.168.0.20 temp Extern 18.7000007629
+# 192.168.0.20 temp RBG_SCH1 21.2999992371
+# 192.168.0.20 temp RBG_SCH2 22.5
+# 192.168.0.20 None Fahren 31450
+# 192.168.0.20 None Hub 8100
+# 192.168.0.20 None LAM 5002
+# 192.168.0.20 hours LAM1 13
+# 192.168.0.20 None Lastzyklen 78
+# 192.168.0.20 None LAM1_Zyklen 115
+# 192.168.0.20 hours Service 109
+# 192.168.0.20 hours Serviceintervall 700
 
 factory_settings["siemens_plc_temp_default_levels"] = {
     "levels"                    : (70, 80),
@@ -46,12 +46,12 @@ factory_settings["siemens_plc_temp_default_levels"] = {
 }
 
 def inventory_siemens_plc_temp(info):
-    return [ (l[1], {}) for l in info if l[0] == "temp" ]
+    return [ (l[2], {}) for l in info if l[1] == "temp" ]
 
 
 def check_siemens_plc_temp(item, params, info):
     for line in info:
-        if line[0] == "temp" and line[1] == item:
+        if line[1] == "temp" and line[2] == item:
             temp = float(line[-1])
             return check_temperature(temp, params)
 

@@ -4055,24 +4055,24 @@ register_check_parameters(
                 Tuple(
                     title = _("Levels for Datafiles"),
                     elements = [
-                      Filesize(title = _("Warning if above")), 
-                      Filesize(title = _("Critical if above")), 
+                      Filesize(title = _("Warning at or above")), 
+                      Filesize(title = _("Critical at or above")), 
                     ]
             )),
             ("log_files",
                 Tuple(
                     title = _("Levels for Logfiles"),
                     elements = [
-                      Filesize(title = _("Warning if above")), 
-                      Filesize(title = _("Critical if above")), 
+                      Filesize(title = _("Warning at or above")), 
+                      Filesize(title = _("Critical at or above")), 
                     ]
             )),
             ("log_files_used",
                 Tuple(
                     title = _("Levels for used Logfiles"),
                     elements = [
-                      Filesize(title = _("Warning if above")), 
-                      Filesize(title = _("Critical if above")), 
+                      Filesize(title = _("Warning at or above")), 
+                      Filesize(title = _("Critical at or above")), 
                     ]
             )),
         ]

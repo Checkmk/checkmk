@@ -30,13 +30,16 @@ def agent_siemens_plc_arguments(params, hostname, ipaddress):
     if "timeout" in params:
         args += ' --timeout %d' % params["timeout"]
 
-    args += " " + quote_shell_string(ipaddress)
-    args += " %d" % params["rack"]
-    args += " %d" % params["slot"]
-    args += " %d" % params["tcp_port"]
+    for device in params["devices"]:
+        dev_args  = device["host_address"]
+        dev_args += ";%d" % device["rack"]
+        dev_args += ";%d" % device["slot"]
+        dev_args += ";%d" % device["tcp_port"]
 
-    for parts in params["values"]:
-        args += " %s" % ",".join(map(str, parts))
+        for values in params["values"] + device["values"]:
+            dev_args += ";%s" % ",".join(map(str, values))
+
+        args += " " + quote_shell_string(dev_args)
 
     return args
 

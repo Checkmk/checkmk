@@ -480,28 +480,80 @@ register_rule(group,
     "special_agents:siemens_plc",
     Dictionary(
         elements = [
-            ("rack", Integer(
-                title = _("Number of the Rack"),
-                minvalue = 0,
-            )),
-            ("slot", Integer(
-                title = _("Number of the Slot"),
-                minvalue = 0,
-            )),
-            ("tcp_port", Integer(
-                title = _("TCP Port number"),
-                help = _("Port number for communicating with the PLC"),
-                default_value = 102,
-                minvalue = 1,
-                maxvalue = 65535,
-            )),
-            ("timeout", Integer(
-                title = _("Connect Timeout"),
-                help = _("The connect timeout in seconds when establishing a connection "
-                         "with the PLC."),
-                default_value = 60,
-                minvalue = 1,
-                unit = _("seconds"),
+            ("devices", ListOf(
+                Dictionary(
+                    elements = [
+                        ('host_address', TextAscii(
+                            title = _('Network Address'),
+                            allow_empty = False,
+                            help = _('Specify the hostname or IP address of the PLC to communicate with.')
+                        )),
+                        ("rack", Integer(
+                            title = _("Number of the Rack"),
+                            minvalue = 0,
+                        )),
+                        ("slot", Integer(
+                            title = _("Number of the Slot"),
+                            minvalue = 0,
+                        )),
+                        ("tcp_port", Integer(
+                            title = _("TCP Port number"),
+                            help = _("Port number for communicating with the PLC"),
+                            default_value = 102,
+                            minvalue = 1,
+                            maxvalue = 65535,
+                        )),
+                        ("timeout", Integer(
+                            title = _("Connect Timeout"),
+                            help = _("The connect timeout in seconds when establishing a connection "
+                                     "with the PLC."),
+                            default_value = 60,
+                            minvalue = 1,
+                            unit = _("seconds"),
+                        )),
+                        ("values", ListOf(
+                            Tuple(
+                                elements = [
+                                    Integer(
+                                        title = "<nobr>%s</nobr>" % _("DB Number"),
+                                        minvalue = 1,
+                                    ),
+                                    Integer(
+                                        title = _("Address"),
+                                    ),
+                                    DropdownChoice(
+                                        title = _("Datatype"),
+                                        choices = [
+                                            ("dint", _("Double Integer (DINT)")),
+                                            ("real", _("Real Number (REAL)")),
+                                        ],
+                                    ),
+                                    DropdownChoice(
+                                        title = _("Type of the value"),
+                                        choices = [
+                                            (None,    _("Unclassified")),
+                                            ("temp",  _("Temperature")),
+                                            ("hours", _("Hours")),
+                                        ],
+                                    ),
+                                    ID(
+                                        title = _("Ident of the value"),
+                                        help = _(" An identifier of your choice. This identifier "
+                                                 "is used by the Check_MK checks to access "
+                                                 "and identify the single values. The identifier "
+                                                 "needs to be unique within a group of VALUETYPES."),
+                                    ),
+                                ],
+                                orientation = "horizontal",
+                            ),
+                            title = _("Values to fetch from this device"),
+                            validate = validate_siemens_plc_values,
+                            magic = '@?@',
+                        )),
+                    ],
+                    optional_keys = ["timeout"],
+                ),
+                title = _("Devices to fetch information from"),
             )),
             ("values", ListOf(
                 Tuple(
@@ -538,7 +590,7 @@ register_rule(group,
                     ],
                     orientation = "horizontal",
                 ),
-                title = _("Values to fetch"),
+                title = _("Values to fetch from all devices"),
                 validate = validate_siemens_plc_values,
             )),
         ],

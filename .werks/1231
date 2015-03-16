@@ -1,0 +1,9 @@
+Title: mssql_counters.file_sizes: It's now possible to set levels for Filesizes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426504883
+Class: feature
+
+

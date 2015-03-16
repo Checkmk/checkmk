@@ -205,39 +205,46 @@ check_info['mssql_counters.locks'] = {
 # File Sizes
 #
 
+
 def check_mssql_file_sizes(item, params, info):
-    data_file_bytes, log_file_bytes, log_file_used_bytes = None, None, None
+    if not params:
+        params = {}
+    values = {}
     for line in info:
         if mssql_counters_item(line, False) == item:
             if line[1] == 'data_file(s)_size_(kb)':
-                data_file_bytes = int(line[-1]) * 1024
+                values['data_files'] = int(line[-1]) * 1024
             elif line[1] == 'log_file(s)_size_(kb)':
-                log_file_bytes = int(line[-1]) * 1024
+                values['log_files'] = int(line[-1]) * 1024
             elif line[1] == 'log_file(s)_used_size_(kb)':
-                log_file_used_bytes = int(line[-1]) * 1024
+                values['log_files_used'] = int(line[-1]) * 1024
 
-    if data_file_bytes is None and log_file_bytes is None and log_file_used_bytes is None:
-        return (3, 'Counters %s could not be found in agent output' % (item))
+    if len(values.keys()) == 3:
+        for what, name in [ ("data_files", "Data Files"), 
+                            ("log_files_used", "Log files Used"),
+                            ("log_files", "Log Files total"),]:
+            state = 0
+            levels = ""
+            if what in params:
+                warn, crit = params[what]
+                if values[what] >= crit:
+                    state = 2
+                elif values[what] >= warn:
+                    state = 1
+                if state > 0:
+                    levels = " (Warn/ Crit at %s/ %s)" % \
+                                            (get_bytes_human_readable(warn),
+                                            get_bytes_human_readable(crit))
 
-    output   = []
-    perfdata = []
-
-    output.append('Data Files: %s' % get_bytes_human_readable(data_file_bytes))
-    perfdata.append(('data_files', data_file_bytes))
-
-    output.append('Log Files: %s (Used: %s)' %
-        (get_bytes_human_readable(log_file_bytes), get_bytes_human_readable(log_file_used_bytes)))
-
-    perfdata.append(('log_files', log_file_bytes))
-    perfdata.append(('log_files_used', log_file_used_bytes))
-
-    return (0, '%s' % ', '.join(output), perfdata)
+            perfdata = [ (what, values[what], warn, crit ) ]
+            yield state, "%s: %s%s" % ( name, levels, get_bytes_human_readable(values[what]) ), perfdata
 
 
 check_info['mssql_counters.file_sizes'] = {
-    'check_function':      check_mssql_file_sizes,
-    'inventory_function':  lambda info: inventory_mssql_counters(info,
-        [ 'data_file(s)_size_(kb)', 'log_file(s)_size_(kb)', 'log_file(s)_used_size_(kb)' ], False, False),
-    'service_description': "%s File Sizes",
-    'has_perfdata':        True,
+    'check_function'            : check_mssql_file_sizes,
+    'inventory_function'        : lambda info: inventory_mssql_counters(info,
+        [ 'data_file(s)_size_(kb)', 'log_file(s)_size_(kb)', 'log_file(s)_used_size_(kb)' ], False, False, {} ),
+    'service_description'       : "%s File Sizes",
+    'has_perfdata'              : True,
+    'group'                     : "mssql_file_sizes",
 }

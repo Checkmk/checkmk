@@ -1,0 +1,7 @@
+Title: make rrdcached TIMEOUT configurable via WATO (and increase default)
+Component: wato
+State: open
+Date: 2015-03-16 12:04:14
+Targetversion: 1.2.7
+Class: todo
+

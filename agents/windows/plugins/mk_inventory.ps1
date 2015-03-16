@@ -2,6 +2,8 @@
 $delay = 14400 # execute agent only every $delay seconds
 $exe_paths = @("c:\Program Files (x86)")
 
+[System.Threading.Thread]::CurrentThread.CurrentCulture = [Globalization.CultureInfo]::InvariantCulture
+[System.Threading.Thread]::CurrentThread.CurrentUICulture = [Globalization.CultureInfo]::InvariantCulture
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 write-output "" # workaround to prevent the byte order mark to be at the beginning of the first section
 $name = (Get-Item env:\Computername).Value
@@ -16,7 +18,6 @@ if (!$agent_dir) {
 }
 
 $timestamp = $agent_dir + "\timestamp."+ $remote_host
-
 
 # does $timestamp exist?
 If (Test-Path $timestamp){

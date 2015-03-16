@@ -25,6 +25,7 @@
     WATO:
     * 2045 FIX: Avoid fetching SNMP data when showing service list in WATO - unless Full Scan is pressed
     * 2047 FIX: Allow overriding existing WATO rules by own files in local/ hierarchy...
+    * 1230 FIX: Fixed possible encoding problem with useres containing non ASCII Characters
 
     Event Console:
     * 2133 FIX: Fix visualization of global EC setting for Rule Optimizer...

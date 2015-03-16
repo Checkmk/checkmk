@@ -353,6 +353,7 @@
     * 2084 FIX: Disabled notification for a user is now shown on profile page even when not permitted to edit...
     * 2045 FIX: Avoid fetching SNMP data when showing service list in WATO - unless Full Scan is pressed
     * 2047 FIX: Allow overriding existing WATO rules by own files in local/ hierarchy...
+    * 1230 FIX: Fixed possible encoding problem with useres containing non ASCII Characters
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

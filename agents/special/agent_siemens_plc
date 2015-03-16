@@ -177,7 +177,7 @@ for device in devices:
             data_offset = addresses[db_number][0]
             data  = client.db_read(db_number, address-data_offset, size)
             value = parse_func(data, 0)
-            sys.stdout.write("%s %s %s\n" % (valuetype, ident, value))
+            sys.stdout.write("%s %s %s %s\n" % (device['host_address'], valuetype, ident, value))
     except:
         if opt_debug:
             raise

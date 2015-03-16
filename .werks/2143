@@ -1,0 +1,9 @@
+Title: Solaris-Agent: Fixed broken zfsget checks on solaris 10
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1426491686
+Class: fix
+
+

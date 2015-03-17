@@ -1,0 +1,15 @@
+Title: Fixed exception in HW-/SW-Inventory GUI with special characters in inventorized data
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426590143
+
+The information fetched from e.g. windows systems were not properly encoded. This could
+lead into exceptions when viewing the data in the GUI.
+
+To get these encoding errors fixed, you need to update to this version and then wait
+for all your inventory data being updated. After it has been updated, the errors in the
+GUI should be gone.

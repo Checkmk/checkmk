@@ -75,5 +75,6 @@ def inv_win_bios(info):
 
 inv_info['win_bios'] = {
    "inv_function"           : inv_win_bios,
+   "unicode"                : True,
 }
 

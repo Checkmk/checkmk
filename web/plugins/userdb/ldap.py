@@ -92,6 +92,20 @@ ldap_filter_map = {
     },
 }
 
+# All these characters are replaced from user ids by default. Check_MK
+# currently does not support special characters in user ids, so users
+# not matching this specification are cleaned up with this map. When the
+# user accounts still do not match the specification, they are skipped.
+ldap_umlaut_translation = {
+    ord(u'ü'): u'ue',
+    ord(u'ö'): u'oe',
+    ord(u'ä'): u'ae',
+    ord(u'ß'): u'ss',
+    ord(u'Ü'): u'UE',
+    ord(u'Ö'): u'OE',
+    ord(u'Ä'): u'AE',
+}
+
 #.
 #   .-General LDAP code----------------------------------------------------.
 #   |                      _     ____    _    ____                         |
@@ -106,6 +120,8 @@ ldap_filter_map = {
 
 def ldap_log(s):
     if config.ldap_debug_log is not None:
+        if type(s) == unicode:
+            s = s.encode('utf-8')
         file(ldap_replace_macros(config.ldap_debug_log), "a").write('%s %s\n' %
                                             (time.strftime('%Y-%m-%d %H:%M:%S'), s))
 
@@ -414,6 +430,7 @@ def ldap_rewrite_user_id(user_id):
         user_id = user_id.lower()
 
     umlauts = config.ldap_userspec.get('user_id_umlauts', 'replace')
+<<<<<<< HEAD
     new = ""
     for c in user_id:
         if c == u'ü':
@@ -444,10 +461,22 @@ def ldap_rewrite_user_id(user_id):
             new += 'Aa'
         else:
             new += c
+=======
+    new_user_id = user_id.translate(ldap_umlaut_translation)
+
+>>>>>>> 66bf8cac36feb08cb4e28852c5f5763ced61436c
     if umlauts == 'replace':
-        user_id = new
-    elif umlauts == 'skip' and user_id != new:
+        user_id = new_user_id
+    elif umlauts == 'skip' and user_id != new_user_id:
         return None # This makes the user being skipped
+
+    # Now check whether or not the user id matches our specification
+    try:
+        str(user_id)
+    except UnicodeEncodeError:
+        # Skipping this user: not all "bad" characters were replaced before
+        ldap_log('Skipped user: %s (contains not allowed special characters)' % user_id)
+        return None
 
     return user_id
 

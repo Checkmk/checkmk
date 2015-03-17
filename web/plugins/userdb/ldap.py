@@ -430,7 +430,6 @@ def ldap_rewrite_user_id(user_id):
         user_id = user_id.lower()
 
     umlauts = config.ldap_userspec.get('user_id_umlauts', 'replace')
-<<<<<<< HEAD
     new = ""
     for c in user_id:
         if c == u'ü':
@@ -448,7 +447,7 @@ def ldap_rewrite_user_id(user_id):
         elif c == u'Ä':
             new += 'AE'
         elif c == u'Ø':
-            new += 'Oe':
+            new += 'Oe'
         elif c == u'ø':
             new += 'oe'
         elif c == u'Æ':
@@ -461,10 +460,8 @@ def ldap_rewrite_user_id(user_id):
             new += 'Aa'
         else:
             new += c
-=======
     new_user_id = user_id.translate(ldap_umlaut_translation)
 
->>>>>>> 66bf8cac36feb08cb4e28852c5f5763ced61436c
     if umlauts == 'replace':
         user_id = new_user_id
     elif umlauts == 'skip' and user_id != new_user_id:

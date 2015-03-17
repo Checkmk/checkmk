@@ -1,0 +1,15 @@
+Title: Fixed exception in inventory GUI when trying to render dates of inventorized exe files
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426518769
+
+Till this change the agent provided the installation dates of the exe files in a localized
+format (depending on the system locale config). The new agent is now providing a non
+localized format which can easily be parsed by the check.
+
+Not parsed installation dates lead to exceptions in the GUI when showing the inventorized
+information of a host.

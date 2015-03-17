@@ -33,7 +33,7 @@
 # unit_name:          The ID of a unit, e.g. "%"
 # unit:               The definition-dict of a unit like in unit_info
 
-import math
+import math, time
 import config, defaults
 from lib import *
 
@@ -665,7 +665,6 @@ def page_pnp_template():
         output += graph_code
 
     html.write(output)
-
 
 
 def render_pnp_graph(graph, translated_metrics):

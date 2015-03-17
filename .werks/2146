@@ -1,0 +1,16 @@
+Title: In distributed environments user notification rules trigger a profile synchronisation now
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426587167
+
+In previous versions the custom user notification rules were not synchronized to
+remote sites in the moment the user changed his rules. An admin had to perform
+a synchronisation via WATO to replicate these changes to the rules to the remote
+sites for taking effect there.
+
+Now, when a user changes his individual notification rules, a replication of
+the updated user profile is triggered.

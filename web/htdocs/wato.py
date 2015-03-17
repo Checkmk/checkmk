@@ -9087,6 +9087,8 @@ def render_bulks(only_ripe):
 
 # Similar like mode_notifications, but just for the user specific notification table
 def mode_user_notifications(phase, profilemode):
+    global notification_rule_start_async_repl
+
     if profilemode:
         userid = config.user_id
         title = _("Your personal notification rules")
@@ -9120,10 +9122,18 @@ def mode_user_notifications(phase, profilemode):
                              _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?" %
                                (nr, rule.get("description",""))))
             if c:
-                log_pending(SYNC, None, "notification-delete-user-rule", _("Deleted notification rule %d of user %s") %
-                            (nr, userid))
                 del rules[nr]
                 userdb.save_users(users)
+
+                log_what = "notification-delete-user-rule"
+                log_text = _("Deleted notification rule %d of user %s") % (nr, userid)
+
+                notification_rule_start_async_repl = False
+                if profilemode and is_distributed():
+                    notification_rule_start_async_repl = True
+                    log_audit(None, log_what, log_text)
+                else:
+                    log_pending(SYNC, None, log_what, log_text)
             elif c == False:
                 return ""
             else:
@@ -9137,15 +9147,31 @@ def mode_user_notifications(phase, profilemode):
                 del rules[from_pos] # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
                 userdb.save_users(users)
-                log_pending(SYNC, None, "notification-move-user-rule", _("Changed position of notification rule %d of user %s") %
-                       (from_pos, userid))
+
+                log_what = "notification-move-user-rule"
+                log_text = _("Changed position of notification rule %d of user %s") % (from_pos, userid)
+
+                notification_rule_start_async_repl = False
+                if profilemode and is_distributed():
+                    notification_rule_start_async_repl = True
+                    log_audit(None, log_what, log_text)
+                else:
+                    log_pending(SYNC, None, log_what, log_text)
         return
+
+    if notification_rule_start_async_repl:
+        user_profile_async_replication_dialog()
+        notification_rule_start_async_repl = False
+        html.write('<h3>%s</h3>' % _('Notification Rules'))
 
     rules = user.get("notification_rules", [])
     render_notification_rules(rules, userid, profilemode = profilemode)
 
+notification_rule_start_async_repl = False
 
 def mode_notification_rule(phase, profilemode):
+    global notification_rule_start_async_repl
+
     edit_nr = int(html.var("edit", "-1"))
     clone_nr = int(html.var("clone", "-1"))
     if profilemode:
@@ -9215,9 +9241,20 @@ def mode_notification_rule(phase, profilemode):
             save_notification_rules(rules)
 
         if new:
-            log_pending(SYNC, None, "new-notification-rule", _("Created new notification rule") + suffix)
+            log_what = "new-notification-rule"
+            log_text = _("Created new notification rule") + suffix
         else:
-            log_pending(SYNC, None, "edit-notification-rule", _("Changed notification rule %d") % edit_nr + suffix)
+            log_what = "edit-notification-rule"
+            log_text = _("Changed notification rule %d") % edit_nr + suffix
+
+        notification_rule_start_async_repl = False
+        if profilemode and is_distributed():
+            notification_rule_start_async_repl = True
+            log_audit(None, log_what, log_text)
+            return # don't redirect to other page
+        else:
+            log_pending(SYNC, None, log_what, log_text)
+
         if profilemode:
             return "user_notifications_p"
         elif userid:
@@ -9225,6 +9262,10 @@ def mode_notification_rule(phase, profilemode):
         else:
             return "notifications"
 
+    if notification_rule_start_async_repl:
+        user_profile_async_replication_dialog()
+        notification_rule_start_async_repl = False
+        return
 
     html.begin_form("rule", method = "POST")
     vs.render_input("rule", rule)
@@ -15683,8 +15724,8 @@ def select_language(user):
                     'create you own translation, you find <a href="%(url)s">documentation online</a>.') %
                     { "url" : "http://mathias-kettner.de/checkmk_multisite_i18n.html"} )
 
-def user_profile_async_replication_dialog():
-    html.header(_('Replicate new Authentication Information'),
+def user_profile_async_replication_page():
+    html.header(_('Replicate new User Profile'),
                 javascripts = ['wato'],
                 stylesheets = ['check_mk', 'pages', 'wato', 'status'])
 
@@ -15692,14 +15733,20 @@ def user_profile_async_replication_dialog():
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
     html.end_context_buttons()
 
+    user_profile_async_replication_dialog()
+
+    html.footer()
+
+
+def user_profile_async_replication_dialog():
     sites = [(name, config.site(name)) for name in config.sitenames() ]
     sort_sites(sites)
     repstatus = load_replication_status()
 
-    html.message(_('To make a login possible with your new credentials on all remote sites, the '
-                   'new login credentials need to be replicated to the remote sites. This is done '
-                   'on this page now. Each site is being represented by a single image which is first '
-                   'shown gray and then fills to green during synchronisation.'))
+    html.message(_('For make your changes available on all remote sites, your user profile needs '
+                   'to be replicated to the remote sites. This is done on this page now. Each site '
+                   'is being represented by a single image which is first shown gray and then fills '
+                   'to green during synchronisation.'))
 
     html.write('<h3>%s</h3>' % _('Replication States'))
     html.write('<div id="profile_repl">')
@@ -15741,7 +15788,6 @@ def user_profile_async_replication_dialog():
     html.javascript('var g_num_replsites = %d;\n' % num_replsites)
 
     html.write('</div>')
-    html.footer()
 
 
 def page_user_profile(change_pw=False):
@@ -15853,7 +15899,7 @@ def page_user_profile(change_pw=False):
     # When in distributed setup, display the replication dialog instead of the normal
     # profile edit dialog after changing the password.
     if start_async_replication:
-        user_profile_async_replication_dialog()
+        user_profile_async_replication_page()
         return
 
     if change_pw:

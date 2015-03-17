@@ -1,0 +1,27 @@
+Title: LDAP-Sync: Handling user ids with special characters more user friendly
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426583054
+
+At the moment the Check_MK GUI does not allow to use special characters like
+german umlauts in the user ID. By default the LDAP sync pluginn tries to
+replace these umlauts with some similar characters, or if enabled, it tries
+to skip these users during sync.
+
+But if a user ID contains other special characters, which are not handled by
+the LDAP code, this could result in exceptions after synchronising such users.
+
+We improved the handling of those users to skip them silently during
+synchronisation. If you miss some users, just enable the diagnostic log and
+have a look at the LDAP debug log (located in <tt>var/check_mk/web/ldap-debug.log</tt>
+in OMD sites) and search for <tt>Skipped user: ...</tt> entries. If you need
+these users within Check_MK please let us know, we will add the needed umlauts
+to the translation map.
+
+For future innovation releases we plan to make such special characters usable
+in user IDs, then this translation map will not be needed anymore.
+

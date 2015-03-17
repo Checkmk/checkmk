@@ -33,6 +33,9 @@
     * 2133 FIX: Fix visualization of global EC setting for Rule Optimizer...
     * 2139 FIX: Fix exception in Event Console when archiving events with match groups and non ASCII characters
 
+    HW/SW-Inventory:
+    * 2147 FIX: Fixed exception in HW-/SW-Inventory GUI with special characters in inventorized data...
+
 
 1.2.6:
     Checks & Agents:

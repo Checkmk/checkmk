@@ -53,4 +53,5 @@ def inv_win_video(info):
 
 inv_info['win_video'] = {
    "inv_function"           : inv_win_video,
+   "unicode"                : True,
 }

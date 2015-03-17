@@ -430,6 +430,18 @@ def ldap_rewrite_user_id(user_id):
             new += 'OE'
         elif c == u'Ä':
             new += 'AE'
+        elif c == u'Ø':
+            new += 'Oe':
+        elif c == u'ø':
+            new += 'oe'
+        elif c == u'Æ':
+            new += 'Ae'
+        elif c == u'æ':
+            new += 'ae'
+        elif c == u'å':
+            new += 'aa'
+        elif c == u'Å':
+            new += 'Aa'
         else:
             new += c
     if umlauts == 'replace':

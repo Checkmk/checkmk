@@ -1,0 +1,135 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+
+# <<<aix_if>>>
+# [en0]
+# Device Type: Virtual I/O Ethernet Adapter (l-lan)
+# Hardware Address: 3a:91:69:58:fb:02
+# Packets: 160437280                            Packets: 202011889
+# Bytes: 288954334803                           Bytes: 88290654589
+# Transmit Errors: 0                            Receive Errors: 0
+# Broadcast Packets: 9914                       Broadcast Packets: 27541611
+# Multicast Packets: 2                          Multicast Packets: 0
+# General Statistics:
+# -------------------
+# No mbuf Errors: 0
+# Adapter Reset Count: 0
+# Adapter Data Rate: 20000
+# Driver Flags: Up Broadcast Running 
+#         Simplex 64BitSupport ChecksumOffload 
+#                 DataRateSet 
+
+check_includes['aix_if'] = [ "if.include" ]
+
+def if_aix_convert_to_if64(info):
+    nic_info = {}
+    current_nic = None
+    index = 0
+    flags = ()
+    for line in info:
+        # Be careful! On clustered hosts we have more than one perf-counters section
+        # and ethtool section. This needs to be handled. Sadly we have no section
+        # headers. Try to detect it by data format.
+        if line[0].startswith('['):
+            nic = line[0][1:-1]
+            index += 1
+            nic_info[nic] = { "ifIndex": index }
+            nic_info[nic]["ifDescr"] = nic
+            nic_info[nic]["ifAlias"] = nic
+            if nic.startswith("lo"):
+                nic_info[nic]["ifType"] = "24"
+            else:
+                nic_info[nic]["ifType"] = "6"
+        elif line[0] == "Bytes:" and line[2] == "Bytes:":
+            nic_info[nic]["ifOutOctets"] = line[1]
+            nic_info[nic]["ifInOctets"] = line[3]
+        elif line[0] == "Packets:" and line[2] == "Packets:":
+            nic_info[nic]["outucast"] = line[1]
+            nic_info[nic]["inucast"] = line[3]
+        elif line[0] == "Transmit" and line[1] == "Errors:":
+            nic_info[nic]["ifOutErrors"] = line[2]
+            nic_info[nic]["ifInErrors"] = line[5]
+        elif " ".join(line[0:2]) == "Broadcast Packets:":
+            nic_info[nic]["outbcast"] = line[2]
+            nic_info[nic]["inbcast"] = line[5]
+        elif " ".join(line[0:2]) == "Multicast Packets:":
+            nic_info[nic]["outmcast"] = line[2]
+            nic_info[nic]["inmcast"] = line[5]
+        elif " ".join(line[0:2]) == "Hardware Address:":
+            nic_info[nic]["ifPhysAddress"] = "".join([chr(int(x, 16)) for x in line[2].split(":")])
+        elif " ".join(line[0:3]) == "Adapter Data Rate:":
+            # speed is in Mb/s
+            nic_info[nic]["ifSpeed"] = int(line[3]) * 1000000
+        elif  " ".join(line[0:2]) == "Driver Flags:":
+            flags = line[2:]
+        elif len(line) and ":" not in " ".join(line) and len(flags):
+            flags += line
+
+    if "Up" in flags:
+        nic_info[nic]["ifOperStatus"] = 1
+    elif "Down" in flags:
+        nic_info[nic]["ifOperStatus"] = 2
+    # No information from entstat. We consider interfaces up
+    # if they have been used at least some time since the
+    # system boot.
+    elif nic_info[nic]["ifInOctets"] > 0:
+         nic_info[nic]["ifOperStatus"] = 1
+    else:
+        # unknown, or never been up
+        nic_info[nic]["ifOperStatus"] = 4
+
+    nic_info[nic]["ifOutQLen"] = 0
+    nic_info[nic]["ifInDiscards"] = 0
+    nic_info[nic]["ifOutDiscards"] = 0
+
+    if_table = []
+    for nic in nic_info:
+        nic_list = []
+        for attr in [ "ifIndex", "ifDescr", "ifType", "ifSpeed", "ifOperStatus",
+          "ifInOctets", "inucast", "inmcast", "inbcast", "ifInDiscards",
+          "ifInErrors", "ifOutOctets", "outucast", "outmcast", "outbcast",
+          "ifOutDiscards", "ifOutErrors", "ifOutQLen", "ifAlias", "ifPhysAddress" ]:
+           nic_list.append(nic_info[nic][attr])
+        if_table.append(map(str,nic_list))
+    return if_table
+
+def inventory_aix_if(info):
+    return inventory_if_common(if_aix_convert_to_if64(info))
+
+def check_aix_if(item, params, info):
+    return check_if_common(item, params, if_aix_convert_to_if64(info))
+
+
+check_info["aix_if"] = {
+    'check_function':          check_aix_if,
+    'inventory_function':      inventory_aix_if,
+    'service_description':     'Interface %s',
+    'has_perfdata':            True,
+    'group':                   'if',
+    'default_levels_variable': 'if_default_levels',
+}

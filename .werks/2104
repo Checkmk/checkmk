@@ -1,0 +1,16 @@
+Title: aix_if: new agent section and check
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1426589403
+Class: feature
+
+This aix check_mk_agent has a new section aix_if extracting more information about network interfaces
+than the previous lnx_if section. A new interface check for AIX named aix_if has also been created
+given more useful information.
+
+As long as you do not replace the check_mk_agent on your AIX systems, nothing will change.
+When you replace the agent with the new one, you will have to redo the service discovery.
+Interfaces will reappear with the same service description, but with more information about the NIC.
+

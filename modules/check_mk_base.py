@@ -825,6 +825,7 @@ def parse_info(lines, hostname):
     section_options = {}
     separator = None
     encoding  = None
+    to_unicode = False
     for line in lines:
         line = line.rstrip("\r")
         stripped_line = line.strip()
@@ -872,6 +873,13 @@ def parse_info(lines, hostname):
             # The section data might have a different encoding
             encoding = section_options.get("encoding")
 
+            # Make the contents of the section unicode strings or UTF-8
+            # encoded bytestrings (like it was done always in the past)
+            try:
+                to_unicode = inv_info.get(section_name, {}).get('unicode', False)
+            except NameError:
+                pass # e.g. in precompiled mode we have no inv_info. That's ok.
+
         elif stripped_line != '':
             if "nostrip" not in section_options:
                 line = stripped_line
@@ -879,9 +887,13 @@ def parse_info(lines, hostname):
             if encoding:
                 try:
                     decoded_line = line.decode(encoding)
-                    line = decoded_line.encode('utf-8')
+                    if not to_unicode:
+                        line = decoded_line.encode('utf-8')
                 except:
                     pass
+            elif to_unicode:
+                line = line.decode('utf-8')
+
             section.append(line.split(separator))
 
     return info, piggybacked, persist

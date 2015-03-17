@@ -167,19 +167,12 @@ procs=`vmstat|grep lcpu|sed -e 's;.* lcpu=\([[:digit:]]\{1,4\}\) .*;\1;'`
 echo $load 1/$ps $$ $procs
 
 
-# The following section has been contributed by Joerg Linge
-echo "<<<lnx_if:sep(58)>>>"
+echo "<<<aix_if>>>"
 for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1)
 do
-    bytes=$(entstat $ent | grep ^Bytes: | awk '{printf "%s %s", $2, $4}')
-    bytes_rx=$(echo $bytes | awk '{print $2'})
-    bytes_tx=$(echo $bytes | awk '{print $1'})
-    packets=$(entstat $ent | grep ^Packets: | awk '{printf "%s %s", $2, $4}')
-    packets_rx=$(echo $packets | awk '{print $2'})
-    packets_tx=$(echo $packets | awk '{print $1'})
-    errors_tx=$(entstat $ent | grep 'Transmit Errors:' | awk '{print $3'})
-    errors_rx=$(entstat $ent | grep 'Receive Errors:'  | awk '{print $6'})
-    echo "$ent: $bytes_rx $packets_rx $errors_rx 0 0 0 0 0 $bytes_tx $packets_tx $errors_tx 0 0 0 0 0"
+    echo "[$ent]"
+    entstat $ent | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit:|^Broadcast:|^Multicast:)"
+    entstat $ent | grep -p "Driver Flags:"
 done
 
 
@@ -193,6 +186,7 @@ fi
 
 echo '<<<aix_multipath>>>'
     lspath -F"name parent status"
+
 
 echo '<<<aix_lvm>>>'
     # -L disables LVM lock for the query. Avoids blocking while LVM is

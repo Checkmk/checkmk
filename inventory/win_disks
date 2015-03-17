@@ -88,4 +88,5 @@ def inv_win_disks(info):
 
 inv_info['win_disks'] = {
    "inv_function"           : inv_win_disks,
+   "unicode"                : True,
 }

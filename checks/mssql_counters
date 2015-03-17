@@ -235,6 +235,8 @@ def check_mssql_file_sizes(item, params, info):
                     levels = " (Warn/ Crit at %s/ %s)" % \
                                             (get_bytes_human_readable(warn),
                                             get_bytes_human_readable(crit))
+            else:
+                warn, crit = None, None
 
             perfdata = [ (what, values[what], warn, crit ) ]
             yield state, "%s: %s%s" % ( name, levels, get_bytes_human_readable(values[what]) ), perfdata

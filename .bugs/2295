@@ -1,0 +1,40 @@
+Title: mk_inventory.ps1 workaround für BOM führt bei manchen Kunden zu Problemen
+Component: inv
+State: open
+Date: 2015-03-17 11:25:20
+Targetversion: 1.2.6
+Class: bug
+
+die zweite Zeile in mk_inventory.ps1
+verursacht bei uns das Problem:
+
+ mk_inventory.ps1
+
+ [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+ write-output "" # workaround
+ to prevent the byte order mark to be at the beginning of the first section
+
+ $name = (Get-Item env:\Computername).Value
+
+ ....
+
+ Das Script wir bei jedem Agentenaufruf
+ gecalled, steigt dann aber vor dem Inventory aus, da ein Timestamp existiert.
+
+ Da die leere Zeile aber vor dem Ausstieg
+ geschrieben wird, führt dies zu folgenden Bild im Agentenoutput:
+
+ [[[Veeam Backup]]]
+ [[[Windows PowerShell]]]
+ <<<logwatch>>>
+
+ <<<local>>>
+ <<<mrpe>>>
+
+ Damit kommt dann der logwatch.ec check nicht mehr zurecht.
+
+  Log Forwarding UNKNOWN - invalid output from agent, invalid check
+
+  > parameters or error in implementation of check logwatch.ec. Please
+  > enable "Log exceptions in check plugins" for further information.

@@ -26,7 +26,7 @@
 
 # Example output
 # <<<win_os>>>
-# WIN7|Microsoft Windows 7 Home Premium |6.1.7601|64-Bit|1|0
+# WIN2003|Microsoft(R) Windows(R) Server 2003 Standard Edition|5.2.3790||2|0|20100620230628.000000+120
 
 def inv_win_os(info):
     node = inv_tree("software.os.")
@@ -40,9 +40,12 @@ def inv_win_os(info):
             else:
                 node["arch"] = "i386"
         node["service_pack"] = line[4]+"."+line[5]
-        dat = re.sub("\+\d+","",line[6])
-        tz = int(re.sub("\d{14}.\d{6}","",line[6]))
-        node["install_date"] = int(time.mktime(time.strptime(dat, "%Y%m%d%H%M%S.%f"))) - tz*60
+
+        if '+' in line[6]:
+            datestr, tz = line[6].split('+')
+        else:
+            datestr, tz = line[6], 0
+        node["install_date"] = int(time.mktime(time.strptime(datestr, "%Y%m%d%H%M%S.%f"))) - int(tz)*60
 
 
 inv_info['win_os'] = {

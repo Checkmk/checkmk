@@ -543,3 +543,8 @@ div.popup span {
     margin-bottom: 5px;
     color: white;
 }
+
+/* TEST */
+table.graph {
+    border: 1px solid #888888;
+}

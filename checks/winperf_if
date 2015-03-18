@@ -109,7 +109,7 @@ def convert_winperf_if(info):
 
                     as_dict = dict(zip(headers, map(lambda x: x.rstrip(), line)))
 
-                    # Unfortunately teamed interfaces loose their #x index and are no longer
+                    # Unfortunately teamed interfaces lose their #x index and are no longer
                     # distinguishable with the data from the Win32_NetworkAdapter.
                     # Fortunately this index information is still available in the teaming section
                     # The GUID is used to combine the two datasets

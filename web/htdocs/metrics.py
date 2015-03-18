@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Frequently used variable names an terms
+# Frequently used variable names:
 # perf_data_string:   Raw performance data as sent by the core, e.g "foor=17M;1;2;4;5"
 # perf_data:          Split performance data, e.g. [("foo", "17", "M", "1", "2", "4", "5")]
 # translated_metrics: Completely parsed and translated into metrics, e.g. { "foo" : { "value" : 17.0, "unit" : { "render" : ... }, ... } }
@@ -32,6 +32,7 @@
 # color_rgb:          RGB color split into triple (r, g, b), where r,b,g in (0.0 .. 1.0)
 # unit_name:          The ID of a unit, e.g. "%"
 # unit:               The definition-dict of a unit like in unit_info
+# graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import math, time
 import config, defaults
@@ -382,14 +383,14 @@ def perfometer_possible(perfometer, translated_metrics):
             return False
     return True
 
-def get_graphs(translated_metrics):
-    for graph in graph_info:
-        if graph_possible(graph, translated_metrics):
-            yield graph
+def get_graph_templates(translated_metrics):
+    for graph_template in graph_info:
+        if graph_possible(graph_template, translated_metrics):
+            yield graph_template
 
 
-def graph_possible(graph, translated_metrics):
-    for metric_definition in graph["metrics"]:
+def graph_possible(graph_template, translated_metrics):
+    for metric_definition in graph_template["metrics"]:
         try:
             evaluate(metric_definition[0], translated_metrics)
         except Exception, e:
@@ -655,27 +656,25 @@ def page_pnp_template():
     if not translated_metrics:
         return # check not supported
 
-    graphs = get_graphs(translated_metrics)
-
     # Collect output in string. In case of an exception to not output
     # any definitions
     output = ""
-    for graph in graphs:
-        graph_code = render_pnp_graph(graph, translated_metrics)
+    for graph_template in get_graph_templates(translated_metrics):
+        graph_code = render_graph_pnp(graph_template, translated_metrics)
         output += graph_code
 
     html.write(output)
 
 
-def render_pnp_graph(graph, translated_metrics):
+def render_graph_pnp(graph_template, translated_metrics):
 
     graph_title = None
     vertical_label = None
 
     rrdgraph_commands = ""
 
-    legend_precision    = graph.get("legend_precision", 2)
-    legend_scale        = graph.get("legend_scale", 1)
+    legend_precision    = graph_template.get("legend_precision", 2)
+    legend_scale        = graph_template.get("legend_scale", 1)
     legend_scale_symbol = scale_symbols[legend_scale]
 
     # Define one RRD variable for each of the available metrics.
@@ -703,10 +702,10 @@ def render_pnp_graph(graph, translated_metrics):
 
     # Compute width of columns in case of mirrored legend
 
-    mirror_legend = graph.get("mirror_legend")
+    mirror_legend = graph_template.get("mirror_legend")
     total_width = 89 # characters
     left_width = max([len(_("Average")), len(_("Maximum")), len(_("Last"))]) + 2
-    column_width = (total_width - left_width) / len(graph["metrics"]) - 2
+    column_width = (total_width - left_width) / len(graph_template["metrics"]) - 2
 
     # Now add areas and lines to the graph
     graph_metrics = []
@@ -717,7 +716,7 @@ def render_pnp_graph(graph, translated_metrics):
     # Compute width of the right column of the legend
     if not mirror_legend:
         max_title_length = 0
-        for nr, metric_definition in enumerate(graph["metrics"]):
+        for nr, metric_definition in enumerate(graph_template["metrics"]):
             if len(metric_definition) >= 3:
                 title = metric_definition[2]
             elif not "," in metric_definition:
@@ -727,7 +726,7 @@ def render_pnp_graph(graph, translated_metrics):
             max_title_length = max(max_title_length, len(title))
 
 
-    for nr, metric_definition in enumerate(graph["metrics"]):
+    for nr, metric_definition in enumerate(graph_template["metrics"]):
         metric_name = metric_definition[0]
         line_type = metric_definition[1] # "line", "area", "stack"
 
@@ -854,15 +853,15 @@ def render_pnp_graph(graph, translated_metrics):
     # Now compute the arguments for the command line of rrdgraph
     rrdgraph_arguments = ""
 
-    graph_title = graph.get("title", graph_title)
-    vertical_label = graph.get("vertical_label", vertical_label)
+    graph_title = graph_template.get("title", graph_title)
+    vertical_label = graph_template.get("vertical_label", vertical_label)
 
     rrdgraph_arguments += "--vertical-label %s --title %s -L 4" % (
         quote_shell_string(vertical_label),
         quote_shell_string(graph_title))
 
-    if "range" in graph:
-        rrdgraph_arguments += " -l %f -u %f" % graph["range"]
+    if "range" in graph_template:
+        rrdgraph_arguments += " -l %f -u %f" % graph_template["range"]
     else:
         rrdgraph_arguments += " -l 0"
 
@@ -876,6 +875,7 @@ def render_pnp_graph(graph, translated_metrics):
 # "#ff0080" -> (1.0, 0.0, 0.5)
 def parse_color(color):
     return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
+
 
 def render_color(color_rgb):
     return "#%02x%02x%02x" % (

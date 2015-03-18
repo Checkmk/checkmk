@@ -115,7 +115,7 @@ def handler(req, fields = None, profiling = True):
         # profiling can be enabled in multisite.mk
         if profiling and config.profile:
             import cProfile # , pstats, sys, StringIO, tempfile
-            # the profiler looses the memory about all modules. We need to hand over
+            # the profiler loses the memory about all modules. We need to hand over
             # the request object in the apache module.
             # Ubuntu: install python-profiler when using this feature
             profilefile = defaults.var_dir + "/web/multisite.profile"

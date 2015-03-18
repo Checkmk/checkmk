@@ -125,11 +125,8 @@ ldap_umlaut_translation = {
 #   '----------------------------------------------------------------------'
 
 def ldap_log(s):
-    if config.ldap_debug_log is not None:
-        if type(s) == unicode:
-            s = s.encode('utf-8')
-        file(ldap_replace_macros(config.ldap_debug_log), "a").write('%s %s\n' %
-                                            (time.strftime('%Y-%m-%d %H:%M:%S'), s))
+    if config.ldap_debug_log:
+        logger(LOG_DEBUG, 'LDAP: %s' % s)
 
 class MKLDAPException(MKGeneralException):
     pass

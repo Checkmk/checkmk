@@ -31,13 +31,20 @@ def agent_siemens_plc_arguments(params, hostname, ipaddress):
         args += ' --timeout %d' % params["timeout"]
 
     for device in params["devices"]:
-        dev_args  = device["host_address"]
+        dev_args  = device["host_name"]
+        dev_args += ";%s" % device["host_address"]
         dev_args += ";%d" % device["rack"]
         dev_args += ";%d" % device["slot"]
         dev_args += ";%d" % device["tcp_port"]
 
-        for values in params["values"] + device["values"]:
-            dev_args += ";%s" % ",".join(map(str, values))
+        for value in params["values"] + device["values"]:
+            v = []
+            for part in value:
+                if type(part) == tuple:
+                    v.append(':'.join(map(str, part)))
+                else:
+                    v.append(str(part))
+            dev_args += ";%s" % ",".join(v)
 
         args += " " + quote_shell_string(dev_args)
 

@@ -40,13 +40,13 @@
 # No mbuf Errors: 0
 # Adapter Reset Count: 0
 # Adapter Data Rate: 20000
-# Driver Flags: Up Broadcast Running 
-#         Simplex 64BitSupport ChecksumOffload 
-#                 DataRateSet 
+# Driver Flags: Up Broadcast Running
+#         Simplex 64BitSupport ChecksumOffload
+#                 DataRateSet
 
 check_includes['aix_if'] = [ "if.include" ]
 
-def if_aix_convert_to_if64(info):
+def parse_aix_if(info):
     nic_info = {}
     current_nic = None
     index = 0
@@ -115,21 +115,23 @@ def if_aix_convert_to_if64(info):
           "ifInErrors", "ifOutOctets", "outucast", "outmcast", "outbcast",
           "ifOutDiscards", "ifOutErrors", "ifOutQLen", "ifAlias", "ifPhysAddress" ]:
            nic_list.append(nic_info[nic][attr])
-        if_table.append(map(str,nic_list))
+        if_table.append(map(str, nic_list))
     return if_table
 
 def inventory_aix_if(info):
-    return inventory_if_common(if_aix_convert_to_if64(info))
+    return inventory_if_common(info)
 
 def check_aix_if(item, params, info):
-    return check_if_common(item, params, if_aix_convert_to_if64(info))
+    return check_if_common(item, params, info)
 
 
 check_info["aix_if"] = {
-    'check_function':          check_aix_if,
-    'inventory_function':      inventory_aix_if,
-    'service_description':     'Interface %s',
-    'has_perfdata':            True,
-    'group':                   'if',
+    'inventory_function'     : inventory_aix_if,
+    'check_function'         : check_aix_if,
+    'parse_function'         : parse_aix_if,
+    'service_description'    : 'Interface %s',
+    'has_perfdata'           : True,
+    'group'                  : 'if',
     'default_levels_variable': 'if_default_levels',
+    'includes'               : ['if.include']
 }

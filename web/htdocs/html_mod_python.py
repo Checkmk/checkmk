@@ -136,18 +136,9 @@ class html_mod_python(htmllib.html):
                 omd_mode = 'own'
         return (omd_mode, omd_site)
 
-
-    # Debug logging directly to apache error_log
-    # Even if this is for debugging purpose, set the log-level to WARN in all cases
-    # since the apache in OMD sites has LogLevel set to "warn" by default which would
-    # suppress messages generated here. Again, this is only for debugging during
-    # development, so this should be no problem for regular users.
     def log(self, msg):
-        if type(msg) == unicode:
-            msg = msg.encode('utf-8')
-        elif type(msg) != str:
-            msg = repr(msg)
-        self.req.log_error(msg, apache.APLOG_ERR) # only accepts str, not unicode
+        from lib import logger
+        logger(LOG_NOTICE, msg)
 
     def http_redirect(self, url):
         self.set_http_header('Location', url)

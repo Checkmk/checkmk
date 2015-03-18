@@ -44,7 +44,7 @@ foreach ( $entry in $cpu ) { foreach ( $item in $cpu_vars) {  write-host $item "
 
 # OS Version
 write-host "<<<win_os:sep(124):persist($until)>>>"
-Get-WmiObject Win32_OperatingSystem -ComputerName $name -Recurse | foreach-object { write-host -separator $separator $_.csname, $_.caption, $_.version, $_.OSArchitecture, $_.servicepackmajorversion, $_.ServicePackMinorVersion, $_.InstallDate }
+Get-WmiObject Win32_OperatingSystem -ComputerName $name | foreach-object { write-host -separator $separator $_.csname, $_.caption, $_.version, $_.OSArchitecture, $_.servicepackmajorversion, $_.ServicePackMinorVersion, $_.InstallDate }
 
 # Memory
 #Get-WmiObject Win32_PhysicalMemory -ComputerName $name  | select BankLabel,DeviceLocator,Capacity,Manufacturer,PartNumber,SerialNumber,Speed

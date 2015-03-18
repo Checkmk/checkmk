@@ -1,0 +1,12 @@
+Title: ldap debug logfile gives problems with distributed monitoring
+Component: multisite
+State: open
+Date: 2015-03-18 10:03:24
+Targetversion: 1.2.6
+Class: bug
+
+when configuring debug mode for the ldap connector a name for a logfile is suggested, which is in the 
+monitoring site. When using distributed monitoring, this setting is moved to the remite site. Since
+the logfile name does not exist on the remote site and cannot be created, the restart of the remote site
+fails.
+The same problem happens when using 'omd mv'

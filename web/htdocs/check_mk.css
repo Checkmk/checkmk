@@ -546,5 +546,41 @@ div.popup span {
 
 /* TEST */
 table.graph {
-    border: 1px solid #888888;
+    border: 1px solid black;
+    box-shadow: 0.5px 0.5px 2px #888;
+    border-spacing: 0px;
+    background-color: #eeeeee;
+    padding: 10px 10px;
+}
+
+table.graph canvas {
+    margin: 0px;
+}
+table.prediction td {
+    padding: 0px;
+}
+
+table.graph td.legend {
+    padding-left: 43px;
+    color: #000000;
+    padding-bottom: 12px;
+    padding-top: 2px;
+}
+
+table.graph td.legend div {
+    display: inline-block;
+    float: none;
+}
+
+table.graph td.legend div.color {
+    border: 1px solid black;
+    height: 12px;
+    width: 12px;
+    vertical-align: bottom;
+    display: inline-block;
+    box-shadow: 0.5px 0.5px 1px #888;
+}
+table.graph td.legend div.entry {
+    margin-right: 20px;
+    margin-left: 5px;
 }

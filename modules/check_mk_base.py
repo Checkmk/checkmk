@@ -1057,7 +1057,7 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
     last_time, last_val = g_counters.get(itemname)
     timedif = this_time - last_time
 
-    # Gracefully handle time-anomaly of target systems. We loose
+    # Gracefully handle time-anomaly of target systems. We lose
     # one value, but what then heck..
     if timedif < 0:
         timedif = 0

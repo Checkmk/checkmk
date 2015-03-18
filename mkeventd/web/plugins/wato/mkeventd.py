@@ -1815,7 +1815,7 @@ if mkeventd_enabled:
         "retention_interval",
         Age(title = _("State Retention Interval"),
             help = _("In this interval the event daemon will save its state "
-                     "to disk, so that you won't loose your current event "
+                     "to disk, so that you won't lose your current event "
                      "state in case of a crash."),
             default_value = 60,
         ),

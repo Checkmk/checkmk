@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check is intended to alert you of problems in a servers SAN
  connection. It can differentiate different FC Login states and
- different driver states. If a port looses connectivity, you will
+ different driver states. If a port loses connectivity, you will
  be getting a {"CRIT"} status.
 
  The check will go to {"UNKNOWN"} if the HBA is removed, or to

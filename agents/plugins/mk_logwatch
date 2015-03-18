@@ -326,7 +326,7 @@ except Exception, e:
     sys.exit(1)
 
 # Simply ignore errors in the status file.  In case of a corrupted status file we simply begin
-# with an empty status. That keeps the monitoring up and running - even if we might loose a
+# with an empty status. That keeps the monitoring up and running - even if we might lose a
 # message in the extreme case of a corrupted status file.
 try:
     status = read_status()

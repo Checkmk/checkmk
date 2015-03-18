@@ -475,6 +475,59 @@ def validate_siemens_plc_values(value, varprefix):
                               _("The ident of a value needs to be unique per valuetype."))
         valuetypes[valuetype].append(ident)
 
+_siemens_plc_value = [
+    Integer(
+        title = "<nobr>%s</nobr>" % _("DB Number"),
+        minvalue = 1,
+    ),
+    Float(
+        title = _("Address"),
+        display_format = "%.1f",
+        help = _("Addresses are specified as float values, while the numbers "
+                 "the dot specify the byte to fetch and the number after the "
+                 "dot specifies the bit to fetch. The number of the bit is always "
+                 "between 0 and 7."),
+    ),
+    CascadingDropdown(
+        title = _("Datatype"),
+        choices = [
+            ("dint", _("Double Integer (DINT)")),
+            ("real", _("Real Number (REAL)")),
+            ("bit",  _("Single Bit (BOOL)")),
+            ("str",  _("String (STR)"), Integer(
+                minvalue = 1,
+                title = _("Size"),
+                unit = _("Bytes"),
+            )),
+            ("raw",  _("Raw Bytes (HEXSTR)"), Integer(
+                minvalue = 1,
+                title = _("Size"),
+                unit = _("Bytes"),
+            )),
+        ],
+        html_separator = "",
+        sorted = True,
+    ),
+    DropdownChoice(
+        title = _("Type of the value"),
+        choices = [
+            (None,    _("Unclassified")),
+            ("temp",  _("Temperature")),
+            ("hours", _("Hours")),
+            ("flag",  _("State flag (on/off)")),
+            ("text",  _("Text")),
+        ],
+        sorted = True,
+    ),
+    ID(
+        title = _("Ident of the value"),
+        help = _(" An identifier of your choice. This identifier "
+                 "is used by the Check_MK checks to access "
+                 "and identify the single values. The identifier "
+                 "needs to be unique within a group of VALUETYPES."),
+    ),
+]
+
 group = "datasource_programs"
 register_rule(group,
     "special_agents:siemens_plc",
@@ -483,6 +536,12 @@ register_rule(group,
             ("devices", ListOf(
                 Dictionary(
                     elements = [
+                        ('host_name', TextAscii(
+                            title = _('Name of the PLC'),
+                            allow_empty = False,
+                            help = _('Specify the logical name, e.g. the hostname, of the PLC. This name '
+                                     'is used to name the resulting services.')
+                        )),
                         ('host_address', TextAscii(
                             title = _('Network Address'),
                             allow_empty = False,
@@ -513,37 +572,7 @@ register_rule(group,
                         )),
                         ("values", ListOf(
                             Tuple(
-                                elements = [
-                                    Integer(
-                                        title = "<nobr>%s</nobr>" % _("DB Number"),
-                                        minvalue = 1,
-                                    ),
-                                    Integer(
-                                        title = _("Address"),
-                                    ),
-                                    DropdownChoice(
-                                        title = _("Datatype"),
-                                        choices = [
-                                            ("dint", _("Double Integer (DINT)")),
-                                            ("real", _("Real Number (REAL)")),
-                                        ],
-                                    ),
-                                    DropdownChoice(
-                                        title = _("Type of the value"),
-                                        choices = [
-                                            (None,    _("Unclassified")),
-                                            ("temp",  _("Temperature")),
-                                            ("hours", _("Hours")),
-                                        ],
-                                    ),
-                                    ID(
-                                        title = _("Ident of the value"),
-                                        help = _(" An identifier of your choice. This identifier "
-                                                 "is used by the Check_MK checks to access "
-                                                 "and identify the single values. The identifier "
-                                                 "needs to be unique within a group of VALUETYPES."),
-                                    ),
-                                ],
+                                elements = _siemens_plc_value,
                                 orientation = "horizontal",
                             ),
                             title = _("Values to fetch from this device"),
@@ -557,37 +586,7 @@ register_rule(group,
             )),
             ("values", ListOf(
                 Tuple(
-                    elements = [
-                        Integer(
-                            title = "<nobr>%s</nobr>" % _("DB Number"),
-                            minvalue = 1,
-                        ),
-                        Integer(
-                            title = _("Address"),
-                        ),
-                        DropdownChoice(
-                            title = _("Datatype"),
-                            choices = [
-                                ("dint", _("Double Integer (DINT)")),
-                                ("real", _("Real Number (REAL)")),
-                            ],
-                        ),
-                        DropdownChoice(
-                            title = _("Type of the value"),
-                            choices = [
-                                (None,    _("Unclassified")),
-                                ("temp",  _("Temperature")),
-                                ("hours", _("Hours")),
-                            ],
-                        ),
-                        ID(
-                            title = _("Ident of the value"),
-                            help = _(" An identifier of your choice. This identifier "
-                                     "is used by the Check_MK checks to access "
-                                     "and identify the single values. The identifier "
-                                     "needs to be unique within a group of VALUETYPES."),
-                        ),
-                    ],
+                    elements = _siemens_plc_value,
                     orientation = "horizontal",
                 ),
                 title = _("Values to fetch from all devices"),

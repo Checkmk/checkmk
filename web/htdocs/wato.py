@@ -11402,7 +11402,7 @@ def automation_push_snapshot():
               _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
                 (our_id, site_id))
 
-        # Make sure there are no local changes we would loose! But only if we are
+        # Make sure there are no local changes we would lose! But only if we are
         # distributed ourselves (meaning we are a peer).
         if is_distributed():
             pending = parse_audit_log("pending")
@@ -13787,7 +13787,7 @@ def mode_ruleeditor(phase):
     search_form(_("Search for rules: "), "rulesets")
 
     # Group names are separated with "/" into main group and optional subgroup.
-    # Do not loose carefully manually crafted order of groups!
+    # Do not lose carefully manually crafted order of groups!
     groupnames = []
     for gn, rulesets in g_rulespec_groups:
         main_group = gn.split('/')[0]

@@ -1,0 +1,11 @@
+Title: ucs_bladecenter_fans.temp, ucs_bladecenter_psu.chassis_temp: fixed broken temperature checks (nagios only)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426680724
+
+These checks did not include a library file. It was unlikely that
+they work in a nagios environment.

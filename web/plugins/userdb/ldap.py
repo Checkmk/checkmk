@@ -104,6 +104,12 @@ ldap_umlaut_translation = {
     ord(u'Ü'): u'UE',
     ord(u'Ö'): u'OE',
     ord(u'Ä'): u'AE',
+    ord(u'å'): u'aa',
+    ord(u'Å'): u'Aa',
+    ord(u'Ø'): u'Oe',
+    ord(u'ø'): u'oe',
+    ord(u'Æ'): u'Ae',
+    ord(u'æ'): u'ae',
 }
 
 #.

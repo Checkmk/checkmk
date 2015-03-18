@@ -939,16 +939,14 @@ register_configvar(group,
 
 register_configvar(group,
     "ldap_debug_log",
-    Optional(
-        Filename(
-            label = _("Absolute path to log file"),
-            default = defaults.var_dir + '/web/ldap-debug.log',
-            trans_func = userdb.ldap_replace_macros,
-        ),
-          title = _("LDAP connection diagnostics"),
-          label = _("Activate logging of LDAP transactions into a logfile"),
-          help = _("If this option is used and set to a filename, Check_MK will create a logfile "
-                   "containing details about connecting to LDAP and the single transactions.")),
+    Checkbox(
+        title = _("LDAP connection diagnostics"),
+        label = _("Activate logging of LDAP transactions"),
+        help = _("If this option is enabled, Check_MK will create a log file in "
+                 "<tt>var/log/ldap.log</tt> within your site in OMD environments. "
+                 "You should enable this option only for debugging."),
+        default_value = False
+    ),
     domain = "multisite",
     in_global_settings = False,
 )

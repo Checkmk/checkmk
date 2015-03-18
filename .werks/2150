@@ -1,0 +1,12 @@
+Title: Reworked internal logging mechanism
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426681245
+Class: fix
+
+The web GUI has now a central log file, which is located at
+<tt>var/log/web.log</tt> in your OMD site. This logfile is
+used for all application internal logs, for example the
+LDAP diagnostic log.

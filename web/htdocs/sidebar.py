@@ -403,7 +403,7 @@ def ajax_snapin():
     except Exception, e:
         html.flush()
         html.unplug()
-        html.log('Exception during snapin refresh: %s' % e)
+        logger(LOG_ERR, 'Exception during snapin refresh: %s' % e)
         raise
 
 def move_snapin():

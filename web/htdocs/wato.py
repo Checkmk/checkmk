@@ -11434,7 +11434,7 @@ def automation_push_snapshot():
             save_configuration_settings(current_settings)
             shutil.rmtree(tmp_dir)
         except Exception, e:
-            html.log("Warning: cannot extract site-specific global settings: %s" % e)
+            logger(LOG_WARNING, "Warning: cannot extract site-specific global settings: %s" % e)
 
         log_commit_pending() # pending changes are lost
 
@@ -15247,7 +15247,7 @@ def load_rulesets(folder):
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                                                                        (path, e)))
         else:
-            html.log('load_rulesets: Problem while loading rulesets (%s - %s). '
+            logger(LOG_ERR, 'load_rulesets: Problem while loading rulesets (%s - %s). '
                      'Continue with partly loaded rules...' % (path, e))
 
     # Extract only specified rule variables

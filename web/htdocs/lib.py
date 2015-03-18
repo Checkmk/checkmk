@@ -24,18 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import grp, pprint, os, errno, gettext, marshal, re, fcntl, __builtin__
+import grp, pprint, os, errno, gettext, marshal, re, fcntl, __builtin__, time
 
-#Workarround when the file is included outsite multisite
+# Workarround when the file is included outsite multisite
 try:
     import defaults
 except:
     pass
 
-
 core_state_names = { -1: _("NODATA"), 0: _("OK"), 1: _("WARNING"), 2: _("CRITICAL"), 3: _("UNKNOWN")}
 nagios_short_state_names = { -1: _("PEND"), 0: _("OK"), 1: _("WARN"), 2: _("CRIT"), 3: _("UNKN") }
 nagios_short_host_state_names = { 0: _("UP"), 1: _("DOWN"), 2: _("UNREACH") }
+
+# possible log levels for logger()
+LOG_EMERG   = 0 # system is unusable
+LOG_ALERT   = 1 # action must be taken immediately
+LOG_CRIT    = 2 # critical conditions
+LOG_ERR     = 3 # error conditions
+LOG_WARNING = 4 # warning conditions
+LOG_NOTICE  = 5 # normal but significant condition
+LOG_INFO    = 6 # informational
+LOG_DEBUG   = 7 # debug-level messages
 
 # never used directly in the code. Just some wrapper to make all of our
 # exceptions handleable with one call
@@ -338,6 +347,36 @@ def format_plugin_output(output, row = None):
 def format_exception():
     import traceback
     return traceback.format_exc()
+
+
+# Debug logging directly to the dedicated web GUI log. The log format is
+# equal to the cmc.log format. The format is:
+#   2015-02-09 11:42:47 [5] Started 20 cmk helpers in 1.105 ms.
+#   <date> <time> [<lvl>] <msg>
+# the levels of the syslog format are used:
+#   LOG_EMERG   0   /* system is unusable */
+#   LOG_ALERT   1   /* action must be taken immediately */
+#   LOG_CRIT    2   /* critical conditions */
+#   LOG_ERR     3   /* error conditions */
+#   LOG_WARNING 4   /* warning conditions */
+#   LOG_NOTICE  5   /* normal but significant condition */
+#   LOG_INFO    6   /* informational */
+#   LOG_DEBUG   7   /* debug-level messages */
+def logger(level, msg):
+    if type(msg) == unicode:
+        msg = msg.encode('utf-8')
+    elif type(msg) != str:
+        msg = repr(msg)
+
+    log_file = defaults.log_dir + '/web.log'
+    file(log_file, 'a')
+    aquire_lock(log_file)
+    try:
+        file(log_file, 'a').write('%s [%d] [%d] %s\n' %
+            (time.strftime('%Y-%m-%d %H:%M:%S'), level, os.getpid(), msg))
+    finally:
+        release_lock(log_file)
+
 
 # Escape/strip unwanted chars from (user provided) strings to
 # use them in livestatus queries. Prevent injections of livestatus

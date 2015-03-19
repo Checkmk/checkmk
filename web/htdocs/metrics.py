@@ -332,7 +332,7 @@ def perfometer_possible(perfometer, translated_metrics):
             required = perfometer["segments"][:]
         else:
             required = [] # TODO: logarithmic, etc.
-        if "label" in perfometer:
+        if "label" in perfometer and perfometer["label"] != None:
             required.append(perfometer["label"][0])
         if "total" in perfometer:
             required.append(perfometer["total"])
@@ -532,11 +532,14 @@ def build_perfometer(perfometer, translated_metrics):
             # Use unit of first metrics for output of sum. We assume that all
             # stackes metrics have the same unit anyway
             if "label" in perfometer:
-                expr, unit_name = perfometer["label"]
-                value, unit, color = evaluate(expr, translated_metrics)
-                if unit_name:
-                    unit = unit_info[unit_name]
-                label = unit["render"](summed)
+                if perfometer["label"] == None:
+                    label = ""
+                else:
+                    expr, unit_name = perfometer["label"]
+                    value, unit, color = evaluate(expr, translated_metrics)
+                    if unit_name:
+                        unit = unit_info[unit_name]
+                    label = unit["render"](summed)
             else: # absolute
                 value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
 

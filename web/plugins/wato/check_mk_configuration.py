@@ -1594,7 +1594,7 @@ register_configvar(deprecated,
 #   '----------------------------------------------------------------------'
 
 register_rulegroup("grouping", _("Grouping"),
-   _("Assignment of host &amp; services to host, service and contacts groups. "))
+   _("Assignment of host & services to host, service and contacts groups. "))
 group = "grouping"
 
 register_rule(group,

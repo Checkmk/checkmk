@@ -223,7 +223,7 @@ builtin_dashboards["simple_problems"] = {
     "context"     : {},
     "mtime"       : 0,
     "show_title"  : True,
-    "title"       : _("Host &amp; Services Problems"),
+    "title"       : _("Host & Services Problems"),
     "topic"       : _("Overview"),
     "description" : _("A compact dashboard which lists your unhandled host and service problems."),
     "dashlets" : [

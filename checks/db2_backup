@@ -1,0 +1,70 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<db2_backup>>>
+# [[[db2taddm:CMDBS1]]]
+# 2015-03-12-04.00.13.000000
+
+db2_backup_default_levels = (86400 * 14, 86400 * 28)
+
+def inventory_db2_backup(parsed):
+    for instance in parsed:
+        yield instance, "db2_backup_default_levels"
+
+def check_db2_backup(item, params, parsed):
+    db = parsed.get(item)
+    if not db:
+        return
+
+    try:
+        last_backup = time.mktime(time.strptime(db[0][0][:19], "%Y-%m-%d-%H.%M.%S"))
+    except:
+        if db[0][0] == "-":
+            yield 1, "No backup available"
+        else:
+            yield 3, "Last backup contains an invalid timestamp: %s" % db[0][0]
+        return
+
+    age = time.time() - last_backup
+    if params:
+        warn, crit = params
+        if age >= crit:
+            yield 2, "Time since last backup: %s" % get_age_human_readable(age)
+        elif age >= warn:
+            yield 1, "Time since last backup: %s" % get_age_human_readable(age)
+        else:
+            yield 0, "Time since last backup: %s" % get_age_human_readable(age)
+    else:
+        yield 0, "Time since last backup: %s" % get_age_human_readable(age)
+
+check_info['db2_backup'] = {
+    "parse_function"          : parse_db2_dbs,
+    "service_description"     : "DB2 Backup %s",
+    "check_function"          : check_db2_backup,
+    "inventory_function"      : inventory_db2_backup,
+    "group"                   : "db2_backup",
+    "includes"                : ["db2.include"],
+}

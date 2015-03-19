@@ -3627,6 +3627,80 @@ register_check_parameters(
      None
 )
 
+db_levels_common = [
+    ("levels",
+        Alternative(
+            title = _("Levels for the Tablespace usage"),
+            default_value = (10.0, 5.0),
+            elements = [
+                Tuple(
+                    title = _("Percentage free space"),
+                    elements = [
+                        Percentage(title = _("Warning if below"), unit = _("% free")),
+                        Percentage(title = _("Critical if below"), unit = _("% free")),
+                    ]
+                ),
+                Tuple(
+                    title = _("Absolute free space"),
+                    elements = [
+                         Integer(title = _("Warning if below"), unit = _("MB"), default_value = 1000),
+                         Integer(title = _("Critical if below"), unit = _("MB"), default_value = 500),
+                    ]
+                ),
+                ListOf(
+                    Tuple(
+                        orientation = "horizontal",
+                        elements = [
+                            Filesize(title = _("Tablespace larger than")),
+                            Alternative(
+                                title = _("Levels for the Tablespace size"),
+                                elements = [
+                                    Tuple(
+                                        title = _("Percentage free space"),
+                                        elements = [
+                                            Percentage(title = _("Warning if below"), unit = _("% free")),
+                                            Percentage(title = _("Critical if below"), unit = _("% free")),
+                                        ]
+                                    ),
+                                    Tuple(
+                                        title = _("Absolute free space"),
+                                        elements = [
+                                             Integer(title = _("Warning if below"), unit = _("MB")),
+                                             Integer(title = _("Critical if below"), unit = _("MB")),
+                                        ]
+                                    ),
+                                ]
+                            ),
+                        ],
+                    ),
+                    title = _('Dynamic levels'),
+                ),
+            ]
+        )
+    ),
+    ("magic",
+       Float(
+          title = _("Magic factor (automatic level adaptation for large tablespaces)"),
+          help = _("This is only be used in case of percentual levels"),
+          minvalue = 0.1,
+          maxvalue = 1.0,
+          default_value = 0.9)),
+    (  "magic_normsize",
+       Integer(
+           title = _("Reference size for magic factor"),
+           minvalue = 1,
+           default_value = 1000,
+           unit = _("MB"))),
+    ( "magic_maxlevels",
+      Tuple(
+          title = _("Maximum levels if using magic factor"),
+          help = _("The tablespace levels will never be raise above these values, when using "
+                   "the magic factor and the tablespace is very small."),
+          elements = [
+              Percentage(title = _("Maximum warning level"),  unit = _("% free"), allow_int = True, default_value = 60.0),
+              Percentage(title = _("Maximum critical level"), unit = _("% free"), allow_int = True, default_value = 50.0)])
+    )
+]
 
 register_check_parameters(
     subgroup_applications,
@@ -3638,78 +3712,7 @@ register_check_parameters(
                  "more data files. Tables and indexes are created within a particular "
                  "tablespace. "
                  "This rule allows you to define checks on the size of tablespaces."),
-        elements = [
-            ("levels",
-                Alternative(
-                    title = _("Levels for the Tablespace usage"),
-                    default_value = (10.0, 5.0),
-                    elements = [
-                        Tuple(
-                            title = _("Percentage free space"),
-                            elements = [
-                                Percentage(title = _("Warning if below"), unit = _("% free")),
-                                Percentage(title = _("Critical if below"), unit = _("% free")),
-                            ]
-                        ),
-                        Tuple(
-                            title = _("Absolute free space"),
-                            elements = [
-                                 Integer(title = _("Warning if below"), unit = _("MB"), default_value = 1000),
-                                 Integer(title = _("Critical if below"), unit = _("MB"), default_value = 500),
-                            ]
-                        ),
-                        ListOf(
-                            Tuple(
-                                orientation = "horizontal",
-                                elements = [
-                                    Filesize(title = _("Tablespace larger than")),
-                                    Alternative(
-                                        title = _("Levels for the Tablespace size"),
-                                        elements = [
-                                            Tuple(
-                                                title = _("Percentage free space"),
-                                                elements = [
-                                                    Percentage(title = _("Warning if below"), unit = _("% free")),
-                                                    Percentage(title = _("Critical if below"), unit = _("% free")),
-                                                ]
-                                            ),
-                                            Tuple(
-                                                title = _("Absolute free space"),
-                                                elements = [
-                                                     Integer(title = _("Warning if below"), unit = _("MB")),
-                                                     Integer(title = _("Critical if below"), unit = _("MB")),
-                                                ]
-                                            ),
-                                        ]
-                                    ),
-                                ],
-                            ),
-                            title = _('Dynamic levels'),
-                        ),
-                    ]
-                )
-            ),
-            ("magic",
-               Float(
-                  title = _("Magic factor (automatic level adaptation for large tablespaces)"),
-                  help = _("This is only be used in case of percentual levels"),
-                  minvalue = 0.1,
-                  maxvalue = 1.0,
-                  default_value = 0.9)),
-            (  "magic_normsize",
-               Integer(
-                   title = _("Reference size for magic factor"),
-                   minvalue = 1,
-                   default_value = 1000,
-                   unit = _("MB"))),
-            ( "magic_maxlevels",
-              Tuple(
-                  title = _("Maximum levels if using magic factor"),
-                  help = _("The tablespace levels will never be raise above these values, when using "
-                           "the magic factor and the tablespace is very small."),
-                  elements = [
-                      Percentage(title = _("Maximum warning level"),  unit = _("% free"), allow_int = True, default_value = 60.0),
-                      Percentage(title = _("Maximum critical level"), unit = _("% free"), allow_int = True, default_value = 50.0)])),
+        elements = db_levels_common + [
             ( "autoextend",
                 Checkbox(
                   title = _("Autoextend"),
@@ -4282,6 +4285,7 @@ register_check_parameters(
     ),
     None
 )
+
 
 register_check_parameters(
     subgroup_applications,
@@ -7040,14 +7044,152 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
-    "db2_logsizes",
-    _("Size of DB2 logfiles"),
-    get_free_used_dynamic_valuespec("free", "logfile", default_value = (20.0, 10.0)),
+    "db2_logsize",
+    _("DB2 logfile usage"),
+    Dictionary(
+        elements = [ ("levels",
+            Transform(
+                get_free_used_dynamic_valuespec("free", "logfile", default_value = (20.0, 10.0)),
+                title = _("Logfile levels"),
+                allow_empty = False,
+                forth = transform_filesystem_free,
+                back  = transform_filesystem_free
+           ))
+        ]
+    ),
     TextAscii(
-        title = _("Logfile name"),
-        allow_empty = True),
+        title = _("Instance"),
+        help = _("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "db2_sortoverflow",
+    _("DB2 Sort Overflow"),
+    Dictionary(
+         help = _("This rule allows you to set percentual limits for sort overflows."),
+         elements = [
+             ( "levels_perc",
+               Tuple(
+                   title = _("Overflows"),
+                   elements = [
+                       Percentage(title = _("Warning at"),  unit = _("%"), default_value = 2.0),
+                       Percentage(title = _("Critical at"), unit = _("%"), default_value = 4.0),
+                    ],
+               ),
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Instance"),
+        help = _("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+    ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "db2_tablespaces",
+    _("DB2 Tablespaces"),
+    Dictionary(
+        help = _("A tablespace is a container for segments (tables, indexes, etc). A "
+                 "database consists of one or more tablespaces, each made up of one or "
+                 "more data files. Tables and indexes are created within a particular "
+                 "tablespace. "
+                 "This rule allows you to define checks on the size of tablespaces."),
+        elements = db_levels_common,
+    ),
+    TextAscii(
+        title = _("Instance"),
+        help = _("The instance name, the database name and the tablespace name combined "
+                 "like this db2wps8:WPSCOMT8.USERSPACE1")
+    ),
+    "dict"
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    "db2_connections",
+    _("DB2 Connections"),
+    Dictionary(
+         help = _("This rule allows you to set limits for the maximum number of DB2 connections"),
+         elements = [
+             ( "levels_total",
+               Tuple(
+                   title = _("Number of current connections"),
+                   elements = [
+                       Integer(title = _("Warning at"),  unit = _("connections"), default_value = 150),
+                       Integer(title = _("Critical at"), unit = _("connections"), default_value = 200),
+                    ],
+               ),
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Instance"),
+        help = _("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "db2_counters",
+    _("DB2 Counters"),
+    Dictionary(
+         help = _("This rule allows you to configure limits for the deadlocks and lockwaits "
+                  "counters of a DB2."),
+         elements = [
+             ( "deadlocks",
+               Tuple(
+                   title = _("Deadlocks"),
+                   elements = [
+                       Float(title = _("Warning at"),  unit = _("deadlocks/sec")),
+                       Float(title = _("Critical at"), unit = _("deadlocks/sec")),
+                    ],
+               ),
+            ),
+             ( "lockwaits",
+               Tuple(
+                   title = _("Lockwaits"),
+                   elements = [
+                       Float(title = _("Warning at"),  unit = _("lockwaits/sec")),
+                       Float(title = _("Critical at"), unit = _("lockwaits/sec")),
+                    ],
+               ),
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Instance"),
+        help = _("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+    ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "db2_backup",
+    _("DB2 Time since last database Backup"),
+    Optional(
+        Tuple(
+            elements = [
+              Age(title = _("Warning at"),  display = ["days", "hours", "minutes"], default_value = 86400 * 14),
+              Age(title = _("Critical at"), display = ["days", "hours", "minutes"], default_value = 86400 * 28)
+            ]
+        ),
+        title = _("Specify time since last successful backup"),
+    ),
+    TextAscii(
+        title = _("Instance"),
+        help = _("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+    ),
     "first"
 )
+
 
 register_check_parameters(
     subgroup_applications,

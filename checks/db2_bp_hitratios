@@ -1,0 +1,72 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<db2_bp_hitratios>>>
+# [[[db2taddm:CMDBS1]]]
+# BP_NAME        TOTAL_HIT_RATIO_PERCENT DATA_HIT_RATIO_PERCENT INDEX_HIT_RATIO_PERCENT XDA_HIT_RATIO_PERCENT
+# IBMDEFAULTBP                     99.36                  98.48                   99.94                     -
+# BUF8K                            99.94                  99.94                   99.95                     -
+# BUF32K                           99.99                  99.98                   99.99                     -
+# BP8                             100.00                 100.00                       -                     -
+
+def inventory_db2_bp_hitratios(parsed):
+    for key, values in parsed.items():
+        for field in values[1:]:
+            if not field[0].startswith("IBMSYSTEMBP"):
+                yield "%s:%s" % (key, field[0]), {}
+
+def check_db2_bp_hitratios(item, no_params, parsed):
+    db_instance, field = item.rsplit(":",1)
+    db = parsed.get(db_instance)
+    if not db:
+        return
+
+    headers = db[0]
+    for line in db[1:]:
+        if field == line[0]:
+            hr_info = dict(zip(headers[1:], line[1:])) # skip BP_NAME
+            for key in headers[1:]:
+                value = hr_info[key]
+                value = value.replace("-","0")
+                key   = key.replace("_RATIO_PERCENT","")
+                map_key_to_text = {
+                    "TOTAL_HIT": "Total",
+                    "DATA_HIT": "Data",
+                    "INDEX_HIT": "Index",
+                    "XDA_HIT": "XDA",
+                }
+                yield 0, "%s: %s%%" % (map_key_to_text[key], value), [("%sratio" % key.lower(), float(value), None, None, 0, 100)]
+            break
+
+check_info['db2_bp_hitratios'] = {
+    "parse_function"          : parse_db2_dbs,
+    "service_description"     : "DB2 BP-Hitratios %s",
+    "check_function"          : check_db2_bp_hitratios,
+    "inventory_function"      : inventory_db2_bp_hitratios,
+    "has_perfdata"            : True,
+    "includes"                : ["db2.include"]
+}
+

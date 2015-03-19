@@ -1,0 +1,23 @@
+title: DB2 Connections and Query Latency
+agents: aix
+catalog: app/db2
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of connections to a DB2 database.
+
+ It also outputs the connection latency (no limits configurable).
+
+ You can configure limits for the number of connections.
+
+ This check needs the mk_db2.aix plugin installed in the agent.
+
+item:
+ The DB2 instance name followed by a : and the database name, e.g. db2ilog1:REST1
+
+inventory:
+ One separate check for each database will be created.
+
+perfdata:
+ Two values. The number of connections and the latency.
+

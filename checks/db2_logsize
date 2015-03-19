@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<db2_logsize>>>
+# TIMESTAMP 1426495343
+# [[[db2taddm:CMDBS1]]]
+# usedspace 7250240
+# logfilsiz 2048
+# logprimary 6
+# logsecond 100
+
+factory_settings["db2_logsize_default_levels"] = {
+    "levels": (-20.0, -10.0) # Interpreted as free space in df_check_filesystem_single
+}
+
+def inventory_db2_logsize(parsed):
+    for key in parsed[1]:
+        yield key, {}
+
+def check_db2_logsize(item, params, parsed):
+    timestamp   = parsed[0]
+    db          = parsed[1].get(item)
+    sector_size = 4096
+
+    data  = dict(db)
+    total = int(data["logfilsiz"]) * (int(data["logprimary"]) + int(data["logsecond"])) * sector_size
+    free  = total - int(data["usedspace"])
+
+    return df_check_filesystem_single(g_hostname, item, total / 1024**2, free / 1024**2, 0,
+                                      None, None, params, this_time = timestamp)
+
+check_info['db2_logsize'] = {
+    "parse_function"          : parse_db2_dbs,
+    "service_description"     : "DB2 Logsize %s",
+    "check_function"          : check_db2_logsize,
+    "inventory_function"      : inventory_db2_logsize,
+    "group"                   : "db2_logsize",
+    "has_perfdata"            : True,
+    "default_levels_variable" : "db2_logsize_default_levels",
+    "includes"                : [ "df.include", "db2.include" ]
+}

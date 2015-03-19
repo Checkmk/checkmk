@@ -1,0 +1,12 @@
+Title: mk_oracle: backport of werk 1564 from agent
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427482918
+Class: fix
+
+This is the port of the change from the Linux Agent to mk_oracle for
+run_cached. Details are described in Werk 1564-
+
+

@@ -33,7 +33,7 @@ def check_mbg_lantime_state(_no_item, params, info):
       '0': (2 ,'not synchronized'                 ),
       '1': (2 ,'no good reference clock'          ),
       '2': (0 ,'sync to external reference clock' ),
-      '3': (0 ,'sync to serial refernce clock'    ),
+      '3': (0 ,'sync to serial reference clock'    ),
       '4': (0 ,'normal operation PPS'             ),
       '5': (0 ,'normal operation reference clock' ),
     }

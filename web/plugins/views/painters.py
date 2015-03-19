@@ -75,8 +75,8 @@
 import bi # needed for aggregation icon
 
 multisite_painter_options["pnp_timerange"] = {
-    'valuespec' : PNPTimerange(
-        title = _("PNP Timerange"),
+    'valuespec' : Timerange(
+        title = _("Graph Timerange"),
         default_value = None,
         include_time = True,
     )

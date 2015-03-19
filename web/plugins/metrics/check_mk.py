@@ -730,7 +730,7 @@ perfometer_info.append({
         "fs_used(%)",
         "fs_provisioning(%),fs_used(%),-#ffc030",
     ],
-    "total"     : "100",
+    "total"     : 100,
     "label"     : ( "fs_used(%)", "%" ),
 })
 
@@ -823,7 +823,7 @@ graph_info.append({
         ( "user,system,io_wait,+,+#004080", "line", _("Total") ),
     ],
     "mirror_legend" : True,
-    "range" : (0, 100),
+    # "range" : (0, 100),
 })
 
 graph_info.append({

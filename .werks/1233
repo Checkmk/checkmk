@@ -1,0 +1,9 @@
+Title: Fixed fileinfo check for solaris in case of missing files
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1426755598
+Class: fix
+
+

@@ -44,11 +44,12 @@ def parse_ucs_bladecenter_if(info):
     # TODO: fabricFcSanPcEp
     for what, cut in [ ("fcStats", 6),
                        ("fcErrStats", 10) ]:
-        for key, values in data[what].items():
-            fc_name = key[:-cut]
-            if fc_name in fc_interfaces:
-                fc_interfaces[fc_name].setdefault(what, {})
-                fc_interfaces[key[:-cut]][what].update(values)
+        if what in data:
+            for key, values in data[what].items():
+                fc_name = key[:-cut]
+                if fc_name in fc_interfaces:
+                    fc_interfaces[fc_name].setdefault(what, {})
+                    fc_interfaces[key[:-cut]][what].update(values)
 
 
     # ==== Ethernet ====
@@ -72,11 +73,12 @@ def parse_ucs_bladecenter_if(info):
     for what, cut in [ ("etherRxStats", 9),
                        ("etherTxStats", 9),
                        ("etherErrStats", 10) ]:
-        for key, values in data[what].items():
-            eth_name = key[:-cut]
-            if eth_name in eth_interfaces:
-                eth_interfaces[eth_name].setdefault(what, {})
-                eth_interfaces[key[:-cut]][what].update(values)
+        if what in data:
+            for key, values in data[what].items():
+                eth_name = key[:-cut]
+                if eth_name in eth_interfaces:
+                    eth_interfaces[eth_name].setdefault(what, {})
+                    eth_interfaces[key[:-cut]][what].update(values)
 
     # ==== Interconnects ====
     icnt_interfaces = {}
@@ -100,11 +102,12 @@ def parse_ucs_bladecenter_if(info):
     for what, cut in [ ("etherRxStats", 9),
                        ("etherTxStats", 9),
                        ("etherErrStats", 10) ]:
-        for key, values in data[what].items():
-            eth_name = key[:-cut]
-            if eth_name in icnt_interfaces:
-                icnt_interfaces[eth_name].setdefault(what, {})
-                icnt_interfaces[key[:-cut]][what].update(values)
+        if what in data:
+            for key, values in data[what].items():
+                eth_name = key[:-cut]
+                if eth_name in icnt_interfaces:
+                    icnt_interfaces[eth_name].setdefault(what, {})
+                    icnt_interfaces[key[:-cut]][what].update(values)
 
 
     # Example interfaces
@@ -251,8 +254,8 @@ def parse_ucs_bladecenter_if(info):
     converted = []
     last_index = 0
     for what, group_prefix, interfaces, item_template in [
-          ("fibrechannel", "Fibrechannel-Group",  fc_interfaces,  "Slot %s FC-Switch %s Port %s"),
-          ("ethernet",     "Ethernet-Group",     eth_interfaces,  "Slot %s Switch %s Port %s"),
+          ("fibrechannel", "Fibrechannel-Group",   fc_interfaces, "Slot %s FC-Switch %s Port %s"),
+          ("ethernet",     "Ethernet-Group",      eth_interfaces, "Slot %s Switch %s Port %s"),
           ("interconnect", "Interconnect-Group", icnt_interfaces, "Slot %s IC-Switch %s Port %s"),
     ]:
         for index, (name, values) in enumerate(interfaces.items()):
@@ -303,6 +306,8 @@ def parse_ucs_bladecenter_if(info):
                         else:
                             ctr_value += int(values.get(ctr_key, "0"))
                 entry[table_index] = str(ctr_value)
+        else:
+            index = 0
         last_index += index + 1
 
     return converted

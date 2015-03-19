@@ -1,0 +1,22 @@
+Title: Fixed processing of html processing in input fields
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426752106
+
+If you enter html entities in input fields, the value will be saved correctly.
+If you open the rule for editing again, the value will be interpreted. This
+replaces html entities with the interpreted character. If you save the rule
+now, all html entities will be lost.
+
+One example:
+C+:
+You enter &#46;
+Will be replaced with . (Dot)
+C-:
+
+This bug was reported by a customer who have used check_http for finding html
+entities in a webpage.

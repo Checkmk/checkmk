@@ -1,0 +1,11 @@
+Title: Remove PNP Timeranges from range selection, put these ranges directly into the list
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426758052
+Class: feature
+
+The selection of a time range for PNP graphs contained one entry <i>PNP View</i> and a submenu
+for <i>4 Hours</i>, <i>25 Hours</i>, etc. These entries have been moved directly into the
+list and are now also available for the availability and reporting modules.

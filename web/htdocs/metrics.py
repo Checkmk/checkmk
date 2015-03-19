@@ -538,7 +538,8 @@ def build_perfometer(perfometer, translated_metrics):
                     unit = unit_info[unit_name]
                 label = unit["render"](summed)
             else: # absolute
-                value, unit, color = evaluate(metrics_expressions[0], translated_metrics)
+                value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
+
                 label = unit["render"](summed)
 
             return label, stack

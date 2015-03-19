@@ -21,7 +21,7 @@ perfdata:
   The check generates perfdata for the active and inactive sessions.
 
 [parameters]
-paramaeters(dict): A dictionary with the following optional keys:
+parameters(dict): A dictionary with the following optional keys:
 
   {"active"}: A tuple of warn and crit thresholds
   {"inactive"}: A tuple of warn and crit thresholds

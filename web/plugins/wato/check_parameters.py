@@ -7103,17 +7103,17 @@ register_check_parameters(
             ("ok_states", ListChoice(
               title = _("States which result in OK"),
               choices = synology_update_states,
-              default_value = [2, 3]
+              default_value = [ 2 ]
             )),
             ("warn_states", ListChoice(
               title = _("States which result in Warning"),
               choices = synology_update_states,
-              default_value = [5]
+              default_value = [ 5 ]
             )),
             ("crit_states", ListChoice(
               title = _("States which result in Critical"),
               choices = synology_update_states,
-              default_value = [1,4]
+              default_value = [ 1,4 ]
             )),
         ],
         optional_keys = None,

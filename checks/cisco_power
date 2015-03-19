@@ -70,9 +70,11 @@ def inventory_cisco_power(info):
 
 def check_cisco_power(item, no_params, info):
     if "/" in item:
-        item = item.split("/")[1]
+        split_item = item.split("/")[1]
+    else:
+        split_item = None
     for sid, textinfo, state, source in info:
-        if sid == item or cisco_sensor_item(textinfo, sid) == item:
+        if sid == item or sid == split_item or cisco_sensor_item(textinfo, sid) == item:
             state = int(state)
             source = int(source)
             output = 'state: %s, source: %s' % \

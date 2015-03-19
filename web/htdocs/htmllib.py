@@ -1315,7 +1315,7 @@ class html:
         elif ty not in [str, unicode]: # also possible: type Exception!
             value = "%s" % value # Note: this allows Unicode. value might not have type str now
 
-        return value.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
+        return value.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 
     # This function returns a str object, never unicode!
     # Beware: this code is crucial for the performance of Multisite!

@@ -520,12 +520,6 @@ def logwatch_to_prio(level):
     else:
         return 4
 
-def syslog_time():
-    localtime = time.localtime()
-    day = int(time.strftime("%d", localtime)) # strip leading 0
-    value = time.strftime("%b %%d %H:%M:%S", localtime)
-    return value % day
-
 def inventory_logwatch_ec(info):
     forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
     if forwarded_logs:
@@ -588,12 +582,13 @@ def check_logwatch_ec(item, params, info):
     # <facility+priority> timestamp hostname logfile: message
     facility = params.get('facility', 17) << 3 # default to "local1"
     messages = []
-    cur_time = syslog_time()
+    cur_time = int(time.time())
+
     forwarded_logfiles = set([])
     for logfile, lines in logs.items():
         for line in lines:
             msg = '<%d>' % (facility + logwatch_to_prio(line[0]),)
-            msg += '%s %s %s: %s' % (cur_time, g_hostname, logfile, line[2:])
+            msg += '@%s %s %s: %s' % (cur_time, g_hostname, logfile, line[2:])
             messages.append(msg)
             forwarded_logfiles.add(logfile)
 

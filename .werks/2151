@@ -1,0 +1,19 @@
+Title: Fixed wrong time in events when forwarding logwatch to EC between timezones
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426758431
+
+When forwarding logwatch log entries to the event console between timezones, the
+time of the local time of sending system was used to forward the log entries
+without caring about the time zone.
+
+We changed the forwarding code to use unix timestamps for solving the problems
+with timezones during forwarding.
+
+You will need to update your event console in order to be able to receive the
+new formated messages from remote systems. We recommend to first update your
+event console system and then update the sending system.

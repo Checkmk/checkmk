@@ -7089,7 +7089,6 @@ register_check_parameters(
 synology_update_states = [
  (1, "Available"),
  (2, "Unavailable"),
- (3, "Connection"),
  (4, "Disconnected"),
  (5, "Others"),
 ]

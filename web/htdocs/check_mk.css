@@ -544,13 +544,18 @@ div.popup span {
     color: white;
 }
 
-/* TEST */
+/* Graphs */
 table.graph {
     border: 1px solid black;
-    box-shadow: 0.5px 0.5px 2px #888;
+    box-shadow: 0.5px 0.5px 3px #888;
     border-spacing: 0px;
-    background-color: #eeeeee;
-    padding: 10px 10px;
+    background-color: #f8f4f0;
+    padding: 8px 16px 4px 8px;
+}
+
+table.graph td.title {
+    text-align: center;
+    font-weight: bold;
 }
 
 table.graph canvas {
@@ -560,12 +565,48 @@ table.prediction td {
     padding: 0px;
 }
 
-table.graph td.legend {
-    padding-left: 43px;
+table.graph tr > td.legend {
     color: #000000;
-    padding-bottom: 12px;
-    padding-top: 2px;
+    padding: 5px;
+    padding-left: 49px;
 }
+
+table.graph tr > td.legend > table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table.graph tr > td.legend > table th,
+table.graph tr > td.legend > table td {
+    padding: 2px 8px 3px 2px;
+    white-space: nowrap;
+}
+
+table.graph tr > td.legend > table .scalar {
+    padding: 1px 10px;
+    width: 80px;
+}
+
+table.graph tr > td.legend > table th,
+table.graph tr > td.legend > table th.scalar {
+    background-color: transparent;
+    border-style: none;
+    color: black;
+    text-align: right;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #bbb;
+    color: #888;
+    font-weight: bold;
+}
+
+table.graph tr > td.legend > table > tbody > tr:nth-child(2) td {
+    padding-top: 4px;
+}
+
+table.graph tr > td.legend > table td.scalar {
+    text-align: right;
+}
+
 
 table.graph td.legend div {
     display: inline-block;
@@ -580,6 +621,7 @@ table.graph td.legend div.color {
     display: inline-block;
     box-shadow: 0.5px 0.5px 1px #888;
 }
+
 table.graph td.legend div.entry {
     margin-right: 20px;
     margin-left: 5px;

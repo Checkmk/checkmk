@@ -803,10 +803,14 @@ perfometer_info.append(("dual", [
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 graph_info.append({
-    # "title"          : _("Das ist der Titel"),       # Wenn fehlt, dann nimmt er den Titel der ersten Metrik
-    # "vertical_label" : _("Das hier kommt vertikal"), # Wenn fehlt, dann nimmt er die Unit der ersten Metrik
     "metrics" : [
         ( "fs_used", "area" ),
+    ]
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "temp", "area" ),
     ]
 })
 

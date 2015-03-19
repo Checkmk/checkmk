@@ -513,15 +513,13 @@ def build_perfometer(perfometer, translated_metrics):
                 summed += value
 
             if "total" in perfometer:
-                if type(perfometer["total"]) in [ int, float ]:
-                    total = perfometer["total"]
-                else:
-                    total, unit, color = evaluate(perfometer["total"], translated_metrics)
+                total, unit, color = evaluate(perfometer["total"], translated_metrics)
             else:
                 total = summed
 
             if total == 0:
                 entry.append((100.0, "#ffffff"))
+
             else:
                 for ex in perfometer["segments"]:
                     value, unit, color = evaluate(ex, translated_metrics)
@@ -540,11 +538,9 @@ def build_perfometer(perfometer, translated_metrics):
                     unit = unit_info[unit_name]
                 label = unit["render"](summed)
             else: # absolute
-                value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
+                value, unit, color = evaluate(metrics_expressions[0], translated_metrics)
                 label = unit["render"](summed)
 
-            if perfometer.get("hide_label", False):
-                label = ""
             return label, stack
 
 

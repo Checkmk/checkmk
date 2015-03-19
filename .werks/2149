@@ -1,6 +1,6 @@
 Title: LDAP: The diagnostic log has been changed to use a fixed path
 Level: 1
-Component: wato
+Component: multisite
 Class: fix
 Compatible: compat
 State: unknown
@@ -9,4 +9,4 @@ Date: 1426671051
 
 The LDAP diagnostic log, which should only be enabled for debugging purposes,
 has been changed from a free configurable path to a fixed path. In your
-OMD sites it will now always be located within <tt>var/log/ldap.log</tt>.
+OMD sites it will now always be located within <tt>var/log/web.log</tt>.

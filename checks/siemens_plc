@@ -46,12 +46,12 @@ factory_settings["siemens_plc_temp_default_levels"] = {
 }
 
 def inventory_siemens_plc_temp(info):
-    return [ (l[2], {}) for l in info if l[1] == "temp" ]
+    return [ (l[0]+" "+l[2], {}) for l in info if l[1] == "temp" ]
 
 
 def check_siemens_plc_temp(item, params, info):
     for line in info:
-        if line[1] == "temp" and line[2] == item:
+        if line[1] == "temp" and line[0]+" "+line[2] == item:
             temp = float(line[-1])
             return check_temperature(temp, params)
 

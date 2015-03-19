@@ -356,7 +356,7 @@ table.data.single {
     empty-cells: show;
 }
 
-table.data.single tr.data td {
+table.data.single tr.data > td {
     padding-bottom: 4px;
     padding: 4px 5px 2px 5px;
     text-align: left;

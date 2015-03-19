@@ -248,7 +248,7 @@ def load_users(lock = False):
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
         else:
-            html.log('load_users: Problem while loading contacts (%s - %s). '
+            logger(LOG_ERR, 'load_users: Problem while loading contacts (%s - %s). '
                      'Initializing structure...' % (filename, e))
         contacts = {}
 
@@ -265,7 +265,7 @@ def load_users(lock = False):
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
         else:
-            html.log('load_users: Problem while loading users (%s - %s). '
+            logger(LOG_ERR, 'load_users: Problem while loading users (%s - %s). '
                      'Initializing structure...' % (filename, e))
         users = {}
 
@@ -590,7 +590,7 @@ def load_roles():
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
         else:
-            html.log('load_roles: Problem while loading roles (%s - %s). '
+            logger(LOG_ERR, 'load_roles: Problem while loading roles (%s - %s). '
                      'Initializing structure...' % (filename, e))
         return roles
 
@@ -646,7 +646,7 @@ def load_group_information():
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
         else:
-            html.log('load_group_information: Problem while loading groups (%s - %s). '
+            logger(LOG_ERR, 'load_group_information: Problem while loading groups (%s - %s). '
                      'Initializing structure...' % (filename, e))
         return {}
 
@@ -683,7 +683,7 @@ def load_custom_attrs():
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
         else:
-            html.log('load_custom_attrs: Problem while loading custom attributes (%s - %s). '
+            logger(LOG_ERR, 'load_custom_attrs: Problem while loading custom attributes (%s - %s). '
                      'Initializing structure...' % (filename, e))
         return {}
 
@@ -841,7 +841,7 @@ def hook_page():
                 raise
             else:
                 import traceback
-                html.log('Exception (%s, page handler): %s' %
+                logger(LOG_ERR, 'Exception (%s, page handler): %s' %
                             (connector['id'], traceback.format_exc()))
 
     general_page_hook()

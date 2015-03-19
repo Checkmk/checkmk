@@ -1,0 +1,14 @@
+Title: check_mk perfometer metrics: fixed exception and two new functions
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426761345
+Class: fix
+
+Fixed an exception in dictionary perfometers when no labels were set.
+
+The "total" key in a dictionary perfometer can now be set to a fixed value.
+
+The new key "hide_label" in a dictionary perfometer hides any text.
+This might be useful in stacked/dual perfometers.

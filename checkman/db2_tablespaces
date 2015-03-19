@@ -1,0 +1,21 @@
+title: DB2 Tablespace Usage
+agents: aix
+catalog: app/db2
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the current and maximum size of DB2 tablespaces.
+
+ This check needs the mk_db2.aix or mk_db2 plugin installed in the agent.
+
+item:
+ The instance name, the database name and the tablespace name combined
+ like this db2wps8:WPSCOMT8.USERSPACE1
+
+inventory:
+ One separate check for each tablespace will be created.
+
+perfdata:
+ Three values in bytes: the current size, the used size of the tablespace
+ and the maximum size of the table space.
+

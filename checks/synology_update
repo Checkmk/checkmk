@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["synology_update_levels"] = {
-    "ok_states"     : [ 2, 3 ],
+    "ok_states"     : [ 2 ],
     "warn_states"   : [ 5 ],
     "crit_states"    : [ 1, 4 ],
 }
@@ -50,6 +50,9 @@ def check_synology_update(_no_item, params, info):
         state = 1
     elif device_state in params['crit_states']:
         state = 2
+    elif device_state == 3:
+        # to prevent flapping between update avail and Connection
+        raise MKCounterWrap("Devices try to connect to the update server")
     return state, "Update Status: %s, Current Version: %s" % (states[device_state], version)
 
 check_info["synology_update"] = {

@@ -1,0 +1,70 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<db2_sort_overflow>>>
+# [[[test:datenbank1]]]
+# Total sorts 100
+# Sort overflows 3
+
+factory_settings["db2_sort_overflow_default_levels"] = {
+    "levels_perc": (2.0, 4.0)
+}
+def inventory_db2_sort_overflow(parsed):
+    inventory = []
+    for key in parsed.keys():
+        yield key, {}
+
+def check_db2_sort_overflow(item, params, parsed):
+    db = parsed.get(item)
+    if not db:
+        return
+
+    total, overflows = tuple(map(lambda x: float(x[-1]), db))
+    overflow_perc = overflows * 100 / total
+    warn, crit = params.get("levels_perc")
+    if overflow_perc >= crit:
+        yield 2, "%.1f%% sort overflow (leves at %.1f%%/%.1f%%)" % \
+            (overflow_perc, warn, crit)
+    elif overflow_perc >= warn:
+        yield 1, "%.1f%% sort overflow (leves at %.1f%%/%.1f%%)" % \
+            (overflow_perc, warn, crit)
+    else:
+        yield 0, "%.1f%% sort overflow" % overflow_perc
+
+    yield 0, "Sort overflows: %d" % overflows
+    yield 0, "Total sorts: %d" % total, [("sort_overflow", overflow_perc, warn, crit, 0, 100)]
+
+
+check_info['db2_sort_overflow'] = {
+    "parse_function"          : parse_db2_dbs,
+    "service_description"     : "DB2 Sort Overflow %s",
+    "check_function"          : check_db2_sort_overflow,
+    "inventory_function"      : inventory_db2_sort_overflow,
+    "has_perfdata"            : True,
+    "group"                   : "db2_sortoverflow",
+    "default_levels_variable" : "db2_sort_overflow_default_levels",
+    "includes"                : ["db2.include"]
+}

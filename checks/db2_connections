@@ -1,0 +1,72 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<db2_connections>>>
+# [[[db2taddm:CMDBS1]]]
+# port 50214
+# sessions 40
+# latency 0:1.03
+
+factory_settings["db2_connections_default_levels"] = {
+    "levels_total" : (150, 200),
+}
+
+def inventory_db2_connections(parsed):
+    inventory = []
+    for item in parsed:
+        yield item, None
+
+def check_db2_connections(item, params, parsed):
+    db = parsed.get(item)
+    if not db:
+        return
+    data = dict(db)
+
+    warn, crit = params["levels_total"]
+    connections = int(data["connections"])
+    if connections >= crit:
+        yield 2, "Connections: %s" % connections, [("connections", connections)]
+    elif connections >= warn:
+        yield 1, "Connections: %s" % connections, [("connections", connections)]
+    else:
+        yield 0, "Connections: %s" % connections, [("connections", connections)]
+    yield 0, "Port: %s" % data["port"]
+
+    minutes, rest = data["latency"].split(":")
+    seconds, mseconds = rest.split(".")
+    ms = int(minutes) * 60 * 1000 + int(seconds) * 1000 + int(mseconds)
+    yield 0, "Latency: %.2f ms" % ms, [("latency", ms)]
+
+check_info['db2_connections'] = {
+    "parse_function"          : parse_db2_dbs,
+    "service_description"     : "DB2 Connections %s",
+    "check_function"          : check_db2_connections,
+    "inventory_function"      : inventory_db2_connections,
+    "has_perfdata"            : True,
+    "group"                   : "db2_connections",
+    "default_levels_variable" : "db2_connections_default_levels",
+    "includes"                : ["db2.include"]
+}

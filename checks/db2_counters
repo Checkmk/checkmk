@@ -1,0 +1,94 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<db2_counters>>>
+# TIMESTAMP 1426610723
+# db2taddm:CMDBS1 deadlocks 0
+# db2taddm:CMDBS1 lockwaits 99
+# db2taddm:CMDBS1 sortoverflows 2387
+
+factory_settings["db2_counters_default_levels"] = {
+}
+
+db2_counters_map = {
+    "deadlocks"     : "Deadlocks",
+    "lockwaits"     : "Lockwaits",
+}
+
+def parse_db2_counters(info):
+    dbs = {}
+    timestamp = 0
+    for line in info:
+        if line[0].startswith("TIMESTAMP"):
+            timestamp = int(line[1])
+            continue
+        dbs.setdefault(line[0], {})
+        if line[1] in db2_counters_map.keys():
+            dbs[line[0]][line[1]] = line[2]
+    return timestamp, dbs
+
+def inventory_db2_counters(parsed):
+    for db in parsed[1]:
+        yield db, {}
+
+def check_db2_counters(item, params, parsed):
+    timestamp = parsed[0]
+    db = parsed[1].get(item)
+    if not db:
+        return
+
+    wrapped = False
+    for counter, label in db2_counters_map.items():
+        value = float(db[counter])
+        countername = "db2_counters.%s.%s" % (item, counter)
+        try:
+            rate = get_rate("db2_counters.%s.%s" % (item, counter), timestamp, value, onwrap = RAISE)
+        except MKCounterWrapped:
+            wrapped = True
+            continue
+
+        warn, crit = params.get(counter, (None, None))
+        perfdata = [(counter, rate, warn, crit)]
+        if crit != None and rate >= crit:
+            yield 2, "%s: %.1f/s" % (label, rate), perfdata
+        elif warn != None and rate >= warn:
+            yield 1, "%s: %.1f/s" % (label, rate), perfdata
+        else:
+            yield 0, "%s: %.1f/s" % (label, rate), perfdata
+
+    if wrapped:
+        raise MKCounterWrapped("Some counter(s) wrapped, no data this time")
+
+check_info['db2_counters'] = {
+    "parse_function"          : parse_db2_counters,
+    "service_description"     : "DB2 Counters %s",
+    "check_function"          : check_db2_counters,
+    "inventory_function"      : inventory_db2_counters,
+    "has_perfdata"            : True,
+    "group"                   : "db2_counters",
+    "includes"                : ["db2.include"],
+    "default_levels_variable" : "db2_counters_default_levels",
+}

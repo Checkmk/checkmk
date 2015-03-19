@@ -1,0 +1,22 @@
+title: DB2 Bufferpool Hitratios
+agents: aix
+catalog: app/db2
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the hitratios of the various bufferpools for a database.
+
+ This check needs the mk_db2.aix plugin installed in the agent.
+
+ It is always OK.
+
+item:
+ The combination of the instance name, the database and the bufferpool name
+ joined by ":". For example db2aml:SIRONT4:BP16_GWG
+
+inventory:
+ One separate check is created for each bufferpool in a database. Bufferpools named IBMSYSTEMBP*
+ are ignored.
+
+perfdata:
+ Four values: xda_hitratio, data_hitratio, index_hitratio and total_hitratio in percent

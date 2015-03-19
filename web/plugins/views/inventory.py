@@ -346,7 +346,7 @@ def inv_titleinfo_long(invpath, node):
 
 
 multisite_painters["inventory_tree"] = {
-    "title"    : _("Hardware &amp; Software Tree"),
+    "title"    : _("Hardware & Software Tree"),
     "columns"  : [],
     "load_inv" : True,
     "paint"    : paint_inv_tree,

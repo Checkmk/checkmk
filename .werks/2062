@@ -1,0 +1,19 @@
+Title: grouped interfaces: additional information in check output and new port state 'degraded'
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1426844877
+Class: feature
+
+Grouped interfaces now clearly show that they are grouped together by listing all
+group members and their state in the check output.
+
+Additionally the new port state <i>degraded</i> has been introduced.
+A grouped interface is set to this port state if not all of its members are <i>up</i>.
+If all members of a group are <i>down</i>, the grouped interface is also considered <i>down</i>, as usual.
+
+C+:
+CRIT - Group Status (degraded)(!!), Members: [QLogic 1 10GbE Adapter 2 (down), QLogic 1 10GbE Adapter (up)] 10.00 Gbit/s (wrong speed, expected: 20.00 Gbit/s)(!), in: 0.00 B/s, out: 0.00 B/s
+C-:
+

@@ -1335,6 +1335,7 @@ _if_portstate_choices = [
                         ( '5', 'dormant(5)') ,
                         ( '6', 'notPresent(6)'),
                         ( '7', 'lowerLayerDown(7)'),
+                        ( '8', 'degraded(8)'),
                         ]
 
 _brocade_fcport_adm_choices = [

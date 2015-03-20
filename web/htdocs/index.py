@@ -275,7 +275,7 @@ def handler(req, fields = None, profiling = True):
             response_code = apache.HTTP_BAD_GATEWAY
 
         if ty in [MKConfigError, MKGeneralException]:
-            log(LOG_ERR, _("%s: %s") % (plain_title, e))
+            logger(LOG_ERR, _("%s: %s") % (plain_title, e))
 
     except (apache.SERVER_RETURN,
             (apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED),

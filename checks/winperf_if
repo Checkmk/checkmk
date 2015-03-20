@@ -194,6 +194,12 @@ def convert_winperf_if(info):
         if nic.get("GUID") in teaming_info:
             index_info = ( teaming_info[nic.get("GUID")]["TeamName"], index_info )
 
+
+        connection_status = nic.get('NetConnectionStatus')
+        if connection_status not in ['1', '2', '7']:
+            # Unknown states are set to down
+            connection_status = '2'
+
         converted.append((
            index_info,
            nic_name,
@@ -201,7 +207,7 @@ def convert_winperf_if(info):
            bandwidth or nic[10], # Bandwidth
            # NetConnectionStatus: 2 means 'up', 7 is 'not connected'. If the plugin
            # wmic_if is missing and we have link information we have to assume 'up':
-           nic.get('NetConnectionStatus', '2') == '2' and '1' or '2',
+           connection_status,
            nic[-246], # ifInOctets,
            nic[14], # inucast
            0,       # inmcast

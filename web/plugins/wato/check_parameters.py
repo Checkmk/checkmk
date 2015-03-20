@@ -38,7 +38,7 @@ subgroup_storage =      _("Storage, Filesystems and Files")
 subgroup_os =           _("Operating System Resources")
 subgroup_printing =     _("Printers")
 subgroup_environment =  _("Temperature, Humidity, Electrical Parameters, etc.")
-subgroup_applications = _("Applications, Processes &amp; Services")
+subgroup_applications = _("Applications, Processes & Services")
 subgroup_virt =         _("Virtualization")
 subgroup_hardware =     _("Hardware, BIOS")
 subgroup_inventory =    _("Inventory - automatic service detection")
@@ -5221,7 +5221,7 @@ register_check_parameters(
     Tuple(
         help = _("Temperature levels for external thermometers that are used "
                  "for monitoring the temperature of a datacenter. An example "
-                 "is the webthem from W&amp;T."),
+                 "is the webthem from W&T."),
         elements = [
             Integer(title = _("warning at"), unit = u"°C", default_value = 26),
             Integer(title = _("critical at"), unit = u"°C", default_value = 30),

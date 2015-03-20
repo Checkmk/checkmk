@@ -1,0 +1,9 @@
+Title: apache_status: Fixed plugin to work on CentOS/RedHat 5.x
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1426841453
+Class: fix
+
+The agent plugin was not compatible with Python 2.4. This has been fixed now.

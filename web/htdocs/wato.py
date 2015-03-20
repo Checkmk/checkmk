@@ -13728,7 +13728,7 @@ def mode_ruleeditor(phase):
         if only_host:
             return _("Rules effective on host ") + only_host
         else:
-            return _("Rule-Based Configuration of Host &amp; Service Parameters")
+            return _("Rule-Based Configuration of Host & Service Parameters")
 
     elif phase == "buttons":
         global_buttons()

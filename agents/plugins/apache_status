@@ -41,15 +41,19 @@
 # It is also possible to override or extend the ssl_ports variable to make the
 # check contact other ports than 443 with HTTPS requests.
 
-import os, sys, urllib2, re
+import os, sys, urllib2, re, socket
 
 config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
 config_file = config_dir + "/apache_status.conf"
-timeout = 5
 
 if not os.path.exists(config_file):
     config_file = config_dir + "/apache_status.cfg"
 
+# We have to deal with socket timeouts. Python > 2.6
+# supports timeout parameter for the urllib2.urlopen method
+# but we are on a python 2.5 system here which seem to use the
+# default socket timeout. We are local here so  set it to 1 second.
+socket.setdefaulttimeout(5.0)
 
 # None or list of (proto, ipaddress, port) tuples.
 # proto is 'http' or 'https'
@@ -129,13 +133,13 @@ for server in servers:
         # Try to fetch the status page for each server
         try:
             request = urllib2.Request(url, headers={"Accept" : "text/plain"})
-            fd = urllib2.urlopen(request, timeout=timeout)
+            fd = urllib2.urlopen(request)
         except urllib2.URLError, e:
             if 'SSL23_GET_SERVER_HELLO:unknown protocol' in str(e):
                 # HACK: workaround misconfigurations where port 443 is used for
                 # serving non ssl secured http
                 url = 'http://%s:%s/server-status?auto' % (address, port)
-                fd = urllib2.urlopen(url, timeout=timeout)
+                fd = urllib2.urlopen(url)
             else:
                 raise
 

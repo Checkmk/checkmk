@@ -21,7 +21,7 @@ The plugin output is processed by the following new checks
 <tr><td>db2_connections</td><td>Number of database connections</td><td>X</td></tr>
 <tr><td>db2_counters</td><td>Deadlocks and Lockwaits per Second</td><td>X</td></tr>
 <tr><td>db2_logsize</td><td>Size and growth of database logfile</td>X<td></td></tr>
-<tr><td>db2_tablespaces</td><td>Size and growth of tablespaces</td>X<td></td></tr>
+<tr><td>db2_tablespaces</td><td>Size and growth of tablespaces</td><td>X</td></tr>
 <tr><td>db2_sort_overflow</td><td>Percentual sort overflow</td><td>X</td></tr>
 <tr><td>db2_version</td><td>Displays DB2 version</td><td></td></tr>
 </table>

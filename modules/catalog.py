@@ -42,6 +42,8 @@ manpage_catalog_titles = {
             "wagner"       : "WAGNER Group",
             "climaventa"   : "Climaventa",
         "other"       : "Other devices",
+        "time"        : "Clock Devices",
+            "meinberg"   : "Meinberg",
         "network"     : "Networking (Switches, Routers, etc.)",
             "alcatel"    : "Alcatel",
             "avm"        : "AVM",

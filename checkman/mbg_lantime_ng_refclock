@@ -1,0 +1,26 @@
+title: Meinberg LANTIME Devices: Non-GPS Refclock State (NG MIB)
+agents: snmp
+catalog: hw/time/meinberg
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the refclock state of Meinberg LANTIME clocks supporting
+ the new MBG-LANTIME-NG-MIB. It is only applied to non-gps (i.e. radio
+ frequency) refclocks, since the gps refclocks have their own subcheck.
+
+ The check handles the reported state of the refclock and provides additional information
+ about its state, like the field strength and the corellation.
+
+ When the refclock state is "not available" CRIT is raised and a WARN state is issued
+ if the refclock state is "not synchronized".
+ If the number of good satellites drops below 3, a CRIT state is raised.
+
+inventory:
+ One service per non-gps refclock is created.
+
+item:
+ The index number of the refclock.
+
+perfdata:
+ Radio types: field strength in %. Supplemented by corellation in % if available.

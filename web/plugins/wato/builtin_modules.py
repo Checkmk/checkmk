@@ -39,7 +39,7 @@ modules += [
       ( "globalvars",        _("Global Settings"),    "configuration", "global",
       _("Global settings for Check_MK, Multisite and the monitoring core.")),
 
-      ( "ruleeditor",        _("Host &amp; Service Parameters"), "rulesets", "rulesets",
+      ( "ruleeditor",        _("Host & Service Parameters"), "rulesets", "rulesets",
       _("Check parameters and other configuration variables on "
         "hosts and services") ),
 

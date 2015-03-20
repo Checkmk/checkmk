@@ -2193,6 +2193,9 @@ class Timerange(CascadingDropdown):
         CascadingDropdown.__init__(self, **kwargs)
 
     def compute_range(self, rangespec):
+        if rangespec == None:
+            rangespec = "4h"
+
         now = time.time()
         if rangespec[0] == 'age':
             from_time = now - rangespec[1]

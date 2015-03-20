@@ -1,0 +1,31 @@
+title: Meinberg LANTIME Devices: GPS Refclock State (NG MIB)
+agents: snmp
+catalog: hw/time/meinberg
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the refclock state of Meinberg LANTIME clocks supporting
+ the new MBG-LANTIME-NG-MIB. It is only applied to GPS refclocks. Other
+ refclocks have their own subcheck.
+
+ The check handles the reported state of the refclock and provides additional information
+ about its state, like the number of satellites.
+
+ When the refclock state is "not available" CRIT is raised and a WARN state is issued
+ if the refclock state is "not synchronized".
+ If the number of good satellites drops below 3, a CRIT state is raised.
+
+inventory:
+ One service per GPS refclock is created.
+
+item:
+ The index number of the refclock.
+
+perfdata:
+ number of good satellites and number of visible satellites.
+
+[parameters]
+parameters(tuple): A tuple of warning and critical levels for the number of
+ good satellites, default is (3, 3)
+

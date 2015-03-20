@@ -551,6 +551,7 @@ table.graph {
     border-spacing: 0px;
     background-color: #f8f4f0;
     padding: 8px 16px 4px 8px;
+    margin-bottom: 5px;
 }
 
 table.graph td.title {

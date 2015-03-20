@@ -1,0 +1,28 @@
+Title: DB2 monitoring: Additional checks for AIX (and presumably linux)
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426782741
+Class: feature
+
+This werk introduces the new agent plugin mk_db2.aix which can be
+installed on aix systems in the agents plugins directories.
+
+It is very likely that it runs on linux systems as well.
+
+It is able to run queries over multiple DB2 instances.
+The plugin output is processed by the following new checks
+
+<table>
+<tr><th>Check</th><th>Description</th><th>Limits configurable</th></tr>
+<tr><td>db2_backup</td><td>Time since last database backup</td><td>X</td></tr>
+<tr><td>db2_bp_hitratios</td><td>Bufferpool Hitratios</td><td></td></tr>
+<tr><td>db2_connections</td><td>Number of database connections</td><td>X</td></tr>
+<tr><td>db2_counters</td><td>Deadlocks and Lockwaits per Second</td><td>X</td></tr>
+<tr><td>db2_logsize</td><td>Size and growth of database logfile</td><td>X</td></tr>
+<tr><td>db2_tablespaces</td><td>Size and growth of tablespaces</td><td>X</td></tr>
+<tr><td>db2_sort_overflow</td><td>Percentual sort overflow</td><td>X</td></tr>
+<tr><td>db2_version</td><td>Displays DB2 version</td><td></td></tr>
+</table>
+

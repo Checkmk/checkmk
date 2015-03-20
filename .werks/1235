@@ -1,0 +1,11 @@
+Title: Added notification plugin for Braintwoer SMS Gateways
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426761898
+Class: feature
+
+The plugin can be found in doc/treasures/notifications/ and need to be copied to ~/local/share/check_mk/notifications.
+Also you need to setup the credentials and a hostname inside the script.
+

@@ -511,11 +511,13 @@ _siemens_plc_value = [
     DropdownChoice(
         title = _("Type of the value"),
         choices = [
-            (None,    _("Unclassified")),
-            ("temp",  _("Temperature")),
-            ("hours", _("Hours")),
-            ("flag",  _("State flag (on/off)")),
-            ("text",  _("Text")),
+            (None,                  _("Unclassified")),
+            ("temp",                _("Temperature")),
+            ("hours_operation",     _("Hours of operation")),
+            ("hours_since_service", _("Hours since service")),
+            ("hours",               _("Hours")),
+            ("flag",                _("State flag (on/off)")),
+            ("text",                _("Text")),
         ],
         sorted = True,
     ),

@@ -8538,3 +8538,57 @@ register_check_parameters(
     None,
     "dict"
 )
+
+register_check_parameters(
+    subgroup_environment,
+    "siemens_plc_flag",
+    _("State of Siemens PLC Flags"),
+    DropdownChoice(
+        help = _("This rule sets the expected state, the one which should result in an OK state, "
+                 "of the monitored flags of Siemens PLC devices."),
+        title = _("Expected flag state"),
+        choices = [
+             (True,  _("Expect the flag to be: On")),
+             (False, _("Expect the flag to be: Off")),
+        ],
+        default_value = True
+    ),
+    TextAscii(
+        title = _("Device Name and Value Ident"),
+        help = _("You need to concatenate the device name which is configured in the special agent "
+                 "for the PLC device separated by a space with the ident of the value which is also "
+                 "configured in the special agent."),
+        allow_empty = True),
+     None
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "siemens_plc_duration",
+    _("Siemens PLC Duration"),
+    Dictionary(
+        elements = [
+            ('duration', Tuple(
+                title = _("Duration"),
+                elements = [
+                    Age(
+                        title = _("Warning at"),
+                    ),
+                    Age(
+                        title = _("Critical at"),
+                    ),
+                ]
+            )),
+        ],
+        help = _("This rule is used to configure thresholds for duration values read from "
+                 "Siemens PLC  devices."),
+        title = _("Expected flag state"),
+    ),
+    TextAscii(
+        title = _("Device Name and Value Ident"),
+        help = _("You need to concatenate the device name which is configured in the special agent "
+                 "for the PLC device separated by a space with the ident of the value which is also "
+                 "configured in the special agent."),
+    ),
+    None
+)

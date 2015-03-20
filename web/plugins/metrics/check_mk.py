@@ -589,6 +589,17 @@ metric_info["tablespace_max_size"] = {
     "color" : "#172121",
 }
 
+metric_info["hours_operation"] = {
+    "title" : _("Hours of Operation"),
+    "unit"  : "s",
+    "color" : "#94b65a",
+}
+
+metric_info["hours_since_service"] = {
+    "title" : _("Hours since Service"),
+    "unit"  : "s",
+    "color" : "#94b65a",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -744,6 +755,8 @@ check_metrics["check_mk-db2_counters"]                          = {}
 check_metrics["check_mk-db2_logsize"]                           = { 0: { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-db2_sort_overflow"]                     = {}
 check_metrics["check_mk-db2_tablespaces"]                       = {}
+check_metrics["check_mk-siemens_plc.temp"]                      = {}
+check_metrics["check_mk-siemens_plc.hours"]                     = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.

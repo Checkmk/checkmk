@@ -25,20 +25,36 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<siemens_plc>>>
-# 192.168.0.20 hours Gesamt 123
-# 192.168.0.20 hours Fahren 56
-# 192.168.0.20 hours Hub 48
-# 192.168.0.20 temp Extern 18.7000007629
-# 192.168.0.20 temp RBG_SCH1 21.2999992371
-# 192.168.0.20 temp RBG_SCH2 22.5
-# 192.168.0.20 None Fahren 31450
-# 192.168.0.20 None Hub 8100
-# 192.168.0.20 None LAM 5002
-# 192.168.0.20 hours LAM1 13
-# 192.168.0.20 None Lastzyklen 78
-# 192.168.0.20 None LAM1_Zyklen 115
-# 192.168.0.20 hours Service 109
-# 192.168.0.20 hours Serviceintervall 700
+# PFT01 temp Gesamt 279183569715
+# PFT01 flag Testbit True
+# PFT01 flag Testbit2 False
+# RGB01 temp Gesamt 123
+# RGB01 hours Fahren 56
+# RGB01 hours Hub 48
+# RGB01 temp Extern 18.7000007629
+# RGB01 temp RBG_SCH1 0.0
+# RGB01 temp RBG_SCH2 0.0
+# RGB01 None Fahren 31450
+# RGB01 None Hub 8100
+# RGB01 None LAM 5002
+# RGB01 hours LAM1 13
+# RGB01 None Lastzyklen 78
+# RGB01 None LAM1_Zyklen 115
+# RGB01 hours Service 109
+# RGB01 hours Serviceintervall 700
+# RGB01 text Testtext HRL01-0001-0010-02-07
+
+#.
+#   .--Temperature---------------------------------------------------------.
+#   |     _____                                   _                        |
+#   |    |_   _|__ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |      | |/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |      | |  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      |_|\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 factory_settings["siemens_plc_temp_default_levels"] = {
     "levels"                    : (70, 80),
@@ -64,4 +80,116 @@ check_info['siemens_plc.temp'] = {
     "group"                   : "temperature",
     "default_levels_variable" : "siemens_plc_temp_default_levels",
     "includes"                : [ "temperature.include" ],
+}
+
+#.
+#   .--State flags---------------------------------------------------------.
+#   |           ____  _        _          __ _                             |
+#   |          / ___|| |_ __ _| |_ ___   / _| | __ _  __ _ ___             |
+#   |          \___ \| __/ _` | __/ _ \ | |_| |/ _` |/ _` / __|            |
+#   |           ___) | || (_| | ||  __/ |  _| | (_| | (_| \__ \            |
+#   |          |____/ \__\__,_|\__\___| |_| |_|\__,_|\__, |___/            |
+#   |                                                |___/                 |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_siemens_plc_flag(info):
+    return [ (l[0]+" "+l[2], False) for l in info if l[1] == "flag" ]
+
+
+def check_siemens_plc_flag(item, params, info):
+    expected_state = params
+    for line in info:
+        if line[1] == "flag" and line[0]+" "+line[2] == item:
+            flag_state = line[-1] == 'True'
+            if flag_state:
+                state = not expected_state and 2 or 0
+                return state, 'On'
+            else:
+                state = expected_state and 2 or 0
+                return state, 'Off'
+
+
+check_info['siemens_plc.flag'] = {
+    "inventory_function"      : inventory_siemens_plc_flag,
+    "check_function"          : check_siemens_plc_flag,
+    "service_description"     : "Flag %s",
+    "has_perfdata"            : False,
+    "group"                   : "siemens_plc_flag",
+}
+
+#.
+#   .--Duration------------------------------------------------------------.
+#   |               ____                  _   _                            |
+#   |              |  _ \ _   _ _ __ __ _| |_(_) ___  _ __                 |
+#   |              | | | | | | | '__/ _` | __| |/ _ \| '_ \                |
+#   |              | |_| | |_| | | | (_| | |_| | (_) | | | |               |
+#   |              |____/ \__,_|_|  \__,_|\__|_|\___/|_| |_|               |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_siemens_plc_duration(info):
+    return [ (l[0]+" "+l[2], {}) for l in info if l[1].startswith("hours") ]
+
+
+def check_siemens_plc_duration(item, params, info):
+    for line in info:
+        if line[1].startswith("hours") and line[0]+" "+line[2] == item:
+            if line[1].startswith("hours"):
+                seconds = int(line[-1])*3600
+
+            key = 'siemens_plc.duration.%s' % item
+            if key in g_counters and g_counters[key] < seconds:
+                return 2, 'Reduced from %s to %s' % (get_age_human_readable(g_counters[key]),
+                                                     get_age_human_readable(seconds))
+            g_counters[key] = seconds
+
+            state = 0
+            warn, crit = params.get('duration', (None, None))
+            if crit != None and seconds >= crit:
+                state = 2
+            elif warn != None and seconds >= warn:
+                state = 1
+
+            return state, get_age_human_readable(seconds), [(line[1], seconds)]
+
+
+check_info['siemens_plc.duration'] = {
+    "inventory_function"      : inventory_siemens_plc_duration,
+    "check_function"          : check_siemens_plc_duration,
+    "service_description"     : "Duration %s",
+    "has_perfdata"            : True,
+    "group"                   : "siemens_plc_duration",
+}
+
+#.
+#   .--Info----------------------------------------------------------------.
+#   |                         ___        __                                |
+#   |                        |_ _|_ __  / _| ___                           |
+#   |                         | || '_ \| |_ / _ \                          |
+#   |                         | || | | |  _| (_) |                         |
+#   |                        |___|_| |_|_|  \___/                          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_siemens_plc_info(info):
+    return [ (l[0]+" "+l[2], {}) for l in info if l[1] == "text" ]
+
+
+def check_siemens_plc_info(item, _no_params, info):
+    for line in info:
+        if line[1] == "text" and line[0]+" "+line[2] == item:
+            return 0, line[-1]
+
+
+check_info['siemens_plc.info'] = {
+    "inventory_function"      : inventory_siemens_plc_info,
+    "check_function"          : check_siemens_plc_info,
+    "service_description"     : "Info %s",
+    "has_perfdata"            : False,
 }

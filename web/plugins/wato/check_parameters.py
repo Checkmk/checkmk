@@ -151,6 +151,7 @@ _if_portstate_choices = [
                         ( '5', 'dormant(5)') ,
                         ( '6', 'notPresent(6)'),
                         ( '7', 'lowerLayerDown(7)'),
+                        ( '8', 'degraded(8)'),
                         ]
 
 #duplicate: check_mk_configuration.py

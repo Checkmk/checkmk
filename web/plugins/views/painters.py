@@ -75,8 +75,8 @@
 import bi # needed for aggregation icon
 
 multisite_painter_options["pnp_timerange"] = {
-    'valuespec' : PNPTimerange(
-        title = _("PNP Timerange"),
+    'valuespec' : Timerange(
+        title = _("Graph Timerange"),
         default_value = None,
         include_time = True,
     )
@@ -781,7 +781,18 @@ multisite_painters["svc_group_memberlist"] = {
 }
 
 # PNP Graphs
-def paint_pnpgraph(sitename, host, service = "_HOST_"):
+def paint_pnpgraph(row):
+    try:
+        css, htmlcode = paint_svc_time_graph(row)
+        if htmlcode:
+            return css, htmlcode
+    except NameError:
+        pass
+
+    sitename = row["site"]
+    host = row["host_name"]
+    service = row.get("service_description", "_HOST_")
+
     container_id = "%s_%s_%s_graph" % (sitename, host, service)
     pnp_url = html.site_status[sitename]["site"]["url_prefix"] + "pnp4nagios/"
     if 'X' in html.display_options:
@@ -806,11 +817,10 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
                            defaults.url_prefix + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts)
 
 multisite_painters["svc_pnpgraph" ] = {
-    "title"   : _("PNP service graph"),
-    "short"   : _("PNP graph"),
-    "columns" : [ "host_name", "service_description" ],
+    "title"   : _("Service Graphs"),
+    "columns" : [ "host_name", "service_description", "service_perf_data", "service_check_command" ],
     "options" : [ 'pnp_timerange' ],
-    "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"]),
+    "paint"   : paint_pnpgraph,
     "printable" : False,
 }
 
@@ -1163,7 +1173,7 @@ multisite_painters["host_pnpgraph" ] = {
     "short"   : _("PNP graph"),
     "columns" : [ "host_name" ],
     "options" : [ 'pnp_timerange' ],
-    "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"]),
+    "paint"   : paint_pnpgraph,
     "printable" : False,
 }
 

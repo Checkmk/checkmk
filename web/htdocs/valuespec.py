@@ -2139,6 +2139,12 @@ class Timerange(CascadingDropdown):
             ]
 
         kwargs['choices'] += [
+            ( "4h",  _("The last 4 hours")),
+            ( "25h", _("The last 25 hours")),
+            ( "7d",  _("The last 7 days")),
+            ( "31d", _("The last 31 days")),
+            ( "365d", _("The last 365 days")),
+
             ( "d0",  _("Today") ),
             ( "d1",  _("Yesterday") ),
 
@@ -2187,6 +2193,9 @@ class Timerange(CascadingDropdown):
         CascadingDropdown.__init__(self, **kwargs)
 
     def compute_range(self, rangespec):
+        if rangespec == None:
+            rangespec = "4h"
+
         now = time.time()
         if rangespec[0] == 'age':
             from_time = now - rangespec[1]
@@ -2209,6 +2218,18 @@ class Timerange(CascadingDropdown):
             midnight = time.mktime(broken)
 
             until_time = now
+            if rangespec[0].isdigit(): # 4h, 365d
+                count = int(rangespec[:-1])
+                s = rangespec[-1]
+                if s == 'd':
+                    seconds = count * 86400
+                    title = _("Last %d days") % count
+                else:
+                    seconds = count * 3600
+                    title = _("Last %d hours") % count
+                from_time = now - seconds
+                return (from_time, now), title
+
             if rangespec[0] == 'd': # this/last Day
                 from_time = time.mktime(broken)
                 titles = _("Today"), _("Yesterday")
@@ -2248,25 +2269,6 @@ class Timerange(CascadingDropdown):
                         from_broken[1] = 12
                         from_broken[0] -= 1
                 return (time.mktime(from_broken), until_time), titles[1]
-
-class PNPTimerange(Timerange):
-    def __init__(self, **kwargs):
-        choosable = [
-            ("0", _("4 Hours")),  ("1", _("25 Hours")),
-            ("2", _("One Week")), ("3", _("One Month")),
-            ("4", _("One Year")),
-        ]
-
-        if kwargs.get('allow_all', True):
-            choosable.append(("", _("All")))
-
-        kwargs['choices'] = [
-            ('pnp_view', _("PNP View"), DropdownChoice(
-                default_value = '1',
-                choices = choosable,
-            )),
-        ]
-        Timerange.__init__(self, **kwargs)
 
 
 # A selection of various date formats

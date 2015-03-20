@@ -529,6 +529,66 @@ metric_info["disk_utilization"] = {
     "color" : "#a05830",
 }
 
+metric_info["xda_hitratio"] = {
+    "title" : _("XDA Hitratio"),
+    "unit"  : "%",
+    "color" : "#0ae86d",
+}
+
+metric_info["data_hitratio"] = {
+    "title" : _("Data Hitratio"),
+    "unit"  : "%",
+    "color" : "#2828de",
+}
+
+metric_info["index_hitratio"] = {
+    "title" : _("Index Hitratio"),
+    "unit"  : "%",
+    "color" : "#dc359f",
+}
+
+metric_info["total_hitratio"] = {
+    "title" : _("Total Hitratio"),
+    "unit"  : "%",
+    "color" : "#2e282c",
+}
+
+metric_info["deadlocks"] = {
+    "title" : _("Deadlocks"),
+    "unit"  : "1/s",
+    "color" : "#dc359f",
+}
+
+metric_info["lockwaits"] = {
+    "title" : _("Waitlocks"),
+    "unit"  : "1/s",
+    "color" : "#2e282c",
+}
+
+metric_info["sort_overflow"] = {
+    "title" : _("Sort Overflow"),
+    "unit"  : "%",
+    "color" : "#e72121",
+}
+
+metric_info["tablespace_size"] = {
+    "title" : _("Tablespace Size"),
+    "unit"  : "bytes",
+    "color" : "#092507",
+}
+
+metric_info["tablespace_used"] = {
+    "title" : _("Tablespace Used"),
+    "unit"  : "bytes",
+    "color" : "#e59d12",
+}
+
+metric_info["tablespace_max_size"] = {
+    "title" : _("Tablespace Max Size"),
+    "unit"  : "bytes",
+    "color" : "#172121",
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -678,6 +738,13 @@ check_metrics["check_mk-postgres_locks"]                        = {}
 check_metrics["check_mk-postgres_conn_time"]                    = {}
 check_metrics["check_mk-postgres_sessions"]                     = { "total": {"name": "total_sessions"}, "running": {"name": "running_sessions"} }
 
+check_metrics["check_mk-db2_bp_hitratios"]                      = {}
+check_metrics["check_mk-db2_connections"]                       = {}
+check_metrics["check_mk-db2_counters"]                          = {}
+check_metrics["check_mk-db2_logsize"]                           = { 0: { "name": "fs_used", "scale" : MB } }
+check_metrics["check_mk-db2_sort_overflow"]                     = {}
+check_metrics["check_mk-db2_tablespaces"]                       = {}
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -730,7 +797,7 @@ perfometer_info.append({
         "fs_used(%)",
         "fs_provisioning(%),fs_used(%),-#ffc030",
     ],
-    "total"     : "100",
+    "total"     : 100,
     "label"     : ( "fs_used(%)", "%" ),
 })
 
@@ -766,6 +833,35 @@ perfometer_info.append(("logarithmic", ( "connection_time", 0.2, 2)))
 perfometer_info.append(("dual", [
    ( "logarithmic", ( "input_signal_power_dbm", 4, 2)),
    ( "logarithmic", ( "output_signal_power_dbm", 4, 2)),
+]))
+
+
+perfometer_info.append(("dual", [
+   ( "logarithmic", ( "deadlocks", 50, 2)),
+   ( "logarithmic", ( "lockwaits", 50, 2)),
+]))
+
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [
+        "sort_overflow",
+    ],
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [
+        "tablespace_used",
+    ],
+    "total"     : "tablespace_size",
+})
+
+perfometer_info.append(("stacked", [
+("dual", [ {"type": "linear", "label": None, "segments": [ "total_hitratio" ], "total": 100},
+           {"type": "linear", "label": None, "segments": [ "data_hitratio" ],  "total": 100}]),
+("dual", [ {"type": "linear", "label": None, "segments": [ "index_hitratio" ], "total": 100},
+           {"type": "linear", "label": None, "segments": [ "xda_hitratio" ],   "total": 100}])
 ]))
 
 perfometer_info.append(("linear",      ( [ "output_load" ], 100.0, None)))
@@ -823,7 +919,7 @@ graph_info.append({
         ( "user,system,io_wait,+,+#004080", "line", _("Total") ),
     ],
     "mirror_legend" : True,
-    "range" : (0, 100),
+    # "range" : (0, 100),
 })
 
 graph_info.append({
@@ -936,5 +1032,35 @@ graph_info.append({
         ( "database_size",  "area" ),
     ],
     "legend_scale" : MB,
+})
+
+graph_info.append({
+    "title" : _("Bufferpool Hitratios"),
+    "metrics" : [
+        ( "total_hitratio", "line" ),
+        ( "data_hitratio",  "line" ),
+        ( "index_hitratio", "line" ),
+        ( "xda_hitratio",   "line" ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "deadlocks",  "line" ),
+        ( "lockwaits",  "line" ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "sort_overflow",  "line" ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "tablespace_size",  "line" ),
+        ( "tablespace_used",  "line" ),
+    ],
 })
 

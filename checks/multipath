@@ -289,7 +289,7 @@ def check_multipath(item, target_numpaths, parsed):
         mmap = parsed[item]
     else:
         for mmap in parsed.values():
-            if mmap["alias"] == item:
+            if mmap.get("alias") == item:
                 break
         else:
             return 3, "Multipath device not found in agent output"

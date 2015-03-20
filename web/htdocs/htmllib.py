@@ -773,9 +773,10 @@ class html:
             self.add_custom_style_sheet()
 
             # Load specified Javascript files
-            for js in [ "checkmk", "hover" ] + javascripts:
+            for js in [ "checkmk", "hover", "graphs" ] + javascripts:
                 if defaults.omd_root:
-                    fname = 'js/%s-%s.js' % (js, defaults.check_mk_version)
+                    if os.path.exists(defaults.omd_root + "/share/check_mk/web/htdocs/js/" + js + ".js"):
+                        fname = 'js/%s-%s.js' % (js, defaults.check_mk_version)
                 else:
                     fname = 'js/%s.js' % js
                 self.write('<script type="text/javascript" src="%s"></script>\n' % fname)
@@ -1315,7 +1316,7 @@ class html:
         elif ty not in [str, unicode]: # also possible: type Exception!
             value = "%s" % value # Note: this allows Unicode. value might not have type str now
 
-        return value.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
+        return value.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 
     # This function returns a str object, never unicode!
     # Beware: this code is crucial for the performance of Multisite!

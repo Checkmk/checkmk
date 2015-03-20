@@ -1,6 +1,6 @@
 #!/usr/bin/python
-# Pushover
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
+# Braintwoer SMS Gateway
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -25,21 +25,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Send notification to Pushover
+# Send notification to a Braintwoer SMS Gateway
 #
-# This notification script can be put below share/check_mk/notifications. It sends
-# notifications to Pushover. Note: this currently is just a simple test. The device
-# should probably be set to a user name or similar.
+# This notification script can be put below share/check_mk/notifications.
+# Plese configure the needed credentials 
 
 import sys, os, urllib, httplib
 
-# Enter your keys and tokens here. For details about what that's
-# about please refer to the Pushover documentation.
-user_key   = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
-app_token  = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
-device     = "XXXXX"
+username    = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+password    = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+host        = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+path        = "/api.php"
 
-message = os.environ['NOTIFY_HOSTNAME'] + " "
+to          = os.environ.get("NOTIFY_CONTACTPAGER")
+message     = os.environ['NOTIFY_HOSTNAME'] + " "
 
 if os.environ['NOTIFY_WHAT'] == 'SERVICE':
     message += os.environ['NOTIFY_SERVICESTATE'][:2] + " "
@@ -51,18 +50,21 @@ if os.environ['NOTIFY_WHAT'] == 'SERVICE':
 else:
     message += "is " + os.environ['NOTIFY_HOSTSTATE']
 
+url = "http://%s/%s?" % ( host, path ) + urllib.urlencode([ 
+   ( "username",    username    ),
+   ( "password",    password    ),
+   ( "to",          to          ),
+   ( "text",        message     )
+])
 
-conn = httplib.HTTPSConnection("api.pushover.net:443")
-conn.request("POST", "/1/messages.json",
-urllib.urlencode({
-      "token"   : app_token,
-      "user"    : user_key,
-      "message" : message,
-}), { "Content-type": "application/x-www-form-urlencoded" })
-response = conn.getresponse()
-headers = dict(response.getheaders())
-status = headers.get('status')
-code, explanation = status.split(None, 1)
-if code != "200":
-    sys.stdout.write("Failed to notify via Pushover: %s, HTTP status is %s\n" % (explanation, status))
-    sys.exit(1)
+
+try:
+    handle = urllib.urlopen(url)
+    response = handle.read().strip()
+    if response == "100":
+        sys.stdout.write("Successfully sent SMS to %s\n" % to)
+    else:
+        sys.stderr.write("Error sending SMS to %s: %s\n" % (to, exitcodes.get(response, "Invalid exit code %s" % response)))
+        sys.stderr.write("URL was %s\n" % url)
+except Exception, e:
+    sys.stderr.write("Error sending SMS to %s. Exception: %s%s\n" % e)

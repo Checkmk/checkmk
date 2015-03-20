@@ -117,7 +117,7 @@ def check_apc(item, params, info):
     # 4. Check battery capacity
     state = 0
     infotxt = "capacity %d%% (crit at or below " % battery_capacity
-    if (alt_crit_capacity != None and diff_sec < allowed_delay_sec) or self_test_in_progress:
+    if alt_crit_capacity != None and diff_sec < allowed_delay_sec:
         infotxt += "%d%% in delay after calib.)" % alt_crit_capacity
         if battery_capacity <= alt_crit_capacity:
             state = 2

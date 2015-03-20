@@ -453,11 +453,14 @@ def collect_hosttags():
         parts = taggedhost.split("|")
         hosttags[parts[0]] = parts[1:]
 
+
+g_hosttag_taglist_cache = {}
+g_global_caches.append('g_hosttag_taglist_cache')
+
 # Check if a host fullfills the requirements of a tags
 # list. The host must have all tags in the list, except
 # for those negated with '!'. Those the host must *not* have!
 # New in 1.1.13: a trailing + means a prefix match
-g_hosttag_taglist_cache = {}
 def hosttags_match_taglist(hosttags, required_tags):
     try:
         cache_id = tuple(hosttags)+tuple(required_tags)
@@ -875,7 +878,6 @@ def host_of_clustered_service(hostname, servicedesc):
 #   | Code for computing the table of checks of a host.                    |
 #   '----------------------------------------------------------------------'
 
-
 # Returns check table for a specific host
 # Format: (checkname, item) -> (params, description)
 
@@ -1087,6 +1089,8 @@ def get_datasource_program(hostname, ipaddress):
 # Variables needed during the renaming of hosts (see automation.py)
 ignore_ip_lookup_failures = False
 failed_ip_lookups = []
+g_dns_cache = {}
+g_global_caches.append('g_dns_cache')
 
 # Determine the IP address of a host
 def lookup_ipaddress(hostname):
@@ -1145,6 +1149,7 @@ def lookup_ipaddress(hostname):
             g_dns_cache[hostname] = None
             raise
 
+g_global_caches.append('g_ip_lookup_cache')
 def init_ip_lookup_cache():
     global g_ip_lookup_cache
     if g_ip_lookup_cache is None:
@@ -1568,6 +1573,8 @@ def service_deps(hostname, servicedesc):
 
 
 g_converted_host_rulesets_cache = {}
+g_global_caches.append('g_converted_host_rulesets_cache')
+
 def convert_host_ruleset(ruleset):
     new_rules = []
     if len(ruleset) == 1 and ruleset[0] == "":
@@ -1721,8 +1728,9 @@ def convert_pattern(pattern):
 def convert_pattern_list(patterns):
     return tuple([ convert_pattern(p) for p in patterns ])
 
-
 g_hostlist_match_cache = {}
+g_global_caches.append('g_hostlist_match_cache')
+
 def all_matching_hosts(tags, hostlist):
     cache_id = tuple(tags), tuple(hostlist)
     try:
@@ -1743,6 +1751,8 @@ def all_matching_hosts(tags, hostlist):
 
 
 g_converted_service_rulesets_cache = {}
+g_global_caches.append('g_converted_service_rulesets_cache')
+
 def convert_service_ruleset(ruleset):
     new_rules = []
     for rule in ruleset:
@@ -1771,8 +1781,10 @@ def convert_service_ruleset(ruleset):
     return new_rules
 
 
-# Compute outcome of a service rule set that has an item
 g_extraconf_servicelist_cache = {}
+g_global_caches.append('g_extraconf_servicelist_cache')
+
+# Compute outcome of a service rule set that has an item
 def service_extra_conf(hostname, service, ruleset):
     try:
         ruleset = g_converted_service_rulesets_cache[id(ruleset)]
@@ -5075,13 +5087,10 @@ def copy_globals():
     for varname, value in globals().items():
         # Some global caches are allowed to change.
         if varname not in [ "g_service_description", "g_multihost_checks",
-                            "g_check_table_cache", "g_singlehost_checks",
+                            "g_singlehost_checks",
                             "g_nodesof_cache", "g_compiled_regexes", "vars_before_config",
                             "g_initial_times", "g_keepalive_initial_memusage",
-                            "g_dns_cache", "g_ip_lookup_cache",
-                            "g_converted_host_rulesets_cache", "g_converted_service_rulesets_cache",
-                            "g_extraconf_servicelist_cache", "g_hostlist_match_cache",
-                            "g_hosttag_taglist_cache" ] \
+                            "g_global_caches" ] + g_global_caches \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
             global_saved[varname] = copy.copy(value)
     return global_saved
@@ -5245,6 +5254,9 @@ def do_check_keepalive():
             signal.alarm(0)
             if opt_debug:
                 raise
+            else:
+                import traceback # Always log details to the cmc.log
+                traceback.print_exc()
             output = "UNKNOWN - %s\n" % e
             os.write(keepalive_fd, "%03d\n%08d\n%s" % (3, len(output), output))
 

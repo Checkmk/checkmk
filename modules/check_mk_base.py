@@ -79,22 +79,15 @@ except NameError:
 # are need to be reset in keepalive mode after a configuration change has
 # been signalled.
 def reset_global_caches():
-    global g_check_table_cache
-    g_check_table_cache = {}    # per-host-checktables
     global g_singlehost_checks
     g_singlehost_checks = None  # entries in checks used by just one host
     global g_multihost_checks
     g_multihost_checks  = None  # entries in checks used by more than one host
-    global g_nodesof_cache
-    g_nodesof_cache     = {}    # Nodes of cluster hosts
-    global g_dns_cache
-    g_dns_cache         = {}
     global g_ip_lookup_cache
     g_ip_lookup_cache   = None  # permanently cached ipaddresses from ipaddresses.cache
-    global g_converted_rulesets_cache
-    g_converted_rulesets_cache = {}
 
-reset_global_caches()
+    for cachevar_name in g_global_caches:
+        globals()[cachevar_name] = {}
 
 # Prepare colored output if stdout is a TTY. No colors in pipe, etc.
 if sys.stdout.isatty():
@@ -176,7 +169,16 @@ g_broken_snmp_hosts          = set([])
 g_broken_agent_hosts         = set([])
 g_timeout                    = None
 g_compiled_regexes           = {}
+g_global_caches              = []
 
+# global variables used to cache temporary values that need to
+# be reset after a configuration change.
+g_check_table_cache          = {} # per-host-checktables
+g_global_caches.append('g_check_table_cache')
+g_nodesof_cache              = {} # Nodes of cluster hosts
+g_global_caches.append('g_nodesof_cache')
+
+reset_global_caches()
 
 # variables set later by getopt. These are defined here since in precompiled
 # mode the module check_mk.py is not present and we need all options to be

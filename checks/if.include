@@ -76,10 +76,10 @@ check_config_variables.append("nagios_illegal_chars")
 
 # Name of state (lookup SNMP enum)
 def if_statename(st):
-    names = { '1': 'up',      '2': 'down',
-              '3': 'testing', '4': 'unknown',
-              '5': 'dormant', '6': 'notPresent',
-              '7': 'lowerLayerDown' }
+    names = { '1': 'up',             '2': 'down',
+              '3': 'testing',        '4': 'unknown',
+              '5': 'dormant',        '6': 'notPresent',
+              '7': 'lowerLayerDown', '8': 'degraded' }
     return names.get(st, st)
 
 def if_extract_node(line, has_nodeinfo):
@@ -125,7 +125,7 @@ def inventory_if_common(info, has_nodeinfo = False):
     if len(info) == 0 or len(info[0]) != length:
         return []
 
-    settings = host_extra_conf_merged(g_hostname, inventory_if_rules)
+    settings            = host_extra_conf_merged(g_hostname, inventory_if_rules)
     uses_description    = settings.get('use_desc', if_inventory_uses_description)
     uses_alias          = settings.get('use_alias', if_inventory_uses_alias)
     porttypes           = settings.get('porttypes', if_inventory_porttypes)
@@ -264,7 +264,12 @@ def check_if_common(item, params, info, has_nodeinfo = False):
     # If this item is in an ifgroup create a pseudo interface and pass its data to the common instance
     # This is done by simply adding the additional group_info data to the already existing info table
     if params.get("aggregate"):
+        group_members = []
         matching_interfaces = []
+
+        settings            = host_extra_conf_merged(g_hostname, inventory_if_rules)
+        uses_description    = settings.get('use_desc', if_inventory_uses_description)
+        uses_alias          = settings.get('use_alias', if_inventory_uses_alias)
 
         node_offset = has_nodeinfo and 1 or 0
         def get_interface_item(line):
@@ -274,9 +279,9 @@ def check_if_common(item, params, info, has_nodeinfo = False):
 
             ifDescr = line[ 1 + node_offset]
             ifAlias = line[18 + node_offset]
-            if if_inventory_uses_description and ifDescr:
+            if uses_description and ifDescr:
                 if_item = ifDescr
-            elif if_inventory_uses_alias and ifAlias:
+            elif uses_alias and ifAlias:
                 if_item = ifAlias
             else:
                 if_item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo)
@@ -320,6 +325,7 @@ def check_if_common(item, params, info, has_nodeinfo = False):
                 ifGroup, ifIndex = ifIndex
 
             if_item = get_interface_item(element)
+            group_members.append({"name": if_item, "state": ifOperStatus})
             perfdata = []
 
             # Only these values are packed into counters
@@ -346,7 +352,7 @@ def check_if_common(item, params, info, has_nodeinfo = False):
                     # continue, other counters might wrap as well
 
             # Add interface info to group info
-            group_info["ifSpeed"]       += saveint(ifSpeed)
+            group_info["ifSpeed"]       += ifOperStatus == "1" and saveint(ifSpeed) or 0
             group_info["ifInOctets"]    += saveint(ifInOctets)
             group_info["inucast"]       += saveint(inucast)
             group_info["inmcast"]       += saveint(inmcast)
@@ -364,8 +370,14 @@ def check_if_common(item, params, info, has_nodeinfo = False):
 
 
         # Append an additional entry to the info table containing the calculated group_info
-        one_up = "1" in [element[4] for element in matching_interfaces]
-        group_operStatus = one_up and "1" or "2"
+        group_portstates = set([element[4] for element in matching_interfaces])
+        if "1" in group_portstates:
+            if len(group_portstates) == 1:
+                group_operStatus = "1" # up
+            else:
+                group_operStatus = "8" # degraded
+        else:
+            group_operStatus = "2" # down
 
         alias_info = []
         if params.get("iftype"):
@@ -400,11 +412,11 @@ def check_if_common(item, params, info, has_nodeinfo = False):
         # If applicable, signal the check_if_common_single if the counter of the
         # given interface has wrapped. Actually a wrap of the if group itself is unlikely,
         # however any counter wrap of one of its members causes the accumulation being invalid
-        return check_if_common_single(item, params, [group_entry], wrapped, has_nodeinfo=has_nodeinfo)
+        return check_if_common_single(item, params, [group_entry], wrapped, has_nodeinfo = has_nodeinfo, group_members = group_members)
 
     return check_if_common_single(item, params, info, has_nodeinfo=has_nodeinfo)
 
-def check_if_common_single(item, params, info, force_counter_wrap = False, has_nodeinfo = False):
+def check_if_common_single(item, params, info, force_counter_wrap = False, has_nodeinfo = False, group_members = None):
     # Params now must be a dict. Some keys might
     # be set to None
     targetspeed        = params.get("speed")
@@ -455,23 +467,27 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
         ifAlias = cleanup_if_strings(ifAlias)
 
         if if_item_matches(item, ifIndex, ifAlias, ifDescr):
-            # Display port number or alias in infotext if that is not part
-            # of the service description anyway
-            if item.lstrip("0") == ifIndex \
-                and (item == ifAlias or ifAlias == '') \
-                and (item == ifDescr or ifDescr == ''): # description trivial
-                infotext = ""
-            elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '': # non-unique Alias
-                infotext = "[%s/%s]" % (ifAlias, ifDescr)
-            elif item != ifAlias and ifAlias != '': # alias useful
-                infotext = "[%s] " % ifAlias
-            elif item != ifDescr and ifDescr != '': # description useful
-                infotext = "[%s] " % ifDescr
+            if group_members:
+                # The detailed group info is added later on
+                infotext = "Group Status "
             else:
-                infotext = "[%s] " % ifIndex
+                # Display port number or alias in infotext if that is not part
+                # of the service description anyway
+                if item.lstrip("0") == ifIndex \
+                    and (item == ifAlias or ifAlias == '') \
+                    and (item == ifDescr or ifDescr == ''): # description trivial
+                    infotext = ""
+                elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '': # non-unique Alias
+                    infotext = "[%s/%s]" % (ifAlias, ifDescr)
+                elif item != ifAlias and ifAlias != '': # alias useful
+                    infotext = "[%s] " % ifAlias
+                elif item != ifDescr and ifDescr != '': # description useful
+                    infotext = "[%s] " % ifDescr
+                else:
+                    infotext = "[%s] " % ifIndex
 
-            if node != None:
-                infotext = "%son %s: " % ( infotext, node )
+                if node != None:
+                    infotext = "%son %s: " % ( infotext, node )
 
             state = 0
 
@@ -484,6 +500,14 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
             else:
                 infotext += "(%s) " % operstatus
 
+            if group_members:
+                infotext = infotext[:-1] # remove last space
+                extra_info = ", Members: "
+                member_info = []
+                for member in group_members:
+                    member_operstatus = if_statename(str(member["state"]))
+                    member_info.append("%s (%s)" % (member["name"], member_operstatus))
+                infotext += extra_info + "[%s] " % ", ".join(member_info)
 
             # prepare reference speed for computing relative bandwidth usage
             speed = saveint(ifSpeed)

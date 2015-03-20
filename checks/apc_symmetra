@@ -66,7 +66,7 @@ def check_apc(item, params, info):
     last_diag_date = info[0][13]
 
     output_state_bitmask = int(info[0][14], 2) # string contains a bitmask, convert to int
-    self_test_in_progress = output_state_bitmask & (2^29) == 1
+    self_test_in_progress = output_state_bitmask & 1<<35 != 0
 
     # convert old format tuple to dict
     if type(params) is tuple:
@@ -117,7 +117,7 @@ def check_apc(item, params, info):
     # 4. Check battery capacity
     state = 0
     infotxt = "capacity %d%% (crit at or below " % battery_capacity
-    if (alt_crit_capacity != None and diff_sec < allowed_delay_sec) or self_test_in_progress:
+    if alt_crit_capacity != None and diff_sec < allowed_delay_sec:
         infotxt += "%d%% in delay after calib.)" % alt_crit_capacity
         if battery_capacity <= alt_crit_capacity:
             state = 2

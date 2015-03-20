@@ -787,6 +787,8 @@ def paint_pnpgraph(row):
         if htmlcode:
             return css, htmlcode
     except NameError:
+        if config.debug:
+            raise
         pass
 
     sitename = row["site"]

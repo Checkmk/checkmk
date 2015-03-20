@@ -5254,6 +5254,9 @@ def do_check_keepalive():
             signal.alarm(0)
             if opt_debug:
                 raise
+            else:
+                import traceback # Always log details to the cmc.log
+                traceback.print_exc()
             output = "UNKNOWN - %s\n" % e
             os.write(keepalive_fd, "%03d\n%08d\n%s" % (3, len(output), output))
 

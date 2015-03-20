@@ -1,6 +1,6 @@
 title: Meinberg LANTIME devices: Fans (NG MIB)
 agents: snmp
-catalog: hw/other
+catalog: hw/time/meinberg
 license: GPL
 distribution: check_mk
 description:

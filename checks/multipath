@@ -176,7 +176,6 @@ def parse_multipath(info):
     group = {}
     numpaths = None
     for line in info:
-
         # Ignore error messages due to invalid multipath.conf
         if line[0] == "multipath.conf":
             continue

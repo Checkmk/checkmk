@@ -23,6 +23,7 @@
     * 1233 FIX: Fixed fileinfo check for solaris in case of missing files
     * 1236 FIX: multipath: Now show correct error in case of removed multipaths instead of check crash
     * 2152 FIX: apache_status: Fixed plugin to work on CentOS/RedHat 5.x...
+    * 1237 FIX: Fixed missing temperature checks on cisco devices
 
     Multisite:
     * 2054 FIX: Sidebar snapin "Tree of folders": fixed exception when using localized default value...

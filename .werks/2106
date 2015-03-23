@@ -1,0 +1,9 @@
+Title: aix_sap_processlist: new check and agent plugin to monitor the process list of SAP Application Server Instances on AIX systems
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427128023
+Class: feature
+
+

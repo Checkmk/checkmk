@@ -14455,7 +14455,7 @@ def folder_selection(folder, depth=0):
         title_prefix = "&nbsp;&nbsp;&nbsp;" * depth + "` " + "- " * depth
     else:
         title_prefix = ""
-    sel = [ (folder[".path"], title_prefix + folder["title"]) ]
+    sel = [ (folder[".path"], HTML(title_prefix + html.attrencode(folder["title"]))) ]
 
     subfolders = sorted(folder[".folders"].values(), cmp = lambda x,y : cmp(x.get("title").lower(), y.get("title").lower()))
     for subfolder in subfolders:

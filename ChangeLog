@@ -27,6 +27,7 @@
     * 1238 FIX: check_mk_agent.linux: Do not execute the multipath section if no /etc/multipath.conf exsist.
 
     Multisite:
+    * 1239 Fixed /treasures/downtime script to work with the new visuals
     * 2054 FIX: Sidebar snapin "Tree of folders": fixed exception when using localized default value...
     * 2090 FIX: Fixed errors when editing / rendering custom url dashlets in some cases...
     * 2092 FIX: Dashboards: Possible to configure an empty custom title

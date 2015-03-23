@@ -192,7 +192,7 @@ def set_downtime(variables, add_vars):
 
 if arg_services:
     for service in arg_services:
-        set_downtime(variables, [("service", service + "$")])
+        set_downtime(variables, [("service", service )])
 else:
     set_downtime(variables, [])
     if opt_all:

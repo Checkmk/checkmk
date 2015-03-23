@@ -191,7 +191,7 @@ def parse_multipath(info):
         l = " ".join(line)
 
         # Skip output when multipath is not present
-        if l.endswith('DM multipath kernel driver not loaded') \
+        if l.endswith('kernel driver not loaded') \
            or l.endswith('does not exist, blacklisting all devices.') \
            or l.endswith('A sample multipath.conf file is located at') \
            or l.endswith('multipath.conf'):

@@ -15,6 +15,5 @@ make CFLAGS=-g -j 8
 
 
 sudo install src/livestatus.o /omd/sites/$SITE/lib/mk-livestatus/livestatus.o
-echo "$C files copied"
 echo "Restarting site $SITE"
 sudo omd restart $SITE nagios

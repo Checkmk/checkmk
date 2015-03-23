@@ -250,8 +250,10 @@ cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for 
 
 # Linux Multipathing
 if type multipath >/dev/null ; then
-    echo '<<<multipath>>>'
-    multipath -l
+    if [ -f /etc/multipath.conf ] ; then
+        echo '<<<multipath>>>'
+        multipath -l
+    fi
 fi
 
 # Performancecounter Platten

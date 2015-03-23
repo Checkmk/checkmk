@@ -505,7 +505,7 @@ _siemens_plc_value = [
                 unit = _("Bytes"),
             )),
         ],
-        html_separator = "",
+        orientation = "horizontal",
         sorted = True,
     ),
     DropdownChoice(

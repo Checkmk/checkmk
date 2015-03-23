@@ -86,6 +86,11 @@ scale_symbols = {
   P  : "P",
 }
 
+scalar_colors = {
+    "warn" : "#ffff00",
+    "crit" : "#ff0000",
+}
+
 
 # Convert perf_data_string into perf_data, extract check_command
 def parse_perf_data(perf_data_string, check_command=None):
@@ -208,6 +213,10 @@ def translate_metrics(perf_data, check_command):
 # e.g. "fs_used:max(%)" -> 100.0,  "%", "#00ffc6",
 # e.g. 123.4            -> 123.4,  "",  None
 # e.g. "123.4#ff0000"   -> 123.4,  "",  "#ff0000",
+# Note:
+# "fs_growth.max" is the same as fs_growth. The .max is just
+# relevant when fetching RRD data and is used for selecting
+# the consolidation function MAX.
 def evaluate(expression, translated_metrics):
     if type(expression) in (float, int) or "," not in expression:
         return evaluate_literal(expression, translated_metrics)
@@ -220,6 +229,7 @@ def evaluate(expression, translated_metrics):
         if explicit_color:
             color = "#" + explicit_color
         return value, unit, color
+
 
 # TODO: real unit computation!
 def unit_mult(u1, u2):
@@ -234,6 +244,26 @@ def unit_add(u1, u2):
 def unit_sub(u1, u2):
     return unit_mult(u1, u2)
 
+def operator_minmax(a, b, func):
+    v = func(a[0], b[0])
+    # Use unit and color of the winner. If the winner
+    # has none (e.g. it is a scalar like 0), then take
+    # unit and color of the looser.
+    if v == a[0]:
+        winner = a
+        loser = b
+    else:
+        winner = b
+        loser = a
+
+    if winner[1] != unit_info[""]:
+        unit = winner[1]
+    else:
+        unit = loser[1]
+
+    return v, unit, winner[2] or loser[2]
+
+
 # TODO: Do real unit computation, detect non-matching units
 rpn_operators = {
     "+"  : lambda a, b: ((a[0] +  b[0]),                unit_mult(a[1], b[1]), choose_operator_color(a[2], b[2])),
@@ -244,6 +274,8 @@ rpn_operators = {
     "<"  : lambda a, b: ((a[0] <  b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
     ">=" : lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
     "<=" : lambda a, b: ((a[0] <= b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
+    "MIN" : lambda a, b: operator_minmax(a, b, min),
+    "MAX" : lambda a, b: operator_minmax(a, b, max),
 }
 
 def choose_operator_color(a, b):
@@ -278,6 +310,7 @@ def evaluate_rpn(expression, translated_metrics):
 
 
 def evaluate_literal(expression, translated_metrics):
+
     if type(expression) == int:
         return expression, unit_info["count"], None
 
@@ -286,6 +319,11 @@ def evaluate_literal(expression, translated_metrics):
 
     elif expression[0].isdigit() or expression[0] == '-':
         return float(expression), unit_info[""], None
+
+    if expression.endswith(".max") or expression.endswith(".min") or expression.endswith(".average"):
+        expression = expression.rsplit(".", 1)[0]
+
+    color = None
 
     # TODO: Error handling with useful exceptions
     if expression.endswith("(%)"):
@@ -297,6 +335,7 @@ def evaluate_literal(expression, translated_metrics):
     if ":" in expression:
         varname, scalarname = expression.split(":")
         value = translated_metrics[varname]["scalar"].get(scalarname)
+        color = scalar_colors.get(scalarname)
     else:
         varname = expression
         value = translated_metrics[varname]["value"]
@@ -312,8 +351,25 @@ def evaluate_literal(expression, translated_metrics):
     else:
         unit = translated_metrics[varname]["unit"]
 
-    color = metric_info[varname]["color"]
+    if color == None:
+        color = metric_info[varname]["color"]
     return value, unit, color
+
+
+# Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"
+def replace_expressions(text, translated_metrics):
+    def eval_to_string(match):
+        expression = match.group()[2:-1]
+        unit_name = None
+        if "@" in expression:
+            expression, unit_name = expression.split("@")
+        value, unit, color = evaluate(expression, translated_metrics)
+        if unit_name:
+            unit = unit_info[unit_name]
+        return unit["render"](value)
+
+    r = regex(r"%\([^)]*\)")
+    return r.sub(eval_to_string, text)
 
 
 def get_perfometers(translated_metrics):
@@ -330,8 +386,11 @@ def perfometer_possible(perfometer, translated_metrics):
     if type(perfometer) == dict:
         if perfometer["type"] == "linear":
             required = perfometer["segments"][:]
+        elif perfometer["type"] == "logarithmic":
+            required = [ perfometer["metric"] ]
         else:
-            required = [] # TODO: logarithmic, etc.
+            pass # TODO: logarithmic, etc. dual, stacked?
+
         if "label" in perfometer and perfometer["label"] != None:
             required.append(perfometer["label"][0])
         if "total" in perfometer:
@@ -414,74 +473,6 @@ def drop_dotzero(v):
         return t
 
 
-def frexp10(x):
-    exp = int(math.log10(x))
-    mantissa = x / 10**exp
-    if mantissa < 1:
-        mantissa *= 10
-        exp -= 1
-    return mantissa, exp
-
-# Render a physical value witha precision of p
-# digits. Use K (kilo), M (mega), m (milli), µ (micro)
-# p is the number of non-zero digits - not the number of
-# decimal places.
-# Examples for p = 3:
-# a: 0.0002234   b: 4,500,000  c: 137.56
-# Result:
-# a: 223 µ       b: 4.50 M     c: 138
-
-# Note if the type of v is integer, then the precision cut
-# down to the precision of the actual number
-def physical_precision(v, precision, unit_symbol):
-    if v == 0:
-        return "%%.%df" % (precision - 1) % v
-    elif v < 0:
-        return "-" + physical_precision(-v, precision, unit_symbol)
-
-    # Splitup in mantissa (digits) an exponent to the power of 10
-    # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
-    mantissa, exponent = frexp10(float(v))
-
-    if type(v) == int:
-        precision = min(precision, exponent + 1)
-
-    # Round the mantissa to the required number of digits
-    # -> a: 2.23              b: 4.5         c: 1.38
-    mant_rounded = round(mantissa, precision-1) * 10**exponent
-
-    # Choose a power where no artifical zero (due to rounding) needs to be
-    # placed left of the decimal point.
-    scale_symbols = {
-        -4 : "p",
-        -3 : "n",
-        -2 : u"µ",
-        -1 : "m",
-        0 : "",
-        1 : "K",
-        2 : "M",
-        3 : "G",
-        4 : "T",
-        5 : "P",
-    }
-    scale = 0
-
-    while exponent < 0:
-        scale -= 1
-        exponent += 3
-
-    # scale, exponent = divmod(exponent, 3)
-    places_before_comma = exponent + 1
-    places_after_comma = precision - places_before_comma
-    while places_after_comma < 0:
-        scale += 1
-        exponent -= 3
-        places_before_comma = exponent + 1
-        places_after_comma = precision - places_before_comma
-    value = mantissa * 10**exponent
-    return u"%%.%df %%s%%s" % places_after_comma % (value, scale_symbols[scale], unit_symbol)
-
-
 def metricometer_logarithmic(value, half_value, base, color):
     # Negative values are printed like positive ones (e.g. time offset)
     value = abs(float(value))
@@ -502,7 +493,12 @@ def metricometer_logarithmic(value, half_value, base, color):
 def build_perfometer(perfometer, translated_metrics):
     # TODO: alle nicht-dict Perfometer umstellen
     if type(perfometer) == dict:
-        if perfometer["type"] == "linear":
+        if perfometer["type"] == "logarithmic":
+            value, unit, color = evaluate(perfometer["metric"], translated_metrics)
+            label = unit["render"](value)
+            stack = [ metricometer_logarithmic(value, perfometer["half_value"], perfometer["exponent"], color) ]
+
+        elif perfometer["type"] == "linear":
             entry = []
             stack = [entry]
 
@@ -545,10 +541,11 @@ def build_perfometer(perfometer, translated_metrics):
 
                 label = unit["render"](summed)
 
-            return label, stack
+        return label, stack
 
 
 
+    # This stuf is deprecated and will be removed soon. Watch out!
     perfometer_type, definition = perfometer
 
     if perfometer_type == "logarithmic":
@@ -896,7 +893,7 @@ def darken_color(rgb, v):
 # Make a color lighter. v ranges from 0 (not lighter) to 1 (white)
 def lighten_color(rgb, v):
     def lighten(x, v):
-        return 1.0 - ((1.0 - x) * (1.0 - v))
+        return x + ((1.0 - x) * (1.0 - v))
     return tuple([ lighten(x, v) for x in rgb ])
 
 def mix_colors(a, b):

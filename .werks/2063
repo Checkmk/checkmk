@@ -1,0 +1,9 @@
+Title: winperf_if: now also able to detect the interface port state 'lowerLayerDown'
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426861644
+Class: feature
+
+Previous version only reported interface 'down'

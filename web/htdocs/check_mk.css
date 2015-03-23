@@ -579,8 +579,10 @@ table.graph tr > td.legend > table {
 
 table.graph tr > td.legend > table th,
 table.graph tr > td.legend > table td {
-    padding: 2px 8px 3px 2px;
+    padding: 2px 8px 2.5px 2px;
     white-space: nowrap;
+    font-size: 11px;
+    /* background-color: #fdfcf8; */
 }
 
 table.graph tr > td.legend > table .scalar {
@@ -595,7 +597,7 @@ table.graph tr > td.legend > table th.scalar {
     color: black;
     text-align: right;
     padding-bottom: 3px;
-    border-bottom: 1px solid #bbb;
+    border-bottom: 0.6px solid #000;
     color: #888;
     font-weight: bold;
 }
@@ -608,6 +610,13 @@ table.graph tr > td.legend > table td.scalar {
     text-align: right;
 }
 
+table.graph tr > td.legend > table > tbody > tr.scalar.first {
+    border-top: 0.6px solid #000;
+}
+
+table.graph tr > td.legend > table > tbody > tr.scalar.first td {
+    padding-top: 4px;
+}
 
 table.graph td.legend div {
     display: inline-block;
@@ -616,11 +625,14 @@ table.graph td.legend div {
 
 table.graph td.legend div.color {
     border: 1px solid black;
-    height: 12px;
-    width: 12px;
-    vertical-align: bottom;
+    height: 9px;
+    width: 9px;
+    vertical-align: top;
+    position: relative;
+    top: 1px;
     display: inline-block;
     box-shadow: 0.5px 0.5px 1px #888;
+    margin-right: 2px;
 }
 
 table.graph td.legend div.entry {

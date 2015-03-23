@@ -102,6 +102,13 @@ unit_info["bytes/s"] = {
     "render" : lambda v: bytes_human_readable(v) + _("/s"),
 }
 
+# Output in bytes/days, value is in bytes/s
+unit_info["bytes/d"] = {
+    "title"  : _("Bytes per day"),
+    "symbol" : _("B/d"),
+    "render" : lambda v: bytes_human_readable(v * 86400.0) + _("/d"),
+}
+
 unit_info["c"] = {
     "title"  : _("Degree Celsius"),
     "symbol" : u"°C",
@@ -164,8 +171,10 @@ unit_info["db"] = {
 #   |  Definitions of metrics                                              |
 #   '----------------------------------------------------------------------'
 
+# Title are always lower case - except the first character!
+
 metric_info["rta"] = {
-    "title" : _("Round Trip Average"),
+    "title" : _("Round trip average"),
     "unit"  : "s",
     "color" : "#40a0b0",
 }
@@ -176,8 +185,14 @@ metric_info["pl"] = {
     "color" : "#ffc030",
 }
 
+metric_info["uptime"] = {
+    "title" : _("Uptime"),
+    "unit"  : "s",
+    "color" : "#80f000",
+}
+
 metric_info["hit_ratio"] = {
-    "title" : _("Cache Hit Ratio"),
+    "title" : _("Cache hit ratio"),
     "unit"  : "ratio",
     "color" : "#60c0c0",
 }
@@ -201,7 +216,7 @@ metric_info["mem_free"] = {
 }
 
 metric_info["swap_used"] = {
-    "title" : _("Used Swap space"),
+    "title" : _("Used swap space"),
     "unit"  : "bytes",
     "color" : "#008030",
 }
@@ -213,7 +228,7 @@ metric_info["caches"] = {
 }
 
 metric_info["swap_free"] = {
-    "title" : _("Free Swap space"),
+    "title" : _("Free swap space"),
     "unit"  : "bytes",
     "color" : "#eeeeee",
 }
@@ -227,7 +242,19 @@ metric_info["execution_time"] = {
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
     "unit"  : "",
-    "color" : "#6688ff",
+    "color" : "#60c0e0",
+}
+
+metric_info["load5"] = {
+    "title" : _("CPU load average of last 5 minutes"),
+    "unit"  : "",
+    "color" : "#428399",
+}
+
+metric_info["load15"] = {
+    "title" : _("CPU load average of last 15 minutes"),
+    "unit"  : "",
+    "color" : "#2c5766",
 }
 
 metric_info["fs_used"] = {
@@ -235,6 +262,31 @@ metric_info["fs_used"] = {
     "unit"  : "bytes",
     "color" : "#00ffc6",
 }
+
+metric_info["inodes_used"] = {
+    "title" : _("Used inodes"),
+    "unit"  : "count",
+    "color" : "#a0608f",
+}
+
+metric_info["fs_size"] = {
+    "title" : _("Filesystem size"),
+    "unit"  : "bytes",
+    "color" : "#006040",
+}
+
+metric_info["fs_growth"] = {
+    "title" : _("Filesystem growth"),
+    "unit"  : "bytes/d",
+    "color" : "#29cfaa",
+}
+
+metric_info["fs_trend"] = {
+    "title" : _("Trend of filesystem growth"),
+    "unit"  : "bytes/d",
+    "color" : "#808080",
+}
+
 
 metric_info["fs_provisioning"] = {
     "title" : _("Provisioned filesystem space"),
@@ -256,7 +308,7 @@ metric_info["ctxt"] = {
 }
 
 metric_info["pgmajfault"] = {
-    "title" : _("Major Page Faults"),
+    "title" : _("Major page faults"),
     "unit"  : "1/s",
     "color" : "#ddaa22",
 }
@@ -288,14 +340,14 @@ metric_info["system"] = {
 }
 
 metric_info["util"] = {
-    "title" : _("CPU Utilization"),
+    "title" : _("CPU utilization"),
     "help"  : _("Percentage of CPU time used"),
     "unit"  : "%",
     "color" : "#60f020",
 }
 
 metric_info["io_wait"] = {
-    "title" : _("IO-Wait"),
+    "title" : _("IO-wait"),
     "help"  : _("Percentage of CPU time spent waiting for IO"),
     "unit"  : "%",
     "color" : "#00b0c0",
@@ -314,13 +366,13 @@ metric_info["connection_time"] = {
 }
 
 metric_info["input_signal_power_dbm"] = {
-    "title" : _("Input Power"),
+    "title" : _("Input power"),
     "unit"  : "dbm",
     "color" : "#20c080",
 }
 
 metric_info["output_signal_power_dbm"] = {
-    "title" : _("Output Power"),
+    "title" : _("Output power"),
     "unit"  : "dbm",
     "color" : "#2080c0",
 }
@@ -338,37 +390,31 @@ metric_info["indexspace_wasted"] = {
 }
 
 metric_info["current"] = {
-    "title" : _("Electrical Current"),
+    "title" : _("Electrical current"),
     "unit"  : "a",
     "color" : "#ffb030",
 }
 
 metric_info["voltage"] = {
-    "title" : _("Electrical Voltage"),
+    "title" : _("Electrical voltage"),
     "unit"  : "v",
     "color" : "#ffc060",
 }
 
-metric_info["output_load"] = {
-    "title" : _("Output Load"),
-    "unit"  : "%",
-    "color" : "#c080a0",
-}
-
 metric_info["power"] = {
-    "title" : _("Electrical Power"),
+    "title" : _("Electrical power"),
     "unit"  : "w",
     "color" : "#8848c0",
 }
 
 metric_info["appower"] = {
-    "title" : _("Electrical Apparent Power"),
+    "title" : _("Electrical apparent power"),
     "unit"  : "va",
     "color" : "#aa68d80",
 }
 
 metric_info["energy"] = {
-    "title" : _("Electrical Energy"),
+    "title" : _("Electrical energy"),
     "unit"  : "wh",
     "color" : "#aa80b0",
 }
@@ -380,13 +426,13 @@ metric_info["output_load"] = {
 }
 
 metric_info["voltage_percent"] = {
-    "title" : _("Electrical Tension in % of normal value"),
+    "title" : _("Electrical tension in % of normal value"),
     "unit"  : "%",
     "color" : "#ffc020",
 }
 
 metric_info["humidity"] = {
-    "title" : _("Relative Humidity"),
+    "title" : _("Relative humidity"),
     "unit"  : "%",
     "color" : "#90b0b0",
 }
@@ -398,7 +444,7 @@ metric_info["requests_per_second"] = {
 }
 
 metric_info["busy_workers"] = {
-    "title" : _("Busy Workers"),
+    "title" : _("Busy workers"),
     "unit"  : "count",
     "color" : "#a080b0",
 }
@@ -410,19 +456,19 @@ metric_info["connections"] = {
 }
 
 metric_info["signal_noise"] = {
-    "title" : _("Signal/Noise Ratio"),
+    "title" : _("Signal/Noise ratio"),
     "unit"  : "db",
     "color" : "#aadd66",
 }
 
 metric_info["codewords_corrected"] = {
-    "title" : _("Corrected Codewords"),
+    "title" : _("Corrected codewords"),
     "unit"  : "ratio",
     "color" : "#ff8040",
 }
 
 metric_info["codewords_uncorrectable"] = {
-    "title" : _("Uncorrectable Codewords"),
+    "title" : _("Uncorrectable codewords"),
     "unit"  : "ratio",
     "color" : "#ff4020",
 }
@@ -452,103 +498,103 @@ metric_info["exclusive_locks"] = {
 }
 
 metric_info["disk_read_throughput"] = {
-    "title" : _("Read Throughput"),
+    "title" : _("Read throughput"),
     "unit"  : "bytes/s",
     "color" : "#40c080",
 }
 
 metric_info["disk_write_throughput"] = {
-    "title" : _("Write Throughput"),
+    "title" : _("Write throughput"),
     "unit"  : "bytes/s",
     "color" : "#4080c0",
 }
 
 metric_info["disk_read_ios"] = {
-    "title" : _("Read Operations"),
+    "title" : _("Read operations"),
     "unit"  : "1/s",
     "color" : "#60e0a0",
 }
 
 metric_info["disk_write_ios"] = {
-    "title" : _("Write Operations"),
+    "title" : _("Write operations"),
     "unit"  : "1/s",
     "color" : "#60a0e0",
 }
 
 metric_info["disk_average_read_wait"] = {
-    "title" : _("Read Wait time"),
+    "title" : _("Read wait Time"),
     "unit"  : "s",
     "color" : "#20e8c0",
 }
 
 metric_info["disk_average_write_wait"] = {
-    "title" : _("Write Wait Time"),
+    "title" : _("Write wait time"),
     "unit"  : "s",
     "color" : "#20c0e8",
 }
 
 metric_info["disk_average_wait"] = {
-    "title" : _("Request Wait Time"),
+    "title" : _("Request wait time"),
     "unit"  : "s",
     "color" : "#4488cc",
 }
 
 metric_info["disk_average_read_request_size"] = {
-    "title" : _("Average Read Request Size"),
+    "title" : _("Average read request size"),
     "unit"  : "bytes",
     "color" : "#409c58",
 }
 
 metric_info["disk_average_write_request_size"] = {
-    "title" : _("Average Write Request Size"),
+    "title" : _("Average write request size"),
     "unit"  : "bytes",
     "color" : "#40589c",
 }
 
 metric_info["disk_average_request_size"] = {
-    "title" : _("Average Request Size"),
+    "title" : _("Average request size"),
     "unit"  : "bytes",
     "color" : "#4488cc",
 }
 
 metric_info["disk_latency"] = {
-    "title" : _("Average Disk Latency"),
+    "title" : _("Average disk latency"),
     "unit"  : "s",
     "color" : "#c04080",
 }
 
 metric_info["disk_queue_length"] = {
-    "title" : _("Disk IO-Queue Length"),
+    "title" : _("Disk IO-queue length"),
     "unit"  : "",
     "color" : "#7060b0",
 }
 
 metric_info["disk_utilization"] = {
-    "title" : _("Disk Utilization"),
+    "title" : _("Disk utilization"),
     "unit"  : "ratio",
     "color" : "#a05830",
 }
 
 metric_info["xda_hitratio"] = {
-    "title" : _("XDA Hitratio"),
+    "title" : _("XDA hitratio"),
     "unit"  : "%",
     "color" : "#0ae86d",
 }
 
 metric_info["data_hitratio"] = {
-    "title" : _("Data Hitratio"),
+    "title" : _("Data hitratio"),
     "unit"  : "%",
     "color" : "#2828de",
 }
 
 metric_info["index_hitratio"] = {
-    "title" : _("Index Hitratio"),
+    "title" : _("Index hitratio"),
     "unit"  : "%",
     "color" : "#dc359f",
 }
 
 metric_info["total_hitratio"] = {
-    "title" : _("Total Hitratio"),
+    "title" : _("Total hitratio"),
     "unit"  : "%",
     "color" : "#2e282c",
 }
@@ -566,40 +612,71 @@ metric_info["lockwaits"] = {
 }
 
 metric_info["sort_overflow"] = {
-    "title" : _("Sort Overflow"),
+    "title" : _("Sort overflow"),
     "unit"  : "%",
     "color" : "#e72121",
 }
 
 metric_info["tablespace_size"] = {
-    "title" : _("Tablespace Size"),
+    "title" : _("Tablespace size"),
     "unit"  : "bytes",
     "color" : "#092507",
 }
 
 metric_info["tablespace_used"] = {
-    "title" : _("Tablespace Used"),
+    "title" : _("Tablespace used"),
     "unit"  : "bytes",
     "color" : "#e59d12",
 }
 
 metric_info["tablespace_max_size"] = {
-    "title" : _("Tablespace Max Size"),
+    "title" : _("Tablespace max size"),
     "unit"  : "bytes",
     "color" : "#172121",
 }
 
 metric_info["hours_operation"] = {
-    "title" : _("Hours of Operation"),
+    "title" : _("Hours of operation"),
     "unit"  : "s",
     "color" : "#94b65a",
 }
 
 metric_info["hours_since_service"] = {
-    "title" : _("Hours since Service"),
+    "title" : _("Hours since service"),
     "unit"  : "s",
     "color" : "#94b65a",
 }
+
+metric_info["execution_time"] = {
+    "title" : _("Total execution time"),
+    "unit"  : "s",
+    "color" : "#d080af",
+}
+
+metric_info["user_time"] = {
+    "title" : _("CPU time spent in user space"),
+    "unit"  : "s",
+    "color" : "#60f020",
+}
+
+metric_info["system_time"] = {
+    "title" : _("CPU time spent in system space"),
+    "unit"  : "s",
+    "color" : "#ff6000",
+}
+
+metric_info["children_user_time"] = {
+    "title" : _("CPU time of childs in user space"),
+    "unit"  : "s",
+    "color" : "#aef090",
+}
+
+metric_info["children_system_time"] = {
+    "title" : _("CPU time of childs in system space"),
+    "unit"  : "s",
+    "color" : "#ffb080",
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -614,8 +691,15 @@ metric_info["hours_since_service"] = {
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
 
+check_metrics["check-mk"]                                       = {}
 check_metrics["check-mk-ping"]                                  = {}
 check_metrics["check-mk"]                                       = {}
+
+check_metrics["check_mk-uptime"]                                = {}
+check_metrics["check_mk-esx_vsphere_counters.uptime"]           = {}
+check_metrics["check_mk-fritz.uptime"]                          = {}
+check_metrics["check_mk-jolokia_metrics.uptime"]                = {}
+check_metrics["check_mk-snmp_uptime"]                           = {}
 
 check_metrics["check_mk-cpu.loads"]                             = {}
 check_metrics["check_mk-ucd_cpu_load"]                          = {}
@@ -629,24 +713,30 @@ check_metrics["check_mk-mem.linux"]                             = {}
 check_metrics["check_mk-aix_memory"]                            = { "ramused" : { "name" : "mem_used", "scale": MB }, "swapused" : { "name" : "swap_used", "scale": MB }}
 check_metrics["check_mk-mem.win"]                               = { "memory" : { "name" : "mem_used", "scale" : MB }, "pagefile" : { "name" : "pagefile_used", "scale" : MB }}
 
-check_metrics["check_mk-df"]                                    = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-vms_df"]                                = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-vms_diskstat.df"]                       = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_disk"]                                     = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-df_netapp"]                             = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-df_netapp32"]                           = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-zfsget"]                                = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-hr_fs"]                                 = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-oracle_asm_diskgroup"]                  = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-esx_vsphere_counters.ramdisk"]          = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-hitachi_hnas_span"]                     = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-hitachi_hnas_volume"]                   = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-emcvnx_raidgroups.capacity"]            = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-emcvnx_raidgroups.capacity_contiguous"] = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-ibm_svc_mdiskgrp"]                      = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-fast_lta_volumes"]                      = { 0: { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = { 0: { "name": "fs_used", "scale" : MB } }
+df_translation = {
+    0         : { "name"  : "fs_used", "scale" : MB },
+    "fs_size" : { "scale" : MB },
+    "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
+    "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },
+}
+check_metrics["check_mk-df"]                                    = df_translation
+check_metrics["check_mk-vms_df"]                                = df_translation
+check_metrics["check_mk-vms_diskstat.df"]                       = df_translation
+check_metrics["check_disk"]                                     = df_translation
+check_metrics["check_mk-df_netapp"]                             = df_translation
+check_metrics["check_mk-df_netapp32"]                           = df_translation
+check_metrics["check_mk-zfsget"]                                = df_translation
+check_metrics["check_mk-hr_fs"]                                 = df_translation
+check_metrics["check_mk-oracle_asm_diskgroup"]                  = df_translation
+check_metrics["check_mk-esx_vsphere_counters.ramdisk"]          = df_translation
+check_metrics["check_mk-hitachi_hnas_span"]                     = df_translation
+check_metrics["check_mk-hitachi_hnas_volume"]                   = df_translation
+check_metrics["check_mk-emcvnx_raidgroups.capacity"]            = df_translation
+check_metrics["check_mk-emcvnx_raidgroups.capacity_contiguous"] = df_translation
+check_metrics["check_mk-ibm_svc_mdiskgrp"]                      = df_translation
+check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = df_translation
+check_metrics["check_mk-fast_lta_volumes"]                      = df_translation
+check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = df_translation
 
 check_metrics["check_mk-diskstat"]                              = {}
 
@@ -777,6 +867,19 @@ check_metrics["check_mk-siemens_plc.hours"]                     = {}
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
+perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "execution_time" ],
+    "total"    : 90.0,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "uptime",
+    "half_value" : 2592000.0,
+    "exponent"   : 2,
+})
+
 perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
 perfometer_info.append(("linear",       ( ["execution_time"], 90.0, None)))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
@@ -795,7 +898,7 @@ perfometer_info.append({
     "condition" : "fs_provisioning(%),100,>",
     "segments"  : [
         "fs_used(%)",
-        "100,fs_used(%),-#FFFFFF",
+        "100,fs_used(%),-#e3fff9",
         "fs_provisioning(%),100.0,-#ffc030",
     ],
     "total"     : "fs_provisioning(%)",
@@ -809,22 +912,23 @@ perfometer_info.append({
     "segments"  : [
         "fs_used(%)",
         "fs_provisioning(%),fs_used(%),-#ffc030",
+        "100,fs_provisioning(%),fs_used(%),-,-#e3fff9",
     ],
     "total"     : 100,
     "label"     : ( "fs_used(%)", "%" ),
 })
 
-# perfometer_info.append(("linear",      ( [ "fs_used(%)", "fs_provisioning(%),100.0,-", ], 200.0, None))) # ("fs_used(%)", "%"))))
-# perfometer_info.append(("linear",      ( [ "fs_used(%)", ], "fs_provisioning(%)", ("fs_used(%)", "%"))))
-# perfometer_info.append(("linear",      ( [ "fs_used(%)", "100.0,fs_used(%),-", ], "fs_provisioning(%)", "fs_used(%)")))
+# Filesystem without over-provisioning
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [
+        "fs_used(%)",
+        "100.0,fs_used(%),-#e3fff9",
+    ],
+    "total"     : 100,
+    "label"     : ( "fs_used(%)", "%" ),
+})
 
-perfometer_info.append(("stacked", [
-  ("linear",      ( [ "fs_used(%)" ],     100.0, None)),
-  ("logarithmic", ( "fs_provisioning(%)", 100.0, 1.2)),
-]))
-
-# and without
-perfometer_info.append(("linear",      ( [ "fs_used(%)" ],                                              100.0,       None)))
 
 perfometer_info.append(("linear",      ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None,
 ("mem_total,mem_used,+,swap_used,/", "ratio"))))
@@ -911,11 +1015,81 @@ perfometer_info.append(("dual", [
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
+
+graph_info.append({
+    "metrics" : [
+        ( "execution_time", "area" )
+    ]
+})
+
+graph_info.append({
+    "title" : _("Used CPU Time"),
+    "metrics" : [
+        ( "user_time",            "area" ),
+        ( "children_user_time",   "stack" ),
+        ( "system_time",          "stack" ),
+        ( "children_system_time", "stack" ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "uptime", "area" ),
+    ]
+})
+
+graph_info.append({
+    "title"   : _("CPU Load - %(load1:max@count) CPU Cores"),
+    "metrics" : [
+        ( "load1", "area" ),
+        ( "load15", "line" ),
+    ],
+    "scalars" : [
+        "load1:warn",
+        "load1:crit",
+    ]
+})
+
+
 graph_info.append({
     "metrics" : [
         ( "fs_used", "area" ),
-    ]
+        ( "fs_size,fs_used,-#e3fff9", "stack", _("Free space") ),
+        ( "fs_size", "line" ),
+    ],
+    "scalars" : [
+        "fs_used:warn",
+        "fs_used:crit",
+    ],
+    "range" : (0, "fs_used:max"),
 })
+
+
+graph_info.append({
+    "title" : _("Growing / Shrinking"),
+    "metrics" : [
+       ( "fs_growth.max,0,MAX",             "area",  _("Growth"), ),
+       ( "fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage") ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+       ( "fs_trend", "line" ),
+    ],
+    "range" : (0, 0),
+})
+
+graph_info.append({
+    "metrics" : [
+       ( "inodes_used", "area" ),
+    ],
+    "scalars" : [
+        "inodes_used:warn",
+        "inodes_used:crit",
+    ],
+})
+
 
 graph_info.append({
     "metrics" : [

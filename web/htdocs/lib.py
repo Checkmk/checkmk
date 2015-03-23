@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import grp, pprint, os, errno, gettext, marshal, re, fcntl, __builtin__, time
+import math, grp, pprint, os, errno, gettext, marshal, re, fcntl, __builtin__, time
 
 # Workarround when the file is included outsite multisite
 try:
@@ -474,6 +474,74 @@ def num_split(s):
         first_word = regex("[0-9]").split(s)[0]
         return ( first_word.lower(), ) + num_split(s[len(first_word):])
 
+def frexp10(x):
+    exp = int(math.log10(x))
+    mantissa = x / 10**exp
+    if mantissa < 1:
+        mantissa *= 10
+        exp -= 1
+    return mantissa, exp
+
+
+# Render a physical value witha precision of p
+# digits. Use K (kilo), M (mega), m (milli), µ (micro)
+# p is the number of non-zero digits - not the number of
+# decimal places.
+# Examples for p = 3:
+# a: 0.0002234   b: 4,500,000  c: 137.56
+# Result:
+# a: 223 µ       b: 4.50 M     c: 138
+
+# Note if the type of v is integer, then the precision cut
+# down to the precision of the actual number
+def physical_precision(v, precision, unit_symbol):
+    if v == 0:
+        return "%%.%df" % (precision - 1) % v
+    elif v < 0:
+        return "-" + physical_precision(-v, precision, unit_symbol)
+
+    # Splitup in mantissa (digits) an exponent to the power of 10
+    # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
+    mantissa, exponent = frexp10(float(v))
+
+    if type(v) == int:
+        precision = min(precision, exponent + 1)
+
+    # Round the mantissa to the required number of digits
+    # -> a: 2.23              b: 4.5         c: 1.38
+    mant_rounded = round(mantissa, precision-1) * 10**exponent
+
+    # Choose a power where no artifical zero (due to rounding) needs to be
+    # placed left of the decimal point.
+    scale_symbols = {
+        -4 : "p",
+        -3 : "n",
+        -2 : u"µ",
+        -1 : "m",
+        0 : "",
+        1 : "K",
+        2 : "M",
+        3 : "G",
+        4 : "T",
+        5 : "P",
+    }
+    scale = 0
+
+    while exponent < 0:
+        scale -= 1
+        exponent += 3
+
+    # scale, exponent = divmod(exponent, 3)
+    places_before_comma = exponent + 1
+    places_after_comma = precision - places_before_comma
+    while places_after_comma < 0:
+        scale += 1
+        exponent -= 3
+        places_before_comma = exponent + 1
+        places_after_comma = precision - places_before_comma
+    value = mantissa * 10**exponent
+    return u"%%.%df %%s%%s" % places_after_comma % (value, scale_symbols[scale], unit_symbol)
+
 
 def number_human_readable(n, precision=1, unit="B"):
     base = 1024.0
@@ -498,7 +566,7 @@ def age_human_readable(secs, min_only=False):
     elif secs > 0 and secs < 0.0001: # us
         return "%.1f us" % (secs * 1000000)
     elif secs > 0 and secs < 1: # ms
-        return "%.2f ms" % (secs * 1000)
+        return physical_precision(secs, 3, _("s"))
     elif min_only:
         mins = secs / 60.0
         return "%.1f %s" % (mins, _("min"))

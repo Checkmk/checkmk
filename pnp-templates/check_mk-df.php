@@ -190,9 +190,9 @@ if (isset($RRD['inodes_used'])) {
     $def[5] .= "GPRINT:inodes_used:MAX:\"Max\: %2.0lf\" ";
     $def[5] .= "GPRINT:inodes_used:AVERAGE:\"Average\: %2.0lf\\n\" ";
     $def[5] .= "HRULE:$MAX[inodes_used]#000000:\"Total Inodes \" ";
-    if (isset($WARN['inodes_used'])) {
-        $def[5] .= "HRULE:$WARN[inodes_used]#ffff00:\"Warning at $WARN[inodes_used] \" ";
-        $def[5] .= "HRULE:$CRIT[inodes_used]#ff0000:\"Critical at $CRIT[inodes_used]\\n\" ";
+    if (isset($WARN['inodes_used']) && $WARN['inodes_used']) {
+         $def[5] .= "HRULE:$WARN[inodes_used]#ffff00:\"Warning at $WARN[inodes_used] \" ";
+         $def[5] .= "HRULE:$CRIT[inodes_used]#ff0000:\"Critical at $CRIT[inodes_used]\\n\" ";
     }
 }
 

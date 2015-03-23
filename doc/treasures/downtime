@@ -196,7 +196,7 @@ if arg_services:
         if opt_mode == "remove":
             set_downtime(variables, [("service_regex", service + "$")])
         else:
-            set_downtime(variables, [("service", service)])
+            set_downtime(variables, [("service_regex", service + "$")])
 else:
     set_downtime(variables, [])
     if opt_all:

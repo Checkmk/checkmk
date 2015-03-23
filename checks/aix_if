@@ -86,29 +86,30 @@ def parse_aix_if(info):
             # speed is in Mb/s
             nic_info[nic]["ifSpeed"] = int(line[3]) * 1000000
         elif  " ".join(line[0:2]) == "Driver Flags:":
-            flags = line[2:]
+            nic_info[nic]["flags"] = line[2:]
         elif len(line) and ":" not in " ".join(line) and len(flags):
-            flags += line
+            nic_info[nic]["flags"] += line
 
-    if "Up" in flags:
-        nic_info[nic]["ifOperStatus"] = 1
-    elif "Down" in flags:
-        nic_info[nic]["ifOperStatus"] = 2
-    # No information from entstat. We consider interfaces up
-    # if they have been used at least some time since the
-    # system boot.
-    elif nic_info[nic]["ifInOctets"] > 0:
-         nic_info[nic]["ifOperStatus"] = 1
-    else:
-        # unknown, or never been up
-        nic_info[nic]["ifOperStatus"] = 4
-
-    nic_info[nic]["ifOutQLen"] = 0
-    nic_info[nic]["ifInDiscards"] = 0
-    nic_info[nic]["ifOutDiscards"] = 0
 
     if_table = []
     for nic in nic_info:
+        if "Up" in nic_info[nic]["flags"]:
+            nic_info[nic]["ifOperStatus"] = 1
+        elif "Down" in nic_info[nic]["flags"]:
+            nic_info[nic]["ifOperStatus"] = 2
+        # No information from entstat. We consider interfaces up
+        # if they have been used at least some time since the
+        # system boot.
+        elif nic_info[nic]["ifInOctets"] > 0:
+             nic_info[nic]["ifOperStatus"] = 1
+        else:
+            # unknown, or never been up
+            nic_info[nic]["ifOperStatus"] = 4
+
+        nic_info[nic]["ifOutQLen"] = 0
+        nic_info[nic]["ifInDiscards"] = 0
+        nic_info[nic]["ifOutDiscards"] = 0
+
         nic_list = []
         for attr in [ "ifIndex", "ifDescr", "ifType", "ifSpeed", "ifOperStatus",
           "ifInOctets", "inucast", "inmcast", "inbcast", "ifInDiscards",

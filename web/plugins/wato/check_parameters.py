@@ -8611,7 +8611,38 @@ register_check_parameters(
         ],
         help = _("This rule is used to configure thresholds for duration values read from "
                  "Siemens PLC  devices."),
-        title = _("Expected flag state"),
+        title = _("Duration levels"),
+    ),
+    TextAscii(
+        title = _("Device Name and Value Ident"),
+        help = _("You need to concatenate the device name which is configured in the special agent "
+                 "for the PLC device separated by a space with the ident of the value which is also "
+                 "configured in the special agent."),
+    ),
+    None
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "siemens_plc_counter",
+    _("Siemens PLC Counter"),
+    Dictionary(
+        elements = [
+            ('levels', Tuple(
+                title = _("Counter level"),
+                elements = [
+                    Integer(
+                        title = _("Warning at"),
+                    ),
+                    Integer(
+                        title = _("Critical at"),
+                    ),
+                ]
+            )),
+        ],
+        help = _("This rule is used to configure thresholds for counter values read from "
+                 "Siemens PLC devices."),
+        title = _("Counter levels"),
     ),
     TextAscii(
         title = _("Device Name and Value Ident"),

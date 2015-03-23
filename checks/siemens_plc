@@ -29,19 +29,19 @@
 # PFT01 flag Testbit True
 # PFT01 flag Testbit2 False
 # RGB01 temp Gesamt 123
-# RGB01 hours Fahren 56
-# RGB01 hours Hub 48
+# RGB01 seconds Fahren 56
+# RGB01 seconds Hub 48
+# RGB01 seconds LAM1 13
 # RGB01 temp Extern 18.7000007629
 # RGB01 temp RBG_SCH1 0.0
 # RGB01 temp RBG_SCH2 0.0
-# RGB01 None Fahren 31450
-# RGB01 None Hub 8100
-# RGB01 None LAM 5002
-# RGB01 hours LAM1 13
-# RGB01 None Lastzyklen 78
-# RGB01 None LAM1_Zyklen 115
-# RGB01 hours Service 109
-# RGB01 hours Serviceintervall 700
+# RGB01 counter Fahren 31450
+# RGB01 counter Hub 8100
+# RGB01 counter LAM 5002
+# RGB01 counter Lastzyklen 78
+# RGB01 counter LAM1_Zyklen 115
+# RGB01 seconds Service 109
+# RGB01 seconds Serviceintervall 700
 # RGB01 text Testtext HRL01-0001-0010-02-07
 
 #.
@@ -132,14 +132,17 @@ check_info['siemens_plc.flag'] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_siemens_plc_duration(info):
-    return [ (l[0]+" "+l[2], {}) for l in info if l[1].startswith("hours") ]
+    return [ (l[0]+" "+l[2], {}) for l in info if l[1].startswith("hours")
+                                               or l[1].startswith("seconds") ]
 
 
 def check_siemens_plc_duration(item, params, info):
     for line in info:
-        if line[1].startswith("hours") and line[0]+" "+line[2] == item:
+        if (line[1].startswith("hours") or line[1].startswith("seconds")) and line[0]+" "+line[2] == item:
             if line[1].startswith("hours"):
                 seconds = int(line[-1])*3600
+            else:
+                seconds = int(line[-1])
 
             key = 'siemens_plc.duration.%s' % item
             if key in g_counters and g_counters[key] < seconds:
@@ -163,6 +166,50 @@ check_info['siemens_plc.duration'] = {
     "service_description"     : "Duration %s",
     "has_perfdata"            : True,
     "group"                   : "siemens_plc_duration",
+}
+
+#.
+#   .--Counter-------------------------------------------------------------.
+#   |                  ____                  _                             |
+#   |                 / ___|___  _   _ _ __ | |_ ___ _ __                  |
+#   |                | |   / _ \| | | | '_ \| __/ _ \ '__|                 |
+#   |                | |__| (_) | |_| | | | | ||  __/ |                    |
+#   |                 \____\___/ \__,_|_| |_|\__\___|_|                    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_siemens_plc_counter(info):
+    return [ (l[0]+" "+l[2], {}) for l in info if l[1].startswith("counter") ]
+
+
+def check_siemens_plc_counter(item, params, info):
+    for line in info:
+        if line[1].startswith("counter") and line[0]+" "+line[2] == item:
+            value = int(line[-1])
+
+            key = 'siemens_plc.counter.%s' % item
+            if key in g_counters and g_counters[key] < value:
+                return 2, 'Reduced from %s to %s' % (g_counters[key], value)
+            g_counters[key] = value
+
+            state = 0
+            warn, crit = params.get('levels', (None, None))
+            if crit != None and value >= crit:
+                state = 2
+            elif warn != None and value >= warn:
+                state = 1
+
+            return state, '%d' % value, [(line[1], value)]
+
+
+check_info['siemens_plc.counter'] = {
+    "inventory_function"      : inventory_siemens_plc_counter,
+    "check_function"          : check_siemens_plc_counter,
+    "service_description"     : "Counter %s",
+    "has_perfdata"            : True,
+    "group"                   : "siemens_plc_counter",
 }
 
 #.

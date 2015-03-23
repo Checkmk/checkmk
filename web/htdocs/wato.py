@@ -10325,7 +10325,7 @@ def mode_edit_site(phase):
 
     # ValueSpecs for the more complex input fields
     vs_conn_method = CascadingDropdown(
-        html_separator = " ",
+        orientation = "horizontal",
         choices = conn_choices,
     )
 
@@ -17211,7 +17211,7 @@ def mode_bi_edit_rule(phase):
             title = _("Aggregation Function"),
             help = _("The aggregation function decides how the status of a node "
                      "is constructed from the states of the child nodes."),
-            html_separator = "",
+            orientation = "horizontal",
             choices = aggregation_choices,
           )
         ),

@@ -1286,8 +1286,8 @@ class CascadingDropdown(ValueSpec):
             self._choices = kwargs["choices"] # function, store for later
 
         self._separator = kwargs.get("separator", ", ")
-        self._html_separator = kwargs.get("html_separator", "<br>")
         self._sorted = kwargs.get("sorted", True)
+        self._orientation = kwargs.get("orientation", "vertical") # or horizontal
 
     def normalize_choices(self, choices):
         new_choices = []
@@ -1348,7 +1348,10 @@ class CascadingDropdown(ValueSpec):
         # 2. Form already submitted -> honor URL variable vp for visibility
         cur_val = html.var(vp)
 
-        html.write(self._html_separator)
+        if self._orientation == "vertical":
+            html.write("<br>")
+        else:
+            html.write("&nbsp;")
         for nr, (val, title, vs) in enumerate(choices):
             if vs:
                 vp = varprefix + "_%d" % nr

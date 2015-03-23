@@ -43,7 +43,10 @@ def check_db2_sort_overflow(item, params, parsed):
         return
 
     total, overflows = tuple(map(lambda x: float(x[-1]), db))
-    overflow_perc = overflows * 100 / total
+    if total > 0:
+        overflow_perc = overflows * 100 / total
+    else:
+        overflow_perc = 0.0
     warn, crit = params.get("levels_perc")
     if overflow_perc >= crit:
         yield 2, "%.1f%% sort overflow (leves at %.1f%%/%.1f%%)" % \

@@ -609,10 +609,6 @@ table.validationerror img {
     text-shadow: 0px 1px 0px #fff;
 }
 
-.wato table.data.ruleset td.condition {
-    width: 360px;
-}
-
 /* Special styling for Timeperiods editor */
 .wato table.timeperiod td.name {
     width: 195px;

@@ -50,9 +50,15 @@ def parse_aix_sap_processlist(info):
             instance = line[0][1:-1]
         elif instance and line[0].startswith("FAIL:"):
             instance = None
-        elif instance and len(line) >= 7 and line[-1] != " pid":
+        elif instance and len(line) == 7 and line[-1] != " pid":
+            description, status, textstatus, start = map(lambda x: re.sub("^ ","",x), line[1:5])
+            start_time = time.strptime(start, "%Y %m %d %H:%M:%S")
+            new_info.append([instance, description, status, textstatus, start_time])
+        elif instance and len(line) == 9:
             description, status, textstatus = map(lambda x: re.sub("^ ","",x), line[1:4])
-            new_info.append([instance, description, status, textstatus])
+            start = re.sub("^ ","",line[6])
+            start_time = time.strptime(start, "%Y %m %d %H:%M:%S")
+            new_info.append([instance, description, status, textstatus, start_time])
     return new_info
 
 def inventory_aix_sap_processlist(info):
@@ -61,16 +67,20 @@ def inventory_aix_sap_processlist(info):
         yield item, None
 
 def check_aix_sap_processlist(item, _no_params, info):
+    now = time.time()
     for line in info:
         if item == "%s on Instance %s" % (line[1], line[0]):
-            infotext = line[3]
+            start =  time.strftime("%c", line[4])
+            elapsed = now - time.mktime(line[4])
+            infotext = "%s, Start Time: %s, Elapsed Time: %s" % (line[3], start, get_age_human_readable(elapsed))
+            perfdata = [ ("runtime", elapsed) ]
             if line[2] == "GREEN":
                 state = 0
             elif line[2] == "YELLOW":
                 state = 1
             else:
                 state = 2
-            return state, infotext
+            return state, infotext, perfdata
 
 
 check_info["aix_sap_processlist"] = {
@@ -78,4 +88,5 @@ check_info["aix_sap_processlist"] = {
     'check_function'         : check_aix_sap_processlist,
     'parse_function'         : parse_aix_sap_processlist,
     'service_description'    : 'SAP Process %s',
+    'has_perfdata'           : True,
 }

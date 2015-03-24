@@ -191,6 +191,12 @@ metric_info["uptime"] = {
     "color" : "#80f000",
 }
 
+metric_info["runtime"] = {
+    "title" : _("Process Runtime"),
+    "unit"  : "s",
+    "color" : "#80f000",
+}
+
 metric_info["hit_ratio"] = {
     "title" : _("Cache hit ratio"),
     "unit"  : "ratio",
@@ -710,6 +716,7 @@ check_metrics["check_mk-blade_bx_load"]                         = {}
 check_metrics["check_mk-cpu.threads"]                           = {}
 
 check_metrics["check_mk-mem.linux"]                             = {}
+check_metrics["check_mk-aix_sap_processlist"]                   = {}
 check_metrics["check_mk-aix_memory"]                            = { "ramused" : { "name" : "mem_used", "scale": MB }, "swapused" : { "name" : "swap_used", "scale": MB }}
 check_metrics["check_mk-mem.win"]                               = { "memory" : { "name" : "mem_used", "scale" : MB }, "pagefile" : { "name" : "pagefile_used", "scale" : MB }}
 
@@ -880,6 +887,13 @@ perfometer_info.append({
     "exponent"   : 2,
 })
 
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "runtime",
+    "half_value" : 864000.0,
+    "exponent"   : 2,
+})
+
 perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
 perfometer_info.append(("linear",       ( ["execution_time"], 90.0, None)))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
@@ -1035,6 +1049,13 @@ graph_info.append({
 graph_info.append({
     "metrics" : [
         ( "uptime", "area" ),
+    ]
+})
+
+graph_info.append({
+    "title"   : _("Process Runtime"),
+    "metrics" : [
+        ( "runtime", "area" ),
     ]
 })
 

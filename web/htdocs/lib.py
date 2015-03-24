@@ -481,11 +481,8 @@ def num_split(s):
     #     exp -= 1
     # return mantissa, exp
 
-def logb(x, base):
-    return math.log(x) / math.log(base)
-
 def frexpb(x, base):
-    exp = int(logb(x, base))
+    exp = int(math.log(x, base))
     mantissa = x / base**exp
     if mantissa < 1:
         mantissa *= base
@@ -576,6 +573,17 @@ def number_human_readable(n, precision=1, unit="B"):
         return (f + "k%s") % (n / base, unit)
     else:
         return (f + "%s") % (n, unit)
+
+
+def percent_human_redable(perc, precision=2, drop_zeroes=True):
+    if perc > 0:
+        perc_precision = max(1, 2 - int(round(math.log(perc, 10))))
+    else:
+        perc_precision = 1
+    text = "%%.%df" % perc_precision % perc
+    if drop_zeroes:
+        text = text.rstrip("0").rstrip(".")
+    return text + "%"
 
 
 def age_human_readable(secs, min_only=False):

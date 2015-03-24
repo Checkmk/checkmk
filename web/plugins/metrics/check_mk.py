@@ -55,7 +55,7 @@ unit_info["count"] = {
 unit_info["%"] = {
     "title"  : _("%"),
     "symbol" : _("%"),
-    "render" : lambda v: "%s%%" % drop_dotzero(v),
+    "render" : lambda v: percent_human_redable(v, 3),
 }
 
 # Similar as %, but value ranges from 0.0 ... 1.0
@@ -63,7 +63,7 @@ unit_info["ratio"] = {
     "title"  : _("%"),
     "symbol" : _("%"),
     "render_scale" : 100.0, # Scale by this before rendering if "render" not being used
-    "render" : lambda v: "%s%%" % drop_dotzero(100.0 * v),
+    "render" : lambda v: percent_human_redable(v, 3),
 }
 
 unit_info["s"] = {

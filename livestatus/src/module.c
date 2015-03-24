@@ -729,10 +729,8 @@ void livestatus_parse_arguments(const char *args_orig)
             }
             else if (!strcmp(left, "pnp_path")) {
                 g_pnp_path = strndup(right, 4096);
-                logger(LOG_WARNING, "%s", g_pnp_path);
                 if (right[strlen(right) - 1] != '/')
                     strncat(g_pnp_path, "/",  sizeof(&g_pnp_path) - strlen(g_pnp_path) - 1 ); // make sure, that trailing slash is always there
-                logger(LOG_WARNING, "%s", g_pnp_path);
                 check_path("PNP perfdata directory", g_pnp_path);
             }
             else if (!strcmp(left, "mk_inventory_path")) {

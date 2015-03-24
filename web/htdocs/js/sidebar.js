@@ -22,10 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-var browser         = navigator.userAgent.toLowerCase();
-var weAreIEF__k     = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") == -1));
-var weAreOpera      = browser.indexOf("opera") != -1;
-var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
 var g_content_loc   = null;
 
 var sidebar_folded = false;
@@ -51,7 +47,8 @@ if (window.addEventListener) {
     window.addEventListener('DOMMouseScroll', scrollWheel,     false);
   else
     window.addEventListener('mousewheel',     scrollWheel,     false);
-} else {
+}
+else {
   document.documentElement.onmousemove  = function(e) {
     // snapin drag 'n drop
     snapinDrag(e);

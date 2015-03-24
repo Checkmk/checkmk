@@ -22,9 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// ----------------------------------------------------------------------------
-// general function
-// ----------------------------------------------------------------------------
+//  .--General-------------------------------------------------------------.
+//  |                   ____                           _                   |
+//  |                  / ___| ___ _ __   ___ _ __ __ _| |                  |
+//  |                 | |  _ / _ \ '_ \ / _ \ '__/ _` | |                  |
+//  |                 | |_| |  __/ | | |  __/ | | (_| | |                  |
+//  |                  \____|\___|_| |_|\___|_|  \__,_|_|                  |
+//  |                                                                      |
+//  +----------------------------------------------------------------------+
+//  |  General functions used in many places                               |
+//  '----------------------------------------------------------------------'
+
+var browser         = navigator.userAgent.toLowerCase();
+var weAreOpera      = browser.indexOf("opera") != -1;
+var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
+
+
 
 // Make JS understand Python source code
 var True = true;

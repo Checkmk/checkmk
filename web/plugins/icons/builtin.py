@@ -195,7 +195,7 @@ def pnp_icon(row, what):
         url = ""
 
     import metrics
-    if not hasattr(metrics, 'render_graph_html'):
+    if not hasattr(metrics, 'render_graph_html') or what == 'host':
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
         # to keep the number of single requests low
         hover_content_func = 'pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)

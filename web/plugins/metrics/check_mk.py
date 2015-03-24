@@ -51,18 +51,6 @@ unit_info["count"] = {
     "render" : lambda v: "%d" % v,
 }
 
-unit_info["sessions"] = {
-    "title"  : _("Sessions"),
-    "symbol" : "",
-    "render" : lambda v: "%d" % v,
-}
-
-unit_info["locks"] = {
-    "title"  : _("Locks"),
-    "symbol" : "",
-    "render" : lambda v: "%d" % v,
-}
-
 # value ranges from 0.0 ... 100.0
 unit_info["%"] = {
     "title"  : _("%"),
@@ -79,9 +67,10 @@ unit_info["ratio"] = {
 }
 
 unit_info["s"] = {
-    "title" : _("sec"),
-    "symbol" : _("s"),
-    "render" : age_human_readable,
+    "title"    : _("sec"),
+    "symbol"   : _("s"),
+    "render"   : age_human_readable,
+    "stepping" : "time", # for vertical graph labels
 }
 
 unit_info["1/s"] = {
@@ -91,22 +80,25 @@ unit_info["1/s"] = {
 }
 
 unit_info["bytes"] = {
-    "title"  : _("Bytes"),
-    "symbol" : _("B"),
-    "render" : bytes_human_readable,
+    "title"    : _("Bytes"),
+    "symbol"   : _("B"),
+    "render"   : bytes_human_readable,
+    "stepping" : "binary", # for vertical graph labels
 }
 
 unit_info["bytes/s"] = {
-    "title"  : _("Bytes per second"),
-    "symbol" : _("B/s"),
-    "render" : lambda v: bytes_human_readable(v) + _("/s"),
+    "title"    : _("Bytes per second"),
+    "symbol"   : _("B/s"),
+    "render"   : lambda v: bytes_human_readable(v) + _("/s"),
+    "stepping" : "binary", # for vertical graph labels
 }
 
 # Output in bytes/days, value is in bytes/s
 unit_info["bytes/d"] = {
-    "title"  : _("Bytes per day"),
-    "symbol" : _("B/d"),
-    "render" : lambda v: bytes_human_readable(v * 86400.0) + _("/d"),
+    "title"    : _("Bytes per day"),
+    "symbol"   : _("B/d"),
+    "render"   : lambda v: bytes_human_readable(v * 86400.0) + _("/d"),
+    "stepping" : "binary", # for vertical graph labels
 }
 
 unit_info["c"] = {
@@ -156,7 +148,6 @@ unit_info["db"] = {
     "symbol" : _("dB"),
     "render" : lambda v: physical_precision(v, 3, _("dB")),
 }
-
 
 
 #.
@@ -474,26 +465,26 @@ metric_info["codewords_uncorrectable"] = {
 }
 
 metric_info["total_sessions"] = {
-    "title" : _("Total"),
-    "unit"  : "sessions",
+    "title" : _("Total sessions"),
+    "unit"  : "count",
     "color" : "#94b65a",
 }
 
 metric_info["running_sessions"] = {
-    "title" : _("Running"),
-    "unit"  : "sessions",
+    "title" : _("Running sessions"),
+    "unit"  : "count",
     "color" : "#999b94",
 }
 
 metric_info["shared_locks"] = {
-    "title" : _("Shared"),
-    "unit"  : "locks",
+    "title" : _("Shared locks"),
+    "unit"  : "count",
     "color" : "#92ec89",
 }
 
 metric_info["exclusive_locks"] = {
-    "title" : _("Exclusive"),
-    "unit"  : "locks",
+    "title" : _("Exclusive locks"),
+    "unit"  : "count",
     "color" : "#ca5706",
 }
 

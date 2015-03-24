@@ -871,6 +871,9 @@ def register_user_attribute_sync_plugins():
         }
 
 def ldap_convert_groups_to_contactgroups(plugin, params, user_id, ldap_user, user):
+    # 0. Figure out how to check group membership.
+    user_cmp_val = ldap_member_attr().lower() == 'memberuid' and user_id or ldap_user['dn']
+
     # 1. Fetch all existing group names in WATO
     cg_names = load_group_information().get("contact", {}).keys()
 
@@ -879,7 +882,7 @@ def ldap_convert_groups_to_contactgroups(plugin, params, user_id, ldap_user, use
     ldap_groups = ldap_group_members(cg_names, nested = params.get('nested', False))
 
     # 3. Only add groups which the user is member of
-    return {'contactgroups': [ g['cn'] for dn, g in ldap_groups.items() if ldap_user['dn'] in g['members']]}
+    return {'contactgroups': [ g['cn'] for dn, g in ldap_groups.items() if user_cmp_val in g['members']]}
 
 ldap_attribute_plugins['groups_to_contactgroups'] = {
     'title': _('Contactgroup Membership'),
@@ -907,6 +910,11 @@ def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     ldap_groups = dict(ldap_group_members([ dn.lower() for role_id, dn in params.items() if isinstance(dn, str) ],
                                      filt_attr = 'distinguishedname', nested = params.get('nested', False)))
 
+    # posixGroup objects use the memberUid attribute to specify the group
+    # memberships. This is the username instead of the users DN. So the
+    # username needs to be used for filtering here.
+    user_cmp_val = ldap_member_attr().lower() == 'memberuid' and user_id or ldap_user['dn']
+
     roles = set([])
 
     # Loop all roles mentioned in params (configured to be synchronized)
@@ -916,7 +924,7 @@ def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
         dn = dn.lower() # lower case matching for DNs!
 
         # if group could be found and user is a member, add the role
-        if dn in ldap_groups and ldap_user['dn'] in ldap_groups[dn]['members']:
+        if dn in ldap_groups and user_cmp_val in ldap_groups[dn]['members']:
             roles.add(role_id)
 
     # Load default roles from default user profile when the user got no role

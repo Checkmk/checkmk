@@ -1,0 +1,10 @@
+Title: LDAP: Fixed group-to-role/group-to-contactgroup sync with OpenLDAP (using posixGroup)
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6p1
+Date: 1427202535
+
+

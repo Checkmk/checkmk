@@ -34,6 +34,7 @@
     * 2092 FIX: Dashboards: Possible to configure an empty custom title
     * 2145 FIX: LDAP-Sync: Handling user ids with special characters more user friendly...
     * 1953 FIX: Fixed processing of html processing in input fields...
+    * 2157 FIX: LDAP: Fixed group-to-role/group-to-contactgroup sync with OpenLDAP (using posixGroup)
 
     WATO:
     * 2045 FIX: Avoid fetching SNMP data when showing service list in WATO - unless Full Scan is pressed

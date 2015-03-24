@@ -597,7 +597,7 @@ table.graph tr > td.legend > table th.scalar {
     color: black;
     text-align: right;
     padding-bottom: 3px;
-    border-bottom: 0.6px solid #000;
+    border-bottom: 1px solid #000;
     color: #888;
     font-weight: bold;
 }
@@ -611,7 +611,7 @@ table.graph tr > td.legend > table td.scalar {
 }
 
 table.graph tr > td.legend > table > tbody > tr.scalar.first {
-    border-top: 0.6px solid #000;
+    border-top: 1px solid #000;
 }
 
 table.graph tr > td.legend > table > tbody > tr.scalar.first td {

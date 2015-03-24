@@ -1097,7 +1097,7 @@ graph_info.append({
         ( "user,system,io_wait,+,+#004080", "line", _("Total") ),
     ],
     "mirror_legend" : True,
-    # "range" : (0, 100),
+    "range" : (0, 100),
 })
 
 graph_info.append({

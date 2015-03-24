@@ -94,7 +94,11 @@ scalar_colors = {
 
 # Convert perf_data_string into perf_data, extract check_command
 def parse_perf_data(perf_data_string, check_command=None):
+    if not perf_data_string:
+        return {}, check_command
+
     parts = perf_data_string.split()
+
     # Try if check command is appended to performance data
     # in a PNP like style
     if parts[-1].startswith("[") and parts[-1].endswith("]"):
@@ -312,7 +316,7 @@ def evaluate_rpn(expression, translated_metrics):
 def evaluate_literal(expression, translated_metrics):
 
     if type(expression) == int:
-        return expression, unit_info["count"], None
+        return float(expression), unit_info["count"], None
 
     elif type(expression) == float:
         return expression, unit_info[""], None

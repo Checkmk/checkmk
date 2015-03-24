@@ -529,32 +529,35 @@ def physical_precision(v, precision, unit_symbol):
     # Choose a power where no artifical zero (due to rounding) needs to be
     # placed left of the decimal point.
     scale_symbols = {
+        -5 : "f",
         -4 : "p",
         -3 : "n",
         -2 : u"µ",
         -1 : "m",
-        0 : "",
-        1 : "K",
-        2 : "M",
-        3 : "G",
-        4 : "T",
-        5 : "P",
+         0 : "",
+         1 : "K",
+         2 : "M",
+         3 : "G",
+         4 : "T",
+         5 : "P",
     }
     scale = 0
 
-    while exponent < 0:
+    while exponent < 0 and scale > -5:
         scale -= 1
         exponent += 3
 
     # scale, exponent = divmod(exponent, 3)
     places_before_comma = exponent + 1
     places_after_comma = precision - places_before_comma
-    while places_after_comma < 0:
+    while places_after_comma < 0 and scale < 5:
         scale += 1
         exponent -= 3
         places_before_comma = exponent + 1
         places_after_comma = precision - places_before_comma
+
     value = mantissa * 10**exponent
+
     return u"%%.%df %%s%%s" % places_after_comma % (value, scale_symbols[scale], unit_symbol)
 
 
@@ -578,8 +581,6 @@ def number_human_readable(n, precision=1, unit="B"):
 def age_human_readable(secs, min_only=False):
     if secs < 0:
         return "- " + age_human_readable(-secs, min_only)
-    elif secs > 0 and secs < 0.0001: # us
-        return "%.1f us" % (secs * 1000000)
     elif secs > 0 and secs < 1: # ms
         return physical_precision(secs, 3, _("s"))
     elif min_only:
@@ -601,8 +602,16 @@ def age_human_readable(secs, min_only=False):
     if days < 6:
         d = ("%.1f" % days).rstrip("0").rstrip(".")
         return "%s %s" % (d, _("days"))
-    else:
+    elif days < 999:
         return "%.0f %s" % (days, _("days"))
+    else:
+        years = days / 365
+        if years < 10:
+            return "%.1f %s" % (years, _("years"))
+        else:
+            return "%.0f %s" % (years, _("years"))
+
+
 
 
 def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):

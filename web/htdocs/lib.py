@@ -474,13 +474,28 @@ def num_split(s):
         first_word = regex("[0-9]").split(s)[0]
         return ( first_word.lower(), ) + num_split(s[len(first_word):])
 
-def frexp10(x):
-    exp = int(math.log10(x))
-    mantissa = x / 10**exp
+    # exp = int(math.log10(x))
+    # mantissa = x / 10**exp
+    # if mantissa < 1:
+    #     mantissa *= 10
+    #     exp -= 1
+    # return mantissa, exp
+
+def logb(x, base):
+    return math.log(x) / math.log(base)
+
+def frexpb(x, base):
+    exp = int(logb(x, base))
+    mantissa = x / base**exp
     if mantissa < 1:
-        mantissa *= 10
+        mantissa *= base
         exp -= 1
     return mantissa, exp
+
+def frexp10(x):
+    return frexpb(x, 10)
+
+
 
 
 # Render a physical value witha precision of p
@@ -582,8 +597,12 @@ def age_human_readable(secs, min_only=False):
     hours = mins / 60
     if hours < 48:
         return "%d %s" % (hours, _("hours"))
-    days = hours / 24
-    return "%d %s" % (days, _("days"))
+    days = hours / 24.0
+    if days < 6:
+        d = ("%.1f" % days).rstrip("0").rstrip(".")
+        return "%s %s" % (d, _("days"))
+    else:
+        return "%.0f %s" % (days, _("days"))
 
 
 def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):

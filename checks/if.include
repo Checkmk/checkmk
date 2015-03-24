@@ -165,7 +165,13 @@ def if_get_traffic_levels(params):
 
 def get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed_speed_in, assumed_speed_out):
     traffic_levels = {}
-    for (traffic_dir, up_or_low), (level_type, (warn, crit)) in general_traffic_levels.items():
+    for (traffic_dir, up_or_low), (level_type, levels) in general_traffic_levels.items():
+        if type(levels) != tuple:
+            traffic_levels[(traffic_dir, 'predictive')] = levels
+            continue # don't convert predictive levels config
+        else:
+            warn, crit = levels
+
         for what, level_value in [('warn', warn), ('crit', crit)]:
             # If the measurement unit is set to bit and the bw levels
             # are of type absolute, convert these 'bit' entries to byte
@@ -656,7 +662,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
             if wrapped:
                 # If there is a threshold on the bandwidth, we cannot proceed
                 # further (the check would be flapping to green on a wrap)
-                if bw_crit != None:
+                if any(traffic_levels.values()):
                     raise MKCounterWrapped("Counter wrap, skipping checks this time")
                 perfdata = []
             else:
@@ -674,10 +680,15 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
 
                     infotext += ", %s: %s" % (what, format_value(traffic))
 
-                    bw_warn     = traffic_levels[(what, 'upper', 'warn')]
-                    bw_crit     = traffic_levels[(what, 'upper', 'crit')]
-                    bw_warn_min = traffic_levels[(what, 'lower', 'warn')]
-                    bw_crit_min = traffic_levels[(what, 'lower', 'crit')]
+                    if (what, 'predictive') in traffic_levels:
+                        params = traffic_levels[(what, 'predictive')]
+                        bw_warn, bw_crit = None, None
+                    else:
+                        bw_warn     = traffic_levels[(what, 'upper', 'warn')]
+                        bw_crit     = traffic_levels[(what, 'upper', 'crit')]
+                        bw_warn_min = traffic_levels[(what, 'lower', 'warn')]
+                        bw_crit_min = traffic_levels[(what, 'lower', 'crit')]
+                        params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
 
                     if speed:
                         perc_used = 100.0 * traffic / speed
@@ -691,22 +702,17 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                     if average:
                         traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic, average)
                         infotext += ", %dmin avg: %s" % (average, format_value(traffic_avg))
-                        perfdata.append( ("%s_avg_%d" % (what, average), traffic_avg, bw_warn, bw_crit, 0, speed) )
+                        dsname = "%s_avg_%d" % (what, average)
+                        perfdata.append((dsname, traffic_avg, bw_warn, bw_crit, 0, speed))
                         traffic = traffic_avg # apply levels to average traffic
+                    else:
+                        dsname = what
 
-                    # Check bandwidth thresholds
-                    if bw_crit != None and traffic >= bw_crit:
-                        state = 2
-                        infotext += ' (!!) >= ' + format_value(bw_crit)
-                    elif bw_warn != None and traffic >= bw_warn:
-                        state = max(state, 1)
-                        infotext += ' (!) >= ' + format_value(bw_warn)
-                    if bw_crit_min != None and traffic < bw_crit_min:
-                        state = 2
-                        infotext += ' (!!) < ' + format_value(bw_crit_min)
-                    elif bw_warn_min != None and traffic < bw_warn_min:
-                        state = max(state, 1)
-                        infotext += ' (!) >= ' + format_value(bw_warn_min)
+                    # Check bandwidth thresholds incl. prediction
+                    result = check_levels(traffic, dsname, params, statemarkers=True)
+                    state = max(state, result[0])
+                    infotext += result[1]
+                    perfdata += result[2]
 
                     # check percentage of error packets
                     pacrate = urate + nurate + errorrate

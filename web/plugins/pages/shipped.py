@@ -43,6 +43,7 @@ import notify
 import webapi
 import visuals
 import crashed_check
+import metrics
 
 # map URLs to page rendering functions
 
@@ -59,8 +60,10 @@ pagehandlers.update({
    "count_context_button"     : views.ajax_count_button,
    "export_views"             : views.ajax_export,
    "ajax_set_viewoption"      : views.ajax_set_viewoption,
-   "ajax_set_rowselection"    : weblib.ajax_set_rowselection,
    "view"                     : views.page_view,
+   "ajax_inv_render_tree"     : views.ajax_inv_render_tree,
+   "show_graph"               : metrics.page_show_graph,
+   "ajax_set_rowselection"    : weblib.ajax_set_rowselection,
    "prediction_graph"         : prediction.page_graph,
    "logwatch"                 : logwatch.page_show,
    "side"                     : sidebar.page_side,
@@ -99,7 +102,6 @@ pagehandlers.update({
 
    "ajax_userdb_sync"         : userdb.ajax_sync,
    "notify"                   : notify.page_notify,
-   "ajax_inv_render_tree"     : views.ajax_inv_render_tree,
 
    "webapi"                   : webapi.page_api,
 

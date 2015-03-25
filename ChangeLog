@@ -54,6 +54,7 @@
     HW/SW-Inventory:
     * 2147 FIX: Fixed exception in HW-/SW-Inventory GUI with special characters in inventorized data...
     * 2148 FIX: win_os: Fixed inventory of OS with older powershell versions
+    * 2108 FIX: win_bios win_disks win_system win_video: these inventory checks can now handle colons in the output
 
 
 1.2.6:

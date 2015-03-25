@@ -113,8 +113,8 @@ def check_netapp_api_disk_summary(_no_item, params, info):
         else:
             yield 0, "%s: %s" % (text, len(disks))
 
-    if params.get("broken_spare_ratio") and len(broken_disks):
-        warn, crit  = params["broken_spare_ratio"]
+    if broken_disks:
+        warn, crit  = params.get("broken_spare_ratio", (1.0, 50.0))
         ratio = float(len(broken_disks)) / (len(broken_disks) + spare_count) * 100
         state = 0
         if ratio >= crit:
@@ -122,7 +122,7 @@ def check_netapp_api_disk_summary(_no_item, params, info):
         elif ratio >= warn:
             state = 1
         if state:
-            yield state, "Too much broken disks (levels at %.1f%%/%.1f%%)" % (warn, crit)
+            yield state, "Too many broken disks (levels at %.1f%%/%.1f%%)" % (warn, crit)
 
 check_info["netapp_api_disk.summary"] = {
     'check_function'      : check_netapp_api_disk_summary,

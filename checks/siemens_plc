@@ -146,9 +146,11 @@ def check_siemens_plc_duration(item, params, info):
 
             key = 'siemens_plc.duration.%s' % item
             if key in g_counters and g_counters[key] < seconds:
+                g_counters[key] = seconds
                 return 2, 'Reduced from %s to %s' % (get_age_human_readable(g_counters[key]),
                                                      get_age_human_readable(seconds))
-            g_counters[key] = seconds
+            else:
+                g_counters[key] = seconds
 
             state = 0
             warn, crit = params.get('duration', (None, None))
@@ -191,8 +193,10 @@ def check_siemens_plc_counter(item, params, info):
 
             key = 'siemens_plc.counter.%s' % item
             if key in g_counters and g_counters[key] < value:
+                g_counters[key] = value
                 return 2, 'Reduced from %s to %s' % (g_counters[key], value)
-            g_counters[key] = value
+            else:
+                g_counters[key] = value
 
             state = 0
             warn, crit = params.get('levels', (None, None))

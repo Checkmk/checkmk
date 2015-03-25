@@ -1,0 +1,10 @@
+Title: win_bios win_disks win_system win_video: these inventory checks can now handle colons in the output
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427298555
+
+

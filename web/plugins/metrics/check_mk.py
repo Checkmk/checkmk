@@ -645,25 +645,25 @@ metric_info["execution_time"] = {
 }
 
 metric_info["user_time"] = {
-    "title" : _("CPU time spent in user space"),
+    "title" : _("CPU time in user space"),
     "unit"  : "s",
     "color" : "#60f020",
 }
 
 metric_info["system_time"] = {
-    "title" : _("CPU time spent in system space"),
+    "title" : _("CPU time in system space"),
     "unit"  : "s",
     "color" : "#ff6000",
 }
 
 metric_info["children_user_time"] = {
-    "title" : _("CPU time of childs in user space"),
+    "title" : _("Child time in user space"),
     "unit"  : "s",
     "color" : "#aef090",
 }
 
 metric_info["children_system_time"] = {
-    "title" : _("CPU time of childs in system space"),
+    "title" : _("Child time in system space"),
     "unit"  : "s",
     "color" : "#ffb080",
 }

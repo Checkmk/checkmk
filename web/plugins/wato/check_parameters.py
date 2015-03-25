@@ -5592,8 +5592,8 @@ register_check_parameters(
             Tuple(
                 title = _("Broken to spare ratio"),
                 elements = [
-                    Percentage(title = _("Warning at or above")),
-                    Percentage(title = _("Critical at or above")),
+                    Percentage(title = _("Warning at or above"), default_value = 1.0),
+                    Percentage(title = _("Critical at or above"), default_value = 50.0),
                 ]
             )),
         ],

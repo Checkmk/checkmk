@@ -2235,7 +2235,7 @@ class EventServer:
                 "priority"    : 0,
                 "text"        : line,
                 "host"        : "",
-                "ipaddress"   : address or "",
+                "ipaddress"   : address and address[0] or "",
                 "application" : "",
                 "pid"         : 0,
                 "time"        : time.time(),

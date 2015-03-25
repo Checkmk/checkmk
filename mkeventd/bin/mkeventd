@@ -2118,7 +2118,8 @@ class EventServer:
 
     def parse_event(self, line, address):
         event = {
-            "ipaddress"   : address or "",
+            # address is either None or a tuple of (ipaddress, port)
+            "ipaddress"   : address and address[0] or "",
         }
         try:
             # Variant 1: plain syslog message without priority/facility:

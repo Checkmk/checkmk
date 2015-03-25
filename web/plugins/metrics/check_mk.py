@@ -46,9 +46,10 @@ unit_info[""] = {
 }
 
 unit_info["count"] = {
-    "title"  : _("Count"),
-    "symbol" : "",
-    "render" : lambda v: "%d" % v,
+    "title"    : _("Count"),
+    "symbol"   : "",
+    "render"   : lambda v                               : "%d" % v,
+    "stepping" : "integer", # for vertical graph labels
 }
 
 # value ranges from 0.0 ... 100.0
@@ -91,6 +92,12 @@ unit_info["bytes/s"] = {
     "symbol"   : _("B/s"),
     "render"   : lambda v: bytes_human_readable(v) + _("/s"),
     "stepping" : "binary", # for vertical graph labels
+}
+
+unit_info["bits/s"] = {
+    "title"    : _("Bits per second"),
+    "symbol"   : _("bits/s"),
+    "render"   : lambda v: physical_precision(v, 3, _("bit/s")),
 }
 
 # Output in bytes/days, value is in bytes/s
@@ -668,7 +675,71 @@ metric_info["children_system_time"] = {
     "color" : "#ffb080",
 }
 
+metric_info["printer_queue"] = {
+    "title" : _("Printer queue length"),
+    "unit"  : "count",
+    "color" : "#a63df2",
+}
 
+metric_info["if_in_octets"] = {
+    "title" : _("Input Octets"),
+    "unit"  : "bytes/s",
+    "color" : "#00e060",
+}
+
+metric_info["if_out_octets"] = {
+    "title" : _("Output Octets"),
+    "unit"  : "bytes/s",
+    "color" : "#0080e0",
+}
+
+metric_info["if_in_discards"] = {
+    "title" : _("Input Discards"),
+    "unit"  : "1/s",
+    "color" : "#ff8000",
+}
+
+metric_info["if_in_errors"] = {
+    "title" : _("Input Errors"),
+    "unit"  : "1/s",
+    "color" : "#ff0000",
+}
+
+metric_info["if_out_discards"] = {
+    "title" : _("Output Dicards"),
+    "unit"  : "1/s",
+    "color" : "#ff8080",
+}
+
+metric_info["if_out_errors"] = {
+    "title" : _("Output Errors"),
+    "unit"  : "1/s",
+    "color" : "#ff0080",
+}
+
+metric_info["if_in_unicast"] = {
+    "title" : _("Input unicast packets"),
+    "unit"  : "1/s",
+    "color" : "#00ffc0",
+}
+
+metric_info["if_in_non_unicast"] = {
+    "title" : _("Input non-unicast packets"),
+    "unit"  : "1/s",
+    "color" : "#00c080",
+}
+
+metric_info["if_out_unicast"] = {
+    "title" : _("Output unicast packets"),
+    "unit"  : "1/s",
+    "color" : "#00c0ff",
+}
+
+metric_info["if_out_non_unicast"] = {
+    "title" : _("Output non-unicast packets"),
+    "unit"  : "1/s",
+    "color" : "#0080c0",
+}
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -728,6 +799,35 @@ check_metrics["check_mk-ibm_svc_mdiskgrp"]                      = df_translation
 check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = df_translation
 check_metrics["check_mk-fast_lta_volumes"]                      = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = df_translation
+
+# in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
+if_translation = {
+    "in"        : { "name": "if_in_octets" },
+    "out"       : { "name": "if_out_octets" },
+    "indisc"    : { "name": "if_in_discards" },
+    "inerr"     : { "name": "if_in_errors" },
+    "outdisc"   : { "name": "if_out_discards" },
+    "outerr"    : { "name": "if_out_errors" },
+    "inucast"   : { "name": "if_in_unicast" },
+    "innucast"  : { "name": "if_in_non_unicast" },
+    "outucast"  : { "name": "if_out_unicast" },
+    "outnucast" : { "name": "if_out_non_unicast" },
+}
+check_metrics["check_mk-esx_vsphere_counters"] = if_translation
+check_metrics["check_mk-fritz"]                = if_translation
+check_metrics["check_mk-hitachi_hnas_fc_if"]   = if_translation
+check_metrics["check_mk-if64"]                 = if_translation
+check_metrics["check_mk-if64_tplink"]          = if_translation
+check_metrics["check_mk-if_lancom"]            = if_translation
+check_metrics["check_mk-if"]                   = if_translation
+check_metrics["check_mk-lnx_if"]               = if_translation
+check_metrics["check_mk-mcdata_fcport"]        = if_translation
+check_metrics["check_mk-netapp_api_if"]        = if_translation
+check_metrics["check_mk-statgrab_net"]         = if_translation
+check_metrics["check_mk-ucs_bladecenter_if"]   = if_translation
+check_metrics["check_mk-vms_if"]               = if_translation
+check_metrics["check_mk-winperf_if"]           = if_translation
+
 
 check_metrics["check_mk-diskstat"]                              = {}
 
@@ -838,6 +938,8 @@ check_metrics["check_mk-db2_sort_overflow"]                     = {}
 check_metrics["check_mk-db2_tablespaces"]                       = {}
 check_metrics["check_mk-siemens_plc.temp"]                      = {}
 check_metrics["check_mk-siemens_plc.hours"]                     = {}
+
+check_metrics["check_mk-cups_queues"]                           = { "jobs" : { "name" : "printer_queue" } }
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -994,6 +1096,13 @@ perfometer_info.append(("dual", [
    ( "logarithmic", ( "disk_read_throughput", 5000000, 10)),
    ( "logarithmic", ( "disk_write_throughput", 5000000, 10)),
 ]))
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "printer_queue",
+    "half_value" : 10,
+    "exponent"   : 2,
+})
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -1212,6 +1321,10 @@ graph_info.append({
     "legend_scale" : MB,
 })
 
+# TODO: Warum ist hier überall line? Default ist Area.
+# Kann man die hit ratios nicht schön stacken? Ist 
+# nicht total die Summe der anderen?
+
 graph_info.append({
     "title" : _("Bufferpool Hitratios"),
     "metrics" : [
@@ -1222,6 +1335,8 @@ graph_info.append({
     ],
 })
 
+# TODO: Warum sind die in einem Graphen? Kann man
+# die irgendwie addieren?
 graph_info.append({
     "metrics" : [
         ( "deadlocks",  "line" ),
@@ -1231,14 +1346,67 @@ graph_info.append({
 
 graph_info.append({
     "metrics" : [
-        ( "sort_overflow",  "line" ),
+        ( "sort_overflow",  "area" ),
+    ],
+})
+
+# TODO: Warum auch hier line? Sollte mit
+# areas arbeiten. Habe das mal umgestellt, aber noch
+# nicht getestet.
+graph_info.append({
+    "metrics" : [
+        ( "tablespace_used",  "area" ),
+        ( "tablespace_size",  "area" ),
     ],
 })
 
 graph_info.append({
     "metrics" : [
-        ( "tablespace_size",  "line" ),
-        ( "tablespace_used",  "line" ),
+         ( "printer_queue", "area" )
+    ],
+    "range" : (0, 10),
+})
+
+# Networking
+
+graph_info.append({
+    "title" : _("Bandwidth"),
+    "metrics" : [
+        ( "if_in_octets,8,*@bits/s",   "area", _("Input bandwidth") ),
+        ( "if_out_octets,8,*@bits/s",  "-area", _("Output bandwidth") ),
     ],
 })
 
+# TODO: show this graph instead of Bandwidth if this is configured
+# in the check's parameters. But is this really a good solution?
+# We could use a condition on if_in_octets:min. But if this value
+# is missing then evaluating the condition will fail. Solution
+# could be using 0 for bits and 1 for octets and making sure that
+# this value is not used anywhere.
+# graph_info.append({
+#     "title" : _("Octets"),
+#     "metrics" : [
+#         ( "if_in_octets",      "area" ),
+#         ( "if_out_octets",     "-area" ),
+#     ],
+# })
+
+graph_info.append({
+    "title" : _("Packets"),
+    "metrics" : [
+        ( "if_in_unicast",      "area" ),
+        ( "if_in_non_unicast",  "stack" ),
+        ( "if_out_unicast",     "-area" ),
+        ( "if_out_non_unicast", "-stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Errors"),
+    "metrics" : [
+        ( "if_in_errors",    "area" ),
+        ( "if_in_discards",  "stack" ),
+        ( "if_out_errors",   "-area" ),
+        ( "if_out_discards", "-stack" ),
+    ],
+})

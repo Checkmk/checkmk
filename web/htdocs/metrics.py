@@ -229,9 +229,20 @@ def evaluate(expression, translated_metrics):
             expression, explicit_color = expression.rsplit("#", 1) # drop appended color information
         else:
             explicit_color = None
+
+        if "@" in expression:
+            expression, explicit_unit_name = expression.rsplit("@", 1) # appended unit name
+        else:
+            explicit_unit_name = None
+
         value, unit, color = evaluate_rpn(expression, translated_metrics)
+
         if explicit_color:
             color = "#" + explicit_color
+
+        if explicit_unit_name:
+            unit = unit_info[explicit_unit_name]
+
         return value, unit, color
 
 

@@ -508,7 +508,7 @@ def frexp10(x):
 # down to the precision of the actual number
 def physical_precision(v, precision, unit_symbol):
     if v == 0:
-        return "%%.%df" % (precision - 1) % v
+        return "%%.%df %%s" % (precision - 1) % (v, unit_symbol)
     elif v < 0:
         return "-" + physical_precision(-v, precision, unit_symbol)
 

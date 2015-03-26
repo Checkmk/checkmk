@@ -638,7 +638,8 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
     get_url(url, pnp_response_handler, data, pnp_error_response_handler, false);
 }
 
-function hover_graph(site, host_name, service) {
+function hover_graph(site, host_name, service)
+{
     var c = get_url_sync('show_graph.py?site='+encodeURIComponent(site)
                        +'&host_name='+encodeURIComponent(host_name)
                        +'&service='+encodeURIComponent(service));

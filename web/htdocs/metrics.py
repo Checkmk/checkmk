@@ -926,8 +926,6 @@ def mix_colors(a, b):
 #   |    |  _  | (_) \ V /  __/ | |_____| |_| | | | (_| | |_) | | | |      |
 #   |    |_| |_|\___/ \_/ \___|_|        \____|_|  \__,_| .__/|_| |_|      |
 #   |                                                   |_|                |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 def page_show_graph():
@@ -942,15 +940,17 @@ def page_show_graph():
             "Filter: host_name = %s\n" \
             "Filter: service_description = %s\n" \
             "Columns: perf_data check_command\n" % (host_name, service)
+
     html.live.set_only_sites([site])
     data = html.live.query_row(query)
     html.live.set_only_sites(None)
+
     row = {
-        'site': site, 
-        'host_name': host_name, 
-        'service_description': service,
-        'service_perf_data': data[0],
-        'service_check_command': data[1],
+        'site'                  : site,
+        'host_name'             : host_name,
+        'service_description'   : service,
+        'service_perf_data'     : data[0],
+        'service_check_command' : data[1],
     }
 
     # now try to render the graph with our graphing. If it is not possible,

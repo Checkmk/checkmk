@@ -657,6 +657,7 @@ table.graph td.legend div.color {
 table.graph td.legend div.entry {
     margin-right: 20px;
     margin-left: 5px;
+}
 
 div#hover_menu {
     position: absolute;

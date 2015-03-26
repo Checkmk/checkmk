@@ -90,7 +90,7 @@ def page_crashed_check():
     html.context_button(_("Submit Report"), mailto_url, "email")
     html.end_context_buttons()
 
-    output_box(_("Crash report"), trace.replace(" ", "&nbsp;"))
+    output_box(_("Crash report"), HTML(trace.replace(" ", "&nbsp;")))
 
     if agent_output:
         output_box(_("Agent output"), agent_output)

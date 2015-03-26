@@ -119,10 +119,13 @@ def check_printer_supply(item, params, info):
                     # no percentage possible. We compare directly against levels
                     return (0, "current level is %d" % current, [("pages", current)])
 
-            if upturn or (unit_type == 3 and maxlevel == 0):
-                leftperc = 100 - current
+            if maxlevel != 0:
+                leftperc = 100.0 * float(current) / maxlevel
             else:
-                leftperc = 100.0 * current / maxlevel
+                leftperc = float(current) # assume 100% as max
+
+            if upturn or (unit_type == 3 and maxlevel == 0):
+                leftperc = 100 - leftperc
 
             infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)
             if leftperc <= crit:

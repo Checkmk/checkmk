@@ -27,6 +27,7 @@
     * 1238 FIX: check_mk_agent.linux: Do not execute the multipath section if no /etc/multipath.conf exsist.
     * 1240 FIX: multipath: improved detection for not installed multipath
     * 2159 FIX: netapp_api_disk.summary: Changed default thresholds to WARN on the first broken disk, CRIT on 50%...
+    * 2161 FIX: heartbeat_crm: Fixed UnboundLocalError exception on some systems
 
     Multisite:
     * 1239 Fixed /treasures/downtime script to work with the new visuals

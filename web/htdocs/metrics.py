@@ -469,6 +469,14 @@ def graph_possible(graph_template, translated_metrics):
             evaluate(metric_definition[0], translated_metrics)
         except Exception, e:
             return False
+
+    # Allow graphs to be disabled if certain (better) metrics
+    # are available
+    if "not_if_have" in graph_template:
+        for var in graph_template["not_if_have"]:
+            if var in translated_metrics:
+                return False
+
     return True
 
 

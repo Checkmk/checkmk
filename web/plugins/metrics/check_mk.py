@@ -207,22 +207,46 @@ metric_info["database_size"] = {
     "color" : "#00868B",
 }
 
-metric_info["mem_used"] = {
-    "title" : _("Used RAM"),
-    "unit"  : "bytes",
-    "color" : "#80ff40",
+metric_info["mem_total"] = {
+    "title" : _("RAM installed"),
+    "color": "#f0f0f0", 
+    "unit" : "bytes",
 }
 
 metric_info["mem_free"] = {
     "title" : _("Free RAM"),
-    "unit"  : "bytes",
     "color" : "#ffffff",
+    "unit"  : "bytes",
+}
+
+metric_info["mem_used"] = {
+    "color": "#80ff40", 
+    "title" : _("RAM used"),
+    "unit" : "bytes",
+}
+
+metric_info["swap_total"] = {
+    "title" : _("Swap installed"),
+    "color": "#e0e0e0", 
+    "unit" : "bytes",
+}
+
+metric_info["swap_free"] = {
+    "title" : _("Free swap space"),
+    "unit"  : "bytes",
+    "color" : "#eeeeee",
 }
 
 metric_info["swap_used"] = {
-    "title" : _("Used swap space"),
-    "unit"  : "bytes",
-    "color" : "#008030",
+    "title" : _("Swap used"),
+    "color": "#408f20", 
+    "unit" : "bytes",
+}
+
+metric_info["swap_cached"] = {
+    "title" : _("Swap cached"),
+    "color": "#5bebc9", 
+    "unit" : "bytes",
 }
 
 metric_info["caches"] = {
@@ -231,11 +255,175 @@ metric_info["caches"] = {
     "color" : "#ffffff",
 }
 
-metric_info["swap_free"] = {
-    "title" : _("Free swap space"),
-    "unit"  : "bytes",
-    "color" : "#eeeeee",
+
+metric_info["mem_lnx_cached"] = {
+    "title" : _("File contents"),
+    "color": "#91cceb", 
+    "unit" : "bytes",
 }
+
+metric_info["mem_lnx_buffers"] = {
+    "title" : _("Filesystem structure"),
+    "color": "#5bb9eb", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_slab"] = {
+    "title" : _("Slab (Various smaller caches)"),
+    "color": "#af91eb", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_active_anon"] = {
+    "title" : _("Active   (anonymous)"),
+    "color": "#ff4040", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_active_file"] = {
+    "title" : _("Active   (files)"),
+    "color": "#ff8080", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_inactive_anon"] = {
+    "title" : _("Inactive (anonymous)"),
+    "color": "#377cab", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_inactive_file"] = {
+    "title" : _("Inactive (files)"),
+    "color": "#4eb0f2", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_active"] = {
+    "title" : _("Active"),
+    "color": "#ff4040", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_inactive"] = {
+    "title" : _("Inactive"),
+    "color": "#4040ff", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_dirty"] = {
+    "title" : _("Dirty disk blocks"),
+    "color": "#f2904e", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_writeback"] = {
+    "title" : _("Currently being written"),
+    "color": "#f2df40", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_nfs_unstable"] = {
+    "title" : _("Modified NFS data"),
+    "color": "#c6f24e", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_bounce"] = {
+    "title" : _("Bounce buffers"),
+    "color": "#4ef26c", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_writeback_tmp"] = {
+    "title" : _("Dirty FUSE data"),
+    "color": "#4eeaf2", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_total_total"] = {
+    "title" : _("Total virtual memory"),
+    "color": "#f0f0f0", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_committed_as"] = {
+    "title" : _("Committed memory"),
+    "color": "#40a080", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_commit_limit"] = {
+    "title" : _("Commit limit"),
+    "color": "#e0e0e0", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_shmem"] = {
+    "title" : _("Shared memory"),
+    "color": "#bf9111", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_kernel_stack"] = {
+    "title" : _("Kernel stack"),
+    "color": "#7192ad", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_page_tables"] = {
+    "title" : _("Page tables"),
+    "color": "#71ad9f", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_mlocked"] = {
+    "title" : _("Locked mmap() data"),
+    "color": "#a671ad", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_huge_pages_total"] = {
+    "title" : _("Total"),
+    "color": "#f0f0f0", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_huge_pages_free"] = {
+    "title" : _("Free"),
+    "color": "#f0a0f0", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_huge_pages_rsvd"] = {
+    "title" : _("Reserved part of Free"),
+    "color": "#40f0f0", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_huge_pages_surp"] = {
+    "title" : _("Surplus"),
+    "color": "#90f0b0", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_vmalloc_total"] = {
+    "title" : _("Total address space"),
+    "color": "#f0f0f0", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_vmalloc_used"] = {
+    "title" : _("Allocated space"),
+    "color": "#aaf76f", 
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_vmalloc_chunk"] = {
+    "title" : _("Largest free chunk"),
+    "color": "#c6f7e9", 
+    "unit" : "bytes",
+}
+
 
 metric_info["execution_time"] = {
     "title" : _("Execution time"),
@@ -259,6 +447,24 @@ metric_info["load15"] = {
     "title" : _("CPU load average of last 15 minutes"),
     "unit"  : "",
     "color" : "#2c5766",
+}
+
+metric_info["context_switches"] = {
+    "title" : _("Context switches"),
+    "unit"  : "1/s",
+    "color" : "#80ff20",
+}
+
+metric_info["major_page_faults"] = {
+    "title" : _("Major page faults"),
+    "unit"  : "1/s",
+    "color" : "#20ff80",
+}
+
+metric_info["process_creations"] = {
+    "title" : _("Process creations"),
+    "unit"  : "1/s",
+    "color" : "#ff8020",
 }
 
 metric_info["fs_used"] = {
@@ -303,24 +509,6 @@ metric_info["temp"] = {
     "title" : _("Temperature"),
     "unit"  : "c",
     "color" : "#f0a040"
-}
-
-metric_info["ctxt"] = {
-    "title" : _("Context switches"),
-    "unit"  : "1/s",
-    "color" : "#ddaa66",
-}
-
-metric_info["pgmajfault"] = {
-    "title" : _("Major page faults"),
-    "unit"  : "1/s",
-    "color" : "#ddaa22",
-}
-
-metric_info["proc_creat"] = {
-    "title" : _("Process creations"),
-    "unit"  : "1/s",
-    "color" : "#ddaa99",
 }
 
 metric_info["threads"] = {
@@ -775,12 +963,48 @@ check_metrics["check_mk-statgrab_load"]                         = {}
 check_metrics["check_mk-hpux_cpu"]                              = {}
 check_metrics["check_mk-blade_bx_load"]                         = {}
 
+check_metrics["check_mk-kernel"]                                = { 
+    "ctxt"       : { "name": "context_switches" },
+    "pgmajfault" : { "name": "major_page_faults" },
+    "processes"  : { "name": "process_creations" },
+}
+
 check_metrics["check_mk-cpu.threads"]                           = {}
 
-check_metrics["check_mk-mem.linux"]                             = {}
 check_metrics["check_mk-aix_sap_processlist"]                   = {}
 check_metrics["check_mk-aix_memory"]                            = { "ramused" : { "name" : "mem_used", "scale": MB }, "swapused" : { "name" : "swap_used", "scale": MB }}
 check_metrics["check_mk-mem.win"]                               = { "memory" : { "name" : "mem_used", "scale" : MB }, "pagefile" : { "name" : "pagefile_used", "scale" : MB }}
+
+check_metrics["check_mk-mem.linux"]                             = {
+    "cached"           : { "name" : "mem_lnx_cached", },
+    "buffers"          : { "name" : "mem_lnx_buffers", },
+    "slab"             : { "name" : "mem_lnx_slab", },
+    "active_anon"      : { "name" : "mem_lnx_active_anon", },
+    "active_file"      : { "name" : "mem_lnx_active_file", },
+    "inactive_anon"    : { "name" : "mem_lnx_inactive_anon", },
+    "inactive_file"    : { "name" : "mem_lnx_inactive_file", },
+    "active"           : { "name" : "mem_lnx_active", },
+    "inactive"         : { "name" : "mem_lnx_inactive", },
+    "dirty"            : { "name" : "mem_lnx_dirty", },
+    "writeback"        : { "name" : "mem_lnx_writeback", },
+    "nfs_unstable"     : { "name" : "mem_lnx_nfs_unstable", },
+    "bounce"           : { "name" : "mem_lnx_bounce", },
+    "writeback_tmp"    : { "name" : "mem_lnx_writeback_tmp", },
+    "total_total"      : { "name" : "mem_lnx_total_total", },
+    "committed_as"     : { "name" : "mem_lnx_committed_as", },
+    "commit_limit"     : { "name" : "mem_lnx_commit_limit", },
+    "shmem"            : { "name" : "mem_lnx_shmem", },
+    "kernel_stack"     : { "name" : "mem_lnx_kernel_stack", },
+    "page_tables"      : { "name" : "mem_lnx_page_tables", },
+    "mlocked"          : { "name" : "mem_lnx_mlocked", },
+    "huge_pages_total" : { "name" : "mem_lnx_huge_pages_total", },
+    "huge_pages_free"  : { "name" : "mem_lnx_huge_pages_free", },
+    "huge_pages_rsvd"  : { "name" : "mem_lnx_huge_pages_rsvd", },
+    "huge_pages_surp"  : { "name" : "mem_lnx_huge_pages_surp", },
+    "vmalloc_total"    : { "name" : "mem_lnx_vmalloc_total", },
+    "vmalloc_used"     : { "name" : "mem_lnx_vmalloc_used", },
+    "vmalloc_chunk"    : { "name" : "mem_lnx_vmalloc_chunk", },
+}
 
 df_translation = {
     0         : { "name"  : "fs_used", "scale" : MB },
@@ -891,8 +1115,6 @@ check_metrics["check_mk-ucs_bladecenter_fans.temp"]             = {}
 check_metrics["check_mk-ucs_bladecenter_psu.chassis_temp"]      = {}
 check_metrics["check_mk-mysql_capacity"]                        = {}
 
-check_metrics["check_mk-kernel"]                                = { "processes" : { "name" : "proc_creat", } }
-
 check_metrics["check_mk-hr_cpu"]                                = {}
 check_metrics["check_mk-kernel.util"]                           = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "name" : "io_wait" } }
@@ -991,9 +1213,9 @@ perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
 perfometer_info.append(("linear",       ( ["execution_time"], 90.0, None)))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "temp",         40.0, 1.2)))
-perfometer_info.append(("logarithmic",  ( "ctxt",       1000.0, 2.0)))
-perfometer_info.append(("logarithmic",  ( "pgmajfault", 1000.0, 2.0)))
-perfometer_info.append(("logarithmic",  ( "proc_creat", 1000.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "context_switches",       1000.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "major_page_faults", 1000.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "process_creations", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
 perfometer_info.append(("linear",       ( [ "user", "system", "io_wait" ],                               100.0,       None)))
 perfometer_info.append(("linear",       ( [ "util", ],                                                   100.0,       None)))
@@ -1149,6 +1371,24 @@ graph_info.append({
 graph_info.append({
     "metrics" : [
         ( "uptime", "area" ),
+    ]
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "context_switches", "area" ),
+    ]
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "major_page_faults", "area" ),
+    ]
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "process_creations", "area" ),
     ]
 })
 
@@ -1429,5 +1669,115 @@ graph_info.append({
         ( "if_in_discards",  "stack" ),
         ( "if_out_errors",   "-area" ),
         ( "if_out_discards", "-stack" ),
+    ],
+})
+
+# Linux memory graphs. They are a lot...
+
+graph_info.append({
+    "title" : _("RAM + Swap overview"),
+    "metrics" : [
+        ("mem_total", "area"),
+        ("swap_total", "stack"),
+        ("mem_used", "area"),
+        ("swap_used", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Swap"),
+    "metrics" : [
+        ("swap_total", "area"),
+        ("swap_used", "area"),
+        ("swap_cached", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Caches"),
+    "metrics" : [
+        ("mem_lnx_cached", "area"),
+        ("mem_lnx_buffers", "stack"),
+        ("swap_cached", "stack"),
+        ("mem_lnx_slab", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Active and Inactive Memory"),
+    "metrics" : [
+        ("mem_lnx_active_anon", "area"),
+        ("mem_lnx_active_file", "stack"),
+        ("mem_lnx_inactive_anon", "area"),
+        ("mem_lnx_inactive_file", "stack"),
+    ],
+})
+
+
+# TODO: Show this graph only, if the previous graph
+# is not possible. This cannot be done with a condition,
+# since we currently cannot state a condition on non-existing
+# metrics.
+graph_info.append({
+    "title" : _("Active and Inactive Memory"),
+    "metrics" : [
+        ("mem_lnx_active", "area"),
+        ("mem_lnx_inactive", "area"),
+    ],
+    "not_if_have" : [ "mem_lnx_active_anon" ],
+})
+
+graph_info.append({
+    "title" : _("Filesystem Writeback"),
+    "metrics" : [
+        ("mem_lnx_dirty", "area"),
+        ("mem_lnx_writeback", "stack"),
+        ("mem_lnx_nfs_unstable", "stack"),
+        ("mem_lnx_bounce", "stack"),
+        ("mem_lnx_writeback_tmp", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Memory committing"),
+    "metrics" : [
+        ("mem_lnx_total_total", "area"),
+        ("mem_lnx_committed_as", "area"),
+        ("mem_lnx_commit_limit", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Shared memory"),
+    "metrics" : [
+        ("mem_lnx_shmem", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Memory that cannot be swapped out"),
+    "metrics" : [
+        ("mem_lnx_kernel_stack", "area"),
+        ("mem_lnx_page_tables", "stack"),
+        ("mem_lnx_mlocked", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Huge Pages"),
+    "metrics" : [
+        ("mem_lnx_huge_pages_total", "area"),
+        ("mem_lnx_huge_pages_free", "area"),
+        ("mem_lnx_huge_pages_rsvd", "area"),
+        ("mem_lnx_huge_pages_surp", "line"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("VMalloc Address Space"),
+    "metrics" : [
+        ("mem_lnx_vmalloc_total", "area"),
+        ("mem_lnx_vmalloc_used", "area"),
+        ("mem_lnx_vmalloc_chunk", "stack"),
     ],
 })

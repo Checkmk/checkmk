@@ -105,6 +105,11 @@ def check_printer_supply(item, params, info):
             else:
                 warn, crit, upturn = params
 
+            # Assume 100% as maximum when 0 is reported
+            # Saw some toner cartridge reporting value=0 and maxlevel=0 on empty toner
+            if maxlevel == 0:
+                maxlevel = 100
+
             perfdata = [ ("pages", current, warn / 100.0 * maxlevel, crit / 100.0 * maxlevel, 0, maxlevel ) ]
 
             # handle cases with partial data
@@ -119,12 +124,8 @@ def check_printer_supply(item, params, info):
                     # no percentage possible. We compare directly against levels
                     return (0, "current level is %d" % current, [("pages", current)])
 
-            if maxlevel != 0:
-                leftperc = 100.0 * float(current) / maxlevel
-            else:
-                leftperc = float(current) # assume 100% as max
-
-            if upturn or (unit_type == 3 and maxlevel == 0):
+            leftperc = 100.0 * float(current) / maxlevel
+            if upturn or unit_type == 4:
                 leftperc = 100 - leftperc
 
             infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)

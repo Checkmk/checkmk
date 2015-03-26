@@ -1,0 +1,14 @@
+Title: citrix_sessions: Handle not set thresholds on single values correctly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427355497
+
+When a user sets citrix_sessions_default_levels to a value which misses one of
+the needed thresholds, the check results in an exception. This is now more
+robust.
+
+However, the check should better use the factory defaults mechanism.

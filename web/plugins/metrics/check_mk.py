@@ -467,6 +467,12 @@ metric_info["process_creations"] = {
     "color" : "#ff8020",
 }
 
+metric_info["threads"] = {
+    "title" : _("Number of running threads"),
+    "unit"  : "count",
+    "color" : "#8040f0",
+}
+
 metric_info["fs_used"] = {
     "title" : _("Used filesystem space"),
     "unit"  : "bytes",
@@ -934,6 +940,74 @@ metric_info["if_out_non_unicast"] = {
     "unit"  : "1/s",
     "color" : "#0080c0",
 }
+
+metric_info["tcp_established"] = {
+    "title" : _("State %s") % "ESTABLISHED",
+    "unit"  : "count",
+    "color" : "#00f040",
+}
+
+metric_info["tcp_syn_sent"] = {
+    "title" : _("State %s") % "SYN_SENT",
+    "unit"  : "count",
+    "color" : "#a00000",
+}
+
+metric_info["tcp_syn_recv"] = {
+    "title" : _("State %s") % "SYN_RECV",
+    "unit"  : "count",
+    "color" : "#ff4000",
+}
+
+metric_info["tcp_last_ack"] = {
+    "title" : _("State %s") % "LAST_ACK",
+    "unit"  : "count",
+    "color" : "#c060ff",
+}
+
+metric_info["tcp_close_wait"] = {
+    "title" : _("State %s") % "CLOSE_WAIT",
+    "unit"  : "count",
+    "color" : "#f000f0",
+}
+
+metric_info["tcp_time_wait"] = {
+    "title" : _("State %s") % "TIME_WAIT",
+    "unit"  : "count",
+    "color" : "#00b0b0",
+}
+
+metric_info["tcp_closed"] = {
+    "title" : _("State %s") % "CLOSED",
+    "unit"  : "count",
+    "color" : "#ffc000",
+}
+
+metric_info["tcp_closing"] = {
+    "title" : _("State %s") % "CLOSING",
+    "unit"  : "count",
+    "color" : "#ffc080",
+}
+
+metric_info["tcp_fin_wait1"] = {
+    "title" : _("State %s") % "FIN_WAIT1",
+    "unit"  : "count",
+    "color" : "#cccccc",
+}
+
+metric_info["tcp_fin_wait2"] = {
+    "title" : _("State %s") % "FIN_WAIT2",
+    "unit"  : "count",
+    "color" : "#888888",
+}
+
+metric_info["tcp_bound"] = {
+    "title" : _("State %s") % "BOUND",
+    "unit"  : "count",
+    "color" : "#4060a0",
+}
+
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -1004,6 +1078,20 @@ check_metrics["check_mk-mem.linux"]                             = {
     "vmalloc_total"    : { "name" : "mem_lnx_vmalloc_total", },
     "vmalloc_used"     : { "name" : "mem_lnx_vmalloc_used", },
     "vmalloc_chunk"    : { "name" : "mem_lnx_vmalloc_chunk", },
+}
+
+check_metrics["check_mk-tcp_conn_stats"] = {
+    "SYN_SENT"    : { "name": "tcp_syn_sent" },
+    "SYN_RECV"    : { "name": "tcp_syn_recv" },
+    "ESTABLISHED" : { "name": "tcp_established" },
+    "TIME_WAIT"   : { "name": "tcp_time_wait" },
+    "LAST_ACK"    : { "name": "tcp_last_ack" },
+    "CLOSE_WAIT"  : { "name": "tcp_close_wait" },
+    "CLOSED"      : { "name": "tcp_closed" },
+    "CLOSING"     : { "name": "tcp_closing" },
+    "FIN_WAIT1"   : { "name": "tcp_fin_wait1" },
+    "FIN_WAIT2"   : { "name": "tcp_fin_wait2" },
+    "BOUND"       : { "name": "tcp_bound" },
 }
 
 df_translation = {
@@ -1352,11 +1440,27 @@ perfometer_info.append({
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 
-graph_info.append({
-    "metrics" : [
-        ( "execution_time", "area" )
-    ]
-})
+def define_generic_graph(metric_name):
+    graph_info.append({
+        "metrics" : [
+            ( metric_name, "area" ),
+        ],
+        "scalars" : [
+            metric_name + ":warn",
+            metric_name + ":crit",
+        ]
+    })
+
+define_generic_graph("context_switches")
+define_generic_graph("major_page_faults")
+define_generic_graph("process_creations")
+define_generic_graph("threads")
+define_generic_graph("runtime")
+define_generic_graph("execution_time")
+define_generic_graph("uptime")
+define_generic_graph("temp")
+define_generic_graph("time_offset")
+
 
 graph_info.append({
     "title" : _("Used CPU Time"),
@@ -1368,36 +1472,6 @@ graph_info.append({
     ],
 })
 
-graph_info.append({
-    "metrics" : [
-        ( "uptime", "area" ),
-    ]
-})
-
-graph_info.append({
-    "metrics" : [
-        ( "context_switches", "area" ),
-    ]
-})
-
-graph_info.append({
-    "metrics" : [
-        ( "major_page_faults", "area" ),
-    ]
-})
-
-graph_info.append({
-    "metrics" : [
-        ( "process_creations", "area" ),
-    ]
-})
-
-graph_info.append({
-    "title"   : _("Process Runtime"),
-    "metrics" : [
-        ( "runtime", "area" ),
-    ]
-})
 
 graph_info.append({
     "title"   : _("CPU Load - %(load1:max@count) CPU Cores"),
@@ -1441,22 +1515,8 @@ graph_info.append({
     "range" : (0, 0),
 })
 
-graph_info.append({
-    "metrics" : [
-       ( "inodes_used", "area" ),
-    ],
-    "scalars" : [
-        "inodes_used:warn",
-        "inodes_used:crit",
-    ],
-})
+define_generic_graph("inodes_used")
 
-
-graph_info.append({
-    "metrics" : [
-        ( "temp", "area" ),
-    ]
-})
 
 graph_info.append({
     "title"   : _("CPU utilization"),
@@ -1468,12 +1528,6 @@ graph_info.append({
     ],
     "mirror_legend" : True,
     "range" : (0, 100),
-})
-
-graph_info.append({
-    "metrics" : [
-        ( "time_offset", "area" ),
-    ]
 })
 
 graph_info.append({
@@ -1780,4 +1834,22 @@ graph_info.append({
         ("mem_lnx_vmalloc_used", "area"),
         ("mem_lnx_vmalloc_chunk", "stack"),
     ],
+})
+
+graph_info.append({
+    "title" : _("TCP Connection States"),
+    "metrics" : [
+       ( "tcp_syn_sent",    "stack"),
+       ( "tcp_syn_recv",    "stack"),
+       ( "tcp_established", "stack"),
+       ( "tcp_time_wait",   "stack"),
+       ( "tcp_last_ack",    "stack"),
+       ( "tcp_close_wait",  "stack"),
+       ( "tcp_closed",      "stack"),
+       ( "tcp_closing",     "stack"),
+       ( "tcp_fin_wait1",   "stack"),
+       ( "tcp_fin_wait2",   "stack"),
+       ( "tcp_bound",       "stack"),
+    ],
+    "omit_zero_metrics" : True,
 })

@@ -966,7 +966,7 @@ def page_show_graph():
     try:
         # Currently always displaying 24h graph
         end_time = time.time()
-        start_time = end_time - 24 * 3600
+        start_time = end_time - 8 * 3600
 
         htmlcode = render_svc_time_graph(row, start_time, end_time, size=(30, 10), show_legend=False)
         if htmlcode:

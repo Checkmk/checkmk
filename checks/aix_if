@@ -44,13 +44,11 @@
 #         Simplex 64BitSupport ChecksumOffload
 #                 DataRateSet
 
-check_includes['aix_if'] = [ "if.include" ]
 
 def parse_aix_if(info):
     nic_info = {}
     current_nic = None
     index = 0
-    flags = ()
     for line in info:
         # Be careful! On clustered hosts we have more than one perf-counters section
         # and ethtool section. This needs to be handled. Sadly we have no section
@@ -86,29 +84,29 @@ def parse_aix_if(info):
             # speed is in Mb/s
             nic_info[nic]["ifSpeed"] = int(line[3]) * 1000000
         elif  " ".join(line[0:2]) == "Driver Flags:":
-            flags = line[2:]
-        elif len(line) and ":" not in " ".join(line) and len(flags):
-            flags += line
-
-    if "Up" in flags:
-        nic_info[nic]["ifOperStatus"] = 1
-    elif "Down" in flags:
-        nic_info[nic]["ifOperStatus"] = 2
-    # No information from entstat. We consider interfaces up
-    # if they have been used at least some time since the
-    # system boot.
-    elif nic_info[nic]["ifInOctets"] > 0:
-         nic_info[nic]["ifOperStatus"] = 1
-    else:
-        # unknown, or never been up
-        nic_info[nic]["ifOperStatus"] = 4
-
-    nic_info[nic]["ifOutQLen"] = 0
-    nic_info[nic]["ifInDiscards"] = 0
-    nic_info[nic]["ifOutDiscards"] = 0
+            nic_info[nic]["flags"] = line[2:]
+        elif len(line) and ":" not in " ".join(line) and "flags" in nic_info[nic]:
+            nic_info[nic]["flags"] += line
 
     if_table = []
     for nic in nic_info:
+        if "Up" in nic_info[nic]["flags"]:
+            nic_info[nic]["ifOperStatus"] = 1
+        elif "Down" in nic_info[nic]["flags"]:
+            nic_info[nic]["ifOperStatus"] = 2
+        # No information from entstat. We consider interfaces up
+        # if they have been used at least some time since the
+        # system boot.
+        elif nic_info[nic]["ifInOctets"] > 0:
+             nic_info[nic]["ifOperStatus"] = 1
+        else:
+            # unknown, or never been up
+            nic_info[nic]["ifOperStatus"] = 4
+
+        nic_info[nic]["ifOutQLen"] = 0
+        nic_info[nic]["ifInDiscards"] = 0
+        nic_info[nic]["ifOutDiscards"] = 0
+
         nic_list = []
         for attr in [ "ifIndex", "ifDescr", "ifType", "ifSpeed", "ifOperStatus",
           "ifInOctets", "inucast", "inmcast", "inbcast", "ifInDiscards",
@@ -118,8 +116,10 @@ def parse_aix_if(info):
         if_table.append(map(str, nic_list))
     return if_table
 
+
 def inventory_aix_if(info):
     return inventory_if_common(info)
+
 
 def check_aix_if(item, params, info):
     return check_if_common(item, params, info)

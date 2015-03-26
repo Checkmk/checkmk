@@ -1,0 +1,9 @@
+Title: aix_agent: Local checks can now also be executed in run cached mode
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427358961
+Class: feature
+
+Thanks to Matthias Haehnel for providing the patch.

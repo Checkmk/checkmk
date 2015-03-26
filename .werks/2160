@@ -1,0 +1,10 @@
+Title: Fixed rename of hosts where a host with this name did exist before
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427291362
+
+

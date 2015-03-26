@@ -117,6 +117,83 @@ def if_pad_with_zeroes(info, ifIndex, has_nodeinfo):
         return ifIndex
 
 
+def if_get_traffic_levels(params):
+    # Transform old style traffic parameters to new CascadingDropdown based data format
+    new_traffic = []
+    if 'traffic' in params and type(params['traffic']) != list:
+        warn, crit = params['traffic']
+        if type(warn) == int:
+            new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
+        elif type(warn) == float:
+            new_traffic.append(('both', ('upper', ('perc', (warn, crit)))))
+
+    if 'traffic_minimum' in params:
+        warn, crit = params['traffic_minimum']
+        if type(warn) == int:
+            new_traffic.append(('both', ('lower', ('abs', (warn, crit)))))
+        elif type(warn) == float:
+            new_traffic.append(('both', ('lower', ('perc', (warn, crit)))))
+        del params['traffic_minimum']
+
+    if new_traffic:
+        traffic_levels = new_traffic
+    else:
+        traffic_levels = params.get('traffic', [])
+
+    # Now bring the levels in a structure which is easily usable for the check
+    # and also convert direction="both" to single in/out entries
+    levels = {
+        ('in',  'upper'): (None, (None, None)),
+        ('out', 'upper'): (None, (None, None)),
+        ('in',  'lower'): (None, (None, None)),
+        ('out', 'lower'): (None, (None, None)),
+    }
+    for level in traffic_levels:
+        traffic_dir = level[0]
+        up_or_low   = level[1][0]
+        level_type  = level[1][1][0]
+        level_value = level[1][1][1]
+
+        if traffic_dir == 'both':
+            levels[('in', up_or_low)]  = (level_type, level_value)
+            levels[('out', up_or_low)] = (level_type, level_value)
+        else:
+            levels[(traffic_dir, up_or_low)] = (level_type, level_value)
+
+    return levels
+
+
+def get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed_speed_in, assumed_speed_out):
+    traffic_levels = {}
+    for (traffic_dir, up_or_low), (level_type, levels) in general_traffic_levels.items():
+        if type(levels) != tuple:
+            traffic_levels[(traffic_dir, 'predictive')] = levels
+            continue # don't convert predictive levels config
+        else:
+            warn, crit = levels
+
+        for what, level_value in [('warn', warn), ('crit', crit)]:
+            # If the measurement unit is set to bit and the bw levels
+            # are of type absolute, convert these 'bit' entries to byte
+            # still reported as bytes to stay compatible with older rrd data
+            if unit == 'Bit' and level_type == 'abs':
+                level_value = level_value / 8
+            elif level_type == 'perc':
+                # convert percentages to absolute values. Use either the assumed speed
+                # or the reference speed. When none of both are available, ignore
+                # the percentual levels
+                if traffic_dir == 'in' and assumed_speed_in:
+                    level_value = level_value / 100.0 * assumed_speed_in / 8
+                elif traffic_dir == 'out' and assumed_speed_out:
+                    level_value = level_value / 100.0 * assumed_speed_out / 8
+                elif ref_speed:
+                    level_value = level_value / 100.0 * ref_speed
+                else:
+                    level_value = None
+
+            traffic_levels[(traffic_dir, up_or_low, what)] = level_value # bytes
+    return traffic_levels
+
 def inventory_if_common(info, has_nodeinfo = False):
     if has_nodeinfo:
         length = 21
@@ -440,17 +517,8 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
     else:
         nucast_warn, nucast_crit = None, None
 
-    # Traffic checking might be turned off
-    if "traffic" in params:
-        bw_warn_param, bw_crit_param = params["traffic"]
-    else:
-        bw_warn_param, bw_crit_param = None, None
-
-    # Traffic minimum checking might be turned off
-    if "traffic_minimum" in params:
-        bw_warn_min_param, bw_crit_min_param = params["traffic_minimum"]
-    else:
-        bw_warn_min_param, bw_crit_min_param = None, None
+    # Convert the traffic related levels to a common format
+    general_traffic_levels = if_get_traffic_levels(params)
 
     for line in info:
         node, line = if_extract_node(line,has_nodeinfo)
@@ -537,77 +605,17 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
             else:
                 infotext += "speed unknown"
 
-
-            bw_warn, bw_crit         = bw_warn_param, bw_crit_param
-            bw_warn_min, bw_crit_min = bw_warn_min_param, bw_crit_min_param
-            # If the measurement unit is set to bit and the bw levels
-            # are of type int convert these 'bit' entries to byte
-            # still reported as bytes to stay compatible with older rrd data
-            if unit == "Bit":
-                if type(bw_warn_param) == int:
-                    bw_warn     = bw_warn / 8
-                if type(bw_crit_param) == int:
-                    bw_crit     = bw_crit / 8
-                if type(bw_warn_min_param) == int:
-                    bw_warn_min     = bw_warn_min / 8
-                if type(bw_crit_min_param) == int:
-                    bw_crit_min     = bw_crit_min / 8
-
-            # convert percentages to absolute values if levels are float
-            # this is only possible if a reference speed is available.
-            if ref_speed:
-                if type(bw_warn_param) == float:
-                    bw_warn = bw_warn_param / 100.0 * ref_speed # bytes
-                if type(bw_crit_param) == float:
-                    bw_crit = bw_crit_param / 100.0 * ref_speed # bytes
-                if type(bw_warn_min_param) == float:
-                    bw_warn_min = bw_warn_min_param / 100.0 * ref_speed # bytes
-                if type(bw_crit_min_param) == float:
-                    bw_crit_min = bw_crit_min_param / 100.0 * ref_speed # bytes
-            # Ignore percentual levels if no reference speed is available
-            else:
-                if type(bw_warn_param) == float:
-                    bw_warn = None
-                if type(bw_crit_param) == float:
-                    bw_crit = None
-                if type(bw_warn_min_param) == float:
-                    bw_warn_min = None
-                if type(bw_crit_min_param) == float:
-                    bw_crit_min = None
-
-
-            bw_warn_in, bw_crit_in, bw_warn_out, bw_crit_out = [bw_warn, bw_crit] * 2
-            bw_warn_min_in, bw_crit_min_in, bw_warn_min_out, bw_crit_min_out = [bw_warn_min, bw_crit_min] * 2
-            for speed_in in [ assumed_speed_in, assumed_speed_out ]:
-                if not speed_in:
-                    continue
-                if type(bw_warn_param) == float:
-                    bw_warn_in = bw_warn_param / 100.0 * speed_in / 8
-                if type(bw_crit_param) == float:
-                    bw_crit_in = bw_crit_param / 100.0 * speed_in / 8
-                if type(bw_warn_min_param) == float:
-                    bw_warn_min_in = bw_warn_min_param / 100.0 * speed_in / 8
-                if type(bw_crit_min_param) == float:
-                    bw_crit_min_in = bw_crit_min_param / 100.0 * speed_in / 8
-                break
-
-            for speed_out in [ assumed_speed_out, assumed_speed_in ]:
-                if not speed_out:
-                    continue
-                if type(bw_warn_param) == float:
-                    bw_warn_out = bw_warn_param / 100.0 * speed_out / 8
-                if type(bw_crit_param) == float:
-                    bw_crit_out = bw_crit_param / 100.0 * speed_out / 8
-                if type(bw_warn_min_param) == float:
-                    bw_warn_min_out = bw_warn_min_param / 100.0 * speed_out / 8
-                if type(bw_crit_min_param) == float:
-                    bw_crit_min_out = bw_crit_min_param / 100.0 * speed_out / 8
-                break
-
+            # Convert the traffic levels to interface specific levels, for example where the percentage
+            # levels are converted to absolute levels or assumed speeds of an interface are treated correctly
+            traffic_levels = get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed_speed_in, assumed_speed_out)
 
             # Speed in bytes
             speed_b_in  = assumed_speed_in  and assumed_speed_in / 8  or ref_speed
             speed_b_out = assumed_speed_out and assumed_speed_out / 8 or ref_speed
+
+            #
+            # All internal values within ths check after this point are bytes, not bits!
+            #
 
             # When the interface is reported as down, there is no need to try to handle,
             # the performance counters. Most devices do reset the counter values to zero,
@@ -623,13 +631,13 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
             wrapped = False
             perfdata = []
             for name, counter, warn, crit, mmin, mmax in [
-                ( "in",        ifInOctets, bw_warn_in, bw_crit_in, 0, speed_b_in),
+                ( "in",        ifInOctets, traffic_levels[('in', 'upper', 'warn')], traffic_levels[('in', 'upper', 'crit')], 0, speed_b_in),
                 ( "inucast",   inucast, None, None, None, None),
                 ( "innucast",  saveint(inmcast) + saveint(inbcast), nucast_warn, nucast_crit, None, None),
                 ( "indisc",    ifInDiscards, None, None, None, None),
                 ( "inerr",     ifInErrors, err_warn, err_crit, None, None),
 
-                ( "out",       ifOutOctets, bw_warn_out, bw_crit_out, 0, speed_b_out),
+                ( "out",       ifOutOctets, traffic_levels[('out', 'upper', 'warn')], traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
                 ( "outucast",  outucast, None, None, None, None),
                 ( "outnucast", saveint(outmcast) + saveint(outbcast), nucast_warn, nucast_crit, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
@@ -654,53 +662,57 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
             if wrapped:
                 # If there is a threshold on the bandwidth, we cannot proceed
                 # further (the check would be flapping to green on a wrap)
-                if bw_crit != None:
+                if any(traffic_levels.values()):
                     raise MKCounterWrapped("Counter wrap, skipping checks this time")
                 perfdata = []
             else:
                 perfdata.append(("outqlen", saveint(ifOutQLen),"","", unit == "Bit" and "0.0" or "0"))
                 def format_value(value):
                     if unit == "Bit":
-                        value = value * 8
-                        return get_nic_speed_human_readable(value)
+                        return get_nic_speed_human_readable(value*8)
                     else:
                         return "%s/s" % get_bytes_human_readable(value)
 
                 # loop over incoming and outgoing traffic
-                for what, errorrate, urate, nurate, traffic, speed, bw_warn, bw_crit, bw_warn_min, bw_crit_min in \
-                   [ ("in",  rates[4], rates[1], rates[2], rates[0], speed_in, bw_warn_in, bw_crit_in, bw_warn_min_in, bw_crit_min_in),
-                     ("out", rates[9], rates[6], rates[7], rates[5], speed_out, bw_warn_out, bw_crit_out, bw_warn_min_out, bw_crit_min_out) ]:
+                for what, errorrate, urate, nurate, traffic, speed in \
+                   [ ("in",  rates[4], rates[1], rates[2], rates[0], speed_b_in),
+                     ("out", rates[9], rates[6], rates[7], rates[5], speed_b_out) ]:
 
                     infotext += ", %s: %s" % (what, format_value(traffic))
 
+                    if (what, 'predictive') in traffic_levels:
+                        params = traffic_levels[(what, 'predictive')]
+                        bw_warn, bw_crit = None, None
+                    else:
+                        bw_warn     = traffic_levels[(what, 'upper', 'warn')]
+                        bw_crit     = traffic_levels[(what, 'upper', 'crit')]
+                        bw_warn_min = traffic_levels[(what, 'lower', 'warn')]
+                        bw_crit_min = traffic_levels[(what, 'lower', 'crit')]
+                        params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
+
                     if speed:
-                        perc_used = 100.0 * traffic / (speed / 8)
+                        perc_used = 100.0 * traffic / speed
 
                         assumed_info = ""
                         if assumed_speed_in or assumed_speed_out:
-                            assumed_info = "/" + format_value(speed / 8)
+                            assumed_info = "/" + format_value(speed)
                         infotext += "(%.1f%%%s)" % (perc_used, assumed_info)
 
                     # handle computation of average
                     if average:
                         traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic, average)
                         infotext += ", %dmin avg: %s" % (average, format_value(traffic_avg))
-                        perfdata.append( ("%s_avg_%d" % (what, average), traffic_avg, bw_warn, bw_crit, 0, speed) )
+                        dsname = "%s_avg_%d" % (what, average)
+                        perfdata.append((dsname, traffic_avg, bw_warn, bw_crit, 0, speed))
                         traffic = traffic_avg # apply levels to average traffic
+                    else:
+                        dsname = what
 
-                    # Check bandwidth thresholds
-                    if bw_crit != None and traffic >= bw_crit:
-                        state = 2
-                        infotext += ' (!!) >= ' + format_value(bw_crit)
-                    elif bw_warn != None and traffic >= bw_warn:
-                        state = max(state, 1)
-                        infotext += ' (!) >= ' + format_value(bw_warn)
-                    if bw_crit_min != None and traffic < bw_crit_min:
-                        state = 2
-                        infotext += ' (!!) < ' + format_value(bw_crit_min)
-                    elif bw_warn_min != None and traffic < bw_warn_min:
-                        state = max(state, 1)
-                        infotext += ' (!) >= ' + format_value(bw_warn_min)
+                    # Check bandwidth thresholds incl. prediction
+                    result = check_levels(traffic, dsname, params, statemarkers=True)
+                    state = max(state, result[0])
+                    infotext += result[1]
+                    perfdata += result[2]
 
                     # check percentage of error packets
                     pacrate = urate + nurate + errorrate

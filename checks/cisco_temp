@@ -52,7 +52,9 @@
 
 def inventory_cisco_temp(checktyp, info):
     # Skip sensors with state 5 (not present)
-    return [ (name, None)  for (name, state) in info if state != '5' ]
+    for name, state in info:
+        if state != '5':
+            yield name, None
 
 def check_cisco_temp(item, _no_params, info):
     for name, state in info:

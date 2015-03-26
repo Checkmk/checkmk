@@ -1797,7 +1797,7 @@ register_rule(
           ( "custom",     _("Use a custom check plugin..."), PluginCommandLine() ),
         ],
         default_value = "ping",
-        html_separator = " ",
+        orientation = "horizontal",
     ),
     match = 'first'
 )

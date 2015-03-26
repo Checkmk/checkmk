@@ -758,9 +758,10 @@ class html:
                 self.write('<base target="%s">\n' % self.attrencode(self.link_target))
 
             # Load all specified style sheets and all user style sheets in htdocs/css
-            for css in [ "check_mk" ] + stylesheets + [ 'ie' ]:
+            for css in [ "check_mk", "graphs" ] + stylesheets + [ 'ie' ]:
                 if defaults.omd_root:
-                    fname = '%s-%s.css' % (css, defaults.check_mk_version)
+                    if os.path.exists(defaults.omd_root + "/share/check_mk/web/htdocs/" + css + ".css"):
+                        fname = '%s-%s.css' % (css, defaults.check_mk_version)
                 else:
                     fname = '%s.css' % css
 

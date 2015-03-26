@@ -1,0 +1,9 @@
+Title: Interface-Checks: Can now be configured to use predictive traffic levels
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427195721
+Class: feature
+
+

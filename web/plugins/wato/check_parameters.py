@@ -2402,11 +2402,69 @@ register_check_parameters(
     "dict"
 )
 
+def vs_interface_traffic():
+    def vs_abs_perc():
+        return CascadingDropdown(
+            orientation = "horizontal",
+            choices = [
+                ("perc", _("Percentual levels (in relation to port speed)"), Tuple(
+                    orientation = "float",
+                    show_titles = False,
+                    elements = [
+                        Percentage(label = _("Warning at")),
+                        Percentage(label = _("Critical at")),
+                    ]
+                )),
+                ("abs", _("Absolute levels in bits or bytes per second"), Tuple(
+                    orientation = "float",
+                    show_titles = False,
+                    elements = [
+                        Integer(label = _("Warning at")),
+                        Integer(label = _("Critical at")),
+                    ]
+                )),
+                ("predictive", _("Predictive Levels"), PredictiveLevels())
+            ]
+        )
+
+    return CascadingDropdown(
+        orientation = "horizontal",
+        choices = [
+            ("upper", _("Upper"), vs_abs_perc()),
+            ("lower", _("Lower"), vs_abs_perc()),
+        ]
+    )
+
+def transform_if(v):
+    new_traffic = []
+
+    if 'traffic' in v and type(v['traffic']) != list:
+        warn, crit = v['traffic']
+        if type(warn) == int:
+            new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
+        elif type(warn) == float:
+            new_traffic.append(('both', ('upper', ('perc', (warn, crit)))))
+
+    if 'traffic_minimum' in v:
+        warn, crit = v['traffic_minimum']
+        if type(warn) == int:
+            new_traffic.append(('both', ('lower', ('abs', (warn, crit)))))
+        elif type(warn) == float:
+            new_traffic.append(('both', ('lower', ('perc', (warn, crit)))))
+        del v['traffic_minimum']
+
+    if new_traffic:
+        v['traffic'] = new_traffic
+
+    return v
+
 register_check_parameters(
     subgroup_networking,
     "if",
     _("Network interfaces and switch ports"),
-    Dictionary(
+    # Transform old traffic related levels which used "traffic" and "traffic_minimum"
+    # keys where each was configured with an Alternative valuespec
+    Transform(Dictionary(
         elements = [
             ( "errors",
               Tuple(
@@ -2499,52 +2557,21 @@ register_check_parameters(
                        ( "bit",  _("Bits") ),
                        ( "byte", _("Bytes") ),],
                )),
-             ( "traffic",
-               Alternative(
-                   title = _("Used bandwidth (maximum traffic)"),
-                   help = _("Setting levels on the used bandwidth is optional. If you do set "
-                            "levels you might also consider using an averaging."),
-                   elements = [
-                       Tuple(
-                           title = _("Percentual levels (in relation to port speed)"),
-                           elements = [
-                               Percentage(title = _("Warning at"), label = _("% of port speed")),
-                               Percentage(title = _("Critical at"), label = _("% of port speed")),
-                           ]
-                       ),
-                       Tuple(
-                           title = _("Absolute levels in bits or bytes per second"),
-                           help = _("Depending on the measurement unit (defaults to byte) the absolute levels are set in bit or byte"),
-                           elements = [
-                               Integer(title = _("Warning at"), label = _("bits / bytes per second")),
-                               Integer(title = _("Critical at"), label = _("bits / bytes per second")),
-                           ]
-                        )
-                   ])
-             ),
-             ( "traffic_minimum",
-               Alternative(
-                   title = _("Used bandwidth (minimum traffic)"),
-                   help = _("Setting levels on the used bandwidth is optional. If you do set "
-                            "levels you might also consider using an averaging."),
-                   elements = [
-                       Tuple(
-                           title = _("Percentual levels (in relation to port speed)"),
-                           elements = [
-                               Percentage(title = _("Warning if below"), label = _("% of port speed")),
-                               Percentage(title = _("Critical if below"), label = _("% of port speed")),
-                           ]
-                       ),
-                       Tuple(
-                           title = _("Absolute levels in bits or bytes per second"),
-                           help = _("Depending on the measurement unit (defaults to byte) the absolute levels are set in bit or byte"),
-                           elements = [
-                               Integer(title = _("Warning if below"), label = _("bits / bytes per second")),
-                               Integer(title = _("Critical if below"), label = _("bits / bytes per second")),
-                           ]
-                        )
-                   ])
-             ),
+              ( "traffic",
+                ListOf(CascadingDropdown(
+                        title = _("Direction"),
+                        orientation = "horizontal",
+                        choices = [
+                            ('both', _("In / Out"), vs_interface_traffic()),
+                            ('in',   _("In"),       vs_interface_traffic()),
+                            ('out',  _("Out"),      vs_interface_traffic()),
+                        ]
+                    ),
+                    title = _("Used bandwidth (minimum or maximum traffic)"),
+                    help = _("Setting levels on the used bandwidth is optional. If you do set "
+                             "levels you might also consider using an averaging."),
+                )
+              ),
              ( "nucasts",
                    Tuple(
                        title = _("Non-unicast packet rates"),
@@ -2571,6 +2598,8 @@ register_check_parameters(
              ),
 
          ]),
+        forth = transform_if,
+    ),
     TextAscii(
         title = _("port specification"),
         allow_empty = False),
@@ -3342,20 +3371,33 @@ register_check_parameters(
     _("Printer cartridge levels"),
     Transform(
         Tuple(
-              help = _("Levels for printer cartridges."),
-              elements = [
-                  Percentage(title = _("Warning remaining"), allow_int = True, default_value = 20.0),
-                  Percentage(title = _("Critical remaining"), allow_int = True, default_value = 10.0),
-                  Checkbox(
-                        title = _("Upturn toner levels"),
-                        label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
-                        help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
-                                  " fuel instead of what is left. In this case it's possible"
-                                  " to upturn the levels to handle this behavior"
-                                 )
-                        ),]
-             ),
-             forth = transform_printer_supply,
+            elements = [
+                Percentage(
+                    title = _("Warning remaining"),
+                    allow_int = True,
+                    default_value = 20.0,
+                    help = _("For consumable supplies, this is configured as the percentage of "
+                             "remaining capacity. For supplies that fill up, this is configured "
+                             "as remaining space."),
+                ),
+                Percentage(
+                    title = _("Critical remaining"),
+                    allow_int = True,
+                    default_value = 10.0,
+                    help = _("For consumable supplies, this is configured as the percentage of "
+                             "remaining capacity. For supplies that fill up, this is configured "
+                             "as remaining space."),
+                ),
+                Checkbox(
+                    title = _("Upturn toner levels"),
+                    label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
+                    help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                              " fuel instead of what is left. In this case it's possible"
+                              " to upturn the levels to handle this behavior")
+                ),
+            ]
+        ),
+        forth = transform_printer_supply,
     ),
     TextAscii(
         title = _("cartridge specification"),
@@ -5563,8 +5605,8 @@ register_check_parameters(
             Tuple(
                 title = _("Broken to spare ratio"),
                 elements = [
-                    Percentage(title = _("Warning at or above")),
-                    Percentage(title = _("Critical at or above")),
+                    Percentage(title = _("Warning at or above"), default_value = 1.0),
+                    Percentage(title = _("Critical at or above"), default_value = 50.0),
                 ]
             )),
         ],
@@ -8582,7 +8624,38 @@ register_check_parameters(
         ],
         help = _("This rule is used to configure thresholds for duration values read from "
                  "Siemens PLC  devices."),
-        title = _("Expected flag state"),
+        title = _("Duration levels"),
+    ),
+    TextAscii(
+        title = _("Device Name and Value Ident"),
+        help = _("You need to concatenate the device name which is configured in the special agent "
+                 "for the PLC device separated by a space with the ident of the value which is also "
+                 "configured in the special agent."),
+    ),
+    None
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "siemens_plc_counter",
+    _("Siemens PLC Counter"),
+    Dictionary(
+        elements = [
+            ('levels', Tuple(
+                title = _("Counter level"),
+                elements = [
+                    Integer(
+                        title = _("Warning at"),
+                    ),
+                    Integer(
+                        title = _("Critical at"),
+                    ),
+                ]
+            )),
+        ],
+        help = _("This rule is used to configure thresholds for counter values read from "
+                 "Siemens PLC devices."),
+        title = _("Counter levels"),
     ),
     TextAscii(
         title = _("Device Name and Value Ident"),

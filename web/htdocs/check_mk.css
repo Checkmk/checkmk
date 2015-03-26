@@ -657,4 +657,12 @@ table.graph td.legend div.color {
 table.graph td.legend div.entry {
     margin-right: 20px;
     margin-left: 5px;
+
+div#hover_menu {
+    position: absolute;
+    width: auto;
+    /* The hover menu needs to have a higher z-index than the highest element
+       on the pages. In this case it was the perfometer which had 30. */
+    z-index: 40;
+    color: #000;
 }

@@ -94,8 +94,11 @@ scalar_colors = {
 
 # Convert perf_data_string into perf_data, extract check_command
 def parse_perf_data(perf_data_string, check_command=None):
+    # Strip away arguments like in "check_http!-H mathias-kettner.de"
+    check_command = check_command.split("!")[0]
+
     if not perf_data_string:
-        return {}, check_command
+        return None, check_command
 
     parts = perf_data_string.split()
 
@@ -104,9 +107,6 @@ def parse_perf_data(perf_data_string, check_command=None):
     if parts[-1].startswith("[") and parts[-1].endswith("]"):
         check_command = parts[-1][1:-1]
         del parts[-1]
-
-    # Strip away arguments like in "check_http!-H mathias-kettner.de"
-    check_command = check_command.split("!")[0]
 
     # Python's isdigit() works only on str. We deal with unicode since
     # we deal with data coming from Livestatus
@@ -917,3 +917,70 @@ def mix_colors(a, b):
        for (ca, cb)
        in zip(a, b)
     ])
+
+#.
+#   .--Hover-Graph---------------------------------------------------------.
+#   |     _   _                           ____                 _           |
+#   |    | | | | _____   _____ _ __      / ___|_ __ __ _ _ __ | |__        |
+#   |    | |_| |/ _ \ \ / / _ \ '__|____| |  _| '__/ _` | '_ \| '_ \       |
+#   |    |  _  | (_) \ V /  __/ | |_____| |_| | | | (_| | |_) | | | |      |
+#   |    |_| |_|\___/ \_/ \___|_|        \____|_|  \__,_| .__/|_| |_|      |
+#   |                                                   |_|                |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def page_show_graph():
+    site = html.var('site')
+    host_name = html.var('host_name')
+    service = html.var('service')
+
+    # FIXME HACK TODO We don't have the current perfata and check command
+    # here, but we only need it till metrics.render_svc_time_graph() does
+    # not need these information anymore.
+    query = "GET services\n" \
+            "Filter: host_name = %s\n" \
+            "Filter: service_description = %s\n" \
+            "Columns: perf_data check_command\n" % (host_name, service)
+    html.live.set_only_sites([site])
+    data = html.live.query_row(query)
+    html.live.set_only_sites(None)
+    row = {
+        'site': site, 
+        'host_name': host_name, 
+        'service_description': service,
+        'service_perf_data': data[0],
+        'service_check_command': data[1],
+    }
+
+    # now try to render the graph with our graphing. If it is not possible,
+    # add JS code to let browser fetch the PNP graph
+    try:
+        # Currently always displaying 24h graph
+        end_time = time.time()
+        start_time = end_time - 24 * 3600
+
+        htmlcode = render_svc_time_graph(row, start_time, end_time, size=(30, 10), show_legend=False)
+        if htmlcode:
+            html.write(htmlcode)
+            return
+    except NameError:
+        if config.debug:
+            raise
+        pass
+
+    # Fallback to PNP graph rendering
+    host = pnp_cleanup(host_name)
+    if not service:
+        svc = "_HOST_"
+    else:
+        svc = pnp_cleanup(service)
+    site = html.site_status[site]["site"]
+    if html.mobile:
+        url = site["url_prefix"] + ("pnp4nagios/index.php?kohana_uri=/mobile/popup/%s/%s" % \
+            (html.urlencode(host), html.urlencode(svc)))
+    else:
+        url = site["url_prefix"] + ("pnp4nagios/index.php/popup?host=%s&srv=%s" % \
+            (html.urlencode(host), html.urlencode(svc)))
+
+    html.write(url)

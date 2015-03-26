@@ -1,0 +1,11 @@
+Title: Interface-Checks: Separate traffic thresholds for in and out are now possible
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427119581
+Class: feature
+
+It is now possible to configure separate bandwidth thresholds for the interface
+checks on the traffic directions. Instead of configuring "In/Out" at once, you
+can choose only a single traffic direction to specify the levels for.

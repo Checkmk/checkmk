@@ -1,0 +1,12 @@
+Title: printer_supply: Now auto detects whether or not a supply is consumable or filling up
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427357861
+
+This change is intended mainly as fix for an exception which occured for filling up
+supplies which report a maximum capacity of 0. Meaning when the level reaches zero
+it is fully filled up.

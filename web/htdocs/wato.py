@@ -10325,7 +10325,7 @@ def mode_edit_site(phase):
 
     # ValueSpecs for the more complex input fields
     vs_conn_method = CascadingDropdown(
-        html_separator = " ",
+        orientation = "horizontal",
         choices = conn_choices,
     )
 
@@ -14455,7 +14455,7 @@ def folder_selection(folder, depth=0):
         title_prefix = "&nbsp;&nbsp;&nbsp;" * depth + "` " + "- " * depth
     else:
         title_prefix = ""
-    sel = [ (folder[".path"], title_prefix + folder["title"]) ]
+    sel = [ (folder[".path"], HTML(title_prefix + html.attrencode(folder["title"]))) ]
 
     subfolders = sorted(folder[".folders"].values(), cmp = lambda x,y : cmp(x.get("title").lower(), y.get("title").lower()))
     for subfolder in subfolders:
@@ -17211,7 +17211,7 @@ def mode_bi_edit_rule(phase):
             title = _("Aggregation Function"),
             help = _("The aggregation function decides how the status of a node "
                      "is constructed from the states of the child nodes."),
-            html_separator = "",
+            orientation = "horizontal",
             choices = aggregation_choices,
           )
         ),

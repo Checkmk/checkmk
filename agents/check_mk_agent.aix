@@ -233,6 +233,12 @@ then
     fi
   done
 
+  # Call some local checks only every X'th second
+  for skript in [1-9]*/* ; do
+      if [ -x "$skript" ] ; then
+          run_cached local_${skript//\//\#} ${skript%/*} "$skript"
+      fi
+  done
 fi
 
 # MK's Remote Plugin Executor

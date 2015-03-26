@@ -1,0 +1,13 @@
+Title: netapp_api_disk.summary: Changed default thresholds to WARN on the first broken disk, CRIT on 50%
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427284350
+
+The thresholds are configured using percentage levels on the broken to spare disk ratio.
+Previous versions of the check simply did not apply levels on the number of broken disks
+except you configured the ratio. We have added a default ratio of 1% for WARN and 50% for
+CRIT.

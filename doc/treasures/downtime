@@ -67,7 +67,7 @@ long_options = [ "help", "set", "remove", "comment=", "url=",
 opt_all      = False
 opt_verbose  = 0
 opt_mode     = 'set'
-opt_comment  = "Automatic downtime"
+opt_comment  = "Automatic_downtime"
 opt_user     = "automation"
 opt_secret   = None
 opt_url      = None
@@ -134,7 +134,7 @@ arg_services = args[1:]
 
 if opt_mode == "set":
     verbose("Mode:          set downtime")
-    verbose("Duration:      %ds" % opt_duration)
+    verbose("Duration:      %dm" % opt_duration)
 else:
     verbose("Mode:          remove downtimes")
 verbose("Host:          " + arg_host)
@@ -194,9 +194,9 @@ def set_downtime(variables, add_vars):
 if arg_services:
     for service in arg_services:
         if opt_mode == "remove":
-            set_downtime(variables, [("service_regex", service + "$")])
+            set_downtime(variables, [("service", service )])
         else:
-            set_downtime(variables, [("service", service)])
+            set_downtime(variables, [("service", service )])
 else:
     set_downtime(variables, [])
     if opt_all:

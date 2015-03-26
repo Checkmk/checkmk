@@ -1,0 +1,11 @@
+Title: ups_socomec_capacity: Now no longer critical when device reports -1 minutes left on battery
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1426872550
+Class: fix
+
+Some Socomec UPSes report -1 minutes left on battery at 100% capacity, which previously led to the
+check being critical all the time. The time left on battery subresult has been removed in these
+cases.

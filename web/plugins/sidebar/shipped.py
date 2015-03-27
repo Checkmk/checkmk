@@ -731,7 +731,7 @@ function show_speed(percentage) {
     context.shadowOffsetX = 2;
     context.shadowOffsetY = 2;
     context.shadowBlur = 2;
-    context.stroStyle = "#000000";
+    context.strokeStyle = "#000000";
     context.stroke();
     context = null;
 }

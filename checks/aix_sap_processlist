@@ -1,0 +1,92 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<aix_sap_processlist:sep(44)>>>
+# [01]
+# 23.03.2015 13:49:27
+# GetProcessList
+# OK
+# name, description, dispstatus, textstatus, starttime, elapsedtime, pid
+# msg_server, MessageServer, GREEN, Running, 2015 03 23 05:03:45, 8:45:42, 17563666
+# disp+work, Dispatcher, GREEN, Running, Message Server connection ok, Dialog Queue time: 0.00 sec, 2015 03 23 05:03:45, 8:45:42, 15335532
+# igswd_mt, IGS Watchdog, GREEN, Running, 2015 03 23 05:03:45, 8:45:42, 31326312
+#
+# <<<aix_sap_processlist:sep(44)>>>
+# [02]
+# 23.03.2015 13:59:27
+# GetProcessList
+# FAIL: NIECONN_REFUSED (Connection refused), NiRawConnect failed in plugin_fopen()
+
+
+def parse_aix_sap_processlist(info):
+    instance = None
+    new_info = []
+    for line in info:
+        if line[0].startswith('['):
+            instance = line[0][1:-1]
+        elif instance and line[0].startswith("FAIL:"):
+            instance = None
+        elif instance and len(line) == 7 and line[-1] != " pid":
+            description, status, textstatus, start = map(lambda x: re.sub("^ ","",x), line[1:5])
+            start_time = time.strptime(start, "%Y %m %d %H:%M:%S")
+            new_info.append([instance, description, status, textstatus, start_time])
+        elif instance and len(line) == 9:
+            description, status, textstatus = map(lambda x: re.sub("^ ","",x), line[1:4])
+            start = re.sub("^ ","",line[6])
+            start_time = time.strptime(start, "%Y %m %d %H:%M:%S")
+            new_info.append([instance, description, status, textstatus, start_time])
+    return new_info
+
+def inventory_aix_sap_processlist(info):
+    for line in info:
+        item = "%s on Instance %s" % (line[1], line[0])
+        yield item, None
+
+def check_aix_sap_processlist(item, _no_params, info):
+    now = time.time()
+    for line in info:
+        if item == "%s on Instance %s" % (line[1], line[0]):
+            start =  time.strftime("%c", line[4])
+            elapsed = now - time.mktime(line[4])
+            infotext = "%s, Start Time: %s, Elapsed Time: %s" % (line[3], start, get_age_human_readable(elapsed))
+            perfdata = [ ("runtime", elapsed) ]
+            if line[2] == "GREEN":
+                state = 0
+            elif line[2] == "YELLOW":
+                state = 1
+            else:
+                state = 2
+            return state, infotext, perfdata
+
+
+check_info["aix_sap_processlist"] = {
+    'inventory_function'     : inventory_aix_sap_processlist,
+    'check_function'         : check_aix_sap_processlist,
+    'parse_function'         : parse_aix_sap_processlist,
+    'service_description'    : 'SAP Process %s',
+    'has_perfdata'           : True,
+}

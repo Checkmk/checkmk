@@ -1,0 +1,19 @@
+Title: SNMPv3: Added support for using SNMP contextes in requests
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427445341
+Class: feature
+
+Some devices, which are checked via SNMPv3, offer their SNMP data
+in different SNMP contextes. Check_MK can now be configured, based
+on the host and check type, to use one or multiple specific SNMPv3
+context names in the SNMP requests done for the host and check.
+
+By default Check_MK does not set any context, but if you need it,
+simply configure the rule <i>SNMPv3 contexts to use in requests</i>.
+
+Please note to only use this feature when you really need it. By
+configuring multiple contextes, all SNMP requests are done once for
+each SNMPv3 context. This increases the amount of SNMP communication.

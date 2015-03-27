@@ -1815,35 +1815,6 @@ register_rule(group,
     ),
 )
 
-def get_snmp_checktypes():
-   checks = check_mk_local_automation("get-check-information")
-   types = [ (cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
-             for (cn, c) in checks.items() if c['snmp'] ]
-   types.sort()
-   return [ (None, _('All SNMP Checks')) ] + types
-
-register_rule(group,
-    "snmp_check_interval",
-    Tuple(
-        title = _('Check intervals for SNMP checks'),
-        help = _('This rule can be used to customize the check interval of each SNMP based check. '
-                 'With this option it is possible to configure a longer check interval for specific '
-                 'checks, than then normal check interval.'),
-        elements = [
-            DropdownChoice(
-                title = _("Checktype"),
-                choices = get_snmp_checktypes,
-            ),
-            Integer(
-                title = _("Do check every"),
-                unit = _("minutes"),
-                min_value = 1,
-                default_value = 1,
-            ),
-        ]
-    )
-)
-
 group = "monconf/" + _("Notifications")
 register_rule(group,
     "extra_host_conf:notifications_enabled",
@@ -2538,3 +2509,53 @@ register_rule(group,
                  "agent is running on. It is not applied to the translated piggybacked hosts."),
     ),
     match = "dict")
+
+def get_snmp_checktypes():
+   checks = check_mk_local_automation("get-check-information")
+   types = [ (cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
+             for (cn, c) in checks.items() if c['snmp'] ]
+   types.sort()
+   return [ (None, _('All SNMP Checks')) ] + types
+
+register_rule(group,
+    "snmp_check_interval",
+    Tuple(
+        title = _('Check intervals for SNMP checks'),
+        help = _('This rule can be used to customize the check interval of each SNMP based check. '
+                 'With this option it is possible to configure a longer check interval for specific '
+                 'checks, than then normal check interval.'),
+        elements = [
+            DropdownChoice(
+                title = _("Checktype"),
+                choices = get_snmp_checktypes,
+            ),
+            Integer(
+                title = _("Do check every"),
+                unit = _("minutes"),
+                min_value = 1,
+                default_value = 1,
+            ),
+        ]
+    )
+)
+
+register_rule(group,
+    "snmpv3_contexts",
+    Tuple(
+        title = _('SNMPv3 contexts to use in requests'),
+        help = _('By default Check_MK does not use a specific context during SNMPv3 queries, '
+                 'but some devices are offering their information in different SNMPv3 contexts. '
+                 'This rule can be used to configure, based on hosts and check type, which SNMPv3 '
+                 'contexts Check_MK should ask for when getting information via SNMPv3.'),
+        elements = [
+            DropdownChoice(
+                title = _("Checktype"),
+                choices = get_snmp_checktypes,
+            ),
+            ListOfStrings(
+                title = _("SNMP Context IDs"),
+                allow_empty = False,
+            ),
+        ]
+    )
+)

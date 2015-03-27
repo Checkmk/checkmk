@@ -3371,20 +3371,33 @@ register_check_parameters(
     _("Printer cartridge levels"),
     Transform(
         Tuple(
-              help = _("Levels for printer cartridges."),
-              elements = [
-                  Percentage(title = _("Warning remaining"), allow_int = True, default_value = 20.0),
-                  Percentage(title = _("Critical remaining"), allow_int = True, default_value = 10.0),
-                  Checkbox(
-                        title = _("Upturn toner levels"),
-                        label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
-                        help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
-                                  " fuel instead of what is left. In this case it's possible"
-                                  " to upturn the levels to handle this behavior"
-                                 )
-                        ),]
-             ),
-             forth = transform_printer_supply,
+            elements = [
+                Percentage(
+                    title = _("Warning remaining"),
+                    allow_int = True,
+                    default_value = 20.0,
+                    help = _("For consumable supplies, this is configured as the percentage of "
+                             "remaining capacity. For supplies that fill up, this is configured "
+                             "as remaining space."),
+                ),
+                Percentage(
+                    title = _("Critical remaining"),
+                    allow_int = True,
+                    default_value = 10.0,
+                    help = _("For consumable supplies, this is configured as the percentage of "
+                             "remaining capacity. For supplies that fill up, this is configured "
+                             "as remaining space."),
+                ),
+                Checkbox(
+                    title = _("Upturn toner levels"),
+                    label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
+                    help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                              " fuel instead of what is left. In this case it's possible"
+                              " to upturn the levels to handle this behavior")
+                ),
+            ]
+        ),
+        forth = transform_printer_supply,
     ),
     TextAscii(
         title = _("cartridge specification"),
@@ -5592,8 +5605,8 @@ register_check_parameters(
             Tuple(
                 title = _("Broken to spare ratio"),
                 elements = [
-                    Percentage(title = _("Warning at or above")),
-                    Percentage(title = _("Critical at or above")),
+                    Percentage(title = _("Warning at or above"), default_value = 1.0),
+                    Percentage(title = _("Critical at or above"), default_value = 50.0),
                 ]
             )),
         ],
@@ -8611,7 +8624,38 @@ register_check_parameters(
         ],
         help = _("This rule is used to configure thresholds for duration values read from "
                  "Siemens PLC  devices."),
-        title = _("Expected flag state"),
+        title = _("Duration levels"),
+    ),
+    TextAscii(
+        title = _("Device Name and Value Ident"),
+        help = _("You need to concatenate the device name which is configured in the special agent "
+                 "for the PLC device separated by a space with the ident of the value which is also "
+                 "configured in the special agent."),
+    ),
+    None
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "siemens_plc_counter",
+    _("Siemens PLC Counter"),
+    Dictionary(
+        elements = [
+            ('levels', Tuple(
+                title = _("Counter level"),
+                elements = [
+                    Integer(
+                        title = _("Warning at"),
+                    ),
+                    Integer(
+                        title = _("Critical at"),
+                    ),
+                ]
+            )),
+        ],
+        help = _("This rule is used to configure thresholds for counter values read from "
+                 "Siemens PLC devices."),
+        title = _("Counter levels"),
     ),
     TextAscii(
         title = _("Device Name and Value Ident"),

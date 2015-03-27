@@ -1,0 +1,11 @@
+Title: LDAP: Multiple LDAP groups can be configured for assigning single roles to users
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427361208
+Class: feature
+
+In previous versions only one LDAP group per role could be configured to assign this
+role the the members of the LDAP group. It's now possible to use multiple ldap groups
+for a single role.

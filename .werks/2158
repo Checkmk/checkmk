@@ -1,0 +1,13 @@
+Title: Condition column in WATO rule tables has now a flexible width
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427204010
+
+In previous versions this column had a fixed width, which could lead
+to strange layout problems where this column is filled up and others
+would have space for being shrunk to give the condition column more
+space.

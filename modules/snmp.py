@@ -90,6 +90,12 @@ def oid_to_intlist(oid):
 def cmp_oids(o1, o2):
     return cmp(oid_to_intlist(o1), oid_to_intlist(o2))
 
+def snmpv3_contexts_of(hostname, check_type):
+    for ty, rules in host_extra_conf(hostname, snmpv3_contexts):
+        if ty == check_type:
+            return rules
+    return [None]
+
 def get_snmp_table(hostname, ip, check_type, oid_info):
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
@@ -144,10 +150,19 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
 
             if opt_use_snmp_walk or is_usewalk_host(hostname):
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid)
-            elif has_inline_snmp and use_inline_snmp:
-                rowinfo = inline_snmpwalk_on_suboid(hostname, check_type, fetchoid, oid)
             else:
-                rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid)
+                rowinfo = []
+                if is_snmpv3_host(hostname):
+                    snmp_contexts = snmpv3_contexts_of(hostname, check_type)
+                else:
+                    snmp_contexts = [None]
+
+                for context_name in snmp_contexts:
+                    if has_inline_snmp and use_inline_snmp:
+                        rowinfo += inline_snmpwalk_on_suboid(hostname, check_type, fetchoid, oid,
+                                                                              context_name=context_name)
+                    else:
+                        rowinfo += snmpwalk_on_suboid(hostname, ip, fetchoid, context_name=context_name)
 
             # I've seen a broken device (Mikrotik Router), that broke after an
             # update to RouterOS v6.22. It would return 9 time the same OID when
@@ -418,10 +433,12 @@ def snmp_decode_string(text):
 #   | Non-inline SNMP handling code. Kept for compatibility.               |
 #   '----------------------------------------------------------------------'
 
-def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False):
+def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False, context_name = None):
     portspec = snmp_port_spec(hostname)
-    command = snmp_walk_command(hostname) + \
-             " -OQ -OU -On -Ot %s%s %s" % (ip, portspec, oid)
+    command = snmp_walk_command(hostname)
+    if context_name != None:
+        command += " -n %s" % quote_shell_string(context_name)
+    command += " -OQ -OU -On -Ot %s%s %s" % (ip, portspec, oid)
     vverbose('   Running %s\n' % command)
 
     snmp_process = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)

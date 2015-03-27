@@ -1,0 +1,11 @@
+Title: jolokia_metrics.threads: Fixed graph template
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427449149
+
+The graphs were scaled wrong and all three graphs were showing the same information
+Thanks for the patch to Ricardo Francisco T. Ribeiro!

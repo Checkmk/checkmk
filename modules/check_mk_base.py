@@ -1793,9 +1793,10 @@ def regex(pattern):
 def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemarkers=False):
     if unit:
         unit = " " + unit # Insert space before MB, GB, etc.
-
     perfdata = []
     infotexts = []
+
+    scale_value = lambda v: v != None and v * factor * scale or None
 
     # None or (None, None) -> do not check any levels
     if params == None or params == (None, None):
@@ -1803,8 +1804,12 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
 
     # Pair of numbers -> static levels
     elif type(params) == tuple:
-        warn_upper, crit_upper = params[0] * factor * scale, params[1] * factor * scale,
-        warn_lower, crit_lower = None, None
+        if len(params) == 2: # upper warn and crit
+            warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
+            warn_lower, crit_lower = None, None
+        else: # uppwer and lower warn and crit
+            warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
+            warn_lower, crit_lower = scale_value(params[2]), scale_value(params[3])
         ref_value = None
 
     # Dictionary -> predictive levels

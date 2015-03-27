@@ -717,6 +717,7 @@ def automation_rename_host(args):
 
 
 def rename_host_dir(basedir, oldname, newname):
+    import shutil
     if os.path.exists(basedir + "/" + oldname):
         if os.path.exists(basedir + "/" + newname):
             shutil.rmtree(basedir + "/" + newname)

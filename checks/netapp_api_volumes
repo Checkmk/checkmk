@@ -103,13 +103,14 @@ def check_netapp_api_volumes(item, params, parsed):
     return state, info, perf
 
 check_info["netapp_api_volumes"] = {
-    'check_function'      : check_netapp_api_volumes,
-    'inventory_function'  : inventory_netapp_api_volumes,
-    'parse_function'      : lambda info: netapp_api_convert_info(info,
+    'check_function'          : check_netapp_api_volumes,
+    'inventory_function'      : inventory_netapp_api_volumes,
+    'parse_function'          : lambda info: netapp_api_convert_info(info,
                                          configs = {"volume-list-info": {"block-name": "volume-info", "key": "name"}},
                                          counter_key = "instance_name"),
-    'service_description' : 'Volume %s',
-    'has_perfdata'        : True,
-    'group'               : "netapp_volumes",
-    'includes'            : [ "df.include", "netapp_api.include" ]
+    'service_description'     : 'Volume %s',
+    'has_perfdata'            : True,
+    'group'                   : "netapp_volumes",
+    'includes'                : [ "df.include", "netapp_api.include" ],
+    "default_levels_variable" : "filesystem_default_levels",
 }

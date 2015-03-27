@@ -682,6 +682,8 @@ function set_oraenv () {
         ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID_SHORT}":" | cut -d":" -f2)
     fi
 
+    LD_LIBRARY_PATH=$ORACLE_HOME/lib
+
     if [ ! -d ${ORACLE_HOME:-"not_found"} ] ; then
         echo "ORA-99999 ORACLE_HOME for ORACLE_SID="$ORACLE_SID" not found or not existing!"
         exit 1
@@ -691,7 +693,7 @@ function set_oraenv () {
 
     test -f ${TNS_ADMIN}/sqlnet.ora || ( echo "ORA-99998 Couldn't find "${TNS_ADMIN}/sqlnet.ora ; exit 1)
 
-    export ORACLE_HOME TNS_ADMIN ORACLE_SID
+    export ORACLE_HOME TNS_ADMIN ORACLE_SID LD_LIBRARY_PATH
 }
 
 function get_oraversion () {

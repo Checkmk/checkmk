@@ -294,6 +294,7 @@
     * 2109 FIX: netapp_api_volumes: now using the defined levels when using the Nagios core
     * 1241 FIX: hp_prolaint: Unkown state is not longer handled as OK...
     * 2171 FIX: netapp_api_vf_status: Handling "DR backup" as normal (OK) state now
+    * 1898 FIX: mk_oracle: Bugfix for error while loading shared libraries: libsqlplus.so
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

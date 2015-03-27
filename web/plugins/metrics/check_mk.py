@@ -520,7 +520,7 @@ metric_info["temp"] = {
 metric_info["threads"] = {
     "title" : _("Number of threads"),
     "unit"  : "count",
-    "color" : "#aa44ff",
+    "color" : "#9a77ee",
 }
 
 metric_info["user"] = {
@@ -1775,18 +1775,18 @@ graph_info.append({
 graph_info.append({
     "title" : _("RAM + Swap overview"),
     "metrics" : [
-        ("mem_total", "area"),
+        ("mem_total",  "area"),
         ("swap_total", "stack"),
-        ("mem_used", "area"),
-        ("swap_used", "stack"),
+        ("mem_used",   "area"),
+        ("swap_used",  "stack"),
     ],
 })
 
 graph_info.append({
     "title" : _("Swap"),
     "metrics" : [
-        ("swap_total", "area"),
-        ("swap_used", "area"),
+        ("swap_total",  "area"),
+        ("swap_used",   "area"),
         ("swap_cached", "stack"),
     ],
 })
@@ -1794,10 +1794,10 @@ graph_info.append({
 graph_info.append({
     "title" : _("Caches"),
     "metrics" : [
-        ("mem_lnx_cached", "area"),
+        ("mem_lnx_slab",    "stack"),
+        ("swap_cached",     "stack"),
         ("mem_lnx_buffers", "stack"),
-        ("swap_cached", "stack"),
-        ("mem_lnx_slab", "stack"),
+        ("mem_lnx_cached",  "stack"),
     ],
 })
 

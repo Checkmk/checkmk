@@ -944,22 +944,36 @@ def page_show_graph():
     # FIXME HACK TODO We don't have the current perfata and check command
     # here, but we only need it till metrics.render_svc_time_graph() does
     # not need these information anymore.
-    query = "GET services\n" \
-            "Filter: host_name = %s\n" \
-            "Filter: service_description = %s\n" \
-            "Columns: perf_data check_command\n" % (host_name, service)
+    if service == "_HOST_":
+        query = "GET hosts\n" \
+                "Filter: host_name = %s\n" \
+                "Columns: perf_data check_command\n" % host_name
+
+    else:
+        query = "GET services\n" \
+                "Filter: host_name = %s\n" \
+                "Filter: service_description = %s\n" \
+                "Columns: perf_data check_command\n" % (host_name, service)
 
     html.live.set_only_sites([site])
     data = html.live.query_row(query)
     html.live.set_only_sites(None)
 
-    row = {
-        'site'                  : site,
-        'host_name'             : host_name,
-        'service_description'   : service,
-        'service_perf_data'     : data[0],
-        'service_check_command' : data[1],
-    }
+    if service == "_HOST_":
+        row = {
+            'site'                  : site,
+            'host_name'             : host_name,
+            'host_perf_data'        : data[0],
+            'host_check_command'    : data[1],
+        }
+    else:
+        row = {
+            'site'                  : site,
+            'host_name'             : host_name,
+            'service_description'   : service,
+            'service_perf_data'     : data[0],
+            'service_check_command' : data[1],
+        }
 
     # now try to render the graph with our graphing. If it is not possible,
     # add JS code to let browser fetch the PNP graph
@@ -968,7 +982,7 @@ def page_show_graph():
         end_time = time.time()
         start_time = end_time - 8 * 3600
 
-        htmlcode = render_svc_time_graph(row, start_time, end_time, size=(30, 10), show_legend=False)
+        htmlcode = render_time_graph(row, start_time, end_time, size=(30, 10), show_legend=False, graph_id_prefix="hover")
         if htmlcode:
             html.write(htmlcode)
             return
@@ -979,10 +993,7 @@ def page_show_graph():
 
     # Fallback to PNP graph rendering
     host = pnp_cleanup(host_name)
-    if not service:
-        svc = "_HOST_"
-    else:
-        svc = pnp_cleanup(service)
+    svc = pnp_cleanup(service)
     site = html.site_status[site]["site"]
     if html.mobile:
         url = site["url_prefix"] + ("pnp4nagios/index.php?kohana_uri=/mobile/popup/%s/%s" % \

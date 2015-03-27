@@ -1825,9 +1825,9 @@ function vs_iconselector_toggle(varprefix, category_name) {
     var nav_links = document.getElementsByClassName(varprefix+'_nav');
     for (var i = 0; i < nav_links.length; i++) {
         if (nav_links[i].id == varprefix+'_'+category_name+'_nav')
-            add_class(nav_links[i], 'active');
+            add_class(nav_links[i].parentNode, 'active');
         else
-            remove_class(nav_links[i], 'active');
+            remove_class(nav_links[i].parentNode, 'active');
     }
 
     // Now update the category containers

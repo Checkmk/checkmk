@@ -987,6 +987,8 @@ body.main table.footer .popup_menu a:hover {
 
 #popup_menu .icons div {
     clear: left;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 #popup_menu .icons a {

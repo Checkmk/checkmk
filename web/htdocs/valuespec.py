@@ -3199,6 +3199,7 @@ class IconSelector(ValueSpec):
 
         self._categories = [
             ('logos', _('Logos')),
+            ('parts', _('Parts')),
             ('misc',  _('Misc')),
         ]
 

@@ -183,6 +183,12 @@ metric_info["pl"] = {
     "color" : "#ffc030",
 }
 
+metric_info["response_time"] = {
+    "title" : _("Response time"),
+    "unit"  : "s",
+    "color" : "#40a0b0",
+}
+
 metric_info["uptime"] = {
     "title" : _("Uptime"),
     "unit"  : "s",
@@ -1054,6 +1060,8 @@ check_metrics["check-mk"]                                       = {}
 check_metrics["check-mk-ping"]                                  = {}
 check_metrics["check-mk"]                                       = {}
 
+check_metrics["check_mk_active-tcp"]                            = { "time" : { "name": "response_time" } }
+
 check_metrics["check_mk-uptime"]                                = {}
 check_metrics["check_mk-esx_vsphere_counters.uptime"]           = {}
 check_metrics["check_mk-fritz.uptime"]                          = {}
@@ -1335,6 +1343,14 @@ perfometer_info.append({
     "exponent"   : 2,
 })
 
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "response_time",
+    "half_value" : 10,
+    "exponent"   : 4,
+})
+
+
 perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
 perfometer_info.append(("linear",       ( ["execution_time"], 90.0, None)))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
@@ -1501,6 +1517,7 @@ define_generic_graph("process_creations")
 define_generic_graph("threads")
 define_generic_graph("runtime")
 define_generic_graph("execution_time")
+define_generic_graph("response_time")
 define_generic_graph("uptime")
 define_generic_graph("temp")
 define_generic_graph("time_offset")

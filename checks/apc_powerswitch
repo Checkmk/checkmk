@@ -29,7 +29,7 @@ apc_powerswitch_critical_states  = ()
 
 
 def inventory_apc_powerswitch(info):
-    return [ (x[0],saveint(x[2])) for x in info if x[1] == "1" ]
+    return [ (x[0],saveint(x[2])) for x in info if x[2] == "1" ]
 
 def check_apc_powerswitch(item, params, info):
     state_name = {

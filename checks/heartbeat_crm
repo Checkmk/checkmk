@@ -72,7 +72,7 @@ factory_settings["heartbeat_crm_default_levels"] = {
 }
 
 def heartbeat_crm_parse_general(info):
-    dc, numNodes, numResources = None, None, None
+    dc, num_nodes, num_resources = None, None, None
     for line in info:
         if ' '.join(line[0:2]) == 'Last updated:':
             last_updated = ' '.join(line[2:])

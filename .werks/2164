@@ -1,0 +1,9 @@
+Title: printer_supply: Fixed handling different capacities than percentage when used upturned levels
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1427358759
+Class: fix
+
+

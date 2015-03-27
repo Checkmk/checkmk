@@ -205,6 +205,11 @@ def handler(req, fields = None, profiling = True):
                 login.page_login(plain_error)
                 release_all_locks()
                 return apache.OK
+        else:
+            # In case of basic auth the user is already known, but we still need to decide
+            # whether or not the user is an automation user (which is allowed to use transid=-1)
+            if html.var("_secret"):
+                login.check_auth_automation()
 
         # Call userdb page hooks which are executed on a regular base to e.g. syncronize
         # information withough explicit user triggered actions

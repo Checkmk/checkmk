@@ -28,6 +28,12 @@
     * 1240 FIX: multipath: improved detection for not installed multipath
     * 2159 FIX: netapp_api_disk.summary: Changed default thresholds to WARN on the first broken disk, CRIT on 50%...
     * 2109 FIX: netapp_api_volumes: now using the defined levels when using the Nagios core
+    * 2161 FIX: heartbeat_crm: Fixed UnboundLocalError exception on some systems
+    * 2162 FIX: citrix_sessions: Handle not set thresholds on single values correctly...
+    * 2163 FIX: printer_supply: Now auto detects whether or not a supply is consumable or filling up...
+    * 2164 FIX: printer_supply: Fixed handling different capacities than percentage when used upturned levels
+    * 2169 FIX: jolokia_metrics.threads: Fixed graph template...
+    * 2170 FIX: jolokia_metrics_gc: Fixed exception when GC time not reported by server
 
     Multisite:
     * 1239 Fixed /treasures/downtime script to work with the new visuals
@@ -37,6 +43,7 @@
     * 2145 FIX: LDAP-Sync: Handling user ids with special characters more user friendly...
     * 1953 FIX: Fixed processing of html processing in input fields...
     * 2157 FIX: LDAP: Fixed group-to-role/group-to-contactgroup sync with OpenLDAP (using posixGroup)
+    * 2168 FIX: Fixed automation actions with transid=-1 when using basic authentication
 
     WATO:
     * 2045 FIX: Avoid fetching SNMP data when showing service list in WATO - unless Full Scan is pressed

@@ -2191,7 +2191,7 @@ class EventServer:
             elif line[10] == '-' and line[19] == ' ':
                 event['host'] = line.split(' ')[1]
                 event['time'] = time.mktime(time.strptime(line.split(' ')[0], '%Y:%m:%d-%H:%M:%S'))
-                rest = line.split(' ')[2:]
+                rest = " ".join(line.split(' ')[2:])
                 event.update(self.parse_syslog_info(rest))
 
             # Variant 6

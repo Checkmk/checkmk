@@ -24,8 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 $title = str_replace("_", " ", $servicedesc);
-$opt[1] = "--vertical-label 'ThreadRate' -l 0 --title \"ThreadRate of $title\" ";
-
+$opt[1] = "--vertical-label 'ThreadRate' -l0 --title \"ThreadRate of $title\" ";
 $def[1] =  "DEF:var1=$RRDFILE[1]:$DS[1]:AVERAGE " ;
 $def[1] .= "AREA:var1#F2F2F2:\"\" " ;
 $def[1] .= "LINE1:var1#FF6600:\"ThreadRate \" " ;
@@ -33,12 +32,10 @@ $def[1] .= "GPRINT:var1:LAST:\"%3.2lf LAST \" ";
 $def[1] .= "GPRINT:var1:MAX:\"%3.2lf MAX \" ";
 $def[1] .= "GPRINT:var1:AVERAGE:\"%3.2lf AVERAGE \" ";
 
-
-$opt[2] = "--vertical-label \"ThreadCount\" -u102 -l0 --title \"Different ThreadCounts of $servicedesc\" ";
-$def[2] = "DEF:var1=$RRDFILE[1]:$DS[2]:AVERAGE " ;
-$def[2] .= "DEF:var2=$RRDFILE[1]:$DS[3]:AVERAGE " ;
-$def[2] .= "DEF:var3=$RRDFILE[1]:$DS[4]:AVERAGE " ;
-#
+$opt[2] = "--vertical-label 'ThreadCount' -l0 --title \"Different ThreadCounts of $servicedesc\" ";
+$def[2] = "DEF:var1=$RRDFILE[2]:$DS[2]:AVERAGE " ;
+$def[2] .= "DEF:var2=$RRDFILE[3]:$DS[3]:AVERAGE " ;
+$def[2] .= "DEF:var3=$RRDFILE[4]:$DS[4]:AVERAGE " ;
 $def[2] .= "AREA:var1#FFFFFF:\"\" " ;
 $def[2] .= "AREA:var2#FFFFFF:\"\" " ;
 $def[2] .= "AREA:var3#FFFFFF:\"\" " ;
@@ -49,12 +46,10 @@ $def[2] .= rrd::gprint("var2", array("LAST", "MAX", "AVERAGE"),"%3.0lf");
 $def[2] .= "LINE1:var3#0CD524:\"PeakThreadCount   \" " ;
 $def[2] .= rrd::gprint("var3", array("LAST", "MAX", "AVERAGE"),"%3.0lf");
 
-#TotalStartedThreadCount
+# TotalStartedThreadCount
 $opt[3] = "--vertical-label \"TotalStartedThreadCount\" -l0 --title \"TotalStartedThreadCount of $title\" ";
-#
-$def[3] =  "DEF:var1=$RRDFILE[1]:$DS[5]:AVERAGE " ;
+$def[3] =  "DEF:var1=$RRDFILE[5]:$DS[5]:AVERAGE " ;
 $def[3] .= "AREA:var1#F2F2F2:\"\" " ;
 $def[3] .= "LINE1:var1#FF6600:\"TotalStartedThreadCount \" " ;
 $def[3] .= "GPRINT:var1:LAST:\"%3.0lf current \" ";
 ?>
-

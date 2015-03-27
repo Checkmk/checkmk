@@ -1,0 +1,9 @@
+Title: netapp_api_volumes: now using the defined levels when using the Nagios core
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1427457104
+Class: fix
+
+

@@ -209,7 +209,7 @@ metric_info["database_size"] = {
 
 metric_info["mem_total"] = {
     "title" : _("RAM installed"),
-    "color": "#f0f0f0", 
+    "color": "#f0f0f0",
     "unit" : "bytes",
 }
 
@@ -220,14 +220,14 @@ metric_info["mem_free"] = {
 }
 
 metric_info["mem_used"] = {
-    "color": "#80ff40", 
+    "color": "#80ff40",
     "title" : _("RAM used"),
     "unit" : "bytes",
 }
 
 metric_info["swap_total"] = {
     "title" : _("Swap installed"),
-    "color": "#e0e0e0", 
+    "color": "#e0e0e0",
     "unit" : "bytes",
 }
 
@@ -239,13 +239,13 @@ metric_info["swap_free"] = {
 
 metric_info["swap_used"] = {
     "title" : _("Swap used"),
-    "color": "#408f20", 
+    "color": "#408f20",
     "unit" : "bytes",
 }
 
 metric_info["swap_cached"] = {
     "title" : _("Swap cached"),
-    "color": "#5bebc9", 
+    "color": "#5bebc9",
     "unit" : "bytes",
 }
 
@@ -258,169 +258,169 @@ metric_info["caches"] = {
 
 metric_info["mem_lnx_cached"] = {
     "title" : _("File contents"),
-    "color": "#91cceb", 
+    "color": "#91cceb",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_buffers"] = {
     "title" : _("Filesystem structure"),
-    "color": "#5bb9eb", 
+    "color": "#5bb9eb",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_slab"] = {
     "title" : _("Slab (Various smaller caches)"),
-    "color": "#af91eb", 
+    "color": "#af91eb",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_active_anon"] = {
     "title" : _("Active   (anonymous)"),
-    "color": "#ff4040", 
+    "color": "#ff4040",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_active_file"] = {
     "title" : _("Active   (files)"),
-    "color": "#ff8080", 
+    "color": "#ff8080",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_inactive_anon"] = {
     "title" : _("Inactive (anonymous)"),
-    "color": "#377cab", 
+    "color": "#377cab",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_inactive_file"] = {
     "title" : _("Inactive (files)"),
-    "color": "#4eb0f2", 
+    "color": "#4eb0f2",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_active"] = {
     "title" : _("Active"),
-    "color": "#ff4040", 
+    "color": "#ff4040",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_inactive"] = {
     "title" : _("Inactive"),
-    "color": "#4040ff", 
+    "color": "#4040ff",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_dirty"] = {
     "title" : _("Dirty disk blocks"),
-    "color": "#f2904e", 
+    "color": "#f2904e",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_writeback"] = {
     "title" : _("Currently being written"),
-    "color": "#f2df40", 
+    "color": "#f2df40",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_nfs_unstable"] = {
     "title" : _("Modified NFS data"),
-    "color": "#c6f24e", 
+    "color": "#c6f24e",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_bounce"] = {
     "title" : _("Bounce buffers"),
-    "color": "#4ef26c", 
+    "color": "#4ef26c",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_writeback_tmp"] = {
     "title" : _("Dirty FUSE data"),
-    "color": "#4eeaf2", 
+    "color": "#4eeaf2",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_total_total"] = {
     "title" : _("Total virtual memory"),
-    "color": "#f0f0f0", 
+    "color": "#f0f0f0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_committed_as"] = {
     "title" : _("Committed memory"),
-    "color": "#40a080", 
+    "color": "#40a080",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_commit_limit"] = {
     "title" : _("Commit limit"),
-    "color": "#e0e0e0", 
+    "color": "#e0e0e0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_shmem"] = {
     "title" : _("Shared memory"),
-    "color": "#bf9111", 
+    "color": "#bf9111",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_kernel_stack"] = {
     "title" : _("Kernel stack"),
-    "color": "#7192ad", 
+    "color": "#7192ad",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_page_tables"] = {
     "title" : _("Page tables"),
-    "color": "#71ad9f", 
+    "color": "#71ad9f",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_mlocked"] = {
     "title" : _("Locked mmap() data"),
-    "color": "#a671ad", 
+    "color": "#a671ad",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_huge_pages_total"] = {
     "title" : _("Total"),
-    "color": "#f0f0f0", 
+    "color": "#f0f0f0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_huge_pages_free"] = {
     "title" : _("Free"),
-    "color": "#f0a0f0", 
+    "color": "#f0a0f0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_huge_pages_rsvd"] = {
     "title" : _("Reserved part of Free"),
-    "color": "#40f0f0", 
+    "color": "#40f0f0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_huge_pages_surp"] = {
     "title" : _("Surplus"),
-    "color": "#90f0b0", 
+    "color": "#90f0b0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_vmalloc_total"] = {
     "title" : _("Total address space"),
-    "color": "#f0f0f0", 
+    "color": "#f0f0f0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_vmalloc_used"] = {
     "title" : _("Allocated space"),
-    "color": "#aaf76f", 
+    "color": "#aaf76f",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_vmalloc_chunk"] = {
     "title" : _("Largest free chunk"),
-    "color": "#c6f7e9", 
+    "color": "#c6f7e9",
     "unit" : "bytes",
 }
 
@@ -1007,6 +1007,35 @@ metric_info["tcp_bound"] = {
     "color" : "#4060a0",
 }
 
+metric_info["host_check_rate"] = {
+    "title" : _("Host check rate"),
+    "unit"  : "1/s",
+    "color" : "#884422",
+}
+
+metric_info["service_check_rate"] = {
+    "title" : _("Service check rate"),
+    "unit"  : "1/s",
+    "color" : "#ffbb66",
+}
+
+metric_info["livestatus_connect_rate"] = {
+    "title" : _("Livestatus connects"),
+    "unit"  : "1/s",
+    "color" : "#556677",
+}
+
+metric_info["livestatus_request_rate"] = {
+    "title" : _("Livestatus requests"),
+    "unit"  : "1/s",
+    "color" : "#bbccdd",
+}
+
+metric_info["log_message_rate"] = {
+    "title" : _("Log messages"),
+    "unit"  : "1/s",
+    "color" : "#aa44cc",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -1037,7 +1066,7 @@ check_metrics["check_mk-statgrab_load"]                         = {}
 check_metrics["check_mk-hpux_cpu"]                              = {}
 check_metrics["check_mk-blade_bx_load"]                         = {}
 
-check_metrics["check_mk-kernel"]                                = { 
+check_metrics["check_mk-kernel"]                                = {
     "ctxt"       : { "name": "context_switches" },
     "pgmajfault" : { "name": "major_page_faults" },
     "processes"  : { "name": "process_creations" },
@@ -1258,6 +1287,15 @@ check_metrics["check_mk-siemens_plc.hours"]                     = {}
 
 check_metrics["check_mk-cups_queues"]                           = { "jobs" : { "name" : "printer_queue" } }
 
+check_metrics["check_mk-livestatus_status"] = {
+    "host_checks"    : { "name" : "host_check_rate" },
+    "service_checks" : { "name" : "service_check_rate" },
+    "connections"    : { "name" : "livestatus_connect_rate" },
+    "requests"       : { "name" : "livestatus_request_rate" },
+    "log_messages"   : { "name" : "log_message_rate" },
+}
+
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -1427,6 +1465,12 @@ perfometer_info.append({
     "half_value" : 10,
     "exponent"   : 2,
 })
+
+perfometer_info.append(("stacked", [
+  ( "logarithmic", ( "host_check_rate",     50, 5)),
+  ( "logarithmic", ( "service_check_rate", 200, 5)),
+]))
+
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -1637,7 +1681,7 @@ graph_info.append({
 })
 
 # TODO: Warum ist hier überall line? Default ist Area.
-# Kann man die hit ratios nicht schön stacken? Ist 
+# Kann man die hit ratios nicht schön stacken? Ist
 # nicht total die Summe der anderen?
 
 graph_info.append({
@@ -1852,4 +1896,28 @@ graph_info.append({
        ( "tcp_bound",       "stack"),
     ],
     "omit_zero_metrics" : True,
+})
+
+graph_info.append({
+    "title" : _("Host and Service Checks"),
+    "metrics" : [
+        ( "host_check_rate",    "stack" ),
+        ( "service_check_rate", "stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Livestatus Connects and Requests"),
+    "metrics" : [
+        ( "livestatus_request_rate", "area" ),
+        ( "livestatus_connect_rate", "area" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Livestatus Requests per Connection"),
+    "metrics" : [
+        ( "livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
+          _("Averate requests per connection")),
+    ],
 })

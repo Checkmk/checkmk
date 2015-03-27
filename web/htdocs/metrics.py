@@ -404,7 +404,7 @@ def perfometer_possible(perfometer, translated_metrics):
         elif perfometer["type"] == "logarithmic":
             required = [ perfometer["metric"] ]
         else:
-            pass # TODO: logarithmic, etc. dual, stacked?
+            pass # TODO: dual, stacked?
 
         if "label" in perfometer and perfometer["label"] != None:
             required.append(perfometer["label"][0])
@@ -550,19 +550,19 @@ def build_perfometer(perfometer, translated_metrics):
 
             # Use unit of first metrics for output of sum. We assume that all
             # stackes metrics have the same unit anyway
-            if "label" in perfometer:
-                if perfometer["label"] == None:
-                    label = ""
-                else:
-                    expr, unit_name = perfometer["label"]
-                    value, unit, color = evaluate(expr, translated_metrics)
-                    if unit_name:
-                        unit = unit_info[unit_name]
-                    label = unit["render"](summed)
-            else: # absolute
-                value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
+            value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
+            label = unit["render"](summed)
 
-                label = unit["render"](summed)
+        # "label" option in all Perf-O-Meters overrides automatic label
+        if "label" in perfometer:
+            if perfometer["label"] == None:
+                label = ""
+            else:
+                expr, unit_name = perfometer["label"]
+                value, unit, color = evaluate(expr, translated_metrics)
+                if unit_name:
+                    unit = unit_info[unit_name]
+                label = unit["render"](value)
 
         return label, stack
 

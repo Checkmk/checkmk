@@ -1061,6 +1061,7 @@ check_metrics["check-mk-ping"]                                  = {}
 check_metrics["check-mk"]                                       = {}
 
 check_metrics["check_mk_active-tcp"]                            = { "time" : { "name": "response_time" } }
+check_metrics["check-mk-host-tcp"]                              = { "time" : { "name": "response_time" } }
 
 check_metrics["check_mk-uptime"]                                = {}
 check_metrics["check_mk-esx_vsphere_counters.uptime"]           = {}

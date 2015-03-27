@@ -1820,6 +1820,26 @@ function vs_iconselector_select(event, varprefix, value) {
     close_popup();
 }
 
+function vs_iconselector_toggle(varprefix, category_name) {
+    // Update the navigation
+    var nav_links = document.getElementsByClassName(varprefix+'_nav');
+    for (var i = 0; i < nav_links.length; i++) {
+        if (nav_links[i].id == varprefix+'_'+category_name+'_nav')
+            add_class(nav_links[i], 'active');
+        else
+            remove_class(nav_links[i], 'active');
+    }
+
+    // Now update the category containers
+    var containers = document.getElementsByClassName(varprefix+'_container');
+    for (var i = 0; i < containers.length; i++) {
+        if (containers[i].id == varprefix+'_'+category_name+'_container')
+            containers[i].style.display = '';
+        else
+            containers[i].style.display = 'none';
+    }
+}
+
 function vs_listofmultiple_add(varprefix) {
     var choice = document.getElementById(varprefix + '_choice');
     var ident = choice.value;

@@ -3187,7 +3187,7 @@ class FileUpload(ValueSpec):
 class IconSelector(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._prefix      = kwargs.get('prefix', 'icon_')
+        self._prefix      = kwargs.get('prefix', '')
         self._allow_empty = kwargs.get('allow_empty', True)
         self._html_path   = 'images/icons'
         self._empty_img   = kwargs.get('emtpy_img', 'empty')
@@ -3197,22 +3197,14 @@ class IconSelector(ValueSpec):
             'empty',
         ]
 
-        # Mapping table to put icons into categories etc.
-        # FIXME: Need specification file or some plugin mechanism
-        self._icons = [
-            'logos': (_('Logos'), [
-                'windows',
-                'linux',
-                'cisco',
-                'checkmk',
-                'ooo_gulls',
-                'acroread',
-            ],
-            'misc': (_('Misc'), [
-
-            ],
+        self._categories = [
+            ('logos', _('Logos')),
+            ('misc',  _('Misc')),
         ]
 
+    # All icons within the images/icons directory have the ident of a category
+    # witten in the PNG meta data. For the default images we have done this scripted.
+    # During upload of user specific icons, the meta data is added to the images.
     def available_icons(self):
         if defaults.omd_root:
             dirs = [
@@ -3222,22 +3214,53 @@ class IconSelector(ValueSpec):
         else:
             dirs = [ os.path.join(defaults.web_dir, "htdocs/images/icons") ]
 
-        icons = set([])
+        valid_categories = dict(self._categories).keys()
+
+        from PIL import Image
+
+        #
+        # Read all icons from the icon directories
+        #
+        icons = {}
         for dir in dirs:
-            if os.path.exists(dir):
-                icons.update([ i[len(self._prefix):-4] for i in os.listdir(dir)
-                           if i[-4:] == '.png' and os.path.isfile(dir + "/" + i)
-                              and i.startswith(self._prefix) ])
+            try:
+                files = os.listdir(dir)
+            except OSError:
+                continue
+
+            for file_name in files:
+                file_path = dir + "/" + file_name
+                if file_name[-4:] == '.png' and os.path.isfile(file_path) \
+                   and file_name.startswith(self._prefix):
+
+                    # extract the category from the meta data
+                    im = Image.open(file_path)
+                    category = im.info.get('Comment')
+                    if category not in valid_categories:
+                        category = 'misc'
+
+                    icon_name = file_name[len(self._prefix):-4]
+                    icons[icon_name] = category
 
         for exclude in self._exclude:
             try:
-                icons.remove(exclude)
+                del icons[exclude]
             except KeyError:
                 pass
 
-        icons = list(icons)
-        icons.sort()
         return icons
+
+    def available_icons_by_category(self, icons):
+        by_cat = {}
+        for icon_name, category_name in icons.items():
+            by_cat.setdefault(category_name, [])
+            by_cat[category_name].append(icon_name)
+
+        icon_categories = []
+        for category_name, category_alias in self._categories:
+            if category_name in by_cat:
+                icon_categories.append((category_name, category_alias, by_cat[category_name]))
+        return icon_categories
 
     def render_icon(self, icon, onclick = '', title = '', id = ''):
         path = "%s/%s%s.png" % (self._html_path, self._prefix, html.attrencode(icon))
@@ -3266,11 +3289,31 @@ class IconSelector(ValueSpec):
 
     def render_popup_input(self, varprefix, value):
         html.write('<div class="icons">')
+
+        icons = self.available_icons()
+        available_icons = self.available_icons_by_category(icons)
+        active_category = icons.get(value, available_icons[0][0])
+
+        # Render tab navigation
+        html.write('<ul>')
+        for category_name, category_alias, icons in available_icons:
+            active = active_category == category_name and ' class="active"' or ''
+            html.write('<li%s>' % active)
+            html.write('<a id="%s_%s_nav" class="%s_nav" href="javascript:vs_iconselector_toggle(\'%s\', \'%s\')">%s</a>' %
+                   (varprefix, category_name, varprefix, varprefix, category_name, category_alias))
+            html.write('</li>')
+        html.write('</ul>')
+
+        # Now render the icons grouped by category
         empty = self._allow_empty and ['empty'] or []
-        for nr, icon in enumerate(empty + self.available_icons()):
-            self.render_icon(icon,
-                onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
-                title = _('Choose this icon'), id = varprefix + '_i_' + icon)
+        for category_name, category_alias, icons in available_icons:
+            display = active_category != category_name and ' style="display:none"' or ''
+            html.write('<div%s id="%s_%s_container" class="%s_container">' % (display, varprefix, category_name, varprefix))
+            for nr, icon in enumerate(empty + icons):
+                self.render_icon(icon,
+                    onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
+                    title = _('Choose this icon'), id = varprefix + '_i_' + icon)
+            html.write('</div>')
         html.write('</div>')
 
     def from_html_vars(self, varprefix):

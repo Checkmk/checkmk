@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+import sys
+from PIL import Image
+
+if len(sys.argv) < 3:
+    sys.stderr.write('So gehts:\n')
+    sys.stderr.write('  add-icon-category category_name pfad/zu/den/bildern*.png\n')
+    sys.exit(1)
+
+category = sys.argv[1]
+images   = sys.argv[2:]
+
+for image in images:
+    im = Image.open(image)
+    im.info['Comment'] = category
+
+    from PIL import PngImagePlugin
+    meta = PngImagePlugin.PngInfo()
+    for k,v in im.info.iteritems():
+        if k not in ('interlace', 'gamma', 'dpi', 'transparency', 'aspect'):
+            meta.add_text(k, v, 0)
+    im.save(image, 'PNG', pnginfo=meta)

@@ -953,6 +953,51 @@ body.main table.footer .popup_menu a:hover {
     text-decoration: underline;
 }
 
+#popup_menu .icons ul {
+    list-style: none;
+    height: 21px;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 5px;
+}
+
+#popup_menu .icons li {
+    float: left;
+}
+
+#popup_menu .icons li a {
+    display: block;
+    height: 21px;
+    padding: 0 5px;
+    line-height: 21px;
+    border-right: 1px solid #fff;
+}
+
+#popup_menu .icons li a:hover {
+    text-decoration: none;
+    color:#779D2A;
+    background-color: #fbfbfb;
+}
+
+#popup_menu .icons li.active a {
+    border-bottom: 1px solid #508AA1;
+    color: #000;
+}
+
+#popup_menu .icons div {
+    clear: left;
+}
+
+#popup_menu .icons a {
+    display: inline-block;
+}
+
+#popup_menu .icons img.icon {
+    width: 20px;
+    height: 20px;
+}
+
 /*--Various----------------------------------------------------------------.
 |                __     __         _                                       |
 |                \ \   / /_ _ _ __(_) ___  _   _ ___                       |

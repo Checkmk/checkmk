@@ -1,0 +1,10 @@
+Title: Fixed automation actions with transid=-1 when using basic authentication
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427446830
+
+

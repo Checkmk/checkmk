@@ -904,8 +904,16 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
 
 def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
-    ldap_groups = dict(ldap_group_members([ dn.lower() for role_id, dn in params.items() if isinstance(dn, str) ],
-                                     filt_attr = 'distinguishedname', nested = params.get('nested', False)))
+    groups_to_fetch = []
+    for role_id, distinguished_names in params.items():
+        if type(distinguished_names) == list:
+            groups_to_fetch += [ dn.lower() for dn in distinguished_names ]
+        elif type(distinguished_names) == str:
+            groups_to_fetch.append(distinguished_names.lower())
+
+    ldap_groups = dict(ldap_group_members(groups_to_fetch,
+                                          filt_attr = 'distinguishedname',
+                                          nested = params.get('nested', False)))
 
     # posixGroup objects use the memberUid attribute to specify the group
     # memberships. This is the username instead of the users DN. So the
@@ -915,14 +923,18 @@ def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     roles = set([])
 
     # Loop all roles mentioned in params (configured to be synchronized)
-    for role_id, dn in params.items():
-        if not isinstance(dn, str):
-            continue # skip non configured ones
-        dn = dn.lower() # lower case matching for DNs!
+    for role_id, distinguished_names in params.items():
+        if type(distinguished_names) != list:
+            distinguished_names = [distinguished_names]
 
-        # if group could be found and user is a member, add the role
-        if dn in ldap_groups and user_cmp_val in ldap_groups[dn]['members']:
-            roles.add(role_id)
+        for dn in distinguished_names:
+            if not isinstance(dn, str):
+                continue # skip non configured ones (old valuespecs allowed None)
+            dn = dn.lower() # lower case matching for DNs!
+
+            # if group could be found and user is a member, add the role
+            if dn in ldap_groups and user_cmp_val in ldap_groups[dn]['members']:
+                roles.add(role_id)
 
     # Load default roles from default user profile when the user got no role
     # by the role sync plugin
@@ -934,14 +946,22 @@ def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
 def ldap_list_roles_with_group_dn():
     elements = []
     for role_id, role in load_roles().items():
-        elements.append((role_id, LDAPDistinguishedName(
-            title = role['alias'] + ' - ' + _("Specify the Group DN"),
-            help  = _("Distinguished Name of the LDAP group to add users this role. "
-                      "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> "
-                      "This group must be defined within the scope of the "
-                      "<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."),
-            size  = 80,
-            enforce_suffix = ldap_replace_macros(config.ldap_groupspec.get('dn', '')),
+        elements.append((role_id, Transform(
+            ListOf(
+                LDAPDistinguishedName(
+                    size = 80,
+                    enforce_suffix = ldap_replace_macros(config.ldap_groupspec.get('dn', '')),
+                    allow_empty = False,
+                ),
+                title = role['alias'] + ' - ' + _("Specify the Group DN"),
+                help  = _("Distinguished Names of the LDAP groups to add users this role. "
+                          "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> "
+                          "This group must be defined within the scope of the "
+                          "<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."),
+                movable = False,
+            ),
+            # Convert old single distinguished names to list of :Ns
+            forth = lambda v: type(v) != list and [v] or v,
         )))
 
     elements.append(

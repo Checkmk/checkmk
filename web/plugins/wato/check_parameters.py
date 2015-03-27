@@ -3371,20 +3371,33 @@ register_check_parameters(
     _("Printer cartridge levels"),
     Transform(
         Tuple(
-              help = _("Levels for printer cartridges."),
-              elements = [
-                  Percentage(title = _("Warning remaining"), allow_int = True, default_value = 20.0),
-                  Percentage(title = _("Critical remaining"), allow_int = True, default_value = 10.0),
-                  Checkbox(
-                        title = _("Upturn toner levels"),
-                        label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
-                        help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
-                                  " fuel instead of what is left. In this case it's possible"
-                                  " to upturn the levels to handle this behavior"
-                                 )
-                        ),]
-             ),
-             forth = transform_printer_supply,
+            elements = [
+                Percentage(
+                    title = _("Warning remaining"),
+                    allow_int = True,
+                    default_value = 20.0,
+                    help = _("For consumable supplies, this is configured as the percentage of "
+                             "remaining capacity. For supplies that fill up, this is configured "
+                             "as remaining space."),
+                ),
+                Percentage(
+                    title = _("Critical remaining"),
+                    allow_int = True,
+                    default_value = 10.0,
+                    help = _("For consumable supplies, this is configured as the percentage of "
+                             "remaining capacity. For supplies that fill up, this is configured "
+                             "as remaining space."),
+                ),
+                Checkbox(
+                    title = _("Upturn toner levels"),
+                    label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
+                    help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                              " fuel instead of what is left. In this case it's possible"
+                              " to upturn the levels to handle this behavior")
+                ),
+            ]
+        ),
+        forth = transform_printer_supply,
     ),
     TextAscii(
         title = _("cartridge specification"),

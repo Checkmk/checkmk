@@ -36,7 +36,7 @@ def fetch_file_from_tar(tardata, filename):
 def output_box(title, content):
     html.write('<h3>%s</h3>' % title)
     html.write('<div class=log_output>%s</div>'
-               % html.attrencode(content).replace("\n", "<br>"))
+               % html.attrencode(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
 
 def page_crashed_check():
     html.header(_("Crashed Check Report"), stylesheets=["status", "pages",])
@@ -90,7 +90,7 @@ def page_crashed_check():
     html.context_button(_("Submit Report"), mailto_url, "email")
     html.end_context_buttons()
 
-    output_box(_("Crash report"), HTML(trace.replace(" ", "&nbsp;")))
+    output_box(_("Crash report"), trace)
 
     if agent_output:
         output_box(_("Agent output"), agent_output)

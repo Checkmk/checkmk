@@ -2205,11 +2205,13 @@ class Timerange(CascadingDropdown):
             until_time = now
             title = _("The last ") + Age().value_to_text(rangespec[1])
             return (from_time, until_time), title
+
         elif rangespec[0] in [ 'date', 'time' ]:
             from_time, until_time = rangespec[1]
             if from_time > until_time:
                 raise MKUserError("avo_rangespec_9_0_year", _("The end date must be after the start date"))
-            until_time += 86400 # Consider *end* of this day
+            if rangespec[0] == 'date':
+                until_time += 86400 # Consider *end* of this day
             title = AbsoluteDate().value_to_text(from_time) + " ... " + \
                     AbsoluteDate().value_to_text(until_time)
             return (from_time, until_time), title

@@ -641,6 +641,9 @@ def get_snmp_character_encoding(hostname):
     if len(entries) > 0:
         return entries[0]
 
+def is_snmpv3_host(hostname):
+    return type(snmp_credentials_of(hostname)) == tuple
+
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
 

@@ -109,6 +109,7 @@ tcp_hosts                            = [ (['tcp'], ALL_HOSTS), (NEGATE, ['snmp']
 bulkwalk_hosts                       = []
 snmpv2c_hosts                        = []
 snmp_without_sys_descr               = []
+snmpv3_contexts                      = []
 usewalk_hosts                        = []
 dyndns_hosts                         = [] # use host name as ip address for these hosts
 ignored_checktypes                   = [] # exclude from inventory

@@ -24,60 +24,149 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# actual format
+# <<<oracle_rman>>>
+# TUX2|COMPLETED|2015-01-02_07:05:59|2015-01-02_07:05:59|DB_INCR|2|335|8485138
+#
+# old format
 # <<<oracle_rman>>>
 # TUX2 COMPLETED 2014-07-08_17:27:59 2014-07-08_17:29:35 DB_INCR 32
 # TUX2 COMPLETED 2014-07-08_17:30:02 2014-07-08_17:30:06 ARCHIVELOG 121
 
 # Columns: SID STATUS START END BACKUPTYPE BACKUPAGE
 
-def inventory_oracle_rman(info):
-    return [ (line[0] + "." + line[4], {}) for line in info
-            # only check full, incremental and archivelog-Backups
-            if line[4] in ('ARCHIVELOG', 'DB_FULL', 'DB_INCR')]
+# Create DB_INCR_<Level> checks when parameter is True
+# Set this to False for old behavior. This is required for the service
+# discovery and can't be set as a inventory parameter.
+inventory_oracle_rman_incremental_details = True
 
+def inventory_oracle_rman(info):
+    inventory = []
+    for line in info:
+        if line[4] in ('ARCHIVELOG', 'DB_FULL', 'DB_INCR', 'CONTROLFILE'):
+            if len(line) == 8:
+
+                if inventory_oracle_rman_incremental_details and line[4] == 'DB_INCR':
+                    inventory.append(("%s.%s_%s" % (line[0], line[4], line[5]), {}))
+                    continue
+
+            # old format used 6 values
+            elif len(line) <> 6:
+                continue
+
+            inventory.append(("%s.%s" % (line[0], line[4]), {}))
+    return inventory
 
 def check_oracle_rman(item, params, info):
-    for sid, status, start, end, backuptype, backupage in info:
-        if item == sid + "." + backuptype:
-            if not backupage:
-                return 0, "Backup is currently running"
-            backupage = int(backupage)
-            infotext = "Last backup %s ago" % get_age_human_readable(backupage * 60)
 
-            perfdata = []
-            state = 2
-            infotext = "no COMPLETED backup found in last 14 days"
+    sid_level0 = ''
+    backupage_level0 = 0
+    item_found = False
 
-            if status in  ('COMPLETED', 'COMPLETED WITH WARNINGS'):
-                if not backupage:
-                    # This should not be possible until last fix
-                    return 3, "Unknown backupage in check found"
+    for line in info:
+        # we leave the llop with break when item is found except for DB_INCR_0
+        # later we need to restore the values for DB_INCR_0 due to possivle
+        #  overwrite with new line from info
 
-                # backupage is time in minutes from agent!
-                backupage = int(backupage)*60
-                infotext = "Last backup %s ago" % get_age_human_readable(backupage)
+        backupscn = -1
 
-                state = 0
-                if "levels" in params:
-                    warn, crit = params.get("levels")
-                    if backupage >= crit:
-                        state = 2
-                    elif backupage >= warn:
-                        state = 1
-                    infotext += " (levels at %s/%s)" % (
-                        get_age_human_readable(warn),
-                        get_age_human_readable(crit))
+        if len(line) == 6:
+            sid, status, start, end, backuptype, backupage = line
 
-                    perfdata = [ ("age", backupage, warn, crit) ]
+        if len(line) == 8:
+
+            sid, status, not_used_1, end, backuptype, backuplevel, backupage, backupscn = line
+            if backupscn == '':
+                backupscn = -1
+            else:
+                backupscn = int(backupscn)
+
+        if backuptype == 'DB_INCR' and item[:-1] == "%s.%s_" % (sid,  backuptype):
+            # we found a DB_INCR_ entry
+            item_found = True
+
+            if backuplevel == '0':
+                # save DB_INCR_0 for possible missing INCR_1..4 at later time
+                sid_level0, end_level0, backupage_level0 = sid, end, backupage
+                # we need to continue for possible missing DB_INCR_1..4
+                continue
+
+            elif item[-1] == backuplevel:
+                # we found the item in agent output
+                break
+
+        elif item == "%s.%s" % (sid,  backuptype):
+            # we found the item in agent output
+            # This situation is also valid for old agent format with
+            # <sid>.DB_INCR as there was no level availible
+            item_found = True
+            break
+
+
+    if item_found:
+
+        used_incr_0 = False
+
+        if item[:-1] == "%s.DB_INCR_" % item[:item.find('.')]:
+            # we are on sid.DB_INCR_
+
+            if item[-1]  == '0':
+
+                # we are on a DB_INCR_0
+                # we could have invalid data from for item loop due to 'continue' at backuplevel==0
+                sid, end, backupage = sid_level0, end_level0, backupage_level0
+
+            else:
+
+                if item == "%s.%s_%s" % (sid,  backuptype, backuplevel):
+                    # we got a line from agent
+                    # => use the data from agent
+                    used_incr_0 = False
                 else:
-                    perfdata = [ ("age", backupage, ) ]
+                    # use the DB_INCR_0 from agent
+                    used_incr_0 = True
+                    sid, end, backupage = sid_level0, end_level0, backupage_level0
 
-            return state, infotext, perfdata
+        perfdata = []
+        state = 2
+        infotext = "no COMPLETED backup found in last 14 days"
+
+        if status in  ('COMPLETED', 'COMPLETED WITH WARNINGS'):
+            if not backupage:
+                # This should not be possible until last fix
+                return 3, "Unknown backupage in check found"
+
+            # backupage is time in minutes from agent!
+            backupage = int(backupage)*60
+            infotext = "Last backup %s ago" % get_age_human_readable(backupage)
+
+            state = 0
+            if "levels" in params:
+                warn, crit = params.get("levels")
+                if backupage >= crit:
+                    state = 2
+                elif backupage >= warn:
+                    state = 1
+                infotext += " (levels at %s/%s)" % (
+                    get_age_human_readable(warn),
+                    get_age_human_readable(crit))
+
+                perfdata = [ ("age", backupage, warn, crit) ]
+            else:
+                perfdata = [ ("age", backupage, ) ]
+
+            if backupscn > 0:
+                infotext += ", incremental SCN %i" % backupscn
+
+            if used_incr_0:
+                infotext += ', Last DB_INCR_0 used'
+
+        return state, infotext, perfdata
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+    raise MKCounterWrapped("Login into database failed. Working on %s" % item)
 
 check_info['oracle_rman'] = {
     "check_function"          : check_oracle_rman,

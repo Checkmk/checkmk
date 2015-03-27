@@ -1,0 +1,28 @@
+Title: oracle_rman: added detection of INCR0/1 backups
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1427480633
+Class: feature
+
+There were problems with the old SQL in mk_oracle for the RMAN check. The result
+are a lot of false alarms. This issue has been fixed with a new strategy in
+selecting the data.
+
+A positive side effect is the ability to monitor level 0+1 backups in different checks.
+It is possible to monitor a weekly level 0 and daily level 1 backup with 2 different checks.
+
+H2: Incompatible change:
+This is an incompatible Change when <tt>ORA <DB_NAME>.DB_INCR</tt> are used in the past. The checkname
+has been changed to <tt><DB_NAME>.DB_INCR_0</tt> and <tt><DB_NAME>.DB_INCR_1</tt> when 
+level 1 backups are used.
+
+This change requires a modification of existing rules due to change names for the checks.
+
+Please don't forget to rediscover the RMAN checks.
+
+There is a global variable which can be used to switch to the old behavior. Details are
+documented in the manpage.
+
+

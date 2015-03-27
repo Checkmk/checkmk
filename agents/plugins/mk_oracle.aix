@@ -282,26 +282,49 @@ sql_rman()
 {
     if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
-        echo "SELECT upper(d.NAME)
-                     ||'|'|| a.STATUS
-                     ||'|'|| to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                     ||'|'|| to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                     ||'|'|| replace(b.INPUT_TYPE, ' ', '_')
-                     ||'|'|| round(((sysdate - END_TIME) * 24 * 60),0)
-                     FROM V\$RMAN_BACKUP_JOB_DETAILS a, v\$database d,
-                          (SELECT input_type, max(command_id) as command_id
-                           FROM V\$RMAN_BACKUP_JOB_DETAILS
-                          WHERE START_TIME > sysdate-14
-                            and input_type != 'ARCHIVELOG'
-                            and STATUS<>'RUNNING' GROUP BY input_type) b
-                     WHERE a.COMMAND_ID = b.COMMAND_ID
+        echo "select upper(name)
+                     || '|'|| 'COMPLETED'
+                     || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                     || '|'|| case when INCREMENTAL_LEVEL IS NULL
+                              then 'DB_FULL'
+                              else 'DB_INCR'
+                              end
+                     || '|'|| INCREMENTAL_LEVEL
+                     || '|'|| round(((sysdate-COMPLETION_TIME) * 24 * 60), 0)
+                     || '|'|| INCREMENTAL_CHANGE#
+                from (select vd.name, bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
+                      from (select bd.file#, bd.INCREMENTAL_LEVEL, max(bd.COMPLETION_TIME) COMPLETION_TIME
+                            from v\$backup_datafile bd
+                            join v\$datafile_header dh on dh.file# = bd.file#
+                            where dh.status = 'ONLINE'
+                            group by bd.file#, bd.INCREMENTAL_LEVEL
+                                           ) bd
+                     join v\$backup_datafile bd2 on bd2.file# = bd.file#
+                                               and bd2.COMPLETION_TIME = bd.COMPLETION_TIME
+                     join v\$database vd on vd.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE#
+                     group by vd.name, bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#
+                     order by vd.name, bd2.INCREMENTAL_LEVEL)
+              UNION ALL
+              select d.name
+                    || '|' || 'COMPLETED'
+                    || '|'
+                    || '|' || to_char(max(bcd.CHECKPOINT_TIME), 'yyyy-mm-dd_hh24:mi:ss')
+                    || '|' || 'CONTROLFILE'
+                    || '|'
+                    || '|' || round((sysdate - max(bcd.CHECKPOINT_TIME)) * 24 * 60)
+                    || '|' || '0'
+              from v\$database d
+              join V\$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
+              group by d.name
               UNION ALL
               select name
                      || '|COMPLETED'
                      || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
-                     || '|ARCHIVELOG|'
+                     || '|ARCHIVELOG||'
                      || round((sysdate - completed)*24*60,0)
+                     || '|'
               from (
                     select d.name
                          , max(a.completion_time) completed

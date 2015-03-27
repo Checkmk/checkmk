@@ -1,0 +1,11 @@
+Title: Fix non-working option for disabling column headers in grouped boxed views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427443957
+
+For example the pages showing graphs after a graph search would show <i>Service graphs</i>
+above each graph. This has been fixed.

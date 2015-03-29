@@ -1,0 +1,12 @@
+Title: hp_prolaint: Unkown state is not longer handled as OK
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427466792
+Class: fix
+
+Due to a bug in the HP Firmware there was a need to handle a reported uknown state as {OK}.
+Since HP provided an Firmware update (http://h20566.www2.hp.com/hpsc/doc/public/display?docId=c03939085&jump) we can 
+handle this state now like expected. 
+

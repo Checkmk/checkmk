@@ -285,7 +285,7 @@ sql_rman()
 {
     if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
-        echo "select /* check_mk rman1 */ upper(name)
+        echo "select /*"$HINT_RMAN" check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
@@ -313,7 +313,7 @@ sql_rman()
                             , bd2.INCREMENTAL_CHANGE#
                      order by name, bd2.INCREMENTAL_LEVEL);
 
-              select /* check_mk rman2 */ name
+              select /*"$HINT_RMAN" check_mk rman2 */ name
                     || '|' || 'COMPLETED'
                     || '|'
                     || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
@@ -329,7 +329,7 @@ sql_rman()
                     group by upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                    );
 
-              select /* check_mk rman3 */ name
+              select /*"$HINT_RMAN" check_mk rman3 */ name
                      || '|COMPLETED'
                      || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
@@ -1087,6 +1087,9 @@ do
         fi
         if [ "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
             echo "Paramter DISABLE_ORA_SESSION_SETTINGS found!"
+        fi
+        if [ "$HINT_RMAN" ] ; then
+            echo "Using HINT_RMAN for this Instance!"
         fi
         # do not execute any check
         continue

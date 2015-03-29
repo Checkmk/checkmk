@@ -1,0 +1,17 @@
+Title: mk_oracle: Performance hint for RMAN checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427651517
+Class: feature
+
+There are some environments with performance issues in RMAN check. There is
+a known issue from Oracle regarding deleted objects in the controlfile of
+the database. See Note 465378.1 in MyOracleSupport for details.
+
+Another solution is adding a hint in the SQL statement. This werk adds the
+function to insert the hint with a variable in <tr>mk_oracle.cfg</tr>. Please
+add the following entry:
+<tr>HINT_RMAN="+RULE"</tr>
+

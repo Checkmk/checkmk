@@ -838,18 +838,37 @@ function sqlplus_internal() {
     fi
 }
 
+function ora_session_environment()
+{
+    echo 'set pages 0 trimspool on feedback off lines 8000'
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' -a ! "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
+        echo 'set echo off'
+        echo 'alter session set "_optimizer_mjc_enabled"=false;'
+
+        # cursor_sharing is not valid for ASM instances
+        if [ ! ${ORACLE_SID:0:1} = '+' ] ; then
+            echo 'alter session set cursor_sharing=exact;'
+        fi
+
+        echo 'set echo on'
+    fi
+    echo 'whenever sqlerror exit 1'
+    echo ' '
+}
+
 # Helper function that calls an SQL statement with a clean output
 # Usage: echo "..." | sqlplus SID
 function sqlplus ()
 {
     local SID=$1
     loc_stdin=$(cat)
+    loc_stdin=$(ora_session_environment)${loc_stdin}
 
     # use sqlplus_internal when no sqlplus.sh is found
     SQLPLUS="$MK_CONFDIR"/sqlplus.sh
     test -f "$SQLPLUS" || SQLPLUS=sqlplus_internal
 
-    if OUTPUT=$({ echo 'set pages 0 trimspool on feedback off lines 8000' ; echo 'whenever sqlerror exit 1'; echo "$loc_stdin" ; } | "$SQLPLUS" $SID)
+    if OUTPUT=$(echo "$loc_stdin"  | "$SQLPLUS" $SID)
     then
         echo "$OUTPUT"
     else
@@ -904,6 +923,7 @@ function do_async_checks ()
 # Make sure that the new shell that is being run by run_cached inherits
 # our functions
 export -f sqlplus
+export -f ora_session_environment
 export -f sqlplus_internal
 export -f do_async_checks
 export -f set_oraenv
@@ -925,6 +945,7 @@ function run_cached_local () {
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
+    local NOW=$(date +%s)
     if [ -e "$CACHEFILE.new" ] ; then
         CF_ATIME=$(file_age "$CACHEFILE.new")
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
@@ -1045,6 +1066,9 @@ do
               from v\$instance;" | sqlplus $SID
         echo "SYNC_SECTIONS=$SECTIONS"
         echo "ASYNC_SECTIONS=$ASECTIONS"
+        if [ "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
+            echo "Paramter DISABLE_ORA_SESSION_SETTINGS found!"
+        fi
         # do not execute any check
         continue
     fi

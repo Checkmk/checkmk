@@ -168,12 +168,13 @@ sql_tablespaces()
     echo 'PROMPT <<<oracle_tablespaces:sep(124)>>>'
     if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
 
-        echo "select upper(d.NAME) || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
+        echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                  || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
                   ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
                   ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
                   ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
                   ||'|'|| contents
-           from v\$database d , (
+           from v\$database d , v\$instance i, (
                     select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
                     f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
                     f.ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
@@ -195,12 +196,13 @@ sql_tablespaces()
               "
     elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
 
-        echo "select upper(d.NAME) || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
+        echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                  || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
                   ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
                   ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
                   ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
                   ||'|'|| contents
-           from v\$database d , (
+           from v\$database d , v\$instance i, (
                     select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
                     f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
                     'ONLINE' ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
@@ -227,13 +229,14 @@ sql_dataguard_stats()
 {
     if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo 'PROMPT <<<oracle_dataguard_stats:sep(124)>>>'
-        echo "SELECT upper(d.NAME)
+        echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| upper(d.DB_UNIQUE_NAME)
                      ||'|'|| d.DATABASE_ROLE
                      ||'|'|| ds.name
                      ||'|'|| ds.value
               FROM  v\$database d
               JOIN  v\$parameter vp on 1=1
+              JOIN v\$instance i on 1=1
               left outer join V\$dataguard_stats ds on 1=1
               WHERE vp.name = 'log_archive_config'
               AND   vp.value is not null
@@ -246,7 +249,7 @@ sql_recovery_status()
 {
     echo 'PROMPT <<<oracle_recovery_status:sep(124)>>>'
     if [ "$AT_LEAST_ORACLE_101" = 'yes' ] ; then
-        echo "SELECT upper(d.NAME)
+        echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| d.DB_UNIQUE_NAME
                      ||'|'|| d.DATABASE_ROLE
                      ||'|'|| d.open_mode
@@ -261,8 +264,8 @@ sql_recovery_status()
               ORDER BY dh.file#;
              "
     elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
-        echo "SELECT upper(d.NAME)
-                     ||'|'|| d.NAME
+        echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                     ||'|'|| upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| d.DATABASE_ROLE
                      ||'|'|| d.open_mode
                      ||'|'|| dh.file#
@@ -282,7 +285,7 @@ sql_rman()
 {
     if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
-        echo "select upper(name)
+        echo "select /* check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
@@ -293,7 +296,8 @@ sql_rman()
                      || '|'|| INCREMENTAL_LEVEL
                      || '|'|| round(((sysdate-COMPLETION_TIME) * 24 * 60), 0)
                      || '|'|| INCREMENTAL_CHANGE#
-                from (select vd.name, bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
+                from (select upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name)) name
+                           , bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
                       from (select bd.file#, bd.INCREMENTAL_LEVEL, max(bd.COMPLETION_TIME) COMPLETION_TIME
                             from v\$backup_datafile bd
                             join v\$datafile_header dh on dh.file# = bd.file#
@@ -303,22 +307,29 @@ sql_rman()
                      join v\$backup_datafile bd2 on bd2.file# = bd.file#
                                                and bd2.COMPLETION_TIME = bd.COMPLETION_TIME
                      join v\$database vd on vd.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE#
-                     group by vd.name, bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#
-                     order by vd.name, bd2.INCREMENTAL_LEVEL)
-              UNION ALL
-              select d.name
+                     join v\$instance i on 1=1
+                     group by upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
+                            , bd2.INCREMENTAL_LEVEL
+                            , bd2.INCREMENTAL_CHANGE#
+                     order by name, bd2.INCREMENTAL_LEVEL);
+
+              select /* check_mk rman2 */ name
                     || '|' || 'COMPLETED'
                     || '|'
-                    || '|' || to_char(max(bcd.CHECKPOINT_TIME), 'yyyy-mm-dd_hh24:mi:ss')
+                    || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
                     || '|' || 'CONTROLFILE'
                     || '|'
-                    || '|' || round((sysdate - max(bcd.CHECKPOINT_TIME)) * 24 * 60)
+                    || '|' || round((sysdate - CHECKPOINT_TIME) * 24 * 60)
                     || '|' || '0'
-              from v\$database d
-              join V\$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
-              group by d.name
-              UNION ALL
-              select name
+              from (select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name
+                          ,max(bcd.CHECKPOINT_TIME) CHECKPOINT_TIME
+                    from v\$database d
+                    join V\$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
+                    join v\$instance i on 1=1
+                    group by upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                   );
+
+              select /* check_mk rman3 */ name
                      || '|COMPLETED'
                      || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
@@ -326,10 +337,10 @@ sql_rman()
                      || round((sysdate - completed)*24*60,0)
                      || '|'
               from (
-                    select d.name
+                    select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name
                          , max(a.completion_time) completed
                          , case when a.backup_count > 0 then 1 else 0 end
-                    from v\$archived_log a, v\$database d
+                    from v\$archived_log a, v\$database d, v\$instance i
                     where a.backup_count > 0
                           and a.dest_id in
                           (select b.dest_id
@@ -337,7 +348,8 @@ sql_rman()
                            where b.target = 'PRIMARY'
                              and b.SCHEDULE = 'ACTIVE'
                           )
-                    group by d.name, case when a.backup_count > 0 then 1 else 0 end);"
+                    group by d.NAME, i.instance_name
+                           , case when a.backup_count > 0 then 1 else 0 end);"
     fi
 }
 
@@ -345,13 +357,13 @@ sql_recovery_area()
 {
     if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo 'PROMPT <<<oracle_recovery_area>>>'
-        echo "select upper(d.NAME)
+        echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||' '|| round((SPACE_USED-SPACE_RECLAIMABLE)/
                                (CASE NVL(SPACE_LIMIT,1) WHEN 0 THEN 1 ELSE SPACE_LIMIT END)*100)
                      ||' '|| round(SPACE_LIMIT/1024/1024)
                      ||' '|| round(SPACE_USED/1024/1024)
                      ||' '|| round(SPACE_RECLAIMABLE/1024/1024)
-              from V\$RECOVERY_FILE_DEST, v\$database d;
+              from V\$RECOVERY_FILE_DEST, v\$database d, v\$instance i;
              "
     fi
 }
@@ -422,7 +434,7 @@ sql_jobs()
 {
     if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
-        echo "SELECT upper(d.NAME)
+        echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
                      ||'|'|| j.OWNER
                      ||'|'|| j.JOB_NAME
                      ||'|'|| j.STATE
@@ -431,12 +443,19 @@ sql_jobs()
                      ||'|'|| j.ENABLED
                      ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
                      ||'|'|| NVL(j.SCHEDULE_NAME, '-')
-                     ||'|'|| d.STATUS
-              FROM dba_scheduler_jobs j, dba_scheduler_job_run_details d, v\$database d
-              WHERE d.owner=j.OWNER AND d.JOB_NAME=j.JOB_NAME
-                AND d.LOG_ID=(SELECT max(LOG_ID) FROM dba_scheduler_job_run_details dd
-                              WHERE dd.owner=j.OWNER and dd.JOB_NAME=j.JOB_NAME
-                             );
+                     ||'|'|| jd.STATUS
+              FROM dba_scheduler_jobs j
+              join v\$database vd on 1 = 1
+              join v\$instance i on 1 = 1
+              left outer join (SELECT owner, job_name, max(LOG_ID) log_id
+                                        FROM dba_scheduler_job_run_details dd
+                                        group by owner, job_name
+                              ) jm on  jm.JOB_NAME = j.JOB_NAME
+                                   and jm.owner=j.OWNER
+              left outer join dba_scheduler_job_run_details jd
+                              on  jd.owner = jm.OWNER
+                              AND jd.JOB_NAME = jm.JOB_NAME
+                              AND jd.LOG_ID = jm.LOG_ID;
              "
     fi
 }
@@ -444,17 +463,17 @@ sql_jobs()
 sql_ts_quotas()
 {
     echo 'PROMPT <<<oracle_ts_quotas:sep(124)>>>'
-    echo "select upper(d.NAME)
+    echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                  ||'|'|| Q.USERNAME
                  ||'|'|| Q.TABLESPACE_NAME
                  ||'|'|| Q.BYTES
                  ||'|'|| Q.MAX_BYTES
-          from dba_ts_quotas Q, v\$database d
+          from dba_ts_quotas Q, v\$database d, v\$instance i
           where max_bytes > 0
           union all
-          select upper(d.NAME)
+          select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                  ||'|||'
-          from v\$database d
+          from v\$database d, v\$instance i
           order by 1;
          "
 }
@@ -654,6 +673,7 @@ sql_asm_diskgroup()
     fi
 }
 
+#.
 #   .--oraenv--------------------------------------------------------------.
 #   |                                                                      |
 #   |                    ___  _ __ __ _  ___ _ ____   __                   |
@@ -733,7 +753,7 @@ function get_oraversion () {
     fi
 }
 
-#
+#.
 #   .--Functions-----------------------------------------------------------.
 #   |             _____                 _   _                              |
 #   |            |  ___|   _ _ __   ___| |_(_) ___  _ __  ___              |
@@ -1066,6 +1086,9 @@ do
               from v\$instance;" | sqlplus $SID
         echo "SYNC_SECTIONS=$SECTIONS"
         echo "ASYNC_SECTIONS=$ASECTIONS"
+        if [ "$IGNORE_DB_NAME" ] ; then
+            echo "IGNORE_DB_NAME found. Ignoring DB_NAME in all SQLs!"
+        fi
         if [ "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
             echo "Paramter DISABLE_ORA_SESSION_SETTINGS found!"
         fi

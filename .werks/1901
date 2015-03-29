@@ -1,0 +1,22 @@
+Title: mk_oracle: IGNORE_DB_NAME for special environments
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427650928
+Class: feature
+
+There are very rare environments, where databases use the same DB_NAME on 1 host.
+mk_oracle is not able to monitor such environments. This problem has been fixed
+with this change.
+
+H2: Important Note
+When <tr>IGNORE_DB_NAME=1</tr> is configured in <tr>mk_oracle.cfg</tr> the name
+of discovered checks will change from <tr>ORA <Database-Name> <Check></tr> to
+<tr>ORA <Instance-Name> <Check></tr>.
+
+The monitoring of Real Application Clusters or Standby Environments is not possible
+with this parameter, because the checks don't use name which could be configured as
+a clustered service.
+
+

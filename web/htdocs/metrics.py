@@ -101,6 +101,7 @@ def parse_perf_data(perf_data_string, check_command=None):
         return None, check_command
 
     parts = perf_data_string.split()
+
     # Try if check command is appended to performance data
     # in a PNP like style
     if parts[-1].startswith("[") and parts[-1].endswith("]"):
@@ -228,9 +229,20 @@ def evaluate(expression, translated_metrics):
             expression, explicit_color = expression.rsplit("#", 1) # drop appended color information
         else:
             explicit_color = None
+
+        if "@" in expression:
+            expression, explicit_unit_name = expression.rsplit("@", 1) # appended unit name
+        else:
+            explicit_unit_name = None
+
         value, unit, color = evaluate_rpn(expression, translated_metrics)
+
         if explicit_color:
             color = "#" + explicit_color
+
+        if explicit_unit_name:
+            unit = unit_info[explicit_unit_name]
+
         return value, unit, color
 
 
@@ -315,7 +327,7 @@ def evaluate_rpn(expression, translated_metrics):
 def evaluate_literal(expression, translated_metrics):
 
     if type(expression) == int:
-        return expression, unit_info["count"], None
+        return float(expression), unit_info["count"], None
 
     elif type(expression) == float:
         return expression, unit_info[""], None
@@ -392,7 +404,7 @@ def perfometer_possible(perfometer, translated_metrics):
         elif perfometer["type"] == "logarithmic":
             required = [ perfometer["metric"] ]
         else:
-            pass # TODO: logarithmic, etc. dual, stacked?
+            pass # TODO: dual, stacked?
 
         if "label" in perfometer and perfometer["label"] != None:
             required.append(perfometer["label"][0])
@@ -457,6 +469,14 @@ def graph_possible(graph_template, translated_metrics):
             evaluate(metric_definition[0], translated_metrics)
         except Exception, e:
             return False
+
+    # Allow graphs to be disabled if certain (better) metrics
+    # are available
+    if "not_if_have" in graph_template:
+        for var in graph_template["not_if_have"]:
+            if var in translated_metrics:
+                return False
+
     return True
 
 
@@ -530,19 +550,19 @@ def build_perfometer(perfometer, translated_metrics):
 
             # Use unit of first metrics for output of sum. We assume that all
             # stackes metrics have the same unit anyway
-            if "label" in perfometer:
-                if perfometer["label"] == None:
-                    label = ""
-                else:
-                    expr, unit_name = perfometer["label"]
-                    value, unit, color = evaluate(expr, translated_metrics)
-                    if unit_name:
-                        unit = unit_info[unit_name]
-                    label = unit["render"](summed)
-            else: # absolute
-                value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
+            value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
+            label = unit["render"](summed)
 
-                label = unit["render"](summed)
+        # "label" option in all Perf-O-Meters overrides automatic label
+        if "label" in perfometer:
+            if perfometer["label"] == None:
+                label = ""
+            else:
+                expr, unit_name = perfometer["label"]
+                value, unit, color = evaluate(expr, translated_metrics)
+                if unit_name:
+                    unit = unit_info[unit_name]
+                label = unit["render"](value)
 
         return label, stack
 
@@ -914,8 +934,6 @@ def mix_colors(a, b):
 #   |    |  _  | (_) \ V /  __/ | |_____| |_| | | | (_| | |_) | | | |      |
 #   |    |_| |_|\___/ \_/ \___|_|        \____|_|  \__,_| .__/|_| |_|      |
 #   |                                                   |_|                |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 def page_show_graph():
@@ -926,29 +944,45 @@ def page_show_graph():
     # FIXME HACK TODO We don't have the current perfata and check command
     # here, but we only need it till metrics.render_svc_time_graph() does
     # not need these information anymore.
-    query = "GET services\n" \
-            "Filter: host_name = %s\n" \
-            "Filter: service_description = %s\n" \
-            "Columns: perf_data check_command\n" % (host_name, service)
+    if service == "_HOST_":
+        query = "GET hosts\n" \
+                "Filter: host_name = %s\n" \
+                "Columns: perf_data check_command\n" % host_name
+
+    else:
+        query = "GET services\n" \
+                "Filter: host_name = %s\n" \
+                "Filter: service_description = %s\n" \
+                "Columns: perf_data check_command\n" % (host_name, service)
+
     html.live.set_only_sites([site])
     data = html.live.query_row(query)
     html.live.set_only_sites(None)
-    row = {
-        'site': site, 
-        'host_name': host_name, 
-        'service_description': service,
-        'service_perf_data': data[0],
-        'service_check_command': data[1],
-    }
+
+    if service == "_HOST_":
+        row = {
+            'site'                  : site,
+            'host_name'             : host_name,
+            'host_perf_data'        : data[0],
+            'host_check_command'    : data[1],
+        }
+    else:
+        row = {
+            'site'                  : site,
+            'host_name'             : host_name,
+            'service_description'   : service,
+            'service_perf_data'     : data[0],
+            'service_check_command' : data[1],
+        }
 
     # now try to render the graph with our graphing. If it is not possible,
     # add JS code to let browser fetch the PNP graph
     try:
         # Currently always displaying 24h graph
         end_time = time.time()
-        start_time = end_time - 24 * 3600
+        start_time = end_time - 8 * 3600
 
-        htmlcode = render_svc_time_graph(row, start_time, end_time, size=(30, 10), show_legend=False)
+        htmlcode = render_time_graph(row, start_time, end_time, size=(30, 10), show_legend=False, graph_id_prefix="hover")
         if htmlcode:
             html.write(htmlcode)
             return
@@ -959,10 +993,7 @@ def page_show_graph():
 
     # Fallback to PNP graph rendering
     host = pnp_cleanup(host_name)
-    if not service:
-        svc = "_HOST_"
-    else:
-        svc = pnp_cleanup(service)
+    svc = pnp_cleanup(service)
     site = html.site_status[site]["site"]
     if html.mobile:
         url = site["url_prefix"] + ("pnp4nagios/index.php?kohana_uri=/mobile/popup/%s/%s" % \

@@ -46,28 +46,17 @@ unit_info[""] = {
 }
 
 unit_info["count"] = {
-    "title"  : _("Count"),
-    "symbol" : "",
-    "render" : lambda v: "%d" % v,
-}
-
-unit_info["sessions"] = {
-    "title"  : _("Sessions"),
-    "symbol" : "",
-    "render" : lambda v: "%d" % v,
-}
-
-unit_info["locks"] = {
-    "title"  : _("Locks"),
-    "symbol" : "",
-    "render" : lambda v: "%d" % v,
+    "title"    : _("Count"),
+    "symbol"   : "",
+    "render"   : lambda v                               : "%d" % v,
+    "stepping" : "integer", # for vertical graph labels
 }
 
 # value ranges from 0.0 ... 100.0
 unit_info["%"] = {
     "title"  : _("%"),
     "symbol" : _("%"),
-    "render" : lambda v: "%s%%" % drop_dotzero(v),
+    "render" : lambda v: percent_human_redable(v, 3),
 }
 
 # Similar as %, but value ranges from 0.0 ... 1.0
@@ -75,13 +64,14 @@ unit_info["ratio"] = {
     "title"  : _("%"),
     "symbol" : _("%"),
     "render_scale" : 100.0, # Scale by this before rendering if "render" not being used
-    "render" : lambda v: "%s%%" % drop_dotzero(100.0 * v),
+    "render" : lambda v: percent_human_redable(v, 3),
 }
 
 unit_info["s"] = {
-    "title" : _("sec"),
-    "symbol" : _("s"),
-    "render" : age_human_readable,
+    "title"    : _("sec"),
+    "symbol"   : _("s"),
+    "render"   : age_human_readable,
+    "stepping" : "time", # for vertical graph labels
 }
 
 unit_info["1/s"] = {
@@ -91,22 +81,31 @@ unit_info["1/s"] = {
 }
 
 unit_info["bytes"] = {
-    "title"  : _("Bytes"),
-    "symbol" : _("B"),
-    "render" : bytes_human_readable,
+    "title"    : _("Bytes"),
+    "symbol"   : _("B"),
+    "render"   : bytes_human_readable,
+    "stepping" : "binary", # for vertical graph labels
 }
 
 unit_info["bytes/s"] = {
-    "title"  : _("Bytes per second"),
-    "symbol" : _("B/s"),
-    "render" : lambda v: bytes_human_readable(v) + _("/s"),
+    "title"    : _("Bytes per second"),
+    "symbol"   : _("B/s"),
+    "render"   : lambda v: bytes_human_readable(v) + _("/s"),
+    "stepping" : "binary", # for vertical graph labels
+}
+
+unit_info["bits/s"] = {
+    "title"    : _("Bits per second"),
+    "symbol"   : _("bits/s"),
+    "render"   : lambda v: physical_precision(v, 3, _("bit/s")),
 }
 
 # Output in bytes/days, value is in bytes/s
 unit_info["bytes/d"] = {
-    "title"  : _("Bytes per day"),
-    "symbol" : _("B/d"),
-    "render" : lambda v: bytes_human_readable(v * 86400.0) + _("/d"),
+    "title"    : _("Bytes per day"),
+    "symbol"   : _("B/d"),
+    "render"   : lambda v: bytes_human_readable(v * 86400.0) + _("/d"),
+    "stepping" : "binary", # for vertical graph labels
 }
 
 unit_info["c"] = {
@@ -158,7 +157,6 @@ unit_info["db"] = {
 }
 
 
-
 #.
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
@@ -185,6 +183,12 @@ metric_info["pl"] = {
     "color" : "#ffc030",
 }
 
+metric_info["response_time"] = {
+    "title" : _("Response time"),
+    "unit"  : "s",
+    "color" : "#40a0b0",
+}
+
 metric_info["uptime"] = {
     "title" : _("Uptime"),
     "unit"  : "s",
@@ -209,22 +213,46 @@ metric_info["database_size"] = {
     "color" : "#00868B",
 }
 
-metric_info["mem_used"] = {
-    "title" : _("Used RAM"),
-    "unit"  : "bytes",
-    "color" : "#80ff40",
+metric_info["mem_total"] = {
+    "title" : _("RAM installed"),
+    "color": "#f0f0f0",
+    "unit" : "bytes",
 }
 
 metric_info["mem_free"] = {
     "title" : _("Free RAM"),
-    "unit"  : "bytes",
     "color" : "#ffffff",
+    "unit"  : "bytes",
+}
+
+metric_info["mem_used"] = {
+    "color": "#80ff40",
+    "title" : _("RAM used"),
+    "unit" : "bytes",
+}
+
+metric_info["swap_total"] = {
+    "title" : _("Swap installed"),
+    "color": "#e0e0e0",
+    "unit" : "bytes",
+}
+
+metric_info["swap_free"] = {
+    "title" : _("Free swap space"),
+    "unit"  : "bytes",
+    "color" : "#eeeeee",
 }
 
 metric_info["swap_used"] = {
-    "title" : _("Used swap space"),
-    "unit"  : "bytes",
-    "color" : "#008030",
+    "title" : _("Swap used"),
+    "color": "#408f20",
+    "unit" : "bytes",
+}
+
+metric_info["swap_cached"] = {
+    "title" : _("Swap cached"),
+    "color": "#5bebc9",
+    "unit" : "bytes",
 }
 
 metric_info["caches"] = {
@@ -233,11 +261,175 @@ metric_info["caches"] = {
     "color" : "#ffffff",
 }
 
-metric_info["swap_free"] = {
-    "title" : _("Free swap space"),
-    "unit"  : "bytes",
-    "color" : "#eeeeee",
+
+metric_info["mem_lnx_cached"] = {
+    "title" : _("File contents"),
+    "color": "#91cceb",
+    "unit" : "bytes",
 }
+
+metric_info["mem_lnx_buffers"] = {
+    "title" : _("Filesystem structure"),
+    "color": "#5bb9eb",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_slab"] = {
+    "title" : _("Slab (Various smaller caches)"),
+    "color": "#af91eb",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_active_anon"] = {
+    "title" : _("Active   (anonymous)"),
+    "color": "#ff4040",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_active_file"] = {
+    "title" : _("Active   (files)"),
+    "color": "#ff8080",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_inactive_anon"] = {
+    "title" : _("Inactive (anonymous)"),
+    "color": "#377cab",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_inactive_file"] = {
+    "title" : _("Inactive (files)"),
+    "color": "#4eb0f2",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_active"] = {
+    "title" : _("Active"),
+    "color": "#ff4040",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_inactive"] = {
+    "title" : _("Inactive"),
+    "color": "#4040ff",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_dirty"] = {
+    "title" : _("Dirty disk blocks"),
+    "color": "#f2904e",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_writeback"] = {
+    "title" : _("Currently being written"),
+    "color": "#f2df40",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_nfs_unstable"] = {
+    "title" : _("Modified NFS data"),
+    "color": "#c6f24e",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_bounce"] = {
+    "title" : _("Bounce buffers"),
+    "color": "#4ef26c",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_writeback_tmp"] = {
+    "title" : _("Dirty FUSE data"),
+    "color": "#4eeaf2",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_total_total"] = {
+    "title" : _("Total virtual memory"),
+    "color": "#f0f0f0",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_committed_as"] = {
+    "title" : _("Committed memory"),
+    "color": "#40a080",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_commit_limit"] = {
+    "title" : _("Commit limit"),
+    "color": "#e0e0e0",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_shmem"] = {
+    "title" : _("Shared memory"),
+    "color": "#bf9111",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_kernel_stack"] = {
+    "title" : _("Kernel stack"),
+    "color": "#7192ad",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_page_tables"] = {
+    "title" : _("Page tables"),
+    "color": "#71ad9f",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_mlocked"] = {
+    "title" : _("Locked mmap() data"),
+    "color": "#a671ad",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_huge_pages_total"] = {
+    "title" : _("Total"),
+    "color": "#f0f0f0",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_huge_pages_free"] = {
+    "title" : _("Free"),
+    "color": "#f0a0f0",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_huge_pages_rsvd"] = {
+    "title" : _("Reserved part of Free"),
+    "color": "#40f0f0",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_huge_pages_surp"] = {
+    "title" : _("Surplus"),
+    "color": "#90f0b0",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_vmalloc_total"] = {
+    "title" : _("Total address space"),
+    "color": "#f0f0f0",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_vmalloc_used"] = {
+    "title" : _("Allocated space"),
+    "color": "#aaf76f",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_vmalloc_chunk"] = {
+    "title" : _("Largest free chunk"),
+    "color": "#c6f7e9",
+    "unit" : "bytes",
+}
+
 
 metric_info["execution_time"] = {
     "title" : _("Execution time"),
@@ -261,6 +453,30 @@ metric_info["load15"] = {
     "title" : _("CPU load average of last 15 minutes"),
     "unit"  : "",
     "color" : "#2c5766",
+}
+
+metric_info["context_switches"] = {
+    "title" : _("Context switches"),
+    "unit"  : "1/s",
+    "color" : "#80ff20",
+}
+
+metric_info["major_page_faults"] = {
+    "title" : _("Major page faults"),
+    "unit"  : "1/s",
+    "color" : "#20ff80",
+}
+
+metric_info["process_creations"] = {
+    "title" : _("Process creations"),
+    "unit"  : "1/s",
+    "color" : "#ff8020",
+}
+
+metric_info["threads"] = {
+    "title" : _("Number of running threads"),
+    "unit"  : "count",
+    "color" : "#8040f0",
 }
 
 metric_info["fs_used"] = {
@@ -307,28 +523,10 @@ metric_info["temp"] = {
     "color" : "#f0a040"
 }
 
-metric_info["ctxt"] = {
-    "title" : _("Context switches"),
-    "unit"  : "1/s",
-    "color" : "#ddaa66",
-}
-
-metric_info["pgmajfault"] = {
-    "title" : _("Major page faults"),
-    "unit"  : "1/s",
-    "color" : "#ddaa22",
-}
-
-metric_info["proc_creat"] = {
-    "title" : _("Process creations"),
-    "unit"  : "1/s",
-    "color" : "#ddaa99",
-}
-
 metric_info["threads"] = {
     "title" : _("Number of threads"),
     "unit"  : "count",
-    "color" : "#aa44ff",
+    "color" : "#9a77ee",
 }
 
 metric_info["user"] = {
@@ -480,26 +678,26 @@ metric_info["codewords_uncorrectable"] = {
 }
 
 metric_info["total_sessions"] = {
-    "title" : _("Total"),
-    "unit"  : "sessions",
+    "title" : _("Total sessions"),
+    "unit"  : "count",
     "color" : "#94b65a",
 }
 
 metric_info["running_sessions"] = {
-    "title" : _("Running"),
-    "unit"  : "sessions",
+    "title" : _("Running sessions"),
+    "unit"  : "count",
     "color" : "#999b94",
 }
 
 metric_info["shared_locks"] = {
-    "title" : _("Shared"),
-    "unit"  : "locks",
+    "title" : _("Shared locks"),
+    "unit"  : "count",
     "color" : "#92ec89",
 }
 
 metric_info["exclusive_locks"] = {
-    "title" : _("Exclusive"),
-    "unit"  : "locks",
+    "title" : _("Exclusive locks"),
+    "unit"  : "count",
     "color" : "#ca5706",
 }
 
@@ -660,29 +858,190 @@ metric_info["execution_time"] = {
 }
 
 metric_info["user_time"] = {
-    "title" : _("CPU time spent in user space"),
+    "title" : _("CPU time in user space"),
     "unit"  : "s",
     "color" : "#60f020",
 }
 
 metric_info["system_time"] = {
-    "title" : _("CPU time spent in system space"),
+    "title" : _("CPU time in system space"),
     "unit"  : "s",
     "color" : "#ff6000",
 }
 
 metric_info["children_user_time"] = {
-    "title" : _("CPU time of childs in user space"),
+    "title" : _("Child time in user space"),
     "unit"  : "s",
     "color" : "#aef090",
 }
 
 metric_info["children_system_time"] = {
-    "title" : _("CPU time of childs in system space"),
+    "title" : _("Child time in system space"),
     "unit"  : "s",
     "color" : "#ffb080",
 }
 
+metric_info["printer_queue"] = {
+    "title" : _("Printer queue length"),
+    "unit"  : "count",
+    "color" : "#a63df2",
+}
+
+metric_info["if_in_octets"] = {
+    "title" : _("Input Octets"),
+    "unit"  : "bytes/s",
+    "color" : "#00e060",
+}
+
+metric_info["if_out_octets"] = {
+    "title" : _("Output Octets"),
+    "unit"  : "bytes/s",
+    "color" : "#0080e0",
+}
+
+metric_info["if_in_discards"] = {
+    "title" : _("Input Discards"),
+    "unit"  : "1/s",
+    "color" : "#ff8000",
+}
+
+metric_info["if_in_errors"] = {
+    "title" : _("Input Errors"),
+    "unit"  : "1/s",
+    "color" : "#ff0000",
+}
+
+metric_info["if_out_discards"] = {
+    "title" : _("Output Dicards"),
+    "unit"  : "1/s",
+    "color" : "#ff8080",
+}
+
+metric_info["if_out_errors"] = {
+    "title" : _("Output Errors"),
+    "unit"  : "1/s",
+    "color" : "#ff0080",
+}
+
+metric_info["if_in_unicast"] = {
+    "title" : _("Input unicast packets"),
+    "unit"  : "1/s",
+    "color" : "#00ffc0",
+}
+
+metric_info["if_in_non_unicast"] = {
+    "title" : _("Input non-unicast packets"),
+    "unit"  : "1/s",
+    "color" : "#00c080",
+}
+
+metric_info["if_out_unicast"] = {
+    "title" : _("Output unicast packets"),
+    "unit"  : "1/s",
+    "color" : "#00c0ff",
+}
+
+metric_info["if_out_non_unicast"] = {
+    "title" : _("Output non-unicast packets"),
+    "unit"  : "1/s",
+    "color" : "#0080c0",
+}
+
+metric_info["tcp_established"] = {
+    "title" : _("State %s") % "ESTABLISHED",
+    "unit"  : "count",
+    "color" : "#00f040",
+}
+
+metric_info["tcp_syn_sent"] = {
+    "title" : _("State %s") % "SYN_SENT",
+    "unit"  : "count",
+    "color" : "#a00000",
+}
+
+metric_info["tcp_syn_recv"] = {
+    "title" : _("State %s") % "SYN_RECV",
+    "unit"  : "count",
+    "color" : "#ff4000",
+}
+
+metric_info["tcp_last_ack"] = {
+    "title" : _("State %s") % "LAST_ACK",
+    "unit"  : "count",
+    "color" : "#c060ff",
+}
+
+metric_info["tcp_close_wait"] = {
+    "title" : _("State %s") % "CLOSE_WAIT",
+    "unit"  : "count",
+    "color" : "#f000f0",
+}
+
+metric_info["tcp_time_wait"] = {
+    "title" : _("State %s") % "TIME_WAIT",
+    "unit"  : "count",
+    "color" : "#00b0b0",
+}
+
+metric_info["tcp_closed"] = {
+    "title" : _("State %s") % "CLOSED",
+    "unit"  : "count",
+    "color" : "#ffc000",
+}
+
+metric_info["tcp_closing"] = {
+    "title" : _("State %s") % "CLOSING",
+    "unit"  : "count",
+    "color" : "#ffc080",
+}
+
+metric_info["tcp_fin_wait1"] = {
+    "title" : _("State %s") % "FIN_WAIT1",
+    "unit"  : "count",
+    "color" : "#cccccc",
+}
+
+metric_info["tcp_fin_wait2"] = {
+    "title" : _("State %s") % "FIN_WAIT2",
+    "unit"  : "count",
+    "color" : "#888888",
+}
+
+metric_info["tcp_bound"] = {
+    "title" : _("State %s") % "BOUND",
+    "unit"  : "count",
+    "color" : "#4060a0",
+}
+
+metric_info["host_check_rate"] = {
+    "title" : _("Host check rate"),
+    "unit"  : "1/s",
+    "color" : "#884422",
+}
+
+metric_info["service_check_rate"] = {
+    "title" : _("Service check rate"),
+    "unit"  : "1/s",
+    "color" : "#ffbb66",
+}
+
+metric_info["livestatus_connect_rate"] = {
+    "title" : _("Livestatus connects"),
+    "unit"  : "1/s",
+    "color" : "#556677",
+}
+
+metric_info["livestatus_request_rate"] = {
+    "title" : _("Livestatus requests"),
+    "unit"  : "1/s",
+    "color" : "#bbccdd",
+}
+
+metric_info["log_message_rate"] = {
+    "title" : _("Log messages"),
+    "unit"  : "1/s",
+    "color" : "#aa44cc",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -701,6 +1060,9 @@ check_metrics["check-mk"]                                       = {}
 check_metrics["check-mk-ping"]                                  = {}
 check_metrics["check-mk"]                                       = {}
 
+check_metrics["check_mk_active-tcp"]                            = { "time" : { "name": "response_time" } }
+check_metrics["check-mk-host-tcp"]                              = { "time" : { "name": "response_time" } }
+
 check_metrics["check_mk-uptime"]                                = {}
 check_metrics["check_mk-esx_vsphere_counters.uptime"]           = {}
 check_metrics["check_mk-fritz.uptime"]                          = {}
@@ -713,12 +1075,62 @@ check_metrics["check_mk-statgrab_load"]                         = {}
 check_metrics["check_mk-hpux_cpu"]                              = {}
 check_metrics["check_mk-blade_bx_load"]                         = {}
 
+check_metrics["check_mk-kernel"]                                = {
+    "ctxt"       : { "name": "context_switches" },
+    "pgmajfault" : { "name": "major_page_faults" },
+    "processes"  : { "name": "process_creations" },
+}
+
 check_metrics["check_mk-cpu.threads"]                           = {}
 
-check_metrics["check_mk-mem.linux"]                             = {}
 check_metrics["check_mk-aix_sap_processlist"]                   = {}
 check_metrics["check_mk-aix_memory"]                            = { "ramused" : { "name" : "mem_used", "scale": MB }, "swapused" : { "name" : "swap_used", "scale": MB }}
 check_metrics["check_mk-mem.win"]                               = { "memory" : { "name" : "mem_used", "scale" : MB }, "pagefile" : { "name" : "pagefile_used", "scale" : MB }}
+
+check_metrics["check_mk-mem.linux"]                             = {
+    "cached"           : { "name" : "mem_lnx_cached", },
+    "buffers"          : { "name" : "mem_lnx_buffers", },
+    "slab"             : { "name" : "mem_lnx_slab", },
+    "active_anon"      : { "name" : "mem_lnx_active_anon", },
+    "active_file"      : { "name" : "mem_lnx_active_file", },
+    "inactive_anon"    : { "name" : "mem_lnx_inactive_anon", },
+    "inactive_file"    : { "name" : "mem_lnx_inactive_file", },
+    "active"           : { "name" : "mem_lnx_active", },
+    "inactive"         : { "name" : "mem_lnx_inactive", },
+    "dirty"            : { "name" : "mem_lnx_dirty", },
+    "writeback"        : { "name" : "mem_lnx_writeback", },
+    "nfs_unstable"     : { "name" : "mem_lnx_nfs_unstable", },
+    "bounce"           : { "name" : "mem_lnx_bounce", },
+    "writeback_tmp"    : { "name" : "mem_lnx_writeback_tmp", },
+    "total_total"      : { "name" : "mem_lnx_total_total", },
+    "committed_as"     : { "name" : "mem_lnx_committed_as", },
+    "commit_limit"     : { "name" : "mem_lnx_commit_limit", },
+    "shmem"            : { "name" : "mem_lnx_shmem", },
+    "kernel_stack"     : { "name" : "mem_lnx_kernel_stack", },
+    "page_tables"      : { "name" : "mem_lnx_page_tables", },
+    "mlocked"          : { "name" : "mem_lnx_mlocked", },
+    "huge_pages_total" : { "name" : "mem_lnx_huge_pages_total", },
+    "huge_pages_free"  : { "name" : "mem_lnx_huge_pages_free", },
+    "huge_pages_rsvd"  : { "name" : "mem_lnx_huge_pages_rsvd", },
+    "huge_pages_surp"  : { "name" : "mem_lnx_huge_pages_surp", },
+    "vmalloc_total"    : { "name" : "mem_lnx_vmalloc_total", },
+    "vmalloc_used"     : { "name" : "mem_lnx_vmalloc_used", },
+    "vmalloc_chunk"    : { "name" : "mem_lnx_vmalloc_chunk", },
+}
+
+check_metrics["check_mk-tcp_conn_stats"] = {
+    "SYN_SENT"    : { "name": "tcp_syn_sent" },
+    "SYN_RECV"    : { "name": "tcp_syn_recv" },
+    "ESTABLISHED" : { "name": "tcp_established" },
+    "TIME_WAIT"   : { "name": "tcp_time_wait" },
+    "LAST_ACK"    : { "name": "tcp_last_ack" },
+    "CLOSE_WAIT"  : { "name": "tcp_close_wait" },
+    "CLOSED"      : { "name": "tcp_closed" },
+    "CLOSING"     : { "name": "tcp_closing" },
+    "FIN_WAIT1"   : { "name": "tcp_fin_wait1" },
+    "FIN_WAIT2"   : { "name": "tcp_fin_wait2" },
+    "BOUND"       : { "name": "tcp_bound" },
+}
 
 df_translation = {
     0         : { "name"  : "fs_used", "scale" : MB },
@@ -744,6 +1156,35 @@ check_metrics["check_mk-ibm_svc_mdiskgrp"]                      = df_translation
 check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = df_translation
 check_metrics["check_mk-fast_lta_volumes"]                      = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = df_translation
+
+# in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
+if_translation = {
+    "in"        : { "name": "if_in_octets" },
+    "out"       : { "name": "if_out_octets" },
+    "indisc"    : { "name": "if_in_discards" },
+    "inerr"     : { "name": "if_in_errors" },
+    "outdisc"   : { "name": "if_out_discards" },
+    "outerr"    : { "name": "if_out_errors" },
+    "inucast"   : { "name": "if_in_unicast" },
+    "innucast"  : { "name": "if_in_non_unicast" },
+    "outucast"  : { "name": "if_out_unicast" },
+    "outnucast" : { "name": "if_out_non_unicast" },
+}
+check_metrics["check_mk-esx_vsphere_counters"] = if_translation
+check_metrics["check_mk-fritz"]                = if_translation
+check_metrics["check_mk-hitachi_hnas_fc_if"]   = if_translation
+check_metrics["check_mk-if64"]                 = if_translation
+check_metrics["check_mk-if64_tplink"]          = if_translation
+check_metrics["check_mk-if_lancom"]            = if_translation
+check_metrics["check_mk-if"]                   = if_translation
+check_metrics["check_mk-lnx_if"]               = if_translation
+check_metrics["check_mk-mcdata_fcport"]        = if_translation
+check_metrics["check_mk-netapp_api_if"]        = if_translation
+check_metrics["check_mk-statgrab_net"]         = if_translation
+check_metrics["check_mk-ucs_bladecenter_if"]   = if_translation
+check_metrics["check_mk-vms_if"]               = if_translation
+check_metrics["check_mk-winperf_if"]           = if_translation
+
 
 check_metrics["check_mk-diskstat"]                              = {}
 
@@ -800,8 +1241,6 @@ check_metrics["check_mk-ucs_bladecenter_fans.temp"]             = {}
 check_metrics["check_mk-ucs_bladecenter_psu.chassis_temp"]      = {}
 check_metrics["check_mk-mysql_capacity"]                        = {}
 
-check_metrics["check_mk-kernel"]                                = { "processes" : { "name" : "proc_creat", } }
-
 check_metrics["check_mk-hr_cpu"]                                = {}
 check_metrics["check_mk-kernel.util"]                           = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "name" : "io_wait" } }
@@ -855,6 +1294,17 @@ check_metrics["check_mk-db2_tablespaces"]                       = {}
 check_metrics["check_mk-siemens_plc.temp"]                      = {}
 check_metrics["check_mk-siemens_plc.hours"]                     = {}
 
+check_metrics["check_mk-cups_queues"]                           = { "jobs" : { "name" : "printer_queue" } }
+
+check_metrics["check_mk-livestatus_status"] = {
+    "host_checks"    : { "name" : "host_check_rate" },
+    "service_checks" : { "name" : "service_check_rate" },
+    "connections"    : { "name" : "livestatus_connect_rate" },
+    "requests"       : { "name" : "livestatus_request_rate" },
+    "log_messages"   : { "name" : "log_message_rate" },
+}
+
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -894,13 +1344,21 @@ perfometer_info.append({
     "exponent"   : 2,
 })
 
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "response_time",
+    "half_value" : 10,
+    "exponent"   : 4,
+})
+
+
 perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
 perfometer_info.append(("linear",       ( ["execution_time"], 90.0, None)))
 perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "temp",         40.0, 1.2)))
-perfometer_info.append(("logarithmic",  ( "ctxt",       1000.0, 2.0)))
-perfometer_info.append(("logarithmic",  ( "pgmajfault", 1000.0, 2.0)))
-perfometer_info.append(("logarithmic",  ( "proc_creat", 1000.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "context_switches",       1000.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "major_page_faults", 1000.0, 2.0)))
+perfometer_info.append(("logarithmic",  ( "process_creations", 1000.0, 2.0)))
 perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
 perfometer_info.append(("linear",       ( [ "user", "system", "io_wait" ],                               100.0,       None)))
 perfometer_info.append(("linear",       ( [ "util", ],                                                   100.0,       None)))
@@ -1018,6 +1476,19 @@ perfometer_info.append(("dual", [
    ( "logarithmic", ( "disk_write_throughput", 5000000, 10)),
 ]))
 
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "printer_queue",
+    "half_value" : 10,
+    "exponent"   : 2,
+})
+
+perfometer_info.append(("stacked", [
+  ( "logarithmic", ( "host_check_rate",     50, 5)),
+  ( "logarithmic", ( "service_check_rate", 200, 5)),
+]))
+
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -1030,11 +1501,28 @@ perfometer_info.append(("dual", [
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 
-graph_info.append({
-    "metrics" : [
-        ( "execution_time", "area" )
-    ]
-})
+def define_generic_graph(metric_name):
+    graph_info.append({
+        "metrics" : [
+            ( metric_name, "area" ),
+        ],
+        "scalars" : [
+            metric_name + ":warn",
+            metric_name + ":crit",
+        ]
+    })
+
+define_generic_graph("context_switches")
+define_generic_graph("major_page_faults")
+define_generic_graph("process_creations")
+define_generic_graph("threads")
+define_generic_graph("runtime")
+define_generic_graph("execution_time")
+define_generic_graph("response_time")
+define_generic_graph("uptime")
+define_generic_graph("temp")
+define_generic_graph("time_offset")
+
 
 graph_info.append({
     "title" : _("Used CPU Time"),
@@ -1046,18 +1534,6 @@ graph_info.append({
     ],
 })
 
-graph_info.append({
-    "metrics" : [
-        ( "uptime", "area" ),
-    ]
-})
-
-graph_info.append({
-    "title"   : _("Process Runtime"),
-    "metrics" : [
-        ( "runtime", "area" ),
-    ]
-})
 
 graph_info.append({
     "title"   : _("CPU Load - %(load1:max@count) CPU Cores"),
@@ -1101,22 +1577,8 @@ graph_info.append({
     "range" : (0, 0),
 })
 
-graph_info.append({
-    "metrics" : [
-       ( "inodes_used", "area" ),
-    ],
-    "scalars" : [
-        "inodes_used:warn",
-        "inodes_used:crit",
-    ],
-})
+define_generic_graph("inodes_used")
 
-
-graph_info.append({
-    "metrics" : [
-        ( "temp", "area" ),
-    ]
-})
 
 graph_info.append({
     "title"   : _("CPU utilization"),
@@ -1127,13 +1589,7 @@ graph_info.append({
         ( "user,system,io_wait,+,+#004080", "line", _("Total") ),
     ],
     "mirror_legend" : True,
-    # "range" : (0, 100),
-})
-
-graph_info.append({
-    "metrics" : [
-        ( "time_offset", "area" ),
-    ]
+    "range" : (0, 100),
 })
 
 graph_info.append({
@@ -1242,6 +1698,10 @@ graph_info.append({
     "legend_scale" : MB,
 })
 
+# TODO: Warum ist hier überall line? Default ist Area.
+# Kann man die hit ratios nicht schön stacken? Ist
+# nicht total die Summe der anderen?
+
 graph_info.append({
     "title" : _("Bufferpool Hitratios"),
     "metrics" : [
@@ -1252,6 +1712,8 @@ graph_info.append({
     ],
 })
 
+# TODO: Warum sind die in einem Graphen? Kann man
+# die irgendwie addieren?
 graph_info.append({
     "metrics" : [
         ( "deadlocks",  "line" ),
@@ -1261,14 +1723,219 @@ graph_info.append({
 
 graph_info.append({
     "metrics" : [
-        ( "sort_overflow",  "line" ),
+        ( "sort_overflow",  "area" ),
+    ],
+})
+
+# TODO: Warum auch hier line? Sollte mit
+# areas arbeiten. Habe das mal umgestellt, aber noch
+# nicht getestet.
+graph_info.append({
+    "metrics" : [
+        ( "tablespace_used",  "area" ),
+        ( "tablespace_size",  "area" ),
     ],
 })
 
 graph_info.append({
     "metrics" : [
-        ( "tablespace_size",  "line" ),
-        ( "tablespace_used",  "line" ),
+         ( "printer_queue", "area" )
+    ],
+    "range" : (0, 10),
+})
+
+# Networking
+
+graph_info.append({
+    "title" : _("Bandwidth"),
+    "metrics" : [
+        ( "if_in_octets,8,*@bits/s",   "area", _("Input bandwidth") ),
+        ( "if_out_octets,8,*@bits/s",  "-area", _("Output bandwidth") ),
     ],
 })
 
+# TODO: show this graph instead of Bandwidth if this is configured
+# in the check's parameters. But is this really a good solution?
+# We could use a condition on if_in_octets:min. But if this value
+# is missing then evaluating the condition will fail. Solution
+# could be using 0 for bits and 1 for octets and making sure that
+# this value is not used anywhere.
+# graph_info.append({
+#     "title" : _("Octets"),
+#     "metrics" : [
+#         ( "if_in_octets",      "area" ),
+#         ( "if_out_octets",     "-area" ),
+#     ],
+# })
+
+graph_info.append({
+    "title" : _("Packets"),
+    "metrics" : [
+        ( "if_in_unicast",      "area" ),
+        ( "if_in_non_unicast",  "stack" ),
+        ( "if_out_unicast",     "-area" ),
+        ( "if_out_non_unicast", "-stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Errors"),
+    "metrics" : [
+        ( "if_in_errors",    "area" ),
+        ( "if_in_discards",  "stack" ),
+        ( "if_out_errors",   "-area" ),
+        ( "if_out_discards", "-stack" ),
+    ],
+})
+
+# Linux memory graphs. They are a lot...
+
+graph_info.append({
+    "title" : _("RAM + Swap overview"),
+    "metrics" : [
+        ("mem_total",  "area"),
+        ("swap_total", "stack"),
+        ("mem_used",   "area"),
+        ("swap_used",  "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Swap"),
+    "metrics" : [
+        ("swap_total",  "area"),
+        ("swap_used",   "area"),
+        ("swap_cached", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Caches"),
+    "metrics" : [
+        ("mem_lnx_slab",    "stack"),
+        ("swap_cached",     "stack"),
+        ("mem_lnx_buffers", "stack"),
+        ("mem_lnx_cached",  "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Active and Inactive Memory"),
+    "metrics" : [
+        ("mem_lnx_active_anon", "area"),
+        ("mem_lnx_active_file", "stack"),
+        ("mem_lnx_inactive_anon", "area"),
+        ("mem_lnx_inactive_file", "stack"),
+    ],
+})
+
+
+# TODO: Show this graph only, if the previous graph
+# is not possible. This cannot be done with a condition,
+# since we currently cannot state a condition on non-existing
+# metrics.
+graph_info.append({
+    "title" : _("Active and Inactive Memory"),
+    "metrics" : [
+        ("mem_lnx_active", "area"),
+        ("mem_lnx_inactive", "area"),
+    ],
+    "not_if_have" : [ "mem_lnx_active_anon" ],
+})
+
+graph_info.append({
+    "title" : _("Filesystem Writeback"),
+    "metrics" : [
+        ("mem_lnx_dirty", "area"),
+        ("mem_lnx_writeback", "stack"),
+        ("mem_lnx_nfs_unstable", "stack"),
+        ("mem_lnx_bounce", "stack"),
+        ("mem_lnx_writeback_tmp", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Memory committing"),
+    "metrics" : [
+        ("mem_lnx_total_total", "area"),
+        ("mem_lnx_committed_as", "area"),
+        ("mem_lnx_commit_limit", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Shared memory"),
+    "metrics" : [
+        ("mem_lnx_shmem", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Memory that cannot be swapped out"),
+    "metrics" : [
+        ("mem_lnx_kernel_stack", "area"),
+        ("mem_lnx_page_tables", "stack"),
+        ("mem_lnx_mlocked", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Huge Pages"),
+    "metrics" : [
+        ("mem_lnx_huge_pages_total", "area"),
+        ("mem_lnx_huge_pages_free", "area"),
+        ("mem_lnx_huge_pages_rsvd", "area"),
+        ("mem_lnx_huge_pages_surp", "line"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("VMalloc Address Space"),
+    "metrics" : [
+        ("mem_lnx_vmalloc_total", "area"),
+        ("mem_lnx_vmalloc_used", "area"),
+        ("mem_lnx_vmalloc_chunk", "stack"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("TCP Connection States"),
+    "metrics" : [
+       ( "tcp_syn_sent",    "stack"),
+       ( "tcp_syn_recv",    "stack"),
+       ( "tcp_established", "stack"),
+       ( "tcp_time_wait",   "stack"),
+       ( "tcp_last_ack",    "stack"),
+       ( "tcp_close_wait",  "stack"),
+       ( "tcp_closed",      "stack"),
+       ( "tcp_closing",     "stack"),
+       ( "tcp_fin_wait1",   "stack"),
+       ( "tcp_fin_wait2",   "stack"),
+       ( "tcp_bound",       "stack"),
+    ],
+    "omit_zero_metrics" : True,
+})
+
+graph_info.append({
+    "title" : _("Host and Service Checks"),
+    "metrics" : [
+        ( "host_check_rate",    "stack" ),
+        ( "service_check_rate", "stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Livestatus Connects and Requests"),
+    "metrics" : [
+        ( "livestatus_request_rate", "area" ),
+        ( "livestatus_connect_rate", "area" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Livestatus Requests per Connection"),
+    "metrics" : [
+        ( "livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
+          _("Averate requests per connection")),
+    ],
+})

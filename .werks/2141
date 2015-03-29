@@ -1,0 +1,15 @@
+Title: Fix computation of explicit time ranges with time of day
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427440971
+
+When you entered an explicit time range (e.g. in the options for the
+graph time range) and selected <i>Explicit time...</i> then 24 hours
+would be added to the end time. This has been fixed. Note: the adding
+of one day is still being done when selecting <i>Explicit date...</i>,
+so that if you select the same start and end date the span is exactly
+24 hours.

@@ -22,9 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// ----------------------------------------------------------------------------
-// general function
-// ----------------------------------------------------------------------------
+//  .--General-------------------------------------------------------------.
+//  |                   ____                           _                   |
+//  |                  / ___| ___ _ __   ___ _ __ __ _| |                  |
+//  |                 | |  _ / _ \ '_ \ / _ \ '__/ _` | |                  |
+//  |                 | |_| |  __/ | | |  __/ | | (_| | |                  |
+//  |                  \____|\___|_| |_|\___|_|  \__,_|_|                  |
+//  |                                                                      |
+//  +----------------------------------------------------------------------+
+//  |  General functions used in many places                               |
+//  '----------------------------------------------------------------------'
+
+var browser         = navigator.userAgent.toLowerCase();
+var weAreOpera      = browser.indexOf("opera") != -1;
+var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
+
+
 
 // Make JS understand Python source code
 var True = true;
@@ -625,7 +638,8 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
     get_url(url, pnp_response_handler, data, pnp_error_response_handler, false);
 }
 
-function hover_graph(site, host_name, service) {
+function hover_graph(site, host_name, service)
+{
     var c = get_url_sync('show_graph.py?site='+encodeURIComponent(site)
                        +'&host_name='+encodeURIComponent(host_name)
                        +'&service='+encodeURIComponent(service));

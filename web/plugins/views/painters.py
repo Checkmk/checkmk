@@ -782,15 +782,14 @@ multisite_painters["svc_group_memberlist"] = {
 
 def paint_graph(row):
     # For hosts graphs always use PNP
-    if row.get("service_description"):
-        try:
-            css, htmlcode = paint_svc_time_graph(row)
-            if htmlcode:
-                return css, htmlcode
-        except NameError:
-            if config.debug:
-                raise
-            pass
+    try:
+        css, htmlcode = paint_time_graph(row)
+        if htmlcode:
+            return css, htmlcode
+    except NameError:
+        if config.debug:
+            raise
+        pass
 
     sitename = row["site"]
     host = row["host_name"]

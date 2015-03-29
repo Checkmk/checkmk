@@ -36,6 +36,9 @@
 # HOSTNAME is optional - Default is localhost
 # PORT is optional - Default is 1521
 
+# ONLY_SIDS is only usable for local running instances. It is ignored for
+# REMOTE_-Instances. The same applies to EXCLUDE.
+
 while test $# -gt 0
 do
     if [ "${1}" = '-d' ] ; then
@@ -686,19 +689,31 @@ sql_asm_diskgroup()
 #   '----------------------------------------------------------------------'
 
 function set_oraenv () {
-    ORACLE_SID=${1}
+    local SID=${1}
 
-    test -f /etc/oratab && ORATAB=/etc/oratab
-    # /var/opt/oracle/oratab is needed for Oracle Solaris
-    test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
-    test -f ${ORATAB:-""} || echo "ORA-99999 oratab not found"
-    test -f ${ORATAB:-""} || exit 1
+    if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]] ; then
 
-    ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID}":" | cut -d":" -f2)
-    if [ -z $ORACLE_HOME ] ; then
-        # cut last number from SID for Oracle RAC to find entry in oratab
-        ORACLE_SID_SHORT=$(echo $ORACLE_SID | sed "s/[0-9]$//")
-        ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID_SHORT}":" | cut -d":" -f2)
+        # we get the ORACLE_HOME from mk_oracle.cfg for REMOTE execution
+        ORACLE_HOME=${ORACLE_HOME:-${REMOTE_ORACLE_HOME}}
+
+    else
+        # we need to keep an existing ORACLE_SID in remote mode
+        # => set it only in local mode
+        ORACLE_SID=$SID
+
+        # we work in local mode
+        test -f /etc/oratab && ORATAB=/etc/oratab
+        # /var/opt/oracle/oratab is needed for Oracle Solaris
+        test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
+        test -f ${ORATAB:-""} || echo "ORA-99999 oratab not found"
+        test -f ${ORATAB:-""} || exit 1
+
+        ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID}":" | cut -d":" -f2)
+        if [ -z $ORACLE_HOME ] ; then
+            # cut last number from SID for Oracle RAC to find entry in oratab
+            ORACLE_SID_SHORT=$(echo $ORACLE_SID | sed "s/[0-9]$//")
+            ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID_SHORT}":" | cut -d":" -f2)
+        fi
     fi
 
     LD_LIBRARY_PATH=$ORACLE_HOME/lib
@@ -716,8 +731,16 @@ function set_oraenv () {
 }
 
 function get_oraversion () {
+    # oraenv is only needed when version is determined from sqlplus
     set_oraenv ${1}
-    ORACLE_VERSION=$($ORACLE_HOME/bin/sqlplus -V | grep ^SQL | cut -d" " -f3 | cut -d"." -f-2)
+
+    if [[ ! "$1" =~ ^REMOTE_INSTANCE_.* ]] ; then
+        # we get the ORACLE_VERSION in main loop because this is only avalible from mk_oracle.cfg
+        # that file is only read in function sqlplus at later time!
+
+        # get the version from ORACLE_HOME/bin/sqlplus
+        ORACLE_VERSION=$($ORACLE_HOME/bin/sqlplus -V | grep ^SQL | cut -d" " -f3 | cut -d"." -f-2)
+    fi
 
     # remove possible existing variables
     unset AT_LEAST_ORACLE_121 AT_LEAST_ORACLE_112 AT_LEAST_ORACLE_111 AT_LEAST_ORACLE_102 AT_LEAST_ORACLE_101 AT_LEAST_ORACLE_92
@@ -765,9 +788,31 @@ function get_oraversion () {
 #   | Helper functions                                                     |
 #   '----------------------------------------------------------------------'
 
-function sqlplus_internal() {
+
+function ora_session_environment()
+{
+    echo 'set pages 0 trimspool on feedback off lines 8000'
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' -a ! "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
+        echo 'set echo off'
+        echo 'alter session set "_optimizer_mjc_enabled"=false;'
+
+        # cursor_sharing is not valid for ASM instances
+        if [ ! ${ORACLE_SID:0:1} = '+' ] ; then
+            echo 'alter session set cursor_sharing=exact;'
+        fi
+
+        echo 'set echo on'
+    fi
+    echo 'whenever sqlerror exit 1'
+    echo ' '
+}
+
+# Helper function that calls an SQL statement with a clean output
+# Usage: echo "..." | sqlplus SID
+function sqlplus() {
     loc_stdin=$(cat)
-    set_oraenv $SID
+    local SID=$1
+
 
     # reload mk_oracle.cfg for run_cached. Otherwise some variables are missing
     if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]
@@ -775,47 +820,78 @@ function sqlplus_internal() {
         . $MK_CONFDIR/mk_oracle.cfg
     fi
 
-    # mk_oracle_dbusers.conf is for compatibility. Do not use it anymore
-    ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
-
-    TNSPINGOK=no
-    if [ -f ${TNS_ADMIN}/tnsnames.ora ] ; then
-        if "${ORACLE_HOME}"/bin/tnsping "${ORACLE_SID}" >/dev/null 2>&1  ; then
-            TNSALIAS=$ORACLE_SID
-            TNSPINGOK=yes
-        fi
-    fi
-
     ORADBUSER=""
     DBPASSWORD=""
 
-    # ASM use '+' as 1st character in SID!
-    if [ ${ORACLE_SID:0:1} = '+' ] ; then
-        ORACFGLINE=${ASMUSER}
+    set_oraenv $SID
+
+    if [[ "$1" =~ ^REMOTE_INSTANCE_.* ]] ; then
+
+        # working on REMOTE_-Mode!
+        ORACFGLINE=$(eval echo \${$1})
+
+        ORACLE_SID=$(echo ${ORACFGLINE} | cut -d":" -f$[7])
+
+        TNSALIAS=$(echo $REMOTE_VARNAME | cut -d"_" -f3-)
+
+        # we need to add the piggyback sections!
+        remote_hostname=$(echo $SID | cut -d"_" -f4-)
+
+        # build the piggyback information in loc_stdin
+        # <<<<hostname>>>> SQL-Statements <<<<>>>>
+        loc_stdin=$(echo 'prompt <<<<'$remote_hostname'>>>>'; echo ' ')$loc_stdin$(echo ' '; echo 'prompt <<<<>>>>'; echo ' ')
     else
-        # use an individuel user or the default DBUSER from mk_oracle.cfg
-        dummy="DBUSER_"${ORACLE_SID}
-        ORACFGLINE=${!dummy}
-        if [ "$ORACFGLINE" = '' ] ; then
-            ORACFGLINE=${DBUSER}
+        # working with locally running instances
+        # mk_oracle_dbusers.conf is for compatibility. Do not use it anymore
+        ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
+
+        TNSALIAS=${ORACLE_SID}
+
+        # ASM use '+' as 1st character in SID!
+        if [ ${ORACLE_SID:0:1} = '+' ] ; then
+            ORACFGLINE=${ASMUSER}
+        else
+            # use an individuel user or the default DBUSER from mk_oracle.cfg
+            dummy="DBUSER_"${ORACLE_SID}
+            ORACFGLINE=${!dummy}
+            if [ "$ORACFGLINE" = '' ] ; then
+                ORACFGLINE=${DBUSER}
+            fi
+        fi
+
+        if [ -f ${ORACLE_USERCONF} -a "${ORACFGLINE}" = '' ] ; then
+            # mk_oracle_dbuser.conf
+            ORACFGLINE=$(cat ${ORACLE_USERCONF} | grep "^"${ORACLE_SID}":")
+            # mk_oracle_dbuser has ORACLE_SID as 1. parameter. we need an offset for all values
+            offset=1
+        else
+            # mk_oracle.cfg
+            offset=0
         fi
     fi
 
-    if [ -f ${ORACLE_USERCONF} -a "${ORACFGLINE}" = '' ] ; then
-        # mk_oracle_dbuser.conf
-        ORACFGLINE=$(cat ${ORACLE_USERCONF} | grep "^"${ORACLE_SID}":")
-        # mk_oracle_dbuser has ORACLE_SID as 1. parameter. we need an offset for all values
-        offset=1
-    else
-        # mk_oracle.cfg
-        offset=0
-    fi
+    # SID_UPPER is required for later use in function sqlplus.
+    # gathering at this point is needed due to dependency to mk_oracle.cfg in remote mode
+    SID_UPPER=$(echo $ORACLE_SID | tr '[:lower:]' '[:upper:]')
+    export SID_UPPER
 
+    offset=${offset:-0}
     ORADBUSER=$(echo ${ORACFGLINE} | cut -d":" -f$[1+offset])
     DBPASSWORD=$(echo ${ORACFGLINE} | cut -d":" -f$[2+offset])
     DBSYSCONNECT=$(echo ${ORACFGLINE} | cut -d":" -f$[3+offset])
     DBHOST=$(echo ${ORACFGLINE} | cut -d":" -f$[4+offset])
     DBPORT=$(echo ${ORACFGLINE} | cut -d":" -f$[5+offset])
+
+    TNSPINGOK=no
+    if [ -f ${TNS_ADMIN}/tnsnames.ora ] ; then
+        if "${ORACLE_HOME}"/bin/tnsping "${TNSALIAS}" >/dev/null 2>&1  ; then
+            TNSPINGOK=yes
+        else
+            unset TNSALIAS
+        fi
+    else
+        unset TNSALIAS
+    fi
 
     if [ ! "${ORACFGLINE}" ] ; then
         # no configuration found
@@ -825,6 +901,7 @@ function sqlplus_internal() {
         if [ ${DBSYSCONNECT} ] ; then
             assysdbaconnect=" as "${DBSYSCONNECT}
         fi
+
         TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST:-"localhost"})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
 
         # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet
@@ -849,53 +926,34 @@ function sqlplus_internal() {
         return 1
     fi
 
-    echo "$loc_stdin" | ${SQLPLUS} -L -s ${DBCONNECT}
-    if [ $? -ne 0 ] ; then
-        if [ "$DEBUGCONNECT" ] ; then
-            echo "Logindetails: ${DBCONNECT}" >&2
-        fi
-        return 1
-    fi
-}
-
-function ora_session_environment()
-{
-    echo 'set pages 0 trimspool on feedback off lines 8000'
-    if [ "$AT_LEAST_ORACLE_102" = 'yes' -a ! "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
-        echo 'set echo off'
-        echo 'alter session set "_optimizer_mjc_enabled"=false;'
-
-        # cursor_sharing is not valid for ASM instances
-        if [ ! ${ORACLE_SID:0:1} = '+' ] ; then
-            echo 'alter session set cursor_sharing=exact;'
-        fi
-
-        echo 'set echo on'
-    fi
-    echo 'whenever sqlerror exit 1'
-    echo ' '
-}
-
-# Helper function that calls an SQL statement with a clean output
-# Usage: echo "..." | sqlplus SID
-function sqlplus ()
-{
-    local SID=$1
-    loc_stdin=$(cat)
+    # add ora_session_environment as prefix before loc_stdin
     loc_stdin=$(ora_session_environment)${loc_stdin}
 
-    # use sqlplus_internal when no sqlplus.sh is found
-    SQLPLUS="$MK_CONFDIR"/sqlplus.sh
-    test -f "$SQLPLUS" || SQLPLUS=sqlplus_internal
-
-    if OUTPUT=$(echo "$loc_stdin"  | "$SQLPLUS" $SID)
+    if OUTPUT=$(echo "$loc_stdin"  | "$SQLPLUS" -L -s ${DBCONNECT})
     then
         echo "$OUTPUT"
     else
-        echo '<<<oracle_instance:sep(124)>>>'
-        local SID_UPPER=$(echo "$SID" | tr '[:lower:]' '[:upper:]')
-        echo "$OUTPUT" | grep -v "^ERROR at line" | tr '\n' ' ' | sed "s/^/$SID_UPPER|FAILURE|/" ; echo
-        return 1
+
+        if [ "$DEBUGCONNECT" ] ; then
+            echo "Logindetails: ${DBCONNECT}" >&2
+            echo "$OUTPUT"
+        else
+            # SID_UPPER is required for backword compatibilty to old sqlplus.sh.
+            # THis will be removed in a future time
+            SID_UPPER=${SID_UPPER:-$(echo $SID | tr '[:lower:]' '[:upper:]')}
+
+            # we need to add the piggyback as the sql didn't return any piggyback information in this situation
+            if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]] ; then
+                echo '<<<<'$remote_hostname'>>>>'
+            fi
+
+            echo '<<<oracle_instance:sep(124)>>>'
+            echo "$OUTPUT" | grep -v "^ERROR at line" | tr '\n' ' ' | sed "s/^/$SID_UPPER|FAILURE|/" ; echo
+
+            if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]] ; then
+                echo '<<<<>>>>'
+            fi
+        fi
     fi
 }
 
@@ -944,11 +1002,10 @@ function do_async_checks ()
 # our functions
 export -f sqlplus
 export -f ora_session_environment
-export -f sqlplus_internal
 export -f do_async_checks
 export -f set_oraenv
 
-function run_cached_local () {
+function run_cached () {
     local section=
     if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
     local NAME=$1
@@ -993,6 +1050,57 @@ function run_cached_local () {
     fi
 }
 
+function do_testmode() {
+    echo "-----------------------------------------------"
+    echo "Logincheck to Instance: "$SID"  Version: "$ORACLE_VERSION
+    echo "select 'Login ok User: ' || user || ' on ' || host_name ||' Instance ' || instance_name
+          from v\$instance;" | sqlplus $SID
+    echo "SYNC_SECTIONS=$SECTIONS"
+    echo "ASYNC_SECTIONS=$ASECTIONS"
+    if [ "$IGNORE_DB_NAME" ] ; then
+        echo "IGNORE_DB_NAME found. Ignoring DB_NAME in all SQLs!"
+    fi
+    if [ "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
+        echo "Paramter DISABLE_ORA_SESSION_SETTINGS found!"
+    fi
+    if [ "$HINT_RMAN" ] ; then
+        echo "Using HINT_RMAN for this Instance!"
+    fi
+}
+
+function do_instance() {
+
+    SID=$1
+
+    if [ ${ORACLE_SID:0:1} = '+' ] ; then
+        DO_ASYNC_SECTIONS=${ASYNC_ASM_SECTIONS}
+        DO_SYNC_SECTIONS=${SYNC_ASM_SECTIONS}
+    else
+        # switch sections to ASM
+        DO_SYNC_SECTIONS=${SYNC_SECTIONS}
+        DO_ASYNC_SECTIONS=${ASYNC_SECTIONS}
+    fi
+
+    # Do sync checks
+    EXCLUDED=$(eval 'echo $EXCLUDE'"_$SID")
+    SECTIONS=$(remove_excluded_sections "$DO_SYNC_SECTIONS" "$EXCLUDED")
+
+    # Do async checks
+    ASECTIONS=$(remove_excluded_sections "$DO_ASYNC_SECTIONS" "$EXCLUDED")
+    ASYNC_SQL=$(for section in $ASECTIONS ; do eval "sql_$section" ; done)
+    export ASYNC_SQL
+
+    if [ "$DEBUGCONNECT" ] ; then
+        do_testmode $SID
+        # do not execute any check
+        continue
+    fi
+
+    do_sync_checks $SID "$SECTIONS"
+    run_cached oracle_$SID $CACHE_MAXAGE do_async_checks $SID
+
+}
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -1004,6 +1112,38 @@ function run_cached_local () {
 #   +----------------------------------------------------------------------+
 #   |  Iterate over all instances and execute sync and async sections.     |
 #   '----------------------------------------------------------------------'
+
+# Are there any remote configurations?
+for element in $(compgen -A variable | grep -E "^REMOTE_INSTANCE_.*_.*") ; do
+
+    REMOTE_DBS=$REMOTE_DBS" "$element
+
+    element_suffix=$(echo $element | cut -d"_" -f4-)
+    REMOTE_HOSTLIST=${element_suffix}" "${REMOTE_HOSTLIST}
+done
+
+if [ "$REMOTE_HOSTLIST" ] ; then
+    # remove duplicate hosts from list
+    REMOTE_HOSTLIST=$(echo $REMOTE_HOSTLIST | tr ' ' '\n' | sort | uniq)
+
+    # create empty piggyback SECTIONS
+    for remote_hostname in $REMOTE_HOSTLIST ; do
+
+        rhostname=$(echo $remote_hostname | cut -d"_" -f3- )
+        echo "<<<<"$remote_hostname">>>>"
+
+        for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS
+        do
+            echo "<<<oracle_"$section">>>"
+        done
+
+        echo "<<<<>>>>"
+    done
+
+    if [ ! -e "$MK_VARDIR/mk_oracle.found" ] ; then
+        touch "$MK_VARDIR/mk_oracle.found"
+    fi
+fi
 
 # Get list of all running databases
 # Do not work on ASM in this plugin. => Ignore a running ASM-Instance!
@@ -1032,14 +1172,12 @@ done
 
 for SID in $SIDS
 do
-    # We need the SID in uppercase at later time
-    SID_UPPER=$(echo $SID | tr '[:lower:]' '[:upper:]')
 
     # Check if SID is listed in ONLY_SIDS if this is used
     if [ "$ONLY_SIDS" ] ; then
         SKIP=yes
         for S in $ONLY_SIDS ; do
-	    if  [ "$S" = "$SID" ] ; then
+            if  [ "$S" = "$SID" ] ; then
                 SKIP=
                 break
             fi
@@ -1055,48 +1193,19 @@ do
         continue
     fi
 
-    if [ ${SID:0:1} = '+' ] ; then
-        DO_ASYNC_SECTIONS=${ASYNC_ASM_SECTIONS}
-        DO_SYNC_SECTIONS=${SYNC_ASM_SECTIONS}
-    else
-        # switch sections to ASM
-        DO_SYNC_SECTIONS=${SYNC_SECTIONS}
-        DO_ASYNC_SECTIONS=${ASYNC_SECTIONS}
-    fi
-
     get_oraversion $SID
+    do_instance $SID
+done
 
-    # Do sync checks
-    EXCLUDED=$(eval 'echo $EXCLUDE'"_$SID")
-    SECTIONS=$(remove_excluded_sections "$DO_SYNC_SECTIONS" "$EXCLUDED")
+for REMOTE_DB in $REMOTE_DBS ; do
+    REMOTE_DB_LINE=$(eval echo \${$REMOTE_DB})
 
-    # Do async checks
-    ASECTIONS=$(remove_excluded_sections "$DO_ASYNC_SECTIONS" "$EXCLUDED")
-    ASYNC_SQL=$(for section in $ASECTIONS ; do eval "sql_$section" ; done)
-    export ASYNC_SQL
+    # ORACLE_VERSION comes from mk_oracle.cfg!
+    ORACLE_VERSION=$(echo $REMOTE_DB_LINE | cut -d":" -f8)
 
-    if [ "$DEBUGCONNECT" ] ; then
-        echo "-----------------------------------------------"
-        echo "Logincheck to Instance: "$SID"  Version: "$ORACLE_VERSION
-        echo "select 'Login ok User: ' || user || ' on ' || host_name
-              from v\$instance;" | sqlplus $SID
-        echo "SYNC_SECTIONS=$SECTIONS"
-        echo "ASYNC_SECTIONS=$ASECTIONS"
-        if [ "$IGNORE_DB_NAME" ] ; then
-            echo "IGNORE_DB_NAME found. Ignoring DB_NAME in all SQLs!"
-        fi
-        if [ "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
-            echo "Paramter DISABLE_ORA_SESSION_SETTINGS found!"
-        fi
-        if [ "$HINT_RMAN" ] ; then
-            echo "Using HINT_RMAN for this Instance!"
-        fi
-        # do not execute any check
-        continue
-    fi
+    # the ORACLE_SID is needed for the oracle_instance check for ASM and normal instance
+    ORACLE_SID=$(echo $REMOTE_DB_LINE | cut -d":" -f7)
 
-    do_sync_checks $SID "$SECTIONS"
-
-    run_cached_local oracle_$SID $CACHE_MAXAGE do_async_checks $SID
-
+    get_oraversion $REMOTE_DB
+    do_instance $REMOTE_DB
 done

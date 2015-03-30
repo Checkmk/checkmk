@@ -1,0 +1,56 @@
+title: Check the RMAN Backup Status
+agents: linux, aix, hp/ux, Solaris
+catalog: app/oracle
+license: GPL
+distribution: check_mk
+description:
+ This check monitors different types of RMAN Backups.
+
+ The age of
+ the last RMAN backup is reported for ARCHIVELOG, CONTROLFILE and
+ FULL/INCREMENTAL Backups.
+ A rule is required for generating notifications.
+
+ there is a specific behavior for DB_INCR_1. The plugin could miss
+ the information for a DB_INCR_1 backup after a delete obsolete in RMAN.
+ The check reports the age for the last DB_INCR_0 for this situation.
+ This is required for a DB_INCR_0 each monday and a
+ DB_INCR_1 on all other days. The delete obsolete after the DB_INCR_0
+ could remove all informations for the DB_INCR_1 and the check
+ reports a missing backup. This is prevented with this behavior.
+
+ This check needs the Check_MK {mk_oracle}-plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+[configuration]
+inventory_oracle_rman_incremental_details (boolean):
+ This variable is for backward compatibility. This is needed when old
+ rules for backups with DB_INCR instead of DB_INCR_0 are existing and
+ a merge to the new behavior is not possigle..
+ Please insert the following variable to main.mk for old behavior:
+
+ inventory_oracle_rman_incremental_details=False
+
+ The default is True for this variable
+
+item:
+ The SID of the database in uppercase (as appearing in the process
+ name of the pmon_... process).
+
+perfdata:
+ One value: The time since the last successfull backup.
+
+[parameters]
+parameters (dict):
+
+ "age": (int, int) - Maximum time in seconds for warn and crit
+ for the last RMAN Backup.
+
+inventory:
+ One separate check for each DB_INCR, DB_FULL, ARCHIVELOG and
+ CONTROLFILE for each database.
+
+ checkgroup_parameters['oracle_rman'] = [
+  ( {'backup_age': (10800, 21600)}
+   , [], ALL_HOSTS, ALL_SERVICES ),

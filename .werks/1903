@@ -1,0 +1,62 @@
+Title: mk_oracle: Remote Monitoring of Oracle Databases
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427652230
+Class: feature
+
+mk_oracle got a major improvement in monitoring Oracle Databases.
+
+This new option allows monitoring a database from another host with a
+running check_mk_agent.
+
+H2: Requirements
+You need an Oracle Client from Oracle to use this feauture. The Oracle Instant Client
+with SQLPlus is a required minimum. You could use an existing Oracle installation as
+environment for mk_oracle as well.
+
+The plugin sends the data with piggyback. Please keep in mind, that the agent from the
+host with mk_oracle is responsible for the piggyback data. If you put the Check_MK check
+in downtime you'll put all other database checks from mk_oracle in a downtime as well.
+
+H2: Configuration
+You need an Oracle Client. If ORACLE_HOME is not set in the login shell of root, you need
+to add the ORACLE_HOME variable to mk_oracle.mk.
+
+Add the following lines to <tt>mk_oracle.cfg</tt>. The path is an example for the RPM Instant
+Client from Oracle for 64bit.
+<tt>ORACLE_HOME=/usr/lib/oracle/11.2/client64</tt>
+
+<tt>REMOTE_INSTANCE_1_omd110=check_mk:check_mk:::::XE:11.2</tt>
+<tt>REMOTE_INSTANCE_2_omd110=check_mk:check_mk:::::XE2:11.2</tt>
+
+Definition of a REMOTE_INSTANCE:
+<tt>REMOTE_INSTANCE_<Number>_<piggyback Hostname>=<Configuration String></tt>
+
+The definition of the database connection is as follows.
+<tt><username>:<password>:<sysdba>:<port>:<Database hostname>:<reserved for future use>:<ORACLE_SID>:<ORACLE-Release></tt>
+
+Notes regarding <tt>REMOTE_INSTANCE_x</tt>
+You need to make sure, that the name of the variable including
+the hostname is unique for every database in <tt>mk_oracle.cfg</tt>.
+Only 3 '_' are allowed in front of the piggyback hostname.
+Otherwise the plugin won't work correctly. The Oracle Release must
+be 9.2, 10.1, 10.2, 11.1, 11.2 or 12.1. No other values are allowed.
+
+Don't forget to use the testmode before starting the inventory on
+the monitoring host.
+
+More details could be found on the documentation at Check_MK:
+https://mathias-kettner.de/checkmk_oracle.html
+
+The testmode is compatible with the remote mode. Details with an
+example are shown in the documentation.
+
+H2: Incompatible change:
+The compatibility against old sqlplus.sh has been removed. Please
+remove an exiting sqlplus.sh and configure
+the <tt>mk_oracle.cfg</tt>. This change is a requirement for the
+new remote monitoring option and the only reason for this
+change.
+There is nothing to do when <tr>sqlplus.sh</tr> was not used before this Werk.

@@ -1,0 +1,15 @@
+Title: mk_oracle: added oracle session environment
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427649985
+Class: feature
+
+The plugin set some session parameters after login to Oracle. This is useful
+for environments with very special init.ora parameters which caused some
+performance problems in mk_oracle.
+
+The new function could be disabled with the following parameter in mk_oracle.cfg:
+<tr>DISABLE_ORA_SESSION_SETTINGS=1</tr>
+

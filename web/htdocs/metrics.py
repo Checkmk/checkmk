@@ -947,13 +947,13 @@ def page_show_graph():
     if service == "_HOST_":
         query = "GET hosts\n" \
                 "Filter: host_name = %s\n" \
-                "Columns: perf_data check_command\n" % host_name
+                "Columns: perf_data metrics check_command\n" % host_name
 
     else:
         query = "GET services\n" \
                 "Filter: host_name = %s\n" \
                 "Filter: service_description = %s\n" \
-                "Columns: perf_data check_command\n" % (host_name, service)
+                "Columns: perf_data metrics check_command\n" % (host_name, service)
 
     html.live.set_only_sites([site])
     data = html.live.query_row(query)
@@ -964,7 +964,8 @@ def page_show_graph():
             'site'                  : site,
             'host_name'             : host_name,
             'host_perf_data'        : data[0],
-            'host_check_command'    : data[1],
+            'host_metrics'          : data[1],
+            'host_check_command'    : data[2],
         }
     else:
         row = {
@@ -972,7 +973,8 @@ def page_show_graph():
             'host_name'             : host_name,
             'service_description'   : service,
             'service_perf_data'     : data[0],
-            'service_check_command' : data[1],
+            'service_metrics'       : data[1],
+            'service_check_command' : data[2],
         }
 
     # now try to render the graph with our graphing. If it is not possible,

@@ -100,19 +100,19 @@ function hoverShow(x, y, code) {
     var hoverLeft = parseInt(_hoverMenu.style.left.replace('px', ''));
     var screenWidth = pageWidth();
     var hoverPosAndSizeOk = true;
-    if(!hoverMenuInScreen(_hoverMenu, hoverSpacer))
+    if (!hoverMenuInScreen(_hoverMenu, hoverSpacer))
         hoverPosAndSizeOk = false;
 
-    if(!hoverPosAndSizeOk) {
+    if (!hoverPosAndSizeOk) {
         _hoverMenu.style.left = (x - hoverSpacer - _hoverMenu.clientWidth) + 'px';
 
-        if(hoverMenuInScreen(_hoverMenu, hoverSpacer))
+        if (hoverMenuInScreen(_hoverMenu, hoverSpacer))
             hoverPosAndSizeOk = true;
     }
 
     // And if the hover menu is still not on the screen move it to the left edge
     // and fill the whole screen width
-    if(!hoverMenuInScreen(_hoverMenu, hoverSpacer)) {
+    if (!hoverMenuInScreen(_hoverMenu, hoverSpacer)) {
         _hoverMenu.style.left = hoverSpacer + scrollLeft + 'px';
         _hoverMenu.style.width = pageWidth() - (2*hoverSpacer) + 'px';
     }
@@ -120,7 +120,7 @@ function hoverShow(x, y, code) {
     var hoverTop = parseInt(_hoverMenu.style.top.replace('px', ''));
     // Only move the menu to the top when the new top will not be
     // out of sight
-    if(hoverTop +_hoverMenu.clientHeight > pageHeight() && hoverTop -_hoverMenu.clientHeight >= 0)
+    if (hoverTop +_hoverMenu.clientHeight > pageHeight() && hoverTop -_hoverMenu.clientHeight >= 0)
         _hoverMenu.style.top = hoverTop -_hoverMenu.clientHeight - hoverSpacer + 'px';
     hoverTop = null;
 
@@ -128,6 +128,7 @@ function hoverShow(x, y, code) {
 }
 
 function hoverMenuInScreen(hoverMenu, hoverSpacer) {
+
     var hoverLeft = parseInt(hoverMenu.style.left.replace('px', ''));
     var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
     document.documentElement.scrollLeft;

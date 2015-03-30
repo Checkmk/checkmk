@@ -474,13 +474,25 @@ def num_split(s):
         first_word = regex("[0-9]").split(s)[0]
         return ( first_word.lower(), ) + num_split(s[len(first_word):])
 
-def frexp10(x):
-    exp = int(math.log10(x))
-    mantissa = x / 10**exp
+    # exp = int(math.log10(x))
+    # mantissa = x / 10**exp
+    # if mantissa < 1:
+    #     mantissa *= 10
+    #     exp -= 1
+    # return mantissa, exp
+
+def frexpb(x, base):
+    exp = int(math.log(x, base))
+    mantissa = x / base**exp
     if mantissa < 1:
-        mantissa *= 10
+        mantissa *= base
         exp -= 1
     return mantissa, exp
+
+def frexp10(x):
+    return frexpb(x, 10)
+
+
 
 
 # Render a physical value witha precision of p
@@ -496,7 +508,7 @@ def frexp10(x):
 # down to the precision of the actual number
 def physical_precision(v, precision, unit_symbol):
     if v == 0:
-        return "%%.%df" % (precision - 1) % v
+        return "%%.%df %%s" % (precision - 1) % (v, unit_symbol)
     elif v < 0:
         return "-" + physical_precision(-v, precision, unit_symbol)
 
@@ -514,32 +526,35 @@ def physical_precision(v, precision, unit_symbol):
     # Choose a power where no artifical zero (due to rounding) needs to be
     # placed left of the decimal point.
     scale_symbols = {
+        -5 : "f",
         -4 : "p",
         -3 : "n",
         -2 : u"µ",
         -1 : "m",
-        0 : "",
-        1 : "K",
-        2 : "M",
-        3 : "G",
-        4 : "T",
-        5 : "P",
+         0 : "",
+         1 : "K",
+         2 : "M",
+         3 : "G",
+         4 : "T",
+         5 : "P",
     }
     scale = 0
 
-    while exponent < 0:
+    while exponent < 0 and scale > -5:
         scale -= 1
         exponent += 3
 
     # scale, exponent = divmod(exponent, 3)
     places_before_comma = exponent + 1
     places_after_comma = precision - places_before_comma
-    while places_after_comma < 0:
+    while places_after_comma < 0 and scale < 5:
         scale += 1
         exponent -= 3
         places_before_comma = exponent + 1
         places_after_comma = precision - places_before_comma
+
     value = mantissa * 10**exponent
+
     return u"%%.%df %%s%%s" % places_after_comma % (value, scale_symbols[scale], unit_symbol)
 
 
@@ -560,11 +575,20 @@ def number_human_readable(n, precision=1, unit="B"):
         return (f + "%s") % (n, unit)
 
 
+def percent_human_redable(perc, precision=2, drop_zeroes=True):
+    if perc > 0:
+        perc_precision = max(1, 2 - int(round(math.log(perc, 10))))
+    else:
+        perc_precision = 1
+    text = "%%.%df" % perc_precision % perc
+    if drop_zeroes:
+        text = text.rstrip("0").rstrip(".")
+    return text + "%"
+
+
 def age_human_readable(secs, min_only=False):
     if secs < 0:
         return "- " + age_human_readable(-secs, min_only)
-    elif secs > 0 and secs < 0.0001: # us
-        return "%.1f us" % (secs * 1000000)
     elif secs > 0 and secs < 1: # ms
         return physical_precision(secs, 3, _("s"))
     elif min_only:
@@ -582,8 +606,51 @@ def age_human_readable(secs, min_only=False):
     hours = mins / 60
     if hours < 48:
         return "%d %s" % (hours, _("hours"))
-    days = hours / 24
-    return "%d %s" % (days, _("days"))
+    days = hours / 24.0
+    if days < 6:
+        d = ("%.1f" % days).rstrip("0").rstrip(".")
+        return "%s %s" % (d, _("days"))
+    elif days < 999:
+        return "%.0f %s" % (days, _("days"))
+    else:
+        years = days / 365
+        if years < 10:
+            return "%.1f %s" % (years, _("years"))
+        else:
+            return "%.0f %s" % (years, _("years"))
+
+
+def date_human_readable(timestamp):
+    # This can be localized:
+    return time.strftime(_("%m/%d/%Y"), time.localtime(timestamp))
+
+def date_range_human_readable(start_time, end_time):
+    start_time_local = time.localtime(start_time)
+    end_time_local = time.localtime(end_time)
+    if start_time_local[:3] == end_time_local[:3]: # same day
+        return date_human_readable(start_time)
+
+    elif start_time_local[:2] == end_time_local[:2]: # same month
+        date_format = _("%m/%d1-%d2/%Y")
+        f = date_format.replace("%d2", time.strftime("%d", end_time_local))
+        f = f.replace("%d1", "%d")
+        return time.strftime(f, start_time_local)
+
+    elif start_time_local[0] == end_time_local[0]: # same year
+        date_format = _("%m1/%d1/%Y - %m2/%d2/%Y")
+        f = date_format.replace("%d2", time.strftime("%d", end_time_local))
+        f = f.replace("%m2", time.strftime("%m", end_time_local))
+        f = f.replace("%d1", "%d").replace("%m1", "%m")
+        return time.strftime(f, start_time_local)
+
+    else:
+        return date_human_readable(start_time) + " - " + \
+               date_human_readable(end_time)
+
+# Just print year and month, no day
+def date_month_human_readable(timestamp):
+    # TODO: %B will currently not be localized
+    return time.strftime(_("%B %Y"), time.localtime(timestamp))
 
 
 def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):

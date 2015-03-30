@@ -195,13 +195,13 @@ def pnp_icon(row, what):
         url = ""
 
     import metrics
-    if not hasattr(metrics, 'render_graph_html') or what == 'host':
+    if not hasattr(metrics, 'render_graph_html'):
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
         # to keep the number of single requests low
         hover_content_func = 'pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)
     else:
         hover_content_func = 'hover_graph(\'%s\', \'%s\', \'%s\')' % \
-                                (row['site'], row['host_name'], row['service_description'])
+                                (row['site'], row['host_name'], row.get('service_description', '_HOST_'))
     return '<a href="%s" onmouseover="displayHoverMenu(event, %s)" ' \
            'onmouseout="hoverHide()">%s</a>' % (url, hover_content_func, html.render_icon('pnp', ''))
 

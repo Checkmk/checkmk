@@ -184,7 +184,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
             html.write("</tr>\n")
 
         column_headers = view.get("column_headers")
-        if column_headers:
+        if column_headers != "off":
             show_header_line()
 
         visible_row_number = 0

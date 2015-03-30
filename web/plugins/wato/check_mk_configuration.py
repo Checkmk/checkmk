@@ -2133,72 +2133,10 @@ register_rule(group,
                  "will also be reflected in the past.")),
     itemtype = "service")
 
-class MonitoringIcon(ValueSpec):
-    def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
-
-    def available_icons(self):
-        if defaults.omd_root:
-            dirs = [ defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons",
-                     defaults.omd_root + "/share/check_mk/web/htdocs/images/icons" ]
-        else:
-            dirs = [ defaults.web_dir + "/htdocs/images/icons" ]
-
-        icons = []
-        for dir in dirs:
-            if os.path.exists(dir):
-                icons += [ i for i in os.listdir(dir)
-                           if '.' in i and os.path.isfile(dir + "/" + i) ]
-        icons.sort()
-        return icons
-
-    def render_input(self, varprefix, value):
-        if value is None:
-            value = ""
-        num_columns = 12
-        html.write("<table>")
-        for nr, filename in enumerate([""] + self.available_icons()):
-            if nr % num_columns == 0:
-                html.write("<tr>")
-            html.write("<td>")
-            html.radiobutton(varprefix, str(nr), value == filename,
-                            self.value_to_text(filename))
-            html.write("&nbsp; </td>")
-            if nr % num_columns == num_columns - 1:
-                html.write("</tr>")
-        if nr != num_columns - 1:
-            html.write("</tr>")
-        html.write("</table>")
-
-    def value_to_text(self, value):
-        if value:
-            return '<img align=middle title="%s" class=icon src="images/icons/%s">' % \
-                (value, value)
-        else:
-            return _("none")
-
-    def from_html_vars(self, varprefix):
-        nr = int(html.var(varprefix))
-        if nr == 0:
-            return None
-        else:
-            return self.available_icons()[nr-1]
-
-    def validate_datatype(self, value, varprefix):
-        if value is not None and type(value) != str:
-            raise MKUserError(varprefix, _("The type is %s, but should be str") %
-                type(value))
-
-    def validate_value(self, value, varprefix):
-        if value and value not in self.available_icons():
-            raise MKUserError(varprefix, _("The selected icon image does not exist."))
-        ValueSpec.custom_validate(self, value, varprefix)
-
-
 
 register_rule(group,
     "extra_host_conf:icon_image",
-    MonitoringIcon(
+    IconSelector(
         title = _("Icon image for hosts in status GUI"),
         help = _("You can assign icons to hosts for the status GUI. "
                  "Put your images into <tt>%s</tt>. ") %
@@ -2207,19 +2145,22 @@ register_rule(group,
                    or defaults.web_dir + "/htdocs/images/icons" ),
         ))
 
+
 register_rule(group,
     "extra_service_conf:icon_image",
-    MonitoringIcon(
-        title = _("Icon image for services in status GUI"),
-        help = _("You can assign icons to services for the status GUI. "
-                 "Put your images into <tt>%s</tt>. ") %
-                ( defaults.omd_root
-                   and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
-                   or defaults.web_dir + "/htdocs/images/icons" ),
+    Transform(
+        IconSelector(
+            title = _("Icon image for services in status GUI"),
+            help = _("You can assign icons to services for the status GUI. "
+                     "Put your images into <tt>%s</tt>. ") %
+                    ( defaults.omd_root
+                       and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
+                       or defaults.web_dir + "/htdocs/images/icons" ),
         ),
+        forth = lambda v: v and v[:-4] or v,
+        back  = lambda v: v and v+'.png' or v,
+    ),
     itemtype = "service")
-
-
 
 
 register_rulegroup("agent", _("Access to Agents"),

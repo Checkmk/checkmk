@@ -3266,13 +3266,17 @@ class IconSelector(ValueSpec):
         return icon_categories
 
     def render_icon(self, icon, onclick = '', title = '', id = ''):
+        if not icon:
+            icon = self._empty_img
         path = "%s/%s%s.png" % (self._html_path, self._prefix, html.attrencode(icon))
 
+        icon = ''
         if onclick:
-            html.write('<a href="javascript:void(0)" onclick="%s">' % onclick)
-        html.write('<img align=absmiddle id="%s" class=icon title="%s" src="%s">' % (id, title, path))
+            icon += '<a href="javascript:void(0)" onclick="%s">' % onclick
+        icon += '<img align=absmiddle id="%s" class=icon title="%s" src="%s">' % (id, title, path)
         if onclick:
-            html.write('</a>')
+            icon += '</a>'
+        return icon
 
     def render_input(self, varprefix, value):
         if not value:
@@ -3285,7 +3289,7 @@ class IconSelector(ValueSpec):
                                         ('varprefix',   varprefix),
                                         ('allow_empty', self._allow_empty and '1' or '0')]))
         if value:
-            self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img')
+            html.write(self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img'))
         else:
             html.write(_('Select an Icon'))
         html.end_popup_trigger()
@@ -3314,9 +3318,9 @@ class IconSelector(ValueSpec):
             display = active_category != category_name and ' style="display:none"' or ''
             html.write('<div%s id="%s_%s_container" class="%s_container">' % (display, varprefix, category_name, varprefix))
             for nr, icon in enumerate(empty + icons):
-                self.render_icon(icon,
+                html.write(self.render_icon(icon,
                     onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
-                    title = _('Choose this icon'), id = varprefix + '_i_' + icon)
+                    title = _('Choose this icon'), id = varprefix + '_i_' + icon))
             html.write('</div>')
 
         if self._upload:
@@ -3328,8 +3332,6 @@ class IconSelector(ValueSpec):
             html.write('</div>')
         html.write('</div>')
 
-
-
     def from_html_vars(self, varprefix):
         icon = html.var(varprefix + '_value')
         if icon == 'empty':
@@ -3338,7 +3340,7 @@ class IconSelector(ValueSpec):
             return icon
 
     def value_to_text(self, value):
-        self.render_icon(value)
+        return self.render_icon(value)
 
     def validate_datatype(self, value, varprefix):
         if value is not None and type(value) != str:

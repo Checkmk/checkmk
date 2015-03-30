@@ -820,7 +820,7 @@ def paint_graph(row):
 
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : _("Service Graphs"),
-    "columns" : [ "host_name", "service_description", "service_perf_data", "service_check_command" ],
+    "columns" : [ "host_name", "service_description", "service_perf_data", "service_metrics", "service_check_command" ],
     "options" : [ 'pnp_timerange' ],
     "paint"   : paint_graph,
     "printable" : False,
@@ -1173,7 +1173,7 @@ multisite_painters["host_notifications_enabled"] = {
 multisite_painters["host_pnpgraph" ] = {
     "title"   : _("PNP host graph"),
     "short"   : _("PNP graph"),
-    "columns" : [ "host_name" ],
+    "columns" : [ "host_name", "host_perf_data", "host_metrics", "host_check_command" ],
     "options" : [ 'pnp_timerange' ],
     "paint"   : paint_graph,
     "printable" : False,

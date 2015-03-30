@@ -976,8 +976,8 @@ body.main table.footer .popup_menu a:hover {
 
 #popup_menu .icons li a:hover {
     text-decoration: none;
-    color:#779D2A;
-    background-color: #fbfbfb;
+    background-color: #629BB1;
+    color: #fff;
 }
 
 #popup_menu .icons li.active a {
@@ -998,6 +998,15 @@ body.main table.footer .popup_menu a:hover {
 #popup_menu .icons img.icon {
     width: 20px;
     height: 20px;
+}
+
+body.icon_upload {
+    background: transparent;
+}
+
+body.icon_upload div.error,
+body.icon_upload div.success {
+    margin: 0;
 }
 
 /*--Various----------------------------------------------------------------.

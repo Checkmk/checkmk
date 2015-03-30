@@ -3174,8 +3174,9 @@ class FileUpload(ValueSpec):
             return ''
 
     def validate_value(self, value, varprefix):
-        if not self._allow_empty and value == None:
+        if not self._allow_empty and (value == None or value[0] == ''):
             raise MKUserError(varprefix, _('Please select a file.'))
+        self.custom_validate(value, varprefix)
 
     def render_input(self, varprefix, value):
         html.upload_file(varprefix)
@@ -3185,22 +3186,23 @@ class FileUpload(ValueSpec):
         return html.uploaded_file(varprefix)
 
 class IconSelector(ValueSpec):
+    _categories = [
+        ('logos',   _('Logos')),
+        ('parts',   _('Parts')),
+        ('misc',    _('Misc')),
+    ]
+
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._prefix      = kwargs.get('prefix', '')
         self._allow_empty = kwargs.get('allow_empty', True)
         self._html_path   = 'images/icons'
         self._empty_img   = kwargs.get('emtpy_img', 'empty')
+        self._upload      = kwargs.get('upload', True)
 
         self._exclude = [
             'trans',
             'empty',
-        ]
-
-        self._categories = [
-            ('logos', _('Logos')),
-            ('parts', _('Parts')),
-            ('misc',  _('Misc')),
         ]
 
     # All icons within the images/icons directory have the ident of a category
@@ -3297,7 +3299,8 @@ class IconSelector(ValueSpec):
 
         # Render tab navigation
         html.write('<ul>')
-        for category_name, category_alias, icons in available_icons:
+        upload = self._upload and [('upload', _('Upload'), [])] or []
+        for category_name, category_alias, icons in available_icons + upload:
             active = active_category == category_name and ' class="active"' or ''
             html.write('<li%s>' % active)
             html.write('<a id="%s_%s_nav" class="%s_nav" href="javascript:vs_iconselector_toggle(\'%s\', \'%s\')">%s</a>' %
@@ -3315,7 +3318,17 @@ class IconSelector(ValueSpec):
                     onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
                     title = _('Choose this icon'), id = varprefix + '_i_' + icon)
             html.write('</div>')
+
+        if self._upload:
+            html.write('<div style="display:none" id="%s_%s_container" class="%s_container">' %
+                                                                 (varprefix, 'upload', varprefix))
+            html.write('<iframe allowTransparency="true" frameborder="0" width="100%" height="100%" '
+                       'src="icon_upload.py">')
+            html.write('</iframe>')
+            html.write('</div>')
         html.write('</div>')
+
+
 
     def from_html_vars(self, varprefix):
         icon = html.var(varprefix + '_value')

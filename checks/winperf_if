@@ -96,7 +96,7 @@ def convert_winperf_if(info):
             if counter:
                 for nr, value in enumerate(line[1:len(nic_names)+1]):
                     nics[nic_names[nr]][counter] = int(value)
-            # Not and integer: then this must be the line with the additional
+            # Not an integer: then this must be the line with the additional
             # information from wmic (which is optional!)
             else:
                 headers = line
@@ -194,20 +194,53 @@ def convert_winperf_if(info):
         if nic.get("GUID") in teaming_info:
             index_info = ( teaming_info[nic.get("GUID")]["TeamName"], index_info )
 
+        # NetConnectionTable Stuff:
+        #
+        # if we have no status, but link information, we assume IF is connected
+        connection_status = nic.get('NetConnectionStatus', '2')
 
-        connection_status = nic.get('NetConnectionStatus')
-        if connection_status not in ['1', '2', '7']:
-            # Unknown states are set to down
-            connection_status = '2'
+        # Windows NetConnectionStatus Table
+        # 0 Disconnected
+        # 1 Connecting
+        # 2 Connected
+        # 3 Disconnecting
+        # 4 Hardware not present
+        # 5 Hardware disabled
+        # 6 Hardware malfunction
+        # 7 Media disconnected
+        # 8 Authenticating
+        # 9 Authentication succeeded
+        # 10 Authentication failed
+        # 11 Invalid address
+        # 12 Credentials required
+
+        # ifOperStatus Table
+        # 1 up
+        # 2 down
+        # 3 testing
+        # 4 unknown
+        # 5 dormant
+        # 6 notPresent
+        # 7 lowerLayerDown
+
+        # NetConnectionStatus           : ifOperStatus
+        # 2 (Connected)                 : 1 (up)
+        # 7 (Media disconnected)        : 7 (lowerLayerDown)
+        # *                             : 2 (down)
+
+        if connection_status == '2':
+            ifoperstatus = '1'
+        elif connection_status == '7':
+            ifoperstatus = '7'
+        else:
+            ifoperstatus = '2'
 
         converted.append((
            index_info,
            nic_name,
            "loopback" in nic_name.lower() and '24' or '6',
            bandwidth or nic[10], # Bandwidth
-           # NetConnectionStatus: 2 means 'up', 7 is 'not connected'. If the plugin
-           # wmic_if is missing and we have link information we have to assume 'up':
-           connection_status,
+           ifoperstatus, # ifOperStatus
            nic[-246], # ifInOctets,
            nic[14], # inucast
            0,       # inmcast

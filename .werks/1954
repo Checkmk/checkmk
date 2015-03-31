@@ -15,4 +15,4 @@ Discovery function now handles the agent output as followed:
 </ul>
 
 Supported agents on Windows, Linux, FreeBSD, MacOSX and Solaris now return the same agent output as followed:
-<Searchpattern or Absolute file path>|<Filesize or "missing">|<Modification time of file>
+[Searchpattern or Absolute file path]|[Filesize or "missing"]|[Modification time of file]

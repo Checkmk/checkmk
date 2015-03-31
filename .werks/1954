@@ -1,4 +1,4 @@
-Title: fileinfo / fileinfo.group: Fixed discovery function for fileinfo groups and equalize agent output of fileinfo agents
+Title: fileinfo / fileinfo.groups: Fixed discovery function for fileinfo groups and equalize agent output of fileinfo agents
 Level: 1
 Component: checks
 Class: fix

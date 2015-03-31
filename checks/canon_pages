@@ -34,6 +34,10 @@ canon_pages_map = {
     'color A4'    :  '123',
     'print total' :  '301',
     'scan'        :  '501',
+
+    # These counters might be customer specific. This is a test:
+    'color A4/A3' :  '106',
+    'b/W A4'      :  '109',
 }
 
 def inventory_canon_pages(info):

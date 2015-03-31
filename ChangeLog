@@ -36,6 +36,7 @@
     * 2109 FIX: netapp_api_volumes: now using the defined levels when using the Nagios core
     * 2171 FIX: netapp_api_vf_status: Handling "DR backup" as normal (OK) state now
     * 2110 FIX: netapp_api_aggr: check did not take configured levels when using Nagios
+    * 1954 FIX: fileinfo / fileinfo.group: Fixed discovery function for fileinfo groups and equalize agent output of fileinfo agents...
 
     Multisite:
     * 1239 Fixed /treasures/downtime script to work with the new visuals

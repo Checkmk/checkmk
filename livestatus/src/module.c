@@ -97,7 +97,7 @@ void *g_nagios_handle;
 int g_unix_socket = -1;
 int g_max_fd_ever = 0;
 char g_socket_path[4096];
-char *g_pnp_path = 0; // base path for PNP4Nagios graphs
+char g_pnp_path[4096]; // base path for PNP4Nagios graphs
 char g_mk_inventory_path[4096]; // base path of Check_MK inventor files
 char g_logfile_path[4096];
 int g_debug_level = 0;
@@ -637,6 +637,9 @@ void livestatus_parse_arguments(const char *args_orig)
     else
         strcpy(slash + 1, "livestatus.log");
 
+    /* there is no default PNP path */
+    g_pnp_path[0] = 0;
+
     if (!args_orig)
         return; // no arguments, use default options
 
@@ -728,9 +731,9 @@ void livestatus_parse_arguments(const char *args_orig)
                 }
             }
             else if (!strcmp(left, "pnp_path")) {
-                g_pnp_path = strndup(right, 4096);
+                strncpy(g_pnp_path, right, sizeof(g_pnp_path) - 1);
                 if (right[strlen(right) - 1] != '/')
-                    strncat(g_pnp_path, "/",  sizeof(&g_pnp_path) - strlen(g_pnp_path) - 1 ); // make sure, that trailing slash is always there
+                    strncat(g_pnp_path, "/",  sizeof(g_pnp_path) - strlen(g_pnp_path) - 1 ); // make sure, that trailing slash is always there
                 check_path("PNP perfdata directory", g_pnp_path);
             }
             else if (!strcmp(left, "mk_inventory_path")) {

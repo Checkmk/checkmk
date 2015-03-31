@@ -49,10 +49,8 @@ def inventory_fileinfo(info, case):
         reftime = int(info[0][0])
     for line in info:
         if len(line) >= 3:
-            if line[1] == "missing":
-                continue
             groups = fileinfo_groups_of_file(line[0], reftime)
-            if case == 'single' and not groups:
+            if case == 'single' and not groups and line[1] != 'missing':
                 inventory.append((line[0], {}));
 
             if case == 'group' and groups:

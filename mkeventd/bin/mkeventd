@@ -2933,6 +2933,8 @@ class EventStatus():
                         event["priority"] = new_event["priority"]
                         log_event_history(event, "CANCELLED")
                         actions = rule.get("cancel_actions", [])
+                        # TODO: Execute the cancelling actions only, if the event
+                        # was open. Do not do this e.g. on delayed or counting.
                         do_event_actions(actions, event, is_cancelling = True)
 
                         to_delete.append(nr)

@@ -44,6 +44,7 @@
 #include "ServicelistColumn.h"
 #include "ServicelistStateColumn.h"
 #include "HostgroupsColumn.h"
+#include "MetricsColumn.h"
 #include "ContactgroupsColumn.h"
 #include "HostSpecialIntColumn.h"
 #include "HostSpecialDoubleColumn.h"
@@ -356,6 +357,9 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
     table->addColumn(new ServicelistColumn(prefix + "services_with_fullstate",
                 "A list of all services including full state information. The list of entries can grow in future versions.",
                    (char *)(&hst.services) - ref, indirect_offset, false, 3));
+
+    table->addColumn(new MetricsColumn(prefix + "metrics",
+                "A dummy column in order to be compatible with Check_MK Multisite", indirect_offset));
 }
 
 void *TableHosts::findObject(char *objectspec)

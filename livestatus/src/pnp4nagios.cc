@@ -32,7 +32,7 @@
 #include "pnp4nagios.h"
 
 
-extern char g_pnp_path[];
+extern char *g_pnp_path;
 
 char *cleanup_pnpname(char *name)
 {

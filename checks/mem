@@ -588,8 +588,8 @@ def check_mem_vmalloc(item, params, info):
     return (state, ("total %.1f MB, " % total_mb) + ", ".join(infotxts), perfdata)
 
 check_info["mem.vmalloc"] = {
-    'check_function':          check_mem_vmalloc,
     'inventory_function':      inventory_mem_vmalloc,
+    'check_function':          check_mem_vmalloc,
     'service_description':     'Vmalloc address space',
     'has_perfdata':            True,
 }

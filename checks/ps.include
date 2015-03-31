@@ -222,7 +222,7 @@ def parse_ps_time(text):
 
     return 86400 * days + 3600 * hours + 60 * minutes + seconds
 
-def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" ):
+def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes", total_ram = None):
     now = time.time()
     if type(params) in (list, tuple):
         if len(params) == 5:
@@ -369,6 +369,28 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" )
                     infotext += "(!)"
             infotext += ","
 
+        # Check levels that are in percent of the total RAM of the host
+        if "resident_levels_perc" in params:
+            warn_perc, crit_perc = params["resident_levels_perc"]
+            if not total_ram:
+                infotext += ", percentual RAM levels, but total RAM is unknown"
+                if state in (0, 1):
+                    state = 3
+            else:
+                resident_perc = 100 * float(resident_size * 1024) / total_ram
+                infotext += " %s of total RAM" % get_percent_human_readable(resident_perc)
+                levelstext = " (warn/crit at %d%%/%d%%)" % (warn_perc, crit_perc)
+                if resident_perc >= crit_perc:
+                    state = 2
+                    infotext += levelstext
+                elif resident_perc >= warn_perc:
+                    state = max(state, 1)
+                    infotext += levelstext
+                else:
+                    infotext += levelstext
+
+            infotext += ","
+
         infotext += " %.1f%% CPU" % percent_cpu
 
         if "cpu_average" in params:
@@ -398,6 +420,7 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" )
                     state = max(state, 1)
                     infotext += "(!)"
 
+    # Check how long the process is running
     if min_elapsed != None:
         if min_elapsed == max_elapsed:
             infotext += ", running for %s" % get_age_human_readable(min_elapsed)

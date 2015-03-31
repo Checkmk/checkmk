@@ -2954,7 +2954,6 @@ no_discovery_possible = None
             if path not in filenames:
                 filenames.append(path)
 
-
     output.write("check_info = {}\n" +
                  "check_includes = {}\n" +
                  "precompile_params = {}\n" +
@@ -3060,8 +3059,14 @@ no_discovery_possible = None
 
     # The same for those checks that use the new API
     for check_type in needed_check_types:
-        for var in check_info[check_type].get("check_config_variables", []):
-            output.write("%s = %r\n" % (var, eval(var)))
+        # Note: check_type might not be in check_info. This is
+        # the case, if "mem" has been added to "extra_sections" and thus
+        # to "needed_check_types" - despite the fact that only subchecks
+        # mem.* exist
+        if check_type in check_info:
+            for var in check_info[check_type].get("check_config_variables", []):
+                output.write("%s = %r\n" % (var, eval(var)))
+
 
     # perform actual check with a general exception handler
     output.write("try:\n")

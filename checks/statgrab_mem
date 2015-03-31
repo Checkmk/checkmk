@@ -26,62 +26,38 @@
 
 memused_default_levels = (150.0, 200.0)
 
-def inventory_statgrab_mem(info):
-    if len(info) > 0:
-        return [(None, 'memused_default_levels')]
-
-def check_statgrab_mem(_no_item, params, info):
+def parse_statgrab_mem(info):
     for var, value in info:
         if var == 'mem.used':     memused_kb   = int(value) / 1024
         elif var == 'mem.total':  totalmem_kb  = int(value) / 1024
         elif var == 'swap.used':  swapused_kb  = int(value) / 1024 / 4 # BUG in statgrab und Solaris?
         elif var == 'swap.total': totalswap_kb = int(value) / 1024 / 4
         elif var == 'mem.cache':  caches_kb    = int(value) / 1024
-    totalused_kb = (swapused_kb + memused_kb - caches_kb)
-    totalused_mb = totalused_kb / 1024
-    totalmem_mb = totalmem_kb / 1024
-    totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
-    totalvirt_mb = (totalswap_kb + totalmem_kb) / 1024
-    warn, crit = params
 
-    perfdata = [
-        ('ramused', str((memused_kb - caches_kb) / 1024) + 'MB', '', '', 0, totalmem_mb),
-        ('swapused', str(swapused_kb / 1024) + 'MB', '', '', 0, totalswap_kb / 1024) ]
+    return {
+        "MemTotal"  : totalmem_kb,
+        "MemFree"   : totalmem_kb - memused_kb,
+        "SwapTotal" : totalswap_kb,
+        "SwapFree"  : totalswap_kb - swapused_kb,
+        "Cached"    : caches_kb,
+    }
 
 
-    # levels may be given either in int -> MB or in float -> percentages
+def inventory_statgrab_mem(parsed):
+    return [(None, 'memused_default_levels')]
 
-    if type(warn) == float:
-        perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalmem_mb),
-                    int(crit/100.0 * totalmem_mb), 0, totalvirt_mb))
-        if totalused_perc >= crit:
-            return (2, '%.1f%% of RAM (%d MB) used by processes (critical at %.1f%%)' %
-                    (totalused_perc, totalused_mb, crit), perfdata)
-        elif totalused_perc >= warn:
-            return (1, '%.1f%% of RAM (%d MB) used by processes (warning at %.1f%%)' %
-                    (totalused_perc, totalused_mb, warn), perfdata)
-        else:
-            return (0, '%.1f%% of RAM (%d MB) used by processes' %
-                    (totalused_perc, totalused_mb), perfdata)
 
-    else:
-        perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalvirt_mb))
-        if totalused_mb >= crit:
-            return (2, '%d MB of RAM (%.1f%%) used by processes (critical at %d MB)' %
-                    (totalused_mb, totalused_perc, crit), perfdata)
-        elif totalused_mb >= warn:
-            return (1, '%d MB of RAM (%.1f%%) used by processes (warning at %d MB)' %
-                    (totalused_mb, totalused_perc, warn), perfdata)
-        else:
-            return (0, '%d MB of RAM (%.1f%%) used by processes' %
-                    (totalused_mb, totalused_perc), perfdata)
+def check_statgrab_mem(_no_item, params, parsed):
+    return check_memory(params, parsed)
 
 
 
 check_info["statgrab_mem"] = {
-    'check_function'      : check_statgrab_mem,
+    'parse_function'      : parse_statgrab_mem,
     'inventory_function'  : inventory_statgrab_mem,
+    'check_function'      : check_statgrab_mem,
     'service_description' : 'Memory used',
     'has_perfdata'        : True,
     'group'               : "statgrab_mem",
+    'includes'            : [ "mem.include" ],
 }

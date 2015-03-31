@@ -402,7 +402,7 @@ process_level_elements = [
        title = _("Maximum allowed age"),
        help = _("Alarms you if the age of the process (not the consumed CPU time, but the real time) exceed the configured levels."),
        elements = [
-           Age(title=_("Warning at:"), default_value = 3600,),
+           Age(title=_("Warning at:"), default_value = 3600),
            Age(title=_("Critical at:"), default_value = 7200),
        ]
    )),
@@ -410,19 +410,27 @@ process_level_elements = [
       Tuple(
         title = _("Virtual memory usage"),
         elements = [
-            Filesize(title = _("Warning at")),
-            Filesize(title = _("Critical at")),
+            Filesize(title = _("Warning at"), default_value = 1000 * 1024 * 1024 * 1024),
+            Filesize(title = _("Critical at"), default_value = 2000 * 1024 * 1024 * 1024),
         ],
    )),
    ( "resident_levels",
       Tuple(
         title = _("Physical memory usage"),
         elements = [
-            Filesize(title = _("Warning at")),
-            Filesize(title = _("Critical at")),
+            Filesize(title = _("Warning at"), default_value = 100 * 1024 * 1024),
+            Filesize(title = _("Critical at"), default_value = 200 * 1024 * 1024),
         ],
    )),
-    ('handle_count', Tuple(
+   ( "resident_levels_perc",
+     Tuple(
+       title = _("Physical memory usage, in percentage of total RAM"),
+       elements = [
+           Percentage(title = _("Warning at"), default_value = 25.0),
+           Percentage(title = _("Critical at"), default_value = 50.0),
+       ]
+   )),
+   ( "handle_count", Tuple(
         title = _('Handle Count (Windows only)'),
         help  = _("The number of object handles in the processes object table. This includes open handles to "
                   "threads, files and other resources like registry keys."),
@@ -436,7 +444,7 @@ process_level_elements = [
                 unit = _("handles"),
             ),
         ],
-    )),
+   )),
 ]
 
 # In version 1.2.4 the check parameters for the resulting ps check

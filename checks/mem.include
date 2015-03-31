@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 memused_default_levels = (150.0, 200.0)
+
 factory_settings["memory_default_levels"] = {
     "levels" : memused_default_levels,
 }

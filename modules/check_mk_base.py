@@ -289,7 +289,7 @@ def apply_parse_function(info, section_name):
 
 def get_info_for_check(hostname, ipaddress, section_name, max_cachefile_age=None, ignore_check_interval=False):
     info = apply_parse_function(get_host_info(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval), section_name)
-    if section_name in check_info and check_info[section_name]["extra_sections"]:
+    if info != None and section_name in check_info and check_info[section_name]["extra_sections"]:
         info = [ info ]
         for es in check_info[section_name]["extra_sections"]:
             try:

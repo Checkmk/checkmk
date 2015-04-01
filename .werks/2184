@@ -1,0 +1,16 @@
+Title: statgrab_mem: converted to the same logic as the other memory checks
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1427814376
+Class: feature
+
+The check plugin <tt>statgrab_mem</tt> now uses the same implementation
+as <tt>solaris_mem</tt> and many other memory checks. That makes the
+output compatible.
+
+Note: This change is incompatible since existing rules for memory
+levels do not apply any longer. Now the same WATO rule set as for
+other memory checks is being used. Please create new rules if you
+have the need for custom levels.

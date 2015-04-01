@@ -1,0 +1,18 @@
+Title: fileinfo / fileinfo.groups: Fixed discovery function for fileinfo groups and equalize agent output of fileinfo agents
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427805197
+
+Discovery function now handles the agent output as followed:
+<ul>
+<li>File Pattern match: For every matching file a new item is returned and a new service is created.</li>
+<li>File Pattern mismatch: This pattern will be ignored. No item is returned and no service is created.</li>
+<li>Group Pattern match or mismatch: For every group a new item is returned and a new service is created.</li>
+</ul>
+
+Supported agents on Windows, Linux, FreeBSD, MacOSX and Solaris now return the same agent output as followed:
+[Searchpattern or Absolute file path]|[Filesize or "missing"]|[Modification time of file]

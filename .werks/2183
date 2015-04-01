@@ -1,0 +1,16 @@
+Title: ps: allow levels of used RAM in percentage of total RAM of host
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427814203
+Class: feature
+
+You can now specify the levels for the memory usage of a process
+or group of processes in relation to the total RAM memory of a host.
+This makes it easier to find memory consuming processes in general,
+without the need for different levels for every single host.
+
+Note: these levels only work if the agent output provides information
+about the total memory. This is the case for at least the usual
+agents for Linux, Windows and Solaris.

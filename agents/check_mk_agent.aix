@@ -116,7 +116,12 @@ echo Version: 1.2.7i1
 echo AgentOS: aix
 
 echo '<<<df>>>'
-df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
+if [ -x /usr/opt/freeware/bin/df ] ; then
+    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs"
+    /usr/opt/freeware/bin/df -PTlk $excludefs | sed 1d
+else
+    df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
+fi
 
 # Check for hanging NFS mounts. This needs a GNU stat installed in the PATH
 if type stat >/dev/null 2>&1 ; then

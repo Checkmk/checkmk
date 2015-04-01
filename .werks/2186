@@ -1,0 +1,12 @@
+Title: check_mk_agent.aix: use GNU df in order to exclude NFS for filesystem monitoring
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427890642
+Class: feature
+
+If the <tt>df</tt> command from the GNU <tt>coreutils</tt> is present at
+<tt>/usr/opt/freeware/bin/df</tt> then that is being used instead of the
+AIX <tt>df</tt> command. This avoids a hanging agent in case of hanging
+NFS mounts.

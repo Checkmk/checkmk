@@ -1,0 +1,9 @@
+Title: ucs_bladecenter_if: fixed exception when fibrechannel interfaces were not configured
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1426751801
+Class: fix
+
+This check couldn't handle agent data were there was no trace of fibrechannel interfaces.

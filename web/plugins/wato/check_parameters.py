@@ -38,7 +38,7 @@ subgroup_storage =      _("Storage, Filesystems and Files")
 subgroup_os =           _("Operating System Resources")
 subgroup_printing =     _("Printers")
 subgroup_environment =  _("Temperature, Humidity, Electrical Parameters, etc.")
-subgroup_applications = _("Applications, Processes &amp; Services")
+subgroup_applications = _("Applications, Processes & Services")
 subgroup_virt =         _("Virtualization")
 subgroup_hardware =     _("Hardware, BIOS")
 subgroup_inventory =    _("Inventory - automatic service detection")
@@ -2995,20 +2995,33 @@ register_check_parameters(
     _("Printer cartridge levels"),
     Transform(
         Tuple(
-              help = _("Levels for printer cartridges."),
-              elements = [
-                  Percentage(title = _("Warning remaining"), allow_int = True, default_value = 20.0),
-                  Percentage(title = _("Critical remaining"), allow_int = True, default_value = 10.0),
-                  Checkbox(
-                        title = _("Upturn toner levels"),
-                        label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
-                        help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
-                                  " fuel instead of what is left. In this case it's possible"
-                                  " to upturn the levels to handle this behavior"
-                                 )
-                        ),]
-             ),
-             forth = transform_printer_supply,
+            elements = [
+                Percentage(
+                    title = _("Warning remaining"),
+                    allow_int = True,
+                    default_value = 20.0,
+                    help = _("For consumable supplies, this is configured as the percentage of "
+                             "remaining capacity. For supplies that fill up, this is configured "
+                             "as remaining space."),
+                ),
+                Percentage(
+                    title = _("Critical remaining"),
+                    allow_int = True,
+                    default_value = 10.0,
+                    help = _("For consumable supplies, this is configured as the percentage of "
+                             "remaining capacity. For supplies that fill up, this is configured "
+                             "as remaining space."),
+                ),
+                Checkbox(
+                    title = _("Upturn toner levels"),
+                    label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
+                    help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                              " fuel instead of what is left. In this case it's possible"
+                              " to upturn the levels to handle this behavior")
+                ),
+            ]
+        ),
+        forth = transform_printer_supply,
     ),
     TextAscii(
         title = _("cartridge specification"),
@@ -4863,8 +4876,8 @@ register_check_parameters(
             Tuple(
                 title = _("Broken to spare ratio"),
                 elements = [
-                    Percentage(title = _("Warning at or above")),
-                    Percentage(title = _("Critical at or above")),
+                    Percentage(title = _("Warning at or above"), default_value = 1.0),
+                    Percentage(title = _("Critical at or above"), default_value = 50.0),
                 ]
             )),
         ],
@@ -5221,7 +5234,7 @@ register_check_parameters(
     Tuple(
         help = _("Temperature levels for external thermometers that are used "
                  "for monitoring the temperature of a datacenter. An example "
-                 "is the webthem from W&amp;T."),
+                 "is the webthem from W&T."),
         elements = [
             Integer(title = _("warning at"), unit = u"°C", default_value = 26),
             Integer(title = _("critical at"), unit = u"°C", default_value = 30),

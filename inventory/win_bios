@@ -45,7 +45,6 @@ def inv_win_bios(info):
         if len(line) > 2:
             line = [ line[0], ":".join(line[1:]) ]
         varname, value = line
-
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
         if varname == "BIOSVersion":
@@ -75,5 +74,6 @@ def inv_win_bios(info):
 
 inv_info['win_bios'] = {
    "inv_function"           : inv_win_bios,
+   "unicode"                : True,
 }
 

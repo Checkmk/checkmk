@@ -136,6 +136,6 @@ check_info["ucs_bladecenter_fans.temp"] = {
     'check_function'      : check_ucs_bladecenter_fans_temp,
     'service_description' : 'Temperature %s FAN',
     'has_perfdata'        : True,
-    'includes'            : [ 'ucs_bladecenter.include' ],
+    'includes'            : [ 'ucs_bladecenter.include', 'temperature.include' ],
     'default_levels_variable' :'ucs_bladecenter_fans_temp_default_levels'
 }

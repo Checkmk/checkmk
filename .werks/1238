@@ -1,0 +1,9 @@
+Title: check_mk_agent.linux: Do not execute the multipath section if no /etc/multipath.conf exsist.
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1427113707
+Class: fix
+
+

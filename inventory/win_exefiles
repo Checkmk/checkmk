@@ -35,13 +35,20 @@ def inv_win_exefiles(info):
     paclist = inv_tree("software.packages:")
     for full_name, write_time, size, description, product_version, product_name in info:
         parts = full_name.split('\\')
-        # 14.02.2014 23:12:04
+        # Since 1.2.6p1 the agent always provides a date format of "04/18/2003 18:06:32".
+        # Old agent versions provided localized date formats which lead to problems here
+        # when none of the implemented parsers matches. We keep the existing parsers for
+        # compatibility, all users with yet unhandled formats should update the agent to
+        # solve the problems.
         if re.match("^\d{2}\.\d{2}\.20\d{2} \d{2}:\d{2}:\d{2}", write_time):
             install_date = int(time.mktime(time.strptime(write_time, "%d.%m.%Y %H:%M:%S")))
         elif re.match("^\d{1,2}/\d{1,2}/20\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)", write_time):
             install_date = int(time.mktime(time.strptime(write_time, "%m/%d/%Y %H:%M:%S %p")))
+        elif re.match("^\d{1,2}/\d{1,2}/20\d{2} \d{1,2}:\d{2}:\d{2}", write_time):
+            # This is the 1.2.6p1 new default date
+            install_date = int(time.mktime(time.strptime(write_time, "%m/%d/%Y %H:%M:%S")))
         else:
-            install_date = write_time
+            install_date = None # need to return 0 to not break the painter which assumes an int
 
         entry = {
             "name"            : parts[-1],
@@ -58,4 +65,5 @@ def inv_win_exefiles(info):
 
 inv_info['win_exefiles'] = {
    "inv_function"           : inv_win_exefiles,
+   "unicode"                : True,
 }

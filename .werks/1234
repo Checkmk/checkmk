@@ -1,0 +1,11 @@
+Title: Fixed cisco_power in case of slashes in item names
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1426760330
+Class: feature
+
+The Checks now not longer goes to Unkown if the name of the power supply contains a slash.
+Please Note:  The next version of Check_MK will have another workarround for this. This fix is only to stay compatible.
+

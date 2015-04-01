@@ -175,6 +175,7 @@ def parse_multipath(info):
     group = {}
     numpaths = None
     for line in info:
+
         # Ignore error messages due to invalid multipath.conf
         if line[0] == "multipath.conf":
             continue
@@ -190,7 +191,7 @@ def parse_multipath(info):
         l = " ".join(line)
 
         # Skip output when multipath is not present
-        if l.endswith('DM multipath kernel driver not loaded') \
+        if l.endswith('kernel driver not loaded') \
            or l.endswith('does not exist, blacklisting all devices.') \
            or l.endswith('A sample multipath.conf file is located at') \
            or l.endswith('multipath.conf'):
@@ -282,7 +283,7 @@ def check_multipath(item, target_numpaths, parsed):
         mmap = parsed[item]
     else:
         for mmap in parsed.values():
-            if mmap["alias"] == item:
+            if mmap.get("alias") == item:
                 break
         else:
             return 3, "Multipath device not found in agent output"

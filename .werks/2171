@@ -1,0 +1,9 @@
+Title: netapp_api_vf_status: Handling "DR backup" as normal (OK) state now
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1427467363
+Class: fix
+
+

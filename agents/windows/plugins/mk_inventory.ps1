@@ -2,6 +2,8 @@
 $delay = 14400 # execute agent only every $delay seconds
 $exe_paths = @("c:\Program Files (x86)")
 
+[System.Threading.Thread]::CurrentThread.CurrentCulture = [Globalization.CultureInfo]::InvariantCulture
+[System.Threading.Thread]::CurrentThread.CurrentUICulture = [Globalization.CultureInfo]::InvariantCulture
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 write-output "" # workaround to prevent the byte order mark to be at the beginning of the first section
 $name = (Get-Item env:\Computername).Value
@@ -16,7 +18,6 @@ if (!$agent_dir) {
 }
 
 $timestamp = $agent_dir + "\timestamp."+ $remote_host
-
 
 # does $timestamp exist?
 If (Test-Path $timestamp){
@@ -43,7 +44,7 @@ foreach ( $entry in $cpu ) { foreach ( $item in $cpu_vars) {  write-host $item "
 
 # OS Version
 write-host "<<<win_os:sep(124):persist($until)>>>"
-Get-WmiObject Win32_OperatingSystem -ComputerName $name -Recurse | foreach-object { write-host -separator $separator $_.csname, $_.caption, $_.version, $_.OSArchitecture, $_.servicepackmajorversion, $_.ServicePackMinorVersion, $_.InstallDate }
+Get-WmiObject Win32_OperatingSystem -ComputerName $name | foreach-object { write-host -separator $separator $_.csname, $_.caption, $_.version, $_.OSArchitecture, $_.servicepackmajorversion, $_.ServicePackMinorVersion, $_.InstallDate }
 
 # Memory
 #Get-WmiObject Win32_PhysicalMemory -ComputerName $name  | select BankLabel,DeviceLocator,Capacity,Manufacturer,PartNumber,SerialNumber,Speed

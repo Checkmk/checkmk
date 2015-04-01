@@ -1,0 +1,9 @@
+Title: netapp_api_aggr: check did not take configured levels when using Nagios
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1427727624
+Class: fix
+
+

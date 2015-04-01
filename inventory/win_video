@@ -39,7 +39,10 @@
 def inv_win_video(info):
     node = inv_tree("hardware.video:")
     array = {}
-    for varname, value in info:
+    for line in info:
+        if len(line) > 2:
+            line = [ line[0], ":".join(line[1:]) ]
+        varname, value = line
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
         if varname == "Name":
@@ -53,4 +56,5 @@ def inv_win_video(info):
 
 inv_info['win_video'] = {
    "inv_function"           : inv_win_video,
+   "unicode"                : True,
 }

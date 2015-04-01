@@ -49,10 +49,8 @@ def inventory_fileinfo(info, case):
         reftime = int(info[0][0])
     for line in info:
         if len(line) >= 3:
-            if line[1] == "missing":
-                continue
             groups = fileinfo_groups_of_file(line[0], reftime)
-            if case == 'single' and not groups:
+            if case == 'single' and not groups and line[1] != 'missing':
                 inventory.append((line[0], {}));
 
             if case == 'group' and groups:
@@ -147,7 +145,10 @@ def check_fileinfo_groups(item, params, info):
             if inclusion != inclusion_tmp:
                 inclusion = inclusion_tmp
                 date_inclusion = inclusion_tmp
-            if fnmatch.fnmatch(line[0], inclusion) and str(line[1]) != 'missing' \
+            # endswith("No such file...") is needed to 
+            # support the solaris perl based version of fileinfo
+            if not line[0].endswith("No such file or directory") \
+                        and fnmatch.fnmatch(line[0], inclusion) and str(line[1]) != 'missing' \
                         and not fnmatch.fnmatch(line[0], exclusion):
                 size = int(line[1])
                 size_all += size

@@ -136,7 +136,7 @@ def inventory_cisco_qos(info):
         for class_id, class_name in info[2]:
             # Get interface ids which use this qos class
             for policy_id, objects_id in cisco_qos_get_config_entries_by_class_id(config, class_id):
-                if ifs[policy_id] in if_names:
+                if ifs.get(policy_id) in if_names:
                     if_name = if_names[ifs[policy_id]]
                     items += [ ('%s: %s' % (if_name, class_name), {}) ]
 

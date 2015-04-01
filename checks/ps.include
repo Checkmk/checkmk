@@ -206,6 +206,20 @@ def process_matches(ps, procname, l_user):
 #   "user" : "foo",
 #   "levels" : (1, 1, 99999, 99999)
 # }
+def parse_ps_time(text):
+    if "-" in text:
+        tokens = text.split("-")
+        days   = int(tokens[0])
+        text   = tokens[1]
+    else:
+        days = 0
+    parts = map(int, text.split(":"))
+    if len(parts) == 3:
+        hours, minutes, seconds = parts
+    else:
+        hours, minutes, seconds = 0, parts[0], parts[1]
+
+    return 86400 * days + 3600 * hours + 60 * minutes + seconds
 
 def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" ):
     now = time.time()
@@ -277,15 +291,12 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" )
                         handle_count += handle_c
                     else:
                         if ":" in addinfo[3]:
-                            if "-" in addinfo[3]:
-                                tokens     = addinfo[3].split("-")
-                                days       = int(tokens[0])
-                                addinfo[3] = tokens[1]
+                            if '/' in addinfo[3]:
+                                pcpu_text, elapsed_text = addinfo[3].split('/')
                             else:
-                                days = 0
+                                pcpu_text = addinfo[3]
+                            total_seconds = parse_ps_time(pcpu_text)
                             pid = addinfo[4]
-                            hours, minutes, seconds = map(int, addinfo[3].split(":"))
-                            total_seconds = 86400 * days + 3600 * hours + 60 * minutes + seconds
                             try:
                                 cputime = get_rate("ps_stat.pcpu.%s" % pid, now, total_seconds, onwrap=RAISE)
                             except MKCounterWrapped, e:

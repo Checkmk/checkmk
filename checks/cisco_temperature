@@ -44,7 +44,11 @@ def parse_cisco_temperature(info):
         thresholds.setdefault(sensor_id, []).append(level)
 
     for sensor_id, sensortype, scalecode, magnitude, value, sensorstate in state_info:
-        descr = descriptions[sensor_id]
+        if sensor_id in descriptions:
+            descr = descriptions[sensor_id]
+        else:
+            descr = sensor_id
+
         if descr and sensortype == '8':
             entity_parsed[descr] = {}
             scale = 10**int(magnitude)

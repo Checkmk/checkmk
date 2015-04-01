@@ -236,7 +236,7 @@ ldap_groupspec        = {
 }
 ldap_active_plugins   = {'email': {}, 'alias': {}, 'auth_expire': {}}
 ldap_cache_livetime   = 300
-ldap_debug_log        = None
+ldap_debug_log        = False
 default_user_profile  = {
     'roles': ['user'],
 }

@@ -1,0 +1,12 @@
+Title: Rule based notification now allow match for notification comment
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427970243
+Class: feature
+
+A new condition allows a match on the notification comment. This comment
+is supplied in custom notifications - never in normal notifications. This
+allows to create custom commands that e.g. open tickets by creating custom
+notifications with a certain text in the comment.

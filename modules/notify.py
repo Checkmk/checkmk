@@ -670,6 +670,7 @@ def rbn_match_rule(rule, context):
         rbn_match_servicelevel(rule, context)          or \
         rbn_match_host_event(rule, context)            or \
         rbn_match_service_event(rule, context)         or \
+        rbn_match_notification_comment(rule, context)  or \
         rbn_match_event_console(rule, context)
 
 
@@ -970,6 +971,14 @@ def rbn_rule_contacts(rule, context):
         all_enabled.append(contactname)
 
     return all_enabled
+
+def rbn_match_notification_comment(rule, context):
+    if "match_notification_comment" in rule:
+        r = regex(rule["match_notification_comment"])
+        notification_comment = context.get("NOTIFICATIONCOMMENT", "")
+        if not r.match(notification_comment):
+            return "The beginning of the notification comment '%s' is not matched by the regex '%s'" % (
+              notification_comment, rule["match_notification_comment"])
 
 
 def rbn_match_event_console(rule, context):

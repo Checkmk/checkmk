@@ -8539,6 +8539,16 @@ def vs_notification_rule(userid = None):
                     default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
                )
              ),
+             ( "match_notification_comment",
+               RegExpUnicode(
+                  title = _("Match notification comment"),
+                  help = _("This match only makes sense for custom notifications. When a user creates "
+                           "a custom notification then he/she can enter a comment. This comment is shipped "
+                           "in the notification context variable <tt>NOTIFICATIONCOMMENT</tt>. Here you can "
+                           "make a condition of that comment. It is a regular expression matching the beginning "
+                           "of the comment."),
+                  size = 60,
+             )),
              ( "match_ec",
                Alternative(
                    title = _("Event Console alerts"),
@@ -8667,7 +8677,7 @@ def vs_notification_rule(userid = None):
         optional_keys = [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
                           "match_services", "match_servicegroups", "match_contactgroups", "match_exclude_services", "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
-                          "match_sl", "match_host_event", "match_service_event", "match_ec",
+                          "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails", "contact_match_macros" ],
         headers = [
             ( _("Rule Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
@@ -8678,7 +8688,7 @@ def vs_notification_rule(userid = None):
                                          "match_services", "match_servicegroups", "match_contactgroups", "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_escalation_throttle",
-                                         "match_sl", "match_host_event", "match_service_event", "match_ec" ] ),
+                                         "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment" ] ),
         ],
         render = "form",
         form_narrow = True,

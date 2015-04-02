@@ -764,17 +764,27 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
             pass # some old Python versions lack settimeout(). Better ignore than fail
         vverbose("Connecting via TCP to %s:%d.\n" % (ipaddress, port))
         s.connect((ipaddress, port))
+        # Immediately close sending direction. We do not send any data
+        # s.shutdown(socket.SHUT_WR)
         try:
             s.setblocking(1)
         except:
             pass
         output = ""
-        while True:
-            out = s.recv(4096, socket.MSG_WAITALL)
-            if out and len(out) > 0:
-                output += out
-            else:
-                break
+        try:
+            while True:
+                out = s.recv(4096, socket.MSG_WAITALL)
+                if out and len(out) > 0:
+                    output += out
+                else:
+                    break
+        except Exception, e:
+            # Python seems to skip closing the socket under certain
+            # conditions, leaving open filedescriptors and sockets in
+            # CLOSE_WAIT. This happens one a timeout (ALERT signal)
+            s.close()
+            raise
+
         s.close()
         if len(output) == 0: # may be caused by xinetd not allowing our address
             raise MKAgentError("Empty output from agent at TCP port %d" % port)

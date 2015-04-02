@@ -1,0 +1,13 @@
+Title: Avoid CLOSE_WAIT sockets for agent connection in case of timeouts
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1427964139
+
+In case of agent timeouts (per default this is set to 60 seconds) when using
+keep alive mode (as the CMC does) socket connections could be left over
+in <tt>CLOSE_WAIT</tt> state. This is due to a file descriptor not being
+closed correctly by Python. This has been fixed.

@@ -76,10 +76,16 @@ check_config_variables.append("nagios_illegal_chars")
 
 # Name of state (lookup SNMP enum)
 def if_statename(st):
-    names = { '1': 'up',             '2': 'down',
-              '3': 'testing',        '4': 'unknown',
-              '5': 'dormant',        '6': 'notPresent',
-              '7': 'lowerLayerDown', '8': 'degraded' }
+    names = {
+        '1': 'up',
+        '2': 'down',
+        '3': 'testing',
+        '4': 'unknown',
+        '5': 'dormant',
+        '6': 'not present',
+        '7': 'lower layer down',
+        '8': 'degraded',
+    }
     return names.get(st, st)
 
 def if_extract_node(line, has_nodeinfo):
@@ -337,7 +343,7 @@ def inventory_if_common(info, has_nodeinfo = False):
 
     return inventory
 
-def check_if_common(item, params, info, has_nodeinfo = False):
+def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Group"):
     # If this item is in an ifgroup create a pseudo interface and pass its data to the common instance
     # This is done by simply adding the additional group_info data to the already existing info table
     if params.get("aggregate"):
@@ -489,11 +495,13 @@ def check_if_common(item, params, info, has_nodeinfo = False):
         # If applicable, signal the check_if_common_single if the counter of the
         # given interface has wrapped. Actually a wrap of the if group itself is unlikely,
         # however any counter wrap of one of its members causes the accumulation being invalid
-        return check_if_common_single(item, params, [group_entry], wrapped, has_nodeinfo = has_nodeinfo, group_members = group_members)
+        return check_if_common_single(item, params, [group_entry], wrapped,
+                     has_nodeinfo = has_nodeinfo, group_members = group_members, group_name = group_name)
 
-    return check_if_common_single(item, params, info, has_nodeinfo=has_nodeinfo)
+    return check_if_common_single(item, params, info, has_nodeinfo=has_nodeinfo, group_name = group_name)
 
-def check_if_common_single(item, params, info, force_counter_wrap = False, has_nodeinfo = False, group_members = None):
+def check_if_common_single(item, params, info, force_counter_wrap = False,
+                           has_nodeinfo = False, group_members = None, group_name = "Group"):
     # Params now must be a dict. Some keys might
     # be set to None
     targetspeed        = params.get("speed")
@@ -537,7 +545,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
         if if_item_matches(item, ifIndex, ifAlias, ifDescr):
             if group_members:
                 # The detailed group info is added later on
-                infotext = "Group Status "
+                infotext = group_name + " Status "
             else:
                 # Display port number or alias in infotext if that is not part
                 # of the service description anyway
@@ -622,7 +630,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
             # but we spotted devices, which do report error packes even for down interfaces.
             # To deal with it, we simply skip over all performance counter checks for down
             # interfaces.
-            if operstatus == "down":
+            if str(ifOperStatus) == "2":
                 return state, infotext
 
             # Performance counters

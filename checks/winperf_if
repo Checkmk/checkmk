@@ -272,7 +272,7 @@ def inventory_winperf_if(info):
     return inventory_if_common(convert_winperf_if(info))
 
 def check_winperf_if(item, params, info):
-    return check_if_common(item, params, convert_winperf_if(info))
+    return check_if_common(item, params, convert_winperf_if(info), group_name = "Teaming")
 
 
 check_info["winperf_if"] = {

@@ -112,8 +112,9 @@ def parse_aix_if(info):
           "ifInOctets", "inucast", "inmcast", "inbcast", "ifInDiscards",
           "ifInErrors", "ifOutOctets", "outucast", "outmcast", "outbcast",
           "ifOutDiscards", "ifOutErrors", "ifOutQLen", "ifAlias", "ifPhysAddress" ]:
-           nic_list.append(nic_info[nic][attr])
+           nic_list.append(nic_info[nic].get(attr,0))
         if_table.append(map(str, nic_list))
+    print if_table
     return if_table
 
 

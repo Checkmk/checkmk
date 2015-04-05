@@ -221,8 +221,12 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
             return info
 
     max_cachefile_age = use_caches and inventory_max_cachefile_age or 0
-    info = apply_parse_function(add_nodeinfo(get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval=True), section_name), section_name)
-    if section_name in check_info and check_info[section_name]["extra_sections"]:
+    rh_info = get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval=True)
+    if rh_info != None:
+        info = apply_parse_function(add_nodeinfo(rh_info, section_name), section_name)
+    else:
+        info = None
+    if info != None and section_name in check_info and check_info[section_name]["extra_sections"]:
         info = [ info ]
         for es in check_info[section_name]["extra_sections"]:
             try:

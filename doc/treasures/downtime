@@ -161,6 +161,7 @@ if opt_mode == 'remove':
     variables += [
         ("view_name",   "downtimes"),
         ("_remove_downtimes", "Remove"),
+        ("host_regex",   arg_host + "$" ),
     ]
 else:
     variables += [

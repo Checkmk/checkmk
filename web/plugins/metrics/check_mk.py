@@ -1822,10 +1822,10 @@ graph_info.append({
 graph_info.append({
     "title" : _("Active and Inactive Memory"),
     "metrics" : [
-        ("mem_lnx_active_anon", "area"),
-        ("mem_lnx_active_file", "stack"),
-        ("mem_lnx_inactive_anon", "area"),
+        ("mem_lnx_inactive_anon", "stack"),
         ("mem_lnx_inactive_file", "stack"),
+        ("mem_lnx_active_anon",   "stack"),
+        ("mem_lnx_active_file",   "stack"),
     ],
 })
 

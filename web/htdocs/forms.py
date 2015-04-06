@@ -70,8 +70,8 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         messages = []
         new_value = {}
         for keyname, section_title, entries in sections:
-            new_value[keyname] = value.get(keyname, {}).copy()
             if type(entries) == list:
+                new_value[keyname] = value.get(keyname, {}).copy()
                 for name, vs in entries:
                     if len(sections) == 1:
                         vp = varprefix
@@ -86,6 +86,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                         html.add_user_error(e.varname, e.message)
 
             else:
+                new_value[keyname] = {}
                 try:
                     edited_value = entries.from_html_vars(keyname)
                     entries.validate_value(edited_value, keyname)

@@ -916,7 +916,7 @@ def darken_color(rgb, v):
 # Make a color lighter. v ranges from 0 (not lighter) to 1 (white)
 def lighten_color(rgb, v):
     def lighten(x, v):
-        return x + ((1.0 - x) * (1.0 - v))
+        return x + ((1.0 - x) * v)
     return tuple([ lighten(x, v) for x in rgb ])
 
 def mix_colors(a, b):

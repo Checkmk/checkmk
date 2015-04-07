@@ -1133,7 +1133,7 @@ check_metrics["check_mk-tcp_conn_stats"] = {
 }
 
 df_translation = {
-    0         : { "name"  : "fs_used", "scale" : MB },
+    "~[_/]"   : { "name"  : "fs_used", "scale" : MB },
     "fs_size" : { "scale" : MB },
     "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
     "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },
@@ -1288,7 +1288,7 @@ check_metrics["check_mk-postgres_sessions"]                     = { "total": {"n
 check_metrics["check_mk-db2_bp_hitratios"]                      = {}
 check_metrics["check_mk-db2_connections"]                       = {}
 check_metrics["check_mk-db2_counters"]                          = {}
-check_metrics["check_mk-db2_logsize"]                           = { 0: { "name": "fs_used", "scale" : MB } }
+check_metrics["check_mk-db2_logsize"]                           = { "~[_/]": { "name": "fs_used", "scale" : MB } }
 check_metrics["check_mk-db2_sort_overflow"]                     = {}
 check_metrics["check_mk-db2_tablespaces"]                       = {}
 check_metrics["check_mk-siemens_plc.temp"]                      = {}
@@ -1822,10 +1822,10 @@ graph_info.append({
 graph_info.append({
     "title" : _("Active and Inactive Memory"),
     "metrics" : [
-        ("mem_lnx_active_anon", "area"),
-        ("mem_lnx_active_file", "stack"),
-        ("mem_lnx_inactive_anon", "area"),
+        ("mem_lnx_inactive_anon", "stack"),
         ("mem_lnx_inactive_file", "stack"),
+        ("mem_lnx_active_anon",   "stack"),
+        ("mem_lnx_active_file",   "stack"),
     ],
 })
 

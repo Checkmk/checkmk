@@ -31,9 +31,9 @@ try:
     from NaElement import *
     from NaServer import *
 except Exception, e:
-    sys.stderr.write("Unable to import the files NaServer.py/NaElement.py. These files are "\
+    sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
                      "provided by the NetApp Managability SDK and must be put into "\
-                     "the sites folder ~/local/lib/python.\nDetailed error: %s" % e)
+                     "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e)
     sys.exit(1)
 
 
@@ -406,7 +406,8 @@ try:
         raise Exception("\n".join(errors))
 
 except Exception, e:
+    if opt_debug:
+        raise
     sys.stderr.write("Error(s) on processing the received data:\n%s" % e)
     sys.exit(1)
-
 

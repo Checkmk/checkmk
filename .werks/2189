@@ -1,0 +1,12 @@
+Title: Allow changing graph number from 1 to "all" when editing PNP graph in report
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428338979
+
+The problem was that when you edited a report element of type PNP graph and wanted
+to change from one specific graph to the list of all graphs of that service you
+wouldn't be able to save your change. Creating new elements worked, nevertheless.

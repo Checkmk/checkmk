@@ -1686,9 +1686,11 @@ def get_rule_options(entry):
 # This function tries to parse the pattern and return different kind of matching
 # functions which can then be performed faster than just using the regex match.
 def convert_pattern(pattern):
+    # TODO: Wouldn't it be faster to declare these functions in global scope
+    # i.e. only once?
     def is_regex(pattern):
         for c in pattern:
-            if c in '*$|[':
+            if c in '.?*+^$|[](){}\\':
                 return True
         return False
 
@@ -1717,6 +1719,7 @@ def convert_pattern(pattern):
     elif is_prefix_match(pattern):
         # prefix match with tailing .*
         pattern = pattern[:-2]
+        # TODO: Should we not rather use startswith()?
         return negate, lambda txt: txt[:len(pattern)] == pattern
 
     elif is_regex(pattern):
@@ -1725,6 +1728,7 @@ def convert_pattern(pattern):
 
     else:
         # prefix match without any regex chars
+        # TODO: Should we not rather use startswith()?
         return negate, lambda txt: txt[:len(pattern)] == pattern
 
 
@@ -1923,7 +1927,12 @@ def in_extraconf_servicelist(service_matchers, item):
             # FIXME: items in autochecks might contain umlauts, the strings
             # are saved as UTF-8 encoded ascii strings. should be saved as
             # unicode strings in this case or at least converted after reading.
-            result = func(item.decode('utf-8'))
+            try:
+                result = func(item.decode('utf-8'))
+            except:
+                if opt_debug:
+                    raise
+                result = False
 
         if result:
             return not negate
@@ -2985,18 +2994,19 @@ no_discovery_possible = None
     output.write("def clusters_of(hostname):\n    return %r\n\n" % clusters_of(hostname))
 
     # snmp hosts
-    output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
-    output.write("def is_tcp_host(hostname):\n   return %r\n\n" % is_tcp_host(hostname))
-    output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
+    output.write("def is_snmp_host(hostname):\n   return    % r\n\n" % is_snmp_host(hostname))
+    output.write("def is_snmpv3_host(hostname):\n   return  % r\n\n" % is_snmpv3_host(hostname))
+    output.write("def is_tcp_host(hostname):\n   return     % r\n\n" % is_tcp_host(hostname))
+    output.write("def is_usewalk_host(hostname):\n   return % r\n\n" % is_usewalk_host(hostname))
     if has_inline_snmp and use_inline_snmp:
-        output.write("def is_snmpv2c_host(hostname):\n   return %r\n\n" % is_snmpv2c_host(hostname))
-        output.write("def is_bulkwalk_host(hostname):\n   return %r\n\n" % is_bulkwalk_host(hostname))
-        output.write("def snmp_timing_of(hostname):\n   return %r\n\n" % snmp_timing_of(hostname))
-        output.write("def snmp_credentials_of(hostname):\n   return %s\n\n" % pprint.pformat(snmp_credentials_of(hostname)))
-        output.write("def snmp_port_of(hostname):\n   return %r\n\n" % snmp_port_of(hostname))
+        output.write("def is_snmpv2c_host(hostname):\n   return     % r\n\n" % is_snmpv2c_host(hostname))
+        output.write("def is_bulkwalk_host(hostname):\n   return    % r\n\n" % is_bulkwalk_host(hostname))
+        output.write("def snmp_timing_of(hostname):\n   return      % r\n\n" % snmp_timing_of(hostname))
+        output.write("def snmp_credentials_of(hostname):\n   return % s\n\n" % pprint.pformat(snmp_credentials_of(hostname)))
+        output.write("def snmp_port_of(hostname):\n   return        % r\n\n" % snmp_port_of(hostname))
     else:
-        output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))
-        output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
+        output.write("def snmp_port_spec(hostname):\n    return   % r\n\n" % snmp_port_spec(hostname))
+        output.write("def snmp_walk_command(hostname):\n   return % r\n\n" % snmp_walk_command(hostname))
 
     # IP addresses
     needed_ipaddresses = {}

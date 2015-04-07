@@ -1592,6 +1592,7 @@ class DualListChoice(ListChoice):
         self._custom_order = kwargs.get("custom_order", False)
         self._instant_add = kwargs.get("instant_add", False)
         self._enlarge_active = kwargs.get("enlarge_active", False)
+        self._rows = kwargs.get("rows", 5)
 
     def render_input(self, varprefix, value):
         self.load_elements()
@@ -1643,7 +1644,7 @@ class DualListChoice(ListChoice):
 
         html.sorted_select(varprefix + '_unselected', unselected,
                            attrs = {
-                               'size'       : 5,
+                               'size'       : self._rows,
                                'multiple'   : 'multiple',
                                'style'      : self._autoheight and 'height:auto' or '',
                                'ondblclick' : not self._instant_add and select_func or '',
@@ -1653,7 +1654,7 @@ class DualListChoice(ListChoice):
         func = self._custom_order and html.select or html.sorted_select
         func(varprefix + '_selected', selected,
                            attrs = {
-                               'size'       : 5,
+                               'size'       : self._rows,
                                'multiple'   : 'multiple',
                                'style'      : self._autoheight and 'height:auto' or '',
                                'ondblclick' : not self._instant_add and unselect_func or '',

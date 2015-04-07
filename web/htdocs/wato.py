@@ -7089,7 +7089,7 @@ def factory_reset():
 
 class CheckTypeSelection(DualListChoice):
     def __init__(self, **kwargs):
-        DualListChoice.__init__(self, **kwargs)
+        DualListChoice.__init__(self, rows=25, **kwargs)
 
     def get_elements(self):
         checks = check_mk_local_automation("get-check-information")

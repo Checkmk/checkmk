@@ -1,0 +1,10 @@
+Title: hitachi_hnas_volume: fix for cases when size information of volumes is not available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428438547
+
+

@@ -117,7 +117,6 @@ Column *Table::dynamicColumn(const char *colname_with_args)
 
     const char *argstring = sep_pos + 1;
 
-    logger(LOG_NOTICE, "Dynamic column %s with args [%s]", name.c_str(), argstring);
     _dynamic_columns_t::iterator it = _dynamic_columns.find(name);
     if (it != _dynamic_columns.end())
         return it->second->createColumn(argstring);

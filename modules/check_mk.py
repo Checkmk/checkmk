@@ -1927,7 +1927,12 @@ def in_extraconf_servicelist(service_matchers, item):
             # FIXME: items in autochecks might contain umlauts, the strings
             # are saved as UTF-8 encoded ascii strings. should be saved as
             # unicode strings in this case or at least converted after reading.
-            result = func(item.decode('utf-8'))
+            try:
+                result = func(item.decode('utf-8'))
+            except:
+                if opt_debug:
+                    raise
+                result = False
 
         if result:
             return not negate

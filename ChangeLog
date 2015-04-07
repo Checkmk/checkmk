@@ -38,6 +38,7 @@
     * 2171 FIX: netapp_api_vf_status: Handling "DR backup" as normal (OK) state now
     * 2110 FIX: netapp_api_aggr: check did not take configured levels when using Nagios
     * 1954 FIX: fileinfo / fileinfo.groups: Fixed discovery function for fileinfo groups and equalize agent output of fileinfo agents...
+    * 2111 FIX: hitachi_hnas_volume: fix for cases when size information of volumes is not available
 
     Multisite:
     * 1239 Fixed /treasures/downtime script to work with the new visuals

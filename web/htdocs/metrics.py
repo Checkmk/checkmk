@@ -160,10 +160,17 @@ def translate_metrics(perf_data, check_command):
     translated_metrics = {}
     for nr, entry in enumerate(perf_data):
         varname = entry[0]
-        if nr in cm:
-            translation_entry = cm[nr]  # access by index of perfdata (e.g. in filesystem)
+
+        translation_entry = {} # Default: no translation neccessary
+
+        if varname in cm:
+            translation_entry = cm[varname]
         else:
-            translation_entry = cm.get(varname, {})
+            for orig_varname, te in cm.items():
+                if orig_varname[0] == "~" and regex(orig_varname[1:]).match(varname): # Regex entry
+                    translation_entry = te
+                    break
+
 
         # Translate name
         metric_name = translation_entry.get("name", varname)

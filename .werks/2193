@@ -1,0 +1,12 @@
+Title: Remove duplicate performance data from host notifications
+Level: 2
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428509406
+
+In HTML emails for host notifications the row for the host performance
+data appeared twice. The second appearance was now moved to the services
+notification - for which it originally was intended.

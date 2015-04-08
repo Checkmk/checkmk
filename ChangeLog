@@ -439,6 +439,7 @@
     * 2015 FIX: Fixed sending notifications for services with umlauts in names...
     * 2038 FIX: Log complete Email address into monitoring history when notifying explicity addresses
     * 2081 FIX: Improved logging of mkeventd in error cases
+    * 2193 FIX: Remove duplicate performance data from host notifications...
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used

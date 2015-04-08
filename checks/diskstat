@@ -111,8 +111,8 @@ def parse_diskstat(info):
         write_ios, write_merges, write_sectors, write_ticks, \
         ios_in_prog, total_ticks, rq_ticks in proc_diskstat:
 
-        if (node_name, major, minor) in name_info:
-            device = name_info[(node_name, major, minor)]
+        if (node_name, int(major), int(minor)) in name_info:
+            device = name_info[(node_name, int(major), int(minor))]
 
         counter_base = "diskstat.%s." % device
 
@@ -275,20 +275,20 @@ def diskstat_extract_name_info(info):
                     info_plain.append(line)
             elif phase == 'dmsetup_info':
                 try:
-                    maj, min = map(int, line[2].split(':'))
+                    major, minor = map(int, line[2].split(':'))
                     if len(line) == 5:
                         name = "LVM %s" % line[1]
                     else:
                         name = "DM %s" % line[1]
-                    name_info[node, maj, min] = name
+                    name_info[node, major, minor] = name
                 except:
                     pass # ignore such crap as "No Devices Found"
             elif phase == 'vx_dsk':
-                maj = int(line[1], 16)
-                min = int(line[2], 16)
+                major = int(line[1], 16)
+                minor = int(line[2], 16)
                 group, disk = line[3].split('/')[-2:]
                 name = "VxVM %s-%s" % (group, disk)
-                name_info[(node, maj, min)] = name
+                name_info[(node, major, minor)] = name
 
     return timestamp, info_plain, name_info
 
@@ -308,7 +308,7 @@ def diskstat_convert_info(info):
                 converted_disks[uuid] = converted_disks[multipath["device"]]
                 del converted_disks[multipath["device"]]
 
-    # Remove any left-over device mapper devices that are not part of a 
+    # Remove any left-over device mapper devices that are not part of a
     # known multipath device, LVM device or whatever
     for device in converted_disks.keys():
         if device.startswith("dm-"):

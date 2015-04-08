@@ -525,8 +525,9 @@ def check_jolokia_metrics_gc(item, params, info):
     if gc == None:
         return
 
-    if params:
-        cwarn, ccrit = params.get('CollectionCount', (None, None))
+    if params == None:
+        params = {}
+
 
     crate = get_rate("jvm.gc.count.%s" % (item), \
                      time.time(), int(gc['CollectionCount']))
@@ -534,6 +535,7 @@ def check_jolokia_metrics_gc(item, params, info):
 
     ctext = ''
     status = 0
+    cwarn, ccrit = params.get('CollectionCount', (None, None))
     if cwarn != None and ccrit != None:
         if crate >= int(ccrit):
             status = 2
@@ -546,9 +548,7 @@ def check_jolokia_metrics_gc(item, params, info):
                     [('CollectionCount', crate, cwarn, ccrit)]
 
     if 'CollectionTime' in gc:
-        if params:
-            twarn, tcrit = params.get('CollectionTime', (None, None))
-
+        twarn, tcrit = params.get('CollectionTime', (None, None))
         trate = get_rate("jvm.gc.time.%s" % (item), \
                          time.time(), int(gc['CollectionTime']))
         trate = trate * 60.0
@@ -563,7 +563,7 @@ def check_jolokia_metrics_gc(item, params, info):
                 status = 1
                 ttext = "(Level %s) " % twarn
 
-        yield status, "%.2f GC ms/minute%s" % (trate, text), \
+        yield status, "%.2f GC ms/minute%s" % (trate, ttext), \
                             [('CollectionTime', trate, twarn, tcrit)]
 
 

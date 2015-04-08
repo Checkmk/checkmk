@@ -1,0 +1,9 @@
+Title: jolokia_metrics.gc: Fixed exception in check if no warn/crit levels are defined
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p1
+Date: 1428497362
+Class: fix
+
+

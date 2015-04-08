@@ -39,6 +39,7 @@
     * 2110 FIX: netapp_api_aggr: check did not take configured levels when using Nagios
     * 1954 FIX: fileinfo / fileinfo.groups: Fixed discovery function for fileinfo groups and equalize agent output of fileinfo agents...
     * 2111 FIX: hitachi_hnas_volume: fix for cases when size information of volumes is not available
+    * 2190 FIX: jolokia_metrics.gc: Fixed exception in check if no warn/crit levels are defined
 
     Multisite:
     * 1239 Fixed /treasures/downtime script to work with the new visuals

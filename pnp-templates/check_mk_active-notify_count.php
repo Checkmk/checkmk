@@ -33,12 +33,15 @@ $minutes = $parts[1];
 
 $opt[1] = "--vertical-label 'Notifications' -l0 --title \"$title (in last $minutes min)\" ";
 $def[1] = "";
+$nr = 0;
 foreach ($DS AS $i => $ds_val) {
     $contact_name = substr($NAME[$i], 0, strpos($NAME[$i], '_'));
-    $def[1] .=  "DEF:$contact_name=".$RRDFILE[$i].":$ds_val:MAX " ;
+    $varname = "notto$nr";
+    $def[1] .=  "DEF:$varname=".$RRDFILE[$i].":$ds_val:MAX " ;
 
-    $def[1] .= "LINE1:$contact_name#".$line_colors[$i % 8].":\"".sprintf("%-20s", $contact_name)."\" ";
-    $def[1] .= "GPRINT:$contact_name:MAX:\"%3.lf\\n\" ";
+    $def[1] .= "LINE1:$varname#".$line_colors[$i % 8].":\"".sprintf("%-20s", $contact_name)."\" ";
+    $def[1] .= "GPRINT:$varname:MAX:\"%3.lf\\n\" ";
+    $nr += 1;
 }
 
 ?>

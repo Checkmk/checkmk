@@ -106,7 +106,7 @@ api_actions["delete_host"] = {
 ###############
 
 def action_discover_services(request):
-    mode = html.var("var") and html.var("mode") or "new"
+    mode = html.var("mode") and html.var("mode") or "new"
 
     hostname = request.get("hostname")
 

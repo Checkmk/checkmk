@@ -64,6 +64,9 @@
     * 2160 FIX: Fixed rename of hosts where a host with this name did exist before
     * 2191 FIX: Fixed handling of URL variable 'mode' in web API for discovering services...
 
+    Notifications:
+    * 2193 FIX: Remove duplicate performance data from host notifications...
+
     Reporting & Availability:
     * 2189 FIX: Allow changing graph number from 1 to "all" when editing PNP graph in report...
 

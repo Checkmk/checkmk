@@ -34,7 +34,7 @@
 import os, sys, socket, time, getopt, glob, re, stat, py_compile, urllib, inspect
 import subprocess
 
-# Hack needed to fix UnicodeWarning in in_extraconf_servicelist(). This
+# Hack needed to fix UnicodeWarning in in_servicematcher_list(). This
 # can be removed once the encoding of autocheck's items are handled correctly
 # as unicode strings
 import warnings
@@ -1805,7 +1805,7 @@ def service_extra_conf(hostname, service, ruleset):
             try:
                 match = g_extraconf_servicelist_cache[cache_id]
             except:
-                match = in_extraconf_servicelist(service_matchers, service)
+                match = in_servicematcher_list(service_matchers, service)
                 g_extraconf_servicelist_cache[cache_id] = match
 
             if match:
@@ -1857,7 +1857,7 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
             try:
                 match = g_extraconf_servicelist_cache[cache_id]
             except:
-                match = in_extraconf_servicelist(service_matchers, service_description)
+                match = in_servicematcher_list(service_matchers, service_description)
                 g_extraconf_servicelist_cache[cache_id] = match
 
             if match:
@@ -1918,8 +1918,13 @@ def in_extraconf_hostlist(hostlist, hostname):
 
     return False
 
+# Slow variant of checking wether a service is matched by a list
+# of regexes - used e.g. by cmk --notify
+def in_extraconf_servicelist(servicelist, service):
+    return in_servicematcher_list(convert_pattern_list(servicelist), service)
 
-def in_extraconf_servicelist(service_matchers, item):
+
+def in_servicematcher_list(service_matchers, item):
     for negate, func in service_matchers:
         try:
             result = func(item)

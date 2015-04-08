@@ -69,12 +69,12 @@ def inventory_akcp_sensor_no_params(info):
 #   |                                                  |___/               |
 #   +----------------------------------------------------------------------+
 
-akcp_humidity_defaultlevels = (35, 40, 60, 65)
+akcp_humidity_defaultlevels = (30, 35, 60, 65)
 
 def inventory_akcp_humidity(info):
-    for line in info:
-        if line[-1] == "1":
-            yield desc, "akcp_humidity_defaultlevels"
+    for description, percent, status, online in info:
+        if online == "1":
+            yield description, "akcp_humidity_defaultlevels"
 
 def check_akcp_humidity(item, params, info):
     for description, percent, status, online in info:

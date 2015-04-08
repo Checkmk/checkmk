@@ -8673,3 +8673,18 @@ register_check_parameters(
     ),
     None
 )
+
+register_check_parameters(
+    subgroup_storage,
+    "bossock_fibers",
+    _("Number of Running Bossock Fibers"),
+    Tuple(
+        title = _("Number of fibers"),
+              elements = [
+              Integer(title = _("Warning at"),  unit=_("fibers")),
+              Integer(title = _("Critical at"), unit=_("fibers")),
+              ]
+    ),
+    TextAscii( title = _("Node ID")),
+    "first"
+)

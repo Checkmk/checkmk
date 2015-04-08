@@ -34,17 +34,14 @@ def inventory_winperf_single(info):
         return None
 
     for line in info[1:]:
-        try:
-            if line[0] == '-232':
-                return [(None, "winperf_cpu_default_levels")]
-        except:
-            pass
+        if line[0] == '-232':
+            return [(None, "winperf_cpu_default_levels")]
 
 
 # params: levels for warn / crit in percentage
 def check_winperf_single(_no_item, params, info):
     if not info:
-        return 
+        return
     this_time = int(float(info[0][0]))
 
     for line in info[1:]:
@@ -72,7 +69,7 @@ def check_winperf_single(_no_item, params, info):
 check_info["winperf_processor.single"] = {
     'check_function':          check_winperf_single,
     'inventory_function':      inventory_winperf_single,
-    'service_description':     'CPU utiliztion single',
+    'service_description':     'CPU utilization single',
     'has_perfdata':            True,
     'group':                   'cpu_utilization_os',
     #'includes':                [ "cpu_single.include" ],

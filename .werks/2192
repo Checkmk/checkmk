@@ -1,0 +1,12 @@
+Title: check_notify_count": Fix exception in PNP template in case of explit email addresses
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428507779
+
+When you use an explicit email address as a target destination (via the rule
+based notification) then RRD Tool would be unhappy because of the @ in the
+variable name. This has been fixed.

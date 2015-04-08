@@ -1,10 +1,9 @@
-Title: Fixed /treasures/downtime script to work with the new visuals
+Title: Fixed doc/treasures/downtime script to work with current GUI version
 Level: 1
 Component: multisite
-Class: feature
+Class: fix
 Compatible: compat
 State: unknown
 Version: 1.2.7i1
 Date: 1427115417
-
 

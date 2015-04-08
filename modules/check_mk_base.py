@@ -1888,6 +1888,16 @@ def saveint(i):
     except:
         return 0
 
+# This variant of int() lets the string if its not
+# convertable. Useful for parsing dict-like things, where
+# some of the values are int.
+def tryint(x):
+    try:
+        return int(x)
+    except:
+        return x
+
+
 def savefloat(f):
     try:
         return float(f)

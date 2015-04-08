@@ -430,7 +430,6 @@ metric_info["mem_lnx_vmalloc_chunk"] = {
     "unit" : "bytes",
 }
 
-
 metric_info["execution_time"] = {
     "title" : _("Execution time"),
     "unit"  : "s",

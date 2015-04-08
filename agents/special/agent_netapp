@@ -142,6 +142,11 @@ def output_environment(results):
         if "netapp_api_disk" not in shared_data:
             return True
 
+        # TODO: We had a case where shelf_uid is not contained in shared_data["netapp_api_disk"]["shelf-uids"].
+        # I (mk) do not know why.
+        if shelf_uid not in shared_data["netapp_api_disk"]["shelf-uids"]:
+            return False
+
         for disk in shared_data["netapp_api_disk"]["shelf-uids"][shelf_uid]:
             state = shared_data["netapp_api_disk"]["disks"].get(disk)
             if state == "partner":

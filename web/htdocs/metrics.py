@@ -388,7 +388,10 @@ def replace_expressions(text, translated_metrics):
         value, unit, color = evaluate(expression, translated_metrics)
         if unit_name:
             unit = unit_info[unit_name]
-        return unit["render"](value)
+        if value != None:
+            return unit["render"](value)
+        else:
+            return _("n/a")
 
     r = regex(r"%\([^)]*\)")
     return r.sub(eval_to_string, text)

@@ -48,7 +48,7 @@ unit_info[""] = {
 unit_info["count"] = {
     "title"    : _("Count"),
     "symbol"   : "",
-    "render"   : lambda v                               : "%d" % v,
+    "render"   : lambda v: "%d" % v,
     "stepping" : "integer", # for vertical graph labels
 }
 

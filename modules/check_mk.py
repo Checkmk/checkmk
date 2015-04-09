@@ -1721,7 +1721,6 @@ def convert_pattern(pattern):
     elif is_prefix_match(pattern):
         # prefix match with tailing .*
         pattern = pattern[:-2]
-        # TODO: Should we not rather use startswith()?
         return negate, lambda txt: txt[:len(pattern)] == pattern
 
     elif is_regex(pattern):
@@ -1730,7 +1729,6 @@ def convert_pattern(pattern):
 
     else:
         # prefix match without any regex chars
-        # TODO: Should we not rather use startswith()?
         return negate, lambda txt: txt[:len(pattern)] == pattern
 
 

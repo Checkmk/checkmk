@@ -147,11 +147,13 @@ def check_siemens_plc_duration(item, params, info):
             perfdata = [(line[1], seconds)]
 
             key = 'siemens_plc.duration.%s' % item
-            if key in g_counters and g_counters[key] < seconds:
-                return 2, 'Reduced from %s to %s' % (get_age_human_readable(g_counters[key]),
+            if key in g_counters and g_counters[key] > seconds:
+                old_seconds = g_counters[key]
+                g_counters[key] = seconds
+                return 2, 'Reduced from %s to %s' % (get_age_human_readable(old_seconds),
                                                      get_age_human_readable(seconds)), perfdata
-
-            g_counters[key] = seconds
+            else:
+                g_counters[key] = seconds
 
             state = 0
             warn, crit = params.get('duration', (None, None))
@@ -191,11 +193,13 @@ def check_siemens_plc_counter(item, params, info):
     for line in info:
         if line[1].startswith("counter") and line[0]+" "+line[2] == item:
             value = int(line[-1])
+            perfdata = [(line[1], value)]
 
             key = 'siemens_plc.counter.%s' % item
-            if key in g_counters and g_counters[key] < value:
+            if key in g_counters and g_counters[key] > value:
+                old_value = g_counters[key]
                 g_counters[key] = value
-                return 2, 'Reduced from %s to %s' % (g_counters[key], value)
+                return 2, 'Reduced from %s to %s' % (old_value, value), perfdata
             else:
                 g_counters[key] = value
 
@@ -206,7 +210,7 @@ def check_siemens_plc_counter(item, params, info):
             elif warn != None and value >= warn:
                 state = 1
 
-            return state, '%d' % value, [(line[1], value)]
+            return state, '%d' % value, perfdata
 
 
 check_info['siemens_plc.counter'] = {

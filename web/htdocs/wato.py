@@ -15774,7 +15774,7 @@ def user_profile_async_replication_dialog():
     sort_sites(sites)
     repstatus = load_replication_status()
 
-    html.message(_('For make your changes available on all remote sites, your user profile needs '
+    html.message(_('In order to activate your changes available on all remote sites, your user profile needs '
                    'to be replicated to the remote sites. This is done on this page now. Each site '
                    'is being represented by a single image which is first shown gray and then fills '
                    'to green during synchronisation.'))

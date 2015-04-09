@@ -785,7 +785,10 @@ def get_single_oid(hostname, ipaddress, oid):
     # in question. The *cache* is working including the X, however.
 
     if oid[0] != '.':
-        raise MKGeneralException("OID definition '%s' does not begin with ." % oid)
+        if opt_debug:
+            raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
+        else:
+            oid = '.' + oid
 
     global g_single_oid_hostname
     global g_single_oid_cache

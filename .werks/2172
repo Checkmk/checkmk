@@ -1,0 +1,16 @@
+Title: Allowing OIDs in checks not starting with a dot again
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428562298
+
+Within Check_MK it is not allowed to use SNMP OIDs not starting with a ".".
+The last release introduced a check which forced all users to fix the SNMP OID
+declarations which don't start with a dot.
+
+Because many users had problems with this error, e decided to make this check less
+restrictive. The check accepts the missing dots now and adds it silently for
+internal processing. Only in debug mode such OID definitions leads to an exception.

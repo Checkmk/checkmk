@@ -1681,6 +1681,13 @@ def get_rule_options(entry):
         return entry, {}
 
 
+def is_regex(pattern):
+    for c in pattern:
+        if c in '.?*+^$|[](){}\\':
+            return True
+    return False
+
+
 # Converts a regex pattern which is used to e.g. match services within Check_MK
 # to a function reference to a matching function which takes one parameter to
 # perform the matching and returns a two item tuple where the first element
@@ -1689,14 +1696,6 @@ def get_rule_options(entry):
 # This function tries to parse the pattern and return different kind of matching
 # functions which can then be performed faster than just using the regex match.
 def convert_pattern(pattern):
-    # TODO: Wouldn't it be faster to declare these functions in global scope
-    # i.e. only once?
-    def is_regex(pattern):
-        for c in pattern:
-            if c in '.?*+^$|[](){}\\':
-                return True
-        return False
-
     def is_infix_string_search(pattern):
         return pattern.startswith('.*') and not is_regex(pattern[2:])
 

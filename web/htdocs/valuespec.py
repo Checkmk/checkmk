@@ -2200,6 +2200,16 @@ class Timerange(CascadingDropdown):
         if rangespec == None:
             rangespec = "4h"
 
+        # Compatibility with previous versions
+        elif rangespec[0] == "pnp_view":
+            rangespec = {
+                1: "4h",
+                2: "25h",
+                3: "7d",
+                4: "31d",
+                5: "365d"
+            }.get(rangespec[1], "4h")
+
         now = time.time()
         if rangespec[0] == 'age':
             from_time = now - rangespec[1]
@@ -2260,6 +2270,7 @@ class Timerange(CascadingDropdown):
                 return (from_time, now), titles[0]
 
             else: # last (previous)
+                html.debug("HIRN", rangespec)
                 if rangespec[0] == 'd':
                     return (from_time - 86400, from_time), titles[1]
                 elif rangespec[0] == 'w':

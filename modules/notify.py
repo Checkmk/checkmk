@@ -657,6 +657,7 @@ def rbn_match_rule(rule, context):
         rbn_match_hosttags(rule, context)              or \
         rbn_match_hostgroups(rule, context)            or \
         rbn_match_servicegroups(rule, context)         or \
+        rbn_match_contacts(rule, context)              or \
         rbn_match_contactgroups(rule, context)         or \
         rbn_match_hosts(rule, context)                 or \
         rbn_match_exclude_hosts(rule, context)         or \
@@ -726,6 +727,23 @@ def rbn_match_servicegroups(rule, context):
 
         return "The service is only in the groups %s, but %s is required" % (
               sgn, " or ".join(required_groups))
+
+def rbn_match_contacts(rule, context):
+    if "match_contacts" in rule:
+        required_contacts = rule["match_contacts"]
+        contacts_text = context["CONTACTS"]
+        if not contacts_text:
+            return "The object has no contact, but %s is required" % (
+                 " or ".join(required_contacts))
+
+        contacts = contacts_text.split(",")
+        for contact in required_contacts:
+            if contact in contacts:
+                return
+
+        return "The object has the contacts %s, but %s is required" % (
+              contacts_text, " or ".join(required_contacts))
+
 
 def rbn_match_contactgroups(rule, context):
     required_groups = rule.get("match_contactgroups")

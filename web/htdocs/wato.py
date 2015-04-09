@@ -8397,9 +8397,8 @@ def vs_notification_rule(userid = None):
             ( "match_contacts",
               ListOf(
                   UserSelection(only_contacts = True),
-                      title = _("Match Contacts (CMC only)"),
-                      help = _("The host/service must have one of the selected contacts. This only works with Check_MK Micro Core. " \
-                               "If you don't use the CMC that filter will not apply"),
+                      title = _("Match Contacts"),
+                      help = _("The host/service must have one of the selected contacts."),
                       movable = False,
                       allow_empty = False,
                       add_label = _("Add contact"),

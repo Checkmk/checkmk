@@ -1,0 +1,11 @@
+Title: New condition "Match Contacts" in rule based notifications
+Level: 2
+Component: notifications
+Compatible: compat
+Version: 1.2.7i1
+Date: 1428585184
+Class: feature
+
+You can now add a new condition in a notification rule in order to match
+for the contacts of a host or service. That way you can make rules
+like "If user adam is a contact of the host/service, then notify bernie."

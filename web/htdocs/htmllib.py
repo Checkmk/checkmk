@@ -356,14 +356,25 @@ class html:
     def icon(self, help, icon):
        self.write(self.render_icon(icon, help))
 
-    def render_icon(self, icon, help="", middle=True):
+    def render_icon(self, icon_name, help="", middle=True, id=None):
         align = middle and ' align=absmiddle' or ''
         title = help and ' title="%s"' % self.attrencode(help) or ""
-        if "/" in icon or "." in icon:
-            src = "images/" + icon
+        id = id and ' id="%s"' % id or ''
+
+        # Detect whether or not the icon is available as images/icon_*.png
+        # or images/icons/*.png. When an icon is available as internal icon,
+        # always use this onec
+        if defaults.omd_root:
+            base_path = defaults.omd_root+"/share/check_mk/web/htdocs/images"
         else:
-            src = "images/icon_%s.png" % icon
-        return '<img src="%s" class=icon%s%s />' % (src, align, title)
+            base_path = defaults.web_dir+"/htdocs/images"
+
+        if os.path.exists(base_path+'/icon_'+icon_name+'.png'):
+            src = "images/icon_%s.png" % icon_name
+        else:
+            src = "images/icons/%s.png" % icon_name
+
+        return '<img src="%s" class=icon%s%s%s />' % (src, align, title, id)
 
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')

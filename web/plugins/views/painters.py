@@ -273,7 +273,7 @@ def paint_type_icon(what, row):
                         result = result, what == 'service' and row['service_description'] or row['host_name']
 
                     if html.output_format == "html":
-                        output = html.render_icon('icons/%s.png' % result[0], result[1])
+                        output = html.render_icon(result[0], help=result[1])
                     else:
                         output = result[0]
                     break # Paint first matched icon

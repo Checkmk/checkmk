@@ -17548,6 +17548,137 @@ def mode_custom_attrs(phase, what):
     table.end()
 
 #.
+#   .--Icons---------------------------------------------------------------.
+#   |                       ___                                            |
+#   |                      |_ _|___ ___  _ __  ___                         |
+#   |                       | |/ __/ _ \| '_ \/ __|                        |
+#   |                       | | (_| (_) | | | \__ \                        |
+#   |                      |___\___\___/|_| |_|___/                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def validate_icon(value, varprefix):
+    from PIL import Image
+    from StringIO import StringIO
+    file_name, mime_type, content = value
+    if file_name[-4:] != '.png' \
+       or mime_type != 'image/png' \
+       or not content.startswith('\x89PNG'):
+        raise MKUserError(varprefix, _('Please choose a PNG icon.'))
+
+    try:
+        im = Image.open(StringIO(content))
+    except IOError:
+        raise MKUserError(varprefix, _('Please choose a valid PNG icon.'))
+
+    w, h = im.size
+    if w > 80 or h > 80:
+        raise MKUserError(varprefix, _('Maximum image size: 80x80px'))
+
+    if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (defaults.omd_root, file_name)) \
+       or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (defaults.omd_root, file_name)):
+        raise MKUserError(varprefix, _('Your icons conflicts with a Check_MK builtin icon. Please '
+                                       'choose another name for your icon.'))
+
+
+def upload_icon(icon_info):
+    # Add the icon category to the PNG comment
+    from PIL import Image, PngImagePlugin
+    from StringIO import StringIO
+    im = Image.open(StringIO(icon_info[0][2]))
+    im.info['Comment'] = icon_info[1]
+    meta = PngImagePlugin.PngInfo()
+    for k,v in im.info.iteritems():
+        if k not in ('interlace', 'gamma', 'dpi', 'transparency', 'aspect'):
+            meta.add_text(k, v, 0)
+
+    # and finally save the image
+    dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % defaults.omd_root
+    make_nagios_directories(dest_dir)
+    im.save(dest_dir+'/'+icon_info[0][0], 'PNG', pnginfo=meta)
+
+
+def load_custom_icons():
+    s = IconSelector()
+    return s.available_icons(only_local=True)
+
+
+def mode_icons(phase):
+    if phase == 'title':
+        return _('Manage Icons')
+
+    elif phase == 'buttons':
+        back_url = html.var("back", "")
+        html.context_button(_("Back"), back_url, "back")
+        return
+
+    vs_upload = Tuple(
+        title = _('Icon'),
+        elements = [
+            FileUpload(
+                title = _('Icon'),
+                allow_empty = False,
+                validate = validate_icon,
+            ),
+            DropdownChoice(
+                title = _('Category'),
+                choices = IconSelector._categories,
+                no_preselect = True,
+            )
+        ]
+    )
+
+    if phase == 'action':
+        if html.has_var("_delete"):
+            icon_name = html.var("_delete")
+            if icon_name in load_custom_icons():
+                c = wato_confirm(_("Confirm Icon deletion"),
+                                 _("Do you really want to delete the icon <b>%s</b>?" % icon_name))
+                if c:
+                    os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
+                                                        (defaults.omd_root, icon_name))
+                elif c == False:
+                    return ""
+                else:
+                    return
+
+        elif html.has_var("_do_upload"):
+            icon_info = vs_upload.from_html_vars('_upload_icon')
+            vs_upload.validate_value(icon_info, '_upload_icon')
+            upload_icon(icon_info)
+        return
+
+    html.write("<h3>" + _("Upload Icon") + "</h3>")
+    if not defaults.omd_site:
+        html.message(_("Sorry, you can mange your icons only within OMD environments."))
+        return
+
+    html.write(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
+
+    html.begin_form('upload_form', method='POST')
+    vs_upload.render_input('_upload_icon', None)
+    html.button('_do_upload', _('Upload'), 'submit')
+
+    html.hidden_fields()
+    html.end_form()
+
+    icons = sorted(load_custom_icons().items())
+    table.begin("icons", _("Custom Icons"))
+    for icon_name, category_name in icons:
+        table.row()
+
+        table.cell(_("Actions"), css="buttons")
+        delete_url = make_action_link([("mode", "icons"), ("_delete", icon_name)])
+        html.icon_button(delete_url, _("Delete this Icon"), "delete")
+
+        table.cell(_("Icon"), html.render_icon(icon_name), css="buttons")
+        table.cell(_("Name"), icon_name)
+        table.cell(_("Category"), IconSelector.category_alias(category_name))
+    table.end()
+
+#.
 #   .--Hooks-&-API---------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |
 #   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |
@@ -18644,6 +18775,7 @@ modes = {
    "bi_rule_tree"       : (["bi_rules"], mode_bi_rule_tree),
    "bi_edit_rule"       : (["bi_rules"], mode_bi_edit_rule),
    "bi_edit_aggregation": (["bi_rules"], mode_bi_edit_aggregation),
+   "icons"              : (["icons"], mode_icons),
 }
 
 loaded_with_language = False
@@ -18904,6 +19036,10 @@ def load_plugins():
         _("Edit the rules for the BI aggregations."),
          [ "admin" ])
 
+    config.declare_permission("wato.icons",
+         _("Manage Custom Icons"),
+         _("Upload or delete custom icons"),
+         [ "admin" ])
 
     load_web_plugins("wato", globals())
 

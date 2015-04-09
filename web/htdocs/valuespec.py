@@ -3194,26 +3194,29 @@ class IconSelector(ValueSpec):
 
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._prefix      = kwargs.get('prefix', '')
         self._allow_empty = kwargs.get('allow_empty', True)
-        self._html_path   = 'images/icons'
         self._empty_img   = kwargs.get('emtpy_img', 'empty')
-        self._upload      = kwargs.get('upload', True)
 
         self._exclude = [
             'trans',
             'empty',
         ]
 
+    @classmethod
+    def category_alias(cls, category_name):
+        categories = dict(cls._categories)
+        return dict(cls._categories).get(category_name, category_name)
+
     # All icons within the images/icons directory have the ident of a category
     # witten in the PNG meta data. For the default images we have done this scripted.
     # During upload of user specific icons, the meta data is added to the images.
-    def available_icons(self):
+    def available_icons(self, only_local=False):
         if defaults.omd_root:
             dirs = [
                 os.path.join(defaults.omd_root, "local/share/check_mk/web/htdocs/images/icons"),
-                os.path.join(defaults.omd_root, "share/check_mk/web/htdocs/images/icons"),
             ]
+            if not only_local:
+                dirs.append(os.path.join(defaults.omd_root, "share/check_mk/web/htdocs/images/icons"))
         else:
             dirs = [ os.path.join(defaults.web_dir, "htdocs/images/icons") ]
 
@@ -3233,8 +3236,7 @@ class IconSelector(ValueSpec):
 
             for file_name in files:
                 file_path = dir + "/" + file_name
-                if file_name[-4:] == '.png' and os.path.isfile(file_path) \
-                   and file_name.startswith(self._prefix):
+                if file_name[-4:] == '.png' and os.path.isfile(file_path):
 
                     # extract the category from the meta data
                     im = Image.open(file_path)
@@ -3242,7 +3244,7 @@ class IconSelector(ValueSpec):
                     if category not in valid_categories:
                         category = 'misc'
 
-                    icon_name = file_name[len(self._prefix):-4]
+                    icon_name = file_name[:-4]
                     icons[icon_name] = category
 
         for exclude in self._exclude:
@@ -3265,15 +3267,14 @@ class IconSelector(ValueSpec):
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories
 
-    def render_icon(self, icon, onclick = '', title = '', id = ''):
-        if not icon:
-            icon = self._empty_img
-        path = "%s/%s%s.png" % (self._html_path, self._prefix, html.attrencode(icon))
+    def render_icon(self, icon_name, onclick = '', title = '', id = ''):
+        if not icon_name:
+            icon_name = self._empty_img
 
         icon = ''
         if onclick:
             icon += '<a href="javascript:void(0)" onclick="%s">' % onclick
-        icon += '<img align=absmiddle id="%s" class=icon title="%s" src="%s">' % (id, title, path)
+        icon += html.render_icon(icon_name, help=title, middle=True, id=id)
         if onclick:
             icon += '</a>'
         return icon
@@ -3287,7 +3288,8 @@ class IconSelector(ValueSpec):
         html.begin_popup_trigger('icon_selector',
             params=html.urlencode_vars([('value',       value),
                                         ('varprefix',   varprefix),
-                                        ('allow_empty', self._allow_empty and '1' or '0')]))
+                                        ('allow_empty', self._allow_empty and '1' or '0'),
+                                        ('back',        html.makeuri([]))]))
         if value:
             html.write(self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img'))
         else:
@@ -3303,13 +3305,18 @@ class IconSelector(ValueSpec):
 
         # Render tab navigation
         html.write('<ul>')
-        upload = self._upload and [('upload', _('Upload'), [])] or []
-        for category_name, category_alias, icons in available_icons + upload:
+        for category_name, category_alias, icons in available_icons:
             active = active_category == category_name and ' class="active"' or ''
             html.write('<li%s>' % active)
             html.write('<a id="%s_%s_nav" class="%s_nav" href="javascript:vs_iconselector_toggle(\'%s\', \'%s\')">%s</a>' %
                    (varprefix, category_name, varprefix, varprefix, category_name, category_alias))
             html.write('</li>')
+        import config# FIXME: Clean this up. But how?
+        if defaults.omd_site and config.may('wato.icons'):
+            back_param = html.has_var('back') and '&back='+html.urlencode(html.var('back')) or ''
+            html.write('<li><a href="wato.py?mode=icons%s">%s</a></li>' %
+                        (back_param, _('Upload')))
+
         html.write('</ul>')
 
         # Now render the icons grouped by category
@@ -3321,14 +3328,6 @@ class IconSelector(ValueSpec):
                 html.write(self.render_icon(icon,
                     onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
                     title = _('Choose this icon'), id = varprefix + '_i_' + icon))
-            html.write('</div>')
-
-        if self._upload:
-            html.write('<div style="display:none" id="%s_%s_container" class="%s_container">' %
-                                                                 (varprefix, 'upload', varprefix))
-            html.write('<iframe allowTransparency="true" frameborder="0" width="100%" height="100%" '
-                       'src="icon_upload.py">')
-            html.write('</iframe>')
             html.write('</div>')
         html.write('</div>')
 

@@ -845,6 +845,8 @@ def save_autochecks_file(hostname, items):
     if not os.path.exists(autochecksdir):
         os.makedirs(autochecksdir)
     filepath = autochecksdir + "/" + hostname + ".mk"
+    if os.path.exists(filepath):
+        os.remove(filepath)
     out = file(filepath, "w")
     out.write("[\n")
     for entry in items:

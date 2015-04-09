@@ -8280,6 +8280,7 @@ def vs_notification_rule(userid = None):
                   help = _("Enter a list of user IDs to be notified here. These users need to be members "
                            "of at least one contact group in order to be notified."),
                   movable = False,
+                  add_label = _("Add user"),
               )
             ),
             ( "contact_groups",
@@ -8391,6 +8392,17 @@ def vs_notification_rule(userid = None):
                   title = _("Match Service Groups"),
                   help = _("The service must be in one of the selected service groups"),
                   allow_empty = False,
+              )
+            ),
+            ( "match_contacts",
+              ListOf(
+                  UserSelection(only_contacts = True),
+                      title = _("Match Contacts (CMC only)"),
+                      help = _("The host/service must have one of the selected contacts. This only works with Check_MK Micro Core. " \
+                               "If you don't use the CMC that filter will not apply"),
+                      movable = False,
+                      allow_empty = False,
+                      add_label = _("Add contact"),
               )
             ),
             ( "match_contactgroups",
@@ -8675,7 +8687,8 @@ def vs_notification_rule(userid = None):
 
         ],
         optional_keys = [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                          "match_services", "match_servicegroups", "match_contactgroups", "match_exclude_services", "match_plugin_output",
+                          "match_services", "match_servicegroups", "match_contacts", "match_contactgroups",
+                          "match_exclude_services", "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
                           "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails", "contact_match_macros" ],
@@ -8685,7 +8698,8 @@ def vs_notification_rule(userid = None):
             + contact_headers
             + [
             ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                                         "match_services", "match_servicegroups", "match_contactgroups", "match_exclude_services", "match_plugin_output",
+                                         "match_services", "match_servicegroups", "match_contacts", "match_contactgroups",
+                                         "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_escalation_throttle",
                                          "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment" ] ),

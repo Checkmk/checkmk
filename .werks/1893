@@ -1,7 +1,7 @@
 Title: cisco_power: Now discovers all power supplies, not only redundant ones
 Level: 1
 Component: checks
-Class: feature
+Class: fix
 Compatible: compat
 State: unknown
 Version: 1.2.6p2

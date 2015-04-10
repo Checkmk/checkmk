@@ -247,6 +247,11 @@ def inventory_if_common(info, has_nodeinfo = False):
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
             ifOutQLen, ifAlias, ifPhysAddress = line
 
+        # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
+        # of just the ifOperStatus
+        if type(ifOperStatus) == tuple:
+            ifOperStatus = ifOperStatus[0]
+
         ifGroup = None
         if type(ifIndex) == tuple:
             ifGroup, ifIndex = ifIndex
@@ -403,12 +408,19 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
                 outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
                 ifOutQLen, ifAlias, ifPhysAddress = line
 
+            # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
+            # of just the ifOperStatus
+            if type(ifOperStatus) == tuple:
+                ifOperStatus, ifOperStatusName = ifOperStatus
+            else:
+                ifOperStatusName = if_statename(ifOperStatus)
+
             ifGroup = None
             if type(ifIndex) == tuple:
                 ifGroup, ifIndex = ifIndex
 
             if_item = get_interface_item(element)
-            group_members.append({"name": if_item, "state": ifOperStatus})
+            group_members.append({"name": if_item, "state": ifOperStatus, "state_name" : ifOperStatusName})
             perfdata = []
 
             # Only these values are packed into counters
@@ -535,6 +547,13 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
             ifOutQLen, ifAlias, ifPhysAddress = line
 
+        # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
+        # of just the ifOperStatus
+        if type(ifOperStatus) == tuple:
+            ifOperStatus, ifOperStatusName = ifOperStatus
+        else:
+            ifOperStatusName = if_statename(ifOperStatus)
+
         ifGroup = None
         if type(ifIndex) == tuple:
             ifGroup, ifIndex = ifIndex
@@ -567,22 +586,20 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
 
             state = 0
 
-            operstatus = if_statename(str(ifOperStatus))
             if targetstate and  \
                 (ifOperStatus != targetstate
                 and not (type(targetstate) in [ list, tuple ] and ifOperStatus in targetstate)):
                 state = 2
-                infotext += "(%s)(!!) " % operstatus
+                infotext += "(%s)(!!) " % ifOperStatusName
             else:
-                infotext += "(%s) " % operstatus
+                infotext += "(%s) " % ifOperStatusName
 
             if group_members:
                 infotext = infotext[:-1] # remove last space
                 extra_info = ", Members: "
                 member_info = []
                 for member in group_members:
-                    member_operstatus = if_statename(str(member["state"]))
-                    member_info.append("%s (%s)" % (member["name"], member_operstatus))
+                    member_info.append("%s (%s)" % (member["name"], member["state_name"]))
                 infotext += extra_info + "[%s] " % ", ".join(member_info)
 
             # prepare reference speed for computing relative bandwidth usage

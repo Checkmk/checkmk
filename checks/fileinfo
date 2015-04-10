@@ -145,7 +145,7 @@ def check_fileinfo_groups(item, params, info):
             if inclusion != inclusion_tmp:
                 inclusion = inclusion_tmp
                 date_inclusion = inclusion_tmp
-            # endswith("No such file...") is needed to 
+            # endswith("No such file...") is needed to
             # support the solaris perl based version of fileinfo
             if not line[0].endswith("No such file or directory") \
                         and fnmatch.fnmatch(line[0], inclusion) and str(line[1]) != 'missing' \

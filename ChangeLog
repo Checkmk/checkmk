@@ -1,4 +1,7 @@
 1.2.6p2:
+    Multisite:
+    * 1945 FIX: doc/treasures/downtime: Fix setting and removing of downtimes...
+
     HW/SW-Inventory:
     * 2197 FIX: win_reg_uninstall: Fix exception in case of invalid output line...
 

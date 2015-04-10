@@ -1,4 +1,7 @@
 1.2.6p2:
+    HW/SW-Inventory:
+    * 2197 FIX: win_reg_uninstall: Fix exception in case of invalid output line...
+
 
 1.2.6p1:
     Core & Setup:

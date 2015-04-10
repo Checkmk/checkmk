@@ -466,6 +466,48 @@ register_configvar(group,
     domain = "multisite",
 )
 
+register_configvar(group,
+    "user_icons_and_actions",
+    Transform(
+        ListOf(
+            Tuple(
+                elements = [
+                    ID(title = _("Ident")),
+                    Dictionary(
+                        elements = [
+                            ('icon', IconSelector(title = _('Icon'))),
+                            ('title', TextUnicode(title = _('Title'))),
+                            ('url', TextAscii(
+                                title = _('Action URL'),
+                                help = _('This URL is opened when clicking on the action / icon. You '
+                                         'can use some macros within the URL which are dynamically '
+                                         'replaced for each object. These are:<br><br>'
+                                         '<li><ul>$HOSTNAME$: Contains the name of the host</ul>'
+                                         '<ul>$SERVICEDESC$: Contains the service description '
+                                         '(in case this is a service)</ul>'
+                                         '<ul>$HOSTADDRESS$: Contains the network address of the host</ul>'),
+                            )),
+                            ('toplevel', FixedValue(True,
+                                title = _('Show in column'),
+                                totext = _('Directly show the action icon in the column'),
+                                help = _('Makes the icon appear in the column instead '
+                                         'of the dropdown menu.'),
+                            ))
+                        ],
+                        optional_keys = ['title', 'url', 'toplevel'],
+                    ),
+                ],
+            ),
+            title = _("Custom icons and actions"),
+            movable = False,
+            totext = _("%d icons and actions"),
+        ),
+        forth = lambda d: sorted(d.items()),
+        back = lambda l: dict(l),
+    ),
+    domain = "multisite",
+)
+
 # Helper that retrieves the list of hostgroups via Livestatus
 # use alias by default but fallback to name if no alias defined
 def list_hostgroups():

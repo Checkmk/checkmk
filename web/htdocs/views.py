@@ -995,7 +995,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
 
     # Prepare columns to paint
-    painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"] ]
+    painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"] if e[0] in multisite_painters ]
 
     # Now compute the list of all columns we need to query via Livestatus.
     # Those are: (1) columns used by the sorters in use, (2) columns use by

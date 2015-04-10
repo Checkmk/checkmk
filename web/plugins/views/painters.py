@@ -297,59 +297,6 @@ multisite_painters["host_icons"] = {
     "paint":    lambda row: paint_icons("host", row)
 }
 
-def paint_type_icon(what, row):
-    if not row["host_name"]:
-        return "", ""# Host probably does not exist
-
-    custom_vars = dict(zip(row["host_custom_variable_names"],
-                           row["host_custom_variable_values"]))
-
-    # Extract host tags
-    if "TAGS" in custom_vars:
-        tags = custom_vars["TAGS"].split()
-    else:
-        tags = []
-
-    output = ""
-    for icon in multisite_icons:
-        if icon.get('type', 'icon') == 'type_icon':
-            try:
-                result = icon['paint'](what, row, tags, custom_vars)
-                if result == "":
-                    break # Explicitly disabled. Don't show an icon
-                elif result is not None:
-                    if type(result) in [str,unicode]:
-                        result = result, what == 'service' and row['service_description'] or row['host_name']
-
-                    if html.output_format == "html":
-                        output = html.render_icon(result[0], help=result[1])
-                    else:
-                        output = result[0]
-                    break # Paint first matched icon
-            except Exception, e:
-                import traceback
-                output += 'Exception in icon plugin!<br />' + traceback.format_exc()
-
-    return "icon", output
-
-multisite_painters["service_type_icon"] = {
-    "title"     : _("Service Icon"),
-    "short"     : _("Icon"),
-    "printable" : False, # does not contain printable text
-    "columns"   : iconpainter_columns("service"),
-    "groupby"   : lambda row: "", # Do not account for in grouping
-    "paint"     : lambda row: paint_type_icon("service", row)
-}
-
-multisite_painters["host_type_icon"] = {
-    "title"     : _("Host Icon"),
-    "short"     : _("Icon"),
-    "printable" : False, # does not contain printable text
-    "columns"   : iconpainter_columns("host"),
-    "groupby"   : lambda row: "", # Do not account for in grouping
-    "paint"     : lambda row: paint_type_icon("host", row)
-}
-
 # -----------------------------------------------------------------------
 
 def paint_nagios_link(row):

@@ -3346,6 +3346,9 @@ class IconSelector(ValueSpec):
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
 
     def validate_value(self, value, varprefix):
+        if not self._allow_empty and not value:
+            raise MKUserError(varprefix, _("You need to select an icon."))
+
         if value and value not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
 

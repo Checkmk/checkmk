@@ -28,7 +28,7 @@ import wato
 
 def wato_link(folder, site, hostname, where):
     if not config.wato_enabled:
-        return ""
+        return
 
     if 'X' in html.display_options:
         url = "wato.py?folder=%s&host=%s" % \
@@ -41,9 +41,9 @@ def wato_link(folder, site, hostname, where):
             url += "&mode=edithost"
             help = _("Edit this host")
             icon = "wato"
-        return '<a href="%s">%s</a>' % (url, html.render_icon(icon, help))
+        return icon, help, url
     else:
-        return ""
+        return
 
 def paint_wato(what, row, tags, custom_vars):
     if not wato.may_see_hosts() or html.mobile:

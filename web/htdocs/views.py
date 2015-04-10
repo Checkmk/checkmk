@@ -2065,9 +2065,9 @@ def prepare_paint(p, row):
         content = '<span title="%s">%s</span>' % (tooltiptext, content)
     return tdclass, content
 
-def link_to_view(content, row, view_name):
+def url_to_view(row, view_name):
     if 'I' not in html.display_options:
-        return content
+        return None
 
     view = available_views.get(view_name)
     if view:
@@ -2091,9 +2091,18 @@ def link_to_view(content, row, view_name):
             vars.append(("display_options", do))
 
         filename = html.mobile and "mobile_view.py" or "view.py"
-        uri = filename + "?" + html.urlencode_vars([("view_name", view_name)] + vars)
-        content = "<a href=\"%s\">%s</a>" % (uri, content)
-    return content
+        return filename + "?" + html.urlencode_vars([("view_name", view_name)] + vars)
+    return None
+
+def link_to_view(content, row, view_name):
+    if 'I' not in html.display_options:
+        return content
+
+    url = url_to_view(row, view_name)
+    if url:
+        return "<a href=\"%s\">%s</a>" % (url, content)
+    else:
+        return content
 
 def docu_link(topic, text):
     return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)

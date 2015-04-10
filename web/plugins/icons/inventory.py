@@ -27,8 +27,7 @@
 def paint_icon_inventory(what, row, tags, customer_vars):
     if (what == "host" or row.get("service_check_command","").startswith("check_mk_active-cmk_inv!")) \
         and inventory.has_inventory(row["host_name"]):
-	return link_to_view(html.render_icon('inv', _("Show Hardware/Software-Inventory of this host")),
-	                    row, 'inv_host' )
+	return 'inv', _("Show Hardware/Software Inventory of this host"), url_to_view(row, 'inv_host')
 
 multisite_icons.append({
     'host_columns': [ "name" ],

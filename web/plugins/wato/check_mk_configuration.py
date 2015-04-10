@@ -472,29 +472,44 @@ register_configvar(group,
         ListOf(
             Tuple(
                 elements = [
-                    ID(title = _("Ident")),
+                    ID(title = _("ID")),
                     Dictionary(
                         elements = [
-                            ('icon', IconSelector(title = _('Icon'))),
+                            ('icon', IconSelector(
+                                title = _('Icon'),
+                                allow_empty = False
+                            )),
                             ('title', TextUnicode(title = _('Title'))),
                             ('url', TextAscii(
                                 title = _('Action URL'),
                                 help = _('This URL is opened when clicking on the action / icon. You '
                                          'can use some macros within the URL which are dynamically '
-                                         'replaced for each object. These are:<br><br>'
-                                         '<li><ul>$HOSTNAME$: Contains the name of the host</ul>'
-                                         '<ul>$SERVICEDESC$: Contains the service description '
-                                         '(in case this is a service)</ul>'
-                                         '<ul>$HOSTADDRESS$: Contains the network address of the host</ul>'),
+                                         'replaced for each object. These are:<br>'
+                                         '<ul><li>$HOSTNAME$: Contains the name of the host</li>'
+                                         '<li>$SERVICEDESC$: Contains the service description '
+                                         '(in case this is a service)</li>'
+                                         '<li>$HOSTADDRESS$: Contains the network address of the host</li></ul>'),
+                                size = 80,
                             )),
                             ('toplevel', FixedValue(True,
                                 title = _('Show in column'),
                                 totext = _('Directly show the action icon in the column'),
                                 help = _('Makes the icon appear in the column instead '
                                          'of the dropdown menu.'),
-                            ))
+                            )),
+                            ('sort_index', Integer(
+                                title = _('Sort index'),
+                                help = _('You can use the sort index to control the order of the '
+                                         'elements in the column and the menu. The elements are sorted '
+                                         'from smaller to higher numbers. The action menu icon '
+                                         'has a sort index of <tt>10</tt>, the graph icon a sort index '
+                                         'of <tt>20</tt>. All other default icons have a sort index of '
+                                         '<tt>30</tt> configured.'),
+                                min_value = 0,
+                                default_value = 15,
+                            )),
                         ],
-                        optional_keys = ['title', 'url', 'toplevel'],
+                        optional_keys = ['title', 'url', 'toplevel', 'sort_index'],
                     ),
                 ],
             ),
@@ -2203,6 +2218,56 @@ register_rule(group,
         back  = lambda v: v and v+'.png' or v,
     ),
     itemtype = "service")
+
+
+def list_user_icons_and_actions():
+    choices = []
+    for key, action in config.user_icons_and_actions.items():
+        label = key
+        if 'title' in action:
+            label += ' - '+action['title']
+        if 'url' in action:
+            label += ' ('+action['url']+')'
+
+        choices.append((key, label))
+    return sorted(choices, key = lambda x: x[1])
+
+
+register_rule(group,
+    "extra_host_conf:_ACTIONS",
+    Transform(
+        ListChoice(
+            title = _("Custom icons or actions for hosts in status GUI"),
+            help = _("You can assign icons or actions to hosts for the status GUI. "
+                     "In order to be able to choose actions here, you need to "
+                     "<a href=\"%s\">define your own actions</a>.") % \
+                        "wato.py?mode=edit_configvar&varname=user_icons_and_actions",
+            choices = list_user_icons_and_actions,
+            allow_empty = False,
+        ),
+        forth = lambda x: x.split(','),
+        back = lambda x: ','.join(x),
+    )
+)
+
+
+register_rule(group,
+    "extra_service_conf:_ACTIONS",
+    Transform(
+        ListChoice(
+            title = _("Custom icons or actions for services in status GUI"),
+            help = _("You can assign icons or actions to services for the status GUI. "
+                     "In order to be able to choose actions here, you need to "
+                     "<a href=\"%s\">define your own actions</a>.") % \
+                        "wato.py?mode=edit_configvar&varname=user_icons_and_actions",
+            choices = list_user_icons_and_actions,
+            allow_empty = False,
+        ),
+        forth = lambda x: x.split(','),
+        back = lambda x: x.join(','),
+    ),
+    itemtype = "service"
+)
 
 
 register_rulegroup("agent", _("Access to Agents"),

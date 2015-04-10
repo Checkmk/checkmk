@@ -31,6 +31,9 @@
 def inv_win_reg_uninstall(info):
     paclist = inv_tree("software.packages:")
     for line in info:
+        if len(line) != 7:
+            continue
+
         display_name, publisher, path, pacname, version, estimated_size, date = line
         install_date = ""
         if re.match("^20\d{6}", date):

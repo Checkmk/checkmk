@@ -1,0 +1,13 @@
+Title: windows_updates: Fix missing warning if reboot required in case forced reboot is in the past
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428677837
+
+If the plugin reports the next forced reboot to lie in the past then
+the check did not warn anymore about a neccessary reboot for applying
+the installed patches. Also the code was cleaned up on the dependency
+to the Python module <tt>datetime</tt> has been removed.

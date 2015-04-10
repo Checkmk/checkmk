@@ -77,5 +77,8 @@ modules += [
       ( "snapshot", _("Backup & Restore"), "backup", "snapshots",
         _("Make snapshots of your configuration, download, upload and restore snapshots.")),
 
+      ( "icons", _("Icons"), "icons", "icons",
+        _("Mange your custom icons to be used e.g. for custom actions or views.")),
+
     ]
 

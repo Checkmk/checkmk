@@ -17610,8 +17610,11 @@ def mode_icons(phase):
         return _('Manage Icons')
 
     elif phase == 'buttons':
-        back_url = html.var("back", "")
-        html.context_button(_("Back"), back_url, "back")
+        back_url = html.var("back")
+        if back_url:
+            html.context_button(_("Back"), back_url, "back")
+        else:
+            home_button()
         return
 
     vs_upload = Tuple(

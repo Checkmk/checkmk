@@ -908,7 +908,7 @@ body.main .popup_menu {
     z-index: 10;
 
     padding: 0;
-    width: 300px;
+    min-width: 300px;
 
     color: #fff;
     background-color: #508AA1;
@@ -959,7 +959,6 @@ body.main table.footer .popup_menu a:hover {
     margin: 0;
     padding: 0;
     border-bottom: 1px solid #e5e5e5;
-    margin-bottom: 5px;
 }
 
 #popup_menu .icons li {
@@ -987,8 +986,10 @@ body.main table.footer .popup_menu a:hover {
 
 #popup_menu .icons div {
     clear: left;
-    max-height: 200px;
+    height: 150px;
     overflow-y: auto;
+    padding: 5px;
+    width: 312px;
 }
 
 #popup_menu .icons a {
@@ -1000,13 +1001,9 @@ body.main table.footer .popup_menu a:hover {
     height: 20px;
 }
 
-body.icon_upload {
-    background: transparent;
-}
-
-body.icon_upload div.error,
-body.icon_upload div.success {
-    margin: 0;
+#popup_menu .icons .image_button {
+   float: right;
+   margin: 4px;
 }
 
 /*--Various----------------------------------------------------------------.

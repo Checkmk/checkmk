@@ -3285,7 +3285,7 @@ class IconSelector(ValueSpec):
 
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)
 
-        html.begin_popup_trigger('icon_selector',
+        html.begin_popup_trigger(varprefix+'_icon_selector', 'icon_selector',
             params=html.urlencode_vars([('value',       value),
                                         ('varprefix',   varprefix),
                                         ('allow_empty', self._allow_empty and '1' or '0'),
@@ -3311,12 +3311,6 @@ class IconSelector(ValueSpec):
             html.write('<a id="%s_%s_nav" class="%s_nav" href="javascript:vs_iconselector_toggle(\'%s\', \'%s\')">%s</a>' %
                    (varprefix, category_name, varprefix, varprefix, category_name, category_alias))
             html.write('</li>')
-        import config# FIXME: Clean this up. But how?
-        if defaults.omd_site and config.may('wato.icons'):
-            back_param = html.has_var('back') and '&back='+html.urlencode(html.var('back')) or ''
-            html.write('<li><a href="wato.py?mode=icons%s">%s</a></li>' %
-                        (back_param, _('Upload')))
-
         html.write('</ul>')
 
         # Now render the icons grouped by category
@@ -3329,6 +3323,12 @@ class IconSelector(ValueSpec):
                     onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
                     title = _('Choose this icon'), id = varprefix + '_i_' + icon))
             html.write('</div>')
+
+        import config# FIXME: Clean this up. But how?
+        if defaults.omd_site and config.may('wato.icons'):
+            back_param = html.has_var('back') and '&back='+html.urlencode(html.var('back')) or ''
+            html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
+
         html.write('</div>')
 
     def from_html_vars(self, varprefix):

@@ -921,10 +921,10 @@ class html:
         else:
             self.status_icons[img] = tooltip
 
-    def begin_popup_trigger(self, ident, data=None, params=None):
+    def begin_popup_trigger(self, ident, what, data=None, params=None):
         self.write('<div class="popup_trigger">\n')
-        onclick = 'toggle_popup(event, this, \'%s\', %s, %s)' % \
-                    (ident, data or 'null', params and "'"+params+"'" or 'null')
+        onclick = 'toggle_popup(event, this, \'%s\', \'%s\', %s, %s)' % \
+                    (ident, what, data or 'null', params and "'"+params+"'" or 'null')
         self.write('<a class="popup_trigger" href="javascript:void(0)" onclick="%s">\n' % onclick)
 
     def end_popup_trigger(self):
@@ -953,7 +953,7 @@ class html:
                     v = v.encode('utf-8')
                 encoded_vars[k] = v
 
-            self.begin_popup_trigger('add_visual',
+            self.begin_popup_trigger('add_visual', 'add_visual',
                 data='[\'%s\', %s, {\'name\': \'%s\'}]' % (mode_name, self.attrencode(repr(encoded_vars)), self.var('view_name')))
             self.write('<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % _("Add this view to..."))
             self.end_popup_trigger()

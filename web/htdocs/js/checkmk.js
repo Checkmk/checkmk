@@ -592,7 +592,7 @@ function create_graph(data, params) {
         visualadd.className = 'popup_trigger';
         visualadd.onclick = function(host, service, view, source) {
             return function(event) {
-                toggle_popup(event, this, 'add_visual',
+                toggle_popup(event, this, 'add_visual', 'add_visual',
                     ['pnpgraph',
                      { 'host': host, 'service': service },
                      { 'timerange': view, 'source': source }]
@@ -2264,20 +2264,13 @@ function handle_popup_close(event) {
     close_popup();
 }
 
-function toggle_popup(event, trigger_obj, what, data, params)
+function toggle_popup(event, trigger_obj, ident, what, data, params)
 {
     var params = typeof(params) === "undefined" ? '' : '?'+params;
 
     if(!event)
         event = window.event;
     var container = trigger_obj.parentNode;
-    var ident;
-    for (var i in container.parentNode.childNodes) {
-        if (container.parentNode.childNodes[i] == container) {
-            ident = i;
-            break;
-        }
-    }
 
     close_popup();
 

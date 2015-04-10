@@ -206,11 +206,17 @@ def paint_icons(what, row):
     if not row["host_name"]:
         return "", ""# Host probably does not exist
 
-    custom_vars = dict(zip(row["host_custom_variable_names"],
-                           row["host_custom_variable_values"]))
+    host_custom_vars = dict(zip(row["host_custom_variable_names"],
+                                row["host_custom_variable_values"]))
+
+    if what != 'host':
+        custom_vars = dict(zip(row[what+"_custom_variable_names"],
+                               row[what+"_custom_variable_values"]))
+    else:
+        custom_vars = host_custom_vars
 
     # Extract needed custom variables
-    tags = custom_vars.get('TAGS', '').split()
+    tags = host_custom_vars.get('TAGS', '').split()
     user_action_ids = custom_vars.get('ACTIONS', '').split(',')
 
     # Icons is a list of triple or quintuplets with these elements:
@@ -220,7 +226,7 @@ def paint_icons(what, row):
     #     is written to HTML
     #  -> or when an exception occured
     # (toplevel, sort_index, icon_name, title, url)
-    icons = process_multisite_icons(what, row, tags, custom_vars)
+    icons = process_multisite_icons(what, row, tags, host_custom_vars)
     icons += process_custom_user_icons_and_actions(user_action_ids)
 
     # Separate toplevel and icons shown in the menu

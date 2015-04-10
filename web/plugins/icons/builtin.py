@@ -29,12 +29,12 @@
 #
 # The parameters are shown below:
 #
-#    def paint_icon_image(what, row, tags, custom_vars):
+#    def paint_icon_image(what, row, tags, host_custom_vars):
 #        """
-#        what:        The type of the current object
-#        row:         The livestatus row for the current object
-#        tags:        List of cmk tags for this object
-#        custom_vars: Dict of objects custom variables
+#        what:             The type of the current object
+#        row:              The livestatus row for the current object
+#        tags:             List of cmk tags for this object
+#        host_custom_vars: Dict of the objects host custom variables
 #        """
 #        return repr(row)
 #
@@ -68,8 +68,8 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def paint_action_menu(what, row, tags, custom_vars):
-    return 'open_menu', _('Open the action menu'), 'onclick:'
+def paint_action_menu(what, row, tags, host_custom_vars):
+    return 'menu', _('Open the action menu'), 'onclick:'
 
 multisite_icons.append({
     'columns':         [],
@@ -87,7 +87,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_reschedule(what, row, tags, custom_vars):
+def paint_reschedule(what, row, tags, host_custom_vars):
     # Reschedule button
     if (row[what + "_active_checks_enabled"] == 1
         or row[what + '_check_command'].startswith('check_mk-')) \
@@ -120,7 +120,7 @@ multisite_icons.append({
 })
 
 
-def paint_rule_editor(what, row, tags, custom_vars):
+def paint_rule_editor(what, row, tags, host_custom_vars):
     if config.wato_enabled and config.may("wato.rulesets") and config.multisite_draw_ruleicon:
         urlvars = [("mode", "object_parameters"),
                    ("host", row["host_name"])]
@@ -147,7 +147,7 @@ multisite_icons.append({
 #   |                                                      |___/           |
 #   +----------------------------------------------------------------------+
 
-def paint_ack_image(what, row, tags, custom_vars):
+def paint_ack_image(what, row, tags, host_custom_vars):
     if row[what + "_acknowledged"]:
         return 'ack', _('This problem has been acknowledged')
 
@@ -166,11 +166,11 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_realhost_link_image(what, row, tags, custom_vars):
+def paint_realhost_link_image(what, row, tags, host_custom_vars):
     # Link to detail host if this is a summary host
-    if "_REALNAME" in custom_vars:
+    if "_REALNAME" in host_custom_vars:
         newrow = row.copy()
-        newrow["host_name"] = custom_vars["_REALNAME"]
+        newrow["host_name"] = host_custom_vars["_REALNAME"]
         return 'detail', _("Detailed host infos"), url_to_view(newrow, 'host')
 
 multisite_icons.append({
@@ -227,7 +227,7 @@ def pnp_icon(row, what):
     return '<a href="%s" onmouseover="displayHoverMenu(event, %s)" ' \
            'onmouseout="hoverHide()">%s</a>' % (url, hover_content_func, html.render_icon('pnp', ''))
 
-def paint_pnp_graph(what, row, tags, custom_vars):
+def paint_pnp_graph(what, row, tags, host_custom_vars):
     pnpgraph_present = row[what + "_pnpgraph_present"]
     if pnpgraph_present == 1:
         return pnp_icon(row, what)
@@ -247,7 +247,7 @@ multisite_icons.append({
 #   |           |_|   |_|  \___|\__,_|_|\___|\__|_|\___/|_| |_|            |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-def paint_prediction_icon(what, row, tags, custom_vars):
+def paint_prediction_icon(what, row, tags, host_custom_vars):
     if what == "service":
         parts = row[what + "_perf_data"].split()
         for p in parts:
@@ -278,7 +278,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_action(what, row, tags, custom_vars):
+def paint_action(what, row, tags, host_custom_vars):
     if 'X' in html.display_options:
         # action_url (only, if not a PNP-URL and pnp_graph is working!)
         action_url       = row[what + "_action_url_expanded"]
@@ -311,7 +311,7 @@ def logwatch_url(sitename, hostname, item):
 
     return site["url_prefix"] + host_item_url + master_url
 
-def paint_logwatch(what, row, tags, custom_vars):
+def paint_logwatch(what, row, tags, host_custom_vars):
     if what != "service":
         return
     if row[what + "_check_command"] in [ 'check_mk-logwatch', 'check_mk-logwatch.groups' ]:
@@ -326,7 +326,7 @@ multisite_icons.append({
 # Adds the url_prefix of the services site to the notes url configured in this site.
 # It also adds the master_url which will be used to link back to the source site
 # in multi site environments.
-def paint_notes(what, row, tags, custom_vars):
+def paint_notes(what, row, tags, host_custom_vars):
     if 'X' in html.display_options:
         notes_url = row[what + "_notes_url_expanded"]
         check_command = row[what + "_check_command"]
@@ -350,7 +350,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_downtimes(what, row, tags, custom_vars):
+def paint_downtimes(what, row, tags, host_custom_vars):
     # Currently we are in a downtime + link to list of downtimes
     # for this host / service
     if row[what + "_scheduled_downtime_depth"] > 0:
@@ -378,7 +378,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_comments(what, row, tags, custom_vars):
+def paint_comments(what, row, tags, host_custom_vars):
     comments = row[what + "_comments_with_extra_info"]
     if len(comments) > 0:
         text = ""
@@ -402,7 +402,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_notifications(what, row, tags, custom_vars):
+def paint_notifications(what, row, tags, host_custom_vars):
     # Notifications disabled
     enabled = row[what + "_notifications_enabled"]
     modified = "notifications_enabled" in row[what + "_modified_attributes_list"]
@@ -428,7 +428,7 @@ multisite_icons.append({
 #   |                            |_|   |_|            |___/                |
 #   +----------------------------------------------------------------------+
 
-def paint_flapping(what, row, tags, custom_vars):
+def paint_flapping(what, row, tags, host_custom_vars):
     if row[what + "_is_flapping"]:
         if what == "host":
             title = _("This host is flapping")
@@ -452,7 +452,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_is_stale(what, row, tags, custom_vars):
+def paint_is_stale(what, row, tags, host_custom_vars):
     if is_stale(row):
         if what == "host":
             title = _("This host is stale")
@@ -476,7 +476,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_active_checks(what, row, tags, custom_vars):
+def paint_active_checks(what, row, tags, host_custom_vars):
     # Setting of active checks modified by user
     if "active_checks_enabled" in row[what + "_modified_attributes_list"]:
         if row[what + "_active_checks_enabled"] == 0:
@@ -499,7 +499,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_passive_checks(what, row, tags, custom_vars):
+def paint_passive_checks(what, row, tags, host_custom_vars):
     # Passive checks disabled manually?
     if "passive_checks_enabled" in row[what + "_modified_attributes_list"]:
         if row[what + "_accept_passive_checks"] == 0:
@@ -520,7 +520,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_notification_periods(what, row, tags, custom_vars):
+def paint_notification_periods(what, row, tags, host_custom_vars):
     if not row[what + "_in_notification_period"]:
         return 'outofnot', _('Out of notification period')
 
@@ -542,7 +542,7 @@ multisite_icons.append({
 # Link to aggregations of the host/service
 # When precompile on demand is enabled, this icon is displayed for all hosts/services
 # otherwise only for the hosts/services which are part of aggregations.
-def paint_aggregations(what, row, tags, custom_vars):
+def paint_aggregations(what, row, tags, host_custom_vars):
     if config.bi_precompile_on_demand \
        or bi.is_part_of_aggregation(what, row["site"], row["host_name"],
                                  row.get("service_description")):
@@ -575,7 +575,7 @@ multisite_icons.append({
 #   '----------------------------------------------------------------------'
 
 
-def paint_stars(what, row, tags, custom_vars):
+def paint_stars(what, row, tags, host_custom_vars):
     try:
         stars = html.stars
     except:
@@ -594,7 +594,7 @@ multisite_icons.append({
     'paint': paint_stars,
 })
 
-def paint_icon_check_bi_aggr(what, row, tags, custom_vars):
+def paint_icon_check_bi_aggr(what, row, tags, host_custom_vars):
     if what == "service" and row.get("service_check_command","").startswith("check_mk_active-bi_aggr!"):
         args = row['service_check_command']
         start = args.find('-b \'') + 4
@@ -630,7 +630,7 @@ multisite_icons.append({
 #   |  Icon for a crashed check with a link to the crash dump page.        |
 #   '----------------------------------------------------------------------'
 
-def paint_icon_crashed_check(what, row, tags, custom_vars):
+def paint_icon_crashed_check(what, row, tags, host_custom_vars):
     if what == "service" \
         and row["service_state"] == 3 \
         and "check failed - please submit a crash report!" in row["service_plugin_output"] :
@@ -658,7 +658,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def paint_icon_image(what, row, tags, custom_vars):
+def paint_icon_image(what, row, tags, host_custom_vars):
     if row[what + '_icon_image']:
         return row[what + '_icon_image'][:-4]
 
@@ -671,7 +671,7 @@ multisite_icons.append({
     'type'    : 'type_icon',
 })
 
-def paint_basic_service_types(what, row, tags, custom_vars):
+def paint_basic_service_types(what, row, tags, host_custom_vars):
     if what == "service":
         svc_desc = row["service_description"]
         if svc_desc.startswith('Check_MK'):
@@ -714,7 +714,7 @@ multisite_icons.append({
     'type'  : 'type_icon',
 })
 
-def paint_basic_host_types(what, row, tags, custom_vars):
+def paint_basic_host_types(what, row, tags, host_custom_vars):
     if what == "host":
         services = dict([ (s[0], s[1:]) for s in row['host_services_with_info'] ])
 

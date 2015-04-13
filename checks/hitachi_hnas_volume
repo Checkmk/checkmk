@@ -45,8 +45,8 @@ def check_hitachi_hnas_volume(item, params, info):
                 fslist.append((item, size_mb, avail_mb, 0))
                 status, message, perfdata = df_check_filesystem_list(item, params, fslist)
             else:
-                status = 1
-                message = "no filesystem size information (!)"
+                status = 0
+                message = "no filesystem size information"
                 perfdata = []
 
             # evaluate volumeStatus

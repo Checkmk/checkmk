@@ -1,0 +1,9 @@
+Title: hitachi_hnas_drives: new check to determine the overall status of all system drives of Hitachi NAS devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1428926934
+Class: feature
+
+

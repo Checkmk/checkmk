@@ -9,6 +9,9 @@
     BI:
     * 1897 FIX: Fixed exception in BI Availability view...
 
+    WATO:
+    * 1956 FIX: WATO Web-API: Fixed exception information for single sites...
+
     HW/SW-Inventory:
     * 2197 FIX: win_reg_uninstall: Fix exception in case of invalid output line...
 

@@ -69,7 +69,24 @@
 #   '----------------------------------------------------------------------'
 
 def paint_action_menu(what, row, tags, host_custom_vars):
-    return 'menu', _('Open the action menu'), 'onclick:'
+    url_vars = [
+        ('host', row['host_name']),
+    ]
+
+    if row.get('site'):
+        url_vars.append(('site', row['site']))
+
+    if what == 'service':
+        url_vars.append(('service', row['service_description']))
+
+    if html.has_var('display_options'):
+        url_vars.append(('display_options', html.var('display_options')))
+    if html.has_var('_display_options'):
+        url_vars.append(('_display_options', html.var('_display_options')))
+
+    return html.render_popup_trigger(
+        html.render_icon('menu', _('Open the action menu')),
+        'action_menu', 'action_menu', params=html.urlencode_vars(url_vars))
 
 multisite_icons.append({
     'columns':         [],
@@ -95,8 +112,8 @@ def paint_reschedule(what, row, tags, host_custom_vars):
 
         servicedesc = ''
         wait_svc    = ''
-        icon        = 'icon_reload'
-        txt         = _('Reschedule an immediate check')
+        icon        = 'reload'
+        txt         = _('Reschedule check')
 
         if what == 'service':
             servicedesc = row['service_description'].replace("\\","\\\\")
@@ -105,13 +122,12 @@ def paint_reschedule(what, row, tags, host_custom_vars):
             # Use Check_MK service for cmk based services
             if row[what + '_check_command'].startswith('check_mk-'):
                 servicedesc = 'Check_MK'
-                icon        = 'icon_reload_cmk'
-                txt         = _('Reschedule an immediate check of the \'Check_MK\' service')
+                icon        = 'reload_cmk'
+                txt         = _('Reschedule \'Check_MK\' service')
 
-        return '<a href=\"javascript:void(0);\" ' \
-               'onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');">' \
-               '<img align=absmiddle class=icon title="%s" src="images/%s.gif" /></a>' % \
-                (row["site"], row["host_name"], html.urlencode(servicedesc), html.urlencode(wait_svc), txt, icon)
+        url = 'onclick:performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');' % \
+                (row["site"], row["host_name"], html.urlencode(servicedesc), html.urlencode(wait_svc))
+        return icon, txt, url
 
 multisite_icons.append({
     'columns':         [ 'active_checks_enabled' ],
@@ -127,9 +143,9 @@ def paint_rule_editor(what, row, tags, host_custom_vars):
 
         if what == 'service':
             urlvars.append(("service", row["service_description"]))
-            title = _("View and edit parameters for this service")
+            title = _("Parameters for this service")
         else:
-            title = _("View and edit parameters for this host")
+            title = _("Parameters for this host")
 
         return 'rulesets', title, html.makeuri_contextless(urlvars, "wato.py")
 
@@ -391,6 +407,7 @@ def paint_comments(what, row, tags, host_custom_vars):
 multisite_icons.append({
     'columns':         [ 'comments_with_extra_info' ],
     'paint':           paint_comments,
+    'toplevel':        True,
 })
 
 #   +----------------------------------------------------------------------+

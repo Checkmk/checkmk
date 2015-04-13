@@ -707,7 +707,7 @@ function actionResponseHandler(oImg, code) {
     }
 
     if(validResponse && response[0] === 'OK') {
-        oImg.src   = 'images/icon_reload.gif';
+        oImg.src   = 'images/icon_reload.png';
         window.location.reload();
     } else if(validResponse && response[0] === 'TIMEOUT') {
         oImg.src   = 'images/icon_reload_failed.gif';
@@ -2290,13 +2290,17 @@ function toggle_popup(event, trigger_obj, ident, what, data, params)
 
     popup_data = data;
 
+    menu.innerHTML = '<img src="images/icon_loading.gif" class=icon>';
+
     // populate the menu using a webservice, because the list of dashboards
     // is not known in the javascript code. But it might have been cached
     // before. In this case do not perform a second request.
-    if (ident in popup_contents)
-        menu.innerHTML = popup_contents[ident];
-    else
-        get_url('ajax_popup_'+what+'.py'+params, handle_render_popup_contents, [ident, event]);
+    // LM: Don't use the cache for the moment. There might be too many situations where
+    // we don't want the popup to be cached.
+    //if (ident in popup_contents)
+    //    menu.innerHTML = popup_contents[ident];
+    //else
+    get_url('ajax_popup_'+what+'.py'+params, handle_render_popup_contents, [ident, event]);
 }
 
 function handle_render_popup_contents(data, response_text)
@@ -2312,22 +2316,22 @@ function handle_render_popup_contents(data, response_text)
 }
 
 function fix_popup_menu_position(event, menu) {
-    //
-    //// When menu is out of screen on the right, move to left
-    //if (menu.offsetLeft + menu.clientWidth > pageWidth()) {
-    //    menu.style.left = (menu.offsetLeft - menu.clientWidth - 15) + 'px';
-    //    menu.style.right = 'auto';
-    //}
+    var rect = menu.getBoundingClientRect();
 
-    // menu.offsetTop does not take whole page offset into account, because
-    // it is positioned relative to another element. Take this into account
-    var offset_top = menu.offsetTop + menu.offsetParent.offsetTop;
+    // Check whether or not the menu is out of the bottom border
+    // -> if so, move the menu up
+    if (rect.bottom > (window.innerHeight || document.documentElement.clientHeight)) {
+        menu.style.top    = 'auto';
+        menu.style.bottom = '15px';
+    }
 
-    // When menu is out of screen on the top, move to bottom
-    //console.log(offset_top)
-    if (offset_top < 0) {
-        menu.style.top = (menu.offsetTop + menu.clientHeight) + 'px';
-        menu.style.bottom = 'auto';
+    // Check whether or not the menu is out of right border and
+    // a move to the left would fix the issue
+    // -> if so, move the menu to the left
+    if (rect.right > (window.innerWidth || document.documentElement.clientWidth)
+        && rect.left - (rect.right - rect.left) >= 0) {
+        menu.style.left  = 'auto';
+        menu.style.right = '15px';
     }
 }
 

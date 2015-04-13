@@ -197,15 +197,8 @@ def process_custom_user_icons_and_actions(user_action_ids):
 
     return icons
 
-# Paint column with various icons. The icons use
-# a plugin based mechanism so it is possible to
-# register own icon "handlers".
-# what: either "host" or "service"
-# row: the data row of the host or service
-def paint_icons(what, row):
-    if not row["host_name"]:
-        return "", ""# Host probably does not exist
 
+def get_icons(what, row, toplevel):
     host_custom_vars = dict(zip(row["host_custom_variable_names"],
                                 row["host_custom_variable_values"]))
 
@@ -221,7 +214,7 @@ def paint_icons(what, row):
 
     # Icons is a list of triple or quintuplets with these elements:
     # (toplevel, sort_index, html_code)
-    #  -> TODO: can be removed on day, handles deprecated icon API
+    #  -> TODO: can be removed one day, handles deprecated icon API
     #  -> this can only happen for toplevel_icons and when output
     #     is written to HTML
     #  -> or when an exception occured
@@ -229,9 +222,30 @@ def paint_icons(what, row):
     icons = process_multisite_icons(what, row, tags, host_custom_vars)
     icons += process_custom_user_icons_and_actions(user_action_ids)
 
-    # Separate toplevel and icons shown in the menu
-    toplevel_icons = sorted([ i for i in icons if i[0] ], key = lambda i: i[1])
-    menu_icons     = sorted([ i for i in icons if not i[0] ], key = lambda i: i[1])
+    if toplevel:
+        # Returns the toplevel icons
+        return sorted([ i for i in icons if i[0] ], key = lambda i: i[1])
+    else:
+        # Returns the menu icons
+        return sorted([ i for i in icons if not i[0] ], key = lambda i: i[1])
+
+
+def replace_action_url_macros(url, what, row):
+    url = url.replace('$HOSTNAME$', row['host_name']).replace('$HOSTADDRESS$', row['host_address'])
+    if what == 'service':
+        url = url.replace('$SERVICEDESC$', row['service_description'])
+    return url
+
+
+# Paint column with various icons. The icons use
+# a plugin based mechanism so it is possible to
+# register own icon "handlers".
+# what: either "host" or "service"
+# row: the data row of the host or service
+def paint_icons(what, row):
+    if not row["host_name"]:
+        return "", ""# Host probably does not exist
+    toplevel_icons = get_icons(what, row, toplevel=True)
 
     # In case of non HTML output, just return the top level icon names
     # as space separated string
@@ -243,6 +257,7 @@ def paint_icons(what, row):
         if len(icon) == 5:
             icon_name, title, url = icon[2:]
             if url:
+                url = replace_action_url_macros(url, what, row)
                 onclick = ''
                 if url.startswith('onclick:'):
                     onclick = ' onclick="%s"' % url[8:]
@@ -257,9 +272,10 @@ def paint_icons(what, row):
     return "icons", output
 
 
-def iconpainter_columns(what):
+def iconpainter_columns(what, toplevel):
     cols = set(['site',
                 'host_name',
+                'host_address',
                 'host_custom_variable_names',
                 'host_custom_variable_values' ])
 
@@ -271,11 +287,12 @@ def iconpainter_columns(what):
         ])
 
     for icon in multisite_icons:
-        if 'columns' in icon:
-            cols.update([ what + '_' + c for c in icon['columns'] ])
-        cols.update([ "host_" + c for c in icon.get("host_columns", [])])
-        if what == "service":
-            cols.update([ "service_" + c for c in icon.get("service_columns", [])])
+        if toplevel == icon.get('toplevel', False):
+            if 'columns' in icon:
+                cols.update([ what + '_' + c for c in icon['columns'] ])
+            cols.update([ "host_" + c for c in icon.get("host_columns", [])])
+            if what == "service":
+                cols.update([ "service_" + c for c in icon.get("service_columns", [])])
 
     return cols
 
@@ -283,7 +300,7 @@ multisite_painters["service_icons"] = {
     "title":   _("Service icons"),
     "short":   _("Icons"),
     "printable" : False, # does not contain printable text
-    "columns": iconpainter_columns("service"),
+    "columns": iconpainter_columns("service", toplevel=True),
     "groupby" : lambda row: "", # Do not account for in grouping
     "paint":    lambda row: paint_icons("service", row)
 }
@@ -292,7 +309,7 @@ multisite_painters["host_icons"] = {
     "title":   _("Host icons"),
     "short":   _("Icons"),
     "printable" : False, # does not contain printable text
-    "columns": iconpainter_columns("host"),
+    "columns": iconpainter_columns("host", toplevel=True),
     "groupby" : lambda row: "", # Do not account for in grouping
     "paint":    lambda row: paint_icons("host", row)
 }

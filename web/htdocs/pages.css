@@ -903,11 +903,11 @@ div.help tt {
 
 body.main .popup_menu {
     position: absolute;
-    bottom: 15px;
+    top: 15px;
     left: 15px;
     z-index: 10;
 
-    padding: 0;
+    padding: 5px 8px;
     min-width: 300px;
 
     color: #fff;
@@ -928,7 +928,7 @@ body.main .popup_menu img {
 body.main .popup_menu ul {
     list-style: none;
     margin: 0;
-    padding: 0px 5px 5px 10px;
+    padding: 0;
 }
 
 body.main .popup_menu a,
@@ -946,6 +946,10 @@ body.main .popup_menu span {
     padding-left: 0px;
     font-weight: bold;
     margin-top: 8px;
+}
+
+body.main .popup_menu li.first span {
+    margin-top: 0;
 }
 
 body.main .popup_menu a:hover,

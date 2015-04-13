@@ -106,6 +106,7 @@ pagehandlers.update({
    "ajax_inv_render_tree"     : views.ajax_inv_render_tree,
 
    "ajax_popup_icon_selector" : views.ajax_popup_icon_selector,
+   "ajax_popup_action_menu"   : views.ajax_popup_action_menu,
 
    "webapi"                   : webapi.page_api,
 

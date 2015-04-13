@@ -914,22 +914,24 @@ class html:
             self.bottom_footer()
             self.body_end()
 
-
     def add_status_icon(self, img, tooltip, url = None):
         if url:
             self.status_icons[img] = tooltip, url
         else:
             self.status_icons[img] = tooltip
 
-    def begin_popup_trigger(self, ident, what, data=None, params=None):
-        self.write('<div class="popup_trigger">\n')
+    def render_popup_trigger(self, content, ident, what, data=None, params=None):
+        src = '<div class="popup_trigger">\n'
         onclick = 'toggle_popup(event, this, \'%s\', \'%s\', %s, %s)' % \
                     (ident, what, data or 'null', params and "'"+params+"'" or 'null')
-        self.write('<a class="popup_trigger" href="javascript:void(0)" onclick="%s">\n' % onclick)
+        src += '<a class="popup_trigger" href="javascript:void(0)" onclick="%s">\n' % onclick
+        src += content
+        src += '</a>\n'
+        src += '</div>\n'
+        return src
 
-    def end_popup_trigger(self):
-        self.write('</a>\n')
-        self.write('</div>\n')
+    def popup_trigger(self, content, ident, what, data=None, params=None):
+        self.write(self.render_popup_trigger(content, ident, what, data, params))
 
     def write_status_icons(self):
         self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
@@ -953,10 +955,12 @@ class html:
                     v = v.encode('utf-8')
                 encoded_vars[k] = v
 
-            self.begin_popup_trigger('add_visual', 'add_visual',
-                data='[\'%s\', %s, {\'name\': \'%s\'}]' % (mode_name, self.attrencode(repr(encoded_vars)), self.var('view_name')))
-            self.write('<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % _("Add this view to..."))
-            self.end_popup_trigger()
+            self.popup_trigger(
+                '<img class=statusicon src="images/status_add_dashlet.png" '
+                'title="%s"></a></div>\n' % _("Add this view to..."),
+                'add_visual', 'add_visual', data='[\'%s\', %s, {\'name\': \'%s\'}]' %
+                                                    (mode_name, self.attrencode(repr(encoded_vars)),
+                                                     self.var('view_name')))
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

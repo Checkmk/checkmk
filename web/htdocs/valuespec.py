@@ -3285,16 +3285,15 @@ class IconSelector(ValueSpec):
 
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)
 
-        html.begin_popup_trigger(varprefix+'_icon_selector', 'icon_selector',
+        if value:
+            content = self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img')
+        else:
+            content = _('Select an Icon')
+        html.popup_trigger(content, varprefix+'_icon_selector', 'icon_selector',
             params=html.urlencode_vars([('value',       value),
                                         ('varprefix',   varprefix),
                                         ('allow_empty', self._allow_empty and '1' or '0'),
                                         ('back',        html.makeuri([]))]))
-        if value:
-            html.write(self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img'))
-        else:
-            html.write(_('Select an Icon'))
-        html.end_popup_trigger()
 
     def render_popup_input(self, varprefix, value):
         html.write('<div class="icons">')

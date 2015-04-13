@@ -2437,3 +2437,72 @@ def ajax_popup_icon_selector():
 
     vs = IconSelector(allow_empty=allow_empty)
     vs.render_popup_input(varprefix, value)
+
+#.
+#   .--Action Menu---------------------------------------------------------.
+#   |          _        _   _               __  __                         |
+#   |         / \   ___| |_(_) ___  _ __   |  \/  | ___ _ __  _   _        |
+#   |        / _ \ / __| __| |/ _ \| '_ \  | |\/| |/ _ \ '_ \| | | |       |
+#   |       / ___ \ (__| |_| | (_) | | | | | |  | |  __/ | | | |_| |       |
+#   |      /_/   \_\___|\__|_|\___/|_| |_| |_|  |_|\___|_| |_|\__,_|       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Realizes the popup action menu for hosts/services in views           |
+#   '----------------------------------------------------------------------'
+
+def query_action_data(what, host, site, svcdesc):
+    # Now fetch the needed data from livestatus
+    columns = list(iconpainter_columns(what, toplevel=False))
+    try:
+        columns.remove('site')
+    except KeyError:
+        pass
+
+    if site:
+        html.live.set_only_sites([site])
+    html.live.set_prepend_site(True)
+    query = 'GET %ss\n' \
+            'Columns: %s\n' \
+            'Filter: host_name = %s\n' \
+           % (what, ' '.join(columns), host)
+    if what == 'service':
+        query += 'Filter: service_description = %s\n' % svcdesc
+    row = html.live.query_row(query)
+
+    html.live.set_prepend_site(False)
+    html.live.set_only_sites(None)
+
+    return dict(zip(['site'] + columns, row))
+
+
+def ajax_popup_action_menu():
+    site    = html.var('site')
+    host    = html.var('host')
+    svcdesc = html.var('service')
+    what    = svcdesc and 'service' or 'host'
+
+    prepare_display_options()
+
+    row = query_action_data(what, host, site, svcdesc)
+    icons = get_icons(what, row, toplevel=False)
+
+    html.write('<ul>\n')
+    for icon in icons:
+        html.write('<li>\n')
+        if len(icon) == 5:
+            icon_name, title, url = icon[2:]
+            if url:
+                url = replace_action_url_macros(url, what, row)
+                onclick = ''
+                if url.startswith('onclick:'):
+                    onclick = ' onclick="%s"' % url[8:]
+                    url = 'javascript:void(0)'
+                html.write('<a href="%s"%s>' % (url, onclick))
+            html.icon('', icon_name)
+            html.write(title)
+            if url:
+                html.write('</a>')
+        else:
+            html.write(icon[2])
+        html.write('</li>\n')
+    html.write('</ul>\n')

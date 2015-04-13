@@ -1,0 +1,22 @@
+title: Hitachi HNAS: Status of System Drives
+agents: snmp
+catalog: hw/storagehw/hitachi
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of system drives of Hitachi NAS-Devices.
+ It was tested against Hitachi HNAS Modell 3090 but probably will work
+ for other HNAS devices using the BlueArc MIB.
+
+ The check works by scanning the SNMP status information of all system drives
+ as given by the device. It displays the number of drives found in each of the
+ known states - if it is non-zero.  Known states are: "Online", "MBR corrupt",
+ "Failed and unaccessible", "Not present", "Not accessible by controller",
+ "Offline", "Initializing", "Formatting", "Unknown",
+
+ All stati except "Online" and "Unknown" trigger a {CRIT} state of
+ the service.  "Online" triggers {OK} and "Unknown" triggers {UNKNOWN}
+
+inventory:
+ One check for each device is created.
+

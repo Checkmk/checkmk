@@ -43,6 +43,28 @@ subgroup_virt =         _("Virtualization")
 subgroup_hardware =     _("Hardware, BIOS")
 subgroup_inventory =    _("Inventory - automatic service detection")
 
+# register_rule(group, varname, valuespec = None, title = None,
+#               help = None, itemspec = None, itemtype = None, itemname = None,
+#               itemhelp = None, itemenum = None,
+#               match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT)
+# register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, match_type, has_inventory=True, register_static_check=True)
+
+# TODO: Sort all rules and check parameters into the figlet header sections.
+# Beware: there are dependencies, so sometimes the order matters.  All rules
+# that are not yet handles are in the last section: in "Unsorted".  Move rules
+# from there into their appropriate sections until "Unsorted" is empty.
+# Create new rules directly in the correct secions.
+
+
+#   .--Networking----------------------------------------------------------.
+#   |        _   _      _                      _    _                      |
+#   |       | \ | | ___| |___      _____  _ __| | _(_)_ __   __ _          |
+#   |       |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ / | '_ \ / _` |         |
+#   |       | |\  |  __/ |_ \ V  V / (_) | |  |   <| | | | | (_| |         |
+#   |       |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\_|_| |_|\__, |         |
+#   |                                                       |___/          |
+#   '----------------------------------------------------------------------'
+
 register_rule(group + "/" + subgroup_networking,
     "ping_levels",
     Dictionary(
@@ -53,6 +75,17 @@ register_rule(group + "/" + subgroup_networking,
         elements = check_icmp_params,
         ),
         match="dict")
+
+
+#.
+#   .--Applications--------------------------------------------------------.
+#   |          _                _ _           _   _                        |
+#   |         / \   _ __  _ __ | (_) ___ __ _| |_(_) ___  _ __  ___        |
+#   |        / _ \ | '_ \| '_ \| | |/ __/ _` | __| |/ _ \| '_ \/ __|       |
+#   |       / ___ \| |_) | |_) | | | (_| (_| | |_| | (_) | | | \__ \       |
+#   |      /_/   \_\ .__/| .__/|_|_|\___\__,_|\__|_|\___/|_| |_|___/       |
+#   |              |_|   |_|                                               |
+#   '----------------------------------------------------------------------'
 
 register_rule(group + '/' + subgroup_applications,
     varname   = "logwatch_rules",
@@ -100,6 +133,135 @@ register_rule(group + '/' + subgroup_applications,
                  "expressions which must match the beginning of the logfile name."),
     match = 'all',
 )
+
+
+register_check_parameters(
+    subgroup_applications,
+    "ad_replication",
+    _("Active Directory Replication"),
+    Tuple(
+        help = _("The number of replication failures"),
+        elements = [
+           Integer(title = _("Warning at"), unit = _("failures")),
+           Integer(title = _("Critical at"), unit = _("failures")),
+        ]
+      ),
+    TextAscii(
+        title = _("Replication Partner"),
+        help = _("The name of the replication partner (Destination DC Site/Destination DC)."),
+    ),
+    "first"
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    "mq_queues",
+    _("Apache ActiveMQ Queue lengths"),
+    Dictionary(
+        elements = [
+            ("size",
+            Tuple(
+               title = _("Levels for the queue length"),
+               help = _("Set the maximum and minimum length for the queue size"),
+               elements = [
+                  Integer(title="Warning at a size of"),
+                  Integer(title="Critical at a size of"),
+               ]
+            )),
+            ("consumerCount",
+            Tuple(
+               title = _("Levels for the consumer count"),
+               help = _("Consumer Count is the size of connected consumers to a queue"),
+               elements = [
+                  Integer(title="Warning less then"),
+                  Integer(title="Critical less then"),
+               ]
+            )),
+        ]
+    ),
+    TextAscii( title=_("Queue Name"),
+    help=_("The name of the queue like in the Apache queue manager")),
+    "first",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "websphere_mq",
+    _("Maximum number of messages in Websphere Message Queues"),
+    Tuple(
+      title = _('Maximum number of messages'),
+          elements = [
+             Integer(title = _("Warning at"), default_value = 1000 ),
+             Integer(title = _("Critical at"), default_value = 1200 ),
+          ]
+    ),
+    TextAscii(title = _("Name of Channel or Queue")),
+    match_type = "first",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "plesk_backups",
+    _("Plesk Backups"),
+    Dictionary(
+         help = _("This check monitors backups configured for domains in plesk."),
+         elements = [
+             ("no_backup_configured_state", MonitoringState(
+                 title = _("State when no backup is configured"),
+                 default_value = 1)
+             ),
+             ("no_backup_found_state", MonitoringState(
+                 title = _("State when no backup can be found"),
+                 default_value = 1)
+             ),
+             ("backup_age",
+               Tuple(
+                   title = _("Maximum age of backups"),
+                   help = _("The maximum age of the last backup."),
+                   elements = [
+                       Age(title = _("Warning at")),
+                       Age(title = _("Critical at")),
+                    ],
+               ),
+             ),
+             ("total_size",
+               Tuple(
+                   title = _("Maximum size of all files on backup space"),
+                   help = _("The maximum size of all files on the backup space. "
+                            "This might be set to the allowed quotas on the configured "
+                            "FTP server to be notified if the space limit is reached."),
+                   elements = [
+                       Filesize(title = _("Warning at")),
+                       Filesize(title = _("Critical at")),
+                    ],
+               ),
+             ),
+         ],
+         optional_keys = ['backup_age', 'total_size']
+    ),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False
+    ),
+    match_type = "first",
+)
+
+
+
+#.
+#   .--Unsorted--(Don't create new stuff here!)----------------------------.
+#   |              _   _                      _           _                |
+#   |             | | | |_ __  ___  ___  _ __| |_ ___  __| |               |
+#   |             | | | | '_ \/ __|/ _ \| '__| __/ _ \/ _` |               |
+#   |             | |_| | | | \__ \ (_) | |  | ||  __/ (_| |               |
+#   |              \___/|_| |_|___/\___/|_|   \__\___|\__,_|               |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  All these rules have not been moved into their according sections.  |
+#   |  Please move them as you come along - but beware of dependecies!     |
+#   |  Remove this section as soon as it's empty.                          |
+#   '----------------------------------------------------------------------'
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_services_rules",
@@ -743,117 +905,6 @@ register_rule(group + '/' + subgroup_inventory,
 )
 
 register_check_parameters(
-    subgroup_applications,
-    "ad_replication",
-    _("Active Directory Replication"),
-    Tuple(
-        help = _("The number of replication failures"),
-        elements = [
-           Integer(title = _("Warning at"), unit = _("failures")),
-           Integer(title = _("Critical at"), unit = _("failures")),
-        ]
-      ),
-    TextAscii(
-        title = _("Replication Partner"),
-        help = _("The name of the replication partner (Destination DC Site/Destination DC)."),
-    ),
-    "first"
-)
-
-register_check_parameters(
-    subgroup_applications,
-    "mq_queues",
-    _("Apache ActiveMQ Queue lengths"),
-    Dictionary(
-        elements = [
-            ("size",
-            Tuple(
-               title = _("Levels for the queue length"),
-               help = _("Set the maximum and minimum length for the queue size"),
-               elements = [
-                  Integer(title="Warning at a size of"),
-                  Integer(title="Critical at a size of"),
-               ]
-            )),
-            ("consumerCount",
-            Tuple(
-               title = _("Levels for the consumer count"),
-               help = _("Consumer Count is the size of connected consumers to a queue"),
-               elements = [
-                  Integer(title="Warning less then"),
-                  Integer(title="Critical less then"),
-               ]
-            )),
-        ]
-    ),
-    TextAscii( title=_("Queue Name"),
-    help=_("The name of the queue like in the Apache queue manager")),
-    "first",
-)
-
-register_check_parameters(
-    subgroup_applications,
-    "websphere_mq",
-    _("Maximum number of messages in Websphere Message Queues"),
-    Tuple(
-      title = _('Maximum number of messages'),
-          elements = [
-             Integer(title = _("Warning at"), default_value = 1000 ),
-             Integer(title = _("Critical at"), default_value = 1200 ),
-          ]
-    ),
-    TextAscii(title = _("Name of Channel or Queue")),
-    None,
-)
-
-register_check_parameters(
-    subgroup_applications,
-    "plesk_backups",
-    _("Plesk Backups"),
-    Dictionary(
-         help = _("This check monitors backups configured for domains in plesk."),
-         elements = [
-             ("no_backup_configured_state", MonitoringState(
-                 title = _("State when no backup is configured"),
-                 default_value = 1)
-             ),
-             ("no_backup_found_state", MonitoringState(
-                 title = _("State when no backup can be found"),
-                 default_value = 1)
-             ),
-             ("backup_age",
-               Tuple(
-                   title = _("Maximum age of backups"),
-                   help = _("The maximum age of the last backup."),
-                   elements = [
-                       Age(title = _("Warning at")),
-                       Age(title = _("Critical at")),
-                    ],
-               ),
-             ),
-             ("total_size",
-               Tuple(
-                   title = _("Maximum size of all files on backup space"),
-                   help = _("The maximum size of all files on the backup space. "
-                            "This might be set to the allowed quotas on the configured "
-                            "FTP server to be notified if the space limit is reached."),
-                   elements = [
-                       Filesize(title = _("Warning at")),
-                       Filesize(title = _("Critical at")),
-                    ],
-               ),
-             ),
-         ],
-         optional_keys = ['backup_age', 'total_size']
-    ),
-    TextAscii(
-        title = _("Service descriptions"),
-        allow_empty = False
-    ),
-    None
-)
-
-register_check_parameters(
     subgroup_storage,
     "brocade_fcport",
     _("Brocade FibreChannel ports"),
@@ -1014,31 +1065,31 @@ register_check_parameters(
 )
 
 register_check_parameters(
-   subgroup_os,
-   "uptime",
-   _("Uptime since last reboot"),
-   Dictionary(
-       elements = [
-           ( "min",
-             Tuple(
-                 title = _("Minimum required uptime"),
-                 elements = [
-                     Age(title = _("Warning if below")),
-                     Age(title = _("Critical if below")),
-                 ]
-           )),
-           ( "max",
-             Tuple(
-                 title = _("Maximum allowed uptime"),
-                 elements = [
-                     Age(title = _("Warning at")),
-                     Age(title = _("Critical at")),
-                 ]
-           )),
-       ]
-   ),
-   None,
-   "first",
+    subgroup_os,
+    "uptime",
+    _("Uptime since last reboot"),
+    Dictionary(
+        elements = [
+            ( "min",
+              Tuple(
+                  title = _("Minimum required uptime"),
+                  elements = [
+                      Age(title = _("Warning if below")),
+                      Age(title = _("Critical if below")),
+                  ]
+            )),
+            ( "max",
+              Tuple(
+                  title = _("Maximum allowed uptime"),
+                  elements = [
+                      Age(title = _("Warning at")),
+                      Age(title = _("Critical at")),
+                  ]
+            )),
+        ]
+    ),
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -1106,8 +1157,7 @@ register_check_parameters(
         title = _("Phase"),
         help = _("The identifier of the phase the power is related to."),
     ),
-    None,
-    "first"
+    match_type = "first"
 )
 
 register_check_parameters(
@@ -1566,7 +1616,7 @@ register_check_parameters(
         ]
     ),
     None,
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -2772,7 +2822,7 @@ register_check_parameters(
         title = _("Memory Pool Name"),
         allow_empty = False
     ),
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -2828,8 +2878,9 @@ register_check_parameters(
         ]
     ),
     None,
-    None
+    match_type = "first",
 )
+
 register_check_parameters(
     subgroup_os,
     "cisco_supervisor_mem",
@@ -2842,7 +2893,7 @@ register_check_parameters(
         ]
     ),
     None,
-    None
+    match_type = "first",
 )
 
 
@@ -3056,7 +3107,8 @@ register_check_parameters(
         ),
         forth = lambda t: type(t) == tuple and { "levels" : t } or t,
     ),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3199,7 +3251,8 @@ register_check_parameters(
           Percentage(title = _("Warning at a RAM usage of"), default_value = 80.0),
           Percentage(title = _("Critical at a RAM usage of"), default_value = 90.0),
         ]),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3411,7 +3464,7 @@ register_check_parameters(
         title = _("cartridge specification"),
         allow_empty = True
     ),
-    None,
+    match_type = "first",
 )
 register_check_parameters(
     subgroup_printing,
@@ -3435,7 +3488,7 @@ register_check_parameters(
         title = _("Printer Name"),
         allow_empty = True
     ),
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3458,7 +3511,7 @@ register_check_parameters(
         title = _('Unit Name'),
         allow_empty = True
     ),
-    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3481,7 +3534,7 @@ register_check_parameters(
         title = _('Unit Name'),
         allow_empty = True
     ),
-    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3501,7 +3554,8 @@ register_check_parameters(
           default_difference = (2.0, 4.0),
           default_levels = (5.0, 10.0),
     ),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3518,7 +3572,8 @@ register_check_parameters(
                  "for user processes and kernel routines over all available cores within "
                  "the last check interval. The possible range is from 0% to 100%"),
         default_value = (90.0, 95.0)),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3543,7 +3598,7 @@ register_check_parameters(
         title = _("Module name"),
         allow_empty = False
     ),
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3566,7 +3621,7 @@ register_check_parameters(
         title = _("FPGA"),
         allow_empty = False
     ),
-    None
+    match_type = "first",
 )
 
 
@@ -3599,7 +3654,8 @@ register_check_parameters(
             )),
         ]
     ),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3659,7 +3715,7 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor names"),
         allow_empty = False),
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -3675,7 +3731,7 @@ register_check_parameters(
               Integer(title = _("Critical at or above"), unit="%" ),
               ]),
      None,
-     None
+     match_type = "first",
 )
 
 db_levels_common = [
@@ -3780,7 +3836,7 @@ register_check_parameters(
         help = _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"),
         regex = '.+\..+',
         allow_empty = False),
-     None
+     match_type = "first",
 )
 
 register_check_parameters(
@@ -3983,14 +4039,15 @@ register_check_parameters(
                  ( True, _("Ignore the state of the Job")),
                  ( False, _("Consider the state of the job")),],
              help = _("The state of the job is ignored per default.")
-            )),]),
+            )),]
+    ),
     TextAscii(
         title = _("Scheduler Job Name"),
         help = _("Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
                  "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"),
         regex = '.+\..+',
         allow_empty = False),
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4095,7 +4152,7 @@ register_check_parameters(
     TextAscii(
         title = _("Service descriptions"),
         allow_empty = False),
-     None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4109,24 +4166,24 @@ register_check_parameters(
                 Tuple(
                     title = _("Levels for Datafiles"),
                     elements = [
-                      Filesize(title = _("Warning at")), 
-                      Filesize(title = _("Critical at")), 
+                      Filesize(title = _("Warning at")),
+                      Filesize(title = _("Critical at")),
                     ]
             )),
             ("log_files",
                 Tuple(
                     title = _("Levels for Logfiles"),
                     elements = [
-                      Filesize(title = _("Warning at")), 
-                      Filesize(title = _("Critical at")), 
+                      Filesize(title = _("Warning at")),
+                      Filesize(title = _("Critical at")),
                     ]
             )),
             ("log_files_used",
                 Tuple(
                     title = _("Levels for used Logfiles"),
                     elements = [
-                      Filesize(title = _("Warning at")), 
-                      Filesize(title = _("Critical at")), 
+                      Filesize(title = _("Warning at")),
+                      Filesize(title = _("Critical at")),
                     ]
             )),
         ]
@@ -4197,7 +4254,7 @@ register_check_parameters(
     TextAscii(
         title = _("Tablespace name"),
         allow_empty = False),
-     None
+     match_type = "first",
 )
 
 register_check_parameters(
@@ -4217,7 +4274,7 @@ register_check_parameters(
         )]
     ),
     None,
-    None
+    match_type = "first",
 )
 register_check_parameters(
     subgroup_applications,
@@ -4256,7 +4313,7 @@ register_check_parameters(
         )]
     ),
     None,
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4278,7 +4335,7 @@ register_check_parameters(
     TextAscii(
         title = _("Job name"),
     ),
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4334,7 +4391,7 @@ register_check_parameters(
         title = _("Service descriptions"),
         allow_empty = False
     ),
-    None
+    match_type = "first",
 )
 
 
@@ -4376,7 +4433,7 @@ register_check_parameters(
             ),
          ]
     ),
-    TextAscii( 
+    TextAscii(
         title = _("Instance"),
         help = _("Only needed if you have multiple MySQL Instances on one server"),
     ),
@@ -4412,7 +4469,7 @@ register_check_parameters(
                            "value."),
                  unit = "min"))
         ]),
-    TextAscii( 
+    TextAscii(
         title = _("Instance"),
         help = _("Only needed if you have multiple MySQL Instances on one server"),
     ),
@@ -4440,7 +4497,7 @@ register_check_parameters(
                 )
             ),
         ]),
-    TextAscii( 
+    TextAscii(
         title = _("Instance"),
         help = _("Only needed if you have multiple MySQL Instances on one server"),
     ),
@@ -4620,7 +4677,7 @@ register_check_parameters(
        ],
     ),
     None,
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4688,7 +4745,7 @@ register_check_parameters(
     Optional(
         Tuple(
             elements = [
-                Filesize(title = _("warning at")), 
+                Filesize(title = _("warning at")),
                 Filesize(title = _("critical at")),
             ]),
         help = _("The check will trigger a warning or critical state if the size of the "
@@ -4731,7 +4788,7 @@ register_check_parameters(
          ]
     ),
     None,
-    None
+    match_type = "first",
 )
 
 
@@ -4750,7 +4807,7 @@ register_check_parameters(
     TextAscii(
         title = _("Database name"),
         allow_empty = False),
-     None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4867,7 +4924,7 @@ register_check_parameters(
     TextAscii(
         title = _("Database name"),
         allow_empty = False),
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4884,7 +4941,7 @@ register_check_parameters(
     TextAscii(
         title = _("Service descriptions"),
         allow_empty = False),
-     None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4897,7 +4954,8 @@ register_check_parameters(
           elements = [
               Integer(title = _("Warning at"), unit = _("threads"), default_value = 1000),
               Integer(title = _("Critical at"), unit = _("threads"), default_value = 2000)]),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4909,7 +4967,8 @@ register_check_parameters(
           elements = [
               Integer(title = _("Warning at"), unit = _("users"), default_value = 20),
               Integer(title = _("Critical at"), unit = _("users"), default_value = 30)]),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -4923,7 +4982,8 @@ register_check_parameters(
                   Integer(title = _("Critical at"), unit = _("processes"), default_value = 200)]),
         title = _("Impose levels on number of processes"),
     ),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -5356,23 +5416,17 @@ register_check_parameters(
           ]
     ),
     None,
-    None
+    match_type = "first",
 )
 
-register_check_parameters(
-    subgroup_os,
-    "uptime",
-    _("Display the system's uptime as a check"),
-    None,
-    None, None
-)
 
 register_check_parameters(
     subgroup_storage,
     "zpool_status",
     _("ZFS storage pool status"),
     None,
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -5380,7 +5434,8 @@ register_check_parameters(
     "vm_state",
     _("Overall state of a virtual machine (for example ESX VMs)"),
     None,
-    None, None
+    None,
+    match_type = "first",
 )
 
 
@@ -5389,7 +5444,8 @@ register_check_parameters(
     "hw_errors",
     _("Simple checks for BIOS/Hardware errors"),
     None,
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -5825,7 +5881,7 @@ register_check_parameters(
          ]
     ),
     None,
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -5874,7 +5930,7 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor"),
         allow_empty = False),
-     None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -5895,7 +5951,7 @@ register_check_parameters(
         title = _("Plug Item number or name"),
         help = _("If you need the number or the name depends on the check. Just take a look to the service description. "),
         allow_empty = True),
-     None
+    match_type = "first",
 )
 
 
@@ -6615,34 +6671,34 @@ register_check_parameters(
 )
 
 register_check_parameters(
-   subgroup_environment,
-   "airflow",
-   _("Airflow levels"),
-   Dictionary(
-      title = _("Levels for airflow"),
-      elements = [
-      ("level_low",
-        Tuple(
-          title = _("Lower levels"),
-          elements = [
-            Integer(title = _( "Warning if below"), unit=_("l/s")),
-            Integer(title = _( "Critical if below"), unit=_("l/s"))
-          ]
-        )
-      ),
-      ("level_high",
-        Tuple(
-          title = _("Upper levels"),
-          elements = [
-            Integer(title = _( "Warning at"), unit=_("l/s")),
-            Integer(title = _( "Critical at"), unit=_("l/s"))
-          ]
-        )
-      ),
-      ]
-   ),
-   None,
-   None,
+    subgroup_environment,
+    "airflow",
+    _("Airflow levels"),
+    Dictionary(
+       title = _("Levels for airflow"),
+       elements = [
+       ("level_low",
+         Tuple(
+           title = _("Lower levels"),
+           elements = [
+             Integer(title = _( "Warning if below"), unit=_("l/s")),
+             Integer(title = _( "Critical if below"), unit=_("l/s"))
+           ]
+         )
+       ),
+       ("level_high",
+         Tuple(
+           title = _("Upper levels"),
+           elements = [
+             Integer(title = _( "Warning at"), unit=_("l/s")),
+             Integer(title = _( "Critical at"), unit=_("l/s"))
+           ]
+         )
+       ),
+       ]
+    ),
+    None,
+    match_type = "first",
 )
 
 
@@ -7031,7 +7087,7 @@ register_check_parameters(
     subgroup_applications,
     "sym_brightmail_queues",
     "Symantec Brightmail Queues",
-    Dictionary( 
+    Dictionary(
         help = _("This check is used to monitor successful email delivery through "
                  "Symantec Brightmail Scanner appliances."),
         elements = [
@@ -7666,7 +7722,8 @@ register_check_parameters(
     "zypper",
     _("Zypper Updates"),
     None,
-    None, None,
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -7767,7 +7824,8 @@ register_check_parameters(
             Integer(title = _("warning at"), default_value = 8500),
             Integer(title = _("critical at"), default_value = 9500),
         ]),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -8377,7 +8435,8 @@ register_check_parameters(
             ),
         ]
     ),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -8501,7 +8560,8 @@ register_check_parameters(
             Integer(title = _("critical at"), default_value = 1500 ),
         ]
     ),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -8515,7 +8575,8 @@ register_check_parameters(
             Integer(title = _("critical at"), default_value = 35000 ),
         ]
     ),
-    None, None
+    None,
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -8609,7 +8670,7 @@ register_check_parameters(
                  "for the PLC device separated by a space with the ident of the value which is also "
                  "configured in the special agent."),
         allow_empty = True),
-     None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -8640,7 +8701,7 @@ register_check_parameters(
                  "for the PLC device separated by a space with the ident of the value which is also "
                  "configured in the special agent."),
     ),
-    None
+    match_type = "first",
 )
 
 register_check_parameters(
@@ -8671,7 +8732,7 @@ register_check_parameters(
                  "for the PLC device separated by a space with the ident of the value which is also "
                  "configured in the special agent."),
     ),
-    None
+    match_type = "first",
 )
 
 register_check_parameters(

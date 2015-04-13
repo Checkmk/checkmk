@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 #   .--README--------------------------------------------------------------.
 #   |               ____                _                                  |
 #   |              |  _ \ ___  __ _  __| |  _ __ ___   ___                 |
@@ -15363,7 +15364,8 @@ def register_rule(group, varname, valuespec = None, title = None,
 # Special version of register_rule, dedicated to checks. This is not really
 # modular here, but we cannot put this function into the plugins file because
 # the order is not defined there.
-def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, matchtype, has_inventory=True, register_static_check=True):
+def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
+                               match_type, has_inventory=True, register_static_check=True):
     # Register rule for discovered checks
     if valuespec and has_inventory: # would be useless rule if check has no parameters
         itemenum = None
@@ -15388,7 +15390,7 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             itemname = itemname,
             itemhelp = itemhelp,
             itemenum = itemenum,
-            match = matchtype)
+            match = match_type)
 
     if register_static_check:
         # Register rule for static checks

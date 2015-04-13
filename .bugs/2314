@@ -1,0 +1,16 @@
+Title: Cleanup json output format of views to use the json module
+Component: multisite
+State: open
+Date: 2015-04-13 14:30:38
+Targetversion: 1.2.7
+Class: cleanup
+
+We have the simplejson module shipped with OMD now, so we can use
+
+try:
+    import simplejson
+except ImportError:
+    import json
+
+to get the json module which can then be used to encode the
+data in json format easily.

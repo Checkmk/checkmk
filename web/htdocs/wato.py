@@ -15366,6 +15366,11 @@ def register_rule(group, varname, valuespec = None, title = None,
 # the order is not defined there.
 def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
                                match_type, has_inventory=True, register_static_check=True):
+
+    if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
+        raise MKGeneralException("Check parameter definition for %s has type Dictionary, but match_type %s" %
+                                 (checkgroup, match_type))
+
     # Register rule for discovered checks
     if valuespec and has_inventory: # would be useless rule if check has no parameters
         itemenum = None

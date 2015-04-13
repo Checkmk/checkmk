@@ -137,6 +137,25 @@ register_rule(group + '/' + subgroup_applications,
 
 register_check_parameters(
     subgroup_applications,
+    "livestatus_status",
+    _("Performance and settings of a Check_MK site"),
+    Dictionary(
+        help = _("When monitoring the performance of a monitoring site (i.e. its core) "
+                 "then also settings are being checked, e.g. for manually disabled notifications. "
+                 "The status of the various situations can be configured here."),
+        elements = [
+
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the monitoring site"),
+    ),
+    match_type = "dict",
+)
+
+
+register_check_parameters(
+    subgroup_applications,
     "ad_replication",
     _("Active Directory Replication"),
     Tuple(
@@ -150,7 +169,7 @@ register_check_parameters(
         title = _("Replication Partner"),
         help = _("The name of the replication partner (Destination DC Site/Destination DC)."),
     ),
-    "first"
+    match_type = "first",
 )
 
 
@@ -182,7 +201,7 @@ register_check_parameters(
     ),
     TextAscii( title=_("Queue Name"),
     help=_("The name of the queue like in the Apache queue manager")),
-    "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -244,7 +263,7 @@ register_check_parameters(
         title = _("Service descriptions"),
         allow_empty = False
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 
@@ -1045,7 +1064,7 @@ register_check_parameters(
         title = _("port name"),
         help = _("The name of the switch port"),
     ),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -1089,7 +1108,7 @@ register_check_parameters(
         ]
     ),
     None,
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -1213,7 +1232,7 @@ register_check_parameters(
     TextAscii(
         title = _("File name"),
         allow_empty = True),
-    "first"
+    match_type = "dict",
 )
 
 register_rule(group + '/' + subgroup_storage,
@@ -1420,7 +1439,7 @@ register_check_parameters(
                  "in the <a href=\"wato.py?mode=edit_ruleset&varname=fileinfo_groups\">%s</a> ruleset.") % \
                     (_('File Grouping Patterns')),
         allow_empty = True),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -1453,7 +1472,7 @@ register_check_parameters(
     TextAscii(
         title = _("File name"),
         allow_empty = True),
-    "first"
+    match_type = "dict",
 )
 
 
@@ -1566,7 +1585,7 @@ register_check_parameters(
         title = _("Apache Server"),
         help  = _("A string-combination of servername and port, e.g. 127.0.0.1:5000.")
     ),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -1592,7 +1611,7 @@ register_check_parameters(
         title = _("Nginx Server"),
         help  = _("A string-combination of servername and port, e.g. 127.0.0.1:80.")
     ),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -1616,7 +1635,7 @@ register_check_parameters(
         ]
     ),
     None,
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -1751,7 +1770,7 @@ register_check_parameters(
         ],
     ),
     TextAscii( title = _("IP-Address of Tunnel Endpoint")),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -1829,7 +1848,7 @@ register_check_parameters(
     TextAscii(
        title = _("Hostname of the Device")
     ),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -1873,8 +1892,9 @@ register_check_parameters(
         ]
     ),
    TextAscii(title = _("Access Point")),
-   "first",
+   match_type = "dict",
 )
+
 register_check_parameters(
     subgroup_networking,
     "tcp_conn_stats",
@@ -2002,7 +2022,7 @@ register_check_parameters(
         ]
     ),
     None,
-    "first"
+    match_type = "dict",
 )
 
 
@@ -3511,7 +3531,7 @@ register_check_parameters(
         title = _('Unit Name'),
         allow_empty = True
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -3534,7 +3554,7 @@ register_check_parameters(
         title = _('Unit Name'),
         allow_empty = True
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -3598,7 +3618,7 @@ register_check_parameters(
         title = _("Module name"),
         allow_empty = False
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -3621,7 +3641,7 @@ register_check_parameters(
         title = _("FPGA"),
         allow_empty = False
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 
@@ -3655,7 +3675,7 @@ register_check_parameters(
         ]
     ),
     None,
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -3836,7 +3856,7 @@ register_check_parameters(
         help = _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"),
         regex = '.+\..+',
         allow_empty = False),
-     match_type = "first",
+     match_type = "dict",
 )
 
 register_check_parameters(
@@ -4047,7 +4067,7 @@ register_check_parameters(
                  "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"),
         regex = '.+\..+',
         allow_empty = False),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -4107,7 +4127,7 @@ register_check_parameters(
         title = _("Database SID"),
         size = 12,
         allow_empty = False),
-    'first',
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -4254,7 +4274,7 @@ register_check_parameters(
     TextAscii(
         title = _("Tablespace name"),
         allow_empty = False),
-     match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -4274,8 +4294,9 @@ register_check_parameters(
         )]
     ),
     None,
-    match_type = "first",
+    match_type = "dict",
 )
+
 register_check_parameters(
     subgroup_applications,
     "veeam_backup",
@@ -4293,7 +4314,7 @@ register_check_parameters(
         )]
     ),
     TextAscii(title=_("Job name")),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -4313,7 +4334,7 @@ register_check_parameters(
         )]
     ),
     None,
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -4335,7 +4356,7 @@ register_check_parameters(
     TextAscii(
         title = _("Job name"),
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -4391,7 +4412,7 @@ register_check_parameters(
         title = _("Service descriptions"),
         allow_empty = False
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 
@@ -4788,7 +4809,7 @@ register_check_parameters(
          ]
     ),
     None,
-    match_type = "first",
+    match_type = "dict",
 )
 
 
@@ -4924,7 +4945,7 @@ register_check_parameters(
     TextAscii(
         title = _("Database name"),
         allow_empty = False),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -5036,7 +5057,7 @@ register_check_parameters(
                   ],
         title = _("Disk/Drive type"),
         help = _("Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here.")),
-    "first"
+    match_type = "dict",
 )
 
 def transform_ibm_svc_host(params):
@@ -5653,8 +5674,7 @@ register_check_parameters(
         ]
     ),
     TextAscii( title = _("DRBD device") ),
-    "first",
-    True,
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -5677,7 +5697,7 @@ register_check_parameters(
         optional_keys = False
     ),
     None,
-    "match"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -5781,7 +5801,7 @@ register_check_parameters(
         ]
     ),
     TextAscii(title = _("Volume name")),
-    "match"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -5848,7 +5868,7 @@ register_check_parameters(
          "do not mix up the service name with the display name of the service."
          "The latter one is just being displayed as a further information."),
         allow_empty = False),
-    "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -5881,7 +5901,7 @@ register_check_parameters(
          ]
     ),
     None,
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -6313,7 +6333,7 @@ register_check_parameters(
     TextAscii(
         title = _("Fan Name"),
         help = _("The identificator of the fan.")),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -6334,7 +6354,7 @@ register_check_parameters(
         optional_keys = [None],
     ),
     None,
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -6382,7 +6402,7 @@ register_check_parameters(
     TextAscii(
         title = _("Phase Number"),
         help = _("The Number of the power Phase.")),
-    "first"
+    match_type = "dict",
 )
 
 
@@ -6698,7 +6718,7 @@ register_check_parameters(
        ]
     ),
     None,
-    match_type = "first",
+    match_type = "dict",
 )
 
 
@@ -6750,7 +6770,7 @@ register_check_parameters(
         )],
     ),
     None,
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -6788,7 +6808,7 @@ register_check_parameters(
             ])),
     ]),
     None,
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -6868,37 +6888,37 @@ register_check_parameters(
 )
 
 register_check_parameters(
-        subgroup_applications,
-        "jvm_uptime",
-        _("JVM uptime (since last reboot)"),
-        Dictionary(
-            help = _("This rule sets the warn and crit levels for the uptime of a JVM. "
-                     "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
-            elements = [
-            ( "min",
-              Tuple(
-                  title = _("Minimum required uptime"),
-                  elements = [
-                  Age(title = _("Warning if below")),
-                  Age(title = _("Critical if below")),
-                  ]
-                  )),
-            ( "max",
-              Tuple(
-                  title = _("Maximum allowed uptime"),
-                  elements = [
-                  Age(title = _("Warning at")),
-                  Age(title = _("Critical at")),
-                  ]
-                  )),
-            ]
+    subgroup_applications,
+    "jvm_uptime",
+    _("JVM uptime (since last reboot)"),
+    Dictionary(
+        help = _("This rule sets the warn and crit levels for the uptime of a JVM. "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+        elements = [
+        ( "min",
+          Tuple(
+              title = _("Minimum required uptime"),
+              elements = [
+              Age(title = _("Warning if below")),
+              Age(title = _("Critical if below")),
+              ]
+              )),
+        ( "max",
+          Tuple(
+              title = _("Maximum allowed uptime"),
+              elements = [
+              Age(title = _("Warning at")),
+              Age(title = _("Critical at")),
+              ]
+              )),
+        ]
+    ),
+    TextAscii(
+            title = _("Name of the virtual machine"),
+            help = _("The name of the application server"),
+            allow_empty = False,
             ),
-        TextAscii(
-                title = _("Name of the virtual machine"),
-                help = _("The name of the application server"),
-                allow_empty = False,
-                ),
-        "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -7368,22 +7388,22 @@ register_check_parameters(
         optional_keys = None,
     ),
     None,
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
-   subgroup_applications,
-   "antivir_update_age",
-   _("Age of last AntiVirus update"),
-   Tuple(
-       title = _("Age of last AntiVirus update"),
-           elements = [
-               Age(title = _("Warning level for time since last update")),
-               Age(title = _("Critical level for time since last update")),
-           ]
-   ),
-   None,
-   "first"
+    subgroup_applications,
+    "antivir_update_age",
+    _("Age of last AntiVirus update"),
+    Tuple(
+        title = _("Age of last AntiVirus update"),
+            elements = [
+                Age(title = _("Warning level for time since last update")),
+                Age(title = _("Critical level for time since last update")),
+            ]
+    ),
+    None,
+    "first"
 )
 
 register_check_parameters(subgroup_applications,
@@ -7941,7 +7961,7 @@ register_check_parameters(
         ]
     ),
     None,
-    "first"
+    match_type = "dict",
 ),
 
 register_check_parameters(
@@ -7976,8 +7996,8 @@ register_check_parameters(
         required_keys = [ 'oper_states' ],  # There is only one value, so its required
     ),
     None,
-    "first"
-),
+    match_type = "dict",
+)
 
 register_check_parameters(
     subgroup_networking,
@@ -8011,7 +8031,7 @@ register_check_parameters(
         required_keys = [ 'oper_states' ],  # There is only one value, so its required
     ),
     None,
-    "first"
+    match_type = "dict",
 ),
 
 register_check_parameters(
@@ -8046,7 +8066,7 @@ register_check_parameters(
         required_keys = [ 'oper_states' ],  # There is only one value, so its required
     ),
     None,
-    "first"
+    match_type = "dict",
 ),
 
 bluecat_ha_operstates = [
@@ -8092,8 +8112,9 @@ register_check_parameters(
         required_keys = [ 'oper_states' ],  # There is only one value, so its required
     ),
     None,
-    "first"
-),
+    match_type = "dict",
+)
+
 register_check_parameters(
     subgroup_storage,
     "fc_port",
@@ -8234,12 +8255,12 @@ register_check_parameters(
 #                )
 #            )
         ]
-      ),
+    ),
     TextAscii(
         title = _("port name"),
         help = _("The name of the FC port"),
     ),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -8516,7 +8537,8 @@ register_check_parameters(
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
                         "dot and hyphon for your service description"),
     ),
-    "first", False
+    match_type = "dict",
+    has_inventory = False
 )
 
 register_check_parameters(
@@ -8546,7 +8568,7 @@ register_check_parameters(
         ],
         title = _("Domino Mail Queue Names"),
     ),
-    "first"
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -8701,7 +8723,7 @@ register_check_parameters(
                  "for the PLC device separated by a space with the ident of the value which is also "
                  "configured in the special agent."),
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -8732,7 +8754,7 @@ register_check_parameters(
                  "for the PLC device separated by a space with the ident of the value which is also "
                  "configured in the special agent."),
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(

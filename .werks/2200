@@ -1,0 +1,14 @@
+Title: New filter for (de-)selecting preliminary notifications to "check-mk-notify"
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1428916122
+Class: feature
+
+When an alert happens then Check_MK lets the core first create a "preliminary" notification.
+This is not yet mapped to one or several users but is the starting point for the rule based
+notifications. But it is already logged into the monitoring log. After sending out the
+actual notifications a further entry for each target user is being logged. A new filter now
+allows to select just the final or just the preliminary notifications. It is available in
+all log and notification views.

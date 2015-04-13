@@ -52,7 +52,7 @@ def check_lnx_quota(item, params, info):
     output   = []
     perfdata = []
 
-    fmt = lambda v, w: w == 'files' and '%d files' % v or get_bytes_human_readable(used*1000, 1000)
+    fmt = lambda v, w: w == 'files' and '%d files' % v or get_bytes_human_readable(v*1000, 1000)
 
     for user, values in parsed[item].items():
         for what, (used, soft, hard, grace) in [

@@ -1,0 +1,11 @@
+Title: lnx_quota: Fixed status message to show the correct values of limits
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428904937
+
+Fixed status message to show the correct values of hard and file limits if
+the user exceeded it.

@@ -1,0 +1,12 @@
+Title: win_reg_uninstall: Fix exception in case of invalid output line
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428671316
+
+Might be cased by a software with vertical bars in the name. This happended
+for <tt>Symantec Backup Exec Remote Agent for Windows</tt>. The reason is
+unclear.

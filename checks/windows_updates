@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
 # <<<windows_updates>>>
 # 0 2 5
 # Windows XP Service Pack 3 (KB936929); Windows-Tool zum Entfernen sch�dlicher Software - M�rz 2011 (KB890830)
@@ -36,15 +34,13 @@
 # Third row:  List of all optional updates (optional)
 # Last row:  Date and time of forced update (optional)
 
-import datetime
-
 windows_updates_default_params = (0, 0, 0, 0, 604800, 172800, True)
 
 def inventory_windows_updates(info):
     if info and len(info[0]) == 3:
         return [(None, "windows_updates_default_params")]
 
-def check_windows_updates(_unused, params, info):
+def check_windows_updates(_no_item, params, info):
     if info and len(info[0]) == 3:
         status = 0
         # Workarround to return errors from the plugin
@@ -95,38 +91,28 @@ def check_windows_updates(_unused, params, info):
             txt.append(this_txt)
             perfdata.append((label, cur, warn, crit))
 
-        if forced_reboot != "":
-            date, time = forced_reboot
-            year, month, day = map(int, date.split("-"))
-            hour, minute, second = map(int, time.split(":"))
-            force_date = datetime.datetime(year, month, day, hour, minute, second)
-            now = datetime.datetime.now()
-            nix = datetime.timedelta(seconds=0)
-            # check if force_date is in the future
-            if force_date - now > nix:
-                if force_crit:
-                    diff_crit = datetime.timedelta(seconds=force_crit)
-                else:
-                    diff_crit = None
-                if force_warn:
-                    diff_warn = datetime.timedelta(seconds=force_warn)
-                else:
-                    diff_warn = None
-                sym = ""
-                if diff_crit and diff_crit > force_date - now:
-                    status = 2
-                    sym = "(!!)"
-                elif diff_warn and diff_warn > force_date - now:
-                    if status < 1:
-                        status = 1
-                    sym = "(!)"
-                boot_txt = ('Reboot enforced on %s to finish updates %s') \
-                              % ( " ".join(forced_reboot), sym )
-                txt.append(boot_txt)
-        elif reboot_required == 1:
+        if reboot_required == 1:
             if status < 1:
                 status = 1
-            txt.append('Reboot required to finish updates (!)')
+            txt.append('Reboot required to finish updates(!)')
+
+        if forced_reboot != "":
+            parsed = time.strptime(" ".join(forced_reboot), "%Y-%m-%d %H:%M:%S")
+            now = int(time.time())
+            delta = time.mktime(parsed) - now
+
+            # check if force_date is in the future
+            if delta >= 0:
+                sym = ""
+                if force_crit and delta <= force_crit:
+                    sym = "(!!)"
+                    status = 2
+                elif force_warn and delta <= force_warn:
+                    sym = "(!)"
+                    status = max(status, 1)
+
+                boot_txt = 'Reboot enforced in %s to finish updates%s' % (get_age_human_readable(delta), sym)
+                txt.append(boot_txt)
 
         return (status, ', '.join(txt), perfdata)
 

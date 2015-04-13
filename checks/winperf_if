@@ -208,19 +208,21 @@ def convert_winperf_if(info):
         connection_status = nic.get('NetConnectionStatus', '2')
 
         # Windows NetConnectionStatus Table
-        # 0 Disconnected
-        # 1 Connecting
-        # 2 Connected
-        # 3 Disconnecting
-        # 4 Hardware not present
-        # 5 Hardware disabled
-        # 6 Hardware malfunction
-        # 7 Media disconnected
-        # 8 Authenticating
-        # 9 Authentication succeeded
-        # 10 Authentication failed
-        # 11 Invalid address
-        # 12 Credentials required
+        connection_states = {
+            '0':  ('2', 'Disconnected'),
+            '1':  ('2', 'Connecting'),
+            '2':  ('1', 'Connected'),
+            '3':  ('2', 'Disconnecting'),
+            '4':  ('2', 'Hardware not present'),
+            '5':  ('2', 'Hardware disabled'),
+            '6':  ('2', 'Hardware malfunction'),
+            '7':  ('7', 'Media disconnected'),
+            '8':  ('2', 'Authenticating'),
+            '9':  ('2', 'Authentication succeeded'),
+            '10': ('2', 'Authentication failed'),
+            '11': ('2', 'Invalid address'),
+            '12': ('2', 'Credentials required'),
+        }
 
         # ifOperStatus Table
         # 1 up
@@ -231,37 +233,27 @@ def convert_winperf_if(info):
         # 6 notPresent
         # 7 lowerLayerDown
 
-        # NetConnectionStatus           : ifOperStatus
-        # 2 (Connected)                 : 1 (up)
-        # 7 (Media disconnected)        : 7 (lowerLayerDown)
-        # *                             : 2 (down)
-
-        if connection_status == '2':
-            ifoperstatus = '1'
-        elif connection_status == '7':
-            ifoperstatus = '7'
-        else:
-            ifoperstatus = '2'
+        ifoperstatus_annotated = connection_states[connection_status]
 
         converted.append((
            index_info,
            nic_name,
            "loopback" in nic_name.lower() and '24' or '6',
-           bandwidth or nic[10], # Bandwidth
-           ifoperstatus, # ifOperStatus
-           nic[-246], # ifInOctets,
-           nic[14], # inucast
-           0,       # inmcast
-           nic[16], # non-unicast empfangen
-           nic[18], # ifInDiscards
-           nic[20], # ifInErrors
-           nic[-4], # ifOutOctets (Bytes gesendet)
-           nic[26], # outucast
+           bandwidth or nic[10],   # Bandwidth
+           ifoperstatus_annotated, # ifOperStatus
+           nic[-246],              # ifInOctets,
+           nic[14],                # inucast
+           0,                      # inmcast
+           nic[16],                # non-unicast empfangen
+           nic[18],                # ifInDiscards
+           nic[20],                # ifInErrors
+           nic[-4],                # ifOutOctets (Bytes gesendet)
+           nic[26],                # outucast
            0,
-           nic[28], # outnonucast
-           nic[30], # ifOutDiscards
-           nic[32], # ifOutErrors
-           nic[34], # ifOutQLen
+           nic[28],                # outnonucast
+           nic[30],                # ifOutDiscards
+           nic[32],                # ifOutErrors
+           nic[34],                # ifOutQLen
            nic.get('NetConnectionID', nic_name),
            mac,
         ))

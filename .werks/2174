@@ -1,0 +1,53 @@
+Title: Added action popup to host & service views, supporting custom actions now
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1428914435
+Class: feature
+
+Each host and service has several icons showing up in the web GUI to either
+provide options to perform actions or visualizing the state of the object.
+
+Now we reworked the whole thing a bit by adding a popup menu which is groups
+together the actions for an object. This aims to reduce the number of icons
+shown up in list views.
+
+By default the icon column is now showing the popup menu trigger icon which
+can be left clicked to open the popup menu and the graph icon if a host or
+service has performance data available. The column is also showing all state
+related icons.
+
+Former versions already allowed users to extend the web GUI with so called
+in python written icon plugins. This is still possible.
+But now, we added the option to easily configure basic actions using WATO.
+The configuration is split into two steps:
+
+a) You need to basically configure your custom actions
+
+This is done via the option <i>Custom icons and actions</i> which
+can be found in the <i>Status GUI (Multisite)</i> tab of the <i>Global
+Settings</i>.
+
+First you need to choose an unique identifier for your action.
+
+Then you can either configure simple icons providing some kind
+of information, for example the type of the system, by configuring just
+an icon and the title.
+
+If you like to add a custom action, for example a link to the web interface
+of one of your devices, you can configure an action URL where you can use
+some basic macros:
+
+<ul>
+<li>$HOSTNAME$: Contains the name of the host</li>
+<li>$SERVICEDESC$: Contains the service description (in case this is a service)</li>
+<li>$HOSTADDRESS$: Contains the network address of the host</li>
+</ul>
+
+b) Assign the actions to your objects
+
+After you configured at least one custom action, you can use the rules
+<i>Custom icons or actions for hosts in status GUI</i> and
+<i>Custom icons or actions for services in status GUI</i> to assign
+your custom actions to your hosts and services.

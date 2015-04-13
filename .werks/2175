@@ -1,0 +1,28 @@
+Title: Added icon uploader, unified icon selection
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1428915320
+Class: feature
+
+Check_MK makes use of icons in views and dashboards, but it is also possible
+to add a custom icon to hosts or services for e.g. showing up the type of
+the device in a graphical way. This version also adds the option to register
+custom icons and actions to host and services.
+
+This change unifies the handling of icons used in such places. We implemented
+an icon selector which is used everywhere were you can select an icon. This
+icon selector groups the icons together in categories for more comfortable
+selection.
+
+We added an icon upload mechanism which gives you the option to manage your
+custom icons using WATO. You can find it in the top level navigation of WATO.
+
+All icons are now loaded from a fixed location, in OMD environments this
+is <tt>share/check_mk/web/htdocs/images/icons</tt> for the icons distributed
+by us and <tt>local/share/check_mk/web/htdocs/images/icons</tt> for your
+custom icons.
+
+Implementation detail: The category of an icon is saved directly in the icon
+image. It is stored in the PNG comment metadata.

@@ -1534,7 +1534,6 @@ def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, param
             icon = params.get('icon')
             if icon:
                 actions.add(icon)
-        print checkname, checkgroup
 
         return list(actions)
 

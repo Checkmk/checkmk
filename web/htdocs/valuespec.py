@@ -24,6 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# FIXME: Cleanups
+# - Consolidate ListChoice and DualListChoice to use the same class
+#   and rename to better name
+# - Consolidate RadioChoice and DropdownChoice to use same class
+#   and rename to better name
+# - Checkbox -> rename to Boolean
+
 import math, os, time, re, sre_constants, urlparse, forms
 from lib import *
 
@@ -1175,6 +1182,7 @@ class DropdownChoice(ValueSpec):
         self._label = kwargs.get("label")
         self._prefix_values = kwargs.get("prefix_values", False)
         self._sorted = kwargs.get("sorted", False)
+        self._empty_text = kwargs.get("empty_text", _("There are not defined any elements for this selection yet."))
 
         self._no_preselect       = kwargs.get("no_preselect",       False)
         self._no_preselect_value = kwargs.get("no_preselect_value", None)
@@ -1213,7 +1221,7 @@ class DropdownChoice(ValueSpec):
             if entry[0] == value:
                 defval = str(n)
         if len(options) == 0:
-            html.write(_("There are no options to select from"))
+            html.write(self._empty_text)
         elif len(options[0]) == 3:
             html.icon_select(varprefix, options, defval)
         else:
@@ -1247,11 +1255,16 @@ class DropdownChoice(ValueSpec):
         ValueSpec.custom_validate(self, value, varprefix)
 
     def validate_datatype(self, value, varprefix):
-        for val, title in self.choices():
+        choices = self.choices()
+        if not choices and value == None:
+            return
+
+        for val, title in choices:
             if val == value:
                 return
+
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
-            (value, ", ".join([v for (v,t) in self.choices()])))
+            (value, ", ".join([v for (v,t) in choices])))
 
 
 # Special conveniance variant for monitoring states

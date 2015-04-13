@@ -2232,41 +2232,37 @@ def list_user_icons_and_actions():
         choices.append((key, label))
     return sorted(choices, key = lambda x: x[1])
 
+icon_upload_link_txt = \
+    _("In order to be able to choose actions here, you need to "
+      "<a href=\"%s\">define your own actions</a>.") % \
+      "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
 
 register_rule(group,
-    "extra_host_conf:_ACTIONS",
-    Transform(
-        ListChoice(
-            title = _("Custom icons or actions for hosts in status GUI"),
-            help = _("You can assign icons or actions to hosts for the status GUI. "
-                     "In order to be able to choose actions here, you need to "
-                     "<a href=\"%s\">define your own actions</a>.") % \
-                        "wato.py?mode=edit_configvar&varname=user_icons_and_actions",
-            choices = list_user_icons_and_actions,
-            allow_empty = False,
-        ),
-        forth = lambda x: x.split(','),
-        back = lambda x: ','.join(x),
-    )
+    "host_icons_and_actions",
+    DropdownChoice(
+        title = _("Custom icons or actions for hosts in status GUI"),
+        help = _("You can assign icons or actions to hosts for the status GUI.") \
+               + " " + icon_upload_link_txt,
+        choices = list_user_icons_and_actions,
+        allow_empty = False,
+        empty_text = icon_upload_link_txt,
+    ),
+    match = "all",
 )
 
 
 register_rule(group,
-    "extra_service_conf:_ACTIONS",
-    Transform(
-        ListChoice(
-            title = _("Custom icons or actions for services in status GUI"),
-            help = _("You can assign icons or actions to services for the status GUI. "
-                     "In order to be able to choose actions here, you need to "
-                     "<a href=\"%s\">define your own actions</a>.") % \
-                        "wato.py?mode=edit_configvar&varname=user_icons_and_actions",
-            choices = list_user_icons_and_actions,
-            allow_empty = False,
-        ),
-        forth = lambda x: x.split(','),
-        back = lambda x: x.join(','),
+    "service_icons_and_actions",
+    DropdownChoice(
+        title = _("Custom icons or actions for services in status GUI"),
+        help = _("You can assign icons or actions to services for the status GUI.") \
+               + " " + icon_upload_link_txt,
+        choices = list_user_icons_and_actions,
+        allow_empty = False,
+        empty_text = icon_upload_link_txt,
     ),
-    itemtype = "service"
+    match = "all",
+    itemtype = "service",
 )
 
 

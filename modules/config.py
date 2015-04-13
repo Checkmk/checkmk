@@ -165,6 +165,8 @@ snmp_check_interval                  = []
 inv_exports                          = {} # Rulesets for inventory export hooks
 notification_parameters              = {} # Rulesets for parameters of notification scripts
 use_new_descriptions_for             = []
+host_icons_and_actions               = [] # Custom user icons / actions to be configured
+service_icons_and_actions            = [] # Custom user icons / actions to be configured
 
 # Rulesets for agent bakery
 agent_config                         = {}

@@ -2219,47 +2219,20 @@ register_rule(group,
     ),
     itemtype = "service")
 
-
-def list_user_icons_and_actions():
-    choices = []
-    for key, action in config.user_icons_and_actions.items():
-        label = key
-        if 'title' in action:
-            label += ' - '+action['title']
-        if 'url' in action:
-            label += ' ('+action['url']+')'
-
-        choices.append((key, label))
-    return sorted(choices, key = lambda x: x[1])
-
-icon_upload_link_txt = \
-    _("In order to be able to choose actions here, you need to "
-      "<a href=\"%s\">define your own actions</a>.") % \
-      "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
-
 register_rule(group,
     "host_icons_and_actions",
-    DropdownChoice(
+    UserIconOrAction(
         title = _("Custom icons or actions for hosts in status GUI"),
-        help = _("You can assign icons or actions to hosts for the status GUI.") \
-               + " " + icon_upload_link_txt,
-        choices = list_user_icons_and_actions,
-        allow_empty = False,
-        empty_text = icon_upload_link_txt,
+        help = _("You can assign icons or actions to hosts for the status GUI.")
     ),
     match = "all",
 )
 
-
 register_rule(group,
     "service_icons_and_actions",
-    DropdownChoice(
+    UserIconOrAction(
         title = _("Custom icons or actions for services in status GUI"),
-        help = _("You can assign icons or actions to services for the status GUI.") \
-               + " " + icon_upload_link_txt,
-        choices = list_user_icons_and_actions,
-        allow_empty = False,
-        empty_text = icon_upload_link_txt,
+        help = _("You can assign icons or actions to services for the status GUI."),
     ),
     match = "all",
     itemtype = "service",

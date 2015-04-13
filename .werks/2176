@@ -1,0 +1,17 @@
+Title: One custom icon or action can be configured per process/service
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1428926372
+Class: feature
+
+It is now possible to configure a custom icon or action per process or
+windows service. This is some sort of shortcut. In case of process
+inventory, you had to configure two rules:
+
+a) a process discovery rule
+b) a rule to assign an icon to this service
+
+With this new feature you can configure the icon to be used for the
+found process right in the value of a process discovery rule.

@@ -748,6 +748,10 @@ register_rule(group + '/' + subgroup_inventory,
                              'create duplicate services with the same description otherwise.</p><p>Windows users are specified by the namespace followed by '
                              'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\Administrator".</p>'),
                 )),
+                ('icon', UserIconOrAction(
+                    title = _("Add custom icon or action"),
+                    help = _("You can assign icons or actions to the found services in the status GUI."),
+                )),
                 ('default_params',
                  Dictionary(
                      title = _("Default parameters for detected services"),
@@ -5881,7 +5885,12 @@ register_check_parameters(
                title = _("State if no entry matches"),
                default_value = 2,
            ),
-        ),]
+        ),
+        ('icon', UserIconOrAction(
+            title = _("Add custom icon or action"),
+            help = _("You can assign icons or actions to the found services in the status GUI."),
+        ))
+        ]
     ),
     TextAscii(
         title = _("Name of the service"),
@@ -7676,7 +7685,12 @@ register_check_parameters(
     _("State and count of processes"),
     Transform(
         Dictionary(
-            elements = process_level_elements,
+            elements = process_level_elements + [
+                ('icon', UserIconOrAction(
+                    title = _("Add custom icon or action"),
+                    help = _("You can assign icons or actions to the found services in the status GUI."),
+                ))
+            ]
         ),
         forth = ps_convert_from_singlekeys,
     ),
@@ -7744,6 +7758,10 @@ register_check_parameters(
                     ],
                     match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
 
+                )),
+                ('icon', UserIconOrAction(
+                    title = _("Add custom icon or action"),
+                    help = _("You can assign icons or actions to the found services in the status GUI."),
                 )),
             ] + process_level_elements,
             # required_keys = [ "process" ],

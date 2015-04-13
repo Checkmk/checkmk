@@ -1522,11 +1522,19 @@ def host_check_command(hostname, ip, is_clust):
             value, hostname))
 
 
-def icons_and_actions_of(what, hostname, svcdesc = None):
+def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, params = None):
     if what == 'host':
         return list(set(host_extra_conf(hostname, host_icons_and_actions)))
     else:
         actions = set(service_extra_conf(hostname, svcdesc, service_icons_and_actions))
+
+        # Some WATO rules might register icons on their own
+        checkgroup = checkgroup_of.get(checkname, checkname)
+        if checkgroup in [ 'ps', 'services' ]:
+            icon = params.get('icon')
+            if icon:
+                actions.add(icon)
+        print checkname, checkgroup
 
         return list(actions)
 
@@ -2247,7 +2255,7 @@ define servicedependency {
             check_interval = value
 
         # Add custom user icons and actions
-        actions = icons_and_actions_of('service', hostname, description)
+        actions = icons_and_actions_of('service', hostname, description, checkname, params)
         action_cfg = actions and '  _ACTIONS\t\t\t%s\n' % ','.join(actions) or ''
 
         outfile.write("""define service {

@@ -811,6 +811,37 @@ class FilterLogState(Filter):
 
 declare_filter(270, FilterLogState())
 
+class NotificationPhaseFilter(FilterTristate):
+    def __init__(self):
+	FilterTristate.__init__(self, "log_notification_phase", _("Notification phase"), "log", "log_command_name", -1)
+
+    def double_height(self):
+        return True
+
+    def display(self):
+        current = html.var(self.varname)
+        html.begin_radio_group(horizontal = False)
+        for value, text in [
+            ("-1", _("Show all phases of notifications")),
+            ("1",  _("Show just preliminary notifications")),
+            ("0",  _("Show just end-user-notifications")),
+        ]:
+            checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
+            html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
+            html.write("<br>")
+        html.end_radio_group()
+
+    def filter_code(self, infoname, positive):
+        # Note: this filter also has to work for entries that are no notification.
+        # In that case the filter is passive and lets everything through
+        if positive:
+            return "Filter: %s = check-mk-notify\nFilter: %s =\nOr: 2\n" % (self.column, self.column)
+        else:
+            return "Filter: %s != check-mk-notify\n" % self.column
+
+
+declare_filter(271, NotificationPhaseFilter())
+
 class BIServiceIsUsedFilter(FilterTristate):
     def __init__(self):
 	FilterTristate.__init__(self, "aggr_service_used", _("Used in BI aggregate"), "service", None)

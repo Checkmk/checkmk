@@ -1938,7 +1938,10 @@ def paint_log_icon(row):
         else:
             img = "downtime"
     elif log_type.endswith("NOTIFICATION"):
-        img = "notify"
+        if row["log_command_name"] == "check-mk-notify":
+            img = "cmk_notify"
+        else:
+            img = "notify"
     elif log_type == "EXTERNAL COMMAND":
         img = "command"
     elif "restarting..." in log_type:
@@ -1963,7 +1966,7 @@ def paint_log_icon(row):
 multisite_painters["log_icon"] = {
     "title"   : _("Log: event icon"),
     "short"   : "",
-    "columns" : ["log_type", "log_state", "log_state_type"],
+    "columns" : ["log_type", "log_state", "log_state_type", "log_command_name"],
     "paint"   : paint_log_icon,
 }
 

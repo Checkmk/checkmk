@@ -1,0 +1,10 @@
+Title: Fixed status message to show the correct values of limits
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p2
+Date: 1428904937
+Class: fix
+
+Fixed status message to show the correct values of hard and file limits if
+the user exceeded it.

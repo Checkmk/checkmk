@@ -1,4 +1,4 @@
-Title: Fixed status message to show the correct values of limits
+Title: lnx_quota: Fixed status message to show the correct values of limits
 Level: 1
 Component: checks
 Class: fix

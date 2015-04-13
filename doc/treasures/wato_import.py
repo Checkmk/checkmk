@@ -32,19 +32,19 @@ try:
     path = os.environ.pop('OMD_ROOT')
     pathlokal = "~/etc/check_mk/conf.d/wato/"
     pathlokal = os.path.expanduser(pathlokal)
-    datei = open(sys.argv[1],'r') 
+    datei = open(sys.argv[1],'r')
 except:
     print """Run this script inside a OMD site
     Usage: ./wato_import.py csvfile.csv
     CSV Example:
-    wato_foldername;hostname;host_alias;ipaddress|None"""
+    wato_foldername;hostname|tags;host_alias;(ipaddress|None)"""
     sys.exit()
 
 folders = {}
 for line in datei:
-    if line.startswith('#'):
+    if line.startswith('#') or len(line.split(',')) < 4:
         continue
-    ordner, name, alias, ipaddress = line.split(';')[:4]
+    ordner, name, alias, ipaddress = line.split(',')[:4]
     if ordner:
         try:
             os.makedirs(pathlokal+ordner)
@@ -53,24 +53,25 @@ for line in datei:
         folders.setdefault(ordner,[])
         ipaddress = ipaddress.strip()
         if ipaddress == "None":
-            ipaddress = False 
+            ipaddress = False
         folders[ordner].append((name,alias,ipaddress))
 datei.close()
 
 for folder in folders:
-    all_hosts = "" 
-    host_attributes = "" 
+    all_hosts = ""
+    host_attributes = ""
     ips = ""
     for name, alias, ipaddress in folders[folder]:
+	realname = name.split("|")[0]
         all_hosts += "'%s',\n" % (name)
         if ipaddress:
-            host_attributes += "'%s' : {'alias' : u'%s', 'ipaddress' : '%s' },\n" % (name, alias, ipaddress)
-            ips += "'%s' : '%s'," % ( name, ipaddress )
+            host_attributes += "'%s' : {'alias' : u'%s', 'ipaddress' : '%s' },\n" % (realname, alias, ipaddress)
+            ips += "'%s' : '%s'," % ( realname, ipaddress )
         else:
-            host_attributes += "'%s' : {'alias' : u'%s' },\n" % (name, alias)
+            host_attributes += "'%s' : {'alias' : u'%s' },\n" % (realname, alias)
 
 
-    ziel = open(pathlokal + folder + '/hosts.mk','w') 
+    ziel = open(pathlokal + folder + '/hosts.mk','w')
     ziel.write('all_hosts += [')
     ziel.write(all_hosts)
     ziel.write(']\n\n')

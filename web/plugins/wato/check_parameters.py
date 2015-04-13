@@ -135,6 +135,8 @@ register_rule(group + '/' + subgroup_applications,
 )
 
 
+
+
 register_check_parameters(
     subgroup_applications,
     "livestatus_status",
@@ -144,7 +146,30 @@ register_check_parameters(
                  "then also settings are being checked, e.g. for manually disabled notifications. "
                  "The status of the various situations can be configured here."),
         elements = [
-
+            ( "site_stopped",
+              MonitoringState(title = "State when the site is stopped", default_value = 2)),
+            ( "execute host checks",
+              MonitoringState(title = "State when host checks are disabled", default_value = 2)),
+            ( "execute service checks",
+              MonitoringState(title = "State when service checks are disabled", default_value = 2)),
+            ( "accept_passive_host_checks",
+              MonitoringState(title = "State when not accepting passive host checks", default_value = 2)),
+            ( "accept_passive_service_checks",
+              MonitoringState(title = "State when not accepting passive service checks", default_value = 2)),
+            ( "check host freshness",
+              MonitoringState(title = "State when not checking host freshness", default_value = 2)),
+            ( "check service freshness",
+              MonitoringState(title = "State when not checking service freshness", default_value = 2)),
+            ( "enable event handlers",
+              MonitoringState(title = "State when event handlers are disabled", default_value = 0)),
+            ( "enable flap detection",
+              MonitoringState(title = "State when flap detection is disabled", default_value = 1)),
+            ( "enable notifications",
+              MonitoringState(title = "State when notifications are disabled", default_value = 2)),
+            ( "process performance data",
+              MonitoringState(title = "State when performance data is disabled", default_value = 1)),
+            ( "check external commands",
+              MonitoringState(title = "State when not checking external commands", default_value = 2)),
         ]
     ),
     TextAscii(

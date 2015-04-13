@@ -1,15 +1,16 @@
-title: Performance of OMD monitoring core via Livestatus
+title: Performance and settings of a Check_MK/OMD instance
 agents: linux
 catalog: app/omd
 license: GPL
 distribution: check_mk
 description:
- This checks retrieves performance data of an OMD monitoring core
- by using MK Livestatus. It is always OK - even if the site is
- currently down. It gets UNKNOWN only if the site is missing.
+ This checks retrieves various performance data of an OMD monitoring core
+ by using MK Livestatus. This data tells you mainly about the performance
+ of the core, the number of checks it executes per second and so on.
 
- The purpose of this check is to learn how your monitoring
- core performs (number of executed checks, Livestatus connections).
+ Its second task is to determine wether some settings have been disabled
+ (e.g. notifications). Which disabled setting leads to which state can
+ be configured via check parameters.
 
 item:
  The name of the OMD site.
@@ -20,4 +21,3 @@ perfdata:
 
 inventory:
  One check per running OMD site is being created.
-

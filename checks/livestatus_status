@@ -31,7 +31,23 @@
 # accept_passive_host_checks;accept_passive_service_checks;cached_log_messages;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;host_checks;host_checks_rate;interval_length;last_command_check;last_log_rotation;livecheck_overflows;livecheck_overflows_rate;livechecks;livechecks_rate;livestatus_active_connections;livestatus_queued_connections;livestatus_threads;livestatus_version;log_messages;log_messages_rate;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_services;obsess_over_hosts;obsess_over_services;process_performance_data;program_start;program_version;requests;requests_rate;service_checks;service_checks_rate
 # 1;1;0;1;0;1;231;1.0327125668e-01;1;1;1;1;1;0;32768;0;0;0.0000000000e+00;0;0.0000000000e+00;0;0.0000000000e+00;60;1359471450;0;0;0.0000000000e+00;0;0.0000000000e+00;1;0;20;2013.01.23;0;0.0000000000e+00;15126;15263;6.5307324420e+00;0;0;0;0;1;1359469039;3.2.3;230;1.0327125668e-01;0;0.0000000000e+00
 
-def livestatus_status_parse(info):
+factory_settings["livestatus_status_default_levels"] = {
+    "site_stopped"                  : 2,
+    "execute_host_checks"           : 2,
+    "execute_service_checks"        : 2,
+    "accept_passive_host_checks"    : 2,
+    "accept_passive_service_checks" : 2,
+    "check_host_freshness"          : 2,
+    "check_service_freshness"       : 2,
+    "enable_event_handlers"         : 0,
+    "enable_flap_detection"         : 1,
+    "enable_notifications"          : 2,
+    "process_performance_data"      : 1,
+    "check_external_commands"       : 2,
+}
+
+
+def parse_livestatus_status(info):
     parsed = {}
     n = 0
     while n < len(info):
@@ -48,47 +64,67 @@ def livestatus_status_parse(info):
             n += 3
     return parsed
 
-def inventory_livestatus_status(info):
-    parsed = livestatus_status_parse(info)
+
+def inventory_livestatus_status(parsed):
     return [ (site, {}) for (site, status) in parsed.items() if status != None ]
 
-livestatus_status_counters = [
-    ( "host_checks",    "Host Checks",         ),
-    ( "service_checks", "Service Checks",      ),
-    ( "forks",          "Process Creations",   ),
-    ( "connections",    "Livestatus Connects", ),
-    ( "requests",       "Livestatus Requests", ),
-    ( "log_messages",   "Log Messages",        ),
-]
 
-def check_livestatus_status(item, _no_params, info):
-    parsed = livestatus_status_parse(info)
+
+def check_livestatus_status(item, params, parsed):
     if item not in parsed:
-        return (3, "Site does not exist")
+        return
     status = parsed[item]
 
     # Ignore down sites. This happens on a regular basis due to restarts
     # of the core. The availability of a site is monitored with 'omd_status'.
     if status == None:
-        return (0, "Site is currently not running")
+        yield params["site_stopped"], "Site is currently not running"
+        return
 
+    # Check Performance counters
     this_time = time.time()
-    perfdata = []
-    infos = []
+    status_counters = [
+        ( "host_checks",    "Host Checks",         ),
+        ( "service_checks", "Service Checks",      ),
+        ( "forks",          "Process Creations",   ),
+        ( "connections",    "Livestatus Connects", ),
+        ( "requests",       "Livestatus Requests", ),
+        ( "log_messages",   "Log Messages",        ),
+    ]
 
-    for counter, title in livestatus_status_counters:
-        rate = get_rate("livestatus_status.%s.%s" % (item, counter), this_time, saveint(status[counter]))
-        perfdata.append((counter, rate))
-        infos.append("%.1f %s/s" % (rate, title))
+    for counter, title in status_counters:
+        rate = get_rate("livestatus_status.%s.%s" % (item, counter), this_time, int(status[counter]))
+        yield 0, ("%.1f %s/s" % (rate, title)), [(counter, rate)]
 
-    infos += [ "Core version: %s" % status["program_version"],
-              "Livestatus version: %s" % status["livestatus_version"]]
-    return (0, ", ".join(infos), perfdata)
+    # Output some general information
+    yield 0, "Core version: %s"       % status["program_version"]
+    yield 0, "Livestatus version: %s" % status["livestatus_version"]
+
+    settings = [
+        ("execute_host_checks",           "Active host checks are disabled"),
+        ("execute_service_checks",        "Active service checks are disabled"),
+        ("accept_passive_host_checks",    "Passive host check are disabled"),
+        ("accept_passive_service_checks", "Passive service checks are disabled"),
+        ("check_host_freshness",          "Host freshness checking is disabled"),
+        ("check_service_freshness",       "Service freshness checking is disabled"),
+        ("enable_event_handlers",         "Event handlers are disabled"),
+        ("enable_flap_detection",         "Flap detection is disabled"),
+        ("enable_notifications",          "Notifications are disabled"),
+        ("process_performance_data",      "Performance data is disabled"),
+        ("check_external_commands",       "External commands are disabled"),
+    ]
+    # Check settings of enablings. Here we are quiet unless a non-OK state is found
+    for settingname, title in settings:
+        if status[settingname] != '1' and params[settingname] != 0:
+            yield params[settingname], title
 
 
 check_info['livestatus_status'] = {
-    "check_function"          : check_livestatus_status,
+    "parse_function"          : parse_livestatus_status,
     "inventory_function"      : inventory_livestatus_status,
+    "check_function"          : check_livestatus_status,
     "service_description"     : "OMD %s performance",
     "has_perfdata"            : True,
+    "group"                   : "livestatus_status",
+    "default_levels_variable" : "livestatus_status_default_levels",
 }

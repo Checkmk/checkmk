@@ -1,6 +1,20 @@
 1.2.6p2:
+    Checks & Agents:
+    * 1893 FIX: cisco_power: Now discovers all power supplies, not only redundant ones...
+    * 1955 FIX: lnx_quota: Fixed status message to show the correct values of limits...
+
     Multisite:
+    * 1945 FIX: doc/treasures/downtime: Fix setting and removing of downtimes...
     * 2177 FIX: Host/Service statistics dashlets honor the site filter correctly now
+
+    WATO:
+    * 1956 FIX: WATO Web-API: Fixed exception information for single sites...
+
+    BI:
+    * 1897 FIX: Fixed exception in BI Availability view...
+
+    HW/SW-Inventory:
+    * 2197 FIX: win_reg_uninstall: Fix exception in case of invalid output line...
 
 
 1.2.6p1:

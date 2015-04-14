@@ -18041,7 +18041,7 @@ class API:
                 try:
                     activate_changes()
                 except Exception, e:
-                    errors.append("%s: %s" % (site["id"], e))
+                    errors.append("Exception: %s" % e)
 
         if not errors:
             log_commit_pending()

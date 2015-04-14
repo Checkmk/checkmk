@@ -835,7 +835,7 @@ function sqlplus() {
         TNSALIAS=$(echo $REMOTE_VARNAME | cut -d"_" -f3-)
 
         # we need to add the piggyback sections!
-        remote_hostname=$(echo $SID | cut -d"_" -f4-)
+        remote_hostname=$(echo ${ORACFGLINE} | cut -d":" -f$[6])
 
         # build the piggyback information in loc_stdin
         # <<<<hostname>>>> SQL-Statements <<<<>>>>
@@ -1114,12 +1114,13 @@ function do_instance() {
 #   '----------------------------------------------------------------------'
 
 # Are there any remote configurations?
-for element in $(compgen -A variable | grep -E "^REMOTE_INSTANCE_.*_.*") ; do
+for element in $(compgen -A variable | grep -E "^REMOTE_INSTANCE_.*") ; do
 
     REMOTE_DBS=$REMOTE_DBS" "$element
 
-    element_suffix=$(echo $element | cut -d"_" -f4-)
-    REMOTE_HOSTLIST=${element_suffix}" "${REMOTE_HOSTLIST}
+    remote_hostname=$(echo $element | cut -d":" -f6)
+
+    REMOTE_HOSTLIST=${remote_hostname}" "${REMOTE_HOSTLIST}
 done
 
 if [ "$REMOTE_HOSTLIST" ] ; then
@@ -1127,9 +1128,9 @@ if [ "$REMOTE_HOSTLIST" ] ; then
     REMOTE_HOSTLIST=$(echo $REMOTE_HOSTLIST | tr ' ' '\n' | sort | uniq)
 
     # create empty piggyback SECTIONS
-    for remote_hostname in $REMOTE_HOSTLIST ; do
+    for element in $REMOTE_HOSTLIST ; do
 
-        rhostname=$(echo $remote_hostname | cut -d"_" -f3- )
+        remote_hostname=$(echo $element | cut -d":" -f6)
         echo "<<<<"$remote_hostname">>>>"
 
         for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS
@@ -1205,6 +1206,9 @@ for REMOTE_DB in $REMOTE_DBS ; do
 
     # the ORACLE_SID is needed for the oracle_instance check for ASM and normal instance
     ORACLE_SID=$(echo $REMOTE_DB_LINE | cut -d":" -f7)
+
+    # This is the piggyback hostname
+    remote_hostname=$(echo $element | cut -d":" -f6)
 
     get_oraversion $REMOTE_DB
     do_instance $REMOTE_DB

@@ -915,7 +915,7 @@ body.main .popup_menu {
     border-width: 1px;
     border-style: solid;
     border-color: #9bc #367 #367 #9bc;
-    box-shadow:  0.5px 0.5px 8px #000;
+    box-shadow:  0.5px 0.5px 16px #888;
     border-radius: 5px;
 }
 
@@ -923,6 +923,7 @@ body.main .popup_menu img {
     width: 12px;
     height: auto;
     vertical-align: bottom;
+    margin-right: 3px;
 }
 
 body.main .popup_menu ul {

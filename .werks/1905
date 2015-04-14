@@ -1,0 +1,13 @@
+Title: oracle_recovery_status: Bugfix for checkpoints in the future
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427882680
+Class: fix
+
+The check results in CRITICAL state when the last checkpoint time is in
+the futute. This is possible after daylight changes or after a change of
+time on the database server after the start of the instance.
+This has been corrected. The check leads to a WARNING state when the last
+checkpoint is in the future and the time is displayed as a result.

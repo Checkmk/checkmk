@@ -42,8 +42,11 @@ nagios_short_host_state_names = { 0: _("UP"), 1: _("DOWN"), 2: _("UNREACH") }
 class MKException(Exception):
     # Do not use the Exception() __str__, because it uses str()
     # to convert the message. We want to keep unicode strings untouched
+    # And don't use self.message, because older python versions don't
+    # have this variable set. self.args[0] seems to be the most portable
+    # way at the moment.
     def __str__(self):
-        return self.message
+        return self.args[0]
 
 class MKGeneralException(MKException):
     plain_title = _("General error")

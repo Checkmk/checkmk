@@ -82,7 +82,7 @@ ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable locks"
 # Note: _ASM_ sections are only executed when SID starts with '+'
 #       sections listed in SYNC_SECTIONS or ASYNC_SECTIONS are not
 #       executed for ASM.
-SYNC_ASM_SECTIONS="instance"
+SYNC_ASM_SECTIONS="instance processes"
 ASYNC_ASM_SECTIONS="asm_diskgroup"
 
 # Interval for running async checks (in seconds)

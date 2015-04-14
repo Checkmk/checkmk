@@ -1,0 +1,20 @@
+title: Check for normal and security updates via APT
+agents: linux
+catalog: os/misc
+license: GPL
+distribution: check_mk
+description:
+ This check checks for available normal and security updates by trying
+ {apt-get update} or {apt-get dist-upgrade} without actually installing
+ packets. It works on Debian and Ubuntu. You need to deploy the plugin
+ {mk_apt} in order for the check to work. It is recommended to install
+ this plugin with asynchronous execution and at an interval with at
+ least one hour.
+
+ The check gets critical if there are security updates available.
+ It gets warning, if there are other updates available. These two
+ states can be overriden via a WATO rule.
+
+inventory:
+ One service will be created for each system where the {mk_apt}
+ plugin is being installed and the command {apt-get} is present.

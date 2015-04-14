@@ -1,0 +1,82 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<apt:sep(0)>>>
+# Inst dpkg [1.17.5ubuntu5.3] (1.17.5ubuntu5.4 Ubuntu:14.04/trusty-updates [amd64])
+# Inst libtasn1-6-dev [3.4-3ubuntu0.1] (3.4-3ubuntu0.2 Ubuntu:14.04/trusty-updates [amd64]) []
+# Inst libtasn1-6 [3.4-3ubuntu0.1] (3.4-3ubuntu0.2 Ubuntu:14.04/trusty-updates [amd64])
+# Inst ntpdate [1:4.2.6.p5+dfsg-3ubuntu2.14.04.2] (1:4.2.6.p5+dfsg-3ubuntu2.14.04.3 Ubuntu:14.04/trusty-security [amd64])
+# Inst udev [204-5ubuntu20.10] (204-5ubuntu20.11 Ubuntu:14.04/trusty-updates [amd64]) []
+# Inst libudev1 [204-5ubuntu20.10] (204-5ubuntu20.11 Ubuntu:14.04/trusty-updates [amd64])
+# Inst libpam-systemd [204-5ubuntu20.10] (204-5ubuntu20.11 Ubuntu:14.04/trusty-updates [amd64]) []
+# Inst systemd-services [204-5ubuntu20.10] (204-5ubuntu20.11 Ubuntu:14.04/trusty-updates [amd64]) []
+# Inst libsystemd-daemon0 [204-5ubuntu20.10] (204-5ubuntu20.11 Ubuntu:14.04/trusty-updates [amd64])
+# Inst libsystemd-login0 [204-5ubuntu20.10] (204-5ubuntu20.11 Ubuntu:14.04/trusty-updates [amd64])
+# Inst libpolkit-gobject-1-0 [0.105-4ubuntu2] (0.105-4ubuntu2.14.04.1 Ubuntu:14.04/trusty-updates [amd64])
+# Inst libxext-dev [2:1.3.2-1] (2:1.3.2-1ubuntu0.0.14.04.1 Ubuntu:14.04/trusty-security [amd64]) []
+
+factory_settings["apt_default_levels"] = {
+    "normal"   : 1,
+    "security" : 2,
+}
+
+def inventory_apt(info):
+    yield None, {}
+
+def check_apt(_no_item, params, info):
+    sec_regex = regex("^[^\\(]*\\(.* (Debian-Security:|Ubuntu:[^/]*/[^-]*-security)")
+    updates = []
+    sec_updates = []
+    for line in info:
+        inst, packet, version, hints = line[0].split(None, 3)
+        if sec_regex.match(line[0]):
+            sec_updates.append(packet)
+        else:
+            updates.append(packet)
+
+    if updates:
+        state = params["normal"]
+    yield state, "%d normal updates" % len(updates), [ ("normal_updates", len(updates)) ]
+
+    if sec_updates:
+        state = params["security"]
+        text = " (%s)" % ", ".join(sec_updates)
+    else:
+        text = ""
+
+    yield state, "%d security updates%s" % (len(sec_updates), text), [ ("security_updates", len(sec_updates)) ]
+
+
+check_info['apt'] = {
+    "inventory_function"      : inventory_apt,
+    "check_function"          : check_apt,
+    "service_description"     : "APT Updates",
+    "group"                   : "apt",
+    "has_perfdata"            : True,
+    "default_levels_variable" : "apt_default_levels",
+}
+

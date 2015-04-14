@@ -508,13 +508,11 @@ metric_info["fs_trend"] = {
     "color" : "#808080",
 }
 
-
 metric_info["fs_provisioning"] = {
     "title" : _("Provisioned filesystem space"),
     "unit"  : "bytes",
     "color" : "#ff8000",
 }
-
 
 metric_info["temp"] = {
     "title" : _("Temperature"),
@@ -1042,6 +1040,19 @@ metric_info["log_message_rate"] = {
     "color" : "#aa44cc",
 }
 
+metric_info["normal_updates"] = {
+    "title" : _("Pending normal updates"),
+    "unit"  : "count",
+    "color" : "#c08030",
+}
+
+metric_info["security_updates"] = {
+    "title" : _("Pending security updates"),
+    "unit"  : "count",
+    "color" : "#ff0030",
+}
+
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -1303,6 +1314,7 @@ check_metrics["check_mk-livestatus_status"] = {
     "log_messages"   : { "name" : "log_message_rate" },
 }
 
+check_metrics["check_mk-apt"] = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -1487,6 +1499,10 @@ perfometer_info.append(("stacked", [
   ( "logarithmic", ( "service_check_rate", 200, 5)),
 ]))
 
+perfometer_info.append(("stacked", [
+  ( "logarithmic", ( "normal_updates",   10, 2)),
+  ( "logarithmic", ( "security_updates", 10, 2)),
+]))
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -1936,5 +1952,13 @@ graph_info.append({
     "metrics" : [
         ( "livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
           _("Averate requests per connection")),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Pending updates"),
+    "metrics" : [
+        ( "normal_updates",    "stack" ),
+        ( "security_updates",  "stack" ),
     ],
 })

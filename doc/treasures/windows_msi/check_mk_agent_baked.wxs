@@ -2,14 +2,20 @@
 <?define CompanyName = "Mathias Kettner GmbH"?>
 <?define ProductVersion = "1.2.5"?>
 <?define ProductUpgradeCode = "854bb2c1-f4aa-4c5c-89e4-8fb0bdfb9ee4"?>
+<?define PackageCode = "47ED1918-CEDF-4D37-943C-B4DBC3F58E6C"?>
 
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
    <Product Id="*" UpgradeCode="$(var.ProductUpgradeCode)"
             Name="Check_MK Agent MSI" Version="$(var.ProductVersion)" Manufacturer="Mathias Kettner GmbH" Language="1033">
-        <Package InstallerVersion="200" Platform="x86" Compressed="yes" Description="Check_MK 32/64 bit MSI installer"/>
+        <Package Id="$(var.PackageCode)" InstallerVersion="200" Platform="x86" Compressed="yes" Description="Check_MK 32/64 bit MSI installer"/>
         <Media Id="1" Cabinet="product.cab" CompressionLevel="none" EmbedCab="yes"/>
+
+        <Property Id="ALLUSERS" Value="1" />
+        <Property Id="REINSTALLMODE" Value="amus" />
+        <MajorUpgrade AllowDowngrades="yes" />
+
         <Upgrade Id="$(var.ProductUpgradeCode)">
             <UpgradeVersion Minimum="$(var.ProductVersion)"
                             Property="NEWERVERSIONDETECTED"/>
@@ -66,6 +72,11 @@
               Execute   ="immediate"
               Return    ="ignore"/>
 
+        <CustomAction Id="uninstall_plugins"
+              Directory ="INSTALLDIR"
+              ExeCommand='[INSTALLDIR]uninstall_plugins.bat'
+              Execute   ="immediate"
+              Return    ="ignore"/>
 
         <CustomAction Id="start_service"
               Directory ="INSTALLDIR"
@@ -87,6 +98,7 @@
         <InstallExecuteSequence>
            <Custom Action="stop_service"      After="InstallInitialize">REMOVE="ALL"</Custom>
            <Custom Action='uninstall_service' After='InstallInitialize'>REMOVE="ALL"</Custom>
+           <Custom Action='uninstall_plugins' After='InstallInitialize'>REMOVE="ALL"</Custom>
         </InstallExecuteSequence>
 
         <DirectoryRef Id="INSTALLDIR">
@@ -122,11 +134,6 @@
                 </RegistryKey>
             </Component>
         </DirectoryRef>
-
-
-        <InstallExecuteSequence>
-            <RemoveExistingProducts Before="InstallInitialize"/>
-        </InstallExecuteSequence>
 
         <Feature Id="Agent" Level="1">
             <ComponentRef Id="agent32"/>

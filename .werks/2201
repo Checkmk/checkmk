@@ -1,0 +1,10 @@
+Title: apt: New check for checking pending APT updates on Debian and Ubuntu
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429015208
+Class: feature
+
+You just need to deploy the new agent plugin <tt>mk_apt</tt>. Read the check
+man page of <tt>apt</tt> for details.

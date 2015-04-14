@@ -2219,54 +2219,23 @@ register_rule(group,
     ),
     itemtype = "service")
 
-
-def list_user_icons_and_actions():
-    choices = []
-    for key, action in config.user_icons_and_actions.items():
-        label = key
-        if 'title' in action:
-            label += ' - '+action['title']
-        if 'url' in action:
-            label += ' ('+action['url']+')'
-
-        choices.append((key, label))
-    return sorted(choices, key = lambda x: x[1])
-
-
 register_rule(group,
-    "extra_host_conf:_ACTIONS",
-    Transform(
-        ListChoice(
-            title = _("Custom icons or actions for hosts in status GUI"),
-            help = _("You can assign icons or actions to hosts for the status GUI. "
-                     "In order to be able to choose actions here, you need to "
-                     "<a href=\"%s\">define your own actions</a>.") % \
-                        "wato.py?mode=edit_configvar&varname=user_icons_and_actions",
-            choices = list_user_icons_and_actions,
-            allow_empty = False,
-        ),
-        forth = lambda x: x.split(','),
-        back = lambda x: ','.join(x),
-    )
+    "host_icons_and_actions",
+    UserIconOrAction(
+        title = _("Custom icons or actions for hosts in status GUI"),
+        help = _("You can assign icons or actions to hosts for the status GUI.")
+    ),
+    match = "all",
 )
 
-
 register_rule(group,
-    "extra_service_conf:_ACTIONS",
-    Transform(
-        ListChoice(
-            title = _("Custom icons or actions for services in status GUI"),
-            help = _("You can assign icons or actions to services for the status GUI. "
-                     "In order to be able to choose actions here, you need to "
-                     "<a href=\"%s\">define your own actions</a>.") % \
-                        "wato.py?mode=edit_configvar&varname=user_icons_and_actions",
-            choices = list_user_icons_and_actions,
-            allow_empty = False,
-        ),
-        forth = lambda x: x.split(','),
-        back = lambda x: x.join(','),
+    "service_icons_and_actions",
+    UserIconOrAction(
+        title = _("Custom icons or actions for services in status GUI"),
+        help = _("You can assign icons or actions to services for the status GUI."),
     ),
-    itemtype = "service"
+    match = "all",
+    itemtype = "service",
 )
 
 

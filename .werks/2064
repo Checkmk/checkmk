@@ -1,0 +1,10 @@
+Title: windows agent: crash.log now uses \r\n as newline
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429005583
+
+

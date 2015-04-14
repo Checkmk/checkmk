@@ -1522,6 +1522,21 @@ def host_check_command(hostname, ip, is_clust):
             value, hostname))
 
 
+def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, params = None):
+    if what == 'host':
+        return list(set(host_extra_conf(hostname, host_icons_and_actions)))
+    else:
+        actions = set(service_extra_conf(hostname, svcdesc, service_icons_and_actions))
+
+        # Some WATO rules might register icons on their own
+        checkgroup = checkgroup_of.get(checkname, checkname)
+        if checkgroup in [ 'ps', 'services' ]:
+            icon = params.get('icon')
+            if icon:
+                actions.add(icon)
+
+        return list(actions)
+
 
 def check_icmp_arguments_of(hostname):
     values = host_extra_conf(hostname, ping_levels)
@@ -2094,6 +2109,10 @@ def create_nagios_hostdefs(outfile, hostname):
     else:
         alias = make_utf8(alias)
 
+    # Add custom user icons and actions
+    actions = icons_and_actions_of('host', hostname)
+    if actions:
+        outfile.write("  _ACTIONS\t\t\t%s\n" % ','.join(actions))
 
     # Custom configuration last -> user may override all other values
     outfile.write(make_utf8(extra_host_conf_of(hostname)))
@@ -2234,16 +2253,20 @@ define servicedependency {
         if value is not None:
             check_interval = value
 
+        # Add custom user icons and actions
+        actions = icons_and_actions_of('service', hostname, description, checkname, params)
+        action_cfg = actions and '  _ACTIONS\t\t\t%s\n' % ','.join(actions) or ''
+
         outfile.write("""define service {
   use\t\t\t\t%s
   host_name\t\t\t%s
   service_description\t\t%s
   check_interval\t\t%d
-%s%s  check_command\t\t\tcheck_mk-%s
+%s%s%s  check_command\t\t\tcheck_mk-%s
 }
 
 """ % ( template, hostname, description, check_interval, logwatch,
-        extra_service_conf_of(hostname, description), checkname ))
+        extra_service_conf_of(hostname, description), action_cfg, checkname ))
 
         checknames_to_define.add(checkname)
         have_at_least_one_service = True

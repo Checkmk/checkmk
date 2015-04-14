@@ -155,31 +155,35 @@ function getButton(event) {
 }
 
 // Adds document/window global event handlers
-function add_event_handler(type, func) {
-    if (window.addEventListener) {
+function add_event_handler(type, func, obj) {
+    var obj = (typeof(obj) === 'undefined') ? window : obj;
+
+    if (obj.addEventListener) {
         // W3 standard browsers
-        window.addEventListener(type, func, false);
+        obj.addEventListener(type, func, false);
     }
-    else if (window.attachEvent) {
+    else if (obj.attachEvent) {
         // IE<9
-        document.documentElement.attachEvent("on" + type, func);
+        obj.attachEvent("on" + type, func);
     }
     else {
-        window["on" + type] = func;
+        obj["on" + type] = func;
     }
 }
 
-function del_event_handler(type, func) {
-    if (window.removeEventListener) {
+function del_event_handler(type, func, obj) {
+    var obj = (typeof(obj) === 'undefined') ? window : obj;
+
+    if (obj.removeEventListener) {
         // W3 stadnard browsers
-        window.removeEventListener(type, func, false);
+        obj.removeEventListener(type, func, false);
     }
-    else if (window.detachEvent) {
+    else if (obj.detachEvent) {
         // IE<9
-        document.documentElement.detachEvent("on"+type, func);
+        obj.detachEvent("on"+type, func);
     }
     else {
-        window["on" + type] = null;
+        obj["on" + type] = null;
     }
 }
 
@@ -190,6 +194,7 @@ function prevent_default_events(event) {
     if (event.stopPropagation)
         event.stopPropagation();
     event.returnValue = false;
+    return false;
 }
 
 function hilite_icon(oImg, onoff) {

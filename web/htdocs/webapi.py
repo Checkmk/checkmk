@@ -35,6 +35,11 @@ try:
 except NameError:
     from sets import Set as set
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 api_actions = {}
 loaded_with_language = False
 
@@ -83,20 +88,8 @@ def page_api():
             if api_actions[action].get("dont_eval_request"):
                 request_object = html.var("request")
             else:
-                eval_function = None
                 request = html.var("request")
-
-                try:
-                    import json
-                    eval_function = json.loads
-                except ImportError:
-                    eval_function = literal_eval
-                    # modify request so it can be read by literal_eval...
-                    for old, new in [ (": null",  ": None"),
-                                      (": true",  ": True"),
-                                      (": false", ": False"), ]:
-                        request = request.replace(old, new)
-                request_object = eval_function(request)
+                request_object = json.loads(request)
         else:
             request_object = {}
 
@@ -111,8 +104,6 @@ def page_api():
 
     output_format = html.var("output_format", "json")
     if output_format == "json":
-        # TODO: implement json alternative for python < 2.5
-        import json
         html.write(json.dumps(response))
     else:
         html.write(repr(response))

@@ -18221,7 +18221,7 @@ class API:
                 try:
                     activate_changes()
                 except Exception, e:
-                    errors.append("%s: %s" % (site["id"], e))
+                    errors.append("Exception: %s" % e)
 
         if not errors:
             log_commit_pending()
@@ -18700,6 +18700,32 @@ def rule_option_elements(disabling=True):
             ),
         ]
     return elements
+
+class UserIconOrAction(DropdownChoice):
+    def __init__(self, **kwargs):
+        empty_text = _("In order to be able to choose actions here, you need to "
+                       "<a href=\"%s\">define your own actions</a>.") % \
+                          "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
+
+        kwargs.update({
+            'choices'     : self.list_user_icons_and_actions,
+            'allow_empty' : False,
+            'empty_text'  : empty_text,
+            'help'        : kwargs.get('help', '') + ' '+empty_text,
+        })
+        DropdownChoice.__init__(self, **kwargs)
+
+    def list_user_icons_and_actions(self):
+        choices = []
+        for key, action in config.user_icons_and_actions.items():
+            label = key
+            if 'title' in action:
+                label += ' - '+action['title']
+            if 'url' in action:
+                label += ' ('+action['url']+')'
+
+            choices.append((key, label))
+        return sorted(choices, key = lambda x: x[1])
 
 #.
 #   .--Plugins-------------------------------------------------------------.

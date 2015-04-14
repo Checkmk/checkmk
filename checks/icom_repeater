@@ -1,0 +1,112 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+icom_repeater_info = ( ".1.3.6.1.4.1.2021.8.1",
+                            [ "1",     # Index Number
+                              "2",     # SNMP item name
+                              "101",]) # SNMP item value
+
+icom_repeater_scan = lambda oid: False #"fc5000" in oid(".1.3.6.1.2.1.1.1.0").lower()
+
+
+def parse_icom_repeater(info):
+    parsed = {}
+    for line in info:
+        if line[1] == "Temperature":
+            parsed["temp"] = float(line[2][:-1])
+            parsed["temp_devunit"] = line[2][-1].lower()
+
+        elif line[1] == "ESN number":
+            parsed["esnno"] = line[2]
+
+        elif line[1] == "Repeater operation":
+            parsed["repop"] = line[2].lower()
+
+        elif line[1] == "Abnormal temperature detection":
+            if line[2] == "Not detected":
+                parsed["temp_devstatus"] = 0
+            else:
+                parsed["temp_devstatus"] = 2
+
+        elif line[1] == "Power-supply voltage":
+            parsed["ps_voltage"] = float(line[2][:-1])
+
+        elif line[1] == "Abnormal power-supply voltage detection":
+            if line[2] == "Not detected":
+                parsed["ps_volt_devstatus"] = 0
+            else:
+                parsed["ps_volt_devstatus"] = 2
+    return parsed
+
+
+def inventory_icom_repeater_temp(parsed):
+    if "temp" in parsed:
+        return [ (None, None) ]
+
+
+def check_icom_repeater_temp(_no_item, params, parsed):
+    return check_temperature(parsed["temp"], params,
+                                dev_unit = parsed["temp_devunit"],
+                                dev_status = parsed["temp_devstatus"])
+
+
+check_info["icom_repeater.temp"] = {
+    "inventory_function"    : inventory_icom_repeater_temp,
+    "check_function"        : check_icom_repeater_temp,
+    "service_description"   : "Temperature",
+    "group"                 : "temperature",
+    "includes"              : [ "temperature.include" ],
+}
+
+
+
+def inventory_icom_repeater(parsed):
+    if parsed:
+        return [(None, None)]
+    else:
+        return []
+
+def check_icom_repeater(_no_item, _no_params, parsed):
+    pprint.pprint(parsed)
+    yield 0, "ESN Number: %s" % parsed["esnno"]
+
+    infotext = "Repeater operation status: %s" % parsed["repop"]
+    if parsed["repop"] == "off":
+        yield 2, infotext
+    elif parsed["repop"] == "on":
+        yield 0, infotext
+    else:
+        yield 3, "Repeater operation status unknown"
+
+check_info["icom_repeater"] = {
+    "parse_function"        :   parse_icom_repeater,
+    "inventory_function"    :   inventory_icom_repeater,
+    "check_function"        :   check_icom_repeater,
+    "service_description"   :   "Repeater info",
+    "snmp_scan_function"    :   icom_repeater_scan,
+    "snmp_info"             :   icom_repeater_info,
+}

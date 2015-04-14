@@ -194,6 +194,7 @@ function prevent_default_events(event) {
     if (event.stopPropagation)
         event.stopPropagation();
     event.returnValue = false;
+    return false;
 }
 
 function hilite_icon(oImg, onoff) {

@@ -22,7 +22,7 @@ in downtime you'll put all other database checks from mk_oracle in a downtime as
 
 H2: Configuration
 You need an Oracle Client. You could use the remote option from an existing Database Server
-to monitor another Server. It is recommended to set <tt>ORACLE_HOME_REMOTE</tt> in <tt>mk_oracle.cfg</tt>
+to monitor another Server. It is recommended to set <tt>REMOTE_ORACLE_HOME</tt> in <tt>mk_oracle.cfg</tt>
 for the <tt>ORACLE_HOME</tt> which should be used for all remote connections.
 
 An existing <tt>ORACLE_HOME</tt> could be used as well, but do not do that in mixed configurations

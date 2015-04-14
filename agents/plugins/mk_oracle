@@ -694,7 +694,7 @@ function set_oraenv () {
     if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]] ; then
 
         # we get the ORACLE_HOME from mk_oracle.cfg for REMOTE execution
-        ORACLE_HOME=${ORACLE_HOME:-${ORACLE_HOME_REMOTE}}
+        ORACLE_HOME=${ORACLE_HOME:-${REMOTE_ORACLE_HOME}}
 
     else
         # we need to keep an existing ORACLE_SID in remote mode

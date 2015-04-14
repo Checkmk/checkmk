@@ -11,7 +11,9 @@ Requires
 ---------------------------------
 - A wine environment with the program packages Mono and Wix-Toolset
   http://www.go-mono.com/mono-downloads/download.html
+  # Used version 3.2.3: http://download.mono-project.com/archive/3.2.3/windows-installer/
   http://wixtoolset.org/
+  # Get the binary package and put in into "Program Files (x86)/wix"
 
 - A working directory where the msi package is build, containing the files
   cmk_InstallDirDlg.wxs    # Modified Install Dialog with Install Service Checkbox

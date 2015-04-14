@@ -867,7 +867,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
     global g_multihost_checks
 
     # speed up multiple lookup of same host
-    if use_cache and hostname in g_check_table_cache:
+    if not skip_autochecks and use_cache and hostname in g_check_table_cache:
         if remove_duplicates and is_dual_host(hostname):
             return remove_duplicate_checks(g_check_table_cache[hostname])
         else:
@@ -966,7 +966,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
             if d in all_descr:
                 deps.append(d)
 
-    if use_cache:
+    if not skip_autochecks and use_cache:
         g_check_table_cache[hostname] = check_table
 
     if remove_duplicates and is_dual_host(hostname):

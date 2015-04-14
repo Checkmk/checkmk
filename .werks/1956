@@ -1,0 +1,10 @@
+Title: WATO Web-API: Fixed exception information for single sites
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428934623
+
+Fixed exception information for single site if the action activate changes is used.

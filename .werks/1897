@@ -1,0 +1,10 @@
+Title: Fixed exception in BI Availability view
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1428937251
+
+The Availabilty view for single host BI aggregations would previously crash due to a key error. This has been fixed.

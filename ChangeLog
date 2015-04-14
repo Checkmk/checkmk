@@ -384,6 +384,7 @@
     * 2141 FIX: Fix computation of explicit time ranges with time of day...
     * 2142 FIX: Fix non-working option for disabling column headers in grouped boxed views...
     * 2168 FIX: Fixed automation actions with transid=-1 when using basic authentication
+    * 2177 FIX: Host/Service statistics dashlets honor the site filter correctly now
 
     WATO:
     * 1760 Added search form to manual checks page
@@ -434,6 +435,7 @@
     * 2158 FIX: Condition column in WATO rule tables has now a flexible width...
     * 2160 FIX: Fixed rename of hosts where a host with this name did exist before
     * 2191 FIX: Fixed handling of URL variable 'mode' in web API for discovering services...
+    * 1956 FIX: WATO Web-API: Fixed exception information for single sites...
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications
@@ -457,6 +459,7 @@
     * 1784 FIX: Fix exception in BI Boxes when parents are being used
     * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules
     * 2085 FIX: Host search for child nodes can now filter child nodes by tags or patterns...
+    * 1897 FIX: Fixed exception in BI Availability view...
 
     Reporting & Availability:
     * 1990 FIX: Fix two exceptions in PDF exports of host group views

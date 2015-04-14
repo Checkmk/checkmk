@@ -1,4 +1,7 @@
 1.2.6p2:
+    Multisite:
+    * 2177 FIX: Host/Service statistics dashlets honor the site filter correctly now
+
 
 1.2.6p1:
     Core & Setup:

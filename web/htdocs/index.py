@@ -141,7 +141,7 @@ def handler(req, fields = None, profiling = True):
         if html.has_var("mobile"):
             html.mobile = not not html.var("mobile")
         else:
-            user_agent = html.req.headers_in.get('User-Agent', '')
+            user_agent = html.get_user_agent()
             html.mobile = mobile.is_mobile(user_agent)
 
         # Redirect to mobile GUI if we are a mobile device and

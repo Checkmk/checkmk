@@ -39,7 +39,7 @@ Definition of a REMOTE_INSTANCE:
 <tt>REMOTE_INSTANCE_<Number>=<Configuration String></tt>
 
 The definition of the database connection is as follows.
-<tt><username>:<password>:<sysdba>:<Database hostname>:<Listener Port><piggyback Hostname>:<ORACLE_SID>:<ORACLE-Release></tt>
+<tt>username:password:sysdba:Database hostname:Listener Port:piggyback Hostname:ORACLE_SID:ORACLE-Release</tt>
 
 Notes regarding <tt>REMOTE_INSTANCE_x</tt>
 You need to make sure, that the name of the variable including

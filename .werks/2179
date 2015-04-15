@@ -1,0 +1,10 @@
+Title: apc_symmetra: Fixed regression introduced with last release when output state is empty
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429083180
+
+

@@ -268,7 +268,7 @@ def inv_titleinfo(invpath, node):
         if type(title) == type(lambda: None):
             title = title(node)
     else:
-        title = invpath.split('.')[-1].split(':')[-1].replace("_", " ").title()
+        title = invpath.rstrip(".").split('.')[-1].split(':')[-1].replace("_", " ").title()
     return icon, title
 
 # The titles of the last two path components of the node, e.g. "BIOS / Vendor"

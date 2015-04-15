@@ -7790,6 +7790,28 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_os,
+    "apt",
+    _("APT Updates"),
+    Dictionary(
+        elements = [
+            ( "normal",
+               MonitoringState(
+                  title = _("State when normal updates are pending"),
+                  default_value = 1,
+            )),
+            ( "security",
+               MonitoringState(
+                  title = _("State when security updates are pending"),
+                  default_value = 2,
+            )),
+        ]
+    ),
+    None,
+    match_type = "dict",
+)
+
+register_check_parameters(
     subgroup_environment,
     "airflow_deviation",
     _("Airflow Deviation in Percent"),

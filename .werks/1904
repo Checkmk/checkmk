@@ -1,0 +1,14 @@
+Title: mk_oracle: added processes check to ASM
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1427882096
+Class: fix
+
+The check for process limit was missing for ASM. This has been fixed.
+
+Please update the mk_oracle plugin and do a service Discovery to get
+the new checks.
+
+

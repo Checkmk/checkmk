@@ -271,8 +271,8 @@ def page_handler():
                         config.need_permission(pname)
 
         except MKUserError, e:
-            action_message = e.message
-            html.add_user_error(e.varname, e.message)
+            action_message = str(e)
+            html.add_user_error(e.varname, str(e))
 
         except MKAuthException, e:
             action_message = e.reason

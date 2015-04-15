@@ -798,15 +798,23 @@ multisite_painters["svc_group_memberlist"] = {
 }
 
 def paint_graph(row):
-    # For hosts graphs always use PNP
-    try:
-        css, htmlcode = paint_time_graph(row)
-        if htmlcode:
-            return css, htmlcode
-    except NameError:
-        if config.debug:
-            raise
-        pass
+    # Filter some clients which do not support our graphing, for example IE < 8
+    try_time_graph = True
+
+    user_agent = html.get_user_agent()
+    if 'MSIE' in user_agent:
+        matches = regex('MSIE ([0-9]{1,}[\.0-9]{0,})').search(user_agent)
+        try_time_graph = not matches or float(matches.group(1)) >= 9.0
+
+    if try_time_graph:
+        try:
+            css, htmlcode = paint_time_graph(row)
+            if htmlcode:
+                return css, htmlcode
+        except NameError:
+            if config.debug:
+                raise
+            pass
 
     sitename = row["site"]
     host = row["host_name"]

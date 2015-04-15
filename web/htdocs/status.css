@@ -349,10 +349,11 @@ td.wide {
 
 td.icons {
     white-space: nowrap;
+    width: 1px;
 }
 td.icons img {
     height: 20px;
-    margin-right: 3px;
+    margin-right: 0px;
 }
 
 td.icon {

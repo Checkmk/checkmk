@@ -12,6 +12,7 @@
         <Package Id="$(var.PackageCode)" InstallerVersion="200" Platform="x86" Compressed="yes" Description="Check_MK 32/64 bit MSI installer"/>
         <Media Id="1" Cabinet="product.cab" CompressionLevel="none" EmbedCab="yes"/>
 
+        <Property Id="ALLUSERS" Value="1" />
         <Property Id="REINSTALLMODE" Value="amus" />
         <MajorUpgrade AllowDowngrades="yes" />
 

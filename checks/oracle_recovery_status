@@ -41,7 +41,7 @@ def inventory_oracle_recovery_status(info):
 def check_oracle_recovery_status(item, params, info):
     state = 0
     offlinecount = 0
-    oldest_checkpoint_age = -1
+    oldest_checkpoint_age = None
 
     oldest_backup_age = -1
     backup_count = 0
@@ -75,16 +75,26 @@ def check_oracle_recovery_status(item, params, info):
             if datafilestatus == 'ONLINE':
                 checkpoint_age = int(checkpoint_age)
 
-                oldest_checkpoint_age = max(oldest_checkpoint_age, checkpoint_age)
+                if oldest_checkpoint_age is None:
+                    oldest_checkpoint_age = checkpoint_age
+                else:
+                    oldest_checkpoint_age = max(oldest_checkpoint_age, checkpoint_age)
             else:
                 offlinecount += 1
 
     if itemfound == True:
         infotext = "%s database" % (database_role.lower())
 
-        if oldest_checkpoint_age == -1:
+        if oldest_checkpoint_age is None:
             infotext += ", no online datafiles found(!!)"
             state = 2
+
+        elif oldest_checkpoint_age <= -1:
+            # we found a negative time for last checkpoint
+            infotext += ", oldest checkpoint is in the future  %s(!), check the time on the server" \
+                        % get_age_human_readable(int(oldest_checkpoint_age)*-1)
+            state = 1
+
         else:
             infotext += ", oldest Checkpoint %s ago" \
                        % (get_age_human_readable(int(oldest_checkpoint_age)))

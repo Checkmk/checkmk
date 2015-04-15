@@ -1,0 +1,16 @@
+Title: windows agent: now correctly installs service with elevated privileges
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429082976
+
+The msi package requires administrative privileges to install the files into
+the program files directory. These privileges were not forwarded to the action
+which actually registers the agent binary as service.
+After the installation all files were installed correctly, but no service was registered.
+This has been fixed.
+
+Additionally the product version is no longer displayed as 1.0.0.

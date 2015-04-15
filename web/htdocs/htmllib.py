@@ -128,6 +128,9 @@ class html:
     BACKSPACE = 8
     F1 = 112
 
+    def get_user_agent(self):
+        return self.req.headers_in.get('User-Agent', '')
+
     def set_page_context(self, c):
         self.page_context = c
 

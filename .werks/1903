@@ -21,28 +21,31 @@ host with mk_oracle is responsible for the piggyback data. If you put the Check_
 in downtime you'll put all other database checks from mk_oracle in a downtime as well.
 
 H2: Configuration
-You need an Oracle Client. If ORACLE_HOME is not set in the login shell of root, you need
-to add the ORACLE_HOME variable to mk_oracle.mk.
+You need an Oracle Client. You could use the remote option from an existing Database Server
+to monitor another Server. It is recommended to set <tt>REMOTE_ORACLE_HOME</tt> in <tt>mk_oracle.cfg</tt>
+for the <tt>ORACLE_HOME</tt> which should be used for all remote connections.
+
+An existing <tt>ORACLE_HOME</tt> could be used as well, but do not do that in mixed configurations
+with local and remote monitoring of Oracle Databases.
 
 Add the following lines to <tt>mk_oracle.cfg</tt>. The path is an example for the RPM Instant
-Client from Oracle for 64bit.
-<tt>ORACLE_HOME=/usr/lib/oracle/11.2/client64</tt>
+Client from Oracle for 64bit on Linux.
+<tt>REMOTE_ORACLE_HOME=/usr/lib/oracle/11.2/client64</tt>
 
-<tt>REMOTE_INSTANCE_1_omd110=check_mk:check_mk:::::XE:11.2</tt>
-<tt>REMOTE_INSTANCE_2_omd110=check_mk:check_mk:::::XE2:11.2</tt>
+<tt>REMOTE_INSTANCE_1=check_mk:check_mk::dbhost:1521:piggybackhost:XE:11.2</tt>
+<tt>REMOTE_INSTANCE_2=check_mk:check_mk::dbhost:1521:piggybackhost:XE2:11.2</tt>
 
 Definition of a REMOTE_INSTANCE:
-<tt>REMOTE_INSTANCE_<Number>_<piggyback Hostname>=<Configuration String></tt>
+<tt>REMOTE_INSTANCE_<Number>=<Configuration String></tt>
 
 The definition of the database connection is as follows.
-<tt><username>:<password>:<sysdba>:<port>:<Database hostname>:<reserved for future use>:<ORACLE_SID>:<ORACLE-Release></tt>
+<tt>username:password:sysdba:Database hostname:Listener Port:piggyback Hostname:ORACLE_SID:ORACLE-Release</tt>
 
 Notes regarding <tt>REMOTE_INSTANCE_x</tt>
 You need to make sure, that the name of the variable including
 the hostname is unique for every database in <tt>mk_oracle.cfg</tt>.
-Only 3 '_' are allowed in front of the piggyback hostname.
-Otherwise the plugin won't work correctly. The Oracle Release must
-be 9.2, 10.1, 10.2, 11.1, 11.2 or 12.1. No other values are allowed.
+The Oracle Release must be 9.2, 10.1, 10.2, 11.1, 11.2 or 12.1.
+No other values are allowed.
 
 Don't forget to use the testmode before starting the inventory on
 the monitoring host.

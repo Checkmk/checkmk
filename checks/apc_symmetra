@@ -65,7 +65,10 @@ def check_apc(item, params, info):
     time_remaining, calib_result, output_load = [ saveint(x) for x in info[0][:13] ]
     last_diag_date = info[0][13]
 
-    output_state_bitmask = int(info[0][14], 2) # string contains a bitmask, convert to int
+    if info[0][14] != '':
+        output_state_bitmask = int(info[0][14], 2) # string contains a bitmask, convert to int
+    else:
+        output_state_bitmask = 0
     self_test_in_progress = output_state_bitmask & 1<<35 != 0
 
     # convert old format tuple to dict

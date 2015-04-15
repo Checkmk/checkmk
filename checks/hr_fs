@@ -27,9 +27,12 @@
 # Juniper devices put information about the device into the
 # field where we expect the mount point. Ugly. Remove that crap.
 def fix_hr_fs_mountpoint(mp):
-    mp = snmp_decode_string(mp)
+    mp = snmp_decode_string(mp).replace("\\", "/")
     if "mounted on:" in mp:
         return mp.rsplit(":",1)[-1].strip()
+    elif "Label:" in mp:
+        pos = mp.find("Label:")
+        return mp[:pos].rstrip()
     else:
         return mp
 

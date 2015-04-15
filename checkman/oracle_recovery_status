@@ -10,7 +10,7 @@ description:
  of an archived redolog will move the checkpoint of the database. This
  is a usual way to monitor the apply of archived redologs on a Physical
  Standby Database without Data Guard. This is normaly needed for
- Standard Edition Databases. There is an imporatnt difference between
+ Standard Edition Databases. There is an important difference between
  Primary and Standby Database. Primary will only create WARNINGs, when
  the level of levels is exceeded. A value for CRITICAL is only usable
  when the Database is in Physical Standby Mode.
@@ -24,6 +24,9 @@ description:
  To prevent such situations, the state of the backup mode could be
  monitored. The rule describes the maximum time for an active backup
  mode for a datafile until a WARN or CRIT is generated.
+
+ If the last checkpoint time is in the future the check generates a WARN
+ and is displaying an information to check the time on the host system.
 
  {Important Information}
  There is no checkpoint created if a database is in backup mode. It

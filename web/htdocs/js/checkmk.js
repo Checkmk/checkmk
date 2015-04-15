@@ -155,31 +155,35 @@ function getButton(event) {
 }
 
 // Adds document/window global event handlers
-function add_event_handler(type, func) {
-    if (window.addEventListener) {
+function add_event_handler(type, func, obj) {
+    var obj = (typeof(obj) === 'undefined') ? window : obj;
+
+    if (obj.addEventListener) {
         // W3 standard browsers
-        window.addEventListener(type, func, false);
+        obj.addEventListener(type, func, false);
     }
-    else if (window.attachEvent) {
+    else if (obj.attachEvent) {
         // IE<9
-        document.documentElement.attachEvent("on" + type, func);
+        obj.attachEvent("on" + type, func);
     }
     else {
-        window["on" + type] = func;
+        obj["on" + type] = func;
     }
 }
 
-function del_event_handler(type, func) {
-    if (window.removeEventListener) {
+function del_event_handler(type, func, obj) {
+    var obj = (typeof(obj) === 'undefined') ? window : obj;
+
+    if (obj.removeEventListener) {
         // W3 stadnard browsers
-        window.removeEventListener(type, func, false);
+        obj.removeEventListener(type, func, false);
     }
-    else if (window.detachEvent) {
+    else if (obj.detachEvent) {
         // IE<9
-        document.documentElement.detachEvent("on"+type, func);
+        obj.detachEvent("on"+type, func);
     }
     else {
-        window["on" + type] = null;
+        obj["on" + type] = null;
     }
 }
 
@@ -190,6 +194,7 @@ function prevent_default_events(event) {
     if (event.stopPropagation)
         event.stopPropagation();
     event.returnValue = false;
+    return false;
 }
 
 function hilite_icon(oImg, onoff) {
@@ -1456,7 +1461,6 @@ function unhide_context_buttons(oA)
     }
     oA.parentNode.style.display = "none";
     oNode = null;
-    oDiv = null;
 }
 
 // .-----------------------------------------------------------------------.
@@ -2000,44 +2004,30 @@ function view_toggle_form(oButton, idForm) {
 }
 
 function init_optiondial(id) {
-    oDiv = document.getElementById(id);
+    var oDiv = document.getElementById(id);
     make_unselectable(oDiv);
 
     var eventname = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel"
-
-     if (oDiv.attachEvent) //if IE (and Opera depending on user setting)
-             oDiv.attachEvent("on" + eventname, optiondial_wheel)
-     else if (oDiv.addEventListener) //WC3 browsers
-             oDiv.addEventListener(eventname, optiondial_wheel, false)
-
+    add_event_handler(eventname, optiondial_wheel);
 }
 
-var dial_direction = 1;
+var g_dial_direction = 1;
 function optiondial_wheel(e) {
     var evt = window.event || e;
     var delta = evt.detail ? evt.detail * (-120) : evt.wheelDelta;
 
-    var oDiv;
-    if (evt.target) oDiv = evt.target;
-    else if (evt.srcElement) oDiv = evt.srcElement;
+    var oDiv = getTarget(evt);
     if (evt.nodeType == 3) // defeat Safari bug
         oDiv = oDiv.parentNode;
     while (!oDiv.className)
         oDiv = oDiv.parentNode;
 
-
-    code = ('' + (oDiv.onclick)).replace("this", "oDiv").replace("onclick", "dial_wheel_function");
-    eval(code);
     if (delta > 0)
-        dial_direction = -1;
-    dial_wheel_function(e);
-    dial_direction = 1;
+        g_dial_direction = -1;
+    oDiv.onclick(e);
+    g_dial_direction = 1;
 
-    if (evt.preventDefault)
-        evt.preventDefault();
-    else
-        return false;
-
+    return prevent_default_events(e);
 }
 
 // used for refresh und num_columns
@@ -2049,7 +2039,7 @@ function view_dial_option(oDiv, viewname, option, choices) {
         val = choice[0];
         title = choice[1];
         if (has_class(oDiv, "val_" + val)) {
-            var new_choice = choices[(c + choices.length + dial_direction) % choices.length];
+            var new_choice = choices[(c + choices.length + g_dial_direction) % choices.length];
             change_class(oDiv, "val_" + val, "val_" + new_choice[0]);
             break;
         }
@@ -2060,11 +2050,11 @@ function view_dial_option(oDiv, viewname, option, choices) {
     speed = 10;
     for (var way = 0; way <= 10; way +=1) {
         step += speed;
-        setTimeout("turn_dial('" + option + "', '', " + way + "," + dial_direction + ")", step);
+        setTimeout("turn_dial('" + option + "', '', " + way + "," + g_dial_direction + ")", step);
     }
     for (var way = -10; way <= 0; way +=1) {
         step += speed;
-        setTimeout("turn_dial('" + option + "', '" + new_choice[1] + "', " + way + "," + dial_direction + ")", step);
+        setTimeout("turn_dial('" + option + "', '" + new_choice[1] + "', " + way + "," + g_dial_direction + ")", step);
     }
 
     get_url_sync("ajax_set_viewoption.py?view_name=" + viewname +

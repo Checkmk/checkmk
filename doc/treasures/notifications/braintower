@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
-# Braintwoer SMS Gateway
+# Braintower SMS Gateway
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -25,46 +25,44 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Send notification to a Braintwoer SMS Gateway
+# Send notification to a Braintower SMS Gateway
 #
 # This notification script can be put below share/check_mk/notifications.
-# Plese configure the needed credentials 
+# Please configure the needed credentials
 
-import sys, os, urllib, httplib
+import sys, os, urllib
 
+# user with permission to use Web-API of gateway
 username    = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
 password    = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
-host        = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
-path        = "/api.php"
+# location (http://servername/api.php)
+location    = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 to          = os.environ.get("NOTIFY_CONTACTPAGER")
 message     = os.environ['NOTIFY_HOSTNAME'] + " "
 
 if os.environ['NOTIFY_WHAT'] == 'SERVICE':
-    message += os.environ['NOTIFY_SERVICESTATE'][:2] + " "
-    avail_len = max_len - len(message)
-    message += os.environ['NOTIFY_SERVICEDESC'][:avail_len] + " "
-    avail_len = max_len - len(message)
-    message += os.environ['NOTIFY_SERVICEOUTPUT'][:avail_len]
-
+    message += os.environ['NOTIFY_SERVICESTATE'] + " "
+    message += os.environ['NOTIFY_SERVICEDESC']
 else:
+    # Host message
     message += "is " + os.environ['NOTIFY_HOSTSTATE']
 
-url = "http://%s/%s?" % ( host, path ) + urllib.urlencode([ 
-   ( "username",    username    ),
-   ( "password",    password    ),
-   ( "to",          to          ),
-   ( "text",        message     )
+url = "%s?" % location + urllib.urlencode([
+    ( "username",   username ),
+    ( "password",   password ),
+    ( "to",         to       ),
+    ( "text",       message  )
 ])
-
 
 try:
     handle = urllib.urlopen(url)
     response = handle.read().strip()
-    if response == "100":
+
+    if handle.getcode() == 200:
         sys.stdout.write("Successfully sent SMS to %s\n" % to)
     else:
-        sys.stderr.write("Error sending SMS to %s: %s\n" % (to, exitcodes.get(response, "Invalid exit code %s" % response)))
+        sys.stderr.write("Error sending SMS to %s: HTTP error code %s\n" % (to, handle.getcode()))
         sys.stderr.write("URL was %s\n" % url)
 except Exception, e:
-    sys.stderr.write("Error sending SMS to %s. Exception: %s%s\n" % e)
+    sys.stderr.write("Error sending SMS to %s: %s\n" % (to, e))

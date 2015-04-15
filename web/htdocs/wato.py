@@ -266,8 +266,8 @@ def page_handler():
                         config.need_permission(pname)
 
         except MKUserError, e:
-            action_message = e.message
-            html.add_user_error(e.varname, e.message)
+            action_message = str(e)
+            html.add_user_error(e.varname, str(e))
 
         except MKAuthException, e:
             action_message = e.reason
@@ -18041,7 +18041,7 @@ class API:
                 try:
                     activate_changes()
                 except Exception, e:
-                    errors.append("%s: %s" % (site["id"], e))
+                    errors.append("Exception: %s" % e)
 
         if not errors:
             log_commit_pending()

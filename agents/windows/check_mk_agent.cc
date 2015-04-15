@@ -3552,7 +3552,7 @@ void crash_log(const char *format, ...)
         dwBytesToWrite = (DWORD)strlen(buffer);
         WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
 
-        WriteFile(g_connectionlog_file, "\n", 1, &dwBytesWritten, NULL);
+        WriteFile(g_connectionlog_file, "\r\n", 2, &dwBytesWritten, NULL);
         FlushFileBuffers(g_connectionlog_file);
     }
     ReleaseMutex(crashlogMutex);

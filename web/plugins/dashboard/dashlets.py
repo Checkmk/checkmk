@@ -203,7 +203,6 @@ dashlet_types["servicestats"] = {
 }
 
 def render_statistics(pie_id, what, table, filter, dashlet):
-    html.write("<div class=stats>")
     pie_diameter     = 130
     pie_left_aspect  = 0.5
     pie_right_aspect = 0.8
@@ -211,7 +210,7 @@ def render_statistics(pie_id, what, table, filter, dashlet):
     info = what == 'hosts' and 'host' or 'service'
     use_filters = visuals.filters_of_visual(dashlet, [info])
     for filt in use_filters:
-        if filt.available():
+        if filt.available() and not isinstance(filt, visuals.FilterSite):
             filter += filt.filter(info)
 
     query = "GET %s\n" % what
@@ -219,10 +218,18 @@ def render_statistics(pie_id, what, table, filter, dashlet):
         query += entry[3]
     query += filter
 
-    result = html.live.query_summed_stats(query)
+    site = dashlet['context'].get('siteopt', {}).get('site')
+    if site:
+        html.live.set_only_sites([site])
+        result = html.live.query_row(query)
+        html.live.set_only_sites()
+    else:
+        result = html.live.query_summed_stats(query)
+
     pies = zip(table, result)
     total = sum([x[1] for x in pies])
 
+    html.write("<div class=stats>")
     html.write('<canvas class=pie width=%d height=%d id="%s_stats" style="float: left"></canvas>' %
             (pie_diameter, pie_diameter, pie_id))
     html.write('<img src="images/globe.png" class="globe">')

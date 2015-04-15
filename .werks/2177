@@ -1,0 +1,9 @@
+Title: Host/Service statistics dashlets honor the site filter correctly now
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p2
+Date: 1428995529
+Class: fix
+
+

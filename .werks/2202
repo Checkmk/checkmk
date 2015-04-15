@@ -1,0 +1,15 @@
+Title: hr_fs: Remove Label:... from mount point, replace \ with /
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1429082929
+Class: fix
+
+This makes the filesystem check via SNMP kompatible with the one via
+the Windows agent. Note: This change is incompatible since the item
+names of the checks will change for Windows systems. You need to
+rediscover in this case.
+
+This does not affect Windows hosts that are monitored via the normal
+Check_MK Agent.

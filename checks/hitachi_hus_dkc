@@ -1,0 +1,82 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_hitachi_hus_dkc(info):
+    for line in info:
+        # dkcRaidListIndexSerialNumber
+        yield line[0], None
+
+def check_hitachi_hus_dkc(item, _no_params, info):
+    # table of end-OIDs, monitored entities and OK states
+    component_map = {
+        2: ("Processor",     (1, )  ),
+        3: ("Internal Bus",  (1, )  ),
+        4: ("Cache",         (1, )  ),
+        5: ("Shared Memory", (1, )  ),
+        6: ("Power Supply",  (1, )  ),
+        7: ("Battery",       (1, )  ),
+        8: ("Fan",           (1, )  ),
+        9: ("Environment",   (1, 4) ),
+    }
+    error_list = [
+        "unknown",
+        "no error",
+        "acute",
+        "serious",
+        "moderate",
+        "service",
+    ]
+    for line in info:
+        # dkcRaidListIndexSerialNumber
+        if line[0] == item:
+            infotext = ""
+            errors = False
+            for end_oid, (component, ok_states) in component_map.iteritems():
+                severity = int(line[end_oid - 1])
+                if severity not in ok_states:
+                    errors = True
+                    yield 2, "%s has errors of severity \"%s\"" % (component, error_list[severity])
+            if not errors:
+                yield 0, "is working properly"
+
+check_info["hitachi_hus_dkc"] = {
+    "check_function"        : check_hitachi_hus_dkc,
+    "inventory_function"    : inventory_hitachi_hus_dkc,
+    "service_description"   : "HUS DKC Chassis %s",
+    "snmp_info"             : (".1.3.6.1.4.1.116.5.11.4.1.1.6.1", [
+                                    1, # dkcRaidListIndexSerialNumber
+                                    2, # dkcHWProcessor
+                                    3, # dkcHWCSW
+                                    4, # dkcHWCache
+                                    5, # dkcHWSM
+                                    6, # dkcHWPS
+                                    7, # dkcHWBattery
+                                    8, # dkcHWFan
+                                    9, # dkcHWEnvironment
+                              ]),
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.116.3.11.4"),
+}

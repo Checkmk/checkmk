@@ -61,7 +61,7 @@ Options:
 
 
 short_options = 'vhrsc:d:u:S:aU:'
-long_options = [ "help", "set", "remove", "comment=", "url=",
+long_options = [ "verbose", "help", "set", "remove", "comment=", "url=",
                  "duration=", "user=", "secret=", "all" ]
 
 opt_all      = False

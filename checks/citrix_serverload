@@ -40,9 +40,9 @@ def check_citrix_serverload(_no_item, params, info):
 
     warn, crit = params
     state = 0
-    if load > crit:
+    if load >= crit:
         state = 2
-    elif load > warn:
+    elif load >= warn:
         state = 1
     return state, "Current Citrix Load is: " + str(load), [ ('perf', load, warn, crit ) ]
 

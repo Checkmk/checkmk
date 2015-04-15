@@ -1,0 +1,9 @@
+Title: hitachi_hus_dkc, hitachi_hus_dku: new checks to monitor hardware states of Hitachi Unified Storage DKUs and DKCs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429105700
+Class: feature
+
+

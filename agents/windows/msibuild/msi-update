@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os, sys, uuid, tempfile, shutil
+import os, sys, uuid, tempfile, shutil, re
 
 def verbose(text):
     if opt_verbose:
@@ -48,10 +48,16 @@ try:
     source_dir        = sys.argv[2]
 
     # Version formatted, e.g. 1.2.4.99
-    new_version_build = "1.0.0.%s" % sys.argv[3]
+    revision  = sys.argv[3]
 
     # Official version name, e.g 1.2.5i4p1
     new_version_name  = sys.argv[4]
+    match = re.search("[a-z]", new_version_name)
+    if match:
+        new_version_build = new_version_name[:match.start(0)] + "." + revision
+    else:
+        new_version_build = new_version_name + "." + revision
+
 except:
     bail_out("Usage: %s MSIFILE.msi SOURCEDIR BUILDNUMBER VERSION" % sys.argv[0])
 
@@ -113,16 +119,13 @@ try:
     component_idt_new   = file(work_dir + "/Component.idt.new", "w")
     component_idt_new.write("".join(lines_component_idt[:3]))
 
-    plugins_cap_code  = ("{%s}" % uuid.uuid1()).upper()
-    check_mk_ini_code = ("{%s}" % uuid.uuid1()).upper()
-
     for line in lines_component_idt[3:]:
         tokens = line.split("\t")
-        if tokens[0] == "plugins.cap":
-            tokens[1] = plugins_cap_code
-        elif tokens[0] == "check_mk.ini":
-            tokens[1] = check_mk_ini_code
-        elif tokens[0] == "agent32":
+        if tokens[0] in [ "plugins.cap",
+                          "check_mk.ini",
+                          "agent32",
+                          "agent64",
+                          "check_mk.example.ini" ]:
             tokens[1] = ("{%s}" % uuid.uuid1()).upper()
         component_idt_new.write("\t".join(tokens))
 
@@ -147,7 +150,7 @@ try:
         elif tokens[0] == "ProductCode":
             tokens[1] = product_code
         elif tokens[0] == "ProductVersion":
-            tokens[1] = "%s\r\n" % ".".join(new_version_build.split(".")[:3])
+            tokens[1] = "%s\r\n" % ".".join(new_version_build.split(".")[:4])
         property_idt_new.write("\t".join(tokens))
     property_idt_new.close()
     # ==============================================

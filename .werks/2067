@@ -1,0 +1,13 @@
+Title: windows agent: product version is no longer set to 1.0.0
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429086999
+
+The windows agent no longer has a fixed product version of 1.0.0.
+Instead it now shows product versions like 1.2.6.142 (Check_MK version + revision)
+or 15.4.15.152 (Daily Build 2015.04.15 + revision)
+

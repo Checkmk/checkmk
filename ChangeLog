@@ -440,6 +440,7 @@
     * 2160 FIX: Fixed rename of hosts where a host with this name did exist before
     * 2191 FIX: Fixed handling of URL variable 'mode' in web API for discovering services...
     * 1956 FIX: WATO Web-API: Fixed exception information for single sites...
+    * 2178 FIX: Fixed handling of user erros in WATO when using Python < 2.5
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

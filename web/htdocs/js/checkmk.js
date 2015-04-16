@@ -2004,30 +2004,30 @@ function view_toggle_form(oButton, idForm) {
 }
 
 function init_optiondial(id) {
-    var oDiv = document.getElementById(id);
-    make_unselectable(oDiv);
+    var container = document.getElementById(id);
+    make_unselectable(container);
 
     var eventname = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel"
-    add_event_handler(eventname, optiondial_wheel);
+    add_event_handler(eventname, optiondial_wheel, container);
 }
 
 var g_dial_direction = 1;
-function optiondial_wheel(e) {
-    var evt = window.event || e;
-    var delta = evt.detail ? evt.detail * (-120) : evt.wheelDelta;
+function optiondial_wheel(event) {
+    event = event || window.event;
+    var delta = event.detail ? event.detail * (-120) : event.wheelDelta;
 
-    var oDiv = getTarget(evt);
-    if (evt.nodeType == 3) // defeat Safari bug
-        oDiv = oDiv.parentNode;
-    while (!oDiv.className)
-        oDiv = oDiv.parentNode;
+    var container = getTarget(event);
+    if (event.nodeType == 3) // defeat Safari bug
+        container = container.parentNode;
+    while (!container.className)
+        container = container.parentNode;
 
     if (delta > 0)
         g_dial_direction = -1;
-    oDiv.onclick(e);
+    container.onclick(event);
     g_dial_direction = 1;
 
-    return prevent_default_events(e);
+    return prevent_default_events(event);
 }
 
 // used for refresh und num_columns

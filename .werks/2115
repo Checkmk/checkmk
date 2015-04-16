@@ -1,0 +1,9 @@
+Title: bluenet_meter: new check to monitor energy and power related parameters of Bachmann Bluenet PDUs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429177688
+Class: feature
+
+

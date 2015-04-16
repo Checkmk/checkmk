@@ -93,7 +93,13 @@ def load_views():
     transform_old_views()
 
 def permitted_views():
-    return available_views
+    try:
+        return available_views
+    except:
+        # In some cases, for example when handling AJAX calls the views might
+        # have not been loaded yet
+        load_views()
+        return available_views
 
 # Convert views that are saved in the pre 1.2.6-style
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
@@ -794,18 +800,14 @@ def page_view():
 def get_needed_columns(view, painters):
     # Make sure that the information about the available views is present. If
     # called via the reporting, than this might not be the case
-    try:
-        available_views
-    except:
-        load_views()
-
+    views = permitted_views()
     columns = []
     for entry in painters:
         painter = entry[0]
         linkview_name = entry[1]
         columns += painter["columns"]
         if linkview_name:
-            linkview = available_views.get(linkview_name)
+            linkview = views.get(linkview_name)
             if linkview:
                 for filt in [ visuals.get_filter(fn) for fn in visuals.get_single_info_keys(linkview) ]:
                     columns += filt.link_columns
@@ -2069,7 +2071,7 @@ def url_to_view(row, view_name):
     if 'I' not in html.display_options:
         return None
 
-    view = available_views.get(view_name)
+    view = permitted_views().get(view_name)
     if view:
         # Get the context type of the view to link to, then get the parameters of this
         # context type and try to construct the context from the data of the row

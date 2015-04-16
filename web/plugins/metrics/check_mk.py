@@ -1283,6 +1283,7 @@ check_metrics["check_mk-raritan_pdu_inlet"]                     = {}
 check_metrics["check_mk-raritan_pdu_inlet_summary"]             = {}
 check_metrics["check_mk-ups_socomec_outphase"]                  = {}
 check_metrics["check_mk-ucs_bladecenter_psu.switch_power"]      = {}
+check_metrics["check_mk-bluenet_meter"]                         = {}
 
 check_metrics["check_mk-bluecoat_sensors"]                      = {}
 

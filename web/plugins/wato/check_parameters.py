@@ -6264,30 +6264,62 @@ register_check_parameters(
     "dict"
 )
 
+phase_elements = [
+    ( "voltage",
+      Tuple(
+          title = _("Voltage"),
+          elements = [
+              Integer(title = _("warning if below"), unit = u"V", default_value = 210),
+              Integer(title = _("critical if below"), unit = u"V", default_value = 200),
+          ],
+    )),
+    ( "power",
+      Tuple(
+          title = _("Power"),
+          elements = [
+              Integer(title = _("warning at"), unit = u"W", default_value = 1000),
+              Integer(title = _("critical at"), unit = u"W", default_value = 1200),
+          ],
+    )),
+    ( "appower",
+      Tuple(
+          title = _("Apparent Power"),
+          elements = [
+              Integer(title = _("warning at"), unit = u"VA", default_value = 1100),
+              Integer(title = _("critical at"), unit = u"VA", default_value = 1300),
+          ],
+    )),
+    ( "current",
+      Tuple(
+          title = _("Current"),
+          elements = [
+              Integer(title = _("warning at"), unit = u"A", default_value = 5),
+              Integer(title = _("critical at"), unit = u"A", default_value = 10),
+          ],
+    )),
+]
+
 register_check_parameters(
     subgroup_environment,
     "ups_outphase",
-    _("Parameters for output phases of UPSs"),
+    _("Parameters for output phases of UPSs and PDUs"),
     Dictionary(
-        elements = [
-            ( "voltage",
-              Tuple(
-                  title = _("Voltage"),
-                  elements = [
-                      Integer(title = _("warning if below"), unit = u"V", default_value = 210),
-                      Integer(title = _("critical if below"), unit = u"V", default_value = 200),
-                  ])),
+        help = _("This rule allows you to specify levels for the voltage, current, load, power "
+                 "and apparent power of your device. The levels will only be applied if the device "
+                 "actually supplies values for these parameters."),
+        elements = phase_elements + [
             ( "load",
               Tuple(
                   title = _("Load"),
                   elements = [
                       Integer(title = _("warning at"), unit = u"%", default_value = 80),
                       Integer(title = _("critical at"), unit = u"%", default_value = 90),
-                  ])),
-            ]),
+                  ]
+            )),
+        ]),
     TextAscii(
         title = _("Output Name"),
-        help = _("The name of the output, e.g. <tt>Phase 1</tt>")),
+        help = _("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>")),
     "dict"
 )
 
@@ -6296,40 +6328,10 @@ register_check_parameters(
     "el_inphase",
     _("Parameters for input phases of UPSs and PDUs"),
     Dictionary(
-        elements = [
-            ( "voltage",
-              Tuple(
-                  title = _("Voltage"),
-                  elements = [
-                      Integer(title = _("warning if below"), unit = u"V", default_value = 210),
-                      Integer(title = _("critical if below"), unit = u"V", default_value = 200),
-                  ],
-            )),
-            ( "power",
-              Tuple(
-                  title = _("Power"),
-                  elements = [
-                      Integer(title = _("warning at"), unit = u"W", default_value = 1000),
-                      Integer(title = _("critical at"), unit = u"W", default_value = 1200),
-                  ],
-            )),
-            ( "appower",
-              Tuple(
-                  title = _("Apparent Power"),
-                  elements = [
-                      Integer(title = _("warning at"), unit = u"VA", default_value = 1100),
-                      Integer(title = _("critical at"), unit = u"VA", default_value = 1300),
-                  ],
-            )),
-            ( "current",
-              Tuple(
-                  title = _("Current"),
-                  elements = [
-                      Integer(title = _("warning at"), unit = u"A", default_value = 5),
-                      Integer(title = _("critical at"), unit = u"A", default_value = 10),
-                  ],
-            )),
-        ]
+        help = _("This rule allows you to specify levels for the voltage, current, power "
+                 "and apparent power of your device. The levels will only be applied if the device "
+                 "actually supplies values for these parameters."),
+        elements = phase_elements,
     ),
     TextAscii(
         title = _("Input Name"),

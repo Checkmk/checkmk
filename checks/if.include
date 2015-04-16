@@ -324,9 +324,16 @@ def inventory_if_common(info, has_nodeinfo = False):
         group_operStatus = one_up and "1" or "2"
 
         if group_operStatus in portstates:
-            params = { "iftype": values["iftype"],
-                       "include_items": values["include_items"],
-                       "aggregate": True }
+            params = {  "iftype"       : values["iftype"],
+                        "include_items": values["include_items"],
+                        "aggregate"    : True }
+
+            if uses_description:
+                params["aggr_member_item"] = "description"
+            elif uses_alias:
+                params["aggr_member_item"] = "alias"
+            else:
+                params["aggr_member_item"] = "index"
 
             if if_inventory_monitor_state:
                 params["state"] = [group_operStatus]
@@ -354,28 +361,19 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
     if params.get("aggregate"):
         group_members = []
         matching_interfaces = []
-
-        settings            = host_extra_conf_merged(g_hostname, inventory_if_rules)
-        uses_description    = settings.get('use_desc', if_inventory_uses_description)
-        uses_alias          = settings.get('use_alias', if_inventory_uses_alias)
-
         node_offset = has_nodeinfo and 1 or 0
-        def get_interface_item(line):
+
+        def get_interface_item(line, what):
             ifIndex = line[ 0 + node_offset]
             if type(ifIndex) == tuple:
                 ifGroup, ifIndex = ifIndex
 
-            ifDescr = line[ 1 + node_offset]
-            ifAlias = line[18 + node_offset]
-            if uses_description and ifDescr:
-                if_item = ifDescr
-            elif uses_alias and ifAlias:
-                if_item = ifAlias
-            else:
-                if_item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo)
-            return if_item
-
-
+            if what == "description":
+                return line[ 1 + node_offset]
+            elif what == "alias":
+                return line[18 + node_offset]
+            else: # index
+                return if_pad_with_zeroes(info, ifIndex, has_nodeinfo)
 
         for element in info:
             ifIndex = element[0 + node_offset]
@@ -383,13 +381,13 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             if type(ifIndex) == tuple:
                 ifGroup, ifIndex = ifIndex
 
+            if_member_item = get_interface_item(element, params.get("aggr_member_item"))
+
             if ifGroup and ifGroup == item:
-                matching_interfaces.append(element)
-            else:
-                match_item = not params.get("include_items") or (get_interface_item(element) in params["include_items"])
-                match_type = not params.get("iftype")        or (params["iftype"] == saveint(element[2 + node_offset]))
-                if match_item and match_type:
-                    matching_interfaces.append(element)
+                matching_interfaces.append((if_member_item, element))
+            elif if_member_item in params.get("include_items", []) or\
+                saveint(element[2 + node_offset]) == params.get("iftype"):
+                matching_interfaces.append((if_member_item, element))
 
         # Accumulate info over matching_interfaces
         wrapped = False
@@ -401,7 +399,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             "outbcast"     : 0, "ifOutDiscards" : 0, "ifOutErrors" : 0, "ifOutQLen" : 0
         }
 
-        for element in matching_interfaces:
+        for (if_member_item, element) in matching_interfaces:
             node, line = if_extract_node(element, has_nodeinfo)
             ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
                 inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
@@ -419,8 +417,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             if type(ifIndex) == tuple:
                 ifGroup, ifIndex = ifIndex
 
-            if_item = get_interface_item(element)
-            group_members.append({"name": if_item, "state": ifOperStatus, "state_name" : ifOperStatusName})
+            group_members.append({"name": if_member_item, "state": ifOperStatus, "state_name" : ifOperStatusName})
             perfdata = []
 
             # Only these values are packed into counters
@@ -441,7 +438,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
                 ( "outdisc",   ifOutDiscards),
                 ( "outerr",    ifOutErrors) ]:
                 try:
-                    get_rate("if.%s.%s.%s" % (name, item, if_item), this_time, saveint(counter), onwrap=RAISE)
+                    get_rate("if.%s.%s.%s" % (name, item, if_member_item), this_time, saveint(counter), onwrap=RAISE)
                 except MKCounterWrapped:
                     wrapped = True
                     # continue, other counters might wrap as well
@@ -466,7 +463,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
 
         # Append an additional entry to the info table containing the calculated group_info
         num_up = 0
-        for element in matching_interfaces:
+        for (if_member_item, element) in matching_interfaces:
             if element[4] == '1' or (
                   type(element[4]) == tuple and element[4][0] == '1'):
                   num_up += 1

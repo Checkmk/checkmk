@@ -49,8 +49,8 @@ def check_elphase(item, params, parsed):
         ( "current",        "Current",        " A",  True, ),
         ( "output_load",    "Load",           "%",   True, ),
         ( "power",          "Power",          " W",  True, ),
-        ( "appower",        "Apparent Power", " W",  True  ),
-        ( "energy",         "Energy",         " Wh", True ),
+        ( "appower",        "Apparent Power", " VA", True, ),
+        ( "energy",         "Energy",         " Wh", True, ),
     ]:
 
         if what in parsed[item]:

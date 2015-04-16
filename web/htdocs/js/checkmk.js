@@ -950,9 +950,6 @@ function update_header_timer()
 // When called with two parmeters the 2nd one is used as new url.
 function set_reload(secs, url)
 {
-    if (typeof url === 'undefined')
-        url = '';
-
     if (g_reload_timer)
         clearTimeout(g_reload_timer);
 
@@ -960,7 +957,7 @@ function set_reload(secs, url)
 
     if (secs !== 0) {
         g_reload_interval = secs;
-        schedule_reload(url, parseFloat(g_reload_interval)*1000);
+        schedule_reload();
     }
 }
 
@@ -968,6 +965,12 @@ function set_reload(secs, url)
 // running, this timer is terminated and replaced by the new one.
 function schedule_reload(url, milisecs)
 {
+    if (typeof url === 'undefined')
+        url = ''; // reload current page (or just the content)
+
+    if (typeof milisecs === 'undefined')
+        milisecs = parseFloat(g_reload_interval) * 1000; // use default reload interval
+
     if (g_reload_timer)
         clearTimeout(g_reload_timer);
 
@@ -985,7 +988,7 @@ function handle_content_reload(_unused, code) {
     // Update the header time
     update_header_timer();
 
-    schedule_reload('');
+    schedule_reload();
 }
 
 function handle_content_reload_error(data, status_code)
@@ -998,7 +1001,7 @@ function handle_content_reload_error(data, status_code)
     }
 
     // Continue update after the error
-    schedule_reload('');
+    schedule_reload();
 }
 
 function do_reload(url)

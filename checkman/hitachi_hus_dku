@@ -10,9 +10,11 @@ description:
  extract state information of the following hardware components of the DKU:
  Power Supply, Drive, Fan, Environment.
 
- The checks gets CRIT if one of the components is not in the state "noError".
- In addition, the Environment component is also OK, when it is in the state
- "moderate".
+ The check is {OK} if all of the components are in the state "noError".
+ It is {WARN} if some of the components are in the states "moderate" or
+ "service".  It is {CRIT} if some of the components are in other states as
+ the above-mentioned.
+
 
 inventory:
  One service for every DKU chassis found

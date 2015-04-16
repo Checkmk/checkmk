@@ -878,7 +878,7 @@ function handle_execute_active_check(oDiv, response_text)
 
     // Change name and class of status columns
     var oTr = oDiv.parentNode.parentNode;
-    if (hasClass(oTr, "even0"))
+    if (has_class(oTr, "even0"))
         var rowtype = "even";
     else
         var rowtype = "odd";

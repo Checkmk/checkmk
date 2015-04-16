@@ -15,6 +15,7 @@
     WATO:
     * 1956 FIX: WATO Web-API: Fixed exception information for single sites...
     * 2178 FIX: Fixed handling of user erros in WATO when using Python < 2.5
+    * 2203 FIX: Fix sorting of unselected elements in a list choice with two panes
 
     BI:
     * 1897 FIX: Fixed exception in BI Availability view...

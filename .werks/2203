@@ -1,0 +1,10 @@
+Title: Fix sorting of unselected elements in a list choice with two panes
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6p2
+Date: 1429179695
+
+

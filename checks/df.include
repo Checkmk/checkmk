@@ -338,16 +338,17 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
        elif used_mb >= warn_mb:
            status = max(1, status)
 
-    show_levels = params.get("show_levels")
-    if show_levels == "always" or \
-        (show_levels == "onproblem" and status > 0) or \
-        (show_levels == "onmagic" and (status > 0 or levels.get("magic", 1.0) != 1.0)):
-        infotext += ", " + levels["levels_text"]
+    if type(params) == dict:
+        show_levels = params.get("show_levels")
+        if show_levels == "always" or \
+            (show_levels == "onproblem" and status > 0) or \
+            (show_levels == "onmagic" and (status > 0 or levels.get("magic", 1.0) != 1.0)):
+            infotext += ", " + levels["levels_text"]
 
-    if reserved_mb > 0 and params["show_reserved"]:
-        reserved_perc = 100.0 * float(reserved_mb) / size_mb
-        infotext += ", therein reserved for root: %.1f%% (%.2f MB)" % (reserved_perc, reserved_mb)
-        perfdata.append(("reserved", reserved_mb))
+        if reserved_mb > 0 and params["show_reserved"]:
+            reserved_perc = 100.0 * float(reserved_mb) / size_mb
+            infotext += ", therein reserved for root: %.1f%% (%.2f MB)" % (reserved_perc, reserved_mb)
+            perfdata.append(("reserved", reserved_mb))
 
     # Trends. The trends are computed in two steps. In the first step we
     # compute the delta to the last check, using a normal check_mk counter.

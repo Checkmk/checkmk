@@ -1,0 +1,18 @@
+title: Bachmann Bluenet Monitored PLC Powermeter
+agents: snmp
+catalog: hw/environment/bachmann
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the voltage, current, and active and apparent power
+ of Bachmann Bluenet Monitored Power Line Connectors (PLCs). It uses the
+ NETTRACK-E3METER-SNMP to extract the data from the device.
+
+ Lower and upper warning and critical levels can be configured for this check.
+ A non-OK state is triggered according to these levels.
+
+inventory:
+ One service for each power meter on the device with a non-zero voltage is created.
+
+item:
+ The ID of the power meter.

@@ -1621,7 +1621,8 @@ class DualListChoice(ListChoice):
             for v in value:
                 if v in allowed_keys:
                     selected.append((v, edict[v]))
-            for v in allowed_keys:
+
+            for v, name in self._elements:
                 if v not in value:
                     unselected.append((v, edict[v]))
         else:
@@ -1655,7 +1656,8 @@ class DualListChoice(ListChoice):
             onchange_selected   += ';vs_duallist_enlarge(\'selected\', \'%s\')' % varprefix
             onchange_unselected += ';vs_duallist_enlarge(\'unselected\', \'%s\')' % varprefix
 
-        html.sorted_select(varprefix + '_unselected', unselected,
+        func = self._custom_order and html.select or html.sorted_select
+        func(varprefix + '_unselected', unselected,
                            attrs = {
                                'size'       : self._rows,
                                'multiple'   : 'multiple',
@@ -1664,7 +1666,6 @@ class DualListChoice(ListChoice):
                            },
                            onchange = onchange_unselected)
         html.write('</td><td>')
-        func = self._custom_order and html.select or html.sorted_select
         func(varprefix + '_selected', selected,
                            attrs = {
                                'size'       : self._rows,

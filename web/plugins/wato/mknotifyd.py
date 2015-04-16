@@ -53,13 +53,13 @@ if mknotifyd_enabled:
                     ( "both",   _("Asynchronous local delivery plus remote forwarding" ) ),
                 ],
                 default_value = False,
-                help = _("This option dedices how notifications will be processed. Without the "
-                         "notification spooler (<tt>mknotifyd</tt>) only direct local delivery "
-                         "is possible. Long lasting or excessive notifications might slow down "
-                         "the monitoring. If you select remote forwarding then make sure that "
-                         "your notification spooler is correctly setup for incoming and/or "
-                         "outgoing connections."),
             ),
+            help = _("This option dedices how notifications will be processed. Without the "
+                     "notification spooler (<tt>mknotifyd</tt>) only direct local delivery "
+                     "is possible. Long lasting or excessive notifications might slow down "
+                     "the monitoring. If you select remote forwarding then make sure that "
+                     "your notification spooler is correctly setup for incoming and/or "
+                     "outgoing connections."),
             forth = lambda x: (x == False and "off" or (x == True and "local" or x)),
         ),
         domain = "check_mk",

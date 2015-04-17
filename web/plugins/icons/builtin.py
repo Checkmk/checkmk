@@ -130,7 +130,7 @@ def paint_reschedule(what, row, tags, host_custom_vars):
         return icon, txt, url
 
 multisite_icons.append({
-    'columns':         [ 'active_checks_enabled' ],
+    'columns':         [ 'active_checks_enabled', 'check_command' ],
     'paint':           paint_reschedule,
     'toplevel':        False,
 })

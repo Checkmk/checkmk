@@ -1,0 +1,11 @@
+Title: Filesystem checks: Fix crash when legacy parameters (tuple) were used
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429187803
+Class: fix
+
+A library function, which is used by many filesystem checks, raised an exception
+when the check parameters were not specified as dictionary. For example (93, 96).
+This has been fixed.

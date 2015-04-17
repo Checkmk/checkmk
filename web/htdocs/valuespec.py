@@ -1919,7 +1919,7 @@ class AbsoluteDate(ValueSpec):
 
         if self._include_time:
             if self._show_titles:
-                html.write('<td>&nbsp</td><td>')
+                html.write('<td>&nbsp;</td><td>')
             else:
                 html.write(" ")
             html.number_input(varprefix + "_hour", hour, size=2)
@@ -2284,7 +2284,6 @@ class Timerange(CascadingDropdown):
                 return (from_time, now), titles[0]
 
             else: # last (previous)
-                html.debug("HIRN", rangespec)
                 if rangespec[0] == 'd':
                     return (from_time - 86400, from_time), titles[1]
                 elif rangespec[0] == 'w':
@@ -2530,9 +2529,6 @@ class Alternative(ValueSpec):
             vs.render_input(varprefix + "_%d" % nr, cur_val)
             html.write("</span>")
 
-
-
-
     def render_input_radio(self, varprefix, value):
         mvs = self.matching_alternative(value)
         for nr, vs in enumerate(self._elements):
@@ -2563,6 +2559,15 @@ class Alternative(ValueSpec):
 
     def canonical_value(self):
         return self._elements[0].canonical_value()
+
+    def default_value(self):
+        try:
+            if type(self._default_value) == type(lambda:True):
+                return self._default_value()
+            else:
+                return self._default_value
+        except:
+            return self._elements[0].default_value()
 
     def value_to_text(self, value):
         vs = self.matching_alternative(value)

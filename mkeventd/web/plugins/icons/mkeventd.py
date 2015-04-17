@@ -94,6 +94,7 @@ def paint_mkeventd(what, row, tags, custom_vars):
 
 if mkeventd_enabled:
     multisite_icons.append({
+        'columns': [ 'check_command' ],
         'host_columns': [ 'address', 'name' ],
         'paint':   paint_mkeventd,
     })

@@ -340,16 +340,14 @@ function dashboard_scheduler(initial) {
 
     // Update timestamp every minute
     // Required if there are no refresh_dashlets present or all refresh times are > 60sec
-    if (timestamp % 60 == 0) {
-        updateHeaderTime();
-    }
+    if (timestamp % 60 == 0)
+        update_header_timer();
 
     setTimeout(function() { dashboard_scheduler(0); }, 1000);
 }
 
 function dashboard_update_contents(id, response_text) {
-    // Update the header time
-    updateHeaderTime();
+    update_header_timer();
 
     // Call the generic function to replace the dashlet inner code
     updateContents(id, response_text);

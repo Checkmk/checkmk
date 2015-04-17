@@ -798,10 +798,10 @@ class html:
 
             if self.browser_reload != 0:
                 if self.browser_redirect != '':
-                    self.write("<script type=\"text/javascript\">setReload(%s, '%s')</script>\n" %
+                    self.write("<script type=\"text/javascript\">set_reload(%s, '%s')</script>\n" %
                                                                   (self.browser_reload, self.browser_redirect))
                 else:
-                    self.write("<script type=\"text/javascript\">setReload(%s)</script>\n" % self.browser_reload)
+                    self.write("<script type=\"text/javascript\">set_reload(%s)</script>\n" % self.browser_reload)
 
 
             self.write("</head>\n")
@@ -824,7 +824,7 @@ class html:
         self.browser_redirect = url
 
     def immediate_browser_redirect(self, secs, url):
-        self.javascript("setReload(%s, '%s');" % (secs, url))
+        self.javascript("set_reload(%s, '%s');" % (secs, url))
 
     def body_css_classes(self):
         body_classes = [ "main" ]
@@ -959,8 +959,7 @@ class html:
                 encoded_vars[k] = v
 
             self.popup_trigger(
-                '<img class=statusicon src="images/status_add_dashlet.png" '
-                'title="%s"></a></div>\n' % _("Add this view to..."),
+                '<img class=statusicon src="images/status_add_dashlet.png" title="%s">\n' % _("Add this view to..."),
                 'add_visual', 'add_visual', data='[\'%s\', %s, {\'name\': \'%s\'}]' %
                                                     (mode_name, self.attrencode(repr(encoded_vars)),
                                                      self.var('view_name')))

@@ -119,7 +119,7 @@ class html_mod_python(htmllib.html):
         if config.pagetitle_date_format:
             self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.pagetitle_date_format)
         self.write(' <b id=headertime></b>')
-        self.write("<script language=\"javascript\" type=\"text/javascript\">updateHeaderTime()</script>")
+        self.javascript('update_header_timer()')
         self.top_heading_right()
 
     def omd_mode(self):
@@ -137,7 +137,7 @@ class html_mod_python(htmllib.html):
         return (omd_mode, omd_site)
 
     def log(self, msg):
-        from lib import logger
+        from lib import logger, LOG_NOTICE
         logger(LOG_NOTICE, msg)
 
     def http_redirect(self, url):

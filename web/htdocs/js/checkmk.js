@@ -22,51 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-//  .--General-------------------------------------------------------------.
-//  |                   ____                           _                   |
-//  |                  / ___| ___ _ __   ___ _ __ __ _| |                  |
-//  |                 | |  _ / _ \ '_ \ / _ \ '__/ _` | |                  |
-//  |                 | |_| |  __/ | | |  __/ | | (_| | |                  |
-//  |                  \____|\___|_| |_|\___|_|  \__,_|_|                  |
-//  |                                                                      |
-//  +----------------------------------------------------------------------+
-//  |  General functions used in many places                               |
-//  '----------------------------------------------------------------------'
-
-var browser         = navigator.userAgent.toLowerCase();
-var weAreOpera      = browser.indexOf("opera") != -1;
-var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
-
-
+//#   .-General------------------------------------------------------------.
+//#   |                   ____                           _                 |
+//#   |                  / ___| ___ _ __   ___ _ __ __ _| |                |
+//#   |                 | |  _ / _ \ '_ \ / _ \ '__/ _` | |                |
+//#   |                 | |_| |  __/ | | |  __/ | | (_| | |                |
+//#   |                  \____|\___|_| |_|\___|_|  \__,_|_|                |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   | Generic library functions used anywhere in Check_MK                |
+//#   '--------------------------------------------------------------------'
 
 // Make JS understand Python source code
 var True = true;
 var False = false;
-
-// Some browsers don't support indexOf on arrays. This implements the
-// missing method
-if (!Array.prototype.indexOf)
-{
-  Array.prototype.indexOf = function(elt /*, from*/)
-  {
-    var len = this.length;
-
-    var from = Number(arguments[1]) || 0;
-    from = (from < 0)
-         ? Math.ceil(from)
-         : Math.floor(from);
-    if (from < 0)
-      from += len;
-
-    for (; from < len; from++)
-    {
-      if (from in this &&
-          this[from] === elt)
-        return from;
-    }
-    return -1;
-  };
-}
 
 // The nextSibling attribute points also to "text nodes" which might
 // be created by spaces or even newlines in the HTML code and not to
@@ -79,14 +48,6 @@ function real_next_sibling(o) {
     return n;
 }
 
-var classRegexes = {};
-
-function hasClass(obj, cls) {
-    if(!classRegexes[cls])
-        classRegexes[cls] = new RegExp('(\\s|^)'+cls+'(\\s|$)');
-    return obj.className.match(classRegexes[cls]);
-}
-
 // simple string replace that replaces all occurrances.
 // Unbelievable that JS does not have a builtin way to
 // to that.
@@ -96,62 +57,197 @@ function replace_all(haystack, needle, r) {
     return haystack;
 }
 
-// This implements getElementsByClassName() for IE<9
-if (!document.getElementsByClassName) {
-  document.getElementsByClassName = function(className, root, tagName) {
-    root = root || document.body;
-
-    // at least try with querySelector (IE8 standards mode)
-    // about 5x quicker than below
-    if (root.querySelectorAll) {
-        tagName = tagName || '';
-        return root.querySelectorAll(tagName + '.' + className);
+function has_class(o, cn) {
+    if (typeof(o.className) === 'undefined')
+        return false;
+    var parts = o.className.split(' ');
+    for (x=0; x<parts.length; x++) {
+        if (parts[x] == cn)
+            return true;
     }
-
-    // and for others... IE7-, IE8 (quirks mode), Firefox 2-, Safari 3.1-, Opera 9-
-    var tagName = tagName || '*', _tags = root.getElementsByTagName(tagName), _nodeList = [];
-    for (var i = 0, _tag; _tag = _tags[i++];) {
-        if (hasClass(_tag, className)) {
-            _nodeList.push(_tag);
-        }
-    }
-    return _nodeList;
-  }
+    return false;
 }
 
-// Again, some IE 7 fun: The IE7 mixes up name and id attributes of objects.
-// When using getElementById() where we really only want to match objects by
-// their id, the clever IE7 also searches objects by their names, wow. crap.
-if (navigator.appVersion.indexOf("MSIE 7.") != -1)
+function remove_class(o, cn) {
+    var parts = o.className.split(' ');
+    var new_parts = Array();
+    for (x=0; x<parts.length; x++) {
+        if (parts[x] != cn)
+            new_parts.push(parts[x]);
+    }
+    o.className = new_parts.join(" ");
+}
+
+function add_class(o, cn) {
+    if (!has_class(o, cn))
+        o.className += " " + cn;
+}
+
+function change_class(o, a, b) {
+    remove_class(o, a);
+    add_class(o, b);
+}
+
+function hilite_icon(oImg, onoff) {
+    src = oImg.src;
+    if (onoff == 0)
+        oImg.src = oImg.src.replace("hi.png", "lo.png");
+    else
+        oImg.src = oImg.src.replace("lo.png", "hi.png");
+}
+
+function pageHeight() {
+  var h;
+
+  if (window.innerHeight !== null && typeof window.innerHeight !== 'undefined' && window.innerHeight !== 0)
+    h = window.innerHeight;
+  else if (document.documentElement && document.documentElement.clientHeight)
+    h = document.documentElement.clientHeight;
+  else if (document.body !== null)
+    h = document.body.clientHeight;
+  else
+    h = null;
+
+  return h;
+}
+
+function pageWidth() {
+  var w;
+
+  if (window.innerWidth !== null && typeof window.innerWidth !== 'undefined' && window.innerWidth !== 0)
+    w = window.innerWidth;
+  else if (document.documentElement && document.documentElement.clientWidth)
+    w = document.documentElement.clientWidth;
+  else if (document.body !== null)
+    w = document.body.clientWidth;
+  else
+    w = null;
+
+  return w;
+}
+
+var g_sidebar_reload_timer = null;
+
+function reload_sidebar()
 {
-    document._getElementById = document.getElementById;
-    document.getElementById = function(id) {
-        var e = document._getElementById(id);
-        if (e) {
-            if (e.attributes['id'].value == id)
-                return e;
-            else {
-                for (var i = 1; i < document.all[id].length; i++) {
-                    if(document.all[id][i].attributes['id'].value == id)
-                        return document.all[id][i];
-                }
-            }
+    if (parent && parent.frames[0]) {
+        // reload sidebar, but preserve eventual quicksearch field value and focus
+        var val = '';
+        var focused = false;
+        var field = parent.frames[0].document.getElementById('mk_side_search_field');
+        if (field) {
+            val = field.value;
+            focused = parent.frames[0].document.activeElement == field;
         }
-        return null;
-    };
+
+        parent.frames[0].document.reloading = 1;
+        parent.frames[0].document.location.reload();
+
+        if (field) {
+            g_sidebar_reload_timer = setInterval(function (value, has_focus) {
+                return function() {
+                    if (!parent.frames[0].document.reloading
+                        && parent.frames[0].document.readyState === 'complete') {
+                        var field = parent.frames[0].document.getElementById('mk_side_search_field');
+                        if (field) {
+                            field.value = value;
+                            if (has_focus) {
+                                field.focus();
+
+                                // Move caret to end
+                                if (field.setSelectionRange !== undefined)
+                                    field.setSelectionRange(value.length, value.length);
+                            }
+                            field = null;
+                        }
+
+                        clearInterval(g_sidebar_reload_timer);
+                        g_sidebar_reload_timer = null;
+                    }
+                };
+            }(val, focused), 50);
+
+            field = null;
+        }
+    }
 }
+
+// Handle Enter key in textfields
+function textinput_enter_submit(e, submit) {
+    var keyCode = e.which || e.keyCode;
+    if (keyCode == 13) {
+        if (submit) {
+            var button = document.getElementById(submit);
+            if (button)
+                button.click();
+        }
+        if (e.preventDefault) e.preventDefault();
+        e.returnValue = false;
+        e.cancelBubble = true;
+        return false;
+    }
+}
+
+function has_canvas_support() {
+    return document.createElement('canvas').getContext;
+}
+
+// convert percent to angle(rad)
+function rad(g) {
+    return (g * 360 / 100 * Math.PI) / 180;
+}
+
+
+// simple implementation of function default arguments when
+// using objects as function parameters. Example:
+// function xxx(args) {
+//     args = merge_args({
+//         'arg2': 'default_val',
+//     });
+// }
+// xxx({
+//   'arg1': 'val1',
+//   'arg3': 'val3',
+// })
+function merge_args()
+{
+    var defaults = arguments[0];
+    var args = arguments[1] || {};
+
+    for (var name in args)
+        defaults[name] = args[name];
+
+    return defaults;
+}
+
+function has_graphing()
+{
+    return typeof g_graphs !== 'undefined';
+}
+
+//#.
+//#   .-Events-------------------------------------------------------------.
+//#   |                    _____                 _                         |
+//#   |                   | ____|_   _____ _ __ | |_ ___                   |
+//#   |                   |  _| \ \ / / _ \ '_ \| __/ __|                  |
+//#   |                   | |___ \ V /  __/ | | | |_\__ \                  |
+//#   |                   |_____| \_/ \___|_| |_|\__|___/                  |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   | User interaction event related                                     |
+//#   '--------------------------------------------------------------------'
 
 function getTarget(event) {
-  return event.target ? event.target : event.srcElement;
+    return event.target ? event.target : event.srcElement;
 }
 
 function getButton(event) {
-  if (event.which == null)
-    /* IE case */
-    return (event.button < 2) ? "LEFT" : ((event.button == 4) ? "MIDDLE" : "RIGHT");
-  else
-    /* All others */
-    return (event.which < 2) ? "LEFT" : ((event.which == 2) ? "MIDDLE" : "RIGHT");
+    if (event.which == null)
+        /* IE case */
+        return (event.button < 2) ? "LEFT" : ((event.button == 4) ? "MIDDLE" : "RIGHT");
+    else
+        /* All others */
+        return (event.which < 2) ? "LEFT" : ((event.which == 2) ? "MIDDLE" : "RIGHT");
 }
 
 // Adds document/window global event handlers
@@ -187,7 +283,6 @@ function del_event_handler(type, func, obj) {
     }
 }
 
-
 function prevent_default_events(event) {
     if (event.preventDefault)
         event.preventDefault();
@@ -197,45 +292,152 @@ function prevent_default_events(event) {
     return false;
 }
 
-function hilite_icon(oImg, onoff) {
-    src = oImg.src;
-    if (onoff == 0)
-        oImg.src = oImg.src.replace("hi.png", "lo.png");
-    else
-        oImg.src = oImg.src.replace("lo.png", "hi.png");
+//#.
+//#   .-Browser Fixes------------------------------------------------------.
+//#   |    ____                                    _____ _                 |
+//#   |   | __ ) _ __ _____      _____  ___ _ __  |  ___(_)_  _____  ___   |
+//#   |   |  _ \| '__/ _ \ \ /\ / / __|/ _ \ '__| | |_  | \ \/ / _ \/ __|  |
+//#   |   | |_) | | | (_) \ V  V /\__ \  __/ |    |  _| | |>  <  __/\__ \  |
+//#   |   |____/|_|  \___/ \_/\_/ |___/\___|_|    |_|   |_/_/\_\___||___/  |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   | Browser detection and browser related workarounds                  |
+//#   '--------------------------------------------------------------------'
+
+// FIXME: cleanup
+var browser         = navigator.userAgent.toLowerCase();
+var weAreOpera      = browser.indexOf("opera") != -1;
+var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
+
+function isFirefox() {
+    return navigator.userAgent.indexOf("Firefox") > -1;
 }
 
+function isWebkit() {
+    return navigator.userAgent.indexOf("WebKit") > -1;
+}
 
-function get_url(url, handler, data, errorHandler, addAjaxId) {
-    if (window.XMLHttpRequest) {
-        var AJAX = new XMLHttpRequest();
-    } else {
-        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
+function is_ie_below_9() {
+    return document.all && !document.addEventListener;
+}
+
+// Some browsers don't support indexOf on arrays. This implements the
+// missing method
+if (!Array.prototype.indexOf)
+{
+    Array.prototype.indexOf = function(elt /*, from*/) {
+        var len = this.length;
+
+        var from = Number(arguments[1]) || 0;
+        from = (from < 0)
+             ? Math.ceil(from)
+             : Math.floor(from);
+        if (from < 0)
+            from += len;
+
+        for (; from < len; from++) {
+            if (from in this &&
+                this[from] === elt)
+            return from;
+        }
+        return -1;
+    };
+}
+
+// This implements getElementsByClassName() for IE<9
+if (!document.getElementsByClassName) {
+    document.getElementsByClassName = function(className, root, tagName) {
+        root = root || document.body;
+
+        // at least try with querySelector (IE8 standards mode)
+        // about 5x quicker than below
+        if (root.querySelectorAll) {
+            tagName = tagName || '';
+            return root.querySelectorAll(tagName + '.' + className);
+        }
+
+        // and for others... IE7-, IE8 (quirks mode), Firefox 2-, Safari 3.1-, Opera 9-
+        var tagName = tagName || '*', _tags = root.getElementsByTagName(tagName), _nodeList = [];
+        for (var i = 0, _tag; _tag = _tags[i++];) {
+            if (has_class(_tag, className)) {
+                _nodeList.push(_tag);
+            }
+        }
+        return _nodeList;
     }
+}
 
-    var addAjaxId = (typeof addAjaxId === "undefined") ? true : addAjaxId;
+// Again, some IE 7 fun: The IE7 mixes up name and id attributes of objects.
+// When using getElementById() where we really only want to match objects by
+// their id, the clever IE7 also searches objects by their names, wow. crap.
+if (navigator.appVersion.indexOf("MSIE 7.") != -1)
+{
+    document._getElementById = document.getElementById;
+    document.getElementById = function(id) {
+        var e = document._getElementById(id);
+        if (e) {
+            if (e.attributes['id'].value == id)
+                return e;
+            else {
+                for (var i = 1; i < document.all[id].length; i++) {
+                    if(document.all[id][i].attributes['id'].value == id)
+                        return document.all[id][i];
+                }
+            }
+        }
+        return null;
+    };
+}
+
+//#.
+//#   .-AJAX---------------------------------------------------------------.
+//#   |                         _       _   _    __  __                    |
+//#   |                        / \     | | / \   \ \/ /                    |
+//#   |                       / _ \ _  | |/ _ \   \  /                     |
+//#   |                      / ___ \ |_| / ___ \  /  \                     |
+//#   |                     /_/   \_\___/_/   \_\/_/\_\                    |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   | AJAX call related functions                                        |
+//#   '--------------------------------------------------------------------'
+
+function call_ajax(url, args)
+{
+    args = merge_args({
+        add_ajax_id      : true,
+        response_handler : null,
+        error_handler    : null,
+        handler_data     : null,
+        method           : "GET",
+        post_data        : null,
+        sync             : false
+    }, args);
+
+    var AJAX = window.XMLHttpRequest ? new XMLHttpRequest()
+                                     : new ActiveXObject("Microsoft.XMLHTTP");
+    if (!AJAX)
+        return null;
 
     // Dynamic part to prevent caching
-    var dyn = '';
-    if (addAjaxId) {
-        dyn = "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
-        if (url.indexOf('\?') !== -1) {
-            dyn = "&"+dyn;
-        } else {
-            dyn = "?"+dyn;
-        }
+    if (args.add_ajax_id) {
+        url += url.indexOf('\?') !== -1 ? "&" : "?";
+        url += "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
     }
 
-    if (!AJAX) {
-        return null;
+    AJAX.open(args.method, url, !args.sync);
+
+    if (args.method == "POST") {
+        AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        AJAX.setRequestHeader("Content-length", args.post_data.length);
+        AJAX.setRequestHeader("Connection", "close");
     }
 
-    AJAX.open("GET", url + dyn, true);
-    if (typeof handler === 'function') {
+    if (!args.sync) {
         AJAX.onreadystatechange = function() {
             if (AJAX && AJAX.readyState == 4) {
                 if (AJAX.status == 200) {
-                    handler(data, AJAX.responseText);
+                    if (args.response_handler)
+                        args.response_handler(args.handler_data, AJAX.responseText);
                 }
                 else if (AJAX.status == 401) {
                     // This is reached when someone is not authenticated anymore
@@ -248,64 +450,43 @@ function get_url(url, handler, data, errorHandler, addAjaxId) {
                         document.location.reload();
                 }
                 else {
-                    if (typeof errorHandler !== 'undefined')
-                        errorHandler(data, AJAX.status);
+                    if (args.error_handler)
+                        args.error_handler(args.handler_data, AJAX.status);
                 }
             }
         }
     }
 
-    AJAX.send(null);
+    AJAX.send(args.post_data);
     return AJAX;
 }
 
-function get_url_sync(url) {
-    if (window.XMLHttpRequest) {
-        var AJAX = new XMLHttpRequest();
-    } else {
-        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
-    }
+function get_url(url, handler, data, errorHandler, addAjaxId)
+{
+    call_ajax(url, {
+        response_handler : handler,
+        handler_data     : data,
+        error_handler    : errorHandler,
+        add_ajax_id      : addAjaxId
+    });
+}
 
-    AJAX.open("GET", url, false);
-    AJAX.send(null);
+function get_url_sync(url)
+{
+    var AJAX = call_ajax(url, {sync:true});
     return AJAX.responseText;
 }
 
-function post_url(url, params) {
-    if (window.XMLHttpRequest) {
-        var AJAX = new XMLHttpRequest();
-    } else {
-        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-
-    AJAX.open("POST", url);
-
-    AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    AJAX.setRequestHeader("Content-length", params.length);
-    AJAX.setRequestHeader("Connection", "close");
-
-    AJAX.onreadystatechange = function() {
-        if (AJAX && AJAX.readyState == 4) {
-            if (AJAX.status == 401) {
-                // This is reached when someone is not authenticated anymore
-                // but has some webservices running which are still fetching
-                // infos via AJAX. Reload the whole frameset or only the
-                // single page in that case.
-                if(top)
-                    top.location.reload();
-                else
-                    document.location.reload();
-            }
-            else if (AJAX.status != 200) {
-                alert('Error ' + AJAX.status + ' during POST to URL ' + url);
-            }
-        }
-    }
-    AJAX.send(params);
+function post_url(url, params)
+{
+    call_ajax(url, {
+        method: "POST",
+        post_data: params
+    });
 }
 
-
-function bulkUpdateContents(ids, codes) {
+function bulkUpdateContents(ids, codes)
+{
     var codes = eval(codes);
     for (var i = 0, len = ids.length; i < len; i++) {
         if (restart_snapins.indexOf(ids[i].replace('snapin_', '')) !== -1) {
@@ -323,93 +504,56 @@ function bulkUpdateContents(ids, codes) {
 }
 
 // Updates the contents of a snapin or dashboard container after get_url
-function updateContents(id, code) {
-  var obj = document.getElementById(id);
-  if (obj) {
-    obj.innerHTML = code;
-    executeJS(id);
-    obj = null;
-  }
+function updateContents(id, code)
+{
+    var obj = document.getElementById(id);
+    if (obj) {
+        obj.innerHTML = code;
+        executeJS(id);
+    }
 }
 
 // There may be some javascript code in the html code rendered by
 // sidebar.py. Execute it here. This is needed in some browsers.
-function executeJS(objId) {
-  // Before switching to asynchronous requests this worked in firefox
-  // out of the box. Now it seems not to work with ff too. So now
-  // executing the javascript manually.
-  // if (!isFirefox()) {
-  var obj = document.getElementById(objId);
-  executeJSbyObject(obj);
+function executeJS(id)
+{
+    executeJSbyObject(document.getElementById(id));
 }
 
-function executeJSbyObject(obj) {
-  // Before switching to asynchronous requests this worked in firefox
-  // out of the box. Now it seems not to work with ff too. So now
-  // executing the javascript manually.
-  // if (!isFirefox()) {
-  var aScripts = obj.getElementsByTagName('script');
-  for(var i = 0; i < aScripts.length; i++) {
-    if (aScripts[i].src && aScripts[i].src !== '') {
-      var oScr = document.createElement('script');
-      oScr.src = aScripts[i].src;
-      document.getElementsByTagName("HEAD")[0].appendChild(oScr);
-      oScr = null;
-    } else {
-      try {
-    	  eval(aScripts[i].text);
-      } catch(e) {alert(aScripts[i].text + "\nError:" + e.message);}
+function executeJSbyObject(obj)
+{
+    var aScripts = obj.getElementsByTagName('script');
+    for(var i = 0; i < aScripts.length; i++) {
+        if (aScripts[i].src && aScripts[i].src !== '') {
+            var oScr = document.createElement('script');
+            oScr.src = aScripts[i].src;
+            document.getElementsByTagName("HEAD")[0].appendChild(oScr);
+            oScr = null;
+        } else {
+            try {
+                eval(aScripts[i].text);
+            } catch(e) {
+                alert(aScripts[i].text + "\nError:" + e.message);
+            }
+        }
     }
-  }
-  aScripts = null;
-  obj = null;
+    aScripts = null;
+    obj = null;
 }
 
-function isFirefox() {
-  return navigator.userAgent.indexOf("Firefox") > -1;
-}
+//#.
+//#   .-URL Handling-------------------------------------------------------.
+//#   |     _   _ ____  _       _   _                 _ _ _                |
+//#   |    | | | |  _ \| |     | | | | __ _ _ __   __| | (_)_ __   __ _    |
+//#   |    | | | | |_) | |     | |_| |/ _` | '_ \ / _` | | | '_ \ / _` |   |
+//#   |    | |_| |  _ <| |___  |  _  | (_| | | | | (_| | | | | | | (_| |   |
+//#   |     \___/|_| \_\_____| |_| |_|\__,_|_| |_|\__,_|_|_|_| |_|\__, |   |
+//#   |                                                           |___/    |
+//#   +--------------------------------------------------------------------+
+//#   |                                                                    |
+//#   '--------------------------------------------------------------------'
 
-function isWebkit() {
-  return navigator.userAgent.indexOf("WebKit") > -1;
-}
-
-function is_ie_below_9() {
-    return document.all && !document.addEventListener;
-}
-
-function pageHeight() {
-  var h;
-
-  if (window.innerHeight !== null && typeof window.innerHeight !== 'undefined' && window.innerHeight !== 0)
-    h = window.innerHeight;
-  else if (document.documentElement && document.documentElement.clientHeight)
-    h = document.documentElement.clientHeight;
-  else if (document.body !== null)
-    h = document.body.clientHeight;
-  else
-    h = null;
-
-  return h;
-}
-
-function pageWidth() {
-  var w;
-
-  if (window.innerWidth !== null && typeof window.innerWidth !== 'undefined' && window.innerWidth !== 0)
-    w = window.innerWidth;
-  else if (document.documentElement && document.documentElement.clientWidth)
-    w = document.documentElement.clientWidth;
-  else if (document.body !== null)
-    w = document.body.clientWidth;
-  else
-    w = null;
-
-  return w;
-}
-
-/**
- * Function gets the value of the given url parameter
- */
+// Function gets the value of the given url parameter
 function getUrlParam(name, url) {
     var url = (typeof url === 'undefined') ? window.location : url;
 
@@ -468,7 +612,8 @@ function makeuri(addvars, url) {
 // GUI styling
 // ----------------------------------------------------------------------------
 
-function update_togglebutton(id, enabled) {
+function update_togglebutton(id, enabled)
+{
     var on  = document.getElementById(id + '_on');
     var off = document.getElementById(id + '_off');
     if (!on || !off)
@@ -522,9 +667,17 @@ function toggle_other_filters(fname, disable_others) {
     }
 }
 
-// ----------------------------------------------------------------------------
-// PNP graph handling
-// ----------------------------------------------------------------------------
+//#.
+//#   .-Graphing-----------------------------------------------------------.
+//#   |               ____                 _     _                         |
+//#   |              / ___|_ __ __ _ _ __ | |__ (_)_ __   __ _             |
+//#   |             | |  _| '__/ _` | '_ \| '_ \| | '_ \ / _` |            |
+//#   |             | |_| | | | (_| | |_) | | | | | | | | (_| |            |
+//#   |              \____|_|  \__,_| .__/|_| |_|_|_| |_|\__, |            |
+//#   |                             |_|                  |___/             |
+//#   +--------------------------------------------------------------------+
+//#   | Performance graph handling                                         |
+//#   '--------------------------------------------------------------------'
 
 function pnp_error_response_handler(data, statusCode) {
     // PNP versions that do not have the JSON webservice respond with
@@ -669,28 +822,18 @@ function hover_graph(site, host_name, service)
     return c;
 }
 
-// ----------------------------------------------------------------------------
-// Handle Enter key in textfields
-// ----------------------------------------------------------------------------
-function textinput_enter_submit(e, submit) {
-    var keyCode = e.which || e.keyCode;
-    if (keyCode == 13) {
-        if (submit) {
-            var button = document.getElementById(submit);
-            if (button)
-                button.click();
-        }
-        if (e.preventDefault) e.preventDefault();
-        e.returnValue = false;
-        e.cancelBubble = true;
-        return false;
-    }
-}
+//#.
+//#   .-Reschedule---------------------------------------------------------.
+//#   |          ____                _              _       _              |
+//#   |         |  _ \ ___  ___  ___| |__   ___  __| |_   _| | ___         |
+//#   |         | |_) / _ \/ __|/ __| '_ \ / _ \/ _` | | | | |/ _ \        |
+//#   |         |  _ <  __/\__ \ (__| | | |  __/ (_| | |_| | |  __/        |
+//#   |         |_| \_\___||___/\___|_| |_|\___|\__,_|\__,_|_|\___|        |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   | Rescheduling of host/service checks                                |
+//#   '--------------------------------------------------------------------'
 
-
-// ----------------------------------------------------------------------------
-// Synchronous action handling
-// ----------------------------------------------------------------------------
 // Protocol is:
 // For regular response:
 // [ 'OK', 'last check', 'exit status plugin', 'output' ]
@@ -749,104 +892,57 @@ function performAction(oLink, action, site, host, service, wait_svc) {
     oImg = null;
 }
 
-function toggle_join_fields(prefix, n, obj) {
-    var r1 = document.getElementById(prefix + 'join_index_row' + n);
-    var r2 = document.getElementById(prefix + 'title_row' + n)
-    if(obj.options[obj.selectedIndex].text.substr(0, 8) == 'SERVICE:') {
-        r1.style.display = '';
-        r2.style.display = '';
-    } else {
-        r1.style.display = 'none';
-        r2.style.display = 'none';
-        r1.childNodes[1].firstChild.value = '';
-        r2.childNodes[1].firstChild.value = '';
-    }
-    r1 = null;
-    r2 = null;
-}
+//#.
+//#   .-Page Reload--------------------------------------------------------.
+//#   |        ____                    ____      _                 _       |
+//#   |       |  _ \ __ _  __ _  ___  |  _ \ ___| | ___   __ _  __| |      |
+//#   |       | |_) / _` |/ _` |/ _ \ | |_) / _ \ |/ _ \ / _` |/ _` |      |
+//#   |       |  __/ (_| | (_| |  __/ |  _ <  __/ | (_) | (_| | (_| |      |
+//#   |       |_|   \__,_|\__, |\___| |_| \_\___|_|\___/ \__,_|\__,_|      |
+//#   |                   |___/                                            |
+//#   +--------------------------------------------------------------------+
+//#   |                                                                    |
+//#   '--------------------------------------------------------------------'
 
-// ----------------------------------------------------------------------------
-// page reload stuff
-// ----------------------------------------------------------------------------
+// Stores the reload timer object
+var g_reload_timer = null;
+// This stores the refresh time of the page (But never 0)
+var g_reload_interval = 0; // seconds
+// This flag tells the handle_content_reload_error() function to add an
+// error message about outdated data to the content container or not.
+// The error message is only being added on the first error.
+var g_reload_error = false;
 
-//Stores the reload timer object
-var gReloadTimer = null;
-// This stores the last refresh time of the page (But never 0)
-var gReloadTime = 0;
-
-// Highlights/Unhighlights a refresh button
-function toggleRefreshButton(s, enable) {
-    var o = document.getElementById('button-refresh-' + s);
-    if(o) {
-        if(enable) {
-            o.setAttribute("className", "left w40 selected");
-            o.setAttribute("class", "left w40 selected");
-        } else {
-            o.setAttribute("className", "left w40");
-            o.setAttribute("class", "left w40");
-        }
-    }
-    o = null;
-}
-
-function toggleRefreshFooter(s) {
+function update_foot_refresh(secs)
+{
     var o = document.getElementById('foot_refresh');
     var o2 = document.getElementById('foot_refresh_time');
-    if(o) {
-        if(s == 0) {
+    if (o) {
+        if(secs == 0) {
             o.style.display = 'none';
         } else {
             o.style.display = 'inline-block';
             if(o2) {
-                o2.innerHTML = s;
+                o2.innerHTML = secs;
             }
         }
     }
-    o = null;
 }
 
-// When called with one or more parameters parameters it reschedules the
-// timer to the given interval. If the parameter is 0 the reload is stopped.
-// When called with two parmeters the 2nd one is used as new url.
-function setReload(secs, url) {
-    if (typeof url === 'undefined')
-        url = '';
-
-    if (gReloadTimer) {
-        toggleRefreshButton(0, false);
-        toggleRefreshButton(gReloadTime, false);
-        clearTimeout(gReloadTimer);
-    }
-
-    toggleRefreshButton(secs, true);
-    toggleRefreshFooter(secs);
-
-    if (secs !== 0) {
-        gReloadTime  = secs;
-        startReloadTimer(url);
-    }
-}
-
-function startReloadTimer(url) {
-    if (gReloadTimer)
-        clearTimeout(gReloadTimer);
-    if (gReloadTime)
-        gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
-}
-
-function updateHeaderTime() {
+function update_header_timer()
+{
     var oTime = document.getElementById('headertime');
-    if(!oTime)
+    if (!oTime)
         return;
 
     var t = new Date();
 
     var hours = t.getHours();
-    if(hours < 10)
+    if (hours < 10)
         hours = "0" + hours;
 
     var min = t.getMinutes();
-    if(min < 10)
+    if (min < 10)
         min = "0" + min;
 
     oTime.innerHTML = hours + ':' + min
@@ -859,47 +955,88 @@ function updateHeaderTime() {
         var date_format = oDate.getAttribute("format");
         oDate.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
     }
-    day    = null;
-    month  = null;
-    year   = null;
-    format = null;
-    oDate  = null;
-    min    = null;
-    hours  = null;
-    t      = null;
-    oTime  = null;
 }
 
-var g_reload_error = false;
-function handleContentReload(_unused, code) {
+// When called with one or more parameters parameters it reschedules the
+// timer to the given interval. If the parameter is 0 the reload is stopped.
+// When called with two parmeters the 2nd one is used as new url.
+function set_reload(secs, url)
+{
+    if (g_reload_timer)
+        clearTimeout(g_reload_timer);
+
+    update_foot_refresh(secs);
+
+    if (secs !== 0) {
+        g_reload_interval = secs;
+        schedule_reload();
+    }
+}
+
+// Issues the timer for the next page reload. If some timer is already
+// running, this timer is terminated and replaced by the new one.
+function schedule_reload(url, milisecs)
+{
+    if (typeof url === 'undefined')
+        url = ''; // reload current page (or just the content)
+
+    if (typeof milisecs === 'undefined')
+        milisecs = parseFloat(g_reload_interval) * 1000; // use default reload interval
+
+    if (g_reload_timer)
+        clearTimeout(g_reload_timer);
+
+    g_reload_timer = setTimeout(function() {
+        do_reload(url);
+    }, milisecs);
+}
+
+function handle_content_reload(_unused, code) {
     g_reload_error = false;
     var o = document.getElementById('data_container');
     o.innerHTML = code;
     executeJS('data_container');
 
     // Update the header time
-    updateHeaderTime();
+    update_header_timer();
 
-    aScripts = null;
-    o = null;
-    startReloadTimer('');
+    schedule_reload();
 }
 
-function handleContentReloadError(data, statusCode) {
+function handle_content_reload_error(_unused, status_code)
+{
     if(!g_reload_error) {
         var o = document.getElementById('data_container');
-        o.innerHTML = '<div class=error>Update failed (' + statusCode
+        o.innerHTML = '<div class=error>Update failed (' + status_code
                       + '). The shown data might be outdated</div>' + o.innerHTML;
-        o = null;
         g_reload_error = true;
     }
 
     // Continue update after the error
-    startReloadTimer('');
+    schedule_reload();
 }
 
-function handleReload(url) {
-    // FiXME: Nicht mehr die ganze Seite neu laden, wenn es ein DIV "data_container" gibt.
+function get_content_reload_data()
+{
+    var data = {};
+
+    if (has_graphing())
+        data = merge_args(data, get_modified_graph_contextes());
+
+    // now urlencode the data
+    var params = [];
+    for (var name in data)
+        params.push(name + '=' + encodeURIComponent(data[name]));
+
+    if (params)
+        return params.join('&');
+    else
+        return null;
+}
+
+function do_reload(url)
+{
+    // Nicht mehr die ganze Seite neu laden, wenn es ein DIV "data_container" gibt.
     // In dem Fall wird die aktuelle URL aus "window.location.href" geholt, für den Refresh
     // modifiziert, der Inhalt neu geholt und in das DIV geschrieben.
     if (!document.getElementById('data_container') || url !== '') {
@@ -922,15 +1059,13 @@ function handleReload(url) {
             else
                 display_options += opts[i];
         }
-        opts = null;
 
         // Add optional display_options if not defined in original display_options
-        var opts = [ 'w' ];
+        opts = [ 'w' ];
         for (var i = 0; i < opts.length; i++) {
             if (display_options.indexOf(opts[i].toUpperCase()) == -1)
                 display_options += opts[i];
         }
-        opts = null;
 
         var params = {'_display_options': display_options};
         var real_display_options = getUrlParam('display_options');
@@ -939,17 +1074,27 @@ function handleReload(url) {
 
         params['_do_actions'] = getUrlParam('_do_actions')
 
-        var url = makeuri(params);
-        display_options = null;
-        get_url(url, handleContentReload, '', handleContentReloadError);
-        url = null;
+        call_ajax(makeuri(params), {
+            response_handler : handle_content_reload,
+            error_handler    : handle_content_reload_error,
+            method           : 'POST',
+            post_data        : get_content_reload_data()
+        });
     }
 }
 
-// --------------------------------------------------------------------------
-// Folding
-// --------------------------------------------------------------------------
-//
+//#.
+//#   .-Foldable Container-------------------------------------------------.
+//#   |     _____     _     _       _     _       ____            _        |
+//#   |    |  ___|__ | | __| | __ _| |__ | | ___ / ___|___  _ __ | |_      |
+//#   |    | |_ / _ \| |/ _` |/ _` | '_ \| |/ _ \ |   / _ \| '_ \| __|     |
+//#   |    |  _| (_) | | (_| | (_| | |_) | |  __/ |__| (_) | | | | |_ _    |
+//#   |    |_|  \___/|_|\__,_|\__,_|_.__/|_|\___|\____\___/|_| |_|\__(_)   |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   |                                                                    |
+//#   '--------------------------------------------------------------------'
+
 var fold_steps = [ 0, 10, 10, 15, 20, 30, 40, 55, 80 ];
 
 function toggle_folding(oImg, state) {
@@ -988,39 +1133,6 @@ function folding_step(oImg, state, step) {
 
     setTimeout(function() { folding_step(oImg, state, step); }, fold_steps[step]);
 }
-
-/* Check if an element has a certain css class. */
-function has_class(o, cn) {
-    if (typeof(o.className) === 'undefined')
-        return false;
-    var parts = o.className.split(' ');
-    for (x=0; x<parts.length; x++) {
-        if (parts[x] == cn)
-            return true;
-    }
-    return false;
-}
-
-function remove_class(o, cn) {
-    var parts = o.className.split(' ');
-    var new_parts = Array();
-    for (x=0; x<parts.length; x++) {
-        if (parts[x] != cn)
-            new_parts.push(parts[x]);
-    }
-    o.className = new_parts.join(" ");
-}
-
-function add_class(o, cn) {
-    if (!has_class(o, cn))
-        o.className += " " + cn;
-}
-
-function change_class(o, a, b) {
-    remove_class(o, a);
-    add_class(o, b);
-}
-
 
 function toggle_tree_state(tree, name, oContainer, fetch_url) {
     var state;
@@ -1069,16 +1181,17 @@ function toggle_foldable_container(treename, id, fetch_url) {
     }
 }
 
-/*
- * +----------------------------------------------------------------------+
- * |       ____                          _           _                    |
- * |      |  _ \ _____      __  ___  ___| | ___  ___| |_ ___  _ __        |
- * |      | |_) / _ \ \ /\ / / / __|/ _ \ |/ _ \/ __| __/ _ \| '__|       |
- * |      |  _ < (_) \ V  V /  \__ \  __/ |  __/ (__| || (_) | |          |
- * |      |_| \_\___/ \_/\_/   |___/\___|_|\___|\___|\__\___/|_|          |
- * |                                                                      |
- * +----------------------------------------------------------------------+
- */
+//#.
+//#   .-Row Selector-------------------------------------------------------.
+//#   |      ____                 ____       _           _                 |
+//#   |     |  _ \ _____      __ / ___|  ___| | ___  ___| |_ ___  _ __     |
+//#   |     | |_) / _ \ \ /\ / / \___ \ / _ \ |/ _ \/ __| __/ _ \| '__|    |
+//#   |     |  _ < (_) \ V  V /   ___) |  __/ |  __/ (__| || (_) | |       |
+//#   |     |_| \_\___/ \_/\_/   |____/ \___|_|\___|\___|\__\___/|_|       |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   |                                                                    |
+//#   '--------------------------------------------------------------------'
 
 // The unique ID to identify the current page and its selections of a user
 var g_page_id = '';
@@ -1433,16 +1546,18 @@ function init_rowselect() {
     tables = null;
 }
 
-function has_canvas_support() {
-    return document.createElement('canvas').getContext;
-}
+//#.
+//#   .-Context Button-----------------------------------------------------.
+//#   |  ____            _            _     ____        _   _              |
+//#   | / ___|___  _ __ | |_ _____  _| |_  | __ ) _   _| |_| |_ ___  _ __  |
+//#   || |   / _ \| '_ \| __/ _ \ \/ / __| |  _ \| | | | __| __/ _ \| '_ \ |
+//#   || |__| (_) | | | | ||  __/>  <| |_  | |_) | |_| | |_| || (_) | | | ||
+//#   | \____\___/|_| |_|\__\___/_/\_\\__| |____/ \__,_|\__|\__\___/|_| |_||
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   | Context button scoring and visibility                              |
+//#   '--------------------------------------------------------------------'
 
-// convert percent to angle(rad)
-function rad(g) {
-    return (g * 360 / 100 * Math.PI) / 180;
-}
-
-// TEST
 function count_context_button(oA)
 {
     // Extract view name from id of parent div element
@@ -1463,16 +1578,17 @@ function unhide_context_buttons(oA)
     oNode = null;
 }
 
-// .-----------------------------------------------------------------------.
-// |          __     __    _            ____                               |
-// |          \ \   / /_ _| |_   _  ___/ ___| _ __   ___  ___              |
-// |           \ \ / / _` | | | | |/ _ \___ \| '_ \ / _ \/ __|             |
-// |            \ V / (_| | | |_| |  __/___) | |_) |  __/ (__              |
-// |             \_/ \__,_|_|\__,_|\___|____/| .__/ \___|\___|             |
-// |                                         |_|                           |
-// +-----------------------------------------------------------------------+
-// | Functions needed by HTML code from ValueSpec (valuespec.py)           |
-// '-----------------------------------------------------------------------'
+//#.
+//#   .-ValueSpecs---------------------------------------------------------.
+//#   |        __     __    _            ____                              |
+//#   |        \ \   / /_ _| |_   _  ___/ ___| _ __   ___  ___ ___         |
+//#   |         \ \ / / _` | | | | |/ _ \___ \| '_ \ / _ \/ __/ __|        |
+//#   |          \ V / (_| | | |_| |  __/___) | |_) |  __/ (__\__ \        |
+//#   |           \_/ \__,_|_|\__,_|\___|____/| .__/ \___|\___|___/        |
+//#   |                                       |_|                          |
+//#   +--------------------------------------------------------------------+
+//#   | Functions needed by HTML code from ValueSpec (valuespec.py)        |
+//#   '--------------------------------------------------------------------'
 
 function valuespec_toggle_option(oCheckbox, divid, negate) {
     var oDiv = document.getElementById(divid);
@@ -1517,7 +1633,6 @@ function list_of_strings_add_focus(oLastChild) {
     if (input.length == 1)
         input[0].onfocus = function(e) { return list_of_strings_extend(this); };
 }
-
 
 /* Is called when the last input field in a ListOfString gets focus.
    In that case a new input field is being appended. */
@@ -1920,6 +2035,18 @@ function vs_listofmultiple_init(varprefix) {
     }
 }
 
+//#.
+//#   .-Help Toggle--------------------------------------------------------.
+//#   |          _   _      _         _____                 _              |
+//#   |         | | | | ___| |_ __   |_   _|__   __ _  __ _| | ___         |
+//#   |         | |_| |/ _ \ | '_ \    | |/ _ \ / _` |/ _` | |/ _ \        |
+//#   |         |  _  |  __/ | |_) |   | | (_) | (_| | (_| | |  __/        |
+//#   |         |_| |_|\___|_| .__/    |_|\___/ \__, |\__, |_|\___|        |
+//#   |                      |_|                |___/ |___/                |
+//#   +--------------------------------------------------------------------+
+//#   |                                                                    |
+//#   '--------------------------------------------------------------------'
+
 function help_enable() {
     var aHelp = document.getElementById('helpbutton');
     aHelp.style.display = "inline-block";
@@ -2060,24 +2187,22 @@ function view_dial_option(oDiv, viewname, option, choices) {
     get_url_sync("ajax_set_viewoption.py?view_name=" + viewname +
             "&option=" + option + "&value=" + new_choice[0]);
     if (option == "refresh")
-        setReload(new_choice[0]);
-    else {
-        if (gReloadTimer)
-            clearTimeout(gReloadTimer);
-        gReloadTimer = setTimeout("handleReload('')", 400.0);
-    }
-    // handleReload('');
+        set_reload(new_choice[0]);
+    else
+        schedule_reload('', 400.0);
 }
+
 // way ranges from -10 to 10 means centered (normal place)
-function turn_dial(option, text, way, direction) {
+function turn_dial(option, text, way, direction)
+{
     var oDiv = document.getElementById("optiondial_" + option).firstChild;
     if (text && oDiv.innerHTML != text)
         oDiv.innerHTML = text;
     oDiv.style.top = (way * 1.3 * direction) + "px";
 }
 
-
-function make_unselectable(elem) {
+function make_unselectable(elem)
+{
     elem.onselectstart = function() { return false; };
     elem.style.MozUserSelect = "none";
     elem.style.KhtmlUserSelect = "none";
@@ -2102,7 +2227,7 @@ function view_switch_option(oDiv, viewname, option, choices) {
             "&option=" + option + "&value=" + new_choice[0]);
 
     if (option == "refresh") {
-        setReload(new_choice[0]);
+        set_reload(new_choice[0]);
     } else if (option == "show_checkboxes") {
         g_selection_enabled = new_value;
     }
@@ -2132,14 +2257,17 @@ function host_tag_update_value(prefix, grp) {
     value_select = null;
 }
 
-// .-Availability----------------------------------------------------------.
-// |             _             _ _       _     _ _ _ _                     |
-// |            / \__   ____ _(_) | __ _| |__ (_) (_) |_ _   _             |
-// |           / _ \ \ / / _` | | |/ _` | '_ \| | | | __| | | |            |
-// |          / ___ \ V / (_| | | | (_| | |_) | | | | |_| |_| |            |
-// |         /_/   \_\_/ \__,_|_|_|\__,_|_.__/|_|_|_|\__|\__, |            |
-// |                                                     |___/             |
-// '-----------------------------------------------------------------------'
+//#.
+//#   .-Availability-------------------------------------------------------.
+//#   |             _             _ _       _     _ _ _ _                  |
+//#   |            / \__   ____ _(_) | __ _| |__ (_) (_) |_ _   _          |
+//#   |           / _ \ \ / / _` | | |/ _` | '_ \| | | | __| | | |         |
+//#   |          / ___ \ V / (_| | | | (_| | |_) | | | | |_| |_| |         |
+//#   |         /_/   \_\_/ \__,_|_|_|\__,_|_.__/|_|_|_|\__|\__, |         |
+//#   |                                                     |___/          |
+//#   +--------------------------------------------------------------------+
+//#   |                                                                    |
+//#   '--------------------------------------------------------------------'
 
 function timeline_hover(row_nr, onoff)
 {
@@ -2152,14 +2280,17 @@ function timeline_hover(row_nr, onoff)
     }
 }
 
-//   .--Keybindings---------------------------------------------------------.
-//   |        _  __          _     _           _ _                          |
-//   |       | |/ /___ _   _| |__ (_)_ __   __| (_)_ __   __ _ ___          |
-//   |       | ' // _ \ | | | '_ \| | '_ \ / _` | | '_ \ / _` / __|         |
-//   |       | . \  __/ |_| | |_) | | | | | (_| | | | | | (_| \__ \         |
-//   |       |_|\_\___|\__, |_.__/|_|_| |_|\__,_|_|_| |_|\__, |___/         |
-//   |                 |___/                             |___/              |
-//   +----------------------------------------------------------------------+
+//#.
+//#   .-Keybindings--------------------------------------------------------.
+//#   |        _  __          _     _           _ _                        |
+//#   |       | |/ /___ _   _| |__ (_)_ __   __| (_)_ __   __ _ ___        |
+//#   |       | ' // _ \ | | | '_ \| | '_ \ / _` | | '_ \ / _` / __|       |
+//#   |       | . \  __/ |_| | |_) | | | | | (_| | | | | | (_| \__ \       |
+//#   |       |_|\_\___|\__, |_.__/|_|_| |_|\__,_|_|_| |_|\__, |___/       |
+//#   |                 |___/                             |___/            |
+//#   +--------------------------------------------------------------------+
+//#   |                                                                    |
+//#   '--------------------------------------------------------------------'
 
 // var keybindings will be defined dynamically by htmllib.py
 var keybindings_pressedkeys = [];
@@ -2186,7 +2317,6 @@ function keybindings_focus(e) {
     keybindings_pressedkeys = [];
 }
 
-
 function keybindings_check(e) {
     for (var i in keybindings) {
         var keylist = keybindings[i][0];
@@ -2211,14 +2341,17 @@ function keybindings_check_keylist(keylist)
     return true;
 }
 
-//   .--Popups--------------------------------------------------------------.
-//   |                  ____                                                |
-//   |                 |  _ \ ___  _ __  _   _ _ __  ___                    |
-//   |                 | |_) / _ \| '_ \| | | | '_ \/ __|                   |
-//   |                 |  __/ (_) | |_) | |_| | |_) \__ \                   |
-//   |                 |_|   \___/| .__/ \__,_| .__/|___/                   |
-//   |                            |_|         |_|                           |
-//   +----------------------------------------------------------------------+
+//#.
+//#   .-Popup Menu---------------------------------------------------------.
+//#   |       ____                           __  __                        |
+//#   |      |  _ \ ___  _ __  _   _ _ __   |  \/  | ___ _ __  _   _       |
+//#   |      | |_) / _ \| '_ \| | | | '_ \  | |\/| |/ _ \ '_ \| | | |      |
+//#   |      |  __/ (_) | |_) | |_| | |_) | | |  | |  __/ | | | |_| |      |
+//#   |      |_|   \___/| .__/ \__,_| .__/  |_|  |_|\___|_| |_|\__,_|      |
+//#   |                 |_|         |_|                                    |
+//#   +--------------------------------------------------------------------+
+//#   | Floating popup menus with content fetched via AJAX calls           |
+//#   '--------------------------------------------------------------------'
 
 var popup_data      = null;
 var popup_id        = null;
@@ -2351,50 +2484,4 @@ function add_to_visual(visual_type, visual_name)
     // After adding a dashlet, go to the choosen dashboard
     if (response)
         window.location.href = response;
-}
-
-var g_sidebar_reload_timer = null;
-
-function reload_sidebar()
-{
-    if (parent && parent.frames[0]) {
-        // reload sidebar, but preserve eventual quicksearch field value and focus
-        var val = '';
-        var focused = false;
-        var field = parent.frames[0].document.getElementById('mk_side_search_field');
-        if (field) {
-            val = field.value;
-            focused = parent.frames[0].document.activeElement == field;
-        }
-
-        parent.frames[0].document.reloading = 1;
-        parent.frames[0].document.location.reload();
-
-        if (field) {
-            g_sidebar_reload_timer = setInterval(function (value, has_focus) {
-                return function() {
-                    if (!parent.frames[0].document.reloading
-                        && parent.frames[0].document.readyState === 'complete') {
-                        var field = parent.frames[0].document.getElementById('mk_side_search_field');
-                        if (field) {
-                            field.value = value;
-                            if (has_focus) {
-                                field.focus();
-
-                                // Move caret to end
-                                if (field.setSelectionRange !== undefined)
-                                    field.setSelectionRange(value.length, value.length);
-                            }
-                            field = null;
-                        }
-
-                        clearInterval(g_sidebar_reload_timer);
-                        g_sidebar_reload_timer = null;
-                    }
-                };
-            }(val, focused), 50);
-
-            field = null;
-        }
-    }
 }

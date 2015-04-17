@@ -24,25 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def fix_tplink_highspeed(info):
+def parse_if64_tplink(info):
+    parsed = []
     for line in info:
-        if type(line[3]) == str: # not yet converted
-            line[3] = saveint(line[3]) * 1000000
+        parsed.append(line[:3] + [ int(line[3]) * 1000000 ] + line[4:])
+    return parsed
 
-def inventory_tplink(info):
-    fix_tplink_highspeed(info)
-    return inventory_if_common(info)
-
-def check_tplink(item, params, info):
-    fix_tplink_highspeed(info)
-    return check_if_common(item, params, info)
-
-
-# check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
 
 check_info["if64_tplink"] = {
-    'check_function':          check_tplink,
-    'inventory_function':      inventory_tplink,
+    'parse_function':          parse_if64_tplink,
+    'check_function':          check_if_common,
+    'inventory_function':      inventory_if_common,
     'service_description':     'Interface %s',
     'has_perfdata':            True,
     'includes':                [ 'if.include' ],

@@ -541,7 +541,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
     general_traffic_levels = if_get_traffic_levels(params)
 
     for line in info:
-        node, line = if_extract_node(line,has_nodeinfo)
+        node, line = if_extract_node(line, has_nodeinfo)
         ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \

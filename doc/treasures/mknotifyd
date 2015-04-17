@@ -245,7 +245,7 @@ def check_config_change():
 #   '----------------------------------------------------------------------'
 
 def handle_spool_files():
-    process_spool_directory(g_spool_dir, 0)
+    process_spool_directory(g_spool_dir, 3)
     process_spool_directory(g_deferred_dir, g_config["deferred_cooldown"])
 
 

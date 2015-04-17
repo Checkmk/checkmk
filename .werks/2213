@@ -1,0 +1,12 @@
+Title: cisco_temperature: Fixed behaviour in cases where device reports status but no temperature
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429273644
+
+Previously, the check would report unknown in cases where the device reports an ok status but no valid
+temperature. This behaviour differed from the way the old cisco_temp_perf check handled this. This has
+been fixed to be consistent with the old behaviour.

@@ -560,6 +560,33 @@ def physical_precision(v, precision, unit_symbol):
 
     return u"%%.%df %%s%%s" % places_after_comma % (value, scale_symbols[scale], unit_symbol)
 
+def nic_speed_human_readable(bits_per_second):
+    if bits_per_second == 10000000:
+        return "10 Mbit/s"
+    elif bits_per_second == 100000000:
+        return "100 Mbit/s"
+    elif bits_per_second == 1000000000:
+        return "1 Gbit/s"
+    elif bits_per_second < 1500:
+        return "%d bit/s" % bits_per_second
+    elif bits_per_second < 1000000:
+        return "%s Kbit/s" % drop_dotzero(bits_per_second / 1000.0, digits=1)
+    elif bits_per_second < 1000000000:
+        return "%s Mbit/s" % drop_dotzero(bits_per_second / 1000000.0, digits=2)
+    else:
+        return "%s Gbit/s" % drop_dotzero(bits_per_second / 1000000000.0, digits=2)
+
+# Converts a number into a floating point number
+# and drop useless zeroes at the end of the fraction
+# 45.1 -> "45.1"
+# 45.0 -> "45"
+def drop_dotzero(v, digits=1):
+    t = "%%.%df" % digits % v
+    if "." in t:
+        return t.rstrip("0").rstrip(".")
+    else:
+        return t
+
 
 def number_human_readable(n, precision=1, unit="B"):
     base = 1024.0
@@ -754,3 +781,261 @@ except ImportError:
             return _convert(node_or_string)
     except:
         literal_eval = none
+
+
+
+#.
+#   .--Various Constants---------------------------------------------------.
+#   |              ____                _              _                    |
+#   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
+#   |            | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|             |
+#   |            | |__| (_) | | | \__ \ || (_| | | | | |_\__ \             |
+#   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Various constants that are needed in more than one module. The      |
+#   |  interface type for example are needed in WATO and in the Inventory  |
+#   '----------------------------------------------------------------------'
+
+interface_oper_states = {
+    1: _("up"),
+    2: _("down"),
+    3: _("testing"),
+    4: _("unknown"),
+    5: _("dormant"),
+    6: _("not present"),
+    7: _("lower layer down"),
+}
+
+interface_port_types = {
+    1:   "other",
+    2:   "regular1822",
+    3:   "hdh1822",
+    4:   "ddnX25",
+    5:   "rfc877x25",
+    6:   "ethernetCsmacd",
+    7:   "iso88023Csmacd",
+    8:   "iso88024TokenBus",
+    9:   "iso88025TokenRing",
+    10:  "iso88026Man",
+    11:  "starLan",
+    12:  "proteon10Mbit",
+    13:  "proteon80Mbit",
+    14:  "hyperchannel",
+    15:  "fddi",
+    16:  "lapb",
+    17:  "sdlc",
+    18:  "ds1",
+    19:  "e1",
+    20:  "basicISDN",
+    21:  "primaryISDN",
+    22:  "propPointToPointSerial",
+    23:  "ppp",
+    24:  "softwareLoopback",
+    25:  "eon",
+    26:  "ethernet3Mbit",
+    27:  "nsip",
+    28:  "slip",
+    29:  "ultra",
+    30:  "ds3",
+    31:  "sip",
+    32:  "frameRelay",
+    33:  "rs232",
+    34:  "para",
+    35:  "arcnet",
+    36:  "arcnetPlus",
+    37:  "atm",
+    38:  "miox25",
+    39:  "sonet",
+    40:  "x25ple",
+    41:  "iso88022llc",
+    42:  "localTalk",
+    43:  "smdsDxi",
+    44:  "frameRelayService",
+    45:  "v35",
+    46:  "hssi",
+    47:  "hippi",
+    48:  "modem",
+    49:  "aal5",
+    50:  "sonetPath",
+    51:  "sonetVT",
+    52:  "smdsIcip",
+    53:  "propVirtual",
+    54:  "propMultiplexor",
+    55:  "ieee80212",
+    56:  "fibreChannel",
+    57:  "hippiInterface",
+    58:  "frameRelayInterconnect",
+    59:  "aflane8023",
+    60:  "aflane8025",
+    61:  "cctEmul",
+    62:  "fastEther",
+    63:  "isdn",
+    64:  "v11",
+    65:  "v36",
+    66:  "g703at64k",
+    67:  "g703at2mb",
+    68:  "qllc",
+    69:  "fastEtherFX",
+    70:  "channel",
+    71:  "ieee80211",
+    72:  "ibm370parChan",
+    73:  "escon",
+    74:  "dlsw",
+    75:  "isdns",
+    76:  "isdnu",
+    77:  "lapd",
+    78:  "ipSwitch",
+    79:  "rsrb",
+    80:  "atmLogical",
+    81:  "ds0",
+    82:  "ds0Bundle",
+    83:  "bsc",
+    84:  "async",
+    85:  "cnr",
+    86:  "iso88025Dtr",
+    87:  "eplrs",
+    88:  "arap",
+    89:  "propCnls",
+    90:  "hostPad",
+    91:  "termPad",
+    92:  "frameRelayMPI",
+    93:  "x213",
+    94:  "adsl",
+    95:  "radsl",
+    96:  "sdsl",
+    97:  "vdsl",
+    98:  "iso88025CRFPInt",
+    99:  "myrinet",
+    100: "voiceEM",
+    101: "voiceFXO",
+    102: "voiceFXS",
+    103: "voiceEncap",
+    104: "voiceOverIp",
+    105: "atmDxi",
+    106: "atmFuni",
+    107: "atmIma",
+    108: "pppMultilinkBundle",
+    109: "ipOverCdlc",
+    110: "ipOverClaw",
+    111: "stackToStack",
+    112: "virtualIpAddress",
+    113: "mpc",
+    114: "ipOverAtm",
+    115: "iso88025Fiber",
+    116: "tdlc",
+    117: "gigabitEthernet",
+    118: "hdlc",
+    119: "lapf",
+    120: "v37",
+    121: "x25mlp",
+    122: "x25huntGroup",
+    123: "trasnpHdlc",
+    124: "interleave",
+    125: "fast",
+    126: "ip",
+    127: "docsCableMaclayer",
+    128: "docsCableDownstream",
+    129: "docsCableUpstream",
+    130: "a12MppSwitch",
+    131: "tunnel",
+    132: "coffee",
+    133: "ces",
+    134: "atmSubInterface",
+    135: "l2vlan",
+    136: "l3ipvlan",
+    137: "l3ipxvlan",
+    138: "digitalPowerline",
+    139: "mediaMailOverIp",
+    140: "dtm",
+    141: "dcn",
+    142: "ipForward",
+    143: "msdsl",
+    144: "ieee1394",
+    145: "if-gsn",
+    146: "dvbRccMacLayer",
+    147: "dvbRccDownstream",
+    148: "dvbRccUpstream",
+    149: "atmVirtual",
+    150: "mplsTunnel",
+    151: "srp",
+    152: "voiceOverAtm",
+    153: "voiceOverFrameRelay",
+    154: "idsl",
+    155: "compositeLink",
+    156: "ss7SigLink",
+    157: "propWirelessP2P",
+    158: "frForward",
+    159: "rfc1483",
+    160: "usb",
+    161: "ieee8023adLag",
+    162: "bgppolicyaccounting",
+    163: "frf16MfrBundle",
+    164: "h323Gatekeeper",
+    165: "h323Proxy",
+    166: "mpls",
+    167: "mfSigLink",
+    168: "hdsl2",
+    169: "shdsl",
+    170: "ds1FDL",
+    171: "pos",
+    172: "dvbAsiIn",
+    173: "dvbAsiOut",
+    174: "plc",
+    175: "nfas",
+    176: "tr008",
+    177: "gr303RDT",
+    178: "gr303IDT",
+    179: "isup",
+    180: "propDocsWirelessMaclayer",
+    181: "propDocsWirelessDownstream",
+    182: "propDocsWirelessUpstream",
+    183: "hiperlan2",
+    184: "propBWAp2Mp",
+    185: "sonetOverheadChannel",
+    186: "digitalWrapperOverheadChannel",
+    187: "aal2",
+    188: "radioMAC",
+    189: "atmRadio",
+    190: "imt",
+    191: "mvl",
+    192: "reachDSL",
+    193: "frDlciEndPt",
+    194: "atmVciEndPt",
+    195: "opticalChannel",
+    196: "opticalTransport",
+    197: "propAtm",
+    198: "voiceOverCable",
+    199: "infiniband",
+    200: "teLink",
+    201: "q2931",
+    202: "virtualTg",
+    203: "sipTg",
+    204: "sipSig",
+    205: "docsCableUpstreamChannel",
+    206: "econet",
+    207: "pon155",
+    208: "pon622",
+    209: "bridge",
+    210: "linegroup",
+    211: "voiceEMFGD",
+    212: "voiceFGDEANA",
+    213: "voiceDID",
+    214: "mpegTransport",
+    215: "sixToFour",
+    216: "gtp",
+    217: "pdnEtherLoop1",
+    218: "pdnEtherLoop2",
+    219: "opticalChannelGroup",
+    220: "homepna",
+    221: "gfp",
+    222: "ciscoISLvlan",
+    223: "actelisMetaLOOP",
+    224: "fcipLink",
+    225: "rpr",
+    226: "qam",
+    227: "lmp",
+    228: "cblVectaStar",
+    229: "docsCableMCmtsDownstream",
+    230: "adsl2",
+}

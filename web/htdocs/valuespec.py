@@ -1919,7 +1919,7 @@ class AbsoluteDate(ValueSpec):
 
         if self._include_time:
             if self._show_titles:
-                html.write('<td>&nbsp</td><td>')
+                html.write('<td>&nbsp;</td><td>')
             else:
                 html.write(" ")
             html.number_input(varprefix + "_hour", hour, size=2)

@@ -197,6 +197,34 @@ function rad(g) {
     return (g * 360 / 100 * Math.PI) / 180;
 }
 
+
+// simple implementation of function default arguments when
+// using objects as function parameters. Example:
+// function xxx(args) {
+//     args = merge_args({
+//         'arg2': 'default_val',
+//     });
+// }
+// xxx({
+//   'arg1': 'val1',
+//   'arg3': 'val3',
+// })
+function merge_args()
+{
+    var defaults = arguments[0];
+    var args = arguments[1] || {};
+
+    for (var name in args)
+        defaults[name] = args[name];
+
+    return defaults;
+}
+
+function has_graphing()
+{
+    return typeof g_graphs !== 'undefined';
+}
+
 //#.
 //#   .-Events-------------------------------------------------------------.
 //#   |                    _____                 _                         |
@@ -373,37 +401,43 @@ if (navigator.appVersion.indexOf("MSIE 7.") != -1)
 //#   | AJAX call related functions                                        |
 //#   '--------------------------------------------------------------------'
 
-function get_url(url, handler, data, errorHandler, addAjaxId)
+function call_ajax(url, args)
 {
-    if (window.XMLHttpRequest) {
-        var AJAX = new XMLHttpRequest();
-    } else {
-        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
-    }
+    args = merge_args({
+        add_ajax_id      : true,
+        response_handler : null,
+        error_handler    : null,
+        handler_data     : null,
+        method           : "GET",
+        post_data        : null,
+        sync             : false
+    }, args);
 
-    var addAjaxId = (typeof addAjaxId === "undefined") ? true : addAjaxId;
+    var AJAX = window.XMLHttpRequest ? new XMLHttpRequest()
+                                     : new ActiveXObject("Microsoft.XMLHTTP");
+    if (!AJAX)
+        return null;
 
     // Dynamic part to prevent caching
-    var dyn = '';
-    if (addAjaxId) {
-        dyn = "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
-        if (url.indexOf('\?') !== -1) {
-            dyn = "&"+dyn;
-        } else {
-            dyn = "?"+dyn;
-        }
+    if (args.add_ajax_id) {
+        url += url.indexOf('\?') !== -1 ? "&" : "?";
+        url += "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
     }
 
-    if (!AJAX) {
-        return null;
+    AJAX.open(args.method, url, !args.sync);
+
+    if (args.method == "POST") {
+        AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        AJAX.setRequestHeader("Content-length", args.post_data.length);
+        AJAX.setRequestHeader("Connection", "close");
     }
 
-    AJAX.open("GET", url + dyn, true);
-    if (typeof handler === 'function') {
+    if (!args.sync) {
         AJAX.onreadystatechange = function() {
             if (AJAX && AJAX.readyState == 4) {
                 if (AJAX.status == 200) {
-                    handler(data, AJAX.responseText);
+                    if (args.response_handler)
+                        args.response_handler(args.handler_data, AJAX.responseText);
                 }
                 else if (AJAX.status == 401) {
                     // This is reached when someone is not authenticated anymore
@@ -416,63 +450,40 @@ function get_url(url, handler, data, errorHandler, addAjaxId)
                         document.location.reload();
                 }
                 else {
-                    if (typeof errorHandler !== 'undefined')
-                        errorHandler(data, AJAX.status);
+                    if (args.error_handler)
+                        args.error_handler(args.handler_data, AJAX.status);
                 }
             }
         }
     }
 
-    AJAX.send(null);
+    AJAX.send(args.post_data);
     return AJAX;
+}
+
+function get_url(url, handler, data, errorHandler, addAjaxId)
+{
+    call_ajax(url, {
+        response_handler : handler,
+        handler_data     : data,
+        error_handler    : errorHandler,
+        add_ajax_id      : addAjaxId
+    });
 }
 
 function get_url_sync(url)
 {
-    if (window.XMLHttpRequest) {
-        var AJAX = new XMLHttpRequest();
-    } else {
-        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-
-    AJAX.open("GET", url, false);
-    AJAX.send(null);
+    var AJAX = call_ajax(url, {sync:true});
     return AJAX.responseText;
 }
 
-function post_url(url, params) {
-    if (window.XMLHttpRequest) {
-        var AJAX = new XMLHttpRequest();
-    } else {
-        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-
-    AJAX.open("POST", url);
-
-    AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    AJAX.setRequestHeader("Content-length", params.length);
-    AJAX.setRequestHeader("Connection", "close");
-
-    AJAX.onreadystatechange = function() {
-        if (AJAX && AJAX.readyState == 4) {
-            if (AJAX.status == 401) {
-                // This is reached when someone is not authenticated anymore
-                // but has some webservices running which are still fetching
-                // infos via AJAX. Reload the whole frameset or only the
-                // single page in that case.
-                if(top)
-                    top.location.reload();
-                else
-                    document.location.reload();
-            }
-            else if (AJAX.status != 200) {
-                alert('Error ' + AJAX.status + ' during POST to URL ' + url);
-            }
-        }
-    }
-    AJAX.send(params);
+function post_url(url, params)
+{
+    call_ajax(url, {
+        method: "POST",
+        post_data: params
+    });
 }
-
 
 function bulkUpdateContents(ids, codes)
 {
@@ -601,7 +612,8 @@ function makeuri(addvars, url) {
 // GUI styling
 // ----------------------------------------------------------------------------
 
-function update_togglebutton(id, enabled) {
+function update_togglebutton(id, enabled)
+{
     var on  = document.getElementById(id + '_on');
     var off = document.getElementById(id + '_off');
     if (!on || !off)
@@ -991,7 +1003,7 @@ function handle_content_reload(_unused, code) {
     schedule_reload();
 }
 
-function handle_content_reload_error(data, status_code)
+function handle_content_reload_error(_unused, status_code)
 {
     if(!g_reload_error) {
         var o = document.getElementById('data_container');
@@ -1002,6 +1014,24 @@ function handle_content_reload_error(data, status_code)
 
     // Continue update after the error
     schedule_reload();
+}
+
+function get_content_reload_data()
+{
+    var data = {};
+
+    if (has_graphing())
+        data = merge_args(data, get_modified_graph_contextes());
+
+    // now urlencode the data
+    var params = [];
+    for (var name in data)
+        params.push(name + '=' + encodeURIComponent(data[name]));
+
+    if (params)
+        return params.join('&');
+    else
+        return null;
 }
 
 function do_reload(url)
@@ -1029,15 +1059,13 @@ function do_reload(url)
             else
                 display_options += opts[i];
         }
-        opts = null;
 
         // Add optional display_options if not defined in original display_options
-        var opts = [ 'w' ];
+        opts = [ 'w' ];
         for (var i = 0; i < opts.length; i++) {
             if (display_options.indexOf(opts[i].toUpperCase()) == -1)
                 display_options += opts[i];
         }
-        opts = null;
 
         var params = {'_display_options': display_options};
         var real_display_options = getUrlParam('display_options');
@@ -1046,10 +1074,12 @@ function do_reload(url)
 
         params['_do_actions'] = getUrlParam('_do_actions')
 
-        var url = makeuri(params);
-        display_options = null;
-        get_url(url, handle_content_reload, '', handle_content_reload_error);
-        url = null;
+        call_ajax(makeuri(params), {
+            response_handler : handle_content_reload,
+            error_handler    : handle_content_reload_error,
+            method           : 'POST',
+            post_data        : get_content_reload_data()
+        });
     }
 }
 

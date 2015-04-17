@@ -1,0 +1,10 @@
+Title: Fixed usage of default values in valuespec alternative selection
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p2
+Date: 1429257630
+Class: fix
+
+No default values were used in valuespec alternative selection.
+Now all default values are shown in subelements of alternative selection.

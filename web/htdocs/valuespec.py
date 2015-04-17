@@ -2284,7 +2284,6 @@ class Timerange(CascadingDropdown):
                 return (from_time, now), titles[0]
 
             else: # last (previous)
-                html.debug("HIRN", rangespec)
                 if rangespec[0] == 'd':
                     return (from_time - 86400, from_time), titles[1]
                 elif rangespec[0] == 'w':

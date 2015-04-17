@@ -58,13 +58,12 @@ def mobile_html_head(title, ready_code=""):
   <script type='text/javascript'>
       $(document).ready(function() { %s });
       $(document).ready(function() {
-        $("a").click(function (event) {
-        event.preventDefault();
-        window.location = $(this).attr("href");
+          $("a").click(function (event) {
+            event.preventDefault();
+            window.location = $(this).attr("href");
+          });
       });
-
   </script>
-
 </head>
 <body class=mobile>
 """ % (title, ready_code))

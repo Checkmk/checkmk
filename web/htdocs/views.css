@@ -711,6 +711,14 @@ table.data.single tr.data td.invtree table th
     padding: 1px 5px;
     height: 14px;
 }
+
+/* Make td class of invtree more specific, when shown in single dataset mode */
+/* td.data.single td.invtree td.number { */
+table.data.single td.invtree td.number {
+    text-align: right;
+}
+
+
 td.invtree table th {
     text-align: left;
 }
@@ -726,3 +734,33 @@ td.invtree span.invnew, span.invnew table.data {
     color: #00bf00;
 }
 
+/* Positioning of the link from an inventory dicttable to the matching multisite table */
+div.invtablelink {
+    position: absolute;
+    top: -17px;
+    right: 1px;
+}
+
+
+td.if_state.if_state_up {
+    background-color: #00c020;
+    box-shadow: 0px 0px 3px #ccffcc inset;
+}
+
+td.if_state.if_state_down {
+    background-color: #bc5b4e;
+    box-shadow: 0px 0px 2px #000 inset;
+}
+
+td.if_state.if_state_other {
+    background-color: #c020c0;
+    box-shadow: 0px 0px 2px #000 inset;
+}
+
+td.if_state {
+    color: white;
+    box-shadow: 0.5px 0.5px 2px #000 inset;
+    text-align: center;
+    font-weight: bold;
+    width: 50px;
+}

@@ -272,6 +272,7 @@ ul.treeangle {
     /* border: 1px solid #4060ff; */
     padding-left: 20px;
     margin: 8px 0px;
+    position: relative; /* In order for placement of invtablelink */
 }
 ul.treeangle li {
     margin: 0px;

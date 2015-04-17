@@ -43,6 +43,228 @@ def cmp_version(a, b):
     bb = map(try_int, b.split("."))
     return cmp(aa, bb)
 
+class FilterInvtableText(Filter):
+    def __init__(self, infoname, name, title):
+        varname = infoname + "_" + name
+        Filter.__init__(self, varname, title, infoname + "s", [varname], [])
+
+    def display(self):
+        htmlvar = self.htmlvars[0]
+        current_value = html.var(htmlvar, "")
+        html.text_input(htmlvar, current_value)
+
+    def filter_table(self, rows):
+        htmlvar = self.htmlvars[0]
+        filtertext = html.var(htmlvar, "").strip().lower()
+        if not filtertext:
+            return rows
+
+        regex = re.compile(filtertext, re.IGNORECASE)
+
+        newrows = []
+        for row in rows:
+            if regex.search(row.get(htmlvar, "")):
+                newrows.append(row)
+        return newrows
+
+# Filter for choosing a range in which an age lies
+class FilterInvtableAge(Filter):
+    def __init__(self, infoname, name, title):
+        name = infoname + "_" + name
+        Filter.__init__(self, name, title, infoname + "s", [name + "_from", name + "_to"], [])
+
+    def display(self):
+        html.write("<table><tr><td style='vertical-align: middle;'>")
+        html.write("%s:" % _("from"))
+        html.write("</td><td>")
+        Age().render_input(self.name + "_from", 0)
+        html.write("</td></tr><tr><td style='vertical-align: middle;'>")
+        html.write("%s:" % _("to"))
+        html.write("</td><td>")
+        Age().render_input(self.name + "_to", 0)
+        html.write("</tr></table>")
+
+    def double_height(self):
+        return True
+
+    def filter_table(self, rows):
+        from_value = Age().from_html_vars(self.name + "_from")
+        to_value = Age().from_html_vars(self.name + "_to")
+
+        if not from_value and not to_value:
+            return rows
+
+        newrows = []
+        for row in rows:
+            value = row.get(self.name, None)
+            if value != None:
+                if from_value and value < from_value:
+                    continue
+
+                if to_value and value > to_value:
+                    continue
+                newrows.append(row)
+        return newrows
+
+
+
+# Filter for choosing a range in which a certain integer lies
+class FilterInvtableIDRange(Filter):
+    def __init__(self, infoname, name, title):
+        name = infoname + "_" + name
+        Filter.__init__(self, name, title, infoname + "s", [name + "_from", name + "_to"], [])
+
+    def display(self):
+        html.write(_("from:") + " ")
+        html.number_input(self.name + "_from")
+        html.write("&nbsp; %s: " % _("to"))
+        html.number_input(self.name + "_to")
+
+    def filter_table(self, rows):
+        from_value = saveint(html.var(self.name + "_from"))
+        to_value = saveint(html.var(self.name + "_to"))
+
+        if not from_value and not to_value:
+            return rows
+
+        newrows = []
+        for row in rows:
+            value = row.get(self.name, None)
+            if value != None:
+                if from_value and value < from_value:
+                    continue
+
+                if to_value and value > to_value:
+                    continue
+                newrows.append(row)
+        return newrows
+
+
+class FilterInvtableOperStatus(Filter):
+    def __init__(self, infoname, name, title):
+        varname = infoname + "_" + name
+        varnames = [ varname + "_" + str(x) for x in interface_oper_states ]
+        Filter.__init__(self, varname, title, infoname + "s", varnames, [])
+
+    def display(self):
+        html.begin_checkbox_group()
+        for state, state_name in sorted(interface_oper_states.items()):
+            varname = self.name + "_" + str(state)
+            html.checkbox(varname, True, label=state_name)
+            if state == 4:
+                html.write("<br>")
+        html.end_checkbox_group()
+
+    def double_height(self):
+        return True
+
+    def filter_table(self, rows):
+        # We consider the filter active if not all checkboxes
+        # are either on (default) or off (unset)
+        settings = set([])
+        for varname in self.htmlvars:
+            settings.add(html.var(varname))
+        if len(settings) == 1:
+            return rows
+
+        new_rows = []
+        for row in rows:
+            oper_status = row["invinterface_oper_status"]
+            varname = "%s_%d" % (self.name, oper_status)
+            if html.get_checkbox(varname):
+                new_rows.append(row)
+        return new_rows
+
+class FilterInvtableAdminStatus(Filter):
+    def __init__(self, infoname, name, title):
+        varname = infoname + "_" + name
+        Filter.__init__(self, varname, title, infoname + "s", [ varname ], [])
+
+    def display(self):
+        html.begin_radio_group(horizontal = True)
+        for value, text in [("1", _("up")), ("2", _("down")), ("-1", _("(ignore)"))]:
+            html.radiobutton(self.name, value, value == "-1", text + " &nbsp; ")
+        html.end_radio_group()
+
+    def filter_table(self, rows):
+        current = html.var(self.name)
+        if current not in ("1", "2"):
+            return rows
+
+        new_rows = []
+        for row in rows:
+            admin_status = str(row["invinterface_admin_status"])
+            if admin_status == current:
+                new_rows.append(row)
+        return new_rows
+
+class FilterInvtableInterfaceType(Filter):
+    def __init__(self, infoname, name, title):
+        varname = infoname + "_" + name
+        Filter.__init__(self, varname, title, infoname + "s", [ varname ], [])
+
+    def double_height(self):
+        return True
+
+    def valuespec(self):
+        choices = [ (type_id, "%d - %s" % (type_id, type_name))
+                    for (type_id, type_name)
+                    in sorted(interface_port_types.items()) ]
+        return DualListChoice(choices = choices, autoheight=False, enlarge_active=True, custom_order=True)
+
+    def selection(self):
+        current = html.var(self.name, "").strip().split("|")
+        if current == ['']:
+            return []
+        else:
+            return current
+
+    def display(self):
+        html.write('<div class=multigroup>')
+        self.valuespec().render_input(self.name, self.selection())
+        html.write('</div>')
+
+    def filter_table(self, rows):
+        current = self.selection()
+        if len(current) == 0:
+            return rows # No types selected, filter is unused
+        new_rows = []
+        for row in rows:
+            if str(row[self.name]) in current:
+                new_rows.append(row)
+        return new_rows
+
+
+class FilterInvtableVersion(Filter):
+    def __init__(self, infoname, name, title):
+        varname = infoname + "_" + name
+        Filter.__init__(self, varname, title, infoname + "s", [varname + "_from", varname + "_to"], [])
+
+    def display(self):
+        htmlvar = self.htmlvars[0]
+        html.write(_("Min.&nbsp;Version:"))
+        html.text_input(self.htmlvars[0], size = 9)
+        html.write(" &nbsp; ")
+        html.write(_("Max.&nbsp;Version:"))
+        html.text_input(self.htmlvars[1], size = 9)
+
+    def filter_table(self, rows):
+        from_version = html.var(self.htmlvars[0])
+        to_version   = html.var(self.htmlvars[1])
+        if not from_version and not to_version:
+            return rows # Filter not used
+
+        new_rows = []
+        for row in rows:
+            version = row.get(self.name, "")
+            if from_version and cmp_version(version, from_version) == -1:
+                continue
+            if to_version and cmp_version(version, to_version) == 1:
+                continue
+            new_rows.append(row)
+
+        return new_rows
+
 class FilterInvText(Filter):
     def __init__(self, name, invpath, title):
         self._invpath = invpath
@@ -72,6 +294,7 @@ class FilterInvText(Filter):
             if regex.search(invdata):
                 newrows.append(row)
         return newrows
+
 
 class FilterInvFloat(Filter):
     def __init__(self, name, invpath, title, unit="", scale=1.0):
@@ -147,6 +370,8 @@ class FilterHasInventory(FilterTristate):
             return [ row for row in rows if not row["host_inventory"] ]
 
 declare_filter(801, FilterHasInventory())
+
+
 
 class FilterInvHasSoftwarePackage(Filter):
     def __init__(self):
@@ -224,57 +449,4 @@ class FilterInvHasSoftwarePackage(Filter):
 
 declare_filter(801, FilterInvHasSoftwarePackage())
 
-class FilterSWPacsText(Filter):
-    def __init__(self, name, title):
-        varname = "invswpac_" + name
-        Filter.__init__(self, varname, title, "invswpacs", [varname], [])
-
-    def display(self):
-        htmlvar = self.htmlvars[0]
-        current_value = html.var(htmlvar, "")
-        html.text_input(htmlvar, current_value)
-
-    def filter_table(self, rows):
-        htmlvar = self.htmlvars[0]
-        filtertext = html.var(htmlvar, "").strip().lower()
-        if not filtertext:
-            return rows
-
-        regex = re.compile(filtertext, re.IGNORECASE)
-
-        newrows = []
-        for row in rows:
-            if regex.search(row.get(htmlvar, "")):
-                newrows.append(row)
-        return newrows
-
-class FilterSWPacsVersion(Filter):
-    def __init__(self, name, title):
-        varname = "invswpac_" + name
-        Filter.__init__(self, varname, title, "invswpacs", [varname + "_from", varname + "_to"], [])
-
-    def display(self):
-        htmlvar = self.htmlvars[0]
-        html.write(_("Min.&nbsp;Version:"))
-        html.text_input(self.htmlvars[0], size = 9)
-        html.write(" &nbsp; ")
-        html.write(_("Max.&nbsp;Version:"))
-        html.text_input(self.htmlvars[1], size = 9)
-
-    def filter_table(self, rows):
-        from_version = html.var(self.htmlvars[0])
-        to_version   = html.var(self.htmlvars[1])
-        if not from_version and not to_version:
-            return rows # Filter not used
-
-        new_rows = []
-        for row in rows:
-            version = row.get(self.name, "")
-            if from_version and cmp_version(version, from_version) == -1:
-                continue
-            if to_version and cmp_version(version, to_version) == 1:
-                continue
-            new_rows.append(row)
-
-        return new_rows
 

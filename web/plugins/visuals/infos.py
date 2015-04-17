@@ -120,14 +120,3 @@ infos['aggr'] = {
     ],
 }
 
-infos['invswpac'] = {
-    'title'       : _('Software Package'),
-    'title_plural': _('Software Packages'),
-    'single_spec' : None,
-}
-
-infos['invhist'] = {
-    'title'       : _('Inventory History'),
-    'title_plural': _('Inventory Historys'),
-    'single_spec' : None,
-}

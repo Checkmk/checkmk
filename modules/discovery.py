@@ -318,7 +318,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, ipaddress
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def snmp_scan(hostname, ipaddress):
+def snmp_scan(hostname, ipaddress, for_inv=False):
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs
     # this to evaluate if_disabled_if64_checks.
@@ -333,7 +333,12 @@ def snmp_scan(hostname, ipaddress):
             raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
 
     found = []
-    for check_type, check in check_info.items():
+    if for_inv:
+        items = inv_info.items()
+    else:
+        items = check_info.items()
+
+    for check_type, check in items:
         if check_type in ignored_checktypes:
             continue
         elif not check_uses_snmp(check_type):
@@ -343,8 +348,13 @@ def snmp_scan(hostname, ipaddress):
         # subchecks sharing the same SNMP info of course should have
         # an identical scan function. But some checks do not do this
         # correctly
-        scan_function = snmp_scan_functions.get(check_type,
-                snmp_scan_functions.get(basename))
+        if check_type in snmp_scan_functions:
+            scan_function = snmp_scan_functions[check_type]
+        elif basename in snmp_scan_functions:
+            scan_function = snmp_scan_functions[basename]
+        elif basename in inv_info:
+            scan_function = inv_info[basename].get("snmp_scan_function")
+
         if scan_function:
             try:
                 result = scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid))

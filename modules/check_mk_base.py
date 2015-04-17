@@ -401,7 +401,14 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
     # Please note, that if the check_type is foo.bar then we lookup the
     # snmp info for "foo", not for "foo.bar".
-    oid_info = snmp_info.get(check_type.split(".")[0])
+    info_type = check_type.split(".")[0]
+    if info_type in snmp_info:
+        oid_info = snmp_info[info_type]
+    elif info_type in inv_info:
+        oid_info = inv_info[info_type].get("snmp_info")
+    else:
+        oid_info = None
+
     if oid_info:
         cache_path = tcp_cache_dir + "/" + cache_relpath
         check_interval = check_interval_of(hostname, check_type)
@@ -1760,7 +1767,9 @@ def nodes_of(hostname):
     return None
 
 def check_uses_snmp(check_type):
-    return snmp_info.get(check_type.split(".")[0]) != None
+    info_type = check_type.split(".")[0]
+    return snmp_info.get(info_type) != None or \
+       (info_type in inv_info and "snmp_info" in inv_info[info_type])
 
 # compile regex or look it up in already compiled regexes
 # (compiling is a CPU consuming process. We cache compiled
@@ -1952,11 +1961,11 @@ def get_nic_speed_human_readable(speed):
             speed = "100 Mbit/s"
         elif speedi == 1000000000:
             speed = "1 Gbit/s"
-        elif speed < 1500:
+        elif speedi < 1500:
             speed = "%d bit/s" % speedi
-        elif speed < 1000000:
+        elif speedi < 1000000:
             speed = "%.1f Kbit/s" % (speedi / 1000.0)
-        elif speed < 1000000000:
+        elif speedi < 1000000000:
             speed = "%.2f Mbit/s" % (speedi / 1000000.0)
         else:
             speed = "%.2f Gbit/s" % (speedi / 1000000000.0)

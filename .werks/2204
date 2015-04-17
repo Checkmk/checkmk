@@ -1,0 +1,14 @@
+Title: Inventory of switch ports, allows searching for unused ports
+Level: 2
+Component: inv
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429282443
+Class: feature
+
+The Check_MK HW/SW-Inventory now collections information via SNMP. The first
+two implemented plugins are for the basic SNMP information and for the list of
+network interfaces (switch ports). The latter are available in a new status
+view where you can search ports for various criteria - e.g. all ports where
+the type is Ethernet and that are down for at least one month.
+All you need to do is to active the HW/SW-Inventory on those devices.

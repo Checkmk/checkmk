@@ -24,20 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def fix_if64_highspeed(info):
+def parse_if64(info):
+    parsed = []
     for line in info:
-        if type(line[4]) == str: # not yet converted
-            line[4] = saveint(line[4]) * 1000000
+        # Fix for switches like DLINK, with empty lines in MIB
+        if saveint(line[1]) > 0:
+            parsed.append(line[:4] + [saveint(line[4]) * 1000000] + line[5:])
+    return parsed
 
 
 def inventory_if64(info):
-    # Fix for switches like DLINK, with empty lines in MIB
-    info = [ x for x in info if saveint(x[1]) > 0 ]
-    fix_if64_highspeed(info)
     return inventory_if_common(info, has_nodeinfo = True)
 
 def check_if64(item, params, info):
-    fix_if64_highspeed(info)
     return check_if_common(item, params, info, has_nodeinfo = True)
 
 
@@ -65,6 +64,7 @@ def if64_scan_function(oid):
 
 
 check_info["if64"] = {
+    "parse_function":          parse_if64,
     'check_function':          check_if64,
     'inventory_function':      inventory_if64,
     'service_description':     'Interface %s',

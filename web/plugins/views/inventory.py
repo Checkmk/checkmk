@@ -270,8 +270,11 @@ def render_inv_dicttable(hostname, tree_id, invpath, node):
     # Add titles for those keys
     titles = []
     for key in keyorder:
-        icon, title = inv_titleinfo(invpath + "0." + key, None)
-        titles.append((title, key))
+        invpath_sub = invpath + "0." + key
+        icon, title = inv_titleinfo(invpath_sub, None)
+        sub_hint = inv_display_hint(invpath_sub)
+        short_title = sub_hint.get("short", title)
+        titles.append((short_title, key))
 
     # Determine *all* keys, in order to find unknown ones
     keys = set([])
@@ -286,6 +289,15 @@ def render_inv_dicttable(hostname, tree_id, invpath, node):
             extratitles.append((title, key))
     extratitles.sort()
     titles += extratitles
+
+    # Link to Multisite view with exactly this table
+    if "view" in hint:
+        url = html.makeuri_contextless([
+            ("view_name", hint["view"] ),
+            ("host", hostname)],
+            filename="view.py")
+        html.write('<div class=invtablelink><a href="%s">%s</a></div>' % 
+            (url, _("Open this table for filtering / sorting")))
 
     # We cannot use table here, since html.plug() does not work recursively
     html.write('<table class=data>')
@@ -303,7 +315,15 @@ def render_inv_dicttable(hostname, tree_id, invpath, node):
                 invpath_sub += "."
             elif type(value) == list or (type(value) == tuple and type(value[0]) == list):
                 invpath_sub += ":"
-            html.write('<td>')
+
+            hint = inv_display_hint(invpath_sub)
+            if "paint_function" in hint:
+                td_class, text = hint["paint_function"](value)
+                classtext = ' class="%s"' % td_class
+            else:
+                classtext = ""
+
+            html.write('<td%s>' % classtext)
             render_inv_subtree(hostname, tree_id, invpath_sub, value)
             html.write('</td>')
         html.write('</tr>')
@@ -331,7 +351,7 @@ def inv_titleinfo(invpath, node):
         if type(title) == type(lambda: None):
             title = title(node)
     else:
-        title = invpath.rstrip(".").split('.')[-1].split(':')[-1].replace("_", " ").title()
+        title = invpath.rstrip(".").rstrip(':').split('.')[-1].split(':')[-1].replace("_", " ").title()
     return icon, title
 
 # The titles of the last two path components of the node, e.g. "BIOS / Vendor"
@@ -383,6 +403,20 @@ def inv_paint_bytes(b):
         i += 1
     return "number", "%d %s" % (b, units[i])
 
+
+def inv_paint_size(b):
+    return "number", bytes_human_readable(b)
+
+
+def inv_paint_number(b):
+    if b == None:
+        return "", ""
+    else:
+        return "number", str(b)
+
+# Similar to paint_number, but is allowed to
+# abbreviate things if numbers are very large
+# (though it doesn't do so yet)
 def inv_paint_count(b):
     if b == None:
         return "", ""
@@ -407,22 +441,49 @@ def inv_paint_bytes_rounded(b):
     else:
         return "number", "%d&nbsp;%s" % (b, units[0])
 
+def inv_paint_nic_speed(bits_per_second):
+    if bits_per_second == 0:
+        return "", ""
+    else:
+        return "number", nic_speed_human_readable(bits_per_second)
+
+
+def inv_paint_if_oper_status(oper_status):
+    if oper_status == 1:
+        css_class = "if_state_up"
+    elif oper_status == 2:
+        css_class = "if_state_down"
+    else:
+        css_class = "if_state_other"
+
+    return "if_state " + css_class, interface_oper_states.get(oper_status, str(oper_status))
+
+
+# admin status can only be 1 or 2, matches oper status :-)
+def inv_paint_if_admin_status(admin_status):
+    return inv_paint_if_oper_status(admin_status)
+
+def inv_paint_if_port_type(port_type):
+    type_name = interface_port_types.get(port_type, _("unknown"))
+    return "", "%d - %s" % (port_type, type_name)
+
+
 def inv_paint_volt(volt):
     if volt:
         return "number", "%.1f V" % volt
     else:
         return "", ""
 
-def inv_paint_timestamp(stamp):
-    if stamp:
-        return "Unix time", "%i" % stamp
-    else:
-        return "", ""
-
 def inv_paint_date(stamp):
     if stamp:
         date_painted = time.strftime("%Y-%m-%d", time.localtime(stamp))
-        return "Date", "%s" % date_painted
+        return "date", "%s" % date_painted
+    else:
+        return "", ""
+
+def inv_paint_age(age):
+    if age:
+        return "", age_human_readable(age)
     else:
         return "", ""
 
@@ -470,7 +531,7 @@ inventory_displayhints.update({
     ".hardware.storage.disks:*.product"                : { "title" : _("Product") },
     ".hardware.storage.disks:*.fsnode"                 : { "title" : _("Filesystem Node") },
     ".hardware.storage.disks:*.serial"                 : { "title" : _("Serial Number") },
-    ".hardware.storage.disks:*.size"                   : { "title" : _("Size") },
+    ".hardware.storage.disks:*.size"                   : { "title" : _("Size"), "paint" : "size" },
     ".hardware.storage.disks:*.type"                   : { "title" : _("Type") },
     ".hardware.video:"                                 : { "title" : _("Graphic Cards") },
     ".hardware.video:*."                               : { "title" : _("Graphic Card %d") },
@@ -492,26 +553,304 @@ inventory_displayhints.update({
     ".software.os.service_pack"                        : { "title" : _("Service Pack"), "short" : _("Service Pack") },
     ".software.os.service_packs:"                      : { "title" : _("Service Packs"), "render" : render_inv_dicttable,
                                                             "keyorder" : [ "name" ] },
+    ".software.configuration."                         : { "title" : _("Configuration"), },
+    ".software.configuration.snmp_info."               : { "title" : _("SNMP Information"), },
+    ".software.configuration.snmp_info.contact"        : { "title" : _("Contact"), },
+    ".software.configuration.snmp_info.location"       : { "title" : _("Location"), },
+    ".software.configuration.snmp_info.name"           : { "title" : _("System name"), },
     ".software.packages:"                              : { "title" : _("Packages"), "icon" : "packages", "render": render_inv_dicttable,
-                                                           "keyorder" : [ "name", "version", "arch", "package_type", "summary"] },
+                                                           "keyorder" : [ "name", "version", "arch", "package_type", "summary"], "view" : "invswpac_of_host" },
     ".software.packages:*.name"                        : { "title" : _("Name"), },
     ".software.packages:*.arch"                        : { "title" : _("Architecture"), },
     ".software.packages:*.package_type"                : { "title" : _("Type"), },
     ".software.packages:*.summary"                     : { "title" : _("Description"), },
-    ".software.packages:*.version"                     : { "title" : _("Version"), },
+    ".software.packages:*.version"                     : { "title" : _("Version"), "sort" : visuals.cmp_version, "filter" : visuals.FilterInvtableVersion  },
     ".software.packages:*.vendor"                      : { "title" : _("Publisher"), },
-    ".software.packages:*.package_version"             : { "title" : _("Package Version"), },
+    ".software.packages:*.package_version"             : { "title" : _("Package Version"), "sort" : visuals.cmp_version, "filter" : visuals.FilterInvtableVersion },
     ".software.packages:*.install_date"                : { "title" : _("Install Date"), "paint" : "date"},
     ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
     ".software.packages:*.path"                        : { "title" : _("Path"), },
+
+    ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
+    ".networking.interfaces:"                          : { "title" : _("Interfaces"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "description", "oper_status", "admin_status", "speed" ], "view" : "invinterface_of_host", },
+    ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : visuals.FilterInvtableIDRange },
+    ".networking.interfaces:*.description"             : { "title" : _("Description") },
+    ".networking.interfaces:*.phys_address"            : { "title" : _("Physical Address (MAC)")  },
+    ".networking.interfaces:*.oper_status"             : { "title" : _("Operational Status"), "short" : _("Status"), "paint" : "if_oper_status", "filter" : visuals.FilterInvtableOperStatus },
+    ".networking.interfaces:*.admin_status"            : { "title" : _("Administrative Status"), "short" : _("Admin"), "paint" : "if_admin_status", "filter" : visuals.FilterInvtableAdminStatus },
+    ".networking.interfaces:*.speed"                   : { "title" : _("Speed"), "paint" : "nic_speed", },
+    ".networking.interfaces:*.port_type"               : { "title" : _("Type"), "paint" : "if_port_type", "filter" : visuals.FilterInvtableInterfaceType },
+    ".networking.interfaces:*.state_age"               : { "title" : _("State Age"), "paint" : "age", "filter" : visuals.FilterInvtableAge },
 })
 
-# TEST: create painters for node with a display hint
+# create painters for node with a display hint
 for invpath, hint in inventory_displayhints.items():
     if "*" not in invpath:
         datatype = hint.get("paint", "str")
         long_title = inv_titleinfo_long(invpath, None)
         declare_inv_column(invpath, datatype, long_title, hint.get("short", long_title))
+
+
+#.
+#   .--Datasources---------------------------------------------------------.
+#   |       ____        _                                                  |
+#   |      |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___         |
+#   |      | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|        |
+#   |      | |_| | (_| | || (_| \__ \ (_) | |_| | | | (_|  __/\__ \        |
+#   |      |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Basic functions for creating datasources for for table-like infor-  |
+#   |  mation like software packages or network interfaces. That way the   |
+#   |  user can access inventory data just like normal Livestatus tables.  |
+#   |  This is needed for inventory data that is organized in tables.      |
+#   |  Data where there is one fixed path per host for an item (like the   |
+#   |  number of CPU cores) no datasource is being needed. These are just  |
+#   |  painters that are available in the hosts info.                      |
+#   '----------------------------------------------------------------------'
+
+def create_inv_rows(hostname, invpath, infoname):
+    tree     = inventory.host(hostname)
+    entries = inventory.get(tree, invpath)
+    for entry in entries:
+        newrow = {}
+        for key, value in entry.items():
+            newrow[infoname + "_" + key] = value
+        yield newrow
+
+
+def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters):
+    # Create livestatus filter for filtering out hosts
+    filter_code = ""
+    for filt in filters:
+        header = filt.filter(infoname)
+        if not header.startswith("Sites:"):
+            filter_code += header
+    host_columns = list(set([ "host_name" ] + filter(lambda c: c.startswith("host_"), columns)))
+
+    html.live.set_only_sites(only_sites)
+    html.live.set_prepend_site(True)
+
+    query = "GET hosts\n"
+    query += "Columns: " + (" ".join(host_columns)) + "\n"
+    query += filter_code
+
+    if config.debug_livestatus_queries \
+            and html.output_format == "html" and 'W' in html.display_options:
+        html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
+                           '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
+
+    html.live.set_only_sites(only_sites)
+    html.live.set_prepend_site(True)
+    data = html.live.query(query)
+    html.live.set_prepend_site(False)
+    html.live.set_only_sites(None)
+
+    headers = [ "site" ] + host_columns
+
+    # Now create big table of all inventory entries of these hosts
+
+    rows = []
+    hostnames = [ row[1] for row in data ]
+    for row in data:
+        site     = row[0]
+        hostname = row[1]
+        hostrow = dict(zip(headers, row))
+        if infoname == "invhist":
+            subrows = create_hist_rows(hostname, columns)
+        else:
+            subrows = create_inv_rows(hostname, invpath, infoname)
+
+        for subrow in subrows:
+            subrow.update(hostrow)
+            rows.append(subrow)
+    return rows
+
+# Find the name of all columns of an embedded table that have a display
+# hint. Respects the order of the columns if one is specified in the
+# display hint:
+def inv_find_subtable_columns(invpath):
+    # Create dict from column name to its order number in the list
+    with_numbers = enumerate(inventory_displayhints[invpath].get("keyorder", []))
+    swapped = map(lambda t: (t[1], t[0]), with_numbers)
+    order = dict(swapped)
+
+    columns = []
+    for path, hint in inventory_displayhints.items():
+        if path.startswith(invpath + "*."):
+            # ".networking.interfaces:*.port_type" -> "port_type"
+            columns.append(path.split(".")[-1])
+
+    columns.sort(cmp = lambda a,b: cmp(order.get(a, 999), order.get(b, 999)) or cmp(a,b))
+    return columns
+
+
+def declare_invtable_columns(infoname, invpath, topic):
+    for name in inv_find_subtable_columns(invpath):
+        hint = inventory_displayhints.get(invpath + "*." + name, {})
+        sortfunc = hint.get("sort", cmp)
+        if "paint" in hint:
+            paint_name = hint["paint"]
+            render_function_name = "inv_paint_" + paint_name
+            render_function = globals()[render_function_name]
+        else:
+            paint_name = "text"
+            render_function = None
+
+        filter_class = hint.get("filter")
+        declare_invtable_column(infoname, name, topic, hint["title"],
+                           hint.get("short", hint["title"]), sortfunc, render_function, filter_class)
+
+
+def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, render_func, filter_class):
+    column = infoname + "_" + name
+    if render_func == None:
+        paint = lambda row: ("", str(row.get(column)))
+    else:
+        def paint(row):
+            if column not in row:
+                return "", ""
+            else:
+                return render_func(row[column])
+
+    multisite_painters[column] = {
+        "title"   : topic + ": " + title,
+        "short"   : short_title,
+        "columns" : [ column ],
+        "paint"   : paint,
+        "sorter"  : column,
+    }
+    multisite_sorters[column] = {
+        "title"    : _("Inventory") + ": " + title,
+        "columns"  : [],
+        "cmp"      : lambda a, b: sortfunc(a.get(column), b.get(column))
+    }
+
+    if filter_class == None:
+        filter_class = visuals.FilterInvtableText
+    visuals.declare_filter(800, filter_class(infoname, name, topic + ": " + title))
+
+
+# One master function that does all
+def declare_invtable_view(infoname, invpath, title_singular, title_plural):
+
+    def inv_table(columns, add_headers, only_sites, limit, filters):
+        return inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters)
+
+    # Declare the "info" (like a database table)
+    visuals.declare_info(infoname, {
+        'title'       : title_singular,
+        'title_plural': title_plural,
+        'single_spec' : None,
+    })
+
+    # Create the datasource (like a database view)
+    multisite_datasources[infoname] = {
+        "title"        : "%s: %s" % (_("Inventory"), title_plural),
+        "table"        : inv_table,
+        "infos"        : [ "host", infoname ],
+        "keys"         : [],
+        "idkeys"       : [],
+    }
+
+    # Declare a painter, sorter and filters for each path with display hint
+    declare_invtable_columns(infoname, invpath, title_singular)
+
+    # Create a nice search-view containing these columns
+    painters = []
+    filters = []
+    for name in inv_find_subtable_columns(invpath):
+        column = infoname + "_" + name
+        painters.append( ( column, '', '' ) )
+        filters.append(column)
+
+    # Declare two views: one for searching globally. And one
+    # for the items of one host.
+
+    view_options = {
+        'datasource'                   : infoname,
+        'topic'                        : _('Inventory'),
+        'public'                       : True,
+        'layout'                       : 'table',
+        'num_columns'                  : 1,
+        'browser_reload'               : 0,
+        'column_headers'               : 'pergroup',
+        'user_sortable'                : True,
+        'play_sounds'                  : False,
+        'force_checkboxes'             : False,
+        'mobile'                       : False,
+
+        'group_painters'               : [],
+        'sorters'                      : [],
+    }
+
+    # View for searching for items
+    multisite_builtin_views[infoname + "_search"] = {
+        # General options
+        'title'                        : _("Search %s") % title_plural,
+        'description'                  : _('A view for searching in the inventory data for %s') % title_plural,
+        'hidden'                       : False,
+        'mustsearch'                   : True,
+
+        # Columns
+        'painters'                     : [ ('host','inv_host', '') ] + painters,
+
+        # Filters
+        'show_filters'                 : [
+            'siteopt',
+            'hostregex',
+            'hostgroups',
+            'opthostgroup',
+            'opthost_contactgroup',
+            'host_address',
+            'host_tags',
+            'hostalias',
+            'host_favorites',] + filters,
+        'hide_filters' : [ ],
+        'hard_filters' : [],
+        'hard_filtervars' : [],
+    }
+    multisite_builtin_views[infoname + "_search"].update(view_options)
+
+    # View for the items of one host
+    multisite_builtin_views[infoname + "_of_host"] = {
+        # General options
+        'title'                        : title_plural,
+        'description'                  : _('A view for the %s of one host') % title_plural,
+        'hidden'                       : True,
+        'mustsearch'                   : False,
+
+        # Columns
+        'painters'                     : painters,
+
+        # Filters
+        'show_filters'                 : filters,
+        'hard_filters' : [ ],
+        'hard_filtervars' : [],
+        'hide_filters' : [ "host" ],
+    }
+    multisite_builtin_views[infoname + "_of_host"].update(view_options)
+
+# Now declare Multisite views for a couple of embedded tables
+declare_invtable_view("invswpac",       ".software.packages:",       _("Software Package"),   _("Software Packages"))
+declare_invtable_view("invinterface",   ".networking.interfaces:",   _("Network Interface"),  _("Network Interfaces"))
+
+# This would also be possible. But we muss a couple of display and filter hints.
+# declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))
+
+
+#.
+#   .--Views---------------------------------------------------------------.
+#   |                    __     ___                                        |
+#   |                    \ \   / (_) _____      _____                      |
+#   |                     \ \ / /| |/ _ \ \ /\ / / __|                     |
+#   |                      \ V / | |  __/\ V  V /\__ \                     |
+#   |                       \_/  |_|\___| \_/\_/ |___/                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Special Multisite table views for software, ports, etc.             |
+#   '----------------------------------------------------------------------'
 
 # View for Inventory tree of one host
 multisite_builtin_views["inv_host"] = {
@@ -521,7 +860,7 @@ multisite_builtin_views["inv_host"] = {
     'title'                        : _('Inventory of host'),
     'linktitle'                    : _('Inventory'),
     'description'                  : _('The complete hardware- and software inventory of a host'),
-    'icon'                         : 'inventory',
+    'icon'                         : 'inv',
     'hidebutton'                   : False,
     'public'                       : True,
     'hidden'                       : True,
@@ -604,170 +943,6 @@ multisite_builtin_views["inv_hosts_cpu"] = {
 }
 
 
-def inv_software_table(columns, add_headers, only_sites, limit, filters):
-    return inv_multisite_table("invswpacs", columns, add_headers, only_sites, limit, filters)
-
-def inv_multisite_table(dsname, columns, add_headers, only_sites, limit, filters):
-    # Create livestatus filter for filtering out hosts
-    filter_code = ""
-    for filt in filters:
-        header = filt.filter(dsname)
-        if not header.startswith("Sites:"):
-            filter_code += header
-    host_columns = list(set([ "host_name" ] + filter(lambda c: c.startswith("host_"), columns)))
-
-    html.live.set_only_sites(only_sites)
-    html.live.set_prepend_site(True)
-
-    query = "GET hosts\n"
-    query += "Columns: " + (" ".join(host_columns)) + "\n"
-    query += filter_code
-
-    if config.debug_livestatus_queries \
-            and html.output_format == "html" and 'W' in html.display_options:
-        html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
-                           '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
-
-    html.live.set_only_sites(only_sites)
-    html.live.set_prepend_site(True)
-
-    data = html.live.query(query)
-
-    html.live.set_prepend_site(False)
-    html.live.set_only_sites(None)
-
-    headers = [ "site" ] + host_columns
-
-    # Now create big table of all software packages / inventory histories of these hosts
-
-    rows = []
-    hostnames = [ row[1] for row in data ]
-    for row in data:
-        site     = row[0]
-        hostname = row[1]
-        hostrow = dict(zip(headers, row))
-        if dsname == "invswpacs":
-            subrows = create_swpac_rows(hostname)
-        else:
-            subrows = create_hist_rows(hostname, columns)
-
-        for subrow in subrows:
-            subrow.update(hostrow)
-            rows.append(subrow)
-    return rows
-
-
-def create_swpac_rows(hostname):
-    tree     = inventory.host(hostname)
-    packages = inventory.get(tree, ".software.packages:")
-    for package in packages:
-        newrow = {}
-        for key, value in package.items():
-            newrow["invswpac_" + key] = value
-        yield newrow
-
-def declare_swpacs_columns(name, title, sortfunc):
-    column = "invswpac_" + name
-    multisite_painters[column] = {
-        "title"   : _("Package") + " " + title,
-        "short"   : title,
-        "columns" : [ "invswpac_name" ],
-        "paint"   : lambda row: ("", str(row.get(column))),
-        "sorter"  : column,
-    }
-    multisite_sorters[column] = {
-        "title"    : _("Inventory") + ": " + title,
-        "columns"  : [],
-        "cmp"      : lambda a, b: sortfunc(a.get(column), b.get(column))
-    }
-
-    if sortfunc == visuals.cmp_version:
-        visuals.declare_filter(801, visuals.FilterSWPacsVersion(name, _("Software Package") + ": " + title))
-    else:
-        visuals.declare_filter(800, visuals.FilterSWPacsText(name, _("Software Package") + ": " + title))
-
-
-for name, title, sortfunc in [
-    ( "name",            _("Name"),             cmp ),
-    ( "summary",         _("Summary"),          cmp ),
-    ( "arch",            _("CPU Architecture"), cmp ),
-    ( "package_type",    _("Type"),             cmp ),
-    ( "package_version", _("Package Version"),  visuals.cmp_version ),
-    ( "version",         _("Version"),          visuals.cmp_version ),
-    ( "install_date",    _("Install Date"),     cmp ),
-    ]:
-    declare_swpacs_columns(name, title, sortfunc)
-
-
-multisite_datasources["invswpacs"] = {
-    "title"        : _("Inventory: Software Packages"),
-    "table"        : inv_software_table,
-    "infos"        : [ "host", "invswpac" ],
-    "keys"         : [],
-    "idkeys"       : [],
-}
-
-# View for searching for a certain software
-multisite_builtin_views["inv_swpacs"] = {
-    # General options
-    'datasource'                   : 'invswpacs',
-    'topic'                        : _('Inventory'),
-    'title'                        : _('Software Package Search'),
-    'description'                  : _('Search for software packages installed on hosts'),
-    'public'                       : True,
-    'hidden'                       : False,
-
-    # Layout options
-    'layout'                       : 'table',
-    'num_columns'                  : 1,
-    'browser_reload'               : 0,
-    'column_headers'               : 'pergroup',
-    'user_sortable'                : True,
-    'play_sounds'                  : False,
-    'force_checkboxes'             : False,
-    'mustsearch'                   : True,
-    'mobile'                       : False,
-
-    # Columns
-    'group_painters'               : [],
-    'painters'                     : [
-         ('host',                  'inv_host', ''),
-         ('invswpac_name',         '',         ''),
-         ('invswpac_summary',      '',         ''),
-         ('invswpac_version',      '',         ''),
-         ('invswpac_package_version', '',         ''),
-         ('invswpac_arch',         '',         ''),
-         ('invswpac_package_type', '',         ''),
-    ],
-
-    # Filters
-    'show_filters'                 : [
-        'siteopt',
-        'hostregex',
-        'hostgroups',
-        'opthostgroup',
-        'opthost_contactgroup',
-        'host_address',
-        'host_tags',
-        'hostalias',
-        'host_favorites',
-        'invswpac',
-        'invswpac_name',
-        'invswpac_summary',
-        'invswpac_arch',
-        'invswpac_package_type',
-        'invswpac_version',
-        'invswpac_package_version',
-     ],
-    'hard_filters'                 : [
-        'has_inv'
-    ],
-    'hard_filtervars'              : [
-        ('is_has_inv', '1' ),
-    ],
-    'hide_filters'                 : [],
-    'sorters'                      : [],
-}
 
 
 #.
@@ -801,6 +976,12 @@ def create_hist_rows(hostname, columns):
         }
         yield newrow
 
+visuals.declare_info('invhist', {
+    'title'       : _('Inventory History'),
+    'title_plural': _('Inventory Historys'),
+    'single_spec' : None,
+})
+
 multisite_datasources["invhist"] = {
     "title"        : _("Inventory: History"),
     "table"        : inv_history_table,
@@ -822,6 +1003,7 @@ multisite_painters["invhist_delta"] = {
     "columns"  : [ "invhist_delta" "invhist_time" ],
     "paint"    : lambda row: paint_inv_tree(row, column="invhist_delta"),
 }
+
 
 def paint_invhist_count(row, what):
     number = row["invhist_" + what]

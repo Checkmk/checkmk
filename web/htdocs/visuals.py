@@ -1127,6 +1127,9 @@ def unpack_context_after_editing(packed_context):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+def declare_info(infoname, info):
+    infos[infoname] = info
+
 def single_infos_spec(single_infos):
     return ('single_infos', FixedValue(single_infos,
         title = _('Show information of single'),

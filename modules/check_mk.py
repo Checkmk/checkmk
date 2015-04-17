@@ -318,6 +318,7 @@ def no_discovery_possible(check_type, info):
 
 # The following data structures will be filled by the checks
 check_info                         = {} # all known checks
+inv_info                           = {} # inventory plugins
 checkgroup_of                      = {} # groups of checks with compatible parametration
 check_includes                     = {} # library files needed by checks
 precompile_params                  = {} # optional functions for parameter precompilation, look at df for an example
@@ -2992,6 +2993,7 @@ no_discovery_possible = None
                 filenames.append(path)
 
     output.write("check_info = {}\n" +
+                 "inv_info = {}\n" +
                  "check_includes = {}\n" +
                  "precompile_params = {}\n" +
                  "factory_settings = {}\n" +

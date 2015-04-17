@@ -241,20 +241,31 @@ def do_inv_for(hostname):
     global g_inv_tree
     g_inv_tree = {}
 
-    for secname, plugin in inv_info.items():
+    # If this is an SNMP host then determine the SNMP sections
+    # that this device supports.
+    if is_snmp_host(hostname):
+        snmp_check_types = snmp_scan(hostname, ipaddress, for_inv=True)
+    else:
+        snmp_check_types = []
+
+    for info_type, plugin in inv_info.items():
+        # Skip SNMP sections that are not supported by this device
+        if check_uses_snmp(info_type) and info_type not in snmp_check_types:
+            continue
+
         try:
-            info = get_realhost_info(hostname, ipaddress, secname, 999999999999, ignore_check_interval = True)
+            info = get_info_for_discovery(hostname, ipaddress, info_type, use_caches=True)
         except Exception, e:
             if str(e):
                 raise # Otherwise simply ignore missing agent section
             continue
 
-        if not info: # section not present (None or [])
+        if info == None: # section not present (None or [])
             # Note: this also excludes existing sections without info..
             continue
 
         if opt_verbose:
-            sys.stdout.write(tty_green + tty_bold + secname + " " + tty_normal)
+            sys.stdout.write(tty_green + tty_bold + info_type + " " + tty_normal)
             sys.stdout.flush()
 
         plugin["inv_function"](info)

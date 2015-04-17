@@ -496,15 +496,6 @@ def metric_to_text(metric, value=None):
     return metric["unit"]["render"](value)
 
 # A few helper function to be used by the definitions
-# 45.1 -> "45.1"
-# 45.0 -> "45"
-def drop_dotzero(v):
-    t = "%.1f" % v
-    if t.endswith(".0"):
-        return t[:-2]
-    else:
-        return t
-
 
 def metricometer_logarithmic(value, half_value, base, color):
     # Negative values are printed like positive ones (e.g. time offset)

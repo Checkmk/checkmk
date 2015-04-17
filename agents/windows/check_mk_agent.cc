@@ -3242,7 +3242,7 @@ void section_plugins(SOCKET &out)
     output(out, "<<<>>>\n");
     output_external_programs(out, PLUGIN);
     // Prevent errors from plugins with missing final newline
-    output(out, "<<<>>>\n");
+    output(out, "\n<<<>>>\n");
 }
 
 

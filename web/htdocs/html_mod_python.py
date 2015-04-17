@@ -137,7 +137,7 @@ class html_mod_python(htmllib.html):
         return (omd_mode, omd_site)
 
     def log(self, msg):
-        from lib import logger
+        from lib import logger, LOG_NOTICE
         logger(LOG_NOTICE, msg)
 
     def http_redirect(self, url):

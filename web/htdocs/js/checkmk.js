@@ -738,7 +738,7 @@ function create_graph(data, params) {
 
     if (data.with_link) {
         var graph_container = document.createElement('div');
-        graph_container.setAttribute('class', 'graph')
+        graph_container.setAttribute('class', 'pnp_graph')
 
         var view   = data['view'] == '' ? 0 : data['view'];
         // needs to be extracted from "params", hack!
@@ -2395,11 +2395,13 @@ function toggle_popup(event, trigger_obj, ident, what, data, params)
         event = window.event;
     var container = trigger_obj.parentNode;
 
-    close_popup();
-
-    if (popup_id === ident) {
-        popup_id = null;
-        return; // same icon clicked: just close the menu
+    if (popup_id) {
+        if (popup_id === ident) {
+            close_popup();
+            return; // same icon clicked: just close the menu
+        } else {
+            close_popup();
+        }
     }
     popup_id = ident;
 

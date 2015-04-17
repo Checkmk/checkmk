@@ -128,6 +128,9 @@ class html:
     BACKSPACE = 8
     F1 = 112
 
+    def is_mobile(self):
+        return self.mobile
+
     def get_user_agent(self):
         return self.req.headers_in.get('User-Agent', '')
 

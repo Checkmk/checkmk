@@ -794,9 +794,9 @@ class html:
             for js in [ "checkmk", "graphs" ] + javascripts:
                 if defaults.omd_root:
                     if os.path.exists(defaults.omd_root + "/share/check_mk/web/htdocs/js/" + js + ".js"):
-                        fname = '%s-%s.js' % (js, defaults.check_mk_version)
+                        fname = '%s-%s' % (js, defaults.check_mk_version)
                 else:
-                    fname = '%s.js' % js
+                    fname = '%s' % js
                 self.javascript_file(fname)
 
             if self.browser_reload != 0:

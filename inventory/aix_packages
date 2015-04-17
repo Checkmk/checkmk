@@ -36,6 +36,9 @@
 
 
 def inv_aix_packages(info):
+    if not info:
+        return # Empty section
+
     paclist = inv_tree("software.packages:")
     headers = info[0]
     headers[0] = headers[0].lstrip("#")

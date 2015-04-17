@@ -798,8 +798,10 @@ multisite_painters["svc_group_memberlist"] = {
 }
 
 def paint_graph(row):
-    # Filter some clients which do not support our graphing, for example IE < 8
-    try_time_graph = True
+    # Filter cases where our graphing is not possible:
+    # - mobile GUI
+    # - for example IE < 8
+    try_time_graph = not html.is_mobile()
 
     user_agent = html.get_user_agent()
     if 'MSIE' in user_agent:

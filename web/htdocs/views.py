@@ -1136,7 +1136,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         # Show/Hide the header with page title, MK logo, etc.
         if 'H' in display_options:
             # FIXME: view/layout/module related stylesheets/javascripts e.g. in case of BI?
-            html.body_start(view_title(view), stylesheets=["pages","views","status","bi"], javascripts=['bi'])
+            html.body_start(view_title(view), stylesheets=["pages","views","status","bi"])
         if 'T' in display_options:
             html.top_heading(view_title(view))
 

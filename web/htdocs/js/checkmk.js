@@ -2485,3 +2485,241 @@ function add_to_visual(visual_type, visual_name)
     if (response)
         window.location.href = response;
 }
+
+//#.
+//#   .-HoverMenu----------------------------------------------------------.
+//#   |          _   _                     __  __                          |
+//#   |         | | | | _____   _____ _ __|  \/  | ___ _ __  _   _         |
+//#   |         | |_| |/ _ \ \ / / _ \ '__| |\/| |/ _ \ '_ \| | | |        |
+//#   |         |  _  | (_) \ V /  __/ |  | |  | |  __/ | | | |_| |        |
+//#   |         |_| |_|\___/ \_/ \___|_|  |_|  |_|\___|_| |_|\__,_|        |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   | Mouseover hover menu, used for performance graph popups            |
+//#   '--------------------------------------------------------------------'
+
+var g_hover_menu = null;
+
+function hide_hover_menu()
+{
+    if (g_hover_menu) {
+        g_hover_menu.style.display = 'none';
+        document.body.style.cursor = 'auto';
+    }
+}
+
+function show_hover_menu(event, code)
+{
+    event = event || window.event;
+    var x = event.clientX,
+        y = event.clientY;
+
+    hide_hover_menu();
+
+    var hoverSpacer = 5;
+    var minWidth = 400;
+
+    // document.body.scrollTop does not work in IE
+    var scrollTop = document.body.scrollTop ? document.body.scrollTop :
+                                              document.documentElement.scrollTop;
+    var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
+                                                document.documentElement.scrollLeft;
+
+    if (g_hover_menu === null) {
+        g_hover_menu = document.createElement('div');
+        g_hover_menu.setAttribute('id', 'hover_menu');
+        document.body.appendChild(g_hover_menu);
+    }
+    g_hover_menu.innerHTML = code;
+    executeJSbyObject(g_hover_menu);
+
+    // Change cursor to "hand" when displaying hover menu
+    document.body.style.cursor = 'pointer';
+
+    // hide the menu first to avoid an "up-then-over" visual effect
+    g_hover_menu.style.display = 'none';
+    g_hover_menu.style.left = (x + hoverSpacer + scrollLeft) + 'px';
+    g_hover_menu.style.top = (y + hoverSpacer + scrollTop) + 'px';
+    g_hover_menu.style.display = '';
+
+    /**
+     * Check if the menu is "in screen" or too large.
+     * If there is some need for reposition try to reposition the hover menu
+     */
+
+    var hoverLeft = parseInt(g_hover_menu.style.left.replace('px', ''));
+    var screenWidth = pageWidth();
+    var hoverPosAndSizeOk = true;
+    if (!hover_menu_in_screen(g_hover_menu, hoverSpacer))
+        hoverPosAndSizeOk = false;
+
+    if (!hoverPosAndSizeOk) {
+        g_hover_menu.style.left = (x - hoverSpacer - g_hover_menu.clientWidth) + 'px';
+
+        if (hover_menu_in_screen(g_hover_menu, hoverSpacer))
+            hoverPosAndSizeOk = true;
+    }
+
+    // And if the hover menu is still not on the screen move it to the left edge
+    // and fill the whole screen width
+    if (!hover_menu_in_screen(g_hover_menu, hoverSpacer)) {
+        g_hover_menu.style.left = hoverSpacer + scrollLeft + 'px';
+        g_hover_menu.style.width = pageWidth() - (2*hoverSpacer) + 'px';
+    }
+
+    var hoverTop = parseInt(g_hover_menu.style.top.replace('px', ''));
+    // Only move the menu to the top when the new top will not be
+    // out of sight
+    if (hoverTop +g_hover_menu.clientHeight > pageHeight() && hoverTop -g_hover_menu.clientHeight >= 0)
+        g_hover_menu.style.top = hoverTop -g_hover_menu.clientHeight - hoverSpacer + 'px';
+
+    return false;
+}
+
+function hover_menu_in_screen(hoverMenu, hoverSpacer)
+{
+    var hoverLeft = parseInt(hoverMenu.style.left.replace('px', ''));
+    var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
+                                                document.documentElement.scrollLeft;
+
+    if(hoverLeft + hoverMenu.clientWidth >= pageWidth() - scrollLeft)
+        return false;
+
+    if(hoverLeft - hoverSpacer < 0)
+        return false;
+    return true;
+}
+
+//#.
+//#   .-BI-----------------------------------------------------------------.
+//#   |                              ____ ___                              |
+//#   |                             | __ )_ _|                             |
+//#   |                             |  _ \| |                              |
+//#   |                             | |_) | |                              |
+//#   |                             |____/___|                             |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   | BI GUI specific                                                    |
+//#   '--------------------------------------------------------------------'
+
+function bi_toggle_subtree(oImg, lazy)
+{
+    if (oImg.tagName == "SPAN") { // clicked on title,
+        oImg = oImg.previousSibling;
+    }
+    var oSubtree = oImg.parentNode.childNodes[6];
+    var url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
+    var do_open;
+
+    if (oSubtree.style.display == "none") {
+        oSubtree.style.display = "";
+        url += "&state=open";
+        toggle_folding(oImg, 1);
+        do_open = true;
+    }
+    else {
+        oSubtree.style.display = "none";
+        url += "&state=closed";
+        toggle_folding(oImg, 0);
+        do_open = false;
+    }
+    oSubtree = null;
+    if (lazy && do_open)
+        get_url(url, bi_update_tree, oImg);
+    else
+        get_url(url);
+}
+
+function bi_update_tree(oImg, code)
+{
+    // Deactivate clicking - the update can last a couple
+    // of seconds. In that time we must inhibit further clicking.
+    oImg.onclick = null;
+
+    // First find enclosding <div class=bi_tree_container>
+    var oDiv = oImg;
+    while (oDiv.className != "bi_tree_container") {
+        oDiv = oDiv.parentNode;
+    }
+    var url = "bi_render_tree.py?" + oDiv.id;
+    get_url(url, bi_update_tree_response, oDiv);
+}
+
+function bi_update_tree_response(oDiv, code) {
+    oDiv.innerHTML = code;
+    executeJSbyObject(oDiv);
+}
+
+function bi_toggle_box(oDiv, lazy)
+{
+    var url = "bi_save_treestate.py?path=" + encodeURIComponent(oDiv.id);
+    var do_open;
+
+    if (oDiv.className.indexOf("open") >= 0) {
+        if (lazy)
+            return; // do not close in lazy mode
+        oDiv.className = oDiv.className.replace(/open/, "closed");
+        url += "&state=closed";
+        do_open = false;
+    }
+    else {
+        oDiv.className = oDiv.className.replace(/closed/, "open");
+        url += "&state=open";
+        do_open = true;
+    }
+
+    if (lazy && do_open)
+        get_url(url, bi_update_tree, oDiv);
+    else {
+        get_url(url);
+        // find child nodes that belong to this node and
+        // control visibility of those. Note: the BI child nodes
+        // are *no* child nodes in HTML but siblings!
+        var found = 0;
+        for (var i in oDiv.parentNode.childNodes) {
+            var onode = oDiv.parentNode.childNodes[i];
+            if (onode == oDiv)
+                found = 1;
+            else if (found == 1)
+                found ++;
+            else if (found) {
+                if (onode.style.display)
+                    onode.style.display = "";
+                else
+                    onode.style.display = "none";
+                return;
+            }
+        }
+    }
+}
+
+function toggle_assumption(oImg, site, host, service)
+{
+    // get current state
+    var current = oImg.src;
+    while (current.indexOf('/') > -1)
+        current = current.substr(current.indexOf('/') + 1);
+    current = current.substr(7);
+    current = current.substr(0, current.length - 4);
+    if (current == 'none')
+        // Assume WARN when nothing assumed yet
+        current = '1';
+    else if (current == '3' || (service == '' && current == '2'))
+        // Assume OK when unknown assumed (or when critical assumed for host)
+        current = '0'
+    else if (current == '0')
+        // Disable assumption when ok assumed
+        current = 'none'
+    else
+        // In all other cases increas the assumption
+        current = parseInt(current) + 1;
+
+    var url = "bi_set_assumption.py?site=" + encodeURIComponent(site)
+            + '&host=' + encodeURIComponent(host);
+    if (service) {
+        url += '&service=' + encodeURIComponent(service);
+    }
+    url += '&state=' + current;
+    oImg.src = "images/assume_" + current + ".png";
+    get_url(url);
+}

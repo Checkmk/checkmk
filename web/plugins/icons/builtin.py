@@ -240,8 +240,8 @@ def pnp_icon(row, what):
     else:
         hover_content_func = 'hover_graph(\'%s\', \'%s\', \'%s\')' % \
                                 (row['site'], row['host_name'], row.get('service_description', '_HOST_'))
-    return '<a href="%s" onmouseover="displayHoverMenu(event, %s)" ' \
-           'onmouseout="hoverHide()">%s</a>' % (url, hover_content_func, html.render_icon('pnp', ''))
+    return '<a href="%s" onmouseover="show_hover_menu(event, %s)" ' \
+           'onmouseout="hide_hover_menu()">%s</a>' % (url, hover_content_func, html.render_icon('pnp', ''))
 
 def paint_pnp_graph(what, row, tags, host_custom_vars):
     pnpgraph_present = row[what + "_pnpgraph_present"]

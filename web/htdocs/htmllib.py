@@ -791,21 +791,19 @@ class html:
             self.add_custom_style_sheet()
 
             # Load specified Javascript files
-            for js in [ "checkmk", "hover", "graphs" ] + javascripts:
+            for js in [ "checkmk", "graphs" ] + javascripts:
                 if defaults.omd_root:
                     if os.path.exists(defaults.omd_root + "/share/check_mk/web/htdocs/js/" + js + ".js"):
-                        fname = 'js/%s-%s.js' % (js, defaults.check_mk_version)
+                        fname = '%s-%s.js' % (js, defaults.check_mk_version)
                 else:
-                    fname = 'js/%s.js' % js
-                self.write('<script type="text/javascript" src="%s"></script>\n' % fname)
+                    fname = '%s.js' % js
+                self.javascript_file(fname)
 
             if self.browser_reload != 0:
                 if self.browser_redirect != '':
-                    self.write("<script type=\"text/javascript\">set_reload(%s, '%s')</script>\n" %
-                                                                  (self.browser_reload, self.browser_redirect))
+                    self.javascript('set_reload(%s, \'%s\')' % (self.browser_reload, self.browser_redirect))
                 else:
-                    self.write("<script type=\"text/javascript\">set_reload(%s)</script>\n" % self.browser_reload)
-
+                    self.javascript('set_reload(%s)' % (self.browser_reload))
 
             self.write("</head>\n")
             self.header_sent = True

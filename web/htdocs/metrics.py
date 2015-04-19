@@ -985,7 +985,7 @@ def page_show_graph():
         end_time = time.time()
         start_time = end_time - 8 * 3600
 
-        htmlcode = render_time_graph(row, start_time, end_time, size=(30, 10), show_legend=False, graph_id_prefix="hover")
+        htmlcode = render_time_graph(row, start_time, end_time, size=(30, 10), font_size=8, show_legend=False, graph_id_prefix="hover")
         if htmlcode:
             html.write(htmlcode)
             return

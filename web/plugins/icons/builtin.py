@@ -232,6 +232,7 @@ def pnp_icon(row, what):
     else:
         url = ""
 
+    # TODO: Import in function is not good
     import metrics
     if not hasattr(metrics, 'render_graph_html'):
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism

@@ -500,6 +500,9 @@
     * 2139 FIX: Fix exception in Event Console when archiving events with match groups and non ASCII characters
     * 2151 FIX: Fixed wrong time in events when forwarding logwatch to EC between timezones...
 
+    Livestatus:
+    * 2208 FIX: Add missing Livestatus column service_period...
+
     HW/SW-Inventory:
     * 1846 Keep track of changes of software and hardware...
     * 1855 esx_systeminfo: new inventory plugin to retrieve info about the host operating system for ESX servers

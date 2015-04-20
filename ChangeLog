@@ -471,6 +471,7 @@
     * 2038 FIX: Log complete Email address into monitoring history when notifying explicity addresses
     * 2081 FIX: Improved logging of mkeventd in error cases
     * 2193 FIX: Remove duplicate performance data from host notifications...
+    * 2207 FIX: Fix exception in rule based notifiations with Nagios core and event type filter...
 
     BI:
     * 1784 FIX: Fix exception in BI Boxes when parents are being used

@@ -1,0 +1,12 @@
+Title: Fix exception in rule based notifiations with Nagios core and event type filter
+Level: 2
+Component: notifications
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429530226
+Class: fix
+
+When using Nagios as a core and the list of allowed events contains flapping
+or downtime events and the previous hard state cannot correctly be determined
+(due to <tt>max_check_attempts</tt> being greater as) then an exception
+could have happened. This has been fixed.

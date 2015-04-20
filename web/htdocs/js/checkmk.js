@@ -1684,36 +1684,40 @@ function valuespec_cascading_change(oSelect, varprefix, count) {
     }
 }
 
-function valuespec_textarea_resize(oArea) {
+function valuespec_textarea_resize(oArea)
+{
     oArea.style.height = (oArea.scrollHeight - 6) + "px"  ;
 }
 
+function valuespec_listof_add(varprefix, magic)
+{
+    var oCountInput = document.getElementById(varprefix + "_count");
+    var count = parseInt(oCountInput.value);
+    var strcount = "" + (count + 1);
+    oCountInput.value = strcount;
+    var oPrototype = document.getElementById(varprefix + "_prototype").childNodes[0].childNodes[0]; // TR
+    var htmlcode = oPrototype.innerHTML;
+    // replace the magic
+    htmlcode = replace_all(htmlcode, magic, strcount);
+    // in some cases the magic might be URL encoded. Also replace these occurences.
+    htmlcode = replace_all(htmlcode, encodeURIComponent(magic).replace('!', '%21'), strcount);
+    var oTable = document.getElementById(varprefix + "_table");
 
-function valuespec_listof_add(varprefix, magic) {
-  var oCountInput = document.getElementById(varprefix + "_count");
-  var count = parseInt(oCountInput.value);
-  var strcount = "" + (count + 1);
-  oCountInput.value = strcount;
-  var oPrototype = document.getElementById(varprefix + "_prototype").childNodes[0].childNodes[0]; // TR
-  var htmlcode = oPrototype.innerHTML;
-  htmlcode = replace_all(htmlcode, magic, strcount);
-  var oTable = document.getElementById(varprefix + "_table");
+    var oTbody = oTable.childNodes[0];
+    if(oTbody == undefined) { // no row -> no <tbody> present!
+        oTbody = document.createElement('tbody');
+        oTable.appendChild(oTbody);
+    }
 
-  var oTbody = oTable.childNodes[0];
-  if(oTbody == undefined) { // no row -> no <tbody> present!
-      oTbody = document.createElement('tbody');
-      oTable.appendChild(oTbody);
-  }
+    // Hack for IE. innerHTML does not work on tbody/tr correctly.
+    var container = document.createElement('div');
+    container.innerHTML = '<table><tbody><tr>' + htmlcode + '</tr></tbody></tr>';
+    var oTr = container.childNodes[0].childNodes[0].childNodes[0] // TR
+    oTbody.appendChild(oTr);
 
-  // Hack for IE. innerHTML does not work on tbody/tr correctly.
-  var container = document.createElement('div');
-  container.innerHTML = '<table><tbody><tr>' + htmlcode + '</tr></tbody></tr>';
-  var oTr = container.childNodes[0].childNodes[0].childNodes[0] // TR
-  oTbody.appendChild(oTr);
+    executeJSbyObject(oTable.lastChild);
 
-  executeJSbyObject(oTable.lastChild);
-
-  valuespec_listof_fixarrows(oTbody);
+    valuespec_listof_fixarrows(oTbody);
 }
 
 // When deleting we do not fix up indices but simply

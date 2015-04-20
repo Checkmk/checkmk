@@ -896,7 +896,7 @@ def rbn_match_event(context, state, last_state, events, allowed_events):
     # Now go through the allowed events. Handle '?' has matching all types!
     for allowed in allowed_events:
         if event == allowed or \
-            event[0] == '?' and event[1] == allowed[1]:
+            event[0] == '?' and len(allowed) > 1 and event[1] == allowed[1]:
             return
 
     return "Event type '%s' not handled by this rule. Allowed are: %s" % (

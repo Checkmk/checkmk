@@ -20,6 +20,9 @@
     * 2178 FIX: Fixed handling of user erros in WATO when using Python < 2.5
     * 2203 FIX: Fix sorting of unselected elements in a list choice with two panes
 
+    Notifications:
+    * 2207 FIX: Fix exception in rule based notifiations with Nagios core and event type filter...
+
     BI:
     * 1897 FIX: Fixed exception in BI Availability view...
 

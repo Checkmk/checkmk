@@ -3367,14 +3367,7 @@ class IconSelector(ValueSpec):
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You need to select an icon."))
 
-        def is_internal_icon():
-            if defaults.omd_root:
-                base_path = defaults.omd_root+"/share/check_mk/web/htdocs/images"
-            else:
-                base_path = defaults.web_dir+"/htdocs/images"
-            return os.path.exists(base_path+'/icon_'+value+'.png')
-
-        if value and value not in self.available_icons() and not is_internal_icon():
+        if value and value not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
 
 

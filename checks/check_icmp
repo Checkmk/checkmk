@@ -39,7 +39,14 @@ def check_icmp_arguments(params):
             loss = value
     args.append("-w %.2f,%d%%" % (rta[0], loss[0]))
     args.append("-c %.2f,%d%%" % (rta[1], loss[1]))
-    args.append("'$HOSTADDRESS$'")
+
+    target = params.get("address", "address")
+    if target == "address":
+        args.append("'$HOSTADDRESS$'")
+    elif target == "alias":
+        args.append("'$HOSTALIAS$'")
+    else: # custom
+        args.append(quote_shell_string(target[1]))
     return " ".join(args)
 
 

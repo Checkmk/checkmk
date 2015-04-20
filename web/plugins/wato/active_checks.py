@@ -221,7 +221,21 @@ register_rule(group,
                  title = _("Service Description"),
                  allow_empty = False,
                  default_value = "PING",
-           ))
+           )),
+           ( "address",
+             CascadingDropdown(
+                 title = _("Alternative address to ping"),
+                 help = _("If you omit this setting then the configured IP address of that host "
+                          "will be pinged. You can set an alternative address here (e.g. when "
+                          "you want to check a secondary IP address of the host in question)."),
+                 orientation = "horizontal",
+                 choices = [
+                     ( "address", _("Ping the normal IP address")),
+                     ( "alias",   _("Use the alias as DNS name / IP address")),
+                     ( "explicit", _("Ping the following explicity address / DNS name"),
+                       Hostname()),
+                 ]
+           )),
         ] + check_icmp_params,
     ),
     match = "all",

@@ -1,0 +1,12 @@
+Title: check_icmp: new option for pinging the host alias or an explicity address
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429521866
+Class: feature
+
+If you use the rule set <i>Check hosts with PING (ICMP Echo Request)</i> for adding
+an ICMP check to a host you can now decide to now use the host's IP address as
+PING target but also the host's alias or even an explicit IP address or DNS
+name.

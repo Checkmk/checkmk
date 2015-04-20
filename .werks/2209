@@ -1,0 +1,9 @@
+Title: New filter for selecting hosts/services in/out of their service period
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429536304
+Class: feature
+
+

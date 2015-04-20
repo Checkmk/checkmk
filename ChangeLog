@@ -23,6 +23,9 @@
     BI:
     * 1897 FIX: Fixed exception in BI Availability view...
 
+    Reporting & Availability:
+    * 2206 FIX: Add missing option "Show timeline of each object directly in table" for reports...
+
     HW/SW-Inventory:
     * 2197 FIX: win_reg_uninstall: Fix exception in case of invalid output line...
 

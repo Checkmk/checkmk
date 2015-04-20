@@ -969,7 +969,7 @@ function set_reload(secs, url)
 
     if (secs !== 0) {
         g_reload_interval = secs;
-        schedule_reload();
+        schedule_reload(url);
     }
 }
 

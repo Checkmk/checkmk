@@ -50,24 +50,26 @@ def parse_cisco_temperature(info):
             descr = sensor_id
 
         if descr and sensortype == '8':
-            entity_parsed[descr] = {}
-            scale = 10**int(magnitude)
-            if scalecode == '8':
-                scale *= 1000
-            entity_parsed[descr]['temp'] = float(value) / scale
-
-            if len(thresholds[sensor_id]) in [ 2, 4 ]:
-                warnraw, critraw = thresholds[sensor_id][0:2]
-                dev_levels = (float(warnraw)/scale, float(critraw)/scale)
-            else:
-                dev_levels = None
-            entity_parsed[descr]['dev_levels'] = dev_levels
 
             if sensorstate == '2':
-                entity_parsed[descr]['unknown'] = (3, "Data from sensor currently not available")
+                entity_parsed[descr] = (3, "Data from sensor currently not available")
             elif sensorstate == '3':
-                entity_parsed[descr]['unknown'] = (3, "Sensor is broken")
-            entity_parsed[descr]['dev_status'] = None
+                entity_parsed[descr] = (3, "Sensor is broken")
+            else:
+                entity_parsed[descr] = {}
+                scale = 10**int(magnitude)
+                if scalecode == '8':
+                    scale *= 1000
+                entity_parsed[descr]['temp'] = float(value) / scale
+
+                if len(thresholds[sensor_id]) in [ 2, 4 ]:
+                    warnraw, critraw = thresholds[sensor_id][0:2]
+                    dev_levels = (float(warnraw)/scale, float(critraw)/scale)
+                else:
+                    dev_levels = None
+                entity_parsed[descr]['dev_levels'] = dev_levels
+
+                entity_parsed[descr]['dev_status'] = None
 
     # Now parse OIDs described by CISCO-ENVMON-MIB
     envmon_states = {
@@ -82,25 +84,29 @@ def parse_cisco_temperature(info):
     parsed = {}
     for statustext, temp, max_temp, state, oid_end in perfstuff:
         item = cisco_sensor_item(statustext, oid_end)
-        parsed[item] = {}
-        parsed[item]['temp'] = int(temp)
         if state in ['5', '6']:
-            parsed[item]['unknown'] = (3, "Sensor %s" % envmon_states[state])
+            parsed[item] = (3, "Sensor %s" % envmon_states[state])
         elif int(temp) == 0:
-            parsed[item]['unknown'] = (3, "Sensor defect")
-        elif max_temp and int(max_temp):
-            parsed[item]['dev_status'] = None
-            parsed[item]['dev_levels'] = (int(max_temp), int(max_temp))
-        else:
-            parsed[item]['dev_levels'] = None
-            if state == '1':
-                parsed[item]['dev_status'] = 0
-            elif state == '2':
-                parsed[item]['dev_status'] = 1
-            elif state in '34':
-                parsed[item]['dev_status'] = 2
+            if state in ('123'):
+                parsed[item] = ( int(state) - 1, "Sensor reports %s state" % envmon_states[state] )
             else:
-                parsed[item]['unknown'] = (3, "Sensor reports unknown status code")
+                parsed[item] = (3, "Sensor defect")
+        else:
+            parsed[item] = {}
+            parsed[item]['temp'] = int(temp)
+            if max_temp and int(max_temp):
+                parsed[item]['dev_status'] = None
+                parsed[item]['dev_levels'] = (int(max_temp), int(max_temp))
+            else:
+                parsed[item]['dev_levels'] = None
+                if state == '1':
+                    parsed[item]['dev_status'] = 0
+                elif state == '2':
+                    parsed[item]['dev_status'] = 1
+                elif state in '34':
+                    parsed[item]['dev_status'] = 2
+                else:
+                    parsed[item] = (3, "Sensor reports unknown status code")
 
     # Merge the two dicts, preferring keys generated from ENTITY data
     parsed.update(entity_parsed)
@@ -115,8 +121,8 @@ def inventory_cisco_temperature(parsed):
 
 def check_cisco_temperature(item, params, parsed):
     if item in parsed:
-        if parsed[item].get('unknown', None):
-            return parsed[item]['unknown']
+        if type(parsed[item]) == tuple:
+            return parsed[item]
         else:
             return check_temperature(parsed[item]['temp'], params,
                         dev_levels = parsed[item]['dev_levels'],

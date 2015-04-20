@@ -2486,9 +2486,6 @@ class Alternative(ValueSpec):
             vs.render_input(varprefix + "_%d" % nr, cur_val)
             html.write("</span>")
 
-
-
-
     def render_input_radio(self, varprefix, value):
         mvs = self.matching_alternative(value)
         for nr, vs in enumerate(self._elements):
@@ -2519,6 +2516,15 @@ class Alternative(ValueSpec):
 
     def canonical_value(self):
         return self._elements[0].canonical_value()
+
+    def default_value(self):
+        try:
+            if type(self._default_value) == type(lambda:True):
+                return self._default_value()
+            else:
+                return self._default_value
+        except:
+            return self._elements[0].default_value()
 
     def value_to_text(self, value):
         vs = self.matching_alternative(value)

@@ -1,0 +1,10 @@
+Title: Fixed default value for text input fields in notification plugins
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p2
+Date: 1429257630
+Class: fix
+
+No default values were used for text input fields in notification plugins.
+Other text input fields may also be affected.

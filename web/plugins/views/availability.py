@@ -498,7 +498,7 @@ avoption_entries = [
   # Timeline
   ( "show_timeline",
     "single",
-    False,
+    True,
     Checkbox(
         title = _("Timeline"),
         label = _("Show timeline of each object directly in table")),

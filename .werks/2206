@@ -1,0 +1,11 @@
+Title: Add missing option "Show timeline of each object directly in table" for reports
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429523690
+
+For the report element <i>Availability Table</i> the option for selecting an inline
+timeline was missing. This has been fixed.

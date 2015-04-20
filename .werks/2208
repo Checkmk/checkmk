@@ -1,0 +1,10 @@
+Title: Add missing Livestatus column service_period
+Level: 1
+Component: livestatus
+Compatible: compat
+Version: 1.2.6p2
+Date: 1429535813
+Class: fix
+
+This column was not being accessable due to the fact that it's
+prefix is <tt>service_</tt>. This has been fixed.

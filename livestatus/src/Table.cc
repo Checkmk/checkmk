@@ -82,6 +82,17 @@ Column *Table::column(const char *colname)
     {
         return column(colname + prefix_len);
     }
+
+    // Now we try to readd the removed prefix. That way we tackle the
+    // problem with the column "service_period". Here the prefix service_
+    // is part of the actual name of the column!
+    string with_prefix(prefixname(), prefix_len - 1);
+    with_prefix += "_";
+    with_prefix += colname;
+
+    it = _columns.find(with_prefix);
+    if (it != _columns.end())
+        return it->second;
     else
         return 0;
 }

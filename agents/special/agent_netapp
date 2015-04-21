@@ -160,6 +160,9 @@ def output_environment(results):
         channel_name = channel.child_get_string("channel-name")
         shelf_list = channel.child_get("shelf-environ-shelf-list")
 
+        if not shelf_list:
+            continue
+
         for idx, child in enumerate(shelf_list.children_get()):
             current_shelf = child.child_get("ses-generic-info").child_get_string("ses-logical-id")
             # convert 0x50050cc002219406 to 50:05:0c:c0:02:21:94:06

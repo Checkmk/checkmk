@@ -1,0 +1,10 @@
+Title: agent_netapp: fixed exception when a channel has no shelf-list configured
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429615270
+
+

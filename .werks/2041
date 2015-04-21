@@ -1,7 +1,7 @@
 Title: Notification Spooler can now handle incoming and outgoing persistent TCP connections
 Level: 2
 Component: notifications
-Compatible: compat
+Compatible: incomp
 Version: 1.2.7i1
 Date: 1425463954
 Class: feature
@@ -32,3 +32,6 @@ spooler. We propose starting with the highest log level. Also a file
 <tt>var/log/mknotifyd.log</tt> is being written every 20 seconds. It
 shows the state of the spooler and its connections. This is being used
 for the monitoring of the spooler.
+
+Note: To get the new mknotifyd running you need to reconfigure its global settings.
+Otherwise it will use the incompatible configuration of the previous version.

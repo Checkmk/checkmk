@@ -1,0 +1,10 @@
+Title: netapp_api_disk.summary: fixed one missing disk in summary check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p2
+Date: 1429614114
+Class: fix
+
+The library function responsible for parsing the agent data did omit the last
+disk entry, thus leading to an invalid disk count and possibly missing error data.

@@ -611,6 +611,9 @@ def get_snmp_character_encoding(hostname):
     if len(entries) > 0:
         return entries[0]
 
+def is_snmpv3_host(hostname):
+    return type(snmp_credentials_of(hostname)) == tuple
+
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
 
@@ -2829,6 +2832,7 @@ no_discovery_possible = None
 
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
+    output.write("def is_snmpv3_host(hostname):\n   return  % r\n\n" % is_snmpv3_host(hostname))
     output.write("def is_tcp_host(hostname):\n   return %r\n\n" % is_tcp_host(hostname))
     output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
     if has_inline_snmp and use_inline_snmp:

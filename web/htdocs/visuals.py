@@ -268,7 +268,12 @@ def page_list(what, title, visuals, custom_columns = [],
     # Deletion of visuals
     delname  = html.var("_delete")
     if delname and html.transaction_valid():
-        deltitle = visuals[(config.user_id, delname)]['title']
+        if config.may('general.delete_foreign_%s' % what):
+            user_id = html.var('_user_id', config.user_id)
+        else:
+            user_id = config.user_id
+
+        deltitle = visuals[(user_id, delname)]['title']
 
         try:
             if check_deletable_handler:
@@ -276,7 +281,7 @@ def page_list(what, title, visuals, custom_columns = [],
 
             c = html.confirm(_("Please confirm the deletion of \"%s\".") % deltitle)
             if c:
-                del visuals[(config.user_id, delname)]
+                del visuals[(user_id, delname)]
                 save(what, visuals)
                 html.reload_sidebar()
             elif c == False:
@@ -313,10 +318,6 @@ def page_list(what, title, visuals, custom_columns = [],
             # Actions
             table.cell(_('Actions'), css = 'buttons visuals')
 
-            # Edit
-            if owner == config.user_id:
-                html.icon_button("edit_%s.py?load_name=%s" % (what_s, visual_name), _("Edit"), "edit")
-
             # Clone / Customize
             buttontext = _("Create a customized copy of this")
             backurl = html.urlencode(html.makeuri([]))
@@ -325,9 +326,15 @@ def page_list(what, title, visuals, custom_columns = [],
             html.icon_button(clone_url, buttontext, "clone")
 
             # Delete
+            if owner and (owner == config.user_id or config.may('general.delete_foreign_%s' % what)):
+                add_vars = [('_delete', visual_name)]
+                if owner != config.user_id:
+                    add_vars.append(('_user_id', owner))
+                html.icon_button(html.makeactionuri(add_vars), _("Delete!"), "delete")
+
+            # Edit
             if owner == config.user_id:
-                html.icon_button(html.makeactionuri([('_delete', visual_name)]),
-                    _("Delete!"), "delete")
+                html.icon_button("edit_%s.py?load_name=%s" % (what_s, visual_name), _("Edit"), "edit")
 
             # Custom buttons - visual specific
             if render_custom_buttons:

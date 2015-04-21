@@ -1,0 +1,9 @@
+Title: Admins can now delete views/dashboards/reports created by other users
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429617043
+Class: feature
+
+

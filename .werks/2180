@@ -1,0 +1,12 @@
+Title: cmk -D showed always "bulkwalk: no" for SNMPv3 hosts (which is wrong)
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6p2
+Date: 1429606780
+
+When using SNMPv3 to query hosts Check_MK is always using bulkwalks, cmk -D [hostname]
+did not show display this behaviour correctly. It only showed "yes" when the host
+was configured as "bulkwalk host".

@@ -4317,7 +4317,7 @@ def dump_host(hostname):
             else:
                 cred = "credentials: '%s'" % ", ".join(credentials)
 
-            if is_bulkwalk_host(hostname):
+            if is_snmpv3_host(hostname) or is_bulkwalk_host(hostname):
                 bulk = "yes"
             else:
                 bulk = "no"

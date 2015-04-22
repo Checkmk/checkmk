@@ -100,6 +100,18 @@ multisite_painters["aggr_icons"] = {
     "paint" : paint_bi_icons,
 }
 
+multisite_painters["aggr_in_downtime"] = {
+    "title" : _("In Downtime"),
+    "columns" : [ "aggr_effective_state" ],
+    "paint" : lambda row: ("", (row["aggr_effective_state"]["in_downtime"] and "1" or "0")),
+}
+
+multisite_painters["aggr_acknowledged"] = {
+    "title" : _("Acknowledged"),
+    "columns" : [ "aggr_effective_state" ],
+    "paint" : lambda row: ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0")),
+}
+
 
 def paint_aggr_state_short(state, assumed = False):
     if state == None:

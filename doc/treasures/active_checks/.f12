@@ -2,3 +2,4 @@
 SITE=${SITE:-$(cat ../../../.site 2>/dev/null)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 sudo rsync -va --exclude=.*.swp ./ /omd/sites/$SITE/lib/nagios/plugins
+sudo rsync -va --delete-after ./ /omd/sites/$SITE/share/doc/check_mk/treasures/active_checks

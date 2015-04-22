@@ -31,7 +31,6 @@ def check_bi_aggr_arguments(params):
     args += ' -b %s' % quote_shell_string(base_url)
     args += ' -a %s' % quote_shell_string(aggr_name)
     args += ' -u %s' % quote_shell_string(username)
-
     args += ' -s %s' % quote_shell_string(secret)
 
     if "auth_mode" in opt_params:
@@ -39,6 +38,12 @@ def check_bi_aggr_arguments(params):
 
     if "timeout" in opt_params:
         args += ' -t %d' % opt_params['timeout']
+
+    if opt_params.get("in_downtime"):
+        args += ' --in-downtime %s' % opt_params['in_downtime']
+
+    if opt_params.get("acknowledged"):
+        args += ' --acknowledged %s' % opt_params['acknowledged']
 
     return args
 

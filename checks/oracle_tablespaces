@@ -205,10 +205,10 @@ def check_oracle_tablespaces(item, params, info):
     # Check autoextend status if parameter not set to None
     if autoext != None:
         if autoext and num_extensible == 0:
-            infotext += ", AUTOEXTEND(!!)"
+            infotext += ", NO AUTOEXTEND(!!)"
             status = 2
         elif not autoext and num_extensible > 0:
-            infotext += ", NO AUTOTEXTEND(!!)"
+            infotext += ", AUTOTEXTEND(!!)"
             status = 2
     elif num_extensible > 0:
         infotext += ", autoextend"

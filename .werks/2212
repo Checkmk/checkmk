@@ -1,0 +1,12 @@
+Title: oracle_tablespaces: Fix plugin output in case of detected problem in Autoextend settings
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429712580
+
+The checkout would output <tt>NO AUTOEXTEND(!!)</tt> if it had detected that autoextend
+was <b>on</b> but should be off. The <tt>NO</tt> has now been removed in order to fix
+the output. The vice versa case has also been fixed.

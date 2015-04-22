@@ -29,7 +29,7 @@ register_rulegroup("activechecks",
     _("Configure active networking checks like HTTP and TCP"))
 group = "activechecks"
 
-# This elements are also used in check_parameters.py
+# These elements are also used in check_parameters.py
 check_icmp_params = [
    ( "rta",
      Tuple(

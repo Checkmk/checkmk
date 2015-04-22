@@ -1,0 +1,11 @@
+Title: Fixed services randomly becoming stale when using CMC
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429703582
+
+Fixed update of services when host has just been added and fist
+performed check was the discovery check.

@@ -553,3 +553,8 @@ div#hover_menu {
     z-index: 40;
     color: #000;
 }
+
+div#hover_menu div.error {
+    width:350px;
+    margin: 0;
+}

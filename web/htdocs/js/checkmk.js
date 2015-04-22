@@ -812,7 +812,7 @@ function hover_graph(site, host_name, service)
         // the expected code, simply display an error message.
         if (c.indexOf('/image?') === -1) {
             // Error! unexpected response
-            c = '<div style="background-color:#BA2C2C;width:350px;padding:5px"> '
+            c = '<div class="error"> '
               + 'ERROR: Received an unexpected response '
               + 'while trying to display the PNP-Graphs. Maybe there is a problem with the '
               + 'authentication.</div>';

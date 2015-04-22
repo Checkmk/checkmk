@@ -151,7 +151,7 @@ def declare_visual_permissions(what, what_plural):
 
     config.declare_permission("general.publish_" + what,
          _("Publish %s") % what_plural,
-         _("Make %s visible and usable for other users") % what_plural,
+         _("Make %s visible and usable for other users.") % what_plural,
          [ "admin", "user" ])
 
     config.declare_permission("general.see_user_" + what,
@@ -162,4 +162,9 @@ def declare_visual_permissions(what, what_plural):
     config.declare_permission("general.force_" + what,
          _("Modify builtin %s") % what_plural,
          _("Make own published %s override builtin %s for all users.") % (what_plural, what_plural),
+         [ "admin" ])
+
+    config.declare_permission("general.delete_foreign_" + what,
+         _("Delete foreign %s") % what_plural,
+         _("Allows to delete %s created by other users.") % what_plural,
          [ "admin" ])

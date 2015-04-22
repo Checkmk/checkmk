@@ -37,6 +37,7 @@
 import math, time
 import config, defaults
 from lib import *
+import livestatus
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -957,7 +958,12 @@ def page_show_graph():
                 "Columns: perf_data metrics check_command\n" % (host_name, service)
 
     html.live.set_only_sites([site])
-    data = html.live.query_row(query)
+    try:
+        data = html.live.query_row(query)
+    except livestatus.MKLivestatusNotFoundError:
+        html.write('<div class="error">%s</div>' %
+            _('Failed to fetch data for graph. Maybe the site is not reachable?'))
+        return
     html.live.set_only_sites(None)
 
     if service == "_HOST_":

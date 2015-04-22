@@ -88,6 +88,7 @@ def netapp_api_convert_info(info, configs = {}, counter_key = None, counter_as_k
         while True:
             line = lines.next()
             if line[0] == "[config_instance]":
+                add_config()
                 add_counter()
                 current_counter = {}
                 is_config = True
@@ -95,6 +96,7 @@ def netapp_api_convert_info(info, configs = {}, counter_key = None, counter_as_k
                 continue
             elif line[0] == "[counter_instance]":
                 add_config()
+                add_counter()
                 current_config = {}
                 is_config      = False
                 continue

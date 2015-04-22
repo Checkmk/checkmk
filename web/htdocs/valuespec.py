@@ -1446,6 +1446,12 @@ class RadioChoice(DropdownChoice):
     def __init__(self, **kwargs):
         DropdownChoice.__init__(self, **kwargs)
         self._columns = kwargs.get("columns")
+        # Allow orientation as corner cases of columns
+        orientation = kwargs.get("orientation")
+        if orientation == "vertical":
+            self._columns = 1
+        elif orientation == "horizontal":
+            self._columns = 9999999
 
     def render_input(self, varprefix, value):
         html.begin_radio_group()

@@ -1451,7 +1451,7 @@ register_rule(group,
                 allow_empty = False
             ),
             Password(
-                title = _("Password"),
+                title = _("Password / Secret"),
                 help = _("Valid automation secret or password for the user, depending on the choosen "
                          "authentication mode."),
                 allow_empty = False
@@ -1472,6 +1472,26 @@ register_rule(group,
                         title = _("Seconds before connection times out"),
                         unit = _("sec"),
                         default_value = 60,
+                    )),
+                    ("in_downtime",
+                      RadioChoice(
+                          title = _("State, if BI aggregate is in scheduled downtime"),
+                          orientation = "vertical",
+                          choices = [
+                            ( None, _("Use normal state, ignore downtime") ),
+                            ( "ok", _("Force to be OK") ),
+                            ( "warn", _("Force to be WARN, if aggregate is not OK") ),
+                          ]
+                    )),
+                    ("acknowledged",
+                      RadioChoice(
+                          title = _("State, if BI aggregate is acknowledged"),
+                          orientation = "vertical",
+                          choices = [
+                            ( None, _("Use normal state, ignore acknowledgement") ),
+                            ( "ok", _("Force to be OK") ),
+                            ( "warn", _("Force to be WARN, if aggregate is not OK") ),
+                          ]
                     )),
                 ]
             ),

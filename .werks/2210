@@ -1,0 +1,13 @@
+Title: check_bi_aggr: new option for honoring downtimes and acknowledgements
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429690482
+Class: feature
+
+The active check <i>Check State of BI Aggregation</i> now has two new
+options for handling aggregates that are in a scheduled downtime or
+that are acknowledged (visit the according WATO rule set for details).
+In each of the two cases you can have the state of such an aggregate
+shifted to OK are at most WARN.

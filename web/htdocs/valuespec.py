@@ -835,7 +835,7 @@ class ListOf(ValueSpec):
         self._allow_empty = kwargs.get("allow_empty", True)
         self._empty_text  = kwargs.get("empty_text")
         if not self._empty_text:
-            self._empty_text = _("Please specify at least on entry")
+            self._empty_text = _("Please specify at least one entry")
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
@@ -1182,7 +1182,7 @@ class DropdownChoice(ValueSpec):
         self._label = kwargs.get("label")
         self._prefix_values = kwargs.get("prefix_values", False)
         self._sorted = kwargs.get("sorted", False)
-        self._empty_text = kwargs.get("empty_text", _("There are not defined any elements for this selection yet."))
+        self._empty_text = kwargs.get("empty_text", _("There are no elements defined for this selection yet."))
 
         self._no_preselect       = kwargs.get("no_preselect",       False)
         self._no_preselect_value = kwargs.get("no_preselect_value", None)
@@ -1974,7 +1974,7 @@ class AbsoluteDate(ValueSpec):
                 if self._allow_empty:
                     return None
                 else:
-                    raise MKUserError(varname, _("Please enter a correct number"))
+                    raise MKUserError(varname, _("Please enter a valid number"))
             if part < mmin or part > mmax:
                 raise MKUserError(varname, _("The value for %s must be between %d and %d" % (_(what), mmin, mmax)))
             parts.append(part)
@@ -2141,7 +2141,7 @@ class TimeofdayRange(ValueSpec):
         self._bounds[0].validate_value(value[0], varprefix + "_from")
         self._bounds[1].validate_value(value[1], varprefix + "_until")
         if value[0] > value[1]:
-            raise MKUserError(varprefix + "_until", _("The <i>from</i> time must not be greater then the <i>until</i> time."))
+            raise MKUserError(varprefix + "_until", _("The <i>from</i> time must not be later then the <i>until</i> time."))
         ValueSpec.custom_validate(self, value, varprefix)
 
 month_names = [
@@ -2978,7 +2978,7 @@ class ElementSelection(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._loaded_at = None
         self._label = kwargs.get("label")
-        self._empty_text = kwargs.get("empty_text", _("There are not defined any elements for this selection yet."))
+        self._empty_text = kwargs.get("empty_text", _("There are no elements defined for this selection yet."))
 
     def load_elements(self):
         if self._loaded_at != id(html):

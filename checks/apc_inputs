@@ -42,7 +42,7 @@ def check_apc_inputs(item, params, info):
     alarm_states = {
         '1' : "normal",
         '2' : "warning",
-        '3' : "cirtical",
+        '3' : "critical",
         '4' : "not applicable",
     }
     for name, location, state, alarm_status in info:
@@ -58,12 +58,10 @@ def check_apc_inputs(item, params, info):
 
             if params['state'] != state:
                 check_state = max( check_state, 1 )
-                messages.append("Port state Change from %s to %s(!)" % \
+                messages.append("Port state Change from %s to %s" % \
                     ( states[params['state']], states[state] ))
 
             return check_state, ", ".join(messages)
-    return 3, "Sensor not found"
-
 
 
 check_info['apc_inputs'] = {

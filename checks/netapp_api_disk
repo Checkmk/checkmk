@@ -103,6 +103,8 @@ def check_netapp_api_disk_summary(_no_item, params, info):
         info = []
         for disk in disks:
             disk_info = "Serial: %s" % disk.get("serial-number")
+            if "physical-space" in disk:
+                disk_info += ", Size: %s" % get_bytes_human_readable(int(disk["physical-space"]))
             shelf_uid  = find_disk_shelf_uid(disk.get("disk-uid"))
             if shelf_uid:
                 disk_info += " (Shelf: %s, Bay %s)" % (shelf_uid, disk.get("bay"))

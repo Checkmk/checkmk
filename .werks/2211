@@ -1,0 +1,9 @@
+Title: netapp_api_disk.summary: output physical size of broken disks as an additional information
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429694699
+Class: feature
+
+

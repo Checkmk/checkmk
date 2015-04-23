@@ -151,6 +151,26 @@ else:
                             ("dir",  "logwatch"),
                           ],
         },
+        "mkeventstatus": {
+          "group"       : _("Configuration"),
+          "title"       : _("Event Console Configuration"),
+          "prefix"      : defaults.omd_root,
+          "paths"       : [
+                            ("dir",  "etc/check_mk/mkeventd.d"),
+                          ],
+          "default"     : True
+        },
+        "mkeventhistory": {
+          "group"       : _("Historic Data"),
+          "title"       : _("Event Console Archive and Current State"),
+          "prefix"      : defaults.omd_root,
+          "paths"       : [
+                            ("dir",  "var/mkeventd/history"),
+                            ("file", "var/mkeventd/status"),
+                            ("file", "var/mkeventd/messages"),
+                            ("dir",  "var/mkeventd/messages-history"),
+                          ],
+        },
         "corehistory": {
           "group"       : _("Historic Data"),
           "title"       : _("Monitoring History"),

@@ -1,0 +1,10 @@
+Title: enterasys_powersupply: It's now possible to choice which redundancy state treated as OK
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429790441
+Class: feature
+
+You will find a new Wato RUle: Enterasys Power Supply Settings
+

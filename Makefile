@@ -48,7 +48,7 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 	       $$(find pnp-templates -type f -name "*.php") \
                mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py \
 	       mkeventd/src/*.c mkeventd/checks/* check_mk_templates.cfg \
-	       doc/treasures/mknotifyd agents/check_mk_*agent* agents/*.c agents/cfg_examples/* \
+	       agents/check_mk_*agent* agents/*.c agents/cfg_examples/* \
 	       agents/special/* $$(find agents/plugins -type f)
 
 
@@ -172,8 +172,6 @@ setversion:
 	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' mkeventd/bin/mkeventd ; \
-	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' doc/treasures/mknotifyd ; \
-	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' doc/treasures/liveproxy/liveproxyd ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion

@@ -1,5 +1,0 @@
-SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
-SITE=${SITE:-$(omd sites --bare | head -n 1)}
-
-sudo install -m 755 liveproxyd /omd/sites/$SITE/bin/
-sudo su - $SITE -c "omd restart liveproxyd"

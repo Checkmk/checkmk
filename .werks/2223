@@ -1,0 +1,14 @@
+Title: Allow cancelling actions to be omitted of the cancelled event is not (yet) open
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429775384
+Class: feature
+
+If you have an Event Console rule that uses delaying or counting at the
+same time as cancelling, and if this rule furthermore defines actions when
+cancelling, then you can have these actions only be executed if the event
+has made it in to the <tt>open</tt> phase. The default is still the old
+behaviour: that cancelling actions are also executed when the event is still
+being delayed or in phase <tt>counting</tt>

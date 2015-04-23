@@ -301,6 +301,16 @@ vs_mkeventd_rule = Dictionary(
             choices = mkeventd.action_choices,
           )
         ),
+        ( "cancel_action_phases",
+          DropdownChoice(
+            title = _("Do Cancelling-Actions when..."),
+            choices = [
+                ( "always", _("Always when an event is being cancelled")),
+                ( "open",   _("Only when the cancelled event is in phase OPEN")),
+            ],
+            help = _("With this setting you can prevent actions to be executed when "
+                     "events are being cancelled that are in the phases DELAYED or COUNTING."),
+        )),
         ( "autodelete",
           Checkbox(
             title = _("Automatic Deletion"),
@@ -689,7 +699,7 @@ vs_mkeventd_rule = Dictionary(
         ( _("Rule Properties"), [ "id", "description", "comment", "docu_url", "disabled" ] ),
         ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
                                     "match_sl", "match_ok", "cancel_priority", "match_timeperiod" ]),
-        ( _("Outcome &amp; Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "drop", "autodelete" ]),
+        ( _("Outcome &amp; Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "cancel_action_phases", "drop", "autodelete" ]),
         ( _("Counting &amp; Timing"), [ "count", "expect", "delay", "livetime", ]),
         ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),
     ],

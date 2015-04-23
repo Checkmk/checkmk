@@ -2925,6 +2925,7 @@ class EventStatus():
                         # Fill a few fields of the cancelled event with data from
                         # the cancelling event so that action scripts have useful
                         # values and the logfile entry if more relevant.
+                        previous_phase = event["phase"]
                         event["phase"]    = "closed"
                         event["state"]    = 0 # OK
                         event["text"]     = new_event["text"]
@@ -2933,9 +2934,13 @@ class EventStatus():
                         event["priority"] = new_event["priority"]
                         log_event_history(event, "CANCELLED")
                         actions = rule.get("cancel_actions", [])
-                        # TODO: Execute the cancelling actions only, if the event
-                        # was open. Do not do this e.g. on delayed or counting.
-                        do_event_actions(actions, event, is_cancelling = True)
+                        if actions:
+                            if previous_phase != "open" \
+                                and rule.get("cancel_action_phases", "always") == "open":
+                                log("Do not execute cancelling actions, event %s's phase is not 'open' but '%s'" %
+                                    (event["id"], previous_phase))
+                            else:
+                                do_event_actions(actions, event, is_cancelling = True)
 
                         to_delete.append(nr)
             for nr in to_delete[::-1]:

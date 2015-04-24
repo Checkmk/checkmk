@@ -1762,6 +1762,32 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_networking,
+    "enterasys_powersupply",
+    _("Enterasys Power Supply Settings"),
+    Dictionary(
+        elements = [
+                ( "redundancy_ok_states",
+                    ListChoice(
+                        title = _("States treated as OK"),
+                        choices = [
+                            (1, 'redundant'),
+                            (2, 'notRedundant'),
+                            (3, 'notSupported'),
+                        ],
+                        default_value = [ 1 ],
+                        )
+                ),
+        ],
+        optional_keys = False,
+    ),
+    TextAscii(
+        title = _("Number of Powersupply"),
+    ),
+    "dict"
+)
+
 hivemanger_states = [
  ( "Critical" , "Critical" ),
  ( "Maybe" , "Maybe" ),

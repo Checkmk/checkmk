@@ -837,7 +837,10 @@ def get_single_oid(hostname, ipaddress, oid):
 
 # Checks whether or not the given host is a cluster host
 def is_cluster(hostname):
-    return hostname in all_active_clusters()
+    # all_configured_clusters() needs to be used, because this function affects
+    # the agent bakery, which needs all configured hosts instead of just the hosts
+    # of this site
+    return hostname in all_configured_clusters()
 
 # If host is node of one or more clusters, return a list of the cluster host names.
 # If not, return an empty list.
@@ -1308,6 +1311,15 @@ def output_conf_header(outfile):
 def all_configured_realhosts():
     return strip_tags(all_hosts)
 
+# Returns a list of all cluster names, regardless if currently
+# disabled or monitored on a remote site. Does not return
+# cluster hosts.
+def all_configured_clusters():
+    return strip_tags(clusters.keys())
+
+def all_configured_hosts():
+    return all_configured_realhosts() + all_configured_clusters()
+
 def all_active_hosts():
     return all_active_realhosts() + all_active_clusters()
 
@@ -1317,7 +1329,7 @@ all_hosts_untagged = None
 def all_active_realhosts():
     global all_hosts_untagged
     if all_hosts_untagged == None:
-        all_hosts_untagged = filter_active_hosts(strip_tags(all_hosts))
+        all_hosts_untagged = filter_active_hosts(all_configured_realhosts())
     return all_hosts_untagged
 
 # Returns a list of all cluster host names to be handled by
@@ -1326,7 +1338,7 @@ all_clusters_untagged = None
 def all_active_clusters():
     global all_clusters_untagged
     if all_clusters_untagged == None:
-        all_clusters_untagged = filter_active_hosts(strip_tags(clusters.keys()))
+        all_clusters_untagged = filter_active_hosts(all_configured_clusters())
     return all_clusters_untagged
 
 def filter_active_hosts(hostlist):
@@ -1619,7 +1631,7 @@ def convert_host_ruleset(ruleset):
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
-        new_rules.append((item, all_matching_hosts(tags, hostlist)))
+        new_rules.append((item, all_matching_hosts(tags, hostlist, with_foreign_hosts=True)))
 
     g_converted_host_rulesets_cache[id(ruleset)] = new_rules
     return new_rules
@@ -1754,15 +1766,20 @@ def convert_pattern_list(patterns):
 g_hostlist_match_cache = {}
 g_global_caches.append('g_hostlist_match_cache')
 
-def all_matching_hosts(tags, hostlist):
+def all_matching_hosts(tags, hostlist, with_foreign_hosts=False):
     cache_id = tuple(tags), tuple(hostlist)
     try:
         return g_hostlist_match_cache[cache_id]
     except KeyError:
         pass
 
+    if with_foreign_hosts:
+        valid_hosts = all_configured_hosts()
+    else:
+        valid_hosts = all_active_hosts()
+
     matching = set([])
-    for hostname in all_active_hosts():
+    for hostname in valid_hosts:
         # When no tag matching is requested, do not filter by tags. Accept all hosts
         # and filter only by hostlist
         if (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)) and \

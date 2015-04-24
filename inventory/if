@@ -79,7 +79,10 @@ def inv_if(info, params):
         else:
             if_available = None
 
-
+    node = inv_tree("networking.")
+    node["available_ethernet_ports"] = available_ethernet_ports
+    node["total_ethernet_ports"] = total_ethernet_ports
+    node["total_interfaces"] = len(info)
 
 inv_info['inv_if'] = {
     "inv_function" : inv_if,

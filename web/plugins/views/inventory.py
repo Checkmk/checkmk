@@ -46,7 +46,7 @@ def paint_host_inventory(row, invpath):
 def cmp_inventory_node(a, b, invpath):
     val_a = inventory.get(a["host_inventory"], invpath)
     val_b = inventory.get(b["host_inventory"], invpath)
-    return cmp(a, b)
+    return cmp(val_a, val_b)
 
 inv_filter_info = {
     "bytes"         : { "unit" : _("MB"),    "scale" : 1024*1024 },
@@ -528,6 +528,7 @@ inventory_displayhints.update({
     ".hardware.memory.arrays:*.devices:*.size"         : { "title" : _("Size"),                   "paint" : "bytes", },
     ".hardware.memory.arrays:*.devices:*.speed"        : { "title" : _("Speed"),                  "paint" : "hz", },
     ".hardware.system."                                : { "title" : _("System") },
+    ".hardware.system.product"                         : { "title" : _("Product") },
     ".hardware.storage."                               : { "title" : _("Storage") },
     ".hardware.storage.disks:"                         : { "title" : _("Block Devices") },
     ".hardware.storage.disks:*."                       : { "title" : _("Block Device %d") },
@@ -579,6 +580,9 @@ inventory_displayhints.update({
     ".software.packages:*.path"                        : { "title" : _("Path"), },
 
     ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
+    ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },
+    ".networking.total_ethernet_ports"                 : { "title" : _("Ports"), "paint" : "count", },
+    ".networking.available_ethernet_ports"             : { "title" : _("Ports available"), "paint" : "count", },
     ".networking.interfaces:"                          : { "title" : _("Interfaces"), "render" : render_inv_dicttable,
                                                            "keyorder" : [ "index", "description", "oper_status", "admin_status", "available", "speed" ], "view" : "invinterface_of_host", },
     ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : visuals.FilterInvtableIDRange },
@@ -597,7 +601,7 @@ for invpath, hint in inventory_displayhints.items():
     if "*" not in invpath:
         datatype = hint.get("paint", "str")
         long_title = inv_titleinfo_long(invpath, None)
-        declare_inv_column(invpath, datatype, long_title, hint.get("short", long_title))
+        declare_inv_column(invpath, datatype, long_title, hint.get("short", hint["title"]))
 
 
 #.
@@ -899,6 +903,8 @@ multisite_builtin_views["inv_host"] = {
     'sorters'                      : [],
 }
 
+generic_host_filters = multisite_builtin_views["allhosts"]["show_filters"]
+
 # View with table of all hosts, with some basic information
 multisite_builtin_views["inv_hosts_cpu"] = {
     # General options
@@ -950,6 +956,46 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     'sorters'                      : [],
 }
 
+
+# View with available and used ethernet ports
+multisite_builtin_views["inv_hosts_ports"] = {
+    # General options
+    'datasource'                   : 'hosts',
+    'topic'                        : _('Inventory'),
+    'title'                        : _('Switch port statisticss'),
+    'linktitle'                    : _('Switch ports (all Hosts)'),
+    'description'                  : _('A list of all hosts with statistics about total, used and free networking interfaces'),
+    'public'                       : True,
+    'hidden'                       : False,
+
+    # Layout options
+    'layout'                       : 'table',
+    'num_columns'                  : 1,
+    'browser_reload'               : 0,
+    'column_headers'               : 'pergroup',
+    'user_sortable'                : True,
+    'play_sounds'                  : False,
+    'force_checkboxes'             : False,
+    'mustsearch'                   : False,
+    'mobile'                       : False,
+
+    # Columns
+    'group_painters'               : [],
+    'painters'                     : [
+         ('host',                       'invinterface_of_host', ''),
+         ('inv_hardware_system_product',             None, ''),
+         ('inv_networking_total_interfaces',         None, ''),
+         ('inv_networking_total_ethernet_ports',     None, ''),
+         ('inv_networking_available_ethernet_ports', None, ''),
+    ],
+
+    # Filters
+    'hard_filters'                 : [ 'has_inv' ],
+    'hard_filtervars'              : [ ('is_has_inv', '1' ), ],
+    'hide_filters'                 : [],
+    'show_filters'                 : generic_host_filters + [],
+    'sorters'                      : [ ('inv_networking_available_ethernet_ports', True) ],
+}
 
 
 

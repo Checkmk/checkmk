@@ -1316,6 +1316,9 @@ check_metrics["check_mk-livestatus_status"] = {
 }
 
 check_metrics["check_mk-apt"] = {}
+check_metrics["check_mk-icom_repeater.ps_volt"] = {}
+check_metrics["check_mk-icom_repeater.pll_volt"] = {}
+check_metrics["check_mk-icom_repeater.temp"] ={}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.

@@ -292,6 +292,86 @@ register_check_parameters(
 )
 
 
+#.
+#   .--Environment---------------------------------------------------------.
+#   |     _____            _                                      _        |
+#   |    | ____|_ ____   _(_)_ __ ___  _ __  _ __ ___   ___ _ __ | |_      |
+#   |    |  _| | '_ \ \ / / | '__/ _ \| '_ \| '_ ` _ \ / _ \ '_ \| __|     |
+#   |    | |___| | | \ V /| | | | (_) | | | | | | | | |  __/ | | | |_      |
+#   |    |_____|_| |_|\_/ |_|_|  \___/|_| |_|_| |_| |_|\___|_| |_|\__|     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+register_check_parameters(
+    subgroup_environment,
+    "pll_lock_voltage",
+    _("Lock Voltage for PLLs"),
+    Dictionary(
+        help = _("PLL lock voltages by freqency"),
+        elements = [
+            ( "rx",
+                ListOf(
+                    Tuple(
+                        elements = [
+                            Float(title = _("Frequencies up to"), unit = u"MHz"),
+                            Float(title = _("Warning below"), unit = u"V"),
+                            Float(title = _("Critical below"), unit = u"V"),
+                            Float(title = _("Warning at or above"), unit = u"V"),
+                            Float(title = _("Critical at or above"), unit = u"V"),
+                        ],
+                    ),
+                    title = _("Lock voltages for RX PLL"),
+                    help = _("Specify frequency ranges by the upper boundary of the range "
+                             "to which the voltage levels are to apply. The list is sorted "
+                             "automatically when saving."),
+                    movable = False
+                    )),
+            ( "tx",
+                ListOf(
+                    Tuple(
+                        elements = [
+                            Float(title = _("Frequencies up to"), unit = u"MHz"),
+                            Float(title = _("Warning below"), unit = u"V"),
+                            Float(title = _("Critical below"), unit = u"V"),
+                            Float(title = _("Warning at or above"), unit = u"V"),
+                            Float(title = _("Critical at or above"), unit = u"V"),
+                        ],
+                    ),
+                    title = _("Lock voltages for TX PLL"),
+                    help = _("Specify frequency ranges by the upper boundary of the range "
+                             "to which the voltage levels are to apply. The list is sorted "
+                             "automatically when saving."),
+                    movable = False
+                    )),
+        ],
+        optional_keys = ["rx", "tx"],
+    ),
+    DropdownChoice( title = _("RX/TX"),
+        choices = [ ("RX", _("RX")), ("TX", _("TX")) ]
+    ),
+    match_type = "dict",
+)
+
+
+register_check_parameters(
+    subgroup_environment,
+    "ps_voltage",
+    _("Output Voltage of Power Supplies"),
+    Tuple(
+        elements = [
+            Float(title = _("Warning below"), unit = u"V"),
+            Float(title = _("Critical below"), unit = u"V"),
+            Float(title = _("Warning at or above"), unit = u"V"),
+            Float(title = _("Critical at or above"), unit = u"V"),
+        ],
+    ),
+    None,
+    match_type = "first",
+)
+
+
 
 #.
 #   .--Unsorted--(Don't create new stuff here!)----------------------------.

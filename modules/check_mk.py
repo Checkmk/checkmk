@@ -464,7 +464,7 @@ g_global_caches.append('g_hosttag_taglist_cache')
 # New in 1.1.13: a trailing + means a prefix match
 def hosttags_match_taglist(hosttags, required_tags):
     try:
-        cache_id = tuple(hosttags)+tuple(required_tags)
+        cache_id = tuple(hosttags) + tuple(required_tags)
         return g_hosttag_taglist_cache[cache_id]
     except KeyError:
         pass

@@ -1,3 +1,5 @@
+1.2.6p3:
+
 1.2.6p2:
     Core & Setup:
     * 2180 FIX: cmk -D showed always "bulkwalk: no" for SNMPv3 hosts (which is wrong)...

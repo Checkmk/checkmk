@@ -1,0 +1,11 @@
+Title: mk_postgres: Prevent loading of .psqlrc
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1429863051
+Class: fix
+
+If the user has a ~/.psqlrc file whit options like \timing on, this leads to unexcpected output by psql.
+While this is untestet, that fix is not included in 1.2.6. But you can currently use the git version to test.
+

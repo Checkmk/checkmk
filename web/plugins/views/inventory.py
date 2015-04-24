@@ -46,7 +46,7 @@ def paint_host_inventory(row, invpath):
 def cmp_inventory_node(a, b, invpath):
     val_a = inventory.get(a["host_inventory"], invpath)
     val_b = inventory.get(b["host_inventory"], invpath)
-    return cmp(a, b)
+    return cmp(val_a, val_b)
 
 inv_filter_info = {
     "bytes"         : { "unit" : _("MB"),    "scale" : 1024*1024 },

@@ -42,6 +42,7 @@
 
     HW/SW-Inventory:
     * 2197 FIX: win_reg_uninstall: Fix exception in case of invalid output line...
+    * 2224 FIX: Fixed sorting in inventory based views...
 
 
 1.2.6p1:

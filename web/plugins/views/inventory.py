@@ -467,6 +467,13 @@ def inv_paint_if_port_type(port_type):
     type_name = interface_port_types.get(port_type, _("unknown"))
     return "", "%d - %s" % (port_type, type_name)
 
+def inv_paint_if_available(available):
+    if available == None:
+        return "", ""
+    else:
+        return "if_state " + (available and "if_available" or "if_not_available"), \
+           (available and _("free") or _("used"))
+
 
 def inv_paint_volt(volt):
     if volt:
@@ -573,12 +580,13 @@ inventory_displayhints.update({
 
     ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
     ".networking.interfaces:"                          : { "title" : _("Interfaces"), "render" : render_inv_dicttable,
-                                                           "keyorder" : [ "index", "description", "oper_status", "admin_status", "speed" ], "view" : "invinterface_of_host", },
+                                                           "keyorder" : [ "index", "description", "oper_status", "admin_status", "available", "speed" ], "view" : "invinterface_of_host", },
     ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : visuals.FilterInvtableIDRange },
     ".networking.interfaces:*.description"             : { "title" : _("Description") },
     ".networking.interfaces:*.phys_address"            : { "title" : _("Physical Address (MAC)")  },
     ".networking.interfaces:*.oper_status"             : { "title" : _("Operational Status"), "short" : _("Status"), "paint" : "if_oper_status", "filter" : visuals.FilterInvtableOperStatus },
     ".networking.interfaces:*.admin_status"            : { "title" : _("Administrative Status"), "short" : _("Admin"), "paint" : "if_admin_status", "filter" : visuals.FilterInvtableAdminStatus },
+    ".networking.interfaces:*.available"               : { "title" : _("Port Usage"), "short" : _("Used"), "paint" : "if_available", "filter" : visuals.FilterInvtableAvailable },
     ".networking.interfaces:*.speed"                   : { "title" : _("Speed"), "paint" : "nic_speed", },
     ".networking.interfaces:*.port_type"               : { "title" : _("Type"), "paint" : "if_port_type", "filter" : visuals.FilterInvtableInterfaceType },
     ".networking.interfaces:*.state_age"               : { "title" : _("State Age"), "paint" : "age", "filter" : visuals.FilterInvtableAge },

@@ -24,9 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inv_if(info):
+def inv_if(info, params):
+    usage_port_types = params.get("usage_port_types",
+           [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ])
+    unused_duration = params.get("unused_duration", 30 * 86400)
+
     def render_mac_address(bytestring):
         return ":".join(["%02s" % hex(ord(m))[2:] for m in bytestring]).replace(' ', '0').upper()
+
+    total_ethernet_ports = 0
+    available_ethernet_ports = 0
 
     node = inv_tree("networking.interfaces:")
     for if_index, if_descr, if_type, if_speed, if_oper_status, if_admin_status, \
@@ -51,6 +58,7 @@ def inv_if(info):
             seconds = float(parts[3])
             last_change = seconds + 60*minutes + 3600*hours + 86400*days
 
+
         node.append({
             "index"        : int(if_index),
             "description"  : if_descr,
@@ -61,6 +69,16 @@ def inv_if(info):
             "state_age"    : last_change,
             "port_type"    : int(if_type),
         })
+
+        if if_type in usage_port_types:
+            if_available = if_oper_status == '2' and last_change > unused_duration
+            total_ethernet_ports += 1
+            if if_available:
+                available_ethernet_ports += 1
+            node[-1]["available"] = if_available
+        else:
+            if_available = None
+
 
 
 inv_info['inv_if'] = {

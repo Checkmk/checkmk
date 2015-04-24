@@ -764,3 +764,14 @@ td.if_state {
     font-weight: bold;
     width: 50px;
 }
+
+td.if_state.if_available {
+    color: black;
+    background-color: #80ff40;
+}
+
+td.if_state.if_not_available {
+    color: black;
+    background-color: #cccccc;
+}
+

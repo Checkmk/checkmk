@@ -175,6 +175,7 @@ class FilterInvtableOperStatus(Filter):
                 new_rows.append(row)
         return new_rows
 
+
 class FilterInvtableAdminStatus(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
@@ -198,6 +199,32 @@ class FilterInvtableAdminStatus(Filter):
                 new_rows.append(row)
         return new_rows
 
+class FilterInvtableAvailable(Filter):
+    def __init__(self, infoname, name, title):
+        varname = infoname + "_" + name
+        Filter.__init__(self, varname, title, infoname + "s", [ varname ], [])
+
+    def display(self):
+        html.begin_radio_group(horizontal = True)
+        for value, text in [("no", _("used")), ("yes", _("free")), ("", _("(ignore)"))]:
+            html.radiobutton(self.name, value, value == "", text + " &nbsp; ")
+        html.end_radio_group()
+
+    def filter_table(self, rows):
+        current = html.var(self.name)
+        if current not in ("no", "yes"):
+            return rows
+
+        f = current == "yes"
+
+        new_rows = []
+        for row in rows:
+            available = row.get("invinterface_available")
+            if available == f:
+                new_rows.append(row)
+        return new_rows
+
+
 class FilterInvtableInterfaceType(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
@@ -207,10 +234,11 @@ class FilterInvtableInterfaceType(Filter):
         return True
 
     def valuespec(self):
-        choices = [ (type_id, "%d - %s" % (type_id, type_name))
-                    for (type_id, type_name)
-                    in sorted(interface_port_types.items()) ]
-        return DualListChoice(choices = choices, autoheight=False, enlarge_active=True, custom_order=True)
+        return DualListChoice(
+            choices = interface_port_type_choices,
+            autoheight = False,
+            enlarge_active = True,
+            custom_order = True)
 
     def selection(self):
         current = html.var(self.name, "").strip().split("|")

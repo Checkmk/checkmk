@@ -1604,6 +1604,10 @@ class MultiSelect(ListChoice):
 # the entries by simply clicking them in a certain order.
 # If that feature is not being used, then the original order
 # of the elements is always being kept.
+# TODO: Beware: the keys in this choice are not type safe.
+# They can only be strings. They must not contain | or other
+# dangerous characters. We should fix this and make it this
+# compatible to DropdownChoice()
 class DualListChoice(ListChoice):
     def __init__(self, **kwargs):
         ListChoice.__init__(self, **kwargs)

@@ -1484,7 +1484,8 @@ def handle_spoolfile(spoolfile):
             # We received a forwarded raw notification. We need to process
             # this with our local notification rules in order to call one,
             # several or no actual plugins.
-            notify_log("Got spool file from remote host for local delivery.")
+            notify_log("Got spool file (%s) from remote host for local delivery." %
+                        find_host_service(plugin_context))
             raw_context = data["context"]
             locally_deliver_raw_context(data["context"])
             return 0 # No error handling for async delivery

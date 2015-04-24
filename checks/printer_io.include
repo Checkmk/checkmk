@@ -25,13 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 printer_io_units = {
-     '3': 'tenThousandthsOfInches',
-     '4': 'micrometers',
-     '8': 'sheets',
-    '16': 'feet',
-    '17': 'meters',
-    '18': 'items',
-    '19': 'percent',
+     '-1' : "unk.",
+     '3'  : 'tenThousandthsOfInches',
+     '4'  : 'micrometers',
+     '8'  : 'sheets',
+    '16'  : 'feet',
+    '17'  : 'meters',
+    '18'  : 'items',
+    '19'  : 'percent',
 }
 
 printer_io_states = {

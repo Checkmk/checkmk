@@ -35,6 +35,9 @@ def inv_if(info):
         if if_type in ( "231", "232" ):
             continue # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
 
+        if not if_last_change or not if_speed:
+            continue # Ignore useless half-empty tables (e.g. Viprinet-Router)
+
         # if_last_change can be of type Timeticks (100th of seconds) or
         # a human readable time stamp (yurks)
         try:

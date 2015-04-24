@@ -91,7 +91,7 @@ function run_cached () {
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.6p2
+echo Version: 1.2.6p3
 echo AgentOS: solaris
 
 

@@ -212,33 +212,29 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     if item in [ 'read', 'write' ]:
         return check_diskstat_old(item, params, this_time, info)
 
-    # summary mode
-    if item == 'SUMMARY': # summary mode (only summarize physical disks!)
-        summary_line = [0] * 13
-        if len(info) == 0:
-            return 3, "No performance information about any disk found"
-        for line in info:
-            if line[0] != None:
-                return 3, "summary mode not supported in a cluster"
-            devname = line[1]
-            if ' ' in devname:
-                continue
-            summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[2:]))
-        return check_diskstat_line(this_time, "SUMMARY", params, [None, ''] + summary_line, mode)
+    # Sum up either all physical disks (if item is "SUMMARY") or
+    # all entries matching the item in question. It is not a bug if
+    # a disk appears more than once. This can for example happen in
+    # Windows clusters - even if they are no Check_MK clusters.
 
-    # single mode
-    result = ""
+    summed_up = [0] * 13
+    matching = 0
+
     for line in info:
-        if line[1] == item: # this may happen several times for a cluster
-            if result == "":
-                result = check_diskstat_line(this_time, item, params, line, mode)
-            else:
-                result = (2, "more than one device found in cluster")
+        if item == 'SUMMARY' and line[0] != None:
+            return 3, "summary mode not supported in a cluster"
 
-    if result != "":
-        return result
+        elif item == 'SUMMARY' and ' ' in line[1]:
+            continue # skip non-physical disks
 
-    return (3, "device missing")
+        elif item == 'SUMMARY' or line[1] == item:
+            matching += 1
+            summed_up = map(lambda e: e[0] + int(e[1]), zip(summed_up, line[2:]))
+
+    if matching == 0:
+        return 3, "No matching disk found"
+    else:
+        return check_diskstat_line(this_time, item, params, [None, ''] + summed_up, mode)
 
 
 # This is the legacy version of diskstat as used in <= 1.1.10.

@@ -416,7 +416,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
     try:
         # Check number of arguments of discovery function. Note: This
         # check for the legacy API will be removed after 1.2.6.
-        if len(inspect.getargspec(discovery_function)[0]) == 2:
+        if len(inspect.getargspec(discovery_function).args) == 2:
             discovered_items = discovery_function(check_type, info) # discovery is a list of pairs (item, current_value)
         else:
             # New preferred style since 1.1.11i3: only one argument: info

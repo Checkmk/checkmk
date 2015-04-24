@@ -268,7 +268,14 @@ def do_inv_for(hostname):
             sys.stdout.write(tty_green + tty_bold + info_type + " " + tty_normal)
             sys.stdout.flush()
 
-        plugin["inv_function"](info)
+        # Inventory functions can optionally have a second argument: parameters.
+        # These are configured via rule sets (much like check parameters).
+        inv_function = plugin["inv_function"]
+        if len(inspect.getargspec(inv_function).args) == 2:
+            params = get_inv_params(hostname, info_type)
+            inv_function(info, params)
+        else:
+            inv_function(info)
 
     # Remove empty paths
     inv_cleanup_tree(g_inv_tree)
@@ -280,6 +287,9 @@ def do_inv_for(hostname):
 
     run_inv_export_hooks(hostname, g_inv_tree)
     return g_inv_tree, old_timestamp
+
+def get_inv_params(hostname, info_type):
+    return host_extra_conf_merged(hostname, inv_parameters.get(info_type, []))
 
 
 # Returns the time stamp of the previous inventory with different

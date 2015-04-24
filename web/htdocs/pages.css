@@ -490,6 +490,10 @@ select {
 
 }
 
+select[multiple=multiple] {
+    height: auto;
+}
+
 input[type=radio] {
     margin-left: 0px;
 }

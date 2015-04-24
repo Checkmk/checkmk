@@ -98,6 +98,7 @@ checks                               = []
 static_checks                        = {}
 check_parameters                     = []
 checkgroup_parameters                = {}
+inv_parameters                       = {} # for HW/SW-Inventory
 legacy_checks                        = [] # non-WATO variant of legacy checks
 active_checks                        = {} # WATO variant for fully formalized checks
 special_agents                       = {} # WATO variant for datasource_programs

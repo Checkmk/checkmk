@@ -107,3 +107,30 @@ register_rule(group,
     ),
     match = "first"
 )
+
+register_rule(group,
+    "inv_parameters:inv_if",
+    Dictionary(
+        title = _("Parameters for switch port inventory"),
+        elements = [
+            ( "unused_duration",
+              Age(
+                  title = _("Port down time until considered unused"),
+                  help = _("After this time in the state <i>down</i> a port is considered unused."),
+                  default_value = 30 * 86400,
+            )),
+            ( "usage_port_types",
+              DualListChoice(
+                title = _("Port types to include in usage statistics"),
+                choices = interface_port_type_choices,
+                autoheight = False,
+                rows = 40,
+                enlarge_active = False,
+                custom_order = True,
+                default_value = [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ],
+            )),
+        ]
+    ),
+    match = "dict",
+)
+

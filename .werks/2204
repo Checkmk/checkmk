@@ -12,3 +12,7 @@ network interfaces (switch ports). The latter are available in a new status
 view, where you can search ports for various criteria - e.g. all ports where
 the type is Ethernet and that are down for at least one month.
 All you need to do is to activate the HW/SW-Inventory for such devices.
+
+There is also a view with overal statistics of used and free ethernet ports
+of hosts. You can configure via a new rule set <i>Parameters for switch port
+inventory</i> which ports should be considere used and free.

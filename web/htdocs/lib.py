@@ -1039,3 +1039,10 @@ interface_port_types = {
     229: "docsCableMCmtsDownstream",
     230: "adsl2",
 }
+
+# For usage in Dropdown choices an the like
+interface_port_type_choices = [
+    (str(type_id), "%d - %s" % (type_id, type_name))
+    for (type_id, type_name)
+    in sorted(interface_port_types.items())
+]

@@ -1491,12 +1491,12 @@ def mode_mkeventd_mibs(phase):
     elif phase == 'action':
         if html.has_var("_delete"):
             filename = html.var("_delete")
-            if filename in load_snmp_mibs():
+            if filename in load_snmp_mibs(mkeventd.mib_upload_dir):
                 c = wato_confirm(_("Confirm MIB deletion"),
                                  _("Do you really want to delete the MIB file <b>%s</b>?" % filename))
                 if c:
                     log_mkeventd("delete-mib", _("Deleted MIB %s") % filename)
-                    os.remove(mkeventd.snmp_mibs_dir + "/" + filename)
+                    os.remove(mkeventd.mib_upload_dir + "/" + filename)
                 elif c == False:
                     return ""
                 else:
@@ -1506,11 +1506,14 @@ def mode_mkeventd_mibs(phase):
             filename, mimetype, content = uploaded_mib
             if filename:
                 try:
-                    upload_mib(filename, mimetype, content)
-                    return None, _("MIB file %s uploaded.") % filename
-                    log_mkeventd("uploaded-mib", _("Uploaded MIB %s") % filename)
+                    msg = upload_mib(filename, mimetype, content)
+                    return None, msg
+                    log_mkeventd("uploaded-mib", _("Uploaded MIB %s: %s") % (filename, msg))
                 except Exception, e:
-                    raise MKUserError("_upload_mib", e)
+                    if config.debug:
+                        raise
+                    else:
+                        raise MKUserError("_upload_mib", str(e))
 
         return
 
@@ -1522,32 +1525,31 @@ def mode_mkeventd_mibs(phase):
     html.hidden_fields()
     html.end_form()
 
-    mibs = load_snmp_mibs().items()
-    mibs.sort()
-    table.begin("mibs", _("Installed SNMP MIBs"))
-    for filename, mib in mibs:
-        table.row()
+    if not os.path.exists(mkeventd.mib_upload_dir):
+        os.makedirs(mkeventd.mib_upload_dir) # Let exception happen if this fails. Never happens on OMD
 
-        table.cell(_("Actions"), css="buttons")
-        delete_url = make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)])
-        html.icon_button(delete_url, _("Delete this MIB"), "delete")
+    for path, title in mkeventd.mib_dirs:
+        table.begin("mibs_"+path, title)
+        for filename, mib in sorted(load_snmp_mibs(path).items()):
+            table.row()
 
-        table.cell(_("Filename"), filename)
-        table.cell(_("MIB"), mib.get("name", ""))
-        table.cell(_("Organization"), mib.get("organization", ""))
-        table.cell(_("Size"), str(mib.get("size")), css="number")
-    table.end()
+            table.cell(_("Actions"), css="buttons")
+            if path == mkeventd.mib_upload_dir:
+                delete_url = make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)])
+                html.icon_button(delete_url, _("Delete this MIB"), "delete")
+
+            table.cell(_("Filename"), filename)
+            table.cell(_("MIB"), mib.get("name", ""))
+            table.cell(_("Organization"), mib.get("organization", ""))
+            table.cell(_("Size"), str(mib.get("size")), css="number")
+        table.end()
 
 
-def load_snmp_mibs():
-    if not os.path.exists(mkeventd.snmp_mibs_dir):
-        os.makedirs(mkeventd.snmp_mibs_dir) # Let exception happen if this fails. Never happens on OMD
-        return []
-
+def load_snmp_mibs(path):
     found = {}
-    for fn in os.listdir(mkeventd.snmp_mibs_dir):
+    for fn in os.listdir(path):
         if fn[0] != '.':
-            mib = parse_snmp_mib_header(mkeventd.snmp_mibs_dir + "/" + fn)
+            mib = parse_snmp_mib_header(path + "/" + fn)
             found[fn] = mib
     return found
 
@@ -1583,6 +1585,72 @@ def parse_snmp_mib_header(path):
 
     return mib
 
+def validate_and_compile_mib(mibname, content):
+    try:
+        from pysmi.compiler import MibCompiler
+        from pysmi.parser.smiv1compat import SmiV1CompatParser
+        from pysmi.searcher.pypackage import PyPackageSearcher
+        from pysmi.searcher.pyfile import PyFileSearcher
+        from pysmi.writer.pyfile import PyFileWriter
+        from pysmi.reader.localfile import FileReader
+        from pysmi.codegen.pysnmp import PySnmpCodeGen, baseMibs, defaultMibPackages
+        from pysmi.writer.callback import CallbackWriter
+        from pysmi.reader.callback import CallbackReader
+        from pysmi.searcher.stub import StubSearcher
+        from pysmi.error import PySmiError
+    except ImportError, e:
+        raise Exception(_('You are missing the needed pysmi python module (%s).') % e)
+
+    make_nagios_directory(mkeventd.compiled_mibs_dir)
+
+    # This object manages the compilation of the uploaded SNMP mib
+    # but also resolving dependencies and compiling dependents
+    compiler = MibCompiler(SmiV1CompatParser(),
+                           PySnmpCodeGen(),
+                           PyFileWriter(mkeventd.compiled_mibs_dir))
+
+    # Provides the just uploaded MIB module
+    compiler.addSources(
+        CallbackReader(lambda t,m,c: m==mibname and c or '', content)
+    )
+
+    # Directories containing ASN1 MIB files which may be used for
+    # dependency resolution
+    compiler.addSources(*[ FileReader(path) for path, title in mkeventd.mib_dirs ])
+
+    # check for already compiled MIBs
+    compiler.addSearchers(PyFileSearcher(mkeventd.compiled_mibs_dir))
+
+    # and also check PySNMP shipped compiled MIBs
+    compiler.addSearchers(*[ PyPackageSearcher(x) for x in defaultMibPackages ])
+
+    # never recompile MIBs with MACROs
+    compiler.addSearchers(StubSearcher(*baseMibs))
+
+    try:
+        results = compiler.compile(mibname, ignoreErrors=True)
+
+        errors = []
+        for name, state in sorted(results.items()):
+            if mibname == name and state == 'failed':
+                raise Exception(_('Failed to compile your module.'))
+
+            if state == 'missing':
+                errors.append(_('%s - Dependency missing') % name)
+            elif state == 'failed':
+                errors.append(_('%s - Failed to compile') % name)
+
+        msg = _("MIB file %s uploaded.") % mibname
+        if errors:
+            msg += '<br>'+_('But there were errors:')+'<br>'
+            msg += '<br>\n'.join(errors)
+        return msg
+
+    except PySmiError, e:
+        if config.debug:
+            raise e
+        raise Exception(_('Failed to process your MIB file (%s): %s') % (mibname, e))
+
 
 def upload_mib(filename, mimetype, content):
     if filename.startswith(".") or "/" in filename:
@@ -1594,7 +1662,14 @@ def upload_mib(filename, mimetype, content):
     if mimetype == "application/tar" or filename.lower().endswith(".gz") or filename.lower().endswith(".tgz"):
         raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
 
-    file(mkeventd.snmp_mibs_dir + "/" + filename, "w").write(content)
+    if '.' in filename:
+        mibname = filename.split('.')[0]
+    else:
+        mibname = filename
+
+    msg = validate_and_compile_mib(mibname.upper(), content)
+    file(mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
+    return msg
 
 
 if mkeventd_enabled:

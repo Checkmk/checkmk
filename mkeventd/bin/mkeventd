@@ -993,9 +993,10 @@ class EventServer:
 
 
     def __init__(self):
-        self._syslog     = None
-        self._syslog_tcp = None
-        self._snmptrap   = None
+        self._syslog       = None
+        self._syslog_tcp   = None
+        self._snmptrap     = None
+        self._mib_resolver = None
 
         self.create_pipe()
         self.open_eventsocket()
@@ -1167,24 +1168,48 @@ class EventServer:
         days, hours = divmod(hours, 24)
         return "%d days, %d hours, %d min" % (days, hours, mins)
 
+
+    def load_mibs(self):
+        builder = MibBuilder() # manages python MIB modules
+
+        # load MIBs from our compiled MIB and default MIB paths
+        builder.setMibSources(*[DirMibSource(g_compiled_mibs_dir)]
+                               + list(builder.getMibSources()))
+
+        log(repr(list(builder.getMibSources())))
+
+        # Indicate we wish to load DESCRIPTION and other texts from MIBs
+        builder.loadTexts = True
+
+        # This loads all or specified pysnmp MIBs into memory
+        builder.loadModules()
+
+        # This object maintains various indices built from MIBs data
+        self._mib_resolver = MibViewController(builder)
+
+
     # Convert pysnmp datatypes to simply handable ones
     def snmptrap_convert_var_binds(self, var_bind_list):
         var_binds = []
         for oid, value in var_bind_list:
-            key = str(oid)
+            mib_var = MibVariable(oid).resolveWithMib(self._mib_resolver)
 
-            if value.__class__.__name__ == 'ObjectIdentifier':
-                val = str(value)
-            elif value.__class__.__name__ == 'TimeTicks':
-                val = self.fmt_timeticks(value._value)
+            if not mib_var.isFullyResolved():
+                log('MIB for %s is not loaded' % oid.prettyPrint())
+                var_binds.append((str(oid), value)) # add untranslated
             else:
-                val = value._value
+                # MIB node object (like OBJECT-TYPE or other SMI MACROs)
+                node = mib_var.getMibNode()
 
-            # Translate some standard SNMPv2 oids
-            if key == '1.3.6.1.2.1.1.3.0':
-                key = 'Uptime'
+                # This MACRO supports SYNTAX clause?
+                if hasattr(node, 'getSyntax'):
+                    # Cast value to MIB SYNTAX type (TEXTUAL-CONVENTION)
+                    value = node.getSyntax().clone(value)
+                    units = node.getUnits()
 
-            var_binds.append((key, val))
+                    var_binds.append((oid.prettyPrint(), value.prettyPrint() + ' ' + units))
+                else:
+                    var_binds.append((oid.prettyPrint(), value))
         return var_binds
 
     def process_snmptrap(self, (whole_msg, (ipaddress, port))):
@@ -1204,33 +1229,38 @@ class EventServer:
 
             # community: proto.apiMessage.getCommunity(req_msg)
 
+            # Convert SNMPv1 PDU to SNMPv2 for equal handling below this
             if proto_version == pysnmp_api.protoVersion1:
-                # These fields are available by specification in v1, but not in v2.
-
-                # use the enterprise oid as application
-                application = proto.apiTrapPDU.getEnterprise(req_pdu).prettyPrint()
-                # Get the host name from the trap
-                host = proto.apiTrapPDU.getAgentAddr(req_pdu).prettyPrint()
-
-                trap = []
-                trap.append(('Generic-Trap', proto.apiTrapPDU.getGenericTrap(req_pdu)._value))
-                trap.append(('Specific-Trap', proto.apiTrapPDU.getSpecificTrap(req_pdu)._value))
-                trap.append(('Uptime', self.fmt_timeticks(proto.apiTrapPDU.getTimeStamp(req_pdu)._value)))
-                trap += self.snmptrap_convert_var_binds(proto.apiTrapPDU.getVarBinds(req_pdu))
-
+                pdu = pysnmp.proto.proxy.rfc2576.v1ToV2(req_pdu)
             elif proto_version == pysnmp_api.protoVersion2c:
-                trap = self.snmptrap_convert_var_binds(proto.apiPDU.getVarBinds(req_pdu))
-                # Use the IP address as host name
-                host = ipaddress
-
-                # use the trap-oid as application
-                application = ''
-                for index, (oid, val) in enumerate(trap):
-                    if oid == '1.3.6.1.6.3.1.1.4.1.0':
-                        application = trap.pop(index)[1]
-                        break
+                pdu = req_pdu
             else:
-                return # dropping unhandled snmp version
+                break # Skip unhandled version
+
+            #if proto_version == pysnmp_api.protoVersion1:
+            #    # These fields are available by specification in v1, but not in v2.
+
+            #    # use the enterprise oid as application
+            #    application = proto.apiTrapPDU.getEnterprise(req_pdu).prettyPrint()
+            #    # Get the host name from the trap
+            #    host = proto.apiTrapPDU.getAgentAddr(req_pdu).prettyPrint()
+
+            #    trap = []
+            #    trap.append(('Generic-Trap', proto.apiTrapPDU.getGenericTrap(req_pdu)._value))
+            #    trap.append(('Specific-Trap', proto.apiTrapPDU.getSpecificTrap(req_pdu)._value))
+            #    trap.append(('Uptime', self.fmt_timeticks(proto.apiTrapPDU.getTimeStamp(req_pdu)._value)))
+            #    trap += self.snmptrap_convert_var_binds(proto.apiTrapPDU.getVarBinds(req_pdu))
+
+            trap = self.snmptrap_convert_var_binds(proto.apiPDU.getVarBinds(pdu))
+            # Use the trap sender IP address as host name
+            host = ipaddress
+
+            # use the trap-oid as application
+            application = ''
+            for index, (oid, val) in enumerate(trap):
+                if oid == '1.3.6.1.6.3.1.1.4.1.0':
+                    application = trap.pop(index)[1]
+                    break
 
         # once we got here we have a real parsed trap which we convert to an event now
         text = ', '.join([ '%s: %s' % (item[0], str(item[1]).replace('\n', '')) for item in trap ])
@@ -2522,6 +2552,8 @@ class StatusServer:
     def handle_command_reload(self):
         with lock_configuration:
             load_configuration()
+            if opt_snmptrap:
+                g_event_server.load_mibs()
             g_event_server.compile_rules(g_config["rules"])
         g_status_server.reload_configuration()
         log("Reloaded configuration.")
@@ -3608,6 +3640,10 @@ opt_syslog_tcp_fd = None
 opt_snmptrap      = False
 opt_snmptrap_fd   = None
 
+# ASN1 MIB source directory candidates. Non existing dirs are ok
+# Please sync these paths with htdocs/mkeventd.py
+g_mib_dirs = [ '/usr/share/snmp/mibs' ]
+
 # Set default values for options
 omd_root = os.getenv("OMD_ROOT")
 if omd_root:
@@ -3619,6 +3655,13 @@ if omd_root:
     g_pid_file          = omd_root + "/tmp/run/mkeventd/pid"
     g_logfile_path      = omd_root + "/var/log/mkeventd.log"
     g_state_dir         = omd_root + "/var/mkeventd"
+    g_compiled_mibs_dir = omd_root + "/local/share/check_mk/compiled_mibs"
+
+    # Please sync these paths with htdocs/mkeventd.py
+    g_mib_dirs = [
+        omd_root + "/local/share/snmp/mibs",
+        omd_root + "/share/snmp/mibs",
+    ] + g_mib_dirs
 else:
     g_config_dir        = "/etc/check_mk"
     g_socket_path       = None
@@ -3628,6 +3671,7 @@ else:
     g_pid_file          = "/var/run/mkeventd.pid"
     g_logfile_path      = "/var/log/mkeventd.log"
     g_state_dir         = "/var/lib/mkeventd"
+    g_compiled_mibs_dir = "/var/lib/mkeventd/compiled_mibs"
 
 
 short_options = "hvVgS:P:p:C:E:L:"
@@ -3690,10 +3734,14 @@ try:
 
     # Handler specific imports
     if opt_snmptrap:
-        #from pysnmp.carrier.asynsock.dispatch import AsynsockDispatcher as pysnmp_AsynsockDispatcher
-        #from pysnmp.carrier.asynsock.dgram import udp as pysnmp_udp
+        # Needed for receiving traps
         from pysnmp.proto import api as pysnmp_api
         from pyasn1.codec.ber import decoder as pyasn_decoder
+        import pysnmp.proto.proxy.rfc2576
+        # Needed for trap translation
+        from pysnmp.entity.rfc3413.oneliner.mibvar import MibVariable
+        from pysnmp.smi.builder import MibBuilder, DirMibSource
+        from pysnmp.smi.view import MibViewController
 
     if not g_pipe_path:
         bail_out("Please specify the path to the pipe (using -P).")
@@ -3741,6 +3789,8 @@ try:
     g_event_status.load_status()
     g_status_server = StatusServer()
     g_event_server  = EventServer()
+    if opt_snmptrap:
+        g_event_server.load_mibs()
     g_event_server.compile_rules(g_config["rules"])
 
     if not opt_foreground:

@@ -1,0 +1,12 @@
+Title: Fixed sorting in inventory based views
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1429870112
+
+When sorting an inventory base table like <i>CPU related inventory of hosts</i>
+and the sort column was one of the inventory columns then the sorting was
+wrong. This has been fixed.

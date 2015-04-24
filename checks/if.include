@@ -512,6 +512,9 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
 
     return check_if_common_single(item, params, info, has_nodeinfo=has_nodeinfo, group_name = group_name)
 
+# TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
+# One case of winperf_if appeared to indicate that in that case Errors = Discards.
+
 def check_if_common_single(item, params, info, force_counter_wrap = False,
                            has_nodeinfo = False, group_members = None, group_name = "Group"):
     # Params now must be a dict. Some keys might

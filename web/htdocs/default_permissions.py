@@ -143,6 +143,7 @@ def load():
 
     loaded_with_language = current_language
 
+# TODO: This has been obsoleted by pagetypes.py
 def declare_visual_permissions(what, what_plural):
     config.declare_permission("general.edit_" + what,
          _("Customize %s and use them") % what_plural,

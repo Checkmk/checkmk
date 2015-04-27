@@ -35,10 +35,22 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import math, time
-import config, defaults
+import config, defaults, pagetypes
 from lib import *
+from valuespec import *
 import livestatus
 
+
+#   .--Plugins-------------------------------------------------------------.
+#   |                   ____  _             _                              |
+#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
+#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
+#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
+#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
+#   |                                 |___/                                |
+#   +----------------------------------------------------------------------+
+#   |  Typical code for loading Multisite plugins of this module           |
+#   '----------------------------------------------------------------------'
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
@@ -57,7 +69,17 @@ def load_plugins():
     loaded_with_language = current_language
 
 
-# Definitions to be used in the actual metric declarations
+#.
+#   .--Constants-----------------------------------------------------------.
+#   |              ____                _              _                    |
+#   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
+#   |            | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|             |
+#   |            | |__| (_) | | | \__ \ || (_| | | | | |_\__ \             |
+#   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Various constants to be used by the declarations of the plugins.    |
+#   '----------------------------------------------------------------------'
 
 KB = 1024
 MB = KB * 1024
@@ -92,6 +114,76 @@ scalar_colors = {
     "crit" : "#ff0000",
 }
 
+
+#.
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   |  Various helper functions                                            |
+#   '----------------------------------------------------------------------'
+
+# "45.0" -> 45.0, "45" -> 45
+def float_or_int(v):
+    try:
+        return int(v)
+    except:
+        return float(v)
+
+def metric_to_text(metric, value=None):
+    if value == None:
+        value = metric["value"]
+    return metric["unit"]["render"](value)
+
+# A few helper function to be used by the definitions
+
+
+# "#ff0080" -> (1.0, 0.0, 0.5)
+def parse_color(color):
+    return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
+
+
+def render_color(color_rgb):
+    return "#%02x%02x%02x" % (
+       int(color_rgb[0] * 255),
+       int(color_rgb[1] * 255),
+       int(color_rgb[2] * 255),)
+
+# Make a color darker. v ranges from 0 (not darker) to 1 (black)
+def darken_color(rgb, v):
+    def darken(x, v):
+        return x * (1.0 - v)
+    return tuple([ darken(x, v) for x in rgb ])
+
+# Make a color lighter. v ranges from 0 (not lighter) to 1 (white)
+def lighten_color(rgb, v):
+    def lighten(x, v):
+        return x + ((1.0 - x) * v)
+    return tuple([ lighten(x, v) for x in rgb ])
+
+def mix_colors(a, b):
+    return tuple([
+       (ca + cb) / 2.0
+       for (ca, cb)
+       in zip(a, b)
+    ])
+
+
+#.
+#   .--Evaluation----------------------------------------------------------.
+#   |          _____            _             _   _                        |
+#   |         | ____|_   ____ _| |_   _  __ _| |_(_) ___  _ __             |
+#   |         |  _| \ \ / / _` | | | | |/ _` | __| |/ _ \| '_ \            |
+#   |         | |___ \ V / (_| | | |_| | (_| | |_| | (_) | | | |           |
+#   |         |_____| \_/ \__,_|_|\__,_|\__,_|\__|_|\___/|_| |_|           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Parsing of performance data into metrics, evaluation of expressions |
+#   '----------------------------------------------------------------------'
 
 # Convert perf_data_string into perf_data, extract check_command
 def parse_perf_data(perf_data_string, check_command=None):
@@ -137,14 +229,6 @@ def parse_perf_data(perf_data_string, check_command=None):
 
     return perf_data, check_command
 
-
-
-# "45.0" -> 45.0, "45" -> 45
-def float_or_int(v):
-    try:
-        return int(v)
-    except:
-        return float(v)
 
 
 # Convert Ascii-based performance data as output from a check plugin
@@ -397,6 +481,17 @@ def replace_expressions(text, translated_metrics):
     r = regex(r"%\([^)]*\)")
     return r.sub(eval_to_string, text)
 
+#.
+#   .--Perf-O-Meters-------------------------------------------------------.
+#   |  ____            __        ___        __  __      _                  |
+#   | |  _ \ ___ _ __ / _|      / _ \      |  \/  | ___| |_ ___ _ __ ___   |
+#   | | |_) / _ \ '__| |_ _____| | | |_____| |\/| |/ _ \ __/ _ \ '__/ __|  |
+#   | |  __/  __/ |  |  _|_____| |_| |_____| |  | |  __/ ||  __/ |  \__ \  |
+#   | |_|   \___|_|  |_|        \___/      |_|  |_|\___|\__\___|_|  |___/  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Implementation of Perf-O-Meters                                     |
+#   '----------------------------------------------------------------------'
 
 def get_perfometers(translated_metrics):
     for perfometer in perfometer_info:
@@ -468,35 +563,6 @@ def perfometer_possible(perfometer, translated_metrics):
             return False
     return True
 
-def get_graph_templates(translated_metrics):
-    for graph_template in graph_info:
-        if graph_possible(graph_template, translated_metrics):
-            yield graph_template
-
-
-def graph_possible(graph_template, translated_metrics):
-    for metric_definition in graph_template["metrics"]:
-        try:
-            evaluate(metric_definition[0], translated_metrics)
-        except Exception, e:
-            return False
-
-    # Allow graphs to be disabled if certain (better) metrics
-    # are available
-    if "not_if_have" in graph_template:
-        for var in graph_template["not_if_have"]:
-            if var in translated_metrics:
-                return False
-
-    return True
-
-
-def metric_to_text(metric, value=None):
-    if value == None:
-        value = metric["value"]
-    return metric["unit"]["render"](value)
-
-# A few helper function to be used by the definitions
 
 def metricometer_logarithmic(value, half_value, base, color):
     # Negative values are printed like positive ones (e.g. time offset)
@@ -667,6 +733,42 @@ def build_perfometer(perfometer, translated_metrics):
 
 
 
+
+#.
+#   .--Graphs--------------------------------------------------------------.
+#   |                    ____                 _                            |
+#   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
+#   |                  | |  _| '__/ _` | '_ \| '_ \/ __|                   |
+#   |                  | |_| | | | (_| | |_) | | | \__ \                   |
+#   |                   \____|_|  \__,_| .__/|_| |_|___/                   |
+#   |                                  |_|                                 |
+#   +----------------------------------------------------------------------+
+#   |  Implementation of time graphs - basic code, not the rendering       |
+#   |  Rendering of the graphs is done by PNP4Nagios, we just create PHP   |
+#   |  templates for PNP here.
+#   '----------------------------------------------------------------------'
+
+def get_graph_templates(translated_metrics):
+    for graph_template in graph_info:
+        if graph_possible(graph_template, translated_metrics):
+            yield graph_template
+
+
+def graph_possible(graph_template, translated_metrics):
+    for metric_definition in graph_template["metrics"]:
+        try:
+            evaluate(metric_definition[0], translated_metrics)
+        except Exception, e:
+            return False
+
+    # Allow graphs to be disabled if certain (better) metrics
+    # are available
+    if "not_if_have" in graph_template:
+        for var in graph_template["not_if_have"]:
+            if var in translated_metrics:
+                return False
+
+    return True
 
 # Called with exactly one variable: the template ID. Example:
 # "check_mk-kernel.util:guest,steal,system,user,wait".
@@ -898,35 +1000,6 @@ def render_graph_pnp(graph_template, translated_metrics):
     return graph_title + "\n" + rrdgraph_arguments + "\n" + rrdgraph_commands + "\n"
 
 
-# "#ff0080" -> (1.0, 0.0, 0.5)
-def parse_color(color):
-    return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
-
-
-def render_color(color_rgb):
-    return "#%02x%02x%02x" % (
-       int(color_rgb[0] * 255),
-       int(color_rgb[1] * 255),
-       int(color_rgb[2] * 255),)
-
-# Make a color darker. v ranges from 0 (not darker) to 1 (black)
-def darken_color(rgb, v):
-    def darken(x, v):
-        return x * (1.0 - v)
-    return tuple([ darken(x, v) for x in rgb ])
-
-# Make a color lighter. v ranges from 0 (not lighter) to 1 (white)
-def lighten_color(rgb, v):
-    def lighten(x, v):
-        return x + ((1.0 - x) * v)
-    return tuple([ lighten(x, v) for x in rgb ])
-
-def mix_colors(a, b):
-    return tuple([
-       (ca + cb) / 2.0
-       for (ca, cb)
-       in zip(a, b)
-    ])
 
 #.
 #   .--Hover-Graph---------------------------------------------------------.

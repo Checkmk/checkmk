@@ -2464,6 +2464,8 @@ function fix_popup_menu_position(event, menu) {
     }
 }
 
+// TODO: Remove this function as soon as all visuals have been
+// converted to pagetypes.py
 function add_to_visual(visual_type, visual_name)
 {
     close_popup();
@@ -2488,6 +2490,27 @@ function add_to_visual(visual_type, visual_name)
     popup_data = null;
 
     // After adding a dashlet, go to the choosen dashboard
+    if (response)
+        window.location.href = response;
+}
+
+function pagetype_add_to_container(page_type, page_name)
+{
+    var element_type = popup_data[0]; // e.g. 'graph'
+    var create_info  = popup_data[1]; // complex JSON struct describing the thing
+    var create_info_json = JSON.stringify(create_info);
+
+    close_popup();
+
+    response = get_url_sync('ajax_pagetype_add_element.py'
+                           + '?page_type=' + page_type
+                           + '&page_name=' + page_name
+                           + '&element_type=' + element_type
+                           + '&create_info='  + encodeURIComponent(create_info_json));
+    popup_data = null;
+
+    // After adding an element, the page type might want us to send to the
+    // container
     if (response)
         window.location.href = response;
 }

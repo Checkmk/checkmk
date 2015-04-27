@@ -311,9 +311,6 @@ class html:
         else:
             return filename
 
-    def makeactionuri(self, addvars):
-        return self.makeuri(addvars + [("_transid", self.get_transid())])
-
     def makeuri_contextless(self, vars, filename=None):
         if not filename:
 	    filename = self.myfile + ".py"
@@ -321,6 +318,12 @@ class html:
             return filename + "?" + self.urlencode_vars(vars)
         else:
             return filename
+
+    def makeactionuri(self, addvars, filename=None):
+        return self.makeuri(addvars + [("_transid", self.get_transid())], filename=filename)
+
+    def makeactionuri_contextless(self, addvars, filename=None):
+        return self.makeuri_contextless(addvars + [("_transid", self.get_transid())], filename=filename)
 
     def image_button(self, varname, title, cssclass = ''):
         if not self.mobile:

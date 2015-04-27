@@ -136,9 +136,14 @@ class html_mod_python(htmllib.html):
                 omd_mode = 'own'
         return (omd_mode, omd_site)
 
-    def log(self, msg):
+    def log(self, *args):
         from lib import logger, LOG_NOTICE
-        logger(LOG_NOTICE, msg)
+        for arg in args:
+            if type(arg) in (str, unicode):
+                text = arg
+            else:
+                text = repr(arg)
+            logger(LOG_NOTICE, text)
 
     def http_redirect(self, url):
         self.set_http_header('Location', url)

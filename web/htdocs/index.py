@@ -35,7 +35,7 @@ from mod_python import apache
 import sys, os, pprint
 from lib import *
 import livestatus
-import defaults, config, login, userdb, hooks, visuals, default_permissions
+import defaults, config, login, userdb, hooks, visuals, default_permissions, pagetypes
 
 if os.path.exists(os.path.dirname(os.path.abspath(__file__)) + '/reporting.py'):
     import reporting
@@ -44,24 +44,30 @@ else:
 
 from html_mod_python import *
 
-# Load page handlers
-pagehandlers = {}
-pagehandlers_dir = defaults.web_dir + "/plugins/pages"
-for fn in os.listdir(pagehandlers_dir):
-    if fn.endswith(".py"):
-        execfile(pagehandlers_dir + "/" + fn)
-
 # prepare local-structure within OMD sites
 if defaults.omd_root:
     local_module_path = defaults.omd_root + "/local/share/check_mk/web/htdocs"
     local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
     if local_module_path not in sys.path:
         sys.path[0:0] = [ local_module_path, defaults.web_dir + "/htdocs" ]
-    local_pagehandlers_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/pages"
-    if os.path.exists(local_pagehandlers_dir):
-        for fn in os.listdir(local_pagehandlers_dir):
-            if fn.endswith(".py"):
-                execfile(local_pagehandlers_dir + "/" + fn)
+
+# Load page handlers
+def load_page_handlers():
+    global pagehandlers
+    pagehandlers = {}
+    pagehandlers_dir = defaults.web_dir + "/plugins/pages"
+    for fn in os.listdir(pagehandlers_dir):
+        if fn.endswith(".py"):
+            execfile(pagehandlers_dir + "/" + fn, globals(), globals())
+
+    if defaults.omd_root:
+        local_pagehandlers_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/pages"
+        if os.path.exists(local_pagehandlers_dir):
+            for fn in os.listdir(local_pagehandlers_dir):
+                if fn.endswith(".py"):
+                    execfile(local_pagehandlers_dir + "/" + fn, globals(), globals())
+
+load_page_handlers()
 
 
 # Call the load_plugins() function in all modules
@@ -136,6 +142,9 @@ def handler(req, fields = None, profiling = True):
         # we need the plugins (i.e. the permissions declared in these) at the
         # time before the first login for generating auth.php.
         load_all_plugins()
+
+        # Install page handlers created by the pagetypes.py modules
+        pagehandlers.update(pagetypes.page_handlers())
 
         # Detect mobile devices
         if html.has_var("mobile"):

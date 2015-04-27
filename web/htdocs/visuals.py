@@ -29,6 +29,7 @@ import os, copy
 from lib import *
 from valuespec import *
 import config, table
+import pagetypes # That will replace visuals.py one day
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -244,6 +245,9 @@ def available(what, all_visuals):
 #   | Show a list of all visuals with actions to delete/clone/edit         |
 #   '----------------------------------------------------------------------'
 
+# TODO: This code has been copied to a new live into htdocs/pagetypes.py
+# We need to convert all existing page types (views, dashboards, reports)
+# to pagetypes.py and then remove this function!
 def page_list(what, title, visuals, custom_columns = [],
     render_custom_buttons = None,
     render_custom_columns = None,
@@ -1323,19 +1327,18 @@ def transform_old_visual(visual):
 #   |  Handling of popup for adding a visual element to a dashboard, etc.  |
 #   '----------------------------------------------------------------------'
 
+# TODO: Remove this code as soon as everything is moved over to pagetypes.py
 def ajax_popup_add():
     html.write("<ul>")
+    pagetypes.render_addto_popup()
 
-    first = True
     for visual_type_name, visual_type in visual_types.items():
         if "popup_add_handler" in visual_type:
             module_name = visual_type["module_name"]
             visual_module = __import__(module_name)
             handler = visual_module.__dict__[visual_type["popup_add_handler"]]
             visuals = handler()
-            cls = first and ' class="first"' or ''
-            first = False
-            html.write('<li%s><span>%s %s:</span></li>' % (cls, _('Add to'), visual_type["title"]))
+            html.write('<li><span>%s %s:</span></li>' % (_('Add to'), visual_type["title"]))
             for name, title in sorted(handler(), key=lambda x: x[1]):
                 html.write('<li><a href="javascript:void(0)" '
                            'onclick="add_to_visual(\'%s\', \'%s\')"><img src="images/icon_%s.png"> %s</a></li>' %

@@ -953,7 +953,7 @@ body.main .popup_menu span {
     margin-top: 8px;
 }
 
-body.main .popup_menu li.first span {
+body.main .popup_menu li:first-child span {
     margin-top: 0;
 }
 

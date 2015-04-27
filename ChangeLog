@@ -2,6 +2,9 @@
     Multisite:
     * 2233 FIX: Fixed WATO folder view and Host Tags search with HTML Entity encoding...
 
+    Notifications:
+    * 2243 FIX: Check_MK notifications don't fail anymore when duplicate hosts are configured
+
 
 1.2.6p2:
     Core & Setup:

@@ -5205,7 +5205,7 @@ def interactive_abort(error):
         sys.stderr.write(error + "\n")
         sys.exit(1)
 
-def read_config_files(with_autochecks=True, with_conf_d=True):
+def read_config_files(with_conf_d=True, validate_hosts=True):
     global vars_before_config, final_mk, local_mk, checks
 
     # Initialize dictionary-type default levels variables
@@ -5273,13 +5273,14 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
         hosttags[parts[0]] = parts[1:]
     all_hosts_untagged = all_active_hosts()
 
-    # Sanity check for duplicate hostnames
-    seen_hostnames = set([])
-    for hostname in strip_tags(all_hosts + clusters.keys()):
-        if hostname in seen_hostnames:
-            sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
-            sys.exit(3)
-        seen_hostnames.add(hostname)
+    if validate_hosts:
+        # Sanity check for duplicate hostnames
+        seen_hostnames = set([])
+        for hostname in strip_tags(all_hosts + clusters.keys()):
+            if hostname in seen_hostnames:
+                sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
+                sys.exit(3)
+            seen_hostnames.add(hostname)
 
     # Add WATO-configured explicit checks to (possibly empty) checks
     # statically defined in checks.
@@ -5689,15 +5690,15 @@ try:
             do_inv_check(a)
             done = True
         elif o == '--notify':
-            read_config_files(False, True)
+            read_config_files(with_conf_d=True, validate_hosts=False)
             sys.exit(do_notify(args))
         elif o == '--create-rrd':
-            read_config_files(False, True)
+            read_config_files(with_conf_d=True)
             execfile(modules_dir + "/rrd.py")
             do_create_rrd(args)
             done = True
         elif o == '--convert-rrds':
-            read_config_files(False, True)
+            read_config_files(with_conf_d=True)
             execfile(modules_dir + "/rrd.py")
             do_convert_rrds(args)
             done = True

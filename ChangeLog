@@ -1,4 +1,7 @@
 1.2.6p3:
+    Multisite:
+    * 2233 FIX: Fixed WATO folder view and Host Tags search with HTML Entity encoding...
+
 
 1.2.6p2:
     Core & Setup:

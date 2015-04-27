@@ -1,0 +1,11 @@
+Title: Fixed WATO folder view and Host Tags search with HTML Entity encoding
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p3
+Date: 1430120013
+Class: fix
+
+Fixed WATO folder view to show correct indent of folder structure again without
+escaping HTML Entities.
+Fixed Host Tags search to show correct operators without escaping HTML Entities.

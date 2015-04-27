@@ -88,7 +88,7 @@ class FilterWatoFile(Filter):
         else:
             title_prefix = ""
         self.path_to_tree[my_path] = folder["title"]
-        sel = [ (my_path , title_prefix + folder["title"]) ]
+        sel = [ (my_path , HTML(title_prefix + html.attrencode(folder["title"]))) ]
         sel += self.sublist(folder.get(".folders", {}), my_path, depth)
         return sel
 

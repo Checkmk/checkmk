@@ -744,7 +744,7 @@ function create_graph(data, params) {
         // needs to be extracted from "params", hack!
         var source = parseInt(getUrlParam('source', params));
 
-        // Add the control for adding the graph to a dashboard
+        // Add the control for adding the graph to a visual
         var visualadd = document.createElement('a');
         visualadd.title = data['add_txt'];
         visualadd.className = 'popup_trigger';

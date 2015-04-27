@@ -1121,11 +1121,10 @@ div.pnp_graph a.popup_trigger {
     display: block;
     width: 20px;
     height: 20px;
-    background-image: url(images/button_add_dashlet_lo.png);
+    background-image: url(images/button_menu_lo.png);
 }
 
 div.pnp_graph a.popup_trigger:hover {
-    background-image: url(images/button_add_dashlet_hi.png);
+    background-image: url(images/button_menu_hi.png);
     cursor: pointer;
 }
-

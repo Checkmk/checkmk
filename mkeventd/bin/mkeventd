@@ -1176,8 +1176,6 @@ class EventServer:
         builder.setMibSources(*[DirMibSource(g_compiled_mibs_dir)]
                                + list(builder.getMibSources()))
 
-        log(repr(list(builder.getMibSources())))
-
         # Indicate we wish to load DESCRIPTION and other texts from MIBs
         builder.loadTexts = True
 

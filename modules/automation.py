@@ -34,17 +34,17 @@ class MKAutomationError(Exception):
 def do_automation(cmd, args):
     try:
         if cmd == "get-configuration":
-            read_config_files(with_autochecks=False, with_conf_d=False)
+            read_config_files(with_conf_d=False)
             result = automation_get_configuration()
         elif cmd == "get-check-information":
             result = automation_get_check_information()
         elif cmd == "delete-host":
-            read_config_files(with_autochecks=False)
+            read_config_files()
             result = automation_delete_host(args)
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         elif cmd == "update-dns-cache":
-            read_config_files(with_autochecks=False)
+            read_config_files()
             result = automation_update_dns_cache()
         else:
             read_config_files()

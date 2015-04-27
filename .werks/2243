@@ -1,0 +1,10 @@
+Title: Check_MK notifications don't fail anymore when duplicate hosts are configured
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1430125860
+
+

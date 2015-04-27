@@ -23,6 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# force load of environment
+if [ -e $HOME/.profile ]
+then
+    . $HOME/.profile
+fi
+
 # Remove locale settings to eliminate localized outputs where possible
 export LC_ALL=C
 unset LANG
@@ -55,7 +61,7 @@ fi
 # Shell version of the waitmax utility, that limits the runtime of
 # commands. This version does not conserve the original exit code
 # of the command. It is successfull if the command terminated
-    # in time.
+# in time.
 function waitmax
 {
    TIMEOUT=${1}0
@@ -206,7 +212,7 @@ netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x];
 if type trd >/dev/null 2>&1
 then
   echo '<<<libelle_business_shadow:sep(58)>>>'
-  trd -s
+  $(which trd) -s
 fi
 
 
@@ -258,6 +264,3 @@ then
         echo "(${PLUGIN##*/}) $descr $? $OUTPUT"
     done
 fi
-
-
-

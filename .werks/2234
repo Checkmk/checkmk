@@ -1,0 +1,13 @@
+Title: AIX Agent: Forced load of environment and fixed call of trd (Libelle Business Shadow)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1430128713
+Class: fix
+
+Environment was not loaded if the agent was called from xinetd/remote. The environment
+is loaded every time if the agent is called.
+
+Libelle Business Shadow cannot be called without an absolute path. Now it is called
+with an absolute path.

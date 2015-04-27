@@ -559,9 +559,23 @@ class html:
         self.form_vars.append(varname)
 
     def sorted_select(self, varname, choices, deflt="", onchange=None, attrs = {}):
+        def sort_function(a, b):
+            aStr = bStr = ''
+
+            if isinstance(a[1], HTML):
+                aStr = a[1].value
+            else:
+                aStr = a[1]
+            if isinstance(b[1], HTML):
+                bStr = b[1].value
+            else:
+                bStr = b[1]
+
+            return cmp(aStr.lower(), bStr.lower())
+
         # Sort according to display texts, not keys
         sorted = choices[:]
-        sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
+        sorted.sort(sort_function)
         self.select(varname, sorted, deflt, onchange, attrs)
 
     # Choices is a list pairs of (key, title). They keys of the choices
@@ -572,15 +586,14 @@ class html:
         attrs.setdefault('size', 1)
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
 
-        self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" %
-                             (onchange_code, varname, varname, attributes))
+        self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" % (onchange_code, varname, varname, attributes))
         for value, text in choices:
             if value == None:
                 value = ""
-            sel = value == current and " selected" or ""
-            self.write("<option value=\"%s\"%s>%s</option>\n" %
+            sel = value == current and " SELECTED" or ""
+            self.write('<option value="%s"%s>%s</option>\n' %
                 (self.attrencode(value), sel, self.attrencode(text)))
-        self.write("</select>\n")
+        self.write('</select>\n')
         if varname:
             self.form_vars.append(varname)
 

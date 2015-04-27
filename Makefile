@@ -31,7 +31,7 @@ CONFDIR	       	= /etc/$(NAME)
 LIBDIR	       	= $(PREFIX)/lib/$(NAME)
 DISTNAME       	= $(NAME)-$(VERSION)
 TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ \
-		  --exclude=.gitignore --exclude=.*.swp --exclude=.f12
+		  --exclude=.gitignore --exclude=*.swp --exclude=.f12
 
 # File to pack into livestatus-$(VERSION).tar.gz
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \

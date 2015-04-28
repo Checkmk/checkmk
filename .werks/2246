@@ -1,0 +1,9 @@
+Title: Linux CPU Inventory: Fixed wrong number of CPUs when first CPU is not in first slot
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.6p3
+Date: 1430208490
+Class: fix
+
+

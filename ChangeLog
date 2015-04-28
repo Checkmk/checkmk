@@ -8,6 +8,9 @@
     Notifications:
     * 2243 FIX: Check_MK notifications don't fail anymore when duplicate hosts are configured
 
+    HW/SW-Inventory:
+    * 2246 FIX: Linux CPU Inventory: Fixed wrong number of CPUs when first CPU is not in first slot
+
 
 1.2.6p2:
     Core & Setup:

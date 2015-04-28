@@ -80,10 +80,18 @@ class Base:
     def add_instance(self, key, instance):
         self.__instances[key] = instance
 
+    @classmethod
+    def remove_instance(self, key):
+        del self.__instances[key]
+
     # Return a list of all instances of this type
     @classmethod
     def instances(self):
         return self.__instances.values()
+
+    @classmethod
+    def instance(self, key):
+        return self.__instances[key]
 
     # Return a dict of all instances of this type
     @classmethod
@@ -148,7 +156,7 @@ class PageRenderer:
         return "name"
 
     def topic(self):
-        return self._["topic"]
+        return self._.get("topic", _("Other"))
 
     # Helper functions for page handlers and render function
     def page_header(self):
@@ -250,7 +258,21 @@ class Overridable:
         elif self.is_mine():
             return True
         else:
-            return config.may('general.delete_foreign_%s' % type_name())
+            return config.may('general.delete_foreign_%s' % self.type_name())
+
+    def edit_url(self):
+        return "edit_%s.py?load_name=%s" % (self.type_name(), self.name())
+
+    def clone_url(self):
+        backurl = html.urlencode(html.makeuri([]))
+        return "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
+                    % (self.type_name(), self.owner(), self.name(), backurl)
+
+    def delete_url(self):
+        add_vars = [('_delete', self.name())]
+        if not self.is_mine():
+            add_vars.append(('_owner', self.owner()))
+        return html.makeactionuri(add_vars)
 
     @classmethod
     def declare_overriding_permissions(self):
@@ -293,7 +315,7 @@ class Overridable:
     def pages(self):
         self.load()
         pages = {}
-        
+
         # Builtin pages
         for page in self.instances():
             if page.is_public() and page.may_see() and page.is_builtin():
@@ -390,13 +412,16 @@ class Overridable:
                 self.declare_permission(instance)
 
     @classmethod
-    def save_user_pages(self):
+    def save_user_instances(self, owner=None):
+        if not owner:
+            owner = config.user_id
+
         save_dict = {}
         for page in self.instances():
-            if page.is_mine():
+            if page.owner() == owner:
                 save_dict[page.name()] = page.internal_representation()
 
-        config.save_user_file('user_%ss' % self.type_name(), save_dict)
+        config.save_user_file('user_%ss' % self.type_name(), save_dict, user=owner)
 
     @classmethod
     def add_page(self, new_page):
@@ -420,6 +445,8 @@ class Overridable:
 
     @classmethod
     def page_list(self):
+        self.load()
+
         # custom_columns = []
         # render_custom_buttons = None
         # render_custom_columns = None
@@ -430,7 +457,14 @@ class Overridable:
 
         html.header(self.type_title_plural(), stylesheets=["pages", "views", "status"])
         html.begin_context_buttons()
-        html.context_button(_('New'), 'create_%s.py' % self.type_name(), "new")
+        html.context_button(_('New'), 'create_%s.py' % self.type_name(), "new_" + self.type_name())
+
+        # TODO: Remove this legacy code as soon as views, dashboards and reports have been
+        # moved to pagetypes.py
+        html.context_button(_("Views"), "edit_views.py", "view")
+        html.context_button(_("Dashboards"), "edit_dashboards.py", "dashboard")
+        html.context_button(_("Reports"), "edit_reports.py", "report")
+
         ### if render_custom_context_buttons:
         ###     render_custom_context_buttons()
         ### for other_what, info in visual_types.items():
@@ -439,20 +473,58 @@ class Overridable:
         ### html.end_context_buttons()
         html.end_context_buttons()
 
-        custom_pages  = []
-        builtin_pages = []
-        for page in self.pages_sorted():
-            if page.may_see():
-                if page.is_builtin():
-                    builtin_pages.append(page)
-                else:
-                    custom_pages.append(page)
+        # Deletion
+        delname  = html.var("_delete")
+        if delname and html.transaction_valid():
+            owner = html.var('_owner', config.user_id)
+            if owner != config.user_id:
+                self.need_overriding_permission("delete_foreign")
 
-        for title, pages in [ (_('Customized'), custom_pages), (_('Builtin'), builtin_pages) ]:
+            instance = self.instance((owner, delname))
+
+            try:
+                if owner != config.user_id:
+                    owned_by = _(" (owned by %s)") % owner
+                else:
+                    owned_by = ""
+                c = html.confirm(_("Please confirm the deletion of \"%s\"%s.") % (
+                  instance.title(), owned_by))
+                if c:
+                    self.remove_instance((owner, delname))
+                    self.save_user_instances(owner)
+                    html.reload_sidebar()
+                elif c == False:
+                    html.footer()
+                    return
+            except MKUserError, e:
+                html.write("<div class=error>%s</div>\n" % e.message)
+                html.add_user_error(e.varname, e.message)
+
+
+        my_instances  = []
+        foreign_instances  = []
+        builtin_instances = []
+        for instance in self.instances_sorted():
+            if instance.may_see():
+                if instance.is_builtin():
+                    builtin_instances.append(instance)
+                elif instance.is_mine():
+                    my_instances.append(instance)
+                else:
+                    foreign_instances.append(instance)
+
+        for title, instances in [
+            (_('Customized'),           my_instances),
+            (_('Owned by other users'), foreign_instances),
+            (_('Builtin'),              builtin_instances),
+        ]:
+            if not instances:
+                continue
+
             html.write('<h3>' + title + '</h3>')
 
             table.begin(limit = None)
-            for page in pages:
+            for instance in instances:
                 table.row()
 
                 # Actions
@@ -460,90 +532,55 @@ class Overridable:
 
                 # Clone / Customize
                 buttontext = _("Create a customized copy of this")
-                backurl = html.urlencode(html.makeuri([]))
-                clone_url = "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
-                            % (self.type_name(), page.owner(), page.name(), backurl)
-                html.icon_button(clone_url, buttontext, "clone")
+                html.icon_button(instance.clone_url(), buttontext, "new_" + self.type_name())
 
                 # Delete
-                if page.may_delete():
-                    add_vars = [('_delete', visual_name)]
-                    if owner != config.user_id:
-                        add_vars.append(('_user_id', owner))
-                    html.icon_button(html.makeactionuri(add_vars), _("Delete!"), "delete")
+                if instance.may_delete():
+                    html.icon_button(instance.delete_url(), _("Delete!"), "delete")
 
                 # Edit
-                if page.is_mine():
-                    html.icon_button("edit_%s.py?load_name=%s" % (what_s, visual_name), _("Edit"), "edit")
+                # TODO: Reihenfolge der Aktionen. Ist nicht delete immer nach edit? Sollte
+                # nicht clone und edit am gleichen Platz sein?
+                if instance.is_mine():
+                    html.icon_button(instance.edit_url(), _("Edit"), "edit")
 
                 ### # Custom buttons - visual specific
                 ### if render_custom_buttons:
                 ###     render_custom_buttons(visual_name, visual)
 
-                # Internal ID of page (we call that 'name')
-                table.cell(_('ID'), page.name())
+                # Internal ID of instance (we call that 'name')
+                table.cell(_('ID'), instance.name())
 
                 # Title
                 table.cell(_('Title'))
-                title = _u(page.title())
-                if not page.is_hidden():
+                title = _u(instance.title())
+                if not instance.is_hidden():
                     html.write("<a href=\"%s.py?%s=%s\">%s</a>" %
-                        (self.type_name(), self.ident_attr(), page.name(), html.attrencode(page.title())))
+                        (self.type_name(), self.ident_attr(), instance.name(), html.attrencode(instance.title())))
                 else:
-                    html.write(html.attrencode(page.title()))
-                html.help(html.attrencode(_u(page.description())))
+                    html.write(html.attrencode(instance.title()))
+                html.help(html.attrencode(_u(instance.description())))
 
                 # Custom columns
                 ### for title, renderer in custom_columns:
                 ###     table.cell(title, renderer(visual))
 
                 # Owner
-                if page.is_builtin():
+                if instance.is_builtin():
                     ownertxt = "<i>" + _("builtin") + "</i>"
                 else:
-                    ownertxt = page.owner()
+                    ownertxt = instance.owner()
                 table.cell(_('Owner'), ownertxt)
-                table.cell(_('Public'), page.is_public() and _("yes") or _("no"))
-                table.cell(_('Hidden'), page.is_hidden() and _("yes") or _("no"))
+                table.cell(_('Public'), instance.is_public() and _("yes") or _("no"))
+                table.cell(_('Hidden'), instance.is_hidden() and _("yes") or _("no"))
 
                 # TODO: Haeeh? Another custom columns
                 ### if render_custom_columns:
                 ###     render_custom_columns(visual_name, visual)
             table.end()
 
-        html.debug(custom_pages)
-        html.debug(builtin_pages)
         html.footer()
         return
-
-        ### # Deletion of visuals
-        ### delname  = html.var("_delete")
-        ### if delname and html.transaction_valid():
-        ###     if config.may('general.delete_foreign_%s' % what):
-        ###         user_id = html.var('_user_id', config.user_id)
-        ###     else:
-        ###         user_id = config.user_id
-
-        ###     deltitle = visuals[(user_id, delname)]['title']
-
-        ###     try:
-        ###         if check_deletable_handler:
-        ###             check_deletable_handler(visuals, delname)
-
-        ###         c = html.confirm(_("Please confirm the deletion of \"%s\".") % deltitle)
-        ###         if c:
-        ###             del visuals[(user_id, delname)]
-        ###             save(what, visuals)
-        ###             html.reload_sidebar()
-        ###         elif c == False:
-        ###             html.footer()
-        ###             return
-        ###     except MKUserError, e:
-        ###         html.write("<div class=error>%s</div>\n" % e.message)
-        ###         html.add_user_error(e.varname, e.message)
-
-
-        html.footer()
 
     # Page for editing an existing page, or creating a new one
     @classmethod
@@ -576,6 +613,8 @@ class Container(Overridable):
     def add_element(self, element):
         self._.setdefault("elements", []).append(element)
 
+    def is_empty(self):
+        return not self.elements()
 
     # The popup for "Add to ...", e.g. for adding a graph to a report
     # or dashboard. This is needed for page types with the aspect "ElementContainer".
@@ -586,7 +625,7 @@ class Container(Overridable):
             html.write('<li><span>%s:</span></li>' % self.type_add_to_title())
             for page in pages:
                 html.write('<li><a href="javascript:void(0)" '
-                           'onclick="pagetype_add_to_container(\'%s\', \'%s\')"><img src="images/icon_%s.png"> %s</a></li>' %
+                           'onclick="pagetype_add_to_container(\'%s\', \'%s\'); reload_sidebar();"><img src="images/icon_%s.png"> %s</a></li>' %
                            (self.type_name(), page.name(), self.type_name(), page.title()))
 
 
@@ -603,24 +642,28 @@ class Container(Overridable):
         create_info    = json.loads(html.var("create_info"))
 
         page_type = page_types[page_type_name]
-        target_page = page_type.add_element_via_popup(page_name, element_type, create_info)
+        target_page, need_sidebar_reload = page_type.add_element_via_popup(page_name, element_type, create_info)
         if target_page:
             # Redirect user to that page
             html.write(target_page.page_url())
+        html.write("\n%s" % (need_sidebar_reload and "true" or "false"))
 
 
     # Default implementation for generic containers - used e.g. by GraphCollection
     @classmethod
     def add_element_via_popup(self, page_name, element_type, create_info):
         self.need_overriding_permission("edit")
-            
+
+        need_sidebar_reload = False
         page = self.find_page(page_name)
         if not page.is_mine():
             page = page.clone()
+            if isinstance(page, PageRenderer) and not page.is_hidden():
+                need_sidebar_reload
 
         page.add_element(create_info) # can be overridden
-        self.save_user_pages()
-        return page
+        self.save_user_instances()
+        return page, need_sidebar_reload
 
 
 #.
@@ -642,6 +685,12 @@ def declare(page_type):
     page_type.declare_overriding_permissions()
     page_types[page_type.type_name()] = page_type
 
+def page_type(page_type_name):
+    return page_types[page_type_name]
+
+def has_page_type(page_type_name):
+    return page_type_name in page_types
+
 
 # Global module functions for the integration into the rest of the code
 
@@ -651,7 +700,7 @@ def page_handlers():
     page_handlers = {}
     for page_type in page_types.values():
         page_handlers.update(page_type.page_handlers())
-    
+
     # Ajax handler for adding elements to a container
     # TODO: Shouldn't we move that declaration into the class?
     page_handlers["ajax_pagetype_add_element"] = lambda: Container.ajax_add_element()

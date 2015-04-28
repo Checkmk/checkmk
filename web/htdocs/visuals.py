@@ -267,6 +267,9 @@ def page_list(what, title, visuals, custom_columns = [],
     for other_what, info in visual_types.items():
         if what != other_what:
             html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what, other_what[:-1])
+    # TODO: We hack in those visuals that already have been moved to pagetypes here
+    html.context_button(_("Graph collections"), "graph_collections.py", "graph_collection")
+
     html.end_context_buttons()
 
     # Deletion of visuals

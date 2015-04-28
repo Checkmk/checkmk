@@ -1610,8 +1610,8 @@ multisite_builtin_views.update({
                            ('site_host', False),
                            ('svcdescr', False)
                           ],
-               'title': _('Search Graphs'),
-               'topic': _('Addons')},
+               'title': _('Search Time Graphs'),
+               'topic': _('Metrics')},
  'hostpnp': {'browser_reload': 90,
              'column_headers': 'off',
              'datasource': 'services',

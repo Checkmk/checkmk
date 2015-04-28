@@ -69,7 +69,7 @@ sidebar_snapins["about"] = {
 
 def visuals_by_topic(permitted_visuals,
         default_order = [ _("Overview"), _("Hosts"), _("Host Groups"), _("Services"), _("Service Groups"),
-                         _("Business Intelligence"), _("Problems"), _("Addons") ]):
+                         _("Metrics"), _("Business Intelligence"), _("Problems"), ]):
     s = [ (_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name, 'painters' in visual)
           for name, visual
           in permitted_visuals
@@ -108,6 +108,13 @@ def render_views():
                     bulletlink(title, "view.py?view_name=%s" % name, onclick = "return wato_views_clicked(this)")
                 else:
                     bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
+
+        # TODO: One day pagestypes should handle the complete snapin.
+        if pagetypes.has_page_type("graph_collection"):
+            for t, title, url in pagetypes.page_type("graph_collection").sidebar_links():
+                if t == topic:
+                    bulletlink(title, url)
+
         if not first: # at least one item rendered
             html.end_foldable_container()
 

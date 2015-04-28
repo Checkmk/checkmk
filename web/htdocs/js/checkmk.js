@@ -2509,10 +2509,16 @@ function pagetype_add_to_container(page_type, page_name)
                            + '&create_info='  + encodeURIComponent(create_info_json));
     popup_data = null;
 
-    // After adding an element, the page type might want us to send to the
-    // container
-    if (response)
-        window.location.href = response;
+    // We get to lines of response. The first is an URL we should be
+    // redirected to. The second is "true" if we should reload the
+    // sidebar.
+    if (response) {
+        var parts = response.split('\n');
+        if (parts[1] == "true")
+            reload_sidebar();
+        if (parts[0])
+            window.location.href = parts[0];
+    }
 }
 
 //#.

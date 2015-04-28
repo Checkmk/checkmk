@@ -57,12 +57,12 @@ def ibm_svc_mdiskgrp_to_mb(size):
 
 def inventory_ibm_svc_mdiskgrp(info):
     for line in info:
-        if len(line) in (15, 19, 24, 25):
+        if len(line) > 10:
             yield line[1], {}
 
 def check_ibm_svc_mdiskgrp(item, params, info):
     for line in info:
-        if len(line) in (15, 19, 24, 25) and item == line[1]:
+        if len(line) > 10 and item == line[1]:
             mgrp_status = line[2]
 
             if mgrp_status != "online":

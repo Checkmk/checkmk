@@ -467,6 +467,7 @@
     * 1956 FIX: WATO Web-API: Fixed exception information for single sites...
     * 2178 FIX: Fixed handling of user erros in WATO when using Python < 2.5
     * 2203 FIX: Fix sorting of unselected elements in a list choice with two panes
+    * 2244 FIX: Fixed sorting of host tag topics in dropdown selections
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

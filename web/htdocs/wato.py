@@ -13020,6 +13020,7 @@ def mode_edit_auxtag(phase):
         explicit = TextUnicode(),
         otherlabel = _("Create New Topic"),
         default_value = None,
+        sorted = True
     )
 
     if phase == "action":
@@ -13146,6 +13147,7 @@ def mode_edit_hosttag(phase):
         explicit = TextUnicode(),
         otherlabel = _("Create New Topic"),
         default_value = None,
+        sorted = True
     )
 
     vs_choices = ListOf(

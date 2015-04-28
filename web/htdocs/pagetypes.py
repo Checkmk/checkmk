@@ -204,6 +204,12 @@ class PageRenderer:
 #   |  Examples: views, dashboards, graphs collections                     |
 #   '----------------------------------------------------------------------'
 class Overridable:
+    def page_header(self):
+        header = self.type_title() + " - " + self.title()
+        if not self.is_mine():
+            header += " (%s)" % self.owner()
+        return header
+
     # Checks wether a page is publicly visible. This does not only need a flag
     # in the page itself, but also the permission from its owner to publish it.
     def is_public(self):
@@ -351,6 +357,8 @@ class Overridable:
         foreign = None
 
         for page in self.instances():
+            if page.name() != name:
+                continue
 
             if page.is_mine() and config.may("general.edit_" + self.type_name()):
                 mine = page
@@ -613,6 +621,11 @@ class Container(Overridable):
     def add_element(self, element):
         self._.setdefault("elements", []).append(element)
 
+    def move_element(self, nr, whither):
+        el = self._["elements"][nr]
+        del self._["elements"][nr]
+        self._["elements"][whither:whither] = [ el ]
+
     def is_empty(self):
         return not self.elements()
 
@@ -659,11 +672,13 @@ class Container(Overridable):
         if not page.is_mine():
             page = page.clone()
             if isinstance(page, PageRenderer) and not page.is_hidden():
-                need_sidebar_reload
+                need_sidebar_reload = True
 
         page.add_element(create_info) # can be overridden
         self.save_user_instances()
-        return page, need_sidebar_reload
+        return None, need_sidebar_reload
+        # With a redirect directly to the page afterwards do it like this:
+        # return page, need_sidebar_reload
 
 
 #.

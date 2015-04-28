@@ -216,6 +216,10 @@ then
 fi
 
 
+echo '<<<uptime>>>'
+uptime | awk '{print $3,$5}' | tr ":" " " | sed 's/,//' | awk '{a=86400*int($1)+3600*int($2)+60*int($3);printf("%d\n",a)}'
+
+
 if cd $PLUGINSDIR 2>/dev/null
 then
     for skript in $(ls)

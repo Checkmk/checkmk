@@ -2560,7 +2560,7 @@ void section_mem(SOCKET &out)
 // '-----------------------------------------------------------------------'
 
 void output_fileinfos(SOCKET &out, const char *path);
-void output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data);
+bool output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data);
 
 void section_fileinfo(SOCKET &out)
 {
@@ -2577,6 +2577,8 @@ void output_fileinfos(SOCKET &out, const char *path)
 {
     WIN32_FIND_DATA data;
     HANDLE h = FindFirstFileEx(path, FindExInfoStandard, &data, FindExSearchNameMatch, NULL, 0);
+    bool found_file = false;
+
     if (h != INVALID_HANDLE_VALUE) {
         // compute basename of path: search backwards for '\'
         const char *basename = "";
@@ -2585,12 +2587,15 @@ void output_fileinfos(SOCKET &out, const char *path)
             *end = 0;
             basename = path;
         }
-        output_fileinfo(out, basename, &data);
+        found_file = output_fileinfo(out, basename, &data);
         while (FindNextFile(h, &data))
-            output_fileinfo(out, basename, &data);
+            found_file = output_fileinfo(out, basename, &data) || found_file;
         if (end)
             *end = '\\'; // repair string
         FindClose(h);
+
+        if (!found_file)
+            output(out, "%s|missing|%d\n", path, current_time());
     }
     else {
         DWORD e = GetLastError();
@@ -2599,7 +2604,7 @@ void output_fileinfos(SOCKET &out, const char *path)
 }
 
 
-void output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data)
+bool output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data)
 {
     unsigned long long size = (unsigned long long)data->nFileSizeLow
         + (((unsigned long long)data->nFileSizeHigh) << 32);
@@ -2607,7 +2612,9 @@ void output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data)
     if (0 == (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
         output(out, "%s\\%s|%llu|%.0f\n", basename,
                 data->cFileName, size, file_time(&data->ftLastWriteTime));
+        return true;
     }
+    return false;
 }
 
 

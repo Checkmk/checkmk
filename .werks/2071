@@ -1,0 +1,12 @@
+Title: windows agent: fileinfo check now correctly reports empty directories
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1430210905
+
+The fileinfo check did not report any data in case the directory
+in question exists but did not contain any files.
+

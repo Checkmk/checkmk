@@ -50,11 +50,15 @@ try:
     # Revision (from build_version)
     revision  = sys.argv[3]
 
-    # Official version name, e.g 1.2.5i4p1
-    new_version_name  = sys.argv[4]
+    # Official version name, e.g
+    # 1.2.5i4p1
+    # 2015.04.12
+    # 1.2.6-2015.04.12
+    new_version_name = sys.argv[4]
     major, minor, build = 1, 0, 0
     try:
-        major, minor, build = map(lambda x: x.lstrip("0"), new_version_name.split(".")[:3])
+        major, minor, build = map(lambda x: x.lstrip("0"),
+                                  new_version_name.split("-")[0].split(".")[:3])
         if len(major) > 3:
             # Looks like a daily build.. 2015.03.05
             major = major[2:].lstrip("0")

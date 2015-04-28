@@ -60,33 +60,44 @@ def check_netapp_api_disk_summary(_no_item, params, info):
     my_disks = dict([disk for disk in disks.items() if not disk[1].get("raid-state") == "partner"])
 
     spare_count  = 0
-    prefailed_disks = []
-    broken_disks    = []
+    data_disks   = []
+    parity_disks = []
+    broken_disks = []
+    prefailed_data_disks   = []
+    prefailed_parity_disks = []
     raid_states     = {}
 
-    phys_space = 0
-    total_space  = 0
+    phys_space  = 0
+    total_space = 0
 
     for name, disk in my_disks.items():
-        if disk.get("raid-state") == "partner":
-            continue # Disk belongs to partner
-
         total_space  += int(disk.get("used-space"))
+        raid_type = disk.get("raid-type")
 
         if disk.get("raid-state", "") == "broken":
             broken_disks.append(disk)
-        elif disk.get("is-prefailed", "false") != "false":
-            prefailed_disks.append(disk)
+        elif disk.get("is-prefailed", "false") not in [ "false", "None" ]:
+            if raid_type in ["parity", "dparity"]:
+                prefailed_parity_disks.append(disk)
+            elif raid_type == "data":
+                prefailed_data_disks.append(disk)
         elif disk.get("raid-state","") == "spare":
             spare_count += 1
-        if disk.get("raid-type"):
-            raid_states.setdefault(disk["raid-type"], 0)
-            raid_states[disk["raid-type"]] += 1
+
+        if raid_type in ["parity", "dparity"]:
+            parity_disks.append(disk)
+        elif raid_type in ["data"]:
+            data_disks.append(disk)
 
     yield 0, "Total Raw Capacity: %s" % get_bytes_human_readable(total_space), [("total_space", total_space)]
-    yield 0, "Disks Total: %s Spare: %s" % (len(my_disks), spare_count), [ ("total", len(my_disks)),
-                                                                           ("spare", spare_count),
-                                                                           ("broken", len(broken_disks)) ]
+    yield 0, "Total disks: %d (%d Spare)"      % (len(my_disks) - len(broken_disks), spare_count), [
+                                                        ("total", len(my_disks)),
+                                                        ("spare", spare_count),
+                                                        ("broken", len(broken_disks)) ]
+
+    yield 0, "Data disks: %d (%d prefailed)"   % (len(data_disks),   len(prefailed_data_disks))
+    yield 0, "Parity disks: %d (%d prefailed)" % (len(parity_disks), len(prefailed_parity_disks))
+    yield 0, "Broken disks: %d" % len(broken_disks)
 
 
     disk_to_shelf_map = {}
@@ -98,8 +109,9 @@ def check_netapp_api_disk_summary(_no_item, params, info):
                     disk_to_shelf_map[disk] = shelf
         return disk_to_shelf_map.get(disk_uid)
 
-    for text, disks, state in [("Prefailed", prefailed_disks, 0),
-                               ("Broken"   , broken_disks,    0)]:
+    for text, disks, state in [("Data-Prefailed",   prefailed_data_disks, 0),
+                               ("Parity-Prefailed", prefailed_parity_disks, 0),
+                               ("Broken",           broken_disks,    0)]:
         info = []
         for disk in disks:
             disk_info = "Serial: %s" % disk.get("serial-number")
@@ -109,9 +121,7 @@ def check_netapp_api_disk_summary(_no_item, params, info):
             info.append(disk_info)
 
         if info:
-            yield state, "%s: %s - %s" % (text, len(disks), " / ".join(info))
-        else:
-            yield 0, "%s: %s" % (text, len(disks))
+            yield state, "%s Disk Details: %s" % (text, " / ".join(info))
 
     if broken_disks:
         warn, crit  = params.get("broken_spare_ratio", (1.0, 50.0))

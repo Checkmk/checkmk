@@ -1,0 +1,15 @@
+Title: agent_netapp, netapp_api_volumes, netapp_api_disks: Improved check output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p3
+Date: 1430232561
+Class: fix
+
+netapp_api_volumes:<br>
+fixed misleading warning for offline volumes, now also reports inode information
+
+
+netapp_api_disks:<br>
+reformatted check output, fixed incorrect disk numbers, data and parity disk now have a separate prefailed information.
+

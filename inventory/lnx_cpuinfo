@@ -58,7 +58,7 @@
 def inv_lnx_cpuinfo(info):
     node = inv_tree("hardware.cpu.")
     num_threads_total = 0
-    num_sockets = 0
+    sockets = set([])
     for varname, value in info:
         if varname == "cpu cores":
             node["cores_per_cpu"] = int(value)
@@ -80,12 +80,14 @@ def inv_lnx_cpuinfo(info):
         elif varname == "processor":
             num_threads_total = int(value) + 1
         elif varname == "physical id":
-            num_sockets = int(value) + 1
+            sockets.add(int(value))
         elif varname == "flags":
             if re.search(" lm ", value):
                 node["arch"] = "x86_64"
             else:
                 node["arch"] = "i386"
+
+    num_sockets = len(sockets)
 
     if num_threads_total:
         node.setdefault("cores_per_cpu", 1)

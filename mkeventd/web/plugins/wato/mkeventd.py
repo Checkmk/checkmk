@@ -1894,8 +1894,6 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-
-
     register_configvar(group,
         "retention_interval",
         Age(title = _("State Retention Interval"),
@@ -2076,6 +2074,18 @@ if mkeventd_enabled:
             label = "max.",
             unit = _("pending connections"),
         ),
+        domain = "mkeventd",
+    )
+
+    register_configvar(group,
+        "translate_snmptraps",
+        Checkbox(title = _("Translate SNMP traps"),
+                 label = _("Use the available SNMP MIBs to translate contents of the SNMP traps"),
+                 help = _("When this option is enabled all available SNMP MIB files will be used "
+                          "to translate the incoming SNMP traps. Information which can not be "
+                          "translated, e.g. because a MIB is missing, are written untouched to "
+                          "the event message."),
+                 default_value = False),
         domain = "mkeventd",
     )
 

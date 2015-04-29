@@ -1,0 +1,11 @@
+Title: check_mk_agent: fixed formatting error for windows eventlog entries > 2048 characters
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1430318451
+
+The windows agent was unable to display eventlog entries when the character count of such an entry exceeded 2048.
+In this case the agent only reported a subset of the information, namely the strings which are filled into the placeholders of the larger message.

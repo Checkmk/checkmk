@@ -412,6 +412,14 @@ class html:
                    'onmouseout=\"hilite_icon(this, 0)\">'
                    '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon))
 
+    def render_icon_button(self, *args, **kwargs):
+        self.plug()
+        self.icon_button(*args, **kwargs)
+        code = self.drain()
+        self.unplug()
+        return code
+
+
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">')
 

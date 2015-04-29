@@ -1052,7 +1052,7 @@ void grow_eventlog_buffer(int newsize)
 bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, char type_char,
         const char *logname, const char *source_name, WCHAR **strings)
 {
-    char msgbuffer[2048];
+    char msgbuffer[8192];
     char dll_realpath[128];
     HINSTANCE dll;
 
@@ -1082,7 +1082,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     else
         dll = NULL;
 
-    WCHAR wmsgbuffer[2048];
+    WCHAR wmsgbuffer[8192];
     DWORD dwFlags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
     if (dll)
         dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
@@ -1098,7 +1098,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
         0, // accept any language
         wmsgbuffer,
         // msgbuffer,
-        2048,
+        8192,
         (char **)strings
     );
     crash_log("Formatting Message - DONE");

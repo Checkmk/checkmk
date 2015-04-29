@@ -50,6 +50,9 @@ def edit_dictionary(entries, value, **args):
 # Edit a list of several dictionaries. Those can either be dictionary
 # valuespec or just a list of elements. Each entry in dictionaries is
 # a pair of key and either a list of elements or a Dictionary.
+# TODO: As soon as the reports have been migrated to pagetypes.py
+# we can drop edit_dictionaries()? At least the function for editing
+# several dictionaries at once.
 def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                     validate=None, buttontext=None, title=None,
                     buttons = None, method="GET", preview=False,
@@ -82,7 +85,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                         vs.validate_value(v, keyname + "_" + varprefix + name)
                         new_value[keyname][name] = v
                     except MKUserError, e:
-                        messages.append("%s: %s" % (title, e.message))
+                        messages.append("%s: %s" % (vs.title(), e.message))
                         html.add_user_error(e.varname, e.message)
 
             else:
@@ -146,6 +149,46 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         html.button("save", buttontext)
     html.del_var("filled_in") # Should be ignored be hidden_fields, but I do not dare to change it there
     html.hidden_fields()
+    html.end_form()
+
+# Similar but for editing an arbitrary valuespec
+def edit_valuespec(vs, value, buttontext=None, method="GET", varprefix="",
+                   validate=None, formname="form", consume_transid = True, focus=None):
+
+    if html.var("filled_in") == formname and html.transaction_valid():
+        if consume_transid:
+            html.check_transaction()
+
+        messages = []
+        try:
+            new_value = vs.from_html_vars(varprefix)
+            vs.validate_value(new_value, varprefix)
+
+        except MKUserError, e:
+            messages.append("%s: %s" % (vs.title(), e.message))
+            html.add_user_error(e.varname, e.message)
+
+        if validate and not html.has_user_errors():
+            try:
+                validate(new_value)
+            except MKUserError, e:
+                messages.append(e.message)
+                html.add_user_error(e.varname, e.message)
+
+        if messages:
+            html.show_error("".join(["%s<br>\n" % m for m in messages]))
+        else:
+            return new_value
+
+    html.begin_form(formname, method=method)
+    html.help(vs.help())
+    vs.render_input(varprefix, value)
+    if buttontext == None:
+        buttontext = _("Save")
+    html.button("save", buttontext)
+    html.del_var("filled_in") # Should be ignored be hidden_fields, but I do not dare to change it there
+    html.hidden_fields()
+    vs.set_focus(varprefix)
     html.end_form()
 
 # New functions for painting forms

@@ -25,8 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-import config, table
+import config, table, forms, inspect
 from lib import *
+from valuespec import *
+
 try:
     import simplejson as json
 except ImportError:
@@ -52,8 +54,88 @@ class Base:
         # and saved to files using repr().
         self._ = d
 
+        # Now give all subclasses that chance to add mandatory keys
+        # if they are missing
+        for clazz in inspect.getmro(self.__class__)[::-1]:
+            if "sanitize" in clazz.__dict__:
+                clazz.sanitize(d)
+
     def internal_representation(self):
         return self._
+
+    # You always must override the following method. Not all phrases
+    # might be neccessary depending on the type of you page.
+    # Possible phrases:
+    # "title"        : Title of one instance
+    # "title_plural" : Title in plural
+    # "add_to"       : Text like "Add to foo bar..."
+    # TODO: Look at GraphCollection for the complete list of phrases to
+    # be defined for each page type and explain that here.
+    @classmethod
+    def phrase(self, phrase):
+        return _("MISSING '%s'") % phrase
+
+    # Implement this function in a subclass in order to add parameters
+    # to be editable by the user when editing the details of such page
+    # type. Note: This method does *not* use overriding, but all methods
+    # of this name will be called in all inherited classes and concatenated.
+    # Note:
+    # - self is the original class, e.g. PageRenderer
+    # - clazz is the derived class, e.g. GraphCollection
+    # Returns a list of entries.
+    # Each entry is a pair of a topic and a list of elements.
+    # Each element is a triple of order, key and valuespec
+    # TODO: Add topic here
+    @classmethod
+    def parameters(self, clazz):
+        return [ ( _("General Properties"), [
+            ( 1.1, 'name', ID(
+                title = _('Unique ID'),
+                help = _("The ID will be used do identify this page in URLs. If this page has the "
+                         "same ID as a builtin page of the type <i>%s</i> then it will shadow the builtin one.") % self.phrase("title"),
+            )),
+            ( 1.2, 'title', TextUnicode(
+                title = _('Title') + '<sup>*</sup>',
+                size = 50,
+                allow_empty = False,
+            )),
+            ( 1.3, 'description', TextAreaUnicode(
+                title = _('Description') + '<sup>*</sup>',
+                help = _("The description is optional and can be used for explainations or documentation"),
+                rows = 4,
+                cols = 50,
+            )),
+        ])]
+
+    # Do *not* override this. It collects all editable parameters of our
+    # page type by calling parameters() for each class
+    @classmethod
+    def collect_parameters(self):
+        topics = {}
+        for clazz in inspect.getmro(self)[::-1]:
+            if "parameters" in clazz.__dict__:
+                for topic, elements in clazz.parameters(self):
+                    el = topics.setdefault(topic, [])
+                    el += elements
+
+        # Sort topics and elements in the topics
+        for topic in topics.values():
+            topic.sort()
+
+        sorted_topics = topics.items()
+        sorted_topics.sort(cmp = lambda t1, t2: cmp(t1[1][0], t2[1][0]))
+
+        # Now remove order numbers. Also drop the topic completely
+        # for the while
+        # TODO: Reenable topic as soon as we have the first page type
+        # with more than one topic
+        parameters = []
+        for topic, elements in sorted_topics:
+            for order, key, vs in elements:
+                parameters.append((key, vs))
+
+        return parameters
+
 
     # Object methods that *can* be overridden - for cases where
     # that pages in question of a dictionary format that is not
@@ -66,6 +148,28 @@ class Base:
 
     def description(self):
         return self._.get("description", "")
+
+    # Default values for the creation dialog can be overridden by the
+    # sub class.
+    @classmethod
+    def default_name(self):
+        stem = self.type_name()
+        nr = 1
+        while True:
+            name = "%s_%d" % (stem, nr)
+            conflict = False
+            for instance in self.__instances.values():
+                if instance.name() == name:
+                    conflict = True
+                    break
+            if not conflict:
+                return name
+            else:
+                nr += 1
+
+    @classmethod
+    def default_topic(self):
+        return _("Other")
 
     # Store for all instances of this page type. The key into
     # this dictionary????
@@ -160,10 +264,26 @@ class PageRenderer:
 
     # Helper functions for page handlers and render function
     def page_header(self):
-        return self.type_title() + " - " + self.title()
+        return self.phrase("title") + " - " + self.title()
 
     def page_url(self):
         return html.makeuri_contextless([(self.ident_attr(), self.name())], filename = "%s.py" % self.type_name())
+
+    # Parameters special for pgge renderers. These can be added to the sidebar,
+    # so we need a topic and a checkbox for the visibility
+    @classmethod
+    def parameters(self, clazz):
+        return [(_("General Properties"), [
+            ( 1.4, 'topic', TextUnicode(
+                title = _('Topic') + '<sup>*</sup>',
+                size = 50,
+                allow_empty = False,
+            )),
+            ( 2.0, 'hidden', Checkbox(
+                title = _("Sidebar integration"),
+                label = _('Do not add a link to this page in sidebar'),
+            )),
+        ])]
 
 
     # Define page handlers for the neccessary pages like listing all pages, editing
@@ -185,7 +305,7 @@ class PageRenderer:
         page = self.find_page(name)
         if not page:
             raise MKGeneralException(_("Cannot find %s with the name %s") % (
-                        self.type_title(), name))
+                        self.phrase("title"), name))
         page.render()
 
 
@@ -203,9 +323,22 @@ class PageRenderer:
 #   |  editing and where the user might also create complete new types.    |
 #   |  Examples: views, dashboards, graphs collections                     |
 #   '----------------------------------------------------------------------'
+
 class Overridable:
+    @classmethod
+    def parameters(self, clazz):
+        if clazz.has_overriding_permission("publish"):
+            return [( _("General Properties"), [
+                ( 2.2, 'public', Checkbox(
+                    title = _("Visbility"),
+                    label = _('Make available for all users')
+                )),
+            ])]
+        else:
+            return []
+
     def page_header(self):
-        header = self.type_title() + " - " + self.title()
+        header = self.phrase("title") + " - " + self.title()
         if not self.is_mine():
             header += " (%s)" % self.owner()
         return header
@@ -271,7 +404,7 @@ class Overridable:
 
     def clone_url(self):
         backurl = html.urlencode(html.makeuri([]))
-        return "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
+        return "edit_%s.py?load_user=%s&load_name=%s&mode=clone&back=%s" \
                     % (self.type_name(), self.owner(), self.name(), backurl)
 
     def delete_url(self):
@@ -281,39 +414,58 @@ class Overridable:
         return html.makeactionuri(add_vars)
 
     @classmethod
+    def create_url(self):
+        return "edit_%s.py?mode=create" % self.type_name()
+
+    @classmethod
+    def list_url(self):
+        return "%ss.py" % self.type_name()
+
+    @classmethod
+    def context_button_list(self):
+        html.context_button(self.phrase("title_plural"), self.list_url(), self.type_name())
+
+    def context_button_edit(self):
+        html.context_button(_("Edit"), self.edit_url(), "edit")
+
+
+    @classmethod
     def declare_overriding_permissions(self):
         config.declare_permission("general.edit_" + self.type_name(),
-             _("Customize %s and use them") % self.type_title_plural(),
-             _("Allows to create own %s, customize builtin %s and use them.") % (self.type_title_plural(), self.type_title_plural()),
+             _("Customize %s and use them") % self.phrase("title_plural"),
+             _("Allows to create own %s, customize builtin %s and use them.") % (self.phrase("title_plural"), self.phrase("title_plural")),
              [ "admin", "user" ])
 
         config.declare_permission("general.publish_" + self.type_name(),
-             _("Publish %s") % self.type_title_plural(),
-             _("Make %s visible and usable for other users.") % self.type_title_plural(),
+             _("Publish %s") % self.phrase("title_plural"),
+             _("Make %s visible and usable for other users.") % self.phrase("title_plural"),
              [ "admin", "user" ])
 
         config.declare_permission("general.see_user_" + self.type_name(),
-             _("See user %s") % self.type_title_plural(),
-             _("Is needed for seeing %s that other users have created.") % self.type_title_plural(),
+             _("See user %s") % self.phrase("title_plural"),
+             _("Is needed for seeing %s that other users have created.") % self.phrase("title_plural"),
              [ "admin", "user", "guest" ])
 
         config.declare_permission("general.force_" + self.type_name(),
-             _("Modify builtin %s") % self.type_title_plural(),
-             _("Make own published %s override builtin %s for all users.") % (self.type_title_plural(), self.type_title_plural()),
+             _("Modify builtin %s") % self.phrase("title_plural"),
+             _("Make own published %s override builtin %s for all users.") % (self.phrase("title_plural"), self.phrase("title_plural")),
              [ "admin" ])
 
         config.declare_permission("general.delete_foreign_" + self.type_name(),
-             _("Delete foreign %s") % self.type_title_plural(),
-             _("Allows to delete %s created by other users.") % self.type_title_plural(),
+             _("Delete foreign %s") % self.phrase("title_plural"),
+             _("Allows to delete %s created by other users.") % self.phrase("title_plural"),
              [ "admin" ])
 
 
     @classmethod
-    def need_overriding_permission(self, how):
-        if not config.may("general.%s_%s" % (how, self.type_name())):
-            raise MKAuthException(_("Sorry, you lack the permission. Operation: %s, table: %s") % (
-                                    how, self.type_title_plural()))
+    def has_overriding_permission(self, how):
+        return config.may("general.%s_%s" % (how, self.type_name()))
 
+    @classmethod
+    def need_overriding_permission(self, how):
+        if not self.has_overriding_permission(how):
+            raise MKAuthException(_("Sorry, you lack the permission. Operation: %s, table: %s") % (
+                                    how, self.phrase("title_plural")))
 
 
     # Return all pages visible to the user, implements shadowing etc.
@@ -382,6 +534,13 @@ class Overridable:
         else:
             return None
 
+    @classmethod
+    def find_my_page(self, name):
+        for page in self.instances():
+            if page.is_mine() and page.name() == name:
+                return page
+
+
     # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
     # mergt diese mit den übergebenen eingebauten
     @classmethod
@@ -393,7 +552,8 @@ class Overridable:
             page_dict["owner"]  = '' # might have been forgotten on copy action
             page_dict["public"] = True
             page_dict["name"]   = name
-            self.add_instance(("", name), self(page_dict))
+            new_page = self(page_dict)
+            self.add_instance(("", name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
         subdirs = os.listdir(config.config_dir)
@@ -413,7 +573,7 @@ class Overridable:
                 raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, path, e))
 
         # Declare permissions - one for each of the pages, if it is public
-        config.declare_permission_section(self.type_name(), self.type_title_plural(), do_sort = True)
+        config.declare_permission_section(self.type_name(), self.phrase("title_plural"), do_sort = True)
 
         for instance in self.instances():
             if instance.is_public():
@@ -463,9 +623,9 @@ class Overridable:
 
         self.need_overriding_permission("edit")
 
-        html.header(self.type_title_plural(), stylesheets=["pages", "views", "status"])
+        html.header(self.phrase("title_plural"), stylesheets=["pages", "views", "status"])
         html.begin_context_buttons()
-        html.context_button(_('New'), 'create_%s.py' % self.type_name(), "new_" + self.type_name())
+        html.context_button(_('New'), self.create_url(), "new_" + self.type_name())
 
         # TODO: Remove this legacy code as soon as views, dashboards and reports have been
         # moved to pagetypes.py
@@ -569,7 +729,9 @@ class Overridable:
                     html.write(html.attrencode(instance.title()))
                 html.help(html.attrencode(_u(instance.description())))
 
-                # Custom columns
+                # Custom columns specific to that page type
+                instance.render_extra_columns()
+
                 ### for title, renderer in custom_columns:
                 ###     table.cell(title, renderer(visual))
 
@@ -590,10 +752,88 @@ class Overridable:
         html.footer()
         return
 
+    # Override this in order to display additional columns of an instance
+    # in the table of all instances.
+    def render_extra_columns(self):
+        pass
+
     # Page for editing an existing page, or creating a new one
     @classmethod
     def page_edit(self):
-        html.debug("EDIT")
+        back_url = html.var("back", self.list_url())
+
+        self.load()
+        self.need_overriding_permission("edit")
+
+        # Three possible modes:
+        # "create" -> create completely new page
+        # "clone"  -> like new, but prefill form with values from existing page
+        # "edit"   -> edit existing page
+        mode = html.var('mode', 'edit')
+        if mode == "create":
+            title = self.phrase("create")
+            page_dict = {
+                "name"  : self.default_name(),
+                "topic" : self.default_topic(),
+            }
+        else:
+            # Load existing page. visual from disk - and create a copy if 'load_user' is set
+            page_name = html.var("load_name")
+            if mode == "edit":
+                title = self.phrase("edit")
+                page = self.find_my_page(page_name)
+                self.remove_instance((config.user_id, page_name)) # will be added later again
+            else: # clone
+                title = self.phrase("clone")
+                load_user = html.var("load_user")
+                page = self.instance((load_user, page_name))
+            page_dict = page.internal_representation()
+
+
+        html.header(title) ### TODO: extra stylesheets for BI. Move bi.css into views.css , stylesheets=["pages", "views", "status", "bi"])
+        html.begin_context_buttons()
+        html.context_button(_("Back"), back_url, "back")
+        html.end_context_buttons()
+
+        # TODO: Implement multiple topics
+        vs = Dictionary(
+            title = _("General Properties"),
+            render = 'form',
+            optional_keys = None,
+            elements = self.collect_parameters(),
+        )
+
+        def validate(page_dict):
+            if self.find_my_page(page_dict["name"]):
+                raise MKUserError("_p_name", _("You already have an with the ID <b>%s</b>") % page_dict["name"])
+
+        new_page_dict = forms.edit_valuespec(vs, page_dict, validate=validate)
+        if new_page_dict != None:
+            new_page_dict["owner"] = config.user_id
+            new_page = self(new_page_dict)
+
+            if mode in ("edit", "clone"):
+                # Take over non-editable keys from previous version
+                for key in page_dict:
+                    if key not in new_page_dict:
+                        new_page_dict[key] = page_dict[key]
+
+            self.add_page(new_page)
+            self.save_user_instances()
+            html.immediate_browser_redirect(1, back_url)
+            html.message(_('Your changes haven been saved.'))
+            # Reload sidebar. TODO: This code logically belongs to PageRenderer. How
+            # can we simply move it there?
+            if new_page_dict.get("hidden") == False or new_page_dict.get("hidden") != page_dict.get("hidden"):
+                html.reload_sidebar()
+
+        else:
+            html.show_localization_hint()
+
+        html.footer()
+        return
+
+
 
 
 #.
@@ -610,16 +850,16 @@ class Overridable:
 #   |  graphs.                                                             |
 #   '----------------------------------------------------------------------'
 
-class Container(Overridable):
+class Container:
     @classmethod
-    def type_add_to_title(self):
-        raise MKInternalError("Missing implementation")
+    def sanitize(self, d):
+        d.setdefault("elements", [])
 
     def elements(self):
-        return self._.get("elements", [])
+        return self._["elements"]
 
     def add_element(self, element):
-        self._.setdefault("elements", []).append(element)
+        self._["elements"].append(element)
 
     def move_element(self, nr, whither):
         el = self._["elements"][nr]
@@ -635,7 +875,7 @@ class Container(Overridable):
     def render_addto_popup(self):
         pages = self.pages()
         if pages:
-            html.write('<li><span>%s:</span></li>' % self.type_add_to_title())
+            html.write('<li><span>%s:</span></li>' % self.phrase("add_to"))
             for page in pages:
                 html.write('<li><a href="javascript:void(0)" '
                            'onclick="pagetype_add_to_container(\'%s\', \'%s\'); reload_sidebar();"><img src="images/icon_%s.png"> %s</a></li>' %

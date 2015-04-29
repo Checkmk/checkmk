@@ -129,6 +129,7 @@ class ValueSpec:
             self._validate(value, varprefix)
 
 
+
 # A fixed non-editable value, e.g. to be use in "Alternative"
 class FixedValue(ValueSpec):
     def __init__(self, value, **kwargs):
@@ -2849,6 +2850,7 @@ class Dictionary(ValueSpec):
                 self.render_input_form_header(varprefix, value, header, sections)
         else:
             self.render_input_form_header(varprefix, value, self.title() or _("Properties"), None)
+        forms.end()
 
     def render_input_form_header(self, varprefix, value, title, sections):
         forms.header(title, isopen=self._form_isopen, narrow=self._form_narrow)
@@ -2880,10 +2882,15 @@ class Dictionary(ValueSpec):
             vs.render_input(vp, value.get(param, vs.default_value()))
             html.write("</div>")
 
-    def set_focus(self, varprefix):
-        elem = self._get_elements()
-        if elem:
-            elem[0][1].set_focus(varprefix + "_p_" + elem[0][0])
+    def set_focus(self, varprefix, key=None):
+        elements = self._get_elements()
+        if elements:
+            if key == None:
+                elements[0][1].set_focus(varprefix + "_p_" + elements[0][0])
+            else:
+                for element in elements:
+                    if element[0] == key:
+                        element[1].set_focus(varprefix + "_p_" + name)
 
     def canonical_value(self):
         return dict([

@@ -5009,8 +5009,8 @@ void do_unpack_plugins(char *plugin_filename) {
     fclose(file);
 
     if (had_error) {
-        printf("There was an error on unpacking the Check_MK-Agent package: File integrety is broken\n."
-               "The file might have been installed partially.");
+        printf("There was an error on unpacking the Check_MK-Agent package: File integrity is broken\n."
+               "The file might have been installed partially!");
         exit(1);
     }
 

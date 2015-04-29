@@ -1,0 +1,27 @@
+Title: The Event Console can now translate incoming SNMP traps
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.7i1
+Date: 1430307780
+Class: feature
+
+The Event Console can be configured to receive SNMP traps. In the past it
+only extracted all raw OIDs and values from the incoming trap and putting
+them together in the event message as they come in.
+
+Now it is possible to use SNMP MIB files to let the Event Console translate
+the OIDs, values and units contained in the traps.
+
+This feature is disabled by default. You need to enable the Event Console
+and the SNMP trap handling by using <tt>omd config</tt> in OMD environments.
+
+Then you need to enable the trap translation in <i>Event Console > Settings</i>
+by setting <i>Translate SNMP traps</i> to <i>on</i>. Finally you need to
+activate the pending EC-Change.
+
+Now all available MIBs will be used to translate the incoming traps.
+
+You can now upload custom MIB files using the MIB management page at
+<i>Event Console > SNMP MIBs</i> which will be used for translation after
+reloading the Event Console.

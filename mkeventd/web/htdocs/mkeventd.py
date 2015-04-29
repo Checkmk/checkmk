@@ -27,17 +27,31 @@
 import socket, config, defaults, re, time
 from lib import *
 
-# TODO: make this configurable and thus work for non OMD-users as
-# well.
+
+# ASN1 MIB source directory candidates. Non existing dirs are ok.
+# Please sync these paths with htdocs/mkeventd.py
+mib_dirs = [ ('/usr/share/snmp/mibs', _('System MIBs')) ]
+
 try:
-    socket_path = defaults.omd_root + "/tmp/run/mkeventd/status"
-    pipe_path = defaults.omd_root + "/tmp/run/mkeventd/events"
-    snmp_mibs_dir = defaults.omd_root + "/local/share/check_mk/mibs"
+    socket_path       = defaults.omd_root + "/tmp/run/mkeventd/status"
+    pipe_path         = defaults.omd_root + "/tmp/run/mkeventd/events"
+
+    compiled_mibs_dir = defaults.omd_root + "/local/share/check_mk/compiled_mibs"
+
+    # Please sync these paths with htdocs/mkeventd.py
+    mib_upload_dir    = defaults.omd_root + "/local/share/snmp/mibs"
+    mib_dirs.insert(0, (defaults.omd_root + "/share/snmp/mibs", _('MIBs shipped with Check_MK')))
+    mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
 except:
-    run_dir = defaults.livestatus_unix_socket.rsplit("/",1)[0]
-    socket_path = run_dir + "/mkeventd/status"
-    pipe_path = run_dir + "/mkeventd/events"
-    snmp_mibs_dir = defaults.var_dir + "/mkeventd/mibs"
+    run_dir           = defaults.livestatus_unix_socket.rsplit("/",1)[0]
+    socket_path       = run_dir + "/mkeventd/status"
+    pipe_path         = run_dir + "/mkeventd/events"
+
+    # Please sync these paths with htdocs/mkeventd.py
+    mib_upload_dir    = defaults.var_dir + "/mkeventd/mibs"
+    compiled_mibs_dir = "/var/lib/mkeventd/compiled_mibs"
+    mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
+
 
 syslog_priorities = [
     (0, "emerg" ),

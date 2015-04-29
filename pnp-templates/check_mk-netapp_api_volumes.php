@@ -41,14 +41,9 @@ foreach ($NAME as $i => $n) {
 # RRDtool Options
 #$servicedes=$NAGIOS_SERVICEDESC
 
-$fsname = str_replace("_", "/", substr($servicedesc, 3));
+$fsname = substr($servicedesc, 7);
 $fstitle = $fsname;
 
-# Hack for windows: replace C// with C:\
-if (strlen($fsname) == 3 && substr($fsname, 1, 2) == '//') {
-    $fsname = $fsname[0] . "\:\\\\";
-    $fstitle = $fsname[0] . ":\\";
-}
 
 $sizegb = sprintf("%.1f", $MAX[1] / 1024.0);
 $maxgb = $MAX[1] / 1024.0;
@@ -57,7 +52,7 @@ $critgb = $CRIT[1] / 1024.0;
 $warngbtxt = sprintf("%.1f", $warngb);
 $critgbtxt = sprintf("%.1f", $critgb);
 
-$opt[1] = "--vertical-label GB -l 0 -u $maxgb --title '$hostname: Filesystem $fstitle ($sizegb GB)' ";
+$opt[1] = "--vertical-label GB -l 0 -u $maxgb --title '$hostname: Volume $fstitle ($sizegb GB)' ";
 
 # First graph show current filesystem usage
 $def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX ";

@@ -6,6 +6,7 @@
 
     Multisite:
     * 2233 FIX: Fixed WATO folder view and Host Tags search with HTML Entity encoding...
+    * 2074 FIX: pnptemplate netapp_api_volume: fixed title
 
     WATO:
     * 2244 FIX: Fixed sorting of host tag topics in dropdown selections

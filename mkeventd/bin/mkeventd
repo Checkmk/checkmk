@@ -1199,15 +1199,20 @@ class EventServer:
                 # MIB node object (like OBJECT-TYPE or other SMI MACROs)
                 node = mib_var.getMibNode()
 
+                mod, sym, indices = mib_var.getMibSymbol()
+                # Only care about the first indice reported. Why should we care about multiple?
+                # Do we have such cases here?
+                translated_oid = '%s::%s.%s' % (mod, sym, indices[0].prettyPrint())
+
                 # This MACRO supports SYNTAX clause?
                 if hasattr(node, 'getSyntax'):
                     # Cast value to MIB SYNTAX type (TEXTUAL-CONVENTION)
                     value = node.getSyntax().clone(value)
                     units = node.getUnits()
 
-                    var_binds.append((oid.prettyPrint(), value.prettyPrint() + ' ' + units))
+                    var_binds.append((translated_oid, value.prettyPrint() + ' ' + units))
                 else:
-                    var_binds.append((oid.prettyPrint(), value))
+                    var_binds.append((translated_oid, value))
         return var_binds
 
     def process_snmptrap(self, (whole_msg, (ipaddress, port))):
@@ -1235,20 +1240,6 @@ class EventServer:
             else:
                 break # Skip unhandled version
 
-            #if proto_version == pysnmp_api.protoVersion1:
-            #    # These fields are available by specification in v1, but not in v2.
-
-            #    # use the enterprise oid as application
-            #    application = proto.apiTrapPDU.getEnterprise(req_pdu).prettyPrint()
-            #    # Get the host name from the trap
-            #    host = proto.apiTrapPDU.getAgentAddr(req_pdu).prettyPrint()
-
-            #    trap = []
-            #    trap.append(('Generic-Trap', proto.apiTrapPDU.getGenericTrap(req_pdu)._value))
-            #    trap.append(('Specific-Trap', proto.apiTrapPDU.getSpecificTrap(req_pdu)._value))
-            #    trap.append(('Uptime', self.fmt_timeticks(proto.apiTrapPDU.getTimeStamp(req_pdu)._value)))
-            #    trap += self.snmptrap_convert_var_binds(proto.apiTrapPDU.getVarBinds(req_pdu))
-
             trap = self.snmptrap_convert_var_binds(proto.apiPDU.getVarBinds(pdu))
             # Use the trap sender IP address as host name
             host = ipaddress
@@ -1256,7 +1247,7 @@ class EventServer:
             # use the trap-oid as application
             application = ''
             for index, (oid, val) in enumerate(trap):
-                if oid == '1.3.6.1.6.3.1.1.4.1.0':
+                if oid in ['1.3.6.1.6.3.1.1.4.1.0', 'SNMPv2-MIB::snmpTrapOID.0']:
                     application = trap.pop(index)[1]
                     break
 

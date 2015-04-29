@@ -23,5 +23,3 @@ sudo chown -R $SITE.$SITE $OMD_ROOT/{etc,local,var}
 sudo omd restart $SITE apache
 echo "Starte EC neu..."
 sudo omd status $SITE mkeventd && sudo omd restart $SITE mkeventd
-
-

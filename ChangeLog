@@ -13,6 +13,9 @@
     Notifications:
     * 2243 FIX: Check_MK notifications don't fail anymore when duplicate hosts are configured
 
+    BI:
+    * 2073 FIX: BI aggregation: fixed exception when showing clusters in BI boxes
+
     HW/SW-Inventory:
     * 2246 FIX: Linux CPU Inventory: Fixed wrong number of CPUs when first CPU is not in first slot
 

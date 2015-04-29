@@ -1217,7 +1217,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     if fetch_parents:
         parent_filter = []
         for row in data:
-            parent_filter += [ 'Filter: name = %s\n' % p for p in row[7] ]
+            parent_filter += [ 'Filter: name = %s\n' % p for p in row[8] ]
         parent_filter_txt = ''.join(parent_filter)
         parent_filter_txt += 'Or: %d\n' % len(parent_filter)
         for row in  get_status_info_filtered(filter_header, only_sites, limit, add_columns, False, bygroup):

@@ -499,6 +499,7 @@
     * 2020 FIX: Fixed non working FOREACH_CHILD mechanism for BI rules
     * 2085 FIX: Host search for child nodes can now filter child nodes by tags or patterns...
     * 1897 FIX: Fixed exception in BI Availability view...
+    * 2073 FIX: BI aggregation: fixed exception when showing clusters in BI boxes
 
     Reporting & Availability:
     * 1990 FIX: Fix two exceptions in PDF exports of host group views

@@ -456,7 +456,7 @@ def inv_paint_if_oper_status(oper_status):
     else:
         css_class = "if_state_other"
 
-    return "if_state " + css_class, interface_oper_states.get(oper_status, str(oper_status))
+    return "if_state " + css_class, interface_oper_states.get(oper_status, str(oper_status)).replace(" ", "&nbsp;")
 
 
 # admin status can only be 1 or 2, matches oper status :-)
@@ -584,9 +584,10 @@ inventory_displayhints.update({
     ".networking.total_ethernet_ports"                 : { "title" : _("Ports"), "paint" : "count", },
     ".networking.available_ethernet_ports"             : { "title" : _("Ports available"), "paint" : "count", },
     ".networking.interfaces:"                          : { "title" : _("Interfaces"), "render" : render_inv_dicttable,
-                                                           "keyorder" : [ "index", "description", "oper_status", "admin_status", "available", "speed" ], "view" : "invinterface_of_host", },
+                                                           "keyorder" : [ "index", "description", "alias", "oper_status", "admin_status", "available", "speed" ], "view" : "invinterface_of_host", },
     ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : visuals.FilterInvtableIDRange },
     ".networking.interfaces:*.description"             : { "title" : _("Description") },
+    ".networking.interfaces:*.alias"                   : { "title" : _("Alias") },
     ".networking.interfaces:*.phys_address"            : { "title" : _("Physical Address (MAC)")  },
     ".networking.interfaces:*.oper_status"             : { "title" : _("Operational Status"), "short" : _("Status"), "paint" : "if_oper_status", "filter" : visuals.FilterInvtableOperStatus },
     ".networking.interfaces:*.admin_status"            : { "title" : _("Administrative Status"), "short" : _("Admin"), "paint" : "if_admin_status", "filter" : visuals.FilterInvtableAdminStatus },

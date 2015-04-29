@@ -36,8 +36,8 @@ def inv_if(info, params):
     available_ethernet_ports = 0
 
     node = inv_tree("networking.interfaces:")
-    for if_index, if_descr, if_type, if_speed, if_oper_status, if_admin_status, \
-        if_phys_address, if_last_change in info:
+    for if_index, if_descr, if_alias, if_type, if_speed, if_high_speed, \
+        if_oper_status, if_admin_status, if_phys_address, if_last_change in info:
 
         if if_type in ( "231", "232" ):
             continue # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
@@ -58,11 +58,16 @@ def inv_if(info, params):
             seconds = float(parts[3])
             last_change = seconds + 60*minutes + 3600*hours + 86400*days
 
+        if if_high_speed:
+            speed = int(if_high_speed) * 1000 * 1000
+        else:
+            speed = int(if_speed)
 
         node.append({
             "index"        : int(if_index),
             "description"  : if_descr,
-            "speed"        : int(if_speed),
+            "alias"        : if_alias,
+            "speed"        : speed,
             "phys_address" : render_mac_address(if_phys_address),
             "oper_status"  : int(if_oper_status),
             "admin_status" : int(if_admin_status), # 1(up) or 2(down)
@@ -86,15 +91,17 @@ def inv_if(info, params):
 
 inv_info['inv_if'] = {
     "inv_function" : inv_if,
-    'snmp_info': ( ".1.3.6.1.2.1.2.2.1", [
-         1,            # ifIndex
-         2,            # ifDescr
-         3,            # ifType
-         5,            # ifSpeed
-         8,            # ifOperStatus
-         7,            # ifAdminStatus
-         6,            # ifPhysAddress
-         9,            # ifLastChange
+    'snmp_info': ( ".1.3.6.1.2.1", [
+         "2.2.1.1",            # ifIndex
+         "2.2.1.2",            # ifDescr
+         "31.1.1.1.18",        # ifAlias
+         "2.2.1.3",            # ifType
+         "2.2.1.5",            # ifSpeed
+         "31.1.1.1.15",        # ifHighSpeed   .. 1000 means 1Gbit
+         "2.2.1.8",            # ifOperStatus
+         "2.2.1.7",            # ifAdminStatus
+         "2.2.1.6",            # ifPhysAddress
+         "2.2.1.9",            # ifLastChange
     ]),
     'snmp_scan_function': lambda oid: int(oid(".1.3.6.1.2.1.2.1.0")) >= 2,
 }

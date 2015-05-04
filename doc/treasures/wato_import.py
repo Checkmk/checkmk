@@ -37,7 +37,7 @@ except:
     print """Run this script inside a OMD site
     Usage: ./wato_import.py csvfile.csv
     CSV Example:
-    wato_foldername;hostname|tags;host_alias;(ipaddress|None)"""
+    wato_foldername,hostname|tags,host_alias,(ipaddress|None)"""
     sys.exit()
 
 folders = {}

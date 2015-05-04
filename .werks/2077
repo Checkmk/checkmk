@@ -1,0 +1,15 @@
+Title: Windows MSI Installer: fixed automatical install of agent plugins
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1430735433
+
+Upon install, the MSI installer did not unpack any plugins provided
+by the plugins.cap file. You had to manually unpack these plugins
+with the command "check_mk_agent.exe unpack plugins.cap".
+
+This has been fixed.
+

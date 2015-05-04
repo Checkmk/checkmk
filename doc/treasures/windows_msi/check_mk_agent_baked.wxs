@@ -74,6 +74,13 @@
               Impersonate="no"
               Return     ="ignore"/>
 
+        <CustomAction Id="unpack_plugins"
+              Directory  ="INSTALLDIR"
+              ExeCommand ='[INSTALLDIR]check_mk_agent.exe unpack plugins.cap'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
+
         <CustomAction Id="uninstall_plugins"
               Directory  ="INSTALLDIR"
               ExeCommand ='[INSTALLDIR]uninstall_plugins.bat'
@@ -96,6 +103,7 @@
               Return     ="ignore"/>
 
         <InstallExecuteSequence>
+            <Custom Action="unpack_plugins"  Before="InstallFinalize">NOT REMOVE="ALL"</Custom>
             <Custom Action="install_service" Before="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
             <Custom Action="start_service"   Before="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
         </InstallExecuteSequence>

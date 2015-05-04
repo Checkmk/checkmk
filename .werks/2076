@@ -1,0 +1,9 @@
+Title: fortigate_cpu_base, fortigate_sessions_base: supports wider range of models
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1430730391
+Class: feature
+
+These two new checks aquire their data through the MIB FORTINET-FORTIGATE-MIB.

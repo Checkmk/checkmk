@@ -24,29 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-enterasys_cpu_default_levels = (90, 95)
+fortigate_cpu_base_default_levels = (80.0, 90.0)
 
-def inventory_enterasys_cpu_util(info):
-    # [:-2] to remove the oid end
-    return [ ( x[0][:-2], "enterasys_cpu_default_levels" ) for x in info ]
+def inventory_fortigate_cpu_base(info):
+    return [(None, "fortigate_cpu_base_default_levels")]
 
-def check_enterasys_cpu_util(item, params, info):
-    for core, util in info:
-        if item == core[:-2]:
-            usage = int(util) / 10.0
-            return check_cpu_util(usage, params)
+def check_fortigate_cpu_base(item, params, info):
+    num_cpus = 0
+    util = 0
+    for line in info:
+        util += int(line[0])
+        num_cpus += 1
+    if num_cpus == 0:
+        return
 
+    util = float(util) / num_cpus
 
-check_info["enterasys_cpu_util"] = {
-    "check_function"        : check_enterasys_cpu_util,
-    "inventory_function"    : inventory_enterasys_cpu_util,
-    "service_description"   : "CPU util %s",
-    "snmp_info"             : ( ".1.3.6.1.4.1.5624.1.2.49.1.1.1.1", [ OID_END,  3 ]), #util in last 1min
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1") \
-                                        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.2"),
+    state, infotext, perfdata = check_cpu_util(util, params)
+    infotext += " at %d CPUs" % num_cpus
+
+    return state, infotext, perfdata
+
+check_info["fortigate_cpu_base"] = {
+    "inventory_function"    : inventory_fortigate_cpu_base,
+    "check_function"        : check_fortigate_cpu_base,
+    "service_description"   : "CPU utilization",
     "has_perfdata"          : True,
-    "group"                 : "cpu_utilization_multiitem",
-    "includes"                : [ "cpu_util.include" ],
-
+    "group"                 : "cpu_utilization",
+    # uses mib FORTINET-FORTIGATE-MIB
+    "snmp_scan_function"    : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0") and\
+                                     oid(".1.3.6.1.4.1.12356.101.4.1.3.0"),
+    "snmp_info"		        : ( ".1.3.6.1.4.1.12356.101.4.1", [ 3 ]),
+    "include"               : [ "cpu_util.include" ],
 }
 

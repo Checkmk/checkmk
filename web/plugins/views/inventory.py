@@ -1013,7 +1013,7 @@ multisite_builtin_views["inv_hosts_ports"] = {
 #   '----------------------------------------------------------------------'
 
 def inv_history_table(columns, add_headers, only_sites, limit, filters):
-    return inv_multisite_table("invhist", columns, add_headers, only_sites, limit, filters)
+    return inv_multisite_table("invhist", None, columns, add_headers, only_sites, limit, filters)
 
 def create_hist_rows(hostname, columns):
     hist_tree = None

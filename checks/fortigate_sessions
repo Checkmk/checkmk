@@ -26,6 +26,9 @@
 
 fortigate_sessions_default_levels = (100000, 150000)
 
+def inventory_fortigate_sessions(info):
+    return [(None, "fortigate_sessions_default_levels")]
+
 def check_fortigate_sessions(item, params, info):
     warn, crit = params
     current = saveint(info[0][0])
@@ -39,14 +42,16 @@ def check_fortigate_sessions(item, params, info):
 	icon = "(!!)"
 
     perf = [("session", current, warn, crit)]
-    return(state, "%d Session%s (levels at %d/%d)" % (current, icon, warn, crit), perf)
+    return state, "%d Session%s (levels at %d/%d)" % (current, icon, warn, crit), perf
 
 check_info["fortigate_sessions"] = {
+    "inventory_function"    : inventory_fortigate_sessions,
     "check_function"        : check_fortigate_sessions,
-    "inventory_function"    : lambda info: [(None, "fortigate_sessions_default_levels")],
     "service_description"   : "Sessions",
     "has_perfdata"          : True,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.4.1.12356.1.10.0"),
+    # uses mib FORTINET-MIB-280
+    "snmp_scan_function"    : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0") and\
+                                     oid(".1.3.6.1.4.1.12356.1.10.0"),
     "snmp_info"		    : ( ".1.3.6.1.4.1.12356.1", [ 10 ]),
 }
 

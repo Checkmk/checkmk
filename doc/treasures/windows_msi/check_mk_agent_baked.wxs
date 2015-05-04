@@ -61,38 +61,43 @@
         <UIRef Id="CmkWixUI_InstallDir"/>
 
         <CustomAction Id="install_service"
-              Directory ="INSTALLDIR"
-              ExeCommand='[INSTALLDIR]check_mk_agent.exe install'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='[INSTALLDIR]check_mk_agent.exe install'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <CustomAction Id="uninstall_service"
-              Directory ="INSTALLDIR"
-              ExeCommand='[INSTALLDIR]check_mk_agent.exe remove'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='[INSTALLDIR]check_mk_agent.exe remove'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <CustomAction Id="uninstall_plugins"
-              Directory ="INSTALLDIR"
-              ExeCommand='[INSTALLDIR]uninstall_plugins.bat'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='[INSTALLDIR]uninstall_plugins.bat'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <CustomAction Id="start_service"
-              Directory ="INSTALLDIR"
-              ExeCommand='net start check_mk_agent'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='net start check_mk_agent'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <CustomAction Id="stop_service"
-              Directory ="INSTALLDIR"
-              ExeCommand='net stop check_mk_agent'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='net stop check_mk_agent'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <InstallExecuteSequence>
-            <Custom Action="install_service" After="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
-            <Custom Action="start_service"   After="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
+            <Custom Action="install_service" Before="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
+            <Custom Action="start_service"   Before="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
         </InstallExecuteSequence>
 
         <InstallExecuteSequence>
@@ -112,8 +117,8 @@
                       Name="check_mk_agent.exe" KeyPath="yes" Checksum="yes"/>
                 <Condition>VersionNT64</Condition>
             </Component>
-            <Component Id="plugins.cmkp" Guid="0e9229ec-373b-11e4-824b-002713b4a9ec">
-                <File Id="plugins.cmkp" Source="sources\plugins.cmkp"/>
+            <Component Id="plugins.cap" Guid="0e9229ec-373b-11e4-824b-002713b4a9ec">
+                <File Id="plugins.cap" Source="sources\plugins.cap"/>
             </Component>
             <Component Id="check_mk.ini" Guid="fa07238c-373b-11e4-961a-002713b4a9ec">
                 <File Id="check_mk.ini" Source="sources\check_mk.ini"/>
@@ -139,7 +144,7 @@
             <ComponentRef Id="agent32"/>
             <ComponentRef Id="agent64"/>
             <ComponentRef Id="check_mk.ini"/>
-            <ComponentRef Id="plugins.cmkp"/>
+            <ComponentRef Id="plugins.cap"/>
             <ComponentRef Id="localFolder"/>
             <ComponentRef Id="pluginFolder"/>
             <ComponentRef Id="RegistryEntries"/>

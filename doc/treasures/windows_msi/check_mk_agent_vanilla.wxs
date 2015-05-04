@@ -61,38 +61,43 @@
         <UIRef Id="CmkWixUI_InstallDir"/>
 
         <CustomAction Id="install_service"
-              Directory ="INSTALLDIR"
-              ExeCommand='[INSTALLDIR]check_mk_agent.exe install'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='[INSTALLDIR]check_mk_agent.exe install'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <CustomAction Id="uninstall_service"
-              Directory ="INSTALLDIR"
-              ExeCommand='[INSTALLDIR]check_mk_agent.exe remove'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='[INSTALLDIR]check_mk_agent.exe remove'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <CustomAction Id="uninstall_plugins"
-              Directory ="INSTALLDIR"
-              ExeCommand='[INSTALLDIR]uninstall_plugins.bat'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='[INSTALLDIR]uninstall_plugins.bat'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <CustomAction Id="start_service"
-              Directory ="INSTALLDIR"
-              ExeCommand='net start check_mk_agent'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='net start check_mk_agent'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <CustomAction Id="stop_service"
-              Directory ="INSTALLDIR"
-              ExeCommand='net stop check_mk_agent'
-              Execute   ="immediate"
-              Return    ="ignore"/>
+              Directory  ="INSTALLDIR"
+              ExeCommand ='net stop check_mk_agent'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
 
         <InstallExecuteSequence>
-            <Custom Action="install_service" After="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
-            <Custom Action="start_service"   After="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
+            <Custom Action="install_service" Before="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
+            <Custom Action="start_service"   Before="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
         </InstallExecuteSequence>
 
         <InstallExecuteSequence>

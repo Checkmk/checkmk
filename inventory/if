@@ -25,6 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 def inv_if(info, params):
+    port_info, uptime_info = info
+    uptime = parse_snmp_uptime(uptime_info[0][0])
+
     usage_port_types = params.get("usage_port_types",
            [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ])
     unused_duration = params.get("unused_duration", 30 * 86400)
@@ -37,7 +40,7 @@ def inv_if(info, params):
 
     node = inv_tree("networking.interfaces:")
     for if_index, if_descr, if_alias, if_type, if_speed, if_high_speed, \
-        if_oper_status, if_admin_status, if_phys_address, if_last_change in info:
+        if_oper_status, if_admin_status, if_phys_address, if_last_change in port_info:
 
         if if_type in ( "231", "232" ):
             continue # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
@@ -63,6 +66,12 @@ def inv_if(info, params):
         else:
             speed = int(if_speed)
 
+        if last_change > 0:
+            state_age = uptime - last_change
+        else:
+            # Assume point of time of boot as last state change.
+            state_age = uptime
+
         node.append({
             "index"        : int(if_index),
             "description"  : if_descr,
@@ -71,12 +80,13 @@ def inv_if(info, params):
             "phys_address" : render_mac_address(if_phys_address),
             "oper_status"  : int(if_oper_status),
             "admin_status" : int(if_admin_status), # 1(up) or 2(down)
-            "state_age"    : last_change,
             "port_type"    : int(if_type),
+            "state_age"    : state_age,
         })
 
+
         if if_type in usage_port_types:
-            if_available = if_oper_status == '2' and last_change > unused_duration
+            if_available = if_oper_status == '2' and state_age > unused_duration
             total_ethernet_ports += 1
             if if_available:
                 available_ethernet_ports += 1
@@ -91,17 +101,20 @@ def inv_if(info, params):
 
 inv_info['inv_if'] = {
     "inv_function" : inv_if,
-    'snmp_info': ( ".1.3.6.1.2.1", [
-         "2.2.1.1",            # ifIndex
-         "2.2.1.2",            # ifDescr
-         "31.1.1.1.18",        # ifAlias
-         "2.2.1.3",            # ifType
-         "2.2.1.5",            # ifSpeed
-         "31.1.1.1.15",        # ifHighSpeed   .. 1000 means 1Gbit
-         "2.2.1.8",            # ifOperStatus
-         "2.2.1.7",            # ifAdminStatus
-         "2.2.1.6",            # ifPhysAddress
-         "2.2.1.9",            # ifLastChange
-    ]),
+    'snmp_info': [
+        ( ".1.3.6.1.2.1", [
+           "2.2.1.1",            # ifIndex
+           "2.2.1.2",            # ifDescr
+           "31.1.1.1.18",        # ifAlias
+           "2.2.1.3",            # ifType
+           "2.2.1.5",            # ifSpeed
+           "31.1.1.1.15",        # ifHighSpeed   .. 1000 means 1Gbit
+           "2.2.1.8",            # ifOperStatus
+           "2.2.1.7",            # ifAdminStatus
+           "2.2.1.6",            # ifPhysAddress
+           "2.2.1.9",            # ifLastChange
+        ]),
+        ( ".1.3.6.1.2.1.1", [ "3.0" ] ), # uptime
+    ],
     'snmp_scan_function': lambda oid: int(oid(".1.3.6.1.2.1.2.1.0")) >= 2,
 }

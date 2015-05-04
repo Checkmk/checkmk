@@ -1,0 +1,10 @@
+Title: windows_tasks: Fixed handling of tasks manually stopped by admin
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p3
+Date: 1430749274
+Class: fix
+
+If a Windows Administrator manually stops a task it will be ignored now and not
+longer results in an error now.

@@ -67,7 +67,7 @@ def check_windows_tasks(item, _no_params, info):
             state = 0
             label = ""
             msg = []
-            if last_result not in [ 0, 0x00041301, 0x00041325 ]: # SCHED_S_TASK_RUNNING, SCHED_S_TASK_QUEUED
+            if last_result not in [ 0, 0x00041301, 0x00041325, 0x00041306 ]: # RUNNING, QUEUED, CANCELD
                 state = 2
                 label = "(!!)"
             msg.append("Service in state: %s%s" % ( last_result, label ) )

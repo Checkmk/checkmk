@@ -142,6 +142,7 @@ def eventd_configuration():
 
     config = {
         "rules"                 : [],
+        "rule_packs"            : [],
         "debug_rules"           : False,
     }
     main_file = defaults.default_config_dir + "/mkeventd.mk"

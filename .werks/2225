@@ -1,0 +1,34 @@
+Title: Restructured Event Console rules into packs
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.7i1
+Date: 1430755084
+Class: feature
+
+The Event Console now groups event rules into <i>Packs</i>. If you update
+to the new version you will find all your existing rules to be contained in
+the pack <i>Default rule pack</i>. The execution of the rules within a pack
+is just as it was in the global list of rules before. But now you can have
+several packs. The execution of the rules is done in the order of the packs
+and within each pack in the order there. This helps you to keep on overview -
+especially if you have a lot of rules.
+
+But there are a couple of more advantages from the packs:
+
+<ul>
+<li>You can easily reorder packs as a whole</li>
+<li>Packs can be disabled as a whole</li>
+<li>Event simulation can show matching rules on the level of the packs</li>
+<li>Rules can be moved from one pack to another</li>
+<li>A new rule option in <i>Actions and Outcome</i> can be used to
+have a rule skip all other rules in the same pack and continue with the
+next one. That way
+you can for example create a pack <i>Oracle</i>. As a first rule
+you match for <tt>(?!ORA-)</tt> and set the rule type to
+<i>Skip this rule pack</i>. That way if a message arrives that does
+<i>not</i> contain <tt>ORA-</tt> all of the following rules in that
+pack will <i>not</i> by tried out. This can make your configuration
+easier and also will speed up the Event Console since the number
+of rule tries is being reduced.</li>
+</ul>

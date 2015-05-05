@@ -1513,20 +1513,20 @@ class EventServer:
                         new_tokens = int(elapsed_secs / secs_per_token)
                         if new_tokens:
                             if opt_debug:
-                                log("Rule %s, event %d: got %d new tokens" % (rule["id"], event["id"], new_tokens))
+                                log("Rule %s/%s, event %d: got %d new tokens" % (rule["pack"], rule["id"], event["id"], new_tokens))
                             event["count"] = max(0, event["count"] - new_tokens)
                             event["last_token"] = last_token + new_tokens * secs_per_token # not now! would be unfair
                             if event["count"] == 0:
-                                log("Rule %s, event %d: again without allowed rate, dropping event" %
-                                    (rule["id"], event["id"]))
+                                log("Rule %s/%s, event %d: again without allowed rate, dropping event" %
+                                    (rule["pack"], rule["id"], event["id"]))
                                 event["phase"] = "closed"
                                 log_event_history(event, "COUNTFAILED")
                                 events_to_delete.append(nr)
 
                     else: # algorithm 'interval'
                         if event["first"] + count["period"] <= now: # End of period reached
-                            log("Rule %s: reached only %d out of %d events within %d seconds. "
-                                "Resetting to zero." % (rule["id"], event["count"], count["count"], count["period"]))
+                            log("Rule %s/%s: reached only %d out of %d events within %d seconds. "
+                                "Resetting to zero." % (rule["pack"], rule["id"], event["count"], count["count"], count["period"]))
                             event["phase"] = "closed"
                             log_event_history(event, "COUNTFAILED")
                             events_to_delete.append(nr)
@@ -1610,8 +1610,8 @@ class EventServer:
                         if event["count"] < expected_count: # no -> trigger alarm
                             self.handle_absent_event(rule, event["count"], expected_count, event["last"])
                         else: # yes -> everything is fine. Just log.
-                            log("Rule %s has reached %d occurrances (%d required). Starting next period." %
-                                    (rule["id"], event["count"], expected_count))
+                            log("Rule %s/%s has reached %d occurrances (%d required). Starting next period." %
+                                    (rule["pack"], rule["id"], event["count"], expected_count))
                             log_event_history(event, "COUNTREACHED")
                         # Counting event is no longer needed.
                         events_to_delete.append(nr)
@@ -1688,8 +1688,9 @@ class EventServer:
 
 
 
-    # Precompile regular expressions and similar stuff
-    def compile_rules(self, rules):
+    # Precompile regular expressions and similar stuff. Also convert legacy
+    # "rules" parameter into new "rule_packs" parameter
+    def compile_rules(self, legacy_rules, rule_packs):
         self._rules = []
         self._rule_by_id = {}
         self._rule_hash = {} # Speedup-Hash for rule execution
@@ -1713,54 +1714,73 @@ class EventServer:
             else:
                 return val.lower()
 
-        for rule in rules:
-            if rule.get("disabled"):
-                count_disabled += 1
-            else:
-                count_rules += 1
-                rule = rule.copy() # keep original intact because of slave replication
+        # Convert legacy_rules into rule_packs
+        if not rule_packs:
+            rule_packs = [{
+                "id"       : "default",
+                "title"    : "Default rule package",
+                "rules"    : legacy_rules,
+                "disabled" : False,
+            }]
 
-                # Convert some data fields into newer format
-                if "livetime" in rule:
-                    livetime = rule["livetime"]
-                    if type(livetime) != tuple:
-                        rule["livetime"] = ( livetime, ["open"] )
+        # Loop through all rule packages and with through their rules
+        for rule_pack in rule_packs:
+            if rule_pack["disabled"]:
+                count_disabled += len(rule_pack["rules"])
+                continue
 
-                self._rules.append(rule)
-                self._rule_by_id[rule["id"]] = rule
-                try:
-                    for key in [ "match", "match_ok", "match_host", "match_application" ]:
-                        if key in rule:
-                            value = compile_matching_value(key, rule[key])
-                            if value == None:
-                                del rule[key]
-                                continue
-
-                            rule[key] = value
-
-                    if 'state' in rule and type(rule['state']) == tuple and rule['state'][0] == 'text_pattern':
-                        for key in [ '2', '1', '0' ]:
-                            if key in rule['state'][1]:
-                                value = compile_matching_value('state', rule['state'][1][key])
-                                if value == None:
-                                    del rule['state'][1][key]
-                                else:
-                                    rule['state'][1][key] = value
-
-                except Exception, e:
-                    if opt_debug:
-                        raise
-                    rule["disabled"] = True
+            for rule in rule_pack["rules"]:
+                if rule.get("disabled"):
                     count_disabled += 1
-                    log("Ignoring rule '%s' because of an invalid regex (%s)." %
-                            (rule["id"], e))
+                else:
+                    count_rules += 1
+                    rule = rule.copy() # keep original intact because of slave replication
 
-                if g_config["rule_optimizer"]:
-                    self.hash_rule(rule)
-                    if "match_facility" not in rule \
-                        and "match_priority" not in rule \
-                        and "cancel_priority" not in rule:
-                        count_unspecific += 1
+                    # Store information about rule pack right within the rule. This is needed
+                    # for debug output and also for skipping rule packs
+                    rule["pack"] = rule_pack["id"]
+
+                    # Convert some data fields into newer format
+                    if "livetime" in rule:
+                        livetime = rule["livetime"]
+                        if type(livetime) != tuple:
+                            rule["livetime"] = ( livetime, ["open"] )
+
+                    self._rules.append(rule)
+                    self._rule_by_id[rule["id"]] = rule
+                    try:
+                        for key in [ "match", "match_ok", "match_host", "match_application" ]:
+                            if key in rule:
+                                value = compile_matching_value(key, rule[key])
+                                if value == None:
+                                    del rule[key]
+                                    continue
+
+                                rule[key] = value
+
+                        if 'state' in rule and type(rule['state']) == tuple and rule['state'][0] == 'text_pattern':
+                            for key in [ '2', '1', '0' ]:
+                                if key in rule['state'][1]:
+                                    value = compile_matching_value('state', rule['state'][1][key])
+                                    if value == None:
+                                        del rule['state'][1][key]
+                                    else:
+                                        rule['state'][1][key] = value
+
+                    except Exception, e:
+                        if opt_debug:
+                            raise
+                        rule["disabled"] = True
+                        count_disabled += 1
+                        log("Ignoring rule '%s/%s' because of an invalid regex (%s)." %
+                                (rule["pack"], rule["id"], e))
+
+                    if g_config["rule_optimizer"]:
+                        self.hash_rule(rule)
+                        if "match_facility" not in rule \
+                            and "match_priority" not in rule \
+                            and "cancel_priority" not in rule:
+                            count_unspecific += 1
 
 
         log("Compiled %d active rules (ignoring %d disabled rules)" % (count_rules, count_disabled))
@@ -1842,7 +1862,12 @@ class EventServer:
         else:
             rule_candidates = self._rules
 
+        skip_pack = None
         for rule in rule_candidates:
+            if skip_pack and rule["pack"] != skip_pack:
+                continue # still in the rule pack that we want to skip
+            skip_pack = None # new pack, reset skipping
+
             try:
                 result = self.event_rule_matches(rule, event)
             except Exception:
@@ -1856,13 +1881,19 @@ class EventServer:
 
                 g_event_status.count_rule_match(rule["id"])
                 if g_config["log_rulehits"]:
-                    log("Rule '%s' hit by message %s/%s - '%s'." % (
-                        rule["id"],
+                    log("Rule '%s/%s' hit by message %s/%s - '%s'." % (
+                        rule["pack"], rule["id"],
                         syslog_facilities[event["facility"]], syslog_priorities[event["priority"]],
                         event["text"]))
+
                 if rule.get("drop"):
-                    g_perfcounters.count("drops")
-                    return
+                    if rule["drop"] == "skip_pack":
+                        skip_pack = rule["pack"]
+                        if g_config["debug_rules"]:
+                            log("  skipping this rule pack")
+                    else:
+                        g_perfcounters.count("drops")
+                        return
 
                 if cancelling:
                     g_event_status.cancel_events(event, groups, rule)
@@ -1942,7 +1973,7 @@ class EventServer:
         with lock_configuration:
             debug = g_config["debug_rules"]
             if debug:
-                log("Trying rule %s..." % rule["id"])
+                log("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
                 log("  Text:   %s" % event["text"])
                 log("  Syslog: %d.%d" % (event["facility"], event["priority"]))
                 log("  Host:   %s" % event["host"])
@@ -2565,7 +2596,7 @@ class StatusServer:
             load_configuration()
             if opt_snmptrap:
                 g_event_server.load_mibs()
-            g_event_server.compile_rules(g_config["rules"])
+            g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
         g_status_server.reload_configuration()
         log("Reloaded configuration.")
 
@@ -3335,8 +3366,9 @@ def replication_send(last_update):
     with lock_configuration:
         response["status"] = g_event_status.pack_status()
         if last_update < g_last_config_reload:
-            response["rules"] = g_config["rules"]
-            response["actions"] = g_config["actions"]
+            response["rules"]      = g_config["rules"] # Remove one bright day, where legacy rules are not needed anymore
+            response["rule_packs"] = g_config["rule_packs"]
+            response["actions"]    = g_config["actions"]
         return response
 
 def replication_pull():
@@ -3409,13 +3441,12 @@ def replication_pull():
                 # Compute statistics of the average time needed for a sync
                 g_perfcounters.count_time("sync", time.time() - now)
 
-# Called when we have new data from our master
 def replication_update_state(new_state):
 
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
         save_master_config(new_state)
-        g_event_server.compile_rules(new_state["rules"])
+        g_event_server.compile_rules(new_state["rules"], new_state.get("rule_packs", []))
         g_config["actions"] = new_state["actions"]
 
     # Update to the masters' event state
@@ -3426,19 +3457,22 @@ def replication_update_state(new_state):
 def save_master_config(new_state):
     path = g_state_dir + "/master_config"
     file(path + ".new", "w").write(repr({
-        "rules" : new_state["rules"],
-        "actions" : new_state["actions"],
+        "rules"      : new_state["rules"],
+        "rule_packs" : new_state["rule_packs"],
+        "actions"    : new_state["actions"],
     }) + "\n")
     os.rename(path + ".new", path)
+
 
 def load_master_config():
     path = g_state_dir + "/master_config"
     try:
         config = eval(file(path).read())
-        g_config["rules"] = config["rules"]
-        g_config["actions"] = config["actions"]
-        log("Replication: restored %d rules and %d actions from %s" %
-            (len(config["rules"]), len(config["actions"]), path))
+        g_config["rules"]      = config["rules"]
+        g_config["rule_packs"] = config.get("rule_packs", [])
+        g_config["actions"]    = config["actions"]
+        log("Replication: restored %d rule packs and %d actions from %s" %
+            (len(g_config["rule_packs"]), len(config["actions"]), path))
     except:
         if is_replication_slave():
             log("Replication: no previously saved master state available")
@@ -3519,7 +3553,8 @@ def load_slave_status():
 def load_configuration():
     global g_config, g_last_config_reload
     g_config = {
-        "rules"                 : [],
+        "rules"                 : [], # old pre 1.2.7i1 format. Only used if rule_packs is empty
+        "rule_packs"            : [], # new format with rule packages
         "actions"               : [],
         "debug_rules"           : False,
         "rule_optimizer"        : True,
@@ -3803,7 +3838,7 @@ try:
     g_event_server  = EventServer()
     if opt_snmptrap and g_config['translate_snmptraps']:
         g_event_server.load_mibs()
-    g_event_server.compile_rules(g_config["rules"])
+    g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 
     if not opt_foreground:
         make_parentdirs(g_pid_file)

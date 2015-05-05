@@ -85,12 +85,13 @@ class ActionList(ListOf):
     def validate_value(self, value, varprefix):
         ListOf.validate_value(self, value, varprefix)
         action_ids = [ v["id"] for v in value ]
-        rules = load_mkeventd_rules()
-        for rule in rules:
-            for action_id in rule.get("actions", []):
-                if action_id not in action_ids + ["@NOTIFY"]:
-                    raise MKUserError(varprefix, _("You are missing the action with the ID <b>%s</b>, "
-                       "which is still used in some rules.") % action_id)
+        legacy_rules, rule_packs = load_mkeventd_rules()
+        for rule_pack in rule_packs:
+            for rule in rule_pack["rules"]:
+                for action_id in rule.get("actions", []):
+                    if action_id not in action_ids + ["@NOTIFY"]:
+                        raise MKUserError(varprefix, _("You are missing the action with the ID <b>%s</b>, "
+                           "which is still used in some rules.") % action_id)
 
 
 vs_mkeventd_actions = \
@@ -242,6 +243,35 @@ class RuleState(CascadingDropdown):
         ]
         CascadingDropdown.__init__(self, choices = choices, **kwargs)
 
+vs_mkeventd_rule_pack = Dictionary(
+    title = _("Rule pack properties"),
+    render = "form",
+    elements = [
+        ( "id",
+          ID(
+            title = _("Rule pack ID"),
+            help = _("A unique ID of this rule pack."),
+            allow_empty = False,
+            size = 12,
+        )),
+        (   "title",
+            TextUnicode(
+                title = _("Title"),
+                help = _("A descriptive title for this rule pack"),
+                allow_empty = False,
+                size = 64,
+            )
+        ),
+        (   "disabled",
+            Checkbox(
+                title = _("Disable"),
+                label = _("Currently disable execution of all rules in the pack"),
+            )
+        ),
+    ],
+    optional_keys = False,
+)
+
 vs_mkeventd_rule = Dictionary(
     title = _("Rule Properties"),
     elements = [
@@ -256,10 +286,16 @@ vs_mkeventd_rule = Dictionary(
     ] + rule_option_elements() +
     [
         ( "drop",
-          Checkbox(
-            title = _("Drop Message"),
-            help = _("With this option all messages matching this rule will be silently dropped."),
-            label = _("Silently drop message, do no actions"),
+          DropdownChoice(
+            title = _("Rule type"),
+            choices = [
+                ( False,       _("Normal operation - process message according to action settings") ),
+                ( True,        _("Do not do any action, drop this message, stop processing") ),
+                ( "skip_pack", _("Skip this rule pack, continue rule execution with next rule pack") ),
+            ],
+            help = _("With this option you can implement rules that rule out certain message from the "
+                     "procession totally. Either you can totally abort further rule execution, or "
+                     "you can skip just the current rule pack and continue with the next one."),
           )
         ),
         ( "state",
@@ -768,61 +804,77 @@ vs_mkeventd_event = Dictionary(
 
 
 #.
-#   .--Persistence---------------------------------------------------------.
-#   |           ____               _     _                                 |
-#   |          |  _ \ ___ _ __ ___(_)___| |_ ___ _ __   ___ ___            |
-#   |          | |_) / _ \ '__/ __| / __| __/ _ \ '_ \ / __/ _ \           |
-#   |          |  __/  __/ |  \__ \ \__ \ ||  __/ | | | (_|  __/           |
-#   |          |_|   \___|_|  |___/_|___/\__\___|_| |_|\___\___|           |
+#   .--Load & Save---------------------------------------------------------.
+#   |       _                    _    ___     ____                         |
+#   |      | |    ___   __ _  __| |  ( _ )   / ___|  __ ___   _____        |
+#   |      | |   / _ \ / _` |/ _` |  / _ \/\ \___ \ / _` \ \ / / _ \       |
+#   |      | |__| (_) | (_| | (_| | | (_>  <  ___) | (_| |\ V /  __/       |
+#   |      |_____\___/ \__,_|\__,_|  \___/\/ |____/ \__,_| \_/ \___|       |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |                                                                      |
+#   |  Loading and saving of rule packages                                 |
 #   '----------------------------------------------------------------------'
 
 def load_mkeventd_rules():
     filename = mkeventd_config_dir + "rules.mk"
     if not os.path.exists(filename):
-        return []
-    try:
-        vars = { "rules" : [] }
-        execfile(filename, vars, vars)
-        # If we are running on OMD then we know the path to
-        # the state retention file of mkeventd and can read
-        # the rule statistics directly from that file.
-        if defaults.omd_root and os.path.exists(mkeventd_status_file):
-            mkeventd_status = eval(file(mkeventd_status_file).read())
-            rule_stats = mkeventd_status["rule_stats"]
-            for rule in vars["rules"]:
-                rule["hits"] = rule_stats.get(rule["id"], 0)
+        return [], []
 
-        # Convert some data fields into a new format
-        for rule in vars["rules"]:
-            if "livetime" in rule:
-                livetime = rule["livetime"]
-                if type(livetime) != tuple:
-                    rule["livetime"] = ( livetime, ["open"] )
+    # Old versions define rules. We convert this into
+    # rule_packs but keep the old rule intact so the
+    # user can switch back to his old configuration.
+    vars = { "rules" : [], "rule_packs" : [] }
+    execfile(filename, vars, vars)
 
-        return vars["rules"]
+    # Convert some data fields into a new format
+    for rule in vars["rules"]:
+        if "livetime" in rule:
+            livetime = rule["livetime"]
+            if type(livetime) != tuple:
+                rule["livetime"] = ( livetime, ["open"] )
 
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
-        return []
+    # Convert old plain rules into a list of one rule pack
+    if vars["rules"] and not vars["rule_packs"]:
+        vars["rule_packs"] = [{
+            "id"     : "default",
+            "title"    : _("Default rule pack"),
+            "rules"    : vars["rules"],
+            "disabled" : False,
+        }]
 
-def save_mkeventd_rules(rules):
+    # Add information about rule hits: If we are running on OMD then we know
+    # the path to the state retention file of mkeventd and can read the rule
+    # statistics directly from that file.
+    if defaults.omd_root and os.path.exists(mkeventd_status_file):
+        mkeventd_status = eval(file(mkeventd_status_file).read())
+        rule_stats = mkeventd_status["rule_stats"]
+        for rule_pack in vars["rule_packs"]:
+            pack_hits = 0
+            for rule in rule_pack["rules"]:
+                hits = rule_stats.get(rule["id"], 0)
+                rule["hits"] = hits
+                pack_hits += hits
+            rule_pack["hits"] = pack_hits
+
+    # Return old rules also, for easy rolling back to old config
+    return vars["rules"], vars["rule_packs"]
+
+
+def save_mkeventd_rules(legacy_rules, rule_packs):
     make_nagios_directory(defaults.default_config_dir + "/mkeventd.d")
     make_nagios_directory(mkeventd_config_dir)
     out = create_user_file(mkeventd_config_dir + "rules.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     try:
         if config.mkeventd_pprint_rules:
-            out.write("rules += \\\n%s\n" % pprint.pformat(rules))
+            out.write("rules += \\\n%s\n\n" % pprint.pformat(legacy_rules))
+            out.write("rule_packs += \\\n%s\n" % pprint.pformat(rule_packs))
             return
     except:
         pass
 
-    out.write("rules += \\\n%r\n" % rules)
+    out.write("rules += \\\n%r\n\n" % legacy_rules)
+    out.write("rule_packs += \\\n%r\n" % rule_packs)
 
 
 #.
@@ -838,67 +890,56 @@ def save_mkeventd_rules(rules):
 #   | activation of the changes.                                           |
 #   '----------------------------------------------------------------------'
 
-def mode_mkeventd_rules(phase):
+def mode_mkeventd_rule_packs(phase):
+    legacy_rules, rule_packs = load_mkeventd_rules()
+
     if phase == "title":
-        return _("Rules for event correlation")
+        return _("Event Console Rule Packages")
 
     elif phase == "buttons":
         home_button()
-        changelog_button()
         mkeventd_changes_button()
         if config.may("mkeventd.edit"):
-            html.context_button(_("New Rule"), make_link([("mode", "mkeventd_edit_rule")]), "new")
+            html.context_button(_("New Rule Pack"), make_link([("mode", "mkeventd_edit_rule_pack")]), "new")
             html.context_button(_("Reset Counters"),
-              make_action_link([("mode", "mkeventd_rules"), ("_reset_counters", "1")]), "resetcounters")
+              make_action_link([("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")]), "resetcounters")
         mkeventd_status_button()
         mkeventd_config_button()
         mkeventd_mibs_button()
         return
 
-    rules = load_mkeventd_rules()
 
     if phase == "action":
-        # Validation of input for rule simulation (no further action here)
-        if html.var("simulate") or html.var("_generate"):
-            event = vs_mkeventd_event.from_html_vars("event")
-            vs_mkeventd_event.validate_value(event, "event")
-            config.save_user_file("simulated_event", event)
+        action_outcome = event_simulation_action()
+        if action_outcome:
+            return action_outcome
 
-        if html.has_var("_generate") and html.check_transaction():
-            if not event.get("application"):
-                raise MKUserError("event_p_application", _("Please specify an application name"))
-            if not event.get("host"):
-                raise MKUserError("event_p_host", _("Please specify a host name"))
-            rfc = mkeventd.send_event(event)
-            return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
-
-
+        # Deletion of rule packs
         if html.has_var("_delete"):
             nr = int(html.var("_delete"))
-            rule = rules[nr]
-            c = wato_confirm(_("Confirm rule deletion"),
-                             _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?" %
-                               (rule["id"], rule.get("description",""))))
+            rule_pack = rule_packs[nr]
+            c = wato_confirm(_("Confirm rule pack deletion"),
+                             _("Do you really want to delete the rule pack <b>%s</b> <i>%s</i> with <b>%s</b> rules?" %
+                               (rule_pack["id"], rule_pack["title"], len(rule_pack["rules"]))))
             if c:
-                log_mkeventd("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
-                del rules[nr]
-                save_mkeventd_rules(rules)
+                log_mkeventd("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
+                del rule_packs[nr]
+                save_mkeventd_rules(legacy_rules, rule_packs)
             elif c == False:
                 return ""
-            else:
-                return
 
+        # Reset all rule hit counteres
         elif html.has_var("_reset_counters"):
             c = wato_confirm(_("Confirm counter reset"),
-                             _("Do you really want to reset all <i>Hits</i> counters to zero?"))
+                             _("Do you really want to reset all rule hit counters in <b>all rule packs</b> to zero?"))
             if c:
                 mkeventd.query("COMMAND RESETCOUNTERS")
                 log_mkeventd("counter-reset", _("Resetted all rule hit counters to zero"))
             elif c == False:
                 return ""
-            else:
-                return
 
+        # Copy rules from master
+        # TODO: Wo ist der Knopf dafür?
         elif html.has_var("_copy_rules"):
             c = wato_confirm(_("Confirm copying rules"),
                              _("Do you really want to copy all event rules from the master and "
@@ -910,37 +951,136 @@ def mode_mkeventd_rules(phase):
                 return None, _("Copied rules from master")
             elif c == False:
                 return ""
-            else:
-                return
 
 
-        if html.check_transaction():
-            if html.has_var("_move"):
-                from_pos = int(html.var("_move"))
-                to_pos = int(html.var("_where"))
-                rule = rules[from_pos]
-                del rules[from_pos] # make to_pos now match!
-                rules[to_pos:to_pos] = [rule]
-                save_mkeventd_rules(rules)
-                log_mkeventd("move-rule", _("Changed position of rule %s") % rule["id"])
+        # Move rule packages
+        elif html.has_var("_move"):
+            from_pos = int(html.var("_move"))
+            to_pos = int(html.var("_where"))
+            rule_pack = rule_packs[from_pos]
+            del rule_packs[from_pos] # make to_pos now match!
+            rule_packs[to_pos:to_pos] = [rule_pack]
+            save_mkeventd_rules(legacy_rules, rule_packs)
+            log_mkeventd("move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"])
+
         return
 
     rep_mode = mkeventd.replication_mode()
     if rep_mode in [ "sync", "takeover" ]:
-        copy_url = make_action_link([("mode", "mkeventd_rules"), ("_copy_rules", "1")])
+        copy_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")])
         html.show_warning(_("WARNING: This Event Console is currently running as a replication "
           "slave. The rules edited here will not be used. Instead a copy of the rules of the "
           "master are being used in the case of a takeover. The same holds for the event "
           "actions in the global settings.<br><br>If you want you can copy the ruleset of "
           "the master into your local slave configuration: ") + \
-          '<a class=button href="%s">' % copy_url +
-          _("Copy Rules From Master") + '</a>')
-
-    if not rules:
-        html.message(_("You have not created any rules yet. The Event Console is useless unless "
-                     "you have activated <i>Force message archiving</i> in the global settings."))
+          '<a href="%s">' % copy_url + _("Copy Rules From Master") + '</a>')
 
     # Simulator
+    event = show_event_simulator()
+
+    if not rule_packs:
+        html.message(_("You have not created any rule packs yet. The Event Console is useless unless "
+                     "you have activated <i>Force message archiving</i> in the global settings."))
+    else:
+        have_match = False
+
+        table.begin(limit=None, sortable=False, title=_("Rule packs"))
+        for nr, rule_pack in enumerate(rule_packs):
+            table.row()
+            delete_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)])
+            top_url    = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", 0)])
+            bottom_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", len(rule_packs)-1)])
+            up_url     = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", nr-1)])
+            down_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", nr+1)])
+            edit_url   = make_link([("mode", "mkeventd_edit_rule_pack"), ("edit", nr)])
+            # Cloning does not work. Rule IDs would not be unique. So drop it for a while
+            # clone_url  = make_link([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
+            rules_url  = make_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack["id"])])
+
+            table.cell(_("Actions"), css="buttons")
+            html.icon_button(edit_url, _("Edit properies of this rule pack"), "edit")
+            # Cloning does not work until we have unique IDs
+            # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
+            html.icon_button(delete_url, _("Delete this rule pack"), "delete")
+            html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
+            if not rule_pack is rule_packs[0]:
+                html.icon_button(top_url, _("Move this rule pack to the top"), "top")
+                html.icon_button(up_url, _("Move this rule pack one position up"), "up")
+            else:
+                html.empty_icon_button()
+                html.empty_icon_button()
+
+            if not rule_pack is rule_packs[-1]:
+                html.icon_button(down_url, _("Move this rule pack one position down"), "down")
+                html.icon_button(bottom_url, _("Move this rule pack to the bottom"), "bottom")
+            else:
+                html.empty_icon_button()
+                html.empty_icon_button()
+
+            # Icon for disabling
+            table.cell("", css="buttons")
+            if rule_pack["disabled"]:
+                html.icon(_("This rule pack is currently disabled. None of its rules will be applied."), "disabled")
+
+            # Simulation of all rules in this pack
+            elif event:
+                matches = 0
+                match_groups = None
+                cancelling_matches = 0
+                skips = 0
+
+                for rule in rule_pack["rules"]:
+                    result = mkeventd.event_rule_matches(rule, event)
+                    if type(result) == tuple:
+                        cancelling, groups = result
+
+                        if not cancelling and rule.get("drop") == "skip_pack":
+                            matches += 1
+                            skips = 1
+                            break
+
+                        if matches == 0:
+                            match_groups = groups # show groups of first (= decisive) match
+
+                        if cancelling and matches == 0:
+                            cancelling_matches += 1
+
+                        matches += 1
+
+                if matches == 0:
+                    msg = _("None of the rules in this pack matches")
+                    icon = "rulenmatch"
+                else:
+                    msg = _("Number of matching rules in this pack: %d") % matches
+                    if skips:
+                        msg += _(", the first match skips this rule pack")
+                        icon = "rulenmatch"
+                    else:
+                        if cancelling:
+                            msg += _(", first match is a cancelling match")
+                        if groups:
+                            msg += _(", match groups of decisive match: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
+                        if have_match:
+                            msg += _(", but it is overruled by a match in a previous rule pack.")
+                            icon = "rulepmatch"
+                        else:
+                            icon = "rulematch"
+                            have_match = True
+                html.icon(msg, icon)
+
+            table.cell(_("ID"), rule_pack["id"])
+            table.cell(_("Title"), html.attrencode(rule_pack["title"]))
+            table.cell(_("Rules"), css="number")
+            html.write('<a href="%s">%d</a>' % (rules_url, len(rule_pack["rules"])))
+
+            if defaults.omd_root:
+                hits = rule_pack.get('hits')
+                table.cell(_("Hits"), hits != None and hits or '', css="number")
+
+        table.end()
+
+
+def show_event_simulator():
     event = config.load_user_file("simulated_event", {})
     html.begin_form("simulator")
     vs_mkeventd_event.render_input("event", event)
@@ -952,23 +1092,115 @@ def mode_mkeventd_rules(phase):
     html.write("<br>")
 
     if html.var("simulate"):
-        event = vs_mkeventd_event.from_html_vars("event")
+        return vs_mkeventd_event.from_html_vars("event")
     else:
-        event = None
+        return None
 
-    if rules:
+def event_simulation_action():
+    # Validation of input for rule simulation (no further action here)
+    if html.var("simulate") or html.var("_generate"):
+        event = vs_mkeventd_event.from_html_vars("event")
+        vs_mkeventd_event.validate_value(event, "event")
+        config.save_user_file("simulated_event", event)
+
+    if html.has_var("_generate") and html.check_transaction():
+        if not event.get("application"):
+            raise MKUserError("event_p_application", _("Please specify an application name"))
+        if not event.get("host"):
+            raise MKUserError("event_p_host", _("Please specify a host name"))
+        rfc = mkeventd.send_event(event)
+        return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
+
+def rule_pack_with_id(rule_packs, rule_pack_id):
+    for nr, entry in enumerate(rule_packs):
+        if entry["id"] == rule_pack_id:
+            return nr, entry
+
+
+def mode_mkeventd_rules(phase):
+    legacy_rules, rule_packs = load_mkeventd_rules()
+    rule_pack_id = html.var("rule_pack")
+    rule_pack_nr, rule_pack = rule_pack_with_id(rule_packs, rule_pack_id)
+    rules = rule_pack["rules"]
+
+    if phase == "title":
+        return _("Rule Package %s") % rule_pack["title"]
+
+    elif phase == "buttons":
+        mkeventd_rules_button()
+        mkeventd_changes_button()
+        if config.may("mkeventd.edit"):
+            html.context_button(_("New Rule"), make_link([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id)]), "new")
+            html.context_button(_("Properties"), make_link([("mode", "mkeventd_edit_rule_pack"), ("edit", rule_pack_nr)]), "edit")
+        return
+
+    if phase == "action":
+        if html.var("_move_to"):
+            if html.check_transaction():
+                for move_nr, rule in enumerate(rules):
+                    move_var = "_move_to_%s" % rule["id"]
+                    if html.var(move_var):
+                        other_pack_nr, other_pack = rule_pack_with_id(rule_packs, html.var(move_var))
+                        other_pack["rules"][0:0] = [ rule ]
+                        del rule_pack["rules"][move_nr]
+                        save_mkeventd_rules(legacy_rules, rule_packs)
+                        log_mkeventd("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
+                        return None, _("Moved rule %s to pack %s") % (rule["id"], html.attrencode(other_pack["title"]))
+                        break
+
+        action_outcome = event_simulation_action()
+        if action_outcome:
+            return action_outcome
+
+        if html.has_var("_delete"):
+            nr = int(html.var("_delete"))
+            rule = rules[nr]
+            c = wato_confirm(_("Confirm rule deletion"),
+                             _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?" %
+                               (rule["id"], rule.get("description",""))))
+            if c:
+                log_mkeventd("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
+                del rules[nr]
+                save_mkeventd_rules(legacy_rules, rule_packs)
+            elif c == False:
+                return ""
+            else:
+                return
+
+        if html.check_transaction():
+            if html.has_var("_move"):
+                from_pos = int(html.var("_move"))
+                to_pos = int(html.var("_where"))
+                rule = rules[from_pos]
+                del rules[from_pos] # make to_pos now match!
+                rules[to_pos:to_pos] = [rule]
+                save_mkeventd_rules(legacy_rules, rule_packs)
+                log_mkeventd("move-rule", _("Changed position of rule %s") % rule["id"])
+        return
+
+    # Simulator
+    event = show_event_simulator()
+
+    if not rules:
+        html.message(_("This package does not yet contain any rules."))
+
+    else:
+        if len(rule_packs) > 1:
+            html.begin_form("move_to", method="POST")
+
+        # Show content of the rule package
         table.begin(limit=None, sortable=False)
 
         have_match = False
         for nr, rule in enumerate(rules):
             table.row()
-            delete_url = make_action_link([("mode", "mkeventd_rules"), ("_delete", nr)])
-            top_url    = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", 0)])
-            bottom_url = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", len(rules)-1)])
-            up_url     = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", nr-1)])
-            down_url   = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", nr+1)])
-            edit_url   = make_link([("mode", "mkeventd_edit_rule"), ("edit", nr)])
-            clone_url  = make_link([("mode", "mkeventd_edit_rule"), ("clone", nr)])
+            delete_url = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_delete", nr)])
+            top_url    = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", 0)])
+            bottom_url = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", len(rules)-1)])
+            up_url     = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", nr-1)])
+            down_url   = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", nr+1)])
+            edit_url   = make_link([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("edit", nr)])
+            clone_url  = make_link([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("clone", nr)])
 
             table.cell(_("Actions"), css="buttons")
             html.icon_button(edit_url, _("Edit this rule"), "edit")
@@ -991,6 +1223,7 @@ def mode_mkeventd_rules(phase):
             table.cell("", css="buttons")
             if rule.get("disabled"):
                 html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+
             elif event:
                 result = mkeventd.event_rule_matches(rule, event)
                 if type(result) != tuple:
@@ -1019,7 +1252,11 @@ def mode_mkeventd_rules(phase):
             table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, rule["id"]))
 
             if rule.get("drop"):
-                table.cell(_("State"), _("DROP"), css="state statep")
+                table.cell(_("State"), css="state statep nowrap")
+                if rule["drop"] == "skip_pack":
+                    html.write(_("SKIP PACK"))
+                else:
+                    html.write(_("DROP"))
             else:
                 if type(rule['state']) == tuple:
                     stateval = rule["state"][0]
@@ -1066,6 +1303,20 @@ def mode_mkeventd_rules(phase):
                 html.write("&nbsp;")
             html.write(html.attrencode(rule.get("description", "")))
 
+            # Move rule to other pack
+            if len(rule_packs) > 1:
+                table.cell(_("Move to pack..."))
+                choices = [ ("", "") ] + \
+                          [ (pack["id"], pack["title"])
+                            for pack in rule_packs
+                            if not pack is rule_pack]
+                html.select("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
+
+        if len(rule_packs) > 1:
+            html.hidden_field("_move_to", "yes")
+            html.hidden_fields()
+            html.end_form()
+
         table.end()
 
 
@@ -1073,19 +1324,105 @@ def copy_rules_from_master():
     answer = mkeventd.query("REPLICATE 0")
     if "rules" not in answer:
         raise MKGeneralException(_("Cannot get rules from local event daemon."))
-    rules = answer["rules"]
-    save_mkeventd_rules(rules)
+    rule_packs = answer["rules"]
+    save_mkeventd_rules([], rule_packs)
+
+
+def mode_mkeventd_edit_rule_pack(phase):
+    legacy_rules, rule_packs = load_mkeventd_rules()
+    edit_nr = int(html.var("edit", -1)) # missing -> new rule pack
+    # Cloning currently not supported. Rule IDs wouldn't be unique!
+    # clone_nr = int(html.var("clone", -1)) # Only needed in 'new' mode
+    clone_nr = -1
+    new = edit_nr < 0
+
+    if phase == "title":
+        if new:
+            return _("Create new rule pack")
+        else:
+            return _("Edit rule pack %s" % rule_packs[edit_nr]["id"])
+
+    elif phase == "buttons":
+        mkeventd_rules_button()
+        mkeventd_changes_button()
+        if edit_nr >= 0:
+            rule_pack_id = rule_packs[edit_nr]["id"]
+            html.context_button(_("Edit Rules"), html.makeuri([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id)]), "mkeventd_rules")
+        return
+
+    if new:
+        ### if clone_nr >= 0:
+        ###     rule_pack = {}
+        ###     rule_pack.update(rule_packs[clone_nr])
+        ### else:
+            rule_pack = { "rules" : [], }
+    else:
+        rule_pack = rule_packs[edit_nr]
+
+
+    if phase == "action":
+        if not html.check_transaction():
+            return "mkeventd_rule_packs"
+
+        if not new: #  or clone_nr >= 0:
+            existing_rules = rule_pack["rules"]
+        else:
+            existing_rules = []
+
+        rule_pack = vs_mkeventd_rule_pack.from_html_vars("rule_pack")
+        vs_mkeventd_rule_pack.validate_value(rule_pack, "rule_pack")
+        rule_pack["rules"] = existing_rules
+        new_id = rule_pack["id"]
+
+        # Make sure that ID is unique
+        for nr, other_rule_pack in enumerate(rule_packs):
+            if new or nr != edit_nr:
+                if other_rule_pack["id"] == new_id:
+                    raise MKUserError("rule_pack_p_id", _("A rule pack with this ID already exists."))
+
+        if new:
+            rule_packs = [ rule_pack ] + rule_packs
+        else:
+            rule_packs[edit_nr] = rule_pack
+
+        save_mkeventd_rules(legacy_rules, rule_packs)
+
+        if new:
+            log_mkeventd("new-rule-pack", _("Created new rule pack with id %s" % rule_pack["id"]))
+        else:
+            log_mkeventd("edit-rule-pack", _("Modified rule pack %s" % rule_pack["id"]))
+        return "mkeventd_rule_packs"
+
+
+    html.begin_form("rule_pack")
+    vs_mkeventd_rule_pack.render_input("rule_pack", rule_pack)
+    vs_mkeventd_rule_pack.set_focus("rule_pack")
+    html.button("save", _("Save"))
+    html.hidden_fields()
+    html.end_form()
 
 
 def mode_mkeventd_edit_rule(phase):
-    rules = load_mkeventd_rules()
-    # Links from status view refer to rule via the rule id
-    if html.var("rule_id"):
+    legacy_rules, rule_packs = load_mkeventd_rules()
+
+    if html.has_var("rule_pack"):
+        rule_pack_nr, rule_pack = rule_pack_with_id(rule_packs, html.var("rule_pack"))
+
+    # In links from multisite views the rule pack is not known.
+    # We just know the rule id and need to find the pack ourselves.
+    else:
         rule_id = html.var("rule_id")
-        for nr, rule in enumerate(rules):
-            if rule["id"] == rule_id:
-                html.set_var("edit", str(nr))
-                break
+        for nr, pack in enumerate(rule_packs):
+            for rnr, rule in enumerate(pack["rules"]):
+                if rule_id == rule["id"]:
+                    rule_pack_nr = nr
+                    rule_pack = pack
+                    html.set_var("edit", str(rnr))
+                    html.set_var("rule_pack", pack["id"])
+                    break
+
+    rules = rule_pack["rules"]
+
 
     edit_nr = int(html.var("edit", -1)) # missing -> new rule
     clone_nr = int(html.var("clone", -1)) # Only needed in 'new' mode
@@ -1099,7 +1436,6 @@ def mode_mkeventd_edit_rule(phase):
 
     elif phase == "buttons":
         home_button()
-        changelog_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
         if clone_nr >= 0:
@@ -1127,9 +1463,10 @@ def mode_mkeventd_edit_rule(phase):
             raise MKUserError("rule_p_id",
                  _("It is not allowed to change the ID of an existing rule."))
         elif new:
-            for r in rules:
-                if r["id"] == rule["id"]:
-                    raise MKUserError("rule_p_id", _("A rule with this ID already exists."))
+            for pack in rule_packs:
+                for r in pack["rules"]:
+                    if r["id"] == rule["id"]:
+                        raise MKUserError("rule_p_id", _("A rule with this ID already exists in rule pack <b>%s</b>.") % html.attrencode(pack["title"]))
 
         try:
             num_groups = re.compile(rule["match"]).groups
@@ -1167,11 +1504,11 @@ def mode_mkeventd_edit_rule(phase):
         if new and clone_nr >= 0:
             rules[clone_nr:clone_nr] = [ rule ]
         elif new:
-            rules = [ rule ] + rules
+            rules[0:0] = [ rule ]
         else:
             rules[edit_nr] = rule
 
-        save_mkeventd_rules(rules)
+        save_mkeventd_rules(legacy_rules, rule_packs)
         if new:
             log_mkeventd("new-rule", _("Created new event correlation rule with id %s" % rule["id"]))
         else:
@@ -1184,10 +1521,10 @@ def mode_mkeventd_edit_rule(phase):
     html.begin_form("rule")
     vs_mkeventd_rule.render_input("rule", rule)
     vs_mkeventd_rule.set_focus("rule")
-    forms.end()
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
+
 
 def mkeventd_reload():
     mkeventd.query("COMMAND RELOAD")
@@ -1221,7 +1558,7 @@ def mode_mkeventd_changes(phase):
         if html.check_transaction():
             mkeventd_reload()
             call_hook_mkeventd_activate_changes()
-            return "mkeventd_rules", _("The new configuration has successfully been activated.")
+            return "mkeventd_rule_packs", _("The new configuration has successfully been activated.")
 
     else:
         if not mkeventd.daemon_running():
@@ -1267,7 +1604,7 @@ def mkeventd_changes_button():
     html.context_button(buttontext, make_link([("mode", "mkeventd_changes")]), icon, hot)
 
 def mkeventd_rules_button():
-    html.context_button(_("All Rules"), make_link([("mode", "mkeventd_rules")]), "back")
+    html.context_button(_("Rule Packs"), make_link([("mode", "mkeventd_rule_packs")]), "back")
 
 def mkeventd_config_button():
     if config.may("mkeventd.config"):
@@ -1354,7 +1691,6 @@ def mode_mkeventd_edit_configvar(phasee):
 
     elif phase == 'buttons':
         home_button()
-        changelog_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
         mkeventd_status_button()
@@ -1394,7 +1730,6 @@ def mode_mkeventd_config(phase):
 
     elif phase == 'buttons':
         home_button()
-        changelog_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
         html.context_button(_("Server Status"), make_link([("mode", "mkeventd_status")]), "status")
@@ -1481,7 +1816,6 @@ def mode_mkeventd_mibs(phase):
 
     elif phase == 'buttons':
         home_button()
-        changelog_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
         mkeventd_status_button()
@@ -1673,8 +2007,10 @@ def upload_mib(filename, mimetype, content):
 
 
 if mkeventd_enabled:
+    modes["mkeventd_rule_packs"]     = (["mkeventd.edit"], mode_mkeventd_rule_packs)
     modes["mkeventd_rules"]          = (["mkeventd.edit"], mode_mkeventd_rules)
     modes["mkeventd_edit_rule"]      = (["mkeventd.edit"], mode_mkeventd_edit_rule)
+    modes["mkeventd_edit_rule_pack"] = (["mkeventd.edit"], mode_mkeventd_edit_rule_pack)
     modes["mkeventd_changes"]        = (["mkeventd.edit"], mode_mkeventd_changes)
     modes["mkeventd_status"]         = ([], mode_mkeventd_status)
     modes["mkeventd_config"]         = (['mkeventd.config'], mode_mkeventd_config)
@@ -1724,9 +2060,9 @@ if mkeventd_enabled:
          ["admin"])
 
     modules.append(
-      ( "mkeventd_rules",  _("Event Console"), "mkeventd", "mkeventd.edit",
+      ( "mkeventd_rule_packs",  _("Event Console"), "mkeventd", "mkeventd.edit",
       _("Manage event classification and correlation rules for the "
-        "event console")))
+        "Event Console")))
 
 
 #.

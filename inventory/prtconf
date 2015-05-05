@@ -77,7 +77,7 @@ def inv_prtconf(info):
             inv_tree("hardware.cpu.")["model"] = value
 
         elif varname == "Processor Clock Speed":
-            inv_tree("hardware.cpu.")["max_speed"] = float(value.split()[0]) * 1024 * 1024
+            inv_tree("hardware.cpu.")["max_speed"] = float(value.split()[0]) * 1000 * 1000
 
         elif varname == "Number Of Processors":
             inv_tree("hardware.cpu.")["cpus"] = int(value)

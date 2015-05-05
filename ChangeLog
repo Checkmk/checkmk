@@ -23,6 +23,7 @@
 
     HW/SW-Inventory:
     * 2246 FIX: Linux CPU Inventory: Fixed wrong number of CPUs when first CPU is not in first slot
+    * 2226 FIX: prtconf: Fix computation of CPU clock speed: 1MHz is 1000^2 Hz, not 1024^2
 
 
 1.2.6p2:

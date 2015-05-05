@@ -1,0 +1,9 @@
+Title: prtconf: Fix computation of CPU clock speed: 1MHz is 1000^2 Hz, not 1024^2
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.6p3
+Date: 1430819374
+Class: fix
+
+

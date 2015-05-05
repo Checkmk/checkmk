@@ -1,0 +1,10 @@
+Title: printer_output: Now correctly detect a bin with unknown as name
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1430809514
+
+

@@ -285,7 +285,7 @@ def locally_deliver_raw_context(raw_context, analyse=False):
         #    have precedence in this situation!
         if not contactname or contactname == "check-mk-notify":
             # 1. RULE BASE NOTIFICATIONS
-            notify_log("Preparing rule based notifications")
+            notify_log_debug("Preparing rule based notifications")
             return notify_rulebased(raw_context, analyse=analyse)
 
         if analyse:
@@ -360,6 +360,8 @@ def notify_keepalive():
         sys.stdout.flush()
     else:
         notify_log("We are back after a restart.")
+
+    notify_log_debug("Verbose logging is activated.")
 
     while True:
         try:
@@ -593,7 +595,7 @@ def user_notification_rules():
             # is handled by WATO. Contact specific rules are a
             # WATO-only feature anyway...
             user_rules.append(rule)
-    notify_log("Found %d user specific rules" % len(user_rules))
+    notify_log_debug("Found %d user specific rules" % len(user_rules))
     return user_rules
 
 
@@ -1296,8 +1298,7 @@ def notify_via_email(plugin_context):
         if "utf8" in l or "utf-8" in l or "utf.8" in l:
             encoding = encoding.strip()
             os.putenv("LANG", encoding)
-            if notification_logging >= 2:
-                notify_log("Setting locale for mail to %s." % encoding)
+            notify_log_debug("Setting locale for mail to %s." % encoding)
             break
     else:
         notify_log("No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.")
@@ -1305,8 +1306,7 @@ def notify_via_email(plugin_context):
     # Important: we must not output anything on stdout or stderr. Data of stdout
     # goes back into the socket to the CMC in keepalive mode and garbles the
     # handshake signal.
-    if notification_logging >= 2:
-        notify_log("Executing command: %s" % command)
+    notify_log_debug("Executing command: %s" % command)
 
     p = subprocess.Popen(command_utf8, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
@@ -1470,13 +1470,15 @@ def create_spoolfile(data):
 # 3. Notifications to *got* forwarded. Contain neither of both.
 # Spool files of type 1 are not handled here!
 def handle_spoolfile(spoolfile):
+    notif_uuid = spoolfile.rsplit("/", 1)[-1]
     notify_log("----------------------------------------------------------------------")
     try:
         data = eval(file(spoolfile).read())
         if "plugin" in data:
             plugin_context = data["context"]
             plugin = data["plugin"]
-            notify_log("Got spool file (%s) for local delivery via %s" % (
+            notify_log("Got spool file %s (%s) for local delivery via %s" % (
+                notif_uuid[:8],
                 find_host_service(plugin_context), (plugin or "plain mail")))
             return call_notification_script(plugin, plugin_context)
 
@@ -1484,9 +1486,9 @@ def handle_spoolfile(spoolfile):
             # We received a forwarded raw notification. We need to process
             # this with our local notification rules in order to call one,
             # several or no actual plugins.
-            notify_log("Got spool file (%s) from remote host for local delivery." %
-                        find_host_service(plugin_context))
             raw_context = data["context"]
+            notify_log("Got spool file %s (%s) from remote host for local delivery." % (
+                       notif_uuid[:8], find_host_service(raw_context)))
             locally_deliver_raw_context(data["context"])
             return 0 # No error handling for async delivery
 
@@ -1999,6 +2001,11 @@ def notify_log(message):
     if notification_logging >= 1:
         formatted = u"%s %s\n" % (time.strftime("%F %T", time.localtime()), message)
         file(notification_log, "a").write(formatted.encode("utf-8"))
+
+def notify_log_debug(message):
+    if notification_logging >= 2:
+        notify_log(message)
+
 
 def get_readable_rel_date(timestamp):
     try:

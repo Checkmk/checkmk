@@ -29,6 +29,8 @@ import availability
 # Variable name conventions
 # spans_by_host: a two tier dict: (site, host) -> service -> list(spans)
 #   In case of BI (site, host) is (None, aggr_group), service is aggr_name
+# availability: a list of dicts. Each dicts describes the availability
+#   information of one object (seconds being OK, CRIT, etc.)
 
 
 #.
@@ -805,11 +807,26 @@ def do_render_availability(spans_by_host, what, avoptions, timeline, timewarpcod
                     else:
                         statistics[s] = [ 1, duration, duration ] # count, min, max
 
-            if not show_timeline:
-                timeline_rows = None
+            availability_entry = {
+                "site"                : site_host[0],
+                "host"                : site_host[1],
+                "service"             : service,
+                "display_name"        : display_name,
+                "states"              : states,
+                "considered_duration" : considered_duration,
+                "total_duration"      : total_duration,
+                "statistics"          : statistics,
+                "groups"              : group_ids,
+            }
 
-            availability.append([site_host[0], site_host[1], service, display_name, states,
-                                considered_duration, total_duration, statistics, timeline_rows, group_ids])
+            if show_timeline:
+                availability_entry["timeline"] = timeline_rows
+
+            availability.append(availability_entry)
+
+
+            # [site_host[0], site_host[1], service, display_name, states,
+            #                    considered_duration, total_duration, statistics, timeline_rows, group_ids])
 
     # Prepare number format function
     range, range_title = avoptions["range"]
@@ -819,7 +836,11 @@ def do_render_availability(spans_by_host, what, avoptions, timeline, timewarpcod
 
     fetch_data = {}
 
+    del timeline_rows
+    # TODO: timeline_rows direct aus availability holen
     if timeline:
+        # TODO: Here we assume that we show exactly one object
+        timeline_rows = availability[0]["timeline"]
         if not fetch: # Timeline does not support fetch
             render_timeline(timeline_rows, from_time, until_time, total_duration,
                             timeline, range_title, render_number, what, timewarpcode, avoptions, False, style="standalone")
@@ -1245,9 +1266,9 @@ def render_timeline_legend(what):
 
 def get_av_groups(availability, grouping):
     all_group_ids = set([])
-    for site, host, service, display_name, states, considered_duration, total_duration, statistics, timeline_rows, group_ids in availability:
-        all_group_ids.update(group_ids)
-        if len(group_ids) == 0:
+    for entry in availability:
+        all_group_ids.update(entry["groups"])
+        if len(entry["groups"]) == 0:
             all_group_ids.add(()) # null-tuple denotes ungrouped objects
     return all_group_ids
 
@@ -1259,9 +1280,9 @@ def render_availability_group(group_title, range_title, group_id, availability,
     # Filter out groups that we want to show this time
     group_availability = []
     for entry in availability:
-        group_ids = entry[-1]
+        group_ids = entry["groups"]
         if group_id == () and group_ids:
-            continue # This is not an angrouped object
+            continue # This is not an ungrouped object
         elif group_id and group_id not in group_ids:
             continue # Not this group
         group_availability.append(entry)
@@ -1302,10 +1323,10 @@ def render_availability_group(group_title, range_title, group_id, availability,
     # Sort according to host and service. First after site, then
     # host (natural sort), then service
     def cmp_av_entry(a, b):
-        return cmp(a[0], b[0]) or \
-               cmp(num_split(a[1]) + (a[1],), num_split(b[1]) + (b[1],)) or \
-               cmp(cmp_service_name_equiv(a[2]), cmp_service_name_equiv(b[2])) or \
-               cmp(a[2], b[2])
+        return cmp(a["site"], b["site"]) or \
+               cmp(num_split(a["host"]) + (a["host"],), num_split(b["host"]) + (b["host"],)) or \
+               cmp(cmp_service_name_equiv(a["service"]), cmp_service_name_equiv(b["service"])) or \
+               cmp(a["service"], b["service"])
 
     group_availability.sort(cmp = cmp_av_entry)
     show_summary = avoptions.get("summary")
@@ -1315,7 +1336,11 @@ def render_availability_group(group_title, range_title, group_id, availability,
         searchable = False, limit = None, output_format = do_csv and "csv" or (fetch and "fetch" or "html"),
         omit_headers = "omit_headers" in avoptions["labelling"])
 
-    for site, host, service, display_name, states, considered_duration, total_duration, statistics, timeline_rows, group_ids in group_availability:
+    for entry in group_availability:
+        site = entry["site"]
+        host = entry["host"]
+        service = entry["service"]
+
         table.row()
 
         if what != "bi":
@@ -1384,24 +1409,24 @@ def render_availability_group(group_title, range_title, group_id, availability,
             if avoptions["av_mode"]:
                 sname = _("Avail.")
 
-            number = states.get(sid, 0)
+            number = entry["states"].get(sid, 0)
             if not number:
                 css = "unused"
             elif show_summary:
                 summary.setdefault(sid, 0.0)
                 if avoptions["timeformat"].startswith("percentage"):
-                    if considered_duration > 0:
-                        summary[sid] += float(number) / considered_duration
+                    if entry["considered_duration"] > 0:
+                        summary[sid] += float(number) / entry["considered_duration"]
                 else:
                     summary[sid] += number
 
             # Apply visual availability levels (render OK in yellow/red, if too low)
             if number and av_levels and sid in [ "ok", "up" ]:
                 css = "state%d" % check_av_levels(number, av_levels, considered_duration)
-            table.cell(sname, render_number(number, considered_duration), css="narrow number " + css, help=help)
+            table.cell(sname, render_number(number, entry["considered_duration"]), css="narrow number " + css, help=help)
 
             # Statistics?
-            x_cnt, x_min, x_max = statistics.get(sid, (None, None, None))
+            x_cnt, x_min, x_max = entry["statistics"].get(sid, (None, None, None))
             os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
             if sid in os_states:
                 for aggr in os_aggrs:
@@ -1442,13 +1467,13 @@ def render_availability_group(group_title, range_title, group_id, availability,
             if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
                 number /= len(group_availability)
                 if avoptions["timeformat"].startswith("percentage"):
-                    number *= considered_duration
+                    number *= entry["considered_duration"]
             if not number:
                 css = "unused"
 
             if number and av_levels and sid in [ "ok", "up" ]:
-                css = "state%d" % check_av_levels(number, av_levels, considered_duration)
-            table.cell(sname, render_number(number, considered_duration), css="heading number " + css, help=help)
+                css = "state%d" % check_av_levels(number, av_levels, entry["considered_duration"])
+            table.cell(sname, render_number(number, entry["considered_duration"]), css="heading number " + css, help=help)
             os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
             if sid in os_states:
                 for aggr in os_aggrs:

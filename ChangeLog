@@ -547,6 +547,7 @@
     * 2197 FIX: win_reg_uninstall: Fix exception in case of invalid output line...
     * 2224 FIX: Fixed sorting in inventory based views...
     * 2246 FIX: Linux CPU Inventory: Fixed wrong number of CPUs when first CPU is not in first slot
+    * 2226 FIX: prtconf: Fix computation of CPU clock speed: 1MHz is 1000^2 Hz, not 1024^2
 
 
 1.2.6b1:

@@ -24,6 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import availability
+
+# Variable name conventions
+# spans_by_host: a two tier dict: (site, host) -> service -> list(spans)
+#   In case of BI (site, host) is (None, aggr_group), service is aggr_name
+
+
+#.
+#   .--Rendering-----------------------------------------------------------.
+#   |            ____                _           _                         |
+#   |           |  _ \ ___ _ __   __| | ___ _ __(_)_ __   __ _             |
+#   |           | |_) / _ \ '_ \ / _` |/ _ \ '__| | '_ \ / _` |            |
+#   |           |  _ <  __/ | | | (_| |  __/ |  | | | | | (_| |            |
+#   |           |_| \_\___|_| |_|\__,_|\___|_|  |_|_| |_|\__, |            |
+#   |                                                    |___/             |
+#   +----------------------------------------------------------------------+
+#   |  Rendering availability data into HTML.                              |
+#   '----------------------------------------------------------------------'
 # Hints:
 # There are several modes for displaying data
 # 1. Availability table
@@ -37,21 +55,21 @@
 #  Here the logic of show_view is used for creating the
 #  filter headers. But these are being reused for the statehist
 #  table instead of the original hosts/services table! This is
-#  done in get_availability_data().
+#  done in get_availability_rawdata().
 #
 #  - htdocs/views.py:show_view()
 #  - plugins/views/availability.py:render_availability()
-#    - plugins/views/availability.py:get_availability_data()
+#    - plugins/views/availability.py:get_availability_rawdata()
 #    - plugins/views/availability.py:do_render_availability()
 #      - plugins/views/availability.py:render_availability_table()
 #
 # 2a) timeline of hosts/services
-#  It is much the same as for 1a), just that in get_availability_data()
+#  It is much the same as for 1a), just that in get_availability_rawdata()
 #  an additional filter is being added for selecting just one host/serivce.
 #
 #  - htdocs/views.py:show_view()
 #  - plugins/views/availability.py:render_availability()
-#    - plugins/views/availability.py:get_availability_data()
+#    - plugins/views/availability.py:get_availability_rawdata()
 #    - plugins/views/availability.py:do_render_availability()
 #      - plugins/views/availability.py:render_timeline()
 #
@@ -94,7 +112,7 @@ def render_availability(view, datasource, filterheaders, display_options,
         return
 
     avoptions = get_availability_options_from_url()
-    range, range_title = avoptions["range"]
+    time_range, range_title = avoptions["range"]
 
     timeline = not not html.var("timeline")
     if timeline:
@@ -145,7 +163,7 @@ def render_availability(view, datasource, filterheaders, display_options,
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
         if timeline:
             html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
-            history_url = history_url_of(tl_site, tl_host, tl_service, range[0], range[1])
+            history_url = history_url_of(tl_site, tl_host, tl_service, time_range[0], time_range[1])
             if not tl_aggr: # No history for BI aggregate timeline
                 html.context_button(_("History"), history_url, "history")
         html.end_context_buttons()
@@ -161,13 +179,13 @@ def render_availability(view, datasource, filterheaders, display_options,
                 raise MKGeneralException("Missing GET variable <tt>aggr_group</tt>")
             aggr_group = html.var("aggr_group")
             tree = bi.get_bi_tree(aggr_group, tl_aggr)
-            rows = [{ "aggr_tree" : tree , "aggr_group" : aggr_group}]
+            spans_by_host = { (None, aggr_group): [{ "aggr_tree" : tree , "aggr_group" : aggr_group}] }
             what = "bi"
         else:
-            rows = get_availability_data(datasource, filterheaders, range, only_sites,
-                                         limit, timeline, timeline or avoptions["show_timeline"], avoptions)
             what = "service" in datasource["infos"] and "service" or "host"
-        do_render_availability(rows, what, avoptions, timeline, "")
+            spans_by_host = availability.get_availability_rawdata(what, filterheaders, time_range, only_sites,
+                                         timeline, timeline or avoptions["show_timeline"], avoptions)
+        do_render_availability(spans_by_host, what, avoptions, timeline, "")
 
     if 'Z' in display_options:
         html.bottom_footer()
@@ -633,42 +651,6 @@ def render_availability_options():
 
     return avoptions
 
-def get_availability_data(datasource, filterheaders, range, only_sites, limit, single_object, include_output, avoptions):
-    has_service = "service" in datasource["infos"]
-    av_filter = "Filter: time >= %d\nFilter: time < %d\n" % range
-    if single_object:
-        tl_site, tl_host, tl_service = single_object
-        av_filter += "Filter: host_name = %s\nFilter: service_description = %s\n" % (
-                tl_host, tl_service)
-        only_sites = [ tl_site ]
-    elif has_service:
-        av_filter += "Filter: service_description !=\n"
-    else:
-        av_filter += "Filter: service_description =\n"
-
-    query = "GET statehist\n" + av_filter
-    query += "Timelimit: %d\n" % avoptions["timelimit"]
-
-    # Add Columns needed for object identification
-    columns = [ "host_name", "service_description" ]
-
-    # Columns for availability
-    columns += [
-      "duration", "from", "until", "state", "host_down", "in_downtime",
-      "in_host_downtime", "in_notification_period", "in_service_period", "is_flapping", ]
-    if include_output:
-        columns.append("log_output")
-    if "use_display_name" in avoptions["labelling"]:
-        columns.append("service_display_name")
-
-    # If we group by host/service group then make sure that that information is available
-    if avoptions["grouping"] not in [ None, "host" ]:
-        columns.append(avoptions["grouping"])
-
-    add_columns = datasource.get("add_columns", [])
-    rows = do_query_data(query, columns, add_columns, None, filterheaders, only_sites, limit = None)
-    return rows
-
 
 host_availability_columns = [
  ( "up",                        "state0",        _("UP"),       None ),
@@ -705,17 +687,7 @@ bi_availability_columns = [
 
 
 # Fetch = true: return av table as Python data, do render nothing
-def do_render_availability(rows, what, avoptions, timeline, timewarpcode, fetch=False):
-    # Sort by site/host and service, while keeping native order
-    by_host = {}
-    for row in rows:
-        site_host = row["site"], row["host_name"]
-        service = row["service_description"]
-        by_host.setdefault(site_host, {})
-        by_host[site_host].setdefault(service, []).append(row)
-
-    # Load annotations
-    annotations = load_annotations()
+def do_render_availability(spans_by_host, what, avoptions, timeline, timewarpcode, fetch=False):
 
     # Now compute availability table. We have the following possible states:
     # 1. "unmonitored"
@@ -740,7 +712,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode, fetch=
     considered_duration = 0
 
     # Note: in case of timeline, we have data from exacly one host/service
-    for site_host, site_host_entry in by_host.iteritems():
+    for site_host, site_host_entry in spans_by_host.iteritems():
         for service, service_entry in site_host_entry.iteritems():
 
             if grouping == "host":
@@ -856,7 +828,8 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode, fetch=
                                                         what, avoptions, render_number, fetch)
 
     if not fetch:
-        render_annotations(annotations, from_time, until_time, by_host, what, avoptions, omit_service = timeline)
+        annotations = load_annotations()
+        render_annotations(annotations, from_time, until_time, spans_by_host, what, avoptions, omit_service = timeline)
 
     return fetch_data
 
@@ -1341,6 +1314,7 @@ def render_availability_group(group_title, range_title, group_id, availability,
     table.begin("av_items", group_title, css="availability",
         searchable = False, limit = None, output_format = do_csv and "csv" or (fetch and "fetch" or "html"),
         omit_headers = "omit_headers" in avoptions["labelling"])
+
     for site, host, service, display_name, states, considered_duration, total_duration, statistics, timeline_rows, group_ids in group_availability:
         table.row()
 
@@ -1507,11 +1481,14 @@ def check_av_levels(number, av_levels, considered_duration):
 
 
 def compute_bi_availability(avoptions, aggr_rows):
-    rows = []
+    spans_by_host = {}
     for aggr_row in aggr_rows:
+        by_host = spans_by_host.setdefault((None, aggr_row["aggr_group"]), {})
+        entry = by_host.setdefault(aggr_row["aggr_name"], [])
         these_rows, tree_state = get_bi_timeline(aggr_row["aggr_tree"], aggr_row["aggr_group"], avoptions, False)
-        rows += these_rows
-    return do_render_availability(rows, "bi", avoptions, timeline=False, timewarpcode=None, fetch=True)
+        entry += these_rows
+
+    return do_render_availability(spans_by_host, "bi", avoptions, timeline=False, timewarpcode=None, fetch=True)
 
 
 # Render availability of a BI aggregate. This is currently
@@ -1610,11 +1587,17 @@ def render_bi_availability(title, aggr_rows):
             else:
                 timewarpcode = ""
 
-        do_render_availability(rows, "bi", avoptions, timeline, timewarpcode)
+        spans_by_host = {}
+        for row in rows:
+            host_entry = spans_by_host.setdefault((None, row["host_name"]), {})
+            host_entry.setdefault(row["service_description"], []).append(row)
+
+        do_render_availability(spans_by_host, "bi", avoptions, timeline, timewarpcode)
 
     if html.output_format != "csv_export":
         html.bottom_footer()
         html.body_end()
+
 
 def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
     range, range_title = avoptions["range"]
@@ -1701,20 +1684,20 @@ def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
     timeline = []
     def append_to_timeline(from_time, until_time, tree_state):
         timeline.append({
-        "state"                  : tree_state[0]['state'],
-        "log_output"             : tree_state[0]['output'],
-        "from"                   : from_time,
-        "until"                  : until_time,
-        "site"                   : "",
-        "host_name"              : aggr_group,
-        "service_description"    : tree['title'],
-        "in_notification_period" : 1,
-        "in_service_period"      : 1,
-        "in_downtime"            : tree_state[0]['in_downtime'],
-        "in_host_downtime"       : 0,
-        "host_down"              : 0,
-        "is_flapping"            : 0,
-        "duration"               : until_time - from_time,
+            "state"                  : tree_state[0]['state'],
+            "log_output"             : tree_state[0]['output'],
+            "from"                   : from_time,
+            "until"                  : until_time,
+            "site"                   : "",
+            "host_name"              : aggr_group,
+            "service_description"    : tree['title'],
+            "in_notification_period" : 1,
+            "in_service_period"      : 1,
+            "in_downtime"            : tree_state[0]['in_downtime'],
+            "in_host_downtime"       : 0,
+            "host_down"              : 0,
+            "is_flapping"            : 0,
+            "duration"               : until_time - from_time,
         })
 
 

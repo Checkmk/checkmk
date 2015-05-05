@@ -25,14 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 
-#<<<statgrab_mem>>>
-#mem.cache 0
-#mem.free 166014599168
-#mem.total 274877906944
-#mem.used 108863307776
-#swap.free 87748075520
-#swap.total 203939356672
-#swap.used 116191281152
+# <<<statgrab_mem>>>
+# mem.cache 0
+# mem.free 166014599168
+# mem.total 274877906944
+# mem.used 108863307776
+# swap.free 87748075520
+# swap.total 203939356672
+# swap.used 116191281152
 
 def inv_solaris_mem(info):
     node = inv_tree("hardware.memory.")

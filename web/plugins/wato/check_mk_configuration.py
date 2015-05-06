@@ -2193,14 +2193,17 @@ register_rule(group,
 
 register_rule(group,
     "extra_host_conf:icon_image",
-    IconSelector(
-        title = _("Icon image for hosts in status GUI"),
-        help = _("You can assign icons to hosts for the status GUI. "
-                 "Put your images into <tt>%s</tt>. ") %
-                ( defaults.omd_root
-                   and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
-                   or defaults.web_dir + "/htdocs/images/icons" ),
-        ))
+    Transform(
+        IconSelector(
+            title = _("Icon image for hosts in status GUI"),
+            help = _("You can assign icons to hosts for the status GUI. "
+                     "Put your images into <tt>%s</tt>. ") %
+                    ( defaults.omd_root
+                       and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
+                       or defaults.web_dir + "/htdocs/images/icons" ),
+        ),
+        forth = lambda v: v.endswith('.png') and v[:-4] or v,
+    ))
 
 
 register_rule(group,
@@ -2214,8 +2217,7 @@ register_rule(group,
                        and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
                        or defaults.web_dir + "/htdocs/images/icons" ),
         ),
-        forth = lambda v: v and v[:-4] or v,
-        back  = lambda v: v and v+'.png' or v,
+        forth = lambda v: v.endswith('.png') and v[:-4] or v,
     ),
     itemtype = "service")
 

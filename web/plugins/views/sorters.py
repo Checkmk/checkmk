@@ -129,18 +129,6 @@ multisite_sorters['servicelevel'] = {
     'cmp'     : lambda r1, r2: cmp_custom_variable(r1, r2, 'EC_SL', cmp_simple_number)
 }
 
-def cmp_service_name_equiv(r):
-    if r == "Check_MK":
-        return -5
-    elif r == "Check_MK Discovery":
-        return -4
-    elif r == "Check_MK inventory":
-        return -3 # FIXME: Remove old name one day
-    elif r == "Check_MK HW/SW Inventory":
-        return -2
-    else:
-        return 0
-
 def cmp_service_name(column, r1, r2):
     return cmp(cmp_service_name_equiv(r1[column]), cmp_service_name_equiv(r2[column])) or \
            cmp_num_split(column, r1, r2)

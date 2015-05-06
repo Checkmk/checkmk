@@ -92,7 +92,7 @@ def cmp_oids(o1, o2):
 
 def snmpv3_contexts_of(hostname, check_type):
     for ty, rules in host_extra_conf(hostname, snmpv3_contexts):
-        if ty == check_type:
+        if ty == None or ty == check_type:
             return rules
     return [None]
 

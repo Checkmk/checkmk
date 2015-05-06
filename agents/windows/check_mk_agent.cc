@@ -4099,7 +4099,6 @@ bool handle_mrpe_config_variable(char *var, char *value)
                     "Format: SERVICEDESC COMMANDLINE\r\n");
             return false;
         }
-        fprintf(stderr, "CMD: [%s]\r\n", command_line);
 
         mrpe_entry* tmp_entry = new mrpe_entry();
         memset(tmp_entry, 0, sizeof(mrpe_entry));
@@ -4785,13 +4784,17 @@ void show_version()
     printf("Check_MK_Agent version %s\n", check_mk_version);
 }
 
-void get_agent_dir(char *buffer, int size)
+void get_agent_dir(char *buffer, int size, bool use_cwd)
 {
     buffer[0] = 0;
 
     HKEY key;
-    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-            "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
+    DWORD ret = -1;
+
+    if (!use_cwd)
+        ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
+
     if (ret == ERROR_SUCCESS)
     {
         DWORD dsize = size;
@@ -4823,11 +4826,11 @@ void get_agent_dir(char *buffer, int size)
 
 }
 
-void determine_directories()
+void determine_directories(bool use_cwd)
 {
     // Determine directories once and forever
     getcwd(g_current_directory, sizeof(g_current_directory));
-    get_agent_dir(g_agent_directory, sizeof(g_agent_directory));
+    get_agent_dir(g_agent_directory, sizeof(g_agent_directory), use_cwd);
     snprintf(g_plugins_dir, sizeof(g_plugins_dir), "%s\\plugins", g_agent_directory);
     snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
     snprintf(g_spool_dir, sizeof(g_spool_dir), "%s\\spool", g_agent_directory);
@@ -5024,7 +5027,10 @@ int main(int argc, char **argv)
     osv.dwOSVersionInfoSize = sizeof(osv);
     GetVersionEx(&osv);
 
-    determine_directories();
+    if (!strcmp(argv[1], "adhoc") || !strcmp(argv[1], "test"))
+        determine_directories(true /* use working dir */);
+    else
+        determine_directories(false /* use registered dir */);
     read_config_file();
 
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);

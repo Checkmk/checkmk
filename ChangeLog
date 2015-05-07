@@ -15,6 +15,7 @@
     WATO:
     * 2250 Added download page for shipped agents and plugins...
     * 2244 FIX: Fixed sorting of host tag topics in dropdown selections
+    * 2263 FIX: Bulk service discovery: Fixed error when doing bulk inventory on locked folders...
 
     Notifications:
     * 2243 FIX: Check_MK notifications don't fail anymore when duplicate hosts are configured

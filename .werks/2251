@@ -1,0 +1,12 @@
+Title: Adding views to dashboards / reports is now respecing all set filters
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6p3
+Date: 1431009374
+
+In previous versions only the filters used by single contexts were used. This
+has been cleaned up now to get the exact same context information on the view
+which is being added.

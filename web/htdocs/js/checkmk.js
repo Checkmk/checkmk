@@ -2327,23 +2327,11 @@ function add_to_visual(visual_type, visual_name)
 {
     close_visualadd_popup();
 
-    var context_txt = [];
-    for (var key in add_visual_data[1]) {
-        var ty = typeof(add_visual_data[1][key]);
-        context_txt.push(key+':'+ty+':'+add_visual_data[1][key]);
-    }
-
-    var params_txt = [];
-    for (var key in add_visual_data[2]) {
-        var ty = typeof(add_visual_data[2][key]);
-        params_txt.push(key+':'+ty+':'+add_visual_data[2][key]);
-    }
-
     response = get_url_sync('ajax_add_visual.py?visual_type=' + visual_type
                                   + '&visual_name=' + visual_name
                                   + '&type=' + add_visual_data[0]
-                                  + '&context=' + encodeURIComponent(context_txt.join('|'))
-                                  + '&params=' + encodeURIComponent(params_txt.join('|')));
+                                  + '&context=' + encodeURIComponent(JSON.stringify(add_visual_data[1]))
+                                  + '&params=' + encodeURIComponent(JSON.stringify(add_visual_data[2])));
     add_visual_data = null;
 
     // After adding a dashlet, go to the choosen dashboard

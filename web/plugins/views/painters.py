@@ -118,20 +118,49 @@ def paint_custom_var(what, key, row):
 #   |___\___\___/|_| |_|___/
 #
 
+# Deprecated in 1.2.7i1
 multisite_icons = []
+# Use this structure for new icons
+multisite_icons_and_actions = {}
 
 load_web_plugins('icons', globals())
 
+def get_multisite_icons():
+    icons = {}
+
+    for icon_id, icon in multisite_icons_and_actions.items():
+        icon.setdefault('toplevel', False)
+        icon.setdefault('sort_index', 30)
+        icons[icon_id] = icon
+
+    # multisite_icons has been deprecated, but to be compatible to old icon
+    # plugins transform them to the new structure. We use part of the paint
+    # function name as icon id.
+    for icon in multisite_icons:
+        icon.setdefault('toplevel', False)
+        icon.setdefault('sort_index', 30)
+        icon_id = icon['paint'].__name__.replace('paint_', '')
+        icons[icon_id] = icon
+
+    # Now apply the user customized options
+    for icon_id, cfg in config.builtin_icon_visibility.items():
+        if icon_id in icons:
+            if 'toplevel' in cfg:
+                icons[icon_id]['toplevel'] = cfg['toplevel']
+            if 'sort_index' in cfg:
+                icons[icon_id]['sort_index'] = cfg['sort_index']
+
+    return icons
 
 def process_multisite_icons(what, row, tags, custom_vars):
     icons = []
-    for icon in multisite_icons:
+    for icon_id, icon in get_multisite_icons().items():
         if icon.get('type', 'icon') == 'icon':
             try:
                 title      = None
                 url        = None
-                toplevel   = icon.get('toplevel', False)
-                sort_index = icon.get('sort_index', 30)
+                toplevel   = icon['toplevel']
+                sort_index = icon['sort_index']
 
                 # In old versions, the icons produced html code directly. The new API
                 # is that the icon functions need to return:
@@ -286,8 +315,8 @@ def iconpainter_columns(what, toplevel):
             'service_custom_variable_values',
         ])
 
-    for icon in multisite_icons:
-        if toplevel == icon.get('toplevel', False):
+    for icon_id, icon in get_multisite_icons().items():
+        if toplevel == icon['toplevel']:
             if 'columns' in icon:
                 cols.update([ what + '_' + c for c in icon['columns'] ])
             cols.update([ "host_" + c for c in icon.get("host_columns", [])])

@@ -248,6 +248,9 @@ user_localizations = default_user_localizations
 # Contains user specified icons and actions for hosts and services
 user_icons_and_actions = {}
 
+# Override toplevel and sort_index settings of builtin icons
+builtin_icon_visibility = {}
+
 # Write WATO folder permissions to auth.php file
 export_folder_permissions = False
 

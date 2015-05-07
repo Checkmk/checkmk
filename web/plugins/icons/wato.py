@@ -57,9 +57,7 @@ def paint_wato(what, row, tags, custom_vars):
         elif row["service_description"] in [ "Check_MK inventory", "Check_MK Discovery" ]:
             return wato_link(wato_folder, row["site"], row["host_name"], "inventory")
 
-multisite_icons.append({
- 'host_columns': [ "filename" ],
- 'paint':  paint_wato,
-})
-
-
+multisite_icons_and_actions['wato'] = {
+    'host_columns' : [ "filename" ],
+    'paint'        :  paint_wato,
+}

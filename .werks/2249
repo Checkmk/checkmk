@@ -1,0 +1,12 @@
+Title: Builtin icon visibility can now be configured
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1430985941
+Class: feature
+
+Using the new global setting "Builtin icon visibility" it is now possible to
+configure the visibility of the builtin icons in views. You can change whether
+or not the single icons are displayed in the popup menu or directly in the cell
+and change the sorting of the icons.

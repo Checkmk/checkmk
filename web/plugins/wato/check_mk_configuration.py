@@ -523,6 +523,58 @@ register_configvar(group,
     domain = "multisite",
 )
 
+def get_builtin_icons():
+    import views
+    return [ (id, id) for id in views.get_multisite_icons().keys() ]
+
+register_configvar(group,
+    "builtin_icon_visibility",
+    Transform(
+        ListOf(
+            Tuple(
+                elements = [
+                    DropdownChoice(
+                        title = _("Icon"),
+                        choices = get_builtin_icons,
+                        sorted = True,
+                    ),
+                    Dictionary(
+                        elements = [
+                            ('toplevel', Checkbox(
+                                title = _('Show in column'),
+                                label = _('Directly show the action icon in the column'),
+                                help = _('Makes the icon appear in the column instead '
+                                         'of the dropdown menu.'),
+                            )),
+                            ('sort_index', Integer(
+                                title = _('Sort index'),
+                                help = _('You can use the sort index to control the order of the '
+                                         'elements in the column and the menu. The elements are sorted '
+                                         'from smaller to higher numbers. The action menu icon '
+                                         'has a sort index of <tt>10</tt>, the graph icon a sort index '
+                                         'of <tt>20</tt>. All other default icons have a sort index of '
+                                         '<tt>30</tt> configured.'),
+                                min_value = 0,
+                            )),
+                        ],
+                        optional_keys = ['toplevel', 'sort_index'],
+                    ),
+                ],
+            ),
+            title = _("Builtin icon visibility"),
+            movable = False,
+            totext = _("%d icons customized"),
+            help = _("You can use this option to change the default visibility "
+                     "options of the builtin icons. You can change whether or not "
+                     "the icons are shown in the popup menu or on top level and "
+                     "change the sorting of the icons."),
+        ),
+        forth = lambda d: sorted(d.items()),
+        back = lambda l: dict(l),
+    ),
+    domain = "multisite",
+)
+
 # Helper that retrieves the list of hostgroups via Livestatus
 # use alias by default but fallback to name if no alias defined
 def list_hostgroups():

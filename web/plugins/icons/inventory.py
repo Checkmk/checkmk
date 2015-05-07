@@ -29,8 +29,8 @@ def paint_icon_inventory(what, row, tags, customer_vars):
         and inventory.has_inventory(row["host_name"]):
 	return 'inv', _("Show Hardware/Software Inventory of this host"), url_to_view(row, 'inv_host')
 
-multisite_icons.append({
-    'host_columns': [ "name" ],
-    'paint': paint_icon_inventory,
-})
+multisite_icons_and_actions['inventory'] = {
+    'host_columns' : [ "name" ],
+    'paint'        : paint_icon_inventory,
+}
 

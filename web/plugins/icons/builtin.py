@@ -88,12 +88,12 @@ def paint_action_menu(what, row, tags, host_custom_vars):
         html.render_icon('menu', _('Open the action menu')),
         'action_menu', 'action_menu', params=html.urlencode_vars(url_vars))
 
-multisite_icons.append({
+multisite_icons_and_actions['action_menu'] = {
     'columns':         [],
     'paint':           paint_action_menu,
     'toplevel':        True,
     'sort_index':      10,
-})
+}
 
 #.
 #   .--Icon-Image----------------------------------------------------------.
@@ -114,12 +114,12 @@ def paint_icon_image(what, row, tags, custom_vars):
             img = img[:-4]
         return html.render_icon(img)
 
-multisite_icons.append({
+multisite_icons_and_actions['icon_image'] = {
     'columns':         [ 'icon_image' ],
     'paint':           paint_icon_image,
     'toplevel':        True,
     'sort_index':      25,
-})
+}
 
 #.
 #   .--Reschedule----------------------------------------------------------.
@@ -158,12 +158,23 @@ def paint_reschedule(what, row, tags, host_custom_vars):
                 (row["site"], row["host_name"], html.urlencode(servicedesc), html.urlencode(wait_svc))
         return icon, txt, url
 
-multisite_icons.append({
+multisite_icons_and_actions['reschedule'] = {
     'columns':         [ 'active_checks_enabled', 'check_command' ],
     'paint':           paint_reschedule,
     'toplevel':        False,
-})
+}
 
+#.
+#   .--Rule-Editor---------------------------------------------------------.
+#   |         ____        _            _____    _ _ _                      |
+#   |        |  _ \ _   _| | ___      | ____|__| (_) |_ ___  _ __          |
+#   |        | |_) | | | | |/ _ \_____|  _| / _` | | __/ _ \| '__|         |
+#   |        |  _ <| |_| | |  __/_____| |__| (_| | | || (_) | |            |
+#   |        |_| \_\\__,_|_|\___|     |_____\__,_|_|\__\___/|_|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 def paint_rule_editor(what, row, tags, host_custom_vars):
     if config.wato_enabled and config.may("wato.rulesets") and config.multisite_draw_ruleicon:
@@ -178,10 +189,10 @@ def paint_rule_editor(what, row, tags, host_custom_vars):
 
         return 'rulesets', title, html.makeuri_contextless(urlvars, "wato.py")
 
-multisite_icons.append({
+multisite_icons_and_actions['rule_editor'] = {
     'service_columns': [ 'description', 'check_command', "host_name" ],
     'paint':           paint_rule_editor,
-})
+}
 
 #.
 #   .--Acknowledge---------------------------------------------------------.
@@ -199,11 +210,11 @@ def paint_ack_image(what, row, tags, host_custom_vars):
     if row[what + "_acknowledged"]:
         return 'ack', _('This problem has been acknowledged')
 
-multisite_icons.append({
+multisite_icons_and_actions['status_acknowledged'] = {
     'columns':         [ 'acknowledged' ],
     'paint':           paint_ack_image,
     'toplevel':        True,
-})
+}
 
 #.
 #   .--Real-Host-----------------------------------------------------------.
@@ -224,9 +235,9 @@ def paint_realhost_link_image(what, row, tags, host_custom_vars):
         newrow["host_name"] = host_custom_vars["_REALNAME"]
         return 'detail', _("Detailed host infos"), url_to_view(newrow, 'host')
 
-multisite_icons.append({
+multisite_icons_and_actions['realhost'] = {
     'paint':           paint_realhost_link_image,
-})
+}
 
 #.
 #   .--Perfgraph-----------------------------------------------------------.
@@ -287,12 +298,12 @@ def paint_pnp_graph(what, row, tags, host_custom_vars):
     if pnpgraph_present == 1:
         return pnp_icon(row, what)
 
-multisite_icons.append({
+multisite_icons_and_actions['perfgraph'] = {
     'columns':         [ 'pnpgraph_present' ],
     'paint':           paint_pnp_graph,
     'toplevel':        True,
     'sort_index':      20,
-})
+}
 
 #.
 #   .--Prediction----------------------------------------------------------.
@@ -322,10 +333,10 @@ def paint_prediction_icon(what, row, tags, host_custom_vars):
                 title = _("Analyse predictive monitoring for this service")
                 return 'prediction', title, url
 
-multisite_icons.append({
+multisite_icons_and_actions['prediction'] = {
     'columns' : [ 'perf_data' ],
     'paint'   : paint_prediction_icon,
-})
+}
 
 #.
 #   .--Action-URL----------------------------------------------------------.
@@ -348,19 +359,19 @@ def paint_action(what, row, tags, host_custom_vars):
            and not ('/pnp4nagios/' in action_url and pnpgraph_present >= 0):
             return 'action', _('Custom Action'), action_url
 
-multisite_icons.append({
+multisite_icons_and_actions['custom_action'] = {
     'columns':         [ 'action_url_expanded', 'pnpgraph_present' ],
     'paint':           paint_action,
-})
+}
 
 #.
-#   .--Notes-URL-----------------------------------------------------------.
-#   |          _   _       _                  _   _ ____  _                |
-#   |         | \ | | ___ | |_ ___  ___      | | | |  _ \| |               |
-#   |         |  \| |/ _ \| __/ _ \/ __|_____| | | | |_) | |               |
-#   |         | |\  | (_) | ||  __/\__ \_____| |_| |  _ <| |___            |
-#   |         |_| \_|\___/ \__\___||___/      \___/|_| \_\_____|           |
-#   |                                                                      |
+#   .--Logwatch------------------------------------------------------------.
+#   |            _                              _       _                  |
+#   |           | |    ___   __ ___      ____ _| |_ ___| |__               |
+#   |           | |   / _ \ / _` \ \ /\ / / _` | __/ __| '_ \              |
+#   |           | |__| (_) | (_| |\ V  V / (_| | || (__| | | |             |
+#   |           |_____\___/ \__, | \_/\_/ \__,_|\__\___|_| |_|             |
+#   |                       |___/                                          |
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
@@ -380,11 +391,22 @@ def paint_logwatch(what, row, tags, host_custom_vars):
     if row[what + "_check_command"] in [ 'check_mk-logwatch', 'check_mk-logwatch.groups' ]:
         return 'logwatch', _('Open Log'), logwatch_url(row["site"], row['host_name'], row['service_description'][4:])
 
-multisite_icons.append({
+multisite_icons_and_actions['logwatch'] = {
     'service_columns': [ 'host_name', 'service_description', 'check_command' ],
     'paint':           paint_logwatch,
-})
+}
 
+#.
+#   .--Notes-URL-----------------------------------------------------------.
+#   |          _   _       _                  _   _ ____  _                |
+#   |         | \ | | ___ | |_ ___  ___      | | | |  _ \| |               |
+#   |         |  \| |/ _ \| __/ _ \/ __|_____| | | | |_) | |               |
+#   |         | |\  | (_) | ||  __/\__ \_____| |_| |  _ <| |___            |
+#   |         |_| \_|\___/ \__\___||___/      \___/|_| \_\_____|           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 # Adds the url_prefix of the services site to the notes url configured in this site.
 # It also adds the master_url which will be used to link back to the source site
@@ -399,10 +421,10 @@ def paint_notes(what, row, tags, host_custom_vars):
         if notes_url:
             return 'notes', _('Custom Notes'), notes_url
 
-multisite_icons.append({
+multisite_icons_and_actions['logwatch'] = {
     'columns':         [ 'notes_url_expanded', 'check_command' ],
     'paint':           paint_notes,
-})
+}
 
 #.
 #   .--Downtimes-----------------------------------------------------------.
@@ -428,12 +450,12 @@ def paint_downtimes(what, row, tags, host_custom_vars):
     elif what == "service" and row["host_scheduled_downtime_depth"] > 0:
         return 'hostdowntime', _("The host is currently in downtime"), url_to_view(row, 'downtimes_of_host')
 
-multisite_icons.append({
+multisite_icons_and_actions['status_downtimes'] = {
     'host_columns':    [ 'scheduled_downtime_depth' ],
     'columns':         [ 'scheduled_downtime_depth' ],
     'paint':           paint_downtimes,
     'toplevel':        True,
-})
+}
 
 #.
 #   .--Comments------------------------------------------------------------.
@@ -457,11 +479,11 @@ def paint_comments(what, row, tags, host_custom_vars):
             text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0, 'abs')[1], author, comment)
         return 'comment', text, url_to_view(row, 'comments_of_' + what)
 
-multisite_icons.append({
+multisite_icons_and_actions['status_comments'] = {
     'columns':         [ 'comments_with_extra_info' ],
     'paint':           paint_comments,
     'toplevel':        True,
-})
+}
 
 #.
 #   .--Notifications-------------------------------------------------------.
@@ -486,11 +508,11 @@ def paint_notifications(what, row, tags, host_custom_vars):
     elif not enabled:
         return 'notif_disabled', _('Notifications are disabled for this %s') % what
 
-multisite_icons.append({
+multisite_icons_and_actions['status_notifications_enabled'] = {
     'columns':         [ 'modified_attributes_list', 'notifications_enabled' ],
     'paint':           paint_notifications,
     'toplevel':        True,
-})
+}
 
 #.
 #   .--Flapping------------------------------------------------------------.
@@ -512,11 +534,11 @@ def paint_flapping(what, row, tags, host_custom_vars):
             title = _("This service is flapping")
         return 'flapping', title
 
-multisite_icons.append({
+multisite_icons_and_actions['status_flapping'] = {
     'columns':         [ 'is_flapping' ],
     'paint':           paint_flapping,
     'toplevel':        True,
-})
+}
 
 #.
 #   .--Staleness-----------------------------------------------------------.
@@ -537,11 +559,11 @@ def paint_is_stale(what, row, tags, host_custom_vars):
         title += _(", no data has been received within the last %.1f check periods") % config.staleness_threshold
         return 'stale', title
 
-multisite_icons.append({
+multisite_icons_and_actions['status_stale'] = {
     'columns':         [ 'staleness' ],
     'paint':           paint_is_stale,
     'toplevel':        True,
-})
+}
 
 #.
 #   .--Active-Checks-------------------------------------------------------.
@@ -563,11 +585,11 @@ def paint_active_checks(what, row, tags, host_custom_vars):
         else:
             return 'enabled', _('Active checks have been manually enabled for this %s!') % what
 
-multisite_icons.append({
+multisite_icons_and_actions['status_active_checks'] = {
     'columns':         [ 'modified_attributes_list', 'active_checks_enabled' ],
     'paint':           paint_active_checks,
     'toplevel':        True,
-})
+}
 
 #.
 #   .--Passiv-Checks-------------------------------------------------------.
@@ -587,11 +609,11 @@ def paint_passive_checks(what, row, tags, host_custom_vars):
         if row[what + "_accept_passive_checks"] == 0:
             return 'npassive', _('Passive checks have been manually disabled for this %s!') % what
 
-multisite_icons.append({
+multisite_icons_and_actions['status_passive_checks'] = {
     'columns':         [ 'modified_attributes_list', 'accept_passive_checks' ],
     'paint':           paint_passive_checks,
     'toplevel':        True,
-})
+}
 
 #.
 #   .--Notif.-Periods------------------------------------------------------.
@@ -609,11 +631,11 @@ def paint_notification_periods(what, row, tags, host_custom_vars):
     if not row[what + "_in_notification_period"]:
         return 'outofnot', _('Out of notification period')
 
-multisite_icons.append({
+multisite_icons_and_actions['status_notification_period'] = {
     'columns':         [ 'in_notification_period' ],
     'paint':           paint_notification_periods,
     'toplevel':        True,
-})
+}
 
 #.
 #   .--Aggregations--------------------------------------------------------.
@@ -647,10 +669,9 @@ def paint_aggregations(what, row, tags, host_custom_vars):
         return 'aggr', _("BI Aggregations containing this %s") % \
                             (what == "host" and _("Host") or _("Service")), url
 
-
-multisite_icons.append({
+multisite_icons_and_actions['aggregations'] = {
     'paint':           paint_aggregations,
-})
+}
 
 #.
 #   .--Stars *-------------------------------------------------------------.
@@ -676,10 +697,10 @@ def paint_stars(what, row, tags, host_custom_vars):
     if starred:
         return 'starred', _("This %s is one of your favorites") % _(what)
 
-multisite_icons.append({
+multisite_icons_and_actions['stars'] = {
     'columns': [],
     'paint': paint_stars,
-})
+}
 
 #.
 #   .--BI-Aggr.------------------------------------------------------------.
@@ -712,10 +733,10 @@ def paint_icon_check_bi_aggr(what, row, tags, host_custom_vars):
         return 'aggr', _('Open this Aggregation'), url
 
 
-multisite_icons.append({
+multisite_icons_and_actions['aggregation_checks'] = {
     'host_columns' : [ 'check_command', 'name', 'address' ],
     'paint'        : paint_icon_check_bi_aggr,
-})
+}
 
 #.
 #   .--Crashdump-----------------------------------------------------------.
@@ -739,8 +760,8 @@ def paint_icon_crashed_check(what, row, tags, host_custom_vars):
         return 'crash', _("This check crashed. Please click here for more information. You also can submit "
                           "a crash report to the development team if you like."), crashurl
 
-multisite_icons.append({
+multisite_icons_and_actions['crashed_check'] = {
     'service_columns' : [ 'plugin_output', 'state', 'host_name' ],
-    'paint'   : paint_icon_crashed_check,
-    'toplevel':        True,
-})
+    'paint'           : paint_icon_crashed_check,
+    'toplevel'        : True,
+}

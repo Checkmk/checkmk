@@ -3748,7 +3748,7 @@ def mode_bulk_inventory(phase):
                             _("Inventorized host: %d added, %d removed, %d kept, %d total services") %
                                                                                 tuple(counts[hostname]))
 
-                        if "inventory_failed" in hostand not hosts.get(".folder", {}).get("_lock_hosts"):
+                        if "inventory_failed" in host and not hosts.get(".folder", {}).get("_lock_hosts"):
                             del host["inventory_failed"]
                             save_hosts(folder) # Could be optimized, but difficult here
 

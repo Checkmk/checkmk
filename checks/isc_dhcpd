@@ -1,0 +1,148 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+isc_dhcpd_default_levels = (15.0, 5.0)
+
+
+# Example output from agent:
+# <<<isc_dhcpd>>>
+# [general]
+# PID: 3670
+# [pools]
+# 10.0.1.1 10.0.1.254
+# [leases]
+# 10.0.1.16
+# 10.0.1.24
+# 10.0.1.26
+# 10.0.1.27
+# 10.0.1.34
+# 10.0.1.36
+# 10.0.1.45
+# 10.0.1.50
+# 10.0.1.53
+# 10.0.1.57
+
+def parse_isc_dhcpd(info):
+    parsed = {}
+
+    for line in info:
+        if line[0] == '[general]':
+            mode = "general"
+        elif line[0] == '[pools]':
+            mode = "pools"
+        elif line[0] == '[leases]':
+            mode = "leases"
+
+        elif mode == "general":
+            if line[0] == "PID:":
+                parsed["pids"] = map(int, line[1:])
+        elif mode == "pools":
+            parsed.setdefault("pools", []).append((line[0], line[1]))
+        elif mode == "leases":
+            parsed.setdefault("leases", []).append(line[0])
+
+    return parsed
+
+# The upper example after parsing:
+# {'leases': ['10.0.1.16',
+#             '10.0.1.24',
+#             '10.0.1.26',
+#             '10.0.1.27',
+#             '10.0.1.34',
+#             '10.0.1.36',
+#             '10.0.1.45',
+#             '10.0.1.50',
+#             '10.0.1.53',
+#             '10.0.1.57'],
+#  'pids': [3670],
+#  'pools': [('10.0.1.1'), ('10.0.1.254')]}
+
+
+def inventory_isc_dhcpd(parsed):
+    return [ ("%s-%s" % pool, "isc_dhcpd_default_levels")
+             for pool in parsed["pools"] ]
+
+
+def check_isc_dhcpd(item, params, parsed):
+    if len(parsed["pids"]) == 0:
+        yield 2, "DHCP Daemon not running"
+    elif len(parsed["pids"]) > 1:
+        yield 1, "DHCP Daemon running %d times (PIDs: %s)" % (
+            len(parsed["pids"]), ", ".join(map(str, parsed["pids"])))
+
+    def ip_to_number(ip):
+        number = 0
+        factor = 1
+        for part in ip.split('.')[::-1]:
+            number += factor * int(part)
+            factor *= 256
+        return number
+
+    pool = tuple(item.split("-"))
+    if pool not in parsed["pools"]:
+        return
+
+    range_from = ip_to_number(pool[0])
+    range_to = ip_to_number(pool[1])
+    num_leases = range_to - range_from + 1
+    num_used = 0
+    for lease in parsed["leases"]:
+        lease_dec = ip_to_number(lease)
+        if lease_dec >= range_from and lease_dec <= range_to:
+            num_used += 1
+
+    num_free = num_leases - num_used
+    perc_free = float(num_free) / num_leases * 100.0
+    perc_warn, perc_crit = params # for free
+    warn = perc_warn / 100 * num_leases
+    crit = perc_crit / 100 * num_leases
+    perf_data = [ ("used_dhcp_leases", num_used, num_leases - warn, num_leases - crit, 0, num_leases) ]
+
+    if num_free <= crit:
+        state = 2
+    elif num_free <= warn:
+        state = 1
+    else:
+        state = 0
+        levels_text = ""
+
+    if state:
+        levels_text = " (levels at %d%%/%d%%)" % (perc_warn, perc_crit)
+
+    yield state, "%d leases used, %d leases free (%s)%s" % (
+        num_used, num_free, get_percent_human_readable(perc_free), levels_text), \
+        perf_data
+
+
+
+check_info["isc_dhcpd"] = {
+    'parse_function':          parse_isc_dhcpd,
+    'inventory_function':      inventory_isc_dhcpd,
+    'check_function':          check_isc_dhcpd,
+    'service_description':     'DHCP Pool %s',
+    'group':                   'win_dhcp_pools',
+    'has_perfdata':            True,
+}

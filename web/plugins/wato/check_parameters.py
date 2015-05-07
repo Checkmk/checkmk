@@ -5021,10 +5021,11 @@ register_check_parameters(
     match_type = "dict",
 )
 
+
 register_check_parameters(
     subgroup_applications,
     "win_dhcp_pools",
-    _("Windows DHCP Pool"),
+    _("DHCP Pools for Windows and Linux"),
     Tuple(
           help = _("The count of remaining entries in the DHCP pool represents "
                    "the number of IP addresses left which can be assigned in the network"),
@@ -5033,10 +5034,12 @@ register_check_parameters(
               Percentage(title = _("Critical if less than"), unit = _("% free pool entries")),
               ]),
     TextAscii(
-        title = _("Service descriptions"),
+        title = _("Pool name"),
         allow_empty = False),
     match_type = "first",
 )
+
+
 
 register_check_parameters(
     subgroup_os,

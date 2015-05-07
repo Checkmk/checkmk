@@ -3743,7 +3743,7 @@ def mode_bulk_inventory(phase):
                     host = folder[".hosts"][hostname]
                     if hostname in failed_hosts:
                         result_txt += _("Failed to inventorize %s: %s<br>") % (hostname, failed_hosts[hostname])
-                        if not host.get("inventory_failed"):
+                        if not host.get("inventory_failed") and not hosts.get(".folder", {}).get("_lock_hosts"):
                             host["inventory_failed"] = True
                             save_hosts(folder)
                     else:
@@ -3752,7 +3752,8 @@ def mode_bulk_inventory(phase):
                         log_pending(AFFECTED, hostname, "bulk-inventory",
                             _("Inventorized host: %d added, %d removed, %d kept, %d total services") %
                                                                                 tuple(counts[hostname]))
-                        if "inventory_failed" in host:
+
+                        if "inventory_failed" in host and not hosts.get(".folder", {}).get("_lock_hosts"):
                             del host["inventory_failed"]
                             save_hosts(folder) # Could be optimized, but difficult here
 
@@ -18174,12 +18175,12 @@ class API:
         host = all_hosts[hostname]
         counts, failed_hosts = check_mk_automation(host[".siteid"], "inventory", [ "@scan", mode ] + [hostname])
         if failed_hosts:
-            if not host.get("inventory_failed"):
+            if not host.get("inventory_failed") and not host.get(".folder", {}).get(".lock_hosts"):
                 host["inventory_failed"] = True
                 save_hosts(host[".folder"])
             raise MKUserError(None, _("Failed to inventorize %s: %s") % (hostname, failed_hosts[hostname]))
 
-        if host.get("inventory_failed"):
+        if host.get("inventory_failed") and not host.get(".folder", {}).get(".lock_hosts"):
             del host["inventory_failed"]
             save_hosts(host[".folder"])
 

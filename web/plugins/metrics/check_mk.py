@@ -1052,6 +1052,12 @@ metric_info["security_updates"] = {
     "color" : "#ff0030",
 }
 
+metric_info["used_dhcp_leases"] = {
+    "title" : _("Used DHCP leases"),
+    "unit"  : "count",
+    "color" : "#60bbbb",
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -1143,7 +1149,7 @@ check_metrics["check_mk-tcp_conn_stats"] = {
 }
 
 df_translation = {
-    "~[_/]"   : { "name"  : "fs_used", "scale" : MB },
+    "~(?!fs_size|growth|trend|fs_provisioning).*"   : { "name"  : "fs_used", "scale" : MB },
     "fs_size" : { "scale" : MB },
     "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
     "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },
@@ -1248,7 +1254,9 @@ check_metrics["check_mk-viprinet_temp"]                         = {}
 check_metrics["check_mk-wagner_titanus_topsense.temp"]          = {}
 check_metrics["check_mk-cmciii.phase"]                          = {}
 check_metrics["check_mk-ucs_bladecenter_fans.temp"]             = {}
+check_metrics["check_mk-icom_repeater.temp"]                    = {}
 check_metrics["check_mk-ucs_bladecenter_psu.chassis_temp"]      = {}
+
 check_metrics["check_mk-mysql_capacity"]                        = {}
 
 check_metrics["check_mk-hr_cpu"]                                = {}
@@ -1318,7 +1326,8 @@ check_metrics["check_mk-livestatus_status"] = {
 check_metrics["check_mk-apt"] = {}
 check_metrics["check_mk-icom_repeater.ps_volt"] = {}
 check_metrics["check_mk-icom_repeater.pll_volt"] = {}
-check_metrics["check_mk-icom_repeater.temp"] ={}
+check_metrics["check_mk-isc_dhcpd"] = {}
+
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -1497,6 +1506,8 @@ perfometer_info.append({
     "half_value" : 10,
     "exponent"   : 2,
 })
+
+perfometer_info.append(("linear",      ( [ "used_dhcp_leases" ], "used_dhcp_leases:max", None)))
 
 perfometer_info.append(("stacked", [
   ( "logarithmic", ( "host_check_rate",     50, 5)),
@@ -1965,4 +1976,17 @@ graph_info.append({
         ( "normal_updates",    "stack" ),
         ( "security_updates",  "stack" ),
     ],
+})
+
+graph_info.append({
+    "title" : _("Used DHCP Leases"),
+    "metrics" : [
+        ( "used_dhcp_leases",    "area" ),
+    ],
+    "range" : (0, "used_dhcp_leases:max"),
+    "scalars" : [
+        "used_dhcp_leases:warn",
+        "used_dhcp_leases:crit",
+        ("used_dhcp_leases:max#000000", _("Total number of leases")),
+    ]
 })

@@ -1,0 +1,13 @@
+Title: Bulk service discovery: Fixed error when doing bulk inventory on locked folders
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1431001927
+
+The bulk service discovery raised an exception when some of the hosts failed
+during the discovery and the folders of these hosts were locked with the option <tt>_lock</tt>.
+This has been fixed.
+

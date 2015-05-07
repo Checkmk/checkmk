@@ -2273,10 +2273,11 @@ function host_tag_update_value(prefix, grp) {
 //#   |                                                                    |
 //#   '--------------------------------------------------------------------'
 
-function timeline_hover(row_nr, onoff)
+function timeline_hover(td, row_nr, onoff)
 {
-    var table = document.getElementsByClassName("timelineevents")[0];
-    var row = table.children[0].children[row_nr+1];
+    var timeline_bar_table = td.parentNode.parentNode.parentNode;
+    var events_table = timeline_bar_table.nextElementSibling;
+    var row = events_table.children[0].children[row_nr+1];
     if (onoff)
         add_class(row, 'hilite');
     else {

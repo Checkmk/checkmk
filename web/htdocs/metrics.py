@@ -314,7 +314,7 @@ def translate_metrics(perf_data, check_command):
 # relevant when fetching RRD data and is used for selecting
 # the consolidation function MAX.
 def evaluate(expression, translated_metrics):
-    if type(expression) in (float, int) or "," not in expression:
+    if type(expression) in (float, int):
         return evaluate_literal(expression, translated_metrics)
     else:
         if "#" in expression:

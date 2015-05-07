@@ -1,0 +1,34 @@
+#!/bin/bash
+# Plugin for checking a DHCP daemon running on Linux.
+# If you conf or leases file is not at one of the places
+# we look for then please add that path to the list
+# and give us feedback at feedback@check-mk.org
+
+for path in /etc/dhcpd.conf /etc/dhcp/dhcpd.conf ; do
+    if [ -e $path ] ; then
+        CONF_FILE=$path
+        break
+    fi
+done
+
+for path in /var/lib/dhcp/db/dhcpd.leases /var/lib/dhcp/dhcpd.leases; do
+    if [ -e $path ] ; then
+        LEASES_FILE=$path
+        break
+    fi
+done
+
+# If no configuration and leases are found, we assume that
+# no dhcpd is running.
+if [ -z "$CONF_FILE" -o -z "$LEASES_FILE" ] ; then exit ; fi
+
+echo '<<<isc_dhcpd>>>'
+echo "[general]"
+echo "PID: $(pidof dhcpd)"
+echo "[pools]"
+sed -nr -e 's/;//g' -e '/^[[:space:]]*range */s///p' < $CONF_FILE
+echo "[leases]"
+sed -nr -e 's/;//g' \
+        -e '/^lease */s/.* ([0-9.]+) .*/\1/p' \
+        -e '/^ *binding state */s///p' < $LEASES_FILE |
+    sed 'N;s/\n/ /' | sed -n '/ active/s///p' | sort -u

@@ -786,7 +786,12 @@ def page_view():
     if not view:
         raise MKGeneralException(_("No view defined with the name '%s'.") % html.attrencode(view_name))
 
-    html.set_page_context(visuals.get_singlecontext_html_vars(view))
+    # Gather the page context which is needed for the "add to visual" popup menu
+    # to add e.g. views to dashboards or reports
+    datasource = multisite_datasources[view['datasource']]
+    context = visuals.get_context_from_uri_vars(datasource['infos'])
+    context.update(visuals.get_singlecontext_html_vars(view))
+    html.set_page_context(context)
 
     show_view(view, True, True, True)
 

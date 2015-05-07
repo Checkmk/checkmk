@@ -984,7 +984,7 @@ class html:
                 encoded_vars[k] = v
 
             self.popup_trigger(
-                '<img class=statusicon src="images/status_add_dashlet.png" title="%s">\n' % _("Add this view to..."),
+                '<img class=statusicon src="images/icon_menu.png" title="%s">\n' % _("Add this view to..."),
                 'add_visual', 'add_visual', data='[\'%s\', %s, {\'name\': \'%s\'}]' %
                                                     (mode_name, self.attrencode(repr(encoded_vars)),
                                                      self.var('view_name')))

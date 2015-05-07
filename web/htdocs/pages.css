@@ -1121,10 +1121,14 @@ div.pnp_graph a.popup_trigger {
     display: block;
     width: 20px;
     height: 20px;
-    background-image: url(images/button_menu_lo.png);
 }
 
 div.pnp_graph a.popup_trigger:hover {
-    background-image: url(images/button_menu_hi.png);
     cursor: pointer;
+}
+
+tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
+    border: none;
+    box-shadow: none;
+    margin: 0;
 }

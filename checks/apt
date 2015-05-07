@@ -58,6 +58,7 @@ def check_apt(_no_item, params, info):
         else:
             updates.append(packet)
 
+    state = 0
     if updates:
         state = params["normal"]
     yield state, "%d normal updates" % len(updates), [ ("normal_updates", len(updates)) ]

@@ -1,0 +1,17 @@
+Title: Added download page for shipped agents and plugins
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1430995542
+
+It is now possible to download the Check_MK agents and plugins
+shipped with your version directly from the WEB GUI. The page
+<i>Monitoring Agents</i> can be opened from the Configuration
+snapin.
+
+This page has been added only to the Check_MK Raw edition. The
+Enterprise Edition has the agent bakery which offers a lot of
+more features like generating customized agents.

@@ -13,6 +13,7 @@
     * 2074 FIX: pnptemplate netapp_api_volume: fixed title
 
     WATO:
+    * 2250 Added download page for shipped agents and plugins...
     * 2244 FIX: Fixed sorting of host tag topics in dropdown selections
 
     Notifications:

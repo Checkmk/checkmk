@@ -2435,14 +2435,14 @@ void section_mem(SOCKET &out)
     statex.dwLength = sizeof (statex);
     GlobalMemoryStatusEx (&statex);
 
-    output(out, "MemTotal:     %11d kB\n", statex.ullTotalPhys     / 1024);
-    output(out, "MemFree:      %11d kB\n", statex.ullAvailPhys     / 1024);
-    output(out, "SwapTotal:    %11d kB\n", (statex.ullTotalPageFile - statex.ullTotalPhys) / 1024);
-    output(out, "SwapFree:     %11d kB\n", (statex.ullAvailPageFile - statex.ullAvailPhys) / 1024);
-    output(out, "PageTotal:    %11d kB\n", statex.ullTotalPageFile / 1024);
-    output(out, "PageFree:     %11d kB\n", statex.ullAvailPageFile / 1024);
-    output(out, "VirtualTotal: %11d kB\n", statex.ullTotalVirtual / 1024);
-    output(out, "VirtualFree:  %11d kB\n", statex.ullAvailVirtual / 1024);
+    output(out, "MemTotal:     %s kB\n", llu_to_string(statex.ullTotalPhys     / 1024));
+    output(out, "MemFree:      %s kB\n", llu_to_string(statex.ullAvailPhys     / 1024));
+    output(out, "SwapTotal:    %s kB\n", llu_to_string((statex.ullTotalPageFile - statex.ullTotalPhys) / 1024));
+    output(out, "SwapFree:     %s kB\n", llu_to_string((statex.ullAvailPageFile - statex.ullAvailPhys) / 1024));
+    output(out, "PageTotal:    %s kB\n", llu_to_string(statex.ullTotalPageFile / 1024));
+    output(out, "PageFree:     %s kB\n", llu_to_string(statex.ullAvailPageFile / 1024));
+    output(out, "VirtualTotal: %s kB\n", llu_to_string(statex.ullTotalVirtual / 1024));
+    output(out, "VirtualFree:  %s kB\n", llu_to_string(statex.ullAvailVirtual / 1024));
 }
 
 // .-----------------------------------------------------------------------.

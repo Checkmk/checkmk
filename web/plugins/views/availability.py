@@ -30,7 +30,6 @@ from valuespec import *
 # TODO: considered_duration und total_duration. Hab ich das wirklich richtig?
 # In der Timeline ist das evtl. falsch. Die considered_duration müsste im
 # allgemeinen kleiner sein.
-# TODO: Koordinaten in inline-Timelines fehlen noch
 # TODO: CSV-Export geht nicht mehr
 
 # Variable name conventions
@@ -280,244 +279,6 @@ def do_render_availability(what, av_rawdata, av_mode, av_object, avoptions):
     render_annotations(annotations, av_rawdata, what, avoptions, omit_service = av_object != None)
 
 
-# style is either inline (just the timeline bar) or "standalone" (the complete page)
-# TODO: Diese Funktion entfällt. Bitte layout_timeline verwenden.
-def ZXXXX_render_timeline(timeline_rows, from_time, until_time, considered_duration,
-                    timeline, range_title, render_number, what, timewarpcode, avoptions, fetch, style):
-
-    if not timeline_rows:
-        if fetch:
-            return []
-        else:
-            html.write('<div class=info>%s</div>' % _("No information available"))
-            return
-
-    # Timeformat: show date only if the displayed time range spans over
-    # more than one day.
-    time_format = "%H:%M:%S"
-    if time.localtime(from_time)[:3] != time.localtime(until_time-1)[:3]:
-        time_format = "%Y-%m-%d " + time_format
-    def render_date(ts):
-        if avoptions["datetime_format"] == "epoch":
-            return str(int(ts))
-        else:
-            return time.strftime(time_format, time.localtime(ts))
-
-    # Render graphical representation
-    # Make sure that each cell is visible, if possible
-    min_percentage = min(100.0 / len(timeline_rows), style == "inline" and 0.0 or 0.5)
-    rest_percentage = 100 - len(timeline_rows) * min_percentage
-    if not fetch:
-        html.write('<div class="timelinerange %s">' % style)
-    if style == "standalone":
-        html.write('<div class=from>%s</div><div class=until>%s</div></div>' % (
-            render_date(from_time), render_date(until_time)))
-
-    if not fetch:
-        html.write('<table class="timeline %s">' % style)
-        html.write('<tr class=timeline>')
-    chaos_begin = None
-    chaos_end = None
-    chaos_count = 0
-    chaos_width = 0
-
-    def output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width):
-        if fetch:
-            html.write("|chaos:%s" % chaos_width)
-        else:
-            title = _("%d chaotic state changes from %s until %s (%s)") % (
-                chaos_count,
-                render_date(chaos_begin), render_date(chaos_end),
-                render_number(chaos_end - chaos_begin, considered_duration))
-            html.write('<td style="width: %.3f%%" title="%s" class="chaos"></td>' % (
-                       max(0.2, chaos_width), html.attrencode(title)))
-
-    for row_nr, (row, state_id) in enumerate(timeline_rows):
-        for sid, css, sname, help in availability.availability_columns[what]:
-            if sid == state_id:
-                title = _("From %s until %s (%s) %s") % (
-                    render_date(row["from"]), render_date(row["until"]),
-                    render_number(row["duration"], considered_duration),
-                    help and help or sname)
-                if "log_output" in row and row["log_output"]:
-                    title += " - " + row["log_output"]
-                width = rest_percentage * row["duration"] / considered_duration
-
-                # If the width is very small then we group several phases into
-                # one single "chaos period".
-                if style == "inline" and width < 0.05:
-                    if not chaos_begin:
-                        chaos_begin = row["from"]
-                    chaos_width += width
-                    chaos_count += 1
-                    chaos_end = row["until"]
-                    continue
-
-                # Chaos period has ended? One not-small phase:
-                elif chaos_begin:
-                    # Only output chaos phases with a certain length
-                    if chaos_count >= 4:
-                        output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width)
-
-                    chaos_begin = None
-                    chaos_count = 0
-                    chaos_width = 0
-
-                width += min_percentage
-                if fetch:
-                    html.write("|%s:%s" % (css, width))
-                else:
-                    html.write('<td onmouseover="timeline_hover(%d, 1);" onmouseout="timeline_hover(%d, 0);" '
-                               'style="width: %.3f%%" title="%s" class="%s"></td>' % (
-                               row_nr, row_nr, width, html.attrencode(title), css))
-
-    if chaos_count > 1:
-        output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width)
-    if not fetch:
-        html.write('</tr></table>')
-
-    if style == "inline":
-        if not fetch:
-            render_timeline_choords(from_time, until_time, width=500)
-        return
-
-    # Render timewarped BI aggregate (might be empty)
-    html.write(timewarpcode)
-
-    # Render Table
-    table.begin("av_timeline", "", css="timelineevents")
-    for row_nr, (row, state_id) in enumerate(timeline_rows):
-        table.row()
-        table.cell(_("Links"), css="buttons")
-        if what == "bi":
-            url = html.makeuri([("timewarp", str(int(row["from"])))])
-            if html.var("timewarp") and int(html.var("timewarp")) == int(row["from"]):
-                html.disabled_icon_button("timewarp_off")
-            else:
-                html.icon_button(url, _("Time warp - show BI aggregate during this time period"), "timewarp")
-        else:
-            url = html.makeuri([("anno_site", tl_site),
-                                ("anno_host", tl_host),
-                                ("anno_service", tl_service),
-                                ("anno_from", row["from"]),
-                                ("anno_until", row["until"])])
-            html.icon_button(url, _("Create an annotation for this period"), "annotation")
-
-        table.cell(_("From"), render_date(row["from"]), css="nobr narrow")
-        table.cell(_("Until"), render_date(row["until"]), css="nobr narrow")
-        table.cell(_("Duration"), render_number(row["duration"], considered_duration), css="narrow number")
-        for sid, css, sname, help in availability_columns[what]:
-            if sid == state_id:
-                table.cell(_("State"), sname, css=css + " state narrow")
-                break
-        else:
-            table.cell(_("State"), "(%s/%s)" % (sid,sname))
-        table.cell(_("Last Known Plugin Output"), row["log_output"])
-
-    table.end()
-
-    # Legend for timeline
-    if "display_timeline_legend" in avoptions["labelling"]:
-        render_timeline_legend(what)
-
-
-def render_timeline_choords(from_time, until_time, width):
-    duration = until_time - from_time
-    def render_choord(t, title):
-        pixel = width * (t - from_time) / float(duration)
-        html.write('<div title="%s" class="timelinechoord" style="left: %dpx"></div>' % (title, pixel))
-
-    # Now comes the difficult part: decide automatically, whether to use
-    # hours, days, weeks or months. Days and weeks needs to take local time
-    # into account. Months are irregular.
-    hours = duration / 3600
-    if hours < 12:
-        scale = "hours"
-    elif hours < 24:
-        scale = "2hours"
-    elif hours < 48:
-        scale = "6hours"
-    elif hours < 24 * 14:
-        scale = "days"
-    elif hours < 24 * 60:
-        scale = "weeks"
-    else:
-        scale = "months"
-
-    broken = list(time.localtime(from_time))
-    while True:
-        next_choord, title = find_next_choord(broken, scale)
-        if next_choord >= until_time:
-            break
-        render_choord(next_choord, title)
-
-# Elements in broken:
-# 0: year
-# 1: month (1 = January)
-# 2: day of month
-# 3: hour
-# 4: minute
-# 5: second
-# 6: day of week (0 = monday)
-# 7: day of year
-# 8: isdst (0 or 1)
-def find_next_choord(broken, scale):
-    broken[4:6] = [0, 0] # always set min/sec to 00:00
-    old_dst = broken[8]
-
-    if scale == "hours":
-        epoch = time.mktime(broken)
-        epoch += 3600
-        broken[:] = list(time.localtime(epoch))
-        title = time.strftime("%H:%M",  broken)
-
-    elif scale == "2hours":
-        broken[3] = broken[3] / 2 * 2
-        epoch = time.mktime(broken)
-        epoch += 2 * 3600
-        broken[:] = list(time.localtime(epoch))
-        title = valuespec.weekdays[broken[6]] + time.strftime(" %H:%M", broken)
-
-    elif scale == "6hours":
-        broken[3] = broken[3] / 6 * 6
-        epoch = time.mktime(broken)
-        epoch += 6 * 3600
-        broken[:] = list(time.localtime(epoch))
-        title = valuespec.weekdays[broken[6]] + time.strftime(" %H:%M", broken)
-
-    elif scale == "days":
-        broken[3] = 0
-        epoch = time.mktime(broken)
-        epoch += 24 * 3600
-        broken[:] = list(time.localtime(epoch))
-        title = valuespec.weekdays[broken[6]] + time.strftime(", %d.%m. 00:00", broken)
-
-    elif scale == "weeks":
-        broken[3] = 0
-        at_00 = int(time.mktime(broken))
-        at_monday = at_00 - 86400 * broken[6]
-        epoch = at_monday + 7 * 86400
-        broken[:] = list(time.localtime(epoch))
-        title = valuespec.weekdays[broken[6]] + time.strftime(", %d.%m.", broken)
-
-    else: # scale == "months":
-        broken[3] = 0
-        broken[2] = 0
-        broken[1] += 1
-        if broken[1] > 12:
-            broken[1] = 1
-            broken[0] += 1
-        epoch = time.mktime(broken)
-        title = "%s %d" % (valuespec.month_names[broken[1]-1], broken[0])
-
-    dst = broken[8]
-    if old_dst == 1 and dst == 0:
-        epoch += 3600
-    elif old_dst == 0 and dst == 1:
-        epoch -= 3600
-    return epoch, title
-
-
 def render_availability_tables(availability_tables, what, avoptions):
 
     if not availability_tables:
@@ -557,7 +318,7 @@ def render_availability_timeline(what, av_entry, avoptions):
         html.write('<div class=info>%s</div>' % _("No information available"))
         return
 
-    timeline_layout = availability.layout_timeline(what, timeline_rows, avoptions, "standalone")
+    timeline_layout = availability.layout_timeline(what, timeline_rows, av_entry["considered_duration"], avoptions, "standalone")
     render_timeline_bar(timeline_layout, "standalone")
     render_date = timeline_layout["render_date"]
     render_number = availability.render_number_function(avoptions)
@@ -673,15 +434,21 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 def render_timeline_bar(timeline_layout, style):
     render_date = timeline_layout["render_date"]
     from_time, until_time = timeline_layout["range"]
+    html.write('<div class="timelinerange %s">' % style)
     if style == "standalone":
-        html.write('<div class="timelinerange %s">' % style)
         html.write('<div class=from>%s</div><div class=until>%s</div></div>' % (
             render_date(from_time), render_date(until_time)))
+
+    if "time_choords" in timeline_layout:
+        timebar_width = 500 # CSS width of inline timebar
+        for position, title in timeline_layout["time_choords"]:
+            pixel = timebar_width * position
+            html.write('<div title="%s" class="timelinechoord" style="left: %dpx"></div>' % (title, pixel))
 
     html.write('<table class="timeline %s">' % style)
     html.write('<tr class=timeline>')
     for row_nr, title, width, css in timeline_layout["spans"]:
-        if style == "standalone":
+        if style == "standalone" and row_nr != None:
             hovercode = ' onmouseover="timeline_hover(this, %d, 1);" onmouseout="timeline_hover(this, %d, 0);"' % (row_nr, row_nr)
         else:
             hovercode = ""
@@ -689,9 +456,8 @@ def render_timeline_bar(timeline_layout, style):
         html.write('<td%s style="width: %.3f%%" title="%s" class="%s"></td>' % (
                      hovercode, width, html.attrencode(title), css))
     html.write("</tr></table>")
+    html.write("</div>")
 
-    # TODO: Choords. Diese müssen aber noch berechnet werden!
-    # render_timeline_choords(from_time, until_time, width=500)
 
 
 #.

@@ -886,7 +886,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
         # Inline timeline
         if show_timeline:
-            row["timeline"] = layout_timeline(what, entry["timeline"], avoptions, style="inline")
+            row["timeline"] = layout_timeline(what, entry["timeline"], entry["considered_duration"], avoptions, style="inline")
 
 
         # Actuall cells with availability data
@@ -975,12 +975,12 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 #    "spans" : [ spans... ],
 #    "legend" : [ legendentries... ],
 # }
-def layout_timeline(what, timeline_rows, avoptions, style):
+def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
 
     render_number = render_number_function(avoptions)
     time_range, range_title = avoptions["range"]
     from_time, until_time = time_range
-    considered_duration = until_time - from_time
+    total_duration = until_time - from_time
 
     # Timeformat: show date only if the displayed time range spans over
     # more than one day.
@@ -1028,16 +1028,24 @@ def layout_timeline(what, timeline_rows, avoptions, style):
         return (None, title, chaos_width, "chaos")
 
 
+    current_time = from_time
     for row_nr, (row, state_id) in enumerate(timeline_rows):
+        this_from_time = row["from"]
+        this_until_time = row["until"]
+        if this_from_time > current_time: # GAP
+            spans.append((None, "", 100.0 * (this_from_time - current_time) / total_duration, "unmonitored"))
+        current_time = this_until_time
+
+        from_text = render_date(this_from_time)
+        until_text = render_date(this_until_time)
+        duration_text = render_number(row["duration"], considered_duration)
+
         for sid, css, sname, help in availability_columns[what]:
             if sid == state_id:
-                from_text = render_date(row["from"])
-                until_text = render_date(row["until"])
-                duration_text = render_number(row["duration"], considered_duration)
                 title = _("From %s until %s (%s) %s") % (from_text, until_text, duration_text, help and help or sname)
                 if "log_output" in row and row["log_output"]:
                     title += " - " + row["log_output"]
-                width = rest_percentage * row["duration"] / considered_duration
+                width = rest_percentage * row["duration"] / total_duration
 
                 # Information for table of detailed events
                 if style == "standalone":
@@ -1080,14 +1088,107 @@ def layout_timeline(what, timeline_rows, avoptions, style):
     if chaos_count > 1:
         spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
 
+    if style == "inline":
+        timeline_layout["time_choords"] = layout_timeline_choords(time_range)
+
     return timeline_layout
 
-    # TODO: Koordinaten!
-    ##### if style == "inline":
-    #####     if not fetch:
-    #####         render_timeline_choords(from_time, until_time, width=500)
-    #####     return
 
+def layout_timeline_choords(time_range):
+    from_time, until_time = time_range
+    duration = until_time - from_time
+
+    # Now comes the difficult part: decide automatically, whether to use
+    # hours, days, weeks or months. Days and weeks needs to take local time
+    # into account. Months are irregular.
+    hours = duration / 3600
+    if hours < 12:
+        scale = "hours"
+    elif hours < 24:
+        scale = "2hours"
+    elif hours < 48:
+        scale = "6hours"
+    elif hours < 24 * 14:
+        scale = "days"
+    elif hours < 24 * 60:
+        scale = "weeks"
+    else:
+        scale = "months"
+
+    broken = list(time.localtime(from_time))
+    while True:
+        next_choord, title = find_next_choord(broken, scale)
+        if next_choord >= until_time:
+            break
+        position = (next_choord - from_time) / float(duration) # ranges from 0.0 to 1.0
+        yield position, title
+
+
+def find_next_choord(broken, scale):
+    # Elements in broken:
+    # 0: year
+    # 1: month (1 = January)
+    # 2: day of month
+    # 3: hour
+    # 4: minute
+    # 5: second
+    # 6: day of week (0 = monday)
+    # 7: day of year
+    # 8: isdst (0 or 1)
+    broken[4:6] = [0, 0] # always set min/sec to 00:00
+    old_dst = broken[8]
+
+    if scale == "hours":
+        epoch = time.mktime(broken)
+        epoch += 3600
+        broken[:] = list(time.localtime(epoch))
+        title = time.strftime("%H:%M",  broken)
+
+    elif scale == "2hours":
+        broken[3] = broken[3] / 2 * 2
+        epoch = time.mktime(broken)
+        epoch += 2 * 3600
+        broken[:] = list(time.localtime(epoch))
+        title = weekdays[broken[6]] + time.strftime(" %H:%M", broken)
+
+    elif scale == "6hours":
+        broken[3] = broken[3] / 6 * 6
+        epoch = time.mktime(broken)
+        epoch += 6 * 3600
+        broken[:] = list(time.localtime(epoch))
+        title = weekdays[broken[6]] + time.strftime(" %H:%M", broken)
+
+    elif scale == "days":
+        broken[3] = 0
+        epoch = time.mktime(broken)
+        epoch += 24 * 3600
+        broken[:] = list(time.localtime(epoch))
+        title = weekdays[broken[6]] + time.strftime(", %d.%m. 00:00", broken)
+
+    elif scale == "weeks":
+        broken[3] = 0
+        at_00 = int(time.mktime(broken))
+        at_monday = at_00 - 86400 * broken[6]
+        epoch = at_monday + 7 * 86400
+        broken[:] = list(time.localtime(epoch))
+        title = weekdays[broken[6]] + time.strftime(", %d.%m.", broken)
+
+    else: # scale == "months":
+        broken[3] = 0
+        broken[2] = 0
+        broken[1] += 1
+        if broken[1] > 12:
+            broken[1] = 1
+            broken[0] += 1
+        epoch = time.mktime(broken)
+        title = "%s %d" % (valuespec.month_names[broken[1]-1], broken[0])
+
+    dst = broken[8]
+    if old_dst == 1 and dst == 0:
+        epoch += 3600
+    elif old_dst == 0 and dst == 1:
+        epoch -= 3600
+    return epoch, title
 
 #.
 #   .--BI------------------------------------------------------------------.

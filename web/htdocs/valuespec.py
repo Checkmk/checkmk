@@ -1787,18 +1787,6 @@ def round_date(t):
 def today():
     return round_date(time.time())
 
-seconds_per_day = 86400
-
-weekdays = {
-   0: _("Monday"),
-   1: _("Tuesday"),
-   2: _("Wednesday"),
-   3: _("Thursday"),
-   4: _("Friday"),
-   5: _("Saturday"),
-   6: _("Sunday"),
-}
-
 class Weekday(DropdownChoice):
     def __init__(self, **kwargs):
         choices = weekdays.items()

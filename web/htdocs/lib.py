@@ -810,6 +810,18 @@ except ImportError:
 #   |  interface type for example are needed in WATO and in the Inventory  |
 #   '----------------------------------------------------------------------'
 
+seconds_per_day = 86400
+
+weekdays = {
+   0: _("Monday"),
+   1: _("Tuesday"),
+   2: _("Wednesday"),
+   3: _("Thursday"),
+   4: _("Friday"),
+   5: _("Saturday"),
+   6: _("Sunday"),
+}
+
 interface_oper_states = {
     1: _("up"),
     2: _("down"),

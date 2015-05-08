@@ -17597,8 +17597,8 @@ def upload_icon(icon_info):
     # Add the icon category to the PNG comment
     from PIL import Image, PngImagePlugin
     from StringIO import StringIO
-    im = Image.open(StringIO(icon_info[0][2]))
-    im.info['Comment'] = icon_info[1]
+    im = Image.open(StringIO(icon_info['icon'][2]))
+    im.info['Comment'] = icon_info['category']
     meta = PngImagePlugin.PngInfo()
     for k,v in im.info.iteritems():
         if k not in ('interlace', 'gamma', 'dpi', 'transparency', 'aspect'):
@@ -17607,7 +17607,7 @@ def upload_icon(icon_info):
     # and finally save the image
     dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % defaults.omd_root
     make_nagios_directories(dest_dir)
-    im.save(dest_dir+'/'+icon_info[0][0], 'PNG', pnginfo=meta)
+    im.save(dest_dir+'/'+icon_info['icon'][0], 'PNG', pnginfo=meta)
 
 
 def load_custom_icons():
@@ -17627,19 +17627,21 @@ def mode_icons(phase):
             home_button()
         return
 
-    vs_upload = Tuple(
+    vs_upload = Dictionary(
         title = _('Icon'),
+        optional_keys = False,
+        render = "form",
         elements = [
-            FileUpload(
+            ('icon', FileUpload(
                 title = _('Icon'),
                 allow_empty = False,
                 validate = validate_icon,
-            ),
-            DropdownChoice(
+            )),
+            ('category', DropdownChoice(
                 title = _('Category'),
                 choices = IconSelector._categories,
                 no_preselect = True,
-            )
+            ))
         ]
     )
 
@@ -17668,7 +17670,7 @@ def mode_icons(phase):
         html.message(_("Sorry, you can mange your icons only within OMD environments."))
         return
 
-    html.write(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
+    html.write("<p>"+_("Allowed are single PNG image files with a maximum size of 80x80 px.")+"</p>")
 
     html.begin_form('upload_form', method='POST')
     vs_upload.render_input('_upload_icon', None)

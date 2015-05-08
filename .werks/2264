@@ -1,0 +1,10 @@
+Title: WATO Web API: new function get_all_hosts (returns all host attributes)
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.6p11
+Date: 1431070771
+
+

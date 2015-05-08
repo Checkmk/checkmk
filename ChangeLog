@@ -31,6 +31,7 @@
     * 2580 FIX: Remove bogus ;0 in comment of problem acknowledgements...
 
     WATO:
+    * 2264 WATO Web API: new function get_all_hosts (returns all host attributes)
     * 2550 FIX: Catching exception when having name conflicts while moving a folder
     * 2552 FIX: API: Service Discovery action is now creating missing pending log entry and marks the site dirty
 

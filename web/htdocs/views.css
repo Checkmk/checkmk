@@ -364,18 +364,59 @@ table.data.single tr.data > td {
     line-height: 14px;
     vertical-align: top;
 }
+
 table.data.single tr.data td.left {
     width: 10%;
     white-space: nowrap;
     vertical-align: top;
     padding-right: 20px;
 }
+
+table.data.matrix {
+    width: auto;
+    margin-bottom: 10px;
+}
+
+table.data.matrix tr.even0 td.left,
 table.data.single tr.even0 td.left {
     background-color: #bbb;
 }
+
+table.data.matrix tr.odd0 td.left,
 table.data.single tr.odd0 td.left {
     background-color: #ccc;
 }
+
+table.data.matrix tr.even0 td.matrixhead {
+    background-color: #888;
+    color: white;
+}
+
+table.data.matrix tr.odd0 td.matrixhead {
+    background-color: #999;
+    color: white;
+}
+
+table.data.matrix td.cell {
+    padding: 0px;
+}
+
+table.data.matrix td.cell table {
+    width: 100%;
+    padding: 0px;
+}
+
+table.data.matrix table.cell > tbody > tr > td {
+    padding: 0px;
+    border: 1px solid red;
+}
+
+table.data.matrix tr.matrixhead td.left a,
+table.data.matrix tr.matrixhead td.left {
+    color: white;
+}
+
+
 table.data.single td.gap {
     background-color: transparent;
     border-left-style: none;

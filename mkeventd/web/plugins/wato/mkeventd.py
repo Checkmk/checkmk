@@ -1853,8 +1853,14 @@ def mode_mkeventd_mibs(phase):
 
     html.write("<h3>" + _("Upload MIB file") + "</h3>")
     html.write(_("Allowed are single MIB files - usually with the extension <tt>.mib</tt> or <tt>.txt</tt>.<br><br>"))
+
     html.begin_form("upload_form", method = "POST")
+    forms.header(_("Upload MIB file"))
+
+    forms.section(_("Select file"))
     html.upload_file("_upload_mib")
+    forms.end()
+
     html.button("upload_button", _("Upload MIB(s)"), "submit")
     html.hidden_fields()
     html.end_form()

@@ -1,0 +1,46 @@
+Title: mk_logwatch: Fixed mostly uncritical command injection from config
+Level: 1
+Component: checks
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1431071697
+
+This change fixes a security related issue n the <tt>mk_logwatch</tt> linux agent
+plugin. It was possible to inject commands to the agent plugin when having write access
+to the logwatch.cfg configuration file. This might result in privilege
+escalation issues in very rare conditions.
+
+From our point of view this is a low impact issue for nearly all installations
+out there. Most installations run the agent as root but also have the 
+<tt>logwatch.cfg</tt> only being writable by root. So if a user has write
+access to this file the user don't need to do privilege escalation anymore
+since he is already root.
+
+If you have the situation where the agent is executed in <i>another</i> user context
+than the configuration file <tt>logwatch.cfg</tt> can be written, you should update
+to the fixed <tt>mk_logwatch</tt> plugin.
+
+Thanks to Adam Lis for finding and reporting this issue!
+
+Short Q/As:
+
+<b>What does the attacker need?</b>
+
+He needs to have write access to the <tt>/etc/check_mk/logwatch.cfg</tt>, which is
+normally only writable by root.
+
+<b>What does the attacker get?</b>
+
+He can execute commands in context of the Check_MK-Agent (often root).
+
+<b>Do I need to update asap?</b>
+
+Only if non-root users can edit the <tt>logwatch.cfg</tt>.
+
+<b>I want to update, where can I get the fixed version?</b>
+
+If we did not release an updated version yet, you can get it from the git:
+
+http://git.mathias-kettner.de/git/?p=check_mk.git;a=blob_plain;f=agents/plugins/mk_logwatch;hb=refs/heads/1.2.6

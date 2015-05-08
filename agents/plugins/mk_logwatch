@@ -26,8 +26,7 @@
 
 # Call with -d for debug mode: colored output, no saving of status
 
-import sys, os, re, time
-import glob
+import sys, os, re, time, glob
 
 if '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]:
     tty_red     = '\033[1;31m'
@@ -376,14 +375,14 @@ for filenames, patterns in config:
         sys.exit(1)
 
 
-    for glob in filenames:
-        if '=' in glob:
+    for glob_pattern in filenames:
+        if '=' in glob_pattern:
             continue
-        logfiles = [ l.strip() for l in os.popen("ls %s 2>/dev/null" % glob).readlines() ]
+        logfiles = glob.glob(glob_pattern)
         if opt_regex:
             logfiles = [ f for f in logfiles if opt_regex.search(f) ]
         if len(logfiles) == 0:
-            print '[[[%s:missing]]]' % glob
+            print '[[[%s:missing]]]' % glob_pattern
         else:
             for logfile in logfiles:
                 process_logfile(logfile, patterns)

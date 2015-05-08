@@ -109,8 +109,6 @@ dist: mk-livestatus mk-eventd
 		--exclude "endless.bat" \
 		--exclude "logstate.txt" \
 		--exclude "*.unversioned.exe" \
-		--exclude "*.cc" \
-		--exclude "*.c" \
 		--exclude "*.res" \
 		--exclude "*~" \
 		--exclude "Makefile" \

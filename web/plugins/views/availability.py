@@ -27,10 +27,10 @@
 import availability, table
 from valuespec import *
 
-# TODO: considered_duration und total_duration. Hab ich das wirklich richtig?
-# In der Timeline ist das evtl. falsch. Die considered_duration müsste im
-# allgemeinen kleiner sein.
 # TODO: CSV-Export geht nicht mehr
+#  --> A: hosts/services
+#  --> B: bi
+# Export as PDF von timelineansicht
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)
@@ -178,11 +178,11 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
     # - Show timeline                   "timeline"
     # --> controlled by URL variable "av_mode"
     av_mode = html.var("av_mode", "table")
+
     if av_mode == "timeline":
         title = _("Availability Timeline")
     else:
         title = _("Availability")
-        html.add_status_icon("download_csv", _("Export as CSV"), html.makeuri([("output_format", "csv_export")]))
 
     # This is combined with the object selection
     # - Show all objects
@@ -202,15 +202,18 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
         av_object = None
         title += view_title(view)
 
-    title += " - " + range_title
+    # Now compute all data, we need this also for CSV export
+    if not html.has_user_errors():
+        av_rawdata = availability.get_availability_rawdata(what, filterheaders, only_sites,
+                                                           av_object, av_mode == "timeline", avoptions)
+        av_data = availability.compute_availability(what, av_rawdata, avoptions)
 
-    # Prepare CSV ouput (TODO: move this into own page)
+    # Do CSV ouput
     if html.output_format == "csv_export":
-        do_csv = True
-        av_output_csv_mimetype(title)
-    else:
-        do_csv = False
+        output_availability_csv(what, av_data, avoptions)
+        return
 
+    title += " - " + range_title
 
     if 'H' in display_options:
         html.body_start(title, stylesheets=["pages","views","status"], force=True)
@@ -231,6 +234,8 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
         if config.reporting_available():
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
+        if av_mode == "availability":
+            html.context_button(_("Export as CSV"), html.makeuri([("output_format", "csv_export")]), "download_csv")
 
         if av_mode == "timeline" or av_object:
             html.context_button(_("Availability"), html.makeuri([("av_mode", "availability"), ("av_host", ""), ("av_aggr", "")]), "availability")
@@ -242,15 +247,12 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
             html.context_button(_("History"), history_url, "history")
         html.end_context_buttons()
 
-    if not do_csv:
-        # Render the avoptions again to get the HTML code, because the HTML vars have changed
-        # above (anno_ and editanno_ has been removed, which must not be part of the form
-        avoptions = render_availability_options()
+    # Render the avoptions again to get the HTML code, because the HTML vars have changed
+    # above (anno_ and editanno_ has been removed, which must not be part of the form
+    avoptions = render_availability_options()
 
     if not html.has_user_errors():
-        av_rawdata = availability.get_availability_rawdata(what, filterheaders, only_sites,
-                                                           av_object, av_mode == "timeline", avoptions)
-        do_render_availability(what, av_rawdata, av_mode, av_object, avoptions)
+        do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
 
     if 'Z' in display_options:
         html.bottom_footer()
@@ -258,16 +260,7 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
         html.body_end()
 
 
-def av_output_csv_mimetype(title):
-    html.req.content_type = "text/csv; charset=UTF-8"
-    filename = '%s-%s.csv' % (title, time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    if type(filename) == unicode:
-        filename = filename.encode("utf-8")
-    html.req.headers_out['Content-Disposition'] = 'Attachment; filename="%s"' % filename
-
-
-def do_render_availability(what, av_rawdata, av_mode, av_object, avoptions):
-    av_data = availability.compute_availability(what, av_rawdata, avoptions)
+def do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions):
 
     if av_mode == "timeline":
         render_availability_timelines(what, av_data, avoptions)
@@ -285,8 +278,8 @@ def render_availability_tables(availability_tables, what, avoptions):
         html.message(_("No matching hosts/services."))
         return
 
-    for group_name, availability_table in availability_tables:
-        render_availability_table(group_name, availability_table, what, avoptions)
+    for group_title, availability_table in availability_tables:
+        render_availability_table(group_title, availability_table, what, avoptions)
 
     # Legend for Availability levels
     av_levels = avoptions["av_levels"]
@@ -479,28 +472,7 @@ def render_timeline_bar(timeline_layout, style):
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
 def render_bi_availability(title, aggr_rows):
-    html.add_status_icon("download_csv", _("Export as CSV"), html.makeuri([("output_format", "csv_export")]))
     av_mode = html.var("av_mode", "availability")
-
-    timeline = html.var("timeline")
-    if timeline:
-        title = _("Timeline of ") + title
-    else:
-        title = _("Availability of ") + title
-    if html.output_format != "csv_export":
-        html.body_start(title, stylesheets=["pages","views","status", "bi"], javascripts=['bi'])
-        html.top_heading(title)
-        html.begin_context_buttons()
-        togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
-        html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
-        if timeline:
-            html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
-        elif len(aggr_rows) == 1:
-            aggr_name = aggr_rows[0]["aggr_name"]
-            aggr_group = aggr_rows[0]["aggr_group"]
-            timeline_url = html.makeuri([("timeline", "1"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
-            html.context_button(_("Timeline"), timeline_url, "timeline")
-        html.end_context_buttons()
 
     html.plug()
     avoptions = render_availability_options()
@@ -508,12 +480,33 @@ def render_bi_availability(title, aggr_rows):
     avoptions_html = html.drain()
     html.unplug()
 
-    if html.output_format == "csv_export":
-        av_output_csv_mimetype(title)
+    if av_mode == "timeline":
+        title = _("Timeline of ") + title
     else:
-        html.write(avoptions_html)
+        title = _("Availability of ") + title
 
-    timewarpcode = ""
+    if html.output_format != "csv_export":
+        html.write(avoptions_html)
+        html.body_start(title, stylesheets=["pages","views","status", "bi"], javascripts=['bi'])
+        html.top_heading(title)
+        html.begin_context_buttons()
+        togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
+        html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
+        if config.reporting_available():
+            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
+        if av_mode == "availability":
+            html.context_button(_("Export as CSV"), html.makeuri([("output_format", "csv_export")]), "download_csv")
+
+        if av_mode == "timeline":
+            html.context_button(_("Availability"), html.makeuri([("av_mode", "availability")]), "availability")
+
+        elif len(aggr_rows) == 1:
+            aggr_name = aggr_rows[0]["aggr_name"]
+            aggr_group = aggr_rows[0]["aggr_group"]
+            timeline_url = html.makeuri([("timeline", "1"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
+            html.context_button(_("Timeline"), timeline_url, "timeline")
+        html.end_context_buttons()
+
 
     if not html.has_user_errors():
         spans = []
@@ -574,13 +567,18 @@ def render_bi_availability(title, aggr_rows):
             else:
                 timewarpcode = ""
 
-        html.write(timewarpcode)
         av_rawdata = availability.spans_by_object(spans)
-        do_render_availability("bi", av_rawdata, av_mode, None, avoptions)# ,  timewarpcode)
+        av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 
-    if html.output_format != "csv_export":
-        html.bottom_footer()
-        html.body_end()
+        if html.output_format == "csv_export":
+            output_availability_csv("bi", av_data, avoptions)
+            return
+
+        html.write(timewarpcode)
+        do_render_availability("bi", av_rawdata, av_data, av_mode, None, avoptions)# ,  timewarpcode)
+
+    html.bottom_footer()
+    html.body_end()
 
 #.
 #   .--Annotations---------------------------------------------------------.
@@ -812,4 +810,35 @@ def handle_edit_annotations():
 
     return finished
 
+#.
+#   .--CSV Export----------------------------------------------------------.
+#   |         ____ ______     __  _____                       _            |
+#   |        / ___/ ___\ \   / / | ____|_  ___ __   ___  _ __| |_          |
+#   |       | |   \___ \\ \ / /  |  _| \ \/ / '_ \ / _ \| '__| __|         |
+#   |       | |___ ___) |\ V /   | |___ >  <| |_) | (_) | |  | |_          |
+#   |        \____|____/  \_/    |_____/_/\_\ .__/ \___/|_|   \__|         |
+#   |                                       |_|                            |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
+def output_availability_csv(what, av_data, avoptions):
+    av_output_csv_mimetype(_("Check_MK-Availability"))
+    availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
+    table.begin("av_items", output_format = "csv")
+    for group_title, availability_table in availability_tables:
+        av_table = availability.layout_availability_table(what, group_title, availability_table, avoptions)
+        for row in av_table["rows"]:
+            table.row()
+            for title, (name, url) in zip(av_table["object_titles"], row["object"]):
+                table.cell(title, name)
+            for (title, help), (text, css) in zip(av_table["cell_titles"], row["cells"]):
+                table.cell(title, text)
+    table.end()
+
+def av_output_csv_mimetype(title):
+    html.req.content_type = "text/csv; charset=UTF-8"
+    filename = '%s-%s.csv' % (title, time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
+    if type(filename) == unicode:
+        filename = filename.encode("utf-8")
+    html.req.headers_out['Content-Disposition'] = 'Attachment; filename="%s"' % filename

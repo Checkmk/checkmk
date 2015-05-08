@@ -5756,14 +5756,14 @@ register_check_parameters(
 register_check_parameters(
     subgroup_storage,
     "netapp_disks",
-    _("NetApp Broken/Spare Disk Ratio"),
+    _("Filer Disk Levels (netapp, ibm svc)"),
     Dictionary(
-        help = _("You can set a limit to the broken to spare disk ratio. "
-                 "The ratio is calculated with <i>broken / (broken + spare)</i>."),
         elements = [
             ( "broken_spare_ratio",
             Tuple(
                 title = _("Broken to spare ratio"),
+                help  = _("You can set a limit to the broken to spare disk ratio. "
+                          "The ratio is calculated with <i>broken / (broken + spare)</i>."),
                 elements = [
                     Percentage(title = _("Warning at or above"), default_value = 1.0),
                     Percentage(title = _("Critical at or above"), default_value = 50.0),

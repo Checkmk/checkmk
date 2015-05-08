@@ -1,0 +1,81 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Agent output:
+# <<<ibm_svc_disk:sep(58)>>>
+# 0:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:4:1:24::
+# 1:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:3:1:23::
+# 2:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:2:1:22::
+# 3:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:1:1:21::
+# 4:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:0:1:20::
+# 5:online::member:sas_hdd:558.4GB:8:V7BRZ_mdisk09:4:5:4::
+# 6:online::member:sas_hdd:558.4GB:1:V7BRZ_mdisk02:6:1:18::
+# 7:online::member:sas_hdd:558.4GB:1:V7BRZ_mdisk02:5:1:17::
+# 8:online::member:sas_hdd:558.4GB:1:V7BRZ_mdisk02:4:1:16::
+# 9:online::member:sas_hdd:558.4GB:1:V7BRZ_mdisk02:3:1:15::
+# 10:online::member:sas_hdd:558.4GB:1:V7BRZ_mdisk02:2:1:14::
+# 11:online::member:sas_hdd:558.4GB:1:V7BRZ_mdisk02:1:1:13::
+# 12:online::member:sas_hdd:558.4GB:1:V7BRZ_mdisk02:0:1:12::
+# 13:online::member:sas_hdd:558.4GB:16:V7BRZ_mdisk19:6:1:10::
+# 14:online::member:sas_hdd:558.4GB:16:V7BRZ_mdisk19:7:1:11::
+# 15:online::member:sas_hdd:558.4GB:16:V7BRZ_mdisk19:5:1:9::
+# 16:online::member:sas_hdd:558.4GB:16:V7BRZ_mdisk19:3:1:7::
+# 17:online::member:sas_hdd:558.4GB:16:V7BRZ_mdisk19:4:1:8::
+# 18:online::member:sas_hdd:558.4GB:16:V7BRZ_mdisk19:2:1:6::
+# 19:online::member:sas_hdd:558.4GB:16:V7BRZ_mdisk19:1:1:5::
+
+def inventory_ibm_svc_disks(info):
+    return [ (None, {}) ]
+
+def check_ibm_svc_disks(_no_item, params, info):
+    disks = []
+    for did, status, error_sequence_number, use, tech_type,\
+        capacity, mdisk_id, mdisk_name, member_id, enclosure_id,\
+        slot_id, node_id, node_name in info:
+        disk = {}
+        disk['identifier'] = "Enclosure: %s, Slot: %s, Type: %s" % ( enclosure_id, slot_id, tech_type )
+        if capacity.endswith('GB'):
+            disk['capacity'] = float(capacity[:-2]) * 1024 * 1024 * 1024
+        # Failure State can be found here,
+        # also spare is a state here
+        disk['state'] = use
+        if status == "offline" and use != "failed":
+            disk['state'] = "offline"
+        disk['type'] = "" # We dont have a type
+        disks.append(disk)
+    return check_filer_disks(disks, params)
+
+check_info["ibm_svc_disks"] = {
+    'check_function'          : check_ibm_svc_disks,
+    'inventory_function'      : inventory_ibm_svc_disks,
+    'service_description'     : 'Disk Summary',
+    'group'                   : 'netapp_disks',
+    'default_levels_variable' : 'filer_disks_default_levels',
+    'has_perfdata'            : True,
+    'includes'                : ['filerdisks.include']
+}
+

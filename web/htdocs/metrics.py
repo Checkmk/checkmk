@@ -1011,67 +1011,80 @@ def render_graph_pnp(graph_template, translated_metrics):
 #   |                                                   |_|                |
 #   '----------------------------------------------------------------------'
 
+def try_time_graph():
+    # Filter cases where our graphing is not possible:
+    # - mobile GUI
+    # - for example IE < 8
+    try_time_graph = not html.is_mobile()
+
+    user_agent = html.get_user_agent()
+    if 'MSIE' in user_agent:
+        matches = regex('MSIE ([0-9]{1,}[\.0-9]{0,})').search(user_agent)
+        try_time_graph = not matches or float(matches.group(1)) >= 9.0
+    return try_time_graph
+
 def page_show_graph():
     site = html.var('site')
     host_name = html.var('host_name')
     service = html.var('service')
 
-    # FIXME HACK TODO We don't have the current perfata and check command
-    # here, but we only need it till metrics.render_svc_time_graph() does
-    # not need these information anymore.
-    if service == "_HOST_":
-        query = "GET hosts\n" \
-                "Filter: host_name = %s\n" \
-                "Columns: perf_data metrics check_command\n" % host_name
+    if try_time_graph():
+        # FIXME HACK TODO We don't have the current perfata and check command
+        # here, but we only need it till metrics.render_svc_time_graph() does
+        # not need these information anymore.
+        if service == "_HOST_":
+            query = "GET hosts\n" \
+                    "Filter: host_name = %s\n" \
+                    "Columns: perf_data metrics check_command\n" % host_name
 
-    else:
-        query = "GET services\n" \
-                "Filter: host_name = %s\n" \
-                "Filter: service_description = %s\n" \
-                "Columns: perf_data metrics check_command\n" % (host_name, service)
+        else:
+            query = "GET services\n" \
+                    "Filter: host_name = %s\n" \
+                    "Filter: service_description = %s\n" \
+                    "Columns: perf_data metrics check_command\n" % (host_name, service)
 
-    html.live.set_only_sites([site])
-    try:
-        data = html.live.query_row(query)
-    except livestatus.MKLivestatusNotFoundError:
-        html.write('<div class="error">%s</div>' %
-            _('Failed to fetch data for graph. Maybe the site is not reachable?'))
-        return
-    html.live.set_only_sites(None)
-
-    if service == "_HOST_":
-        row = {
-            'site'                  : site,
-            'host_name'             : host_name,
-            'host_perf_data'        : data[0],
-            'host_metrics'          : data[1],
-            'host_check_command'    : data[2],
-        }
-    else:
-        row = {
-            'site'                  : site,
-            'host_name'             : host_name,
-            'service_description'   : service,
-            'service_perf_data'     : data[0],
-            'service_metrics'       : data[1],
-            'service_check_command' : data[2],
-        }
-
-    # now try to render the graph with our graphing. If it is not possible,
-    # add JS code to let browser fetch the PNP graph
-    try:
-        # Currently always displaying 24h graph
-        end_time = time.time()
-        start_time = end_time - 8 * 3600
-
-        htmlcode = render_time_graph(row, start_time, end_time, size=(30, 10), font_size=8, show_legend=False, graph_id_prefix="hover")
-        if htmlcode:
-            html.write(htmlcode)
+        html.live.set_only_sites([site])
+        try:
+            data = html.live.query_row(query)
+        except livestatus.MKLivestatusNotFoundError:
+            html.write('<div class="error">%s</div>' %
+                _('Failed to fetch data for graph. Maybe the site is not reachable?'))
             return
-    except NameError:
-        if config.debug:
-            raise
-        pass
+        html.live.set_only_sites(None)
+
+        if service == "_HOST_":
+            row = {
+                'site'                  : site,
+                'host_name'             : host_name,
+                'host_perf_data'        : data[0],
+                'host_metrics'          : data[1],
+                'host_check_command'    : data[2],
+            }
+        else:
+            row = {
+                'site'                  : site,
+                'host_name'             : host_name,
+                'service_description'   : service,
+                'service_perf_data'     : data[0],
+                'service_metrics'       : data[1],
+                'service_check_command' : data[2],
+            }
+
+        # now try to render the graph with our graphing. If it is not possible,
+        # add JS code to let browser fetch the PNP graph
+        try:
+            # Currently always displaying 24h graph
+            end_time = time.time()
+            start_time = end_time - 8 * 3600
+
+            htmlcode = render_time_graph(row, start_time, end_time, size=(30, 10), font_size=8, show_legend=False, graph_id_prefix="hover")
+            if htmlcode:
+                html.write(htmlcode)
+                return
+        except NameError:
+            if config.debug:
+                raise
+            pass
 
     # Fallback to PNP graph rendering
     host = pnp_cleanup(host_name)

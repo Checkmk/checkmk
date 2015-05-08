@@ -26,6 +26,11 @@
 
 import os, copy
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 from lib import *
 from valuespec import *
 import config, table
@@ -1366,14 +1371,7 @@ def ajax_add_visual():
     extra_data = []
     for what in [ 'context', 'params' ]:
         value = html.var(what)
-        data = {}
-        extra_data.append(data)
-        if value == '':
-            continue
-        for entry in value.split('|'):
-            key, vartype, value = entry.split(':', 2)
-            if vartype == 'number':
-                value = int(value)
-            data[key] = value
+        if value:
+            extra_data.append(json.loads(value))
 
     handler(visual_name, element_type, *extra_data)

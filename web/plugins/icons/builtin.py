@@ -719,7 +719,7 @@ def paint_icon_check_bi_aggr(what, row, tags, host_custom_vars):
         args = row['service_check_command']
         start = args.find('-b \'') + 4
         end   = args.find('\' ', start)
-        base_url = args[start:end]
+        base_url = args[start:end].rstrip('/')
         base_url = base_url.replace('$HOSTADDRESS$', row['host_address'])
         base_url = base_url.replace('$HOSTNAME$', row['host_name'])
 

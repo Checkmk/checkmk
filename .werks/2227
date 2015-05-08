@@ -1,0 +1,9 @@
+Title: isc_dhcpd: New agent plugin and check for checking IP address pools of ISC DHCP-Daemon
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1431005682
+Class: feature
+
+

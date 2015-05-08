@@ -2472,23 +2472,11 @@ function add_to_visual(visual_type, visual_name)
 {
     close_popup();
 
-    var context_txt = [];
-    for (var key in popup_data[1]) {
-        var ty = typeof(popup_data[1][key]);
-        context_txt.push(key+':'+ty+':'+popup_data[1][key]);
-    }
-
-    var params_txt = [];
-    for (var key in popup_data[2]) {
-        var ty = typeof(popup_data[2][key]);
-        params_txt.push(key+':'+ty+':'+popup_data[2][key]);
-    }
-
     response = get_url_sync('ajax_add_visual.py?visual_type=' + visual_type
                                   + '&visual_name=' + visual_name
                                   + '&type=' + popup_data[0]
-                                  + '&context=' + encodeURIComponent(context_txt.join('|'))
-                                  + '&params=' + encodeURIComponent(params_txt.join('|')));
+                                  + '&context=' + encodeURIComponent(JSON.stringify(popup_data[1]))
+                                  + '&params=' + encodeURIComponent(JSON.stringify(popup_data[2])));
     popup_data = null;
 
     // After adding a dashlet, go to the choosen dashboard

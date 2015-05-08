@@ -1,0 +1,11 @@
+Title: db2_version: improved check output when version information is missing
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1431074580
+Class: fix
+
+The version information of a db2 instance is taken from on of its snapshots.
+If the instance had no snapshots, the check raised an exception.
+

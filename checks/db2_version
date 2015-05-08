@@ -33,9 +33,14 @@ def inventory_db2_version(info):
 
 def check_db2_version(item, no_params, info):
     for line in info:
-        instance, version = line[0].split(" ", 1)
-        if item == instance:
-            return 0, version
+        tokens = line[0].split(" ", 1)
+        if len(tokens) < 2:
+            if item == tokens[0]:
+                return 3, "No version information found"
+        else:
+            instance, version = tokens
+            if item == instance:
+                return 0, version
 
 check_info['db2_version'] = {
     "service_description"     : "DB2 Version %s",

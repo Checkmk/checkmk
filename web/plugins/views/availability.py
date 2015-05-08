@@ -27,11 +27,6 @@
 import availability, table
 from valuespec import *
 
-# TODO: CSV-Export geht nicht mehr
-#  --> A: hosts/services
-#  --> B: bi
-# Export as PDF von timelineansicht
-
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)
 #   In case of BI (site, host) is (None, aggr_group), service is aggr_name

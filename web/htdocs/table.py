@@ -164,6 +164,7 @@ def end():
     rows = table["rows"]
 
     # Controls wether or not actions are available for a table
+    search_term = None
     actions_enabled = (table["searchable"] or table["sortable"]) and not do_csv
     if actions_enabled:
         user_opts = config.load_user_file("tableoptions", {})

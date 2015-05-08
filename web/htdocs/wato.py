@@ -18231,6 +18231,22 @@ class API:
         else:
             raise MKUserError(None, ", ".join(errors))
 
+    def get_all_hosts(self, effective_attr = False):
+        self.__prepare_folder_info()
+        all_hosts = self.__get_all_hosts()
+        return_hosts = {}
+
+        for hostname in all_hosts.keys():
+            self.__validate_host_parameters(None, hostname, {}, all_hosts, True, ["host_missing", "permissions_read"])
+
+            the_host = all_hosts[hostname]
+            if effective_attr:
+                the_host = effective_attributes(the_host, the_host[".folder"])
+            cleaned_host = dict([(k, v) for (k, v) in the_host.iteritems() if not k.startswith('.') ])
+
+            return_hosts[hostname] = { "attributes": cleaned_host, "path": the_host[".folder"][".path"], "hostname": hostname }
+
+        return return_hosts
 
 # internal helper functions for API
 def collect_hosts(folder):

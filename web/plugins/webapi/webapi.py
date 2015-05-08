@@ -137,3 +137,17 @@ api_actions["activate_changes"] = {
     "locking"         : True,
 }
 
+###############
+
+def action_get_all_hosts(request):
+    if html.var("effective_attributes"):
+        effective_attributes = bool(int(html.var("effective_attributes")))
+    else:
+        effective_attributes = False
+    return g_api.get_all_hosts(effective_attr = effective_attributes)
+
+api_actions["get_all_hosts"] = {
+    "handler": action_get_all_hosts,
+    "locking": False,
+}
+

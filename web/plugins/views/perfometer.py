@@ -37,7 +37,6 @@ perfometers = {}
 # [ [segment, segment, segment], [segment, segment] ] --> horizontal gespaltet.
 # Darin die vertikalen Balken.
 
-#.
 #   .--Old Style-----------------------------------------------------------.
 #   |                ___  _     _   ____  _         _                      |
 #   |               / _ \| | __| | / ___|| |_ _   _| | ___                 |
@@ -122,6 +121,7 @@ def perfometer_logarithmic_dual_independent\
 
 
 def paint_perfometer(row):
+
     perf_data_string = unicode(row["service_perf_data"].strip())
     if not perf_data_string:
         return "", ""
@@ -137,16 +137,15 @@ def paint_perfometer(row):
 
     try:
         # Try new metrics module
+        title = None
         translated_metrics = metrics.translate_metrics(perf_data, check_command)
         if translated_metrics: # definition for this check type exists
             perfometer_definitions = list(metrics.get_perfometers(translated_metrics))
             if perfometer_definitions:
                 title, h = render_metrics_perfometer(perfometer_definitions[0], translated_metrics)
-            else:
-                return "", ""
 
         # Legacy Perf-O-Meters: find matching Perf-O-Meter function
-        else:
+        if title == None:
             perf_painter = perfometers.get(check_command)
             if not perf_painter:
                 return "", ""

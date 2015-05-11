@@ -1,0 +1,9 @@
+Title: mk_db2.aix agent plugin: no longer throws an error when a db2 profile is not set up properly
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1431333222
+Class: fix
+
+An invalid set up instance will be skipped.

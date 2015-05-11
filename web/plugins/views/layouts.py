@@ -521,7 +521,7 @@ multisite_layouts["table"] = {
 def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
 
     header_majorities = matrix_find_majorities(rows, group_painters, True)
-    row_majorities = matrix_find_majorities(rows, painters, False)
+    value_counts, row_majorities = matrix_find_majorities(rows, painters, False)
 
     for groups, unique_row_ids, matrix_cells in \
              create_matrices(rows, group_painters, painters, num_columns):
@@ -545,6 +545,16 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
 
         # Now for each unique service^H^H^H^H^H^H ID column paint one row
         for row_id in unique_row_ids:
+            # Omit rows where all cells have the same values
+            if config.matrix_omit_uniform_lines:
+                at_least_one_different = False
+                for counts in value_counts[row_id].values():
+                    if len(counts) > 1:
+                        at_least_one_different = True
+                        break
+                if not at_least_one_different:
+                    continue
+
             odd = odd == "odd" and "even" or "odd"
             html.write('<tr class="data %s0">' % odd)
             tdclass, content = prepare_paint(painters[0], matrix_cells[row_id].values()[0])
@@ -586,11 +596,12 @@ def matrix_find_majorities(rows, painters, for_header):
         else:
             row_id = tuple(group_value(row, [ painters[0] ]))
         for painter_nr, painter in enumerate(painters[1:]):
-            value = group_value(row, [painter])[0]
+            value = group_value(row, [painter])
             row_entry = counts.setdefault(row_id, {})
             painter_entry = row_entry.setdefault(painter_nr, {})
             painter_entry.setdefault(value, 0)
             painter_entry[value] += 1
+
 
     # Now find majorities for each row
     majorities = {} # row_id -> painter_nr -> majority value
@@ -611,7 +622,7 @@ def matrix_find_majorities(rows, painters, for_header):
     if for_header:
         return majorities[None]
     else:
-        return majorities
+        return counts, majorities
 
 # Create list of matrices to render
 def create_matrices(rows, group_painters, painters, num_columns):
@@ -633,7 +644,7 @@ def create_matrices(rows, group_painters, painters, num_columns):
 
     for row in rows:
         register_events(row) # needed for playing sounds
-        group_id = tuple(group_value(row, group_painters))
+        group_id = group_value(row, group_painters)
         if group_id != last_group_id:
             col_num += 1
             if col_num > num_columns:
@@ -649,7 +660,7 @@ def create_matrices(rows, group_painters, painters, num_columns):
         # Now the rule is that the *first* column painter (usually the service
         # description) will define the left legend of the matrix. It defines
         # the set of possible rows.
-        row_id = tuple(group_value(row, [ painters[0] ]))
+        row_id = group_value(row, [ painters[0] ])
         if row_id not in matrix_cells:
             unique_row_ids.append(row_id)
             matrix_cells[row_id] = {}

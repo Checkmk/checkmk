@@ -2302,7 +2302,7 @@ def group_value(row, group_painters):
         else:
             for c in p[0]["columns"]:
                 group.append(row[c])
-    return group
+    return tuple(group)
 
 def get_painter_option(name):
     opt = multisite_painter_options[name]

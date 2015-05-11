@@ -431,6 +431,7 @@
     * 2233 FIX: Fixed WATO folder view and Host Tags search with HTML Entity encoding...
     * 2074 FIX: pnptemplate netapp_api_volume: fixed title
     * 2251 FIX: Adding views to dashboards / reports is now respecing all set filters...
+    * 2253 FIX: Availability context button is now visible again for host- and servicegroups
 
     WATO:
     * 1760 Added search form to manual checks page

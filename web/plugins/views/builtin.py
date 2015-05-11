@@ -2194,7 +2194,7 @@ multisite_builtin_views.update({
     'datasource': 'servicesbyhostgroup',
     'description': _('A Matrix of Performance data values from all hosts in a certain host group'),
     'group_painters': [('host', 'host', None)],
-    'hidden': False,
+    'hidden': True,
     'hidebutton': False,
     'icon': 'matrix',
     'layout': 'matrix',

@@ -1,0 +1,10 @@
+Title: windows agent: fixed invalid agent output if system memory exceeds 2TB RAM
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p3
+Date: 1431084054
+Class: fix
+
+The section <tt>mem</tt> section reported invalid (negative) values if the
+windows host had equal or more than 2TB RAM.

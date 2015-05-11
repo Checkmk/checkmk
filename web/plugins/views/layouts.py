@@ -522,7 +522,6 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
 
     header_majorities = matrix_find_majorities(rows, group_painters, True)
     value_counts, row_majorities = matrix_find_majorities(rows, painters, False)
-    html.debug(value_counts)
 
     for groups, unique_row_ids, matrix_cells in \
              create_matrices(rows, group_painters, painters, num_columns):

@@ -520,7 +520,8 @@ multisite_layouts["table"] = {
 
 def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
 
-    majorities = matrix_find_majorities(rows, group_painters, painters)
+    header_majorities = matrix_find_majorities(rows, group_painters, True)
+    row_majorities = matrix_find_majorities(rows, painters, False)
 
     for groups, unique_row_ids, matrix_cells in \
              create_matrices(rows, group_painters, painters, num_columns):
@@ -528,12 +529,17 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
         # Paint the matrix. Begin with the group headers
         html.write('<table class="data matrix">')
         odd = "odd"
-        for painter in group_painters:
+        for painter_nr, painter in enumerate(group_painters):
             odd = odd == "odd" and "even" or "odd"
             html.write('<tr class="data %s0">' % odd)
             html.write('<td class=matrixhead>%s</td>' % painter[0]["title"])
             for group, group_row in groups:
                 tdclass, content = prepare_paint(painter, group_row)
+                if painter_nr > 0:
+                    gv = group_value(group_row, [painter])[0]
+                    majority_value = header_majorities.get(painter_nr-1, None)
+                    if majority_value != None and majority_value != gv:
+                        tdclass += " minority"
                 html.write('<td class="left %s">%s</td>' % (tdclass, content))
             html.write("</tr>")
 
@@ -556,7 +562,7 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
                     for painter_nr, p in enumerate(painters[1:]):
                         tdclass, content = prepare_paint(p, cell_row)
                         gv = group_value(cell_row, [p])[0]
-                        majority_value =  majorities[row_id].get(painter_nr, None)
+                        majority_value =  row_majorities[row_id].get(painter_nr, None)
                         if majority_value != None and majority_value != gv:
                             tdclass += " minority"
                         if len(painters) > 2:
@@ -571,12 +577,14 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
         html.write("</table>")
 
 
-def matrix_find_majorities(rows, group_painters, painters):
+def matrix_find_majorities(rows, painters, for_header):
     counts = {} # dict row_id -> painter_nr -> value -> count
 
     for row in rows:
-        group_id = tuple(group_value(row, group_painters))
-        row_id = tuple(group_value(row, [ painters[0] ]))
+        if for_header:
+            row_id = None
+        else:
+            row_id = tuple(group_value(row, [ painters[0] ]))
         for painter_nr, painter in enumerate(painters[1:]):
             value = group_value(row, [painter])[0]
             row_entry = counts.setdefault(row_id, {})
@@ -600,7 +608,10 @@ def matrix_find_majorities(rows, group_painters, painters):
             maj_entry[painter_nr] = maj_value
 
 
-    return majorities
+    if for_header:
+        return majorities[None]
+    else:
+        return majorities
 
 # Create list of matrices to render
 def create_matrices(rows, group_painters, painters, num_columns):

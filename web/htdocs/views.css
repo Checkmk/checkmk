@@ -423,6 +423,13 @@ table.data.matrix tr.odd0 td.minority {
     background-color: #dff;
 }
 
+table.data.matrix tr.even0 td.left.minority {
+    background-color: #bdd;
+}
+table.data.matrix tr.odd0 td.left.minority {
+    background-color: #cee;
+}
+
 
 table.data.single td.gap {
     background-color: transparent;

@@ -100,6 +100,7 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
     html.write("</table>\n")
     html.write("</div>\n")
 
+
 multisite_layouts["dataset"] = {
     "title"  : _("Single dataset"),
     "render" : render_single_dataset,
@@ -519,12 +520,6 @@ multisite_layouts["table"] = {
 
 def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
 
-    if len(painters) < 2:
-        raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least two columns!"))
-
-    if not group_painters:
-        raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least one group column!"))
-
     for groups, unique_row_ids, matrix_cells in \
              create_matrices(rows, group_painters, painters, num_columns):
 
@@ -570,6 +565,12 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
 
 # Create list of matrices to render
 def create_matrices(rows, group_painters, painters, num_columns):
+
+    if len(painters) < 2:
+        raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least two columns!"))
+
+    if not group_painters:
+        raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least one group column!"))
 
     # First find the groups - all rows that have the same values for
     # all group columns. Usually these should correspond with the hosts

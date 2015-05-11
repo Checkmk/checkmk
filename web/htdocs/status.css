@@ -57,26 +57,44 @@ table.data td.perfometer.stale div.title {
 
 
 /* OK/UP */
+/* TODO: Replace class "odd0" with "odd state0" */
 .state0, .hstate0, .state0 a, .hstate0 a {
     background-color: #0b3; color: #fff;
 }
+.odd0 .state0, .odd0 .hstate0, .odd0 .state0 a, .odd0 .hstate0 a {
+    background-color: #1c4;
+}
+.even0 .state0, .even0 .hstate0, .even0 .state0 a, .even0 .hstate0 a {
+    background-color: #0b3;
+}
+
 
 .hstate {
     white-space: nowrap;
 }
 /* WARN */
-.state1, .state1 a, tr.groupheader td.state1 {
-    background-color: #ff0; color: #000;
+.state1, .even1 .state1, .state1 a, tr.groupheader td.state1 {
+    background-color: #f8f800; color: #000;
+}
+.odd0 .state1, .odd1 .state1 {
+    background-color: #ff5;
 }
 
 /* CRIT/DOWN */
-.state2, .hstate1, .state2 a, .hstate2 a {
+.state2, .even0 .state2, .even2 .state2, .hstate1, .state2 a, .hstate2 a {
     background-color: #f00; color: #fff;
 }
+.odd0 .state2, .odd2 .state2 {
+    background-color: #f44;
+}
+
 
 /* UNKNOWN / UNREACH */
 .state3, .hstate2, .state3 a, .hstate2 a {
     background-color: #f80; color: #fff;
+}
+.odd0 .state3, .odd3 .state3 {
+    background-color: #f91;
 }
 
 /* PENDING */

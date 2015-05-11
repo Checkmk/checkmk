@@ -545,6 +545,7 @@ register_configvar(group,
                                 label = _('Directly show the action icon in the column'),
                                 help = _('Makes the icon appear in the column instead '
                                          'of the dropdown menu.'),
+                                default_value = True,
                             )),
                             ('sort_index', Integer(
                                 title = _('Sort index'),

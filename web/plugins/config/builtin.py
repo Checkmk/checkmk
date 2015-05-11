@@ -110,6 +110,9 @@ sounds = [
 view_option_refreshes = [ 30, 60, 90, 0 ]
 view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8, 10, 12 ]
 
+# Experimental:
+matrix_omit_uniform_lines = False
+
 # MISC
 doculink_urlformat = "http://mathias-kettner.de/checkmk_%s.html";
 

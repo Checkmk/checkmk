@@ -61,7 +61,13 @@ function query_instances {
 
         waitmax 20 << WAITMAX
         su $INSTANCE << EOF
-        . $HOMEDIR/sqllib/db2profile 2>&1 > /dev/null;
+
+        if [ ! -f $HOMEDIR/sqllib/db2profile ] ;
+        then
+            exit 0
+        fi
+
+        . $HOMEDIR/sqllib/db2profile >/dev/null 2>&1 ;
 
 
         function compare_version_greater_equal {

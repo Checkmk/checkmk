@@ -1166,10 +1166,8 @@ def render_view(view, rows, datasource, group_painters, painters,
                        row_count > 0 and command_form,
                        # Take into account: layout capabilities
                        can_display_checkboxes and not view.get("force_checkboxes"), show_checkboxes,
-                       # Show link to availability. This exists only for plain hosts
-                       # and services table. The grouping tables have columns that statehist
-                       # is missing. That way some of the filters might fail.
-                       datasource["table"] in [ "hosts", "services", ] or "aggr" in datasource["infos"])
+                       # Show link to availability
+                       "host" in datasource["infos"] or "service" in datasource["infos"] or "aggr" in datasource["infos"])
 
     # User errors in filters
     html.show_user_errors()
@@ -2304,7 +2302,7 @@ def group_value(row, group_painters):
         else:
             for c in p[0]["columns"]:
                 group.append(row[c])
-    return group
+    return tuple(group)
 
 def get_painter_option(name):
     opt = multisite_painter_options[name]

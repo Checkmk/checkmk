@@ -362,14 +362,7 @@ class html:
         if not self.mobile:
             self.write('</label>')
 
-    def icon(self, help, icon):
-       self.write(self.render_icon(icon, help))
-
-    def render_icon(self, icon_name, help="", middle=True, id=None):
-        align = middle and ' align=absmiddle' or ''
-        title = help and ' title="%s"' % self.attrencode(help) or ""
-        id = id and ' id="%s"' % id or ''
-
+    def detect_icon_path(self, icon_name):
         # Detect whether or not the icon is available as images/icon_*.png
         # or images/icons/*.png. When an icon is available as internal icon,
         # always use this onec
@@ -379,11 +372,19 @@ class html:
             base_path = defaults.web_dir+"/htdocs/images"
 
         if os.path.exists(base_path+'/icon_'+icon_name+'.png'):
-            src = "images/icon_%s.png" % icon_name
+            return "images/icon_%s.png" % icon_name
         else:
-            src = "images/icons/%s.png" % icon_name
+            return "images/icons/%s.png" % icon_name
 
-        return '<img src="%s" class=icon%s%s%s />' % (src, align, title, id)
+    def icon(self, help, icon):
+       self.write(self.render_icon(icon, help))
+
+    def render_icon(self, icon_name, help="", middle=True, id=None):
+        align = middle and ' align=absmiddle' or ''
+        title = help and ' title="%s"' % self.attrencode(help) or ""
+        id = id and ' id="%s"' % id or ''
+
+        return '<img src="%s" class=icon%s%s%s />' % (self.detect_icon_path(icon_name), align, title, id)
 
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')
@@ -464,7 +465,8 @@ class html:
             self.begin_context_buttons()
 
         if icon:
-            title = '<img src="images/icon_%s.png">%s' % (self.attrencode(icon), self.attrencode(title))
+            title = '<img src="%s">%s' % (self.attrencode(self.detect_icon_path(icon)), self.attrencode(title))
+
         if id:
             idtext = " id='%s'" % self.attrencode(id)
         else:

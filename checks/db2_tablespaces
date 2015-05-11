@@ -62,6 +62,8 @@ def check_db2_tablespaces(item, params, parsed):
         return
 
     db         = parsed.get(instance)
+    if not db:
+        return
     db_tables  = dict(map(lambda x: (x[0], x[1:]), db[1:]))
     tablespace = db_tables.get(tbsname)
     if not tablespace:

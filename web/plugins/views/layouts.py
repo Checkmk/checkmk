@@ -520,6 +520,8 @@ multisite_layouts["table"] = {
 
 def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
 
+    majorities = matrix_find_majorities(rows, group_painters, painters)
+
     for groups, unique_row_ids, matrix_cells in \
              create_matrices(rows, group_painters, painters, num_columns):
 
@@ -549,19 +551,56 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
                 if cell_row == None:
                     html.write("<td></td>")
                 else:
-                    if len(painters) == 2:
-                        paint(painters[1], cell_row)
-                    else:
+                    if len(painters) > 2:
                         html.write("<td class=cell><table>")
-                        for p in painters[1:]:
+                    for painter_nr, p in enumerate(painters[1:]):
+                        tdclass, content = prepare_paint(p, cell_row)
+                        gv = group_value(cell_row, [p])[0]
+                        majority_value =  majorities[row_id].get(painter_nr, None)
+                        if majority_value != None and majority_value != gv:
+                            tdclass += " minority"
+                        if len(painters) > 2:
                             html.write("<tr>")
-                            paint(p, cell_row)
+                        html.write('<td class="%s">%s</td>' % (tdclass, content))
+                        if len(painters) > 2:
                             html.write("</tr>")
+                    if len(painters) > 2:
                         html.write("</table></td>")
             html.write('</tr>')
 
         html.write("</table>")
 
+
+def matrix_find_majorities(rows, group_painters, painters):
+    counts = {} # dict row_id -> painter_nr -> value -> count
+
+    for row in rows:
+        group_id = tuple(group_value(row, group_painters))
+        row_id = tuple(group_value(row, [ painters[0] ]))
+        for painter_nr, painter in enumerate(painters[1:]):
+            value = group_value(row, [painter])[0]
+            row_entry = counts.setdefault(row_id, {})
+            painter_entry = row_entry.setdefault(painter_nr, {})
+            painter_entry.setdefault(value, 0)
+            painter_entry[value] += 1
+
+    # Now find majorities for each row
+    majorities = {} # row_id -> painter_nr -> majority value
+    for row_id, row_entry in counts.items():
+        maj_entry = majorities.setdefault(row_id, {})
+        for painter_nr, painter_entry in row_entry.items():
+            maj_value = None
+            max_count = 0
+            for value, count in painter_entry.items():
+                if count == max_count:
+                    maj_value = None # No majority
+                elif count > max_count and count >= 2:
+                    maj_value = value
+                    max_count = count
+            maj_entry[painter_nr] = maj_value
+
+
+    return majorities
 
 # Create list of matrices to render
 def create_matrices(rows, group_painters, painters, num_columns):

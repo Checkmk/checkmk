@@ -17,3 +17,8 @@ This new layout has been used to create two new views: a global view <i>Search
 performance data</i> in the topic <i>Metrics</i> and one that can be accessed
 in the details of a host group. Both show all services of the selected hosts
 of of the search in a host by services matrix. Simply try it out!
+
+If one line in a matrix view has the same value for a majority of entries
+then all entries with differing values will be hilighted. That way you can
+use the matrix layout in order to find configuration differences between
+the same service on different hosts.

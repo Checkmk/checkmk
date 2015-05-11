@@ -1029,6 +1029,7 @@ def paint_custom_vars(what, row, blacklist=[]):
 multisite_painters["svc_custom_vars"] = {
     "title"   : _("Service custom variables"),
     "columns" : [ "service_custom_variables" ],
+    "groupby" : lambda row: tuple(row["service_custom_variables"].items()),
     "paint"   : lambda row: paint_custom_vars('service', row),
 }
 
@@ -1429,6 +1430,7 @@ multisite_painters["host_group_memberlist"] = {
     "title"   : _("Hostgroups the host is member of"),
     "short"   : _("Groups"),
     "columns" : [ "host_groups" ],
+    "groupby" : lambda row: tuple(row["host_groups"]),
     "paint"   : paint_host_group_memberlist,
 }
 
@@ -1500,6 +1502,7 @@ multisite_painters["host_servicelevel"] = {
 multisite_painters["host_custom_vars"] = {
     "title"   : _("Host custom variables"),
     "columns" : [ "host_custom_variables" ],
+    "groupby" : lambda row: tuple(row["host_custom_variables"].items()),
     "paint"   : lambda row: paint_custom_vars('host', row, [ 'FILENAME', 'TAGS']),
 }
 

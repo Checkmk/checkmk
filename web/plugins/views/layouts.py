@@ -54,14 +54,19 @@ def render_group_checkbox_th():
     html.write("<th><input type=button class=checkgroup name=_toggle_group"
                " onclick=\"toggle_group_rows(this);\" value=\"%s\" /></th>" % _('X'))
 
-# -------------------------------------------------------------------------
-#    ____  _             _
-#   / ___|(_)_ __   __ _| | ___
-#   \___ \| | '_ \ / _` | |/ _ \
-#    ___) | | | | | (_| | |  __/
-#   |____/|_|_| |_|\__, |_|\___|
-#                  |___/
-# -------------------------------------------------------------------------
+#.
+#   .--Dataset-------------------------------------------------------------.
+#   |                  ____        _                 _                     |
+#   |                 |  _ \  __ _| |_ __ _ ___  ___| |_                   |
+#   |                 | | | |/ _` | __/ _` / __|/ _ \ __|                  |
+#   |                 | |_| | (_| | || (_| \__ \  __/ |_                   |
+#   |                 |____/ \__,_|\__\__,_|___/\___|\__|                  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Layout designed for showing one single dataset with the column      |
+#   |  headers left and the values on the right. It is able to handle      |
+#   |  more than on dataset however.
+#   '----------------------------------------------------------------------'
 def render_single_dataset(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
     for row in rows:
         register_events(row) # needed for playing sounds
@@ -102,14 +107,20 @@ multisite_layouts["dataset"] = {
     "checkboxes" : False,
 }
 
-# -------------------------------------------------------------------------
-#    ____                    _
-#   | __ )  _____  _____  __| |
-#   |  _ \ / _ \ \/ / _ \/ _` |
-#   | |_) | (_) >  <  __/ (_| |
-#   |____/ \___/_/\_\___|\__,_|
-#
-# -------------------------------------------------------------------------
+
+
+#.
+#   .--Boxed---------------------------------------------------------------.
+#   |                      ____                    _                       |
+#   |                     | __ )  _____  _____  __| |                      |
+#   |                     |  _ \ / _ \ \/ / _ \/ _` |                      |
+#   |                     | |_) | (_) >  <  __/ (_| |                      |
+#   |                     |____/ \___/_/\_\___|\__,_|                      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  The boxed layout is useful in views with a width > 1, boxes are     |
+#   |  stacked in columns and can have different sizes.                    |
+#   '----------------------------------------------------------------------'
 def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show_checkboxes):
 
     repeat_heading_every = 20 # in case column_headers is "repeat"
@@ -233,14 +244,19 @@ multisite_layouts["boxed"] = {
     "checkboxes" : True,
 }
 
-# -------------------------------------------------------------------------
-#    _____ _ _          _
-#   |_   _(_) | ___  __| |
-#     | | | | |/ _ \/ _` |
-#     | | | | |  __/ (_| |
-#     |_| |_|_|\___|\__,_|
-#
-# -------------------------------------------------------------------------
+
+#.
+#   .--Tiled---------------------------------------------------------------.
+#   |                        _____ _ _          _                          |
+#   |                       |_   _(_) | ___  __| |                         |
+#   |                         | | | | |/ _ \/ _` |                         |
+#   |                         | | | | |  __/ (_| |                         |
+#   |                         |_| |_|_|\___|\__,_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  The tiled layout puts each dataset into one box with a fixed size.  |
+#   '----------------------------------------------------------------------'
+
 def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, show_checkboxes):
     html.write("<table class=\"data tiled\">\n")
 
@@ -323,14 +339,21 @@ multisite_layouts["tiled"] = {
     "checkboxes" : True,
 }
 
-# -------------------------------------------------------------------------
-#    _____     _     _
-#   |_   _|_ _| |__ | | ___
-#     | |/ _` | '_ \| |/ _ \
-#     | | (_| | |_) | |  __/
-#     |_|\__,_|_.__/|_|\___|
-#
-# ------------------------------------------------------------------------
+
+#.
+#   .--Table---------------------------------------------------------------.
+#   |                       _____     _     _                              |
+#   |                      |_   _|_ _| |__ | | ___                         |
+#   |                        | |/ _` | '_ \| |/ _ \                        |
+#   |                        | | (_| | |_) | |  __/                        |
+#   |                        |_|\__,_|_.__/|_|\___|                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Most common layout: render all datasets in one big table. Groups    |
+#   |  are shown in what seems to be separate tables but they share the    |
+#   |  width of the columns.                                               |
+#   '----------------------------------------------------------------------'
+
 def render_grouped_list(rows, view, group_painters, painters, num_columns, show_checkboxes):
 
     repeat_heading_every = 20 # in case column_headers is "repeat"
@@ -478,3 +501,117 @@ multisite_layouts["table"] = {
     "checkboxes" : True,
 }
 
+
+#.
+#   .--Matrix--------------------------------------------------------------.
+#   |                    __  __       _        _                           |
+#   |                   |  \/  | __ _| |_ _ __(_)_  __                     |
+#   |                   | |\/| |/ _` | __| '__| \ \/ /                     |
+#   |                   | |  | | (_| | |_| |  | |>  <                      |
+#   |                   |_|  |_|\__,_|\__|_|  |_/_/\_\                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  The Matrix is similar to what is called "Mine Map" in other GUIs.   |
+#   |  It create a matrix whose columns are single datasets and whole rows |
+#   |  are entities with the same value in all those datasets. Typicall    |
+#   |  The columns are hosts and the rows are services.                    |
+#   '----------------------------------------------------------------------'
+
+def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
+
+    if len(painters) < 2:
+        raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least two columns!"))
+
+    if not group_painters:
+        raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least one group column!"))
+
+    for groups, unique_row_ids, matrix_cells in \
+             create_matrices(rows, group_painters, painters, num_columns):
+
+        # Paint the matrix. Begin with the group headers
+        html.write('<table class="data matrix">')
+        odd = "odd"
+        for painter in group_painters:
+            odd = odd == "odd" and "even" or "odd"
+            html.write('<tr class="data %s0">' % odd)
+            html.write('<td class=matrixhead>%s</td>' % painter[0]["title"])
+            for group, group_row in groups:
+                tdclass, content = prepare_paint(painter, group_row)
+                html.write('<td class="left %s">%s</td>' % (tdclass, content))
+            html.write("</tr>")
+
+        # Now for each unique service^H^H^H^H^H^H ID column paint one row
+        for row_id in unique_row_ids:
+            odd = odd == "odd" and "even" or "odd"
+            html.write('<tr class="data %s0">' % odd)
+            tdclass, content = prepare_paint(painters[0], matrix_cells[row_id].values()[0])
+            html.write('<td class="left %s">%s</td>' % (tdclass, content))
+
+            # Now go through the groups and paint the rest of the
+            # columns
+            for group_id, group_row in groups:
+                cell_row = matrix_cells[row_id].get(group_id)
+                if cell_row == None:
+                    html.write("<td></td>")
+                else:
+                    if len(painters) == 2:
+                        paint(painters[1], cell_row)
+                    else:
+                        html.write("<td class=cell><table>")
+                        for p in painters[1:]:
+                            html.write("<tr>")
+                            paint(p, cell_row)
+                            html.write("</tr>")
+                        html.write("</table></td>")
+            html.write('</tr>')
+
+        html.write("</table>")
+
+
+# Create list of matrices to render
+def create_matrices(rows, group_painters, painters, num_columns):
+
+    # First find the groups - all rows that have the same values for
+    # all group columns. Usually these should correspond with the hosts
+    # in the matrix
+    groups = []
+    last_group_id = None
+    unique_row_ids = [] # not a set, but a list. Need to keep sort order!
+    matrix_cells = {} # Dict from row_id -> group_id -> row
+    col_num = 0
+
+    for row in rows:
+        register_events(row) # needed for playing sounds
+        group_id = tuple(group_value(row, group_painters))
+        if group_id != last_group_id:
+            col_num += 1
+            if col_num > num_columns:
+                yield (groups, unique_row_ids, matrix_cells)
+                groups = []
+                unique_row_ids = [] # not a set, but a list. Need to keep sort order!
+                matrix_cells = {} # Dict from row_id -> group_id -> row
+                col_num = 1
+
+            last_group_id = group_id
+            groups.append((group_id, row))
+
+        # Now the rule is that the *first* column painter (usually the service
+        # description) will define the left legend of the matrix. It defines
+        # the set of possible rows.
+        row_id = tuple(group_value(row, [ painters[0] ]))
+        if row_id not in matrix_cells:
+            unique_row_ids.append(row_id)
+            matrix_cells[row_id] = {}
+        matrix_cells[row_id][group_id] = row
+
+    if col_num:
+        yield (groups, unique_row_ids, matrix_cells)
+
+
+
+multisite_layouts["matrix"] = {
+    "title"      : _("Matrix"),
+    "render"     : render_matrix,
+    "group"      : True,
+    "checkboxes" : False,
+}

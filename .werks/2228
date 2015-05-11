@@ -1,0 +1,19 @@
+Title: New matrix views for displaying performance data of service in a matrix table
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1431093820
+Class: feature
+
+Multisite has got a new layout: the <i>Matrix</i>. It allows to group and
+compare values of a similar set of services on a list of hosts and many
+other things.  This layout uses the group columns for creating vertical
+matrix columns (e.g.  the host name) and the first normal column for creating
+horizontal columns (e.g.  the service description). All further columns
+(most times just one) are displayed in the cells.
+
+This new layout has been used to create two new views: a global view <i>Search
+performance data</i> in the topic <i>Metrics</i> and one that can be accessed
+in the details of a host group. Both show all services of the selected hosts
+of of the search in a host by services matrix. Simply try it out!

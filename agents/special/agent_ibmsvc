@@ -122,6 +122,8 @@ command_options = {
                        "command" : "lsarray -nohdr -delim :"},
     "lsportsas"     : {"section_header" : "ibm_svc_portsas",     "active" : False,
                        "command" : "lsportsas -nohdr -delim :"},
+    "disks"         : {"section_header" : "ibm_svc_disks",     "active" : False,
+                       "command" : "svcinfo lsdrive -nohdr -delim :"},
 }
 
 for o,a in opts:

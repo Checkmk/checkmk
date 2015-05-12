@@ -536,7 +536,7 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
             for group, group_row in groups:
                 tdclass, content = prepare_paint(painter, group_row)
                 if painter_nr > 0:
-                    gv = group_value(group_row, [painter])[0]
+                    gv = group_value(group_row, [painter])
                     majority_value = header_majorities.get(painter_nr-1, None)
                     if majority_value != None and majority_value != gv:
                         tdclass += " minority"
@@ -620,7 +620,7 @@ def matrix_find_majorities(rows, painters, for_header):
 
 
     if for_header:
-        return majorities[None]
+        return majorities.get(None, {})
     else:
         return counts, majorities
 

@@ -939,7 +939,8 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Filters to use in the view
     # In case of single object views, the needed filters are fixed, but not always present
     # in context. In this case, take them from the context type definition.
-    use_filters = visuals.filters_of_visual(view, datasource['infos'], all_filters_active)
+    use_filters = visuals.filters_of_visual(view, datasource['infos'],
+                                        all_filters_active, datasource.get('link_filters', {}))
 
     # Not all filters are really shown later in show_filter_form(), because filters which
     # have a hardcoded value are not changeable by the user
@@ -953,7 +954,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     visuals.add_context_to_uri_vars(view, datasource["infos"], only_count)
 
     # Check that all needed information for configured single contexts are available
-    visuals.verify_single_contexts('views', view)
+    visuals.verify_single_contexts('views', view, datasource.get('link_filters', {}))
 
     # Af any painter, sorter or filter needs the information about the host's
     # inventory, then we load it and attach it as column "host_inventory"
@@ -1165,7 +1166,7 @@ def render_view(view, rows, datasource, group_painters, painters,
                        # Take into account: layout capabilities
                        can_display_checkboxes and not view.get("force_checkboxes"), show_checkboxes,
                        # Show link to availability
-                       "host" in datasource["infos"] or "service" in datasource["infos"] or "aggr" in datasource["infos"])
+                       datasource["table"] in [ "hosts", "services" ] or "aggr" in datasource["infos"])
 
     # User errors in filters
     html.show_user_errors()
@@ -2079,6 +2080,12 @@ def link_to_view(content, row, view_name):
                     # Get the list of URI vars to be set for that filter
                     new_vars = filter_object.variable_settings(row)
                     vars += new_vars
+
+        # See get_link_filter_names() comment for details
+        for src_key, dst_key in visuals.get_link_filter_names(view, datasource['infos'],
+                                                datasource.get('link_filters', {})):
+            vars += visuals.get_filter(src_key).variable_settings(row)
+            vars += visuals.get_filter(dst_key).variable_settings(row)
 
         do = html.var("display_options")
         if do:

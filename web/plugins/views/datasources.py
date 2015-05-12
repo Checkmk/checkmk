@@ -79,7 +79,11 @@ multisite_datasources["hosts"] = {
     "keys"    : [ "host_name", "host_downtimes" ],
     "join"    : ( "services", "host_name" ),
     "idkeys"  : [ "site", "host_name" ],
-    "description"    : _("Displays a list of hosts."),
+    "description"  : _("Displays a list of hosts."),
+    # When the single info "hostgroup" is used, use the "opthostgroup" filter
+    # to handle the data provided by the single_spec value of the "hostgroup"
+    # info, which is in fact the name of the wanted hostgroup
+    "link_filters" : { "hostgroup": "opthostgroup" },
 }
 
 multisite_datasources["hostsbygroup"] = {
@@ -99,6 +103,13 @@ multisite_datasources["services"] = {
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
     "joinkey" : "service_description",
     "idkeys"  : [ "site", "host_name", "service_description" ],
+    # When the single info "hostgroup" is used, use the "opthostgroup" filter
+    # to handle the data provided by the single_spec value of the "hostgroup"
+    # info, which is in fact the name of the wanted hostgroup
+    "link_filters" : {
+        "hostgroup"    : "opthostgroup",
+        "servicegroup" : "optservicegroup",
+    },
 }
 
 multisite_datasources["servicesbygroup"] = {

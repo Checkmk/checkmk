@@ -222,7 +222,7 @@ factory_settings["icom_repeater_temp_default_levels"] = {
 
 def inventory_icom_repeater_temp(parsed):
     if "temp" in parsed:
-        return [ (None, {}) ]
+        return [ ("System", {}) ]
 
 
 def check_icom_repeater_temp(_no_item, params, parsed):

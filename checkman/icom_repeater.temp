@@ -1,0 +1,40 @@
+title: ICOM Repeater: Temperature
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the system temperature of ICOM repeaters.
+
+item:
+ Always "System"
+
+perfdata:
+ One value: The current temperature.
+
+inventory:
+ One check per device is created.
+
+[parameters]
+parameters(dict): This checks parameters are a dictionary with the
+following (optional) keys:
+
+  {"levels"}: A tuple (warn, crit) containing the upper levels. Default: (50, 55)
+
+  {"levels_lower"}: A tuple (warn, crit) containing the lower levels. Default: (-20, -25)
+
+  {"output_unit"}: "c", "f" or "k", the check will output the temperature in the
+ specified unit. If this is not set, output is in degrees Celsius.
+
+  {"input_unit"}: "c, "f" or "k". By default, the check interprets the sensor value
+ according to the unit sent by the device. This key allows to override that. Tread
+ lightly, as this may lead to a misinterpreted temperature. Should only be used if
+ the device reports its unit incorrectly.
+
+  {"device_levels_handling"}: Specifies how the temperature status
+ (too hot/too cold) provided by the device, respectively the device's levels are
+ handled compared to levels set by the user. Options are "usr", "dev",
+ "best", "worst", "devdefault", "usrdefault". "usr" and "dev" means respecting
+ only the user's resp. the device's levels, wheras "usrdefault" and "devdefault"
+ take the user's resp. the device's levels if present, otherwise try to use the
+ device's resp. the user's levels.

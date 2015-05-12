@@ -154,6 +154,7 @@ def bail_out(reason):
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
 g_infocache                  = {} # In-memory cache of host info.
+g_agent_cache_info           = {} # Information about agent caching
 g_agent_already_contacted    = {} # do we have agent data from this host?
 g_counters                   = {} # storing counters of one host
 g_hostname                   = "unknown" # Host currently being checked
@@ -498,13 +499,15 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     elif len(output) < 16:
         raise MKAgentError("Too short output from agent: '%s'" % output)
 
-    info, piggybacked, persisted = parse_info(output.split("\n"), hostname)
+    info, piggybacked, persisted, agent_cache_info = parse_info(output.split("\n"), hostname)
+    g_agent_cache_info.setdefault(hostname, {}).update(agent_cache_info)
     store_piggyback_info(hostname, piggybacked)
     store_persisted_info(hostname, persisted)
     store_cached_hostinfo(hostname, info)
 
     # Add information from previous persisted agent outputs, if those
     # sections are not available in the current output
+    # TODO: In the persisted sections the agent_cache_info is missing
     add_persisted_info(hostname, info)
 
     # If the agent has failed and the information we seek is
@@ -525,6 +528,7 @@ def store_persisted_info(hostname, persisted):
         file(dir + hostname, "w").write("%r\n" % persisted)
         verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 
+
 def add_persisted_info(hostname, info):
     file_path = var_dir + "/persisted/" + hostname
     try:
@@ -534,7 +538,14 @@ def add_persisted_info(hostname, info):
 
     now = time.time()
     modified = False
-    for section, (persisted_until, persisted_section) in persisted.items():
+    for section, entry in persisted.items():
+        if len(entry) == 2:
+            persisted_from = None
+            persisted_until, persisted_section = entry
+        else:
+            persisted_from, persisted_until, persisted_section = entry
+            g_agent_cache_info[hostname][section] = (persisted_from, persisted_until - persisted_from)
+
         if now < persisted_until or opt_force:
             if section not in info:
                 info[section] = persisted_section
@@ -808,12 +819,10 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
 # Gets all information about one host so far cached.
 # Returns None if nothing has been stored so far
 def get_cached_hostinfo(hostname):
-    global g_infocache
     return g_infocache.get(hostname, None)
 
 # store complete information about a host
 def store_cached_hostinfo(hostname, info):
-    global g_infocache
     oldinfo = get_cached_hostinfo(hostname)
     if oldinfo:
         oldinfo.update(info)
@@ -823,18 +832,19 @@ def store_cached_hostinfo(hostname, info):
 
 # store information about one check type
 def store_cached_checkinfo(hostname, checkname, table):
-    global g_infocache
     info = get_cached_hostinfo(hostname)
     if info:
         info[checkname] = table
     else:
         g_infocache[hostname] = { checkname: table }
 
+
 # Split agent output in chunks, splits lines by whitespaces.
-# Returns a triple of:
+# Returns a tuple of:
 # 1. A dictionary from "sectionname" to a list of rows
 # 2. piggy-backed data for other hosts
 # 3. Sections to be persisted for later usage
+# 4. Agent cache information (dict section name -> (cached_at, cache_interval))
 def parse_info(lines, hostname):
     info = {}
     piggybacked = {} # unparsed info for other hosts
@@ -842,6 +852,7 @@ def parse_info(lines, hostname):
     host = None
     section = []
     section_options = {}
+    agent_cache_info = {}
     separator = None
     encoding  = None
     to_unicode = False
@@ -887,7 +898,13 @@ def parse_info(lines, hostname):
             # Split of persisted section for server-side caching
             if "persist" in section_options:
                 until = int(section_options["persist"])
-                persist[section_name] = ( until, section )
+                cached_at = int(time.time()) # Estimate age of the data
+                cache_interval = int(until - cached_at)
+                agent_cache_info[section_name] = (cached_at, cache_interval)
+                persist[section_name] = ( cached_at, until, section )
+
+            if "cached" in section_options:
+                agent_cache_info[section_name] = tuple(map(int, section_options["cached"].split(",")))
 
             # The section data might have a different encoding
             encoding = section_options.get("encoding")
@@ -915,7 +932,7 @@ def parse_info(lines, hostname):
 
             section.append(line.split(separator))
 
-    return info, piggybacked, persist
+    return info, piggybacked, persist, agent_cache_info
 
 
 def cachefile_age(filename):
@@ -1428,7 +1445,19 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                 if opt_debug:
                     raise
             if not dont_submit:
-                submit_check_result(hostname, description, result, aggrname)
+                # Now add information about the age of the data in the agent
+                # sections. This is in g_agent_cache_info. For clusters we
+                # use the oldest of the timestamps, of course.
+                oldest_cached_at = None
+                largest_interval = None
+                for section_entries in g_agent_cache_info.values():
+                    if infotype in section_entries:
+                        cached_at, cache_interval = section_entries[infotype]
+                        oldest_cached_at = -max(oldest_cached_at, -cached_at)
+                        largest_interval = max(largest_interval, cache_interval)
+
+                submit_check_result(hostname, description, result, aggrname,
+                                    cached_at=oldest_cached_at, cache_interval=largest_interval)
         else:
             error_sections.add(infotype)
 
@@ -1629,7 +1658,7 @@ def convert_perf_data(p):
     return "%s=%s;%s;%s;%s;%s" %  tuple(p)
 
 
-def submit_check_result(host, servicedesc, result, sa):
+def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_interval=None):
     if not result:
         result = 3, "Check plugin did not return any result"
 
@@ -1683,7 +1712,7 @@ def submit_check_result(host, servicedesc, result, sa):
             perftext = "|" + (" ".join(perftexts))
 
     if not opt_dont_submit:
-        submit_to_core(host, servicedesc, state, infotext + perftext)
+        submit_to_core(host, servicedesc, state, infotext + perftext, cached_at, cache_interval)
 
     if opt_verbose:
         if opt_showperfdata:
@@ -1694,12 +1723,14 @@ def submit_check_result(host, servicedesc, result, sa):
         print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, infotext.split('\n')[0], tty_normal, p)
 
 
-def submit_to_core(host, service, state, output):
+def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):
     # Save data for sending it to the Check_MK Micro Core
     # Replace \n to enable multiline ouput
     if opt_keepalive:
         output = output.replace("\n", "\x01", 1).replace("\n","\\n")
         result = "\t%d\t%s\t%s\n" % (state, service, output.replace("\0", "")) # remove binary 0, CMC does not like it
+        if cached_at:
+            result = "\tcached_at=%d\tcache_interval=%d%s" % (cached_at, cache_interval, result)
         global total_check_output
         total_check_output += result
 

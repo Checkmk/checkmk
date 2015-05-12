@@ -5128,6 +5128,8 @@ def cleanup_globals():
     g_counters = {}
     global g_infocache
     g_infocache = {}
+    global g_agent_cache_info
+    g_agent_cache_info = {}
     global g_broken_agent_hosts
     g_broken_agent_hosts = set([])
     global g_broken_snmp_hosts

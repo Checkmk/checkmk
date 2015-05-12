@@ -664,7 +664,13 @@ multisite_painters["svc_state_age"] = {
 }
 
 def paint_checked(what, row):
-    css, td = paint_age(row[what + "_last_check"], row[what + "_has_been_checked"] == 1, 0)
+    age = row[what + "_last_check"]
+    if what == "service":
+        cached_at = row["service_cached_at"]
+        if cached_at:
+            age = cached_at
+
+    css, td = paint_age(age, row[what + "_has_been_checked"] == 1, 0)
     if is_stale(row):
         css += " staletime"
     return css, td
@@ -672,9 +678,28 @@ def paint_checked(what, row):
 multisite_painters["svc_check_age"] = {
     "title"   : _("The time since the last check of the service"),
     "short"   : _("Checked"),
-    "columns" : [ "service_has_been_checked", "service_last_check" ],
+    "columns" : [ "service_has_been_checked", "service_last_check", "service_cached_at" ],
     "options" : [ "ts_format", "ts_date" ],
     "paint"   : lambda row: paint_checked("service", row),
+}
+
+def paint_cache_info(row):
+    if not row["service_cached_at"]:
+        return "", ""
+    else:
+        cached_at = row["service_cached_at"]
+        cache_interval = row["service_cache_interval"]
+        cache_age = time.time() - cached_at
+        percentage = 100.0 * cache_age / cache_interval
+        return "", _("Cache generated %s ago, cache interval: %s, elapsed cache livetime: %s") % (
+               age_human_readable(cache_age), age_human_readable(cache_interval), percent_human_redable(percentage))
+
+multisite_painters["svc_check_cache_info"] = {
+    "title"   : _("Cached agent data"),
+    "short"   : _("Cached"),
+    "columns" : [ "service_last_check", "service_cached_at", "service_cache_interval" ],
+    "options" : [ "ts_format", "ts_date" ],
+    "paint"   : lambda row: paint_cache_info(row),
 }
 
 multisite_painters["svc_next_check"] = {

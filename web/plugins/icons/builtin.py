@@ -129,11 +129,12 @@ multisite_icons_and_actions['icon_image'] = {
 #   |         |  _ <  __/\__ \ (__| | | |  __/ (_| | |_| | |  __/          |
 #   |         |_| \_\___||___/\___|_| |_|\___|\__,_|\__,_|_|\___|          |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 def paint_reschedule(what, row, tags, host_custom_vars):
+    if what == "service" and row["service_cached_at"]:
+        return # No reschedule when agent caches the data anyway
+
     # Reschedule button
     if (row[what + "_active_checks_enabled"] == 1
         or row[what + '_check_command'].startswith('check_mk-')) \
@@ -160,6 +161,7 @@ def paint_reschedule(what, row, tags, host_custom_vars):
 
 multisite_icons_and_actions['reschedule'] = {
     'columns':         [ 'active_checks_enabled', 'check_command' ],
+    'service_columns': [ 'cached_at' ],
     'paint':           paint_reschedule,
     'toplevel':        False,
 }
@@ -522,8 +524,6 @@ multisite_icons_and_actions['status_notifications_enabled'] = {
 #   |              |  _| | | (_| | |_) | |_) | | | | | (_| |               |
 #   |              |_|   |_|\__,_| .__/| .__/|_|_| |_|\__, |               |
 #   |                            |_|   |_|            |___/                |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 def paint_flapping(what, row, tags, host_custom_vars):

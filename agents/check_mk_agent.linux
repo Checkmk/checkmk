@@ -64,10 +64,15 @@ else
     exec </dev/null 2>/dev/null
 fi
 
-# Runs a command asynchronous by use of a cache file
+# Runs a command asynchronous by use of a cache file. Usage:
+# run_cached [-s] NAME MAXAGE
+#   -s creates the section header <<<$NAME>>>
+#   NAME is the name of the section (also used as cache file name)
+#   MAXAGE is the maximum cache livetime in seconds
 function run_cached () {
+    local NOW=$(date +%s)
     local section=
-    if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
+    if [ "$1" = -s ] ; then local section="echo '<<<$2:cached($NOW,$3)>>>' ; " ; shift ; fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
@@ -78,7 +83,6 @@ function run_cached () {
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
-    local NOW=$(date +%s)
     if [ -e "$CACHEFILE.new" ] ; then
         local CF_ATIME=$(stat -c %X "$CACHEFILE.new")
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
@@ -677,7 +681,7 @@ if cd $LOCALDIR ; then
             ./$skript
         fi
     done
-    # Call some plugins only every X'th minute
+    # Call some plugins only every X'th second
     for skript in [1-9]*/* ; do
         if [ -x "$skript" ] ; then
             run_cached local_${skript//\//\\} ${skript%/*} "$skript"
@@ -692,7 +696,7 @@ if cd $PLUGINSDIR ; then
             ./$skript
         fi
     done
-    # Call some plugins only every Xth minute
+    # Call some plugins only every Xth second
     for skript in [1-9]*/* ; do
         if [ -x "$skript" ] ; then
             run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"

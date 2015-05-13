@@ -1058,6 +1058,12 @@ metric_info["used_dhcp_leases"] = {
     "color" : "#60bbbb",
 }
 
+metric_info["registered_phones"] = {
+    "title" : _("Registered phones"),
+    "unit"  : "count",
+    "color" : "#60bbbb",
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -1327,6 +1333,7 @@ check_metrics["check_mk-apt"] = {}
 check_metrics["check_mk-icom_repeater.ps_volt"] = {}
 check_metrics["check_mk-icom_repeater.pll_volt"] = {}
 check_metrics["check_mk-isc_dhcpd"] = {}
+check_metrics["check_mk-cisco_srst_phones"] = {}
 
 
 #.
@@ -1518,6 +1525,13 @@ perfometer_info.append(("stacked", [
   ( "logarithmic", ( "normal_updates",   10, 2)),
   ( "logarithmic", ( "security_updates", 10, 2)),
 ]))
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "registered_phones",
+    "half_value" : 50,
+    "exponent"   : 3,
+})
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -1990,3 +2004,10 @@ graph_info.append({
         ("used_dhcp_leases:max#000000", _("Total number of leases")),
     ]
 })
+
+graph_info.append({
+    "metrics" : [
+        ( "registered_phones", "area" ),
+    ],
+})
+

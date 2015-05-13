@@ -2255,7 +2255,7 @@ register_rule(group,
                        and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
                        or defaults.web_dir + "/htdocs/images/icons" ),
         ),
-        forth = lambda v: v.endswith('.png') and v[:-4] or v,
+        forth = lambda v: v and (v.endswith('.png') and v[:-4]) or v,
     ))
 
 
@@ -2270,7 +2270,7 @@ register_rule(group,
                        and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
                        or defaults.web_dir + "/htdocs/images/icons" ),
         ),
-        forth = lambda v: v.endswith('.png') and v[:-4] or v,
+        forth = lambda v: v and (v.endswith('.png') and v[:-4]) or v,
     ),
     itemtype = "service")
 

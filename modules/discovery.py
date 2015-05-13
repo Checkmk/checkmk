@@ -325,7 +325,7 @@ def snmp_scan(hostname, ipaddress, for_inv=False):
     global g_hostname
     g_hostname = hostname
 
-    vverbose("  SNMP scan:")
+    vverbose("  SNMP scan:\n")
     if not in_binary_hostlist(hostname, snmp_without_sys_descr):
         sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
         sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
@@ -337,6 +337,9 @@ def snmp_scan(hostname, ipaddress, for_inv=False):
         items = inv_info.items()
     else:
         items = check_info.items()
+
+    positive_found = []
+    default_found = []
 
     for check_type, check in items:
         if check_type in ignored_checktypes:
@@ -354,6 +357,8 @@ def snmp_scan(hostname, ipaddress, for_inv=False):
             scan_function = snmp_scan_functions[basename]
         elif basename in inv_info:
             scan_function = inv_info[basename].get("snmp_scan_function")
+        else:
+            scan_function = None
 
         if scan_function:
             try:
@@ -363,7 +368,7 @@ def snmp_scan(hostname, ipaddress, for_inv=False):
                             (check_type, type(result)))
                 elif result:
                     found.append(check_type)
-                    vverbose(" " + check_type)
+                    positive_found.append(check_type)
             except MKGeneralException:
                 # some error messages which we explicitly want to show to the user
                 # should be raised through this
@@ -372,9 +377,13 @@ def snmp_scan(hostname, ipaddress, for_inv=False):
                 pass
         else:
             found.append(check_type)
-            vverbose(" " + tty_blue + tty_bold + check_type + tty_normal)
+            default_found.append(check_type)
 
-    vverbose("\n")
+    vverbose("   SNMP scan found:       %s%s%s%s\n" % (tty_bold, tty_yellow, " ".join(positive_found), tty_normal))
+    if default_found:
+        vverbose("   without scan function: %s%s%s%s\n" % (tty_bold, tty_blue, " ".join(default_found), tty_normal))
+
+
     found.sort()
     return found
 

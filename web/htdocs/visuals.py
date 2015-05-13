@@ -897,9 +897,33 @@ def filters_allowed_for_info(info):
             allowed[fname] = filt
     return allowed
 
+# For all single_infos which are configured for a view which datasource
+# does not provide these infos, try to match the keys of the single_info
+# attributes to a filter which can then be used to filter the data of
+# the available infos.
+# This is needed to make the "hostgroup" single_info possible on datasources
+# which do not have the "hostgroup" info, but the "host" info. This
+# is some kind of filter translation between a filter of the "hostgroup" info
+# and the "hosts" info.
+def get_link_filter_names(visual, info_keys, link_filters):
+    names = []
+    for info_key in visual['single_infos']:
+        if info_key not in info_keys:
+            for key in info_params(info_key):
+                if key in link_filters:
+                    names.append((key, link_filters[key]))
+    return names
+
 # Collects all filters to be used for the given visual
-def filters_of_visual(visual, info_keys, show_all=False):
+def filters_of_visual(visual, info_keys, show_all=False, link_filters=[]):
     filters = []
+
+    # Collect all available filters for these infos
+    all_possible_filters = []
+    for filter_name, filter in multisite_filters.items():
+        if filter.info in info_keys:
+            all_possible_filters.append(filter)
+
     for info_key in info_keys:
         if info_key in visual['single_infos']:
             for key in info_params(info_key):
@@ -909,10 +933,12 @@ def filters_of_visual(visual, info_keys, show_all=False):
                 if type(val) == dict: # this is a real filter
                     filters.append(get_filter(key))
 
+    # See get_link_filter_names() comment for details
+    for key, dst_key in get_link_filter_names(visual, info_keys, link_filters):
+        filters.append(get_filter(dst_key))
+
     if show_all: # add *all* available filters of these infos
-        for filter_name, filter in multisite_filters.items():
-            if filter.info in info_keys:
-                filters.append(filter)
+        filters += all_possible_filters
 
     # add ubiquitary_filters that are possible for these infos
     for fn in ubiquitary_filters:
@@ -940,6 +966,10 @@ def visible_filters_of_visual(visual, use_filters):
             show_filters.append(f)
 
     return show_filters
+
+def apply_link_filter_vars_to_uri_vars(visual, info_keys, link_filters):
+    for src_key, dst_key in get_link_filter_names(visual, info_keys, link_filters):
+        html.set_var(dst_key, html.var(src_key))
 
 def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
     if only_infos == None:
@@ -1156,9 +1186,9 @@ def single_infos_spec(single_infos):
                     or _('Not restricted to showing a specific object.'),
     ))
 
-def verify_single_contexts(what, visual):
+def verify_single_contexts(what, visual, link_filters):
     for k, v in get_singlecontext_html_vars(visual).items():
-        if v == None:
+        if v == None and k not in link_filters:
             raise MKUserError(k, _('This %s can not be displayed, because the '
                                    'necessary context information "%s" is missing.') %
                                                     (visual_types[what]['title'], k))
@@ -1291,6 +1321,14 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
                 skip = True # At least one single context missing
                 break
             vars_values.append((var, val))
+
+        # See get_link_filter_names() comment for details. TODO Hack for host/service
+        # views with single hostgroup context. Will be cleaned up soon. hopefully
+        if visual.get('datasource') in ['hosts', 'services']:
+            if 'hostgroup' in visual['single_infos']:
+                vars_values.append(('opthost_group', html.var('hostgroup')))
+            if 'servicegroup' in visual['single_infos']:
+                vars_values.append(('optservice_group', html.var('servicegroup')))
 
         if not skip:
             # add context link to this visual. For reports we put in

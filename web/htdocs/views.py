@@ -946,6 +946,14 @@ def show_view(view, show_heading = False, show_buttons = True,
     # have a hardcoded value are not changeable by the user
     show_filters = visuals.visible_filters_of_visual(view, use_filters)
 
+    # FIXME TODO HACK to make grouping single contextes possible on host/service infos
+    # Is hopefully cleaned up soon.
+    if view['datasource'] in ['hosts', 'services']:
+        if 'hostgroup' in view['single_infos']:
+            html.set_var('opthost_group', html.var('hostgroup'))
+        if 'servicegroup' in view['single_infos']:
+            html.set_var('optservice_group', html.var('servicegroup'))
+
     # Now populate the HTML vars with context vars from the view definition. Hard
     # coded default values are treated differently:
     #

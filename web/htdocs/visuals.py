@@ -953,10 +953,6 @@ def visible_filters_of_visual(visual, use_filters):
 
     return show_filters
 
-def apply_link_filter_vars_to_uri_vars(visual, info_keys, link_filters):
-    for src_key, dst_key in get_link_filter_names(visual, info_keys, link_filters):
-        html.set_var(dst_key, html.var(src_key))
-
 def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
     if only_infos == None:
         only_infos = infos.keys() # all datasources!
@@ -1304,14 +1300,6 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
                 skip = True # At least one single context missing
                 break
             vars_values.append((var, val))
-
-        # See get_link_filter_names() comment for details. TODO Hack for host/service
-        # views with single hostgroup context. Will be cleaned up soon. hopefully
-        if visual.get('datasource') in ['hosts', 'services']:
-            if 'hostgroup' in visual['single_infos']:
-                vars_values.append(('opthost_group', html.var('hostgroup')))
-            if 'servicegroup' in visual['single_infos']:
-                vars_values.append(('optservice_group', html.var('servicegroup')))
 
         if not skip:
             # add context link to this visual. For reports we put in

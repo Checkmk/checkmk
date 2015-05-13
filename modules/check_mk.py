@@ -801,22 +801,29 @@ def get_single_oid(hostname, ipaddress, oid):
     if oid in g_single_oid_cache:
         return g_single_oid_cache[oid]
 
+    vverbose("       Getting OID %s: " % oid)
     if opt_use_snmp_walk or is_usewalk_host(hostname):
         walk = get_stored_snmpwalk(hostname, oid)
         if len(walk) == 1:
-            return walk[0][1]
+            value = walk[0][1]
         else:
-            return None
+            value = None
 
-    try:
-        if has_inline_snmp and use_inline_snmp:
-            value = inline_snmp_get_oid(hostname, oid)
-        else:
-            value = snmp_get_oid(hostname, ipaddress, oid)
-    except:
-        if opt_debug:
-            raise
-        value = None
+    else:
+        try:
+            if has_inline_snmp and use_inline_snmp:
+                value = inline_snmp_get_oid(hostname, oid)
+            else:
+                value = snmp_get_oid(hostname, ipaddress, oid)
+        except:
+            if opt_debug:
+                raise
+            value = None
+
+    if value != None:
+        vverbose("%s%s%s%s\n" % (tty_bold, tty_green, value, tty_normal))
+    else:
+        vverbose("failed.\n")
 
     g_single_oid_cache[oid] = value
     return value

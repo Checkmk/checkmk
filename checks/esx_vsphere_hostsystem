@@ -292,30 +292,20 @@ def inventory_esx_vsphere_hostsystem_state(info):
 def check_esx_vsphere_hostsystem_state(_no_item, _no_params, info):
     data = esx_vsphere_hostsystem_convert(info)
     state = 0
-    label = {}
-    messages = []
-    label['Status'] = ""
     overallStatus = str(data['overallStatus'][0])
     if overallStatus == "yellow":
         state = 1
-        label['Status'] = "(!)"
     elif overallStatus in [ "red", "gray"]:
         state = 2
-        label['Status'] = "(!!)"
-    messages.append("Entity state: %s%s" % (overallStatus, label['Status']))
+    yield state, "Entity state: %s" + overallStatus
 
-    label['powerState'] = ''
+    state = 0
     powerState = str(data['runtime.powerState'][0])
     if powerState in ['poweredOff', 'unknown']:
         state = 2
-        label['powerState'] = "(!!)"
     elif powerState == 'standBy':
-        state = max(state, 1)
-        label['powerState'] = "(!)"
-    messages.append("Power state: %s%s" % (powerState, label['powerState']))
-
-
-    return(state, ", ".join(messages))
+        state = 1
+    yield state, "Power state: " + powerState
 
 check_info['esx_vsphere_hostsystem.state'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_state,

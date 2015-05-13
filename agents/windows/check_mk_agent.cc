@@ -5078,7 +5078,7 @@ int main(int argc, char **argv)
     osv.dwOSVersionInfoSize = sizeof(osv);
     GetVersionEx(&osv);
 
-    if (!strcmp(argv[1], "adhoc") || !strcmp(argv[1], "test"))
+    if (argc > 1 && (!strcmp(argv[1], "adhoc") || !strcmp(argv[1], "test")))
         determine_directories(true /* use working dir */);
     else
         determine_directories(false /* use registered dir */);

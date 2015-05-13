@@ -357,6 +357,8 @@ def snmp_scan(hostname, ipaddress, for_inv=False):
             scan_function = snmp_scan_functions[basename]
         elif basename in inv_info:
             scan_function = inv_info[basename].get("snmp_scan_function")
+        else:
+            scan_function = None
 
         if scan_function:
             try:

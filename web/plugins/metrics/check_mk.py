@@ -1064,6 +1064,12 @@ metric_info["registered_phones"] = {
     "color" : "#60bbbb",
 }
 
+metric_info["messages"] = {
+    "title" : _("Messages"),
+    "unit"  : "count",
+    "color" : "#aa44cc",
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -1334,6 +1340,9 @@ check_metrics["check_mk-icom_repeater.ps_volt"] = {}
 check_metrics["check_mk-icom_repeater.pll_volt"] = {}
 check_metrics["check_mk-isc_dhcpd"] = {}
 check_metrics["check_mk-cisco_srst_phones"] = {}
+
+check_metrics["check_mk-logwatch.ec"] = {}
+check_metrics["check_mk-logwatch.ec_single"] = {}
 
 
 #.
@@ -2011,3 +2020,8 @@ graph_info.append({
     ],
 })
 
+graph_info.append({
+    "metrics" : [
+        ( "messages", "area" ),
+    ],
+})

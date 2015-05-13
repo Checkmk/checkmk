@@ -517,10 +517,31 @@ def logwatch_to_prio(level):
     else:
         return 4
 
-def inventory_logwatch_ec(info):
+def inventory_logwatch_ec(info, one_svc_per_log):
     forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
+
     if forwarded_logs:
-        return [ (None, { "expected_logfiles": forwarded_logs } ) ]
+        forward_settings = host_extra_conf(g_hostname, checkgroup_parameters.get('logwatch_ec', []))
+
+        merged_rules = {}
+        for rule in forward_settings[-1::-1]:
+            for key, value in rule.items():
+                merged_rules[key] = value
+
+        separate_checks = merged_rules.get("separate_checks", False)
+        if separate_checks != one_svc_per_log:
+            return
+
+        if separate_checks:
+            single_log_params = {}
+            for key in [ "method", "facility", "monitor_logfilelist", "logwatch_reclassify" ]:
+                if key in merged_rules:
+                    single_log_params[key] = merged_rules[key]
+            for log in forwarded_logs:
+                single_log_params["expected_logfiles"] = [log]
+                yield log, single_log_params.copy()
+        else:
+            yield None, { "expected_logfiles": forwarded_logs }
 
 def check_logwatch_ec(item, params, info):
     if len(info) == 1:
@@ -548,6 +569,15 @@ def check_logwatch_ec(item, params, info):
         for logfile in logs.keys():
             if not logwatch_ec_forwarding_enabled(params, logfile):
                 del logs[logfile]
+
+    # 3. If this check has an item (logwatch.ec_single), only forward the information from this log
+    if item:
+        if item not in logs.keys():
+            return
+        else:
+            single_logs = {}
+            single_logs[item] = logs[item]
+            logs = single_logs
 
     # Check if the number of expected files matches the actual one
     status = 0
@@ -584,9 +614,10 @@ def check_logwatch_ec(item, params, info):
     forwarded_logfiles = set([])
 
     # Get the logwatch patterns if they are not already precompiled
-    if "logwatch_patterns" not in params:
-        logwatch_ec_precompile(g_hostname, None, params)
-
+    # The precompile feature is not required when using the cmc as core
+    # HACK: opt_keepalive is used to detect cmc
+    if not opt_keepalive and "logwatch_patterns" not in params:
+        params = logwatch_ec_precompile(g_hostname, item, params)
 
     # Keep track of reclassifed lines
     rclfd_total     = 0
@@ -595,12 +626,18 @@ def check_logwatch_ec(item, params, info):
     for logfile, lines in logs.items():
         # Determine logwatch patterns specifically for this logfile
         log_reclassify_patterns = []
-        for entry in params["logwatch_patterns"]:
-            patterns, log_items = entry
-            for log_item in log_items:
-                reg = regex(log_item)
-                if reg.search(logfile):
-                    log_reclassify_patterns.extend(patterns)
+        # HACK: opt_keepalive is used to detect cmc
+        if opt_keepalive:
+            logfile_patterns = service_extra_conf(g_hostname, logfile, logwatch_rules)
+            if logfile_patterns:
+                log_reclassify_patterns.extend(map(lambda x: x[:2], [z for y in logfile_patterns for z in y]))
+        else:
+            for entry in params["logwatch_patterns"]:
+                patterns, log_items = entry
+                for log_item in log_items:
+                    reg = regex(log_item)
+                    if reg.search(logfile):
+                        log_reclassify_patterns.extend(patterns)
 
         for line in lines:
             rclfd_level = None
@@ -683,20 +720,41 @@ def check_logwatch_ec(item, params, info):
                 (e, num_messages))
 
 def logwatch_ec_precompile(hostname, item, params):
-    if not params.get("logwatch_reclassify"):
+    params = params.copy()
+
+    # HACK: opt_keepalive is used to detect cmc
+    if (opt_keepalive or not params.get("logwatch_reclassify")):
         params.update({"logwatch_patterns": []})
         return params
 
-    if not serviceruleset_is_converted(logwatch_rules):
-        convert_service_ruleset(logwatch_rules)
+    # The following code is used for creating the params of precompiled checks
+    # and when Check_MK is called on the command line.
+    # Check_MK in keepalive mode (in a running cmc) should never reach this code...
+    ruleset = []
+    for rule in logwatch_rules:
+        rule, rule_options = get_rule_options(rule)
+        if rule_options.get("disabled"):
+            continue
 
-    tags = tags_of_host(hostname)
-    logwatch_patterns = []
+        if len(rule) == 3:
+            item, hostlist, servlist = rule
+            tags = []
+        elif len(rule) == 4:
+            item, tags, hostlist, servlist = rule
+        else:
+            continue
+
+        # Directly compute set of all matching hosts here, this
+        # will avoid recomputation later
+        hosts = all_matching_hosts(tags, hostlist)
+        ruleset.append((item, hosts, servlist))
+
     # Filter out any logwatch_rules which do apply to to this host
     # 1st filter: Do not use rules where the hostname does not match
     # 2nd filter: Do not use rules with configured items where no item matches the
     #             "restrict_logfiles" condition (if applicable)
-    for rule in logwatch_rules:
+    logwatch_patterns = []
+    for rule in ruleset:
         patterns, hosts, rule_items = rule
         if hostname in hosts:
             if params.get("restrict_logfiles"):
@@ -713,7 +771,15 @@ precompile_params['logwatch.ec'] = logwatch_ec_precompile
 
 check_info['logwatch.ec'] = {
     'check_function':      check_logwatch_ec,
-    'inventory_function':  inventory_logwatch_ec,
+    'inventory_function':  lambda info: inventory_logwatch_ec(info, False),
     'service_description': "Log Forwarding",
     'group':               'logwatch_ec',
+    'has_perfdata':        True,
+}
+
+check_info['logwatch.ec_single'] = {
+    'check_function':      check_logwatch_ec,
+    'inventory_function':  lambda info: inventory_logwatch_ec(info, True),
+    'service_description': "Log %s",
+    'has_perfdata':        True,
 }

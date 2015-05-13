@@ -7608,9 +7608,20 @@ register_check_parameters(subgroup_applications,
                                      "logwatch reclassification rules specifically designed for a logfile <i>access.log</i>, "
                                      "which do not apply to other logfiles."),
                      )
+                    ),
+                    ('separate_checks',
+                        Checkbox(
+                            title =  _("Create a separate check for each logfile"),
+                            label = _("Separate check"),
+                            help = _("If this option is enabled, there will be one separate check for each logfile found during "
+                                     "the service discovery. This option also changes the behaviour for unknown logfiles. "
+                                     "The default logwatch check forwards all logfiles to the event console, even logfiles "
+                                     "which were not known during the service discovery. Creating one check per logfile changes "
+                                     "this behaviour so that any data from unknown logfiles is discarded."),
+                     )
                     )
                 ],
-                optional_keys = ['restrict_logfiles', 'expected_logfiles', 'logwatch_reclassify'],
+                optional_keys = ['restrict_logfiles', 'expected_logfiles', 'logwatch_reclassify', 'separate_checks'],
             ),
         ],
         default_value = '',

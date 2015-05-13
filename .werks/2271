@@ -1,0 +1,13 @@
+Title: logwatch_ec: Now able to create a single check for each logfile forwarded to the event console
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1431520295
+Class: feature
+
+Per default one check "Log Forwarding" was created when log messages should be forwarded
+to the event console. With the new option <i>Separate check</i> (configurable in WATO)
+it is now possible to create one logwatch forwarding check per logfile.
+These checks also provides the number of messages as performance data.
+

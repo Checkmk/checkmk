@@ -3041,25 +3041,76 @@ void output_external_programs(SOCKET &out, script_type type)
     // Collect and output data
     script_containers_t::iterator it_cont = script_containers.begin();
     script_container* cont = NULL;
-    while (it_cont != script_containers.end()) {
+    while (it_cont != script_containers.end())
+    {
         cont = it_cont->second;
         if (!script_exists(cont)) {
             it_cont++;
             continue;
         }
 
-        if (cont->type == type) {
-            if (cont->status == SCRIPT_FINISHED) {
+        if (cont->type == type)
+        {
+            if (cont->status == SCRIPT_FINISHED)
+            {
                 // Free buffer
                 if (cont->buffer != NULL) {
                     HeapFree(GetProcessHeap(), 0, cont->buffer);
                     cont->buffer = NULL;
                 }
-                cont->buffer      = cont->buffer_work;
+
+                if (cont->max_age == 0)
+                    cont->buffer      = cont->buffer_work;
+                else
+                {
+                    // Determine chache_info text
+                    char cache_info[32];
+                    snprintf(cache_info, sizeof(cache_info), ":cached(%d:%d)", (int)cont->buffer_time, cont->max_age);
+                    int cache_len = strlen(cache_info) + 1;
+
+                    // We need to parse each line and replace any <<<section>>> with <<<section:cached(123455678,3600)>>>
+                    // Allocate new buffer, process/modify each line of the original buffer and write it into the new buffer
+                    int buffer_heap_size = HeapSize(GetProcessHeap(), 0, cont->buffer_work);
+                    char *cache_buffer = (char*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buffer_heap_size + 1024);
+                    int cache_buffer_offset = 0;
+
+                    char *line = strtok(cont->buffer_work, "\n");
+                    int write_bytes = 0;
+                    while (line)
+                    {
+                        int length = strlen(line);
+                        int cr_offset = line[length-1] == '\r' ? 1 : 0;
+                        if (length >=8 && (!strncmp(line, "<<<", 3) && !strncmp(line+length-cr_offset-3, ">>>", 3)))
+                        {
+                            // The return value of snprintf seems broken (off by 3?). Great...
+                            write_bytes = length - cr_offset - 3 + 1; // length - \r - <<< + \0
+                            snprintf(cache_buffer + cache_buffer_offset, write_bytes, "%s", line);
+                            cache_buffer_offset += write_bytes - 1;
+
+                            snprintf(cache_buffer + cache_buffer_offset, cache_len, cache_info);
+                            cache_buffer_offset += cache_len - 1;
+
+                            write_bytes = 3 + cr_offset + 1 + 1; // >>> + \r + \n + \0
+                            snprintf(cache_buffer + cache_buffer_offset, write_bytes, "%s\n", line + length - cr_offset - 3);
+                            cache_buffer_offset += write_bytes - 1;
+                        }
+                        else
+                        {
+                            write_bytes = length + 1 + 1; // length + \n + \0
+                            snprintf(cache_buffer + cache_buffer_offset, write_bytes, "%s\n", line);
+                            cache_buffer_offset += write_bytes - 1;
+                        }
+                        line = strtok(NULL, "\n");
+                    }
+                    HeapFree(GetProcessHeap(), 0, cont->buffer_work);
+                    cont->buffer = cache_buffer;
+                }
+
                 cont->buffer_work = NULL;
                 cont->status      = SCRIPT_IDLE;
             }
-            else if (cont->retry_count < 0 && cont->buffer != NULL) {
+            else if (cont->retry_count < 0 && cont->buffer != NULL)
+            {
                 // Remove outdated cache entries
                 HeapFree(GetProcessHeap(), 0, cont->buffer);
                 cont->buffer = NULL;

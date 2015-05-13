@@ -126,7 +126,7 @@ def cisco_qos_get_config_entries_by_class_id(config, class_id):
     return [ if_index.split('.') for if_index, value in config.iteritems() if value == class_id ]
 
 def inventory_cisco_qos(info):
-    if len(info) == 11:
+    if len(info) == 12:
         ifs = dict(info[0])
         config = dict([ ('.'.join(oid.split('.')[-2:]), value) for oid, value in info[3] ])
         if_names = dict(info[6])
@@ -170,7 +170,8 @@ def check_cisco_qos(item, params, info):
     if_speeds = dict(info[7])
     parents = dict(info[8])
     if_qos_bandwidth = dict(info[9])
-    object_types = dict(info[10])
+    if_qos_bandwidth_units = dict(info[10])
+    object_types = dict(info[11])
 
     if_name, class_name = item.split(': ')
 
@@ -228,7 +229,19 @@ def check_cisco_qos(item, params, info):
         if parent_value_cache[class_id] == b_value:
             if object_types[b_key] == "4":
                  try:
-                     speed = saveint(if_qos_bandwidth[config[b_key]]) * 1000
+                     # 1 kbps
+                     # 2 percentage
+                     # 3 percentageRemaining
+                     # 4 ratioRemaining
+                     # 5 perThousand
+                     # 6 perMillion
+                     unit = int(if_qos_bandwidth_units[config[b_key]])
+                     qos_bandwidth = saveint(if_qos_bandwidth[config[b_key]])
+                     if unit == 1:
+                         speed = qos_bandwidth * 1000
+                     elif unit == 3:
+                         remaining = (speed / 100) * qos_bandwidth
+                         speed = speed - remaining
                      break
                  except KeyError:
                      pass
@@ -332,6 +345,7 @@ snmp_info['cisco_qos']  = [ ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '1.1.1.4' 
                             ( '.1.3.6.1.2.1.2.2.1',     [ OID_END,    '5' ]),          # ifSpeeds
                             ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '5.1.1.4' ]),    # cbQosParentObjectsIndex
                             ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '9.1.1.1' ]),    # qosQueueingConfigBandwidth
+                            ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '9.1.1.2' ]),    # cbQosQueueingCfgBandwidthUnits
                             ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '5.1.1.3' ]),    # cbQosObjectsType
                           ]
 snmp_scan_functions['cisco_qos'] = lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \

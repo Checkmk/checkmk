@@ -202,11 +202,12 @@ class Age(ValueSpec):
         html.write("</div>")
 
     def from_html_vars(self, varprefix):
+        # TODO: Validate for correct numbers!
         return (
-               saveint(html.var(varprefix+'_days', 0))   * 3600 * 24
-             + saveint(html.var(varprefix+'_hours',0))   * 3600
-             + saveint(html.var(varprefix+'_minutes',0)) * 60
-             + saveint(html.var(varprefix+'_seconds',0))
+               saveint(html.var(varprefix + '_days',    0)) * 3600 * 24
+             + saveint(html.var(varprefix + '_hours',   0)) * 3600
+             + saveint(html.var(varprefix + '_minutes', 0)) * 60
+             + saveint(html.var(varprefix + '_seconds', 0))
         )
 
     def value_to_text(self, value):

@@ -80,7 +80,7 @@ def parse_mknotifyd(info):
             else:
                 if value == "None":
                     value = None
-                elif value and varname not in [ "Type", "State", "Version", "Status Message" ]:
+                elif value and varname not in [ "Type", "State", "Version", "Status Message", "Pending Acknowledgements" ]:
                     value = int(value.split()[0])
                 sub_entry[varname] = value
 

@@ -968,6 +968,7 @@ class html:
         self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
              ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar")))
 
+        # TODO: Move this away from here. Make a context button. The view should handle this
         if self.myfile == "view" and self.var('mode') != 'availability':
             self.write('<a target="_top" href="%s">' \
                  '<img class=statusicon src="images/status_download_csv.png" title="%s"></a>\n' % \
@@ -1447,7 +1448,7 @@ class html:
             if y == -1:
                 break
             ht = ht[0:x] + ht[y+1:]
-        return ht
+        return ht.replace("&nbsp;", " ")
 
     def strip_scripts(self, ht):
         while True:

@@ -571,7 +571,7 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
                         html.write("<td class=cell><table>")
                     for painter_nr, p in enumerate(painters[1:]):
                         tdclass, content = prepare_paint(p, cell_row)
-                        gv = group_value(cell_row, [p])[0]
+                        gv = group_value(cell_row, [p])
                         majority_value =  row_majorities[row_id].get(painter_nr, None)
                         if majority_value != None and majority_value != gv:
                             tdclass += " minority"
@@ -585,6 +585,47 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
             html.write('</tr>')
 
         html.write("</table>")
+
+
+def csv_export_matrix(rows, view, group_painters, painters):
+    output_csv_headers(view)
+
+    groups, unique_row_ids, matrix_cells = list(create_matrices(rows, group_painters, painters, num_columns=None))[0]
+
+    table.begin(output_format="csv")
+    for painter_nr, painter in enumerate(group_painters):
+        table.row()
+        table.cell("", painter[0]["title"])
+        for group, group_row in groups:
+            tdclass, content = prepare_paint(painter, group_row)
+            table.cell("", content)
+
+    for row_id in unique_row_ids:
+        # Omit rows where all cells have the same values
+        if config.matrix_omit_uniform_lines:
+            at_least_one_different = False
+            for counts in value_counts[row_id].values():
+                if len(counts) > 1:
+                    at_least_one_different = True
+                    break
+            if not at_least_one_different:
+                continue
+
+        table.row()
+        tdclass, content = prepare_paint(painters[0], matrix_cells[row_id].values()[0])
+        table.cell("", content)
+
+        for group_id, group_row in groups:
+            table.cell("")
+            cell_row = matrix_cells[row_id].get(group_id)
+            if cell_row != None:
+                for painter_nr, p in enumerate(painters[1:]):
+                    tdclass, content = prepare_paint(p, cell_row)
+                    if painter_nr:
+                        html.write(",")
+                    html.write(content)
+
+    table.end()
 
 
 def matrix_find_majorities(rows, painters, for_header):
@@ -609,13 +650,16 @@ def matrix_find_majorities(rows, painters, for_header):
         maj_entry = majorities.setdefault(row_id, {})
         for painter_nr, painter_entry in row_entry.items():
             maj_value = None
-            max_count = 0
+            max_count = 0  # Absolute maximum count
+            max_non_unique = 0 # maximum count, but maybe non unique
             for value, count in painter_entry.items():
-                if count == max_count:
-                    maj_value = None # No majority
-                elif count > max_count and count >= 2:
+                if count > max_non_unique and count >= 2:
                     maj_value = value
+                    max_non_unique = count
                     max_count = count
+                elif count == max_non_unique:
+                    maj_value = None
+                    max_count = None
             maj_entry[painter_nr] = maj_value
 
 
@@ -647,7 +691,7 @@ def create_matrices(rows, group_painters, painters, num_columns):
         group_id = group_value(row, group_painters)
         if group_id != last_group_id:
             col_num += 1
-            if col_num > num_columns:
+            if num_columns != None and col_num > num_columns:
                 yield (groups, unique_row_ids, matrix_cells)
                 groups = []
                 unique_row_ids = [] # not a set, but a list. Need to keep sort order!
@@ -674,6 +718,7 @@ def create_matrices(rows, group_painters, painters, num_columns):
 multisite_layouts["matrix"] = {
     "title"      : _("Matrix"),
     "render"     : render_matrix,
+    "csv_export" : csv_export_matrix,
     "group"      : True,
     "checkboxes" : False,
 }

@@ -154,6 +154,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
             if opt_use_snmp_walk or is_usewalk_host(hostname):
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid)
             else:
+                added_oids = set([])
                 rowinfo = []
                 if is_snmpv3_host(hostname):
                     snmp_contexts = snmpv3_contexts_of(hostname, check_type)
@@ -162,18 +163,25 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
 
                 for context_name in snmp_contexts:
                     if has_inline_snmp and use_inline_snmp:
-                        rowinfo += inline_snmpwalk_on_suboid(hostname, check_type, fetchoid, oid,
+                        rows = inline_snmpwalk_on_suboid(hostname, check_type, fetchoid, oid,
                                                                               context_name=context_name)
                     else:
-                        rowinfo += snmpwalk_on_suboid(hostname, ip, fetchoid, context_name=context_name)
+                        rows = snmpwalk_on_suboid(hostname, ip, fetchoid, context_name=context_name)
 
-            # I've seen a broken device (Mikrotik Router), that broke after an
-            # update to RouterOS v6.22. It would return 9 time the same OID when
-            # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
-            # by removing any duplicate OID information
-            if len(rowinfo) > 1 and rowinfo[0][0] == rowinfo[1][0]:
-                vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rowinfo[0][0])
-                rowinfo = rowinfo[:1]
+                    # I've seen a broken device (Mikrotik Router), that broke after an
+                    # update to RouterOS v6.22. It would return 9 time the same OID when
+                    # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
+                    # by removing any duplicate OID information
+                    if len(rows) > 1 and rows[0][0] == rows[1][0]:
+                        vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0])
+                        rows = rows[:1]
+
+                    for row_oid, val in rows:
+                        if row_oid in added_oids:
+                            vverbose("Duplicate OID found: %s (%s)\n" % (row_oid, val))
+                        else:
+                            rowinfo.append((row_oid, val))
+                            added_oids.add(row_oid)
 
             columns.append((fetchoid, rowinfo))
             number_rows = len(rowinfo)
@@ -409,7 +417,6 @@ def get_stored_snmpwalk(hostname, oid):
     rowinfo = collect_until(current, -1)
     rowinfo.reverse()
     rowinfo += collect_until(current + 1, 1)
-    # import pprint ; pprint.pprint(rowinfo)
 
     if dot_star:
         return [ rowinfo[0] ]

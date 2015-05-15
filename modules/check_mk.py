@@ -3052,6 +3052,7 @@ no_discovery_possible = None
     output.write("def is_snmpv3_host(hostname):\n   return  % r\n\n" % is_snmpv3_host(hostname))
     output.write("def is_tcp_host(hostname):\n   return     % r\n\n" % is_tcp_host(hostname))
     output.write("def is_usewalk_host(hostname):\n   return % r\n\n" % is_usewalk_host(hostname))
+    output.write("def snmpv3_contexts_of_host(hostname):\n    return % r\n\n" % snmpv3_contexts_of_host(hostname))
     if has_inline_snmp and use_inline_snmp:
         output.write("def is_snmpv2c_host(hostname):\n   return     % r\n\n" % is_snmpv2c_host(hostname))
         output.write("def is_bulkwalk_host(hostname):\n   return    % r\n\n" % is_bulkwalk_host(hostname))

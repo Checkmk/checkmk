@@ -90,8 +90,11 @@ def oid_to_intlist(oid):
 def cmp_oids(o1, o2):
     return cmp(oid_to_intlist(o1), oid_to_intlist(o2))
 
+def snmpv3_contexts_of_host(hostname):
+    return host_extra_conf(hostname, snmpv3_contexts)
+
 def snmpv3_contexts_of(hostname, check_type):
-    for ty, rules in host_extra_conf(hostname, snmpv3_contexts):
+    for ty, rules in snmpv3_contexts_of_host(hostname):
         if ty == None or ty == check_type:
             return rules
     return [None]

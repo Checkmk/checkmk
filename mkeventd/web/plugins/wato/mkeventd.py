@@ -1881,7 +1881,7 @@ def mode_mkeventd_mibs(phase):
             table.cell(_("Filename"), filename)
             table.cell(_("MIB"), mib.get("name", ""))
             table.cell(_("Organization"), mib.get("organization", ""))
-            table.cell(_("Size"), str(mib.get("size")), css="number")
+            table.cell(_("Size"), bytes_human_readable(mib.get("size", 0)), css="number")
         table.end()
 
 
@@ -1897,31 +1897,23 @@ def load_snmp_mibs(path):
 def parse_snmp_mib_header(path):
     mib = {}
     mib["size"] = os.stat(path).st_size
-    lineno = 0
-    fileit = file(path)
-    line = ""
-    while lineno < 100:
-        lineno += 1
-        try:
-            next_line = fileit.next().strip()
-        except:
-            break
-        if not next_line:
-            continue
-        old_line = line
-        line = next_line
-        if line.startswith("ORGANIZATION"):
-            parts = line.split(None, 1)
-            if len(parts) > 1:
-                org = parts[1].lstrip('"').rstrip('"')
-                if org:
-                    mib["organization"] = org
-        elif "DEFINITIONS" in line:
-            if line.startswith("DEFINITIONS"):
-                name = old_line
-            else:
-                name = line.split()[0]
-            mib["name"] = name
+
+    # read till first "OBJECT IDENTIFIER" declaration
+    head = ''
+    for line in file(path):
+        if 'OBJECT IDENTIFIER' in line:
+            break # seems the header is finished
+        head += line
+
+    # now try to extract some relevant information from the header
+
+    matches = re.search('ORGANIZATION[^"]+"([^"]+)"', head, re.M)
+    if matches:
+        mib['organization'] = matches.group(1)
+
+    matches = re.search('^\s*([A-Z0-9][A-Z0-9-]+)\s', head, re.I | re.M)
+    if matches:
+        mib['name'] = matches.group(1)
 
     return mib
 

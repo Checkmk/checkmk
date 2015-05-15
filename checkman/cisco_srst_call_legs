@@ -10,7 +10,7 @@ description:
 
 perfdata:
  One variable: the amount of the participants of a current
- telephony conference (int >= 0).
+ telephony conference.
 
 inventory:
  One service is created for each device.

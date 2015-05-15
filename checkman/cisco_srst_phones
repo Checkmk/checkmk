@@ -8,7 +8,7 @@ description:
  The status is always OK.
 
 perfdata:
- One variable: the amount of registered phones (int >= 0).
+ One variable: the amount of registered phones.
 
 inventory:
  One service is created for each device.

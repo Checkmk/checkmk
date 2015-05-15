@@ -137,11 +137,7 @@ multisite_layouts["jsonp"] = {
 
 def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxes, export = False):
     if export:
-        html.req.content_type = "text/csv; charset=UTF-8"
-        filename = '%s-%s.csv' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-        if type(filename) == unicode:
-            filename = filename.encode("utf-8")
-        html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
+        output_csv_headers(view)
 
     csv_separator = html.var("csv_separator", ";")
     first = True

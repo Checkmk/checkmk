@@ -1,0 +1,15 @@
+title: Cisco Unified Survivable Remote Site Telephony (SRST): Registered Phones
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the registered phones of a Cisco device which supports
+ the Cisco Unified SRST feature.
+ The status is always OK.
+
+perfdata:
+ One variable: the amount of registered phones.
+
+inventory:
+ One service is created for each device.

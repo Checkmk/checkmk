@@ -318,7 +318,7 @@ def end():
     odd = "even"
     for nr, (row, css, state, fixed) in enumerate(rows):
         if do_csv:
-            html.write(csv_separator.join([ html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
+            html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
             html.write("\n")
 
         else: # HTML output

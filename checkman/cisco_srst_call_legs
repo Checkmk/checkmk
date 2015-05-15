@@ -1,0 +1,16 @@
+title: Cisco Unified Survivable Remote Site Telephony (SRST): Active Call Legs
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the total number of SIP call legs routed through the Cisco
+ device since going active. This Cisco device supports the Cisco Unified SRST feature.
+ The status is always OK.
+
+perfdata:
+ One variable: the total number of SIP call legs routed through the device since
+ going active.
+
+inventory:
+ One service is created for each device.

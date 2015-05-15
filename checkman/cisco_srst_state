@@ -1,0 +1,15 @@
+title: Cisco Unified Survivable Remote Site Telephony (SRST): Status
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of the Cisco Unified SRST feature
+ of a Cisco device which supports that feature.
+ There are two possible states: active (OK) or inactive (WARN).
+
+ Moreover the check displays the time (in minutes) since the SRST feature
+ switched to active mode.
+
+inventory:
+ One service is created for each device.

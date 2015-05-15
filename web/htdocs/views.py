@@ -1113,15 +1113,22 @@ def show_view(view, show_heading = False, show_buttons = True,
     # always needed. In case of an embedded view in the reporting this
     # field is simply missing, because the rendering is done by the
     # report itself.
+    # TODO: CSV export should be handled by the layouts. It cannot
+    # be done generic in most cases
     if html.output_format == "html":
         if "layout" in view:
             layout = multisite_layouts[view["layout"]]
         else:
             layout = None
     else:
-        layout = multisite_layouts.get(html.output_format)
-        if not layout:
-            layout = multisite_layouts["json"]
+        if "layout" in view and "csv_export" in multisite_layouts[view["layout"]]:
+            multisite_layouts[view["layout"]]["csv_export"](rows, view, group_painters, painters)
+            return
+        else:
+            # Generic layout of export
+            layout = multisite_layouts.get(html.output_format)
+            if not layout:
+                layout = multisite_layouts["json"]
 
     # Until now no single byte of HTML code has been output.
     # Now let's render the view. The render_function will be
@@ -2437,6 +2444,13 @@ def ajax_inv_render_tree():
         html.show_error(_("Invalid path %s in inventory tree") % invpath)
     else:
         render_inv_subtree_container(hostname, tree_id, invpath, node)
+
+def output_csv_headers(view):
+    html.req.content_type = "text/csv; charset=UTF-8"
+    filename = '%s-%s.csv' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
+    if type(filename) == unicode:
+        filename = filename.encode("utf-8")
+    html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
 
 #.
 #   .--Icon Selector-------------------------------------------------------.

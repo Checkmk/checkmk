@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,8 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_cisco_srst_phones(info):
     return [ (None, {}) ]
+
 
 def check_cisco_srst_phones(_no_item, _no_params, info):
     phones = int(info[0][0])
@@ -41,4 +43,3 @@ check_info['cisco_srst_phones'] = {
     'snmp_scan_function'        : cisco_srst_scan_function,
     'includes'                  : [ "cisco_srst.include", ],
 }
-

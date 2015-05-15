@@ -1,0 +1,9 @@
+Title: blade_bays, blade_blades, blade_blowers, blade_health, blade_mediatray: Checks now support IBM Flex Bladecenter
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1431680627
+Class: feature
+
+

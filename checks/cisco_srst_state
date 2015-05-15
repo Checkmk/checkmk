@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -34,13 +34,12 @@ def check_cisco_srst_state(_no_item, _no_params, info):
 
     # Check the state
     if srst_state == '1':
-        yield 1, "SRST active"
+        yield 0, "SRST active"
     else:
-        yield 2, "SRST inactive"
+        yield 1, "SRST inactive"
 
     # Display SRST uptime
     yield check_uptime_seconds(None, int(uptime_text) * 60)
-
 
 
 check_info['cisco_srst_state'] = {

@@ -1070,6 +1070,11 @@ metric_info["messages"] = {
     "color" : "#aa44cc",
 }
 
+metric_info["call_legs"] = { 
+    "title" : _("Call legs"),
+    "unit"  : "count",
+    "color" : "#60bbbb",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -1340,6 +1345,7 @@ check_metrics["check_mk-icom_repeater.ps_volt"] = {}
 check_metrics["check_mk-icom_repeater.pll_volt"] = {}
 check_metrics["check_mk-isc_dhcpd"] = {}
 check_metrics["check_mk-cisco_srst_phones"] = {}
+check_metrics["check_mk-cisco_srst_call_legs"] = {}
 
 check_metrics["check_mk-logwatch.ec"] = {}
 check_metrics["check_mk-logwatch.ec_single"] = {}
@@ -1541,6 +1547,14 @@ perfometer_info.append({
     "half_value" : 50,
     "exponent"   : 3,
 })
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "call_legs",
+    "half_value" : 10,
+    "exponent"   : 2,
+})
+
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -2023,5 +2037,11 @@ graph_info.append({
 graph_info.append({
     "metrics" : [
         ( "messages", "area" ),
+    ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "call_legs", "area" )
     ],
 })

@@ -25,60 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 
-
 # .1.3.6.1.4.1.9.9.441.1.2.1.0 2 --> CISCO-SRST-MIB::csrstEnabled.0, 1:enabled, 2:disable
 
 # .1.3.6.1.4.1.9.9.441.1.3.1.0 2 --> CISCO-SRST-MIB::csrstState.0, 1:active, 2:inactive
 # .1.3.6.1.4.1.9.9.441.1.3.2.0 0 --> CISCO-SRST-MIB::csrstSipPhoneCurrentRegistered.0
 # .1.3.6.1.4.1.9.9.441.1.3.3.0 0 --> CISCO-SRST-MIB::csrstSipCallLegs.0
 # .1.3.6.1.4.1.9.9.441.1.3.4.0 0 --> CISCO-SRST-MIB::csrstTotalUpTime.0
-
-
-# factory_settings["cisco_srst_default_levels"] = {
-#     "registered_phones" : (20,40),
-#     "active_call_legs"  : (10,15),
-# }
-#
-#
-# def inventory_cisco_srst(info):
-#     pprint.pprint(info)
-#     inventory = ["Current state", "Registered phones", "Active call legs", "Time since router is active"]
-#     return [(i, None) for i in inventory ]
-#
-#
-# def check_cisco_srst(item, params, info):
-#     if item == "Current state":
-#         val = int(info[0][0])
-#         if val == 2:
-#             return (1, "Inactive SRST mode")
-#         elif val == 1:
-#             return (0, "Active SRST mode")
-#     elif item == "Registered phones":
-#         warn, crit = params["registered_phones"]
-#         val = int(info[1][0])
-#         perfdata = [("phones", val)]
-#         if val >= crit:
-#             return (2, "TOO MUCH PHONES: %s" % val, perfdata)
-#         elif val >= warn:
-#             return (1, "A lot of phones registered: %s" % val, perfdata)
-#         else:
-#             return (0, "Total number: %s" % val, perfdata)
-#     elif item == "Active call legs":
-#         warn, crit = params["active_call_legs"]
-#         val = int(info[2][0])
-#         perfdata = [("call_legs", val)]
-#         if val >= crit:
-#             return (2, "TOO MUCH PARTICIPANTS: %s" % val, perfdata)
-#         elif val >= warn:
-#             return (1, "A lot of participants: %s" % val, perfdata)
-#         else:
-#             return (0, "Total number: %s" % val, perfdata)
-#     elif item == "Time since router is active":
-#         val = int(info[3][0])
-#         perfdata = [("active_time", val)]
-#         return (0, "Active since %s" % val + " minutes.", perfdata)
-#     else:
-#         return (3, 'foo')
 
 
 def cisco_srst_scan_function(oid):

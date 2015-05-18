@@ -948,8 +948,8 @@ export -f sqlplus_internal
 export -f do_async_checks
 export -f set_oraenv
 
-function file_age() {
-    /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
+function file_mtime() {
+    /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($mtime);' "$1"
 }
 
 function run_cached_local () {
@@ -967,7 +967,7 @@ function run_cached_local () {
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
     local NOW=$(date +%s)
     if [ -e "$CACHEFILE.new" ] ; then
-        CF_ATIME=$(file_age "$CACHEFILE.new")
+        CF_ATIME=$(file_mtime "$CACHEFILE.new")
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
             # Kill the process still accessing that file in case
             # it is still running. This avoids overlapping processes!
@@ -979,11 +979,11 @@ function run_cached_local () {
 
     # Check if cache file exists and is recent enough
     if [ -s "$CACHEFILE" ] ; then
-        MTIME=$(file_age "$CACHEFILE")
+        MTIME=$(file_mtime "$CACHEFILE")
         if [ $((NOW - MTIME)) -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
-        cat "$CACHEFILE"
+        sed "/^<<</s/>>>$/:cached($MTIME,$MAXAGE)>>>/" "$CACHEFILE"
     fi
 
     # Cache file outdated and new job not yet running? Start it

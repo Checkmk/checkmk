@@ -35,7 +35,7 @@
 #include "Query.h"
 #include "Filter.h"
 #include "Column.h"
-#include "EmptyColumn.h"
+#include "NullColumn.h"
 #include "OutputBuffer.h"
 #include "InputBuffer.h"
 #include "StatsColumn.h"
@@ -187,7 +187,7 @@ Query::~Query()
 
 Column *Query::createDummyColumn(const char *name)
 {
-    Column *col = new EmptyColumn(name, "Dummy column");
+    Column *col = new NullColumn(name, "Non existing column");
     _dummy_columns.push_back(col);
     return col;
 }
@@ -531,8 +531,12 @@ void Query::parseColumnsLine(char *line)
         if (column)
             _columns.push_back(column);
         else {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                   "Table '%s' has no column '%s'", _table->name(), column_name);
+            logger(LOG_WARNING, "Replacing non-existing column '%s' with null column", column_name);
+            // Do not fail any longer. We might want to make this configurable.
+            // But not failing has the advantage that an updated GUI, that expects new columns,
+            // will be able to keep compatibility with older Livestatus versions.
+            // _output->setError(RESPONSE_CODE_INVALID_HEADER,
+            //       "Table '%s' has no column '%s'", _table->name(), column_name);
             Column *col = createDummyColumn(column_name);
             _columns.push_back(col);
         }
@@ -1042,6 +1046,17 @@ void Query::outputDouble(double value)
     char buf[64];
     int l = snprintf(buf, sizeof(buf), "%.10e", value);
     _output->addBuffer(buf, l);
+}
+
+void Query::outputNull()
+{
+    if (_output_format == OUTPUT_FORMAT_CSV) {
+        // output empty cell
+    }
+    else if (_output_format == OUTPUT_FORMAT_PYTHON)
+        _output->addBuffer("None", 4);
+    else
+        _output->addBuffer("null", 4); // JSON
 }
 
 void Query::outputAsciiEscape(char value)

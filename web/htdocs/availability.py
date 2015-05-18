@@ -32,9 +32,18 @@
 #### Reporting abbilden.
 
 import bi, views
-# TODO: Get rid of views
+# TODO: Get rid of import of views
 # from lib import *
 from valuespec import *
+
+#   .--Declarations--------------------------------------------------------.
+#   |       ____            _                 _   _                        |
+#   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
+#   |      | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \       |
+#   |      |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 host_availability_columns = [
     ( "up",                        "state0",        _("UP"),          None ),
@@ -237,7 +246,7 @@ avoption_entries = [
   # Visual levels for the availability
   ( "av_levels",
     "double",
-    False,
+    True,
     Optional(
         Tuple(
             elements = [
@@ -934,7 +943,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
 
     # Summary line. It has the same format as each entry in cells
-    if show_summary:
+    if show_summary and len(availability_table) > 0:
         summary_cells = []
 
         for sid, css, sname, help in availability_columns[what]:

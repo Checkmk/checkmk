@@ -1,0 +1,9 @@
+Title: mrpe: made UNKNOWN message more clear in case of an invalid state char
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1431961754
+Class: fix
+
+

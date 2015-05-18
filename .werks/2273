@@ -1,0 +1,10 @@
+Title: New multisite filter: Start of downtime
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1
+Date: 1431963542
+Class: feature
+
+The existing filter "Time when downtime was created" did not show the
+time when the downtime should actually start, but its creation time.

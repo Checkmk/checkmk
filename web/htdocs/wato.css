@@ -25,6 +25,8 @@ Boston, MA 02110-1301 USA.
 
 */
 
+
+
 /*-------------------------------------------------------------------------.
 |                     __        ___  _____ ___                             |
 |                     \ \      / / \|_   _/ _ \                            |
@@ -1255,4 +1257,17 @@ table.nform.rulesettings td.legend div.title {
 
 #profile_repl .site img, #profile_repl .site span {
     vertical-align: middle;
+}
+
+
+.wato table.data.check_catalog td.title {
+    width: 500px;
+}
+
+.wato table.data.check_catalog td.name {
+    width: 200px;
+}
+
+.wato table.data.check_catalog td.agents {
+    width: 200px;
 }

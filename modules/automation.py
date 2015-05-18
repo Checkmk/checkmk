@@ -38,14 +38,10 @@ def do_automation(cmd, args):
             result = automation_get_configuration()
         elif cmd == "get-check-information":
             result = automation_get_check_information()
-        elif cmd == "delete-host":
-            read_config_files()
-            result = automation_delete_host(args)
+        elif cmd == "get-check-catalog":
+            result = automation_get_check_catalog()
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
-        elif cmd == "update-dns-cache":
-            read_config_files()
-            result = automation_update_dns_cache()
         else:
             read_config_files()
             if cmd == "try-inventory":
@@ -68,6 +64,8 @@ def do_automation(cmd, args):
                 result = automation_scan_parents(args)
             elif cmd == "diag-host":
                 result = automation_diag_host(args)
+            elif cmd == "delete-host":
+                result = automation_delete_host(args)
             elif cmd == "rename-host":
                 result = automation_rename_host(args)
             elif cmd == "create-snapshot":
@@ -76,6 +74,8 @@ def do_automation(cmd, args):
 		result = automation_notification_replay(args)
 	    elif cmd == "notification-analyse":
 		result = automation_notification_analyse(args)
+            elif cmd == "update-dns-cache":
+                result = automation_update_dns_cache()
             elif cmd == "bake-agents":
                 result = automation_bake_agents()
             else:
@@ -522,8 +522,26 @@ def automation_get_configuration():
                 result[varname] = globals()[varname]
     return result
 
+
+def automation_get_check_catalog():
+    read_manpage_catalog()
+    tree = {}
+    for path, entries in g_manpage_catalog.items():
+        subtree = tree
+        for component in path[:-1]:
+            subtree = subtree.setdefault(component, {})
+        subtree[path[-1]] = map(strip_manpage_entry, entries)
+
+    return tree, manpage_catalog_titles
+
+def strip_manpage_entry(entry):
+    return dict([ (k,v) for (k,v) in entry.items() if k in [
+        "name", "agents", "title"
+    ]])
+
 def automation_get_check_information():
     manuals = all_manuals()
+
     checks = {}
     for check_type, check in check_info.items():
         manfile = manuals.get(check_type)
@@ -537,6 +555,7 @@ def automation_get_check_information():
         checks[check_type]["service_description"] = check.get("service_description","%s")
         checks[check_type]["snmp"] = check_uses_snmp(check_type)
     return checks
+
 
 def automation_scan_parents(args):
     settings = {
@@ -1152,3 +1171,4 @@ def automation_update_dns_cache():
 def automation_bake_agents():
     if "do_bake_agents" in globals():
         return do_bake_agents()
+

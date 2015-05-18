@@ -1,6 +1,6 @@
 title: FTP backups of Plesk domains
 agents: linux
-catalog: app/Plesk
+catalog: app/plesk
 license: GPL
 distribution: check_mk
 description:

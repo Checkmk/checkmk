@@ -7147,10 +7147,11 @@ def mode_main(phase):
 def render_main_menu(some_modules, columns = 2):
     html.write('<div class="mainmenu">')
     for nr, (mode_or_url, title, icon, permission, help) in enumerate(some_modules):
-        if "." not in permission:
-            permission = "wato." + permission
-        if not config.may(permission) and not config.may("wato.seeall"):
-            continue
+        if permission:
+            if "." not in permission:
+                permission = "wato." + permission
+            if not config.may(permission) and not config.may("wato.seeall"):
+                continue
 
         if '?' in mode_or_url or '/' in mode_or_url:
             url = mode_or_url
@@ -17558,14 +17559,59 @@ def mode_custom_attrs(phase, what):
     table.end()
 
 #.
+#   .--Check Plugins-------------------------------------------------------.
+#   |     ____ _               _      ____  _             _                |
+#   |    / ___| |__   ___  ___| | __ |  _ \| |_   _  __ _(_)_ __  ___      |
+#   |   | |   | '_ \ / _ \/ __| |/ / | |_) | | | | |/ _` | | '_ \/ __|     |
+#   |   | |___| | | |  __/ (__|   <  |  __/| | |_| | (_| | | | | \__ \     |
+#   |    \____|_| |_|\___|\___|_|\_\ |_|   |_|\__,_|\__, |_|_| |_|___/     |
+#   |                                               |___/                  |
+#   +----------------------------------------------------------------------+
+#   | Catalog of check plugins                                             |
+#   '----------------------------------------------------------------------'
+
+def mode_check_plugins(phase):
+    if phase == "title":
+        return _("Catalog of Check Plugins")
+
+    elif phase == "buttons":
+        return
+
+    elif phase == "action":
+        return
+
+    manpages, titles = check_mk_local_automation("get-check-catalog")
+    render_manpage_node(titles, (), manpages)
+
+
+def render_manpage_node(titles, path, node):
+    def translate(t):
+        return titles.get(t, t)
+
+    if type(node) == list:
+        table.begin(searchable=False, sortable=False, css="check_catalog")
+        for entry in sorted(node, cmp=lambda a,b: cmp(a["title"], b["title"])):
+            table.row()
+            table.cell(_("Check Plugin"), entry["title"], css="title")
+            table.cell(_("ID"), "<tt>%s</tt>" % entry["name"], css="name")
+            table.cell(_("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
+        table.end()
+    elif type(node) == dict:
+        for path_comp, subnode in node.items():
+            subpath = path + (path_comp,)
+            html.begin_foldable_container("check_catalog", ";".join(subpath), False, translate(path_comp))
+            render_manpage_node(titles, subpath, subnode)
+            html.end_foldable_container()
+
+
+
+#.
 #   .--Icons---------------------------------------------------------------.
 #   |                       ___                                            |
 #   |                      |_ _|___ ___  _ __  ___                         |
 #   |                       | |/ __/ _ \| '_ \/ __|                        |
 #   |                       | | (_| (_) | | | \__ \                        |
 #   |                      |___\___\___/|_| |_|___/                        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
@@ -18795,6 +18841,7 @@ modes = {
    "ldap_config"        : (["global"], mode_ldap_config),
    "ruleeditor"         : (["rulesets"], mode_ruleeditor),
    "static_checks"      : (["rulesets"], mode_static_checks),
+   "check_plugins"      : ([], mode_check_plugins),
    "rulesets"           : (["rulesets"], mode_rulesets),
    "ineffective_rules"  : (["rulesets"], mode_ineffective_rules),
    "edit_ruleset"       : (["rulesets"], mode_edit_ruleset),

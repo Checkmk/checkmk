@@ -3338,6 +3338,7 @@ def list_all_manuals():
     print_table(['Check type', 'Title'], [tty_bold, tty_normal], table)
 
 def read_manpage_catalog():
+    execfile(modules_dir + "/catalog.py", globals())
     global g_manpage_catalog
     g_manpage_catalog = {}
     for checkname, path in all_manuals().items():
@@ -3399,7 +3400,6 @@ def manpage_num_entries(cat):
 
 
 def manpage_browser_folder(cat, subtrees):
-    execfile(modules_dir + "/catalog.py", globals())
     titles = []
     for e in subtrees:
         title = manpage_catalog_titles.get(e,e)

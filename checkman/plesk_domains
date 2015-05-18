@@ -1,6 +1,6 @@
 title: Dumps out the domains configured in Plesk
 agents: linux
-catalog: app/Plesk
+catalog: app/plesk
 license: GPL
 distribution: check_mk
 description:

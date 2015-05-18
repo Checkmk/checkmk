@@ -47,9 +47,9 @@ def render_wato(mini):
     else:
         iconlink(_("Main Menu"), "wato.py", "home")
     for mode, title, icon, permission, help in wato.modules:
-        if "." not in permission:
+        if permission and "." not in permission:
             permission = "wato." + permission
-        if config.may(permission) or config.may("wato.seeall"):
+        if not permission or config.may(permission) or config.may("wato.seeall"):
             url = "wato.py?mode=%s" % mode
             if mini:
                 html.icon_button(url, title, icon, target="main")

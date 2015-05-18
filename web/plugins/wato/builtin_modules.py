@@ -46,6 +46,9 @@ modules += [
       ( "static_checks",      _("Manual Checks"),     "static_checks", "rulesets",
       _("Configure fixed checks without using service discovery")),
 
+      ( "check_plugins",     _("Catalog of Check Plugins"), "check_plugins", None,
+      _("Browse the catalog of all check plugins, create static checks")),
+
       ( "host_groups",       _("Host & Service Groups"),  "hostgroups", "groups",
       _("Organize your hosts and services in groups independent of the tree structure.") ),
 
@@ -77,8 +80,8 @@ modules += [
       ( "snapshot", _("Backup & Restore"), "backup", "snapshots",
         _("Make snapshots of your configuration, download, upload and restore snapshots.")),
 
-      ( "icons", _("Icons"), "icons", "icons",
-        _("Mange your custom icons to be used e.g. for custom actions or views.")),
+      ( "icons", _("Custom Icons"), "icons", "icons",
+        _("Upload your own icons that can be used in views or custom actions")),
 
     ]
 

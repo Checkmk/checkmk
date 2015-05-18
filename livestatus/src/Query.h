@@ -115,6 +115,7 @@ public:
     void outputUnsignedLong(unsigned long);
     void outputCounter(counter_t);
     void outputDouble(double);
+    void outputNull();
     void outputAsciiEscape(char value);
     void outputUnicodeEscape(unsigned value);
     void outputString(const char *, int size=-1);

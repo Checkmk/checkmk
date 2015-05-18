@@ -1,0 +1,13 @@
+Title: Do not fail on non-existing Livestatus columns any longer, output None or null instead
+Level: 1
+Component: livestatus
+Compatible: compat
+Version: 1.2.7i1
+Date: 1431935942
+Class: feature
+
+When you ask for a column that does not exist in your Livestatus version, now this is not
+considered as a fatal error any longer but just being logged as a warning. Instead
+an empty string (CSV), <tt>None</tt> (Python) or <tt>null</tt> (JSON) is being returned.
+This makes it easier for GUIs to maintain compatibility with existing Livestatus version
+when new features are implemented that make use of new Livestatus columns.

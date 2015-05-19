@@ -10,13 +10,13 @@ The windows agent now comes with the following folders
 
 <table>
 <tr><th>Folder</th><th>Description</th></tr>
-<tr><td>local</td>local scripts<td></td></tr>
-<tr><td>plugins</td>plugin scripts<td></td></tr>
+<tr><td>local</td><td>local scripts</td></tr>
+<tr><td>plugins</td><td>plugin scripts</td></tr>
 <tr><td>config</td><td>configuration files for scripts</td></tr>
 <tr><td>state</td><td>state files for scripts and the agent, e.g. logwatch state</td></tr>
-<tr><td>spool</td><td>spoolfiles from other applications</td>/tr>
-<tr><td>log</td>logfiles from scripts and the agent<td></td></tr>
-<tr><td>temp</td>working directory for scripts<td></td></tr>
+<tr><td>spool</td><td>spoolfiles from other applications</td></tr>
+<tr><td>log</td><td>logfiles from scripts and the agent</td></tr>
+<tr><td>temp</td><td>working directory for scripts</td></tr>
 </table>
 
 When you update the agent to a newer version, the content of this folders will not get deleted.

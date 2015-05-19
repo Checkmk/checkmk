@@ -1,0 +1,12 @@
+Title: mk_oracle.ps1: changed location of config file
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1432049452
+Class: feature
+
+The config file <i>mk_oracle_cfg.ps1</i> is now located in the agents
+subdirectory <i>config</i>. You need to manually move the configuration from
+the agents base dir into the <i>config<i> dir.
+

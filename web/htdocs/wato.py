@@ -3174,19 +3174,24 @@ def show_service_table(host, firsttime):
     # Read current check configuration
     cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
     parameter_column = config.load_user_file("parameter_column", False)
+    error_options = not html.var("ignoreerrors") and [ "@raiseerrors" ] or []
 
     # We first try using the Cache (if the user has not pressed Full Scan).
     # If we do not find any data, we omit the cache and immediately try
     # again without using the cache.
     try:
-        checktable = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
+        options = cache_options + error_options
+        checktable = check_mk_automation(host[".siteid"], "try-inventory", options + [hostname])
         if len(checktable) == 0 and cache_options != []:
             checktable = check_mk_automation(host[".siteid"], "try-inventory", [ '@scan', hostname ])
             html.set_var("_scan", "on")
     except Exception, e:
         if config.debug:
             raise
-        html.show_error(_("Service discovery failed for this host: %s") % e)
+        url = html.makeuri([("ignoreerrors", "1"), ("_scan", html.var("_scan"))])
+        retry_link = '<a href="%s">%s</a>' % (url, _("Retry discovery while ignoring this error (Result might be incomplete)."))
+        html.show_warning("<b>%s</b>: %s<br><br>%s" %
+                          (_("Service discovery failed for this host"), e, retry_link))
         return
 
     checktable.sort()
@@ -3732,7 +3737,10 @@ def mode_bulk_inventory(phase):
                     arguments = [ "@cache" ] + arguments
                 if html.var("do_scan"):
                     arguments = [ "@scan" ] + arguments
+                if not html.get_checkbox("ignore_errors"):
+                    arguments = [ "@raiseerrors" ] + arguments
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
+
                 # sum up host individual counts to have a total count
                 sum_counts = [ 0, 0, 0, 0 ] # added, removed, kept, new
                 result_txt = ''
@@ -3852,6 +3860,7 @@ def mode_bulk_inventory(phase):
     items = []
     hosts_in_this_item = 0
     bulk_size = int(html.var("bulk_size", 10))
+
     for site_id, folder_path, hostname in hosts_to_inventorize:
         if not items or (site_id, folder_path) != current_site_and_folder or hosts_in_this_item >= bulk_size:
             items.append("%s|%s|%s" % (site_id, folder_path, hostname))
@@ -3912,6 +3921,9 @@ def mode_bulk_inventory(phase):
         html.write("<br>")
         html.write(_("Number of hosts to handle at once:") + " ")
         html.number_input("bulk_size", 10, size=3)
+
+        forms.section(_("Error handling"))
+        html.checkbox("ignore_errors", True, label=_("Ignore errors in single check plugins"))
 
         # Start button
         forms.end()

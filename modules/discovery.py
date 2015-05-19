@@ -36,7 +36,7 @@
 #   '----------------------------------------------------------------------'
 
 # Function implementing cmk -I and cmk -II. This is directly
-# being called from the main option parsing code. The list
+# being called from the main option parsing code. The list of
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(hostnames, check_types, only_new):
@@ -65,7 +65,11 @@ def do_discovery(hostnames, check_types, only_new):
     for hostname in hostnames:
         try:
             verbose(tty_white + tty_bold + hostname + tty_normal + ":\n")
-            do_discovery_for(hostname, check_types, only_new, use_caches)
+            if opt_debug:
+                on_error = "raise"
+            else:
+                on_error = "warn"
+            do_discovery_for(hostname, check_types, only_new, use_caches, on_error)
             verbose("\n")
         except Exception, e:
             if opt_debug:
@@ -73,12 +77,12 @@ def do_discovery(hostnames, check_types, only_new):
             verbose(" -> Failed: %s\n" % e)
 
 
-def do_discovery_for(hostname, check_types, only_new, use_caches):
+def do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
     # Usually we disable SNMP scan if cmk -I is used without a list of
     # explicity hosts. But for host that have never been service-discovered
     # yet (do not have autochecks), we enable SNMP scan.
     do_snmp_scan = not use_caches or not has_autochecks(hostname)
-    new_items = discover_services(hostname, check_types, use_caches, do_snmp_scan)
+    new_items = discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error)
     if not check_types and not only_new:
         old_items = [] # do not even read old file
     else:
@@ -142,7 +146,8 @@ def check_discovery(hostname, ipaddress=None):
     lines = []
 
     try:
-        services = get_host_services(hostname, use_caches=opt_use_cachefile, do_snmp_scan=inventory_check_do_scan, ipaddress=ipaddress)
+        services = get_host_services(hostname, use_caches=opt_use_cachefile,
+                                     do_snmp_scan=inventory_check_do_scan, on_error="raise", ipaddress=ipaddress)
         for (check_type, item), (check_source, paramstring) in services.items():
             if check_source == "new":
                 new_check_types.setdefault(check_type, 0)
@@ -160,6 +165,8 @@ def check_discovery(hostname, ipaddress=None):
     except SystemExit, e:
         raise e
     except Exception, e:
+        output = create_crash_dump(hostname, "discovery", None, None, "Check_MK Discovery", [])\
+            .replace("Crash dump:\n", "Crash dump:\\n")
         if opt_debug:
             raise
         # Honor rule settings for "Status of the Check_MK service". In case of
@@ -170,7 +177,6 @@ def check_discovery(hostname, ipaddress=None):
         else:
             what = "exception"
         status = spec.get(what, 3)
-        output = str(e) + "\n"
 
     if opt_keepalive:
         global total_check_output
@@ -279,7 +285,11 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
 # This function *does* handle:
 # - disabled check typess
 #
-def discover_services(hostname, check_types, use_caches, do_snmp_scan, ipaddress=None):
+# on_error is one of:
+# "ignore" -> silently ignore any exception
+# "warn"   -> output a warning on stderr
+# "raise"  -> let the exception come through
+def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error, ipaddress=None):
     if ipaddress == None:
         ipaddress = lookup_ipaddress(hostname)
 
@@ -290,7 +300,13 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, ipaddress
 
             # May we do an SNMP scan?
             if do_snmp_scan:
-                check_types = snmp_scan(hostname, ipaddress)
+                try:
+                    check_types = snmp_scan(hostname, ipaddress, on_error)
+                except Exception, e:
+                    if on_error == "raise":
+                        raise
+                    elif on_error == "warn":
+                        sys.stderr.write("SNMP scan failed: %s" % e)
 
             # Otherwise use all check types that we already have discovered
             # previously
@@ -310,7 +326,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, ipaddress
     discovered_services = []
     try:
         for check_type in check_types:
-            for item, paramstring in discover_check_type(hostname, ipaddress, check_type, use_caches):
+            for item, paramstring in discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
                 discovered_services.append((check_type, item, paramstring))
 
         return discovered_services
@@ -318,7 +334,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, ipaddress
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def snmp_scan(hostname, ipaddress, for_inv=False):
+def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs
     # this to evaluate if_disabled_if64_checks.
@@ -362,10 +378,19 @@ def snmp_scan(hostname, ipaddress, for_inv=False):
 
         if scan_function:
             try:
-                result = scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid))
+                def oid_function(oid, default_value=None):
+                    value = get_single_oid(hostname, ipaddress, oid)
+                    if value == None:
+                        return default_value
+                    else:
+                        return value
+                result = scan_function(oid_function)
                 if result is not None and type(result) not in [ str, bool ]:
-                    verbose("[%s] Scan function returns invalid type (%s).\n" %
-                            (check_type, type(result)))
+                    if on_error != "ignore":
+                        warning("   SNMP scan function of %s returns invalid type %s." %
+                                (check_type, type(result)))
+                    if on_error == "raise":
+                        raise MKGeneralException("SNMP Scan aborted.")
                 elif result:
                     found.append(check_type)
                     positive_found.append(check_type)
@@ -374,6 +399,10 @@ def snmp_scan(hostname, ipaddress, for_inv=False):
                 # should be raised through this
                 raise
             except:
+                if on_error != "ignore":
+                    warning("   Exception in SNMP scan function of %s" % check_type)
+                if on_error == "raise":
+                    raise
                 pass
         else:
             found.append(check_type)
@@ -387,7 +416,7 @@ def snmp_scan(hostname, ipaddress, for_inv=False):
     found.sort()
     return found
 
-def discover_check_type(hostname, ipaddress, check_type, use_caches):
+def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
     # Skip this check type if is ignored for that host
     if service_ignored(hostname, check_type, None):
         return []
@@ -466,11 +495,10 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches):
             result.append((item, paramstring))
 
     except Exception, e:
-        if opt_debug:
-            sys.stderr.write("Exception in discovery function of check type %s\n" % check_type)
+        if on_error != "ignore":
+            warning("  Exception in discovery function of check type %s" % check_type)
+        if on_error == "raise":
             raise
-        if opt_verbose:
-            sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
         return []
 
     return result
@@ -501,20 +529,20 @@ def discoverable_check_types(what): # snmp, tcp, all
 #    "clustered_new" : New service found on a node that belongs to a cluster
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
-def get_host_services(hostname, use_caches, do_snmp_scan, ipaddress=None):
+def get_host_services(hostname, use_caches, do_snmp_scan, on_error, ipaddress=None):
     if is_cluster(hostname):
-        return get_cluster_services(hostname, use_caches, do_snmp_scan)
+        return get_cluster_services(hostname, use_caches, do_snmp_scan, on_error)
     else:
-        return get_node_services(hostname, ipaddress, use_caches, do_snmp_scan)
+        return get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error)
 
 
 # Part of get_node_services that deals with discovered services
-def get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan):
+def get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
     # Create a dict from check_type/item to check_source/paramstring
     services = {}
 
     # Handle discovered services -> "new"
-    new_items = discover_services(hostname, None, use_caches, do_snmp_scan, ipaddress)
+    new_items = discover_services(hostname, None, use_caches, do_snmp_scan, on_error, ipaddress)
     for check_type, item, paramstring in new_items:
        services[(check_type, item)] = ("new", paramstring)
 
@@ -529,8 +557,8 @@ def get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan):
     return services
 
 # Do the actual work for a non-cluster host or node
-def get_node_services(hostname, ipaddress, use_caches, do_snmp_scan):
-    services = get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan)
+def get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
+    services = get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error)
 
     # Identify clustered services
     for (check_type, item), (check_source, paramstring) in services.items():
@@ -583,14 +611,14 @@ def merge_manual_services(services, hostname):
     return services
 
 # Do the work for a cluster
-def get_cluster_services(hostname, use_caches, with_snmp_scan):
+def get_cluster_services(hostname, use_caches, with_snmp_scan, on_error):
     nodes = nodes_of(hostname)
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
     cluster_items = {}
     for node in nodes:
-        services = get_discovered_services(node, None, use_caches, with_snmp_scan)
+        services = get_discovered_services(node, None, use_caches, with_snmp_scan, on_error)
         for (check_type, item), (check_source, paramstring) in services.items():
             descr = service_description(check_type, item)
             if hostname == host_of_clustered_service(node, descr):
@@ -615,8 +643,8 @@ def get_cluster_services(hostname, use_caches, with_snmp_scan):
 
 # Get the list of service of a host or cluster and guess the current state of
 # all services if possible
-def get_check_preview(hostname, use_caches, do_snmp_scan):
-    services = get_host_services(hostname, use_caches, do_snmp_scan)
+def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
+    services = get_host_services(hostname, use_caches, do_snmp_scan, on_error)
     if is_cluster(hostname):
         ipaddress = None
     else:

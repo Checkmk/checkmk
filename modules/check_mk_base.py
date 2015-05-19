@@ -151,6 +151,12 @@ def vverbose(text):
 def bail_out(reason):
     raise MKBailOut(reason)
 
+def warning(reason):
+    stripped = reason.lstrip()
+    indent = reason[:len(reason) - len(stripped)]
+    sys.stderr.write("%s%s%sWARNING:%s %s\n" % (indent, tty_bold, tty_yellow, tty_normal, stripped))
+
+
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
 g_infocache                  = {} # In-memory cache of host info.
@@ -1397,53 +1403,10 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                 dont_submit = True
 
             except Exception, e:
-                text = "check failed - please submit a crash report!"
-                try:
-                    import pprint, tarfile, base64
-                    # Create a crash dump with a backtrace and the agent output.
-                    # This is put into a directory per service. The content is then
-                    # put into a tarball, base64 encoded and put into the long output
-                    # of the check :-)
-                    crash_dir = var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
-                    if not os.path.exists(crash_dir):
-                        os.makedirs(crash_dir)
-                    file(crash_dir + "/trace", "w").write(
-                       (
-                       "  Check output:     %s\n"
-                       "  Check_MK Version: %s\n"
-                       "  Date:             %s\n"
-                       "  Host:             %s\n"
-                       "  Service:          %s\n"
-                       "  Check type:       %s\n"
-                       "  Item:             %r\n"
-                       "  Parameters:       %s\n"
-                       "  %s\n") % (
-                                    text,
-                                    check_mk_version,
-                                    time.strftime("%Y-%d-%m %H:%M:%S"),
-                                    hostname,
-                                    description,
-                                    checkname,
-                                    item,
-                                    pprint.pformat(params),
-                                    traceback.format_exc().replace('\n', '\n      ')))
-                    file(crash_dir + "/info", "w").write(repr(info) + "\n")
-                    cachefile = tcp_cache_dir + "/" + hostname
-                    if os.path.exists(cachefile):
-                        file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
-                    elif os.path.exists(crash_dir + "/agent_output"):
-                        os.remove(crash_dir + "/agent_output")
-
-                    tarcontent = os.popen("tar czf - -C %s ." % quote_shell_string(crash_dir)).read()
-                    encoded = base64.b64encode(tarcontent)
-                    text += "\n" + "Crash dump:\n" + encoded + "\n"
-                except:
-                    pass
-
-                result = 3, text
-
+                result = 3, create_crash_dump(hostname, checkname, item, params, description, info)
                 if opt_debug:
                     raise
+
             if not dont_submit:
                 # Now add information about the age of the data in the agent
                 # sections. This is in g_agent_cache_info. For clusters we
@@ -1477,6 +1440,53 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     error_sections = list(error_sections)
     error_sections.sort()
     return agent_version, num_success, error_sections, ", ".join(problems)
+
+def create_crash_dump(hostname, check_name, item, params, description, info):
+    text = "check failed - please submit a crash report!"
+    try:
+        import pprint, tarfile, base64
+        # Create a crash dump with a backtrace and the agent output.
+        # This is put into a directory per service. The content is then
+        # put into a tarball, base64 encoded and put into the long output
+        # of the check :-)
+        crash_dir = var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
+        if not os.path.exists(crash_dir):
+            os.makedirs(crash_dir)
+        file(crash_dir + "/trace", "w").write(
+           (
+           "  Check output:     %s\n"
+           "  Check_MK Version: %s\n"
+           "  Date:             %s\n"
+           "  Host:             %s\n"
+           "  Service:          %s\n"
+           "  Check type:       %s\n"
+           "  Item:             %r\n"
+           "  Parameters:       %s\n"
+           "  %s\n") % (
+                        text,
+                        check_mk_version,
+                        time.strftime("%Y-%d-%m %H:%M:%S"),
+                        hostname,
+                        description,
+                        check_name,
+                        item,
+                        pprint.pformat(params),
+                        traceback.format_exc().replace('\n', '\n      ')))
+        file(crash_dir + "/info", "w").write(repr(info) + "\n")
+        cachefile = tcp_cache_dir + "/" + hostname
+        if os.path.exists(cachefile):
+            file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
+        elif os.path.exists(crash_dir + "/agent_output"):
+            os.remove(crash_dir + "/agent_output")
+
+        tarcontent = os.popen("tar czf - -C %s ." % quote_shell_string(crash_dir)).read()
+        encoded = base64.b64encode(tarcontent)
+        text += "\n" + "Crash dump:\n" + encoded + "\n"
+    except:
+        if opt_debug:
+            raise
+
+    return text
 
 
 def check_unimplemented(checkname, params, info):

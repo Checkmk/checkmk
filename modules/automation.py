@@ -111,6 +111,14 @@ def do_automation(cmd, args):
 # "refresh" - drop all services and reinventorize
 def automation_discovery(args):
 
+    # Error sensivity
+    if args[0] == "@raiseerrors":
+        args = args[1:]
+        on_error = "raise"
+        os.dup2(os.open("/dev/null", os.O_WRONLY), 2)
+    else:
+        on_error = "ignore"
+
     # perform full SNMP scan on SNMP devices?
     if args[0] == "@scan":
         do_snmp_scan = True
@@ -144,7 +152,8 @@ def automation_discovery(args):
                 counts[hostname][1] += remove_autochecks_of(hostname) # this is cluster-aware!
 
             # Compute current state of new and existing checks
-            services = get_host_services(hostname, use_caches=use_caches, do_snmp_scan=do_snmp_scan)
+            services = get_host_services(hostname, use_caches=use_caches,
+                                         do_snmp_scan=do_snmp_scan, on_error=on_error)
 
             # Create new list of checks
             new_items = {}
@@ -205,6 +214,12 @@ def automation_try_discovery(args):
         do_snmp_scan = True
         use_caches = False
 
+    if args[0] == '@raiseerrors':
+        on_error = "raise"
+        args = args[1:]
+    else:
+        on_error = "ignore"
+
     # TODO: Remove this unlucky option opt_use_cachefile. At least do not
     # handle this option so deep in the code. It should only be handled
     # by top-level functions.
@@ -213,7 +228,8 @@ def automation_try_discovery(args):
     if use_caches:
         check_max_cachefile_age = inventory_max_cachefile_age
     hostname = args[0]
-    table = get_check_preview(hostname, use_caches=use_caches, do_snmp_scan=do_snmp_scan)
+    table = get_check_preview(hostname, use_caches=use_caches,
+                              do_snmp_scan=do_snmp_scan, on_error=on_error)
     return table
 
 

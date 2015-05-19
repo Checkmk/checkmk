@@ -1,0 +1,43 @@
+Title: More transparently show errors during service discovery
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432050571
+Class: feature
+
+Checks might run into problems parsing the output of an agent plugin. When
+this happens during a normal check, you will soon know this as the according
+service goes <i>UNKNOWN</i> and you will be able to create a crash dump.
+
+Errors in single check plugins during service discovery, however, have been
+silently ignored unless you used <tt>--debug</tt> on the command line. This
+behaviour has been changed in the following way:
+
+H2:<tt>cmk -I</tt> on the command line
+
+Now for each files plugin a warning is being printed, but the discovery
+continues. <tt>--debug</tt> will let the Python exception come through
+and abort the discovery with a precise error message - just as it used
+to be.
+
+H2:Check_MK Discovery service
+
+The discovery check now in case of an error during the discovery goes
+to <i>UNKNOWN</i> and produces a crash dump - just as normal checks do.
+That way you can easily send us a crash report in case of any error.
+Previously error would be ignored silently.
+
+H2:Service list in WATO
+
+In WATO the list of a host's services will display a yellow error
+message if one of the plugins fails. This messages has a link for
+retrying the discovery without the error message and that way switch
+back to the old behaviours (temporarliy).
+
+H2:Bulk discovery in WATO
+
+The bulk discovery keeps to the old behaviour of silently ignoring
+errors but has got a new checkbox for letting a host fail if at
+least one check plugin of the host runs into an error. The default
+setting of the checkbox is to ignore errors.

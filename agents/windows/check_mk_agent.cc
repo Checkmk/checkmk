@@ -285,6 +285,7 @@ script_async_execution g_default_script_async_execution = SEQUENTIAL;
 bool verbose_mode               = false;
 bool g_crash_debug              = false;
 bool do_tcp                     = false;
+bool with_stderr                = false;
 bool force_tcp_output           = false; // if true, send socket data immediately
 bool do_file                    = false;
 static FILE* fileout;
@@ -2836,8 +2837,10 @@ int launch_program(script_container* cont)
     STARTUPINFO si;
     SECURITY_ATTRIBUTES sa;
     SECURITY_DESCRIPTOR sd;   // security information for pipes
+
     PROCESS_INFORMATION pi;
-    HANDLE newstdout,read_stdout;  // pipe handles
+    HANDLE script_stdout,read_stdout;  // pipe handles
+    HANDLE script_stderr,read_stderr;
 
     // initialize security descriptor (Windows NT)
     if (IsWinNT())
@@ -2848,35 +2851,36 @@ int launch_program(script_container* cont)
     }
     else
         sa.lpSecurityDescriptor = NULL;
+
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.bInheritHandle = true;                       // allow inheritable handles
 
-    if (!CreatePipe(&read_stdout,&newstdout,&sa,0)) // create stdout pipe
-    {
+    if (!CreatePipe(&read_stdout,&script_stdout,&sa,0)) // create stdout pipe
         return 1;
-    }
+
+    if (!CreatePipe(&read_stderr,&script_stderr,&sa,0)) // create stderr pipe
+        return 1;
 
     //set startupinfo for the spawned process
     GetStartupInfo(&si);
     si.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
-    si.hStdOutput = newstdout;
+    si.hStdOutput = script_stdout;
 
-
-    // Redirect sterr to NUL device
-    SECURITY_ATTRIBUTES secattr;
-    secattr.nLength = sizeof secattr;
-    secattr.lpSecurityDescriptor = NULL;
-    secattr.bInheritHandle = TRUE;
-    HANDLE hnul = CreateFile("NUL", GENERIC_WRITE, 0, &secattr, OPEN_EXISTING, 0, NULL);
-    si.hStdError = hnul;
+    if (with_stderr)
+        si.hStdError = script_stdout;
+    else
+        si.hStdError = script_stderr;
 
     // spawn the child process
     if (!CreateProcess(NULL,cont->path,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
                 NULL,NULL,&si,&pi))
     {
-        CloseHandle(newstdout);
+        CloseHandle(script_stdout);
         CloseHandle(read_stdout);
+
+        CloseHandle(script_stderr);
+        CloseHandle(read_stderr);
         return 1;
     }
 
@@ -2903,9 +2907,18 @@ int launch_program(script_container* cont)
             exit_code = 2;
             break;
         }
+
         GetExitCodeProcess(pi.hProcess, &exit);      // while the process is running
         while (!buffer_full) {
+            if (!with_stderr) {
+                PeekNamedPipe(read_stderr, buf, sizeof(buf), &bread, &avail, NULL);
+                if (avail > 0)
+                    // Just read from the pipe, we do not use this data
+                    ReadFile(read_stderr, buf, sizeof(buf) - 1, &bread, NULL);
+            }
+
             PeekNamedPipe(read_stdout, buf, sizeof(buf), &bread, &avail, NULL);
+
             if (avail == 0)
                 break;
 
@@ -2948,9 +2961,11 @@ int launch_program(script_container* cont)
     CloseHandle(cont->job_object);
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
-    CloseHandle(newstdout);
+    CloseHandle(script_stdout);
     CloseHandle(read_stdout);
-    CloseHandle(hnul);
+    CloseHandle(script_stderr);
+    CloseHandle(read_stderr);
+
     return exit_code;
 }
 
@@ -4603,9 +4618,10 @@ void do_debug()
 }
 
 
-void do_test()
+void do_test(bool output_stderr)
 {
-    do_tcp = false;
+    do_tcp  = false;
+    with_stderr = output_stderr;
     SOCKET dummy;
     open_crash_log();
     crash_log("Started in test mode.");
@@ -5091,7 +5107,7 @@ int main(int argc, char **argv)
     else if (argc <= 1)
         RunService();
     else if (!strcmp(argv[1], "test"))
-        do_test();
+        do_test(true);
     else if (!strcmp(argv[1], "file")) {
         if (argc < 3) {
             fprintf(stderr, "Please specify the name of an output file.\n");
@@ -5103,7 +5119,7 @@ int main(int argc, char **argv)
             exit(1);
         }
         do_file = true;
-        do_test();
+        do_test(false);
         fclose(fileout);
     }
     else if (!strcmp(argv[1], "adhoc"))

@@ -1,0 +1,14 @@
+Title: windows agent: "check_mk_agent.exe test" now also outputs stderr of plugins
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432024643
+Class: feature
+
+If you need stdout only simply use <tt>check_mk_agent.exe file myfile</tt>.
+
+This feature also includes a small fix. If a plugin script wrote something to
+stderr there was a possibility that the following stdout information was skipped.
+This bug was only observed on a Win2k3 system.
+

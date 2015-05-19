@@ -74,6 +74,20 @@
               Impersonate="no"
               Return     ="ignore"/>
 
+        <CustomAction Id="create_custom_folders"
+              Directory  ="INSTALLDIR"
+              ExeCommand ='"[SystemFolder]\Cmd.exe" /c mkdir "[INSTALLDIR]state" "[INSTALLDIR]config" "[INSTALLDIR]log" "[INSTALLDIR]temp" "[INSTALLDIR]spool"'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
+
+        <CustomAction Id="remove_custom_folders"
+              Directory  ="INSTALLDIR"
+              ExeCommand ='"[SystemFolder]\Cmd.exe" /c rmdir /s /q "[INSTALLDIR]state" "[INSTALLDIR]config" "[INSTALLDIR]log" "[INSTALLDIR]temp" "[INSTALLDIR]spool"'
+              Execute    ="deferred"
+              Impersonate="no"
+              Return     ="ignore"/>
+
         <CustomAction Id="uninstall_plugins"
               Directory  ="INSTALLDIR"
               ExeCommand ='[INSTALLDIR]uninstall_plugins.bat'
@@ -96,14 +110,16 @@
               Return     ="ignore"/>
 
         <InstallExecuteSequence>
-            <Custom Action="install_service" Before="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
-            <Custom Action="start_service"   Before="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
+            <Custom Action="create_custom_folders" Sequence="6588" >NOT REMOVE="ALL"</Custom>
+            <Custom Action="install_service"       Sequence="6589" >NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
+            <Custom Action="start_service"         Sequence="6599" >NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
         </InstallExecuteSequence>
 
         <InstallExecuteSequence>
-           <Custom Action="stop_service"      After="InstallInitialize">REMOVE="ALL"</Custom>
-           <Custom Action='uninstall_service' After='InstallInitialize'>REMOVE="ALL"</Custom>
-           <Custom Action='uninstall_plugins' After='InstallInitialize'>REMOVE="ALL"</Custom>
+           <Custom Action="stop_service"          Sequence="1501" >REMOVE="ALL"</Custom>
+           <Custom Action='uninstall_service'     Sequence="1502" >REMOVE="ALL"</Custom>
+           <Custom Action='uninstall_plugins'     Sequence="1503" >REMOVE="ALL"</Custom>
+           <Custom Action='remove_custom_folders' Sequence="1504" >(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
         </InstallExecuteSequence>
 
         <DirectoryRef Id="INSTALLDIR">

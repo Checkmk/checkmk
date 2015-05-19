@@ -300,8 +300,6 @@ register_check_parameters(
 #   |    | |___| | | \ V /| | | | (_) | | | | | | | | |  __/ | | | |_      |
 #   |    |_____|_| |_|\_/ |_|_|  \___/|_| |_|_| |_| |_|\___|_| |_|\__|     |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 register_check_parameters(
@@ -7737,6 +7735,13 @@ def ps_convert_from_singlekeys(old_params):
                 del params[key]
     return params
 
+def ps_convert_inventorized_from_singlekeys(old_params):
+    params = ps_convert_from_singlekeys(old_params)
+    if 'user' in params:
+        del params['user']
+    if 'process' in params:
+        del params['process']
+    return params
 
 # Rule for disovered process checks
 register_check_parameters(
@@ -7752,7 +7757,7 @@ register_check_parameters(
                 ))
             ]
         ),
-        forth = ps_convert_from_singlekeys,
+        forth = ps_convert_inventorized_from_singlekeys,
     ),
     TextAscii(
         title = _("Process name as defined at discovery"),

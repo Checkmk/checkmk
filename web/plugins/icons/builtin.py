@@ -423,7 +423,7 @@ def paint_notes(what, row, tags, host_custom_vars):
         if notes_url:
             return 'notes', _('Custom Notes'), notes_url
 
-multisite_icons_and_actions['logwatch'] = {
+multisite_icons_and_actions['notes'] = {
     'columns':         [ 'notes_url_expanded', 'check_command' ],
     'paint':           paint_notes,
 }

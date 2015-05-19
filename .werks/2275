@@ -1,0 +1,34 @@
+Title: windows agent: new subfolders, improved folder cleanup during uninstall
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i1
+Date: 1432042915
+Class: feature
+
+The windows agent now comes with the following folders
+
+<table>
+<tr><th>Folder</th><th>Description</th></tr>
+<tr><td>local</td>local scripts<td></td></tr>
+<tr><td>plugins</td>plugin scripts<td></td></tr>
+<tr><td>config</td><td>configuration files for scripts</td></tr>
+<tr><td>state</td><td>state files for scripts and the agent, e.g. logwatch state</td></tr>
+<tr><td>spool</td><td>spoolfiles from other applications</td>/tr>
+<tr><td>log</td>logfiles from scripts and the agent<td></td></tr>
+<tr><td>temp</td>working directory for scripts<td></td></tr>
+</table>
+
+When you update the agent to a newer version, the content of this folders will not get deleted.
+Only during the uninstall everything is cleaned up, with two exceptions.
+Self-written scripts in the <i>local</i> and <i>plugin</i> folders are not automatically
+deleted during uninstall. These files will linger around till you remove them manually.
+
+
+The incompatible part of this werk is the changed location of the state files for the
+logwatch and logfiles checks. These files were located in the agent directory, now they
+are located in the subdirectory <i>state</i>. As a result, if you start the new agent there
+will be no known last offsets of the logwatch and the eventlog monitoring. In this scenario
+the agent will start at the end.
+If you want to start at the old offsets, you need to copy the files <i>logstate.txt</i> and
+<i>eventstate.txt</i> into the <i>state</i> directory.

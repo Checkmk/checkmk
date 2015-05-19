@@ -1,0 +1,13 @@
+Title: WATO check group cpu_load cannot parse default levels of cpu.loads checks
+Component: checks
+State: open
+Date: 2015-05-19 17:20:10
+Targetversion: 1.2.6
+Class: bug
+
+If you enabled the display of the check parameters in the WATO services
+view then an error is being displayed:
+
+Invalid check parameter: The data type of the value does not match any
+of the allowed alternatives.! The parameter is: (5, 10) The varname is:
+checkgroup_parameters:cpu_load

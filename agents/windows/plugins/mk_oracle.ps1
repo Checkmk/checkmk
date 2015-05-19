@@ -127,8 +127,14 @@ Param(
      }
 }
 
+# filename for timestamp
+$MK_CONFDIR = $env:MK_CONFDIR
 
-$MK_CONFDIR="C:\Program Files (x86)\check_mk"
+# Fallback if the (old) agent does not provide the MK_CONFDIR
+if (!$MK_CONFDIR) {
+    $MK_CONFDIR= "c:\Program Files (x86)\check_mk\config"
+}
+
 # Source the optional configuration file for this agent plugin
 $CONFIG_FILE="${MK_CONFDIR}\mk_oracle_cfg.ps1"
 if (test-path -path "${CONFIG_FILE}" ) {

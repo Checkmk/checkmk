@@ -10,14 +10,14 @@ $name = (Get-Item env:\Computername).Value
 $separator = "|"
 # filename for timestamp
 $remote_host = $env:REMOTE_HOST
-$agent_dir   = $env:MK_CONFDIR
+$state_dir   = $env:MK_STATEDIR
 
-# Fallback if the (old) agent does not provide the MK_CONFDIR
-if (!$agent_dir) {
-    $agent_dir = "c:\Program Files (x86)\check_mk"
+# Fallback if the (old) agent does not provide the MK_STATEDIR
+if (!$state_dir) {
+    $state_dir = "c:\Program Files (x86)\check_mk\state"
 }
 
-$timestamp = $agent_dir + "\timestamp."+ $remote_host
+$timestamp = $state_dir + "\timestamp."+ $remote_host
 
 # does $timestamp exist?
 If (Test-Path $timestamp){

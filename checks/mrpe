@@ -59,7 +59,7 @@ def check_mrpe(item, params, info):
         if line[0] == item:
             try:
                 state = int(line[1])
-            else:
+            except:
                 state = None
 
             # convert to original format by joining and replacing \1 back with \n

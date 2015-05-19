@@ -6529,6 +6529,13 @@ def ps_convert_from_singlekeys(old_params):
                 del params[key]
     return params
 
+def ps_convert_inventorized_from_singlekeys(old_params):
+    params = ps_convert_from_singlekeys(old_params)
+    if 'user' in params:
+        del params['user']
+    if 'process' in params:
+        del params['process']
+    return params
 
 # Rule for disovered process checks
 register_check_parameters(
@@ -6539,7 +6546,7 @@ register_check_parameters(
         Dictionary(
             elements = process_level_elements,
         ),
-        forth = ps_convert_from_singlekeys,
+        forth = ps_convert_inventorized_from_singlekeys,
     ),
     TextAscii(
         title = _("Process name as defined at discovery"),

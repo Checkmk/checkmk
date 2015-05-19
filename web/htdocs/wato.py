@@ -3286,6 +3286,7 @@ def show_service_table(host, firsttime):
                     except Exception, e:
                         paramtext = _("Invalid check parameter: %s!") % e
                         paramtext += _(" The parameter is: %r") % (params,)
+                        paramtext += _(" The varname is: %s") % varname
 
                     html.write(paramtext)
 

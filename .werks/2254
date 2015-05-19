@@ -1,0 +1,12 @@
+Title: Fixed error message in parameter columns of discovered services
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6p4
+Date: 1432028372
+Class: fix
+
+All discovered services were showing up the "Invalid check parameter" error message
+in the "check parameters" column of the service discovery table of a host.
+This error was simply a problem of visualisation in this table and had no other
+negative effect, the checks worked without a problem.

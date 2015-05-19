@@ -285,6 +285,7 @@ script_async_execution g_default_script_async_execution = SEQUENTIAL;
 bool verbose_mode               = false;
 bool g_crash_debug              = false;
 bool do_tcp                     = false;
+bool with_stderr                = false;
 bool force_tcp_output           = false; // if true, send socket data immediately
 bool do_file                    = false;
 static FILE* fileout;
@@ -2869,7 +2870,11 @@ int launch_program(script_container* cont)
     secattr.lpSecurityDescriptor = NULL;
     secattr.bInheritHandle = TRUE;
     HANDLE hnul = CreateFile("NUL", GENERIC_WRITE, 0, &secattr, OPEN_EXISTING, 0, NULL);
-    si.hStdError = hnul;
+
+    if (with_stderr)
+        si.hStdError = newstdout;
+    else
+        si.hStdError = hnul;
 
     // spawn the child process
     if (!CreateProcess(NULL,cont->path,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
@@ -2950,7 +2955,9 @@ int launch_program(script_container* cont)
     CloseHandle(pi.hProcess);
     CloseHandle(newstdout);
     CloseHandle(read_stdout);
-    CloseHandle(hnul);
+    if (!with_stderr)
+        CloseHandle(hnul);
+
     return exit_code;
 }
 
@@ -4603,9 +4610,10 @@ void do_debug()
 }
 
 
-void do_test()
+void do_test(bool output_stderr)
 {
-    do_tcp = false;
+    do_tcp  = false;
+    with_stderr = output_stderr;
     SOCKET dummy;
     open_crash_log();
     crash_log("Started in test mode.");
@@ -5091,7 +5099,7 @@ int main(int argc, char **argv)
     else if (argc <= 1)
         RunService();
     else if (!strcmp(argv[1], "test"))
-        do_test();
+        do_test(true);
     else if (!strcmp(argv[1], "file")) {
         if (argc < 3) {
             fprintf(stderr, "Please specify the name of an output file.\n");
@@ -5103,7 +5111,7 @@ int main(int argc, char **argv)
             exit(1);
         }
         do_file = true;
-        do_test();
+        do_test(false);
         fclose(fileout);
     }
     else if (!strcmp(argv[1], "adhoc"))

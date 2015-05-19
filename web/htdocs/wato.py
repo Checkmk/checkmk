@@ -8339,7 +8339,7 @@ def vs_notification_rule(userid = None):
         ]
 
     return Dictionary(
-        title = _("Rule Properties"),
+        title = _("General Properties"),
         elements = rule_option_elements()
         + section_override +
         [
@@ -8378,6 +8378,13 @@ def vs_notification_rule(userid = None):
                   orientation = "horizontal",
               )
             ),
+            ( "match_servicegroups",
+              GroupChoice("service",
+                  title = _("Match Service Groups"),
+                  help = _("The service must be in one of the selected service groups"),
+                  allow_empty = False,
+              )
+            ),
             ( "match_services",
               ListOfStrings(
                   title = _("Match only the following services"),
@@ -8390,12 +8397,26 @@ def vs_notification_rule(userid = None):
                   empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
               )
             ),
-            ( "match_servicegroups",
-              GroupChoice("service",
-                  title = _("Match Service Groups"),
-                  help = _("The service must be in one of the selected service groups"),
-                  allow_empty = False,
+            ( "match_exclude_services",
+              ListOfStrings(
+                  title = _("Exclude the following services"),
+                  valuespec = TextUnicode(size = 32),
+                  orientation = "horizontal",
               )
+            ),
+            ( "match_checktype",
+              CheckTypeSelection(
+                  title = _("Match the following check types"),
+                  help = _("Only apply the rule if the notification originates from certain types of check plugins. "
+                           "Note: Host notifications never match this rule if this option is being used."),
+              )
+            ),
+            ( "match_plugin_output",
+              RegExp(
+                 title = _("Match the output of the check plugin"),
+                 help = _("This text is a regular expression that is being searched in the output "
+                          "of the check plugins that produced the alert. It is not a prefix but an infix match."),
+              ),
             ),
             ( "match_contacts",
               ListOf(
@@ -8409,31 +8430,10 @@ def vs_notification_rule(userid = None):
             ),
             ( "match_contactgroups",
               GroupChoice("contact",
-                  title = _("Match Contact Groups (CMC only)"),
+                  title = _("Match Contact Groups"),
                   help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
                            "If you don't use the CMC that filter will not apply"),
                   allow_empty = False,
-              )
-            ),
-            ( "match_exclude_services",
-              ListOfStrings(
-                  title = _("Do <b>not</b> match the following services"),
-                  valuespec = TextUnicode(size = 32),
-                  orientation = "horizontal",
-              )
-            ),
-            ( "match_plugin_output",
-              RegExp(
-                 title = _("Match the output of the check plugin"),
-                 help = _("This text is a regular expression that is being searched in the output "
-                          "of the check plugins that produced the alert. It is not a prefix but an infix match."),
-              ),
-            ),
-            ( "match_checktype",
-              CheckTypeSelection(
-                  title = _("Match the following check types"),
-                  help = _("Only apply the rule if the notification originates from certain types of check plugins. "
-                           "Note: Host notifications never match this rule if this option is being used."),
               )
             ),
             ( "match_timeperiod",
@@ -8689,20 +8689,24 @@ def vs_notification_rule(userid = None):
 
         ],
         optional_keys = [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                          "match_services", "match_servicegroups", "match_contacts", "match_contactgroups",
-                          "match_exclude_services", "match_plugin_output",
+                          "match_servicegroups", "match_services", "match_exclude_services",
+                          "match_contacts", "match_contactgroups",
+                          "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
                           "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails", "contact_match_macros" ],
         headers = [
-            ( _("Rule Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
+            ( _("General Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
             + contact_headers
             + [
-            ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                                         "match_services", "match_servicegroups", "match_contacts", "match_contactgroups",
-                                         "match_exclude_services", "match_plugin_output",
-                                         "match_checktype", "match_timeperiod",
+            ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hostgroups",
+                                         "match_hosts", "match_exclude_hosts",
+                                         "match_servicegroups", "match_services", "match_exclude_services",
+                                         "match_checktype",
+                                         "match_contacts", "match_contactgroups",
+                                         "match_plugin_output",
+                                         "match_timeperiod",
                                          "match_escalation", "match_escalation_throttle",
                                          "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment" ] ),
         ],
@@ -17273,7 +17277,7 @@ def mode_bi_edit_rule(phase):
         )] + elements
 
     vs_rule = Dictionary(
-        title = _("Rule Properties"),
+        title = _("General Properties"),
         optional_keys = False,
         render = "form",
         elements = elements,

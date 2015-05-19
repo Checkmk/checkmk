@@ -350,7 +350,13 @@ char g_agent_directory[256];
 char g_current_directory[256];
 char g_plugins_dir[256];
 char g_local_dir[256];
+
+char g_state_dir[256];
+char g_config_dir[256];
+char g_temp_dir[256];
+char g_log_dir[256];
 char g_spool_dir[256];
+
 char g_config_file[256];
 char g_crash_log[256];
 char g_connection_log[256];
@@ -3417,6 +3423,10 @@ void section_check_mk(SOCKET &out)
     output(out, "ConfigFile: %s\n",       g_config_file);
     output(out, "AgentDirectory: %s\n",   g_agent_directory);
     output(out, "PluginsDirectory: %s\n", g_plugins_dir);
+    output(out, "StateDirectory: %s\n",   g_state_dir);
+    output(out, "ConfigDirectory: %s\n",  g_config_dir);
+    output(out, "TempDirectory: %s\n",    g_temp_dir);
+    output(out, "LogDirectory: %s\n",     g_log_dir);
     output(out, "SpoolDirectory: %s\n",   g_spool_dir);
     output(out, "LocalDirectory: %s\n",   g_local_dir);
     output(out, "ScriptStatistics: Plugin C:%d E:%d T:%d "
@@ -3631,6 +3641,27 @@ void do_remove()
     UninstallService();
 }
 
+// DEBUGGING
+std::string get_last_error_as_string()
+{
+    //Get the error message, if any.
+    DWORD errorMessageID = ::GetLastError();
+    if(errorMessageID == 0)
+        return "No error message has been recorded";
+
+    LPSTR messageBuffer = NULL;
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+    std::string message(messageBuffer, size);
+
+    //Free the buffer.
+    LocalFree(messageBuffer);
+
+    return message;
+}
+
+
 // .-----------------------------------------------------------------------.
 // |       ____               _       ____       _                         |
 // |      / ___|_ __ __ _ ___| |__   |  _ \  ___| |__  _   _  __ _         |
@@ -3646,9 +3677,9 @@ void open_crash_log()
 
     if (g_crash_debug) {
         WaitForSingleObject(crashlogMutex, INFINITE);
-        snprintf(g_crash_log, sizeof(g_crash_log), "%s\\crash.log", g_agent_directory);
-        snprintf(g_connection_log, sizeof(g_connection_log), "%s\\connection.log", g_agent_directory);
-        snprintf(g_success_log, sizeof(g_success_log), "%s\\success.log", g_agent_directory);
+        snprintf(g_crash_log, sizeof(g_crash_log), "%s\\crash.log", g_log_dir);
+        snprintf(g_connection_log, sizeof(g_connection_log), "%s\\connection.log", g_log_dir);
+        snprintf(g_success_log, sizeof(g_success_log), "%s\\success.log", g_log_dir);
 
         // rename left over log if exists (means crash found)
         if (0 == stat(g_connection_log, &buf)) {
@@ -3657,13 +3688,13 @@ void open_crash_log()
             char rotate_path_to[256];
             for (int i=9; i>=1; i--) {
                 snprintf(rotate_path_to, sizeof(rotate_path_to),
-                        "%s\\crash-%d.log", g_agent_directory, i);
+                        "%s\\crash-%d.log", g_log_dir, i);
                 if (i>1)
                     snprintf(rotate_path_from, sizeof(rotate_path_from),
-                            "%s\\crash-%d.log", g_agent_directory, i-1);
+                            "%s\\crash-%d.log", g_log_dir, i-1);
                 else
                     snprintf(rotate_path_from, sizeof(rotate_path_from),
-                            "%s\\crash.log", g_agent_directory);
+                            "%s\\crash.log", g_log_dir);
                 unlink(rotate_path_to);
                 rename(rotate_path_from, rotate_path_to);
             }
@@ -4898,17 +4929,26 @@ void determine_directories(bool use_cwd)
     // Determine directories once and forever
     getcwd(g_current_directory, sizeof(g_current_directory));
     get_agent_dir(g_agent_directory, sizeof(g_agent_directory), use_cwd);
+
     snprintf(g_plugins_dir, sizeof(g_plugins_dir), "%s\\plugins", g_agent_directory);
-    snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
-    snprintf(g_spool_dir, sizeof(g_spool_dir), "%s\\spool", g_agent_directory);
-    snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt", g_agent_directory);
-    snprintf(g_eventlog_statefile, sizeof(g_eventlog_statefile), "%s\\eventstate.txt", g_agent_directory);
+    snprintf(g_config_dir,  sizeof(g_config_dir),  "%s\\config",  g_agent_directory);
+    snprintf(g_local_dir,   sizeof(g_local_dir),   "%s\\local",   g_agent_directory);
+    snprintf(g_spool_dir,   sizeof(g_spool_dir),   "%s\\spool",   g_agent_directory);
+    snprintf(g_state_dir,   sizeof(g_state_dir),   "%s\\state",   g_agent_directory);
+    snprintf(g_temp_dir,    sizeof(g_temp_dir),    "%s\\temp",    g_agent_directory);
+    snprintf(g_log_dir,     sizeof(g_log_dir),     "%s\\log",     g_agent_directory);
+
+    snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt",   g_state_dir);
+    snprintf(g_eventlog_statefile, sizeof(g_eventlog_statefile), "%s\\eventstate.txt", g_state_dir);
 
     // Set these directories as environment variables. Some scripts might use them...
-    SetEnvironmentVariable("PLUGINSDIR", g_plugins_dir);
-    SetEnvironmentVariable("LOCALDIR",   g_local_dir);
-    SetEnvironmentVariable("SPOOLDIR",   g_spool_dir);
-    SetEnvironmentVariable("MK_CONFDIR", g_agent_directory);
+    SetEnvironmentVariable("MK_PLUGINSDIR", g_plugins_dir);
+    SetEnvironmentVariable("MK_CONFDIR",    g_config_dir);
+    SetEnvironmentVariable("MK_LOCALDIR",   g_local_dir);
+    SetEnvironmentVariable("MK_SPOOLDIR",   g_spool_dir);
+    SetEnvironmentVariable("MK_STATEDIR",   g_state_dir);
+    SetEnvironmentVariable("MK_TEMPDIR",    g_temp_dir);
+    SetEnvironmentVariable("MK_LOGDIR",     g_log_dir);
 }
 
 int get_counter_id_from_lang(const char *language, const char *counter_name)
@@ -5075,6 +5115,7 @@ void do_unpack_plugins(char *plugin_filename) {
         free(content);
     }
 
+    fprintf(uninstall_file, "del \"%s\\uninstall_plugins.bat\"\n", g_agent_directory);
     fclose(uninstall_file);
     fclose(file);
 
@@ -5102,9 +5143,10 @@ int main(int argc, char **argv)
 
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);
 
-    if ( ( argc > 2) and  (strcmp(argv[1], "file") && strcmp(argv[1], "unpack")) )
+    if ((argc > 2) && (strcmp(argv[1], "file") && strcmp(argv[1], "unpack")))
         usage();
-    else if (argc <= 1)
+
+    if (argc <= 1)
         RunService();
     else if (!strcmp(argv[1], "test"))
         do_test(true);

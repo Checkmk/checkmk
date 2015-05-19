@@ -4,6 +4,7 @@
 
     WATO:
     * 2254 FIX: Fixed error message in parameter columns of discovered services...
+    * 2230 FIX: Fix two exceptions in case of errors during bulk discovery
 
 
 1.2.6p3:

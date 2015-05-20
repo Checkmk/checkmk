@@ -105,7 +105,7 @@ icom_ps_volt_default_levels = ( 13.5, 13.2, 14.1, 14.4 )
 
 def inventory_icom_repeater_ps_volt(parsed):
     if "ps_voltage" in parsed:
-        yield None, "icom_ps_volt_default_levels"
+        return [ (None, "icom_ps_volt_default_levels") ]
 
 
 def check_icom_repeater_ps_volt(_no_item, params, parsed):
@@ -149,10 +149,6 @@ check_info["icom_repeater.ps_volt"] = {
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-def inventory_icom_ps_volt(parsed):
-    if "ps_voltage" in parsed:
-        yield [ (None, "icom_ps_volt_default_levels") ]
 
 
 def inventory_icom_repeater_pll_volt(parsed):

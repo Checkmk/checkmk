@@ -1,0 +1,10 @@
+Title: printer_supply: move setting for "some remaining" status from global option to check parameters
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432121894
+Class: feature
+
+This is due to a cleanup and for making Check_MK more consitent. If you already have
+changed the global variable, your setting will still work.

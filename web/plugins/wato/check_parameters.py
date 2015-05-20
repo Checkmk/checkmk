@@ -3513,40 +3513,62 @@ register_check_parameters(
 )
 
 def transform_printer_supply(l):
-    if len(l) == 2:
-        return l[0], l[1], False
-    return l
+    if type(l) == tuple:
+        if len(l) == 2:
+            return { "levels" : l }
+        else:
+            return {
+                "levels" : l[:2],
+                "upturn_toner" : l[2],
+            }
+    else:
+        return l
 
 register_check_parameters(
     subgroup_printing,
     "printer_supply",
     _("Printer cartridge levels"),
     Transform(
-        Tuple(
+        Dictionary(
             elements = [
-                Percentage(
-                    title = _("Warning remaining"),
-                    allow_int = True,
-                    default_value = 20.0,
-                    help = _("For consumable supplies, this is configured as the percentage of "
-                             "remaining capacity. For supplies that fill up, this is configured "
-                             "as remaining space."),
-                ),
-                Percentage(
-                    title = _("Critical remaining"),
-                    allow_int = True,
-                    default_value = 10.0,
-                    help = _("For consumable supplies, this is configured as the percentage of "
-                             "remaining capacity. For supplies that fill up, this is configured "
-                             "as remaining space."),
-                ),
-                Checkbox(
-                    title = _("Upturn toner levels"),
-                    label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
-                    help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
-                              " fuel instead of what is left. In this case it's possible"
-                              " to upturn the levels to handle this behavior")
-                ),
+                ( "levels",
+                    Tuple(
+                        title = _("Levels for remaining supply"),
+                        elements = [
+                            Percentage(
+                                title = _("Warning level for remaining"),
+                                allow_int = True,
+                                default_value = 20.0,
+                                help = _("For consumable supplies, this is configured as the percentage of "
+                                         "remaining capacity. For supplies that fill up, this is configured "
+                                         "as remaining space."),
+                            ),
+                            Percentage(
+                                title = _("Critical level for remaining"),
+                                allow_int = True,
+                                default_value = 10.0,
+                                help = _("For consumable supplies, this is configured as the percentage of "
+                                         "remaining capacity. For supplies that fill up, this is configured "
+                                         "as remaining space."),
+                            ),
+                        ]
+                )),
+                ( "some_remaining",
+                   MonitoringState(
+                    title = _("State for <i>some remaining</i>"),
+                    help = _("Some printers do not report a precise percentage but "
+                             "just <i>some remaining</i> at a low fill state. Here you "
+                             "can set the monitoring state for that situation"),
+                    default_value = 1,
+                )),
+                ( "upturn_toner",
+                    Checkbox(
+                        title = _("Upturn toner levels"),
+                        label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
+                        help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                                  " fuel instead of what is left. In this case it's possible"
+                                  " to upturn the levels to handle this behavior"),
+                )),
             ]
         ),
         forth = transform_printer_supply,

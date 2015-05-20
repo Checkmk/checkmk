@@ -1,0 +1,15 @@
+Title: logwatch: Remove global setting logwatch_service_output from WATO
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432123043
+Class: feature
+
+This setting decides wether (default) or not to output the last critical
+found message in a logfile in the output of the check plugin of logwatch
+checks. You still can set this variable in <tt>main.mk</tt> if you like.
+Existing setting still work.
+
+This make Check_MK more consistent: there are no settings for checks
+in the global settings any more now.

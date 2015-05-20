@@ -1,0 +1,11 @@
+Title: win_dhcp_pools: Convert global option for discovery empty pools into rule set
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432130938
+Class: feature
+
+The selection wether empty DHCP should be discovered has now been moved into
+a rule set. If you had set the global option then it is still functioning
+and can be overridden on a per-host-basis with rules.

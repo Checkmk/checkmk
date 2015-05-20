@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
 # Example outputs from agent:
 #
 # <<<win_dhcp_pools>>>
@@ -62,6 +60,7 @@
 
 win_dhcp_pools_default_levels = (10, 5)
 win_dhcp_pools_inventorize_empty = False
+discovery_win_dhcp_pools = []
 
 win_dhcp_pools_stats_translate = {
     'Entdeckungen': 'Discovers',
@@ -82,6 +81,10 @@ def parse_win_dhcp_pools(info):
     return [ ' '.join(line).rstrip('.').split(' = ') for line in info ]
 
 def inventory_win_dhcp_pools(info):
+    settings = host_extra_conf_merged(g_hostname, discovery_win_dhcp_pools)
+    discover_empty = settings.get("empty_pools", win_dhcp_pools_inventorize_empty)
+    print discover_empty
+
     inventory = []
     in_block = False
     last_pool = ""
@@ -98,7 +101,7 @@ def inventory_win_dhcp_pools(info):
             in_block = False
             used, free, pending = pool_stats
             size = used + free + pending
-            if size > 0 or win_dhcp_pools_inventorize_empty:
+            if size > 0 or discover_empty:
                 inventory.append((last_pool, 'win_dhcp_pools_default_levels'))
     return inventory
 

@@ -1434,21 +1434,6 @@ register_configvar(group,
     ))
 
 
-# WAS IST DAS???
-register_configvar(group,
-    "win_dhcp_pools_inventorize_empty",
-    Checkbox(
-        title = _("Inventorize empty windows dhcp pools"),
-        help = _("You can activate the inventorization of "
-                 "dhcp pools, which have no ip addresses in it"),
-        ),
-    need_restart = True
-    )
-
-group = _("Check configuration")
-
-
-
 #.
 #   .--Rulesets------------------------------------------------------------.
 #   |                ____        _                _                        |

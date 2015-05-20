@@ -426,6 +426,22 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'all',
 )
 
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "discovery_win_dhcp_pools",
+    title     = _("Discovery of Windows DHCP Pools"),
+    valuespec = Dictionary(
+        elements = [
+          ( "empty_pools",
+             Checkbox(
+                 title = _("Discovery of empty DHCP pools"),
+                 label = _("Include empty pools into the monitoring"),
+                 help = _("You can activate the creation of services for "
+                          "DHCP pools, which contain no IP addresses."),
+          )),
+        ]
+    ),
+    match = 'dict',
+)
 
 
 register_rule(group + '/' + subgroup_inventory,

@@ -426,24 +426,7 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'all',
 )
 
-#duplicate: check_mk_configuration.py
-_if_portstate_choices = [
-                        ( '1', 'up(1)'),
-                        ( '2', 'down(2)'),
-                        ( '3', 'testing(3)'),
-                        ( '4', 'unknown(4)'),
-                        ( '5', 'dormant(5)') ,
-                        ( '6', 'notPresent(6)'),
-                        ( '7', 'lowerLayerDown(7)'),
-                        ( '8', 'degraded(8)'),
-                        ]
 
-#duplicate: check_mk_configuration.py
-_if_porttype_choices = [
-    (str(type_id), "%d - %s" % (type_id, type_name))
-    for (type_id, type_name)
-    in sorted(interface_port_types.items())
-]
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_if_rules",
@@ -474,6 +457,17 @@ register_rule(group + '/' + subgroup_inventory,
               orientation = "horizontal",
               valuespec = RegExp(size = 32),
         )),
+        ( "pad_portnumbers",
+          Checkbox(title = _("Pad port numbers with zeroes"),
+              label = _("pad port numbers"),
+              help = _("If this option is activated then Check_MK will pad port numbers of "
+                       "network interfaces with zeroes so that all port descriptions from "
+                       "all ports of a host or switch have the same length and thus sort "
+                       "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
+                       "padding. You can switch back to the old behaviour by disabling this "
+                       "option. This will retain the old service descriptions and the old "
+                       "performance data."),
+        )),
         ( "match_desc",
           ListOfStrings(
               title = _("Match interface description (regex)"),
@@ -488,7 +482,7 @@ register_rule(group + '/' + subgroup_inventory,
           ListChoice(title = _("Network interface port states to discover"),
               help = _("When doing discovery on switches or other devices with network interfaces "
                        "then only ports found in one of the configured port states will be added to the monitoring."),
-              choices = _if_portstate_choices,
+              choices = dict_choices(interface_oper_states),
               toggle_all = True,
               default_value = ['1'],
         )),
@@ -496,7 +490,7 @@ register_rule(group + '/' + subgroup_inventory,
           DualListChoice(title = _("Network interface port types to discover"),
               help = _("When doing discovery on switches or other devices with network interfaces "
                        "then only ports of the specified types will be created services for."),
-              choices = _if_porttype_choices,
+              choices = interface_port_type_choices,
               custom_order = True,
               rows = 40,
               toggle_all = True,
@@ -520,6 +514,39 @@ register_rule(group + '/' + subgroup_inventory,
     ),
     match = 'dict',
 )
+
+
+_brocade_fcport_adm_choices = [
+    ( 1, 'online(1)'),
+    ( 2, 'offline(2)'),
+    ( 3, 'testing(3)'),
+    ( 4, 'faulty(4)'),
+]
+
+_brocade_fcport_op_choices = [
+    ( 0, 'unkown(0)'),
+    ( 1, 'online(1)'),
+    ( 2, 'offline(2)'),
+    ( 3, 'testing(3)'),
+    ( 4, 'faulty(4)'),
+]
+
+_brocade_fcport_phy_choices = [
+    ( 1, 'noCard(1)'),
+    ( 2, 'noTransceiver(2)'),
+    ( 3, 'laserFault(3)'),
+    ( 4, 'noLight(4)'),
+    ( 5, 'noSync(5)'),
+    ( 6, 'inSync(6)'),
+    ( 7, 'portFault(7)'),
+    ( 8, 'diagFault(8)'),
+    ( 9, 'lockRef(9)'),
+    ( 10, 'validating(10)'),
+    ( 11, 'invalidModule(11)'),
+    ( 14, 'noSigDet(14)'),
+    ( 255, 'unkown(255)'),
+]
+
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "brocade_fcport_inventory",
@@ -2650,7 +2677,7 @@ register_check_parameters(
                 Optional(
                     ListChoice(
                         title = _("Allowed states:"),
-                        choices = _if_portstate_choices),
+                        choices = dict_choices(interface_oper_states)),
                     title = _("Operational State"),
                     help = _("Activating the monitoring of the operational state (opstate), "
                              "the check will get warning or critical of the current state "
@@ -5472,7 +5499,7 @@ register_rule(group + '/' + subgroup_networking,
                             ("iftype", Transform(
                                         DropdownChoice(
                                             title = _("Select interface port type"),
-                                            choices = _if_porttype_choices,
+                                            choices = interface_port_type_choices,
                                             help = _("Only interfaces with the given port type are put into this group. "
                                                      "For example 53 (propVirtual)."),
                                         ),

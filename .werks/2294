@@ -1,0 +1,12 @@
+Title: if, if64: Move global option for padding port numbers with zeroes into rule
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432124546
+Class: feature
+
+You now can configure wether port numbers should be padded with zero on a per
+host basis in the rule set <i>Network Interface and Switch Port Discovery</i>.
+The global option has been remove from WATO. Any setting you have made is
+still functioning, though.

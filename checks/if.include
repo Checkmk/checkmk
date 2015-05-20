@@ -104,12 +104,12 @@ def if_item_matches(item, ifIndex, ifAlias, ifDescr):
 
 # Pads port numbers with zeroes, so that items
 # nicely sort alphabetically
-def if_pad_with_zeroes(info, ifIndex, has_nodeinfo):
+def if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers):
     if has_nodeinfo:
         index = 1
     else:
         index = 0
-    if if_inventory_pad_portnumbers:
+    if pad_portnumbers:
         def get_index(line):
             if type(line[index]) == tuple:
                 return line[index][1]
@@ -215,6 +215,7 @@ def inventory_if_common(info, has_nodeinfo = False):
     portstates          = settings.get('portstates', if_inventory_portstates)
     match_alias         = settings.get('match_alias')
     match_desc          = settings.get('match_desc')
+    pad_portnumbers     = settings.get('pad_portnumbers', if_inventory_pad_portnumbers)
 
     def port_match(name, what):
         if what == None:
@@ -274,7 +275,7 @@ def inventory_if_common(info, has_nodeinfo = False):
         elif uses_alias and ifAlias:
             item = ifAlias
         else:
-            item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo)
+            item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
 
         # Prepare grouped interfaces
         is_only_in_group = False
@@ -373,7 +374,8 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             elif what == "alias":
                 return line[18 + node_offset]
             else: # index
-                return if_pad_with_zeroes(info, ifIndex, has_nodeinfo)
+                pad_portnumbers = item[0] == '0'
+                return if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
 
         for element in info:
             ifIndex = element[0 + node_offset]

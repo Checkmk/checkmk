@@ -830,6 +830,7 @@ interface_oper_states = {
     5: _("dormant"),
     6: _("not present"),
     7: _("lower layer down"),
+    8: _("degraded"),
 }
 
 interface_port_types = {
@@ -1066,8 +1067,9 @@ interface_port_types = {
 }
 
 # For usage in Dropdown choices an the like
-interface_port_type_choices = [
-    (str(type_id), "%d - %s" % (type_id, type_name))
-    for (type_id, type_name)
-    in sorted(interface_port_types.items())
-]
+def dict_choices(types):
+    return [ (str(type_id), "%d - %s" % (type_id, type_name))
+        for (type_id, type_name)
+        in sorted(types.items()) ]
+
+interface_port_type_choices = dict_choices(interface_port_types)

@@ -971,6 +971,10 @@ def show_view(view, show_heading = False, show_buttons = True,
     need_inventory_data = False
 
     # Prepare Filter headers for Livestatus
+    # TODO: When this is used by the reporting then *all* filters are
+    # active. That way the inventory data will always be loaded. When
+    # we convert this to the visuals principle the we need to optimize
+    # this.
     filterheaders = ""
     only_sites = None
     all_active_filters = [ f for f in use_filters if f.available() ]
@@ -1080,10 +1084,11 @@ def show_view(view, show_heading = False, show_buttons = True,
         if len(join_painters) > 0:
             do_table_join(datasource, rows, filterheaders, join_painters, join_columns, only_sites)
 
-        # Add inventory data if one of the painters needs it
+        # Add inventory data if one of the painters or filters needs it
         if need_inventory_data:
             for row in rows:
-                row["host_inventory"] = inventory.host(row["host_name"])
+                 if "host_name" in row:
+                     row["host_inventory"] = inventory.host(row["host_name"])
 
         sort_data(rows, sorters)
     else:

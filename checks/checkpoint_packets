@@ -38,11 +38,11 @@ factory_settings["checkpoint_packets_default_levels"] = {
 }
 
 def inventory_checkpoint_packets(info):
-    if len(info[0]) == 4:
-        return [ (None, "checkpoint_packets_default_levels" ) ]
+    if info:
+        return [ (None, {}) ]
 
-def check_checkpoint_packets(item, params, info):
-    if info and len(info[0]) == 4:
+def check_checkpoint_packets(_no_item, params, info):
+    if info:
         value = {}
         value["accepted"] = int(info[0][0])
         value["rejected"] = int(info[0][1])

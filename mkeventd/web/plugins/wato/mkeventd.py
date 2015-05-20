@@ -2081,6 +2081,7 @@ if mkeventd_enabled:
     register_configvar_domain("mkeventd", mkeventd_config_dir,
             pending = lambda msg: log_mkeventd('config-change', msg), in_global_settings = False)
     group = _("Event Console")
+    g_configvar_order[group] = 18
 
     register_configvar(group,
         "remote_status",
@@ -2458,7 +2459,7 @@ if mkeventd_enabled:
 # Settings that should also be avaiable on distributed Sites that
 # do not run an own eventd but want to query one or send notifications
 # to one.
-group = _("Notification")
+group = _("Notifications")
 register_configvar(group,
     "mkeventd_notify_contactgroup",
     GroupSelection(

@@ -37,6 +37,7 @@
 #   '----------------------------------------------------------------------'
 
 group = _("User Interface")
+g_configvar_order[group] = 20
 
 register_configvar(group,
     "debug",
@@ -610,6 +611,7 @@ register_configvar(group,
 #   '----------------------------------------------------------------------'
 
 group = _("Administration Tool (WATO)")
+g_configvar_order[group] = 25 
 
 register_configvar(group,
     "wato_max_snapshots",
@@ -723,6 +725,7 @@ register_configvar(group,
 #   '----------------------------------------------------------------------'
 
 group = _("User Management")
+g_configvar_order[group] = 40
 
 register_configvar(group,
     "user_connectors",
@@ -1187,7 +1190,8 @@ register_configvar(group,
 #   |  Operation mode of Check_MK                                          |
 #   '----------------------------------------------------------------------'
 
-group = _("Operation mode of Check_MK")
+group = _("Execution of checks")
+g_configvar_order[group] = 10
 
 
 register_configvar(group,
@@ -1308,19 +1312,6 @@ register_configvar(group,
     need_restart = True)
 
 
-register_configvar(group,
-    "check_submission",
-    DropdownChoice(
-        title = _("Check submission method"),
-        help = _("If you set this to <b>Nagios command pipe</b>, then Check_MK will write its "
-                  "check results into the Nagios command pipe. This is the classical way. "
-                  "Choosing <b>Create check files</b> "
-                  "skips one phase in the Nagios core and directly creates Nagios check files. "
-                  "This reduces the overhead but might not be compatible with other monitoring "
-                  "cores."),
-        choices = [ ("pipe", _("Nagios command pipe")),
-                     ("file", _("Create check files")) ]),
-    need_restart = True)
 
 register_configvar(group,
     "check_mk_perfdata_with_times",
@@ -1383,6 +1374,7 @@ register_configvar(group,
 )
 
 group = _("Service discovery")
+g_configvar_order[group] = 4
 
 register_configvar(group,
     "inventory_check_interval",

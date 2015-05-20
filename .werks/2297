@@ -1,0 +1,12 @@
+Title: Cleanup global settings, rename sections, remove obsolete settings
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432133360
+Class: feature
+
+The <i>Global Settings</i> of WATO have been cleaned up a bit. The sections
+have been renamed to be more self-explanatory. The order has been made more
+useful. And some useless settings have been removed (they still keep working
+if you have changed them from the defaults).

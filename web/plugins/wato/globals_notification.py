@@ -29,7 +29,8 @@
 # TODO: Remove all configuration for legacy-Email to deprecated, or completely
 # remove from WATO.
 
-group = _("Notification")
+group = _("Notifications")
+g_configvar_order[group] = 15
 
 register_configvar(group,
     "enable_rulebased_notifications",

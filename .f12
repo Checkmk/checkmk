@@ -12,9 +12,9 @@ sudo mv /tmp/check_mk_templates.cfg /omd/sites/$SITE/etc/nagios/conf.d
 
 for dir in doc web modules checks checkman mkeventd notifications agents livestatus pnp-templates
 do
-    echo "*******************************************************"
-    echo "VERZEICHNIS $dir **********************************"
-    echo "*******************************************************"
+    echo -e '\033[1;34m'
+    figlet "** $dir **"
+    echo -e '\033[0m'
     cd $dir
     if bash .f12 ; then
         echo "OK."

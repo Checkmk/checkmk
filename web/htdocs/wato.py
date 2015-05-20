@@ -7425,9 +7425,9 @@ def mode_globalvars(phase):
 
     if phase == "title":
         if search:
-            return _("Global configuration settings matching %s") % html.attrencode(search)
+            return _("Global Settings matching %s") % html.attrencode(search)
         else:
-            return _("Global configuration settings for Check_MK")
+            return _("Global Settings")
 
     elif phase == "buttons":
         global_buttons()
@@ -7458,10 +7458,6 @@ def mode_globalvars(phase):
                 c = True # no confirmation for direct toggle
 
             if c:
-                # if action == "reset":
-                #     del current_settings[varname]
-                #     msg = _("Resetted configuration variable %s to its default.") % varname
-                # else:
                 if varname in current_settings:
                     current_settings[varname] = not current_settings[varname]
                 else:
@@ -7489,7 +7485,7 @@ def mode_globalvars(phase):
 
 def render_global_configuration_variables(default_values, current_settings, show_all=False, search=None):
     groupnames = g_configvar_groups.keys()
-    groupnames.sort()
+    groupnames.sort(cmp=lambda a,b: cmp(g_configvar_order.get(a, 999), g_configvar_order.get(b, 999)))
 
     search_form(_("Search for settings:"))
 
@@ -18917,9 +18913,10 @@ def load_plugins():
 
     load_notification_table()
 
-    global g_configvars, g_configvar_groups
+    global g_configvars, g_configvar_groups, g_configvar_order
     g_configvars = {}
     g_configvar_groups = {}
+    g_configvar_order = {}
 
     global g_rulegroups, g_rulespecs, g_rulespec_group, g_rulespec_groups
     g_rulegroups = {}

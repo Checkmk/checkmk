@@ -1,3 +1,5 @@
+1.2.6p5:
+
 1.2.6p4:
     Checks & Agents:
     * 2274 windows agent: "check_mk_agent.exe test" now also outputs stderr of plugins...

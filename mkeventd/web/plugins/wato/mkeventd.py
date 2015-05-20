@@ -2424,7 +2424,7 @@ if mkeventd_enabled:
     )
 
     # A few settings for Multisite and WATO
-    register_configvar(_("Status GUI (Multisite)"),
+    register_configvar(_("User Interface"),
         "mkeventd_connect_timeout",
         Integer(
             title = _("Connect timeout to status socket of Event Console"),
@@ -2439,7 +2439,7 @@ if mkeventd_enabled:
         domain = "multisite",
     )
 
-    register_configvar(_("Configuration GUI (WATO)"),
+    register_configvar(_("Administration Tool (WATO)"),
         "mkeventd_pprint_rules",
         Checkbox(title = _("Pretty-Print rules in config file of Event Console"),
                  label = _("enable pretty-printing of rules"),

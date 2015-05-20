@@ -83,7 +83,6 @@ def parse_win_dhcp_pools(info):
 def inventory_win_dhcp_pools(info):
     settings = host_extra_conf_merged(g_hostname, discovery_win_dhcp_pools)
     discover_empty = settings.get("empty_pools", win_dhcp_pools_inventorize_empty)
-    print discover_empty
 
     inventory = []
     in_block = False

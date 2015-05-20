@@ -36,7 +36,7 @@
 #   | Global configuration settings for main.mk and multisite.mk           |
 #   '----------------------------------------------------------------------'
 
-group = _("Status GUI (Multisite)")
+group = _("User Interface")
 
 register_configvar(group,
     "debug",
@@ -609,7 +609,7 @@ register_configvar(group,
 #   | Global Configuration for WATO                                        |
 #   '----------------------------------------------------------------------'
 
-group = _("Configuration GUI (WATO)")
+group = _("Administration Tool (WATO)")
 
 register_configvar(group,
     "wato_max_snapshots",

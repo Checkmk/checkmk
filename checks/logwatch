@@ -35,6 +35,17 @@ logwatch_groups = []
 # Variables embedded in precompiled checks
 check_config_variables += [ "logwatch_dir", "logwatch_max_filesize", "logwatch_service_output" ]
 
+#   .--General-------------------------------------------------------------.
+#   |                   ____                           _                   |
+#   |                  / ___| ___ _ __   ___ _ __ __ _| |                  |
+#   |                 | |  _ / _ \ '_ \ / _ \ '__/ _` | |                  |
+#   |                 | |_| |  __/ | | |  __/ | | (_| | |                  |
+#   |                  \____|\___|_| |_|\___|_|  \__,_|_|                  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  General functions, for normal and forwarding logwatch check         |
+#   '----------------------------------------------------------------------'
+
 def logwatch_ec_forwarding_enabled(params, item):
     if 'restrict_logfiles' not in params:
         return True # matches all logs on this host
@@ -207,6 +218,18 @@ def logwatch_parse_line(line):
     else:
         text = ""
     return level, text
+
+#.
+#   .--Logwatch------------------------------------------------------------.
+#   |              _                           _       _                   |
+#   |             | | ___   __ ___      ____ _| |_ ___| |__                |
+#   |             | |/ _ \ / _` \ \ /\ / / _` | __/ __| '_ \               |
+#   |             | | (_) | (_| |\ V  V / (_| | || (__| | | |              |
+#   |             |_|\___/ \__, | \_/\_/ \__,_|\__\___|_| |_|              |
+#   |                      |___/                                           |
+#   +----------------------------------------------------------------------+
+#   |  Normal logwatch check                                               |
+#   '----------------------------------------------------------------------'
 
 # In case of a precompiled check, params contains the precompiled
 # logwatch_patterns for the logfile we deal with. If using check_mk
@@ -487,18 +510,17 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
         else:
             return (worst, "%s messages" % ', '.join(count_txt))
 
-#   .----------------------------------------------------------------------.
-#   |      _____ ____   _____ ___  ______        ___    ____  ____         |
-#   |     | ____/ ___| |  ___/ _ \|  _ \ \      / / \  |  _ \|  _ \        |
-#   |     |  _|| |     | |_ | | | | |_) \ \ /\ / / _ \ | |_) | | | |       |
-#   |     | |__| |___  |  _|| |_| |  _ < \ V  V / ___ \|  _ <| |_| |       |
-#   |     |_____\____| |_|   \___/|_| \_\ \_/\_/_/   \_\_| \_\____/        |
-#   |                                                                      |
+#.
+#   .--Event Console Forwarding--------------------------------------------.
+#   |        _                           _       _                         |
+#   |       | | ___   __ ___      ____ _| |_ ___| |__    ___  ___          |
+#   |       | |/ _ \ / _` \ \ /\ / / _` | __/ __| '_ \  / _ \/ __|         |
+#   |       | | (_) | (_| |\ V  V / (_| | || (__| | | ||  __/ (__          |
+#   |       |_|\___/ \__, | \_/\_/ \__,_|\__\___|_| |_(_)___|\___|         |
+#   |                |___/                                                 |
 #   +----------------------------------------------------------------------+
 #   | Forwarding logwatch messages to event console                        |
 #   '----------------------------------------------------------------------'
-
-import socket, time
 
 # OK      -> priority 5 (notice)
 # WARN    -> priority 4 (warning)

@@ -24,8 +24,41 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# <<<acme_sbc>>>
+# show health
+#         Media Synchronized            true
+#         SIP Synchronized              true
+#         BGF Synchronized              disabled
+#         MGCP Synchronized             disabled
+#         H248 Synchronized             disabled
+#         Config Synchronized           true
+#         Collect Synchronized          disabled
+#         Radius CDR Synchronized       disabled
+#         Rotated CDRs Synchronized     disabled
+#         IPSEC Synchronized            disabled
+#         Iked Synchronized             disabled
+#         Active Peer Address           179.253.2.2
+#
+# Redundancy Protocol Process (v3):
+#         State                           Standby
+#         Health                          100
+#         Lowest Local Address            189.253.3.1:9090
+#         1 peer(s) on 2 socket(s):
+#         BERTZSBC02: v3, Active, health=100, max silence=1050
+#                    last received from 142.224.2.3 on wancom1:0
+#
+#         Switchover log:
+#         Apr 24 10:14:09.235: Standby to BecomingActive, active peer xxx has timed out, no arp reply from active in 250ms
+#         Oct 17 10:07:44.567: Active to RelinquishingActive
+#         Oct 20 18:41:11.855: Standby to BecomingActive, active peer xxx has unacceptable health (70)
+#         Oct 29 11:46:04.294: Active to RelinquishingActive
+#         Oct 29 11:47:05.452: Standby to BecomingActive, active peer xxx has unacceptable health (70)
+#         Dec  8 11:37:36.445: Active to RelinquishingActive
+#         Dec  8 11:43:00.227: Standby to BecomingActive, active peer xxx has timed out, no arp reply from active in 250ms
+#         Mar 16 10:13:33.248: Active to RelinquishingActive
+
 def acme_sbc_parse_function(info):
-    states = {} 
+    states = {}
     settings = {}
     for line in info:
         if len(line) == 2:

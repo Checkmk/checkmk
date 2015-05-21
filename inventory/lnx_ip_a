@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,13 +25,39 @@
 # Boston, MA 02110-1301 USA.
 
 
-def scan_checkpoint(oid):
-    sys_descr = oid(".1.3.6.1.2.1.1.1.0")
-    return (
-        # Entry in sysDescr, varies a bit
-        (len(sys_descr) >= 3 and sys_descr.split(" ")[2].endswith("cp")) or
-        sys_descr.startswith("IPSO ") or
-        (sys_descr.startswith("Linux") and "cpx" in
-         sys_descr)) \
-      and \
-         oid(".1.3.6.1.4.1.2620.1.1.21.0").lower().startswith('firewall')
+# Example output from agent:
+# <<<ip_a_r>>>
+# 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default
+#     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+#     inet 127.0.0.1/8 scope host lo
+#        valid_lft forever preferred_lft forever
+#     inet6 ::1/128 scope host
+#        valid_lft forever preferred_lft forever
+# 2: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+#     link/ether 6c:40:08:92:e6:54 brd ff:ff:ff:ff:ff:ff
+#     inet 10.10.0.41/16 brd 10.10.255.255 scope global wlan0
+#        valid_lft forever preferred_lft forever
+#     inet6 fe80::6e40:8ff:fe92:e654/64 scope link
+#        valid_lft forever preferred_lft forever
+
+
+def inv_lnx_ip_a(info):
+    def parse_address(device, network):
+        address = network.split("/")[0]
+        return {
+            "device" : device,
+            "address" : address,
+            "type" : '.' in address and "ipv4" or "ipv6",
+        }
+
+    addresses = inv_tree("networking.addresses:")
+    for line in info:
+        if line[0][-1] == ':':
+            device = line[1].rstrip(':')
+        elif line[0] in ("inet", "inet6"):
+            addresses.append(parse_address(device, line[1]))
+
+
+inv_info['lnx_ip_a'] = {
+    "inv_function" : inv_lnx_ip_a,
+}

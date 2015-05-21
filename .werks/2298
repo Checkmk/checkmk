@@ -1,0 +1,9 @@
+Title: Inventory: add host name (Linux, AIX, Windows), add IP addresses and routes (Linux)
+Level: 2
+Component: inv
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432223656
+Class: feature
+
+

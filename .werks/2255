@@ -1,0 +1,12 @@
+Title: checkpoint_*: Fixed exception in scan function when sysDescr has less than 2 spaces
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p4
+Date: 1432191240
+Class: fix
+
+When running the service discovery on SNMP devices which have a sysDescr which conains
+less than 2 spaces this lead into an exception. The error was present in 1.2.6 and
+master branch but only showed up in the master branch, since the error handling in
+the master branch has changed to be more verbose about such problems.

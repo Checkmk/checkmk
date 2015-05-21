@@ -297,7 +297,7 @@ def check_esx_vsphere_hostsystem_state(_no_item, _no_params, info):
         state = 1
     elif overallStatus in [ "red", "gray"]:
         state = 2
-    yield state, "Entity state: %s" + overallStatus
+    yield state, "Entity state: " + overallStatus
 
     state = 0
     powerState = str(data['runtime.powerState'][0])

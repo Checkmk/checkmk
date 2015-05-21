@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f
+send_user "<<<acme_sbc>>>\n"
+log_user 0
+set host [lindex $argv 0]
+spawn ssh -l user $host
+
+expect "*>"
+log_user 1
+send "show health\r"
+expect "*>"
+log_user 0
+send "exit\r"

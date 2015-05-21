@@ -1,0 +1,10 @@
+Title: acme_sbc, acme_sbc.settings: New Checks to monitor an ACME Session Border Controller
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432209154
+Class: feature
+
+In order to work, that check needs excpect installed on the monitoring server. Also it's needed to add a public SSH keys from your OMD Site to the device.
+

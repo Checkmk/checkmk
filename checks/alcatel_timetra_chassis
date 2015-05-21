@@ -1,0 +1,106 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_alcatel_timetra_chassis(info):
+    for name, adminstate, operstate, alarmstate in info:
+        # Only add active devices
+        if operstate in [ '2','8' ]:
+            yield name, None
+
+def check_alcatel_timetra_chassis(item, _no_params, info):
+    admin_states = {
+        1   : "noop",
+        2   : "inService",
+        3   : "outOfService",
+        4   : "diagnose",
+        5   : "operateSwitch",
+    }
+
+    oper_states = {
+        1   : "unknown",
+        2   : "inService",
+        3   : "outOfService",
+        4   : "diagnosing",
+        5   : "failed",
+        6   : "booting",
+        7   : "empty",
+        8   : "provisioned",
+        9   : "unprovisioned",
+        10  : "upgrade",
+        11  : "downgrade",
+        12  : "inServiceUpgrade",
+        13  : "inServiceDowngrade",
+        14  : "resetPending",
+    }
+
+    alarm_states = {
+        0   : "unknown",
+        1   : "alarmActive",
+        2   : "alarmCleared",
+
+    }
+    for line in info:
+        if line[0] == item:
+            adminstate, operstate, alarmstate = map(int, line[1:])
+            state = 0
+            if operstate != adminstate:
+                if adminstate in [4, 5]:
+                    state = 2
+                elif adminstate in [3, 1]:
+                    state = 1
+                yield state, "Admin State: %s" % admin_states[adminstate]
+
+            state = 0
+            if operstate in [5, 3]:
+                state = 2
+            elif operstate in [4, 6, 10, 11, 12, 13, 14]:
+                state = 1
+            elif operstate not in [2, 8]:
+                state = 3
+            yield state, "Oper State: %s" % oper_states[operstate]
+
+            if alarmstate not in  [0,2]:
+                state = 0
+                if alarmstate == 1:
+                    state = 2
+                yield state, "Alarms State: %s" % alarm_states[alarmstate]
+            return
+
+
+check_info["alcatel_timetra_chassis"] = {
+    "check_function"        : check_alcatel_timetra_chassis,
+    "inventory_function"    : inventory_alcatel_timetra_chassis,
+    "service_description"   : "Device %s",
+    "has_perfdata"          : False,
+    "snmp_scan_function"    : lambda oid: "TiMOS" in oid(".1.3.6.1.2.1.1.1.0"),
+    "snmp_info"             : (".1.3.6.1.4.1.6527.3.1.2.2.1.8.1", [
+                                                        8,  # tmnxHwName
+                                                        15, # tmnxHwAdminState
+                                                        16, # tmnxHwOperState
+                                                        24, # tmnxHwAlarmState
+                                                        ]),
+}
+

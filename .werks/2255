@@ -2,7 +2,7 @@ Title: checkpoint_*: Fixed exception in scan function when sysDescr has less tha
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.6p4
+Version: 1.2.6p5
 Date: 1432191240
 Class: fix
 

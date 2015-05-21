@@ -1,0 +1,9 @@
+Title: Fix two exceptions in case of errors during bulk discovery
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.6p4
+Date: 1432049324
+Class: fix
+
+

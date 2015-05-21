@@ -1,0 +1,9 @@
+Title: Fix exception in reporting for views that do not show a host name
+Level: 1
+Component: reporting
+Compatible: compat
+Version: 1.2.6p4
+Date: 1432126221
+Class: fix
+
+

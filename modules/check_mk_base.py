@@ -660,10 +660,10 @@ def translate_piggyback_host(sourcehost, backedhost):
 
     # 3. Regular expression conversion
     if "regex" in translation:
-        regex, subst = translation.get("regex")
-        if not regex.endswith('$'):
-            regex += '$'
-        rcomp = regex(regex)
+        expr, subst = translation.get("regex")
+        if not expr.endswith('$'):
+            expr += '$'
+        rcomp = regex(expr)
         mo = rcomp.match(backedhost)
         if mo:
             backedhost = subst

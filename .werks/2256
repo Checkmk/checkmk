@@ -1,0 +1,22 @@
+Title: mk_mysql: MySQL monitoring is now available for windows
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432218553
+Class: feature
+
+The mk_mysql plugin which already existed for some time has been
+ported to Windows. It is now available as windows agent plugin.
+You can use the exact same checks as on linux hosts. To make the
+agent plugin working, you need to configure the credentials
+to access the database just like on linux systems with the
+difference that the configuration file needs to be placed in
+the directory of the <tt>check_mk_agent.exe</tt> and named
+<tt>mysql.ini</tt>. In case you have multiple instances running
+on a single host and need different credentials, you can create
+multiple files named <tt>mysql_<instance>.ini</tt> while you need
+to replace instance with the ident of the mysql process.
+
+For further details take a look at the
+<a href="http://mathias-kettner.de/checkmk_mysql.html">documentation</a>.

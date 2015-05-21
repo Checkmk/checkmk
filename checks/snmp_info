@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_snmp_info(info):
-    import datetime
     if len(info[0]) >= 4:
         return [ (None, None) ]
 

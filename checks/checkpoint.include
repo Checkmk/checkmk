@@ -29,7 +29,7 @@ def scan_checkpoint(oid):
     sys_descr = oid(".1.3.6.1.2.1.1.1.0")
     return (
         # Entry in sysDescr, varies a bit
-        (len(sys_descr) >= 3 and sys_descr.split(" ")[2].endswith("cp")) or
+        (len(sys_descr.split(" ")) >= 3 and sys_descr.split(" ")[2].endswith("cp")) or
         sys_descr.startswith("IPSO ") or
         (sys_descr.startswith("Linux") and "cpx" in
          sys_descr)) \

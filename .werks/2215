@@ -1,0 +1,10 @@
+Title: pfsense_status, pfsense_if: Two new checks to monitor the interfaces and status of pfSense firewalls
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432307705
+Class: feature
+
+pfsense_status checks for the running status of pfSense firewalls, pfsense_if monitors the blocked packets
+on the interfaces.

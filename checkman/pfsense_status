@@ -1,0 +1,11 @@
+title: pfSense Status
+agents: snmp
+catalog: app/pfsense
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the running status of pfSense firewalls.
+ A status of "Running" is interpreted as OK, "Not runnning" as CRIT
+
+inventory:
+ One service per device will be created.

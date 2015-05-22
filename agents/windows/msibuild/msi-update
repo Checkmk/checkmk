@@ -176,15 +176,17 @@ try:
     verbose("Creating copy of original file %s -> %s" % (msi_file, new_msi_file))
 
     # Make a copy
-    os.system("cp %(msi_file)s %(new_msi_file)s" % { "msi_file": msi_file, "new_msi_file": new_msi_file})
+    if os.system("cp %(msi_file)s %(new_msi_file)s" % { "msi_file": msi_file, "new_msi_file": new_msi_file}) != 0:
+        bail_out('Fehler!')
 
     # Rename modified tables
     for entry in [ "Property", "File", "Component" ]:
         os.rename(work_dir + "/%s.idt.new" % entry , work_dir + "/%s.idt" % entry)
 
     for entry in [ "Property", "File", "Component" ]:
-        os.system((path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
-             { "work_dir" : work_dir, "new_msi_file": new_msi_file, "file": entry })
+        if os.system((path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
+             { "work_dir" : work_dir, "new_msi_file": new_msi_file, "file": entry }) != 0:
+            bail_out('Fehler!')
 
     # Update summary info with new uuid (HACK! - the msibuild tool is not able to do this on all systems)
     # In this step we replace the package code with a new uuid. This uuid is important, because it is
@@ -198,11 +200,15 @@ try:
             "baked_container.msi"  : { "dftl_start": "{47ED1918-CEDF-4", "dftl_end": "D37-943C-B4DBC3F58E6C}"}
     }
     summary_info.update(default_package_codes[os.path.basename(msi_file)])
-    os.system("sed -i -e 's/%(dftl_start)s/%(start)s/' -e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s" % summary_info)
+    if os.system("sed -i -e 's/%(dftl_start)s/%(start)s/' "
+                 "-e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s" % summary_info) != 0:
+        bail_out('Fehler!')
 
     # Remove original product.cab from stream
     verbose("Removing product.cab from %s" % new_msi_file)
-    os.system((path_prefix + "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams where Name = 'product.cab'\"") % { "new_msi_file": new_msi_file } )
+    if os.system((path_prefix + "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams "
+                 "where Name = 'product.cab'\"") % { "new_msi_file": new_msi_file } ) != 0:
+        bail_out('Fehler!')
 
     # Prepare product.cab file
     verbose("Generating new product.cab")
@@ -210,12 +216,14 @@ try:
     lcab_files = ""
     for index, lcab_file in sorted(cabinet_files):
         lcab_files += "%(source_dir)s/%(lcab_file)s " % globals()
-    os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % globals())
+    if os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % globals()) != 0:
+        bail_out('Fehler!')
 
     # Add modified product.cab
     verbose("Add modified product.cab")
-    os.system((path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % \
-            { "work_dir" : work_dir, "new_msi_file": new_msi_file })
+    if os.system((path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % \
+            { "work_dir" : work_dir, "new_msi_file": new_msi_file }) != 0:
+        bail_out('Fehler!')
 
     shutil.rmtree(work_dir)
     verbose("Successfully created file " + new_msi_file)

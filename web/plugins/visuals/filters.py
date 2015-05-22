@@ -532,18 +532,6 @@ class FilterSite(Filter):
                     choices.append((sitename, config.site(sitename)["alias"]))
         html.sorted_select("site", choices)
 
-    def filter(self, infoname):
-        if config.is_multisite():
-            site = html.var("site")
-            if site:
-                return "Sites: %s\n" % (html.var("site", ""))
-            elif not self.enforce:
-                return ""
-            else:
-                return "Sites:\n" # no site at all
-        else:
-            return ""
-
     def heading_info(self):
         current_value = html.var("site")
         if current_value:

@@ -24,14 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+factory_settings['alcatel_temp'] = {
+      "levels" : ( 45, 50 ), 
+}
 
-def scan_checkpoint(oid):
-    sys_descr = oid(".1.3.6.1.2.1.1.1.0")
-    return (
-        # Entry in sysDescr, varies a bit
-        (len(sys_descr.split(" ")) >= 3 and sys_descr.split(" ")[2].endswith("cp")) or
-        sys_descr.startswith("IPSO ") or
-        (sys_descr.startswith("Linux") and "cpx" in
-         sys_descr)) \
-      and \
-         oid(".1.3.6.1.4.1.2620.1.1.21.0").lower().startswith('firewall')
+def inventory_alcatel_temp(info):
+    for oid, name in enumerate(["Board", "CPU"]):
+        if info[0][oid] != '0':
+            yield name, {}
+
+def check_alcatel_temp(item, params, info):
+    items = { "Board" : 0, "CPU": 1 }
+    temp_celsius = int(info[0][items[item]])
+    return check_temperature(temp_celsius, params)
+
+check_info["alcatel_temp"] = {
+    "check_function"          : check_alcatel_temp,
+    "inventory_function"      : inventory_alcatel_temp,
+    "service_description"     : "Temperature %s",
+    "group"                   : "temperature",
+    "default_levels_variable" : "alcatel_temp",
+    "has_perfdata"            : True,
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.6486.800"),
+    "snmp_info"               : (".1.3.6.1.4.1.6486.800.1.1.1.3.1.1.3.1", [ 
+                                                                              4, # chasHardwareBoardTemp
+                                                                              5, # chasHardwareCpuTemp
+                                                                         ]),
+    "includes"                : [ "temperature.include" ],
+}

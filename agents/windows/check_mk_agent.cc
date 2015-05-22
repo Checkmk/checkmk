@@ -22,7 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 // Looking for documentation on Win32-API? Here are some of the
 // documents that I used:
 

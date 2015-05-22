@@ -25,11 +25,11 @@
 SHELL         = /bin/bash
 VERSION       = 1.2.7i1
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
-WINDRES       = i586-mingw32msvc-windres
+WINDRES       = i686-w64-mingw32-windres
 COPTIONS      = -s -O2 -Wall -Werror -static -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'
 
 ifeq ($(shell uname),Linux)
-  CXX        = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
+  CXX        = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i686-w64-mingw32-g++
   CXX_64     = x86_64-w64-mingw32-g++
   WINDRES_64 = x86_64-w64-mingw32-windres
 else
@@ -135,3 +135,5 @@ clean:
 mrproper: clean
 	rm -f *.exe
 
+setup:
+	sudo apt-get install nsis lcab binutils-mingw-w64-i686 binutils-mingw-w64-x86-64

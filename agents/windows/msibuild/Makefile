@@ -34,6 +34,7 @@ clean:
 	rm -rf $(MSITOOLS)
 	rm -f check_mk_agent.msi
 	rm -rf work sources
+	rm .gsf-save-*
 
 msibuild:
 	tar -Jxf $(MSITOOLS_FILE)

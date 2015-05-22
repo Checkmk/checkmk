@@ -2,6 +2,9 @@
     Checks & Agents:
     * 2255 FIX: checkpoint_*: Fixed exception in scan function when sysDescr has less than 2 spaces...
 
+    Multisite:
+    * 2257 FIX: Improved handling of duplicate hostnames across different sites...
+
 
 1.2.6p4:
     Checks & Agents:

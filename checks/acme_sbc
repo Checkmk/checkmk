@@ -1,0 +1,106 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<acme_sbc>>>
+# show health
+#         Media Synchronized            true
+#         SIP Synchronized              true
+#         BGF Synchronized              disabled
+#         MGCP Synchronized             disabled
+#         H248 Synchronized             disabled
+#         Config Synchronized           true
+#         Collect Synchronized          disabled
+#         Radius CDR Synchronized       disabled
+#         Rotated CDRs Synchronized     disabled
+#         IPSEC Synchronized            disabled
+#         Iked Synchronized             disabled
+#         Active Peer Address           179.253.2.2
+#
+# Redundancy Protocol Process (v3):
+#         State                           Standby
+#         Health                          100
+#         Lowest Local Address            189.253.3.1:9090
+#         1 peer(s) on 2 socket(s):
+#         BERTZSBC02: v3, Active, health=100, max silence=1050
+#                    last received from 142.224.2.3 on wancom1:0
+#
+#         Switchover log:
+#         Apr 24 10:14:09.235: Standby to BecomingActive, active peer xxx has timed out, no arp reply from active in 250ms
+#         Oct 17 10:07:44.567: Active to RelinquishingActive
+#         Oct 20 18:41:11.855: Standby to BecomingActive, active peer xxx has unacceptable health (70)
+#         Oct 29 11:46:04.294: Active to RelinquishingActive
+#         Oct 29 11:47:05.452: Standby to BecomingActive, active peer xxx has unacceptable health (70)
+#         Dec  8 11:37:36.445: Active to RelinquishingActive
+#         Dec  8 11:43:00.227: Standby to BecomingActive, active peer xxx has timed out, no arp reply from active in 250ms
+#         Mar 16 10:13:33.248: Active to RelinquishingActive
+
+def acme_sbc_parse_function(info):
+    states = {}
+    settings = {}
+    for line in info:
+        if len(line) == 2:
+            for what in [ "Health", "State" ]:
+                if line[0] == what:
+                    states[what] = line[1]
+        elif len(line) == 3 and line[1] == "Synchronized":
+            settings[line[0]] = line[2]
+    return states, settings
+
+def inventory_acme_sbc(parsed):
+    return [(None, None)]
+
+def check_acme_sbc(_no_item, _no_params, parsed):
+    health = int(parsed[0]["Health"])
+    dev_state = parsed[0]["State"]
+    if health == 100:
+        state = 0
+    else:
+        state = 2
+    return state, "Health at %d %% (State: %s)" % (health, dev_state)
+
+check_info["acme_sbc"] = {
+    "check_function"        : check_acme_sbc,
+    "inventory_function"    : inventory_acme_sbc,
+    "service_description"   : "Status",
+    "parse_function"        : acme_sbc_parse_function,
+}
+
+def inventory_acme_sbc_settings(parsed):
+    return [(None,  parsed[1])]
+
+def check_acme_sbc_settings(_no_item, params, parsed):
+    current_settings = parsed[1]
+    saved_settings = params
+    yield 0, "Checking %d settings" % len(saved_settings)
+    for setting, value in saved_settings.items():
+        if current_settings[setting] != value:
+            yield 2, "%s changed from %s to %s" % (setting, value, current_settings[setting])
+
+check_info["acme_sbc.settings"] = {
+    "check_function"        : check_acme_sbc_settings,
+    "inventory_function"    : inventory_acme_sbc_settings,
+    "service_description"   : "Settings",
+}

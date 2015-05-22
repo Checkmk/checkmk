@@ -642,13 +642,16 @@ table.nform {
     border-radius: 5px;
     box-shadow: 0px 0px 2px #000;
     margin-bottom: 10px;
-    /* background-image: url("images/white_30percent.png"); */
     background-image: url("images/nform_background.png");
-    /* background-color: #7796a3; */
     background-repeat: repeat;
     border-color: #86A9B8 #22404D #22414D #86A9B8;
     border-width: 1px;
     border-style: solid;
+}
+
+body.main.screenshotmode table.nform {
+    background-color: #508aa1;
+    background-image: none;
 }
 
 table.nform tr.closed {

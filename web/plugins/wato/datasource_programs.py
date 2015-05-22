@@ -360,6 +360,20 @@ register_rule(group,
     match = 'first')
 
 register_rule(group,
+    "special_agents:acme_sbc",
+     FixedValue(
+        {},
+        title = _("Check ACME Session Border Controller"),
+        help = _("This rule activates an expect based agent who connects"
+                 "to an ACME Session Border Controller (SBC). This agent uses SSH, this"
+                 "means that you have to exchange a SSH key to make a password less"
+                 "connect possible"),
+        totext = _("Connect to ACME SBC"),
+    ),
+    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    match = 'first')
+
+register_rule(group,
     "special_agents:fritzbox",
      Dictionary(
         title = _("Check state of Fritz!Box Devices"),

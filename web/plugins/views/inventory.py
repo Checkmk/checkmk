@@ -474,6 +474,27 @@ def inv_paint_if_available(available):
         return "if_state " + (available and "if_available" or "if_not_available"), \
            (available and _("free") or _("used"))
 
+def inv_paint_ipv4_network(nw):
+    if nw == "0.0.0.0/0":
+        return "", _("Default")
+    else:
+        return "", nw
+
+def inv_paint_ip_address_type(t):
+    if t == "ipv4":
+        return "", _("IPv4")
+    elif t == "ipv6":
+        return "", _("IPv6")
+    else:
+        return "", t
+
+
+def inv_paint_route_type(rt):
+    if rt == "local":
+        return "", _("Local route")
+    else:
+        return "", _("Gateway route")
+
 
 def inv_paint_volt(volt):
     if volt:
@@ -583,6 +604,17 @@ inventory_displayhints.update({
     ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },
     ".networking.total_ethernet_ports"                 : { "title" : _("Ports"), "paint" : "count", },
     ".networking.available_ethernet_ports"             : { "title" : _("Ports available"), "paint" : "count", },
+    ".networking.addresses:"                           : { "title" : _("IP Addresses"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "address", "device", "type" ], },
+    ".networking.addresses:*.address"                  : { "title" : _("Address") },
+    ".networking.addresses:*.device"                   : { "title" : _("Device") },
+    ".networking.addresses:*.type"                     : { "title" : _("Address Type"), "paint" : "ip_address_type" },
+    ".networking.routes:"                              : { "title" : _("Routes"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "target", "device", "type", "gateway" ] },
+    ".networking.routes:*.target"                      : { "title" : _("Target"), "paint" : "ipv4_network" },
+    ".networking.routes:*.device"                      : { "title" : _("Device") },
+    ".networking.routes:*.type"                        : { "title" : _("Type of route"), "paint" : "route_type" },
+    ".networking.routes:*.gateway"                     : { "title" : _("Gateway") },
     ".networking.interfaces:"                          : { "title" : _("Interfaces"), "render" : render_inv_dicttable,
                                                            "keyorder" : [ "index", "description", "alias", "oper_status", "admin_status", "available", "speed" ], "view" : "invinterface_of_host", },
     ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : visuals.FilterInvtableIDRange },

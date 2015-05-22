@@ -1,0 +1,12 @@
+title: Alcatel switches: CPU utilization
+agents: snmp
+catalog: hw/network/alcatel
+license: GPL
+distribution: check_mk
+description:
+ This Check Monitors the CPU utilization on Alcatel switches supporting the ALCATEL-IND1-HEALTH-MIB.
+ The value is a average in percent over the last hour. This average is calculated by the device.
+
+inventory:
+ One check is created
+

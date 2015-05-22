@@ -47,6 +47,7 @@ infos['service'] = {
 infos['hostgroup'] = {
     'title'       : _('Host Group'),
     'title_plural': _('Host Groups'),
+    'single_site' : False, # spread over multiple sites
     'single_spec' : [
         ('hostgroup', TextUnicode(
             title = _('Host Group Name'),
@@ -57,6 +58,7 @@ infos['hostgroup'] = {
 infos['servicegroup'] = {
     'title'       : _('Service Group'),
     'title_plural': _('Service Groups'),
+    'single_site' : False, # spread over multiple sites
     'single_spec' : [
         ('servicegroup', TextUnicode(
             title = _('Service Group Name'),

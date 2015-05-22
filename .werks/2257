@@ -1,0 +1,18 @@
+Title: Improved handling of duplicate hostnames across different sites
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1432288983
+
+Normaly it is not allowed to have different hosts with equal name in Check_MK.
+But it is possible to configure this, e.g. by creating hosts with an equal
+name on different sites (we do not recommend to do this).
+
+This change tries to fix handling of this situation in the GUIs views, where
+a user clicks on a host/service which is present on multiple sites but the user intends
+to get the host/service from a specific view. In the past this situation
+was not handled clearly which lead to a view showing data of the two equal
+named hosts where the user expected only data of one.

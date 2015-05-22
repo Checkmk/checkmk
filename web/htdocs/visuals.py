@@ -1175,6 +1175,9 @@ def unpack_context_after_editing(packed_context):
 def declare_info(infoname, info):
     infos[infoname] = info
 
+def is_single_site_info(info_key):
+    return infos[info_key].get('single_site', True)
+
 def single_infos_spec(single_infos):
     return ('single_infos', FixedValue(single_infos,
         title = _('Show information of single'),
@@ -1317,6 +1320,11 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
                 skip = True # At least one single context missing
                 break
             vars_values.append((var, val))
+
+        # When all infos of the target visual are showing single site data, add
+        # the site hint when available
+        if html.var('site') and all([ is_single_site_info(info_key)for info_key in visual['single_infos']]):
+            vars_values.append(('site', html.var('site')))
 
         if not skip:
             # add context link to this visual. For reports we put in

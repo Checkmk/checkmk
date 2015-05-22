@@ -976,16 +976,19 @@ def show_view(view, show_heading = False, show_buttons = True,
     # we convert this to the visuals principle the we need to optimize
     # this.
     filterheaders = ""
-    only_sites = None
     all_active_filters = [ f for f in use_filters if f.available() ]
     for filt in all_active_filters:
         header = filt.filter(tablename)
-        if header.startswith("Sites:"):
-            only_sites = header.strip().split(" ")[1:]
-        else:
-            filterheaders += header
+        filterheaders += header
         if filt.need_inventory():
             need_inventory_data = True
+
+    # Apply the site hint / filter
+    if config.is_multisite():
+        if html.var("site"):
+            only_sites = [html.var("site")]
+        else:
+            only_sites = None
 
     # Prepare limit:
     # We had a problem with stats queries on the logtable where
@@ -2099,7 +2102,7 @@ def url_to_view(row, view_name):
     if view:
         # Get the context type of the view to link to, then get the parameters of this
         # context type and try to construct the context from the data of the row
-        vars = []
+        url_vars = []
         datasource = multisite_datasources[view['datasource']]
         for info_key in datasource['infos']:
             if info_key in view['single_infos']:
@@ -2110,21 +2113,32 @@ def url_to_view(row, view_name):
                     filter_object = visuals.get_filter(filter_name)
                     # Get the list of URI vars to be set for that filter
                     new_vars = filter_object.variable_settings(row)
-                    vars += new_vars
+                    url_vars += new_vars
 
         # See get_link_filter_names() comment for details
         for src_key, dst_key in visuals.get_link_filter_names(view, datasource['infos'],
                                                 datasource.get('link_filters', {})):
-            vars += visuals.get_filter(src_key).variable_settings(row)
-            vars += visuals.get_filter(dst_key).variable_settings(row)
+            url_vars += visuals.get_filter(src_key).variable_settings(row)
+            url_vars += visuals.get_filter(dst_key).variable_settings(row)
+
+        # Some special handling for the site filter which is meant as optional hint
+        # Always add the site filter var when some useful information is available
+        add_site_hint = True
+        for filter_key in datasource.get('multiple_site_filters', []):
+            if filter_key in dict(url_vars):
+                add_site_hint = False
+
+        if add_site_hint:
+            url_vars.append(('site', row['site']))
 
         do = html.var("display_options")
         if do:
-            vars.append(("display_options", do))
+            url_vars.append(("display_options", do))
 
         filename = html.mobile and "mobile_view.py" or "view.py"
-        return filename + "?" + html.urlencode_vars([("view_name", view_name)] + vars)
-    return None
+        uri = filename + "?" + html.urlencode_vars([("view_name", view_name)] + url_vars)
+        content = "<a href=\"%s\">%s</a>" % (uri, content)
+    return content
 
 def link_to_view(content, row, view_name):
     if 'I' not in html.display_options:

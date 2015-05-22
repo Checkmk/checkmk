@@ -5162,7 +5162,7 @@ int main(int argc, char **argv)
         }
         do_file = true;
         do_test(false);
-        fclose(fileout);
+        fclose(fileout); 
     }
     else if (!strcmp(argv[1], "adhoc"))
         do_adhoc();

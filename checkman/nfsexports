@@ -1,14 +1,15 @@
-title: Health of NFS mounts
+title: NFS exports
 agents: linux
 catalog: os/services
 license: GPL
 distribution: check_mk
 description:
- This check validates NFS exports on a NFS file server.
- It looks at exports defined both in /etc/exports (classic way) or exports
- that are run-time defined using exportfs by a cluster management software.
- It uses the native NFS toolset to query this information and should notice
- errors in the NFS server daemons or portmapper.
+
+ This check validates NFS exports on a NFS file server.  It looks at exports
+ defined both in {/etc/exports} (classic way) or exports that are defined
+ using {exportfs} by a cluster management software.  It uses the native NFS
+ toolset for queriying this information and notices errors in the NFS server
+ daemons or portmapper.
 
  If you want to use this check then you will have to install the appropriate
  agent plugin.

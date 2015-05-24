@@ -3315,6 +3315,13 @@ def show_service_table(host, firsttime):
                                  ("item", mk_repr(item))])
                 html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
 
+            if check_source == "active":
+                ctype = "check_" + ct
+            else:
+                ctype = ct
+            manpage_url = make_link([("mode", "check_manpage"), ("check_type", ctype)])
+            html.icon_button(manpage_url, _("View the manual page of the check plugin"), "check_plugins")
+
             if check_source == "ignored":
                 url = make_link([("mode", "edit_ruleset"),
                                  ("varname", "ignored_services"),
@@ -17583,39 +17590,239 @@ def mode_custom_attrs(phase, what):
 #   | Catalog of check plugins                                             |
 #   '----------------------------------------------------------------------'
 
+# topic, has_second_level, title, description
+check_manpage_topics = [
+    ("hw", True, _("Appliances, other dedicated hardware"),
+        _("Switches, load balancers, storage, UPSes, "
+          "environmental sensors, etc. ")),
+
+    ("os", True, _("Operating systems"),
+        _("Plugins for operating systems, things "
+          "like memory, CPU, filesystems, etc.")),
+
+    ("app", False, _("Applications"),
+        _("Monitoring of applications such as "
+          "processes, services or databases")),
+
+    ("agentless", False, _("Networking checks without agent"),
+        _("Plugins that directly check networking "
+          "protocols like HTTP or IMAP")),
+
+    ("generic", False,  _("Generic check plugins"),
+       _("Plugins for local agent extensions or "
+         "communication with the agent in general")),
+]
+
+
 def mode_check_plugins(phase):
+    topic = html.var("topic")
+    if topic:
+        path = topic.split("/") # e.g. [ "hw", "network" ]
+        if not re.match("^[a-zA-Z0-9_./]+$", topic):
+            raise Exception("Invalid topic")
+    else:
+        path = []
+
+    if html.is_cached("check_manpages"):
+        manpages, titles = html.get_cached("check_manpages")
+    else:
+        for comp in path:
+            ID().validate_value(comp, None) # Beware against code injection!
+        manpages, titles = check_mk_local_automation("get-check-catalog", path)
+        html.set_cache("check_manpages", (manpages, titles))
+
+    has_second_level = None
+    if topic:
+        path = topic.split("/") # e.g. [ "hw", "network" ]
+        for t, has_second_level, title, helptext in check_manpage_topics:
+            if t == path[0]:
+                topic_title = title
+                break
+        if len(path) == 2:
+            topic_title = titles.get(path[1], path[1])
+
+
     if phase == "title":
-        return _("Catalog of Check Plugins")
+        heading = _("Catalog of Check Plugins")
+        if topic:
+            heading += " - " + topic_title
+        return heading
 
     elif phase == "buttons":
+        global_buttons()
+        if topic:
+            if len(path) == 2:
+                back_url = html.makeuri([("topic", path[0])])
+            else:
+                back_url = html.makeuri([("topic", "")])
+            html.context_button(_("Back"), back_url, "back")
         return
 
     elif phase == "action":
         return
 
-    manpages, titles = check_mk_local_automation("get-check-catalog")
-    render_manpage_node(titles, (), manpages)
+    html.help(_("This catalog of check plugins gives you a complete listing of all plugins "
+                "that are shipped with your Check_MK installation. It also allows you to "
+                "access the rule sets for configuring the parameters of the checks and to "
+                "manually create services in case you cannot or do not want to rely on the "
+                "automatic service discovery."))
+
+    # The maxium depth of the catalog paths is 3. The top level is being rendered
+    # like the WATO main menu. The second and third level are being rendered like
+    # the global settings.
+
+    if topic:
+        render_manpage_topic(manpages, titles, has_second_level, path, topic_title)
+    else:
+        menu_items = []
+        for topic, has_second_level, title, helptext in check_manpage_topics:
+            menu_items.append((
+                html.makeuri([("topic", topic)]), title, "plugins_" + topic, None, helptext))
+        render_main_menu(menu_items)
 
 
-def render_manpage_node(titles, path, node):
+def render_manpage_topic(manpages, titles, has_second_level, path, topic_title):
+    if type(manpages) == list:
+        render_manpage_list(manpages, titles, path[-1], topic_title)
+    else:
+        # For some topics we render a second level in the same optic as the first level
+        if len(path) == 1 and has_second_level:
+            menu_items = []
+            for path_comp, subnode in manpages.items():
+                url = html.makeuri([("topic", "%s/%s" % (path[0], path_comp))])
+                title = titles.get(path_comp, path_comp)
+                helptext = get_check_plugin_stats(subnode)
+                menu_items.append((url, title, "check_plugins", None, helptext))
+            render_main_menu(menu_items)
+
+        # For the others we directly display the tables
+        else:
+            entries = []
+            for path_comp, subnode in manpages.items():
+                title = titles.get(path_comp, path_comp)
+                entries.append((title, subnode, path_comp))
+            entries.sort(cmp = lambda a,b: cmp(a[0].lower(), b[0].lower()))
+            for title, subnode, path_comp in entries:
+                render_manpage_list(subnode, titles, path_comp, title)
+
+def get_check_plugin_stats(subnode):
+    if type(subnode) == list:
+        num_cats = 1
+        num_plugins = len(subnode)
+    else:
+        num_cats = len(subnode)
+        num_plugins = 0
+        for subcat in subnode.values():
+            num_plugins += len(subcat)
+
+    text = ""
+    if num_cats > 1:
+        text += _("%d %s<br>") % (num_cats, _("sub categories"))
+    text += _("%d %s") % (num_plugins, _("check plugins"))
+    return text
+
+
+def render_manpage_list(manpage_list, titles, path_comp, heading):
     def translate(t):
         return titles.get(t, t)
 
-    if type(node) == list:
-        table.begin(searchable=False, sortable=False, css="check_catalog")
-        for entry in sorted(node, cmp=lambda a,b: cmp(a["title"], b["title"])):
-            table.row()
-            table.cell(_("Check Plugin"), entry["title"], css="title")
-            table.cell(_("ID"), "<tt>%s</tt>" % entry["name"], css="name")
-            table.cell(_("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
-        table.end()
-    elif type(node) == dict:
-        for path_comp, subnode in node.items():
-            subpath = path + (path_comp,)
-            html.begin_foldable_container("check_catalog", ";".join(subpath), False, translate(path_comp))
-            render_manpage_node(titles, subpath, subnode)
-            html.end_foldable_container()
+    html.write("<h2>%s</h2>" % heading)
+    table.begin(searchable=False, sortable=False, css="check_catalog")
+    for entry in sorted(manpage_list, cmp=lambda a,b: cmp(a["title"], b["title"])):
+        if type(entry) != dict:
+            html.write("MIST: %s ist kaputt: %r" % (path_comp, entry))
+            continue
+        table.row()
+        url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]), ("back", html.makeuri([]))])
+        table.cell(_("Type of Check"), "<a href='%s'>%s</a>" % (url, entry["title"]), css="title")
+        table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
+        table.cell(_("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
+    table.end()
 
+
+def mode_check_manpage(phase):
+    check_type = html.var("check_type")
+
+    if phase == "title":
+        if not re.match("^[a-zA-Z0-9_.]+$", check_type):
+            raise Exception("Invalid check type")
+        manpage = check_mk_local_automation("get-check-manpage", [ check_type ])
+        html.set_cache("manpage", manpage)
+        return _("Check plugin manual page") + " - " + manpage["header"]["title"]
+
+    elif phase == "buttons":
+        global_buttons()
+        manpage = html.get_cached("manpage")
+        path = manpage["header"]["catalog"]
+        if html.var("back"):
+            back_url = html.var("back")
+            html.context_button(_("Back"), back_url, "back")
+        html.context_button(_("All Check Plugins"), html.makeuri_contextless([("mode", "check_plugins")]), "check_plugins")
+        if check_type.startswith("check_"):
+            command = "check_mk_active-" + check_type[6:]
+        else:
+            command = "check_mk-" + check_type
+        url = html.makeuri_contextless([("view_name", "searchsvc"), ("check_command", command), ("filled_in", "filter")], filename="view.py")
+        html.context_button(_("Find usage"), url, "status")
+        return
+
+    elif phase == "action":
+        return
+    manpage = html.get_cached("manpage")
+
+
+    # TODO: We could simply detect on how many hosts and services
+    # this plugin is currently in use (Livestatus query) and display this
+    # information together with a link for searching. Then we can remove
+    # the dump context button, that will always be shown - even if the
+    # plugin is not in use.
+
+    html.write('<table class="data manpage">')
+
+    html.write('<tr><th>%s</th><td><b>%s</b></td></tr>' % (
+      _("Title"), manpage["header"]["title"]))
+
+    html.write('<tr><th>%s</th><td><tt>%s</tt></td></tr>' % (
+      _("Name of plugin"), check_type))
+
+    html.write('<tr><th>%s</th><td>%s</td></tr>' % (
+      _("Description"), manpage_text(manpage["header"]["description"])))
+
+    def show_ruleset(varname):
+        if varname in g_rulespecs:
+            rulespec = g_rulespecs[varname]
+            url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
+            param_ruleset = '<a href="%s">%s</a>' % (url, rulespec["title"])
+            html.write('<tr><th>%s</th><td>' % _("Parameter rule set"))
+            html.icon_button(url, _("Edit parameter rule set for this check type"), "check_parameters")
+            html.write(' %s</td></tr>' % param_ruleset)
+            html.write('<tr><th>%s</th><td>' % (_("Example for Parameters")))
+            vs = rulespec["valuespec"]
+            vs.render_input("dummy", vs.default_value())
+            html.write("</td></tr>")
+
+    if manpage["type"] == "check_mk":
+        html.write('<tr><th>%s</th><td>%s</td></tr>' % (
+          _("Service name"), manpage["service_description"].replace("%s", "&#9744;")))
+
+        if manpage.get("group"):
+            group = manpage["group"]
+            varname = "checkgroup_parameters:" + group
+            show_ruleset(varname)
+
+    else:
+        varname = "active_checks:" + check_type[6:]
+        show_ruleset(varname)
+
+    html.write('</table>')
+
+def manpage_text(text):
+    html_code = text.replace("<br>", "\n")\
+                    .replace("<", "&lt;")\
+                    .replace(">", "&gt;")
+    html_code = re.sub("{(.*?)}", "<tt>\\1</tt>", html_code)
+    html_code = re.sub("\n\n+", "<p>", html_code)
+    return html_code
 
 
 #.
@@ -18855,6 +19062,7 @@ modes = {
    "ruleeditor"         : (["rulesets"], mode_ruleeditor),
    "static_checks"      : (["rulesets"], mode_static_checks),
    "check_plugins"      : ([], mode_check_plugins),
+   "check_manpage"      : ([], mode_check_manpage),
    "rulesets"           : (["rulesets"], mode_rulesets),
    "ineffective_rules"  : (["rulesets"], mode_ineffective_rules),
    "edit_ruleset"       : (["rulesets"], mode_edit_ruleset),

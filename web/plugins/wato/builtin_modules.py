@@ -46,7 +46,7 @@ modules += [
       ( "static_checks",      _("Manual Checks"),     "static_checks", "rulesets",
       _("Configure fixed checks without using service discovery")),
 
-      ( "check_plugins",     _("Catalog of Check Plugins"), "check_plugins", None,
+      ( "check_plugins",     _("Check Plugins"), "check_plugins", None,
       _("Browse the catalog of all check plugins, create static checks")),
 
       ( "host_groups",       _("Host & Service Groups"),  "hostgroups", "groups",

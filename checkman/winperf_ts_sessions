@@ -8,7 +8,7 @@ description:
   Server Sessions using the windows performance counters (agent section
   {<<<winperf_ts_sessions>>>}).
 
-  To make this check work, you need to configure the agent via it's <tt>check_mk.ini</tt>
+  To make this check work, you need to configure the agent via it's {check_mk.ini}
   file to forward the terminal service session related counters. Take a
   look at the windows monitoring documentation for details.
 

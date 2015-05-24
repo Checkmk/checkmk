@@ -38,8 +38,10 @@ def do_automation(cmd, args):
             result = automation_get_configuration()
         elif cmd == "get-check-information":
             result = automation_get_check_information()
+        elif cmd == "get-check-manpage":
+            result = automation_get_check_manpage(args)
         elif cmd == "get-check-catalog":
-            result = automation_get_check_catalog()
+            result = automation_get_check_catalog(args)
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
@@ -539,14 +541,32 @@ def automation_get_configuration():
     return result
 
 
-def automation_get_check_catalog():
+def automation_get_check_catalog(args):
+    def path_prefix_matches(p, op):
+        if op and not p:
+            return False
+        elif not op:
+            return True
+        else:
+            return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
+
     read_manpage_catalog()
     tree = {}
+    if len(args) > 0:
+        only_path = tuple(args)
+    else:
+        only_path = ()
+
     for path, entries in g_manpage_catalog.items():
+        if not path_prefix_matches(path, only_path):
+            continue
         subtree = tree
         for component in path[:-1]:
             subtree = subtree.setdefault(component, {})
         subtree[path[-1]] = map(strip_manpage_entry, entries)
+
+    for p in only_path:
+        tree = tree[p]
 
     return tree, manpage_catalog_titles
 
@@ -571,6 +591,36 @@ def automation_get_check_information():
         checks[check_type]["service_description"] = check.get("service_description","%s")
         checks[check_type]["snmp"] = check_uses_snmp(check_type)
     return checks
+
+
+def automation_get_check_manpage(args):
+    if len(args) != 1:
+        raise MKAutomationError("Need exactly one argument.")
+
+    check_type = args[0]
+    manpage = load_manpage(args[0])
+
+    # Add a few informations from check_info. Note: active checks do not
+    # have an entry in check_info
+    if check_type in check_info:
+        manpage["type"] = "check_mk"
+        info = check_info[check_type]
+        for key in [ "snmp_info", "has_perfdata", "service_description" ]:
+            if key in info:
+                manpage[key] = info[key]
+        if "." in check_type:
+            section = check_type.split(".")[0]
+            if section in check_info and "snmp_info" in check_info[section]:
+                manpage["snmp_info"] = check_info[section]["snmp_info"]
+
+        if "group" in info:
+            manpage["group"] = info["group"]
+
+    # Assume active check
+    elif check_type.startswith("check_"):
+        manpage["type"] = "active"
+
+    return manpage
 
 
 def automation_scan_parents(args):

@@ -3372,6 +3372,7 @@ def read_manpage_catalog():
         else:
             g_manpage_catalog.setdefault(tuple(cat), []).append(parsed)
 
+
 def manpage_browser(cat = ()):
     read_manpage_catalog()
     entries = []
@@ -3390,6 +3391,7 @@ def manpage_browser(cat = ()):
         manpage_browse_entries(cat, entries)
     elif subtrees:
         manpage_browser_folder(cat, subtrees)
+
 
 def manpage_num_entries(cat):
     num = 0
@@ -3435,8 +3437,10 @@ def manpage_browse_entries(cat, entries):
         else:
             break
 
+
 def manpage_display_header(cat):
     return " -> ".join([manpage_catalog_titles.get(e,e) for e in cat ])
+
 
 def run_dialog(args):
     env = {
@@ -3494,25 +3498,10 @@ def parse_man_header(checkname, path):
 
     return parsed
 
-
-def show_check_manual(checkname):
+def load_manpage(checkname):
     filename = all_manuals().get(checkname)
-
-    bg_color = 4
-    fg_color = 7
-    bold_color = tty_white + tty_bold
-    normal_color = tty_normal + tty(fg_color, bg_color)
-    title_color_left = tty(0,7,1)
-    title_color_right = tty(0,7)
-    subheader_color = tty(fg_color, bg_color, 1)
-    header_color_left = tty(0,2)
-    header_color_right = tty(7,2,1)
-    parameters_color = tty(6,4,1)
-    examples_color = tty(6,4,1)
-
     if not filename:
-        sys.stdout.write("No manpage for %s. Sorry.\n" % checkname)
-        return
+        return None
 
     sections = {}
     current_section = []
@@ -3552,9 +3541,38 @@ def show_check_manual(checkname):
             else:
                 current_variable, restofline = line.split(':', 1)
                 current_section.append((current_variable, restofline.lstrip()))
+
     except Exception, e:
         sys.stderr.write("Syntax error in %s line %d (%s).\n" % (filename, lineno, e))
         sys.exit(1)
+
+    header = {}
+    for key, value in sections['header']:
+        header[key] = value.strip()
+    header["agents"] = [ a.strip() for a in header["agents"].split(",") ]
+
+    sections['header'] = header
+    return sections
+
+
+def show_check_manual(checkname):
+
+    bg_color = 4
+    fg_color = 7
+    bold_color = tty_white + tty_bold
+    normal_color = tty_normal + tty(fg_color, bg_color)
+    title_color_left = tty(0,7,1)
+    title_color_right = tty(0,7)
+    subheader_color = tty(fg_color, bg_color, 1)
+    header_color_left = tty(0,2)
+    header_color_right = tty(7,2,1)
+    parameters_color = tty(6,4,1)
+    examples_color = tty(6,4,1)
+
+    sections = load_manpage(checkname)
+    if not sections:
+        sys.stdout.write("No manpage for %s. Sorry.\n" % checkname)
+        return
 
     # Output
     height, width = get_tty_size()
@@ -3727,16 +3745,13 @@ def show_check_manual(checkname):
                 output.write(attr2 + " " + line + " " + tty_normal + "\n")
 
     try:
-        header = {}
-        for key, value in sections['header']:
-            header[key] = value.strip()
+        header = sections['header']
 
         print_sectionheader(checkname, header['title'])
         if opt_nowiki:
             sys.stderr.write("<tr><td class=tt>%s</td><td>[check_%s|%s]</td></tr>\n" % (checkname, checkname, header['title']))
         ags = []
-        for agent in header['agents'].split(","):
-            agent = agent.strip()
+        for agent in header['agents']:
             ags.append({ "vms" : "VMS", "linux":"Linux", "aix": "AIX",
                          "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP",
                          "openvms" : "OpenVMS", "vsphere" : "vSphere" }

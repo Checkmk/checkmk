@@ -1,6 +1,6 @@
 title: Innovaphone Gateway: Memory Usage
 agents: special
-catalog: hw/network/tel
+catalog: hw/network/innovaphone
 license: GPL
 distribution: check_mk
 description:

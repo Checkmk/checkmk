@@ -175,7 +175,7 @@ multisite_icons_and_actions['reschedule'] = {
 #   |        |_| \_\\__,_|_|\___|     |_____\__,_|_|\__\___/|_|            |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |                                                                      |
+#   |  Icon to the parameters of a host or service                         |
 #   '----------------------------------------------------------------------'
 
 def paint_rule_editor(what, row, tags, host_custom_vars):
@@ -195,6 +195,37 @@ multisite_icons_and_actions['rule_editor'] = {
     'service_columns': [ 'description', 'check_command', "host_name" ],
     'paint':           paint_rule_editor,
 }
+
+#.
+#   .--Manpage-------------------------------------------------------------.
+#   |              __  __                                                  |
+#   |             |  \/  | __ _ _ __  _ __   __ _  __ _  ___               |
+#   |             | |\/| |/ _` | '_ \| '_ \ / _` |/ _` |/ _ \              |
+#   |             | |  | | (_| | | | | |_) | (_| | (_| |  __/              |
+#   |             |_|  |_|\__,_|_| |_| .__/ \__,_|\__, |\___|              |
+#   |                                |_|          |___/                    |
+#   +----------------------------------------------------------------------+
+#   |  Link to the check manpage                                           |
+#   '----------------------------------------------------------------------'
+
+def paint_manpage_icon(what, row, tags, host_custom_vars):
+    if what == "service" and config.wato_enabled and config.may("wato.use"):
+        command = row["service_check_command"]
+        if command.startswith("check_mk-"):
+            check_type = command[9:]
+        elif command.startswith("check_mk_active-"):
+            check_type = "check_" + command[16:]
+        else:
+            return
+        urlvars = [("mode", "check_manpage"), ("check_type", check_type)]
+        return 'check_plugins', _("Manual page for this check type"), html.makeuri_contextless(urlvars, "wato.py")
+
+
+multisite_icons_and_actions['check_manpage'] = {
+    'service_columns': [ 'check_command' ],
+    'paint':           paint_manpage_icon,
+}
+
 
 #.
 #   .--Acknowledge---------------------------------------------------------.

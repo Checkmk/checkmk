@@ -1,0 +1,15 @@
+Title: New catalog of check plugins and manpages now available as a new WATO module
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432468346
+Class: feature
+
+What now has a new module <i>Check Plugins</i> that is essentially a complete catalog
+of all check plugins that your installation has installed. It contains shipped plugins
+as well as locally installed ones (if they have a man page that is).
+
+From the man pages you can directly jump to the according rule set for the parameters
+of the check. Also links to the manual page have been added in the new service command
+menu and in the WATO service list.

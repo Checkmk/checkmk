@@ -675,6 +675,8 @@ form.search {
     position: absolute;
     top: 13px;
     left: 13px;
+    width: 48px;
+    height: 48px;
 }
 .wato div.mainmenu div.title {
     font-weight: bold;
@@ -1270,4 +1272,23 @@ table.nform.rulesettings td.legend div.title {
 
 .wato table.data.check_catalog td.agents {
     width: 200px;
+}
+
+.wato table.data.manpage th {
+    text-align: left;
+    padding: 4px 5px;
+}
+.wato table.data.manpage td {
+    padding: 4px 5px;
+}
+
+.wato table.data.manpage > tbody > tr:nth-child(even) > th {
+    background-color: #7fadc0;
+}
+
+.wato table.data.manpage > tbody > tr:nth-child(odd) > td {
+    background-color: #ddd;
+}
+.wato table.data.manpage > tbody > tr:nth-child(even) > td {
+    background-color: #eee;
 }

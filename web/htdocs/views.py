@@ -984,11 +984,10 @@ def show_view(view, show_heading = False, show_buttons = True,
             need_inventory_data = True
 
     # Apply the site hint / filter
-    if config.is_multisite():
-        if html.var("site"):
-            only_sites = [html.var("site")]
-        else:
-            only_sites = None
+    if html.var("site"):
+        only_sites = [html.var("site")]
+    else:
+        only_sites = None
 
     # Prepare limit:
     # We had a problem with stats queries on the logtable where
@@ -2136,9 +2135,7 @@ def url_to_view(row, view_name):
             url_vars.append(("display_options", do))
 
         filename = html.mobile and "mobile_view.py" or "view.py"
-        uri = filename + "?" + html.urlencode_vars([("view_name", view_name)] + url_vars)
-        content = "<a href=\"%s\">%s</a>" % (uri, content)
-    return content
+        return filename + "?" + html.urlencode_vars([("view_name", view_name)] + url_vars)
 
 def link_to_view(content, row, view_name):
     if 'I' not in html.display_options:

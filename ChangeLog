@@ -4,6 +4,7 @@
 
     Multisite:
     * 2257 FIX: Improved handling of duplicate hostnames across different sites...
+    * 2299 FIX: Fixed search filter for check command when command was active...
 
 
 1.2.6p4:

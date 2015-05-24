@@ -326,9 +326,9 @@ class FilterQueryDropdown(Filter):
             return ""
 
 declare_filter(110, FilterQueryDropdown("host_check_command", _("Host check command"), "host", \
-        "GET commands\nCache: reload\nColumns: name\n", "Filter: host_check_command = %s\n"))
+        "GET commands\nCache: reload\nColumns: name\n", "Filter: host_check_command ~ ^%s(!.*)?\n"))
 declare_filter(210, FilterQueryDropdown("check_command", _("Service check command"), "service", \
-        "GET commands\nCache: reload\nColumns: name\n", "Filter: service_check_command = %s\n"))
+        "GET commands\nCache: reload\nColumns: name\n", "Filter: service_check_command ~ ^%s(!.*)?$\n"))
 
 class FilterServiceState(Filter):
     def __init__(self, name, title, prefix):

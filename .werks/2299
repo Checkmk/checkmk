@@ -1,0 +1,11 @@
+Title: Fixed search filter for check command when command was active
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p5
+Date: 1432468174
+Class: fix
+
+This filter is e.g. contained in the view for searching services. When you searched
+for active checks (e.g. <tt>check_http</tt>) then the result was always empty because
+of the parameter of the check. This has been fixed.

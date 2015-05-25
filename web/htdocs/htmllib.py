@@ -1570,6 +1570,15 @@ class html:
     def uploaded_file(self, varname, default = None):
         return self.uploads.get(varname, default)
 
+    def magic_move(self, helptext, ajax_url):
+        self.write('<img align=absmiddle class=iconbutton '
+                    'src="images/button_magic_move_lo.png" '
+                    'title="%s" '
+                    'onmouseover="hilite_icon(this, 1)" '
+                    'onmouseout="hilite_icon(this, 0)" '
+                    'onclick="start_magic_move(\'%s\')" >' % (
+                        (helptext, ajax_url)))
+
     #
     # Per request caching
     #

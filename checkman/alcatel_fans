@@ -1,0 +1,12 @@
+title: Alcatel switches: Fan Status
+agents: snmp
+catalog: hw/network/alcatel
+license: GPL
+distribution: check_mk
+description:
+ This Check Monitors all Fans on Alcatel switches supporting the ALCATEL-IND1-CHASSIS-MIB.
+ The status is automaticly reported by the device, so no configuration is needed
+
+inventory:
+ One check is created for each fan
+

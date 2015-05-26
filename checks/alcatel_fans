@@ -27,8 +27,7 @@
 def inventory_alcatel_fan(info):
     # parameter start in enumerate only works since python 2.6
     for nr, value in enumerate(info):
-        loop_item = nr + 1
-        yield loop_item, None
+        yield nr+1, None
 
 def check_alcatel_fan(item, _no_params, info):
     fan_states = {
@@ -37,8 +36,7 @@ def check_alcatel_fan(item, _no_params, info):
         2 : "running",
     }
     for nr, value in enumerate(info):
-        loop_item = nr + 1
-        if loop_item == item:
+        if nr+1 == item:
             fan_state = int(value[0])
             state = 0
             if fan_state != 2:

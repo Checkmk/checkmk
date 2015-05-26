@@ -30,30 +30,30 @@ def inventory_hitatchi_hus_status(info):
 
 def check_hitatchi_hus_status(_no_item, _no_params, info):
     status_values = {
-        0           : ( "Array in normal status", 0 ),
-        1           : ( "Drive blocked", 2 ),
-        2           : ( "Spare drive blockade", 2 ),
-        4           : ( "Data drive blockade", 2 ),
-        8           : ( "ENC alarm", 1 ),
-        64          : ( "Warned array", 1 ),
-        128         : ( "Mate controller blocked",2 ),
-        256         : ( "UPS alarm", 2 ),
-        1024        : ( "Path blocked", 2 ),
-        16384       : ( "Drive I/O module failure", 2 ),
-        32768       : ( "Controller failure by related parts", 2 ),
-        65536       : ( "Battery alarm", 1 ),
-        131072      : ( "Power supply failure", 2 ),
-        1048576     : ( "Fan alarm", 1 ),
-        4194304     : ( "Host I/O module failure", 2 ),
-        838608      : ( "Management module failure", 2 ),
-        16777216    : ( "Host connector alarm", 2 ),
-        268436456   : ( "Host connector alarm", 2 ),
+        0           : ( 0,  "Array in normal status" ),
+        1           : ( 2, "Drive blocked" ),
+        2           : ( 2, "Spare drive blockade" ),
+        4           : ( 2, "Data drive blockade" ),
+        8           : ( 1, "ENC alarm" ),
+        64          : ( 1, "Warned array" ),
+        128         : ( 2, "Mate controller blocked" ),
+        256         : ( 2, "UPS alarm" ),
+        1024        : ( 2, "Path blocked" ),
+        16384       : ( 2, "Drive I/O module failure" ),
+        32768       : ( 2, "Controller failure by related parts" ),
+        65536       : ( 1, "Battery alarm" ),
+        131072      : ( 2, "Power supply failure" ),
+        1048576     : ( 1, "Fan alarm" ),
+        4194304     : ( 2, "Host I/O module failure" ),
+        838608      : ( 2, "Management module failure" ),
+        16777216    : ( 2, "Host connector alarm" ),
+        268436456   : ( 2, "Host connector alarm" ),
     }
 
     for status, output in status_values.items():
         state, message = output
         if status & int(info[0][0]):
-            return state, message
+            yield state, message
 
 check_info["hitatchi_hus_status"] = {
     "check_function"        : check_hitatchi_hus_status,

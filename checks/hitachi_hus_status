@@ -30,7 +30,7 @@ def inventory_hitatchi_hus_status(info):
 
 def check_hitatchi_hus_status(_no_item, _no_params, info):
     status_values = {
-        0           : ( 0,  "Array in normal status" ),
+        0           : ( 0, "Array in normal status" ),
         1           : ( 2, "Drive blocked" ),
         2           : ( 2, "Spare drive blockade" ),
         4           : ( 2, "Data drive blockade" ),
@@ -52,8 +52,12 @@ def check_hitatchi_hus_status(_no_item, _no_params, info):
 
     for status, output in status_values.items():
         state, message = output
+        found_error = False
         if status & int(info[0][0]):
+            found_error = True
             yield state, message
+        if found_error:
+            yield 0, "Array in normal status"
 
 check_info["hitatchi_hus_status"] = {
     "check_function"        : check_hitatchi_hus_status,

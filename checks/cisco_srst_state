@@ -25,6 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 
+# 1.3.6.1.4.1.9.9.441.1.2.32.1.1 -> csrstAccessCodeType: 1, 2, 3, 4(pri)
+# 1.3.6.1.4.1.9.9.441.1.2.32.1.2 -> csrstAccessCode: SnmpAdminString
+# 1.3.6.1.4.1.9.9.441.1.2.32.1.3 -> csrstAccessCodeDIDEnabled TruthValue
+
+
 def inventory_cisco_srst_state(info):
     return [ (None, None) ]
 

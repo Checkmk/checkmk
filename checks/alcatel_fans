@@ -25,16 +25,19 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_alcatel_fan(info):
-    for nr, value in enumerate(info, start=1):
+    # parameter start in enumerate only works since python 2.6
+    for nr, value in enumerate(info):
+        nr += 1
         yield nr, None
 
 def check_alcatel_fan(item, _no_params, info):
     fan_states = {
-        0 : "has no Status",
-        1 : "Not running",
-        2 : "Running",
+        0 : "has no status",
+        1 : "not running",
+        2 : "running",
     }
-    for nr, value in enumerate(info, start=1):
+    for nr, value in enumerate(info):
+        nr += 1
         if nr == item:
             fan_state = int(value[0])
             state = 0

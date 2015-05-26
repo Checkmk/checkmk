@@ -1,0 +1,10 @@
+Title: windows agent: fixed invalid agent output, lead to broken memory check
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.6p4
+Date: 1432042441
+Class: fix
+
+The windows agent in version 1.2.6p3 reported an invalid memory section,
+which caused the memory check to go unknown. This has been fixed.

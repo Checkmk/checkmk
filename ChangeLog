@@ -12,6 +12,7 @@
 1.2.6p4:
     Checks & Agents:
     * 2274 windows agent: "check_mk_agent.exe test" now also outputs stderr of plugins...
+    * 2279 windows agent: fixed invalid agent output, lead to broken memory check
     * 2272 FIX: mrpe: made UNKNOWN message more clear in case of an invalid state char
 
     WATO:

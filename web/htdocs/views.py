@@ -982,11 +982,10 @@ def show_view(view, show_heading = False, show_buttons = True,
             need_inventory_data = True
 
     # Apply the site hint / filter
-    if config.is_multisite():
-        if html.var("site"):
-            only_sites = [html.var("site")]
-        else:
-            only_sites = None
+    if html.var("site"):
+        only_sites = [html.var("site")]
+    else:
+        only_sites = None
 
     # Prepare limit:
     # We had a problem with stats queries on the logtable where

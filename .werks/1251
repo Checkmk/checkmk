@@ -1,0 +1,10 @@
+Title: lvm_pvs, lvm_vgs: New Checks for LVM volume groups and physical volumes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432727463
+Class: feature
+
+The checks need the agent plugin {lvm} in order to work.
+

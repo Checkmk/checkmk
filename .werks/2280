@@ -1,0 +1,11 @@
+Title: agent_vsphere: now provides more information if the login attempt fails
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p5
+Date: 1432736447
+Class: feature
+
+In addition of <i>Cannot connect to vSphere Server. Maybe you provided wrong credentials.
+Please check your connection settings and try again."</i>, the agent now also reports
+extra information.

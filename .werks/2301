@@ -1,0 +1,12 @@
+Title: Availability now allows just showing rows with outage times above certain levels
+Level: 2
+Component: reporting
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432816134
+Class: feature
+
+In the availability options you can now define percentage levels for WARN,
+CRIT and non-OK. Only objects that exceed these levels will be displayed
+then. This allows you to make a report of just those object that had some
+problem during the queried time range.

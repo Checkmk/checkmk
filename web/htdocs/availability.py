@@ -258,6 +258,22 @@ avoption_entries = [
     )
   ),
 
+  # Filter rows according to actual availability
+  ( "av_filter_outages",
+    "double",
+    True,
+    Dictionary(
+        title = _("Only show objects with outages"),
+        columns = 2,
+        elements = [
+           ( "warn",   Percentage(title = _("Show only rows with WARN of at least"), default_value = 0.0)),
+           ( "crit",   Percentage(title = _("Show only rows with CRIT of at least"), default_value = 0.0)),
+           ( "non-ok", Percentage(title = _("Show only rows with non-OK of at least"), default_value = 0.0)),
+        ],
+        optional_keys = False,
+    )
+  ),
+
 
   # Show colummns for min, max, avg duration and count
   ( "outage_statistics",
@@ -462,6 +478,7 @@ def get_default_avoptions():
             "host_down" : "host_down",
         },
         "av_levels"         : None,
+        "av_filter_outages" : { "warn" : 0.0, "crit" : 0.0, "non-ok" : 0.0 },
         "outage_statistics" : ([],[]),
         "av_mode"           : False,
         "service_period"      : "honor",
@@ -693,7 +710,35 @@ def compute_availability(what, av_rawdata, avoptions):
             availability_table.append(availability_entry)
 
     availability_table.sort(cmp = cmp_av_entry)
-    return availability_table
+
+    # Apply filters
+    filtered_table = []
+    for row in availability_table:
+        if pass_availability_filter(row, avoptions):
+            filtered_table.append(row)
+    return filtered_table
+
+
+def pass_availability_filter(row, avoptions):
+    for key, level in avoptions["av_filter_outages"].items():
+        if level == 0.0:
+            continue
+        if key == "warn":
+            ref_value = row["states"].get("warn", 0)
+        elif key == "crit":
+            ref_value = row["states"].get("crit", row["states"].get("down", 0))
+        elif key == "non-ok":
+            ref_value = 0.0
+            for key, value in row["states"].items():
+                if key not in [ "ok", "up", "unmonitored" ]:
+                    ref_value += value
+        else:
+            continue # undefined key. Should never happen
+        percentage = 100.0 * ref_value / row["considered_duration"]
+        if percentage < level:
+            return False
+
+    return True
 
 # Compute a list of availability tables - one for each group.
 # Each entry is a pair of group_name and availability_table.

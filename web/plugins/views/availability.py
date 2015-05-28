@@ -278,7 +278,7 @@ def render_availability_tables(availability_tables, what, avoptions):
 
     # Legend for Availability levels
     av_levels = avoptions["av_levels"]
-    if av_levels:
+    if av_levels and not "omit_av_levels" in avoptions["labelling"]:
         warn, crit = av_levels
         html.write('<div class="avlegend levels">')
         html.write('<h3>%s</h3>' % _("Availability levels"))

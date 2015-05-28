@@ -97,9 +97,9 @@ try:
     # Export required idt files into work dir
     for entry in [ "File", "Property", "Component" ]:
         verbose("Export table %s from file %s" % (entry, msi_file))
-        os.system((path_prefix + "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % \
-                 { "work_dir" : work_dir, "msi_file": msi_file, "property": entry })
-
+        if os.system((path_prefix + "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % \
+                 { "work_dir" : work_dir, "msi_file": msi_file, "property": entry }) != 0:
+            bail_out('Failed to unpack msi table %s from %s' % (entry, msi_file))
 
     verbose("Modify extracted files..")
 

@@ -1,0 +1,11 @@
+Title: mkeventd: fix: now able to create notifications with events containing umlauts
+Level: 2
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1432821086
+
+The event console was unable to create a notification for a event if it contained umlauts like ä, ö, etc.
+The event itself got created, just the notification part was missing.

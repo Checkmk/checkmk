@@ -1,0 +1,9 @@
+Title: bluenet_sensor, bluenet_sensor.hum: new checks to monitor temperature and humidity of Bachmann Bluenet PDUs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432822809
+Class: feature
+
+

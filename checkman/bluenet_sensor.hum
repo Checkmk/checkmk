@@ -1,0 +1,22 @@
+title: Bachmann Bluenet Monitored PDU Humidity Sensors
+agents: snmp
+catalog: hw/environment/bachmann
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the humidity measured by the sensors of Bachmann
+ Bluenet Monitored PDUs. It uses the NETTRACK-E3METER-SNMP MIB to extract the
+ data from the devices.
+
+ Lower and upper warning and critical levels are enforced and may be
+ configured.  A non-OK state is triggered according to these levels.
+
+perfdata:
+ The humidity of the sensor.
+
+inventory:
+ One service for each sensor of a PDU is created.
+
+item:
+ The name of the sensor, which is either "internal" or "external {<id>}",
+ and {<id>} is the numerical id of the sensor.

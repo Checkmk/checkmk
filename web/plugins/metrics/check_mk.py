@@ -1273,6 +1273,7 @@ check_metrics["check_mk-cmciii.phase"]                          = {}
 check_metrics["check_mk-ucs_bladecenter_fans.temp"]             = {}
 check_metrics["check_mk-icom_repeater.temp"]                    = {}
 check_metrics["check_mk-ucs_bladecenter_psu.chassis_temp"]      = {}
+check_metrics["check_mk-bluenet_sensor"]                        = {}
 
 check_metrics["check_mk-mysql_capacity"]                        = {}
 
@@ -1296,7 +1297,7 @@ check_metrics["check_mk-adva_fsp_current"]                      = {}
 check_metrics["check_mk-akcp_exp_humidity"]                     = {}
 check_metrics["check_mk-apc_humidity"]                          = {}
 check_metrics["check_mk-hwg_humidity"]                          = {}
-
+check_metrics["check_mk-bluenet_sensor.hum"]                    = {}
 
 check_metrics["check_mk-apache_status"]                         = { "ReqPerSec" : { "name" : "requests_per_second" }, "BusyWorkers" : { "name" : "busy_workers" }}
 
@@ -1588,6 +1589,7 @@ define_generic_graph("execution_time")
 define_generic_graph("response_time")
 define_generic_graph("uptime")
 define_generic_graph("temp")
+define_generic_graph("humidity")
 define_generic_graph("time_offset")
 
 

@@ -3108,6 +3108,7 @@ def do_notify(event, username, is_cancelling):
     # Send notification context via stdin.
     context_string = "".join([ "%s=%s\n" % (varname, value.replace("\n", "\\n")) for (varname, value) in context.items() ])
 
+    context_string = to_utf8(context_string)
     p = subprocess.Popen(["cmk", "--notify", "stdin"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     response = p.communicate(input=context_string)[0]
     status = p.returncode

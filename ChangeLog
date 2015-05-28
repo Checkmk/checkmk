@@ -9,6 +9,9 @@
     * 2257 FIX: Improved handling of duplicate hostnames across different sites...
     * 2299 FIX: Fixed search filter for check command when command was active...
 
+    Event Console:
+    * 2281 FIX: mkeventd: fix: now able to create notifications with events containing umlauts...
+
 
 1.2.6p4:
     Checks & Agents:

@@ -100,6 +100,16 @@ multisite_painter_options["ts_date"] = {
     'valuespec' : DateFormat(),
 }
 
+multisite_painter_options["matrix_omit_uniform"] = {
+    'valuespec' : DropdownChoice(
+        title = _("Find differences..."),
+        choices = [
+            ( False, _("Always show all rows") ),
+            ( True, _("Omit rows where all columns are identical") ),
+        ]
+    )
+}
+
 # This helper function returns the value of the given custom var
 def paint_custom_var(what, key, row):
     if what:

@@ -546,7 +546,7 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
         # Now for each unique service^H^H^H^H^H^H ID column paint one row
         for row_id in unique_row_ids:
             # Omit rows where all cells have the same values
-            if config.matrix_omit_uniform_lines:
+            if get_painter_option("matrix_omit_uniform"):
                 at_least_one_different = False
                 for counts in value_counts[row_id].values():
                     if len(counts) > 1:
@@ -602,7 +602,7 @@ def csv_export_matrix(rows, view, group_painters, painters):
 
     for row_id in unique_row_ids:
         # Omit rows where all cells have the same values
-        if config.matrix_omit_uniform_lines:
+        if get_painter_option("matrix_omit_uniform"):
             at_least_one_different = False
             for counts in value_counts[row_id].values():
                 if len(counts) > 1:
@@ -721,4 +721,5 @@ multisite_layouts["matrix"] = {
     "csv_export" : csv_export_matrix,
     "group"      : True,
     "checkboxes" : False,
+    "options"    : [ "matrix_omit_uniform" ],
 }

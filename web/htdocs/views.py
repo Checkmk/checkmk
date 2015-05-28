@@ -1057,6 +1057,28 @@ def show_view(view, show_heading = False, show_buttons = True,
         colset.remove("site")
     columns = list(colset)
 
+    # The layout of the view: it can be overridden by several specifying
+    # an output format (like json or python). Note: the layout is not
+    # always needed. In case of an embedded view in the reporting this
+    # field is simply missing, because the rendering is done by the
+    # report itself.
+    # TODO: CSV export should be handled by the layouts. It cannot
+    # be done generic in most cases
+    if html.output_format == "html":
+        if "layout" in view:
+            layout = multisite_layouts[view["layout"]]
+        else:
+            layout = None
+    else:
+        if "layout" in view and "csv_export" in multisite_layouts[view["layout"]]:
+            multisite_layouts[view["layout"]]["csv_export"](rows, view, group_painters, painters)
+            return
+        else:
+            # Generic layout of export
+            layout = multisite_layouts.get(html.output_format)
+            if not layout:
+                layout = multisite_layouts["json"]
+
     # Get list of painter options we need to display (such as PNP time range
     # or the format being used for timestamp display)
     painter_options = []
@@ -1065,6 +1087,9 @@ def show_view(view, show_heading = False, show_buttons = True,
         painter_options += p.get("options", [])
         if p.get("load_inv"):
             need_inventory_data = True
+
+    # Also layouts can register painter options
+    painter_options += layout.get("options", [])
 
     painter_options = list(set(painter_options))
     painter_options.sort()
@@ -1115,27 +1140,6 @@ def show_view(view, show_heading = False, show_buttons = True,
     if browser_reload and 'R' in display_options and not only_count:
         html.set_browser_reload(browser_reload)
 
-    # The layout of the view: it can be overridden by several specifying
-    # an output format (like json or python). Note: the layout is not
-    # always needed. In case of an embedded view in the reporting this
-    # field is simply missing, because the rendering is done by the
-    # report itself.
-    # TODO: CSV export should be handled by the layouts. It cannot
-    # be done generic in most cases
-    if html.output_format == "html":
-        if "layout" in view:
-            layout = multisite_layouts[view["layout"]]
-        else:
-            layout = None
-    else:
-        if "layout" in view and "csv_export" in multisite_layouts[view["layout"]]:
-            multisite_layouts[view["layout"]]["csv_export"](rows, view, group_painters, painters)
-            return
-        else:
-            # Generic layout of export
-            layout = multisite_layouts.get(html.output_format)
-            if not layout:
-                layout = multisite_layouts["json"]
 
     # Until now no single byte of HTML code has been output.
     # Now let's render the view. The render_function will be

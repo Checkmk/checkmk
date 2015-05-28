@@ -31,7 +31,7 @@ def inventory_cisco_srst_call_legs(info):
 
 def check_cisco_srst_call_legs(_no_item, _no_params, info):
     call_legs = int(info[0][0])
-    yield 0, "%d active call legs" % call_legs, [ ("call_legs", call_legs) ]
+    yield 0, "%d call legs routed through the Cisco device since going active" % call_legs, [ ("call_legs", call_legs) ]
 
 
 check_info['cisco_srst_call_legs'] = {

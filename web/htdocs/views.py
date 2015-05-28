@@ -2131,7 +2131,7 @@ def url_to_view(row, view_name):
             if filter_key in dict(url_vars):
                 add_site_hint = False
 
-        if add_site_hint:
+        if add_site_hint and row.get('site'):
             url_vars.append(('site', row['site']))
 
         do = html.var("display_options")

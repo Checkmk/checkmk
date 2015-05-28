@@ -1,0 +1,21 @@
+Title: printer_supply: now able to toggle the point of view for used and remaining material
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.2.7i1
+Date: 1432641270
+
+There is a <i>Upturn toner levels</i> option available which allows you
+to switch the point of view from the remaining- to the used-perspective.
+This was useful, because there are waste toner boxes which count in the
+different direction.
+
+In case of waste toner boxes the upturn feature was hardcoded on.
+However, depending on the manufacturer the count direction differs...
+With this change the upturn option now toggles the direction every time,
+so it doesn't matter if the component is a cartridge or a waste toner box.
+
+After updating to this version, you should check the toner levels and
+set the <i>Upturn toner levels</i> accordingly.

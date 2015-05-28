@@ -34,7 +34,7 @@ Sub addOutput(text)
     output = output & text & vbLf
 End Sub
 
-' Dummy empty output. 
+' Dummy empty output.
 ' Contains timeout error if this scripts runtime exceeds the timeout
 WScript.echo "<<<mssql_versions>>>"
 
@@ -49,12 +49,12 @@ If Err.Number <> 0 Then
     Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement11")
     If Err.Number <> 0 Then
         Err.Clear()
-    
+
         ' try SQL Server 2008
         Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
         If Err.Number <> 0 Then
             Err.Clear()
-    
+
             ' try MSSQL < 10
             Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
             If Err.Number <> 0 Then
@@ -71,7 +71,7 @@ Set WMIservice = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\c
 
 For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE " & _
                                "SQLServiceType = 1 AND PropertyName = 'VERSION'")
-    
+
 
     Set colRunningServices = WMIservice.ExecQuery("SELECT State FROM Win32_Service WHERE Name = '" & prop.ServiceName & "'")
     instId      = Replace(prop.ServiceName, "$", "__")
@@ -79,7 +79,7 @@ For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE "
     instIdx = Replace(instId, "__", "_")
     addOutput( "<<<mssql_versions>>>" )
     addOutput( instIdx & "  " & instVersion )
-    
+
     ' Now query the server instance for the databases
     ' Use name as key and always empty value for the moment
     For Each objService In colRunningServices
@@ -125,7 +125,7 @@ For Each instId In instIds.Keys
 			'WScript.echo (CONN)
 
     CONN.Open
-    
+
     ' Get counter data for the whole instance
     RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
             "FROM sys.dm_os_performance_counters " & _
@@ -140,11 +140,11 @@ For Each instId In instIds.Keys
             instanceName = "None"
         End If
         value        = Trim(RS("cntr_value"))
-        addOutput( objectName & " " & counterName & " " & instanceName & " " & value ) 
+        addOutput( objectName & " " & counterName & " " & instanceName & " " & value )
         RS.MoveNext
     Loop
     RS.Close
-    
+
     ' First only read all databases in this instance and save it to the db names dict
     RS.Open "EXEC sp_databases", CONN
     Dim x, dbName, dbNames
@@ -152,10 +152,10 @@ For Each instId In instIds.Keys
     Do While NOT RS.Eof
         dbName = RS("DATABASE_NAME")
         dbNames.add dbName, ""
-       RS.MoveNext    
+       RS.MoveNext
     Loop
     RS.Close
-    
+
     ' Now gather the db size and unallocated space
     addOutput( "<<<mssql_tablespaces>>>" )
     Dim i, dbSize, unallocated, reserved, data, indexSize, unused
@@ -195,7 +195,7 @@ For Each instId In instIds.Keys
                      data & " " & indexSize & " " & unused )
         Set RS = CreateObject("ADODB.Recordset")
     Next
-    
+
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup 
     Dim lastBackupDate
@@ -213,7 +213,7 @@ For Each instId In instIds.Keys
         Loop
         RS.Close
     Next
-    
+
     CONN.Close
 Next
 

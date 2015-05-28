@@ -140,8 +140,14 @@ def check_printer_supply(item, params, info):
                     return (0, "current level is %d" % current, [("pages", current)])
 
             leftperc = 100.0 * float(current) / maxlevel
-            if upturn or unit_type == 4:
+
+            if unit_type == 4:
                 leftperc = 100 - leftperc
+            # Some printers handle the used / remaining material differently
+            # With the upturn option we can toggle the point of view (again)
+            if upturn:
+                leftperc = 100 - leftperc
+
 
             infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)
             if leftperc <= crit:

@@ -1,4 +1,4 @@
-Title: alcatel_cpu, alcatel_temp: New checks for Alcatel switches based on IND1 MIB
+Title: alcatel_cpu, alcatel_temp, alcatel_fans: New checks for Alcatel switches based on IND1 MIB
 Level: 1
 Component: checks
 Compatible: compat

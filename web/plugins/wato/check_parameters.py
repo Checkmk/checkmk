@@ -309,7 +309,7 @@ register_check_parameters(
             ( "average",
               Integer(
                   title = _("Averaging"),
-                  help = _("When this option is activated then the CPU utilization is being "
+                  help = _("When this option is activated then the block rate is being "
                            "averaged <b>before</b> the levels are being applied."),
                   unit = _("min"),
                   default_value = 15,

@@ -744,7 +744,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     html.hidden_field("load_user", html.var("load_user", "")) # safe old name in case user changes it
     html.hidden_field("load_name", oldname) # safe old name in case user changes it
 
-    # FIXME: Hier werden die Flags aus visbility nicht korrekt geladen. Wäre es nicht besser,
+    # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
     # diese in einem Unter-Dict zu lassen, anstatt diese extra umzukopieren?
     visib = []
     for key, title in visibility_choices:

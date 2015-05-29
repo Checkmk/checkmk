@@ -591,6 +591,7 @@ def csv_export_matrix(rows, view, group_painters, painters):
     output_csv_headers(view)
 
     groups, unique_row_ids, matrix_cells = list(create_matrices(rows, group_painters, painters, num_columns=None))[0]
+    value_counts, row_majorities = matrix_find_majorities(rows, painters, False)
 
     table.begin(output_format="csv")
     for painter_nr, painter in enumerate(group_painters):

@@ -355,7 +355,7 @@ def operator_minmax(a, b, func):
     v = func(a[0], b[0])
     # Use unit and color of the winner. If the winner
     # has none (e.g. it is a scalar like 0), then take
-    # unit and color of the looser.
+    # unit and color of the loser.
     if v == a[0]:
         winner = a
         loser = b

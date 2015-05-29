@@ -1452,7 +1452,7 @@ register_rule(group,
             ),
             Password(
                 title = _("Password / Secret"),
-                help = _("Valid automation secret or password for the user, depending on the choosen "
+                help = _("Valid automation secret or password for the user, depending on the chosen "
                          "authentication mode."),
                 allow_empty = False
             ),

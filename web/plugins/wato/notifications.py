@@ -103,6 +103,18 @@ register_notification_parameters(
                              "other."),
                 )
             ),
+            ('bulk_sort_order',
+                DropdownChoice(
+                    choices = [
+                        ('oldest_first', _('Oldest first')),
+                        ('newest_first', _('Newest first')),
+                    ],
+                    help = _("With this option you can specify, whether the oldest (default) or "
+                             "the newest notification should get shown at the top of the notification mail."),
+                    title = _("Notification sort order for bulk notifications"),
+                    default = "oldest_first"
+                )
+            )
         ]
     )
 )
@@ -185,6 +197,18 @@ $LONGSERVICEOUTPUT$
 """,
                 )
             ),
+            ('bulk_sort_order',
+                DropdownChoice(
+                    choices = [
+                        ('oldest_first', _('Oldest first')),
+                        ('newest_first', _('Newest first')),
+                    ],
+                    help = _("With this option you can specify, whether the oldest (default) or "
+                             "the newest notification should get shown at the top of the notification mail."),
+                    title = _("Notification sort order for bulk notifications"),
+                    default = "oldest_first"
+                )
+            )
         ]
     )
 )

@@ -1,0 +1,14 @@
+Title: notification bulking: now able to configure the notification sort order in emails
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i1
+Date: 1432912433
+Class: feature
+
+With this update you can now configure, which notification should get shown
+at the top of the email. Per default the oldest notification was displayed at the top.
+
+You can configure the new option <i>Notification sort order for bulk notifications</i>
+in the WATO rules <i>Parameters for HTML Email</i> and <i>Parameters for ASCII Email</i> or
+specifically in a notification rule.

@@ -1,0 +1,13 @@
+Title: mkeventd: fixed exception in notification if the application field of the event was not set
+Level: 2
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1432902248
+
+Events without an properly set <i>application</i> field were not processed correctly
+by the Check_MK notification module. By nature, all events from the event console
+are always considered as service events. If the <i>application</i> field is empty
+the event was processed as host event, which lead to an exception.

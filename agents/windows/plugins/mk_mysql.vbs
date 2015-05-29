@@ -35,7 +35,7 @@ Set instances = CreateObject("Scripting.Dictionary")
 Set FSO = CreateObject("Scripting.FileSystemObject")
 Set SHO = CreateObject("WScript.Shell")
 
-cfg_dir = FSO.GetParentFolderName(FSO.GetParentFolderName(WScript.ScriptFullName)) & "\config"
+cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 
 '
 ' First detect all local instances. We only add services of instances

@@ -528,6 +528,7 @@
     * 2263 FIX: Bulk service discovery: Fixed error when doing bulk inventory on locked folders...
     * 2254 FIX: Fixed error message in parameter columns of discovered services...
     * 2230 FIX: Fix two exceptions in case of errors during bulk discovery
+    * 2259 FIX: Raw Edition: Added missing agent download icons to WATO quickaccess snapin
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

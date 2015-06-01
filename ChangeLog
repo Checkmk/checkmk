@@ -1,4 +1,7 @@
 1.2.7i2:
+    Checks & Agents:
+    * 2323 FIX: df: Fix new graphs for all filesystem checks in case of existing inode information
+
 
 1.2.7i1:
     Core & Setup:

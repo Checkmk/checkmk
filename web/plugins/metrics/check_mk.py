@@ -1245,7 +1245,7 @@ check_metrics["check_mk-tcp_conn_stats"] = {
 }
 
 df_translation = {
-    "~(?!fs_size|growth|trend|fs_provisioning).*"   : { "name"  : "fs_used", "scale" : MB },
+    "~(?!inodes_used|fs_size|growth|trend|fs_provisioning).*"   : { "name"  : "fs_used", "scale" : MB },
     "fs_size" : { "scale" : MB },
     "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
     "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },

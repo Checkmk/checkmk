@@ -1,0 +1,9 @@
+Title: df: Fix new graphs for all filesystem checks in case of existing inode information
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1p1
+Date: 1433168217
+Class: fix
+
+

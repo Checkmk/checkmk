@@ -1112,7 +1112,7 @@ for ty, unit in [ ("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s") ]:
         "unit"  : unit,
         "color" : "#5bb9eb",
     }
-    
+
     metric_info[ty+"_nagvis_snapin"] = {
         "title" : "NagVis: Snapin",
         "unit"  : unit,

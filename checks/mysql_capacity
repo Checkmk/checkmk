@@ -69,7 +69,7 @@ def check_mysql_size(item, params, parsed):
             infotext = "Size is %s" % get_bytes_human_readable(size)
             if params:
                 state = 0
-                warn, crit = params 
+                warn, crit = params
                 warn_b = warn * 1024
                 crit_b = crit * 1024
                 perfdata = [("database_size", size, warn_b, crit_b)]

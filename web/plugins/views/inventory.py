@@ -296,7 +296,7 @@ def render_inv_dicttable(hostname, tree_id, invpath, node):
             ("view_name", hint["view"] ),
             ("host", hostname)],
             filename="view.py")
-        html.write('<div class=invtablelink><a href="%s">%s</a></div>' % 
+        html.write('<div class=invtablelink><a href="%s">%s</a></div>' %
             (url, _("Open this table for filtering / sorting")))
 
     # We cannot use table here, since html.plug() does not work recursively

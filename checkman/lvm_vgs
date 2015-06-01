@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This Check monitors the usage of LVM volume groups.
- It useses same configuration like normal filesystems and supports almost the same 
+ It useses same configuration like normal filesystems and supports almost the same
  options (except inodes etc.)
 
  You need to install the agent plugin {lvm}.

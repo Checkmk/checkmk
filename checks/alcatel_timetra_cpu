@@ -42,7 +42,7 @@ def check_alcatel_timetra_cpu(_no_item, params, info):
         levelstext = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
     perfdata = [ ("util", cpu_perc, warn, crit, 0, 100) ]
     return state, "total: %.1f%%" % cpu_perc + levelstext, perfdata
-            
+
 
 check_info["alcatel_timetra_cpu"] = {
     "check_function"        : check_alcatel_timetra_cpu,

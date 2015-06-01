@@ -611,7 +611,7 @@ register_configvar(group,
 #   '----------------------------------------------------------------------'
 
 group = _("Administration Tool (WATO)")
-g_configvar_order[group] = 25 
+g_configvar_order[group] = 25
 
 register_configvar(group,
     "wato_max_snapshots",

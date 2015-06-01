@@ -144,7 +144,7 @@ CONNECTIONS="$(echo "$CONNECTIONS_QUERY" |\
 CONNECTIONS=$(echo "$CONNECTIONS" | grep -v -e 'COMMIT$' -e 'SET$' -e 'BEGIN$')
 echo "$CONNECTIONS" | sed '$d'
 
-# Bloat index and tables 
+# Bloat index and tables
 # Supports versions <9.0, >=9.0
 # This huge query has been gratefully taken from Greg Sabino Mullane's check_postgres.pl
 echo '<<<postgres_bloat:sep(59)>>>'

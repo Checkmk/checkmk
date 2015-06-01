@@ -330,7 +330,7 @@ class Overridable:
         if clazz.has_overriding_permission("publish"):
             return [( _("General Properties"), [
                 ( 2.2, 'public', Checkbox(
-                    title = _("Visbility"),
+                    title = _("Visibility"),
                     label = _('Make available for all users')
                 )),
             ])]

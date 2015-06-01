@@ -564,7 +564,7 @@ def paint_downtime_buttons(what):
         html.checkbox("_include_childs_recurse", False, label=_('Do this recursively'))
     elif what == "service":
         html.write("<hr>")
-        html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected <b>hosts</b> instead of their services'))
+        html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected <b>hosts</b> instead of on the individual services'))
 
 
 

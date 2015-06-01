@@ -1690,9 +1690,11 @@ def notify_bulk(dirname, uuids):
             unhandled_uuids.append((mtime, uuid))
             continue
 
-        bulk_context.append("\n")
+        part_block = []
+        part_block.append("\n")
         for varname, value in context.items():
-            bulk_context.append("%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1")))
+            part_block.append("%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1")))
+        bulk_context.append(part_block)
 
         # Do not forget to add this to the monitoring log. We create
         # a single entry for each notification contained in the bulk.
@@ -1701,6 +1703,15 @@ def notify_bulk(dirname, uuids):
         core_notification_log(plugin_name, context)
 
     if bulk_context: # otherwise: only corrupted files
+        # Per default the uuids are sorted chronologically from oldest to newest
+        # Therefore the notification plugin also shows the oldest entry first
+        # The following configuration option allows to reverse the sorting
+        if old_params.get("bulk_sort_order") == "newest_first":
+            bulk_context.reverse()
+
+        # Converts bulk context from [[1,2],[3,4]] to [1,2,3,4]
+        bulk_context = [x for y in bulk_context for x in y]
+
         parameter_context = create_bulk_parameter_context(old_params)
         context_text = "".join(parameter_context + bulk_context)
         call_bulk_notification_script(plugin, context_text)

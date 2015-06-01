@@ -3262,7 +3262,7 @@ def do_notify(event, username, is_cancelling):
         "SERVICEACKCOMMENT":           "",
         "SERVICEATTEMPT":              "1",
         "SERVICECHECKCOMMAND":         "ec-rule-" + event["rule_id"],
-        "SERVICEDESC":                 event["application"],
+        "SERVICEDESC":                 event["application"] or "Unset",
         "SERVICENOTIFICATIONNUMBER":   "1",
         "SERVICEOUTPUT":               event["text"],
         "SERVICEPERFDATA":             "",

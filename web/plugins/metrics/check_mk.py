@@ -1284,6 +1284,7 @@ check_metrics["check_mk-ucd_cpu_util"]                          = { "wait" : { "
 check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-vms_sys.util"]                          = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-winperf.cpuusage"]                      = { "cpuusage" : { "name" : "util" } }
+check_metrics["check_mk-sni_octopuse_cpu"]                      = {}
 
 check_metrics["check_mk-mbg_lantime_state"]                     = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
 check_metrics["check_mk-mbg_lantime_ng_state"]                  = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
@@ -1531,6 +1532,7 @@ perfometer_info.append({
     "exponent"   : 2,
 })
 
+# TODO: :max should be the default?
 perfometer_info.append(("linear",      ( [ "used_dhcp_leases" ], "used_dhcp_leases:max", None)))
 
 perfometer_info.append(("stacked", [

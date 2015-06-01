@@ -1,0 +1,13 @@
+Title: Add icon for those checks that cannot be rescheduled
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1433170272
+
+The newest version of Check_MK (when using CMC) detects data that originates
+from an agent cache. In such a case a rescheduling of the check is pointless an
+the icon for doing that had been removed. In order to reduce confusion amongst
+the users a replacement icon has been added instead with an explanatory text.

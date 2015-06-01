@@ -4,6 +4,7 @@
 
     Multisite:
     * 2260 Improved load time of Check_MK GUI...
+    * 2324 FIX: Add icon for those checks that cannot be rescheduled...
 
 
 1.2.7i1:

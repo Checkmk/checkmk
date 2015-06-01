@@ -1,0 +1,101 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+omd_apache_patterns = [
+    # perf keys         url matching regex
+    ('cmk_views'      , '^check_mk/view\.py'),
+    ('cmk_wato'       , '^check_mk/wato\.py'),
+    ('cmk_bi'         , '^check_mk/bi\.py'),
+    ('cmk_snapins'    , '^check_mk/sidebar_snapin\.py'),
+    ('cmk_dashboards' , '^check_mk/dashboard\.py'),
+    ('cmk_other'      , '^check_mk/.*\.py'),
+
+    ('nagvis_snapin'  , '^nagvis/server/core/ajax_handler\.php?mod=Multisite&act=getMaps'),
+    ('nagvis_ajax'    , '^nagvis/server/core/ajax_handler\.php'),
+    ('nagvis_other'   , '^nagvis/.*\.php'),
+
+    ('images'         , '\.(jpg|png|gif)$'),
+    ('styles'         , '\.css$'),
+    ('scripts'        , '\.js$'),
+    ('other'          , '.*'),
+]
+
+def inventory_omd_apache(info):
+    for line in info:
+        if line[0][0] == '[':
+            yield line[0][1:-1], None
+
+def check_omd_apache(item, _no_params, info):
+    active = False
+    found  = False
+    stats  = {'requests': {}, 'secs': {}, 'bytes': {}}
+    for line in info:
+        if line[0] == '[' + item + ']':
+            active = True
+        elif active and line[0] == '[':
+            break
+        elif active:
+            method, url, status, size_bytes, microsec = line
+            for key, pattern in omd_apache_patterns:
+                # make url relative to site directory
+                if regex(pattern).search(url[len('/'+item+'/'):]):
+                    found = True
+                    stats['requests'].setdefault(key, 0)
+                    stats['requests'][key] += 1
+
+                    stats['secs'].setdefault(key, 0)
+                    stats['secs'][key] += int(microsec) / 1000.0 / 1000.0
+
+                    stats['bytes'].setdefault(key, 0)
+                    stats['bytes'][key] += int(size_bytes)
+
+                    break # don't call a line twice
+
+    if not found:
+        yield 0, "No activity since last check"
+        return
+
+    # Now process the result. Break down the gathered values to values per second.
+    # the output is showing total values, for the graphing we provide detailed data
+    this_time = time.time()
+    for ty, title in [ ('requests', 'Requests/s'), ('secs', 'Seconds serving/s'),
+                       ('bytes', 'Sent/s') ]:
+        total = 0
+        for key, value in sorted(stats[ty].items(), key = lambda (k,v): v, reverse=True):
+            rate = get_rate("omd_apache.%s.%s.%s" % (item, ty, key), this_time, value,
+                                                             onwrap=SKIP, is_rate=True)
+            total += rate
+            yield 0, None, [(ty+'_'+key, rate)]
+
+        total = ty == 'bytes' and get_bytes_human_readable(total) or '%.2f' % total
+        yield 0, '%s %s' % (total, title)
+
+check_info['omd_apache'] = {
+    'check_function'       : check_omd_apache,
+    'inventory_function'   : inventory_omd_apache,
+    'service_description'  : 'OMD %s apache',
+    'has_perfdata'         : True,
+}

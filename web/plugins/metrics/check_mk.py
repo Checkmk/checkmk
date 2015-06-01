@@ -1070,10 +1070,88 @@ metric_info["messages"] = {
     "color" : "#aa44cc",
 }
 
-metric_info["call_legs"] = { 
+metric_info["call_legs"] = {
     "title" : _("Call legs"),
     "unit"  : "count",
     "color" : "#60bbbb",
+}
+
+metric_info["requests_cmk_views"] = {
+    "title" : _("%s Requests/s") % "Views",
+    "unit"  : "1/s",
+    "color": "#ff8080",
+}
+
+metric_info["requests_cmk_wato"] = {
+    "title" : _("%s Requests/s") % "WATO",
+    "unit"  : "1/s",
+    "color": "#377cab",
+}
+
+metric_info["requests_cmk_bi"] = {
+    "title" : _("%s Requests/s") % "BI",
+    "unit"  : "1/s",
+    "color": "#4eb0f2",
+}
+
+metric_info["requests_cmk_snapins"] = {
+    "title" : _("%s Requests/s") % "Snapins",
+    "unit"  : "1/s",
+    "color": "#ff4040",
+}
+
+metric_info["requests_cmk_dashboards"] = {
+    "title" : _("%s Requests/s") % "Dashboards",
+    "unit"  : "1/s",
+    "color": "#4040ff",
+}
+
+metric_info["requests_cmk_other"] = {
+    "title" : _("%s Requests/s") % "Other",
+    "unit"  : "1/s",
+    "color": "#5bb9eb",
+}
+
+metric_info["requests_nagvis_snapin"] = {
+    "title" : _("%s Requests/s") % "NagVis Snapin",
+    "unit"  : "1/s",
+    "color": "#f2904e",
+}
+
+metric_info["requests_nagvis_ajax"] = {
+    "title" : _("%s Requests/s") % "NagVis AJAX",
+    "unit"  : "1/s",
+    "color": "#af91eb",
+}
+
+metric_info["requests_nagvis_other"] = {
+    "title" : _("%s Requests/s") % "NagVis Other",
+    "unit"  : "1/s",
+    "color": "#f2df40",
+}
+
+metric_info["requests_images"] = {
+    "title" : _("%s Requests/s") % "Image",
+    "unit"  : "1/s",
+    "color": "#91cceb",
+}
+
+metric_info["requests_styles"] = {
+    "title" : _("%s Requests/s") % "Styles",
+    "unit"  : "1/s",
+    "color": "#c6f24e",
+}
+
+metric_info["requests_scripts"] = {
+    "title" : _("%s Requests/s") % "Scripts",
+    "unit"  : "1/s",
+    "color": "#4ef26c",
+}
+
+metric_info["requests_other"] = {
+    "title" : _("%s Requests/s") % "Other",
+    "unit"  : "1/s",
+    "color": "#4eeaf2",
 }
 
 #.
@@ -1350,7 +1428,7 @@ check_metrics["check_mk-cisco_srst_call_legs"] = {}
 
 check_metrics["check_mk-logwatch.ec"] = {}
 check_metrics["check_mk-logwatch.ec_single"] = {}
-
+check_metrics["check_mk-omd_apache"] = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -2047,3 +2125,23 @@ graph_info.append({
         ( "call_legs", "area" )
     ],
 })
+
+graph_info.append({
+    "title" : _("Handled Requests"),
+    "metrics" : [
+        ("requests_cmk_views",      "stack"),
+        #("requests_cmk_wato'",      "stack"),
+        #("requests_cmk_bi",         "stack"),
+        #("requests_cmk_snapins",    "stack"),
+        #("requests_cmk_dashboards", "stack"),
+        #("requests_cmk_other",      "stack"),
+        #("requests_nagvis_snapin",  "stack"),
+        #("requests_nagvis_ajax",    "stack"),
+        #("requests_nagvis_other",   "stack"),
+        #("requests_images",         "stack"),
+        #("requests_styles",         "stack"),
+        #("requests_scripts",        "stack"),
+        #("requests_other",          "stack"),
+    ],
+})
+

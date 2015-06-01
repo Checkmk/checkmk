@@ -32,34 +32,34 @@ def inventory_alcatel_timetra_chassis(info):
 
 def check_alcatel_timetra_chassis(item, _no_params, info):
     admin_states = {
-        1   : "noop",
-        2   : "inService",
-        3   : "outOfService",
-        4   : "diagnose",
-        5   : "operateSwitch",
+        1   : ( 0, "noop"),
+        2   : ( 0, "in service"),
+        3   : ( 1, "out of service"),
+        4   : ( 2, "diagnose"),
+        5   : ( 2, "operate switch"),
     }
 
     oper_states = {
-        1   : "unknown",
-        2   : "inService",
-        3   : "outOfService",
-        4   : "diagnosing",
-        5   : "failed",
-        6   : "booting",
-        7   : "empty",
-        8   : "provisioned",
-        9   : "unprovisioned",
-        10  : "upgrade",
-        11  : "downgrade",
-        12  : "inServiceUpgrade",
-        13  : "inServiceDowngrade",
-        14  : "resetPending",
+        1   : ( 3, "unknown"),
+        2   : ( 0, "in service"),
+        3   : ( 2, "out of service"),
+        4   : ( 1, "diagnosing"),
+        5   : ( 2, "failed"),
+        6   : ( 1, "booting"),
+        7   : ( 3, "empty"),
+        8   : ( 0, "provisioned"),
+        9   : ( 3, "unprovisioned"),
+        10  : ( 1, "upgrade"),
+        11  : ( 1, "downgrade"),
+        12  : ( 1, "in service upgrade"),
+        13  : ( 1, "in service downgrade"),
+        14  : ( 1, "reset pending"),
     }
 
     alarm_states = {
-        0   : "unknown",
-        1   : "alarmActive",
-        2   : "alarmCleared",
+        0   : ( 0, "unknown"),
+        1   : ( 2, "alarm active"),
+        2   : ( 0, "alarm cleared"),
 
     }
     for line in info:
@@ -67,26 +67,13 @@ def check_alcatel_timetra_chassis(item, _no_params, info):
             adminstate, operstate, alarmstate = map(int, line[1:])
             state = 0
             if operstate != adminstate:
-                if adminstate in [4, 5]:
-                    state = 2
-                elif adminstate in [3, 1]:
-                    state = 1
-                yield state, "Admin State: %s" % admin_states[adminstate]
+                if admin_states[adminstate][0] != 0:
+                    yield admin_states[adminstate][0], "Admin state: %s" % admin_states[adminstate][1]
 
-            state = 0
-            if operstate in [5, 3]:
-                state = 2
-            elif operstate in [4, 6, 10, 11, 12, 13, 14]:
-                state = 1
-            elif operstate not in [2, 8]:
-                state = 3
-            yield state, "Oper State: %s" % oper_states[operstate]
+            yield oper_states[operstate][0], "Operational state: %s" % oper_states[operstate][1]
 
-            if alarmstate not in  [0,2]:
-                state = 0
-                if alarmstate == 1:
-                    state = 2
-                yield state, "Alarms State: %s" % alarm_states[alarmstate]
+            if alarm_states[alarmstate][0] != 0:
+                yield alarm_states[alarmstate], "Alarm state: %s" % alarm_states[alarmstate][1]
             return
 
 

@@ -8,6 +8,7 @@ check_mk-*.tar.gz
 mk-livestatus-*.tar.gz
 mkeventd-*.tar.gz
 check-mk-*.exe
+*_min.js
 var/
 .bugs/.my_ids
 .bugs/.last

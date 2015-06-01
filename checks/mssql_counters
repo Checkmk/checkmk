@@ -220,7 +220,7 @@ def check_mssql_file_sizes(item, params, info):
                 values['log_files_used'] = int(line[-1]) * 1024
 
     if len(values.keys()) == 3:
-        for what, name in [ ("data_files", "Data Files"), 
+        for what, name in [ ("data_files", "Data Files"),
                             ("log_files_used", "Log files Used"),
                             ("log_files", "Log Files total"),]:
             state = 0

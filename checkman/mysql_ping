@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
   This check checks if the MySQL deamon is alive and a connection is possible.
-  Otherwiese it returns {CRIT}. This check can also be used to detect wrong or 
+  Otherwiese it returns {CRIT}. This check can also be used to detect wrong or
   unconfigured mk_mysql plugins.
 
   This check needs the agent plugin {mk_mysql} to be installed.

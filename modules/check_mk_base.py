@@ -1025,9 +1025,9 @@ def clear_counters(pattern, older_than):
 # within one checked item. So e.g. you could use "bcast" as name and not "if.%s.bcast" % item
 # Idea (2): Check_MK should fetch a time stamp for each info. This should also be
 # available as a global variable, so that this_time would be an optional argument.
-def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP):
+def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP, is_rate=False):
     try:
-        timedif, rate = get_counter(countername, this_time, this_val, allow_negative)
+        timedif, rate = get_counter(countername, this_time, this_val, allow_negative, is_rate)
         return rate
     except MKCounterWrapped, e:
         if onwrap is RAISE:
@@ -1041,7 +1041,7 @@ def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP
 
 
 # Legacy. Do not use this function in checks directly any more!
-def get_counter(countername, this_time, this_val, allow_negative=False):
+def get_counter(countername, this_time, this_val, allow_negative=False, is_rate=False):
     global g_counters
 
     # First time we see this counter? Do not return
@@ -1066,7 +1066,11 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
     # update counter for next time
     g_counters[countername] = (this_time, this_val)
 
-    valuedif = this_val - last_val
+    if not is_rate:
+        valuedif = this_val - last_val
+    else:
+        valuedif = this_val
+
     if valuedif < 0 and not allow_negative:
         # Do not try to handle wrapper counters. We do not know
         # wether they are 32 or 64 bit. It also could happen counter

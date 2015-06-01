@@ -198,15 +198,15 @@ def parse_diskstat(info):
 ### #  Index 13 -- weighted # of milliseconds spent doing I/Os
 ###     for line in proc_diskstat:
 ###         node = line[0]
-### 
-### 
-### 
+###
+###
+###
 ###     # For multipath devices use the entries for dm-?? and rename
 ###     # them with their multipath UUID/alias - and drop the according
 ###     # sdXY that belong to the paths.
 ###     multipath_name_info = {}
 ###     skipped_devices = set([])
-### 
+###
 ###     # The generic function takes the following values per line:
 ###     #  0: None or node name
 ###     #  1: devname
@@ -228,7 +228,7 @@ def parse_diskstat(info):
 ###         # int(l[13])
 ###         ) for l in info[1:] if len(l) >= 14
 ###     ]
-### 
+###
 ###     # Remove device mapper devices without a translated name
 ###     return [ line for line in rewritten
 ###              if not line[1].startswith("dm-")

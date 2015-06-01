@@ -114,7 +114,7 @@ function run_cached () {
 export -f run_cached
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.7i1
+echo Version: 1.2.7i2
 echo AgentOS: linux
 echo Hostname: $HOSTNAME
 echo AgentDirectory: $MK_CONFDIR
@@ -529,6 +529,17 @@ then
 	    site=${site#/omd/sites/}
 	    echo "[$site]"
 	    grep -v '^#' < $statefile
+        fi
+    done
+
+    echo '<<<omd_apache:sep(124)>>>'
+    for statsfile in /omd/sites/*/var/log/apache/stats; do
+	if [ -e "$statsfile" ] ; then
+	    site=${statsfile%/var/log*}
+	    site=${site#/omd/sites/}
+	    echo "[$site]"
+            cat $statsfile
+            > $statsfile
         fi
     done
 fi

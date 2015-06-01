@@ -25,25 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 
-#1.3.6.1.4.1.231.7.2.9.1.7
-#CPU util
-#( 0..100 )
-
 def inventory_octopus_cpu(info):
-    # are there only 1-cpu models?
     if len(info[0][0]) == 1:
-        # no level so far, it should work ok even under load
         return [(None, None)]
 
 
 def check_octopus_cpu(_no_item, _no_params_info, info):
-    try:
-        # need to un-triple pack here.
-        cpu_perc = int(info[0][0][0])
-        perfdata = [ ("util", "%.3f" % cpu_perc) ]
-        return (0, "CPU utilization is %d%%. (OK from 0-100)" % cpu_perc, perfdata)
-    except:
-        return (3, "UKNW - invalid data received")
+    cpu_perc = int(info[0][0][0])
+    perfdata = [ ("util", "%.3f" % cpu_perc) ]
+    return 0, "CPU utilization is %d%%" % cpu_perc, perfdata
 
 
 check_info['sni_octopuse_cpu'] = {

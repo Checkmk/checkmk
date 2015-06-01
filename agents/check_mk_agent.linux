@@ -531,6 +531,17 @@ then
 	    grep -v '^#' < $statefile
         fi
     done
+
+    echo '<<<omd_apache:sep(124)>>>'
+    for statsfile in /omd/sites/*/var/log/apache/stats; do
+	if [ -e "$statsfile" ] ; then
+	    site=${statsfile%/var/log*}
+	    site=${site#/omd/sites/}
+	    echo "[$site]"
+            cat $statsfile
+            > $statsfile
+        fi
+    done
 fi
 
 # Status of Check_MK Notification Spooler

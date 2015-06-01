@@ -1,4 +1,4 @@
-Title: hitachi_hus_status: New check to monitor drive status on Hitachi Hus Systems
+Title: hitachi_hus_status: New check to monitor global status on Hitachi Hus Systems
 Level: 1
 Component: checks
 Compatible: compat

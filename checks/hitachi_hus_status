@@ -25,10 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_hitatchi_hus_status(info):
+def inventory_hitatchi_hus_status2(info):
     return [ (None, None)]
 
-def check_hitatchi_hus_status(_no_item, _no_params, info):
+def check_hitatchi_hus_status2(_no_item, _no_params, info):
     status_values = {
         0           : ( 0, "Array in normal status" ),
         1           : ( 2, "Drive blocked" ),
@@ -45,23 +45,22 @@ def check_hitatchi_hus_status(_no_item, _no_params, info):
         131072      : ( 2, "Power supply failure" ),
         1048576     : ( 1, "Fan alarm" ),
         4194304     : ( 2, "Host I/O module failure" ),
-        838608      : ( 2, "Management module failure" ),
+        8388608     : ( 2, "Management module failure" ),
         16777216    : ( 2, "Host connector alarm" ),
-        268436456   : ( 2, "Host connector alarm" ),
+        268435456   : ( 2, "Host connector alarm" ),
     }
+    if int(info[0][0]) == 0:
+      yield 0, "Array in normal status"
+    else:
+      yield 0, "Errorcode: %s" % info[0][0]
+      for status, output in status_values.items():
+          state, message = output
+          if status & int(info[0][0]):
+              yield state, message
 
-    for status, output in status_values.items():
-        state, message = output
-        found_error = False
-        if status & int(info[0][0]):
-            found_error = True
-            yield state, message
-        if found_error:
-            yield 0, "Array in normal status"
-
-check_info["hitatchi_hus_status"] = {
-    "check_function"        : check_hitatchi_hus_status,
-    "inventory_function"    : inventory_hitatchi_hus_status,
+check_info["hitatchi_hus_status2"] = {
+    "check_function"        : check_hitatchi_hus_status2,
+    "inventory_function"    : inventory_hitatchi_hus_status2,
     "service_description"   : "Status",
     "snmp_info"             : (".1.3.6.1.4.1.116.5.11.1.2.2", [ 1 ]),
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.116"),

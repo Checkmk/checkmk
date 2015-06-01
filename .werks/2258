@@ -1,0 +1,9 @@
+Title: windows_multipath: Fixed exception in case check reports more paths than expected
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p5
+Date: 1433150408
+Class: fix
+
+

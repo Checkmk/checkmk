@@ -1,0 +1,16 @@
+Title: Improved load time of Check_MK GUI
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433166250
+Class: feature
+
+We did several things to further improve the load time of the Check_MK GUI.
+For example we are now shipping minified (compressed) version of the Stylesheets
+and Javascript source code files. If those files are available on a system, they
+will be used.
+
+If you encounter any problems related to the <tt>*_min*.js</tt> files, please
+let us know. If you remove those compressed files, the uncompressed files will
+be used.

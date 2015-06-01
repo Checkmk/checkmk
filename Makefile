@@ -64,6 +64,7 @@ help:
 	@echo "make version                   --> switch to new version"
 	@echo "make headers                   --> create/update fileheades"
 	@echo "make healspaces                --> remove trailing spaces in code"
+	@echo "setup			      --> prepare system for development"
 
 check-permissions:
 	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
@@ -84,6 +85,7 @@ dist: mk-livestatus mk-eventd
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
 	tar czf $(DISTNAME)/inventory.tar.gz $(TAROPTS) -C inventory $$(cd inventory ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
+	$(MAKE) minify-js optimize-images
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	tar czf $(DISTNAME)/mkeventd.tar.gz $(TAROPTS) -C mkeventd  $$(cd mkeventd ; echo * )
@@ -198,25 +200,28 @@ optimize-images:
 	    mv $$F.opt $$F; \
 	done
 
+minify-js:
+	@for F in $$(cd web/htdocs/js ; ls *.js); do \
+	    if [ $${F/_min/} == $$F ] ; then \
+		NAME=$${F%.*} ; \
+		SRC=web/htdocs/js/$$F ; \
+		DST=web/htdocs/js/$${NAME}_min.js ; \
+		if [ ! -f $$DST ] || [ $$(stat -c%Y $$SRC) -gt $$(stat -c%Y $$DST) ]; then \
+		    echo "Minifying $$F..." ; \
+		    cat $$SRC | slimit > $$DST ; \
+		fi ; \
+	    fi ; \
+	done
+
 clean:
 	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
-	       precompiled cache
+	       precompiled cache web/htdocs/js/*_min.js
 	find -name "*~" | xargs rm -f
 
 mrproper:
 	git clean -xfd -e .bugs 2>/dev/null || git clean -xfd
 
-
-## Do we really need this crap here any longer?
-## setup:
-## 	$(MAKE) dist
-## 	rm -rf $(DISTNAME)
-## 	tar xzf $(DISTNAME).tar.gz
-## 	cd $(DISTNAME) && ./setup.sh --yes
-## 	rm -rf $(DISTNAME)
-## 	check_mk -R
-## 	/etc/init.d/apache2 reload
-
-
+setup:
+	sudo apt-get install figlet pngcrush slimit

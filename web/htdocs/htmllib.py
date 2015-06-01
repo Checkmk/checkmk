@@ -804,6 +804,8 @@ class html:
                 if defaults.omd_root:
                     if os.path.exists(defaults.omd_root + "/share/check_mk/web/htdocs/" + css + ".css"):
                         fname = '%s-%s.css' % (css, defaults.check_mk_version)
+                    else:
+                        continue
                 else:
                     fname = '%s.css' % css
 
@@ -815,13 +817,22 @@ class html:
 
             self.add_custom_style_sheet()
 
-            # Load specified Javascript files
+            # Load specified javascript files. We have some special handling here:
+            # a) files which can not be found shal not be loaded
+            # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
+            # c) load the minified javascript when not in debug mode
             for js in [ "checkmk", "graphs" ] + javascripts:
                 if defaults.omd_root:
-                    if os.path.exists(defaults.omd_root + "/share/check_mk/web/htdocs/js/" + js + ".js"):
+                    base_dir = defaults.omd_root + "/share/check_mk/web/htdocs/js"
+                    if not self.enable_debug and os.path.exists(base_dir + "/" + js + "_min.js"):
+                        fname = '%s_min-%s' % (js, defaults.check_mk_version)
+                    elif os.path.exists(base_dir + "/" + js + ".js"):
                         fname = '%s-%s' % (js, defaults.check_mk_version)
+                    else:
+                        continue
                 else:
                     fname = '%s' % js
+
                 self.javascript_file(fname)
 
             if self.browser_reload != 0:

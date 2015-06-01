@@ -49,16 +49,22 @@ def inventory_omd_apache(info):
             yield line[0][1:-1], None
 
 def check_omd_apache(item, _no_params, info):
+    # First initialize all possible values to be able to always report all perf keys
+    stats  = {'requests': {}, 'secs': {}, 'bytes': {}}
+    for key, pattern in omd_apache_patterns:
+        stats['requests'][key] = 0
+        stats['secs'][key]     = 0
+        stats['bytes'][key]    = 0
+
     active = False
     found  = False
-    stats  = {'requests': {}, 'secs': {}, 'bytes': {}}
     for line in info:
         if line[0] == '[' + item + ']':
             active = True
         elif active and line[0] == '[':
             break
         elif active:
-            method, url, status, size_bytes, microsec = line
+            url, status, size_bytes, microsec = line
             for key, pattern in omd_apache_patterns:
                 # make url relative to site directory
                 if regex(pattern).search(url[len('/'+item+'/'):]):

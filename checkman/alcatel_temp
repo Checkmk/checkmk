@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This Check Monitors CPU and Board Temperatures on Alcatel switches supporting the ALCATEL-IND1-CHASSIS-MIB.
- If the CPU Temperature is supported depends on the switch mode (not supported on Hawk models) 
+ If the CPU Temperature is supported depends on the switch mode (not supported on Hawk models)
 
 inventory:
  One check is created

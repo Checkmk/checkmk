@@ -1070,11 +1070,90 @@ metric_info["messages"] = {
     "color" : "#aa44cc",
 }
 
-metric_info["call_legs"] = { 
+metric_info["call_legs"] = {
     "title" : _("Call legs"),
     "unit"  : "count",
     "color" : "#60bbbb",
 }
+
+for ty, unit in [ ("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s") ]:
+    metric_info[ty+"_cmk_views"] = {
+        "title" : "Check_MK: Views",
+        "unit"  : unit,
+        "color" : "#ff8080",
+    }
+
+    metric_info[ty+"_cmk_wato"] = {
+        "title" : "Check_MK: WATO",
+        "unit"  : unit,
+        "color" : "#377cab",
+    }
+
+    metric_info[ty+"_cmk_bi"] = {
+        "title" : "Check_MK: BI",
+        "unit"  : unit,
+        "color" : "#4eb0f2",
+    }
+
+    metric_info[ty+"_cmk_snapins"] = {
+        "title" : "Check_MK: Snapins",
+        "unit"  : unit,
+        "color" : "#ff4040",
+    }
+
+    metric_info[ty+"_cmk_dashboards"] = {
+        "title" : "Check_MK: Dashboards",
+        "unit"  : unit,
+        "color" : "#4040ff",
+    }
+
+    metric_info[ty+"_cmk_other"] = {
+        "title" : "Check_MK: Other",
+        "unit"  : unit,
+        "color" : "#5bb9eb",
+    }
+
+    metric_info[ty+"_nagvis_snapin"] = {
+        "title" : "NagVis: Snapin",
+        "unit"  : unit,
+        "color" : "#f2904e",
+    }
+
+    metric_info[ty+"_nagvis_ajax"] = {
+        "title" : "NagVis: AJAX",
+        "unit"  : unit,
+        "color" : "#af91eb",
+    }
+
+    metric_info[ty+"_nagvis_other"] = {
+        "title" : "NagVis: Other",
+        "unit"  : unit,
+        "color" : "#f2df40",
+    }
+
+    metric_info[ty+"_images"] = {
+        "title" : "Image",
+        "unit"  : unit,
+        "color" : "#91cceb",
+    }
+
+    metric_info[ty+"_styles"] = {
+        "title" : "Styles",
+        "unit"  : unit,
+        "color" : "#c6f24e",
+    }
+
+    metric_info[ty+"_scripts"] = {
+        "title" : "Scripts",
+        "unit"  : unit,
+        "color" : "#4ef26c",
+    }
+
+    metric_info[ty+"_other"] = {
+        "title" : "Other",
+        "unit"  : unit,
+        "color" : "#4eeaf2",
+    }
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -1352,7 +1431,7 @@ check_metrics["check_mk-cisco_srst_call_legs"] = {}
 
 check_metrics["check_mk-logwatch.ec"] = {}
 check_metrics["check_mk-logwatch.ec_single"] = {}
-
+check_metrics["check_mk-omd_apache"] = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -2060,4 +2139,64 @@ graph_info.append({
     "metrics" : [
         ( "call_legs", "area" )
     ],
+})
+
+graph_info.append({
+    "title" : _("Handled Requests"),
+    "metrics" : [
+        ("requests_cmk_views",      "stack"),
+        ("requests_cmk_wato",       "stack"),
+        ("requests_cmk_bi",         "stack"),
+        ("requests_cmk_snapins",    "stack"),
+        ("requests_cmk_dashboards", "stack"),
+        ("requests_cmk_other",      "stack"),
+        ("requests_nagvis_snapin",  "stack"),
+        ("requests_nagvis_ajax",    "stack"),
+        ("requests_nagvis_other",   "stack"),
+        ("requests_images",         "stack"),
+        ("requests_styles",         "stack"),
+        ("requests_scripts",        "stack"),
+        ("requests_other",          "stack"),
+    ],
+    "omit_zero_metrics" : True,
+})
+
+graph_info.append({
+    "title" : _("Seconds serving"),
+    "metrics" : [
+        ("secs_cmk_views",      "stack"),
+        ("secs_cmk_wato",       "stack"),
+        ("secs_cmk_bi",         "stack"),
+        ("secs_cmk_snapins",    "stack"),
+        ("secs_cmk_dashboards", "stack"),
+        ("secs_cmk_other",      "stack"),
+        ("secs_nagvis_snapin",  "stack"),
+        ("secs_nagvis_ajax",    "stack"),
+        ("secs_nagvis_other",   "stack"),
+        ("secs_images",         "stack"),
+        ("secs_styles",         "stack"),
+        ("secs_scripts",        "stack"),
+        ("secs_other",          "stack"),
+    ],
+    "omit_zero_metrics" : True,
+})
+
+graph_info.append({
+    "title" : _("Bytes sent"),
+    "metrics" : [
+        ("bytes_cmk_views",      "stack"),
+        ("bytes_cmk_wato",       "stack"),
+        ("bytes_cmk_bi",         "stack"),
+        ("bytes_cmk_snapins",    "stack"),
+        ("bytes_cmk_dashboards", "stack"),
+        ("bytes_cmk_other",      "stack"),
+        ("bytes_nagvis_snapin",  "stack"),
+        ("bytes_nagvis_ajax",    "stack"),
+        ("bytes_nagvis_other",   "stack"),
+        ("bytes_images",         "stack"),
+        ("bytes_styles",         "stack"),
+        ("bytes_scripts",        "stack"),
+        ("bytes_other",          "stack"),
+    ],
+    "omit_zero_metrics" : True,
 })

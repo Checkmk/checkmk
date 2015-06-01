@@ -44,15 +44,14 @@ def check_windows_multipath(item, params, info):
     all_paths = params
 
     # Anything less than 51% of paths is considered crit
-    if   num_paths == all_paths:
+    if num_paths == all_paths:
         state = 0
     elif num_paths <= all_paths / 2:
         state = 2
-    elif num_paths < all_paths:
+    else:
         state = 1
 
     return (state, "paths reported %d, expected paths %d" % (num_paths, all_paths) + state * "!")
-
 
 check_info["windows_multipath"]  = {
     "check_function"     : check_windows_multipath,

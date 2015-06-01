@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings['alcatel_temp'] = {
-      "levels" : ( 45, 50 ), 
+      "levels" : ( 45, 50 ),
 }
 
 def inventory_alcatel_temp(info):
@@ -46,7 +46,7 @@ check_info["alcatel_temp"] = {
     "default_levels_variable" : "alcatel_temp",
     "has_perfdata"            : True,
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.6486.800"),
-    "snmp_info"               : (".1.3.6.1.4.1.6486.800.1.1.1.3.1.1.3.1", [ 
+    "snmp_info"               : (".1.3.6.1.4.1.6486.800.1.1.1.3.1.1.3.1", [
                                                                               4, # chasHardwareBoardTemp
                                                                               5, # chasHardwareCpuTemp
                                                                          ]),

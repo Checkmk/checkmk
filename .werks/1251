@@ -1,4 +1,4 @@
-Title: lvm_pvs, lvm_vgs: New Checks for LVM volume groups and physical volumes
+Title: lvm_vgs: New Checks for LVM volume groups
 Level: 1
 Component: checks
 Compatible: compat

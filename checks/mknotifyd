@@ -80,8 +80,12 @@ def parse_mknotifyd(info):
             else:
                 if value == "None":
                     value = None
-                elif value and varname not in [ "Type", "State", "Version", "Status Message", "Pending Acknowledgements" ]:
+                elif value and varname not in [
+                    "Type", "State", "Version", "Status Message",
+                    "Pending Acknowledgements", "Connect Time" ]:
                     value = int(value.split()[0])
+                elif varname == "Connect Time":
+                    value = float(value.split()[0])
                 sub_entry[varname] = value
 
     # Fixup names of the connections. For incoming connections the remote
@@ -212,6 +216,9 @@ def check_mknotifyd_connection(item, _no_params, parsed):
             now = time.time()
             age = now - connection["Since"]
             yield 0, "Uptime: %s" % get_age_human_readable(age)
+
+            if "Connect Time" in connection:
+                yield 0, "Connect time: %.3f sec" % connection["Connect Time"]
 
         # Stats
         for what in ( "Sent", "Received" ):

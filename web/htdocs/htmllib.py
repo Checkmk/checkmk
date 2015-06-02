@@ -802,7 +802,9 @@ class html:
             # Load all specified style sheets and all user style sheets in htdocs/css
             for css in [ "check_mk", "graphs" ] + stylesheets + [ 'ie' ]:
                 if defaults.omd_root:
-                    if os.path.exists(defaults.omd_root + "/share/check_mk/web/htdocs/" + css + ".css"):
+                    rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
+                    if os.path.exists(defaults.omd_root + rel_path) or \
+                        os.path.exists(defaults.omd_root + "/local" + rel_path):
                         fname = '%s-%s.css' % (css, defaults.check_mk_version)
                     else:
                         continue

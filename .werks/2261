@@ -1,0 +1,13 @@
+Title: Fixed wrong pnp template cache path in non OMD environments
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433253304
+Class: fix
+
+Previous versions used /temp/check_mk_pnp_template_cache which was working,
+but not intended. The path has been changed to /tmp/check_mk_pnp_template_cache
+now. You can savely delete the old directory.
+
+This only affects manual installations of Check_MK.

@@ -1,0 +1,12 @@
+Title: Fixed deletion of foreign views/dashboards
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433254800
+Class: fix
+
+When a user tried to delete dashboards or views of foreign
+users this was shown as being successfull, but after accessing
+the list of views or dashboards again one could see that the
+view or dashboard was not deleted. This has been fixed now.

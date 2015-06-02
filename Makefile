@@ -194,24 +194,32 @@ healspaces:
 	@sed -ri 's/[[:space:]]+$$//g' $(HEAL_SPACES_IN)
 
 optimize-images:
-	@for F in web/htdocs/images/*.png web/htdocs/images/icons/*.png; do \
-	    echo "Optimizing $$F..." ; \
-	    pngcrush -q -rem alla -brute $$F $$F.opt ; \
-	    mv $$F.opt $$F; \
-	done
+	@if type pngcrush >/dev/null 2>&1; then \
+	    for F in web/htdocs/images/*.png web/htdocs/images/icons/*.png; do \
+	        echo "Optimizing $$F..." ; \
+	        pngcrush -q -rem alla -brute $$F $$F.opt ; \
+	        mv $$F.opt $$F; \
+	    done ; \
+	else \
+	    echo "Missing pngcrush, not optimizing images! (run \"make setup\" to fix this)" ; \
+	fi
 
 minify-js:
-	@for F in $$(cd web/htdocs/js ; ls *.js); do \
-	    if [ $${F/_min/} == $$F ] ; then \
-		NAME=$${F%.*} ; \
-		SRC=web/htdocs/js/$$F ; \
-		DST=web/htdocs/js/$${NAME}_min.js ; \
-		if [ ! -f $$DST ] || [ $$(stat -c%Y $$SRC) -gt $$(stat -c%Y $$DST) ]; then \
-		    echo "Minifying $$F..." ; \
-		    cat $$SRC | slimit > $$DST ; \
-		fi ; \
-	    fi ; \
-	done
+	@if type slimit >/dev/null 2>&1; then \
+	    for F in $$(cd web/htdocs/js ; ls *.js); do \
+	        if [ $${F/_min/} == $$F ] ; then \
+	    	NAME=$${F%.*} ; \
+	    	SRC=web/htdocs/js/$$F ; \
+	    	DST=web/htdocs/js/$${NAME}_min.js ; \
+	    	if [ ! -f $$DST ] || [ $$(stat -c%Y $$SRC) -gt $$(stat -c%Y $$DST) ]; then \
+	    	    echo "Minifying $$F..." ; \
+	    	    cat $$SRC | slimit > $$DST ; \
+	    	fi ; \
+	        fi ; \
+	    done ; \
+	else \
+	    echo "Missing slimit, not minifying javascript files! (run \"make setup\" to fix this)" ; \
+	fi
 
 clean:
 	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \

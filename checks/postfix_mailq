@@ -61,13 +61,20 @@
 #                                          <wrdlpfrmpft@karl-valentin.com>
 #                 Total requests: 2
 #
+# **************
+# new format
+# <<<postfix_mailq>>>
+# QUEUE_deferred 60 1
+# QUEUE_active 4 0
 
-# WARN num, CRIT num
-postfix_mailq_default_levels = (10, 20)
+factory_settings['postfix_mailq_default_levels'] = {
+    "deferred" : (10, 20),
+    "active"   : (200, 300), # may become large for big mailservers
+}
 
 def inventory_postfix_mailq(info):
     if len(info) > 0 and info[0] != '':
-        return [(None, 'postfix_mailq_default_levels')]
+        return [(None, {})]
 
 def postfix_mailq_to_bytes(value, uom):
     uom = uom.lower()
@@ -78,38 +85,77 @@ def postfix_mailq_to_bytes(value, uom):
     elif uom == 'gbytes':
         return value * 1024 * 1024 * 1024
 
-def check_postfix_mailq(item, params, info):
+def check_postfix_mailq(_no_item, params, info):
+    if type(params) != dict:
+        params = {
+            "deferred" : params,
+        }
     for line in info:
-        if " ".join(line[-2:]) == 'is empty':
-            return (0, 'The mailqueue is empty ', [ ('length', 0, params[0], params[1]),
-                                                         ('size', '0') ])
+        state = 0
+        # new extended version of agent output
+        if line[0].startswith("QUEUE_"):
+            queue = line[0].split("_")[1]
+            size   = int(line[1])
+            length = int(line[2])
+            infotext = "%s queue length is %d" % (queue, length)
+            if queue == "deferred":
+                length_var = "length"
+                size_var = "size"
+            else:
+                length_var = "mail_queue_%s_length" % queue
+                size_var = "mail_queue_%s_size" % size
+            if queue in params:
+                warn, crit = params[queue]
+                if length >= crit:
+                    state = 2
+                elif length >= warn:
+                    state = 1
+                if state:
+                    infotext += " (Levels at %d/%d)" % (warn, crit)
+                perfdata = [ (length_var, length, warn, crit) ]
+            else:
+                perfdata = [ (length_var, length) ]
+
+            perfdata.append((size_var, size))
+
+            yield state, infotext, perfdata
+
+        # old output of mailq command for empty queue
+        elif " ".join(line[-2:]) == 'is empty':
+            warn, crit = params["deferred"]
+            infotext = 'The mailqueue is empty'
+            perfdata = [ ('length', 0, warn, crit),
+                         ('size', 0) ]
+            yield 0, infotext, perfdata
+
+        # old output of mailq command
         elif line[0] == '--' or line[0:2] == [ 'Total', 'requests:']:
+            warn, crit = params["deferred"]
             if line[0] == '--':
                 size    = postfix_mailq_to_bytes(float(line[1]), line[2])
-                len     = int(line[4])
+                length  = int(line[4])
             else:
                 size    = 0
-                len     = int(line[2])
+                length  = int(line[2])
 
-            perfdata = [ ('length', len, params[0], params[1]),
-                         ('size', '%d' % size) ]
+            infotext = 'Mailqueue length is %d' % length
+            perfdata = [ ('length', length, warn, crit),
+                         ('size', size) ]
 
-            if len > params[1]:
-                return (2, 'Mailqueue length is %d '
-                           '(More than threshold: %d)' % (len, params[0]), perfdata)
-            elif len > params[0]:
-                return (1, 'Mailqueue length is %d '
-                           '(More than threshold: %d)' % (len, params[0]), perfdata)
-            else:
-                return (0, 'Mailqueue length is %d ' % len, perfdata)
+            if length >= crit:
+                state = 2
+            elif length >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %d/%d)" % (warn, crit)
 
-    return (3, 'Could not find summarizing line in output')
-
+            yield state, infotext, perfdata
 
 check_info["postfix_mailq"] = {
-    'check_function':          check_postfix_mailq,
-    'inventory_function':      inventory_postfix_mailq,
-    'service_description':     'Postfix Queue',
-    'has_perfdata':            True,
-    'group':                   'mailqueue_length',
+    'check_function'          : check_postfix_mailq,
+    'inventory_function'      : inventory_postfix_mailq,
+    'service_description'     : 'Postfix Queue',
+    'default_levels_variable' : 'postfix_mailq_default_levels',
+    'group'                   : 'mailqueue_length',
+    'has_perfdata'            : True,
 }

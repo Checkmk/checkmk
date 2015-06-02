@@ -1,0 +1,9 @@
+Title: postfix_mailq: agent and check now retrieve and monitor active queue data as well
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433230153
+Class: feature
+
+

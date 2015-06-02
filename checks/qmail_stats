@@ -25,22 +25,28 @@
 # Boston, MA 02110-1301 USA.
 
 
-qmail_stats_default_levels = ( 10, 20 )
+factory_settings['qmail_stats_default_levels'] = {
+        "deferred" : (10, 20),
+}
 
 def inventory_qmail_stats(info):
     if len(info) > 0:
-        return [ (None, "qmail_stats_default_levels") ]
+        return [ (None, {}) ]
 
 def check_qmail_stats(_no_item, params, info):
+    if type(params) != dict:
+        params = {
+            "deferred" : params,
+        }
+    warn, crit = params["deferred"]
     queue_length = saveint(info[0][-1])
-    warn, crit = params
     state = 0
     label = ''
-    if queue_length > crit:
+    if queue_length >= crit:
         state = 2
-	label = "(Levels at %d/%d)" % (warn, crit)
-    elif queue_length > warn:
+    elif queue_length >= warn:
         state = 1
+    if state:
 	label = "(Levels at %d/%d)" % (warn, crit)
 
     perf = [ ('queue', queue_length, warn, crit) ]
@@ -49,9 +55,10 @@ def check_qmail_stats(_no_item, params, info):
 
 
 check_info['qmail_stats'] = {
-  "inventory_function"  : inventory_qmail_stats,
-  "check_function"      : check_qmail_stats,
-  "service_description" : "Qmail Queue",
-  "has_perfdata"        : True,
-  "group"               : "mailqueue_length",
+  "inventory_function"      : inventory_qmail_stats,
+  "check_function"          : check_qmail_stats,
+  "service_description"     : "Qmail Queue",
+  "has_perfdata"            : True,
+  "default_levels_variable" : "qmail_stats_default_levels",
+  "group"                   : "mailqueue_length",
 }

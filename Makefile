@@ -201,7 +201,7 @@ optimize-images:
 	        mv $$F.opt $$F; \
 	    done ; \
 	else \
-	    echo "Missing pngcrush, not optimizing images!" ; \
+	    echo "Missing pngcrush, not optimizing images! (run \"make setup\" to fix this)" ; \
 	fi
 
 minify-js:
@@ -218,7 +218,7 @@ minify-js:
 	        fi ; \
 	    done ; \
 	else \
-	    echo "Missing slimit, not minifying javascript files!" ; \
+	    echo "Missing slimit, not minifying javascript files! (run \"make setup\" to fix this)" ; \
 	fi
 
 clean:

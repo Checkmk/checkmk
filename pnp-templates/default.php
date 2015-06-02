@@ -9,7 +9,7 @@ if ($omd_site) {
 }
 else {
     $url = "http://localhost/check_mk/";
-    $template_cache_dir = "/temp/check_mk_pnp_template_cache";
+    $template_cache_dir = "/tmp/check_mk_pnp_template_cache";
 }
 
 if (!file_exists($template_cache_dir))

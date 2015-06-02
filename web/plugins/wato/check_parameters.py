@@ -5654,18 +5654,40 @@ register_check_parameters(
     subgroup_applications,
     "mailqueue_length",
     _("Number of mails in outgoing mail queue"),
-    Tuple(
-          help = _("This rule is applied to the number of E-Mails that are "
-                   "currently in the outgoing mail queue."),
-          elements = [
-              Integer(title = _("Warning at"), unit = _("mails"), default_value = 10),
-              Integer(title = _("Critical at"), unit = _("mails"), default_value = 20),
-          ]
+    Transform(
+        Dictionary(
+            elements = [
+                ( "deferred",
+                    Tuple(
+                        title = _("Mails in outgoing mail queue/deferred mails"),
+                        help = _("This rule is applied to the number of E-Mails currently "
+                                 "in the deferred mail queue, or in the general outgoing mail "
+                                 "queue, if such a distinction is not available."),
+                        elements = [
+                            Integer(title = _("Warning at"), unit = _("mails"), default_value = 10),
+                            Integer(title = _("Critical at"), unit = _("mails"), default_value = 20),
+                        ],
+                    ),
+                ),
+                ( "active",
+                    Tuple(
+                        title = _("Mails in active mail queue"),
+                        help = _("This rule is applied to the number of E-Mails currently "
+                                 "in the active mail queue"),
+                        elements = [
+                            Integer(title = _("Warning at"), unit = _("mails"), default_value = 800),
+                            Integer(title = _("Critical at"), unit = _("mails"), default_value = 1000),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys = [ "active" ],
+        ),
+        forth = lambda old: type(old) != dict and { "deferred" : old } or old,
     ),
     None,
-    match_type = "first",
+    match_type = "dict",
 )
-
 
 register_check_parameters(
     subgroup_storage,

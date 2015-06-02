@@ -1076,6 +1076,30 @@ metric_info["call_legs"] = {
     "color" : "#60bbbb",
 }
 
+metric_info["length"] = {
+    "title" : _("Length of deferred mail queue"),
+    "unit"  : "count",
+    "color" : "#40a0b0",
+}
+
+metric_info["size"] = {
+    "title" : _("Size of deferred mail queue"),
+    "unit"  : "bytes",
+    "color" : "#402010",
+}
+
+metric_info["mail_queue_active_length"] = {
+    "title" : _("Length of active mail queue"),
+    "unit"  : "count",
+    "color" : "#ff6000",
+}
+
+metric_info["mail_queue_active_size"] = {
+    "title" : _("Size of active mail queue"),
+    "unit"  : "bytes",
+    "color" : "#ff6000",
+}
+
 for ty, unit in [ ("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s") ]:
     metric_info[ty+"_cmk_views"] = {
         "title" : "Check_MK: Views",
@@ -1432,6 +1456,7 @@ check_metrics["check_mk-cisco_srst_call_legs"] = {}
 check_metrics["check_mk-logwatch.ec"] = {}
 check_metrics["check_mk-logwatch.ec_single"] = {}
 check_metrics["check_mk-omd_apache"] = {}
+check_metrics["check_mk-postfix_mailq"] = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -1638,6 +1663,10 @@ perfometer_info.append({
     "exponent"   : 2,
 })
 
+perfometer_info.append(("stacked", [
+   ( "logarithmic", ( "length", 10000, 5)),
+   ( "logarithmic", ( "mail_queue_active_length", 10000, 5)),
+]))
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -2199,4 +2228,12 @@ graph_info.append({
         ("bytes_other",          "stack"),
     ],
     "omit_zero_metrics" : True,
+})
+
+graph_info.append({
+    "title" : _("Outgoing Mails"),
+    "metrics" : [
+        ( "length",   "stack" ),
+        ( "mail_queue_active_length",     "stack" ),
+    ],
 })

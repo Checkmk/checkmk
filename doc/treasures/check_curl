@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# PROXYPASS=patrol\@wacker.corp:Start1
+# PROXYPASS=foo\@bar.corp:Start1
 # PROXYURL=http://$PROXYPASS@$PROXY/
 
 # Copyright Mathias Kettner 2010
@@ -15,7 +15,7 @@
 # if the page contains a text.
 #
 # Usage: check_proxy [-P PROXYUSER:PROXYPASSWORD PROXYURL] URL [ TEXT ]
-# 
+#
 # -P    use proxy, parameters are set in this script
 # URL   http, https or ftp url
 # TEXT  optional text to be searched in result page
@@ -156,7 +156,7 @@ else
         echo "OK - $PURL retrieved"
         exit 0
     else
-        msg=$(curl_error $exitcode) 
+        msg=$(curl_error $exitcode)
         echo "CRIT - $PURL not retrieved, $msg"
         exit 2
     fi

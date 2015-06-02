@@ -4,7 +4,7 @@
 # have to adapt the path to the cache file
 # see below
 #
-# Why should that be usefull? Performance testing.
+# Why should that be useful? Performance testing.
 # GUI testing...
 
 _num_zombies = 100

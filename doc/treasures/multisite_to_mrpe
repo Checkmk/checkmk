@@ -4,7 +4,7 @@
 # Fetches the current state of all services of a host via Multisite and
 # outputs an <<<mrpe>>> section reflecting these states. This script is
 # intended to be used as a datasource program.
-# 
+#
 # Why? This allows you to "import" monitoring data from another
 # Check_MK system via HTTP without having livestatus access. The
 # administrator of the remote system has full control over this
@@ -25,12 +25,12 @@
 #
 # Note: Whenever the list of services of an imported host
 # changes on the remote system you have to do a re-inventory
-# of that host. 
-# 
+# of that host.
+#
 # Here is an example for a datasource_programs-definition (assuming
 # that the user is "automation"):
 # "$OMD_ROOT/local/lib/multisite_to_mrpe --secret dasistgeheim --url http://localhost/remote/check_mk/ <HOST>"
-# 
+#
 
 import os, sys, getopt, time, urllib, subprocess
 
@@ -158,7 +158,7 @@ verbose("URL:              " + url)
 
 try:
     arguments = [ 'curl', '--silent', '--insecure', ]
-    if opt_password: 
+    if opt_password:
         arguments.append('--user')
         arguments.append("%s:%s" % (opt_user, opt_password))
     else:
@@ -192,6 +192,6 @@ for service in services:
         sys.stdout.write("(%s) %s %d %s|%s\n" % (
             service["svc_check_command"].replace(" ", "_"),
             service["service_description"].replace(" ", "_"),
-            state, 
+            state,
             service["svc_plugin_output"],
             service["svc_perf_data"]))

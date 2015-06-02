@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# NOTE: This file is deprecated and superseeded by check_bi_aggr,
+# which can be configured via WATO now.
+
 # Example for creating real Nagios checks from BI aggregations.
 
 # Installation:

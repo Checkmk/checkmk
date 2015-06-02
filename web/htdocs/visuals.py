@@ -96,12 +96,15 @@ def load_plugins():
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def save(what, visuals):
+def save(what, visuals, user_id = None):
+    if user_id == None:
+        user_id = config.user_id
+
     uservisuals = {}
-    for (user_id, name), visual in visuals.items():
-        if config.user_id == user_id:
+    for (owner_id, name), visual in visuals.items():
+        if user_id == owner_id:
             uservisuals[name] = visual
-    config.save_user_file('user_' + what, uservisuals)
+    config.save_user_file('user_' + what, uservisuals, user = user_id)
 
 
 def load(what, builtin_visuals, skip_func = None):
@@ -294,7 +297,7 @@ def page_list(what, title, visuals, custom_columns = [],
             c = html.confirm(_("Please confirm the deletion of \"%s\".") % deltitle)
             if c:
                 del visuals[(user_id, delname)]
-                save(what, visuals)
+                save(what, visuals, user_id)
                 html.reload_sidebar()
             elif c == False:
                 html.footer()

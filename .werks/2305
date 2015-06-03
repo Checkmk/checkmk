@@ -1,0 +1,12 @@
+Title: agent_vsphere, esx_vsphere_sensors: now able to handle sensor names with semicolon
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1433335253
+
+The esx_vsphere_sensors check crashed when there was a semicolon in the sensor name
+E.g. <tt>Controller 500605B002DB9F70 (ServeRAID M5015 SAS/SATA Controller) n/a (Package); 12.7.0-0020 (Fw)</tt>
+

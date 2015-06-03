@@ -1,7 +1,6 @@
 #!/bin/bash
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-make -C .. minify-js
 sudo rsync \
     --exclude=defaults.py \
     --exclude "*mkevent*" \
@@ -14,7 +13,12 @@ if [ "$SITE" != - ] ; then
     sudo omd restart $SITE apache
 fi
 
-# Nicht mit minifizierten Dateien entwickeln
+# Per Default wird geguckt, ob die *_min.js-Dateien älter sind, als
+# die Original-Dateien. Wenn ja, dann werden sie neu erstellt.
+make DESTDIR=/omd/sites/$SITE/share/check_mk -C .. minify-js
+# Wenn man ohne die min-Dateien entwickeln will, kann man das hier
+# auskommentieren. Dies räumt dann auch die Dateien weg, die
+# schon in der original-Installation vom OMD vorhanden waren.
 #sudo rm -f /omd/sites/$SITE/share/check_mk/web/htdocs/js/*_min.js
 
 # Gecache PNP-Schablonen entfernen

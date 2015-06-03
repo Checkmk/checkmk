@@ -206,15 +206,16 @@ optimize-images:
 
 minify-js:
 	@if type slimit >/dev/null 2>&1; then \
+	    [ -n "$(DESTDIR)" ] && DESTDIR="$(DESTDIR)/" ; \
 	    for F in $$(cd web/htdocs/js ; ls *.js); do \
 	        if [ $${F/_min/} == $$F ] ; then \
-	    	NAME=$${F%.*} ; \
-	    	SRC=web/htdocs/js/$$F ; \
-	    	DST=web/htdocs/js/$${NAME}_min.js ; \
-	    	if [ ! -f $$DST ] || [ $$(stat -c%Y $$SRC) -gt $$(stat -c%Y $$DST) ]; then \
-	    	    echo "Minifying $$F..." ; \
-	    	    cat $$SRC | slimit > $$DST ; \
-	    	fi ; \
+	            NAME=$${F%.*} ; \
+	            SRC=web/htdocs/js/$$F ; \
+	            DST=$${DESTDIR}web/htdocs/js/$${NAME}_min.js ; \
+	            if [ ! -f $$DST ] || [ $$(stat -c%Y $$SRC) -gt $$(stat -c%Y $$DST) ]; then \
+	                echo "Minifying $$F..." ; \
+	                cat $$SRC | slimit > $$DST ; \
+	            fi ; \
 	        fi ; \
 	    done ; \
 	else \

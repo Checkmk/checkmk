@@ -15,9 +15,6 @@ inventory:
  The names of the mail queues are predefined in the check. If the corresponding
  oid is found, the corresponding mail queue is inventorized.
 
-[configuration]
-domino_mailqueues_defaults (dict)
-
 [parameters]
 parameters (dict): The parameters can be given in a dictionary based syntax
    with the single element below.

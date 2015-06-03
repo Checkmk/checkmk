@@ -1,0 +1,13 @@
+Title: oracle_tablespaces: correctly handle case where check runs in clustered mode
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433321278
+Class: feature
+
+The check for the ORACLE tablespaces now works correctly when Check_MK
+cluster hosts are being used. In such a case data files may appear twice in
+the agent output - once for each node of the cluster. The check now considers
+that node that has the most data files as the active node and uses the data
+from that node.

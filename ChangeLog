@@ -1,6 +1,7 @@
 1.2.7i2:
     Checks & Agents:
     * 2117 postfix_mailq: agent and check now retrieve and monitor active queue data as well
+    * 2325 oracle_tablespaces: correctly handle case where check runs in clustered mode...
     * 2323 FIX: df: Fix new graphs for all filesystem checks in case of existing inode information
 
     Multisite:

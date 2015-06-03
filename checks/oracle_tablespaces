@@ -30,29 +30,6 @@
 # This restriction is only working with newer agents, because we need an
 # additional parameter at end if each datafile
 
-# <<<oracle_tablespaces>>>
-# pengt /database/pengt/daten155/dbf/system_01.dbf SYSTEM AVAILABLE YES 38400 4194302 38392 1280 SYSTEM 8192 ONLINE
-# pengt /database/pengt/daten155/dbf/undotbs_01.dbf UNDOTBS1 AVAILABLE YES 128000 4194302 127992 640 ONLINE 8192 ONLINE
-# pengt /database/pengt/daten155/dbf/sysaux_01.dbf SYSAUX AVAILABLE YES 25600 4194302 25592 1280 ONLINE 8192 ONLINE
-# pengt /database/pengt/daten155/dbf/ts_user_01.dbf TS_USER AVAILABLE YES 8480 1280000 8472 160 ONLINE 8192 ONLINE
-# pengt /database/pengt/daten155/dbf/TS_PENG_ABR_01.dbf TS_PENG_ABR AVAILABLE YES 12800 1280000 12792 12800 ONLINE 8192 ONLINE
-
-#
-# Order of columns (it is a table of data files, so table spaces appear multiple times)
-# 0. database SID
-# 1. data file name
-# 2. table space name
-# 3. status of the data file
-# 4. whether the file is auto extensible
-# 5. current size of data file in blocks
-# 6. maximum size of data file in blocks (if auto extensible)
-# 7. currently number of blocks used by user data
-# 8. size of next increment in blocks (if auto extensible)
-# 9. wheter the file is in use (online)
-# 10. block size in bytes
-# 11. status of the table space
-# 12. free space in the datafile
-# 13. Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
 
 # This definition needs to be removed at a later stage
 # A previous version of this check didn't write the parameter
@@ -75,46 +52,140 @@ oracle_tablespaces_check_autoext = True
 # parameter in main.mk. It is not used anymore!
 oracle_tablespaces_check_default_increment = True
 
-def inventory_oracle_tablespaces(info):
-    tablespaces = set([])
-    autoextensible = set([])
+# <<<oracle_tablespaces>>>
+# pengt /database/pengt/daten155/dbf/system_01.dbf SYSTEM AVAILABLE YES 38400 4194302 38392 1280 SYSTEM 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/undotbs_01.dbf UNDOTBS1 AVAILABLE YES 128000 4194302 127992 640 ONLINE 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/sysaux_01.dbf SYSAUX AVAILABLE YES 25600 4194302 25592 1280 ONLINE 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/ts_user_01.dbf TS_USER AVAILABLE YES 8480 1280000 8472 160 ONLINE 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/TS_PENG_ABR_01.dbf TS_PENG_ABR AVAILABLE YES 12800 1280000 12792 12800 ONLINE 8192 ONLINE
+
+# Order of columns (it is a table of data files, so table spaces appear multiple times)
+# -1 Node info (added by Check_MK)
+# 0  database SID
+# 1  data file name
+# 2  table space name
+# 3  status of the data file
+# 4  whether the file is auto extensible
+# 5  current size of data file in blocks
+# 6  maximum size of data file in blocks (if auto extensible)
+# 7  currently number of blocks used by user data
+# 8  size of next increment in blocks (if auto extensible)
+# 9  wheter the file is in use (online)
+# 10 block size in bytes
+# 11 status of the table space
+# 12 free space in the datafile
+# 13 Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
+
+def parse_oracle_tablespaces(info):
+
+    table_spaces = {}
+    error_sids = {}
+
     for line in info:
-        if len(line) not in (13,14):
+        node_name = line[0]
+        line = line[1:]
+
+        # Check for query errors
+        err = oracle_handle_ora_errors(line)
+        if err == False:
+            continue # ignore ancient agent outputs
+        elif isinstance(err, tuple):
+            sid = line[0]
+            error_sids[sid] = err
+
+        if len(line) not in (13, 14):
             continue
-        ts = (line[0], line[2])
-        if line[11] in [ "ONLINE", "READONLY" ]:
-            tablespaces.add(ts)
-        if line[4] == "YES":
-            autoextensible.add(ts)
 
-    inventory = []
-    for t in tablespaces:
-        if oracle_tablespaces_check_autoext:
-            ae = t in autoextensible
+        sid, data_file_name, ts_name, data_file_status, autoextensible, \
+        file_size, max_file_size, used_blocks, increment_size, file_in_use, \
+        block_size, ts_status, free_space = line[:13]
+
+        if len(line) == 14:
+            ts_type = line[13]
         else:
-            ae = None # means: ignore, only display setting
+            # old behaivor is all Tablespaces are treated as PERMANENT
+            ts_type = 'PERMANENT'
 
-        parameters = { "autoextend" : ae }
-        inventory.append(("%s.%s" % t, parameters))
-    return inventory
+        table_space = table_spaces.setdefault((node_name, sid, ts_name), [])
 
-def check_oracle_tablespaces(item, params, info):
+        bs = int(block_size)
+        table_space.append({
+            "name"           : data_file_name,
+            "block_size"     : bs,
+            "size"           : int(file_size) * bs,
+            "max_size"       : int(max_file_size) * bs,
+            "used_size"      : int(used_blocks) * bs,
+            "free_space"     : int(free_space) * bs,
+            "increment_size" : int(increment_size) * bs,
+            "status"         : data_file_status,
+            "autoextensible" : autoextensible == "YES",
+            "ts_type"        : ts_type,
+            "ts_status"      : ts_status,
+        })
+
+    # Now join this into one dictionary. If there are more than
+    # one nodes per tablespace, then we select that node with the
+    # most data files
+
+    result = {}
+    for (node_name, sid, ts_name), data_files in table_spaces.items():
+        ts_key = (sid, ts_name)
+        # Use data from this node, if it is the first/only, or if it
+        # has more data files than a previous one
+        if ts_key not in result or \
+              len(result[ts_key]["data_files"]) < len(data_files):
+            result[ts_key] = {
+                "data_files"     : data_files,
+                "type"           : data_files[0]["ts_type"],
+                "status"         : data_files[0]["ts_status"],
+                "autoextensible" : False,
+            }
+            for df in data_files:
+                if df["autoextensible"]:
+                    result[ts_key]["autoextensible"] = True
+
+    return result, error_sids
+
+
+def inventory_oracle_tablespaces(parsed):
+    table_spaces, error_sids = parsed
+    for (sid, ts_name), table_space in table_spaces.items():
+        if table_space["status"] in ( "ONLINE", "READONLY" ):
+            if oracle_tablespaces_check_autoext:
+                ae = table_space["autoextensible"]
+            else:
+                ae = None # means: ignore, only display setting
+
+            parameters = { "autoextend" : ae }
+            yield "%s.%s" % (sid, ts_name), parameters
+
+
+def check_oracle_tablespaces(item, params, parsed):
     try:
-        sid, tbsname = item.split('.')
+        sid, ts_name = item.split('.')
     except ValueError:
-        return (3, 'Invalid check item given (must be <SID>.<tablespace>)')
+        return (3, 'Invalid check item (must be <SID>.<tablespace>)')
 
-    ts_status = None
-    num_files = 0
-    num_avail = 0
+    table_spaces, error_sids = parsed
+    if sid in error_sids:
+        return error_sids[sid]
+
+    table_space = table_spaces.get((sid, ts_name))
+    if not table_space:
+        return # Missing
+
+    ts_status = table_space["status"]
+    ts_type   = table_space["type"]
+
+    num_files      = 0
+    num_avail      = 0
     num_extensible = 0
-    current_size = 0
-    max_size = 0
-    used = 0
+    current_size   = 0
+    max_size       = 0
+    used           = 0
     num_increments = 0
     increment_size = 0
-    free_space = 0
-    ts_type = None
+    free_space     = 0
 
     # Conversion of old autochecks params
     if type(params) == tuple:
@@ -123,51 +194,42 @@ def check_oracle_tablespaces(item, params, info):
     autoext = params.get("autoextend")
     uses_default_increment = False
 
-    for line in info:
-        if line[0] == sid:
-            err = oracle_handle_ora_errors(line)
-            if err == False:
-                continue
-            elif isinstance(err, tuple):
-                return err
+    for data_file in table_space["data_files"]:
+        num_files += 1
+        if data_file["status"] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
+            num_avail += 1
+            current_size += data_file["size"]
+            used += data_file["size"] - data_file["free_space"]
 
-            if line[2] == tbsname and len(line) in (13,14):
-                # the ts_type is a new value on agent.
-                if len(line) == 14:
-                    ts_type = line[13]
-                else:
-                    # old behaivor is all Tablespaces are treated as PERMANENT
-                    ts_type = 'PERMANENT'
-                ts_status = line[11]
-                blocksize = int(line[10])
-                num_files += 1
-                if line[3] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
-                    num_avail += 1
-                    current_size += blocksize * int(line[5])
-                    used += blocksize * (int(line[5]) - int(line[12]))
-                    # Autoextensible? Honor max size
-                    if line[4] == "YES":
-                        num_extensible += 1
-                        my_max_size = blocksize * int(line[6])
-                        max_size += my_max_size
-                        free_bl = int(line[6]) - int(line[5]) # number of free extension blocks
-                        incsize = int(line[8]) # size of next increment in blocks
-                        if incsize == 1:
-                            uses_default_increment = True
+            # Autoextensible? Honor max size. Everything is computed in
+            # *Bytes* here!
+            if data_file["autoextensible"]:
+                num_extensible += 1
+                max_size += data_file["max_size"]
+                free_extension = data_file["max_size"] - data_file["size"] # free extension space
+                incsize = data_file["increment_size"]
+                if incsize == data_file["block_size"]:
+                    uses_default_increment = True
 
-                        incs, rest = divmod(free_bl, incsize)
-                        if rest:
-                            incs += 1
+                #incs, rest = divmod(free_extension, incsize)
+                #if rest:
+                #    # ??? Was ist, wenn es nicht genau aufgeht und ein weiteres
+                #    # increment max_size überschreiten würde? Das geht ja wohl
+                #    # nicht oder??
+                #    # incs += 1 ### Dann würde max_size überschritten!
+                incs = free_extension / incsize
+                num_increments += incs
+                increment_size += incsize * incs
 
-                        num_increments += incs
-                        increment_size += blocksize * incsize * incs - rest * blocksize
-                        free_space += blocksize * (incsize * incs + (int(line[12]))) - rest * blocksize
+                # The free space in this table is the current free space plus
+                # the additional space that can be gathered by using all available
+                # remaining increments
+                free_space += increment_size + data_file["free_space"]
 
-                    # not autoextensible: take current size as maximum
-                    else:
-                        my_max_size = blocksize * int(line[5])
-                        max_size += my_max_size
-                        free_space += blocksize *  int(line[12])
+            # not autoextensible: take current size as maximum
+            else:
+                max_size += data_file["size"]
+                free_space += data_file["free_space"]
 
 
     if ts_status == None:
@@ -237,10 +299,12 @@ def check_oracle_tablespaces(item, params, info):
     return status, infotext, perfdata
 
 check_info['oracle_tablespaces'] = {
-    "service_description"     : "ORA %s Tablespace",
-    "check_function"          : check_oracle_tablespaces,
+    "parse_function"          : parse_oracle_tablespaces,
     "inventory_function"      : inventory_oracle_tablespaces,
+    "check_function"          : check_oracle_tablespaces,
+    "service_description"     : "ORA %s Tablespace",
     "has_perfdata"            : True,
+    "node_info"               : True,
     "group"                   : "oracle_tablespaces",
     "default_levels_variable" : "oracle_tablespaces_defaults",
     "includes"                : [ "oracle.include", "db.include" ]

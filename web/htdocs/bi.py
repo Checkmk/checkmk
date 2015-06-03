@@ -201,7 +201,7 @@ def aggregation_groups():
 
 def log(s):
     if compile_logging():
-        file(config.bi_compile_log, "a").write(s)
+        logger(LOG_DEBUG, 'BI: %s' % s)
 
 # Precompile the forest of BI rules. Forest? A collection of trees.
 # The compiled forest does not contain any regular expressions anymore.
@@ -214,7 +214,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     new_config_information = cache_needs_update()
     if new_config_information:
-        log("Configuration has changed. Forcing recompile.\n")
+        log("Configuration has changed. Forcing recompile.")
         g_cache = {}
         global g_config_information
         g_config_information = new_config_information
@@ -249,7 +249,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         g_user_cache = cache
 
     if g_user_cache["compiled_all"]:
-        log('PID: %d - Already compiled everything\n' % os.getpid())
+        log('PID: %d - Already compiled everything' % os.getpid())
         used_cache = True
         return # In this case simply skip further compilations
 
@@ -261,7 +261,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     if (cache["compiled_hosts"] or cache["compiled_groups"]) \
        and (not config.bi_precompile_on_demand \
        or (config.bi_precompile_on_demand and not only_groups and not only_hosts)):
-        log("Invalidating incomplete cache, since we compile all now.\n")
+        log("Invalidating incomplete cache, since we compile all now.")
         cache = empty_user_cache()
         g_user_cache = cache
 
@@ -278,14 +278,14 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         # check wether or not hosts are not compiled yet
         only_hosts = to_compile(only_hosts, 'hosts')
         if not only_hosts:
-            log('PID: %d - All requested hosts have already been compiled\n' % os.getpid())
+            log('PID: %d - All requested hosts have already been compiled' % os.getpid())
             used_cache = True
             return # Nothing to do - everything is cached
 
     if only_groups and cache['compiled_groups']:
         only_groups = to_compile(only_groups, 'groups')
         if not only_groups:
-            log('PID: %d - All requested groups have already been compiled\n' % os.getpid())
+            log('PID: %d - All requested groups have already been compiled' % os.getpid())
             used_cache = True
             return # Nothing to do - everything is cached
 
@@ -299,7 +299,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     # compilation.
     load_services(cache, only_hosts)
 
-    log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d\n"
+    log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d"
         % (user, only_groups, only_hosts, os.getpid()))
 
     if compile_logging():
@@ -337,11 +337,11 @@ def compile_forest(user, only_hosts = None, only_groups = None):
             groups_set = set(groups)
 
             if only_groups and not groups_set.intersection(only_groups):
-                log('Skip aggr (No group of the aggr has been requested: %r)\n' % groups)
+                log('Skip aggr (No group of the aggr has been requested: %r)' % groups)
                 continue # skip not requested groups if filtered by groups
 
             if len(groups_set) == len(groups_set.intersection(cache['compiled_groups'])):
-                log('Skip aggr (All groups have already been compiled\n')
+                log('Skip aggr (All groups have already been compiled')
                 continue # skip if all groups have already been compiled
 
             new_entries = compile_rule_node(aggr_type, entry[1:], 0)
@@ -361,7 +361,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
             # enter new aggregations into dictionary for these groups
             for group in groups:
                 if group in cache['compiled_groups']:
-                    log('Skip aggr (group %s already compiled)\n' % group)
+                    log('Skip aggr (group %s already compiled)' % group)
                     continue # the group has already been compiled completely
 
                 if group not in cache['forest']:
@@ -439,7 +439,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
         after = time.time()
 
-        log("This request:\n"
+        log("\nThis request:\n"
             "  User: %s, Only-Groups: %r, Only-Hosts: %s\n"
             "  PID: %d, Processed %d services on %d hosts in %.3f seconds.\n"
             "\n"
@@ -448,8 +448,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
             "  Everything compiled: %r\n"
             "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
             "Config:\n"
-            "  Multi-Aggregations: %d, Host-Aggregations: %d\n"
-            "\n"
+            "  Multi-Aggregations: %d, Host-Aggregations: %d"
             % (
                user, only_groups, only_hosts,
                os.getpid(),
@@ -1807,10 +1806,10 @@ def host_table(columns, add_headers, only_sites, limit, filters):
     return singlehost_table(columns, add_headers, only_sites, limit, filters, False, bygroup=False)
 
 def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbyname, bygroup):
-    log("--------------------------------------------------------------------\n")
-    log("* Starting to compute singlehost_table (joinbyname = %s)\n" % joinbyname)
+    log("--------------------------------------------------------------------")
+    log("* Starting to compute singlehost_table (joinbyname = %s)" % joinbyname)
     load_assumptions() # user specific, always loaded
-    log("* Assumptions are loaded.\n")
+    log("* Assumptions are loaded.")
 
     # Create livestatus filter for filtering out hosts. We can
     # simply use all those filters since we have a 1:n mapping between
@@ -1821,10 +1820,10 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
         if not header.startswith("Sites:"):
             filter_code += header
 
-    log("* Getting status information about hosts...\n")
+    log("* Getting status information about hosts...")
     host_columns = filter(lambda c: c.startswith("host_"), columns)
     hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns, config.bi_precompile_on_demand, bygroup)
-    log("* Got %d host rows\n" % len(hostrows))
+    log("* Got %d host rows" % len(hostrows))
 
     # if limit:
     #     views.check_limit(hostrows, limit)
@@ -1840,11 +1839,11 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                 only_groups = [ filt.selected_group() ]
 
     if config.bi_precompile_on_demand:
-        log("* Compiling forest on demand...\n")
+        log("* Compiling forest on demand...")
         compile_forest(config.user_id, only_groups = only_groups,
                        only_hosts = [ (h['site'], h['name']) for h in hostrows ])
     else:
-        log("* Compiling forest...\n")
+        log("* Compiling forest...")
         compile_forest(config.user_id)
 
     # rows by site/host - needed for later cluster state gathering
@@ -1853,7 +1852,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
 
     rows = []
     # Now compute aggregations of these hosts
-    log("* Assembling host rows...\n")
+    log("* Assembling host rows...")
 
     # Special optimization for joinbyname
     if joinbyname:
@@ -1931,7 +1930,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                 return rows
 
 
-    log("* Assembled %d rows.\n" % len(rows))
+    log("* Assembled %d rows." % len(rows))
     return rows
 
 

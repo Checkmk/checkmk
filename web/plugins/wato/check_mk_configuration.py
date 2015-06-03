@@ -387,17 +387,17 @@ register_configvar(group,
 
 register_configvar(group,
     "bi_compile_log",
-    Optional(
-        Filename(
-            label = _("Absolute path to log file"),
-            default = defaults.var_dir + '/web/bi-compile.log',
-        ),
-          title = _("Logfile for BI compilation diagnostics"),
-          label = _("Activate logging of BI compilations into a logfile"),
-          help = _("If this option is used and set to a filename, Check_MK BI will create a logfile "
-                   "containing details about compiling BI aggregations. This includes statistics and "
-                   "details for each executed compilation.")),
-    domain = "multisite")
+    Checkbox(
+        title = _("Enable BI compilation diagnostics"),
+        label = _("Activate logging of BI compilations"),
+        help = _("If this option is enabled, Check_MK BI will create a log details "
+                 "about compiling BI aggregations. This includes statistics and "
+                 "details for each executed compilation. The logs are written to "
+                 "<tt>%s</tt>") % site_neutral_path(defaults.log_dir + "/web.log"),
+        default_value = False,
+    ),
+    domain = "multisite"
+)
 
 register_configvar(group,
     "auth_by_http_header",

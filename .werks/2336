@@ -1,0 +1,12 @@
+Title: BI compilation diagnostics are now logged to the generic web.log
+Level: 1
+Component: bi
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433325247
+Class: fix
+
+It is possible to enable diagnostic information for compiling the BI
+rules. These information were written to an explicit configured log
+file, which leads to problems in distributed setups. This logging has
+now been changed to use the generic <tt>web.log</tt>.

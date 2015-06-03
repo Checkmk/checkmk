@@ -1,0 +1,15 @@
+Title: Discovery service: Fixed handling of agent / SNMP communication errors
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1433341742
+
+When a host could not be contacted via agent or did not receive an SNMP response,
+this resulted in a situation where the check was shown as UNKNOWN and broken check
+with the hint to send a bug report the us.
+
+This handling has been changed to reporting a WARNING state together with the related
+error message as output. The "crashed check" link is not displayed for this case anymore.

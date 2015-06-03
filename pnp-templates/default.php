@@ -39,6 +39,10 @@ else
 # cache file missing or stale: try to fetch live template via HTTP
 if ($cache_state != "uptodate")
 {
+    // always speaking to local host, so a small connect timeout is good to
+    // catch to long hanging requests when e.g. the system apache is not
+    // listening on localhost
+    ini_set('default_socket_timeout', 2);
     $fd = @fopen($url . "pnp_template.py?id=" . urlencode($id_string), "r");
     if ($fd) {
         $data = "";

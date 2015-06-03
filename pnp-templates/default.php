@@ -39,7 +39,7 @@ else
 # cache file missing or stale: try to fetch live template via HTTP
 if ($cache_state != "uptodate")
 {
-    $fd = @fopen($url . "pnp_template.py?id=" . $id_string, "r");
+    $fd = @fopen($url . "pnp_template.py?id=" . urlencode($id_string), "r");
     if ($fd) {
         $data = "";
         while (!feof($fd)) {

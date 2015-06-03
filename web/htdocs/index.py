@@ -99,7 +99,6 @@ def handler(req, fields = None, profiling = True):
     response_code = apache.OK
 
     try:
-
         # Ajax-Functions want no HTML output in case of an error but
         # just a plain server result code of 500
         fail_silently = html.has_var("_ajaxid")
@@ -300,10 +299,11 @@ def handler(req, fields = None, profiling = True):
 
     except Exception, e:
         html.unplug()
-        msg = "%s %s: %s" % (req.uri, _('Internal error'), e)
+        import traceback
+        msg = "%s %s: %s" % (req.uri, _('Internal error'), traceback.format_exc())
         if type(msg) == unicode:
             msg = msg.encode('utf-8')
-        apache.log_error(msg, apache.APLOG_ERR) # log in all cases
+        logger(LOG_ERR, msg)
         if plain_error:
             html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
         elif not fail_silently:

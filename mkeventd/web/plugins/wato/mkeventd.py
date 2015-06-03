@@ -2090,7 +2090,7 @@ if mkeventd_enabled:
                 elements = [
                   Integer(
                       title = _("Port number:"),
-                      help = _("If you are running the mkeventd as a non-root (such as in an OMD site) "
+                      help = _("If you are running the Event Console as a non-root (such as in an OMD site) "
                                "please choose port number greater than 1024."),
                       minvalue = 1,
                       maxvalue = 65535,
@@ -2300,26 +2300,26 @@ if mkeventd_enabled:
     register_configvar(group,
         "log_level",
         DropdownChoice(
+            title = _("Log level"),
+            help = _("You can configure the Event Console to log more details about it's actions. "
+                     "These information are logged into the file <tt>%s</tt>") %
+                                site_neutral_path(defaults.log_dir + "/mkeventd.log"),
             choices = [
                 (0, _("Normal logging")),
                 (1, _("Verbose logging")),
             ],
             default_value = 0,
         ),
-        title = _("Log level"),
-        help = _("You can configure the mkeventd to log more details about it's actions. "
-                 "These information are logged into the file <tt>%s</tt>") %
-                            site_neutral_path(defaults.log_dir + "/mkeventd.log"),
         domain = "mkeventd",
     )
 
     register_configvar(group,
         "log_rulehits",
         Checkbox(title = _("Log rule hits"),
-                 label = _("Log hits for rules in log of mkeventd"),
+                 label = _("Log hits for rules in log of Event Console"),
                  help = _("If you enable this option then every time an event matches a rule "
                           "(by normal hit, cancelling, counting or dropping) a log entry will be written "
-                          "into the log file of the mkeventd. Please be aware that this might lead to "
+                          "into the log file of the Event Console. Please be aware that this might lead to "
                           "a large number of log entries. "),
                 default_value = False),
         domain = "mkeventd",
@@ -2327,10 +2327,10 @@ if mkeventd_enabled:
 
     register_configvar(group,
         "debug_mkeventd_queries",
-        Checkbox(title = _("Debug queries to mkeventd"),
-                 label = _("enable debugging of queries"),
-                 help = _("With this option turned on all queries made to the event daemon "
-                          "will be displayed."),
+        Checkbox(title = _("Debug queries to Event Console"),
+                 label = _("Enable debugging of queries"),
+                 help = _("With this option turned on all queries asking for data of the Event Console "
+                          "will be displayed in the views."),
                 default_value = False),
         domain = "mkeventd",
     )

@@ -919,7 +919,7 @@ if not error:
                     data = hostsystems_sensors[hostname][key]
                     if data["key"] in ["green", "unknown"]:
                         continue
-                    line = '%s;%s;%s;%s;%s;' % (data["name"], data["baseUnits"], data["currentReading"],
+                    line = '%s;%s;%s;%s;%s;' % (data["name"].replace(";", "_"), data["baseUnits"], data["currentReading"],
                                                 data["sensorType"], data["unitModifier"])
                     if "rateUnits" in data:
                         line += data["rateUnits"]

@@ -39,24 +39,26 @@ else
 # cache file missing or stale: try to fetch live template via HTTP
 if ($cache_state != "uptodate")
 {
-    $fd = @fopen($url . "pnp_template.py?id=" . $id_string, "r");
+    // always speaking to local host, so a small connect timeout is good to
+    // catch to long hanging requests when e.g. the system apache is not
+    // listening on localhost
+    ini_set('default_socket_timeout', 2);
+    $fd = @fopen($url . "pnp_template.py?id=" . urlencode($id_string), "r");
     if ($fd) {
         $data = "";
         while (!feof($fd)) {
             $data .= fread($fd, 4096);
         }
         fclose($fd);
-        if ($data) {
-            $fd = fopen($template_cache_path, "w");
-            fwrite($fd, $data);
-            fclose($fd);
-            $cache_state = "uptodate";
-        }
+        $fd = fopen($template_cache_path, "w");
+        fwrite($fd, $data);
+        fclose($fd);
+        $cache_state = "uptodate";
     }
 }
 
 # Now read template information from cache file, if present
-if ($cache_state == "uptodate") {
+if (($cache_state == "uptodate" || $cache_state == "stale") && filesize($template_cache_path) > 0) {
     $rrdbase = substr($NAGIOS_XMLFILE, 0, strlen($NAGIOS_XMLFILE) - 4);
     $fd = fopen($template_cache_path, "r");
     while (!feof($fd)) {

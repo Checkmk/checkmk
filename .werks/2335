@@ -1,0 +1,11 @@
+Title: Fixed PNP default template for active checks with arguments
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1433321671
+
+The graph popups were not rendered and PNP showed up a message <tt>$def[]</tt>
+not defined.

@@ -1412,6 +1412,7 @@ check_metrics["check_mk-apc_rackpdu_power"]                     = { "amperage" :
 check_metrics["check_mk-apc_ats_output"]                        = { "volt" : { "name" : "voltage" }, "watt" : { "name" : "power"}, "ampere": { "name": "current"}, "load_perc" : { "name": "output_load" }}
 check_metrics["check_mk-raritan_pdu_inlet"]                     = {}
 check_metrics["check_mk-raritan_pdu_inlet_summary"]             = {}
+check_metrics["check_mk-raritan_pdu_ocprot.current"]            = {}
 check_metrics["check_mk-ups_socomec_outphase"]                  = {}
 check_metrics["check_mk-ucs_bladecenter_psu.switch_power"]      = {}
 check_metrics["check_mk-bluenet_meter"]                         = {}

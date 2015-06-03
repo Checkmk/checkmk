@@ -24,32 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#<<<job>>>
-#==> asd ASD <==
-#start_time 1389355839
-#exit_code 0
-#real_time 0:00.00
-#user_time 0.00
-#system_time 0.00
-#reads 0
-#writes 0
-#max_res_kbytes 1968
-#avg_mem_kbytes 0
+# <<<job>>>
+# ==> asd ASD <==
+# start_time 1389355839
+# exit_code 0
+# real_time 0:00.00
+# user_time 0.00
+# system_time 0.00
+# reads 0
+# writes 0
+# max_res_kbytes 1968
+# avg_mem_kbytes 0
 #
 #
-#==> test <==
-#start_time 1389352839
-#exit_code 0
-#real_time 0:00.00
-#user_time 0.00
-#system_time 0.00
-#reads 0
-#writes 0
-#max_res_kbytes 1984
-#avg_mem_kbytes 0
+# ==> test <==
+# start_time 1389352839
+# exit_code 0
+# real_time 0:00.00
+# user_time 0.00
+# system_time 0.00
+# reads 0
+# writes 0
+# max_res_kbytes 1984
+# avg_mem_kbytes 0
 
 factory_settings["job_default_levels"] = {
-        "age": ( 0, 0 ) # disabled as default
+    "age": (0, 0) # disabled as default
 }
 
 def inventory_job(info):

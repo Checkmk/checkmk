@@ -456,6 +456,20 @@ register_check_parameters(
     match_type = "first",
 )
 
+register_check_parameters(
+    subgroup_environment,
+    "ocprot_current",
+    _("Electrical Current of Overcurrent Protectors"),
+    Tuple(
+        elements = [
+            Float(title = _("Warning at"), unit = u"A", default_value = 14.0),
+            Float(title = _("Critical at"), unit = u"A", default_value = 15.0),
+        ],
+    ),
+    TextAscii(title = _("The Index of the Overcurrent Protector")),
+    match_type = "first",
+)
+
 
 
 #.

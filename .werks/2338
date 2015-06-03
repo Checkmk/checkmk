@@ -1,0 +1,10 @@
+Title: Logging internal GUI exceptions to web.log instead of apache error_log
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433339472
+Class: fix
+
+This cleanup moves log entries about exceptions occured while rendering the
+GUI pages from the apache error_log to the <tt>var/log/web.log</tt> file.

@@ -303,7 +303,7 @@ def handler(req, fields = None, profiling = True):
         msg = "%s %s: %s" % (req.uri, _('Internal error'), e)
         if type(msg) == unicode:
             msg = msg.encode('utf-8')
-        apache.log_error(msg, apache.APLOG_ERR) # log in all cases
+        logger(LOG_ERR, msg)
         if plain_error:
             html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
         elif not fail_silently:

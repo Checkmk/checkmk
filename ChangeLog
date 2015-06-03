@@ -1,4 +1,7 @@
 1.2.7i1p2:
+    Multisite:
+    * 2335 FIX: Fixed PNP default template for active checks with arguments...
+
 
 1.2.7i1p1:
     Checks & Agents:

@@ -1,4 +1,4 @@
-Title: Discovery service: Fixed handling of agent / snmp communication errors
+Title: Discovery service: Fixed handling of agent / SNMP communication errors
 Level: 1
 Component: core
 Class: fix

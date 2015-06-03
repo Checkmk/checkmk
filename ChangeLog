@@ -9,6 +9,9 @@
     * 2261 FIX: Fixed wrong pnp template cache path in non OMD environments...
     * 2262 FIX: Fixed deletion of foreign views/dashboards...
 
+    Event Console:
+    * 2333 The Event Console log level can now be configured via GUI...
+
 
 1.2.7i1:
     Core & Setup:

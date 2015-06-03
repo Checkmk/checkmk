@@ -2298,6 +2298,22 @@ if mkeventd_enabled:
     )
 
     register_configvar(group,
+        "log_level",
+        DropdownChoice(
+            choices = [
+                (0, _("Normal logging")),
+                (1, _("Verbose logging")),
+            ],
+            default_value = 0,
+        ),
+        title = _("Log level"),
+        help = _("You can configure the mkeventd to log more details about it's actions. "
+                 "These information are logged into the file <tt>%s</tt>") %
+                            site_neutral_path(defaults.log_dir + "/mkeventd.log"),
+        domain = "mkeventd",
+    )
+
+    register_configvar(group,
         "log_rulehits",
         Checkbox(title = _("Log rule hits"),
                  label = _("Log hits for rules in log of mkeventd"),

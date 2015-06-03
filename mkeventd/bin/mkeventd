@@ -201,7 +201,7 @@ def log(text):
         sys.stderr.write("%s\n" % text)
 
 def verbose(text):
-    if opt_verbose:
+    if opt_verbose or g_config['log_level']:
         log(text)
 
 g_regex_cache = {}
@@ -3559,6 +3559,7 @@ def load_configuration():
         "actions"               : [],
         "debug_rules"           : False,
         "rule_optimizer"        : True,
+        "log_level"             : 0,
         "log_rulehits"          : False,
         "log_messages"          : False,
         "retention_interval"    : 60,

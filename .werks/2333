@@ -1,0 +1,11 @@
+Title: The Event Console log level can now be configured via GUI
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433318056
+Class: feature
+
+The more verbose logging of the mkeventd, which could previously only
+be enabled using the command line, can now be configured using the
+Event Console Settings in the GUI.

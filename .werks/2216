@@ -1,4 +1,4 @@
-Title: raritan_pdu_ocprot, raritan_pdu_ocprot.current: Two new checks to monitor overcurrent protectors of Raritan PDUs
+Title: raritan_pdu_ocprot: New check to monitor overcurrent protectors of Raritan PDUs
 Level: 1
 Component: checks
 Compatible: compat
@@ -6,4 +6,4 @@ Version: 1.2.7i2
 Date: 1433340363
 Class: feature
 
-raritan_pdu_ocprot monitors the status of overcurrent protectors, raritan_pdu_ocprot.current the electrical current.
+raritan_pdu_ocprot monitors the status of overcurrent protectors and the electrical current.

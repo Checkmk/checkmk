@@ -11,6 +11,7 @@
 
     Event Console:
     * 2333 The Event Console log level can now be configured via GUI...
+    * 2334 Logging details about loaded SNMP MIB modules during startup
 
 
 1.2.7i1:

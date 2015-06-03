@@ -1163,6 +1163,10 @@ class EventServer:
         # This loads all or specified pysnmp MIBs into memory
         builder.loadModules()
 
+        loaded_mib_module_names = builder.mibSymbols.keys()
+        log('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
+        verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
+
         # This object maintains various indices built from MIBs data
         self._mib_resolver = MibViewController(builder)
 

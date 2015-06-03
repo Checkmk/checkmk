@@ -50,17 +50,15 @@ if ($cache_state != "uptodate")
             $data .= fread($fd, 4096);
         }
         fclose($fd);
-        if ($data) {
-            $fd = fopen($template_cache_path, "w");
-            fwrite($fd, $data);
-            fclose($fd);
-            $cache_state = "uptodate";
-        }
+        $fd = fopen($template_cache_path, "w");
+        fwrite($fd, $data);
+        fclose($fd);
+        $cache_state = "uptodate";
     }
 }
 
 # Now read template information from cache file, if present
-if ($cache_state == "uptodate") {
+if (($cache_state == "uptodate" || $cache_state == "stale") && filesize($template_cache_path) > 0) {
     $rrdbase = substr($NAGIOS_XMLFILE, 0, strlen($NAGIOS_XMLFILE) - 4);
     $fd = fopen($template_cache_path, "r");
     while (!feof($fd)) {

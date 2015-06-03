@@ -1,4 +1,4 @@
-title: Raritan PX-2000 family PDU overcurrent protector status
+title: Raritan PX-2000 family PDU overcurrent protector
 agents: snmp
 catalog: hw/other
 license: GPL
@@ -6,10 +6,15 @@ distribution: check_mk
 description:
  This check monitors the electrical current of overcurrent protectors
  of the Raritan PX-2000 family of intelligent rack power distribution
- units (iPDUs).
+ units (iPDUs). As well as the current, the status as reported by the
+ device is taken into account, whereby the status open is interpreted
+ as CRIT, closed as OK, and unavailable as UNKNOWN.
 
 item:
  The ID of the Overcurrent protector, eg. C1.
+
+perfdata:
+ One value: The current current in Ampère.
 
 inventory:
  One check per overcurrent protector is created.

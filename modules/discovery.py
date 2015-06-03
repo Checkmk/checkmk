@@ -162,6 +162,13 @@ def check_discovery(hostname, ipaddress=None):
         else:
             output = "no unchecked services found\n"
             status = 0
+    except (MKSNMPError, MKAgentError), e:
+        output = "Discovery failed: %s" % e
+        # Honor rule settings for "Status of the Check_MK service". In case of
+        # a problem we assume a connection error here.
+        spec = exit_code_spec(hostname)
+        status = spec.get("connection", 1)
+
     except SystemExit, e:
         raise e
     except Exception, e:

@@ -23,6 +23,7 @@
     * 2561 FIX: check-mk-agent rpm is now also replacing check_mk_agent named rpms...
 
     Multisite:
+    * 2340 FIX: Email validation: Top level domains can now have a maximum length of 24 characters
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
     * 2510 FIX: Fixed sidebar frame scaling in chrome when using browser zoom
     * 2548 FIX: Fixed exceptions in different places in case of user errors...

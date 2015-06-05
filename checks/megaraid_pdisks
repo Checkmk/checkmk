@@ -107,6 +107,7 @@ megaraid_pdisks_states = {
     'Online'             : 0,
     'Hotspare'           : 0,
     'Unconfigured(good)' : 0,
+    'JBOD'               : 0,
     'Failed'             : 2,
     'Unconfigured(bad)'  : 1,
 }

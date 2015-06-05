@@ -41,33 +41,79 @@
 # OVERALL 2
 
 def inventory_omd_status(info):
-    for line in info:
-        if line[0][0] == '[':
-            yield line[0][1:-1], None
+    for site in info.keys():
+        yield site, None
 
-def check_omd_status(item, _no_params, info):
+def parse_omd_status(info):
     active = False
+    parsed = {}
+
     for line in info:
-        if line[0] == '[' + item + ']':
+        if line[1][0] == '[':
+            item = line[1][1:-1]
+            # items may appear several times in clusters
+            # so dont overwrite the previous node result
+            if item not in parsed:
+                parsed[item] = {}
+            node = line[0]
+            parsed[item][node] = {}
+            parsed[item][node]["stopped"] = []
             active = True
             stopped = []
-        elif active:
-            if line[0] == 'OVERALL':
-                if line[1] == '0':
-                    return (0, 'all services are running')
-                elif line[1] == '1':
-                    return (2, 'site is stopped')
-                else:
-                    return (2, 'partially running! stopped services: %s' % ", ".join(stopped))
-            elif line[1] != '0':
-                stopped.append(line[0])
-    return (3, "site not existing or AUTOSTART off")
+        elif active and line[1] == 'OVERALL':
+            if line[2] == '0':
+                parsed[item][node]["overall"] = "running"
+            elif line[2] == '1':
+                parsed[item][node]["overall"] = "stopped"
+            active = False
+        elif active and line[2] != '0':
+            parsed[item][node]["stopped"].append(line[1])
+            parsed[item][node]["overall"] = "partially"
 
+    return parsed
+
+
+def check_omd_status(item, _no_params, info):
+
+    parsed_site = info[item]
+    number_nodes = len(parsed_site)
+    stopped_nodes = 0
+
+    for node, services in parsed_site.iteritems():
+        if services["overall"] == "stopped":
+            stopped_nodes += 1
+
+    # stopped sites are only CRIT when all are stopped
+    if stopped_nodes == number_nodes:
+        state = 2
+    else:
+        state = 0
+
+    for node, services in parsed_site.iteritems():
+        if node:
+            node_text = " on %s" % node
+        else:
+            node_text = ""
+        if services["overall"] == "running":
+            infotext = "running%s" % node_text
+            # running sites are always OK
+            yield 0, infotext
+        elif services["overall"] == "stopped":
+            infotext = "stopped%s" % node_text
+            # stopped sites are only CRIT when all are stopped
+            yield state, infotext
+        else:
+            infotext = "partially running%s, stopped services: " % node_text
+            infotext += ", ".join(services["stopped"])
+            # partially running sites are always CRIT
+            yield 2, infotext
 
 
 check_info["omd_status"] = {
-    'check_function':          check_omd_status,
-    'inventory_function':      inventory_omd_status,
-    'service_description':     'OMD %s status',
-    'group':                   'omd_status',
+    'check_function'      : check_omd_status,
+    'inventory_function'  : inventory_omd_status,
+    'parse_function'      : parse_omd_status,
+    'service_description' : 'OMD %s status',
+    'group'               : 'omd_status',
+    'node_info'           : True,
 }

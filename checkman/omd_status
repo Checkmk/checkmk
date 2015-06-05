@@ -10,6 +10,11 @@ description:
  otherwise. If the site is only partially running then the check output
  shows the names of the stopped services.
 
+ The check also works in a cluster environment, listing all node where the
+ sites are running on and their states. The total state of the service is
+ then only critical when one of the sites on a node is partially running,
+ or when all sites on the nodes are stopped.
+
 item:
  The name of the site (string).
 

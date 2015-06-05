@@ -512,7 +512,10 @@ class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
         kwargs.setdefault("size", 40)
         TextAscii.__init__(self, **kwargs)
-        self._regex = re.compile('^[A-Z0-9._%+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,4})$', re.I)
+        # The "new" top level domains are very unlimited in length. Theoretically they can be
+        # up to 63 chars long. But currently the longest is 24 characters. Check this out with:
+        # wget -qO - http://data.iana.org/TLD/tlds-alpha-by-domain.txt | tail -n+2 | wc -L
+        self._regex = re.compile('^[A-Z0-9._%+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$', re.I)
         self._make_clickable = kwargs.get("make_clickable", False)
 
     def value_to_text(self, value):

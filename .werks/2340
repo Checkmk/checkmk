@@ -1,0 +1,9 @@
+Title: Email validation: Top level domains can now have a maximum length of 24 characters
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433497930
+Class: fix
+
+

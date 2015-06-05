@@ -1,0 +1,10 @@
+Title: aix_sap_processlist: agent plugin now is more general to deal with various AIX versions
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1433492293
+
+it is now actively searching for the right path to its libraries

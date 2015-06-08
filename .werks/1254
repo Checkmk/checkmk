@@ -1,0 +1,9 @@
+Title: The target address for crash reports can now be configured in wato global settings
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433769983
+Class: feature
+
+

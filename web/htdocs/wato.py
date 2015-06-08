@@ -8533,7 +8533,7 @@ def vs_notification_rule(userid = None):
                         ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
                         ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
                         ( 'f', _("Start or end of flapping state")),
-                        ( 's', _("Start or end of a scheduled downtime ")),
+                        ( 's', _("Start or end of a scheduled downtime")),
                         ( 'x', _("Acknowledgement of host problem")),
                     ],
                     default_value = [ 'rd', 'dr', 'f', 's', 'x' ],

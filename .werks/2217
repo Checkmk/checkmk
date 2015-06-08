@@ -1,0 +1,8 @@
+Title: md: Fix handling of found and expected disks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p6
+Date: 1433769443
+Class: fix
+

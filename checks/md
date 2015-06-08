@@ -127,7 +127,7 @@ def check_md(item, _no_params, info):
             its_next = True
         elif its_next:
             disk_state_1 = line[-2]
-            (num_disks, expected_disks) = disk_state_1[1:-1].split('/')
+            (num_disks, expected_disks) = map(int,disk_state_1[1:-1].split('/'))
             disk_state_2 = line[-1]
             working_disks = disk_state_2.count('U')
             state_next = True

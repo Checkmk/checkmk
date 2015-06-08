@@ -22,6 +22,9 @@
     * 2338 FIX: Logging internal GUI exceptions to web.log instead of apache error_log...
     * 2340 FIX: Email validation: Top level domains can now have a maximum length of 24 characters
 
+    WATO:
+    * 1254 The target address for crash reports can now be configured in wato global settings
+
     BI:
     * 2336 FIX: BI compilation diagnostics are now logged to the generic web.log...
 

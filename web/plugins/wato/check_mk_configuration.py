@@ -231,6 +231,14 @@ register_configvar(group,
             default_value = True),
     domain = "multisite")
 
+register_configvar(group,
+    "crash_report_target",
+    TextAscii(title = _("Mail Address for Crash reports"),
+              help = _("This Address will be used as default receiver address for crash reports"),
+              size = 80,
+              default_value = "feedback@check-mk.org",
+              attrencode = True),
+    domain = "multisite")
 
 register_configvar(group,
     "multisite_draw_ruleicon",

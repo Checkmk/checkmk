@@ -70,6 +70,8 @@ factory_settings['printer_output_default_levels'] = {
 def inventory_printer_io(info):
     for line in info:
         index, name, descr, status = line[:4]
+        if descr == '':
+            continue
         ignore = False
         snmp_status = saveint(status)
         for state_val in sorted(printer_io_states,reverse=True):

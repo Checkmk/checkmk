@@ -3885,10 +3885,11 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "cpu_utilization_os",
-    _("CPU utilization for Windows and ESX Hosts"),
+    _("CPU utilization for simple devices"),
     Dictionary(
         help = _("This rule configures levels for the CPU utilization (not load) for "
-                 "the operating systems Windows and VMWare ESX host systems. The utilization "
+                 "the operating systems Windows and VMWare ESX host systems, as well as devices "
+                 "implementing the Host Resources MIB. The utilization "
                  "ranges from 0 to 100 - regardless of the number of CPUs."),
         elements = [
             ( "levels",

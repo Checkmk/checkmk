@@ -53,11 +53,11 @@ def check_cpu_util(util, params, this_time = None):
     if "average" in params:
         util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
         check_against = util_avg
-        counter = "avg"
+        perfvar = "avg"
         infotext += ", %dmin average: %.1f %%" % (params["average"], util_avg)
     else:
         check_against = util
-        counter = "util"
+        perfvar = "util"
 
 
     levels = params.get("levels")
@@ -66,7 +66,7 @@ def check_cpu_util(util, params, this_time = None):
     else:
         warn, crit = None, None
 
-    state, extrainfo, extraperf = check_levels(check_against, counter, levels)
+    state, extrainfo, extraperf = check_levels(check_against, perfvar, levels)
     if extrainfo:
         infotext += ", " + extrainfo
 

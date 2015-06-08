@@ -1,0 +1,10 @@
+Title: hr_cpu: Reworked check to use WATO rule allowing averaging and predictive levels
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i2
+Date: 1433777551
+Class: feature
+
+hr_cpu now uses a different WATO rule, so old rules for this check type will no longer
+apply.

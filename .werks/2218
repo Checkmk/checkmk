@@ -1,0 +1,11 @@
+Title: hr_cpu: Not applying levels now works
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p6
+Date: 1433773368
+Class: fix
+
+
+The WATO rule for this check allows not applying levels, but the check
+would previously crash when this is used. This has been fixed.

@@ -26,11 +26,11 @@
 SHELL         = /bin/bash
 VERSION       = 1.2.7i2
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
-WINDRES       = i686-w64-mingw32-windres
+WINDRES       = i586-mingw32msvc-windres
 COPTIONS      = -s -O2 -Wall -Werror -static -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'
 
 ifeq ($(shell uname),Linux)
-  CXX        = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i686-w64-mingw32-g++
+  CXX        = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
   CXX_64     = x86_64-w64-mingw32-g++
   WINDRES_64 = x86_64-w64-mingw32-windres
 else

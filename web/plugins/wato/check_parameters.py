@@ -7128,11 +7128,11 @@ register_check_parameters(
             elements = [
                 Integer(
                     title = _("Warning at"),
-                    default_value = 1,
+                    default_value = 2,
                 ),
                 Integer(
                     title = _("Critical at"),
-                    default_value = 1,
+                    default_value = 3,
             ),
             ])),
        ("offset", Tuple(
@@ -7141,12 +7141,12 @@ register_check_parameters(
                 Integer(
                     title = _("Warning at"),
                     unit = _("microseconds"),
-                    default_value = 1,
+                    default_value = 10,
                 ),
                 Integer(
                     title = _("Critical at"),
                     unit = _("microseconds"),
-                    default_value = 1,
+                    default_value = 20,
             ),
             ])),
     ]),

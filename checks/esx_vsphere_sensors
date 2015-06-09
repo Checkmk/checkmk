@@ -39,6 +39,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
     sensor_state_modified = False
 
     for name, base_units, current_reading, sensor_type, unit_modifier, rate_units, health_key, health_label, health_summary in info:
+        health_key = health_key.lower()
         if health_key == "green":
             continue # usually not output by agent anyway
         infos.append("%s: %s (%s)" % (name, health_label, health_summary))
@@ -58,7 +59,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
                     new_state = entry.get("states").get(str(sensor_state))
                     if new_state != None:
                         sensor_state          = new_state
-                        extra_info            = "(state modified by rule)"
+                        extra_info            = "(Alert state has been modified by Check_MK rule)"
                         sensor_state_modified = True
 
         state = max(state, sensor_state)

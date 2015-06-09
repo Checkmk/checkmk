@@ -2606,68 +2606,15 @@ register_check_parameters(
     subgroup_storage,
     "volume_groups",
     _("Volume Groups (LVM)"),
-    Dictionary(
+    Alternative(
+        title = _("Levels for volume group"),
+        show_alternative_title = True,
+        default_value = (80.0, 90.0),
+        match = match_dual_level_type,
         elements = [
-             ("levels",
-                 Alternative(
-                     title = _("Levels for volume group"),
-                     show_alternative_title = True,
-                     default_value = (80.0, 90.0),
-                     match = match_dual_level_type,
-                     elements = [
-                            get_free_used_dynamic_valuespec("used", "volume group"),
-                            Transform(
-                                     get_free_used_dynamic_valuespec("free", "filesystem", default_value = (20.0, 10.0)),
-                                     title = _("Levels for free space"),
-                                     allow_empty = False,
-                                     forth = transform_filesystem_free,
-                                     back  = transform_filesystem_free
-                             )
-                         ]
-                         )
-             ),
-             # Beware: this is a nasty hack that helps us to detect new-style paramters.
-             # Something hat has todo with float/int conversion and has not been documented
-             # by the one who implemented this.
-             ( "flex_levels",
-               FixedValue(
-                   None,
-                   totext = "",
-                   title = "",
-                   )),
-             ( "show_levels",
-               DropdownChoice(
-                   title = _("Display warn/crit levels in check output..."),
-                   choices = [
-                     ( "onproblem", _("Only if the status is non-OK")),
-                     ( "onmagic",   _("If the status is non-OK or a magic factor is set")),
-                     ( "always",    _("Always") ),
-                   ],
-                   default_value = "onmagic",
-             )),
-             (  "magic",
-                Float(
-                   title = _("Magic factor (automatic level adaptation for large volume groups)"),
-                   default_value = 0.8,
-                   minvalue = 0.1,
-                   maxvalue = 1.0)),
-             (  "magic_normsize",
-                Integer(
-                    title = _("Reference size for magic factor"),
-                    default_value = 20,
-                    minvalue = 1,
-                    unit = _("GB"))),
-             ( "levels_low",
-               Tuple(
-                   title = _("Minimum levels if using magic factor"),
-                   help = _("The levels will never fall below these values, when using "
-                            "the magic factor and the volume group is very small."),
-                   elements = [
-                       Percentage(title = _("Warning at"),  unit = _("% usage"), allow_int = True, default_value=50),
-                       Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=60)])),
-
-        ],
-        hidden_keys = ["flex_levels"],
+            get_free_used_dynamic_valuespec("used", "volume group"),
+            get_free_used_dynamic_valuespec("free", "volume group", default_value = (20.0, 10.0)),
+         ]
     ),
     TextAscii(
         title = _("Volume Group"),

@@ -1,4 +1,7 @@
 1.2.6p6:
+    Core & Setup:
+    * 2307 FIX: Windows Agent MSI installer: removed version information from product name...
+
     Checks & Agents:
     * 2305 FIX: agent_vsphere, esx_vsphere_sensors: now able to handle sensor names with semicolon...
     * 1253 FIX: printer_io,printer_supply: prevent discovery on not supported devices

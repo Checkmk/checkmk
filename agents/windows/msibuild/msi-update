@@ -160,7 +160,7 @@ try:
     for line in lines_property_idt[3:]:
         tokens = line.split("\t")
         if tokens[0] == "ProductName":
-            tokens[1] = "Check_MK Agent MSI %s Rev %s\r\n" % (new_version_name, new_version_build.split(".")[-1])
+            tokens[1] = "Check_MK Agent\r\n"
     # The upgrade code defines the product family. Do not change it!
     #    elif tokens[0] == "UpgradeCode":
     #        tokens[1] = upgrade_code

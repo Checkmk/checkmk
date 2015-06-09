@@ -1,0 +1,10 @@
+Title: windows agent: made 32 bit version working again (used old 32 bit crosscompiler)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1p2
+Date: 1433834306
+Class: fix
+
+Introducing a new crosscompiler for the 32 bit version broke a few things - the agent crashed..
+With this werk the old crosscompiler is used again.

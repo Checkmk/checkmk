@@ -1,6 +1,7 @@
 1.2.7i2:
     Core & Setup:
     * 2339 FIX: Discovery service: Fixed handling of agent / SNMP communication errors...
+    * 2307 FIX: Windows Agent MSI installer: removed version information from product name...
 
     Checks & Agents:
     * 2117 postfix_mailq: agent and check now retrieve and monitor active queue data as well

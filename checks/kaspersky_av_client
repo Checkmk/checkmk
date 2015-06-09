@@ -1,0 +1,96 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<kaspersky_av_client>>>
+# Signatures 08.05.2015 01:23:00
+# Fullscan 08.05.2015 05:43:16 0
+
+
+factory_settings['kaspersky_av_client_default_levels'] = {
+    'signature_age' : ( 86400, 7*86400 ),
+    'fullscan_age'  : ( 86400, 7*86400 ),
+}
+
+
+def parse_kaspersky_av_client(info):
+    now = time.time()
+    parsed = {}
+    for line in info:
+        timestamp_text = line[1] + " " + line[2]
+        # We assume that the timestamp is to be interpreted in the timezone of
+        # the Check_MK server. This might be a problem, if e.g. the agent is located
+        # in China and the Check_MK server in USA.
+        age = now - time.mktime(time.strptime(timestamp_text, '%d.%m.%Y %H:%M:%S'))
+
+        if line[0] == "Signatures":
+            parsed['signature_age'] = age
+
+        elif line[0] == "Fullscan":
+            parsed['fullscan_age'] = age
+            parsed['fullscan_failed'] = line[3] != "0"
+
+    return parsed
+
+
+def inventory_kaspersky_av_client(parsed):
+    return [ (None, {}) ]
+
+
+def check_kaspersky_av_client(_no_item, params, parsed):
+    for key, what in [
+        ( "signature_age", "Last update of signatures" ),
+        ( "fullscan_age",  "Last fullscan" ),
+    ]:
+        age = parsed[key]
+        warn, crit = params[key]
+        if age >= crit:
+            state = 2
+        elif age >= warn:
+            state = 1
+        else:
+            state = 0
+
+        infotext = "%s %s ago" % (what, get_age_human_readable(age))
+        if state > 0:
+            infotext += " (warn/crit at %s/%s)" % (
+                get_age_human_readable(warn),
+                get_age_human_readable(crit))
+
+        yield state, infotext
+
+    if parsed["fullscan_failed"]:
+        yield 2, "Last fullscan failed"
+
+
+check_info['kaspersky_av_client'] = {
+    'parse_function'            : parse_kaspersky_av_client,
+    'inventory_function'        : inventory_kaspersky_av_client,
+    'check_function'            : check_kaspersky_av_client,
+    'service_description'       : 'Kaspersky AV',
+    'default_levels_variable'   : 'kaspersky_av_client_default_levels',
+    'group'                     : 'kaspersky_av_client',
+}

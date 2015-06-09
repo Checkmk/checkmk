@@ -324,6 +324,49 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "kaspersky_av_client",
+    _("Kaspersky Anti-Virus Time Settings"),
+    Dictionary(
+        elements = [
+            ( "signature_age",
+                Tuple( title = _("Time Settings for Signature"),
+                    elements = [
+                        Age(title=_("Warning at:"), default_value = 86400),
+                        Age(title=_("Critical at:"), default_value = 7*86400),
+                    ],
+                ),
+            ),
+            ( "fullscan_age",
+                Tuple( title = _("Time Settings for Fullscan"),
+                    elements = [
+                        Age(title=_("Warning at:"), default_value = 86400),
+                        Age(title=_("Critical at:"), default_value = 7*86400),
+                    ],
+                ),
+            ),
+        ],
+    ),
+    None,
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "mcafee_av_client",
+    _("McAfee Anti-Virus Time Settings"),
+    Tuple(
+        title = _('Time Settings for Signature'),
+        elements = [
+            Age(title = _("Warning at"), default_value = 86400 ),
+            Age(title = _("Critical at"), default_value = 7*86400 ),
+        ],
+    ),
+    None,
+    match_type = "first",
+)
+
 # register_check_parameters(
 #     subgroup_applications,
 #     "pfsense_counter",

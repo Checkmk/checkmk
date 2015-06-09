@@ -1,0 +1,10 @@
+Title: cpu_util checks: removed superfluous space in check output
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1433858568
+
+

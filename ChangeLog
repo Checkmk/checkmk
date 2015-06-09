@@ -18,6 +18,7 @@
     * 2118 FIX: aix_sap_processlist: agent plugin now is more general to deal with various AIX versions...
     * 1253 FIX: printer_io,printer_supply: prevent discovery on not supported devices
     * 2217 FIX: md: Fix handling of found and expected disks
+    * 2309 FIX: cpu_util checks: removed superfluous space in check output
 
     Multisite:
     * 2260 Improved load time of Check_MK GUI...

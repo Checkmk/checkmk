@@ -68,7 +68,7 @@ def check_cpu_util(util, params, this_time = None):
 
     state, extrainfo, extraperf = check_levels(check_against, perfvar, levels)
     if extrainfo:
-        infotext += ", " + extrainfo
+        infotext += "," + extrainfo
 
     perfdata = [ ("util", util, warn, crit, 0, 100) ]
     if "average" in params:

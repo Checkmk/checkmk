@@ -34,6 +34,7 @@
     Event Console:
     * 2333 The Event Console log level can now be configured via GUI...
     * 2334 Logging details about loaded SNMP MIB modules during startup
+    * 2326 Allow relating Event Console hosts to monitoring hosts now also by alias...
 
 
 1.2.7i1:

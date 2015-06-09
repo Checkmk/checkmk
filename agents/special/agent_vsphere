@@ -32,6 +32,9 @@
 
 import httplib, pprint, sys, os, getopt, socket, time, datetime, re
 
+# Great article how to get additional information
+# http://www.veeam.com/kb1007
+
 telegram_list = {
        "systeminfo":
          '<ns1:RetrieveServiceContent xsi:type="ns1:RetrieveServiceContentRequestType">'\
@@ -177,6 +180,9 @@ telegram_list = {
          '<ns1:pathSet>name</ns1:pathSet>'\
          '<ns1:pathSet>overallStatus</ns1:pathSet>'\
          '<ns1:pathSet>runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo</ns1:pathSet>'\
+         '<ns1:pathSet>runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo</ns1:pathSet>'\
+         '<ns1:pathSet>runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo</ns1:pathSet>'\
+         '<ns1:pathSet>runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo</ns1:pathSet>'\
          '<ns1:pathSet>runtime.inMaintenanceMode</ns1:pathSet>'\
          '<ns1:pathSet>hardware.memorySize</ns1:pathSet></ns1:propSet>'\
          '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
@@ -852,6 +858,15 @@ if not error:
                                                                 "currentReading": currentReading, "unitModifier": unitModifier,
                                                                 "baseUnits": baseUnits, "sensorType": sensorType }
 
+                def eval_hardwarestatus_info(sensor_propset):
+                    sensor_pattern = ""
+                    for key in [ "name", "label", "summary", "key" ]:
+                        sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
+
+                    sensor_data = get_pattern(sensor_pattern, sensor_propset)
+                    for name, label, summary, key in sensor_data:
+                        hostsystems_sensors[hostname][name] = { "name": name, "label": label, "summary": summary, "key": key }
+
                 def eval_multipath_state(multipath_propset):
                     multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>", value)
                     for mp_name, mp_state in multipaths:
@@ -888,11 +903,14 @@ if not error:
                         keys_index[key] = idx
 
                 eval_functions = {
-                    "config.multipathState.path"                                    : eval_multipath_state,
-                    "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
-                    "hardware.cpuPkg"                                               : eval_cpu_pkg,
-                    "hardware.pciDevice"                                            : eval_pci_device,
-                    "hardware.systemInfo.otherIdentifyingInfo"                      : eval_systeminfo_other,
+                    "config.multipathState.path"                                      : eval_multipath_state,
+                    "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo"  : eval_sensor_info,
+                    "runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo": eval_hardwarestatus_info,
+                    "runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo"    : eval_hardwarestatus_info,
+                    "runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo" : eval_hardwarestatus_info,
+                    "hardware.cpuPkg"                                                 : eval_cpu_pkg,
+                    "hardware.pciDevice"                                              : eval_pci_device,
+                    "hardware.systemInfo.otherIdentifyingInfo"                        : eval_systeminfo_other,
                 }
 
                 elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)
@@ -909,22 +927,23 @@ if not error:
 
                 print "<<<esx_vsphere_hostsystem>>>"
                 for key in sorted(properties.keys()):
-                    if key == "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo":
-                        continue
-                    value = properties[key]
-                    print "%s %s" % (key, " ".join(value))
+                    print "%s %s" % (key, " ".join(properties[key]))
 
                 print "<<<esx_vsphere_sensors:sep(59)>>>"
                 for key in sorted(hostsystems_sensors[hostname].keys()):
                     data = hostsystems_sensors[hostname][key]
                     if data["key"] in ["green", "unknown"]:
                         continue
-                    line = '%s;%s;%s;%s;%s;' % (data["name"].replace(";", "_"), data["baseUnits"], data["currentReading"],
-                                                data["sensorType"], data["unitModifier"])
-                    if "rateUnits" in data:
-                        line += data["rateUnits"]
-                    line += ";%s;%s;%s" % ( data["key"], data["label"], data["summary"] )
-                    print line
+                    print '%s;%s;%s;%s;%s;%s;%s;%s;%s' % (
+                                    data["name"].replace(";", "_"),
+                                    data.get("baseUnits", ""),
+                                    data.get("currentReading", ""),
+                                    data.get("sensorType", ""),
+                                    data.get("unitModifier", ""),
+                                    data.get("rateUnits", ""),
+                                    data["key"],
+                                    data["label"],
+                                    data["summary"].replace(";", "_"))
 
 
         ###########################

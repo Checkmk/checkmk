@@ -1,0 +1,10 @@
+Title: lvm_vgs: Check now has his own configuration in wato
+Level: 1
+Component: wato
+Compatible: incomp
+Version: 1.2.7i2
+Date: 1433839820
+Class: feature
+
+Before the filesystem rulset was used. If you already created parameters for this check you have the recreate this parameters in the new rule.
+

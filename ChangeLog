@@ -28,6 +28,8 @@
 
     WATO:
     * 1254 The target address for crash reports can now be configured in wato global settings
+    * 1256 lvm_vgs: Check now has his own configuration in wato...
+            NOTE: Please refer to the migration notes!
 
     BI:
     * 2336 FIX: BI compilation diagnostics are now logged to the generic web.log...

@@ -238,6 +238,13 @@ then
   done
 fi
 
+# Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
+   echo '<<<fileinfo:sep(124)>>>'
+   date +%s
+   # simulate output of the Linux "stat -c "%n|%s|%Y" command
+   /usr/bin/perl -e 'printf "$_|%s|%s\n", (stat) [7,9] for @ARGV' $(cat "$MK_CONFDIR/fileinfo.cfg")
+fi
 
 echo '<<<local>>>'
 if cd $LOCALDIR 2>/dev/null

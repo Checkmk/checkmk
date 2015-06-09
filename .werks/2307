@@ -1,0 +1,12 @@
+Title: Windows Agent MSI installer: removed version information from product name
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1433835402
+
+The agent version is no longer displayed in the product name.
+This is because some software management tools have troubles to detect the same
+product family if the name differs.

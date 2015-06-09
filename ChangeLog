@@ -1,6 +1,7 @@
 1.2.7i2:
     Core & Setup:
     * 2339 FIX: Discovery service: Fixed handling of agent / SNMP communication errors...
+    * 2307 FIX: Windows Agent MSI installer: removed version information from product name...
 
     Checks & Agents:
     * 2117 postfix_mailq: agent and check now retrieve and monitor active queue data as well
@@ -9,6 +10,7 @@
     * 2119 omd_status: check can now work in a cluster environment
     * 2219 hr_cpu: Reworked check to use WATO rule allowing averaging and predictive levels...
             NOTE: Please refer to the migration notes!
+    * 1255 AIX Agent now supports fileinfo. Thanks to Falk Grunert (IBM)
     * 2323 FIX: df: Fix new graphs for all filesystem checks in case of existing inode information
     * 2305 FIX: agent_vsphere, esx_vsphere_sensors: now able to handle sensor names with semicolon...
     * 2118 FIX: aix_sap_processlist: agent plugin now is more general to deal with various AIX versions...
@@ -27,6 +29,8 @@
 
     WATO:
     * 1254 The target address for crash reports can now be configured in wato global settings
+    * 1256 lvm_vgs: Check now has his own configuration in wato...
+            NOTE: Please refer to the migration notes!
 
     BI:
     * 2336 FIX: BI compilation diagnostics are now logged to the generic web.log...

@@ -60,6 +60,10 @@ def check_lparstat(item, params, info):
             cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint', 'nsp', 'utcyc' ]
             uom    = [ '',      '%',    '',      '',    '',     '',       '%',  '%' ]
             values = line[-8:]
+        elif len(line) == 11:
+            cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint', 'nsp' ]
+            uom    = [ '',      '%',    '',      '',    '',     '',       '%' ]
+            values = line[-7:]
         elif len(line) == 10:
             cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint' ]
             uom    = [ '',      '%',    '',      '',    '',     '' ]

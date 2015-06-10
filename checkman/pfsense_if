@@ -10,5 +10,8 @@ description:
 inventory:
  One service per interface will be created.
 
+item:
+ The description of the interface as provided by the device.
+
 perfdata:
  The rate of blocked packets per second.

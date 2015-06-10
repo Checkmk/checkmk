@@ -19,6 +19,7 @@
     * 1253 FIX: printer_io,printer_supply: prevent discovery on not supported devices
     * 2217 FIX: md: Fix handling of found and expected disks
     * 2309 FIX: cpu_util checks: removed superfluous space in check output
+    * 1257 FIX: oracle_jobs: Fix: Discovery now supports the old oracle plugin again
 
     Multisite:
     * 2260 Improved load time of Check_MK GUI...

@@ -47,16 +47,14 @@ def inventory_pfsense_counter(parsed):
 def check_pfsense_counter(_no_item, params, parsed):
 
     namestoinfo = {
-        "matched"    : "Packets that matched a rule:",
-        "badoffset"  : "Packets with bad offset:",
-        "fragment"   : "Fragmented packets:",
-        "short"      : "Short packets:",
-        "normalized" : "Normalized packets:",
-        "memdrop"    : "Packets dropped due to memory limitations:",
+        "matched"    : "Packets that matched a rule",
+        "badoffset"  : "Packets with bad offset",
+        "fragment"   : "Fragmented packets",
+        "short"      : "Short packets",
+        "normalized" : "Normalized packets",
+        "memdrop"    : "Packets dropped due to memory limitations",
     }
 
-    rate = {}
-    avgrate = {}
     this_time = time.time()
 
     if params.get("average"):
@@ -66,20 +64,18 @@ def check_pfsense_counter(_no_item, params, parsed):
         backlog_minutes = None
 
     for what in parsed:
-        rate[what] = get_rate("pfsense_counter-%s" % what, this_time, parsed[what])
-        perfrate = ("fw_packets_" + what, rate[what])
+        rate = get_rate("pfsense_counter-%s" % what, this_time, parsed[what])
+        perfrate = ("fw_packets_" + what, rate)
 
         if backlog_minutes:
-            avgrate[what] = get_average("pfsense_counter-%srate" % what, this_time,
-                                        rate[what], backlog_minutes)
-            check_against = avgrate[what]
-            perfavg = ("fw_avg_packets_" + what, avgrate[what])
-            infotext = "%s %.2f" % (namestoinfo[what], avgrate[what])
+            avgrate = get_average("pfsense_counter-%srate" % what, this_time,
+                                        rate, backlog_minutes)
+            check_against = avgrate
+            perfavg = ("fw_avg_packets_" + what, avgrate)
         else:
             perfavg = None
-            check_against = rate[what]
-            infotext = "%s %.2f" % (namestoinfo[what], rate[what])
-        infotext = "%s %.2f pkts/s" % (namestoinfo[what], check_against
+            check_against = rate
+        infotext = "%s: %.2f pkts/s" % (namestoinfo[what], check_against)
 
         status = 0
         if params.get(what):

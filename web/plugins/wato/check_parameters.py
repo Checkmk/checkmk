@@ -340,48 +340,45 @@ register_check_parameters(
                   default_value = 15,
                   label = _("Compute average over last "),
                   )),
-             ("matched", Tuple(
-                             title = _("Levels for rate of packets that matched a rule"),
-                             elements = [
-                                Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 85.0),
-                                Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 90.0),
-                             ],
+             ( "fragment",
+               Tuple(
+                   title = _("Levels for rate of fragmented packets"),
+                   elements = [
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 100.0),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 200.0),
+                   ],
              )),
-             ("badoffset", Tuple(
-                             title = _("Levels for rate of packets with bad offset"),
-                             elements = [
-                                Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 85.0),
-                                Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 90.0),
-                             ],
-                 )),
-             ("fragment", Tuple(
-                             title = _("Levels for rate of fragmented packets"),
-                             elements = [
-                                Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 85.0),
-                                Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 90.0),
-                             ],
-                 )),
-             ("short", Tuple(
-                             title = _("Levels for rate of short packets"),
-                             elements = [
-                                Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 85.0),
-                                Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 90.0),
-                             ],
-                 )),
-             ("normalized", Tuple(
-                             title = _("Levels for rate of normalized packets"),
-                             elements = [
-                                Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 85.0),
-                                Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 90.0),
-                             ],
-                 )),
-             ("memdrop", Tuple(
-                             title = _("Levels for rate of packets dropped due to memory limitations"),
-                             elements = [
-                                Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 85.0),
-                                Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 90.0),
-                             ],
-                 )),
+             ( "normalized",
+               Tuple(
+                   title = _("Levels for rate of normalized packets"),
+                   elements = [
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 10.0),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 50.0),
+                   ],
+             )),
+             ( "badoffset",
+               Tuple(
+                   title = _("Levels for rate of packets with bad offset"),
+                   elements = [
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 0.1),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10.0),
+                   ],
+             )),
+             ( "short",
+               Tuple(
+                   title = _("Levels for rate of short packets"),
+                   elements = [
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 0.1),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10.0),
+                   ],
+             )),
+             ( "memdrop", Tuple(
+                    title = _("Levels for rate of packets dropped due to memory limitations"),
+                    elements = [
+                       Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 0.001),
+                       Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10.0),
+                   ],
+             )),
          ],
      ),
      None,

@@ -9,6 +9,7 @@
     * 2218 FIX: hr_cpu: Not applying levels now works...
     * 2309 FIX: cpu_util checks: removed superfluous space in check output
     * 1257 FIX: oracle_jobs: Fix: Discovery now supports the old oracle plugin again
+    * 1258 FIX: fileinfo solaris: Fixed configuration crash...
 
 
 1.2.6p5:

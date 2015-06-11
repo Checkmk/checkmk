@@ -1,0 +1,17 @@
+Title: agent_vsphere, esx_vsphere_sensors: now reports additional sensor information (cpu, storage controller, memory)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433850734
+Class: feature
+
+The agent_vsphere now queries these additional objects
+<ul>
+<li>runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo</li>
+<li>runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo</li>
+<li>runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo</li>
+</ul>
+
+The esx_vsphere_sensor check will report any problems regarding the
+raid controller, the health of the CPU and the DIMM modules.

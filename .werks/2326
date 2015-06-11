@@ -1,0 +1,12 @@
+Title: Allow relating Event Console hosts to monitoring hosts now also by alias
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433844223
+Class: feature
+
+In the view of the Event Console events in the GUI Check_MK tries to match the
+hosts of the events with the hosts in the monitoring (if they are known) by
+either the host name or the IP address. From now on also the hosts' aliases
+are being checked.

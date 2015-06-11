@@ -26,8 +26,8 @@
 
 
 factory_settings["mbg_lantime_state_default_levels"] = {
-     "stratum" : (1,   1),
-     "offset"  : (500, 1000), # us
+     "stratum" : (2,   3),
+     "offset"  : (10, 20), # us
 }
 
 def snmp_scan_mbg_lantime_ng_hw(oid):

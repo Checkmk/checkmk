@@ -42,7 +42,9 @@ factory_settings["oracle_jobs_defaults"] = {
 }
 
 def inventory_oracle_jobs(info):
-    return [ ( ("%s.%s.%s" % (line[0], line[1], line[2])), {} ) for line in info ]
+    for line in info:
+        if len(line) >= 3:
+            yield "%s.%s.%s" % ( line[0], line[1], line[2] ), {}
 
 def check_oracle_jobs(item, params, info):
     if item.count('.') == 2:

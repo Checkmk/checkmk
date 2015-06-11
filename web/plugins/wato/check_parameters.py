@@ -422,6 +422,67 @@ register_check_parameters(
 #     match_type = "dict",
 # )
 
+register_check_parameters(
+     subgroup_applications,
+     "pfsense_counter",
+     _("pfSense Firewall Packet Rates"),
+     Dictionary(
+         help = _("This rule set is for configuring levels for global packet counters."),
+         elements = [
+             ("average", Integer(
+                  title = _("Averaging"),
+                  help = _("When this option is activated then the packet rates are being "
+                           "averaged <b>before</b> the levels are being applied. Setting this to zero will "
+                           "deactivate averaging."),
+                  unit = _("min"),
+                  default_value = 15,
+                  label = _("Compute average over last "),
+                  )),
+             ( "fragment",
+               Tuple(
+                   title = _("Levels for rate of fragmented packets"),
+                   elements = [
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 100.0),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 200.0),
+                   ],
+             )),
+             ( "normalized",
+               Tuple(
+                   title = _("Levels for rate of normalized packets"),
+                   elements = [
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 10.0),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 50.0),
+                   ],
+             )),
+             ( "badoffset",
+               Tuple(
+                   title = _("Levels for rate of packets with bad offset"),
+                   elements = [
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 0.1),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10.0),
+                   ],
+             )),
+             ( "short",
+               Tuple(
+                   title = _("Levels for rate of short packets"),
+                   elements = [
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 0.1),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10.0),
+                   ],
+             )),
+             ( "memdrop", Tuple(
+                    title = _("Levels for rate of packets dropped due to memory limitations"),
+                    elements = [
+                       Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 0.001),
+                       Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10.0),
+                   ],
+             )),
+         ],
+     ),
+     None,
+     match_type = "dict",
+)
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |
@@ -2649,68 +2710,15 @@ register_check_parameters(
     subgroup_storage,
     "volume_groups",
     _("Volume Groups (LVM)"),
-    Dictionary(
+    Alternative(
+        title = _("Levels for volume group"),
+        show_alternative_title = True,
+        default_value = (80.0, 90.0),
+        match = match_dual_level_type,
         elements = [
-             ("levels",
-                 Alternative(
-                     title = _("Levels for volume group"),
-                     show_alternative_title = True,
-                     default_value = (80.0, 90.0),
-                     match = match_dual_level_type,
-                     elements = [
-                            get_free_used_dynamic_valuespec("used", "volume group"),
-                            Transform(
-                                     get_free_used_dynamic_valuespec("free", "filesystem", default_value = (20.0, 10.0)),
-                                     title = _("Levels for free space"),
-                                     allow_empty = False,
-                                     forth = transform_filesystem_free,
-                                     back  = transform_filesystem_free
-                             )
-                         ]
-                         )
-             ),
-             # Beware: this is a nasty hack that helps us to detect new-style paramters.
-             # Something hat has todo with float/int conversion and has not been documented
-             # by the one who implemented this.
-             ( "flex_levels",
-               FixedValue(
-                   None,
-                   totext = "",
-                   title = "",
-                   )),
-             ( "show_levels",
-               DropdownChoice(
-                   title = _("Display warn/crit levels in check output..."),
-                   choices = [
-                     ( "onproblem", _("Only if the status is non-OK")),
-                     ( "onmagic",   _("If the status is non-OK or a magic factor is set")),
-                     ( "always",    _("Always") ),
-                   ],
-                   default_value = "onmagic",
-             )),
-             (  "magic",
-                Float(
-                   title = _("Magic factor (automatic level adaptation for large volume groups)"),
-                   default_value = 0.8,
-                   minvalue = 0.1,
-                   maxvalue = 1.0)),
-             (  "magic_normsize",
-                Integer(
-                    title = _("Reference size for magic factor"),
-                    default_value = 20,
-                    minvalue = 1,
-                    unit = _("GB"))),
-             ( "levels_low",
-               Tuple(
-                   title = _("Minimum levels if using magic factor"),
-                   help = _("The levels will never fall below these values, when using "
-                            "the magic factor and the volume group is very small."),
-                   elements = [
-                       Percentage(title = _("Warning at"),  unit = _("% usage"), allow_int = True, default_value=50),
-                       Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=60)])),
-
-        ],
-        hidden_keys = ["flex_levels"],
+            get_free_used_dynamic_valuespec("used", "volume group"),
+            get_free_used_dynamic_valuespec("free", "volume group", default_value = (20.0, 10.0)),
+         ]
     ),
     TextAscii(
         title = _("Volume Group"),
@@ -7171,11 +7179,11 @@ register_check_parameters(
             elements = [
                 Integer(
                     title = _("Warning at"),
-                    default_value = 1,
+                    default_value = 2,
                 ),
                 Integer(
                     title = _("Critical at"),
-                    default_value = 1,
+                    default_value = 3,
             ),
             ])),
        ("offset", Tuple(
@@ -7184,12 +7192,12 @@ register_check_parameters(
                 Integer(
                     title = _("Warning at"),
                     unit = _("microseconds"),
-                    default_value = 1,
+                    default_value = 10,
                 ),
                 Integer(
                     title = _("Critical at"),
                     unit = _("microseconds"),
-                    default_value = 1,
+                    default_value = 20,
             ),
             ])),
     ]),

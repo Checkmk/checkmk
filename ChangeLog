@@ -12,11 +12,16 @@
             NOTE: Please refer to the migration notes!
     * 1255 AIX Agent now supports fileinfo. Thanks to Falk Grunert (IBM)
     * 2284 kaspersky_av_client, mcafee_av_client: New Checks, Monitoring Signature and Fullscan Age...
+    * 2308 agent_vsphere, esx_vsphere_sensors: now reports additional sensor information (cpu, storage controller, memory)...
+    * 2327 mbg_lantime_ng_state, mbg_lantime_state: change default parameters to 2/3 for stratum, 10/20us for offset
+    * 2220 pfsense_counter: New check to monitor several global packet rates on pfSense firewalls
     * 2323 FIX: df: Fix new graphs for all filesystem checks in case of existing inode information
     * 2305 FIX: agent_vsphere, esx_vsphere_sensors: now able to handle sensor names with semicolon...
     * 2118 FIX: aix_sap_processlist: agent plugin now is more general to deal with various AIX versions...
     * 1253 FIX: printer_io,printer_supply: prevent discovery on not supported devices
     * 2217 FIX: md: Fix handling of found and expected disks
+    * 2309 FIX: cpu_util checks: removed superfluous space in check output
+    * 1257 FIX: oracle_jobs: Fix: Discovery now supports the old oracle plugin again
 
     Multisite:
     * 2260 Improved load time of Check_MK GUI...
@@ -39,6 +44,7 @@
     Event Console:
     * 2333 The Event Console log level can now be configured via GUI...
     * 2334 Logging details about loaded SNMP MIB modules during startup
+    * 2326 Allow relating Event Console hosts to monitoring hosts now also by alias...
 
 
 1.2.7i1:

@@ -72,16 +72,21 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     # the host_address.
     host_filters = ""
     for host in required_hosts:
+        host_utf8 = host.encode("utf-8")
         host_filters += "Filter: host_name =~ %s\n" \
-                        "Filter: host_address = %s\n" % (host.encode("utf-8"), host.encode("utf-8"))
+                        "Filter: host_alias =~ %s\n" \
+                        "Filter: host_address = %s\n" % \
+                        (host_utf8, host_utf8, host_utf8)
     if len(required_hosts) > 0:
-        host_filters += "Or: %d\n" % (len(required_hosts) * 2)
+        host_filters += "Or: %d\n" % (len(required_hosts) * 3)
 
     # Make sure that the host name is fetched. We need it for
     # joining. The event columns are always fetched all. The event
     # daemon currently does not implement any Columns: header.
     if "host_name" not in columns:
         columns.append("host_name")
+    if "host_alias" not in columns:
+        columns.append("host_alias")
     if "host_address" not in columns:
         columns.append("host_address")
 
@@ -124,11 +129,12 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     else:
         host_contact_groups = None
 
-    # Create lookup dict from hostname/address to the dataset of the host.
+    # Create lookup dict from hostname/alias/address to the dataset of the host.
     # This speeds up the mapping to the events.
     hostdict = {}
     for row in hostrows:
         hostdict[row["host_name"].lower()] = row
+        hostdict[row["host_alias"].lower()] = row
         hostdict[row["host_address"]] = row
 
     # If there is at least one host filter, then we do not show event
@@ -928,7 +934,8 @@ if mkeventd_enabled:
             ('event_state', None, ''),
             ('event_host', None, ''),
             ('event_ipaddress', None, ''),
-            ('host_address', 'hoststatus', ''),
+            ('foobar', None, ''),
+            ('alias', 'hoststatus', ''),
             ('host_contacts', None, ''),
             ('host_icons', None, ''),
             ('event_text', None, ''),

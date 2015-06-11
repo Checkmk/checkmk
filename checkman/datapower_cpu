@@ -1,0 +1,19 @@
+title: IBM Datapower CPU Utilization
+agents: snmp
+catalog: hw/network/ibm
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the CPU utilization on IBMs Datapower Gateways
+ supporting the DATAPOWER-STATUS-MIB. The check reads the percentage of
+ CPU utilization.
+
+ The check will result in a WARNING/CRITICAL state when the given thresholds
+ for the CPU utilization are reached.
+
+perfdata:
+ One variable: the current CPU utilization in percent
+
+inventory:
+ On each gateway one service is created.

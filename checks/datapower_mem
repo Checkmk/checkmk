@@ -34,10 +34,10 @@ def inventory_datapower_mem(info):
 
 def check_datapower_mem(_no_item, params, info):
 
-    mem_total_kb = int(info[0][0])
-    mem_used_kb = int(info[0][1])
+    mem_total_bytes = int(info[0][0]) * 1024
+    mem_used_bytes = int(info[0][1]) * 1024
 
-    return check_memory_simple(mem_used_kb, mem_total_kb, params)
+    return check_memory_simple(mem_used_bytes, mem_total_bytes, params)
 
 
 check_info['datapower_mem'] = {

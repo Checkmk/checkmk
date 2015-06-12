@@ -1,0 +1,25 @@
+title: McAfee Anti-Virus Signature Date
+agents: windows
+catalog: app/kaspersky
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the signature date of a windows system using
+ McAfee Anti-Virus software.
+
+ The check uses information provided by an agent which returns the
+ signature date.
+
+ Levels for warning and critical state can be set.
+
+inventory:
+ One check is created for each windows host.
+
+[parameters]
+ parameters(dict): A dictionary with the following keys:
+
+ { 'signature_age' } : A tuple of warn and crit.
+
+[configuration]
+ mcafee_av_client_default_levels(dict):
+ Default levels, preset to { 'levels' : ( 86400, 7*86400) }

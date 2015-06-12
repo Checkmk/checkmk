@@ -269,7 +269,7 @@ then
     /usr/bin/perl -e 'print time."\n"'
     for file in $(cat "$MK_CONFDIR/fileinfo.cfg")
     do
-        ls $file 2>/dev/null
+        ls $file > /dev/null 2>&1
         if [ $? -eq 0 ]; then
             ls $file | sort -u | \
                 /usr/bin/perl -e '

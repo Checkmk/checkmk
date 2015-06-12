@@ -1,0 +1,10 @@
+Title: oracle_jobs: Fix: Discovery now supports the old oracle plugin again
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1433944845
+
+

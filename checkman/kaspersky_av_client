@@ -1,0 +1,31 @@
+title: Kaspersky Anti-Virus: Signature and Fullscan
+agents: windows
+catalog: app/
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the signature date of a windows system using
+ Kaspersky Anti-Virus software.
+
+ The check uses information provided by an agent which returns the
+ signature date and time and the fullscan date and time including
+ if the fullscan was succesfull or failed.
+
+ Levels for warning and critical state can be set.
+
+inventory:
+ One checks is created for each windows host.
+
+[parameters]
+ parameters(dict): A dictionary with the following keys:
+
+ { 'signature_age' } : A tuple of warn and crit,
+ { 'fullscan_age' }  : A tuple of warn and crit.
+
+[configuration]
+ kaspersky_av_client_default_levels(dict):
+ Default levels, preset to {
+ 'signature_age' : ( 86400, 7*86400),
+ 'fullscan_age'  : ( 86400, 7*86400)
+ }
+

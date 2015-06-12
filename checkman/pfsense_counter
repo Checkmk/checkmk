@@ -1,0 +1,16 @@
+title: pfSense Counter
+agents: snmp
+catalog: app/pfsense
+license: GPL
+distribution: check_mk
+description:
+ This check monitors various global packet rates of pfSense firewalls.
+ Currently supported: Packets that matched a rule, packets with bad offset,
+ fragmented packets, short packets, normalized packets and
+ packets dropped due to memory limitations.
+
+inventory:
+ One service per pfSense device will be created.
+
+perfdata:
+ The packet rates and, if enabled, their moving average.

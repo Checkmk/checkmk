@@ -1,0 +1,9 @@
+Title: pfsense_counter: New check to monitor several global packet rates on pfSense firewalls
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433950616
+Class: feature
+
+

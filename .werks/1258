@@ -1,0 +1,11 @@
+Title: fileinfo solaris: Fixed configuration crash
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1434006788
+
+The fix is located in the agent.
+

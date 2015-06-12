@@ -68,6 +68,7 @@ manpage_catalog_titles = {
             "genua"       : "genua",
             "h3c"         : "H3C Technologies (also 3Com)",
             "hp"          : "Hewlett-Packard (HP)",
+            "ibm"         : "IBM",
             "innovaphone" : "Innovaphone",
             "juniper"     : "Juniper Networks",
             "kemp"        : "KEMP",

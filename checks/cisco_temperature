@@ -116,7 +116,7 @@ def parse_cisco_temperature(info):
 
 def inventory_cisco_temperature(parsed):
     for item in parsed.keys():
-        yield item, None
+        yield item, {}
 
 
 def check_cisco_temperature(item, params, parsed):

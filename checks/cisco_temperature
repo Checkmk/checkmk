@@ -24,6 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# NOTE: Devices of type 3850 with firmware versions 3.2.0SE, 3.2.1, 3.2.2
+# have been observed to display a tenth of the actual temperature value.
+# A firmware update on the device fixes this.
+
 def parse_cisco_temperature(info):
     description_info, state_info, levels_info, perfstuff = info
 
@@ -64,7 +69,9 @@ def parse_cisco_temperature(info):
 
                 if len(thresholds[sensor_id]) in [ 2, 4 ]:
                     warnraw, critraw = thresholds[sensor_id][0:2]
-                    dev_levels = (float(warnraw)/scale, float(critraw)/scale)
+                    # Some devices deliver these values in the wrong order
+                    dev_levels = ( min(float(warnraw)/scale, float(critraw)/scale),
+                                   max(float(warnraw)/scale, float(critraw)/scale) )
                 else:
                     dev_levels = None
                 entity_parsed[descr]['dev_levels'] = dev_levels

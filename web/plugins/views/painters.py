@@ -1857,13 +1857,14 @@ multisite_painters["downtime_origin"] = {
     "title"   : _("Downtime origin"),
     "short"   : _("Origin"),
     "columns" : ["downtime_origin"],
-    "paint"   : lambda row: (None, row["downtime_origin"] == 0 and _("command") or _("configuration")),
+    "paint"   : lambda row: (None, row["downtime_origin"] == 1 and _("configuration") or _("command")),
 }
 
 def paint_downtime_recurring(row):
     r = row["downtime_recurring"]
     return "", {
         0: _("no"),
+        None: _("no"),
         1: _("hourly"),
         2: _("daily"),
         3: _("weekly"),

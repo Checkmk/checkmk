@@ -776,7 +776,7 @@ def snmp_get_oid(hostname, ipaddress, oid):
         value = None
 
     # Strip quotes
-    if value.startswith('"') and value.endswith('"'):
+    if value and value.startswith('"') and value.endswith('"'):
         value = value[1:-1]
     return value
 

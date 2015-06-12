@@ -1,0 +1,15 @@
+Title: Fix sporadic error "Connection reset by peer" when reloading Event Console
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.6p6
+Date: 1434107286
+Class: fix
+
+The problem appeared especially when distributing changes with WATO in a
+distributed setup. The reason was: the reload of the configuration closed
+and reopened the UNIX socket that is used for sending commands. That way
+parallel connections would be closed. Now the UNIX socket is only reopened
+when the configuration parameter <i>Max. number of pending connections to
+the status socket</i> has changed and a reload is thus neccessary in order
+to make that change active.

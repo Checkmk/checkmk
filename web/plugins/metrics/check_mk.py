@@ -1458,6 +1458,7 @@ check_metrics["check_mk-logwatch.ec"] = {}
 check_metrics["check_mk-logwatch.ec_single"] = {}
 check_metrics["check_mk-omd_apache"] = {}
 check_metrics["check_mk-postfix_mailq"] = {}
+check_metrics["check_mk-datapower_cpu"] = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.

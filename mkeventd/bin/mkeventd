@@ -2374,6 +2374,10 @@ class StatusServer:
         self.open_sockets()
 
     def open_sockets(self):
+        self.open_unix_socket()
+        self.open_tcp_socket()
+
+    def open_unix_socket(self):
         if os.path.exists(g_socket_path):
             os.remove(g_socket_path)
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -2381,7 +2385,9 @@ class StatusServer:
         # Make sure that socket is group writable
         os.chmod(g_socket_path, 0664)
         self._socket.listen(g_config['socket_queue_len'])
+        self._unix_socket_queue_len = g_config['socket_queue_len'] # detect changes in config
 
+    def open_tcp_socket(self):
         if g_config["remote_status"]:
             try:
                 self._tcp_port, self._tcp_allow_commands = g_config["remote_status"][:2]
@@ -2406,12 +2412,27 @@ class StatusServer:
             self._tcp_access_list = None
 
     def close_sockets(self):
+        self.close_tcp_socket()
+        self.close_unix_socket()
+
+    def close_unix_socket(self):
         if self._socket:
             self._socket.close()
             self._socket = None
+
+    def close_tcp_socket(self):
         if self._tcp_socket:
             self._tcp_socket.close()
             self._tcp_socket = None
+
+    def reopen_sockets(self):
+        if self._unix_socket_queue_len != g_config["socket_queue_len"]:
+            log("socket_queue_len has changed. Reopening UNIX socket.")
+            self.close_unix_socket()
+            self.open_unix_socket()
+
+        self.close_tcp_socket()
+        self.open_tcp_socket()
 
     def reload_configuration(self):
         self._reopen_sockets = True
@@ -2447,10 +2468,7 @@ class StatusServer:
                 addr_info = None
 
                 if self._reopen_sockets:
-                    if opt_debug:
-                        log("Reopening sockets")
-                    self.close_sockets()
-                    self.open_sockets()
+                    self.reopen_sockets()
                     self._reopen_sockets = False
 
                 listen_list = [ self._socket ]

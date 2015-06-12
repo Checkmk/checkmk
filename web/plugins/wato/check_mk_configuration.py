@@ -1753,6 +1753,7 @@ register_rule(group,
                  "as the 'service time'.")),
     itemtype = "service")
 
+
 register_rule(group,
     "extra_host_conf:first_notification_delay",
     Integer(

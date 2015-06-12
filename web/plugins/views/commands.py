@@ -379,14 +379,25 @@ def command_downtime(cmdtag, spec, row):
     down_from = int(time.time())
     down_to = None
 
+    if html.get_checkbox("_down_do_recur"):
+        recurring_type = html.var("_down_recurring")
+        if recurring_type == "1":
+            title_start = _("schedule a hourly recurring")
+        elif recurring_type == "2":
+            title_start = _("schedule a daily recurring")
+        elif recurring_type == "3":
+            title_start = _("schedule a weekly recurring")
+    else:
+        title_start = _("schedule an immediate")
+
     if html.var("_down_2h"):
         down_to = down_from + 7200
-        title = _("<b>schedule an immediate 2-hour downtime</b> on")
+        title = _("<b>%s 2-hour downtime</b> on") % title_start
 
     elif html.var("_down_today"):
         br = time.localtime(down_from)
         down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = _("<b>schedule an immediate downtime until 24:00:00</b> on")
+        title = _("<b>%s downtime until 24:00:00</b> on") % title_start
 
     elif html.var("_down_week"):
         br = time.localtime(down_from)
@@ -394,7 +405,7 @@ def command_downtime(cmdtag, spec, row):
         days_plus = 6 - wday
         down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
         down_to += days_plus * 24 * 3600
-        title = _("<b>schedule an immediate downtime until sunday night</b> on")
+        title = _("<b>%s downtime until sunday night</b> on") % title_start
 
     elif html.var("_down_month"):
         br = time.localtime(down_from)
@@ -405,12 +416,12 @@ def command_downtime(cmdtag, spec, row):
         else:
             new_year = br.tm_year
         down_to = time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, br.tm_isdst))
-        title = _("<b>schedule an immediate downtime until end of month</b> on")
+        title = _("<b>%s downtime until end of month</b> on") % title_start
 
     elif html.var("_down_year"):
         br = time.localtime(down_from)
         down_to = time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = _("<b>schedule an immediate downtime until end of %d</b> on") % br.tm_year
+        title = _("<b>%s downtime until end of %d</b> on") % (title_start, br.tm_year)
 
     elif html.var("_down_from_now"):
         try:
@@ -422,12 +433,12 @@ def command_downtime(cmdtag, spec, row):
             raise MKUserError("_down_minutes", _("Please enter a positive number of minutes."))
 
         down_to = time.time() + minutes * 60
-        title = _("<b>schedule an immediate downtime for the next %d minutes</b> on" % minutes)
+        title = _("<b>%s downtime for the next %d minutes</b> on" % (title_start, minutes))
 
     elif html.var("_down_adhoc"):
         minutes = config.adhoc_downtime.get("duration",0)
         down_to = time.time() + minutes * 60
-        title = _("<b>schedule an immediate downtime for the next %d minutes</b> on" % minutes)
+        title = _("<b>%s downtime for the next %d minutes</b> on" % (title_start, minutes))
 
     elif html.var("_down_custom"):
         down_from = html.get_datetime_input("_down_from")
@@ -473,9 +484,15 @@ def command_downtime(cmdtag, spec, row):
             fixed = 1
             duration = 0
 
+        if html.get_checkbox("_down_do_recur"):
+            recurring = int(html.var("_down_recurring"))
+            fixed_and_recurring = recurring * 2 + fixed
+        else:
+            fixed_and_recurring = fixed
+
         def make_command(spec, cmdtag):
             return ("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec ) \
-                   + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, config.user_id)) \
+                   + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed_and_recurring, duration, config.user_id)) \
                    + lqencode(comment)
 
         if "aggr_tree" in row: # BI mode
@@ -565,6 +582,16 @@ def paint_downtime_buttons(what):
     elif what == "service":
         html.write("<hr>")
         html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected <b>hosts</b> instead of on the individual services'))
+
+    html.write("<hr>")
+    html.checkbox("_down_do_recur", False, label=_("Repeat this downtime on a regular base every"))
+    html.write(" ")
+    html.select("_down_recurring", [
+       ( "1", _("hour") ),
+       ( "2", _("day") ),
+       ( "3", _("week") ),
+    ], "3")
+    html.write(_("(This only works when using CMC)"))
 
 
 

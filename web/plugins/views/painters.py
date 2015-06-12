@@ -392,10 +392,14 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
         return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
 
     warn_txt = ''
+    output_format = "%s"
     if what == 'future' and age > 0:
         warn_txt = ' <b>%s</b>' % _('in the past!')
     elif what == 'past' and age < 0:
         warn_txt = ' <b>%s</b>' % _('in the future!')
+    elif what == 'both' and age > 0:
+        output_format = "%%s %s" % _("ago")
+
 
     # Time delta less than two days => make relative time
     if age < 0:
@@ -408,7 +412,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
     else:
         age_class = "age"
 
-    return age_class, prefix + html.age_text(age) + warn_txt
+    return age_class, prefix + (output_format % html.age_text(age)) + warn_txt
 
 
 def paint_future_time(timestamp):
@@ -1849,6 +1853,30 @@ multisite_painters["downtime_fixed"] = {
     "paint"   : lambda row: (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed")),
 }
 
+multisite_painters["downtime_origin"] = {
+    "title"   : _("Downtime origin"),
+    "short"   : _("Origin"),
+    "columns" : ["downtime_origin"],
+    "paint"   : lambda row: (None, row["downtime_origin"] == 1 and _("configuration") or _("command")),
+}
+
+def paint_downtime_recurring(row):
+    r = row["downtime_recurring"]
+    return "", {
+        0: _("no"),
+        None: _("no"),
+        1: _("hourly"),
+        2: _("daily"),
+        3: _("weekly"),
+    }.get(r, _("(unknown)"))
+
+multisite_painters["downtime_recurring"] = {
+    "title"   : _("Downtime recurring interval"),
+    "short"   : _("Recurring"),
+    "columns" : ["downtime_recurring"],
+    "paint"   : paint_downtime_recurring,
+}
+
 multisite_painters["downtime_what"] = {
     "title"   : _("Downtime for host/service"),
     "short"   : _("for"),
@@ -1876,7 +1904,7 @@ multisite_painters["downtime_start_time"] = {
     "short"   : _("Start"),
     "columns" : ["downtime_start_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint"   : lambda row: paint_age(row["downtime_start_time"], True, 3600, what=None),
+    "paint"   : lambda row: paint_age(row["downtime_start_time"], True, 3600, what="both"),
 }
 
 multisite_painters["downtime_end_time"] = {
@@ -1884,16 +1912,19 @@ multisite_painters["downtime_end_time"] = {
     "short"   : _("End"),
     "columns" : ["downtime_end_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint"   : lambda row: paint_age(row["downtime_end_time"], True, 3600, what=None),
+    "paint"   : lambda row: paint_age(row["downtime_end_time"], True, 3600, what="both"),
 }
 
 def paint_downtime_duration(row):
-    return "number", "%02d:%02d:00" % divmod(row["downtime_duration"] / 60, 60)
+    if row["downtime_fixed"] == 0:
+        return "number", "%02d:%02d:00" % divmod(row["downtime_duration"] / 60, 60)
+    else:
+        return "", ""
 
 multisite_painters["downtime_duration"] = {
     "title"   : _("Downtime duration (if flexible)"),
-    "short"   : _("Duration"),
-    "columns" : ["downtime_duration", ], # "downtime_fixed"],
+    "short"   : _("Flex. Duration"),
+    "columns" : ["downtime_duration", "downtime_fixed"],
     "paint"   : paint_downtime_duration,
 }
 

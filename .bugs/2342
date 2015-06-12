@@ -1,9 +1,9 @@
 Title: cli service discovery in debug mode gives traceback when not using inline snmp
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2015-06-12 09:34:21
 Targetversion: 1.2.6
-Class: bug
 
 OMD[heute]:~$ cmk --debug -vII heute
 Discovering services on heute:
@@ -52,3 +52,6 @@ index 9906bc7..6aedca7 100755
          value = value[1:-1]
      return value
 
+
+2015-06-12 12:19:24: changed state open -> done
+applied the above fix

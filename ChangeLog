@@ -19,6 +19,9 @@
     * 2335 FIX: Fixed PNP default template for active checks with arguments...
     * 2337 FIX: Fixed problem with long hanging pnp graph rendering calls
 
+    Event Console:
+    * 2328 FIX: Fix sporadic error "Connection reset by peer" when reloading Event Console...
+
 
 1.2.7i1p1:
     Checks & Agents:

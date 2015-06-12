@@ -39,11 +39,14 @@ def check_hr_cpu(item, params, info):
         return (3, "no data found in SNMP output")
     util = float(util) / num_cpus
     infotext = "%2.1f%% utilization at %d CPUs" % (util, num_cpus)
-    warn, crit = params
+    if params:
+        warn, crit = params
+    else:
+        warn, crit = None, None
     perfdata = [("util", util, warn, crit, 0, 100)]
-    if util >= crit:
+    if crit and util >= crit:
         return (2, infotext + " (critical at %d%%)" % crit, perfdata)
-    elif util >= warn:
+    elif warn and util >= warn:
         return (1, infotext + " (warning at %d%%)" % warn, perfdata)
     else:
         return (0, infotext, perfdata)

@@ -4484,6 +4484,7 @@ def usage():
  cmk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
  cmk -P, --package COMMAND            do package operations
  cmk --localize COMMAND               do localization operations
+ cmk --handle-alerts                  used to handle alerts from core
  cmk --notify                         used to send notifications from core
  cmk --create-rrd [--keepalive|SPEC]  create round robin database (only CMC)
  cmk --convert-rrds [--split] [H...]  convert exiting RRD to new format (only CMC)
@@ -4514,8 +4515,8 @@ OPTIONS:
                  is directed into a pipe or file.
   --procs N      start up to N processes in parallel during --scan-parents
   --checks A,..  restrict checks/inventory to specified checks (tcp/snmp/check type)
-  --keepalive    used by Check_MK Mirco Core: run check and --notify in continous
-                 mode. Read data from stdin and von from cmd line and environment
+  --keepalive    used by Check_MK Mirco Core: run check and --notify or --handle-alerts
+                 in continous mode. Read data from stdin and from cmd line.
   --cmc-file=X   relative filename for CMC config file (used by -B/-U)
   --extraoid A   Do --snmpwalk also on this OID, in addition to mib-2 and enterprises.
                  You can specify this option multiple times.
@@ -5712,7 +5713,7 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                  "flush", "package", "localize", "donate", "snmpwalk", "oid=", "extraoid=",
                  "snmptranslate", "bake-agents", "force", "show-snmp-stats",
-                 "usewalk", "scan-parents", "procs=", "automation=", "notify",
+                 "usewalk", "scan-parents", "procs=", "automation=", "handle-alerts", "notify",
                  "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                  "convert-rrds", "split-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
@@ -5721,7 +5722,8 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=",
                  "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap" ]
 
-non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
+non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
+                      '--handle-alerts', '--notify',
                       '--man', '-V', '--version' ,'-h', '--help', '--automation',
                       '--create-rrd', '--convert-rrds', '--keepalive', '--cap' ]
 
@@ -5926,6 +5928,10 @@ try:
             execfile(modules_dir + "/inventory.py")
             do_inv_check(a)
             done = True
+        elif o == '--handle-alerts':
+            read_config_files(with_conf_d=True, validate_hosts=False)
+            sys.exit(do_notify(args))
+            # sys.exit(do_handle_alerts(args))
         elif o == '--notify':
             read_config_files(with_conf_d=True, validate_hosts=False)
             sys.exit(do_notify(args))

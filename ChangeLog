@@ -11,6 +11,9 @@
     * 1257 FIX: oracle_jobs: Fix: Discovery now supports the old oracle plugin again
     * 1258 FIX: fileinfo solaris: Fixed configuration crash...
 
+    Event Console:
+    * 2328 FIX: Fix sporadic error "Connection reset by peer" when reloading Event Console...
+
 
 1.2.6p5:
     Checks & Agents:

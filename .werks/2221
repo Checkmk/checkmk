@@ -1,0 +1,10 @@
+Title: cisco_temperature: Fixed order of device levels for some devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434108600
+Class: fix
+
+Some Cisco devices report the device internal temperature levels in the wrong
+order. The check now handles this behaviour.

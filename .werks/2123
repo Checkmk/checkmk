@@ -1,0 +1,9 @@
+Title: datapower_fs: new check to monitor filesystems on IBMs Datapower Gateways
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434125006
+Class: feature
+
+

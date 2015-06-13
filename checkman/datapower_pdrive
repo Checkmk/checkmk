@@ -1,0 +1,23 @@
+title: IBM Datapower Physical Drives
+agents: snmp
+catalog: hw/network/ibm
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the physical disk drives of IBMs Datapower Gateways
+ supporting the DATAPOWER-STATUS-MIB.
+
+ It reports the position in the drive bay, the logical drive it is member
+ of, the manufacturer and product name of the disk, the state as reported
+ by the disk controller and - if available - by the disk itself. The state
+ of the service is determined accordingly.
+
+ No limits can be defined for this check,
+
+inventory:
+ One service is created for each physical drive found.
+
+item:
+ The item name is derived from the ID of the disk controller and the ID of
+ the physical drive, seperated by a "-".

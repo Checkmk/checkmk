@@ -1,4 +1,4 @@
-Title: #       new file:   datapower_pdrive, datapower_ldrive: new checks to monitor disk states of IBM Datapower Gateways
+Title: datapower_pdrive, datapower_ldrive: new checks to monitor disk states of IBM Datapower Gateways
 Level: 1
 Component: checks
 Compatible: compat

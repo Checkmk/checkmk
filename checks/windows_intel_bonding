@@ -25,23 +25,23 @@
 # Boston, MA 02110-1301 USA.
 
 
-#<<<windows_intel_bonding>>>
-#Caption    Name                                    RedundancyStatus
-#Bond_10.4  {714F579F-D17A-40DC-B684-083C561EE352}  2
+# <<<windows_intel_bonding>>>
+# Caption    Name                                    RedundancyStatus
+# Bond_10.4  {714F579F-D17A-40DC-B684-083C561EE352}  2
 #
-####
-#AdapterFunction  AdapterStatus  GroupComponent                                                                                               PartComponent
-#1                1              IANet_TeamOfAdapters.CreationClassName="IANet_TeamOfAdapters",Name="{714F579F-D17A-40DC-B684-083C561EE352}"  IANet_PhysicalEthernetAdapter.CreationClassName="IANet_PhysicalEthernetAdapter",DeviceID="{18EC3002-F03B-4B69-AD88-BFEB700460DC}",SystemCreationClassName="Win32_ComputerSystem",SystemName="Z3061021"
-#2                2              IANet_TeamOfAdapters.CreationClassName="IANet_TeamOfAdapters",Name="{714F579F-D17A-40DC-B684-083C561EE352}"  IANet_PhysicalEthernetAdapter.CreationClassName="IANet_PhysicalEthernetAdapter",DeviceID="{1EDEBE50-005F-4533-BAFC-E863617F1030}",SystemCreationClassName="Win32_ComputerSystem",SystemName="Z3061021"
+# ###
+# AdapterFunction  AdapterStatus  GroupComponent                                                                                               PartComponent
+# 1                1              IANet_TeamOfAdapters.CreationClassName="IANet_TeamOfAdapters",Name="{714F579F-D17A-40DC-B684-083C561EE352}"  IANet_PhysicalEthernetAdapter.CreationClassName="IANet_PhysicalEthernetAdapter",DeviceID="{18EC3002-F03B-4B69-AD88-BFEB700460DC}",SystemCreationClassName="Win32_ComputerSystem",SystemName="Z3061021"
+# 2                2              IANet_TeamOfAdapters.CreationClassName="IANet_TeamOfAdapters",Name="{714F579F-D17A-40DC-B684-083C561EE352}"  IANet_PhysicalEthernetAdapter.CreationClassName="IANet_PhysicalEthernetAdapter",DeviceID="{1EDEBE50-005F-4533-BAFC-E863617F1030}",SystemCreationClassName="Win32_ComputerSystem",SystemName="Z3061021"
 #
-####
-#AdapterStatus  Caption                                                             DeviceID
-#51             TEAM : Bond_10.4 - Intel(R) Gigabit ET Dual Port Server Adapter     {18EC3002-F03B-4B69-AD88-BFEB700460DC}
-#51             TEAM : Bond_10.4 - Intel(R) Gigabit ET Dual Port Server Adapter #2  {1EDEBE50-005F-4533-BAFC-E863617F1030}
-#35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #43           {55799336-A84B-4DA5-8EB9-B7426AA1AB75}
-#35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #35           {7DB9B461-FAC0-4763-9AF9-9A6CA6648188}
-#35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #40           {82AE1F27-BF28-4E30-AC3D-809DF5FF0D39}
-#35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #38           {DC918766-F61C-4801-92F8-E5532907EA0D}
+# ###
+# AdapterStatus  Caption                                                             DeviceID
+# 51             TEAM : Bond_10.4 - Intel(R) Gigabit ET Dual Port Server Adapter     {18EC3002-F03B-4B69-AD88-BFEB700460DC}
+# 51             TEAM : Bond_10.4 - Intel(R) Gigabit ET Dual Port Server Adapter #2  {1EDEBE50-005F-4533-BAFC-E863617F1030}
+# 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #43           {55799336-A84B-4DA5-8EB9-B7426AA1AB75}
+# 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #35           {7DB9B461-FAC0-4763-9AF9-9A6CA6648188}
+# 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #40           {82AE1F27-BF28-4E30-AC3D-809DF5FF0D39}
+# 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #38           {DC918766-F61C-4801-92F8-E5532907EA0D}
 
 def get_real_adapter_name(bond, name):
     prefix = "TEAM : %s - " % bond
@@ -55,28 +55,31 @@ def parse_windows_intel_bonding(info):
 
     try:
         # Get bond info
-        lines.next() # Skip header
-        while True:
-            line = lines.next()
-            if line[0] == "###":
-                break
-            bond_caption = " ".join(line[:-2])
-            bond_name, bond_mode = line[-2], line[-1]
-            bonds[bond_name] = { "caption": bond_caption, "mode": bond_mode}
+        line = lines.next()
+        if line[0] != "###":
+            while True:
+                line = lines.next()
+                if line[0] == "###":
+                    break
+                bond_caption = " ".join(line[:-2])
+                bond_name, bond_mode = line[-2], line[-1]
+                bonds[bond_name] = { "caption": bond_caption, "mode": bond_mode}
 
         # Get adapter info
-        lines.next() # Skip header
-        while True:
-            line = lines.next()
-            if line[0] == "###":
-                break
-            adapter_function, adapter_status = line[0], line[1]
-            adapter_bond = line[2].split(",")[-1].split("=")[1][1:-1]
-            adapter = line[3].split(",")[1].split("=")[1][1:-1]
-            adapters[adapter] = { "function": adapter_function, "status": adapter_status, "bond": adapter_bond }
+        line = lines.next()
+        if line[0] != "###":
+            while True:
+                line = lines.next()
+                if line[0] == "###":
+                    break
+                adapter_function, adapter_status = line[0], line[1]
+                print (line)
+                adapter_bond = line[2].split(",")[-1].split("=")[1][1:-1]
+                adapter = line[3].split(",")[1].split("=")[1][1:-1]
+                adapters[adapter] = { "function": adapter_function, "status": adapter_status, "bond": adapter_bond }
 
         # Get adapter names
-        lines.next() # Skip header
+        line = lines.next() # Skip header
         while True:
             line = lines.next()
             adapter_names[line[-1]] = " ".join(line[1:-1])

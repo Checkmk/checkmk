@@ -1,9 +1,0 @@
-Title: windows_intel_bonding: Fix exception in case of no existing bonding device
-Level: 1
-Component: checks
-Compatible: compat
-Version: 1.2.7i2
-Date: 1434363304
-Class: fix
-
-

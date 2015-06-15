@@ -51,8 +51,6 @@ def parse_raritan_pdu_ocprot(info):
             parsed.setdefault(protector_id, {})["state"] = state
         elif end_oid.endswith(".1"):
             parsed.setdefault(protector_id, {})["current"] = float(value) / 10
-
-    pprint.pprint(parsed)
     return parsed
 
 

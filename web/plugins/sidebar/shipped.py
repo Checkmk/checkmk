@@ -947,6 +947,7 @@ def render_master_control():
         ( "enable_flap_detection",    _("Flap Detection" )),
         ( "enable_event_handlers",    _("Event handlers" )),
         ( "process_performance_data", _("Performance data" )),
+        ( "enable_event_handlers",    _("Alert handlers" )),
         ]
 
     html.live.set_prepend_site(True)
@@ -961,7 +962,9 @@ def render_master_control():
         html.write("<table class=master_control>\n")
         for i, (colname, title) in enumerate(items):
             # Do not show event handlers on Check_MK Micro Core
-            if is_cmc and colname == 'enable_event_handlers':
+            if is_cmc and title == _("Event handlers"):
+                continue
+            elif not is_cmc and title == _("Alert handlers"):
                 continue
 
             colvalue = siteline[i + 1]

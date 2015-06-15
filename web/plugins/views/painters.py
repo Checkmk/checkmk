@@ -1868,6 +1868,7 @@ def paint_downtime_recurring(row):
         1: _("hourly"),
         2: _("daily"),
         3: _("weekly"),
+        999: _("every 5 minutes"),
     }.get(r, _("(unknown)"))
 
 multisite_painters["downtime_recurring"] = {

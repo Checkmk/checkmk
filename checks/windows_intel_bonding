@@ -73,7 +73,6 @@ def parse_windows_intel_bonding(info):
                 if line[0] == "###":
                     break
                 adapter_function, adapter_status = line[0], line[1]
-                print (line)
                 adapter_bond = line[2].split(",")[-1].split("=")[1][1:-1]
                 adapter = line[3].split(",")[1].split("=")[1][1:-1]
                 adapters[adapter] = { "function": adapter_function, "status": adapter_status, "bond": adapter_bond }

@@ -17,6 +17,10 @@
     * 2220 pfsense_counter: New check to monitor several global packet rates on pfSense firewalls
     * 2120 datapower_cpu, datapower_mem: new checks to monitor CPU and memory and IBMs Datapower Gateways
     * 2121 datapower_temp: new check to monitor temperature sensors of IBMs Datapower Gateways
+    * 2122 datapower_fan: new check to monitor fan status of IBM Datapower Gateways
+    * 2123 datapower_fs: new check to monitor filesystems on IBMs Datapower Gateways
+    * 2124 datapower_pdrive, datapower_ldrive: new checks to monitor disk states of IBM Datapower Gateways
+    * 2125 datapower_raid_bat: new check to monitor the battery of RAID controllers of IBM Datapower Gateways
     * 2323 FIX: df: Fix new graphs for all filesystem checks in case of existing inode information
     * 2305 FIX: agent_vsphere, esx_vsphere_sensors: now able to handle sensor names with semicolon...
     * 2118 FIX: aix_sap_processlist: agent plugin now is more general to deal with various AIX versions...

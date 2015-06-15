@@ -1,0 +1,22 @@
+title: IBM Datapower Fans
+agents: snmp
+catalog: hw/network/ibm
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the fans of IBMs Datapower Gateways supporting the
+ DATAPOWER-STATUS-MIB.
+
+ It reports the fan speed in rpm, and the state of the fan extracted from
+ the device. The state of the service is derived accordingly.
+
+ No limits can be defined for this check,
+
+inventory:
+ On each gateway one service is created for each fan found.
+
+item:
+ The item name is derived from the extracted ID number of the fan and
+ a mapping between IDs and fan locations hardcoded in the check and
+ taken from the DATAPOWER-STATUS-MIB.

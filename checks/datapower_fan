@@ -1,0 +1,89 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+#
+
+datapower_fan_ids = {
+    "1":  "CPU 1",
+    "2":  "CPU 2",
+    "3":  "Chassis 1",
+    "4":  "Chassis 2",
+    "5":  "Chassis 3",
+    "6":  "Chassis 4",
+    "7":  "Chassis 5",
+    "8":  "Chassis 6",
+    "9":  "Chassis 7",
+    "10": "Chassis 8",
+    "11": "Tray 1 Fan 1",
+    "12": "Tray 1 Fan 2",
+    "13": "Tray 1 Fan 3",
+    "14": "Tray 1 Fan 4",
+    "15": "Tray 2 Fan 1",
+    "16": "Tray 2 Fan 2",
+    "17": "Tray 2 Fan 3",
+    "18": "Tray 2 Fan 4",
+    "19": "Tray 3 Fan 1",
+    "20": "Tray 3 Fan 2",
+    "21": "Tray 3 Fan 3",
+    "22": "Tray 3 Fan 4",
+    "23": "Hard Disk Tray Fan 1",
+    "24": "Hard Disk Tray Fan 2",
+}
+
+def inventory_datapower_fan(info):
+    for fan_id, speed, status in info:
+        yield datapower_fan_ids[fan_id], None
+
+def check_datapower_fan(item, _no_params, info):
+    datapower_fan_status = {
+        "1": (2, "reached lower non-recoverable limit: "),
+        "2": (2, "reached lower critical limit: "),
+        "3": (1, "reached lower non-critical limit: "),
+        "4": (0, ""), # OK
+        "5": (1, "reached upper non-critical limit: "),
+        "6": (2, "reached upper critical limit: "),
+        "7": (2, "reached upper non-recoverable limit: "),
+        "8": (2, "failure, "),
+        "9": (2, "no reading, "),
+        "10": (1, "invalid, "),
+    }
+    for fan_id, speed, status in info:
+        if item == datapower_fan_ids[fan_id]:
+            state, state_txt = datapower_fan_status[status]
+            infotext = "%s%s rpm" % (state_txt, speed)
+            return state, infotext
+
+
+check_info["datapower_fan"] = {
+    "inventory_function"      : inventory_datapower_fan,
+    "check_function"          : check_datapower_fan,
+    "service_description"     : "Fan %s",
+    "snmp_info"               : (".1.3.6.1.4.1.14685.3.1.97.1", [
+                                    1, # dpStatusEnvironmentalFanSensorsFanID
+                                    2, # dpStatusEnvironmentalFanSensorsFanSpeed
+                                    4, # dpStatusEnvironmentalFanSensorsReadingStatus
+                                 ]),
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14685.1.7"),
+}

@@ -1,0 +1,22 @@
+title: IBM Datapower Logical Drives
+agents: snmp
+catalog: hw/network/ibm
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the logical disk drives of IBMs Datapower Gateways
+ supporting the DATAPOWER-STATUS-MIB.
+
+ It reports the RAID level, the number of disks of the logical drive and
+ the state as reported by the device. The state of the service is determined
+ accordingly.
+
+ No limits can be defined for this check,
+
+inventory:
+ One service is created for each logical drive found.
+
+item:
+ The item name is derived from the ID of the disk controller and the ID
+ of the logical drive on this controller, seperated by a "-".

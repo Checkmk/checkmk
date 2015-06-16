@@ -1453,7 +1453,7 @@ def render_availability_group(group_title, range_title, group_id, availability,
         table.row(css="summary")
         if not "omit_buttons" in labelling and not no_html:
             table.cell("")
-        if not "omit_host" in labelling:
+        if not "omit_host" in labelling or what == "bi":
             table.cell("", _("Summary"), css="heading")
         if what == "service":
             table.cell("", "")

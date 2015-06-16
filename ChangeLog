@@ -10,6 +10,10 @@
     * 2309 FIX: cpu_util checks: removed superfluous space in check output
     * 1257 FIX: oracle_jobs: Fix: Discovery now supports the old oracle plugin again
     * 1258 FIX: fileinfo solaris: Fixed configuration crash...
+    * 2221 FIX: cisco_temperature: Fixed order of device levels for some devices...
+
+    Reporting & Availability:
+    * 2331 FIX: Fix missing column with name "Summary" when "Do not display the host name" is checked
 
     Event Console:
     * 2328 FIX: Fix sporadic error "Connection reset by peer" when reloading Event Console...

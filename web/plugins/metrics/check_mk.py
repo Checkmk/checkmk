@@ -430,12 +430,6 @@ metric_info["mem_lnx_vmalloc_chunk"] = {
     "unit" : "bytes",
 }
 
-metric_info["execution_time"] = {
-    "title" : _("Execution time"),
-    "unit"  : "s",
-    "color" : "#22dd33",
-}
-
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
     "unit"  : "",
@@ -470,12 +464,6 @@ metric_info["process_creations"] = {
     "title" : _("Process creations"),
     "unit"  : "1/s",
     "color" : "#ff8020",
-}
-
-metric_info["threads"] = {
-    "title" : _("Number of running threads"),
-    "unit"  : "count",
-    "color" : "#8040f0",
 }
 
 metric_info["fs_used"] = {
@@ -849,7 +837,7 @@ metric_info["hours_since_service"] = {
 }
 
 metric_info["execution_time"] = {
-    "title" : _("Total execution time"),
+    "title" : _("Execution time"),
     "unit"  : "s",
     "color" : "#d080af",
 }

@@ -2411,7 +2411,7 @@ def rename_host(host, newname):
 
     # Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
-    def rename_in_notification_rules(rules):
+    def rename_in_event_rules(rules):
         num_changed = 0
         for rule in rules:
             for key in [ "match_hosts", "match_exclude_hosts" ]:
@@ -2425,16 +2425,27 @@ def rename_host(host, newname):
     for userid, user in users.items():
         if user.get("notification_rules"):
             rules = user["notification_rules"]
-            num_changed = rename_in_notification_rules(rules)
+            num_changed = rename_in_event_rules(rules)
             if num_changed:
                 actions.append("%d notification rules of user %s" % (num_changed, userid))
                 some_changed = True
 
     rules = load_notification_rules()
-    num_changed = rename_in_notification_rules(rules)
+    num_changed = rename_in_event_rules(rules)
     if num_changed:
         actions.append(_("%d global notification rules") % num_changed)
         save_notification_rules(rules)
+
+    try:
+        rules = load_alert_handler_rules() # only available in CEE
+    except:
+        rules = None
+
+    if rules:
+        num_changed = rename_in_event_rules(rules)
+        if num_changed:
+            actions.append(_("%d alert handler rules") % num_changed)
+            save_alert_handler_rules(rules)
 
     # Notification channels of flexible notifcations also can have host conditions
     for userid, user in users.items():
@@ -5058,7 +5069,7 @@ def log_audit(linkinfo, what, message, user_id = None):
 
 # status is one of:
 # SYNC        -> Only sync neccessary
-# RESTART     -> Restart and sync neccessary
+# RESTART     -> Restart and sync neccessary (TODO: where is this used??)
 # SYNCRESTART -> Do sync and restart
 # AFFECTED    -> affected sites are already marked for sync+restart
 #                by mark_affected_sites_dirty().
@@ -8357,278 +8368,12 @@ def vs_notification_rule(userid = None):
     return Dictionary(
         title = _("General Properties"),
         elements = rule_option_elements()
-        + section_override +
-        [
-            # Matching
-            ( "match_folder",
-              FolderChoice(
-                  help = _("This condition makes the rule match only hosts that are managed "
-                           "via WATO and that are contained in this folder - either directly "
-                           "or in one of its subfolders."),
-              ),
-            ),
-            ( "match_hosttags",
-              HostTagCondition(
-                  title = _("Match Host Tags"))
-            ),
-            ( "match_hostgroups",
-              GroupChoice("host",
-                  title = _("Match Host Groups"),
-                  help = _("The host must be in one of the selected host groups"),
-                  allow_empty = False,
-              )
-            ),
-            ( "match_hosts",
-              ListOfStrings(
-                  title = _("Match only the following hosts"),
-                  size = 24,
-                  orientation = "horizontal",
-                  allow_empty = False,
-                  empty_text = _("Please specify at least one host. Disable the option if you want to allow all hosts."),
-              )
-            ),
-            ( "match_exclude_hosts",
-              ListOfStrings(
-                  title = _("Exclude the following hosts"),
-                  size = 24,
-                  orientation = "horizontal",
-              )
-            ),
-            ( "match_servicegroups",
-              GroupChoice("service",
-                  title = _("Match Service Groups"),
-                  help = _("The service must be in one of the selected service groups"),
-                  allow_empty = False,
-              )
-            ),
-            ( "match_services",
-              ListOfStrings(
-                  title = _("Match only the following services"),
-                  help = _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
-                           "service name in order for the rule to match. Note: Host notifications never match this "
-                           "rule if this option is being used."),
-                  valuespec = TextUnicode(size = 32),
-                  orientation = "horizontal",
-                  allow_empty = False,
-                  empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
-              )
-            ),
-            ( "match_exclude_services",
-              ListOfStrings(
-                  title = _("Exclude the following services"),
-                  valuespec = TextUnicode(size = 32),
-                  orientation = "horizontal",
-              )
-            ),
-            ( "match_checktype",
-              CheckTypeSelection(
-                  title = _("Match the following check types"),
-                  help = _("Only apply the rule if the notification originates from certain types of check plugins. "
-                           "Note: Host notifications never match this rule if this option is being used."),
-              )
-            ),
-            ( "match_plugin_output",
-              RegExp(
-                 title = _("Match the output of the check plugin"),
-                 help = _("This text is a regular expression that is being searched in the output "
-                          "of the check plugins that produced the alert. It is not a prefix but an infix match."),
-              ),
-            ),
-            ( "match_contacts",
-              ListOf(
-                  UserSelection(only_contacts = True),
-                      title = _("Match Contacts"),
-                      help = _("The host/service must have one of the selected contacts."),
-                      movable = False,
-                      allow_empty = False,
-                      add_label = _("Add contact"),
-              )
-            ),
-            ( "match_contactgroups",
-              GroupChoice("contact",
-                  title = _("Match Contact Groups"),
-                  help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
-                           "If you don't use the CMC that filter will not apply"),
-                  allow_empty = False,
-              )
-            ),
-            ( "match_timeperiod",
-              TimeperiodSelection(
-                  title = _("Match only during timeperiod"),
-                  help = _("Match this rule only during times where the selected timeperiod from the monitoring "
-                           "system is active."),
-              ),
-            ),
-            ( "match_escalation",
-              Tuple(
-                  title = _("Restrict to n<sup>th</sup> to m<sup>th</sup> notification"),
-                  orientation = "float",
-                  elements = [
-                      Integer(
-                          label = _("from"),
-                          help = _("Let through notifications counting from this number. "
-                                   "For normal alerts The first notification has the number 1. "
-                                   "For custom notifications the number is 0."),
-                          default_value = 0,
-                          minvalue = 0,
-                          maxvalue = 999999,
-                      ),
-                      Integer(
-                          label = _("to"),
-                          help = _("Let through notifications counting upto this number"),
-                          default_value = 999999,
-                          minvalue = 1,
-                          maxvalue = 999999,
-                      ),
-                ],
-              ),
-            ),
-            ( "match_escalation_throttle",
-              Tuple(
-                  title = _("Throttle periodic notifications"),
-                  help = _("This match option allows you to throttle periodic notifications after "
-                           "a certain number of notifications have been created by the monitoring "
-                           "core. If you for example select 10 as the beginning and 5 as the rate "
-                           "then you will receive the notification 1 through 10 and then 15, 20, "
-                           "25.. and so on."),
-                  orientation = "float",
-                  elements = [
-                     Integer(
-                         label = _("beginning from notifcation number"),
-                         default_value = 10,
-                         minvalue = 1,
-                     ),
-                     Integer(
-                         label = _("send only every"),
-                         default_value = 5,
-                         unit = _("th notification"),
-                         minvalue = 1,
-                    )
-                  ],
-              )
-            ),
-            ( "match_sl",
-              Tuple(
-                title = _("Match service level"),
-                help = _("Host or service must be in the following service level to get notification"),
-                orientation = "horizontal",
-                show_titles = False,
-                elements = [
-                  DropdownChoice(label = _("from:"),  choices = service_levels, prefix_values = True),
-                  DropdownChoice(label = _(" to:"),  choices = service_levels, prefix_values = True),
-                ],
-              ),
-            ),
-            ( "match_host_event",
-               ListChoice(
-                    title = _("Match host event type"),
-                    help = _("Select the host event types and transitions this rule should handle. Note: "
-                             "If you activate this option and do <b>not</b> also specify service event "
-                             "types then this rule will never hold for service notifications!"),
-                    choices = [
-                        ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
-                        ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
-                        ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
-                        ( 'du', _("DOWN")        + u" ➤ " + _("UNREACHABLE")),
-                        ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
-                        ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
-                        ( 'f', _("Start or end of flapping state")),
-                        ( 's', _("Start or end of a scheduled downtime")),
-                        ( 'x', _("Acknowledgement of host problem")),
-                    ],
-                    default_value = [ 'rd', 'dr', 'f', 's', 'x' ],
-              )
-            ),
-            ( "match_service_event",
-                ListChoice(
-                    title = _("Match service event type"),
-                     help  = _("Select the service event types and transitions this rule should handle. Note: "
-                               "If you activate this option and do <b>not</b> also specify host event "
-                               "types then this rule will never hold for host notifications!"),
-                    choices = [
-                        ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
-                        ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
-                        ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
-
-                        ( 'wr', _("WARN")    + u" ➤ " + _("OK")),
-                        ( 'wc', _("WARN")    + u" ➤ " + _("CRIT")),
-                        ( 'wu', _("WARN")    + u" ➤ " + _("UNKNOWN")),
-
-                        ( 'cr', _("CRIT")    + u" ➤ " + _("OK")),
-                        ( 'cw', _("CRIT")    + u" ➤ " + _("WARN")),
-                        ( 'cu', _("CRIT")    + u" ➤ " + _("UNKNOWN")),
-
-                        ( 'ur', _("UNKNOWN") + u" ➤ " + _("OK")),
-                        ( 'uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
-                        ( 'uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
-
-                        ( 'f', _("Start or end of flapping state")),
-                        ( 's', _("Start or end of a scheduled downtime")),
-                        ( 'x', _("Acknowledgement of service problem")),
-                    ],
-                    default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
-               )
-             ),
-             ( "match_notification_comment",
-               RegExpUnicode(
-                  title = _("Match notification comment"),
-                  help = _("This match only makes sense for custom notifications. When a user creates "
-                           "a custom notification then he/she can enter a comment. This comment is shipped "
-                           "in the notification context variable <tt>NOTIFICATIONCOMMENT</tt>. Here you can "
-                           "make a condition of that comment. It is a regular expression matching the beginning "
-                           "of the comment."),
-                  size = 60,
-             )),
-             ( "match_ec",
-               Alternative(
-                   title = _("Event Console alerts"),
-                   help = _("The Event Console can have events create notifications in Check_MK. "
-                            "These notifications will be processed by the rule based notification "
-                            "system of Check_MK. This matching option helps you distinguishing "
-                            "and also gives you access to special event fields."),
-                   style = "dropdown",
-                   elements = [
-                        FixedValue(False, title = _("Do not match Event Console alerts"), totext=""),
-                        Dictionary(
-                            title = _("Match only Event Console alerts"),
-                            elements = [
-                                ( "match_rule_id",
-                                  ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
-                                ),
-                                ( "match_priority",
-                                  Tuple(
-                                      title = _("Match syslog priority"),
-                                      help = _("Define a range of syslog priorities this rule matches"),
-                                      orientation = "horizontal",
-                                      show_titles = False,
-                                      elements = [
-                                         DropdownChoice(label = _("from:"), choices = mkeventd.syslog_priorities, default_value = 4),
-                                         DropdownChoice(label = _(" to:"),   choices = mkeventd.syslog_priorities, default_value = 0),
-                                      ],
-                                  ),
-                                ),
-                                ( "match_facility",
-                                  DropdownChoice(
-                                      title = _("Match syslog facility"),
-                                      help = _("Make the rule match only if the event has a certain syslog facility. "
-                                               "Messages not having a facility are classified as <tt>user</tt>."),
-                                      choices = mkeventd.syslog_facilities,
-                                  )
-                                ),
-                                ( "match_comment",
-                                  RegExpUnicode(
-                                      title = _("Match event comment"),
-                                      help = _("This is a regular expression for matching the event's comment."),
-                                  )
-                                ),
-                            ]
-                        )
-                   ]
-               )
-             )
-        ] +
-        section_contacts +
-        [
+        + section_override
+        + generic_rule_match_conditions()
+        + event_rule_match_conditions(flavour="notify")
+        + notification_rule_match_conditions()
+        + section_contacts
+        + [
             # Notification
             ( "notify_plugin",
               vs_notification_methods(),
@@ -8730,6 +8475,294 @@ def vs_notification_rule(userid = None):
         form_narrow = True,
         validate = validate_notification_rule,
     )
+
+
+def generic_rule_match_conditions():
+    return [
+        ( "match_folder",
+          FolderChoice(
+              help = _("This condition makes the rule match only hosts that are managed "
+                       "via WATO and that are contained in this folder - either directly "
+                       "or in one of its subfolders."),
+          ),
+        ),
+        ( "match_hosttags",
+          HostTagCondition(
+              title = _("Match Host Tags"))
+        ),
+        ( "match_hostgroups",
+          GroupChoice("host",
+              title = _("Match Host Groups"),
+              help = _("The host must be in one of the selected host groups"),
+              allow_empty = False,
+          )
+        ),
+        ( "match_hosts",
+          ListOfStrings(
+              title = _("Match only the following hosts"),
+              size = 24,
+              orientation = "horizontal",
+              allow_empty = False,
+              empty_text = _("Please specify at least one host. Disable the option if you want to allow all hosts."),
+          )
+        ),
+        ( "match_exclude_hosts",
+          ListOfStrings(
+              title = _("Exclude the following hosts"),
+              size = 24,
+              orientation = "horizontal",
+          )
+        ),
+        ( "match_servicegroups",
+          GroupChoice("service",
+              title = _("Match Service Groups"),
+              help = _("The service must be in one of the selected service groups"),
+              allow_empty = False,
+          )
+        ),
+        ( "match_services",
+          ListOfStrings(
+              title = _("Match only the following services"),
+              help = _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
+                       "service name in order for the rule to match. Note: Host notifications never match this "
+                       "rule if this option is being used."),
+              valuespec = TextUnicode(size = 32),
+              orientation = "horizontal",
+              allow_empty = False,
+              empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
+          )
+        ),
+        ( "match_exclude_services",
+          ListOfStrings(
+              title = _("Exclude the following services"),
+              valuespec = TextUnicode(size = 32),
+              orientation = "horizontal",
+          )
+        ),
+        ( "match_checktype",
+          CheckTypeSelection(
+              title = _("Match the following check types"),
+              help = _("Only apply the rule if the notification originates from certain types of check plugins. "
+                       "Note: Host notifications never match this rule if this option is being used."),
+          )
+        ),
+        ( "match_plugin_output",
+          RegExp(
+             title = _("Match the output of the check plugin"),
+             help = _("This text is a regular expression that is being searched in the output "
+                      "of the check plugins that produced the alert. It is not a prefix but an infix match."),
+          ),
+        ),
+        ( "match_contacts",
+          ListOf(
+              UserSelection(only_contacts = True),
+                  title = _("Match Contacts"),
+                  help = _("The host/service must have one of the selected contacts."),
+                  movable = False,
+                  allow_empty = False,
+                  add_label = _("Add contact"),
+          )
+        ),
+        ( "match_contactgroups",
+          GroupChoice("contact",
+              title = _("Match Contact Groups"),
+              help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
+                       "If you don't use the CMC that filter will not apply"),
+              allow_empty = False,
+          )
+        ),
+        ( "match_sl",
+          Tuple(
+            title = _("Match service level"),
+            help = _("Host or service must be in the following service level to get notification"),
+            orientation = "horizontal",
+            show_titles = False,
+            elements = [
+              DropdownChoice(label = _("from:"),  choices = service_levels, prefix_values = True),
+              DropdownChoice(label = _(" to:"),  choices = service_levels, prefix_values = True),
+            ],
+          ),
+        ),
+        ( "match_timeperiod",
+          TimeperiodSelection(
+              title = _("Match only during timeperiod"),
+              help = _("Match this rule only during times where the selected timeperiod from the monitoring "
+                       "system is active."),
+          ),
+        ),
+    ]
+
+
+# flavour = "notify" or "alert"
+def event_rule_match_conditions(flavour):
+    if flavour == "notify":
+        add_choices = [
+            ( 'f', _("Start or end of flapping state")),
+            ( 's', _("Start or end of a scheduled downtime")),
+            ( 'x', _("Acknowledgement of host problem")),
+        ]
+        add_default = [ 'f', 's', 'x' ]
+    else:
+        add_choices = []
+        add_default = []
+
+    return [
+       ( "match_host_event",
+          ListChoice(
+               title = _("Match host event type"),
+               help = _("Select the host event types and transitions this rule should handle. Note: "
+                        "If you activate this option and do <b>not</b> also specify service event "
+                        "types then this rule will never hold for service notifications!"),
+               choices = [
+                   ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
+                   ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
+                   ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
+                   ( 'du', _("DOWN")        + u" ➤ " + _("UNREACHABLE")),
+                   ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
+                   ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
+               ] + add_choices,
+               default_value = [ 'rd', 'dr', ] + add_default,
+         )
+       ),
+       ( "match_service_event",
+           ListChoice(
+               title = _("Match service event type"),
+                help  = _("Select the service event types and transitions this rule should handle. Note: "
+                          "If you activate this option and do <b>not</b> also specify host event "
+                          "types then this rule will never hold for host notifications!"),
+               choices = [
+                   ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
+                   ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
+                   ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
+
+                   ( 'wr', _("WARN")    + u" ➤ " + _("OK")),
+                   ( 'wc', _("WARN")    + u" ➤ " + _("CRIT")),
+                   ( 'wu', _("WARN")    + u" ➤ " + _("UNKNOWN")),
+
+                   ( 'cr', _("CRIT")    + u" ➤ " + _("OK")),
+                   ( 'cw', _("CRIT")    + u" ➤ " + _("WARN")),
+                   ( 'cu', _("CRIT")    + u" ➤ " + _("UNKNOWN")),
+
+                   ( 'ur', _("UNKNOWN") + u" ➤ " + _("OK")),
+                   ( 'uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
+                   ( 'uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
+
+               ] + add_choices,
+               default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', ] + add_default,
+          )
+        ),
+    ]
+
+
+def notification_rule_match_conditions():
+    return [
+       ( "match_escalation",
+         Tuple(
+             title = _("Restrict to n<sup>th</sup> to m<sup>th</sup> notification"),
+             orientation = "float",
+             elements = [
+                 Integer(
+                     label = _("from"),
+                     help = _("Let through notifications counting from this number. "
+                              "For normal alerts The first notification has the number 1. "
+                              "For custom notifications the number is 0."),
+                     default_value = 0,
+                     minvalue = 0,
+                     maxvalue = 999999,
+                 ),
+                 Integer(
+                     label = _("to"),
+                     help = _("Let through notifications counting upto this number"),
+                     default_value = 999999,
+                     minvalue = 1,
+                     maxvalue = 999999,
+                 ),
+           ],
+         ),
+       ),
+       ( "match_escalation_throttle",
+         Tuple(
+             title = _("Throttle periodic notifications"),
+             help = _("This match option allows you to throttle periodic notifications after "
+                      "a certain number of notifications have been created by the monitoring "
+                      "core. If you for example select 10 as the beginning and 5 as the rate "
+                      "then you will receive the notification 1 through 10 and then 15, 20, "
+                      "25.. and so on."),
+             orientation = "float",
+             elements = [
+                Integer(
+                    label = _("beginning from notifcation number"),
+                    default_value = 10,
+                    minvalue = 1,
+                ),
+                Integer(
+                    label = _("send only every"),
+                    default_value = 5,
+                    unit = _("th notification"),
+                    minvalue = 1,
+               )
+             ],
+         )
+       ),
+        ( "match_notification_comment",
+          RegExpUnicode(
+             title = _("Match notification comment"),
+             help = _("This match only makes sense for custom notifications. When a user creates "
+                      "a custom notification then he/she can enter a comment. This comment is shipped "
+                      "in the notification context variable <tt>NOTIFICATIONCOMMENT</tt>. Here you can "
+                      "make a condition of that comment. It is a regular expression matching the beginning "
+                      "of the comment."),
+             size = 60,
+        )),
+        ( "match_ec",
+          Alternative(
+              title = _("Event Console alerts"),
+              help = _("The Event Console can have events create notifications in Check_MK. "
+                       "These notifications will be processed by the rule based notification "
+                       "system of Check_MK. This matching option helps you distinguishing "
+                       "and also gives you access to special event fields."),
+              style = "dropdown",
+              elements = [
+                   FixedValue(False, title = _("Do not match Event Console alerts"), totext=""),
+                   Dictionary(
+                       title = _("Match only Event Console alerts"),
+                       elements = [
+                           ( "match_rule_id",
+                             ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
+                           ),
+                           ( "match_priority",
+                             Tuple(
+                                 title = _("Match syslog priority"),
+                                 help = _("Define a range of syslog priorities this rule matches"),
+                                 orientation = "horizontal",
+                                 show_titles = False,
+                                 elements = [
+                                    DropdownChoice(label = _("from:"), choices = mkeventd.syslog_priorities, default_value = 4),
+                                    DropdownChoice(label = _(" to:"),   choices = mkeventd.syslog_priorities, default_value = 0),
+                                 ],
+                             ),
+                           ),
+                           ( "match_facility",
+                             DropdownChoice(
+                                 title = _("Match syslog facility"),
+                                 help = _("Make the rule match only if the event has a certain syslog facility. "
+                                          "Messages not having a facility are classified as <tt>user</tt>."),
+                                 choices = mkeventd.syslog_facilities,
+                             )
+                           ),
+                           ( "match_comment",
+                             RegExpUnicode(
+                                 title = _("Match event comment"),
+                                 help = _("This is a regular expression for matching the event's comment."),
+                             )
+                           ),
+                       ]
+                   )
+              ]
+          )
+        )
+    ]
+
 
 def validate_notification_rule(rule, varprefix):
     if "bulk" in rule and rule["notify_plugin"][1] == None:
@@ -8886,6 +8919,32 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
         table.end()
 
 
+def generic_rule_list_actions(rules, what, what_title, save_rules):
+    if html.has_var("_delete"):
+        nr = int(html.var("_delete"))
+        rule = rules[nr]
+        c = wato_confirm(_("Confirm deletion of %s"),
+                         _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?" %
+                           (what_title, nr, rule.get("description",""))))
+        if c:
+            log_pending(SYNC, None, what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
+            del rules[nr]
+            save_rules(rules)
+        elif c == False:
+            return ""
+        else:
+            return
+
+    elif html.has_var("_move"):
+        if html.check_transaction():
+            from_pos = int(html.var("_move"))
+            to_pos = int(html.var("_where"))
+            rule = rules[from_pos]
+            del rules[from_pos] # make to_pos now match!
+            rules[to_pos:to_pos] = [rule]
+            save_rules(rules)
+            log_pending(SYNC, None, what + "-move-rule", _("Changed position of %s %d") % (what_title, from_pos))
+
 
 def mode_notifications(phase):
     options         = config.load_user_file("notification_display_options", {})
@@ -8940,31 +8999,9 @@ def mode_notifications(phase):
                 result = check_mk_local_automation("notification-replay", [str(nr)], None)
                 return None, _("Replayed notifiation number %d") % (nr + 1)
 
-        elif html.has_var("_delete"):
-            nr = int(html.var("_delete"))
-            rule = rules[nr]
-            c = wato_confirm(_("Confirm notification rule deletion"),
-                             _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?" %
-                               (nr, rule.get("description",""))))
-            if c:
-                log_pending(SYNC, None, "notification-delete-rule", _("Deleted notification rule %d") % nr)
-                del rules[nr]
-                save_notification_rules(rules)
-            elif c == False:
-                return ""
-            else:
-                return
+        else:
+            return generic_rule_list_actions(rules, "notification", _("notification rule"),  save_notification_rules)
 
-        elif html.has_var("_move"):
-            if html.check_transaction():
-                from_pos = int(html.var("_move"))
-                to_pos = int(html.var("_where"))
-                rule = rules[from_pos]
-                del rules[from_pos] # make to_pos now match!
-                rules[to_pos:to_pos] = [rule]
-                save_notification_rules(rules)
-                log_pending(SYNC, None, "notification-move-rule", _("Changed position of notification rule %d") % from_pos)
-        return
 
     # Check setting of global notifications. Are they enabled? If not, display
     # a warning here. Note: this is a main.mk setting, so we cannot access this

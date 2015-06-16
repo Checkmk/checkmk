@@ -32,7 +32,7 @@
 # - realhost_name - Name of a *real* host, not a cluster (string)
 
 import os, sys, socket, time, getopt, glob, re, stat, py_compile, urllib, inspect
-import subprocess
+import subprocess, fcntl
 
 # Hack needed to fix UnicodeWarning in in_servicematcher_list(). This
 # can be removed once the encoding of autocheck's items are handled correctly
@@ -273,7 +273,8 @@ config_variable_names = set(vars().keys()).difference(known_vars)
 
 # at check time (and many of what is also needed at administration time).
 try:
-    modules = [ 'check_mk_base', 'discovery', 'snmp', 'agent_simulator', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
+    modules = [ 'check_mk_base', 'discovery', 'snmp', 'agent_simulator', 'notify', 'events',
+                 'alert_handling', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         if os.path.exists(filename):
@@ -3302,7 +3303,7 @@ def read_packed_config():
 #   '----------------------------------------------------------------------'
 
 def get_tty_size():
-    import termios,struct,fcntl
+    import termios, struct
     try:
         ws = struct.pack("HHHH", 0, 0, 0, 0)
         ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
@@ -4486,8 +4487,9 @@ def usage():
  cmk --localize COMMAND               do localization operations
  cmk --handle-alerts                  used to handle alerts from core
  cmk --notify                         used to send notifications from core
- cmk --create-rrd [--keepalive|SPEC]  create round robin database (only CMC)
- cmk --convert-rrds [--split] [H...]  convert exiting RRD to new format (only CMC)
+ cmk --create-rrd [--keepalive|SPEC]  create round robin database (only CEE)
+ cmk --convert-rrds [--split] [H...]  convert exiting RRD to new format (only CEE)
+ cmk --handle-alerts                  alert handling, always in keepalive mode (only CEE)
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
@@ -4515,7 +4517,7 @@ OPTIONS:
                  is directed into a pipe or file.
   --procs N      start up to N processes in parallel during --scan-parents
   --checks A,..  restrict checks/inventory to specified checks (tcp/snmp/check type)
-  --keepalive    used by Check_MK Mirco Core: run check and --notify or --handle-alerts
+  --keepalive    used by Check_MK Mirco Core: run check and --notify
                  in continous mode. Read data from stdin and from cmd line.
   --cmc-file=X   relative filename for CMC config file (used by -B/-U)
   --extraoid A   Do --snmpwalk also on this OID, in addition to mib-2 and enterprises.
@@ -5930,8 +5932,7 @@ try:
             done = True
         elif o == '--handle-alerts':
             read_config_files(with_conf_d=True, validate_hosts=False)
-            sys.exit(do_notify(args))
-            # sys.exit(do_handle_alerts(args))
+            sys.exit(do_handle_alerts(args))
         elif o == '--notify':
             read_config_files(with_conf_d=True, validate_hosts=False)
             sys.exit(do_notify(args))

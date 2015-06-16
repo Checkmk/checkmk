@@ -82,6 +82,4 @@ modules += [
 
       ( "icons", _("Custom Icons"), "icons", "icons",
         _("Upload your own icons that can be used in views or custom actions")),
-
-    ]
-
+]

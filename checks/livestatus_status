@@ -39,7 +39,7 @@ factory_settings["livestatus_status_default_levels"] = {
     "accept_passive_service_checks" : 2,
     "check_host_freshness"          : 2,
     "check_service_freshness"       : 2,
-    "enable_event_handlers"         : 0,
+    "enable_event_handlers"         : 1,
     "enable_flap_detection"         : 1,
     "enable_notifications"          : 2,
     "process_performance_data"      : 1,

@@ -1,0 +1,9 @@
+Title: ovs_bonding: Linux agent now supports OVS version 6.2
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434442321
+Class: feature
+
+Thanks to Alexander Scholler.

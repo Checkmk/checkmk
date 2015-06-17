@@ -1,0 +1,11 @@
+Title: New icon for hosts/services that are out of their service period
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434529503
+Class: feature
+
+The service period defines the times of the day that a service is expected
+to by up. This is mainly being used for availability computations but can
+also be used for filtering out unimportant things during non-work-hours.

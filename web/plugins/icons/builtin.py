@@ -654,8 +654,6 @@ multisite_icons_and_actions['status_passive_checks'] = {
 #   |   | |\  | (_) | |_| |  _|_____|  __/  __/ |  | | (_) | (_| \__ \     |
 #   |   |_| \_|\___/ \__|_|_|(_)    |_|   \___|_|  |_|\___/ \__,_|___/     |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 def paint_notification_periods(what, row, tags, host_custom_vars):
@@ -665,6 +663,25 @@ def paint_notification_periods(what, row, tags, host_custom_vars):
 multisite_icons_and_actions['status_notification_period'] = {
     'columns':         [ 'in_notification_period' ],
     'paint':           paint_notification_periods,
+    'toplevel':        True,
+}
+
+#.
+#   .--Service Period------------------------------------------------------.
+#   |          ____                  _            ____                     |
+#   |         / ___|  ___ _ ____   _(_) ___ ___  |  _ \ ___ _ __           |
+#   |         \___ \ / _ \ '__\ \ / / |/ __/ _ \ | |_) / _ \ '__|          |
+#   |          ___) |  __/ |   \ V /| | (_|  __/ |  __/  __/ | _           |
+#   |         |____/ \___|_|    \_/ |_|\___\___| |_|   \___|_|(_)          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+def paint_service_periods(what, row, tags, host_custom_vars):
+    if not row[what + "_in_service_period"]:
+        return 'outof_serviceperiod', _('Out of service period')
+
+multisite_icons_and_actions['status_service_period'] = {
+    'columns':         [ 'in_service_period' ],
+    'paint':           paint_service_periods,
     'toplevel':        True,
 }
 

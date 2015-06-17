@@ -44,6 +44,7 @@
     * 2337 FIX: Fixed problem with long hanging pnp graph rendering calls
     * 2338 FIX: Logging internal GUI exceptions to web.log instead of apache error_log...
     * 2340 FIX: Email validation: Top level domains can now have a maximum length of 24 characters
+    * 2353 FIX: Fix showing options for availability in BI mode, where above header
 
     WATO:
     * 1254 The target address for crash reports can now be configured in wato global settings

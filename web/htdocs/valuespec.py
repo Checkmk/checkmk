@@ -591,7 +591,8 @@ class Hostname(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
-        self._regex_error = _("Please enter a valid hostname or IPv4 address.")
+        self._regex_error = _("Please enter a valid hostname or IPv4 address. "
+                              "Only only letters, digits, dash, underscore and dot are allowed.")
 
 class AbsoluteDirname(TextAscii):
     def __init__(self, **kwargs):

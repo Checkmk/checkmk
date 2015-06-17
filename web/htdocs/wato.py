@@ -2179,9 +2179,8 @@ def check_new_hostname(varname, hostname):
     if not hostname:
         raise MKUserError(varname, _("Please specify a host name."))
     elif hostname in g_folder[".hosts"]:
-        raise MKUserError(varname, _("A host with this name already exists."))
-    elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
-        raise MKUserError(varname, _("Invalid host name: must contain only characters, digits, dash, underscore and dot."))
+        raise MKUserError(varname, _("A host with this name already exists in this folder."))
+    Hostname().validate_value(hostname, varname)
 
 def check_new_host_permissions(folder, host, hostname):
     config.need_permission("wato.manage_hosts")
@@ -14834,7 +14833,9 @@ def get_rule_conditions(ruleset):
     else:
         negate = html.get_checkbox("negate_hosts")
         nr = 0
-        host_list = ListOfStrings().from_html_vars("hostlist")
+        vs = ListOfStrings(valuespec=Hostname())
+        host_list = vs.from_html_vars("hostlist")
+        vs.validate_value(host_list, "hostlist")
         if negate:
             host_list = [ "!" + h for h in host_list ]
         # append ALL_HOSTS to negated host lists

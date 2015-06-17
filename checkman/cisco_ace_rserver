@@ -1,0 +1,28 @@
+title: Cisco ACE Server: Status of Real Server
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the status of the so-called real servers of Cisco
+ switches with the Application Control Engine (ACE) module. It uses snmp
+ to extract information from the CISCO-ENHANCED-SLB MIB.
+
+ The check monitors the operational and the administrative state of each
+ rserver, as well as the current number of connections. The criticality of
+ the check is determined from the operational state: if the operational
+ state is {in service}, the check is {OK}. If the operational state is
+ {probe testing} or {standby}, the check is {WARN}. Otherwise, it is {CRIT}.
+ If the administrative state is {out of service}, the worst total criticality
+ is {WARN}.
+
+item:
+ The name of the real server, or, if this is not configured on the device,
+ the IP-address of the real server.
+
+inventory:
+ One service for each real server is created
+
+perfdata:
+ The current number of connections going through a real server.

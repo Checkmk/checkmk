@@ -1328,6 +1328,7 @@ check_metrics["check_mk-carel_sensors"]                         = {}
 check_metrics["check_mk-casa_cpu_temp"]                         = {}
 check_metrics["check_mk-cisco_temp_perf"]                       = {}
 check_metrics["check_mk-cisco_temp_sensor"]                     = {}
+check_metrics["check_mk-cisco_ace_rserver"]                     = {}
 check_metrics["check_mk-climaveneta_temp"]                      = {}
 check_metrics["check_mk-cmciii.temp"]                           = {}
 check_metrics["check_mk-cmctc.temp"]                            = {}
@@ -1559,7 +1560,13 @@ perfometer_info.append(("stacked", [
 perfometer_info.append(("linear",      ( [ "running_sessions" ],                                        "total_sessions", None)))
 perfometer_info.append(("linear",      ( [ "shared_locks", "exclusive_locks" ],                         None, None)))
 
-perfometer_info.append(("linear",      ( [ "connections" ], 100, None)))
+perfometer_info.append({
+        "type"      : "logarithmic",
+        "metric"    : "connections",
+        "half_value": 50,
+        "exponent"  : 2
+})
+
 perfometer_info.append(("logarithmic", ( "connection_time", 0.2, 2)))
 
 perfometer_info.append(("dual", [

@@ -1,0 +1,9 @@
+Title: Fix showing options for availability in BI mode, where above header
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i1p3
+Date: 1434545517
+Class: fix
+
+

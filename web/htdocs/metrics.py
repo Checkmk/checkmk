@@ -34,7 +34,7 @@
 # unit:               The definition-dict of a unit like in unit_info
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
-import math, time
+import math, time, colorsys
 import config, defaults, pagetypes, table
 from lib import *
 from valuespec import *
@@ -140,6 +140,48 @@ def metric_to_text(metric, value=None):
     return metric["unit"]["render"](value)
 
 # A few helper function to be used by the definitions
+
+#.
+#   .--Colors--------------------------------------------------------------.
+#   |                      ____      _                                     |
+#   |                     / ___|___ | | ___  _ __ ___                      |
+#   |                    | |   / _ \| |/ _ \| '__/ __|                     |
+#   |                    | |__| (_) | | (_) | |  \__ \                     |
+#   |                     \____\___/|_|\___/|_|  |___/                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Functions and constants dealing with colors                         |
+#   '----------------------------------------------------------------------'
+
+cmk_color_palette = {
+    "24" : (0.5, 1.0, 1.0),
+    "25" : (0.7, 1.0, 1.0),
+}
+
+# 23/c -> #ff8040
+# #ff8040 -> #ff8040
+def parse_color_into_hexrgb(color_string):
+    if color_string[0] == "#":
+        return color_string
+    elif "/" in color_string:
+        cmk_color_index, color_shading = color_string.split("/")
+        hsv = list(cmk_color_palette[cmk_color_index])
+        if color_shading == 'a':
+            hsv[2] *= 0.6
+        elif color_shading == 'b':
+            hsv[2] *= 0.8
+        elif color_shading == 'd':
+            hsv[1] *= 0.8
+        elif color_shading == 'e':
+            hsv[1] *= 0.6
+        color_hexrgb = hsv_to_hexrgb(hsv)
+        return color_hexrgb
+    else:
+        return "#808080"
+
+
+def hsv_to_hexrgb(hsv):
+    return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
 # "#ff0080" -> (1.0, 0.0, 0.5)
@@ -459,7 +501,7 @@ def evaluate_literal(expression, translated_metrics):
         unit = translated_metrics[varname]["unit"]
 
     if color == None:
-        color = metric_info[varname]["color"]
+        color = parse_color_into_hexrgb(metric_info[varname]["color"])
     return value, unit, color
 
 
@@ -912,7 +954,7 @@ def render_graph_pnp(graph_template, translated_metrics):
             mi = metric_info[metric_name]
             if not title:
                 title = mi["title"]
-            color = mi["color"]
+            color = parse_color_into_hexrgb(mi["color"])
             unit = unit_info[mi["unit"]]
 
         if custom_color:

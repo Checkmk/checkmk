@@ -52,6 +52,7 @@
             NOTE: Please refer to the migration notes!
 
     BI:
+    * 2354 BI aggregations now also consider the service period...
     * 2336 FIX: BI compilation diagnostics are now logged to the generic web.log...
 
     Event Console:

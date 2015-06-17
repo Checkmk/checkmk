@@ -1,0 +1,21 @@
+Title: BI aggregations now also consider the service period
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434548994
+Class: feature
+
+BI aggregations now also consider the service period of their contained
+services and hosts - just like for downtimes and acknowledgements. A BI
+aggregate is thus considered to be within its service period if its state
+would be OK under the assumption that all objects that are currently out
+of their service period are CRIT and the rest is OK. Or otherwise stated:
+If all things that are not in their service period are switched off: if the
+BI aggregate would get CRIT - well then it is not in its service period.
+Yet in other words that means that the service period of something can only
+cover times where all of its vital parts also are in service period.
+
+The information "within/out of service period" is now also available for
+the availability computations. That allows you now to base availability
+reporting for BI aggregates to be based on certain time periods.

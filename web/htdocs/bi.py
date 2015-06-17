@@ -1031,8 +1031,9 @@ def execute_leaf_node(node, status_info, use_hard_states):
             "output"              : _("Host %s not found") % host,
             "in_downtime"         : False,
             "acknowledged"        : False,
+            "in_service_period"   : True,
         }, None, node)
-    host_state, host_hard_state, host_output, host_in_downtime, host_acknowledged, service_state = status
+    host_state, host_hard_state, host_output, host_in_downtime, host_acknowledged, host_in_service_period, service_state = status
 
     # Get state assumption from user
     if service:
@@ -1045,7 +1046,9 @@ def execute_leaf_node(node, status_info, use_hard_states):
     if service:
         for entry in service_state: # list of all services of that host
             if entry[0] == service:
-                state, has_been_checked, output, hard_state, attempt, max_attempts, downtime_depth, acknowledged = entry[1:9]
+                if len(entry) < 10:
+                    entry = entry + [ True ] # old versions of Livestatus do not send in_service_period
+                state, has_been_checked, output, hard_state, attempt, max_attempts, downtime_depth, acknowledged, in_service_period = entry[1:10]
                 if has_been_checked == 0:
                     output = _("This service has not been checked yet")
                     state = PENDING
@@ -1054,17 +1057,19 @@ def execute_leaf_node(node, status_info, use_hard_states):
                 else:
                     st = state
                 state = {
-                    "state"        : st,
-                    "output"       : output,
-                    "in_downtime"  : downtime_depth > 0,
-                    "acknowledged" : not not acknowledged,
+                    "state"             : st,
+                    "output"            : output,
+                    "in_downtime"       : downtime_depth > 0,
+                    "acknowledged"      : not not acknowledged,
+                    "in_service_period" : in_service_period,
                 }
                 if state_assumption != None:
                     assumed_state = {
-                        "state"        : state_assumption,
-                        "output"       : _("Assumed to be %s") % service_state_names[state_assumption],
-                        "in_downtime"  : downtime_depth > 0,
-                        "acknowledged" : not not acknowledged,
+                        "state"             : state_assumption,
+                        "output"            : _("Assumed to be %s") % service_state_names[state_assumption],
+                        "in_downtime"       : downtime_depth > 0,
+                        "acknowledged"      : not not acknowledged,
+                        "in_service_period" : in_service_period,
                     }
 
                 else:
@@ -1072,10 +1077,11 @@ def execute_leaf_node(node, status_info, use_hard_states):
                 return (state, assumed_state, node)
 
         return ({
-                "state"        : MISSING,
-                "output"       : _("This host has no such service"),
-                "in_downtime"  : False,
-                "acknowledged" : False,
+                "state"             : MISSING,
+                "output"            : _("This host has no such service"),
+                "in_downtime"       : False,
+                "acknowledged"      : False,
+                "in_service_period" : True,
             }, None, node)
 
     else:
@@ -1085,17 +1091,19 @@ def execute_leaf_node(node, status_info, use_hard_states):
             st = host_state
         aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING}[st]
         state = {
-            "state"        : aggr_state,
-            "output"       : host_output,
-            "in_downtime"  : host_in_downtime,
-            "acknowledged" : host_acknowledged,
+            "state"             : aggr_state,
+            "output"            : host_output,
+            "in_downtime"       : host_in_downtime,
+            "acknowledged"      : host_acknowledged,
+            "in_service_period" : host_in_service_period,
             }
         if state_assumption != None:
             assumed_state = {
-                "state"        : state_assumption,
-                "output"       : _("Assumed to be %s") % host_state_names[state_assumption],
-                "in_downtime"  : host_in_downtime,
-                "acknowledged" : host_acknowledged,
+                "state"             : state_assumption,
+                "output"            : _("Assumed to be %s") % host_state_names[state_assumption],
+                "in_downtime"       : host_in_downtime,
+                "acknowledged"      : host_acknowledged,
+                "in_service_period" : host_in_service_period,
                 }
         else:
             assumed_state = None
@@ -1118,6 +1126,7 @@ def execute_rule_node(node, status_info, use_hard_states):
     node_states = []
     assumed_states = []
     downtime_states = []
+    service_period_states = []
     ack_states = [] # Needed for computing the acknowledgement of non-OK nodes
     one_assumption = False
     for n in node["nodes"]:
@@ -1134,6 +1143,9 @@ def execute_rule_node(node, status_info, use_hard_states):
             acked_state = result[0]["state"]
         ack_states.append(({"state": acked_state, "output" : ""}, result[2]))
 
+        # Assume items oo their service period as CRIT when computing in_service_period of aggregate
+        service_period_states.append(({"state": (not result[0]["in_service_period"]) and 2 or 0, "output" : ""}, result[2]))
+
         node_states.append((result[0], result[2]))
         if result[1] != None:
             assumed_states.append((result[1], result[2]))
@@ -1142,19 +1154,28 @@ def execute_rule_node(node, status_info, use_hard_states):
             # no assumption, take real state into assumption array
             assumed_states.append(node_states[-1])
 
-    downtime_state = func(*([downtime_states] + funcargs))
     state = func(*([node_states] + funcargs))
+
+    # Compute downtime state
+    downtime_state = func(*([downtime_states] + funcargs))
     state["in_downtime"] = downtime_state["state"] >= 2
+
+    # Compute acknowledgedment state
     if state["state"] > 0: # Non-OK-State -> compute acknowledgedment
         ack_state = func(*([ack_states] + funcargs))
         state["acknowledged"] = ack_state["state"] == 0 # would be OK if acked problems would be OK
     else:
         state["acknowledged"] = False
 
+    # Compute service period state
+    service_period_state = func(*([service_period_states] + funcargs))
+    state["in_service_period"] = service_period_state["state"] < 2
+
     if one_assumption:
         assumed_state = func(*([assumed_states] + funcargs))
         assumed_state["in_downtime"] = state["in_downtime"]
         assumed_state["acknowledged"] = state["acknowledged"]
+        assumed_state["in_service_period"] = state["in_service_period"]
     else:
         assumed_state = None
     return (state, assumed_state, node, subtrees)
@@ -1182,7 +1203,7 @@ def get_status_info(required_hosts):
         html.live.set_auth_domain('bi')
         data = html.live.query(
                 "GET hosts\n"
-                "Columns: name state hard_state plugin_output scheduled_downtime_depth acknowledged services_with_fullstate\n"
+                "Columns: name state hard_state plugin_output scheduled_downtime_depth acknowledged in_service_period services_with_fullstate\n"
                 + filter)
         html.live.set_auth_domain('read')
         tuples += [((site, e[0]), e[1:]) for e in data]
@@ -1587,11 +1608,15 @@ def aggr_render_node(tree, title, mousecode, show_host):
 
     if tree[0]["in_downtime"]:
         title = ('<img class="icon bi" src="images/icon_downtime.png" title="%s">' % \
-            _("This element is currently in a scheduled downtime")) + title
+            _("This element is currently in a scheduled downtime.")) + title
 
     if tree[0]["acknowledged"]:
         title = ('<img class="icon bi" src="images/icon_ack.png" title="%s">' % \
-            _("This problem has been acknowledged")) + title
+            _("This problem has been acknowledged.")) + title
+
+    if not tree[0]["in_service_period"]:
+        title = ('<img class="icon bi" src="images/icon_outof_serviceperiod.png" title="%s">' % \
+            _("This element is currently not in its service period.")) + title
 
     h = '<span class="content state state%d%s">%s</span>\n' \
          % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))

@@ -42,6 +42,8 @@ public:
     void output(void *, Query *);
     Filter *createFilter(int opid, char *value);
     servicesmember *getMembers(void *data);
+private:
+    int inCustomTimeperiod(service *svc, const char *varname);
 };
 
 

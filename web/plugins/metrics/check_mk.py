@@ -80,6 +80,13 @@ unit_info["1/s"] = {
     "render" : lambda v: "%s%s" % (drop_dotzero(v), _("/s")),
 }
 
+unit_info["hz"] = {
+    "title"  : _("Hz"),
+    "symbol" : _("Hz"),
+    "render" : lambda v : physical_precision(v, 3, _("Hz")),
+}
+
+
 unit_info["bytes"] = {
     "title"    : _("Bytes"),
     "symbol"   : _("B"),
@@ -717,9 +724,7 @@ metric_info["disk_average_read_wait"] = {
 }
 
 metric_info["disk_average_write_wait"] = {
-    "title" : _("Write wait time"),
-    "unit"  : "s",
-    "color" : "#20c0e8",
+    "title" : _("Write wait time"), "unit" : "s", "color" : "#20c0e8",
 }
 
 metric_info["disk_average_wait"] = {
@@ -1090,82 +1095,113 @@ metric_info["mail_queue_active_size"] = {
 
 for ty, unit in [ ("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s") ]:
     metric_info[ty+"_cmk_views"] = {
-        "title" : "Check_MK: Views",
+        "title" : _("Check_MK: Views"),
         "unit"  : unit,
         "color" : "#ff8080",
     }
 
-    metric_info[ty+"_cmk_wato"] = {
-        "title" : "Check_MK: WATO",
+    metric_info[ty + "_cmk_wato"] = {
+        "title" : _("Check_MK: WATO"),
         "unit"  : unit,
         "color" : "#377cab",
     }
 
-    metric_info[ty+"_cmk_bi"] = {
-        "title" : "Check_MK: BI",
+    metric_info[ty + "_cmk_bi"] = {
+        "title" : _("Check_MK: BI"),
         "unit"  : unit,
         "color" : "#4eb0f2",
     }
 
-    metric_info[ty+"_cmk_snapins"] = {
-        "title" : "Check_MK: Snapins",
+    metric_info[ty + "_cmk_snapins"] = {
+        "title" : _("Check_MK: Snapins"),
         "unit"  : unit,
         "color" : "#ff4040",
     }
 
-    metric_info[ty+"_cmk_dashboards"] = {
-        "title" : "Check_MK: Dashboards",
+    metric_info[ty + "_cmk_dashboards"] = {
+        "title" : _("Check_MK: Dashboards"),
         "unit"  : unit,
         "color" : "#4040ff",
     }
 
-    metric_info[ty+"_cmk_other"] = {
-        "title" : "Check_MK: Other",
+    metric_info[ty + "_cmk_other"] = {
+        "title" : _("Check_MK: Other"),
         "unit"  : unit,
         "color" : "#5bb9eb",
     }
 
-    metric_info[ty+"_nagvis_snapin"] = {
-        "title" : "NagVis: Snapin",
+    metric_info[ty + "_nagvis_snapin"] = {
+        "title" : _("NagVis: Snapin"),
         "unit"  : unit,
         "color" : "#f2904e",
     }
 
-    metric_info[ty+"_nagvis_ajax"] = {
-        "title" : "NagVis: AJAX",
+    metric_info[ty + "_nagvis_ajax"] = {
+        "title" : _("NagVis: AJAX"),
         "unit"  : unit,
         "color" : "#af91eb",
     }
 
-    metric_info[ty+"_nagvis_other"] = {
-        "title" : "NagVis: Other",
+    metric_info[ty + "_nagvis_other"] = {
+        "title" : _("NagVis: Other"),
         "unit"  : unit,
         "color" : "#f2df40",
     }
 
-    metric_info[ty+"_images"] = {
-        "title" : "Image",
+    metric_info[ty + "_images"] = {
+        "title" : _("Image"),
         "unit"  : unit,
         "color" : "#91cceb",
     }
 
-    metric_info[ty+"_styles"] = {
-        "title" : "Styles",
+    metric_info[ty + "_styles"] = {
+        "title" : _("Styles"),
         "unit"  : unit,
         "color" : "#c6f24e",
     }
 
-    metric_info[ty+"_scripts"] = {
-        "title" : "Scripts",
+    metric_info[ty + "_scripts"] = {
+        "title" : _("Scripts"),
         "unit"  : unit,
         "color" : "#4ef26c",
     }
 
-    metric_info[ty+"_other"] = {
-        "title" : "Other",
+    metric_info[ty + "_other"] = {
+        "title" : _("Other"),
         "unit"  : unit,
         "color" : "#4eeaf2",
     }
+
+
+metric_info["total_modems"] = {
+    "title" : _("Total number of modems"),
+    "unit"  : "count",
+    "color" : "12/c",
+}
+
+metric_info["active_modems"] = {
+    "title" : _("Active modems"),
+    "unit"  : "count",
+    "color" : "14/c",
+}
+
+metric_info["registered_modems"] = {
+    "title" : _("Registered modems"),
+    "unit"  : "count",
+    "color" : "16/c",
+}
+
+metric_info["channel_utilization"] = {
+    "title" : _("Channel utilization"),
+    "unit"  : "%",
+    "color" : "24/c",
+}
+
+metric_info["frequency"] = {
+    "title" : _("Frequency"),
+    "unit"  : "hz",
+    "color" : "10/c",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -1409,7 +1445,13 @@ check_metrics["check_mk-bluenet_meter"]                         = {}
 check_metrics["check_mk-bluecoat_sensors"]                      = {}
 
 check_metrics["check_mk-zfs_arc_cache"]                         = { "hit_ratio" : { "scale" : 0.01 }}
-check_metrics["check_mk-docsis_channels_upstream"]              = {}
+check_metrics["check_mk-docsis_channels_upstream"]              = {
+    "total"      : { "name" : "total_modems" },
+    "active"     : { "name" : "active_modems" },
+    "registered" : { "name" : "registered_modems" },
+    "util"       : { "name" : "channel_utilization" },
+    "frequency"  : { "scale" : 1000000.0 },
+}
 
 check_metrics["check_mk-postgres_bloat"]                        = {}
 check_metrics["check_mk-postgres_connections"]                  = {}
@@ -2234,3 +2276,18 @@ graph_info.append({
         ( "mail_queue_active_length",     "stack" ),
     ],
 })
+
+
+
+graph_info.append({
+    "title" : _("Modems"),
+    "metrics" : [ 
+        ( "active_modems",     "area" ),
+        ( "registered_modems", "line" ),
+        ( "total_modems",      "line" ),
+    ],
+})
+
+define_generic_graph("channel_utilization")
+define_generic_graph("signal_noise")
+define_generic_graph("frequency")

@@ -154,6 +154,10 @@ def metric_to_text(metric, value=None):
 #   '----------------------------------------------------------------------'
 
 cmk_color_palette = {
+    "10" : (0.3, 1.0, 1.0),
+    "12" : (0.5, 1.0, 1.0),
+    "14" : (0.6, 1.0, 1.0),
+    "16" : (0.8, 1.0, 1.0),
     "24" : (0.5, 1.0, 1.0),
     "25" : (0.7, 1.0, 1.0),
 }
@@ -309,7 +313,8 @@ def translate_metrics(perf_data, check_command):
                 "color" : "#888888",
             }
         else:
-            mi = metric_info[metric_name]
+            mi = metric_info[metric_name].copy()
+            mi["color"] = parse_color_into_hexrgb(mi["color"])
 
         # Optional scaling
         scale = translation_entry.get("scale", 1.0)

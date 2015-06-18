@@ -1,0 +1,9 @@
+Title: docsis_channels_upstream: Fix graph definitions
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434618449
+Class: fix
+
+

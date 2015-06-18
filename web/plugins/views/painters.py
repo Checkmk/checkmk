@@ -202,7 +202,6 @@ def process_multisite_icons(what, row, tags, custom_vars):
                                     n = n[:-4]
                                 elif n.endswith(".gif"):
                                     n = n[:-4]
-                                output += ' '+n.encode('utf-8')
                                 icons.append((toplevel, sort_index, n.encode('utf-8'), None, None))
                         continue
 

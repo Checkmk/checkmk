@@ -1,6 +1,7 @@
 1.2.7i1p3:
     Multisite:
     * 2353 FIX: Fix showing options for availability in BI mode, where above header
+    * 2356 FIX: Fixed exception in Multisite JSON output
 
 
 1.2.7i1p2:

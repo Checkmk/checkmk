@@ -1200,7 +1200,7 @@ metric_info["channel_utilization"] = {
 metric_info["frequency"] = {
     "title" : _("Frequency"),
     "unit"  : "hz",
-    "color" : "10/c",
+    "color" : "11/c",
 }
 
 #.

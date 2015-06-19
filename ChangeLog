@@ -47,6 +47,7 @@
     * 2340 FIX: Email validation: Top level domains can now have a maximum length of 24 characters
     * 2353 FIX: Fix showing options for availability in BI mode, where above header
     * 2356 FIX: Fixed exception in Multisite JSON output
+    * 2310 FIX: multisite view data export: fixed exception when using joined columns...
 
     WATO:
     * 1254 The target address for crash reports can now be configured in wato global settings

@@ -1273,7 +1273,7 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
         only_sites.add(site)
         hosts.append(host)
 
-    columns = [ "host_name", "service_description", "from", "log_output", "state", "in_downtime" ]
+    columns = [ "host_name", "service_description", "from", "log_output", "state", "in_downtime", "in_service_period" ]
     html.live.set_only_sites(list(only_sites))
     html.live.set_prepend_site(True)
     html.live.set_limit() # removes limit
@@ -1331,7 +1331,7 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
         for row in phase_entries:
             service     = row["service_description"]
             key         = row["site"], row["host_name"], service
-            states[key] = row["state"], row["log_output"], row["in_downtime"]
+            states[key] = row["state"], row["log_output"], row["in_downtime"], (row["in_service_period"] != 0)
 
 
     update_states(phases_list[0][1])
@@ -1355,7 +1355,7 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
             "host_name"              : aggr_group,
             "service_description"    : tree['title'],
             "in_notification_period" : 1,
-            "in_service_period"      : 1,
+            "in_service_period"      : True,
             "in_downtime"            : tree_state[0]['in_downtime'],
             "in_host_downtime"       : 0,
             "host_down"              : 0,
@@ -1398,6 +1398,7 @@ def compute_tree_state(tree, status):
                 1,               # max_attempts (not relevant)
                 state_output[2], # in_downtime
                 False,           # acknowledged
+                state_output[3], # in_service_period
                 ))
         else:
             hosts[site_host] = state_output
@@ -1410,6 +1411,7 @@ def compute_tree_state(tree, status):
             state_output[1],
             state_output[2], # in_downtime
             False, # acknowledged
+            state_output[3], # in_service_period
             services_by_host.get(site_host,[])
         ]
 

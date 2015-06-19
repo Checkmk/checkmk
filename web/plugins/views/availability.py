@@ -469,11 +469,8 @@ def render_timeline_bar(timeline_layout, style):
 def render_bi_availability(title, aggr_rows):
     av_mode = html.var("av_mode", "availability")
 
-    html.plug()
-    avoptions = render_availability_options()
+    avoptions = get_availability_options_from_url()
     time_range, range_title = avoptions["range"]
-    avoptions_html = html.drain()
-    html.unplug()
 
     if av_mode == "timeline":
         title = _("Timeline of ") + title
@@ -481,7 +478,6 @@ def render_bi_availability(title, aggr_rows):
         title = _("Availability of ") + title
 
     if html.output_format != "csv_export":
-        html.write(avoptions_html)
         html.body_start(title, stylesheets=["pages","views","status", "bi"], javascripts=['bi'])
         html.top_heading(title)
         html.begin_context_buttons()
@@ -501,6 +497,8 @@ def render_bi_availability(title, aggr_rows):
             timeline_url = html.makeuri([("timeline", "1"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
             html.context_button(_("Timeline"), timeline_url, "timeline")
         html.end_context_buttons()
+
+        avoptions = render_availability_options()
 
 
     if not html.has_user_errors():

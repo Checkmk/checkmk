@@ -27,7 +27,9 @@
 #include "nagios.h"
 #include "Query.h"
 #include "TableServices.h"
+#include "TimeperiodsCache.h"
 
+extern TimeperiodsCache *g_timeperiods_cache;
 extern TableServices *g_table_services;
 
 servicesmember *ServicelistColumn::getMembers(void *data)
@@ -84,6 +86,8 @@ void ServicelistColumn::output(void *data, Query *query)
                     query->outputInteger(svc->scheduled_downtime_depth);
                     query->outputSublistSeparator();
                     query->outputInteger(svc->problem_has_been_acknowledged);
+                    query->outputSublistSeparator();
+                    query->outputInteger(inCustomTimeperiod(svc, "SERVICE_PERIOD"));
                 }
                 query->outputEndSublist();
             }
@@ -98,3 +102,14 @@ Filter *ServicelistColumn::createFilter(int opid, char *value)
     return new ServicelistColumnFilter(this, opid, value);
 }
 
+
+int ServicelistColumn::inCustomTimeperiod(service *svc, const char *varname)
+{
+    customvariablesmember *cvm = svc->custom_variables;
+    while (cvm) {
+        if (!(strcmp(cvm->variable_name, varname)))
+            return g_timeperiods_cache->inTimeperiod(cvm->variable_value);
+        cvm = cvm->next;
+    }
+    return 1; // assume 7X24
+}

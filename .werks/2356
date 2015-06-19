@@ -1,0 +1,10 @@
+Title: Fixed exception in Multisite JSON output
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1434620049
+
+

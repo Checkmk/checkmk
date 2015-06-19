@@ -2179,9 +2179,8 @@ def check_new_hostname(varname, hostname):
     if not hostname:
         raise MKUserError(varname, _("Please specify a host name."))
     elif hostname in g_folder[".hosts"]:
-        raise MKUserError(varname, _("A host with this name already exists."))
-    elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
-        raise MKUserError(varname, _("Invalid host name: must contain only characters, digits, dash, underscore and dot."))
+        raise MKUserError(varname, _("A host with this name already exists in this folder."))
+    Hostname().validate_value(hostname, varname)
 
 def check_new_host_permissions(folder, host, hostname):
     config.need_permission("wato.manage_hosts")
@@ -14834,7 +14833,9 @@ def get_rule_conditions(ruleset):
     else:
         negate = html.get_checkbox("negate_hosts")
         nr = 0
-        host_list = ListOfStrings().from_html_vars("hostlist")
+        vs = ListOfStrings()
+        host_list = vs.from_html_vars("hostlist")
+        vs.validate_value(host_list, "hostlist")
         if negate:
             host_list = [ "!" + h for h in host_list ]
         # append ALL_HOSTS to negated host lists
@@ -15045,9 +15046,13 @@ def mode_edit_rule(phase, new = False):
     html.checkbox("negate_hosts", negate_hosts, label =
                  _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
     html.write("</div>")
-    html.help(_("You can enter a number of explicit host names that rule should or should "
-                 "not apply to here. Leave this option disabled if you want the rule to "
-                 "apply for all hosts specified by the given tags."))
+    html.help(_("Here you can enter a list of explicit host names that the rule should or should "
+                 "not apply to. Leave this option disabled if you want the rule to "
+                 "apply for all hosts specified by the given tags. The names that you "
+                 "enter here are compared with case sensitive exact matching. Alternatively "
+                 "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
+                 "character. That regular expression must match the <i>beginning</i> of "
+                 "the host names in question."))
 
     # Itemlist
     itemtype = rulespec["itemtype"]

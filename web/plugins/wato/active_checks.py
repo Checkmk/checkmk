@@ -437,7 +437,13 @@ register_rule(group,
             ),
             ( "sql",
               TextAscii(title = _("SQL-statement or procedure name"), allow_empty = False,
-                      help = _('The SQL-statement or procedure name which is executed on the DBMS'))
+                      help = _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
+                               'a result table with one row and at least two columns. The first column must be '
+                               'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
+                               'Alternatively the first column can be interpreted as number value and you can '
+                               'define levels for this number. The '
+                               'second column is used as check output. The third column is optional and can '
+                               'contain performance data.'))
             ),
             ( "procedure",
             Dictionary(

@@ -33,6 +33,7 @@
     * 1258 FIX: fileinfo solaris: Fixed configuration crash...
     * 2221 FIX: cisco_temperature: Fixed order of device levels for some devices...
     * 2329 FIX: windows_intel_bonding: Fix exception in case of no existing bonding device
+    * 2355 FIX: docsis_channels_upstream: Fix graph definitions
 
     Multisite:
     * 2260 Improved load time of Check_MK GUI...
@@ -44,6 +45,8 @@
     * 2337 FIX: Fixed problem with long hanging pnp graph rendering calls
     * 2338 FIX: Logging internal GUI exceptions to web.log instead of apache error_log...
     * 2340 FIX: Email validation: Top level domains can now have a maximum length of 24 characters
+    * 2353 FIX: Fix showing options for availability in BI mode, where above header
+    * 2356 FIX: Fixed exception in Multisite JSON output
 
     WATO:
     * 1254 The target address for crash reports can now be configured in wato global settings
@@ -51,6 +54,7 @@
             NOTE: Please refer to the migration notes!
 
     BI:
+    * 2354 BI aggregations now also consider the service period...
     * 2336 FIX: BI compilation diagnostics are now logged to the generic web.log...
 
     Event Console:

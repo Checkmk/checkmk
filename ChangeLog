@@ -12,6 +12,9 @@
     * 1258 FIX: fileinfo solaris: Fixed configuration crash...
     * 2221 FIX: cisco_temperature: Fixed order of device levels for some devices...
 
+    Multisite:
+    * 2310 FIX: multisite view data export: fixed exception when using joined columns...
+
     Reporting & Availability:
     * 2331 FIX: Fix missing column with name "Summary" when "Do not display the host name" is checked
 

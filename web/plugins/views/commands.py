@@ -387,6 +387,10 @@ def command_downtime(cmdtag, spec, row):
             title_start = _("schedule a daily recurring")
         elif recurring_type == "3":
             title_start = _("schedule a weekly recurring")
+        elif recurring_type == "4":
+            title_start = _("schedule a two-weekly recurring")
+        elif recurring_type == "5":
+            title_start = _("schedule a four-weekly recurring")
     else:
         title_start = _("schedule an immediate")
 
@@ -590,6 +594,8 @@ def paint_downtime_buttons(what):
        ( "1", _("hour") ),
        ( "2", _("day") ),
        ( "3", _("week") ),
+       ( "4", _("second week") ),
+       ( "5", _("fourth week") ),
     ], "3")
     html.write(_("(This only works when using CMC)"))
 

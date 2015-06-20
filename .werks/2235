@@ -1,0 +1,13 @@
+Title: lnx_quota: Extended linux quota check with group quota check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434797514
+Class: feature
+
+Extended linux quota check with group quota check. Per default only
+user quota is checked. The user can configure if group quota should
+be checked additionally.
+
+Users and groups with no soft and hard limit are ignored for monitoring.

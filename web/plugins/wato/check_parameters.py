@@ -483,6 +483,35 @@ register_check_parameters(
      match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "lnx_quota",
+    _("Linux quota check"),
+    Dictionary(
+        optional_keys = None,
+        elements = [
+            ( "user",
+                Checkbox(
+                    title = _("Monitor user quotas"),
+                    label = _("Enable"),
+                    default_value = True,
+                ),
+            ),
+            ( "group",
+                Checkbox(
+                    title = _("Monitor group quotas"),
+                    label = _("Enable"),
+                ),
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("filesystem"),
+        help = _("Name of filesystem with quotas enabled"),
+    ),
+    match_type = 'dict',
+)
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |

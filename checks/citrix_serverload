@@ -48,7 +48,7 @@ def check_citrix_serverload(_no_item, params, info):
         state = 2
     elif load >= warn:
         state = 1
-    yield state, "Current Citrix Load is: " + str(load/100) + "%", [ ('perf', load, warn, crit ) ]
+    yield state, "Current Citrix Load is: %.2f%%" % (load/100.0), [ ('perf', load, warn, crit ) ]
 
 check_info["citrix_serverload"] = {
     "group"                 : "citrix_load",

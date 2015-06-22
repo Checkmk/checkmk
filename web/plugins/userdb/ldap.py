@@ -1025,6 +1025,61 @@ def ldap_login(username, password):
     ldap_default_bind(ldap_connection)
     return result
 
+# In case the sync is done on the master of a distributed setup the auth serial
+# is increased on the master, but not on the slaves. The user can not access the
+# slave sites anymore with the master sites cookie since the serials differ. In
+# case the slave sites sync with LDAP on their own this issue will be repaired after
+# the next LDAP sync on the slave, but in case the slaves do not sync, this problem
+# will be repaired automagically once an admin performs the next WATO sync for
+# another reason.
+# Now, to solve this issue, we issue a user profile sync in case the password has
+# been changed. We do this only when only the password has changed.
+# Hopefully we have no large bulks of users changing their passwords at the same
+# time. In this case the implementation does not scale well. We would need to
+# change this to some kind of profile bulk sync per site.
+def synchronize_profile_to_sites(user_id, profile):
+    import wato # FIXME: Cleanup!
+    sites = [(site_id, config.site(site_id))
+              for site_id in config.sitenames()
+              if not wato.site_is_local(site_id) ]
+
+    ldap_log('Credentials changed: %s. Trying to sync to %d sites' % (user_id, len(sites)))
+
+    num_disabled  = 0
+    num_succeeded = 0
+    num_failed    = 0
+    for site_id, site in sites:
+        if not site.get("replication"):
+            num_disabled += 1
+            continue
+
+        if site.get("disabled"):
+            num_disabled += 1
+            continue
+
+        status = html.site_status.get(site_id, {}).get("state", "unknown")
+        if status == "dead":
+            result = "Site is dead"
+        else:
+            try:
+                result = wato.push_user_profile_to_site(site, user_id, profile)
+            except Exception, e:
+                result = str(e)
+
+        if result == True:
+            num_succeeded += 1
+        else:
+            num_failed += 1
+            ldap_log('  FAILED [%s]: %s' % (site_id, result))
+            # Add pending entry to make sync possible later for admins
+            wato.update_replication_status(site_id, {"need_sync": True})
+            wato.log_pending(wato.AFFECTED, None, "edit-users",
+                            _('Password changed (sync failed: %s)') % result, user_id = '')
+
+    ldap_log('  Disabled: %d, Succeeded: %d, Failed: %d' %
+                    (num_disabled, num_succeeded, num_failed))
+
+
 def ldap_sync(add_to_changelog, only_username):
     # Store time of the last sync. Don't store after sync since parallel
     # requests to e.g. the page hook would cause duplicate calculations
@@ -1100,11 +1155,20 @@ def ldap_sync(add_to_changelog, only_username):
             if removed:
                 details.append(_('Removed: %s') % ', '.join(removed))
 
-            # Ignore password changes from ldap - do not log them. For now.
+            # Password changes found in LDAP should not be logged as "pending change".
+            # These changes take effect imediately (pw already changed in AD, auth serial
+            # is increaed by sync plugin) on the local site, so no one needs to active this.
+            pw_changed = False
             if 'ldap_pw_last_changed' in changed:
                 changed.remove('ldap_pw_last_changed')
+                pw_changed = True
             if 'serial' in changed:
                 changed.remove('serial')
+                pw_changed = True
+
+            # Synchronize new user profile to remote sites if needed
+            if pw_changed and not changed and wato.is_distributed():
+                synchronize_profile_to_sites(user_id, user)
 
             if changed:
                 details.append(('Changed: %s') % ', '.join(changed))

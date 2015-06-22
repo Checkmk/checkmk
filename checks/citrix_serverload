@@ -36,15 +36,19 @@ def check_citrix_serverload(_no_item, params, info):
     try:
         load = int(info[0][0])
     except:
-        return 3, "Load information not found"
+        yield 3, "Load information not found"
+        return
 
     warn, crit = params
     state = 0
+    if load == 20000:
+        yield 1, "License error"
+        load = 10000
     if load >= crit:
         state = 2
     elif load >= warn:
         state = 1
-    return state, "Current Citrix Load is: " + str(load), [ ('perf', load, warn, crit ) ]
+    yield state, "Current Citrix Load is: " + str(load/100) + "%", [ ('perf', load, warn, crit ) ]
 
 check_info["citrix_serverload"] = {
     "group"                 : "citrix_load",

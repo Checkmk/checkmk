@@ -1,0 +1,10 @@
+Title: SNMP-Traps: Also deleting compiled files when removing a MIB file
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1p3
+Date: 1434973693
+
+

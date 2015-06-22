@@ -4,6 +4,9 @@
     * 2356 FIX: Fixed exception in Multisite JSON output
     * 2310 FIX: multisite view data export: fixed exception when using joined columns...
 
+    Event Console:
+    * 2342 FIX: SNMP-Traps: Also deleting compiled files when removing a MIB file
+
 
 1.2.7i1p2:
     Core & Setup:

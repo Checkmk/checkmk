@@ -29,23 +29,20 @@ wut_webtherm_defaultlevels = (30, 35)
 def inventory_webtherm(info):
     # line[0] is 1.1, 2.1, 3.1, 6.1, 8.1, 16.1 or 18.1 depending on MIB variant. We chop
     # of the first part in order to get independent of that.
-    return [ (line[0].split(".")[1], "wut_webtherm_defaultlevels") for
-        line in info if len(line) == 2 ]
+    for line in info:
+        if len(line) == 2:
+            temp = float(line[1].replace(",", "."))
+            # If greater then 75 it can't be a temperature sensor.
+            # Maybe humidity
+            if temp > 75:
+                continue
+            yield (line[0].split(".")[1], "wut_webtherm_defaultlevels") 
 
 def check_webtherm(item, params, info):
     for line in info:
         if line[0].split(".")[1] == item:
             temp = float(line[1].replace(",", "."))
-            warn, crit = params
-            perfdata = [ ("temp", temp, warn, crit) ]
-            infotext = "%.1f C (warn/crit at %.1f/%.1f C)" % (temp, warn, crit)
-            if temp >= crit:
-                return (2, infotext, perfdata)
-            elif temp >= warn:
-                return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
-    return (3, "No sensor found")
+            return check_temperature(temp, params)
 
 def detect_webtherm(oid):
     return oid(".1.3.6.1.2.1.1.2.0") in \
@@ -60,14 +57,15 @@ def detect_webtherm(oid):
           ".1.3.6.1.4.1.5040.1.2.18" ]
 
 check_info["wut_webtherm"] = {
-    'check_function':          check_webtherm,
-    'inventory_function':      inventory_webtherm,
-    'service_description':     'Thermograph Sensor %s',
-    'has_perfdata':            True,
-    'snmp_info':               ('.1.3.6.1.4.1.5040.1.2',
-        ['1', '2', '3', '6', '7', '8', '9', '16', '18'],
-        ['1.2.1.1', '1.3.1.1']
+    'check_function'            : check_webtherm,
+    'inventory_function'        : inventory_webtherm,
+    'service_description'       : 'Temperature %s',
+    'has_perfdata'              : True,
+    'snmp_info'                 : ('.1.3.6.1.4.1.5040.1.2',
+                                    ['1', '2', '3', '6', '7', '8', '9', '16', '18'],
+                                    ['1.2.1.1', '1.3.1.1']
     ),
-    'snmp_scan_function':      detect_webtherm,
-    'group':                   'room_temperature',
+    'snmp_scan_function'        : detect_webtherm,
+    'group'                     : 'temperature',
+    'includes'                  : [ 'temperature.include' ],
 }

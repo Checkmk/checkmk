@@ -3079,6 +3079,23 @@ void output_external_programs(SOCKET &out, script_type type)
                     cont->buffer = NULL;
                 }
 
+                // Replace BOM for UTF-16 LE and UTF-8 with newlines
+                if ( (strlen(cont->buffer_work)) >= 2 &&
+                   ((unsigned char)cont->buffer_work[0] == 0xFF && (unsigned char)cont->buffer_work[1] == 0xFE) )
+                {
+                    cont->buffer_work[0] = '\n';
+                    cont->buffer_work[1] = '\n';
+                }
+                else if ( strlen(cont->buffer_work) >= 3 &&
+                   (unsigned char)cont->buffer_work[0] == 0xEF &&
+                   (unsigned char)cont->buffer_work[1] == 0xBB &&
+                   (unsigned char)cont->buffer_work[1] == 0xBF )
+                {
+                    cont->buffer_work[0] = '\n';
+                    cont->buffer_work[1] = '\n';
+                    cont->buffer_work[2] = '\n';
+                }
+
                 if (cont->max_age == 0)
                     cont->buffer      = cont->buffer_work;
                 else

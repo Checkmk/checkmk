@@ -1,4 +1,7 @@
 1.2.7i1p3:
+    Checks & Agents:
+    * 2311 FIX: windows agent: now replaces BOM (byte order marks) from local and plugin scripts...
+
     Multisite:
     * 2353 FIX: Fix showing options for availability in BI mode, where above header
     * 2356 FIX: Fixed exception in Multisite JSON output

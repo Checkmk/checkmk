@@ -440,7 +440,7 @@ metric_info["mem_lnx_vmalloc_chunk"] = {
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
     "unit"  : "",
-    "color" : "24/e",
+    "color" : "34/c",
 }
 
 metric_info["load5"] = {

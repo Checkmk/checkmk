@@ -1,0 +1,17 @@
+Title: Rule Based Notifications GUI can now deal with latin-1 encoded plugin output in backlog
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1435047522
+
+When a plugin produces output containing latin-1 encoded characters, these are transparently
+handled by the core and forwarded to the notification engine. The notifications are already
+sent out correctly, but the RBN configuration dialog was not able to display these notifications
+when using the <i>Analyse</i> function. This lead to exceptions.
+
+The GUI has now been fixed to also support latin-1 encoded notification information.
+
+However, better write your plugins to output UTF-8 encoded characters.

@@ -178,6 +178,24 @@ unit_info["db"] = {
 
 # Title are always lower case - except the first character!
 
+# colors:
+#
+#                   red
+#  magenta                       orange
+#            11 12 13 14 15 16
+#         46                   21
+#         45                   22
+#   blue  44                   23  yellow
+#         43                   24
+#         42                   25
+#         41                   26
+#            36 35 34 33 32 31
+#     cyan                       chartreuse
+#                  green
+#
+# "color" : "23/a"  basic color
+# "color" : "23/b"  nuance of color
+
 metric_info["rta"] = {
     "title" : _("Round trip average"),
     "unit"  : "s",

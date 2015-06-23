@@ -1825,12 +1825,25 @@ def mode_mkeventd_mibs(phase):
     elif phase == 'action':
         if html.has_var("_delete"):
             filename = html.var("_delete")
-            if filename in load_snmp_mibs(mkeventd.mib_upload_dir):
+            mibs = load_snmp_mibs(mkeventd.mib_upload_dir)
+            if filename in mibs:
                 c = wato_confirm(_("Confirm MIB deletion"),
                                  _("Do you really want to delete the MIB file <b>%s</b>?" % filename))
                 if c:
                     log_mkeventd("delete-mib", _("Deleted MIB %s") % filename)
+
+                    # Delete the uploaded mib file
                     os.remove(mkeventd.mib_upload_dir + "/" + filename)
+
+                    # Also delete the compiled files
+                    mib_name = mibs[filename]["name"]
+                    for f in [ mkeventd.compiled_mibs_dir + "/" + mib_name + ".py",
+                               mkeventd.compiled_mibs_dir + "/" + mib_name + ".pyc",
+                               mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".py",
+                               mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".pyc"
+                            ]:
+                        if os.path.exists(f):
+                            os.remove(f)
                 elif c == False:
                     return ""
                 else:

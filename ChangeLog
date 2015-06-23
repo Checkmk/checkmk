@@ -1,10 +1,18 @@
 1.2.7i1p3:
     Checks & Agents:
+    * 2311 FIX: windows agent: now replaces BOM (byte order marks) from local and plugin scripts...
     * 2357 FIX: livestatus_status: no not alarm switched off host freshness nor event handlers on CMC <= 1.2.6...
 
     Multisite:
     * 2353 FIX: Fix showing options for availability in BI mode, where above header
     * 2356 FIX: Fixed exception in Multisite JSON output
+    * 2310 FIX: multisite view data export: fixed exception when using joined columns...
+
+    Notifications:
+    * 2343 FIX: Rule Based Notifications GUI can now deal with latin-1 encoded plugin output in backlog...
+
+    Event Console:
+    * 2342 FIX: SNMP-Traps: Also deleting compiled files when removing a MIB file
 
 
 1.2.7i1p2:

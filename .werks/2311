@@ -1,0 +1,16 @@
+Title: windows agent: now replaces BOM (byte order marks) from local and plugin scripts
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2
+Date: 1435049944
+
+Some windows plugins recklessly reported byte order marks
+at the beginning of their output, which lead problems when
+the data was evaluated.
+
+With this change byte order marks will be replaced by empty lines.
+Empty lines in the agent output are ignored, so there won't be any
+side effects.

@@ -367,61 +367,6 @@ register_check_parameters(
     match_type = "first",
 )
 
-# register_check_parameters(
-#     subgroup_applications,
-#     "pfsense_counter",
-#     _("Various global packet rates for pfSense Firewalls"),
-#     Dictionary(
-#         elements = [
-#             ("timerange", Integer(
-#                 title = _("Timeframe for Average"),
-#                 unit = _("min"),
-#                 default_value = 5)),
-#             ("match", Tuple(
-#                 title = _("Levels for rate of packets that matched a rule"),
-#                 elements = [
-#                     Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 20),
-#                     Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 30),
-#                 ])),
-#             ("badoffset", Tuple(
-#                 title = _("Levels for rate of packets with bad offset"),
-#                 elements = [
-#                     Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 20),
-#                     Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 30),
-#                 ])),
-#             ("fragment", Tuple(
-#                 title = _("Levels for rate of fragmented packets"),
-#                 elements = [
-#                     Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 20),
-#                     Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 30),
-#                 ])),
-#             ("short", Tuple(
-#                 title = _("Levels for rate of short packets"),
-#                 elements = [
-#                     Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 20),
-#                     Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 30),
-#                 ])),
-#             ("normalize", Tuple(
-#                 title = _("Levels for rate of normalized packets"),
-#                 elements = [
-#                     Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 20),
-#                     Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 30),
-#                 ])),
-#             ("memdrop", Tuple(
-#                 title = _("Levels for rate of packets dropped due to memory limitations"),
-#                 elements = [
-#                     Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 20),
-#                     Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 30),
-#                 ])),
-#         ],
-#     ),
-#     TextAscii(
-#         title = _("Interface"),
-#         help = _("The description of the interface as provided by the device"),
-#     ),
-#     match_type = "dict",
-# )
-
 register_check_parameters(
      subgroup_applications,
      "pfsense_counter",

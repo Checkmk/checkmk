@@ -1,0 +1,10 @@
+Title: wut_webtherm: Check now uses the Check_MK defaults for temperature checks
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i2
+Date: 1435050105
+Class: feature
+
+This means that the Service name is now "Temperature" and the Output fits to all other temperature checks.
+Also the check now uses the new temperature WATO rule and the old rules no longer apply.

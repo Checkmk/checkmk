@@ -1,0 +1,10 @@
+Title: citrix_serverload: Load now formatted in percent, correctly treat license error
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434979445
+Class: feature
+
+The load is now formatted in percent, like in the Citrix GUI. The licensing error coded
+into this value in XenApp 7 is now treated correctly.

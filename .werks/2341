@@ -1,0 +1,16 @@
+Title: LDAP Sync: Automatically syncing credential changes to slave sites in distributed setups
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434967888
+Class: feature
+
+When using the LDAP sync while having a distributed setup users might not be able to access
+the GUI on the slave sites when their password was changed in LDAP. This could only be
+fixed by an admin which performed a manual WATO synchronisation of the current configuration.
+
+This has now been changed. When the password change has been detected, the master site tries
+to synchronize the profile of the user to the configured and reachable remote site(s). If
+this fails, the site is marked as "to be synchronized". Then the admin can perform the sync
+manually once the site is available again.

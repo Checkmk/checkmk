@@ -37,9 +37,9 @@ factory_settings["livestatus_status_default_levels"] = {
     "execute_service_checks"        : 2,
     "accept_passive_host_checks"    : 2,
     "accept_passive_service_checks" : 2,
-    "check_host_freshness"          : 2,
-    "check_service_freshness"       : 2,
-    "enable_event_handlers"         : 0,
+    "check_host_freshness"          : 0, # Was in OMD the default up to now, better not warn
+    "check_service_freshness"       : 1,
+    "enable_event_handlers"         : 1,
     "enable_flap_detection"         : 1,
     "enable_notifications"          : 2,
     "process_performance_data"      : 1,
@@ -99,6 +99,11 @@ def check_livestatus_status(item, params, parsed):
     # Output some general information
     yield 0, "Core version: %s"       % status["program_version"]
     yield 0, "Livestatus version: %s" % status["livestatus_version"]
+
+    # In CMC <= 1.2.6 event handlers cannot be enabled. So never
+    # warn.
+    if status["program_version"].startswith("Check_MK 1.2.6"):
+        params["enable_event_handlers"] = 0
 
     settings = [
         ("execute_host_checks",           "Active host checks are disabled"),

@@ -1,4 +1,7 @@
 1.2.7i1p3:
+    Checks & Agents:
+    * 2357 FIX: livestatus_status: no not alarm switched off host freshness nor event handlers on CMC <= 1.2.6...
+
     Multisite:
     * 2353 FIX: Fix showing options for availability in BI mode, where above header
     * 2356 FIX: Fixed exception in Multisite JSON output

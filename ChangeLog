@@ -4,6 +4,9 @@
     * 2356 FIX: Fixed exception in Multisite JSON output
     * 2310 FIX: multisite view data export: fixed exception when using joined columns...
 
+    Notifications:
+    * 2343 FIX: Rule Based Notifications GUI can now deal with latin-1 encoded plugin output in backlog...
+
     Event Console:
     * 2342 FIX: SNMP-Traps: Also deleting compiled files when removing a MIB file
 

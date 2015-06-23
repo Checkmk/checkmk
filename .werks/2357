@@ -1,0 +1,12 @@
+Title: livestatus_status: no not alarm switched off host freshness nor event handlers on CMC <= 1.2.6
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1435059274
+Class: fix
+
+CMC version 1.2.6 did not have event handlers. So they are always switched
+off. The check will no longer warn about this. Host freshness checking is
+turned off per default in OMD based installations for the Nagios core. Per
+default alerting this also has been disabled.

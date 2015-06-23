@@ -178,7 +178,7 @@ unit_info["db"] = {
 
 # Title are always lower case - except the first character!
 
-# colors:
+# Colors:
 #
 #                   red
 #  magenta                       orange
@@ -190,11 +190,22 @@ unit_info["db"] = {
 #         42                   25
 #         41                   26
 #            36 35 34 33 32 31
-#     cyan                       chartreuse
+#     cyan                       yellow-green
 #                  green
 #
-# "color" : "23/a"  basic color
-# "color" : "23/b"  nuance of color
+# Special colors:
+# 51  gray
+# 52  brown 1
+# 53  brown 2
+#
+# For a new metric_info you have to choose a color. No more hex-codes are needed!
+# Instead you can choose a number of the above color ring and a letter 'a' or 'b
+# where 'a' represents the basic color and 'b' is a nuance/shading of the basic color.
+# Both number and letter must be declared!
+#
+# Example:
+# "color" : "23/a" (basic color yellow)
+# "color" : "23/b" (nuance of color yellow)
 
 metric_info["rta"] = {
     "title" : _("Round trip average"),

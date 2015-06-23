@@ -14,6 +14,10 @@ description:
  Primary and Standby Database. Primary will only create WARNINGs, when
  the level of levels is exceeded. A value for CRITICAL is only usable
  when the Database is in Physical Standby Mode.
+ The check for 'missing files' detects missing files in the control file
+ of the database. The Check results in a CRIT state when more the 0
+ files are missing. This is possible in physical stanbdy Environments
+ after an error while creating a new datafile.
 
  The 2nd function is the monitoring of datafiles in manual backup mode.
  This is important for database which are backed up with 'alter database

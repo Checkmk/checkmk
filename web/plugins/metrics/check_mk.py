@@ -2310,7 +2310,7 @@ graph_info.append({
 
 graph_info.append({
     "title" : _("Modems"),
-    "metrics" : [ 
+    "metrics" : [
         ( "active_modems",     "area" ),
         ( "registered_modems", "line" ),
         ( "total_modems",      "line" ),

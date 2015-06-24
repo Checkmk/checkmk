@@ -290,30 +290,35 @@ def diskstat_select_disk(disks, item):
     if item == "SUMMARY":
         summarized = {
             "node"                       : None,
-            "read_ios"                   : 0.0,
-            "write_ios"                  : 0.0,
-            "read_throughput"            : 0.0,
-            "write_throughput"           : 0.0,
-            "utilization"                : 0.0,
-            "latency"                    : 0.0,
-            "average_request_size"       : 0.0,
-            "average_wait"               : 0.0,
-            "average_read_wait"          : 0.0,
-            "average_read_request_size"  : 0.0,
-            "average_write_wait"         : 0.0,
-            "average_write_request_size" : 0.0,
-            "queue_length"               : 0.0,
+            # We do not set these settings explictly because some
+            # devices may not provide all of them.
+            # "read_ios"                   : 0.0,
+            # "write_ios"                  : 0.0,
+            # "read_throughput"            : 0.0,
+            # "write_throughput"           : 0.0,
+            # "utilization"                : 0.0,
+            # "latency"                    : 0.0,
+            # "average_request_size"       : 0.0,
+            # "average_wait"               : 0.0,
+            # "average_read_wait"          : 0.0,
+            # "average_read_request_size"  : 0.0,
+            # "average_write_wait"         : 0.0,
+            # "average_write_request_size" : 0.0,
+            # "queue_length"               : 0.0,
         }
 
         if disks:
             num_averaged = 0
             for device, disk in disks.items():
-                if disk["read_throughput"] + disk["write_throughput"] > 0: # skip idle disks
+                # If all disks are idle the summarized dict would have no keys
+                # So we take care that at least all keys of this disk are set
+                for key in disk.keys():
+                    if key != "node":
+                        summarized.setdefault(key, 0.0)
+                if True or disk["read_throughput"] + disk["write_throughput"] > 0: # skip idle disks
                     num_averaged += 1
                     for key, value in disk.items():
-                        if key.startswith("ave") or key in ("utilization", "latency", "queue_length"):
-                                summarized[key] += value
-                        elif key != "node":
+                        if key != "node":
                             summarized[key] += value
 
             if num_averaged:
@@ -350,7 +355,6 @@ def diskstat_select_disk(disks, item):
 #       'queue_length'               : 0.0,
 # }}
 def check_diskstat_dict(item, params, disks):
-
     # Take care of previously discovered services
     if item in ("read", "write"):
         yield 3, "Sorry, the new version of this check does not " \
@@ -381,32 +385,38 @@ def check_diskstat_dict(item, params, disks):
 
 
     # Utilization
-    util = disk["utilization"]
-    state, text, extraperf = check_levels(util, "disk_utilization", params.get("utilization"),
-                                          unit = "%", scale = 0.01, statemarkers=False)
-    yield state, "%sUtilization: %.1f%%%s" % (prefix, util * 100, text), extraperf
+    if "utilization" in disk:
+        util = disk["utilization"]
+        state, text, extraperf = check_levels(util, "disk_utilization", params.get("utilization"),
+                                              unit = "%", scale = 0.01, statemarkers=False)
+        yield state, "%sUtilization: %.1f%%%s" % (prefix, util * 100, text), extraperf
 
 
     # Throughput
     for what in "read", "write":
-        throughput = disk[what + "_throughput"]
-        state, text, extraperf = check_levels(throughput, "disk_" + what + "_throughput", params.get(what),
-                                              unit = "MB/s", scale = 1048576, statemarkers=False)
-        yield state, "%s: %s/s%s" % (what.title(), get_bytes_human_readable(throughput), text), extraperf
+        if what+"_throughput" in disk:
+            throughput = disk[what + "_throughput"]
+            state, text, extraperf = check_levels(throughput, "disk_" + what + "_throughput", params.get(what),
+                                                  unit = "MB/s", scale = 1048576, statemarkers=False)
+            yield state, "%s: %s/s%s" % (what.title(), get_bytes_human_readable(throughput), text), extraperf
 
 
-    # Average wait from end to end (currently without level)
-    avg_wait = disk["average_wait"]
-    yield 0, "Wait: %.2f ms" % (avg_wait * 1000.0)
-
+    # Average wait from end to end
+    for what in [ "wait", "read_wait", "write_wait"]:
+        if "average_" + what in disk:
+            wait = disk["average_" + what]
+            state, text, extraperf = check_levels(wait, what, params.get(what),
+                                                  unit = "ms", scale = 0.001, statemarkers=False)
+            yield state, "Average %s: %.2f ms %s" % (what.title().replace("_", " "), wait * 1000, text), extraperf
 
     # Average disk latency
-    latency = disk["latency"]
-    state, text, extraperf = check_levels(latency, "disk_latency", params.get("latency"),
-                                          unit = "ms", scale = 0.001, statemarkers=False)
-    yield state, "Latency: %.2f ms%s" % (latency * 1000.0, text), extraperf
+    if "latency" in disk:
+        latency = disk["latency"]
+        state, text, extraperf = check_levels(latency, "disk_latency", params.get("latency"),
+                                              unit = "ms", scale = 0.001, statemarkers=False)
+        yield state, "Latency: %.2f ms%s" % (latency * 1000.0, text), extraperf
 
-    # All the other metrics are currenlty not output in the plugin output - simply because
+    # All the other metrics are currently not output in the plugin output - simply because
     # of their amount. They are present as performance data and will shown in graphs.
 
     # Send everything as performance data now. Sort keys alphabetically
@@ -414,8 +424,7 @@ def check_diskstat_dict(item, params, disks):
     for key in sorted(disk.keys()):
         value = disk[key]
         if type(value) in (int, float):
-            ## warn, crit = levels.get(key, (None, None))
-            ## perfdata.append(( "disk_" + key, value, warn, crit))
+            # Currently the levels are not shown in the perfdata
             perfdata.append(("disk_" + key, value))
 
     yield 0, None, perfdata

@@ -41,6 +41,7 @@ def inventory_oracle_recovery_status(info):
 def check_oracle_recovery_status(item, params, info):
     state = 0
     offlinecount = 0
+    filemissingcount = 0
     oldest_checkpoint_age = None
 
     oldest_backup_age = -1
@@ -73,12 +74,16 @@ def check_oracle_recovery_status(item, params, info):
                 oldest_backup_age = max(int(backup_age), oldest_backup_age)
 
             if datafilestatus == 'ONLINE':
-                checkpoint_age = int(checkpoint_age)
-
-                if oldest_checkpoint_age is None:
-                    oldest_checkpoint_age = checkpoint_age
+                if backup_state == 'FILE MISSING':
+                    filemissingcount += 1
                 else:
-                    oldest_checkpoint_age = max(oldest_checkpoint_age, checkpoint_age)
+                    checkpoint_age = int(checkpoint_age)
+
+                    if oldest_checkpoint_age is None:
+                        oldest_checkpoint_age = checkpoint_age
+                    else:
+                        oldest_checkpoint_age = max(oldest_checkpoint_age, checkpoint_age)
+
             else:
                 offlinecount += 1
 
@@ -93,7 +98,7 @@ def check_oracle_recovery_status(item, params, info):
             # we found a negative time for last checkpoint
             infotext += ", oldest checkpoint is in the future  %s(!), check the time on the server" \
                         % get_age_human_readable(int(oldest_checkpoint_age)*-1)
-            state = 1
+            state = max(state, 1)
 
         else:
             infotext += ", oldest Checkpoint %s ago" \
@@ -131,6 +136,11 @@ def check_oracle_recovery_status(item, params, info):
         if offlinecount > 0:
             infotext += " %i datafiles offline(!!)" \
                         % (offlinecount)
+            state = 2
+
+        if filemissingcount > 0:
+            infotext += " %i missing datafiles(!!)" \
+                        % (filemissingcount)
             state = 2
 
         if oldest_backup_age > 0:

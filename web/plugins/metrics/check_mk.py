@@ -178,6 +178,35 @@ unit_info["db"] = {
 
 # Title are always lower case - except the first character!
 
+# Colors:
+#
+#                   red
+#  magenta                       orange
+#            11 12 13 14 15 16
+#         46                   21
+#         45                   22
+#   blue  44                   23  yellow
+#         43                   24
+#         42                   25
+#         41                   26
+#            36 35 34 33 32 31
+#     cyan                       yellow-green
+#                  green
+#
+# Special colors:
+# 51  gray
+# 52  brown 1
+# 53  brown 2
+#
+# For a new metric_info you have to choose a color. No more hex-codes are needed!
+# Instead you can choose a number of the above color ring and a letter 'a' or 'b
+# where 'a' represents the basic color and 'b' is a nuance/shading of the basic color.
+# Both number and letter must be declared!
+#
+# Example:
+# "color" : "23/a" (basic color yellow)
+# "color" : "23/b" (nuance of color yellow)
+
 metric_info["rta"] = {
     "title" : _("Round trip average"),
     "unit"  : "s",
@@ -440,7 +469,7 @@ metric_info["mem_lnx_vmalloc_chunk"] = {
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
     "unit"  : "",
-    "color" : "24/e",
+    "color" : "34/c",
 }
 
 metric_info["load5"] = {

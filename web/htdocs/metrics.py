@@ -201,14 +201,20 @@ def parse_color_into_hexrgb(color_string):
     elif "/" in color_string:
         cmk_color_index, color_shading = color_string.split("/")
         hsv = list(cmk_color_palette[cmk_color_index])
-        if color_shading == 'a':
-            hsv[2] *= 0.6
-        elif color_shading == 'b':
-            hsv[2] *= 0.8
-        elif color_shading == 'd':
-            hsv[1] *= 0.8
-        elif color_shading == 'e':
-            hsv[1] *= 0.6
+
+        # Colors of the yellow ("2") and green ("3") area need to be darkened (in third place of the hsv tuple),
+        # colors of the red and blue area need to be brightened (in second place of the hsv tuple).
+        # For both shadings we need different factors.
+        cmk_color_nuance_index = 1
+        cmk_color_nuance_factor = 0.6
+
+        if cmk_color_index[0] in ["2", "3"]:
+            cmk_color_nuance_index = 2
+            cmk_color_nuance_factor = 0.8
+
+        if color_shading == 'b':
+            hsv[cmk_color_nuance_index] *= cmk_color_nuance_factor
+
         color_hexrgb = hsv_to_hexrgb(hsv)
         return color_hexrgb
     else:

@@ -1,0 +1,11 @@
+Title: oracle_recovery_status: added support for missing files
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2
+Date: 1434707027
+Class: fix
+
+The check results in UNKNOWN state when a database has a missing
+datafile. The Check creates a CRIT with '1 missing datafiles(!!)'.
+

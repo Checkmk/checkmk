@@ -1470,7 +1470,103 @@ def call_bulk_notification_script(plugin, context_text):
 #   |  Functions dealing with loading, storing and converting contexts.    |
 #   '----------------------------------------------------------------------'
 
+# Add a few further helper variables that are usefull in notification plugins
+def complete_raw_context(raw_context):
+    raw_context["WHAT"] = raw_context.get("SERVICEDESC") and "SERVICE" or "HOST"
+    raw_context["MONITORING_HOST"] = socket.gethostname()
+    raw_context["LOGDIR"] = notification_logdir
+    if omd_root:
+        raw_context["OMD_ROOT"] = omd_root
+        raw_context["OMD_SITE"] = os.getenv("OMD_SITE", "")
+    raw_context["MAIL_COMMAND"] = notification_mail_command
 
+    # The Check_MK Micro Core sends the MICROTIME and no other time stamps. We add
+    # a few Nagios-like variants in order to be compatible
+    if "MICROTIME" in raw_context:
+        microtime = int(raw_context["MICROTIME"])
+        timestamp = float(microtime) / 1000000.0
+        broken = time.localtime(timestamp)
+        raw_context["DATE"] = time.strftime("%Y-%m-%d", broken)
+        raw_context["SHORTDATETIME"] = time.strftime("%Y-%m-%d %H:%M:%S", broken)
+        raw_context["LONGDATETIME"] = time.strftime("%a %b %d %H:%M:%S %Z %Y", broken)
+
+    raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % \
+                        urlencode('view.py?view_name=hoststatus&host=%s' % raw_context['HOSTNAME'])
+    if raw_context['WHAT'] == 'SERVICE':
+        raw_context['SERVICEURL'] = '/check_mk/index.py?start_url=%s' % \
+                                    urlencode('view.py?view_name=service&host=%s&service=%s' %
+                                                 (raw_context['HOSTNAME'], raw_context['SERVICEDESC']))
+
+    # Relative Timestamps for several macros
+    for macro in [ 'LASTHOSTSTATECHANGE', 'LASTSERVICESTATECHANGE', 'LASTHOSTUP', 'LASTSERVICEOK' ]:
+        if macro in raw_context:
+            raw_context[macro + '_REL'] = get_readable_rel_date(raw_context[macro])
+
+
+    # Rule based notifications enabled? We might need to complete a few macros
+    contact = raw_context.get("CONTACTNAME")
+    if not contact or contact == "check-mk-notify":
+        add_rulebased_macros(raw_context)
+
+    # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
+    # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)
+    for what in [ "HOST", "SERVICE" ]:
+        key = what + "NOTIFICATIONNUMBER"
+        if key in raw_context and  raw_context[key] == "0":
+            raw_context[key] = "1"
+
+    # Add the previous hard state. This is neccessary for notification rules that depend on certain transitions,
+    # like OK -> WARN (but not CRIT -> WARN). The CMC sends PREVIOUSHOSTHARDSTATE and PREVIOUSSERVICEHARDSTATE.
+    # Nagios does not have this information and we try to deduct this.
+    if "PREVIOUSHOSTHARDSTATE" not in raw_context and "LASTHOSTSTATE" in raw_context:
+        prev_state = raw_context["LASTHOSTSTATE"]
+        # When the attempts are > 1 then the last state could be identical with
+        # the current one, e.g. both critical. In that case we assume the
+        # previous hard state to be OK.
+        if prev_state == raw_context["HOSTSTATE"]:
+            prev_state = "UP"
+        elif "HOSTATTEMPT" not in raw_context or \
+            ("HOSTATTEMPT" in raw_context and raw_context["HOSTATTEMPT"] != "1"):
+            # Here We do not know. The transition might be OK -> WARN -> CRIT and
+            # the initial OK is completely lost. We use the artificial state "?"
+            # here, which matches all states and makes sure that when in doubt a
+            # notification is being sent out. But when the new state is UP, then
+            # we know that the previous state was a hard state (otherwise there
+            # would not have been any notification)
+            if raw_context["HOSTSTATE"] != "UP":
+                prev_state = "?"
+            notify_log("Previous host hard state not known. Allowing all states.")
+        raw_context["PREVIOUSHOSTHARDSTATE"] = prev_state
+
+    # Same for services
+    if raw_context["WHAT"] == "SERVICE" and "PREVIOUSSERVICEHARDSTATE" not in raw_context:
+        prev_state = raw_context["LASTSERVICESTATE"]
+        if prev_state == raw_context["SERVICESTATE"]:
+            prev_state = "OK"
+        elif "SERVICEATTEMPT" not in raw_context or \
+            ("SERVICEATTEMPT" in raw_context and raw_context["SERVICEATTEMPT"] != "1"):
+            if raw_context["SERVICESTATE"] != "OK":
+                prev_state = "?"
+            notify_log("Previous service hard state not known. Allowing all states.")
+        raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
+
+    # Add short variants for state names (at most 4 characters)
+    for key, value in raw_context.items():
+        if key.endswith("STATE"):
+            raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
+
+    if raw_context["WHAT"] == "SERVICE":
+        raw_context['SERVICEFORURL'] = urllib.quote(raw_context['SERVICEDESC'])
+    raw_context['HOSTFORURL'] = urllib.quote(raw_context['HOSTNAME'])
+
+    convert_context_to_unicode(raw_context)
+
+# Be aware: The backlog.mk contains the raw context which has not been decoded
+# to unicode yet. It contains raw encoded strings e.g. the plugin output provided
+# by third party plugins which might be UTF-8 encoded but can also be encoded in
+# other ways. Currently the context is converted later by bot, this module
+# and the GUI. TODO Maybe we should centralize the encoding here and save the
+# backlock already encoded.
 def store_notification_backlog(raw_context):
     path = notification_logdir + "/backlog.mk"
     if not notification_backlog:

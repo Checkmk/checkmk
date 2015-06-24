@@ -195,17 +195,19 @@ suburi   = "jolokia"
 instance = None
 
 global_vars = [
-  ( "java.lang:type=Memory/NonHeapMemoryUsage/used",      "NonHeapMemoryUsage",      [] ),
-  ( "java.lang:type=Memory/NonHeapMemoryUsage/max",       "NonHeapMemoryMax",        [] ),
-  ( "java.lang:type=Memory/HeapMemoryUsage/used",         "HeapMemoryUsage",         [] ),
-  ( "java.lang:type=Memory/HeapMemoryUsage/max",          "HeapMemoryMax",           [] ),
-  ( "java.lang:type=Threading/ThreadCount",               "ThreadCount",             [] ),
-  ( "java.lang:type=Threading/DaemonThreadCount",         "DeamonThreadCount",       [] ),
-  ( "java.lang:type=Threading/PeakThreadCount",           "PeakThreadCount",         [] ),
-  ( "java.lang:type=Threading/TotalStartedThreadCount",   "TotalStartedThreadCount", [] ),
-  ( "java.lang:type=Runtime/Uptime",                      "Uptime",                  [] ),
-  ( "java.lang:type=GarbageCollector,name=*/CollectionCount",             "",        [] ),
-  ( "java.lang:type=GarbageCollector,name=*/CollectionTime",             "",         [] ),
+  ( "java.lang:type=Memory/NonHeapMemoryUsage/used",                "NonHeapMemoryUsage",       [] ),
+  ( "java.lang:type=Memory/NonHeapMemoryUsage/max",                 "NonHeapMemoryMax",         [] ),
+  ( "java.lang:type=Memory/HeapMemoryUsage/used",                   "HeapMemoryUsage",          [] ),
+  ( "java.lang:type=Memory/HeapMemoryUsage/max",                    "HeapMemoryMax",            [] ),
+  ( "java.lang:type=Threading/ThreadCount",                         "ThreadCount",              [] ),
+  ( "java.lang:type=Threading/DaemonThreadCount",                   "DeamonThreadCount",        [] ),
+  ( "java.lang:type=Threading/PeakThreadCount",                     "PeakThreadCount",          [] ),
+  ( "java.lang:type=Threading/TotalStartedThreadCount",             "TotalStartedThreadCount",  [] ),
+  ( "java.lang:type=Runtime/Uptime",                                "Uptime",                   [] ),
+  ( "java.lang:type=GarbageCollector,name=*/CollectionCount",       "",                         [] ),
+  ( "java.lang:type=GarbageCollector,name=*/CollectionTime",        "",                         [] ),
+  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/used",   "PermGenUsage",             [] ),
+  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/max",    "PermGenMax",               [] ),
 ]
 
 

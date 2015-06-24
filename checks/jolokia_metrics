@@ -50,6 +50,7 @@ jolokia_metrics_tp_default_levels = {
             'currentThreadsCount': (None, None)
 }
 
+
 def jolokia_metrics_parse(info):
     parsed = {}
     for inst, var, value in info:
@@ -212,6 +213,17 @@ def inventory_jolokia_metrics_gc(info, what):
     for inst, vals in parsed.iteritems():
         for gc, val in vals.get('gc', {}).iteritems():
             inv.append(("%s GC %s" % (inst ,gc) , levels))
+    return inv
+
+def inventory_jolokia_metrics_tp(info, what):
+    inv = []
+    parsed = jolokia_metrics_parse(info)
+    levels = 'jolokia_metrics_tp_default_levels'
+    if what == 'tp':
+        needed_key = ["currentThreadsBusy", "currentThreadCount", "maxThreads"]
+    for inst, vals in parsed.iteritems():
+        for tp, val in vals.get('tp', {}).iteritems():
+            inv.append(("%s ThreadPool %s" % (inst ,tp) , levels))
     return inv
 
 def inventory_jolokia_metrics_tp(info, what):
@@ -744,4 +756,29 @@ check_info["jolokia_metrics.bea_sess"] = {
     "group"               : "jvm_sessions",
     "has_perfdata"        : True,
 }
+
+jolokia_metrics_permgen_default_levels = ( 10, 20 )
+
+def inventory_jolokia_metrics_permgen(info):
+    parsed = jolokia_metrics_parse(info)
+    for instance, values in parsed.items():
+        if "PermGenUsage" in values:
+            yield instance, "jolokia_metrics_permgen_default_levels"
+
+def check_jolokia_metrics_perm_gen(item, params, info):
+    parsed = jolokia_metrics_parse(info)
+    values = parsed.get(item)
+    usage_bytes = int(values['PermGenUsage'])
+    max_bytes = int(values['PermGenMax'])
+    if values:
+        return 0, "Usage: %s, Max: %s" % ( get_bytes_human_readable(usage_bytes), get_bytes_human_readable(max_bytes) )
+
+check_info["jolokia_metrics.perm_gen"] = {
+    "service_description" : "JVM %s PermGen Space",
+    "check_function"      : check_jolokia_metrics_perm_gen,
+    "inventory_function"  : inventory_jolokia_metrics_permgen,
+    "group"               : None,
+    "has_perfdata"        : True,
+}
+
 

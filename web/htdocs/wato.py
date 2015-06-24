@@ -7227,21 +7227,45 @@ def mode_ldap_config(phase):
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("Users"), make_link([("mode", "users")]), "users")
+        html.context_button(_("New Connection"), make_link([("mode", "edit_ldap_connection")]), "new")
         return
 
+    connections = userdb.get_connection_config()
     if phase == "action":
-        pass
+        if html.has_var("_delete"):
+            nr = int(html.var("_delete"))
+            connection = connections[nr]
+            c = wato_confirm(_("Confirm deletion of LDAP connection"),
+                             _("Do you really want to delete the LDAP connection <b>%s</b>?" %
+                               (connection["id"])))
+            if c:
+                log_pending(SYNC, None, "delete-ldap-connection", _("Deleted LDAP connection %s") % (connection["id"]))
+                del connections[nr]
+                userdb.save_connection_config()
+            elif c == False:
+                return ""
+            else:
+                return
+
+        elif html.has_var("_move"):
+            if html.check_transaction():
+                from_pos = int(html.var("_move"))
+                to_pos = int(html.var("_where"))
+                connection = connections[from_pos]
+                log_pending(SYNC, None, "move-ldap-connection", _("Changed position of LDAP connection %s") % (connection["id"]))
+                del connections[from_pos] # make to_pos now match!
+                connections[to_pos:to_pos] = [connection]
+                userdb.save_connection_config()
+        return
 
     userdb.ldap_test_module()
 
-    table.begin(title=title)
-
-    connections = userdb.get_connector_config()
+    table.begin()
     for nr, connection in enumerate(connections):
         table.row()
 
         table.cell(_("Actions"), css="buttons")
-        edit_url   = make_link([("mode", "edit_ldap_connection"), ("edit", nr)])
+        edit_url   = make_link([("mode", "edit_ldap_connection"), ("id", connection["id"])])
         delete_url = make_action_link([("mode", "ldap_config"), ("_delete", nr)])
         top_url    = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", 0)])
         bottom_url = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", len(connections)-1)])
@@ -7270,6 +7294,7 @@ def mode_ldap_config(phase):
         else:
             html.empty_icon_button()
 
+        table.cell(_("ID"), connection["id"])
         table.cell(_("Description"))
         url = connection.get("docu_url")
         if url:
@@ -7279,13 +7304,13 @@ def mode_ldap_config(phase):
 
     table.end()
 
-def vs_ldap_connector(new):
+def vs_ldap_connection(new):
     if new:
         general_elements = [
             ("id", TextAscii(
-                title = _("Unique Connector ID"),
-                help = _("The ID of the connector must be a unique text. It will be used as an internal key "
-                         "when objects refer to the connector."),
+                title = _("Unique ID"),
+                help = _("The ID of the connection must be a unique text. It will be used as an internal key "
+                         "when objects refer to the connection."),
                 allow_empty = False,
                 size = 12,
             ))
@@ -7542,7 +7567,7 @@ def vs_ldap_connector(new):
     ]
 
     return Dictionary(
-        title = _('LDAP Connector'),
+        title = _('LDAP Connection'),
         elements = general_elements
             + connection_elements
             + user_elements
@@ -7569,53 +7594,61 @@ def vs_ldap_connector(new):
 
 
 def mode_edit_ldap_connection(phase):
-    connector_nr = html.var("edit")
-    if connector_nr == None:
+    connection_id = html.var("id")
+    connections = userdb.get_connection_config()
+    connection = {}
+    if connection_id == None:
         new = True
-        connector = {}
     else:
         new = False
-        nr = int(connector_nr)
-        connectors = userdb.get_connector_config()
-        connector = connectors[nr]
+        for nr, c in enumerate(connections):
+            if c['id'] == connection_id:
+                connection = c
+                connection_nr = nr
+        if not connection:
+            raise MKUserError(None, _("The given connection does not exist."))
 
     if phase == "title":
-        if html.var("edit"):
-            return _("Edit LDAP Connector: %s") % html.attrencode(connector["id"])
+        if new:
+            return _("Create new LDAP Connection")
         else:
-            return _("Create LDAP Connector")
+            return _("Edit LDAP Connection: %s") % html.attrencode(connection["id"])
 
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("Back"), make_link([("mode", "ldap_config")]), "back")
         return
 
-    vs = vs_ldap_connector(new)
+    vs = vs_ldap_connection(new)
 
     if phase == 'action':
         if not html.check_transaction():
             return
 
-        connector = vs.from_html_vars("connector")
-        vs.validate_value(connector, "connector")
+        connection = vs.from_html_vars("connection")
+        vs.validate_value(connection, "connection")
 
         if new:
-            connectors.insert(0, connector)
+            connections.insert(0, connection)
         else:
-            connector["id"] = connectors[nr]["id"] # Keep the read-only connector id
-            connectors[nr] = connector
+            connection["id"] = connection_id
+            connections[connection_nr] = connection
 
         if new:
-            log_what = "new-ldap-connector"
-            log_text = _("Created new LDAP connector")
+            log_what = "new-ldap-connection"
+            log_text = _("Created new LDAP connection")
         else:
-            log_what = "edit-ldap-connector"
-            log_text = _("Changed LDAP connector %s") % connector['id']
+            log_what = "edit-ldap-connection"
+            log_text = _("Changed LDAP connection %s") % connection['id']
         log_pending(SYNC, None, log_what, log_text)
 
-        userdb.save_connector_config()
-        userdb.load_connector_config() # make new configuration active
-        return
+        userdb.save_connection_config()
+        if html.var("_save"):
+            return "ldap_config"
+        else:
+            # Fix the case where a user hit "Save & Test" during creation
+            html.set_var('id', connection["id"])
+            return
 
     #
     # Regular page rendering
@@ -7623,9 +7656,9 @@ def mode_edit_ldap_connection(phase):
 
     html.write('<div id=ldap>')
     html.write('<table><tr><td>')
-    html.begin_form("connector", method="POST")
-    vs.render_input("connector", connector)
-    vs.set_focus("connector")
+    html.begin_form("connection", method="POST")
+    vs.render_input("connection", connection)
+    vs.set_focus("connection")
     html.button("_save", _("Save"))
     html.button("_test", _("Save & Test"))
     html.hidden_fields()

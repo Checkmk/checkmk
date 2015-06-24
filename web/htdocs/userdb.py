@@ -34,13 +34,14 @@ loaded_with_language = False
 
 # Custom user attributes
 user_attributes  = {}
-connector_config = []
 builtin_user_attribute_names = []
+connection_config = []
 
 # Load all userdb plugins
 def load_plugins():
-    global user_attributes, connector_config
-    global multisite_user_connectors, builtin_user_attribute_names
+    global user_attributes
+    global multisite_user_connectors
+    global builtin_user_attribute_names
 
     # Do not cache the custom user attributes. They can be created by the user
     # during runtime, means they need to be loaded during each page request.
@@ -50,6 +51,8 @@ def load_plugins():
             if attr_name not in builtin_user_attribute_names:
                 del user_attributes[attr_name]
         declare_custom_user_attrs()
+
+    load_connection_config()
 
     global loaded_with_language
     if loaded_with_language == current_language:
@@ -62,7 +65,6 @@ def load_plugins():
     load_web_plugins("userdb", globals())
     builtin_user_attribute_names = user_attributes.keys()
     declare_custom_user_attrs()
-    load_connector_config()
 
     # Connectors have the option to perform migration of configuration options
     # while the initial loading is performed
@@ -716,32 +718,32 @@ def declare_custom_user_attrs():
 #   | external sources like LDAP servers.                                  |
 #   '----------------------------------------------------------------------'
 
-def get_connector_config():
-    return connector_config
+def get_connection_config():
+    return connection_config
 
-def load_connector_config():
-    global connector_config
+def load_connection_config():
+    global connection_config
     filename = multisite_dir + "user_connectors.mk"
     if not os.path.exists(filename):
-        connector_config = []
+        connection_config = []
     try:
         vars = {
             "user_connectors" : [],
         }
         execfile(filename, vars, vars)
-        connector_config = vars["user_connectors"]
+        connection_config = vars["user_connectors"]
 
     except Exception, e:
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
-        connector_config = vars["user_connectors"]
+        connection_config = vars["user_connectors"]
 
-def save_connector_config():
+def save_connection_config():
     make_nagios_directory(multisite_dir)
     out = create_user_file(multisite_dir + "user_connectors.mk", "w")
     out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
-    out.write("user_connectors += \\\n%s\n\n" % pprint.pformat(connector_config))
+    out.write("user_connectors += \\\n%s\n\n" % pprint.pformat(connection_config))
 
 #.
 #   .-Hooks----------------------------------------------------------------.

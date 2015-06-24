@@ -1003,7 +1003,7 @@ ldap_attribute_plugins['groups_to_roles'] = {
 #   '----------------------------------------------------------------------'
 
 def ldap_is_active():
-    return bool([ c for c in connector_config if c['type'] == 'ldap' and not c.get('disabled') ])
+    return bool([ c for c in connection_config if c['type'] == 'ldap' and not c.get('disabled') ])
 
 # This function only validates credentials, no locked checking or similar
 def ldap_login(username, password):
@@ -1258,7 +1258,7 @@ def ldap_page():
 # This function migrates the former configuration to the new one.
 # TODO This code can be removed the day we decide not to migrate old configs anymore.
 def ldap_migrate_config():
-    if connector_config:
+    if connection_config:
         return # Don't try to migrate anything when there is at least one connection configured
 
     # Create a default connection out of the old config format
@@ -1280,8 +1280,8 @@ def ldap_migrate_config():
                 key = what + "_" + key
             connector[key] = val
 
-    connector_config.append(connector)
-    save_connector_config()
+    connection_config.append(connector)
+    save_connection_config()
 
 
 multisite_user_connectors.append({

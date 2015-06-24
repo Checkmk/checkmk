@@ -1,4 +1,7 @@
 1.2.7i3:
+    Checks & Agents:
+    * 2312 New checks for EMC VPLEX: emc_vplex_cpu, emc_vplex_director_stats, emc_vplex_if, emc_vplex_volumes...
+
 
 1.2.7i2:
     Core & Setup:

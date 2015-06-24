@@ -1,0 +1,42 @@
+title: EMC VPLEX Volume Diskstat
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+
+ This check measures the throughput of the EMC VPLEX volumes.
+ You can either have a single check for every single volume
+ or a summary check (which is the default) summing up the throughput
+ of all volumes.
+
+ The check also gives info on the IO Operations per seconds.
+
+ You can apply separate warning and critical levels for the read
+ and write throughput. Optionally you can have the check compute
+ average values on a configurable time period and have the levels
+ applied on the average instead of the current values. This makes
+ it possible to ignore short "peaks" and only trigger and longer
+ phases of high disk activity.
+
+ Note: It seems that the relevant SNMP data of the EMC VPLEX System
+ is only updated every 90 seconds. You should set the monitoring interval
+ to 120 seconds, otherwise there will be errors in the calucation of the rates
+ for read/write throughput and IOs.
+
+item:
+ Either {"SUMMARY"} for a summarized check of all disks or the name of the
+ disk device, e.g. {"VPZ-B-S-L323_vol"}.
+
+inventory:
+  The inventory is configured via the {diskstat_inventory} rule. If this is set
+  to {["summary"]} (the default), then one check will be created for all volumes.
+  If it is set to {["physical"]} then one check will be created per volume.
+  You can also set {["summary", "physical"]} to create both variants.
+
+perfdata:
+  The volumes throughput for read and write in bytes per second. If averaging
+  is turned on, then two additional values are sent: the averaged read and
+  write throughput.
+
+  The volumes write and write latency and the operations per second.

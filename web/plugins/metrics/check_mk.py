@@ -734,6 +734,12 @@ metric_info["disk_write_throughput"] = {
     "color" : "#4080c0",
 }
 
+metric_info["disk_ios"] = {
+    "title" : _("Disk I/O operations"),
+    "unit"  : "1/s",
+    "color" : "#60e0a0",
+}
+
 metric_info["disk_read_ios"] = {
     "title" : _("Read operations"),
     "unit"  : "1/s",
@@ -1373,9 +1379,12 @@ check_metrics["check_mk-statgrab_net"]         = if_translation
 check_metrics["check_mk-ucs_bladecenter_if"]   = if_translation
 check_metrics["check_mk-vms_if"]               = if_translation
 check_metrics["check_mk-winperf_if"]           = if_translation
+check_metrics["check_mk-emc_vplex_if"]         = if_translation
 
 
 check_metrics["check_mk-diskstat"]                              = {}
+check_metrics["check_mk-emc_vplex_volumes"]                     = {}
+check_metrics["check_mk-emc_vplex_director_stats"]              = {}
 
 check_metrics["check_mk-apc_symmetra_ext_temp"]                 = {}
 check_metrics["check_mk-adva_fsp_temp"]                         = {}
@@ -1442,6 +1451,7 @@ check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "
 check_metrics["check_mk-vms_sys.util"]                          = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-winperf.cpuusage"]                      = { "cpuusage" : { "name" : "util" } }
 check_metrics["check_mk-sni_octopuse_cpu"]                      = {}
+check_metrics["check_mk-emc_vplex_cpu"]                         = {}
 
 check_metrics["check_mk-mbg_lantime_state"]                     = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
 check_metrics["check_mk-mbg_lantime_ng_state"]                  = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
@@ -1920,6 +1930,8 @@ graph_info.append({
     ],
 })
 
+define_generic_graph("disk_ios")
+
 graph_info.append({
     "title" : _("Average request size"),
     "metrics" : [
@@ -2310,7 +2322,7 @@ graph_info.append({
 
 graph_info.append({
     "title" : _("Modems"),
-    "metrics" : [ 
+    "metrics" : [
         ( "active_modems",     "area" ),
         ( "registered_modems", "line" ),
         ( "total_modems",      "line" ),

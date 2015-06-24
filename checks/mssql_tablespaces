@@ -24,12 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#<<<mssql_tablespaces>>>
-#MSSQL_SQLEXPRESS master 5.25 MB 1.59 MB 2464 KB 1096 KB 1024 KB 344 KB
-#MSSQL_SQLEXPRESS model 3.00 MB 1.13 MB 1152 KB 472 KB 632 KB 48 KB
-#MSSQL_SQLEXPRESS msdb 18.13 MB 4.05 MB 10960 KB 8336 KB 2080 KB 544 KB
-#MSSQL_SQLEXPRESS tempdb 2.75 MB 1.08 MB 1200 KB 480 KB 672 KB 48 KB
-#MSSQL_SQLEXPRESS test123 4.00 MB 1.78 MB 1248 KB 528 KB 648 KB 72 KB
+# <<<mssql_tablespaces>>>
+# MSSQL_SQLEXPRESS master 5.25 MB 1.59 MB 2464 KB 1096 KB 1024 KB 344 KB
+# MSSQL_SQLEXPRESS model 3.00 MB 1.13 MB 1152 KB 472 KB 632 KB 48 KB
+# MSSQL_SQLEXPRESS msdb 18.13 MB 4.05 MB 10960 KB 8336 KB 2080 KB 544 KB
+# MSSQL_SQLEXPRESS tempdb 2.75 MB 1.08 MB 1200 KB 480 KB 672 KB 48 KB
+# MSSQL_SQLEXPRESS test123 4.00 MB 1.78 MB 1248 KB 528 KB 648 KB 72 KB
 
 #  0: process instance
 #  1: tablespace name
@@ -86,7 +86,7 @@ def check_mssql_tablespaces(item, params, info):
             warn, crit = params.get(key, (None, None))
             error_label = ""
             if warn and crit:
-                levels = "(Warn/Crit at %s/%s)" % \
+                levels = "(warn/crit at %s/%s)" % \
                 (get_bytes_human_readable(warn), get_bytes_human_readable(crit))
                 if val_bytes > crit:
                     state = 2
@@ -106,6 +106,6 @@ check_info['mssql_tablespaces'] = {
     'check_function':      check_mssql_tablespaces,
     'inventory_function':  inventory_mssql_tablespaces,
     'service_description': '%s Sizes',
-    'group'                 : "mssql_tablespaces",
+    'group':               "mssql_tablespaces",
     'has_perfdata':        True,
 }

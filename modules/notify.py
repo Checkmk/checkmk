@@ -1139,7 +1139,7 @@ def call_notification_script(plugin, plugin_context):
     else:
         exitcode = 0
 
-    # Clear environment again. 
+    # Clear environment again.
     remove_context_from_environment(plugin_context, "NOTIFY_")
 
     return exitcode

@@ -1,0 +1,29 @@
+title: Traffic and status of network interfaces using 32 bit counters
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the traffic of the EMC VPLEX frontend and backend
+ interfaces. Port up/down detection is not supported.
+
+ You can configure limits for the in- and outgoing traffic.
+ This check supports the averaging of the in- and outgoing traffic.
+
+item:
+ There are three ways to specify the interface: {1}: the index number
+ which is determined by the check, the interface description, e.g. {B1-FC00} or
+ the alias, which is a combination of the director name an the description, e.g {director-1-1-A A1-FC03}
+
+inventory:
+ The inventory creates one service for each port
+
+perfdata:
+ {in}: The number of bytes received per second.
+
+ {out}: The number of bytes sent per second.
+
+ {in_avg_?}: optional: The averaged number of received bytes over a longer range of time
+
+ {out_avg_?}: optional: The averaged number of sent bytes
+

@@ -1,0 +1,26 @@
+Title: New checks for EMC VPLEX: emc_vplex_cpu, emc_vplex_director_stats, emc_vplex_if, emc_vplex_volumes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435149632
+Class: feature
+
+These new checks provide information for
+
+<ul>
+<li>Director disks IO throughput and latency</li>
+<li>Directors frontend and backend interface statistics</li>
+<li>Directors CPU utilization</li>
+<li>Volume IO throughput and latency</li>
+</ul>
+
+Note: The EMC VPLEX devices currently do not provide a SysDescr OID, which is
+considered as a bug. If you want to discover these checks you need to configure
+these hosts with the rule <i>"Hosts without system description OID"</i> (snmp_without_sys_descr).
+Otherwise these devices will fail at the start of the service discovery.
+
+Additional note: It seems that the snmp information is only updated every 90 seconds.
+We highly recommend to set the check interval for these checks (actually the Check_MK check)
+to 120 seconds. If you query the system every minute there will be errors in the rate computation
+of the interfaces and other side effects.

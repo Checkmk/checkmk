@@ -735,7 +735,7 @@ metric_info["disk_write_throughput"] = {
 }
 
 metric_info["disk_ios"] = {
-    "title" : _("Read/Write operations"),
+    "title" : _("Disk I/O operations"),
     "unit"  : "1/s",
     "color" : "#60e0a0",
 }
@@ -1930,12 +1930,7 @@ graph_info.append({
     ],
 })
 
-graph_info.append({
-    "title" : _("Disk I/O Operations"),
-    "metrics" : [
-        ( "disk_ios",  "area" ),
-    ],
-})
+define_generic_graph("disk_ios")
 
 graph_info.append({
     "title" : _("Average request size"),

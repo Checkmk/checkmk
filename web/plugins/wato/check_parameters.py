@@ -5543,6 +5543,10 @@ register_check_parameters(
     "diskstat",
     _("Levels for disk IO"),
     Dictionary(
+        help     = _("With this rule you can set limits for various disk IO statistics. "
+                     "Keep in mind that not all of these settings may be applicable for the actual "
+                     "check. For example, if the check doesn't provide a <i>Read wait</i> information in its "
+                     "output, any configuration setting referring to <i>Read wait</i> will have no effect."),
         elements = [
             ( "read",
               Levels(
@@ -5568,6 +5572,16 @@ register_check_parameters(
                   unit = _("ms"),
                   default_levels = (80.0, 160.0),
             )),
+            ( "read_wait",
+              Levels(
+                  title = _("Read wait"),
+                  unit = _("ms"),
+                  default_levels = (100.0, 250.0))),
+            ( "write_wait",
+              Levels(
+                  title = _("Write wait"),
+                  unit = _("ms"),
+                  default_levels = (100.0, 250.0))),
             ( "average",
               Age(
                   title = _("Averaging"),

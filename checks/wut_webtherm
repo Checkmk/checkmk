@@ -36,7 +36,7 @@ def inventory_webtherm(info):
             # Maybe humidity
             if temp > 75:
                 continue
-            yield (line[0].split(".")[1], "wut_webtherm_defaultlevels") 
+            yield (line[0].split(".")[1], "wut_webtherm_defaultlevels")
 
 def check_webtherm(item, params, info):
     for line in info:

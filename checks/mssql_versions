@@ -38,8 +38,6 @@ def check_mssql_versions(item, _unused, info):
     for line in info:
         if line[0] == item:
             return (0, 'Server is running Version %s' % line[1])
-    return (2, "Server objance not existing or not running")
-
 
 check_info["mssql_versions"] = {
     'check_function':          check_mssql_versions,

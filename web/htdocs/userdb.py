@@ -33,14 +33,14 @@ from valuespec import *
 loaded_with_language = False
 
 # Custom user attributes
-user_attributes = {}
+user_attributes  = {}
+connector_config = []
 builtin_user_attribute_names = []
 
 # Load all userdb plugins
 def load_plugins():
-    global user_attributes
-    global multisite_user_connectors
-    global builtin_user_attribute_names
+    global user_attributes, connector_config
+    global multisite_user_connectors, builtin_user_attribute_names
 
     # Do not cache the custom user attributes. They can be created by the user
     # during runtime, means they need to be loaded during each page request.
@@ -62,6 +62,12 @@ def load_plugins():
     load_web_plugins("userdb", globals())
     builtin_user_attribute_names = user_attributes.keys()
     declare_custom_user_attrs()
+    load_connector_config()
+
+    # Connectors have the option to perform migration of configuration options
+    # while the initial loading is performed
+    for connector in multisite_user_connectors:
+        connector.get('migrate_config', lambda: None)()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -72,13 +78,10 @@ def load_plugins():
 def list_user_connectors():
     return [ (c['id'], c['title']) for c in multisite_user_connectors ]
 
-def connector_enabled(connector_id):
-    return connector_id in config.user_connectors
-
 def enabled_connectors():
     connectors = []
     for connector in multisite_user_connectors:
-        if connector['id'] in config.user_connectors:
+        if connector.get('is_active', lambda: False)():
             connectors.append(connector)
     return connectors
 
@@ -698,6 +701,47 @@ def declare_custom_user_attrs():
             topic = attr.get('topic', 'personal'),
             add_custom_macro = attr.get('add_custom_macro', False )
         )
+
+#.
+#   .--ConnectorCfg--------------------------------------------------------.
+#   |    ____                            _              ____  __           |
+#   |   / ___|___  _ __  _ __   ___  ___| |_ ___  _ __ / ___|/ _| __ _     |
+#   |  | |   / _ \| '_ \| '_ \ / _ \/ __| __/ _ \| '__| |   | |_ / _` |    |
+#   |  | |__| (_) | | | | | | |  __/ (__| || (_) | |  | |___|  _| (_| |    |
+#   |   \____\___/|_| |_|_| |_|\___|\___|\__\___/|_|   \____|_|  \__, |    |
+#   |                                                            |___/     |
+#   +----------------------------------------------------------------------+
+#   | The user can enable and configure a list of user connectors which    |
+#   | are then used by the userdb to fetch user / group information from   |
+#   | external sources like LDAP servers.                                  |
+#   '----------------------------------------------------------------------'
+
+def get_connector_config():
+    return connector_config
+
+def load_connector_config():
+    global connector_config
+    filename = multisite_dir + "user_connectors.mk"
+    if not os.path.exists(filename):
+        connector_config = []
+    try:
+        vars = {
+            "user_connectors" : [],
+        }
+        execfile(filename, vars, vars)
+        connector_config = vars["user_connectors"]
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        connector_config = vars["user_connectors"]
+
+def save_connector_config():
+    make_nagios_directory(multisite_dir)
+    out = create_user_file(multisite_dir + "user_connectors.mk", "w")
+    out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
+    out.write("user_connectors += \\\n%s\n\n" % pprint.pformat(connector_config))
 
 #.
 #   .-Hooks----------------------------------------------------------------.

@@ -1002,6 +1002,9 @@ ldap_attribute_plugins['groups_to_roles'] = {
 #   | Hook functions used in this connector                                |
 #   '----------------------------------------------------------------------'
 
+def ldap_is_active():
+    return bool([ c for c in connector_config if c['type'] == 'ldap' and not c.get('disabled') ])
+
 # This function only validates credentials, no locked checking or similar
 def ldap_login(username, password):
     ldap_connect()
@@ -1249,20 +1252,54 @@ def ldap_page():
         file(g_ldap_sync_fail_file, 'w').write('%s\n%s' % (time.strftime('%Y-%m-%d %H:%M:%S'),
                                                             traceback.format_exc()))
 
-multisite_user_connectors.append({
-    'id':          'ldap',
-    'title':       _('LDAP (Active Directory, OpenLDAP)'),
-    'short_title': _('LDAP'),
 
-    'login':             ldap_login,
-    'sync':              ldap_sync,
-    'page':              ldap_page,
-    'locked':            user_locked, # no ldap check, just check the WATO attribute.
-                                      # This handles setups where the locked attribute is not
-                                      # synchronized and the user is enabled in LDAP and disabled
-                                      # in Check_MK. When the user is locked in LDAP a login is
-                                      # not possible.
-    'locked_attributes':      ldap_locked_attributes,
-    'multisite_attributes':   ldap_multisite_attributes,
-    'non_contact_attributes': ldap_multisite_attributes,
+# With release 1.2.7i3 we introduced multi ldap server connection capabilities.
+# We had to change the configuration declaration to reflect the new possibilites.
+# This function migrates the former configuration to the new one.
+# TODO This code can be removed the day we decide not to migrate old configs anymore.
+def ldap_migrate_config():
+    if connector_config:
+        return # Don't try to migrate anything when there is at least one connection configured
+
+    # Create a default connection out of the old config format
+    connector = {
+        'id'             : 'default',
+        'type'           : 'ldap',
+        'description'    : _('This is the default LDAP connection.'),
+        'disabled'       : 'ldap' not in getattr(config, 'user_connectors', []),
+        'cache_livetime' : config.ldap_cache_livetime,
+        'active_plugins' : config.ldap_active_plugins,
+        'debug_log'      : config.ldap_debug_log,
+    }
+
+    connector.update(config.ldap_connection)
+
+    for what in ["user", "group"]:
+        for key, val in config.ldap_userspec.items():
+            if key in ["dn", "scope", "filter", "filter_group", "member"]:
+                key = what + "_" + key
+            connector[key] = val
+
+    connector_config.append(connector)
+    save_connector_config()
+
+
+multisite_user_connectors.append({
+    'id'             : 'ldap',
+    'title'          : _('LDAP (Active Directory, OpenLDAP)'),
+    'short_title'    : _('LDAP'),
+
+    'is_active'      : ldap_is_active,
+    'migrate_config' : ldap_migrate_config,
+    'login'          : ldap_login,
+    'sync'           : ldap_sync,
+    'page'           : ldap_page,
+    'locked'         : user_locked, # no ldap check, just check the WATO attribute.
+                                 # This handles setups where the locked attribute is not
+                                 # synchronized and the user is enabled in LDAP and disabled
+                                 # in Check_MK. When the user is locked in LDAP a login is
+                                 # not possible.
+    'locked_attributes'      : ldap_locked_attributes,
+    'multisite_attributes'   : ldap_multisite_attributes,
+    'non_contact_attributes' : ldap_multisite_attributes,
 })

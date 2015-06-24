@@ -7219,50 +7219,403 @@ def render_main_menu(some_modules, columns = 2):
 #   '----------------------------------------------------------------------'
 
 def mode_ldap_config(phase):
-    if phase == 'title':
-        return _('LDAP Configuration')
+    title = _("LDAP Connections")
 
-    elif phase == 'buttons':
+    if phase == "title":
+        return title
+
+    elif phase == "buttons":
         global_buttons()
         html.context_button(_("Users"), make_link([("mode", "users")]), "users")
         return
 
-    config_vars = [
-        'ldap_connection',
-        'ldap_userspec',
-        'ldap_groupspec',
-        'ldap_active_plugins',
-        'ldap_cache_livetime',
-        'ldap_debug_log',
+    if phase == "action":
+        pass
+
+    userdb.ldap_test_module()
+
+    table.begin(title=title)
+
+    connections = userdb.get_connector_config()
+    for nr, connection in enumerate(connections):
+        table.row()
+
+        table.cell(_("Actions"), css="buttons")
+        edit_url   = make_link([("mode", "edit_ldap_connection"), ("edit", nr)])
+        delete_url = make_action_link([("mode", "ldap_config"), ("_delete", nr)])
+        top_url    = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", 0)])
+        bottom_url = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", len(connections)-1)])
+        up_url     = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", nr-1)])
+        down_url   = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", nr+1)])
+
+        html.icon_button(edit_url, _("Edit this LDAP connection"), "edit")
+        html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
+        if connection is not connections[0]:
+            html.icon_button(top_url, _("Move this LDAP connection to the top"), "top")
+            html.icon_button(up_url, _("Move this LDAP connection one position up"), "up")
+        else:
+            html.empty_icon_button()
+            html.empty_icon_button()
+
+        if connection is not connections[-1]:
+            html.icon_button(down_url, _("Move this LDAP connection one position down"), "down")
+            html.icon_button(bottom_url, _("Move this LDAP connection to the bottom"), "bottom")
+        else:
+            html.empty_icon_button()
+            html.empty_icon_button()
+
+        table.cell("", css="narrow")
+        if connection.get("disabled"):
+            html.icon(_("This connection is currently not being used for synchronization."), "disabled")
+        else:
+            html.empty_icon_button()
+
+        table.cell(_("Description"))
+        url = connection.get("docu_url")
+        if url:
+            html.icon_button(url, _("Context information about this connection"), "url", target="_blank")
+            html.write("&nbsp;")
+        html.write(html.attrencode(connection["description"]))
+
+    table.end()
+
+def vs_ldap_connector(new):
+    if new:
+        general_elements = [
+            ("id", TextAscii(
+                title = _("Unique Connector ID"),
+                help = _("The ID of the connector must be a unique text. It will be used as an internal key "
+                         "when objects refer to the connector."),
+                allow_empty = False,
+                size = 12,
+            ))
+        ] + rule_option_elements()
+    else:
+        general_elements = rule_option_elements()
+
+    connection_elements = [
+        ("server", TextAscii(
+            title = _("LDAP Server"),
+            help = _("Set the host address of the LDAP server. Might be an IP address or "
+                     "resolvable hostname."),
+            allow_empty = False,
+            attrencode = True,
+        )),
+        ('failover_servers', ListOfStrings(
+            title = _('Failover Servers'),
+            help = _('When the connection to the first server fails with connect specific errors '
+                     'like timeouts or some other network related problems, the connect mechanism '
+                     'will try to use this server instead of the server configured above. If you '
+                     'use persistent connections (default), the connection is being used until the '
+                     'LDAP is not reachable or the local webserver is restarted.'),
+            allow_empty = False,
+        )),
+        ("port", Integer(
+            title = _("TCP Port"),
+            help  = _("This variable allows to specify the TCP port to "
+                      "be used to connect to the LDAP server. "),
+            minvalue = 1,
+            maxvalue = 65535,
+            default_value = 389,
+        )),
+        ("use_ssl", FixedValue(
+            title  = _("Use SSL"),
+            help   = _("Connect to the LDAP server with a SSL encrypted connection. You might need "
+                       "to configure the OpenLDAP installation on your monitoring server to accept "
+                       "the certificates of the LDAP server. This is normally done via system wide "
+                       "configuration of the CA certificate which signed the certificate of the LDAP "
+                       "server. Please refer to the <a target=\"_blank\" "
+                       "href=\"http://mathias-kettner.de/checkmk_multisite_ldap_integration.html\">"
+                       "documentation</a> for details."),
+            value  = True,
+            totext = _("Encrypt the network connection using SSL."),
+        )),
+        ("no_persistent", FixedValue(
+            title  = _("No persistent connection"),
+            help   = _("The connection to the LDAP server is not persisted."),
+            value  = True,
+            totext = _("Don't use persistent LDAP connections."),
+        )),
+        ("connect_timeout", Float(
+            title = _("Connect Timeout (sec)"),
+            help = _("Timeout for the initial connection to the LDAP server in seconds."),
+            minvalue = 1.0,
+            default_value = 2.0,
+        )),
+        ("version", DropdownChoice(
+            title = _("LDAP Version"),
+            help  = _("Select the LDAP version the LDAP server is serving. Most modern "
+                      "servers use LDAP version 3."),
+            choices = [ (2, "2"), (3, "3") ],
+            default_value = 3,
+        )),
+        ("type", DropdownChoice(
+            title = _("Directory Type"),
+            help  = _("Select the software the LDAP directory is based on. Depending on "
+                      "the selection e.g. the attribute names used in LDAP queries will "
+                      "be altered."),
+            choices = [
+                ("ad",                 _("Active Directory")),
+                ("openldap",           _("OpenLDAP")),
+                ("389directoryserver", _("389 Directory Server")),
+            ],
+        )),
+        ("bind", Tuple(
+            title = _("Bind Credentials"),
+            help  = _("Set the credentials to be used to connect to the LDAP server. The "
+                      "used account must not be allowed to do any changes in the directory "
+                      "the whole connection is read only. "
+                      "In some environment an anonymous connect/bind is allowed, in this "
+                      "case you don't have to configure anything here."
+                      "It must be possible to list all needed user and group objects from the "
+                      "directory."),
+            elements = [
+                LDAPDistinguishedName(
+                    title = _("Bind DN"),
+                    help  = _("Specify the distinguished name to be used to bind to "
+                              "the LDAP directory, e. g. <tt>CN=ldap,OU=users,DC=example,DC=com</tt>"),
+                    size = 63,
+                ),
+                Password(
+                    title = _("Bind Password"),
+                    help  = _("Specify the password to be used to bind to "
+                              "the LDAP directory."),
+                ),
+            ],
+        )),
+        ("page_size", Integer(
+            title = _("Page Size"),
+            help = _("LDAP searches can be performed in paginated mode, for example to improve "
+                     "the performance. This enables pagination and configures the size of the pages."),
+            minvalue = 1,
+            default_value = 1000,
+        )),
+        ("response_timeout", Integer(
+            title = _("Response Timeout (sec)"),
+            help = _("Timeout for LDAP query responses."),
+            minvalue = 0,
+            default_value = 5,
+        )),
     ]
-    vs = [ (v, g_configvars[v][1]) for v in config_vars ]
 
-    current_settings = load_configuration_settings()
+    user_elements = [
+        ("user_dn", LDAPDistinguishedName(
+            title = _("User Base DN"),
+            help  = _("Give a base distinguished name here, e. g. <tt>OU=users,DC=example,DC=com</tt><br> "
+                      "All user accounts to synchronize must be located below this one."),
+            size = 80,
+        )),
+        ("user_scope", DropdownChoice(
+            title = _("Search Scope"),
+            help  = _("Scope to be used in LDAP searches. In most cases <i>Search whole subtree below "
+                      "the base DN</i> is the best choice. "
+                      "It searches for matching objects recursively."),
+            choices = [
+                ("sub",  _("Search whole subtree below the base DN")),
+                ("base", _("Search only the entry at the base DN")),
+                ("one",  _("Search all entries one level below the base DN")),
+            ],
+            default_value = "sub",
+        )),
+        ("user_filter", TextAscii(
+            title = _("Search Filter"),
+            help = _("Using this option you can define an optional LDAP filter which is used during "
+                     "LDAP searches. It can be used to only handle a subset of the users below the given "
+                     "base DN.<br><br>Some common examples:<br><br> "
+                     "All user objects in LDAP:<br> "
+                     "<tt>(&(objectclass=user)(objectcategory=person))</tt><br> "
+                     "Members of a group:<br> "
+                     "<tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br>"),
+            size = 80,
+            default_value = lambda: userdb.ldap_filter('users', False),
+            attrencode = True,
+        )),
+        ("user_filter_group", LDAPDistinguishedName(
+            title = _("Filter Group (Only use in special situations)"),
+            help = _("Using this option you can define the DN of a group object which is used to filter the users. "
+                     "Only members of this group will then be synchronized. This is a filter which can be "
+                     "used to extend capabilities of the regular \"Search Filter\". Using the search filter "
+                     "you can only define filters which directly apply to the user objects. To filter by "
+                     "group memberships, you can use the <tt>memberOf</tt> attribute of the user objects in some "
+                     "directories. But some directories do not have such attributes because the memberships "
+                     "are stored in the group objects as e.g. <tt>member</tt> attributes. You should use the "
+                     "regular search filter whenever possible and only use this filter when it is really "
+                     "neccessary. Finally you can say, you should not use this option when using Active Directory. "
+                     "This option is neccessary in OpenLDAP directories when you like to filter by group membership.<br><br>"
+                     "If using, give a plain distinguished name of a group here, e. g. "
+                     "<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt>"),
+            size = 80,
+        )),
+        ("user_id", TextAscii(
+            title = _("User-ID Attribute"),
+            help  = _("The attribute used to identify the individual users. It must have "
+                      "unique values to make an user identifyable by the value of this "
+                      "attribute."),
+            default_value = lambda: userdb.ldap_attr('user_id'),
+            attrencode = True,
+        )),
+        ("lower_user_ids", FixedValue(
+            title  = _("Lower Case User-IDs"),
+            help   = _("Convert imported User-IDs to lower case during synchronization."),
+            value  = True,
+            totext = _("Enforce lower case User-IDs."),
+        )),
+        ("user_id_umlauts", DropdownChoice(
+            title = _("Umlauts in User-IDs"),
+            help  = _("Multisite does not support umlauts in User-IDs at the moment. To deal "
+                      "with LDAP users having umlauts in their User-IDs you have the following "
+                      "choices."),
+            choices = [
+                ("replace",  _("Replace umlauts like \"&uuml;\" with \"ue\"")),
+                ("skip",     _("Skip users with umlauts in their User-IDs")),
+            ],
+            default_value = "replace",
+        )),
+    ]
 
-    if not userdb.connector_enabled('ldap'):
-        html.message(_('The LDAP user connector is disabled. You need to enable it to be able '
-                       'to configure the LDAP settings.'))
+    group_elements = [
+        ("group_dn", LDAPDistinguishedName(
+            title = _("Group Base DN"),
+            help  = _("Give a base distinguished name here, e. g. <tt>OU=groups,DC=example,DC=com</tt><br> "
+                      "All groups used must be located below this one."),
+            size = 80,
+        )),
+        ("group_scope", DropdownChoice(
+            title = _("Search Scope"),
+            help  = _("Scope to be used in group related LDAP searches. In most cases "
+                      "<i>Search whole subtree below the base DN</i> "
+                      "is the best choice. It searches for matching objects in the given base "
+                      "recursively."),
+            choices = [
+                ("sub",  _("Search whole subtree below the base DN")),
+                ("base", _("Search only the entry at the base DN")),
+                ("one",  _("Search all entries one level below the base DN")),
+            ],
+            default_value = "sub",
+        )),
+        ("group_filter", TextAscii(
+            title = _("Search Filter"),
+            help = _("Using this option you can define an optional LDAP filter which is used "
+                     "during group related LDAP searches. It can be used to only handle a "
+                     "subset of the groups below the given base DN.<br><br>"
+                     "e.g. <tt>(objectclass=group)</tt>"),
+            size = 80,
+            default_value = lambda: userdb.ldap_filter('groups', False),
+            attrencode = True,
+        )),
+        ("group_member", TextAscii(
+            title = _("Member Attribute"),
+            help  = _("The attribute used to identify users group memberships."),
+            default_value = lambda: userdb.ldap_attr('member'),
+            attrencode = True,
+        )),
+    ]
+
+    other_elements = [
+        ("active_plugins", Dictionary(
+            title = _('Attribute Sync Plugins'),
+            help  = _('It is possible to fetch several attributes of users, like Email or full names, '
+                      'from the LDAP directory. This is done by plugins which can individually enabled '
+                      'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
+                      'user accounts for gathering their attributes. The user options which get imported '
+                      'into Check_MK from LDAP will be locked in WATO.'),
+            elements = userdb.ldap_attribute_plugins_elements,
+            default_keys = ['email', 'alias', 'auth_expire' ],
+        )),
+        ("cache_livetime", Age(
+            title = _('Cache Livetime'),
+            help  = _('This option defines the maximum age for using the cached LDAP data. The time of the '
+                      'last LDAP synchronization is saved and checked on every request to the multisite '
+                      'interface. Once the cache gets outdated, a new synchronization job is started.<br><br>'
+                      'Please note: Passwords of the users are never stored in WATO and therefor never cached!'),
+            minvalue = 1,
+            default_value = 300,
+        )),
+        ("debug_log", Checkbox(
+            title = _("Connection Diagnostics"),
+            label = _("Activate logging of LDAP transactions"),
+            help = _("If this option is enabled, Check_MK will create a log file in "
+                     "<tt>var/log/ldap.log</tt> within your site in OMD environments. "
+                     "You should enable this option only for debugging."),
+            default_value = False
+        )),
+    ]
+
+    return Dictionary(
+        title = _('LDAP Connector'),
+        elements = general_elements
+            + connection_elements
+            + user_elements
+            + group_elements
+            + other_elements
+        ,
+        headers = [
+            (_("General Properties"), [ key for key, vs in general_elements ]),
+            (_("LDAP Connection"),    [ key for key, vs in connection_elements ]),
+            (_("Users"),              [ key for key, vs in user_elements ]),
+            (_("Groups"),             [ key for key, vs in group_elements ]),
+            (_("Attribute Sync Plugins"), [ "active_plugins" ]),
+            (_("Other"),              [ "cache_livetime", "debug_log" ]),
+        ],
+        render = "form",
+        form_narrow = True,
+        optional_keys = [
+            'no_persistent', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
+            'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids',
+            'group_filter', 'group_member',
+        ],
+        default_keys = ['page_size'],
+    )
+
+
+def mode_edit_ldap_connection(phase):
+    connector_nr = html.var("edit")
+    if connector_nr == None:
+        new = True
+        connector = {}
+    else:
+        new = False
+        nr = int(connector_nr)
+        connectors = userdb.get_connector_config()
+        connector = connectors[nr]
+
+    if phase == "title":
+        if html.var("edit"):
+            return _("Edit LDAP Connector: %s") % html.attrencode(connector["id"])
+        else:
+            return _("Create LDAP Connector")
+
+    elif phase == "buttons":
+        global_buttons()
+        html.context_button(_("Back"), make_link([("mode", "ldap_config")]), "back")
         return
+
+    vs = vs_ldap_connector(new)
 
     if phase == 'action':
         if not html.check_transaction():
             return
 
-        for (varname, valuespec) in vs:
-            valuespec = dict(vs)[varname]
-            new_value = valuespec.from_html_vars(varname)
-            valuespec.validate_value(new_value, varname)
-            if current_settings.get(varname) != new_value:
-                msg = _("Changed LDAP configuration variable %s to %s.") \
-                          % (varname, valuespec.value_to_text(new_value))
-                log_pending(SYNC, None, "edit-configvar", msg)
-            current_settings[varname] = new_value
+        connector = vs.from_html_vars("connector")
+        vs.validate_value(connector, "connector")
 
-        save_configuration_settings(current_settings)
-        config.load_config() # make new configuration active
+        if new:
+            connectors.insert(0, connector)
+        else:
+            connector["id"] = connectors[nr]["id"] # Keep the read-only connector id
+            connectors[nr] = connector
+
+        if new:
+            log_what = "new-ldap-connector"
+            log_text = _("Created new LDAP connector")
+        else:
+            log_what = "edit-ldap-connector"
+            log_text = _("Changed LDAP connector %s") % connector['id']
+        log_pending(SYNC, None, log_what, log_text)
+
+        userdb.save_connector_config()
+        userdb.load_connector_config() # make new configuration active
         return
-
-    userdb.ldap_test_module()
 
     #
     # Regular page rendering
@@ -7270,21 +7623,9 @@ def mode_ldap_config(phase):
 
     html.write('<div id=ldap>')
     html.write('<table><tr><td>')
-    html.begin_form('ldap_config', method = "POST", action = 'wato.py?mode=ldap_config')
-    need_header = True
-    for (var, valuespec) in vs:
-        value = current_settings.get(var, valuespec.default_value())
-        if isinstance(valuespec, Dictionary):
-            valuespec._render = "form"
-        else:
-            if need_header:
-                forms.header(_('Other Settings'))
-                need_header = False
-            forms.section(valuespec.title())
-        valuespec.render_input(var, value)
-        html.help(valuespec.help())
-    forms.end()
-
+    html.begin_form("connector", method="POST")
+    vs.render_input("connector", connector)
+    vs.set_focus("connector")
     html.button("_save", _("Save"))
     html.button("_test", _("Save & Test"))
     html.hidden_fields()
@@ -11860,8 +12201,7 @@ def mode_users(phase):
             html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
         if config.may("general.notify"):
             html.context_button(_("Notify Users"), 'notify.py', "notification")
-        if userdb.connector_enabled('ldap'):
-            html.context_button(_("LDAP Settings"), make_link([("mode", "ldap_config")]), "ldap")
+        html.context_button(_("LDAP Connections"), make_link([("mode", "ldap_config")]), "ldap")
         return
 
     # Execute all connectors synchronisations of users. This must be done before
@@ -19137,6 +19477,7 @@ modes = {
    "snapshot_detail"    : (["snapshots"], mode_snapshot_detail),
    "edit_configvar"     : (["global"], mode_edit_configvar),
    "ldap_config"        : (["global"], mode_ldap_config),
+   "edit_ldap_connection": (["global"], mode_edit_ldap_connection),
    "ruleeditor"         : (["rulesets"], mode_ruleeditor),
    "static_checks"      : (["rulesets"], mode_static_checks),
    "check_plugins"      : ([], mode_check_plugins),

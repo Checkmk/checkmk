@@ -221,22 +221,11 @@ crash_report_target = "feedback@check-mk.org"
 #     \___/|___/\___|_|  |____/|____/
 #
 
-user_connectors       = ['htpasswd']
 userdb_automatic_sync = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ]
-ldap_connection       = {
-    'type'            : 'ad',
-    'page_size'       : 1000,
-}
-ldap_userspec         = {
-    'scope'           : 'sub',
-    'user_id_umlauts' : 'replace',
-}
-ldap_groupspec        = {
-    'scope'           : 'sub',
-}
-ldap_active_plugins   = {'email': {}, 'alias': {}, 'auth_expire': {}}
-ldap_cache_livetime   = 300
-ldap_debug_log        = False
+
+# Holds dicts defining user connector instances and their properties
+user_connectors = []
+
 default_user_profile  = {
     'roles': ['user'],
 }

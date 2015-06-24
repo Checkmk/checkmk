@@ -646,10 +646,6 @@ def check_jolokia_metrics_tp(item, params, info):
                                                             ctext, busy, btext, max)
     return (status, output, perf)
 
-def check_jolokia_metrics_perm_gen( item, info, params ):
-    print info
-    return
-
 # General JVM checks
 check_info["jolokia_metrics.mem"] = {
     "service_description"     : "JVM %s Memory",

@@ -4499,8 +4499,8 @@ register_check_parameters(
     Optional(
         Tuple(
             elements = [
-              Integer(title = _("Warning if older than"), unit = _("seconds")),
-              Integer(title = _("Critical if older than"), unit = _("seconds"))
+              Age(title = _("Warning if older than")),
+              Age(title = _("Critical if older than"))
             ]
         ),
         title = _("Specify time since last successful backup"),

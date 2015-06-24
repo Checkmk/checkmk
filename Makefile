@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.2.7i2
+VERSION        	= 1.2.7i2p1
 NAME           	= check_mk
 PREFIX         	= /usr
 BINDIR         	= $(PREFIX)/bin

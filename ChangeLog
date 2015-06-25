@@ -1,6 +1,7 @@
 1.2.7i3:
     Checks & Agents:
     * 2312 New checks for EMC VPLEX: emc_vplex_cpu, emc_vplex_director_stats, emc_vplex_if, emc_vplex_volumes...
+    * 1260 jolokia_metrics.perm_gen: New Check to monitor used Perm Space on a JVM
 
 
 1.2.7i2:

@@ -7476,6 +7476,15 @@ register_check_parameters(
                                ]
                             )
                        ])),
+                ( "perm",
+                    Tuple(
+                        title = _("Perm Memory usage"),
+                        elements = [
+                            Percentage(title = _("Warning at"), label = _("% usage")),
+                            Percentage(title = _("Critical at"), label = _("% usage")),
+                        ]
+                    )
+                ),
             ]),
         TextAscii(
             title = _("Name of the virtual machine"),

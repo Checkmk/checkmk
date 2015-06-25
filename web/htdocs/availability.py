@@ -31,7 +31,7 @@
 #### die Möglichkeit "All Timelines" schaffen und diese dann 1:1 im
 #### Reporting abbilden.
 
-import bi, views
+import bi, views, visuals
 # TODO: Get rid of import of views
 # from lib import *
 from valuespec import *

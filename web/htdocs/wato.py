@@ -17910,7 +17910,7 @@ def validate_icon(value, varprefix):
 
     if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (defaults.omd_root, file_name)) \
        or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (defaults.omd_root, file_name)):
-        raise MKUserError(varprefix, _('Your icons conflicts with a Check_MK builtin icon. Please '
+        raise MKUserError(varprefix, _('Your icon conflicts with a Check_MK builtin icon. Please '
                                        'choose another name for your icon.'))
 
 

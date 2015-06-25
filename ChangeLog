@@ -3,6 +3,12 @@
     * 2312 New checks for EMC VPLEX: emc_vplex_cpu, emc_vplex_director_stats, emc_vplex_if, emc_vplex_volumes...
     * 1260 jolokia_metrics.perm_gen: New Check to monitor used Perm Space on a JVM
 
+    Multisite:
+    * 2314 FIX: Availability: fixed exception when grouping by host or service group
+
+    Notifications:
+    * 2313 FIX: notification bulking: fixed exception for plugins which are not configured with checkboxes, e.g. sms
+
 
 1.2.7i2:
     Core & Setup:

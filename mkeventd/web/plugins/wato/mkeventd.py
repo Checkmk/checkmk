@@ -290,7 +290,7 @@ vs_mkeventd_rule = Dictionary(
             title = _("Rule type"),
             choices = [
                 ( False,       _("Normal operation - process message according to action settings") ),
-                ( True,        _("Do not do any action, drop this message, stop processing") ),
+                ( True,        _("Do not perform any action, drop this message, stop processing") ),
                 ( "skip_pack", _("Skip this rule pack, continue rule execution with next rule pack") ),
             ],
             help = _("With this option you can implement rules that rule out certain message from the "

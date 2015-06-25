@@ -1,0 +1,12 @@
+Title: windows agent: BOM replacement, fixed incorrect byte offset
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2p1
+Date: 1435237065
+
+The windows agent did not correctly detect byte order marks for
+plugins using an UTF-8 encoding. UTF-16 was working as intented.
+

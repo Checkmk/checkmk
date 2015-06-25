@@ -3089,7 +3089,7 @@ void output_external_programs(SOCKET &out, script_type type)
                 else if ( strlen(cont->buffer_work) >= 3 &&
                    (unsigned char)cont->buffer_work[0] == 0xEF &&
                    (unsigned char)cont->buffer_work[1] == 0xBB &&
-                   (unsigned char)cont->buffer_work[1] == 0xBF )
+                   (unsigned char)cont->buffer_work[2] == 0xBF )
                 {
                     cont->buffer_work[0] = '\n';
                     cont->buffer_work[1] = '\n';

@@ -5576,12 +5576,12 @@ register_check_parameters(
               Levels(
                   title = _("Read wait"),
                   unit = _("ms"),
-                  default_levels = (100.0, 250.0))),
+                  default_levels = (30.0, 50.0))),
             ( "write_wait",
               Levels(
                   title = _("Write wait"),
                   unit = _("ms"),
-                  default_levels = (100.0, 250.0))),
+                  default_levels = (30.0, 50.0))),
             ( "average",
               Age(
                   title = _("Averaging"),

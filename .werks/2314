@@ -1,0 +1,10 @@
+Title: Availability: fixed exception when grouping by host or service group
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2p1
+Date: 1435221374
+
+

@@ -773,8 +773,8 @@ def check_jolokia_metrics_perm_gen(item, params, info):
         usage_bytes = int(values['PermGenUsage'])
         size_bytes = int(values['PermGenMax'])
         usage_perc = 100.0 / size_bytes * usage_bytes
-        warn_bytes = usage_bytes / 100.0 * warn 
-        crit_bytes = usage_bytes / 100.0 * crit 
+        warn_bytes = usage_bytes / 100.0 * warn
+        crit_bytes = usage_bytes / 100.0 * crit
         perfdata = [("mem_perm_used", usage_bytes, warn_bytes, crit_bytes, 0, size_bytes)]
         state = 0
         if usage_perc >= crit:

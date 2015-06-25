@@ -2,6 +2,7 @@
     Checks & Agents:
     * 2312 New checks for EMC VPLEX: emc_vplex_cpu, emc_vplex_director_stats, emc_vplex_if, emc_vplex_volumes...
     * 1260 jolokia_metrics.perm_gen: New Check to monitor used Perm Space on a JVM
+    * 2315 FIX: windows agent: BOM replacement, fixed incorrect byte offset...
 
     Multisite:
     * 2314 FIX: Availability: fixed exception when grouping by host or service group

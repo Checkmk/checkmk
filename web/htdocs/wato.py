@@ -7304,6 +7304,12 @@ def mode_ldap_config(phase):
 
     table.end()
 
+
+def validate_ldap_connection_id(value, varprefix):
+    if value in [ c['id'] for c in userdb.get_connection_config() ]:
+        raise MKUserError(varprefix, _("This ID is already user by another connection. Please choose another one."))
+
+
 def vs_ldap_connection(new):
     if new:
         general_elements = [
@@ -7313,6 +7319,7 @@ def vs_ldap_connection(new):
                          "when objects refer to the connection."),
                 allow_empty = False,
                 size = 12,
+                validate = validate_ldap_connection_id,
             ))
         ] + rule_option_elements()
     else:

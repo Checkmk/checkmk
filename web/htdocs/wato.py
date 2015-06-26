@@ -16891,6 +16891,18 @@ def convert_aggregation_to_bi(aggr):
         convaggr = (bi_constants["DISABLED"],) + convaggr
     return convaggr
 
+
+def validate_bi_rule_call(value, varprefix):
+    rule_id, arguments = value
+    aggregations, aggregation_rules = load_bi_rules()
+    rule_params = aggregation_rules[rule_id]['params']
+
+    if len(arguments) != len(rule_params):
+        raise MKUserError(varprefix+"_1_0", _("The rule you selected needs %d argument(s) (%s), "
+                                       "but you configured %d arguments.") %
+                                (len(rule_params), ', '.join(rule_params), len(arguments)))
+
+
 # Not in global context, so that l10n will happen again
 def declare_bi_valuespecs(aggregation_rules):
     global vs_aggregation, aggregation_choices, vs_bi_node
@@ -16913,7 +16925,8 @@ def declare_bi_valuespecs(aggregation_rules):
                 size = 12,
                 title = _("Arguments:"),
             ),
-        ]
+        ],
+        validate = validate_bi_rule_call,
     )
 
     host_re_help = _("Either an exact host name or a regular expression exactly matching the host "

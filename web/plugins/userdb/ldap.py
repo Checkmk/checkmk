@@ -160,7 +160,7 @@ def ldap_connect_server(server):
         uri = ldap_uri(server)
         conn = ldap.ldapobject.ReconnectLDAPObject(uri)
         conn.protocol_version = g_config['version']
-        conn.network_timeout  = g_config.get('connect_timeout', 2.0)
+        conn.network_timeout  = g_config['connect_timeout']
         conn.retry_delay      = 0.5
 
         # When using the domain top level as base-dn, the subtree search stumbles with referral objects.
@@ -204,13 +204,13 @@ def ldap_connect(enforce_new = False, enforce_server = None):
 
     # Some major config var validations
 
-    if not g_config.get('server'):
+    if not g_config['server']:
         raise MKLDAPException(_('The LDAP connector is enabled in global settings, but the '
                                 'LDAP server to connect to is not configured. Please fix this in the '
                                 '<a href="wato.py?mode=ldap_config">LDAP '
                                 'connection settings</a>.'))
 
-    if not g_config.get('user_dn'):
+    if not g_config['user_dn']:
         raise MKLDAPException(_('The distinguished name of the container object, which holds '
                                 'the user objects to be authenticated, is not configured. Please '
                                 'fix this in the <a href="wato.py?mode=ldap_config">'
@@ -338,7 +338,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     if scope:
         config_scope = scope
     else:
-        config_scope = g_config.get('user_scope', 'sub')
+        config_scope = g_config['user_scope']
 
     if config_scope == 'sub':
         scope = ldap.SCOPE_SUBTREE
@@ -469,10 +469,10 @@ def ldap_bind_credentials_configured():
     return g_config.get('bind', ('', ''))[0] != ''
 
 def ldap_user_base_dn_configured():
-    return g_config.get('user_dn', '') != ''
+    return g_config['user_dn'] != ''
 
 def ldap_group_base_dn_configured():
-    return g_config.get('group_dn', '') != ''
+    return g_config['group_dn'] != ''
 
 def ldap_user_base_dn_exists():
     try:
@@ -959,7 +959,7 @@ def ldap_list_roles_with_group_dn():
             ListOf(
                 LDAPDistinguishedName(
                     size = 80,
-                    enforce_suffix = ldap_replace_macros(g_config.get('group_dn', '')),
+                    enforce_suffix = ldap_replace_macros(g_config['group_dn']),
                     allow_empty = False,
                 ),
                 title = role['alias'] + ' - ' + _("Specify the Group DN"),

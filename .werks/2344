@@ -1,0 +1,17 @@
+Title: Improved validation of selected rules when editing BI aggregations
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435300730
+
+In previous versions it was possible to create a non working BI configuration
+using the BI editor by creating an aggregation which calls a BI rules which
+needs one or several arguments, but not providing any argument in the BI aggregation.
+Saving this configuration was possible and caused problems in different places
+of the GUI, for example the report editor when rendering the BI filters.
+
+The editor has been extended to do a better validation to prevent this kind of
+misconfiguration.

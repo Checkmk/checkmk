@@ -130,14 +130,12 @@ def htpasswd_save(users):
     if rename_file:
         os.rename(filename, filename[:-4])
 
-multisite_user_connectors.append({
-    'id'          : 'htpasswd',
+multisite_user_connectors['htpasswd'] = {
     'title'       : _('Apache Local Password File (htpasswd)'),
     'short_title' : _('htpasswd'),
 
     # Register hook functions
-    'is_active'   : lambda: True,
     'login'       : htpasswd_login,
     'save'        : htpasswd_save,
     # Not registering: sync, locked_attributes, page
-})
+}

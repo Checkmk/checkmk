@@ -60,7 +60,7 @@ def load_plugins():
 
     # declare & initialize global vars
     user_attributes = {}
-    multisite_user_connectors = []
+    multisite_user_connectors = {}
 
     load_web_plugins("userdb", globals())
     builtin_user_attribute_names = user_attributes.keys()
@@ -68,7 +68,7 @@ def load_plugins():
 
     # Connectors have the option to perform migration of configuration options
     # while the initial loading is performed
-    for connector in multisite_user_connectors:
+    for connector in multisite_user_connectors.values():
         connector.get('migrate_config', lambda: None)()
 
     # This must be set after plugin loading to make broken plugins raise
@@ -77,28 +77,37 @@ def load_plugins():
     loaded_with_language = current_language
 
 
-def list_user_connectors():
-    return [ (c['id'], c['title']) for c in multisite_user_connectors ]
-
-def enabled_connectors():
-    connectors = []
-    for connector in multisite_user_connectors:
-        if connector.get('is_active', lambda: False)():
-            connectors.append(connector)
+# Returns a list of two part tuples where the first element is the unique
+# connection id and the second element the connector specification dict
+def active_connections():
+    connections = []
+    for connector_id, connector in multisite_user_connectors.items():
+        if connector_id == 'htpasswd':
+            # htpasswd connector is enabled by default and always executed first
+            connections.insert(0, ('htpasswd', connector))
+        else:
+            for connection in get_connection_config():
+                connections.append((connection['id'], connector))
     return connectors
 
-def get_connector_id(connector_id):
-    if connector_id is None:
-        connector_id = 'htpasswd'
-    return connector_id
+
+def cleanup_connection_id(connection_id):
+    if connection_id is None:
+        connection_id = 'htpasswd'
+
+    # Old Check_MK used a static "ldap" connector id for all LDAP users.
+    # Since Check_MK now supports multiple LDAP connections, the ID has
+    # been changed to "default"
+    if connection_id == 'ldap':
+        connection_id = 'default'
+
+    return connection_id
+
 
 # Returns the connector dictionary of the given id
-def get_connector(connector_id):
-    connector_id = get_connector_id(connector_id)
-    for connector in enabled_connectors():
-        if connector['id'] == connector_id:
-            return connector
-    return {}
+def get_connector(connection_id):
+    return dict(active_connections()).get(cleanup_connection_id(connection_id), {})
+
 
 # Returns a list of locked attributes
 def locked_attributes(connector_id):
@@ -757,7 +766,7 @@ def save_connection_config():
 
 # This hook is called to validate the login credentials provided by a user
 def hook_login(username, password):
-    for connector in enabled_connectors():
+    for connection_id, connector in active_connections():
         handler = connector.get('login', None)
         if not handler:
             continue
@@ -796,9 +805,9 @@ def hook_login(username, password):
 #   c) Before activating the changes in WATO
 def hook_sync(connector_id = None, add_to_changelog = False, only_username = None, raise_exc = False):
     if connector_id:
-        connectors = [ get_connector(connector_id) ]
+        connectors = [ (connector_id, get_connector(connector_id)) ]
     else:
-        connectors = enabled_connectors()
+        connectors = active_connections()
 
     no_errors = True
     for connector in connectors:
@@ -835,7 +844,7 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
 # Hook function can be registered here to be executed during saving of the
 # new user construct
 def hook_save(users):
-    for connector in enabled_connectors():
+    for connection_id, connector in active_connections():
         handler = connector.get('save', None)
         if not handler:
             continue
@@ -876,7 +885,7 @@ def hook_page():
     if 'page' not in config.userdb_automatic_sync:
         return
 
-    for connector in enabled_connectors():
+    for connection_id, connector in active_connections():
         handler = connector.get('page', None)
         if not handler:
             continue

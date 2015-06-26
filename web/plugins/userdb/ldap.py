@@ -1002,9 +1002,6 @@ ldap_attribute_plugins['groups_to_roles'] = {
 #   | Hook functions used in this connector                                |
 #   '----------------------------------------------------------------------'
 
-def ldap_is_active():
-    return bool([ c for c in connection_config if c['type'] == 'ldap' and not c.get('disabled') ])
-
 # This function only validates credentials, no locked checking or similar
 def ldap_login(username, password):
     ldap_connect()
@@ -1284,12 +1281,11 @@ def ldap_migrate_config():
     save_connection_config()
 
 
-multisite_user_connectors.append({
+multisite_user_connectors['ldap'] = {
     'id'             : 'ldap',
     'title'          : _('LDAP (Active Directory, OpenLDAP)'),
     'short_title'    : _('LDAP'),
 
-    'is_active'      : ldap_is_active,
     'migrate_config' : ldap_migrate_config,
     'login'          : ldap_login,
     'sync'           : ldap_sync,
@@ -1302,4 +1298,4 @@ multisite_user_connectors.append({
     'locked_attributes'      : ldap_locked_attributes,
     'multisite_attributes'   : ldap_multisite_attributes,
     'non_contact_attributes' : ldap_multisite_attributes,
-})
+}

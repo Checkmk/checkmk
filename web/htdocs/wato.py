@@ -7603,6 +7603,7 @@ def vs_ldap_connection(new):
 def mode_edit_ldap_connection(phase):
     connection_id = html.var("id")
     connections = userdb.load_connection_config()
+    userdb.set_connection(connection_id)
     connection = {}
     if connection_id == None:
         new = True
@@ -7651,6 +7652,7 @@ def mode_edit_ldap_connection(phase):
 
         userdb.save_connection_config(connections)
         config.user_connections = connections # make directly available on current page
+        userdb.set_connection(connection_id)
         if html.var("_save"):
             return "ldap_config"
         else:
@@ -7785,7 +7787,6 @@ def mode_edit_ldap_connection(phase):
             (_('Sync-Plugin: Roles'),  test_groups_to_roles),
         ]
 
-        userdb.set_connection(connection_id)
         for address in userdb.ldap_servers():
             html.write('<h3>%s: %s</h3>' % (_('Server'), address))
             table.begin('test', searchable = False)

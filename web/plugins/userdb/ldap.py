@@ -1294,6 +1294,7 @@ def ldap_migrate_config():
                 key = what + "_" + key
             connection[key] = val
 
+    save_connection_config([connection])
     config.user_connections.append(connection)
 
 

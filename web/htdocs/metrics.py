@@ -836,9 +836,13 @@ def get_graph_templates(translated_metrics):
     for graph_template in graph_info:
         if graph_possible(graph_template, translated_metrics):
             yield graph_template
+        elif graph_possible_without_optional_metrics(graph_template, translated_metrics):
+            html.debug("JA")
+            yield graph_without_missing_optional_metrics(graph_template, translated_metrics)
 
 
 def graph_possible(graph_template, translated_metrics):
+
     for metric_definition in graph_template["metrics"]:
         try:
             evaluate(metric_definition[0], translated_metrics)
@@ -847,12 +851,47 @@ def graph_possible(graph_template, translated_metrics):
 
     # Allow graphs to be disabled if certain (better) metrics
     # are available
-    if "not_if_have" in graph_template:
-        for var in graph_template["not_if_have"]:
+    if "conflicting_metrics" in graph_template:
+        for var in graph_template["conflicting_metrics"]:
             if var in translated_metrics:
                 return False
 
     return True
+
+
+def graph_possible_without_optional_metrics(graph_template, translated_metrics):
+    if "optional_metrics" in graph_template:
+        return graph_possible(graph_template,
+                      add_fake_metrics(translated_metrics, graph_template["optional_metrics"]))
+
+
+def graph_without_missing_optional_metrics(graph_template, translated_metrics):
+    working_metrics = []
+
+    for metric_definition in graph_template["metrics"]:
+        try:
+            evaluate(metric_definition[0], translated_metrics)
+            working_metrics.append(metric_definition)
+        except:
+            pass
+
+    reduced_graph_template = graph_template.copy()
+    reduced_graph_template["metrics"] = working_metrics
+    html.debug(reduced_graph_template)
+    return reduced_graph_template
+
+
+
+def add_fake_metrics(translated_metrics, metric_names):
+    with_fake = translated_metrics.copy()
+    for metric_name in metric_names:
+        with_fake[metric_name] = {
+            "value" : 1.0,
+            "scale" : 1.0,
+            "unit" : unit_info[""],
+            "color" : "#888888",
+        }
+    return with_fake
 
 # Called with exactly one variable: the template ID. Example:
 # "check_mk-kernel.util:guest,steal,system,user,wait".

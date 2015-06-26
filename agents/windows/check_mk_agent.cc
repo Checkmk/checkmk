@@ -3102,7 +3102,7 @@ void output_external_programs(SOCKET &out, script_type type)
                 {
                     // Determine chache_info text
                     char cache_info[32];
-                    snprintf(cache_info, sizeof(cache_info), ":cached(%d:%d)", (int)cont->buffer_time, cont->max_age);
+                    snprintf(cache_info, sizeof(cache_info), ":cached(%d,%d)", (int)cont->buffer_time, cont->max_age);
                     int cache_len = strlen(cache_info) + 1;
 
                     // We need to parse each line and replace any <<<section>>> with <<<section:cached(123455678,3600)>>>
@@ -3117,7 +3117,8 @@ void output_external_programs(SOCKET &out, script_type type)
                     {
                         int length = strlen(line);
                         int cr_offset = line[length-1] == '\r' ? 1 : 0;
-                        if (length >=8 && (!strncmp(line, "<<<", 3) && !strncmp(line+length-cr_offset-3, ">>>", 3)))
+                        if (length >=8 && strncmp(line, "<<<<", 4) && (!strncmp(line, "<<<", 3) &&
+                            !strncmp(line+length-cr_offset-3, ">>>", 3)))
                         {
                             // The return value of snprintf seems broken (off by 3?). Great...
                             write_bytes = length - cr_offset - 3 + 1; // length - \r - <<< + \0

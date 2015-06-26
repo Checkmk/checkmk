@@ -1816,7 +1816,7 @@ graph_info.append({
     "scalars" : [
         "load1:warn",
         "load1:crit",
-    ]
+    ],
 })
 
 graph_info.append({
@@ -1997,12 +1997,10 @@ graph_info.append({
     ],
 })
 
-# TODO: Warum sind die in einem Graphen? Kann man
-# die irgendwie addieren?
 graph_info.append({
     "metrics" : [
-        ( "deadlocks",  "line" ),
-        ( "lockwaits",  "line" ),
+        ( "deadlocks",  "area" ),
+        ( "lockwaits",  "stack" ),
     ],
 })
 
@@ -2012,9 +2010,6 @@ graph_info.append({
     ],
 })
 
-# TODO: Warum auch hier line? Sollte mit
-# areas arbeiten. Habe das mal umgestellt, aber noch
-# nicht getestet.
 graph_info.append({
     "metrics" : [
         ( "tablespace_used",  "area" ),
@@ -2125,7 +2120,7 @@ graph_info.append({
         ("mem_lnx_active", "area"),
         ("mem_lnx_inactive", "area"),
     ],
-    "not_if_have" : [ "mem_lnx_active_anon" ],
+    "conflicting_metrics" : [ "mem_lnx_active_anon" ],
 })
 
 graph_info.append({

@@ -8995,16 +8995,19 @@ def mode_notifications(phase):
             if html.check_transaction():
                 options["show_user_rules"] = not not html.var("_show_user")
                 config.save_user_file("notification_display_options", options)
+                return
 
         elif html.has_var("_show_backlog"):
             if html.check_transaction():
                 options["show_backlog"] = not not html.var("_show_backlog")
                 config.save_user_file("notification_display_options", options)
+                return
 
         elif html.has_var("_show_bulks"):
             if html.check_transaction():
                 options["show_bulks"] = not not html.var("_show_bulks")
                 config.save_user_file("notification_display_options", options)
+                return
 
         elif html.has_var("_replay"):
             if html.check_transaction():

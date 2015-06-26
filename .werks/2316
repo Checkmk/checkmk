@@ -1,4 +1,4 @@
-Title: windows agent: fixed formatting errors in cached agent sections
+Title: windows agent: fix garbled output of cached agent plugins
 Level: 2
 Component: checks
 Compatible: compat
@@ -6,4 +6,5 @@ Version: 1.2.7i2p1
 Date: 1435308547
 Class: fix
 
-
+If you configured a <i>cache_age</i> for plugins in your <i>check_mk.ini</i>
+file, those plugins delivered broken output. This has been fixed.

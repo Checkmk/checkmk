@@ -211,7 +211,9 @@ def inventory_if_common(info, has_nodeinfo = False):
     settings            = host_extra_conf_merged(g_hostname, inventory_if_rules)
     uses_description    = settings.get('use_desc', if_inventory_uses_description)
     uses_alias          = settings.get('use_alias', if_inventory_uses_alias)
-    porttypes           = settings.get('porttypes', if_inventory_porttypes)
+    # Need to copy porttypes as the discovery function appends to the list below.
+    # The check must not modify the global if_inventory_porttypes configuration variable.
+    porttypes           = settings.get('porttypes', if_inventory_porttypes)[:]
     portstates          = settings.get('portstates', if_inventory_portstates)
     match_alias         = settings.get('match_alias')
     match_desc          = settings.get('match_desc')

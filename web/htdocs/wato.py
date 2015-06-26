@@ -7252,7 +7252,8 @@ def mode_ldap_config(phase):
                 from_pos = int(html.var("_move"))
                 to_pos = int(html.var("_where"))
                 connection = connections[from_pos]
-                log_pending(SYNC, None, "move-ldap-connection", _("Changed position of LDAP connection %s") % (connection["id"]))
+                log_pending(SYNC, None, "move-ldap-connection", _("Changed position of LDAP connection %s to %d") %
+                                                                            (connection["id"], to_pos))
                 del connections[from_pos] # make to_pos now match!
                 connections[to_pos:to_pos] = [connection]
                 userdb.save_connection_config(connections)
@@ -12344,7 +12345,7 @@ def mode_users(phase):
             locked_attributes = userdb.locked_attributes(user_connection_id)
         else:
             table.cell(_("Connector"), "%s (%s) (disabled)" %
-                    (connector['short_title'], user_connection_id), css="error")
+                    (connector.get('short_title', 'UNKNOWN'), user_connection_id), css="error")
             locked_attributes = []
 
         # Authentication

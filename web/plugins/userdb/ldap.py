@@ -959,7 +959,7 @@ def ldap_list_roles_with_group_dn():
             ListOf(
                 LDAPDistinguishedName(
                     size = 80,
-                    enforce_suffix = ldap_replace_macros(g_config['group_dn']),
+                    enforce_suffix = ldap_replace_macros(g_config.get('group_dn', '')),
                     allow_empty = False,
                 ),
                 title = role['alias'] + ' - ' + _("Specify the Group DN"),

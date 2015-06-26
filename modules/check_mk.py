@@ -5364,7 +5364,7 @@ def do_check_keepalive():
         if opt_debug:
             after = copy_globals()
             for varname, value in before.items():
-                if value != after[varname]:
+                if varname not in ignore_changed_global_variables and value != after[varname]:
                     sys.stderr.write("WARNING: global variable %s has changed: %r ==> %s\n"
                            % (varname, value, repr(after[varname])[:50]))
             new_vars = set(after.keys()).difference(set(before.keys()))
@@ -5411,6 +5411,13 @@ def keepalive_read_line():
 #   | Code for reading the configuration files.                            |
 #   '----------------------------------------------------------------------'
 
+# These variables shal be ignored when performing checks which global
+# variables have been changed during runtime of e.g. the Check_MK
+# keepalive mode
+ignore_changed_global_variables = [
+    'all_hosts_untagged',
+    'all_clusters_untagged',
+]
 
 # Now - at last - we can read in the user's configuration files
 def all_nonfunction_vars():
@@ -5564,8 +5571,7 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     vars_after_config = all_nonfunction_vars()
     ignored_variables = set(['vars_before_config', 'parts',
                              'hosttags' ,'seen_hostnames',
-                             'all_hosts_untagged', 'all_clusters_untagged',
-                             'taggedhost' ,'hostname'])
+                             'taggedhost' ,'hostname'] + ignore_changed_global_variables)
     errors = 0
     for name in vars_after_config:
         if name not in ignored_variables and name not in vars_before_config:

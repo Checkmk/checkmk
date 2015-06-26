@@ -7230,7 +7230,7 @@ def mode_ldap_config(phase):
         html.context_button(_("New Connection"), make_link([("mode", "edit_ldap_connection")]), "new")
         return
 
-    connections = userdb.get_connection_config()
+    connections = userdb.load_connection_config()
     if phase == "action":
         if html.has_var("_delete"):
             nr = int(html.var("_delete"))
@@ -7241,7 +7241,7 @@ def mode_ldap_config(phase):
             if c:
                 log_pending(SYNC, None, "delete-ldap-connection", _("Deleted LDAP connection %s") % (connection["id"]))
                 del connections[nr]
-                userdb.save_connection_config()
+                userdb.save_connection_config(connections)
             elif c == False:
                 return ""
             else:
@@ -7255,7 +7255,7 @@ def mode_ldap_config(phase):
                 log_pending(SYNC, None, "move-ldap-connection", _("Changed position of LDAP connection %s") % (connection["id"]))
                 del connections[from_pos] # make to_pos now match!
                 connections[to_pos:to_pos] = [connection]
-                userdb.save_connection_config()
+                userdb.save_connection_config(connections)
         return
 
     userdb.ldap_test_module()
@@ -7306,7 +7306,7 @@ def mode_ldap_config(phase):
 
 
 def validate_ldap_connection_id(value, varprefix):
-    if value in [ c['id'] for c in userdb.get_connection_config() ]:
+    if value in [ c['id'] for c in config.user_connections ]:
         raise MKUserError(varprefix, _("This ID is already user by another connection. Please choose another one."))
 
 
@@ -7602,7 +7602,7 @@ def vs_ldap_connection(new):
 
 def mode_edit_ldap_connection(phase):
     connection_id = html.var("id")
-    connections = userdb.get_connection_config()
+    connections = userdb.load_connection_config()
     connection = {}
     if connection_id == None:
         new = True
@@ -7649,7 +7649,8 @@ def mode_edit_ldap_connection(phase):
             log_text = _("Changed LDAP connection %s") % connection['id']
         log_pending(SYNC, None, log_what, log_text)
 
-        userdb.save_connection_config()
+        userdb.save_connection_config(connections)
+        config.user_connections = connections # make directly available on current page
         if html.var("_save"):
             return "ldap_config"
         else:
@@ -7758,12 +7759,13 @@ def mode_edit_ldap_connection(phase):
                 return (False, msg)
 
         def test_groups_to_roles(address):
-            if 'groups_to_roles' not in config.ldap_active_plugins:
+            active_plugins = userdb.ldap_active_plugins()
+            if 'groups_to_roles' not in active_plugins:
                 return True, _('Skipping this test (Plugin is not enabled)')
 
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             num = 0
-            for role_id, dn in config.ldap_active_plugins['groups_to_roles'].items():
+            for role_id, dn in active_plugins['groups_to_roles'].items():
                 if isinstance(dn, str):
                     num += 1
                     try:
@@ -7783,6 +7785,7 @@ def mode_edit_ldap_connection(phase):
             (_('Sync-Plugin: Roles'),  test_groups_to_roles),
         ]
 
+        userdb.set_connection(connection_id)
         for address in userdb.ldap_servers():
             html.write('<h3>%s: %s</h3>' % (_('Server'), address))
             table.begin('test', searchable = False)
@@ -12300,7 +12303,8 @@ def mode_users(phase):
     for id, user in entries:
         table.row()
 
-        connector = userdb.get_connector(user.get('connector'))
+        user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
+        connector = userdb.get_connector(user_connection_id)
 
         # Buttons
         table.cell(_("Actions"), css="buttons")
@@ -12335,11 +12339,10 @@ def mode_users(phase):
 
         # Connector
         if connector:
-            table.cell(_("Connector"), connector['short_title'])
-            locked_attributes = userdb.locked_attributes(user.get('connector'))
+            table.cell(_("Connector"), '%s (%s)' % (user_connection_id, connector['short_title']))
+            locked_attributes = userdb.locked_attributes(user_connection_id)
         else:
-            table.cell(_("Connector"), "%s (disabled)" %
-                            userdb.cleanup_connection_id(user.get('connector')), css="error")
+            table.cell(_("Connector"), "%s (disabled)" % user_connection_id, css="error")
             locked_attributes = []
 
         # Authentication

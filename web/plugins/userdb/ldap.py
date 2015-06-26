@@ -125,22 +125,22 @@ ldap_umlaut_translation = {
 #   '----------------------------------------------------------------------'
 
 def ldap_log(s):
-    if config.ldap_debug_log:
-        logger(LOG_DEBUG, 'LDAP: %s' % s)
+    if g_config['debug_log']:
+        logger(LOG_DEBUG, 'LDAP [%s]: %s' % (g_config['id'], s))
 
 class MKLDAPException(MKGeneralException):
     pass
 
-ldap_connection = None
-ldap_connection_options = None
+ldap_connections        = {}
+ldap_connection_options = {}
 
 def ldap_uri(server):
-    if 'use_ssl' in config.ldap_connection:
+    if 'use_ssl' in g_config:
         uri = 'ldaps://'
     else:
         uri = 'ldap://'
 
-    return uri + '%s:%d' % (server, config.ldap_connection['port'])
+    return uri + '%s:%d' % (server, g_config['port'])
 
 def ldap_test_module():
     try:
@@ -150,22 +150,22 @@ def ldap_test_module():
                                 "install this extension to make the LDAP user connector work."))
 
 def ldap_servers():
-    servers = [ config.ldap_connection['server'] ]
-    if config.ldap_connection.get('failover_servers'):
-        servers += config.ldap_connection.get('failover_servers')
+    servers = [ g_config['server'] ]
+    if g_config.get('failover_servers'):
+        servers += g_config.get('failover_servers')
     return servers
 
 def ldap_connect_server(server):
     try:
         uri = ldap_uri(server)
         conn = ldap.ldapobject.ReconnectLDAPObject(uri)
-        conn.protocol_version = config.ldap_connection['version']
-        conn.network_timeout  = config.ldap_connection.get('connect_timeout', 2.0)
+        conn.protocol_version = g_config['version']
+        conn.network_timeout  = g_config.get('connect_timeout', 2.0)
         conn.retry_delay      = 0.5
 
         # When using the domain top level as base-dn, the subtree search stumbles with referral objects.
         # whatever. We simply disable them here when using active directory. Hope this fixes all problems.
-        if config.ldap_connection['type'] == 'ad':
+        if g_config['type'] == 'ad':
             conn.set_option(ldap.OPT_REFERRALS, 0)
 
         ldap_default_bind(conn)
@@ -175,18 +175,26 @@ def ldap_connect_server(server):
     except MKLDAPException, e:
         return None, str(e)
 
+
 def ldap_disconnect():
-    global ldap_connection, ldap_connection_options
-    ldap_connection = None
-    ldap_connection_options = None
+    try:
+        del ldap_connections[g_config['id']]
+    except KeyError:
+        pass
+
+    try:
+        del ldap_connection_options[g_config['id']]
+    except KeyError:
+        pass
+
 
 def ldap_connect(enforce_new = False, enforce_server = None):
-    global ldap_connection, ldap_connection_options
+    connection_id = g_config['id']
 
     if not enforce_new \
-       and not "no_persistent" in config.ldap_connection \
-       and ldap_connection \
-       and config.ldap_connection == ldap_connection_options:
+       and not "no_persistent" in g_config \
+       and connection_id in ldap_connections \
+       and g_config == ldap_connection_options[connection_id]:
         ldap_log('LDAP CONNECT - Using existing connecting')
         return # Use existing connections (if connection settings have not changed)
     else:
@@ -196,13 +204,13 @@ def ldap_connect(enforce_new = False, enforce_server = None):
 
     # Some major config var validations
 
-    if not config.ldap_connection.get('server'):
+    if not g_config.get('server'):
         raise MKLDAPException(_('The LDAP connector is enabled in global settings, but the '
                                 'LDAP server to connect to is not configured. Please fix this in the '
                                 '<a href="wato.py?mode=ldap_config">LDAP '
                                 'connection settings</a>.'))
 
-    if not config.ldap_userspec.get('dn'):
+    if not g_config.get('user_dn'):
         raise MKLDAPException(_('The distinguished name of the container object, which holds '
                                 'the user objects to be authenticated, is not configured. Please '
                                 'fix this in the <a href="wato.py?mode=ldap_config">'
@@ -216,32 +224,33 @@ def ldap_connect(enforce_new = False, enforce_server = None):
             servers = ldap_servers()
 
         for server in servers:
-            ldap_connection, error_msg = ldap_connect_server(server)
-            if ldap_connection:
+            connection, error_msg = ldap_connect_server(server)
+            if connection:
+                ldap_connections[connection_id] = connection
                 break # got a connection!
             else:
                 errors.append(error_msg)
 
         # Got no connection to any server
-        if ldap_connection is None:
+        if connection is None:
             raise MKLDAPException(_('LDAP connection failed:\n%s') %
                                         ('\n'.join(errors)))
 
         # on success, store the connection options the connection has been made with
-        ldap_connection_options = config.ldap_connection
+        ldap_connection_options[connection_id] = g_config
 
     except Exception:
         # Invalidate connection on failure
-        ldap_connection         = None
-        ldap_connection_options = None
+        connection = None
+        ldap_disconnect()
         raise
 
 # Bind with the default credentials
 def ldap_default_bind(conn):
     try:
-        if 'bind' in config.ldap_connection:
-            ldap_bind(ldap_replace_macros(config.ldap_connection['bind'][0]),
-                      config.ldap_connection['bind'][1], catch = False, conn = conn)
+        if 'bind' in g_config:
+            ldap_bind(ldap_replace_macros(g_config['bind'][0]),
+                      g_config['bind'][1], catch = False, conn = conn)
         else:
             ldap_bind('', '', catch = False, conn = conn) # anonymous bind
     except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
@@ -251,7 +260,7 @@ def ldap_default_bind(conn):
 
 def ldap_bind(user_dn, password, catch = True, conn = None):
     if conn is None:
-        conn = ldap_connection
+        conn = ldap_connections[g_config['id']]
     ldap_log('LDAP_BIND %s' % user_dn)
     try:
         conn.simple_bind_s(user_dn, password)
@@ -266,12 +275,12 @@ def ldap_bind(user_dn, password, catch = True, conn = None):
 def ldap_async_search(base, scope, filt, columns):
     ldap_log('  ASYNC SEARCH')
     # issue the ldap search command (async)
-    msgid = ldap_connection.search_ext(base, scope, filt, columns)
+    msgid = ldap_connections[g_config['id']].search_ext(base, scope, filt, columns)
 
     results = []
     while True:
-        restype, resdata = ldap_connection.result(msgid = msgid,
-            timeout = config.ldap_connection.get('response_timeout', 5))
+        restype, resdata = ldap_connections[g_config['id']].result(msgid = msgid,
+            timeout = g_config.get('response_timeout', 5))
 
         results.extend(resdata)
         if restype == ldap.RES_SEARCH_RESULT or not resdata:
@@ -279,7 +288,7 @@ def ldap_async_search(base, scope, filt, columns):
 
         # no limit at the moment
         #if sizelimit and len(users) >= sizelimit:
-        #    ldap_connection.abandon_ext(msgid)
+        #    ldap_connections[g_config['id']].abandon_ext(msgid)
         #    break
         time.sleep(0.1)
 
@@ -287,7 +296,7 @@ def ldap_async_search(base, scope, filt, columns):
 
 def ldap_paged_async_search(base, scope, filt, columns):
     ldap_log('  PAGED ASYNC SEARCH')
-    page_size = config.ldap_connection.get('page_size', 100)
+    page_size = g_config.get('page_size', 100)
 
     if ldap_compat:
         lc = SimplePagedResultsControl(size = page_size, cookie = '')
@@ -299,10 +308,10 @@ def ldap_paged_async_search(base, scope, filt, columns):
     results = []
     while True:
         # issue the ldap search command (async)
-        msgid = ldap_connection.search_ext(base, scope, filt, columns, serverctrls = [lc])
+        msgid = ldap_connections[g_config['id']].search_ext(base, scope, filt, columns, serverctrls = [lc])
 
-        unused_code, response, unused_msgid, serverctrls = ldap_connection.result3(
-            msgid = msgid, timeout = config.ldap_connection.get('response_timeout', 5)
+        unused_code, response, unused_msgid, serverctrls = ldap_connections[g_config['id']].result3(
+            msgid = msgid, timeout = g_config.get('response_timeout', 5)
         )
 
         for result in response:
@@ -329,7 +338,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     if scope:
         config_scope = scope
     else:
-        config_scope = config.ldap_userspec.get('scope', 'sub')
+        config_scope = g_config.get('user_scope', 'sub')
 
     if config_scope == 'sub':
         scope = ldap.SCOPE_SUBTREE
@@ -352,7 +361,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
             ldap_connect()
             result = []
             try:
-                search_func = config.ldap_connection.get('page_size') \
+                search_func = g_config.get('page_size') \
                               and ldap_paged_async_search or ldap_async_search
                 for dn, obj in search_func(base, scope, filt, columns):
                     if dn is None:
@@ -402,19 +411,19 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
 
 # Returns the ldap filter depending on the configured ldap directory type
 def ldap_filter(key, handle_config = True):
-    value = ldap_filter_map[config.ldap_connection['type']].get(key, '(objectclass=*)')
+    value = ldap_filter_map[g_config['type']].get(key, '(objectclass=*)')
     if handle_config:
         if key == 'users':
-            value = config.ldap_userspec.get('filter', value)
+            value = g_config.get('user_filter', value)
         elif key == 'groups':
-            value = config.ldap_groupspec.get('filter', value)
+            value = g_config.get('group_filter', value)
     return ldap_replace_macros(value)
 
 # Returns the ldap attribute name depending on the configured ldap directory type
 # If a key is not present in the map, the assumption is, that the key matches 1:1
 # Always use lower case here, just to prevent confusions.
 def ldap_attr(key):
-    return ldap_attr_map[config.ldap_connection['type']].get(key, key).lower()
+    return ldap_attr_map[g_config['type']].get(key, key).lower()
 
 # Returns the given distinguished name template with replaced vars
 def ldap_replace_macros(tmpl):
@@ -429,10 +438,10 @@ def ldap_replace_macros(tmpl):
     return dn
 
 def ldap_rewrite_user_id(user_id):
-    if config.ldap_userspec.get('lower_user_ids', False):
+    if g_config.get('lower_user_ids', False):
         user_id = user_id.lower()
 
-    umlauts = config.ldap_userspec.get('user_id_umlauts', 'replace')
+    umlauts = g_config.get('user_id_umlauts', 'replace')
     new_user_id = user_id.translate(ldap_umlaut_translation)
 
     if umlauts == 'replace':
@@ -451,23 +460,23 @@ def ldap_rewrite_user_id(user_id):
     return user_id
 
 def ldap_user_id_attr():
-    return config.ldap_userspec.get('user_id', ldap_attr('user_id'))
+    return g_config.get('user_id', ldap_attr('user_id'))
 
 def ldap_member_attr():
-    return config.ldap_groupspec.get('member', ldap_attr('member'))
+    return g_config.get('group_member', ldap_attr('member'))
 
 def ldap_bind_credentials_configured():
-    return config.ldap_connection.get('bind', ('', ''))[0] != ''
+    return g_config.get('bind', ('', ''))[0] != ''
 
 def ldap_user_base_dn_configured():
-    return config.ldap_userspec.get('dn', '') != ''
+    return g_config.get('user_dn', '') != ''
 
 def ldap_group_base_dn_configured():
-    return config.ldap_groupspec.get('dn', '') != ''
+    return g_config.get('group_dn', '') != ''
 
 def ldap_user_base_dn_exists():
     try:
-        result = ldap_search(ldap_replace_macros(config.ldap_userspec['dn']), columns = ['dn'], scope = 'base')
+        result = ldap_search(ldap_replace_macros(g_config['user_dn']), columns = ['dn'], scope = 'base')
     except Exception, e:
         return False
     if not result:
@@ -484,9 +493,9 @@ def ldap_get_user(username, no_escape = False):
     # It's only ok when exactly one entry is found. Returns the DN and user_id
     # as tuple in this case.
     result = ldap_search(
-        ldap_replace_macros(config.ldap_userspec['dn']),
+        ldap_replace_macros(g_config['user_dn']),
         '(&(%s=%s)%s)' % (ldap_user_id_attr(), ldap.filter.escape_filter_chars(username),
-                          config.ldap_userspec.get('filter', '')),
+                          g_config.get('user_filter', '')),
         [ldap_user_id_attr()],
     )
 
@@ -510,7 +519,7 @@ def ldap_get_users(add_filter = ''):
     filt = ldap_filter('users')
 
     # Create filter by the optional filter_group
-    filter_group_dn = config.ldap_userspec.get('filter_group', None)
+    filter_group_dn = g_config.get('user_filter_group', None)
     member_filter = ''
     if filter_group_dn:
         member_attr = ldap_member_attr().lower()
@@ -543,7 +552,7 @@ def ldap_get_users(add_filter = ''):
         filt = '(&%s%s)' % (filt, add_filter)
 
     result = {}
-    for dn, ldap_user in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']),
+    for dn, ldap_user in ldap_search(ldap_replace_macros(g_config['user_dn']),
                                      filt, columns = columns):
         if ldap_user_id_attr() not in ldap_user:
             raise MKLDAPException(_('The configured User-ID attribute "%s" does not '
@@ -556,7 +565,7 @@ def ldap_get_users(add_filter = ''):
     return result
 
 def ldap_group_base_dn_exists():
-    group_base_dn = ldap_replace_macros(config.ldap_groupspec['dn'])
+    group_base_dn = ldap_replace_macros(g_config['group_dn'])
     if not group_base_dn:
         return False
 
@@ -572,12 +581,12 @@ def ldap_group_base_dn_exists():
 
 def ldap_get_groups(specific_dn = None):
     filt = ldap_filter('groups')
-    dn   = ldap_replace_macros(config.ldap_groupspec['dn'])
+    dn   = ldap_replace_macros(g_config['group_dn'])
 
     if specific_dn:
         # When using AD, the groups can be filtered by the DN attribute. With
         # e.g. OpenLDAP this is not possible. In that case, change the DN.
-        if config.ldap_connection['type'] == 'ad':
+        if g_config['type'] == 'ad':
             filt = '(&%s(distinguishedName=%s))' % (filt, specific_dn)
         else:
             dn = specific_dn
@@ -600,12 +609,12 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
         filt = ldap_filter('groups')
         member_attr = ldap_member_attr().lower()
 
-        if config.ldap_connection['type'] == 'ad' or filt_attr != 'distinguishedname':
+        if g_config['type'] == 'ad' or filt_attr != 'distinguishedname':
             if filters:
                 add_filt = '(|%s)' % ''.join([ '(%s=%s)' % (filt_attr, f) for f in filters ])
                 filt = '(&%s%s)' % (filt, add_filt)
 
-            for dn, obj in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn', member_attr]):
+            for dn, obj in ldap_search(ldap_replace_macros(g_config['group_dn']), filt, ['cn', member_attr]):
                 groups[dn] = {
                     'cn'      : obj['cn'][0],
                     'members' : [ m.encode('utf-8').lower() for m in obj.get(member_attr,[]) ],
@@ -626,7 +635,7 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
         groups = {}
         for filter_val in filters:
             if filt_attr == 'cn':
-                result = ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']),
+                result = ldap_search(ldap_replace_macros(g_config['group_dn']),
                                      '(&%s(cn=%s))' % (ldap_filter('groups'), filter_val),
                                      columns = ['dn'])
                 if not result:
@@ -644,7 +653,7 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
                 'members' : [],
                 'cn'      : cn,
             }
-            for user_dn, obj in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']), filt, columns = ['dn']):
+            for user_dn, obj in ldap_search(ldap_replace_macros(g_config['user_dn']), filt, columns = ['dn']):
                 groups[dn]['members'].append(user_dn.lower())
 
     g_ldap_group_cache[cache_key] = groups
@@ -696,7 +705,7 @@ def ldap_attribute_plugins_elements():
 # Returns a list of all needed LDAP attributes of all enabled plugins
 def ldap_needed_attributes():
     attrs = set([])
-    for key, params in config.ldap_active_plugins.items():
+    for key, params in g_config['active_plugins'].items():
         plugin = ldap_attribute_plugins[key]
         if 'needed_attributes' in plugin:
             attrs.update(plugin['needed_attributes'](params or {}))
@@ -761,7 +770,7 @@ ldap_attribute_plugins['alias'] = {
 # a date has been stored in the user before and then maybe increase the serial.
 def ldap_convert_auth_expire(plugin, params, user_id, ldap_user, user):
     # Special handling for active directory: Is the user enabled / disabled?
-    if config.ldap_connection['type'] == 'ad' and ldap_user.get('useraccountcontrol'):
+    if g_config['type'] == 'ad' and ldap_user.get('useraccountcontrol'):
         # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
         if saveint(ldap_user['useraccountcontrol'][0]) & 2 and not user.get("locked", False):
             return {
@@ -794,7 +803,7 @@ def ldap_attrs_auth_expire(params):
     attrs = [ params.get('attr', ldap_attr('pw_changed')).lower() ]
 
     # Fetch user account flags to check locking
-    if config.ldap_connection['type'] == 'ad':
+    if g_config['type'] == 'ad':
         attrs.append('useraccountcontrol')
     return attrs
 
@@ -950,7 +959,7 @@ def ldap_list_roles_with_group_dn():
             ListOf(
                 LDAPDistinguishedName(
                     size = 80,
-                    enforce_suffix = ldap_replace_macros(config.ldap_groupspec.get('dn', '')),
+                    enforce_suffix = ldap_replace_macros(g_config.get('group_dn', '')),
                     allow_empty = False,
                 ),
                 title = role['alias'] + ' - ' + _("Specify the Group DN"),
@@ -1022,7 +1031,7 @@ def ldap_login(username, password):
     except:
         result = False
 
-    ldap_default_bind(ldap_connection)
+    ldap_default_bind(ldap_connections[g_config['id']])
     return result
 
 # In case the sync is done on the master of a distributed setup the auth serial
@@ -1085,7 +1094,7 @@ def ldap_sync(add_to_changelog, only_username):
     # requests to e.g. the page hook would cause duplicate calculations
     file(g_ldap_sync_time_file, 'w').write('%s\n' % time.time())
 
-    if not config.ldap_connection or not ldap_user_base_dn_configured():
+    if not ldap_user_base_dn_configured():
         return # silently skip sync without configuration
 
     # Flush ldap related before each sync to have a caching only for the
@@ -1095,8 +1104,10 @@ def ldap_sync(add_to_changelog, only_username):
     g_ldap_group_cache = {}
 
     start_time = time.time()
+    connection_id = g_config['id']
 
-    ldap_log('  SYNC PLUGINS: %s' % ', '.join(config.ldap_active_plugins.keys()))
+    ldap_log('SYNC STARTED')
+    ldap_log('  SYNC PLUGINS: %s' % ', '.join(g_config['active_plugins'].keys()))
 
     # Unused at the moment, always sync all users
     #filt = None
@@ -1111,25 +1122,28 @@ def ldap_sync(add_to_changelog, only_username):
     # Remove users which are controlled by this connector but can not be found in
     # LDAP anymore
     for user_id, user in users.items():
-        if user.get('connector') == 'ldap' and user_id not in ldap_users:
+        user_connection_id = cleanup_connection_id(user.get('connector'))
+        if user_connection_id == connection_id and user_id not in ldap_users:
             del users[user_id] # remove the user
             wato.log_pending(wato.SYNCRESTART, None, "edit-users",
-                _("LDAP Connector: Removed user %s" % user_id), user_id = '')
+                _("LDAP [%s]: Removed user %s") % (connection_id, user_id), user_id = '')
 
     for user_id, ldap_user in ldap_users.items():
         if user_id in users:
             user = copy.deepcopy(users[user_id])
             mode_create = False
         else:
-            user = new_user_template('ldap')
+            user = new_user_template(connection_id)
             mode_create = True
 
+        user_connection_id = cleanup_connection_id(user.get('connector'))
+
         # Skip all users not controlled by this connector
-        if user.get('connector') != 'ldap':
+        if user_connection_id != connection_id:
             continue
 
         # Gather config from convert functions of plugins
-        for key, params in config.ldap_active_plugins.items():
+        for key, params in g_config['active_plugins'].items():
             user.update(ldap_attribute_plugins[key]['convert'](key, params or {}, user_id, ldap_user, user))
 
         if not mode_create and user == users[user_id]:
@@ -1147,7 +1161,7 @@ def ldap_sync(add_to_changelog, only_username):
 
         if mode_create:
             wato.log_pending(wato.SYNCRESTART, None, "edit-users",
-                             _("LDAP Connector: Created user %s" % user_id), user_id = '')
+                             _("LDAP [%s]: Created user %s") % (connection_id, user_id), user_id = '')
         else:
             details = []
             if added:
@@ -1175,7 +1189,7 @@ def ldap_sync(add_to_changelog, only_username):
 
             if details:
                 wato.log_pending(wato.SYNCRESTART, None, "edit-users",
-                     _("LDAP Connector: Modified user %s (%s)") % (user_id, ', '.join(details)),
+                     _("LDAP [%s]: Modified user %s (%s)") % (connection_id, user_id, ', '.join(details)),
                      user_id = '')
 
     duration = time.time() - start_time
@@ -1193,7 +1207,7 @@ def ldap_sync(add_to_changelog, only_username):
 # by this connector
 def ldap_locked_attributes():
     locked = set([ 'password' ]) # This attributes are locked in all cases!
-    for key in config.ldap_active_plugins.keys():
+    for key in g_config['active_plugins'].keys():
         locked.update(ldap_attribute_plugins.get(key, {}).get('lock_attributes', []))
     return list(locked)
 
@@ -1201,7 +1215,7 @@ def ldap_locked_attributes():
 # the multisites users.mk
 def ldap_multisite_attributes():
     attrs = set([])
-    for key in config.ldap_active_plugins.keys():
+    for key in g_config['active_plugins'].keys():
         attrs.update(ldap_attribute_plugins.get(key, {}).get('multisite_attributes', []))
     return list(attrs)
 
@@ -1209,9 +1223,12 @@ def ldap_multisite_attributes():
 # the check_mks contacts.mk
 def ldap_non_contact_attributes():
     attrs = set([])
-    for key in config.ldap_active_plugins.keys():
+    for key in g_config['active_plugins'].keys():
         attrs.update(ldap_attribute_plugins.get(key, {}).get('non_contact_attributes', []))
     return list(attrs)
+
+def ldap_active_plugins():
+    return g_config['active_plugins']
 
 ldap_builtin_attribute_plugin_names = []
 
@@ -1234,7 +1251,7 @@ def ldap_page():
     if os.path.exists(g_ldap_sync_fail_file):
         cache_livetime = 20
     else:
-        cache_livetime = config.ldap_cache_livetime
+        cache_livetime = g_config['cache_livetime']
 
     if last_sync_time + cache_livetime > time.time():
         return # No action needed, cache is recent enough
@@ -1255,30 +1272,29 @@ def ldap_page():
 # This function migrates the former configuration to the new one.
 # TODO This code can be removed the day we decide not to migrate old configs anymore.
 def ldap_migrate_config():
-    if connection_config:
+    if config.user_connections:
         return # Don't try to migrate anything when there is at least one connection configured
 
     # Create a default connection out of the old config format
-    connector = {
+    connection = {
         'id'             : 'default',
         'type'           : 'ldap',
         'description'    : _('This is the default LDAP connection.'),
         'disabled'       : 'ldap' not in getattr(config, 'user_connectors', []),
-        'cache_livetime' : config.ldap_cache_livetime,
-        'active_plugins' : config.ldap_active_plugins,
-        'debug_log'      : config.ldap_debug_log,
+        'cache_livetime' : getattr(config, 'ldap_cache_livetime', 300),
+        'active_plugins' : getattr(config, 'ldap_active_plugins', ['email', 'alias', 'auth_expire' ]),
+        'debug_log'      : getattr(config, 'ldap_debug_log', False),
     }
 
-    connector.update(config.ldap_connection)
+    connection.update(getattr(config, 'ldap_connection', {}))
 
     for what in ["user", "group"]:
-        for key, val in config.ldap_userspec.items():
+        for key, val in getattr(config, 'ldap_'+what+'spec', {}).items():
             if key in ["dn", "scope", "filter", "filter_group", "member"]:
                 key = what + "_" + key
-            connector[key] = val
+            connection[key] = val
 
-    connection_config.append(connector)
-    save_connection_config()
+    config.user_connections.append(connection)
 
 
 multisite_user_connectors['ldap'] = {

@@ -224,7 +224,7 @@ crash_report_target = "feedback@check-mk.org"
 userdb_automatic_sync = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ]
 
 # Holds dicts defining user connector instances and their properties
-user_connectors = []
+user_connections = []
 
 default_user_profile  = {
     'roles': ['user'],

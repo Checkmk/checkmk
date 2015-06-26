@@ -1,6 +1,7 @@
 1.2.7i2p1:
     Checks & Agents:
     * 2315 FIX: windows agent: BOM replacement, fixed incorrect byte offset...
+    * 2316 FIX: windows agent: fixed formatting errors in cached agent sections
     * 2345 FIX: mk_logwatch: Now also removing CR characters from log line endings before matching
 
     Multisite:

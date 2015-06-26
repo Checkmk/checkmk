@@ -429,11 +429,9 @@ def unit_mult(u1, u2):
     else:
         return u1
 
-def unit_add(u1, u2):
-    return unit_mult(u1, u2)
-
-def unit_sub(u1, u2):
-    return unit_mult(u1, u2)
+unit_div = unit_mult
+unit_add = unit_mult
+unit_sub = unit_mult
 
 def operator_minmax(a, b, func):
     v = func(a[0], b[0])
@@ -458,9 +456,9 @@ def operator_minmax(a, b, func):
 # TODO: Do real unit computation, detect non-matching units
 rpn_operators = {
     "+"  : lambda a, b: ((a[0] +  b[0]),                unit_mult(a[1], b[1]), choose_operator_color(a[2], b[2])),
-    "-"  : lambda a, b: ((a[0] -  b[0]),                unit_mult(a[1], b[1]), choose_operator_color(a[2], b[2])),
-    "*"  : lambda a, b: ((a[0] *  b[0]),                unit_mult(a[1], b[1]), choose_operator_color(a[2], b[2])),
-    "/"  : lambda a, b: ((a[0] /  b[0]),                unit_info[""],         choose_operator_color(a[2], b[2])),
+    "-"  : lambda a, b: ((a[0] -  b[0]),                unit_sub(a[1], b[1]), choose_operator_color(a[2], b[2])),
+    "*"  : lambda a, b: ((a[0] *  b[0]),                unit_add(a[1], b[1]), choose_operator_color(a[2], b[2])),
+    "/"  : lambda a, b: ((a[0] /  b[0]),                unit_div(a[1], b[1]), choose_operator_color(a[2], b[2])),
     ">"  : lambda a, b: ((a[0] >  b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
     "<"  : lambda a, b: ((a[0] <  b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
     ">=" : lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
@@ -833,11 +831,12 @@ def build_perfometer(perfometer, translated_metrics):
 #   '----------------------------------------------------------------------'
 
 def get_graph_templates(translated_metrics):
+    if not translated_metrics:
+        return
     for graph_template in graph_info:
         if graph_possible(graph_template, translated_metrics):
             yield graph_template
         elif graph_possible_without_optional_metrics(graph_template, translated_metrics):
-            html.debug("JA")
             yield graph_without_missing_optional_metrics(graph_template, translated_metrics)
 
 
@@ -877,7 +876,6 @@ def graph_without_missing_optional_metrics(graph_template, translated_metrics):
 
     reduced_graph_template = graph_template.copy()
     reduced_graph_template["metrics"] = working_metrics
-    html.debug(reduced_graph_template)
     return reduced_graph_template
 
 

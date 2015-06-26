@@ -1282,7 +1282,7 @@ def ldap_migrate_config():
         'description'    : _('This is the default LDAP connection.'),
         'disabled'       : 'ldap' not in getattr(config, 'user_connectors', []),
         'cache_livetime' : getattr(config, 'ldap_cache_livetime', 300),
-        'active_plugins' : getattr(config, 'ldap_active_plugins', ['email', 'alias', 'auth_expire' ]),
+        'active_plugins' : getattr(config, 'ldap_active_plugins', []) or {'email': {}, 'alias': {}, 'auth_expire': {}},
         'debug_log'      : getattr(config, 'ldap_debug_log', False),
     }
 

@@ -2560,8 +2560,8 @@ filesystem_elements = [
     ( "show_reserved",
       DropdownChoice(
           title = _("Show space reserved for the <tt>root</tt> user"),
-          help = _("Check_MK accounts space that is reserved for the <tt>root</tt> user on Linux, Unix as "
-                   "used space. Usually 5% are being reserved for root when a new filesystem is being created. "
+          help = _("Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                   "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
                    "With this option you can have Check_MK display the current amount of reserved but yet unused "
                    "space."),
           choices = [
@@ -2960,7 +2960,7 @@ register_check_parameters(
                     ),
                     title = _("Used bandwidth (minimum or maximum traffic)"),
                     help = _("Setting levels on the used bandwidth is optional. If you do set "
-                             "levels you might also consider using an averaging."),
+                             "levels you might also consider using averaging."),
                 )
               ),
              ( "nucasts",
@@ -4499,8 +4499,8 @@ register_check_parameters(
     Optional(
         Tuple(
             elements = [
-              Integer(title = _("Warning if older than"), unit = _("seconds")),
-              Integer(title = _("Critical if older than"), unit = _("seconds"))
+              Age(title = _("Warning if older than")),
+              Age(title = _("Critical if older than"))
             ]
         ),
         title = _("Specify time since last successful backup"),
@@ -4820,7 +4820,7 @@ register_check_parameters(
             ( "average",
               Integer(
                   title = _("Average"),
-                  help = _("When averaging is set, then an floating average value "
+                  help = _("When averaging is set, a floating average value "
                            "of the disk throughput is computed and the levels for read "
                            "and write will be applied to the average instead of the current "
                            "value."),
@@ -5111,7 +5111,7 @@ register_check_parameters(
     ),
     TextAscii(
         title = _("Name of the database"),
-        help = _("Don't forgett the instance: instance:dbname"),
+        help = _("Don't forget the instance: instance:dbname"),
     ),
     "first"
 )
@@ -5576,12 +5576,12 @@ register_check_parameters(
               Levels(
                   title = _("Read wait"),
                   unit = _("ms"),
-                  default_levels = (100.0, 250.0))),
+                  default_levels = (30.0, 50.0))),
             ( "write_wait",
               Levels(
                   title = _("Write wait"),
                   unit = _("ms"),
-                  default_levels = (100.0, 250.0))),
+                  default_levels = (30.0, 50.0))),
             ( "average",
               Age(
                   title = _("Averaging"),
@@ -5625,7 +5625,7 @@ register_check_parameters(
             ( "average",
               Integer(
                   title = _("Average"),
-                  help = _("When averaging is set, then an floating average value "
+                  help = _("When averaging is set, a floating average value "
                            "of the disk throughput is computed and the levels for read "
                            "and write will be applied to the average instead of the current "
                            "value."),
@@ -7476,6 +7476,15 @@ register_check_parameters(
                                ]
                             )
                        ])),
+                ( "perm",
+                    Tuple(
+                        title = _("Perm Memory usage"),
+                        elements = [
+                            Percentage(title = _("Warning at"), label = _("% usage")),
+                            Percentage(title = _("Critical at"), label = _("% usage")),
+                        ]
+                    )
+                ),
             ]),
         TextAscii(
             title = _("Name of the virtual machine"),

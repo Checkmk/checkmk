@@ -267,6 +267,12 @@ metric_info["mem_used"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_perm_used"] = {
+    "color": "#80ff40",
+    "title" : _("Perm used"),
+    "unit" : "bytes",
+}
+
 metric_info["swap_total"] = {
     "title" : _("Swap installed"),
     "color": "#e0e0e0",
@@ -735,7 +741,7 @@ metric_info["disk_write_throughput"] = {
 }
 
 metric_info["disk_ios"] = {
-    "title" : _("Read/Write operations"),
+    "title" : _("Disk I/O operations"),
     "unit"  : "1/s",
     "color" : "#60e0a0",
 }
@@ -1269,6 +1275,7 @@ check_metrics["check_mk-ucd_cpu_load"]                          = {}
 check_metrics["check_mk-statgrab_load"]                         = {}
 check_metrics["check_mk-hpux_cpu"]                              = {}
 check_metrics["check_mk-blade_bx_load"]                         = {}
+check_metrics["check_mk-jolokia_metrics.perm_gen"]              = {}
 
 check_metrics["check_mk-kernel"]                                = {
     "ctxt"       : { "name": "context_switches" },
@@ -1576,6 +1583,12 @@ perfometer_info.append({
     "exponent"   : 4,
 })
 
+perfometer_info.append({
+    "type"       : "linear",
+    "segments"  : [ "mem_perm_used"],
+    "total"     : "mem_perm_used:max",
+
+})
 
 perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
 perfometer_info.append(("linear",       ( ["execution_time"], 90.0, None)))
@@ -1780,6 +1793,7 @@ define_generic_graph("uptime")
 define_generic_graph("temp")
 define_generic_graph("humidity")
 define_generic_graph("time_offset")
+define_generic_graph("mem_perm_used")
 
 
 graph_info.append({
@@ -1930,12 +1944,7 @@ graph_info.append({
     ],
 })
 
-graph_info.append({
-    "title" : _("Disk I/O Operations"),
-    "metrics" : [
-        ( "disk_ios",  "area" ),
-    ],
-})
+define_generic_graph("disk_ios")
 
 graph_info.append({
     "title" : _("Average request size"),

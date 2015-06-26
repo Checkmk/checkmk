@@ -1,0 +1,9 @@
+Title: jolokia_metrics.perm_gen: New Check to monitor used Perm Space on a JVM
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435230606
+Class: feature
+
+

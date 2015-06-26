@@ -50,6 +50,7 @@ jolokia_metrics_tp_default_levels = {
             'currentThreadsCount': (None, None)
 }
 
+
 def jolokia_metrics_parse(info):
     parsed = {}
     for inst, var, value in info:
@@ -212,6 +213,17 @@ def inventory_jolokia_metrics_gc(info, what):
     for inst, vals in parsed.iteritems():
         for gc, val in vals.get('gc', {}).iteritems():
             inv.append(("%s GC %s" % (inst ,gc) , levels))
+    return inv
+
+def inventory_jolokia_metrics_tp(info, what):
+    inv = []
+    parsed = jolokia_metrics_parse(info)
+    levels = 'jolokia_metrics_tp_default_levels'
+    if what == 'tp':
+        needed_key = ["currentThreadsBusy", "currentThreadCount", "maxThreads"]
+    for inst, vals in parsed.iteritems():
+        for tp, val in vals.get('tp', {}).iteritems():
+            inv.append(("%s ThreadPool %s" % (inst ,tp) , levels))
     return inv
 
 def inventory_jolokia_metrics_tp(info, what):
@@ -744,4 +756,45 @@ check_info["jolokia_metrics.bea_sess"] = {
     "group"               : "jvm_sessions",
     "has_perfdata"        : True,
 }
+
+jolokia_metrics_perm_gen_default_levels = { "perm" : ( 80.0, 100.0 ) }
+
+def inventory_jolokia_metrics_perm_gen(info):
+    parsed = jolokia_metrics_parse(info)
+    for instance, values in parsed.items():
+        if "PermGenUsage" in values:
+            yield instance, "jolokia_metrics_perm_gen_default_levels"
+
+def check_jolokia_metrics_perm_gen(item, params, info):
+    parsed = jolokia_metrics_parse(info)
+    values = parsed.get(item)
+    if values:
+        warn, crit = params['perm']
+        usage_bytes = int(values['PermGenUsage'])
+        size_bytes = int(values['PermGenMax'])
+        usage_perc = 100.0 / size_bytes * usage_bytes
+        warn_bytes = usage_bytes / 100.0 * warn
+        crit_bytes = usage_bytes / 100.0 * crit
+        perfdata = [("mem_perm_used", usage_bytes, warn_bytes, crit_bytes, 0, size_bytes)]
+        state = 0
+        if usage_perc >= crit:
+            state = 2
+        elif usage_perc >= warn:
+            state = 1
+        if state != 0:
+            levels = "(Warn/Crit at %2.f %%/ %.2f %%)" % ( warn, crit )
+        else:
+            levels = ""
+        return state, "Usage: %.2f %% (%s of %s used) %s" % \
+          ( usage_perc, get_bytes_human_readable(usage_bytes), get_bytes_human_readable(size_bytes), levels ), \
+          perfdata
+
+check_info["jolokia_metrics.perm_gen"] = {
+    "service_description" : "JVM %s PermGen Usage",
+    "check_function"      : check_jolokia_metrics_perm_gen,
+    "inventory_function"  : inventory_jolokia_metrics_perm_gen,
+    "group"               : "jvm_memory",
+    "has_perfdata"        : True,
+}
+
 

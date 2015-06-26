@@ -1,0 +1,9 @@
+Title: notification bulking: fixed exception for plugins which are not configured with checkboxes, e.g. sms
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435215874
+Class: fix
+
+

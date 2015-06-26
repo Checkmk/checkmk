@@ -1408,7 +1408,7 @@ def notify_bulk(dirname, uuids):
         # Per default the uuids are sorted chronologically from oldest to newest
         # Therefore the notification plugin also shows the oldest entry first
         # The following configuration option allows to reverse the sorting
-        if old_params.get("bulk_sort_order") == "newest_first":
+        if type(old_params) == dict and old_params.get("bulk_sort_order") == "newest_first":
             bulk_context.reverse()
 
         # Converts bulk context from [[1,2],[3,4]] to [1,2,3,4]

@@ -5245,6 +5245,9 @@ def do_check_keepalive():
     num_checks = 0 # count total number of check cycles
 
     read_packed_config()
+
+    # TODO: This is not used at all in keepalive mode except that compute_check_parameters()
+    # adds variables to this set. But it is not checked in this mode. Should be removed.
     global vars_before_config
     vars_before_config = set([])
 
@@ -5253,8 +5256,9 @@ def do_check_keepalive():
 
     global total_check_output
     total_check_output = ""
-    if opt_debug:
-        before = copy_globals()
+
+    if opt_verbose:
+        original_global_vars = copy_globals()
 
     ipaddress_cache = {}
 
@@ -5268,7 +5272,7 @@ def do_check_keepalive():
             read_packed_config()
             cleanup_globals()
             reset_global_caches()
-            before = copy_globals()
+            original_global_vars = copy_globals()
             continue
 
         elif not cmdline:
@@ -5360,15 +5364,19 @@ def do_check_keepalive():
 
         cleanup_globals() # Prepare for next check
 
-        # Check if all global variables are clean, but only in debug mode
-        if opt_debug:
-            after = copy_globals()
-            for varname, value in before.items():
-                if value != after[varname]:
-                    sys.stderr.write("WARNING: global variable %s has changed: %r ==> %s\n"
-                           % (varname, value, repr(after[varname])[:50]))
-            new_vars = set(after.keys()).difference(set(before.keys()))
-            if (new_vars):
+        # Check if all global variables are clean, but only in verbose logging mode
+        if opt_verbose:
+            new_global_vars = copy_globals()
+            for varname, value in original_global_vars.items():
+                if varname not in ignore_changed_global_variables and value != new_global_vars[varname]:
+                    if opt_verbose > 1:
+                        sys.stderr.write("WARNING: global variable %s has changed: %r ==> %r\n"
+                                % (varname, value, new_global_vars[varname]))
+                    else:
+                        sys.stderr.write("WARNING: global variable %s has changed: %s ==> %s\n"
+                                % (varname, repr(value)[:50], repr(new_global_vars[varname])[:50]))
+            new_vars = set(new_global_vars.keys()).difference(set(original_global_vars.keys()))
+            if new_vars:
                 sys.stderr.write("WARNING: new variable appeared: %s\n" % ", ".join(new_vars))
             sys.stderr.flush()
 
@@ -5411,6 +5419,13 @@ def keepalive_read_line():
 #   | Code for reading the configuration files.                            |
 #   '----------------------------------------------------------------------'
 
+# These variables shal be ignored when performing checks which global
+# variables have been changed during runtime of e.g. the Check_MK
+# keepalive mode
+ignore_changed_global_variables = [
+    'all_hosts_untagged',
+    'all_clusters_untagged',
+]
 
 # Now - at last - we can read in the user's configuration files
 def all_nonfunction_vars():
@@ -5564,8 +5579,7 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     vars_after_config = all_nonfunction_vars()
     ignored_variables = set(['vars_before_config', 'parts',
                              'hosttags' ,'seen_hostnames',
-                             'all_hosts_untagged', 'all_clusters_untagged',
-                             'taggedhost' ,'hostname'])
+                             'taggedhost' ,'hostname'] + ignore_changed_global_variables)
     errors = 0
     for name in vars_after_config:
         if name not in ignored_variables and name not in vars_before_config:

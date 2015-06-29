@@ -1,7 +1,7 @@
 1.2.7i2p1:
     Checks & Agents:
     * 2315 FIX: windows agent: BOM replacement, fixed incorrect byte offset...
-    * 2316 FIX: windows agent: fixed formatting errors in cached agent sections
+    * 2316 FIX: windows agent: fix garbled output of cached agent plugins...
     * 2345 FIX: mk_logwatch: Now also removing CR characters from log line endings before matching
 
     Multisite:
@@ -13,6 +13,7 @@
 
     Notifications:
     * 2313 FIX: notification bulking: fixed exception for plugins which are not configured with checkboxes, e.g. sms
+    * 2347 FIX: Improved error message in notify.log when sendmail is missing
 
 
 1.2.7i2:

@@ -388,7 +388,10 @@ def send_mail(m, target, from_address):
     if from_address:
         cmd += ['-f', from_address]
     cmd += [ "-i", target]
-    p = subprocess.Popen(cmd, stdin = subprocess.PIPE)
+    try:
+        p = subprocess.Popen(cmd, stdin = subprocess.PIPE)
+    except OSError:
+        raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
     p.communicate(m.as_string())
     return True
 

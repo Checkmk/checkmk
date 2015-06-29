@@ -34,6 +34,9 @@
     * 2348 FIX: HTML-Mails: Added missing link to service descriptions
     * 2349 FIX: HTML-Mails: Fixed state colors in Outlook
 
+    HW/SW-Inventory:
+    * 2367 FIX: win_system: Fixed exception when non-UTF-8 sequences are contained agent output
+
 
 1.2.7i2:
     Core & Setup:

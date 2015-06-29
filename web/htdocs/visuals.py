@@ -156,15 +156,15 @@ def load(what, builtin_visuals, skip_func = None):
                         if attr not in visual and attr in builtin_visual:
                             visual[attr] = builtin_visual[attr]
 
+                # Repair visuals with missing 'title' or 'description'
+                visual.setdefault("title", name)
+                visual.setdefault("description", "")
+
                 # Declare custom permissions
                 declare_visual_permission(what, name, visual)
 
                 visuals[(user, name)] = visual
 
-                # Repair visuals with missing 'title' or 'description'
-                for key in [ "title", "description" ]:
-                    if key not in visual:
-                        visual[key] = _("Missing %s") % key
 
         except SyntaxError, e:
             raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, path, e))

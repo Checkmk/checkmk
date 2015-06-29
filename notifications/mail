@@ -141,34 +141,51 @@ tr.even2 { background-color: #ffaaaa; }
 tr.odd3  { background-color: #ffe0a0; }
 tr.even3 { background-color: #ffefaf; }
 
-span.state {
+.stateOK, .stateUP {
     padding-left: 3px;
     padding-right: 3px;
     border-radius: 2px;
     font-weight: bold;
-}
-
-.stateOK, .stateUP {
     background-color: #0b3; color: #ffffff;
 }
 
 .stateWARNING {
+    padding-left: 3px;
+    padding-right: 3px;
+    border-radius: 2px;
+    font-weight: bold;
     background-color: #ffff00; color: #000000;
 }
 
 .stateCRITICAL, .stateDOWN {
+    padding-left: 3px;
+    padding-right: 3px;
+    border-radius: 2px;
+    font-weight: bold;
     background-color: #ff0000; color: #ffffff;
 }
 
 .stateUNKNOWN, .stateUNREACHABLE {
+    padding-left: 3px;
+    padding-right: 3px;
+    border-radius: 2px;
+    font-weight: bold;
     background-color: #ff8800; color: #ffffff;
 }
 
 .statePENDING {
+    padding-left: 3px;
+    padding-right: 3px;
+    border-radius: 2px;
+    font-weight: bold;
     background-color: #888888; color: #ffffff;
 }
 
 .stateDOWNTIME {
+    padding-left: 3px;
+    padding-right: 3px;
+    border-radius: 2px;
+    font-weight: bold;
     background-color: #00aaff; color: #ffffff;
 }
 
@@ -498,11 +515,11 @@ def construct_content(context):
     #   NOTIFICATIONTYPE is "CUSTOM"
 
     html_info = ""
-    html_state = '<span class="state state$@STATE$">$@STATE$</span>'
+    html_state = '<span class="state$@STATE$">$@STATE$</span>'
     notification_type = context["NOTIFICATIONTYPE"]
     if notification_type in [ "PROBLEM", "RECOVERY" ]:
         txt_info = "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$"
-        html_info = '<span class="state state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; ' + \
+        html_info = '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; ' + \
                     html_state
 
     elif notification_type.startswith("FLAP"):

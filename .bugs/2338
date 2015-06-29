@@ -1,0 +1,11 @@
+Title: Cloning rules in WATO should jump to edit page, not directly clone
+Component: wato
+State: open
+Date: 2015-06-29 12:40:32
+Targetversion: future
+Class: nastiness
+
+It should work like in most other place in WATO: Clicking clone should not instantly copy
+a rule but enter the "Create new rule" dialog prefilled with all the values from the rule.
+In a hidden variable we can save the position of the rule to be created so that it will
+be a direct neighbor of the clone rule.

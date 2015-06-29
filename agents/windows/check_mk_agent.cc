@@ -3107,8 +3107,11 @@ void output_external_programs(SOCKET &out, script_type type)
 
                     // We need to parse each line and replace any <<<section>>> with <<<section:cached(123455678,3600)>>>
                     // Allocate new buffer, process/modify each line of the original buffer and write it into the new buffer
+                    // We increase this new buffer by a good amount, because there might be several hundred
+                    // sections (e.g. veeam_backup status piggyback) within this plugin output.
+                    // TODO: Maybe add a dry run mode. Count the number of section lines and reserve a fitting extra heap
                     int buffer_heap_size = HeapSize(GetProcessHeap(), 0, cont->buffer_work);
-                    char *cache_buffer = (char*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buffer_heap_size + 1024);
+                    char *cache_buffer = (char*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buffer_heap_size + 262144);
                     int cache_buffer_offset = 0;
 
                     char *line = strtok(cont->buffer_work, "\n");

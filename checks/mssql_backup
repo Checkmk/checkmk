@@ -24,10 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# TODO: Remove this. Use time.strptime and time.strftime!!
-import datetime
-
 # <<<mssql_backup>>>
 # MSSQL_SQLEXPRESS test123 1331207325
 
@@ -50,14 +46,13 @@ def check_mssql_backup(item, params, info):
 
         if item == inst + ' ' + tablespace:
             if last_backup_date:
-                dt = datetime.datetime(*time.strptime(last_backup_date + ' ' + last_backup_time, '%Y-%m-%d %H:%M:%S')[:6])
+                timestamp = time.mktime(time.strptime(last_backup_date + ' ' + last_backup_time,
+                                                      '%Y-%m-%d %H:%M:%S'))
             else:
-                dt = datetime.datetime.fromtimestamp(saveint(last_backup_timestamp))
+                timestamp = int(last_backup_timestamp)
 
             state = 0
-            # Would be so nice to use delta.total_seconds(). But we must care about python < 2.7
-            delta = datetime.datetime.now() - dt
-            sec_ago = (delta.microseconds + (delta.seconds + delta.days * 24 * 3600) * 10**6) / 10**6
+            sec_ago = time.time() - timestamp
 
             if params is not None:
                 if sec_ago >= params[1]:
@@ -68,8 +63,9 @@ def check_mssql_backup(item, params, info):
             else:
                 perfdata = [('seconds', sec_ago)]
 
-            return (state, 'Last backup was at %s (%ds ago)' %
-                (dt.strftime('%Y-%m-%d %H:%M:%S'), sec_ago), perfdata)
+            return (state, 'Last backup was at %s (%s ago)' %
+                (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)),
+                 get_age_human_readable(sec_ago)), perfdata)
 
     return (3, 'Tablespace %s could not be found' % item)
 

@@ -1,0 +1,13 @@
+Title: multisite view data export: fixed exception when using joined columns
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p6
+Date: 1434719835
+Class: fix
+
+The csv / json / python data export of a mulitsite view did not work correctly
+when there were joined columns involved. An exception occured whenever an additional
+column was set after the joined column.
+
+Note: A single joined column at the end of a table row did work.

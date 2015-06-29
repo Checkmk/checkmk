@@ -8834,6 +8834,20 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
 
 
 
+def convert_context_to_unicode(context):
+    # Convert all values to unicode
+    for key, value in context.iteritems():
+        if type(value) == str:
+            try:
+                value_unicode = value.decode("utf-8")
+            except:
+                try:
+                    value_unicode = value.decode("latin-1")
+                except:
+                    value_unicode = u"(Invalid byte sequence)"
+            context[key] = value_unicode
+
+
 def mode_notifications(phase):
     options         = config.load_user_file("notification_display_options", {})
     show_user_rules = options.get("show_user_rules", False)
@@ -8951,14 +8965,13 @@ def mode_notifications(phase):
 
         if backlog:
             table.begin(table_id = "backlog", title = _("Recent notifications (for analysis)"), sortable=False)
-            for nr, entry in enumerate(backlog):
+            for nr, context in enumerate(backlog):
+                convert_context_to_unicode(context)
                 table.row()
                 table.cell(css="buttons")
 
                 analyse_url = html.makeuri([("analyse", str(nr))])
-                context = entry.items()
-                context.sort()
-                tooltip = "".join(("%s: %s\n" % e).decode('utf-8') for e in context)
+                tooltip = "".join(("%s: %s\n" % e) for e in sorted(context.items()))
                 html.icon_button(analyse_url, _("Analyze ruleset with this notification:\n%s" % tooltip), "analyze")
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
@@ -8966,22 +8979,22 @@ def mode_notifications(phase):
                     html.icon(_("You are analysing this notification"), "rulematch")
 
                 table.cell(_("Nr."), nr+1, css="number")
-                if "MICROTIME" in entry:
-                    date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(entry["MICROTIME"]) / 1000000.0))
+                if "MICROTIME" in context:
+                    date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(context["MICROTIME"]) / 1000000.0))
                 else:
-                    date = entry.get("SHORTDATETIME") or \
-                           entry.get("LONGDATETIME") or \
-                           entry.get("DATE") or \
+                    date = context.get("SHORTDATETIME") or \
+                           context.get("LONGDATETIME") or \
+                           context.get("DATE") or \
                            _("Unknown date")
 
                 table.cell(_("Date/Time"), date, css="nobr")
-                nottype = entry.get("NOTIFICATIONTYPE", "")
+                nottype = context.get("NOTIFICATIONTYPE", "")
                 table.cell(_("Type"), nottype)
 
                 if nottype in [ "PROBLEM", "RECOVERY" ]:
-                    if entry.get("SERVICESTATE"):
-                        statename = _(entry["SERVICESTATE"][:4])
-                        state = entry["SERVICESTATEID"]
+                    if context.get("SERVICESTATE"):
+                        statename = _(context["SERVICESTATE"][:4])
+                        state = context["SERVICESTATEID"]
                         css = "state svcstate state%s" % state
                     else:
                         statename = _(entry.get("HOSTSTATE")[:4])
@@ -9000,9 +9013,9 @@ def mode_notifications(phase):
                 else:
                     table.cell(_("State"), "")
 
-                table.cell(_("Host"), entry.get("HOSTNAME", ""))
-                table.cell(_("Service"), entry.get("SERVICEDESC", ""))
-                output = entry.get("SERVICEOUTPUT", entry.get("HOSTOUTPUT"))
+                table.cell(_("Host"), context.get("HOSTNAME", ""))
+                table.cell(_("Service"), context.get("SERVICEDESC", ""))
+                output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
                 table.cell(_("Plugin output"), output)
             table.end()
 
@@ -16878,6 +16891,18 @@ def convert_aggregation_to_bi(aggr):
         convaggr = (bi_constants["DISABLED"],) + convaggr
     return convaggr
 
+
+def validate_bi_rule_call(value, varprefix):
+    rule_id, arguments = value
+    aggregations, aggregation_rules = load_bi_rules()
+    rule_params = aggregation_rules[rule_id]['params']
+
+    if len(arguments) != len(rule_params):
+        raise MKUserError(varprefix+"_1_0", _("The rule you selected needs %d argument(s) (%s), "
+                                       "but you configured %d arguments.") %
+                                (len(rule_params), ', '.join(rule_params), len(arguments)))
+
+
 # Not in global context, so that l10n will happen again
 def declare_bi_valuespecs(aggregation_rules):
     global vs_aggregation, aggregation_choices, vs_bi_node
@@ -16900,7 +16925,8 @@ def declare_bi_valuespecs(aggregation_rules):
                 size = 12,
                 title = _("Arguments:"),
             ),
-        ]
+        ],
+        validate = validate_bi_rule_call,
     )
 
     host_re_help = _("Either an exact host name or a regular expression exactly matching the host "

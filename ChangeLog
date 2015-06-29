@@ -13,6 +13,7 @@
     * 2362 FIX: mk_logwatch: fix cases where one logfile is listsed more than once in logwatch.cfg...
     * 2363 FIX: jolokia_metrics.uptime: Do not inventory instances where Uptime is missing - avoid crashed check
     * 2381 FIX: emc_datadomain_fans: Made check more robust against broken SNMP output
+    * 2366 FIX: carel_sensors: fix crash in case of missing temperature sensor
 
     Multisite:
     * 2314 FIX: Availability: fixed exception when grouping by host or service group

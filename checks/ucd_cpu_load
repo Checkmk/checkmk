@@ -32,7 +32,8 @@ def inventory_ucd_cpu_load(info):
         return [(None, "cpuload_default_levels")]
 
 def check_ucd_cpu_load(item, params, info):
-    return check_cpu_load_generic(params, [ float(l[0]) for l in info ])
+    # Note: Some dump devices send 12,540000 instead of 12.540000
+    return check_cpu_load_generic(params, [ float(l[0].replace(",", ".")) for l in info ])
 
 
 # We are not sure how to safely detect the UCD SNMP Daemon. We know that

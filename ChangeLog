@@ -24,6 +24,7 @@
     * 2381 FIX: emc_datadomain_fans: Made check more robust against broken SNMP output
     * 2366 FIX: carel_sensors: fix crash in case of missing temperature sensor
     * 2382 FIX: mssql_backup: Formating age output more human friendly
+    * 2368 FIX: ucd_cpu_load: fix exception in case of dump SNMP agent sending 12,540000 instead of 12.540000
 
     Multisite:
     * 2310 FIX: multisite view data export: fixed exception when using joined columns...

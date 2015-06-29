@@ -1,0 +1,10 @@
+Title: ucd_cpu_load: fix exception in case of dump SNMP agent sending 12,540000 instead of 12.540000
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435588503
+
+

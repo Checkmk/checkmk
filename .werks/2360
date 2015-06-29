@@ -1,0 +1,11 @@
+Title: esx_vsphere_vm.snapshot: Fix output of snapshot age in performance data and graph
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435572488
+
+The check would output the timestamp instead of the age in seconds. That lead to bizarre
+graphs. This has been fixed.

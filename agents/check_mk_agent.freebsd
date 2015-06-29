@@ -398,9 +398,8 @@ if cd $LOCALDIR ; then
     done
 fi
 
-
-echo '<<<local>>>'
-if cd $LOCALDIR ; then
+# Plugins
+if cd $PLUGINSDIR; then
     for skript in $(ls) ; do
         if [ -f "$skript" -a -x "$skript" ] ; then
             ./$skript
@@ -409,7 +408,7 @@ if cd $LOCALDIR ; then
     # Call some plugins only every X'th minute
     for skript in [1-9]*/* ; do
         if [ -x "$skript" ] ; then
-            run_cached local_${skript//\//\\} ${skript%/*} "$skript"
+            run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
         fi
     done
 fi

@@ -54,5 +54,4 @@ def inv_win_os(info):
 
 inv_info['win_os'] = {
    "inv_function"           : inv_win_os,
-   "unicode"                : True,
 }

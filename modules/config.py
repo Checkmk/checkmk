@@ -50,6 +50,7 @@ check_mk_perfdata_with_times       = True
 debug_log                          = False # deprecated
 monitoring_host                    = None # deprecated
 max_num_processes                  = 50
+fallback_agent_output_encoding     = 'latin1'
 
 # SNMP communities and encoding
 has_inline_snmp                    = False # is set to True by inline_snmp module, when available

@@ -915,29 +915,20 @@ def parse_info(lines, hostname):
             # The section data might have a different encoding
             encoding = section_options.get("encoding")
 
-            # Make the contents of the section unicode strings or UTF-8
-            # encoded bytestrings (like it was done always in the past)
-            try:
-                to_unicode = inv_info.get(section_name, {}).get('unicode', False)
-            except NameError:
-                pass # e.g. in precompiled mode we have no inv_info. That's ok.
-
         elif stripped_line != '':
             if "nostrip" not in section_options:
                 line = stripped_line
 
             if encoding:
                 try:
-                    decoded_line = line.decode(encoding)
-                    if not to_unicode:
-                        line = decoded_line.encode('utf-8')
+                    line = line.decode(encoding)
                 except:
-                    pass
-            elif to_unicode:
+                    line = line.decode(fallback_agent_output_encoding)
+            else:
                 try:
                     line = line.decode('utf-8')
                 except:
-                    line = line.decode('latin1')
+                    line = line.decode(fallback_agent_output_encoding)
 
             section.append(line.split(separator))
 

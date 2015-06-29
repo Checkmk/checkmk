@@ -1,0 +1,9 @@
+Title: carel_sensors: fix crash in case of missing temperature sensor
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435582715
+Class: fix
+
+

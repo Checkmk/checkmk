@@ -50,9 +50,9 @@ def check_carel_uniflair_cooling(item, _no_params, info):
     humidity = float(humidity)/10
 
     output = ""
-    output = output + ( "Global Status:%s" % (err_global_status and "(!!)Error, " or "OK, " ))
-    output = output + ( "Emergency Operation:%s" % (err_emergency_op and "(!!)Active, " or "Inactive, "))
-    output = output + ( "Humidifier:%s" % (err_waterloss and "(!!)Water Loss, " or "No Water Loss, " ))
+    output = output + ( "Global Status: %s" % (err_global_status and "Error(!!), " or "OK, " ))
+    output = output + ( "Emergency Operation: %s" % (err_emergency_op and "Active(!!), " or "Inactive, "))
+    output = output + ( "Humidifier: %s" % (err_waterloss and "Water Loss(!!), " or "No Water Loss, " ))
     output = output + "Humidity: %3.1f%%" % humidity
 
 

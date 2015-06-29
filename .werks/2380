@@ -1,0 +1,10 @@
+Title: Custom Host Notes painter was showing service notes when used in service based views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435582050
+
+

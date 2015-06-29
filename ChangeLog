@@ -20,6 +20,7 @@
     * 2314 FIX: Availability: fixed exception when grouping by host or service group
     * 2361 FIX: Fix exception for missing key 'title' in certain cases of older customized views
     * 2379 FIX: Plugin-Output: Fixed handling of URLs within output of check_http...
+    * 2380 FIX: Custom Host Notes painter was showing service notes when used in service based views
 
     WATO:
     * 2365 Removed old deprecated notification global options for plain emails...

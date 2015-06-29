@@ -391,16 +391,16 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
             yield 0, "Powered On: %s" % (powered_on_snapshot and powered_on_snapshot[3] or "None")
 
             perfdata = []
+            snapshot_age = time.time() - last_snapshot[1]
             if params.get("age"):
                 warn, crit = params["age"]
-                snapshot_age = time.time() - last_snapshot[1]
                 if snapshot_age > crit:
                     yield 2, "Snapshot is older than %s" % get_age_human_readable(snapshot_age)
                 elif snapshot_age > warn:
                     yield 1, "Snapshot is older than %s" % get_age_human_readable(snapshot_age)
-                perfdata = [("age", last_snapshot[1], warn, crit)]
+                perfdata = [("age", snapshot_age, warn, crit)]
             else:
-                perfdata = [("age", last_snapshot[1])]
+                perfdata = [("age", snapshot_age)]
 
             yield 0, "Last Snapshot: %s %s" % (last_snapshot[3],
                                                time.strftime("%D %H:%M",time.localtime(last_snapshot[1]))),\

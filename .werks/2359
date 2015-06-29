@@ -1,0 +1,10 @@
+Title: adva_fsp_if: Use more reliable SNMP table, avoids sporadic problems
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435571003
+Class: fix
+
+The check now uses <tt>opticalIfDiagOutputPower</tt> rather than <tt>currentPmSnapshotOutputPower</tt>.
+That fixes problems with disappearing interfaces. Thanks to Bernhard Schmidt.

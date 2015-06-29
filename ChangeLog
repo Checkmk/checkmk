@@ -19,6 +19,7 @@
     * 2381 FIX: emc_datadomain_fans: Made check more robust against broken SNMP output
     * 2366 FIX: carel_sensors: fix crash in case of missing temperature sensor
     * 2382 FIX: mssql_backup: Formating age output more human friendly
+    * 2383 FIX: FreeBSD Agent: Fixed handling <<<ps>>> section when jailed
 
     Multisite:
     * 2314 FIX: Availability: fixed exception when grouping by host or service group

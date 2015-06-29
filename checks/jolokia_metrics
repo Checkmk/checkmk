@@ -138,7 +138,10 @@ def inventory_jolokia_metrics(info, what):
     elif what == 'threads':
         levels = 'jolokia_metrics_threads_default_levels'
 
-    return [ (k, levels) for k in parsed ]
+    for instance, data in parsed.items():
+        if what == 'uptime' and "Uptime" not in data:
+            continue
+        yield instance, levels
 
 
 def inventory_jolokia_metrics_apps(info, what):
@@ -356,12 +359,9 @@ def check_jolokia_metrics_threads(item, params, info):
 
 def check_jolokia_metrics_uptime(item, params, info):
     parsed = jolokia_metrics_parse(info)
-    if item not in parsed:
-        return (3, "data not found in agent output")
-    uptime = saveint(parsed[item]['Uptime']) / 1000
-
-    return check_uptime_seconds(params, uptime)
-
+    if item in parsed:
+        uptime = int(parsed[item]['Uptime']) / 1000
+        return check_uptime_seconds(params, uptime)
 
 
 def check_jolokia_metrics_app_state(item, _unused, info):

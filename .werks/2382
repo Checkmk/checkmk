@@ -1,0 +1,9 @@
+Title: mssql_backup: Formating age output more human friendly
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435583553
+Class: fix
+
+

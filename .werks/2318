@@ -1,0 +1,11 @@
+Title: windows agent: no longer crashes when a cached plugin has several hundred sections
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2p1
+Date: 1435589516
+Class: fix
+
+The windows agent crashed when a single cached plugin reported several hundred sections.
+Cached plugins needs to be postprocessed, which requires additional heap buffer.
+The extra heap buffer was set to a too small value. This has been fixed.

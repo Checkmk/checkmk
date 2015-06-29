@@ -1,0 +1,13 @@
+Title: Removed old deprecated notification global options for plain emails
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435581968
+Class: feature
+
+The global settings for old plain email notifications (like configuring the
+subject) have been removed. The will not work for the current rule based
+notifications anyway. If you really still use plain emails then your old
+settings will continue to work for the while, though. We encourage you to
+switch over to rule based notifiations.

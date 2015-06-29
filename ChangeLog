@@ -20,6 +20,7 @@
     * 2380 FIX: Custom Host Notes painter was showing service notes when used in service based views
 
     WATO:
+    * 2365 Removed old deprecated notification global options for plain emails...
     * 2344 FIX: Improved validation of selected rules when editing BI aggregations...
     * 2346 FIX: Notifications: Fixed garbled page when switching on/off bulks/backlog/user rules
 

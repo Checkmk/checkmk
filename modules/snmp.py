@@ -402,7 +402,15 @@ def snmp_decode_string(text):
     if encoding:
         return text.decode(encoding).encode("utf-8")
     else:
-        return text.decode('latin1').encode('utf-8')
+        # Try to determine the current string encoding. In case a UTF-8
+        # decoding fails, we decode latin1 and encode it as UTF-8 again.
+        # When UTF-8 decoding works, we assume the string is already
+        # encoded in UTF-8 as we expect it to be.
+        try:
+            text.decode('utf-8')
+            return text
+        except:
+            return text.decode('latin1').encode('utf-8')
 
 #   .--Classic SNMP--------------------------------------------------------.
 #   |        ____ _               _        ____  _   _ __  __ ____         |

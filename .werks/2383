@@ -1,0 +1,9 @@
+Title: FreeBSD Agent: Fixed handling <<<ps>>> section when jailed
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435585221
+Class: fix
+
+

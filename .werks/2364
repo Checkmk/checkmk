@@ -1,0 +1,11 @@
+Title: Moved global settings for old plain emails to deprecated folder
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435581816
+Class: feature
+
+These settings are more than deprecated. And they do not work unless you
+switch off rule based notifications and do not use even flexible notifications.
+Settings that you already have still work.

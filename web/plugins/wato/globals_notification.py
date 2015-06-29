@@ -100,10 +100,10 @@ register_configvar(group,
     ),
     domain = "check_mk")
 
-register_configvar(group,
+register_configvar(deprecated,
     "notification_mail_command",
     TextUnicode(
-        title = _("Email command line used for notifications"),
+        title = _("Email command line used for plain notifications"),
         help = _("This command will be executed whenever a notification should be done. "
                  "The command will receive the notification text body on standard input. "
                  "The macro <tt>$SUBJECT$</tt> will be replaced by a text configured "
@@ -122,10 +122,10 @@ register_configvar(group,
     ),
     domain = "check_mk")
 
-register_configvar(group,
+register_configvar(deprecated,
     "notification_host_subject",
     TextUnicode(
-        title = _("Email subject to use for host notifications"),
+        title = _("Email subject to use for plain host notifications"),
         help = _("This template will be used as <tt>$SUBJECT$</tt> in email notifications "
                   "that deal with host alerts. The variable <tt>$SUBJECT$</tt> will then "
                   "be available in <a href=\"%s\"><tt>notification_common_body</tt></a>." % (
@@ -136,10 +136,10 @@ register_configvar(group,
     ),
     domain = "check_mk")
 
-register_configvar(group,
+register_configvar(deprecated,
     "notification_service_subject",
     TextUnicode(
-        title = _("Email subject to use for service notifications"),
+        title = _("Email subject to use for plain service notifications"),
         help = _("This template will be used as <tt>$SUBJECT$</tt> in email notifications "
                   "that deal with service alerts. The variable <tt>$SUBJECT$</tt> will then "
                   "be available in <a href=\"%s\"><tt>notification_common_body</tt></a>." % (
@@ -151,10 +151,10 @@ register_configvar(group,
     domain = "check_mk")
 
 
-register_configvar(group,
+register_configvar(deprecated,
     "notification_common_body",
     TextAreaUnicode(
-        title = _("Email body to use for both host and service notifications"),
+        title = _("Email body to use for both plain host and service notifications"),
         help = _("This template will be used as email body when sending notifications. "
                   "Appended to it will be a specific body for either host or service "
                   "notifications configured in two extra parameters. "
@@ -194,10 +194,10 @@ register_configvar(group,
     domain = "check_mk")
 
 
-register_configvar(group,
+register_configvar(deprecated,
     "notification_host_body",
     TextAreaUnicode(
-        title = _("Email body to use for host notifications"),
+        title = _("Email body to use for plain host notifications"),
         help = _("This template will be appended to the <a href=\"%s\"><tt>"
                   "notification_common_body</tt></a> when host notifications are sent." %
                   "wato.py?mode=edit_configvar&varname=notification_common_body"
@@ -206,10 +206,10 @@ register_configvar(group,
     ),
     domain = "check_mk")
 
-register_configvar(group,
+register_configvar(deprecated,
     "notification_service_body",
     TextAreaUnicode(
-        title = _("Email body to use for service notifications"),
+        title = _("Email body to use for plain service notifications"),
         help = _("This template will be appended to the <a href=\"%s\"><tt>"
                   "notification_common_body</tt></a> when service notifications are sent." %
                   "wato.py?mode=edit_configvar&varname=notification_common_body"

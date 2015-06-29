@@ -622,3 +622,47 @@ register_rule(group,
     ),
     factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
+
+register_rule(group,
+    "special_agents:ruckus_spot",
+    Dictionary(
+        elements = [
+            ( "address",
+              Alternative(
+                  title = _("Server Address"),
+                  help  = _("Here you can set a manual address if the server differs from the host"),
+                  elements = [
+                    FixedValue(True, title = _("Use host address"), totext = ""),
+                    TextAscii(title = _("Enter address"))
+                  ],
+                  default_value = True
+              )
+            ),
+            ( "port",
+              Integer(
+                  title = _("Port"),
+                  allow_empty = False,
+                  default_value = 8443
+              )
+            ),
+            ( "venueid",
+              TextAscii(
+                  title = _("Venue ID"),
+                  allow_empty = False,
+              )
+            ),
+            ( "api_key",
+              TextAscii(
+                  title = _("API key"),
+                  allow_empty = False,
+                  size = 70
+              )
+            ),
+        ],
+        optional_keys = False
+    ),
+    title = _("Agent Ruckus Spot"),
+    help = _("This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
+             "which collects the data through the Ruckus Spot web interface"),
+    match = 'first')
+

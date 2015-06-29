@@ -119,6 +119,7 @@ manpage_catalog_titles = {
         "postfix"       : "Postfix",
         "postgresql"    : "PostgreSQL",
         "qmail"         : "qmail",
+        "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "tsm"           : "IBM Tivoli Storage Manager (TSM)",
         "unitrends"     : "Unitrends",

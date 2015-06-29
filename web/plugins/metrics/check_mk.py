@@ -2140,6 +2140,25 @@ metric_info["apache_state_keep_alive"] = {
     "color" : "53/b",
 }
 
+for what, perfname, shading in [ ("2.4", "2_4", "a"), ("5", "5", "b") ]:
+    metric_info["ap_devices_total_%sghz" % perfname] = {
+        "title" : _("Total %s GHz devices") % what,
+        "unit"  : "count",
+        "color" : "51/%s" % shading,
+    }
+
+    metric_info["ap_devices_drifted_%sghz" % perfname] = {
+        "title" : _("Time drifted %s GHz devices") % what,
+        "unit"  : "count",
+        "color" : "23/%s" % shading,
+    }
+
+    metric_info["ap_devices_not_responding_%sghz" % perfname] = {
+        "title" : _("Not responding %s GHz devices") % what,
+        "unit"  : "count",
+        "color" : "14/%s" % shading,
+    }
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -2779,6 +2798,7 @@ check_metrics["check_mk-ps"] = {
 }
 check_metrics["check_mk-ps.perf"] = check_metrics["check_mk-ps"]
 
+check_metrics["check_mk-ruckus_spot_ap"] = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -2798,6 +2818,20 @@ check_metrics["check_mk-ps.perf"] = check_metrics["check_mk-ps"]
 # dual        -> two Perf-O-Meters next to each other, the first one from right to left
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
+
+
+perfometer_info.append(("stacked", [
+    {
+    "type"     : "linear",
+    "segments" : [ "ap_devices_drifted_2_4ghz", "ap_devices_not_responding_2_4ghz" ],
+    "total"    : "ap_devices_total_2_4ghz",
+    },
+    {
+    "type"     : "linear",
+    "segments" : [ "ap_devices_drifted_5ghz", "ap_devices_not_responding_5ghz" ],
+    "total"    : "ap_devices_total_5ghz",
+    }])
+)
 
 perfometer_info.append({
     "type"     : "linear",
@@ -2892,7 +2926,7 @@ perfometer_info.append(("stacked", [
         "type"          : "logarithmic",
         "metric"        : "backup_age",
         "half_value"    : 5,
-        "exponent"      : 2, 
+        "exponent"      : 2,
     }
 ]))
 
@@ -4415,3 +4449,13 @@ graph_info.append({
         ( "fc_notxcredits", "stack" ),
     ]
 })
+
+for what, perfname in [ ("2.4", "2_4"), ("5", "5") ]:
+    graph_info.append({
+        "title" : _("%s GHz band" % what),
+        "metrics" : [
+            ( "ap_devices_total_%sghz" % perfname, "area" ),
+            ( "ap_devices_drifted_%sghz" % perfname, "area" ),
+            ( "ap_devices_not_responding_%sghz" % perfname, "stack" ),
+        ]
+    })

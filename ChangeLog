@@ -46,6 +46,9 @@
     Event Console:
     * 2328 FIX: Fix sporadic error "Connection reset by peer" when reloading Event Console...
 
+    HW/SW-Inventory:
+    * 2367 FIX: win_system: Fixed exception when non-UTF-8 sequences are contained agent output
+
 
 1.2.6p5:
     Checks & Agents:

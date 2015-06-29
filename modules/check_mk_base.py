@@ -893,7 +893,10 @@ def parse_info(lines, hostname):
                 except:
                     pass
             elif to_unicode:
-                line = line.decode('utf-8')
+                try:
+                    line = line.decode('utf-8')
+                except:
+                    line = line.decode('latin1')
 
             section.append(line.split(separator))
 

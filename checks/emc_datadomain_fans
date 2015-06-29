@@ -42,7 +42,7 @@ def check_emc_datadomain_fans(item, _no_params, info):
                   "3": "High"
                 }
     for line in info:
-        if item == line[0]+"-"+line[1]:
+        if item == "%s-%s" % (line[0], line[1]):
             dev_descr = line[2]
             dev_level = line[3]
             dev_state = line[4]

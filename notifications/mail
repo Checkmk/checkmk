@@ -222,7 +222,7 @@ body_elements = [
 
   ( "servicedesc", "service", True, "Service",
     "$SERVICEDESC$",
-    "$SERVICEDESC$" ),
+    "$LINKEDSERVICEDESC$" ),
 
   ( "event", "both", True, "Event",
     "$EVENT_TXT$",

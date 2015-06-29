@@ -56,5 +56,4 @@ def inv_win_reg_uninstall(info):
 
 inv_info['win_reg_uninstall'] = {
    "inv_function"           : inv_win_reg_uninstall,
-   "unicode"                : True,
 }

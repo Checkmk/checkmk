@@ -68,5 +68,4 @@ def inv_win_exefiles(info):
 
 inv_info['win_exefiles'] = {
    "inv_function"           : inv_win_exefiles,
-   "unicode"                : True,
 }

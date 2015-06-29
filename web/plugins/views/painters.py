@@ -799,10 +799,10 @@ def notes_matching_pattern_entries(dirs, item):
                     matching.append(dir + "/" + pattern)
     return matching
 
-def paint_custom_notes(row):
+def paint_custom_notes(what, row):
     host = row["host_name"]
     svc = row.get("service_description")
-    if svc:
+    if what == "service":
         notes_dir = defaults.default_config_dir + "/notes/services"
         dirs = notes_matching_pattern_entries([notes_dir], host)
         item = svc
@@ -837,7 +837,7 @@ multisite_painters["svc_custom_notes"] = {
     "title"   : _("Custom services notes"),
     "short"   : _("Notes"),
     "columns" : [ "host_name", "host_address", "service_description", "service_plugin_output" ],
-    "paint"   : paint_custom_notes,
+    "paint"   : lambda row: paint_custom_notes("service", row),
 }
 
 multisite_painters["svc_staleness"] = {
@@ -1303,7 +1303,7 @@ multisite_painters["host_custom_notes"] = {
     "title"   : _("Custom host notes"),
     "short"   : _("Notes"),
     "columns" : [ "host_name", "host_address", "host_plugin_output" ],
-    "paint"   : paint_custom_notes,
+    "paint"   : lambda row: paint_custom_notes("hosts", row),
 }
 
 multisite_painters["host_comments"] = {

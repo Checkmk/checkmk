@@ -1,0 +1,14 @@
+Title: FreeBSD Agent: Removed statgrab cpu section because there is a dedicated cpu section
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435570636
+Class: fix
+
+Removed the <tt>statgrab_cpu</tt> section from the agent because there is a standard
+conform <tt>cpu</tt> section in the agent.
+
+If yoy used the <tt>statgrab_cpu</tt> check before and have disabled the <tt>cpu</tt>
+check on your devices by configuration, you will need to remove the "disabled services"
+or "disabled checks" rules from your hosts.

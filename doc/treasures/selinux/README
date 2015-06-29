@@ -1,0 +1,9 @@
+Here is an untested configuration for running OMD with selinux enabled.
+This is how you can install it (as root):
+
+# setsebool -P httpd_can_network_connect on
+# touch /.autorelabel
+# semodule -i omd.pp
+# reboot
+
+Many thanks to Maarten Vanraes who provided it.

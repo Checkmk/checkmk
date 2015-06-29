@@ -22,6 +22,7 @@
 
     Multisite:
     * 2310 FIX: multisite view data export: fixed exception when using joined columns...
+    * 2361 FIX: Fix exception for missing key 'title' in certain cases of older customized views
 
     WATO:
     * 2344 FIX: Improved validation of selected rules when editing BI aggregations...

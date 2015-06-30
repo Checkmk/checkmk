@@ -1,0 +1,11 @@
+Title: Fixed XSS problem on all pages using confirm dialogs outputting user provided parameters
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435652277
+Class: security
+
+On some pages, like for example the host group management page of WATO, it was possible
+to inject user provided HTML/Javascript code into the confirm messages. An attacker could
+use this to let an authenticated user open a prepared URL for privilege escalation.

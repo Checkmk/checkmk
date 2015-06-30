@@ -1014,13 +1014,7 @@ class html:
             cls    = 'error'
             prefix = _('ERROR')
 
-        # Only strip off some tags. We allow some simple tags like
-        # <b>, <tt>, <i> to be part of the exception message. The tags
-        # are escaped first and then fixed again after attrencode.
-        msg = self.attrencode(obj)
-        msg = re.sub(r'&lt;(/?)(b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
-        # Also repair link definitions
-        msg = re.sub(r'&lt;a href=&quot;(.*)&quot;&gt;', r'<a href="\1">', msg)
+        msg = self.permissive_attrencode(obj)
 
         if self.output_format == "html":
             if self.mobile:
@@ -1251,7 +1245,7 @@ class html:
         if not self.has_var("_do_confirm"):
             if self.mobile:
                 self.write('<center>')
-            self.write("<div class=really>%s" % msg)
+            self.write("<div class=really>%s" % self.permissive_attrencode(msg))
             self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
@@ -1313,7 +1307,14 @@ class html:
     def disable_keybindings(self):
         self.keybindings_enabled = False
 
-    # From here: Former not class functions
+    # Only strip off some tags. We allow some simple tags like
+    # <b>, <tt>, <i> to be part of the string. This is useful
+    # for messages where we still want to have formating options.
+    def permissive_attrencode(self, obj):
+        msg = self.attrencode(obj)
+        msg = re.sub(r'&lt;(/?)(b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
+        # Also repair link definitions
+        return re.sub(r'&lt;a href=&quot;(.*)&quot;&gt;', r'<a href="\1">', msg)
 
     # Encode HTML attributes: replace " with &quot;, also replace
     # < and >. This code is slow. Works on str and unicode without

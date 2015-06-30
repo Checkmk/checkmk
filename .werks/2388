@@ -1,0 +1,7 @@
+Title: Fixed reflected XSS on the index page using the start_url parameter
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435653074
+Class: security

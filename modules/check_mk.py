@@ -1305,13 +1305,14 @@ def service_description(check_type, item):
     # can by empty in some cases. Nagios silently drops leading
     # and trailing spaces in the configuration file.
 
-    if type(item) == str:
+    item_type = type(item)
+    if item_type in [ str, unicode ]:
         # Remove characters from item name that are banned by Nagios
         item_safe = sanitize_service_description(item)
         if "%s" not in descr_format:
             descr_format += " %s"
         return (descr_format % (item_safe,)).strip()
-    if type(item) == int or type(item) == long:
+    elif item_type in [ int, long ]:
         if "%s" not in descr_format:
             descr_format += " %s"
         return (descr_format % (item,)).strip()

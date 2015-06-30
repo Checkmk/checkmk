@@ -1,0 +1,25 @@
+Title: Auth cookie is using "secure" flag when HTTPS request detected
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435662820
+
+In previous versions the authentication cookie, which identifies an
+authenticated user with the GUI, was never using the "secure" flag.
+This means the cookie was sent to the webserver when doing HTTP and
+HTTPS requests. In such a situation a user which authenticated using
+HTTPS could access the GUI using HTTP and was still authenticated
+becaus the browser sends the HTTPS related cookie via HTTP. This is
+some kind of security risk since the information which should only
+be transported using the encrypted HTTPS requests could be transported
+in clear text over the network using HTTP.
+
+The GUI tries now to detect the HTTPS requests. In case a HTTPS
+request is detected, the cookies are set with the "secure" flag
+which makes the cookies only used via HTTPS.
+
+The HTTPS detection currently checks wether or not the HTTP request
+header <tt>X-Forwarded-Proto</tt> is set to <tt>https</tt>.

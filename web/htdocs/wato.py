@@ -3763,7 +3763,7 @@ def mode_bulk_inventory(phase):
                 else:
                     msg = _("Error during inventory of %s<div class=exc>%s</div>") % (", ".join(hostnames), e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre><br>" % format_exception().replace("\n", "<br>")
+                    msg += "<br><pre>%s</pre><br>" % html.attrencode(format_exception().replace("\n", "<br>"))
                 result += msg
             html.write(result)
             return ""
@@ -4196,7 +4196,7 @@ def mode_parentscan(phase):
                 else:
                     msg = _("Error during parent scan of %s: %s") % (hostname, e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre>" % format_exception().replace("\n", "<br>")
+                    msg += "<br><pre>%s</pre>" % html.attrencode(format_exception().replace("\n", "<br>"))
                 result += msg + "\n<br>"
             html.write(result)
             return ""

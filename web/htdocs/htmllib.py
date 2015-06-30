@@ -991,7 +991,7 @@ class html:
 
         self.begin_foldable_container("html", "exc_details", False, _("Details"))
         self.write('<div class=log_output>')
-        self.write("<pre>%s</pre>" % details)
+        self.write("<pre>%s</pre>" % self.attrencode(details))
         self.write('</div>')
         self.end_foldable_container()
         self.write("</div>")

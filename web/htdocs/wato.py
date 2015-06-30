@@ -11804,7 +11804,7 @@ def mode_users(phase):
             clone_url = make_link([("mode", "edit_user"), ("clone", id)])
             html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-        delete_url = html.makeactionuri([("_delete", id)])
+        delete_url = make_action_link([("mode", "users"), ("_delete", id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
         notifications_url = make_link([("mode", "user_notifications"), ("user", id)])
@@ -12131,7 +12131,7 @@ def mode_edit_user(phase):
     # Let exceptions from loading notification scripts happen now
     load_notification_scripts()
 
-    html.begin_form("user")
+    html.begin_form("user", method="POST")
     forms.header(_("Identity"))
 
     # ID

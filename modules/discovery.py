@@ -186,8 +186,7 @@ def check_discovery(hostname, ipaddress=None):
         status = spec.get(what, 3)
 
     if opt_keepalive:
-        global total_check_output
-        total_check_output += output
+        add_keepalive_result_line(output)
         return status
     else:
         sys.stdout.write(core_state_names[status] + " - " + output)
@@ -722,7 +721,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
                 try:
                     reset_wrapped_counters()
-                    result = convert_check_result(check_function(item, params, info), check_uses_snmp(check_type))
+                    result = sanitize_check_result(check_function(item, params, info), check_uses_snmp(check_type))
                     if last_counter_wrap():
                         raise last_counter_wrap()
                 except MKCounterWrapped, e:

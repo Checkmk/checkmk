@@ -1004,7 +1004,7 @@ class html:
                 '<img class=statusicon src="images/icon_menu.png" title="%s">\n' % _("Add this view to..."),
                 'add_visual', 'add_visual', data='[\'%s\', %s, {\'name\': \'%s\'}]' %
                                                     (mode_name, self.attrencode(repr(encoded_vars)),
-                                                     self.var('view_name')))
+                                                     self.attrencode(self.var('view_name'))))
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

@@ -946,7 +946,8 @@ class html:
             h += '<div class="visualadd"><a class="visualadd" href="javascript:void(0)" ' \
                  'onclick="toggle_add_to_visual(event, this, \'%s\', %s, {\'name\': \'%s\'})">' \
                  '<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % \
-                 (mode_name, self.attrencode(repr(encoded_vars)), self.var('view_name'), _("Add this view to..."))
+                 (mode_name, self.attrencode(repr(encoded_vars)), self.attrencode(self.var('view_name')),
+                  _("Add this view to..."))
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

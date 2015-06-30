@@ -1,0 +1,10 @@
+Title: Fixed possible XSS issue on views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435654030
+Class: security
+
+It was possible to use the view_name variable to inject HTML/Javascript
+code into the status GUI views.

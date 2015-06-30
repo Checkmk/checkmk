@@ -871,6 +871,20 @@ metric_info["io_wait"] = {
     "color" : "#00b0c0",
 }
 
+metric_info["cpu_util_guest"] = {
+    "title" : _("Guest operating systems"),
+    "help"  : _("CPU time spent for executing guest operating systems"),
+    "unit"  : "%",
+    "color" : "12/a",
+}
+
+metric_info["cpu_util_steal"] = {
+    "title" : _("Steal"),
+    "help"  : _("CPU time stolen by other operating systems"),
+    "unit"  : "%",
+    "color" : "16/a",
+}
+
 metric_info["idle"] = {
     "title" : _("Idle"),
     "help"  : _("CPU idle time"),
@@ -2530,7 +2544,12 @@ check_metrics["check_mk-mysql_capacity"]                        = {}
 check_metrics["check_mk-mysql_slave"]                           = {}
 
 check_metrics["check_mk-hr_cpu"]                                = {}
-check_metrics["check_mk-kernel.util"]                           = { "wait" : { "name" : "io_wait" } }
+check_metrics["check_mk-kernel.util"]                           = {
+    "wait" : { "name" : "io_wait" },
+    "guest" : { "name" : "cpu_util_guest" },
+    "steal" : { "name" : "cpu_util_steal" },
+}
+
 check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-ucd_cpu_util"]                          = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "name" : "io_wait" } }
@@ -2834,6 +2853,8 @@ check_metrics["check_mk-ps"] = {
 check_metrics["check_mk-ps.perf"] = check_metrics["check_mk-ps"]
 
 check_metrics["check_mk-ruckus_spot_ap"] = {}
+
+check_metrics["check_mk-local"] = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -3384,15 +3405,7 @@ perfometer_info.append({
 #          ('tablespace_used', 'area')
 
 def define_generic_graph(metric_name):
-    graph_info.append({
-        "metrics" : [
-            ( metric_name, "area" ),
-        ],
-        "scalars" : [
-            metric_name + ":warn",
-            metric_name + ":crit",
-        ]
-    })
+    graph_info.append(generic_graph_template(metric_name))
 
 define_generic_graph("context_switches")
 define_generic_graph("major_page_faults")
@@ -3782,6 +3795,25 @@ graph_info.append({
         ( "io_wait",                        "stack" ),
         ( "user,system,io_wait,+,+#004080", "line", _("Total") ),
     ],
+    "conflicting_metrics" : [
+        "cpu_util_guest",
+        "cpu_util_steal",
+    ],
+    "mirror_legend" : True,
+    "range" : (0, 100),
+})
+
+graph_info.append({
+    "title"   : _("CPU utilization"),
+    "metrics" : [
+        ( "user",                           "area"  ),
+        ( "system",                         "stack" ),
+        ( "io_wait",                        "stack" ),
+        ( "cpu_util_guest",                 "stack" ),
+        ( "cpu_util_steal",                 "stack" ),
+        ( "user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#004080", "line", _("Total") ),
+    ],
+    "omit_zero_metrics" : True,
     "mirror_legend" : True,
     "range" : (0, 100),
 })
@@ -4273,7 +4305,6 @@ graph_info.append({
     "scalars" : [
         "mem_heap:warn",
         "mem_heap:crit",
-        "mem_heap:max",
     ]
 })
 

@@ -1,0 +1,10 @@
+Title: Fixed possible XSS on WATO rule edit page
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435651254
+Class: security
+
+A possible XSS injection has been fixed on the rule edit page of WATO. It was possible
+to inject javascript code using the HTTP parameters the page is processing.

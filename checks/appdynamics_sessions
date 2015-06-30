@@ -1,0 +1,83 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# Written by comNET GmbH, Ringo Hartmann
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<appdynamics_sessions:sep(124)>>>
+# Hans|/hans|rejectedSessions:0|sessionAverageAliveTime:1800|sessionCounter:13377|expiredSessions:13371|processingTime:1044|maxActive:7|activeSessions:6|sessionMaxAliveTime:4153
+
+def inventory_appdynamics_sessions(info):
+    for line in info:
+        yield ' '.join(line[0:2]), {}
+
+def check_appdynamics_sessions(item, params, info):
+    for line in info:
+        if item == ' '.join(line[0:2]):
+            values = {}
+            for metric in line[2:]:
+                name, value = metric.split(':')
+                values[name] = int(value)
+
+            active      = values['activeSessions']
+            rejected    = values['rejectedSessions']
+            max_active  = values['maxActive']
+            counter     = values['sessionCounter']
+
+            now = time.time()
+            rate_id = 'appdynamics_sessions.%s.counter' % (item.lower().replace(' ', '_'))
+            counter_rate = get_rate(rate_id, now, counter)
+
+            state = 0
+            perfdata = []
+            if type(params) == tuple:
+                min_warn, min_crit, max_warn, max_crit = params
+                perfdata.append(('running_sessions', active, max_warn, max_crit))
+
+                if active <= min_crit or active >= max_crit:
+                    state = 2
+                elif active <= min_warn or active >= max_warn:
+                    state = 1
+            else:
+                perfdata.append(('running_sessions', active))
+
+            active_label = ''
+            if state > 0:
+                active_label = ' (levels at %d-%d / %d-%d)' \
+                               % (min_warn, max_warn, min_crit, max_crit)
+
+            yield state, 'Active: %d (%.2f/sec)%s' % (active, counter_rate, active_label), perfdata
+
+            perfdata = [('rejected_sessions', rejected)]
+            yield 0, 'Rejected: %d' % rejected, perfdata
+
+            yield 0, 'Maximum active: %d' % max_active
+
+check_info['appdynamics_sessions'] = {
+  'inventory_function'  : inventory_appdynamics_sessions,
+  'check_function'      : check_appdynamics_sessions,
+  'service_description' : 'AppDynamics Sessions %s',
+  'has_perfdata'        : True,
+  'group'               : 'jvm_sessions',
+}

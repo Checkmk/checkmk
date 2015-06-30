@@ -1,0 +1,15 @@
+title: AppDynamics: Threads and requests
+agents: appdynamics
+catalog: app/java
+license: GPL
+distribution: check_mk
+description:
+ This check measures the amount of threads of Web Container Runtimes
+ using the information collected by AppDynamics. Hence there is no need to
+ query the application server itself.
+
+ The WATO ruleset {JVM threads} applies crit/warn levels to the threads part
+ of this check.
+
+inventory:
+ One item per application is generated.

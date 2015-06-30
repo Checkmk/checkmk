@@ -670,10 +670,22 @@ metric_info["mem_heap"] = {
     "color" : "23/a",
 }
 
+metric_info["mem_heap_committed"] = {
+    "title" : _("Heap memory committed"),
+    "unit"  : "bytes",
+    "color" : "23/b",
+}
+
 metric_info["mem_nonheap"] = {
-    "title" : _("Nonheap memory usage"),
+    "title" : _("Non-heap memory usage"),
     "unit"  : "bytes",
     "color" : "16/a",
+}
+
+metric_info["mem_nonheap_committed"] = {
+    "title" : _("Non-heap memory committed"),
+    "unit"  : "bytes",
+    "color" : "16/b",
 }
 
 metric_info["processes"] = {
@@ -1085,8 +1097,15 @@ metric_info["total_sessions"] = {
 metric_info["running_sessions"] = {
     "title" : _("Running sessions"),
     "unit"  : "count",
-    "color" : "#999b94",
+    "color" : "42/a",
 }
+
+metric_info["rejected_sessions"] = {
+    "title" : _("Rejected sessions"),
+    "unit"  : "count",
+    "color" : "45/a",
+}
+
 
 metric_info["shared_locks"] = {
     "title" : _("Shared locks"),
@@ -2159,6 +2178,18 @@ for what, perfname, shading in [ ("2.4", "2_4", "a"), ("5", "5", "b") ]:
         "color" : "14/%s" % shading,
     }
 
+metric_info["request_rate"] = {
+    "title" : _("Request rate"),
+    "unit"  : "1/s",
+    "color" : "34/a",
+}
+
+metric_info["error_rate"] = {
+    "title" : _("Error rate"),
+    "unit"  : "1/s",
+    "color" : "14/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -2190,6 +2221,10 @@ check_metrics["check_mk-jolokia_metrics.gc"] = {
     "CollectionCount" : { "name" : "gc_reclaimed_redundant_memory_areas" },
     "CollectionTime"  : { "name" : "gc_reclaimed_redundant_memory_areas_time", "scale" : 1/60 },
 }
+
+check_metrics["check_mk-appdynamics_memory"] = {}
+check_metrics["check_mk-appdynamics_sessions"] = {}
+check_metrics["check_mk-appdynamics_web_container"] = {}
 
 check_metrics["check_mk-rmon_stats"] = {
     "0-63b"     : { "name" : "rmon_packets_63" },
@@ -2822,14 +2857,14 @@ check_metrics["check_mk-ruckus_spot_ap"] = {}
 
 perfometer_info.append(("stacked", [
     {
-    "type"     : "linear",
-    "segments" : [ "ap_devices_drifted_2_4ghz", "ap_devices_not_responding_2_4ghz" ],
-    "total"    : "ap_devices_total_2_4ghz",
+        "type"     : "linear",
+        "segments" : [ "ap_devices_drifted_2_4ghz", "ap_devices_not_responding_2_4ghz" ],
+        "total"    : "ap_devices_total_2_4ghz",
     },
-    {
-    "type"     : "linear",
-    "segments" : [ "ap_devices_drifted_5ghz", "ap_devices_not_responding_5ghz" ],
-    "total"    : "ap_devices_total_5ghz",
+        {
+        "type"     : "linear",
+        "segments" : [ "ap_devices_drifted_5ghz", "ap_devices_not_responding_5ghz" ],
+        "total"    : "ap_devices_total_5ghz",
     }])
 )
 
@@ -2864,6 +2899,18 @@ perfometer_info.append({
     "type"       : "linear",
     "segments"  : [ "mem_perm_used"],
     "total"     : "mem_perm_used:max",
+})
+
+perfometer_info.append({
+    "type"       : "linear",
+    "segments"  : [ "mem_heap"],
+    "total"     : "mem_heap:max",
+})
+
+perfometer_info.append({
+    "type"       : "linear",
+    "segments"  : [ "mem_nonheap"],
+    "total"     : "mem_nonheap:max",
 })
 
 perfometer_info.append({
@@ -3312,6 +3359,13 @@ perfometer_info.append(("dual", [
     }
 ]))
 
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "request_rate",
+    "half_value" : 100,
+    "exponent"   : 2,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -3366,6 +3420,7 @@ define_generic_graph("mem_used")
 define_generic_graph("licenses")
 define_generic_graph("voltage")
 define_generic_graph("running_sessions")
+define_generic_graph("rejected_sessions")
 define_generic_graph("disk_iops")
 define_generic_graph("backup_size")
 define_generic_graph("logswitches_last_hour")
@@ -3390,6 +3445,8 @@ define_generic_graph("backup_avgspeed")
 define_generic_graph("backup_duration")
 define_generic_graph("connector_outlets")
 define_generic_graph("job_duration")
+define_generic_graph("request_rate")
+define_generic_graph("error_rate")
 
 graph_info.append({
     "title"   : _("Context switches"),
@@ -4062,14 +4119,6 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title" : _("Heap and nonheap memory"),
-    "metrics" : [
-        ( "mem_heap",   "area" ),
-        ( "mem_nonheap", "stack" ),
-    ],
-})
-
-graph_info.append({
     "title" : _("RAM + Swap used"),
     "metrics" : [
         ("mem_used",  "area"),
@@ -4201,6 +4250,46 @@ graph_info.append({
         ("mem_lnx_vmalloc_chunk", "stack"),
     ],
 })
+
+graph_info.append({
+    "title" : _("Heap and non-heap memory"),
+    "metrics" : [
+        ( "mem_heap",   "area" ),
+        ( "mem_nonheap", "stack" ),
+    ],
+    "conflicting_metrics" : [
+        "mem_heap_committed",
+        "mem_nonheap_committed",
+    ],
+})
+
+
+graph_info.append({
+    "title" : _("Heap memory usage"),
+    "metrics" : [
+        ( "mem_heap_committed", "area" ),
+        ( "mem_heap",           "area" ),
+    ],
+    "scalars" : [
+        "mem_heap:warn",
+        "mem_heap:crit",
+        "mem_heap:max",
+    ]
+})
+
+graph_info.append({
+    "title" : _("Non-heap memory usage"),
+    "metrics" : [
+        ( "mem_nonheap_committed", "area" ),
+        ( "mem_nonheap",           "area" ),
+    ],
+    "scalars" : [
+        "mem_nonheap:warn",
+        "mem_nonheap:crit",
+        "mem_nonheap:max",
+    ]
+})
+
 
 graph_info.append({
     "title" : _("TCP Connection States"),

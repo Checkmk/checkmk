@@ -9,4 +9,5 @@ Date: 1435652277
 
 On some pages, like for example the host group management page of WATO, it was possible
 to inject user provided HTML/Javascript code into the confirm messages. An attacker could
-use this to let an authenticated user open a prepared URL for privilege escalation.
+use this to let an authenticated user open a prepared URL for privilege escalation within
+the GUI.

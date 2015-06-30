@@ -115,6 +115,7 @@ class html:
         self.ignore_transids = False
         self.current_transid = None
         self.page_context = {}
+        self.body_classes = ['main']
 
         # Time measurement
         self.times            = {}
@@ -823,17 +824,18 @@ class html:
     def immediate_browser_redirect(self, secs, url):
         self.javascript("setReload(%s, '%s');" % (secs, url))
 
-    def body_css_classes(self):
-        body_classes = [ "main" ]
-        if self.var("_body_class"):
-            body_classes.append(self.var("_body_class"))
+    def add_body_css_class(self, cls):
+        self.body_classes.append(cls)
+
+    def get_body_css_classes(self):
+        body_classes = self.body_classes
         if self.screenshotmode:
             body_classes.append("screenshotmode")
         return " ".join(body_classes)
 
     def body_start(self, title='', **args):
         self.html_head(title, **args)
-        self.write('<body class="%s">' % self.body_css_classes())
+        self.write('<body class="%s">' % self.get_body_css_classes())
 
     def header(self, title='', **args):
         if self.output_format == "html":

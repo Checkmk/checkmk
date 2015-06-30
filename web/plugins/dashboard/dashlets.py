@@ -550,7 +550,7 @@ def dashlet_view(nr, dashlet):
 
     html.set_var('display_options', 'HRSIXL')
     html.set_var('_display_options', 'HRSIXL')
-    html.set_var('_body_class', 'dashlet')
+    html.add_body_css_class('dashlet')
 
     import views # FIXME: HACK, clean this up somehow
     views.load_views()

@@ -1,0 +1,13 @@
+Title: Fixed XSS using the _body_class parameter of views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435653652
+Class: security
+
+It was possible to use the _body_class parameter of the status GUI views
+to inject HTML/Javascript code into the pages.
+
+The _body_class parameter, which was only used for internal purposes, has
+totally been removed now.

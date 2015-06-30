@@ -1879,8 +1879,8 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                              row["state"],
                              row["hard_state"],
                              row["plugin_output"],
-                             not not hostrow["acknowledged"],
                              hostrow["scheduled_downtime_depth"] > 0,
+                             not not hostrow["acknowledged"],
                              row["services_with_fullstate"] ]
                 if status_info == None:
                     break
@@ -1890,8 +1890,8 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                 hostrow["state"],
                 hostrow["hard_state"],
                 hostrow["plugin_output"],
-                not not hostrow["acknowledged"],
                 hostrow["scheduled_downtime_depth"] > 0,
+                not not hostrow["acknowledged"],
                 hostrow["services_with_fullstate"] ] }
 
         for group, aggregation in aggrs:
@@ -1909,8 +1909,8 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                             this_row['state'],
                             this_row['hard_state'],
                             this_row['plugin_output'],
-                            not not this_row["acknowledged"],
                             this_row["scheduled_downtime_depth"] > 0,
+                            not not this_row["acknowledged"],
                             this_row['services_with_fullstate'],
                         ]
 

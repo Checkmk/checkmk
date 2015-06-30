@@ -1590,7 +1590,7 @@ def sanitize_yield_check_result(result, is_snmp):
         status = 0
 
         for subresult in subresults:
-            st, text, perfdata = sanitize_check_result_encoding(subresult)
+            st, text, perf = sanitize_check_result_encoding(subresult)
 
             if text != None:
                 infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
@@ -1599,7 +1599,7 @@ def sanitize_yield_check_result(result, is_snmp):
                 else:
                     status = max(status, st)
 
-            if perfdata != None:
+            if perf != None:
                 perfdata += subresult[2]
 
         return status, ", ".join(infotexts), perfdata

@@ -14367,7 +14367,7 @@ def mode_edit_ruleset(phase):
 
     if not rulespec:
         text = html.var("service_description") or varname
-        html.write("<div class=info>" + _("There are no rules availabe for %s.") % text + "</div>")
+        html.write("<div class=info>" + _("There are no rules availabe for %s.") % html.attrencode(text) + "</div>")
         return
 
     if not hostname:

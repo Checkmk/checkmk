@@ -41,6 +41,10 @@
     * 2348 FIX: HTML-Mails: Added missing link to service descriptions
     * 2349 FIX: HTML-Mails: Fixed state colors in Outlook
 
+    BI:
+    * 2369 FIX: Fix exception in BI availability via table "Hostname Aggregations"
+    * 2370 FIX: Fix computation of "in downtime" and "acknownledged" of hosts in BI aggregations...
+
     HW/SW-Inventory:
     * 2367 FIX: win_system: Fixed exception when non-UTF-8 sequences are contained agent output
 

@@ -1,0 +1,10 @@
+Title: Fix exception in BI availability via table "Hostname Aggregations"
+Level: 2
+Component: bi
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2p1
+Date: 1435652572
+
+

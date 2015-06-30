@@ -2301,7 +2301,6 @@ def paint_header(view, p):
     # Important for links:
     # - Add the display options (Keeping the same display options as current)
     # - Link to _self (Always link to the current frame)
-    # - Keep the _body_class variable (e.g. for dashlets)
     thclass = ''
     onclick = ''
     title = ''
@@ -2311,8 +2310,6 @@ def paint_header(view, p):
         params = [
             ('sort', sort_url(view, painter, join_index)),
         ]
-        if html.has_var('_body_class'):
-            params.append(('_body_class',     html.var('_body_class')))
         if hasattr(html, 'title_display_options'):
             params.append(('display_options', html.title_display_options))
 

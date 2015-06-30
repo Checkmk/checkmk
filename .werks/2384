@@ -1,0 +1,18 @@
+Title: Prevent user passwords from being visible in webserver log on user creation
+Level: 1
+Component: wato
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435649205
+
+When a user is created using WATO, the set values of the form fields were logged
+directly into the webserver access log, because the form of this page used the
+GET request method. Users which have access to the log files would be able to
+see the initial passwords. If you use an older version of Check_MK it is a good
+idea to set the "Change password at next login or access" to force the user
+to change his password on first login.
+
+We changed this form to perform a POST request now to prevent these information
+being written to the logs.

@@ -22,7 +22,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-# FORMALIZED
 
 $title = str_replace("_", " ", $servicedesc);
 $opt[1] = "--vertical-label 'log switches/h' -l0 -u $CRIT[1] --title \"$title\" ";

@@ -22,7 +22,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-# FORMALIZED
 
 $license = substr($servicedesc, 16);
 $opt[1] = "--vertical-label Licenses -l 0 -u $MAX[1] --title 'Used Citrix Licenses - $license'";

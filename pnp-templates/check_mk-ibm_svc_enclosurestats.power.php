@@ -22,7 +22,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-# FORMALIZED
 
 $opt[1] = "--vertical-label \"Watt\"  -l 0 -u 60 --title \"$hostname / $servicedesc\" ";
 

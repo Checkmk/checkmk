@@ -22,7 +22,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-# FORMALIZED
 
 # active=20;;;; established=8;;;; halfOpened=3;;;; halfClosed=4;;;; passthrough=35;;;;
 $opt[1] = "--vertical-label 'Connections' -l0  --title \"Current connections on $hostname\" ";

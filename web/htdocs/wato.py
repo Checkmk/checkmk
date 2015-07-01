@@ -7604,7 +7604,6 @@ def vs_ldap_connection(new):
 def mode_edit_ldap_connection(phase):
     connection_id = html.var("id")
     connections = userdb.load_connection_config()
-    userdb.set_connection(connection_id)
     connection = {}
     if connection_id == None:
         new = True
@@ -7653,7 +7652,6 @@ def mode_edit_ldap_connection(phase):
 
         userdb.save_connection_config(connections)
         config.user_connections = connections # make directly available on current page
-        userdb.set_connection(connection_id)
         if html.var("_save"):
             return "ldap_config"
         else:
@@ -7688,20 +7686,20 @@ def mode_edit_ldap_connection(phase):
                        'href="http://mathias-kettner.de/checkmk_multisite_ldap_integration.html">'
                        'LDAP Documentation</a>.'))))
     else:
-        def test_connect(address):
-            conn, msg = userdb.ldap_connect_server(address)
+        def test_connect(connection, address):
+            conn, msg = connection.connect_server(address)
             if conn:
                 return (True, _('Connection established. The connection settings seem to be ok.'))
             else:
                 return (False, msg)
 
-        def test_user_base_dn(address):
-            if not userdb.ldap_user_base_dn_configured():
+        def test_user_base_dn(connection, address):
+            if not connection.has_user_base_dn_configured():
                 return (False, _('The User Base DN is not configured.'))
-            userdb.ldap_connect(enforce_new = True, enforce_server = address)
-            if userdb.ldap_user_base_dn_exists():
+            connection.connect(enforce_new = True, enforce_server = address)
+            if userdb.user_base_dn_exists():
                 return (True, _('The User Base DN could be found.'))
-            elif userdb.ldap_bind_credentials_configured():
+            elif connection.has_bind_credentials_configured():
                 return (False, _('The User Base DN could not be found. Maybe the provided '
                                  'user (provided via bind credentials) has no permission to '
                                  'access the Base DN or the credentials are wrong.'))
@@ -7709,18 +7707,18 @@ def mode_edit_ldap_connection(phase):
                 return (False, _('The User Base DN could not be found. Seems you need '
                                  'to configure proper bind credentials.'))
 
-        def test_user_count(address):
-            if not userdb.ldap_user_base_dn_configured():
+        def test_user_count(connection, address):
+            if not connection.has_user_base_dn_configured():
                 return (False, _('The User Base DN is not configured.'))
-            userdb.ldap_connect(enforce_new = True, enforce_server = address)
+            connection.connect(enforce_new = True, enforce_server = address)
             try:
-                ldap_users = userdb.ldap_get_users()
+                ldap_users = connection.ldap_get_users()
                 msg = _('Found no user object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_users = None
                 msg = str(e)
                 if 'successful bind must be completed' in msg:
-                    if not userdb.ldap_bind_credentials_configured():
+                    if not connection.has_bind_credentials_configured():
                         return (False, _('Please configure proper bind credentials.'))
                     else:
                         return (False, _('Maybe the provided user (provided via bind credentials) has not '
@@ -7731,27 +7729,27 @@ def mode_edit_ldap_connection(phase):
             else:
                 return (False, msg)
 
-        def test_group_base_dn(address):
-            if not userdb.ldap_group_base_dn_configured():
+        def test_group_base_dn(connection, address):
+            if not connection.has_group_base_dn_configured():
                 return (False, _('The Group Base DN is not configured, not fetching any groups.'))
-            userdb.ldap_connect(enforce_new = True, enforce_server = address)
-            if userdb.ldap_group_base_dn_exists():
+            connection.connect(enforce_new = True, enforce_server = address)
+            if connection.group_base_dn_exists():
                 return (True, _('The Group Base DN could be found.'))
             else:
                 return (False, _('The Group Base DN could not be found.'))
 
-        def test_group_count(address):
-            if not userdb.ldap_group_base_dn_configured():
+        def test_group_count(connection, address):
+            if not connection.has_group_base_dn_configured():
                 return (False, _('The Group Base DN is not configured, not fetching any groups.'))
-            userdb.ldap_connect(enforce_new = True, enforce_server = address)
+            connection.connect(enforce_new = True, enforce_server = address)
             try:
-                ldap_groups = userdb.ldap_get_groups()
+                ldap_groups = connection.get_groups()
                 msg = _('Found no group object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_groups = None
                 msg = str(e)
                 if 'successful bind must be completed' in msg:
-                    if not userdb.ldap_bind_credentials_configured():
+                    if not connection.has_bind_credentials_configured():
                         return (False, _('Please configure proper bind credentials.'))
                     else:
                         return (False, _('Maybe the provided user (provided via bind credentials) has not '
@@ -7762,17 +7760,17 @@ def mode_edit_ldap_connection(phase):
                 return (False, msg)
 
         def test_groups_to_roles(address):
-            active_plugins = userdb.ldap_active_plugins()
+            active_plugins = connection.active_plugins()
             if 'groups_to_roles' not in active_plugins:
                 return True, _('Skipping this test (Plugin is not enabled)')
 
-            userdb.ldap_connect(enforce_new = True, enforce_server = address)
+            connection.connect(enforce_new = True, enforce_server = address)
             num = 0
             for role_id, dn in active_plugins['groups_to_roles'].items():
                 if isinstance(dn, str):
                     num += 1
                     try:
-                        ldap_groups = userdb.ldap_get_groups(dn)
+                        ldap_groups = connection.get_groups(dn)
                         if not ldap_groups:
                             return False, _('Could not find the group specified for role %s') % role_id
                     except Exception, e:
@@ -7788,14 +7786,15 @@ def mode_edit_ldap_connection(phase):
             (_('Sync-Plugin: Roles'),  test_groups_to_roles),
         ]
 
-        for address in userdb.ldap_servers():
+        connection = userdb.get_connection(connection_id)
+        for address in connection.servers():
             html.write('<h3>%s: %s</h3>' % (_('Server'), address))
             table.begin('test', searchable = False)
 
-            for title, test in tests:
+            for title, test_func in tests:
                 table.row()
                 try:
-                    state, msg = test(address)
+                    state, msg = test_func(connection, address)
                 except Exception, e:
                     state = False
                     msg = _('Exception: %s') % html.attrencode(e)
@@ -7811,7 +7810,7 @@ def mode_edit_ldap_connection(phase):
 
             table.end()
 
-        userdb.ldap_disconnect()
+        connection.disconnect()
 
     html.write('</td></tr></table>')
     html.write('</div>')

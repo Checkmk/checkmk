@@ -70,8 +70,8 @@ def load_plugins():
 
     # Connectors have the option to perform migration of configuration options
     # while the initial loading is performed
-    for connector in multisite_user_connectors.values():
-        connector.get('migrate_config', lambda: None)()
+    for connector_class in multisite_user_connectors.values():
+        connector_class.migrate_config()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -83,13 +83,13 @@ def load_plugins():
 # connection id and the second element the connector specification dict
 def active_connections():
     connections = []
-    for connector_id, connector in multisite_user_connectors.items():
+    for connector_id, connector_class in multisite_user_connectors.items():
         if connector_id == 'htpasswd':
             # htpasswd connector is enabled by default and always executed first
-            connections.insert(0, ('htpasswd', connector))
+            connections.insert(0, ('htpasswd', connector_class({})))
         else:
-            for connection in config.user_connections:
-                connections.append((connection['id'], connector))
+            for connection_config in config.user_connections:
+                connections.append((connection_config['id'], connector_class(connection_config)))
     return connections
 
 
@@ -107,27 +107,21 @@ def cleanup_connection_id(connection_id):
 
 
 # Returns the connector dictionary of the given id
-def get_connector(connection_id):
+def get_connection(connection_id):
     return dict(active_connections()).get(connection_id, {})
 
 
 # Returns a list of locked attributes
 def locked_attributes(connection_id):
-    connection_id = cleanup_connection_id(connection_id)
-    connector = get_connector(connection_id)
-    return get_connector_handler(connection_id, connector, 'locked_attributes', lambda: [])()
+    return get_connection(cleanup_connection_id(connection_id)).locked_attributes()
 
 # Returns a list of multisite attributes
 def multisite_attributes(connection_id):
-    connection_id = cleanup_connection_id(connection_id)
-    connector = get_connector(connection_id)
-    return get_connector_handler(connection_id, connector, 'multisite_attributes', lambda: [])()
+    return get_connection(cleanup_connection_id(connection_id)).multisite_attributes()
 
 # Returns a list of non contact attributes
 def non_contact_attributes(connection_id):
-    connection_id = cleanup_connection_id(connection_id)
-    connector = get_connector(connection_id)
-    return get_connector_handler(connection_id, connector, 'non_contact_attributes', lambda: [])()
+    return get_connection(cleanup_connection_id(connection_id)).non_contact_attributes()
 
 def new_user_template(connection_id):
     new_user = {
@@ -757,6 +751,89 @@ def save_connection_config(connections):
     out.write("user_connections = \\\n%s\n\n" % pprint.pformat(connections))
 
 #.
+#   .--ConnectorAPI--------------------------------------------------------.
+#   |     ____                            _              _    ____ ___     |
+#   |    / ___|___  _ __  _ __   ___  ___| |_ ___  _ __ / \  |  _ \_ _|    |
+#   |   | |   / _ \| '_ \| '_ \ / _ \/ __| __/ _ \| '__/ _ \ | |_) | |     |
+#   |   | |__| (_) | | | | | | |  __/ (__| || (_) | | / ___ \|  __/| |     |
+#   |    \____\___/|_| |_|_| |_|\___|\___|\__\___/|_|/_/   \_\_|  |___|    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Implements the base class for User Connector classes. It implements  |
+#   | basic mechanisms and default methods which might/should be           |
+#   | overridden by the specific connector classes.                        |
+#   '----------------------------------------------------------------------'
+
+# FIXME: How to declare methods/attributes forced to be overridden?
+class UserConnector(object):
+    # The uniq identifier of the connector
+    _id = None
+
+    def __init__(self, config):
+        super(UserConnector, self).__init__()
+        self._config = config
+
+    # The string representing this connector to humans
+    @classmethod
+    def title(self):
+        return None
+
+
+    @classmethod
+    def short_title(self):
+        return _('htpasswd')
+
+    #
+    # USERDB API METHODS
+    #
+
+    @classmethod
+    def migrate_config(self):
+        pass
+
+    # Optional: Hook function can be registered here to be executed
+    # to validate a login issued by a user.
+    # Gets parameters: username, password
+    # Has to return either:
+    #     '<user_id>' -> Login succeeded
+    #     False       -> Login failed
+    #     None        -> Unknown user
+    def check_credentials(self, user_id, password):
+        return None
+
+    # Optional: Hook function can be registered here to be executed
+    # to synchronize all users.
+    def do_sync(add_to_changelog, only_username):
+        pass
+
+    # Optional: Tells whether or not the given user is currently
+    # locked which would mean that he is not allowed to login.
+    def is_locked(self, user_id):
+        return False
+
+    # Optional: Hook function can be registered here to be xecuted
+    # on each call to a multisite page, even on ajax requests etc.
+    def on_page_load(self):
+        pass
+
+    # Optional: Hook function can be registered here to be xecuted
+    # to save all users.
+    def save_users(self, users):
+        pass
+
+    # List of user attributes locked for all users attached to this
+    # connection. Those locked attributes are read-only in WATO.
+    def locked_attributes(self):
+        return []
+
+    def multisite_attributes(self):
+        return []
+
+    def non_contact_attributes(self):
+        return []
+
+
+#.
 #   .-Hooks----------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |
@@ -767,31 +844,10 @@ def save_connection_config(connections):
 #   +----------------------------------------------------------------------+
 
 
-def set_connection(connection_id):
-    global g_config
-    for connection in config.user_connections:
-        if connection_id == connection['id']:
-            g_config = connection
-            return
-    g_config = {}
-
-
-# When calling a connector action, this function needs to be used. It wraps
-# the connector function and sets the global connector config var "g_config"
-# to the connection specific configuration
-def get_connector_handler(connection_id, connector, action, deflt = None):
-    set_connection(connection_id)
-    return connector.get(action, deflt)
-
-
 # This hook is called to validate the login credentials provided by a user
 def hook_login(username, password):
-    for connection_id, connector in active_connections():
-        handler = get_connector_handler(connection_id, connector, 'login')
-        if not handler:
-            continue
-
-        result = handler(username, password)
+    for connection_id, connection in active_connections():
+        result = connection.check_credentials(username, password)
         # None        -> User unknown, means continue with other connectors
         # '<user_id>' -> success
         # False       -> failed
@@ -809,8 +865,7 @@ def hook_login(username, password):
             # password against the hash in the htpasswd file prefixed with
             # a "!". But when using other conectors it might be neccessary
             # to validate the user "locked" attribute.
-            lock_handler = get_connector_handler(connection_id, connector, 'locked')
-            if lock_handler and lock_handler(username):
+            if connection.is_locked(username):
                 return False # The account is locked
 
             return result
@@ -825,51 +880,46 @@ def hook_login(username, password):
 #   c) Before activating the changes in WATO
 def hook_sync(connection_id = None, add_to_changelog = False, only_username = None, raise_exc = False):
     if connection_id:
-        connections = [ (connection_id, get_connector(connection_id)) ]
+        connections = [ (connection_id, get_connection(connection_id)) ]
     else:
         connections = active_connections()
 
     no_errors = True
-    for connection_id, connector in connections:
-        handler = get_connector_handler(connection_id, connector, 'sync')
-        if handler:
-            try:
-                handler(add_to_changelog, only_username)
-            except MKLDAPException, e:
-                if raise_exc:
-                    raise
-                if config.debug:
-                    import traceback
-                    html.show_error(
-                        "<h3>" + _("Error during sync") + "</h3>"
-                        "<pre>%s</pre>" % (traceback.format_exc())
-                    )
-                else:
-                    html.show_error(
-                        "<h3>" + _("Error during sync") + "</h3>"
-                        "<pre>%s</pre>" % (e)
-                    )
-                no_errors = False
-            except:
-                if raise_exc:
-                    raise
+    for connection_id, connection in connections:
+        try:
+            connection.do_sync(add_to_changelog, only_username)
+        except MKLDAPException, e:
+            if raise_exc:
+                raise
+            if config.debug:
                 import traceback
                 html.show_error(
                     "<h3>" + _("Error during sync") + "</h3>"
                     "<pre>%s</pre>" % (traceback.format_exc())
                 )
-                no_errors = False
+            else:
+                html.show_error(
+                    "<h3>" + _("Error during sync") + "</h3>"
+                    "<pre>%s</pre>" % (e)
+                )
+            no_errors = False
+        except:
+            if raise_exc:
+                raise
+            import traceback
+            html.show_error(
+                "<h3>" + _("Error during sync") + "</h3>"
+                "<pre>%s</pre>" % (traceback.format_exc())
+            )
+            no_errors = False
     return no_errors
 
 # Hook function can be registered here to be executed during saving of the
 # new user construct
 def hook_save(users):
-    for connection_id, connector in active_connections():
-        handler = get_connector_handler(connection_id, connector, 'save')
-        if not handler:
-            continue
+    for connection_id, connection in active_connections():
         try:
-            handler(users)
+            connection.save_users(users)
         except:
             if config.debug:
                 import traceback
@@ -905,19 +955,16 @@ def hook_page():
     if 'page' not in config.userdb_automatic_sync:
         return
 
-    for connection_id, connector in active_connections():
-        handler = get_connector_handler(connection_id, connector, 'page')
-        if not handler:
-            continue
+    for connection_id, connection in active_connections():
         try:
-            handler()
+            connection.on_page_load()
         except:
             if config.debug:
                 raise
             else:
                 import traceback
                 logger(LOG_ERR, 'Exception (%s, page handler): %s' %
-                            (connector['id'], traceback.format_exc()))
+                            (connection_id, traceback.format_exc()))
 
     general_page_hook()
 

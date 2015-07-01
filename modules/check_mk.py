@@ -5353,8 +5353,8 @@ def do_check_keepalive():
                 g_total_check_output = "%s - Check_MK timed out after %d seconds\n" % (
                     core_state_names[status], g_timeout)
 
-            os.write(keepalive_fd, "%03d\n%08d\n%s" %
-                 (status, len(g_total_check_output), make_utf8(g_total_check_output)))
+            check_output_utf8 = make_utf8(g_total_check_output)
+            os.write(keepalive_fd, "%03d\n%08d\n%s" % (status, len(check_output_utf8), check_output_utf8))
             g_total_check_output = ""
 
         except Exception, e:

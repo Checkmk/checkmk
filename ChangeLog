@@ -18,13 +18,14 @@
     * 2362 FIX: mk_logwatch: fix cases where one logfile is listsed more than once in logwatch.cfg...
     * 2363 FIX: jolokia_metrics.uptime: Do not inventory instances where Uptime is missing - avoid crashed check
     * 2381 FIX: emc_datadomain_fans: Made check more robust against broken SNMP output
-    * 1261 FIX: apc_symmetra_power: Ignore unused phases while disocery
     * 2366 FIX: carel_sensors: fix crash in case of missing temperature sensor
     * 2382 FIX: mssql_backup: Formating age output more human friendly
     * 2383 FIX: FreeBSD Agent: Fixed handling <<<ps>>> section when jailed
     * 2368 FIX: ucd_cpu_load: fix exception in case of dump SNMP agent sending 12,540000 instead of 12.540000
     * 2318 FIX: windows agent: no longer crashes when a cached plugin has several hundred sections...
     * 2319 FIX: winperf_if: fixed exception when using windows_if.ps1 in an old windows version...
+    * 1261 FIX: apc_symmetra_power: Ignore unused phases while disocery
+    * 2320 FIX: winperf_msx_queues: no longer crashes in service discovery if there are no msx queues available
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

@@ -231,6 +231,18 @@ metric_info["rta"] = {
     "color" : "#40a0b0",
 }
 
+metric_info["rtmin"] = {
+    "title" : _("Round trip minimum"),
+    "unit"  : "s",
+    "color" : "42/a",
+}
+
+metric_info["rtmax"] = {
+    "title" : _("Round trip maximum"),
+    "unit"  : "s",
+    "color" : "42/b",
+}
+
 metric_info["pl"] = {
     "title" : _("Packet loss"),
     "unit"  : "%",
@@ -285,19 +297,19 @@ metric_info["prefetch_metadata_hit_ratio"] = {
     "color" : "43/a",
 }
 
-metric_info["zfs_meta_used"] = {
+metric_info["zfs_metadata_used"] = {
     "title" : _("Used meta data"),
     "unit"  : "bytes",
     "color" : "31/a",
 }
 
-metric_info["zfs_meta_max"] = {
+metric_info["zfs_metadata_max"] = {
     "title" : _("Maxmimum of meta data"),
     "unit"  : "bytes",
     "color" : "33/a",
 }
 
-metric_info["zfs_meta_limit"] = {
+metric_info["zfs_metadata_limit"] = {
     "title" : _("Limit of meta data"),
     "unit"  : "bytes",
     "color" : "36/a",
@@ -849,6 +861,12 @@ metric_info["nice"] = {
     "color" : "#ff9050",
 }
 
+metric_info["interrupt"] = {
+    "title" : _("Interrupt"),
+    "unit"  : "%",
+    "color" : "#ff9050",
+}
+
 metric_info["system"] = {
     "title" : _("System"),
     "help"  : _("CPU time spent in kernel space"),
@@ -941,7 +959,7 @@ metric_info["time_offset"] = {
 metric_info["jitter"] = {
     "title" : _("Time dispersion"),
     "unit"  : "s",
-    "color" : "#9a52bf",
+    "color" : "43/b",
 }
 
 metric_info["connection_time"] = {
@@ -981,12 +999,6 @@ metric_info["connections_rate"] = {
 }
 
 metric_info["requests_per_second"] = {
-    "title" : _("Requests per second"),
-    "unit"  : "1/s",
-    "color" : "#4080a0",
-}
-
-metric_info["bytes_per_requests"] = {
     "title" : _("Requests per second"),
     "unit"  : "1/s",
     "color" : "#4080a0",
@@ -1315,12 +1327,6 @@ metric_info["system_time"] = {
     "color" : "#ff6000",
 }
 
-metric_info["physc"] = {
-    "title" : _("Physical CPU"),
-    "unit"  : "%",
-    "color" : "32/b",
-}
-
 metric_info["children_user_time"] = {
     "title" : _("Child time in user space"),
     "unit"  : "s",
@@ -1475,6 +1481,84 @@ metric_info["fc_notxcredits"] = {
     "title" : _("No TX Credits"),
     "unit"  : "1/s",
     "color" : "15/a",
+}
+
+metric_info["fc_c2c3_discards"] = {
+    "title" : _("C2 and c3 discards"),
+    "unit"  : "1/s",
+    "color" : "15/a",
+}
+
+metric_info["fc_link_fails"] = {
+    "title" : _("Link failures"),
+    "unit"  : "1/s",
+    "color" : "11/a",
+}
+
+metric_info["fc_sync_losses"] = {
+    "title" : _("Sync losses"),
+    "unit"  : "1/s",
+    "color" : "12/a",
+}
+
+metric_info["fc_prim_seq_errors"] = {
+    "title" : _("Primitive sequence errors"),
+    "unit"  : "1/s",
+    "color" : "13/a",
+}
+
+metric_info["fc_invalid_tx_words"] = {
+    "title" : _("Invalid TX words"),
+    "unit"  : "1/s",
+    "color" : "14/a",
+}
+
+metric_info["fc_invalid_crcs"] = {
+    "title" : _("Invalid crcs"),
+    "unit"  : "1/s",
+    "color" : "15/a",
+}
+
+metric_info["fc_address_id_errors"] = {
+    "title" : _("Address ID errors"),
+    "unit"  : "1/s",
+    "color" : "16/a",
+}
+
+metric_info["fc_link_resets_in"] = {
+    "title" : _("Link resets in"),
+    "unit"  : "1/s",
+    "color" : "21/a",
+}
+
+metric_info["fc_link_resets_out"] = {
+    "title" : _("Link resets out"),
+    "unit"  : "1/s",
+    "color" : "22/a",
+}
+
+metric_info["fc_offline_seqs_in"] = {
+    "title" : _("Offline sequences in"),
+    "unit"  : "1/s",
+    "color" : "23/a",
+}
+
+metric_info["fc_offline_seqs_out"] = {
+    "title" : _("Offline sequences out"),
+    "unit"  : "1/s",
+    "color" : "24/a",
+}
+
+metric_info["fc_c2_fbsy_frames"] = {
+    "title" : _("F_BSY frames"),
+    "unit"  : "1/s",
+    "color" : "25/a",
+}
+
+metric_info["fc_c2_frjt_frames"] = {
+    "title" : _("F_RJT frames"),
+    "unit"  : "1/s",
+    "color" : "26/a",
 }
 
 
@@ -1724,6 +1808,12 @@ metric_info["mail_queue_deferred_length"] = {
     "color" : "#40a0b0",
 }
 
+metric_info["mails_received_time"] = {
+    "title" : _("Received mails"),
+    "unit"  : "s",
+    "color" : "31/a",
+}
+
 metric_info["mail_queue_deferred_size"] = {
     "title" : _("Size of deferred mail queue"),
     "unit"  : "bytes",
@@ -1826,8 +1916,8 @@ metric_info["licenses"] = {
     "color" : "#ff6234",
 }
 
-metric_info["files"] = {
-    "title" : _("Files"),
+metric_info["files_open"] = {
+    "title" : _("Open files"),
     "unit"  : "count",
     "color" : "#ff6234",
 }
@@ -1838,16 +1928,16 @@ metric_info["directories"] = {
     "color" : "#202020",
 }
 
-metric_info["semaphore_ids"] = {
-    "title" : _("IPC semaphore IDs"),
-    "unit"  : "count",
-    "color" : "#404040",
-}
-
 metric_info["shared_memory_segments"] = {
     "title" : _("Shared memory segments"),
     "unit"  : "count",
     "color" : "#606060",
+}
+
+metric_info["semaphore_ids"] = {
+    "title" : _("IPC semaphore IDs"),
+    "unit"  : "count",
+    "color" : "#404040",
 }
 
 metric_info["semaphores"] = {
@@ -2165,6 +2255,85 @@ metric_info["apache_state_keep_alive"] = {
     "color" : "53/b",
 }
 
+metric_info["http_bandwidth"] = {
+    "title" : _("Http bandwidth"),
+    "unit"  : "bytes/s",
+    "color" : "53/b",
+}
+
+# netapp api volumes
+
+for volume_info in [ "NFS", "CIFS", "SAN", "FCP", "ISCSI" ]:
+    for what, unit in [ ("data", "bytes"), ("latency", "s") ]:
+
+        volume = volume_info.lower()
+
+        metric_info[ "%s_read_%s" % (volume, what) ] = {
+            "title" : _( "%s read %s" % (volume_info, what) ),
+            "unit"  : unit,
+            "color" : "31/a",
+        }
+
+        metric_info[ "%s_write_%s" % (volume, what) ] = {
+            "title" : _( "%s write %s" % (volume_info, what) ),
+            "unit"  : unit,
+            "color" : "44/a",
+        }
+
+metric_info["harddrive_power_cycles"] = {
+    "title" : _("Harddrive power cycles"),
+    "unit"  : "count",
+    "color" : "11/a",
+}
+
+metric_info["harddrive_reallocated_sectors"] = {
+    "title" : _("Harddrive reallocated sectors"),
+    "unit"  : "count",
+    "color" : "14/a",
+}
+
+metric_info["harddrive_reallocated_events"] = {
+    "title" : _("Harddrive reallocated events"),
+    "unit"  : "count",
+    "color" : "21/a",
+}
+
+metric_info["harddrive_spin_retries"] = {
+    "title" : _("Harddrive spin retries"),
+    "unit"  : "count",
+    "color" : "24/a",
+}
+
+metric_info["harddrive_pending_sectors"] = {
+    "title" : _("Harddrive pending sectors"),
+    "unit"  : "count",
+    "color" : "31/a",
+}
+
+metric_info["harddrive_cmd_timeouts"] = {
+    "title" : _("Harddrive command timeouts"),
+    "unit"  : "count",
+    "color" : "34/a",
+}
+
+metric_info["harddrive_end_to_end_errors"] = {
+    "title" : _("Harddrive end-to-end errors"),
+    "unit"  : "count",
+    "color" : "41/a",
+}
+
+metric_info["harddrive_uncorrectable_erros"] = {
+    "title" : _("Harddrive uncorrectable errors"),
+    "unit"  : "count",
+    "color" : "44/a",
+}
+
+metric_info["harddrive_udma_crc_errors"] = {
+    "title" : _("Harddrive udma crc errors"),
+    "unit"  : "count",
+    "color" : "46/a",
+}
+
 for what, perfname, shading in [ ("2.4", "2_4", "a"), ("5", "5", "b") ]:
     metric_info["ap_devices_total_%sghz" % perfname] = {
         "title" : _("Total %s GHz devices") % what,
@@ -2209,8 +2378,43 @@ metric_info["error_rate"] = {
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
 
-check_metrics["check_mk_active-tcp"]                            = { "time" : { "name": "response_time" } }
-check_metrics["check-mk-host-tcp"]                              = { "time" : { "name": "response_time" } }
+check_metrics["check_mk_active-mail_loop"] = {
+    "duration" : { "name": "mails_received_time" }
+}
+
+check_metrics["check_mk_active-http"] = {
+    "time" : { "name": "responese_time" },
+    "size" : { "name": "http_bandwidth" },
+}
+
+check_metrics["check_mk_active-tcp"] = {
+    "time" : { "name": "response_time" }
+}
+
+check_metrics["check-mk-host-tcp"] = {
+    "time" : { "name": "response_time" }
+}
+
+check_metrics["check_mk-netapp_api_volumes"] = {
+    "nfs_read_latency"      : { "scale" : m },
+    "nfs_write_latency"     : { "scale" : m },
+    "cifs_read_latency"     : { "scale" : m },
+    "cifs_write_latency"    : { "scale" : m },
+    "san_read_latency"      : { "scale" : m },
+    "san_write_latency"     : { "scale" : m },
+    "fcp_read_latency"      : { "scale" : m },
+    "fcp_write_latency"     : { "scale" : m },
+    "iscsi_read_latency"    : { "scale" : m },
+    "iscsi_write_latency"   : { "scale" : m },
+}
+
+check_metrics["check_mk_active-tcp"] = {
+    "time" : { "name": "response_time" }
+}
+
+check_metrics["check-mk-host-tcp"] = {
+    "time" : { "name": "response_time" }
+}
 
 check_metrics["check_mk-jolokia_metrics.gc"] = {
     "CollectionCount" : { "name" : "gc_reclaimed_redundant_memory_areas" },
@@ -2226,13 +2430,39 @@ check_metrics["check_mk-rmon_stats"] = {
     "1024-1518b": { "name" : "rmon_packets_1518" },
 }
 
-check_metrics["check_mk-cpu.loads"]                             = { "load5" : { "auto_graph" : False }}
-check_metrics["check_mk-ucd_cpu_load"]                          = { "load5" : { "auto_graph" : False }}
-check_metrics["check_mk-hpux_cpu"]                              = { "wait" : { "name" : "io_wait" } }
+check_metrics["check_mk-cpu.loads"] = {
+   " load5" : { "auto_graph" : False }
+}
+
+check_metrics["check_mk-ucd_cpu_load"] = {
+    "load5" : { "auto_graph" : False }
+}
+
+check_metrics["check_mk-hpux_cpu"] = {
+    "wait" : { "name" : "io_wait" }
+}
+
+check_metrics["check_mk-hitachi_hnas_cpu"] = {
+    "cpu_util" : { "name" : "util" }
+}
 
 check_metrics["check_mk-statgrab_disk"] = {
     "read"  : { "name" : "disk_read_throughput" },
     "write" : { "name" : "disk_write_throughput" }
+}
+
+check_metrics["check_mk-ibm_svc_systemstats.diskio"] = {
+    "read"  : { "name" : "disk_read_throughput" },
+    "write" : { "name" : "disk_write_throughput" }
+}
+
+check_metrics["check_mk-ibm_svc_nodestats.diskio"] = {
+    "read"  : { "name" : "disk_read_throughput" },
+    "write" : { "name" : "disk_write_throughput" }
+}
+
+check_metrics["check_mk-netscaler_mem"] = {
+    "mem"  : { "name" : "mem_used" }
 }
 
 ram_used_swap_translation = {
@@ -2259,12 +2489,20 @@ check_metrics["check_mk-ibm_svc_nodestats.disk_latency"] = {
     "write_latency" : { "scale" : m },
 }
 
+check_metrics["check_mk-ibm_svc_systemstats.disk_latency"] = {
+    "read_latency"  : { "scale" : m },
+    "write_latency" : { "scale" : m },
+}
+
 check_metrics["check_mk-netapp_api_disk.summary"] = {
     "total_disk_capacity"   : { "name" : "disk_capacity" },
     "total_disks"           : { "name" : "disks" },
 }
 
-check_metrics["check_mk-emc_isilon_iops"]                       = { "iops" : { "name" : "disk_ios" } }
+check_metrics["check_mk-emc_isilon_iops"] = {
+    "iops" : { "name" : "disk_ios" }
+}
+
 check_metrics["check_mk-vms_system.ios"] = {
     "direct"   : { "name" : "direct_io" },
     "buffered" : { "name" : "buffered_io" }
@@ -2276,17 +2514,33 @@ check_metrics["check_mk-kernel"] = {
     "processes"  : { "name": "process_creations" },
 }
 
-check_metrics["check_mk-vms_system.procs"]                      = { "procs" : { "name" : "processes" } }
+check_metrics["check_mk-oracle_jobs"] = {
+    "duration" : { "name" : "job_duration" }
+}
+
+check_metrics["check_mk-vms_system.procs"] = {
+    "procs" : { "name" : "processes" }
+}
 
 check_metrics["check_mk-jolokia_metrics.tp"] = {
     "currentThreadCount" : { "name" : "threads_idle" },
     "currentThreadsBusy" : { "name" : "threads_busy" },
 }
 
-check_metrics["check_mk-aix_memory"]                            = { "ramused" : { "name" : "mem_used", "scale": MB }, "swapused" : { "name" : "swap_used", "scale": MB }}
-check_metrics["check_mk-mem.win"]                               = { "memory" : { "name" : "mem_used", "scale" : MB }, "pagefile" : { "name" : "pagefile_used", "scale" : MB }}
+check_metrics["check_mk-aix_memory"] = {
+    "ramused" : { "name" : "mem_used", "scale": MB },
+    "swapused" : { "name" : "swap_used", "scale": MB }
+}
 
-check_metrics["check_mk-brocade_mlx.module_mem"]                = { "memused" : { "name" : "mem_used" } }
+check_metrics["check_mk-mem.win"] = {
+    "memory" : { "name" : "mem_used", "scale" : MB },
+    "pagefile" : { "name" : "pagefile_used", "scale" : MB }
+}
+
+check_metrics["check_mk-brocade_mlx.module_mem"] = {
+    "memused" : { "name" : "mem_used" }
+}
+
 check_metrics["check_mk-jolokia_metrics.mem"] = {
     "heap"    : { "name" : "mem_heap" , "scale" : MB },
     "nonheap" : { "name" : "mem_nonheap", "scale" : MB }
@@ -2350,13 +2604,20 @@ check_metrics["check_mk-tcp_conn_stats"] = {
     "BOUND"       : { "name": "tcp_bound" },
 }
 
+check_metrics["check_mk_active-disk_smb"] = {
+    "~.*" : { "name" : "fs_used" }
+}
+
 df_translation = {
     "~(?!inodes_used|fs_size|growth|trend|fs_provisioning).*"   : { "name"  : "fs_used", "scale" : MB },
     "fs_size" : { "scale" : MB },
     "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
     "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },
 }
+
 check_metrics["check_mk-df"]                                    = df_translation
+check_metrics["check_mk-esx_vsphere_datastores"]                = df_translation
+check_metrics["check_mk-netapp_api_aggr"]                       = df_translation
 check_metrics["check_mk-vms_df"]                                = df_translation
 check_metrics["check_mk-vms_diskstat.df"]                       = df_translation
 check_metrics["check_disk"]                                     = df_translation
@@ -2374,6 +2635,7 @@ check_metrics["check_mk-ibm_svc_mdiskgrp"]                      = df_translation
 check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = df_translation
 check_metrics["check_mk-fast_lta_volumes"]                      = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = df_translation
+check_metrics["check_mk-netapp_api_volume"]                     = df_translation
 
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
 if_translation = {
@@ -2388,21 +2650,25 @@ if_translation = {
     "outucast"  : { "name": "if_out_unicast" },
     "outnucast" : { "name": "if_out_non_unicast" },
 }
-check_metrics["check_mk-esx_vsphere_counters"] = if_translation
-check_metrics["check_mk-fritz"]                = if_translation
-check_metrics["check_mk-hitachi_hnas_fc_if"]   = if_translation
-check_metrics["check_mk-if64"]                 = if_translation
-check_metrics["check_mk-if64_tplink"]          = if_translation
-check_metrics["check_mk-if_lancom"]            = if_translation
-check_metrics["check_mk-if"]                   = if_translation
-check_metrics["check_mk-lnx_if"]               = if_translation
-check_metrics["check_mk-mcdata_fcport"]        = if_translation
-check_metrics["check_mk-netapp_api_if"]        = if_translation
-check_metrics["check_mk-statgrab_net"]         = if_translation
-check_metrics["check_mk-ucs_bladecenter_if"]   = if_translation
-check_metrics["check_mk-vms_if"]               = if_translation
-check_metrics["check_mk-winperf_if"]           = if_translation
-check_metrics["check_mk-emc_vplex_if"]         = if_translation
+
+check_metrics["check_mk-esx_vsphere_counters"]      = if_translation
+check_metrics["check_mk-esx_vsphere_counters.if"]   = if_translation
+check_metrics["check_mk-fritz"]                     = if_translation
+check_metrics["check_mk-fritz.wan_if"]              = if_translation
+check_metrics["check_mk-hitachi_hnas_fc_if"]        = if_translation
+check_metrics["check_mk-if64"]                      = if_translation
+check_metrics["check_mk-hpux_if"]                   = if_translation
+check_metrics["check_mk-if64_tplink"]               = if_translation
+check_metrics["check_mk-if_lancom"]                 = if_translation
+check_metrics["check_mk-if"]                        = if_translation
+check_metrics["check_mk-lnx_if"]                    = if_translation
+check_metrics["check_mk-mcdata_fcport"]             = if_translation
+check_metrics["check_mk-netapp_api_if"]             = if_translation
+check_metrics["check_mk-statgrab_net"]              = if_translation
+check_metrics["check_mk-ucs_bladecenter_if"]        = if_translation
+check_metrics["check_mk-vms_if"]                    = if_translation
+check_metrics["check_mk-winperf_if"]                = if_translation
+check_metrics["check_mk-emc_vplex_if"]              = if_translation
 
 check_metrics["check_mk-brocade_fcport"] = {
     "in"             : { "name": "fc_rx_bytes", },
@@ -2426,6 +2692,43 @@ check_metrics["check_mk-fc_port"] = {
     "notxcredits"    : { "name": "fc_notxcredits" },
 }
 
+check_metrics["check_mk-qlogic_fcport"] = {
+    "in"                    : { "name" : "fc_rx_bytes", },
+    "out"                   : { "name" : "fc_tx_bytes", },
+    "rxframes"              : { "name" : "fc_rx_frames", },
+    "txframes"              : { "name" : "fc_tx_frames", },
+    "link_failures"         : { "name" : "fc_link_fails" },
+    "sync_losses"           : { "name" : "fc_sync_losses" },
+    "prim_seq_proto_errors" : { "name" : "fc_prim_seq_errors" },
+    "invalid_tx_words"      : { "name" : "fc_invalid_tx_words" },
+    "discards"              : { "name" : "fc_c2c3_discards" },
+    "invalid_crcs"          : { "name" : "fc_invalid_crcs" },
+    "address_id_errors"     : { "name" : "fc_address_id_errors" },
+    "link_reset_ins"        : { "name" : "fc_link_resets_in" },
+    "link_reset_outs"       : { "name" : "fc_link_resets_out" },
+    "ols_ins"               : { "name" : "fc_offline_seqs_in" },
+    "ols_outs"              : { "name" : "fc_offline_seqs_out" },
+    "c2_fbsy_frames"        : { "name" : "fc_c2_fbsy_frames" },
+    "c2_frjt_frames"        : { "name" : "fc_c2_frjt_frames" },
+}
+
+check_metrics["check_mk-mysql.innodb_io"] = {
+    "read" : { "name" : "disk_read_throughput" },
+    "write": { "name" : "disk_write_throughput" }
+}
+
+check_metrics["check_mk-esx_vsphere_counters.diskio"] = {
+    "read"      : { "name" : "disk_read_throughput" },
+    "write"     : { "name" : "disk_write_throughput" },
+    "ios"       : { "name" : "disk_ios" },
+    "latency"   : { "name" : "disk_latency" },
+}
+
+check_metrics["check_mk-emcvnx_disks"] = {
+    "read" : { "name" : "disk_read_throughput" },
+    "write": { "name" : "disk_write_throughput" }
+}
+
 check_metrics["check_mk-diskstat"] = {
     "read" : { "name" : "disk_read_throughput" },
     "write": { "name" : "disk_write_throughput" }
@@ -2436,22 +2739,42 @@ check_metrics["check_mk-netapp_api_protocol"] = {
     "write_ops": { "name" : "disk_write_ios" }
 }
 
-check_metrics["check_mk-dell_powerconnect_temp"]                = { "temperature" : { "name" : "temp" } }
-check_metrics["check_mk-ipmi_sensors"]                          = { "value" : { "name" : "temp" } }
-check_metrics["check_mk-ipmi"]                                  = { "ambient_temp" : { "name" : "temp" }, "degrees_C" : { "name" : "temp" } }
+check_metrics["check_mk-ibm_svc_systemstats.iops"] = {
+    "read"  : { "name" : "disk_read_ios" },
+    "write" : { "name" : "disk_write_ios" }
+}
 
-check_metrics["check_mk-wagner_titanus_topsense.smoke"]             = { "smoke_perc" : { "name" : "smoke_ppm" } }
-check_metrics["check_mk-wagner_titanus_topsense.airflow_deviation"] = { "airflow_deviation" : { "name" : "deviation_airflow" } }
-check_metrics["check_mk-wagner_titanus_topsense.chamber_deviation"] = { "chamber_deviation" : { "name" : "deviation_calibration_point" } }
+check_metrics["check_mk-dell_powerconnect_temp"] = {
+    "temperature" : { "name" : "temp" }
+}
+
+check_metrics["check_mk-ipmi_sensors"] = {
+    "value" : { "name" : "temp" }
+}
+
+check_metrics["check_mk-ipmi"] = {
+    "ambient_temp" : { "name" : "temp" }
+}
+
+check_metrics["check_mk-wagner_titanus_topsense.smoke"] = {
+    "smoke_perc" : { "name" : "smoke_ppm" }
+}
+
+check_metrics["check_mk-wagner_titanus_topsense.airflow_deviation"] = {
+    "airflow_deviation" : { "name" : "deviation_airflow" }
+}
+
+check_metrics["check_mk-wagner_titanus_topsense.chamber_deviation"] = {
+    "chamber_deviation" : { "name" : "deviation_calibration_point" }
+}
 
 check_metrics["check_mk-apc_symmetra"] = {
     "OutputLoad" : { "name" : "output_load" },
-    "batcurr"     : { "name" : "battery_current" },
+    "batcurr"    : { "name" : "battery_current" },
     "systemp"    : { "name" : "battery_temp" },
     "capacity"   : { "name" : "battery_capacity" },
     "runtime"    : { "name" : "lifetime_remaining", "scale" : 60 },
 }
-
 
 check_metrics["check_mk-kernel.util"]                           = {
     "wait" : { "name" : "io_wait" },
@@ -2459,12 +2782,33 @@ check_metrics["check_mk-kernel.util"]                           = {
     "steal" : { "name" : "cpu_util_steal" },
 }
 
-check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "name" : "io_wait" } }
-check_metrics["check_mk-ucd_cpu_util"]                          = { "wait" : { "name" : "io_wait" } }
-check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "name" : "io_wait" } }
-check_metrics["check_mk-vms_sys.util"]                          = { "wait" : { "name" : "io_wait" } }
-check_metrics["check_mk-winperf.cpuusage"]                      = { "cpuusage" : { "name" : "util" } }
-check_metrics["check_mk-h3c_lanswitch_cpu"]                     = { "usage" : { "name" : "util" } }
+check_metrics["check_mk-lparstat_aix.cpu_util"] = {
+    "wait" : { "name" : "io_wait" }
+}
+
+check_metrics["check_mk-ucd_cpu_util"] = {
+    "wait" : { "name" : "io_wait" }
+}
+
+check_metrics["check_mk-vms_cpu"] = {
+    "wait" : { "name" : "io_wait" }
+}
+
+check_metrics["check_mk-vms_sys.util"] = {
+    "wait" : { "name" : "io_wait" }
+}
+
+check_metrics["check_mk-winperf.cpuusage"] = {
+    "cpuusage" : { "name" : "util" }
+}
+
+check_metrics["check_mk-h3c_lanswitch_cpu"] = {
+    "usage" : { "name" : "util" }
+}
+
+check_metrics["check_mk-h3c_lanswitch_cpu"] = {
+    "usage" : { "name" : "util" }
+}
 
 check_metrics["check_mk-brocade_mlx.module_cpu"] = {
     "cpu_util1"   : { "name" : "util1s" },
@@ -2484,7 +2828,14 @@ check_metrics["check_mk-ibm_svc_nodestats.cache"] = {
     "total_cache_pc" : { "name" : "total_cache_usage" }
 }
 
-check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage"]      = { "usage" : { "name" : "mem_used" } }
+check_metrics["check_mk-ibm_svc_systemstats.cache"] = {
+    "write_cache_pc" : { "name" : "write_cache_usage" },
+    "total_cache_pc" : { "name" : "total_cache_usage" }
+}
+
+check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage"] = {
+    "usage" : { "name" : "mem_used" }
+}
 
 check_metrics["check_mk-ibm_svc_host"] = {
     "active"    : { "name" : "hosts_active" },
@@ -2494,7 +2845,13 @@ check_metrics["check_mk-ibm_svc_host"] = {
     "other"     : { "name" : "hosts_other" },
 }
 
-check_metrics["check_mk-juniper_screenos_mem"]                  = { "usage" : { "name" : "mem_used" } }
+check_metrics["check_mk-juniper_screenos_mem"] = {
+    "usage" : { "name" : "mem_used" }
+}
+
+check_metrics["check_mk-juniper_trpz_mem"] = {
+    "usage" : { "name" : "mem_used" }
+}
 
 check_metrics["check_mk-ibm_svc_nodestats.iops"] = {
     "read" : { "name" : "disk_read_ios" },
@@ -2511,13 +2868,24 @@ check_metrics["check_mk-f5_bigip_interfaces"] = {
     "bytes_out": { "name" : "if_out_octets" }
 }
 
-check_metrics["check_mk-mbg_lantime_state"]                     = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
-check_metrics["check_mk-mbg_lantime_ng_state"]                  = { "offset" : { "name" : "time_offset", "scale" : 0.000001 }} # convert us -> sec
-check_metrics["check_mk-systemtime"]                            = { "offset" : { "name" : "time_offset" }}
+check_metrics["check_mk-mbg_lantime_state"] = {
+    "offset" : { "name" : "time_offset", "scale" : 0.000001 }
+} # convert us -> sec
+
+check_metrics["check_mk-mbg_lantime_ng_state"] = {
+    "offset" : { "name" : "time_offset", "scale" : 0.000001 }
+} # convert us -> sec
+
+check_metrics["check_mk-systemtime"] = {
+    "offset" : { "name" : "time_offset" }
+}
 
 check_metrics["check_mk-ntp"] = {
     "offset" : { "name" : "time_offset", "scale" : m },
     "jitter" : { "scale" : m },
+}
+check_metrics["check_mk-chrony"] = {
+    "offset" : { "name" : "time_offset", "scale" : m }
 }
 
 check_metrics["check_mk-ntp.time"] = {
@@ -2525,10 +2893,14 @@ check_metrics["check_mk-ntp.time"] = {
     "jitter" : { "scale" : m },
 }
 
-check_metrics["check_mk-adva_fsp_if"]                           = { "output_power" : { "name" : "output_signal_power_dbm" },
-                                                                    "input_power" : { "name" : "input_signal_power_dbm" }}
+check_metrics["check_mk-adva_fsp_if"] = {
+    "output_power" : { "name" : "output_signal_power_dbm" },
+    "input_power" : { "name" : "input_signal_power_dbm" }
+}
 
-check_metrics["check_mk-allnet_ip_sensoric.tension"]            = { "tension" : { "name" : "voltage_percent" }}
+check_metrics["check_mk-allnet_ip_sensoric.tension"] = {
+    "tension" : { "name" : "voltage_percent" }
+}
 
 check_metrics["check_mk-apache_status"] = {
     "Uptime"               : { "name" : "uptime" },
@@ -2555,18 +2927,35 @@ check_metrics["check_mk-apache_status"] = {
     "State_Keepalive"      : { "name" : "apache_state_keep_alive" },
 }
 
-check_metrics["check_mk-hp_blade_psu"]                          = { "output" : { "name" : "power" }}
-check_metrics["check_mk-apc_rackpdu_power"]                     = { "amperage" : { "name" : "current" }}
-check_metrics["check_mk-apc_ats_output"]                        = { "volt" : { "name" : "voltage" }, "watt" : { "name" : "power"}, "ampere": { "name": "current"}, "load_perc" : { "name": "output_load" }}
+check_metrics["check_mk-ups_socomec_out_voltage"] = {
+    "out_voltage" : { "name" : "voltage" }
+}
+
+check_metrics["check_mk-hp_blade_psu"] = {
+    "output" : { "name" : "power" }
+}
+
+check_metrics["check_mk-apc_rackpdu_power"] = {
+    "amperage" : { "name" : "current" }
+}
+
+check_metrics["check_mk-apc_ats_output"] = {
+    "volt" : { "name" : "voltage" },
+    "watt" : { "name" : "power"},
+    "ampere": { "name": "current"},
+    "load_perc" : { "name": "output_load" }
+}
 
 check_metrics["check_mk-ups_out_load"] = {
     "out_load"    : { "name": "output_load" },
     "out_voltage" : { "name": "voltage" },
 }
 
-check_metrics["check_mk-raritan_pdu_outletcount"]               = { "outletcount" : { "name" : "connector_outlets" } }
+check_metrics["check_mk-raritan_pdu_outletcount"] = {
+    "outletcount" : { "name" : "connector_outlets" }
+}
 
-check_metrics["check_mk-docsis_channels_upstream"]              = {
+check_metrics["check_mk-docsis_channels_upstream"] = {
     "total"      : { "name" : "total_modems" },
     "active"     : { "name" : "active_modems" },
     "registered" : { "name" : "registered_modems" },
@@ -2577,9 +2966,9 @@ check_metrics["check_mk-docsis_channels_upstream"]              = {
 check_metrics["check_mk-zfs_arc_cache"]  = {
     "hit_ratio"     : { "name": "cache_hit_ratio", },
     "size"          : { "name": "caches", "scale" : MB },
-    "arc_meta_used" : { "name": "zfs_meta_used", "scale" : MB },
-    "arc_meta_limit": { "name": "zfs_meta_limit", "scale" : MB },
-    "arc_meta_max"  : { "name": "zfs_meta_max", "scale" : MB },
+    "arc_meta_used" : { "name": "zfs_metadata_used", "scale" : MB },
+    "arc_meta_limit": { "name": "zfs_metadata_limit", "scale" : MB },
+    "arc_meta_max"  : { "name": "zfs_metadata_max", "scale" : MB },
 }
 
 check_metrics["check_mk-zfs_arc_cache.l2"] = {
@@ -2587,13 +2976,26 @@ check_metrics["check_mk-zfs_arc_cache.l2"] = {
     "l2_hit_ratio" : { "name": "zfs_l2_hit_ratio", },
 }
 
-check_metrics["check_mk-postgres_sessions"]                     = { "total": {"name": "total_sessions"}, "running": {"name": "running_sessions"} }
+check_metrics["check_mk-postgres_sessions"] = {
+    "total": {"name": "total_sessions"},
+    "running": {"name": "running_sessions"}
+}
 
-check_metrics["check_mk-oracle_sessions"]                       = { "sessions" : {"name": "running_sessions"} }
-check_metrics["check_mk-oracle_logswitches"]                    = { "logswitches" : { "name" : "logswitches_last_hour" } }
-check_metrics["check_mk-oracle_dataguard_stats"]                = { "apply_lag" : { "name" : "database_apply_lag" } }
+check_metrics["check_mk-oracle_sessions"] = {
+    "sessions" : {"name": "running_sessions"}
+}
 
-check_metrics["check_mk-db2_logsize"]                           = { "~[_/]": { "name": "fs_used", "scale" : MB } }
+check_metrics["check_mk-oracle_logswitches"] = {
+    "logswitches" : { "name" : "logswitches_last_hour" }
+}
+
+check_metrics["check_mk-oracle_dataguard_stats"] = {
+    "apply_lag" : { "name" : "database_apply_lag" }
+}
+
+check_metrics["check_mk-db2_logsize"] = {
+    "~[_/]": { "name": "fs_used", "scale" : MB }
+}
 
 check_metrics["check_mk-steelhead_connections"] = {
     "active"      : { "name" : "fw_connections_active" },
@@ -2618,9 +3020,17 @@ check_metrics["check_mk-mssql_tablespaces"] = {
     "unused"        : { "name" : "unused_size" },
 }
 
-check_metrics["check_mk-f5_bigip_vserver"]                      = { "conn_rate" : { "name" : "connections_rate" } }
+check_metrics["check_mk-f5_bigip_vserver"] = {
+    "conn_rate" : { "name" : "connections_rate" }
+}
 
-check_metrics["check_mk-arcserve_backup"]                       = { "size" : { "name" : "backup_size" } }
+check_metrics["check_mk-arcserve_backup"] = {
+    "size" : { "name" : "backup_size" }
+}
+
+check_metrics["check_mk-oracle_rman"] = {
+    "age" : { "name" : "backup_age" }
+}
 
 check_metrics["check_mk-veeam_client"] = {
     "totalsize" : { "name" : "backup_size" },
@@ -2628,10 +3038,13 @@ check_metrics["check_mk-veeam_client"] = {
     "avgspeed"  : { "name" : "backup_avgspeed" },
 }
 
-check_metrics["check_mk-cups_queues"]                           = { "jobs" : { "name" : "printer_queue" } }
+check_metrics["check_mk-cups_queues"] = {
+    "jobs" : { "name" : "printer_queue" }
+}
 
-check_metrics["check_mk-printer_pages"]                         = { "pages" : { "name" : "pages_total" } }
-
+check_metrics["check_mk-printer_pages"] = {
+    "pages" : { "name" : "pages_total" }
+}
 
 check_metrics["check_mk-livestatus_status"] = {
     "host_checks"    : { "name" : "host_check_rate" },
@@ -2665,8 +3078,16 @@ check_metrics["check_mk-tsm_stagingpools"] = {
     "util" : { "name" : "tapes_util" }
 }
 
-check_metrics["check_mk-hpux_tunables"] = {
-    "entries" : { "name" : "semaphores" }
+check_metrics["check_mk-hpux_tunables.shmseg"] = {
+    "segments" : { "name" : "shared_memory_segments" }
+}
+
+check_metrics["check_mk-hpux_tunables.semmns"] = {
+    "entries"  : { "name" : "semaphores" }
+}
+
+check_metrics["check_mk-hpux_tunables.maxfiles_lim"] = {
+    "files" : { "name" : "files_open" }
 }
 
 check_metrics["check_mk-win_dhcp_pools"] = {
@@ -2704,6 +3125,19 @@ ps_translation = {
     "rss"     : { "name" : "process_resident_size", "scale" : KB, },
     "pcpu"    : { "name" : "util" },
     "pcpuavg" : { "name" : "util_average" },
+}
+
+check_metrics["check_mk-smart.stats"] = {
+    "Power_On_Hours"            : { "name" : "uptime", "scale" : 3600 },
+    "Power_Cycle_Count"         : { "name" : "harddrive_power_cycle" },
+    "Reallocated_Sector_Ct"     : { "name" : "harddrive_reallocated_sectors" },
+    "Reallocated_Event_Count"   : { "name" : "harddrive_reallocated_events" },
+    "Spin_Retry_Count"          : { "name" : "harddrive_spin_retries" },
+    "Current_Pending_Sector"    : { "name" : "harddrive_pending_sectors" },
+    "Command_Timeout"           : { "name" : "harddrive_cmd_timeouts" },
+    "End-to-End_Error"          : { "name" : "harddrive_end_to_end_errors" },
+    "Reported_Uncorrect"        : { "name" : "harddrive_uncorrectable_errors" },
+    "UDMA_CRC_Error_Count"      : { "name" : "harddrive_udma_crc_errors" },
 }
 
 check_metrics["check_mk-ps"] = ps_translation
@@ -2765,9 +3199,23 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type"       : "logarithmic",
+    "metric"     : "job_duration",
+    "half_value" : 120.0,
+    "exponent"   : 2,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
     "metric"     : "response_time",
     "half_value" : 10,
     "exponent"   : 4,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "mails_received_time",
+    "half_value" : 5,
+    "exponent"   : 3,
 })
 
 perfometer_info.append({
@@ -2841,16 +3289,23 @@ perfometer_info.append(("stacked", [
     {
         "type"          : "logarithmic",
         "metric"        : "checkpoint_age",
-        "half_value"    : 5,
+        "half_value"    : 86400,
         "exponent"      : 2,
     },
     {
         "type"          : "logarithmic",
         "metric"        : "backup_age",
-        "half_value"    : 5,
+        "half_value"    : 86400,
         "exponent"      : 2,
     }
 ]))
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "backup_age",
+    "half_value"    : 86400,
+    "exponent"      : 2,
+})
 
 perfometer_info.append(("stacked", [
     {
@@ -2894,45 +3349,131 @@ perfometer_info.append({
     "total"         : 100.0,
 })
 
-perfometer_info.append(("stacked", [{
-    "type"      : "logarithmic",
-    "metric"    : "mem_heap",
-    "half_value": 100*MB,
-    "exponent"  : 2,
-    },{
-    "type"      : "logarithmic",
-    "metric"    : "mem_nonheap",
-    "half_value": 100*MB,
-    "exponent"  : 2,
+perfometer_info.append(("stacked", [
+    {
+        "type"       : "logarithmic",
+        "metric"     : "mem_heap",
+        "half_value" : 100 * MB,
+        "exponent"   : 2,
+    },
+    {
+        "type"       : "logarithmic",
+        "metric"     : "mem_nonheap",
+        "half_value" : 100*MB,
+        "exponent"   : 2,
     }
 ]))
 
-perfometer_info.append(("stacked", [{
-    "type"      : "linear",
-    "segments"  : [ "threads_idle" ],
-    "total"     : "threads_idle:max",
-    },{
-    "type"      : "linear",
-    "segments"  : [ "threads_busy" ],
-    "total"     : "threads_busy:max",
+perfometer_info.append(("stacked", [
+    {
+	    "type"      : "linear",
+	    "segments"  : [ "threads_idle" ],
+	    "total"     : "threads_idle:max",
+	},
+    {
+	    "type"      : "linear",
+	    "segments"  : [ "threads_busy" ],
+	    "total"     : "threads_busy:max",
     }
 ]))
 
-perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
-perfometer_info.append(("linear",       ( ["execution_time"], 90.0, None)))
-perfometer_info.append(("logarithmic",  ( "load1",         4.0, 2.0)))
-perfometer_info.append(("logarithmic",  ( "temp",         40.0, 1.2)))
-perfometer_info.append(("logarithmic",  ( "context_switches",       1000.0, 2.0)))
-perfometer_info.append(("logarithmic",  ( "major_page_faults", 1000.0, 2.0)))
-perfometer_info.append(("logarithmic",  ( "process_creations", 1000.0, 2.0)))
-perfometer_info.append(("logarithmic",  ( "threads",     400.0, 2.0)))
-perfometer_info.append(("linear",       ( [ "user", "system", "idle", "nice" ],                          100.0,       None)))
-perfometer_info.append(("linear",       ( [ "user", "system", "idle", "io_wait" ],                          100.0,       None)))
-perfometer_info.append(("linear",       ( [ "user", "system", "io_wait" ],                               100.0,       None)))
-perfometer_info.append(("linear",       ( [ "fpga_util", ],                                              100.0,       None)))
-perfometer_info.append(("linear",       ( [ "util", ],                                                   100.0,       None)))
-perfometer_info.append(("linear",       ( [ "util1", ],                                                  100.0,       None)))
-perfometer_info.append(("logarithmic",  ( "database_size", GB, 5.0 )))
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "rta",
+    "half_value"    : 0.1,
+    "exponent"      : 4
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "execution_time" ],
+    "total"     : 90.0,
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "load1",
+    "half_value"    : 4.0,
+    "exponent"      : 2.0
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "temp",
+    "half_value"    : 40.0,
+    "exponent"      : 1.2
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "context_switches",
+    "half_value"    : 1000.0,
+    "exponent"      : 2.0
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "major_page_faults",
+    "half_value"    : 1000.0,
+    "exponent"      : 2.0
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "process_creations",
+    "half_value"    : 1000.0,
+    "exponent"      : 2.0
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "threads",
+    "half_value"    : 400.0,
+    "exponent"      : 2.0
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "user", "system", "idle", "nice" ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "user", "system", "idle", "io_wait" ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "user", "system", "io_wait" ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "fpga_util", ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "util", ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "util1", ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "database_size",
+    "half_value"    : GB,
+    "exponent"      : 5.0,
+})
 
 # Filesystem check with over-provisioning
 perfometer_info.append({
@@ -2971,19 +3512,55 @@ perfometer_info.append({
     "label"     : ( "fs_used(%)", "%" ),
 })
 
-
+# TODO total = None?
 perfometer_info.append(("linear", ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_total,mem_used,+,swap_used,/", "ratio"))))
-perfometer_info.append(("linear", ( [ "mem_used" ],                                                "mem_total", None)))
-perfometer_info.append(("linear", ( [ "mem_used(%)" ],                                              100.0, None)))
-perfometer_info.append(("logarithmic", ( "time_offset",  1.0, 10.0)))
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "mem_used" ],
+    "total"     : "mem_total",
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "mem_used(%)" ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "time_offset",
+    "half_value"    : 1.0,
+    "exponent"      : 10.0,
+})
 
 perfometer_info.append(("stacked", [
-   ( "logarithmic", ( "tablespace_wasted", 1000000, 2)),
-   ( "logarithmic", ( "indexspace_wasted", 1000000, 2)),
+    {
+        "type"          : "logarithmic",
+        "metric"        : "tablespace_wasted",
+        "half_value"    : 1000000,
+        "exponent"      : 2,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "indexspace_wasted",
+        "half_value"    : 1000000,
+        "exponent"      : 2,
+    }
 ]))
 
-perfometer_info.append(("linear",      ( [ "running_sessions" ],                                        "total_sessions", None)))
-perfometer_info.append(("linear",      ( [ "shared_locks", "exclusive_locks" ],                         None, None)))
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "running_sessions" ],
+    "total"     : "total_sessions",
+})
+
+# TODO total : None?
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "shared_locks", "exclusive_locks" ],
+    "total"     : None,
+})
 
 perfometer_info.append({
         "type"      : "logarithmic",
@@ -2992,16 +3569,41 @@ perfometer_info.append({
         "exponent"  : 2
 })
 
-perfometer_info.append(("logarithmic", ( "connection_time", 0.2, 2)))
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "connection_time",
+    "half_value"    : 0.2,
+    "exponent"      : 2,
+})
 
 perfometer_info.append(("dual", [
-   ( "logarithmic", ( "input_signal_power_dbm", 4, 2)),
-   ( "logarithmic", ( "output_signal_power_dbm", 4, 2)),
+    {
+        "type"          : "logarithmic",
+        "metric"        : "input_signal_power_dbm",
+        "half_value"    : 4,
+        "exponent"      : 2,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "output_signal_power_dbm",
+        "half_value"    : 4,
+        "exponent"      : 2,
+    }
 ]))
 
 perfometer_info.append(("dual", [
-   ( "logarithmic", ( "read_blocks",  50000000, 2)),
-   ( "logarithmic", ( "write_blocks", 50000000, 2)),
+    {
+        "type"          : "logarithmic",
+        "metric"        : "read_blocks",
+        "half_value"    : 50000000,
+        "exponent"      : 2,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "write_blocks",
+        "half_value"    : 50000000,
+        "exponent"      : 2,
+    }
 ]))
 
 perfometer_info.append({
@@ -3012,60 +3614,170 @@ perfometer_info.append({
 })
 
 perfometer_info.append(("dual", [
-   ( "logarithmic", ( "deadlocks", 50, 2)),
-   ( "logarithmic", ( "lockwaits", 50, 2)),
+    {
+        "type"          : "logarithmic",
+        "metric"        : "deadlocks",
+        "half_value"    : 50,
+        "exponent"      : 2,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "lockwaits",
+        "half_value"    : 50,
+        "exponent"      : 2,
+    }
 ]))
 
 
+# TODO: max fehlt
 perfometer_info.append({
     "type"      : "linear",
-    "segments"  : [
-        "sort_overflow",
-    ],
-})
-
-perfometer_info.append({
-    "type" : "linear", "segments" : [ "mem_used" ], "total" : "mem_used:max"
+    "segments"  : [ "sort_overflow" ],
 })
 
 perfometer_info.append({
     "type"      : "linear",
-    "segments"  : [
-        "tablespace_used",
-    ],
+    "segments"  : [ "mem_used" ],
+    "total"     : "mem_used:max",
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "tablespace_used" ],
     "total"     : "tablespace_max_size",
 })
 
 perfometer_info.append(("stacked", [
-("dual", [ {"type": "linear", "label": None, "segments": [ "total_hitratio" ], "total": 100},
-           {"type": "linear", "label": None, "segments": [ "data_hitratio" ],  "total": 100}]),
-("dual", [ {"type": "linear", "label": None, "segments": [ "index_hitratio" ], "total": 100},
-           {"type": "linear", "label": None, "segments": [ "xda_hitratio" ],   "total": 100}])
+    ("dual", [
+        {
+            "type"      : "linear",
+            "label"     : None,
+            "segments"  : [ "total_hitratio" ],
+            "total": 100
+        },
+        {
+            "type"      : "linear",
+            "label"     : None,
+            "segments"  : [ "data_hitratio" ],
+            "total"     : 100
+        }
+    ]),
+    ("dual", [
+        {
+            "type"      : "linear",
+            "label"     : None,
+            "segments"  : [ "index_hitratio" ],
+            "total"     : 100
+        },
+        {
+            "type"      : "linear",
+            "label"     : None,
+            "segments"  : [ "xda_hitratio" ],
+            "total"     : 100
+        }
+    ])
 ]))
 
-perfometer_info.append(("linear",      ( [ "output_load" ], 100.0, None)))
-perfometer_info.append(("logarithmic", ( "power", 1000, 2)))
-perfometer_info.append(("logarithmic", ( "current", 10, 4)))
-perfometer_info.append(("logarithmic", ( "voltage", 220.0, 2)))
-perfometer_info.append(("linear",      ( [ "voltage_percent" ], 100.0, None)))
-perfometer_info.append(("linear",      ( [ "humidity" ], 100.0, None)))
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "output_load" ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "power",
+    "half_value"    : 1000,
+    "exponent"      : 2,
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "current",
+    "half_value"    : 10,
+    "exponent"      : 4,
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "voltage",
+    "half_value"    : 220.0,
+    "exponent"      : 2,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "voltage_percent" ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "humidity" ],
+    "total"     : 100.0,
+})
 
 perfometer_info.append(("stacked", [
-  ( "logarithmic", ( "requests_per_second", 10, 5)),
-  ( "logarithmic", ( "busy_workers",        10, 2))
+    {
+        "type"          : "logarithmic",
+        "metric"        : "requests_per_second",
+        "half_value"    : 10,
+        "exponent"      : 5,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "busy_workers",
+        "half_value"    : 10,
+        "exponent"      : 2,
+    }
 ]))
 
-perfometer_info.append(("linear",      ( [ "cache_hit_ratio" ], 100, None)))
-perfometer_info.append(("linear",      ( [ "zfs_l2_hit_ratio" ], 100, None)))
-perfometer_info.append(("stacked",  [
-   ("logarithmic",  ( "signal_noise", 50.0, 2.0)),
-   ("linear",       ( [ "codewords_corrected", "codewords_uncorrectable" ], 1.0, None)),
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "cache_hit_ratio" ],
+    "total"     : 100,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "zfs_l2_hit_ratio" ],
+    "total"     : 100,
+})
+
+perfometer_info.append(("stacked", [
+    {
+        "type"          : "logarithmic",
+        "metric"        : "signal_noise",
+        "half_value"    : 50.0,
+        "exponent"      : 2.0,
+    },
+    {
+        "type"          : "linear",
+        "segments"      : [ "codewords_corrected", "codewords_uncorrectable" ],
+        "total"         : 1.0,
+    }
 ]))
-perfometer_info.append(("logarithmic",  ( "signal_noise", 50.0, 2.0))) # Fallback if no codewords are available
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "signal_noise",
+    "half_value"    : 50.0,
+    "exponent"      : 2.0
+}) # Fallback if no codewords are available
 
 perfometer_info.append(("dual", [
-   ( "logarithmic", ( "disk_read_throughput", 5000000, 10)),
-   ( "logarithmic", ( "disk_write_throughput", 5000000, 10)),
+    {
+        "type"          : "logarithmic",
+        "metric"        : "disk_read_throughput",
+        "half_value"    : 5000000,
+        "exponent"      : 10,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "disk_write_throughput",
+        "half_value"    : 5000000,
+        "exponent"      : 10,
+    }
 ]))
 
 perfometer_info.append({
@@ -3139,21 +3851,55 @@ perfometer_info.append({
 })
 
 perfometer_info.append(("stacked", [
-  ( "logarithmic", ( "direct_io",   25, 2)),
-  ( "logarithmic", ( "buffered_io", 25, 2)),
+    {
+        "type"          : "logarithmic",
+        "metric"        : "direct_io",
+        "half_value"    : 25,
+        "exponent"      : 2,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "buffered_io",
+        "half_value"    : 25,
+        "expoent"       : 2,
+    }
 ]))
 
 # TODO: :max should be the default?
-perfometer_info.append(("linear",      ( [ "used_dhcp_leases" ], "used_dhcp_leases:max", None)))
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "used_dhcp_leases" ],
+    "total"     : "used_dhcp_leases:max",
+})
 
 perfometer_info.append(("stacked", [
-  ( "logarithmic", ( "host_check_rate",     50, 5)),
-  ( "logarithmic", ( "service_check_rate", 200, 5)),
+    {
+        "type"          : "logarithmic",
+        "metric"        : "host_check_rate",
+        "half_value"    : 50,
+        "exponent"      : 5,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "service_check_rate",
+        "half_value"    : 200,
+        "exponent"      : 5,
+    }
 ]))
 
 perfometer_info.append(("stacked", [
-  ( "logarithmic", ( "normal_updates",   10, 2)),
-  ( "logarithmic", ( "security_updates", 10, 2)),
+    {
+        "type"          : "logarithmic",
+        "metric"        : "normal_updates",
+        "half_value"    : 10,
+        "exponent"      : 2,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "security_updates",
+        "hal_value"     : 10,
+        "exponent"      : 2,
+    }
 ]))
 
 perfometer_info.append({
@@ -3171,15 +3917,25 @@ perfometer_info.append({
 })
 
 perfometer_info.append(("stacked", [
-   ( "logarithmic", ( "mail_queue_deferred_length", 10000, 5)),
-   ( "logarithmic", ( "mail_queue_active_length", 10000, 5)),
+    {
+        "type"          : "logarithmic",
+        "metric"        : "mail_queue_deferred_length",
+        "half_value"    : 10000,
+        "exponent"      : 5,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "mail_queue_active_length",
+        "half_value"    : 10000,
+        "exponent"      : 5,
+    }
 ]))
 
 perfometer_info.append({
-    "type"      : "logarithmic",
-    "metric"    : "mail_queue_deferred_length",
-    "half_value": 10000,
-    "exponent"  : 5
+    "type"          : "logarithmic",
+    "metric"        : "mail_queue_deferred_length",
+    "half_value"    : 10000,
+    "exponent"      : 5
 })
 
 perfometer_info.append({
@@ -3188,15 +3944,18 @@ perfometer_info.append({
     "total"    : 100.0,
 })
 
-perfometer_info.append(("dual", [{
-    "type"      : "linear",
-    "segments"  : [ "qos_dropped_bytes_rate" ],
-    "total"     : "qos_dropped_bytes_rate:max"
-    },{
-    "type"      : "linear",
-    "segments"  : [ "qos_outbound_bytes_rate" ],
-    "total"     : "qos_outbound_bytes_rate:max"
-}]))
+perfometer_info.append(("dual", [
+    {
+	    "type"      : "linear",
+	    "segments"  : [ "qos_dropped_bytes_rate" ],
+	    "total"     : "qos_dropped_bytes_rate:max"
+    },
+    {
+	    "type"      : "linear",
+	    "segments"  : [ "qos_outbound_bytes_rate" ],
+	    "total"     : "qos_outbound_bytes_rate:max"
+    }
+]))
 
 perfometer_info.append({
     "type"      : "logarithmic",
@@ -3257,7 +4016,6 @@ perfometer_info.append({
 # The first one must be the bigger one, then descending.
 # Example: ('tablespace_size', 'area'),
 #          ('tablespace_used', 'area')
-
 
 graph_info.append({
     "title"   : _("Context switches"),
@@ -3389,6 +4147,8 @@ graph_info.append({
     ],
 })
 
+define_generic_graph("backup_age")
+
 graph_info.append({
     "title"   : _("NTP time offset"),
     "metrics" : [
@@ -3405,28 +4165,17 @@ graph_info.append({
 graph_info.append({
     "title"   : _("ZFS meta data"),
     "metrics" : [
-        ( "zfs_meta_max", "area" ),
-        ( "zfs_meta_used", "area" ),
-        ( "zfs_meta_limit", "line" ),
+        ( "zfs_metadata_max", "area" ),
+        ( "zfs_metadata_used", "area" ),
+        ( "zfs_metadata_limit", "line" ),
     ],
 })
 
 graph_info.append({
     "title"     : _("Cache hit ratio"),
-    "condition" : "prefetch_data_hit_ratio,prefetch_metadata_hit_ratio,>=",
     "metrics"   : [
         ( "cache_hit_ratio", "area" ),
-        ( "prefetch_data_hit_ratio", "area" ),
-        ( "prefetch_metadata_hit_ratio", "area" ),
-    ],
-})
-
-graph_info.append({
-    "title"     : _("Cache hit ratio"),
-    "condition" : "prefetch_data_hit_ratio,prefetch_metadata_hit_ratio,<",
-    "metrics"   : [
-        ( "cache_hit_ratio", "area" ),
-        ( "prefetch_metadata_hit_ratio", "area" ),
+        ( "prefetch_metadata_hit_ratio", "line" ),
         ( "prefetch_data_hit_ratio", "area" ),
     ],
 })
@@ -3543,6 +4292,7 @@ graph_info.append({
     "range" : (0, "fs_used:max"),
 })
 
+define_generic_graph("fs_used")
 
 graph_info.append({
     "title" : _("Growing / Shrinking"),
@@ -3577,7 +4327,6 @@ graph_info.append({
         ( "system",                         "stack" ),
         ( "idle",                           "stack" ),
         ( "io_wait",                        "stack" ),
-        ( "physc",                          "stack" ),
     ],
     "range" : (0, 100),
 })
@@ -3610,6 +4359,16 @@ graph_info.append({
     ],
     "omit_zero_metrics" : True,
     "mirror_legend" : True,
+    "range" : (0, 100),
+})
+
+graph_info.append({
+    "title"   : _("CPU utilization"),
+    "metrics" : [
+        ( "user",                           "area"  ),
+        ( "system",                         "stack" ),
+        ( "interrupt",                      "stack" ),
+    ],
     "range" : (0, 100),
 })
 
@@ -3837,7 +4596,6 @@ graph_info.append({
         ( "pages_color_a3", "stack" ),
         ( "pages_bw_a4",    "stack" ),
         ( "pages_bw_a3",    "stack" ),
-        ( "pages_scan",     "stack" ),
         ( "pages_total",    "line" ),
     ],
     "optional_metrics" : [
@@ -3845,7 +4603,6 @@ graph_info.append({
         "pages_color_a3",
         "pages_bw_a4",
         "pages_bw_a3",
-        "pages_scan",
     ],
     "omit_zero_metrics": True,
 })
@@ -4278,6 +5035,120 @@ graph_info.append({
         ( "fc_c3discards", "stack" ),
         ( "fc_notxcredits", "stack" ),
     ]
+})
+
+graph_info.append({
+    "title" : _("Errors"),
+    "metrics" : [
+        ( "fc_link_fails", "stack" ),
+        ( "fc_sync_losses", "stack" ),
+        ( "fc_prim_seq_errors", "stack" ),
+        ( "fc_invalid_tx_words", "stack" ),
+        ( "fc_invalid_crcs", "stack" ),
+        ( "fc_address_id_errors", "stack" ),
+        ( "fc_link_resets_in", "stack" ),
+        ( "fc_link_resets_out", "stack" ),
+        ( "fc_offline_seqs_in", "stack" ),
+        ( "fc_offline_seqs_out", "stack" ),
+        ( "fc_c2c3_discards", "stack" ),
+        ( "fc_c2_fbsy_frames", "stack" ),
+        ( "fc_c2_frjt_frames", "stack" ),
+    ]
+})
+
+graph_info.append({
+    "title" : _("NFS traffic"),
+    "metrics" : [
+        ("nfs_read_data", "-area"),
+        ("nfs_write_data", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("NFS latency"),
+    "metrics" : [
+        ("nfs_read_latency", "-area"),
+        ("nfs_write_latency", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("CIFS traffic"),
+    "metrics" : [
+        ("cifs_read_data", "-area"),
+        ("cifs_write_data", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("CIFS latency"),
+    "metrics" : [
+        ("cifs_read_latency", "-area"),
+        ("cifs_write_latency", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("SAN traffic"),
+    "metrics" : [
+        ("san_read_data", "-area"),
+        ("san_write_data", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("SAN latency"),
+    "metrics" : [
+        ("san_read_latency", "-area"),
+        ("san_write_latency", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("FCP traffic"),
+    "metrics" : [
+        ("fcp_read_data", "-area"),
+        ("fcp_write_data", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("FCP latency"),
+    "metrics" : [
+        ("fcp_read_latency", "-area"),
+        ("fcp_write_latency", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("ISCSI traffic"),
+    "metrics" : [
+        ("icsci_read_data", "-area"),
+        ("icsci_write_data", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("ICSCI latency"),
+    "metrics" : [
+        ("icsci_read_latency", "-area"),
+        ("icsci_write_latency", "area"),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Harddrive health statistic"),
+    "metrics" : [
+        ("harddrive_power_cycle",           "stack"),
+        ("harddrive_reallocated_sectors",   "stack"),
+        ("harddrive_reallocated_events",    "stack"),
+        ("harddrive_spin_retries",          "stack"),
+        ("harddrive_pending_sectors",       "stack"),
+        ("harddrive_cmd_timeouts",          "stack"),
+        ("harddrive_end_to_end_errors",     "stack"),
+        ("harddrive_uncorrectable_errors",  "stack"),
+        ("harddrive_udma_crc_errors",       "stack"),
+    ],
 })
 
 for what, perfname in [ ("2.4", "2_4"), ("5", "5") ]:

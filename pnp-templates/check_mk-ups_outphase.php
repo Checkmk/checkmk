@@ -22,6 +22,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+# FORMALIZED
 
 # The number of data source various due to different
 # settings (such as averaging). We rather work with names

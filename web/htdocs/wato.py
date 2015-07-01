@@ -7604,23 +7604,23 @@ def vs_ldap_connection(new):
 def mode_edit_ldap_connection(phase):
     connection_id = html.var("id")
     connections = userdb.load_connection_config()
-    connection = {}
+    connection_cfg = {}
     if connection_id == None:
         new = True
     else:
         new = False
         for nr, c in enumerate(connections):
             if c['id'] == connection_id:
-                connection = c
+                connection_cfg = c
                 connection_nr = nr
-        if not connection:
+        if not connection_cfg:
             raise MKUserError(None, _("The given connection does not exist."))
 
     if phase == "title":
         if new:
             return _("Create new LDAP Connection")
         else:
-            return _("Edit LDAP Connection: %s") % html.attrencode(connection["id"])
+            return _("Edit LDAP Connection: %s") % html.attrencode(connection_id)
 
     elif phase == "buttons":
         global_buttons()
@@ -7633,21 +7633,21 @@ def mode_edit_ldap_connection(phase):
         if not html.check_transaction():
             return
 
-        connection = vs.from_html_vars("connection")
-        vs.validate_value(connection, "connection")
+        connection_cfg = vs.from_html_vars("connection")
+        vs.validate_value(connection_cfg, "connection")
 
         if new:
-            connections.insert(0, connection)
+            connections.insert(0, connection_cfg)
         else:
-            connection["id"] = connection_id
-            connections[connection_nr] = connection
+            connection_cfg["id"] = connection_id
+            connections[connection_nr] = connection_cfg
 
         if new:
             log_what = "new-ldap-connection"
             log_text = _("Created new LDAP connection")
         else:
             log_what = "edit-ldap-connection"
-            log_text = _("Changed LDAP connection %s") % connection['id']
+            log_text = _("Changed LDAP connection %s") % connection_id
         log_pending(SYNC, None, log_what, log_text)
 
         userdb.save_connection_config(connections)
@@ -7656,7 +7656,7 @@ def mode_edit_ldap_connection(phase):
             return "ldap_config"
         else:
             # Fix the case where a user hit "Save & Test" during creation
-            html.set_var('id', connection["id"])
+            html.set_var('id', connection_id)
             return
 
     #
@@ -7666,7 +7666,7 @@ def mode_edit_ldap_connection(phase):
     html.write('<div id=ldap>')
     html.write('<table><tr><td>')
     html.begin_form("connection", method="POST")
-    vs.render_input("connection", connection)
+    vs.render_input("connection", connection_cfg)
     vs.set_focus("connection")
     html.button("_save", _("Save"))
     html.button("_test", _("Save & Test"))
@@ -7697,7 +7697,7 @@ def mode_edit_ldap_connection(phase):
             if not connection.has_user_base_dn_configured():
                 return (False, _('The User Base DN is not configured.'))
             connection.connect(enforce_new = True, enforce_server = address)
-            if userdb.user_base_dn_exists():
+            if connection.user_base_dn_exists():
                 return (True, _('The User Base DN could be found.'))
             elif connection.has_bind_credentials_configured():
                 return (False, _('The User Base DN could not be found. Maybe the provided '
@@ -7712,7 +7712,7 @@ def mode_edit_ldap_connection(phase):
                 return (False, _('The User Base DN is not configured.'))
             connection.connect(enforce_new = True, enforce_server = address)
             try:
-                ldap_users = connection.ldap_get_users()
+                ldap_users = connection.get_users()
                 msg = _('Found no user object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_users = None
@@ -7759,7 +7759,7 @@ def mode_edit_ldap_connection(phase):
             else:
                 return (False, msg)
 
-        def test_groups_to_roles(address):
+        def test_groups_to_roles(connection, address):
             active_plugins = connection.active_plugins()
             if 'groups_to_roles' not in active_plugins:
                 return True, _('Skipping this test (Plugin is not enabled)')

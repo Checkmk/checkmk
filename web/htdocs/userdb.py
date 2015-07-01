@@ -81,7 +81,7 @@ def load_plugins():
 
 # Returns a list of two part tuples where the first element is the unique
 # connection id and the second element the connector specification dict
-def active_connections():
+def get_connections(only_enabled=False):
     connections = []
     for connector_id, connector_class in multisite_user_connectors.items():
         if connector_id == 'htpasswd':
@@ -89,8 +89,13 @@ def active_connections():
             connections.insert(0, ('htpasswd', connector_class({})))
         else:
             for connection_config in config.user_connections:
-                connections.append((connection_config['id'], connector_class(connection_config)))
+                if not only_enabled or not connection_config.get('disabled'):
+                    connections.append((connection_config['id'], connector_class(connection_config)))
     return connections
+
+
+def active_connections():
+    return get_connections(only_enabled=True)
 
 
 def cleanup_connection_id(connection_id):
@@ -108,7 +113,7 @@ def cleanup_connection_id(connection_id):
 
 # Returns the connector dictionary of the given id
 def get_connection(connection_id):
-    return dict(active_connections()).get(connection_id)
+    return dict(get_connections()).get(connection_id)
 
 
 # Returns a list of locked attributes

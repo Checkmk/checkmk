@@ -58,6 +58,7 @@ except NameError:
 
 user = None
 user_id = None
+user_confdir = None
 builtin_role_ids = [ "user", "admin", "guest" ] # hard coded in various permissions
 user_role_ids = []
 
@@ -267,12 +268,15 @@ def login(u):
         user_permissions["wato.users"]  = True # ... with access to user management
 
     # Prepare users' own configuration directory
-    global user_confdir
-    user_confdir = config_dir + "/" + user_id
-    make_nagios_directory(user_confdir)
+    set_user_confdir(user_id)
 
     # load current on/off-switching states of sites
     read_site_config()
+
+def set_user_confdir(user_id):
+    global user_confdir
+    user_confdir = config_dir + "/" + user_id
+    make_nagios_directory(user_confdir)
 
 def get_language(default = None):
     if default == None:
@@ -401,6 +405,12 @@ def save_stars(stars):
 
 # Helper functions
 def load_user_file(name, deflt, lock = False):
+    # In some early error during login phase there are cases where it might
+    # happen that a user file is requested byt the user_confdir is not yet
+    # set. We have all information to set it, then do it.
+    if user_confdir == None:
+        set_user_confdir(name)
+
     path = user_confdir + "/" + name + ".mk"
     try:
         if lock:

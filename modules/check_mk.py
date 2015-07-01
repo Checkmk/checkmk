@@ -2286,7 +2286,7 @@ define servicedependency {
 %s%s%s  check_command\t\t\tcheck_mk-%s
 }
 
-""" % ( template, hostname, description, check_interval, logwatch,
+""" % ( template, hostname, description.encode("utf-8"), check_interval, logwatch,
         extra_service_conf_of(hostname, description), action_cfg, checkname ))
 
         checknames_to_define.add(checkname)

@@ -1190,8 +1190,8 @@ def render_graph_pnp(graph_template, translated_metrics):
     graph_title = graph_template.get("title", graph_title)
     vertical_label = graph_template.get("vertical_label", vertical_label)
 
-    rrdgraph_arguments += "--vertical-label %s --title %s -L 4" % (
-        quote_shell_string(vertical_label),
+    rrdgraph_arguments += " --vertical-label %s --title %s " % (
+        quote_shell_string(vertical_label or " "),
         quote_shell_string(graph_title))
 
     min_value, max_value = get_graph_range(graph_template, translated_metrics)
@@ -1199,10 +1199,6 @@ def render_graph_pnp(graph_template, translated_metrics):
         rrdgraph_arguments += " -l %f -u %f" % (min_value, max_value)
     else:
         rrdgraph_arguments += " -l 0"
-
-
-    # Some styling options, currently hardcoded
-    rrdgraph_arguments += " --color MGRID\"#cccccc\" --color GRID\"#dddddd\" --width=600";
 
     return graph_title + "\n" + rrdgraph_arguments + "\n" + rrdgraph_commands + "\n"
 

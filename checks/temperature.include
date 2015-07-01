@@ -58,9 +58,9 @@ def render_temp(n, output_unit):
         return "%.1f" % t
 
 temp_unitsym = {
-"c": "°C",
-"f": "°F",
-"k": "K",
+    "c": "°C",
+    "f": "°F",
+    "k": "K",
 }
 
 

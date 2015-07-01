@@ -135,20 +135,3 @@ check_info['esx_vsphere_objects.count'] = {
   "service_description" : "Object count",
   "has_perfdata"        : True,
 }
-#   .--Cluster-------------------------------------------------------------.
-#   |                    ____ _           _                                |
-#   |                   / ___| |_   _ ___| |_ ___ _ __                     |
-#   |                  | |   | | | | / __| __/ _ \ '__|                    |
-#   |                  | |___| | |_| \__ \ ||  __/ |                       |
-#   |                   \____|_|\__,_|___/\__\___|_|                       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-# def check_esx_vsphere_objects_cluster(_no_item, params, info):
-#     print info
-#     return 3, "MIST"
-#
-# check_info['esx_vsphere_objects.cluster'] = {
-#   "check_function"      : check_esx_vsphere_objects_cluster,
-#   "service_description" : "HostSystem SUMMARY",
-# }

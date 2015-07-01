@@ -365,6 +365,9 @@ def need_sidebar_reload():
 def lock_exclusive():
     aquire_lock(defaults.default_config_dir + "/multisite.mk")
 
+def unlock_exclusive():
+    release_lock(defaults.default_config_dir + "/multisite.mk")
+
 
 def git_command(args):
     encoded_args = " ".join([ a.encode("utf-8") for a in args ])
@@ -3756,7 +3759,11 @@ def mode_bulk_inventory(phase):
                     arguments = [ "@scan" ] + arguments
                 if not html.get_checkbox("ignore_errors"):
                     arguments = [ "@raiseerrors" ] + arguments
+
+                unlock_exclusive() # Avoid freezing WATO when hosts do not respond timely
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
+                lock_exclusive()
+                load_hosts(folder)
 
                 # sum up host individual counts to have a total count
                 sum_counts = [ 0, 0, 0, 0 ] # added, removed, kept, new

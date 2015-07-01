@@ -27,7 +27,10 @@
 apc_power_default_levels = (20, 1) # warning / critical *below* those levels (Watt)
 
 def inventory_apc_power(info):
-    return [ (line[0], "", "apc_power_default_levels") for line in info ]
+    for line in info:
+        value = int(line[1])
+        if value not in [ 0, -1]:
+            yield line[0], "apc_power_default_levels"
 
 def check_apc_power(item, params, info):
     warn, crit = params

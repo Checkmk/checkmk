@@ -1,0 +1,13 @@
+Title: process discovery: fixed exception during service discovery when no explicit process matching was set
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435758354
+
+The process discovery failed with an exception when there was no match type explictly set.
+E.g. in WATO this means that the checkbox for <i>Process Matching</i> was unchecked.
+
+The check now uses the setting <i>Match all services</i> as default.

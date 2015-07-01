@@ -1,0 +1,8 @@
+Title: apc_symmetra_power: Ignore unused phases during discovery
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435751643
+Class: fix
+

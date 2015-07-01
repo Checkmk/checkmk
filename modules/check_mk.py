@@ -2286,7 +2286,7 @@ define servicedependency {
 %s%s%s  check_command\t\t\tcheck_mk-%s
 }
 
-""" % ( template, hostname, description, check_interval, logwatch,
+""" % ( template, hostname, description.encode("utf-8"), check_interval, logwatch,
         extra_service_conf_of(hostname, description), action_cfg, checkname ))
 
         checknames_to_define.add(checkname)
@@ -2928,9 +2928,8 @@ no_discovery_possible = None
                  'check_result_path', 'check_submission', 'monitoring_core',
                  'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir', 'log_dir',
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user', 'rrd_path', 'rrdcached_socket',
-                 'omd_root',
-                 'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
-                 'piggyback_max_cachefile_age',
+                 'omd_root', 'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
+                 'piggyback_max_cachefile_age', 'fallback_agent_output_encoding',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk',
                  'check_mk_perfdata_with_times', 'livestatus_unix_socket',
                  'use_inline_snmp', 'record_inline_snmp_stats',
@@ -5353,8 +5352,8 @@ def do_check_keepalive():
                 g_total_check_output = "%s - Check_MK timed out after %d seconds\n" % (
                     core_state_names[status], g_timeout)
 
-            os.write(keepalive_fd, "%03d\n%08d\n%s" %
-                 (status, len(g_total_check_output), make_utf8(g_total_check_output)))
+            check_output_utf8 = make_utf8(g_total_check_output)
+            os.write(keepalive_fd, "%03d\n%08d\n%s" % (status, len(check_output_utf8), check_output_utf8))
             g_total_check_output = ""
 
         except Exception, e:

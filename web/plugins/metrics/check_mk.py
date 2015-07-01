@@ -29,14 +29,6 @@
 # in der Unit eine "range"-Angabe ist, dann soll diese genommen werden.
 # "%" und "ratio". Und dann sämtliche Schablonen, die nur wegen Range
 # 0..100 da sind, wieder durch generic ersetzen.
-# - Legende so umdrehen, dass die gleichen Reihenfolge wie im Graphen
-# entsteht.
-# - Lösung für localchecks finden. Hier haben die Perfvariablen freie
-#   Namen. Evt. ist die Lösung:
-# - Default-Metrik: Wenn translate_metrics zu einer Perf-Variable keine
-#   Definition findet, dann muss eine Dummy-Definition angelegt werden,
-#   Die Farben werden dann einfach aus dem Kreis ausgewählt.
-# - Linien in den Graphen scheinen immer schwarz zu sein.
 
 # Metric definitions for Check_MK's checks
 
@@ -2386,12 +2378,6 @@ metric_info["error_rate"] = {
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
 
-check_metrics["check-mk"]                                       = {}
-check_metrics["check-mk-ping"]                                  = {}
-check_metrics["check_mk_active-icmp"]                           = {}
-check_metrics["check-mk"]                                       = {}
-
-check_metrics["check_mk_active-mail"]                           = {}
 check_metrics["check_mk_active-mail_loop"]                      = { "duration" : { "name": "mails_received_time" } }
 check_metrics["check_mk_active-http"] = {
     "time" : { "name": "responese_time" },
@@ -2401,11 +2387,6 @@ check_metrics["check_mk_active-http"] = {
 check_metrics["check_mk_active-tcp"]                            = { "time" : { "name": "response_time" } }
 check_metrics["check-mk-host-tcp"]                              = { "time" : { "name": "response_time" } }
 
-check_metrics["check_mk-uptime"]                                = {}
-check_metrics["check_mk-esx_vsphere_counters.uptime"]           = {}
-check_metrics["check_mk-fritz.uptime"]                          = {}
-check_metrics["check_mk-jolokia_metrics.uptime"]                = {}
-check_metrics["check_mk-snmp_uptime"]                           = {}
 check_metrics["check_mk-netapp_api_volumes"] = {
     "nfs_read_latency"      : { "scale" : m },
     "nfs_write_latency"     : { "scale" : m },
@@ -2419,18 +2400,13 @@ check_metrics["check_mk-netapp_api_volumes"] = {
     "iscsi_write_latency"   : { "scale" : m },
 }
 
-check_metrics["check_mk-netapp_api_cpu.utilization"]            = {}
-check_metrics["check_mk-netapp_cpu"]                            = {}
-check_metrics["check_mk-netapp_api_vf_stats.cpu_util"]          = {}
+check_metrics["check_mk_active-tcp"]                            = { "time" : { "name": "response_time" } }
+check_metrics["check-mk-host-tcp"]                              = { "time" : { "name": "response_time" } }
 
 check_metrics["check_mk-jolokia_metrics.gc"] = {
     "CollectionCount" : { "name" : "gc_reclaimed_redundant_memory_areas" },
     "CollectionTime"  : { "name" : "gc_reclaimed_redundant_memory_areas_time", "scale" : 1/60 },
 }
-
-check_metrics["check_mk-appdynamics_memory"] = {}
-check_metrics["check_mk-appdynamics_sessions"] = {}
-check_metrics["check_mk-appdynamics_web_container"] = {}
 
 check_metrics["check_mk-rmon_stats"] = {
     "0-63b"     : { "name" : "rmon_packets_63" },
@@ -2441,17 +2417,10 @@ check_metrics["check_mk-rmon_stats"] = {
     "1024-1518b": { "name" : "rmon_packets_1518" },
 }
 
-check_metrics["check_mk-cpu.loads"]                             = {}
-check_metrics["check_mk-ucd_cpu_load"]                          = {}
-check_metrics["check_mk-statgrab_load"]                         = {}
-check_metrics["check_mk-statgrab_cpu"]                          = {}
+check_metrics["check_mk-cpu.loads"]                             = { "load5" : { "auto_graph" : False }}
+check_metrics["check_mk-ucd_cpu_load"]                          = { "load5" : { "auto_graph" : False }}
 check_metrics["check_mk-hpux_cpu"]                              = { "wait" : { "name" : "io_wait" } }
-check_metrics["check_mk-blade_bx_load"]                         = {}
-check_metrics["check_mk-jolokia_metrics.perm_gen"]              = {}
 check_metrics["check_mk-hitachi_hnas_cpu"]                      = { "cpu_util" : { "name" : "util" } }
-check_metrics["check_mk-decru_cpu"]                             = {}
-check_metrics["check_mk-hp_procurve_cpu"]                       = {}
-check_metrics["check_mk-cisco_cpu"]                             = {}
 
 check_metrics["check_mk-statgrab_disk"] = {
     "read"  : { "name" : "disk_read_throughput" },
@@ -2470,17 +2439,14 @@ check_metrics["check_mk-ibm_svc_nodestats.diskio"] = {
 
 check_metrics["check_mk-netscaler_mem"]                         = { "mem"  : { "name" : "mem_used" } }
 
-check_metrics["check_mk-statgrab_mem"] = {
+ram_used_swap_translation = {
     "ramused"  : { "name" : "mem_used",  "scale" : MB },
     "swapused" : { "name" : "swap_used", "scale" : MB },
     "memused"  : { "name" : "mem_total", "scale" : MB },
 }
 
-check_metrics["check_mk-hr_mem"] = {
-    "ramused"  : { "name" : "mem_used",  "scale" : MB },
-    "swapused" : { "name" : "swap_used", "scale" : MB },
-    "memused"  : { "name" : "mem_total", "scale" : MB },
-}
+check_metrics["check_mk-statgrab_mem"] = ram_used_swap_translation
+check_metrics["check_mk-hr_mem"] = ram_used_swap_translation
 
 check_metrics["check_mk-mem.used"] = {
     "ramused"       : { "name" : "mem_used",  "scale" : MB },
@@ -2513,25 +2479,21 @@ check_metrics["check_mk-vms_system.ios"] = {
     "buffered" : { "name" : "buffered_io" }
 }
 
-check_metrics["check_mk-kernel"]                                = {
+check_metrics["check_mk-kernel"] = {
     "ctxt"       : { "name": "context_switches" },
     "pgmajfault" : { "name": "major_page_faults" },
     "processes"  : { "name": "process_creations" },
 }
 
-check_metrics["check_mk-oracle_processes"]                      = {}
-check_metrics["check_mk-oracle_instance"]                       = {}
 check_metrics["check_mk-oracle_jobs"]                           = { "duration" : { "name" : "job_duration" } }
 
 check_metrics["check_mk-vms_system.procs"]                      = { "procs" : { "name" : "processes" } }
 
-check_metrics["check_mk-cpu.threads"]                           = {}
 check_metrics["check_mk-jolokia_metrics.tp"] = {
     "currentThreadCount" : { "name" : "threads_idle" },
     "currentThreadsBusy" : { "name" : "threads_busy" },
 }
 
-check_metrics["check_mk-aix_sap_processlist"]                   = {}
 check_metrics["check_mk-aix_memory"]                            = { "ramused" : { "name" : "mem_used", "scale": MB }, "swapused" : { "name" : "swap_used", "scale": MB }}
 check_metrics["check_mk-mem.win"]                               = { "memory" : { "name" : "mem_used", "scale" : MB }, "pagefile" : { "name" : "pagefile_used", "scale" : MB }}
 
@@ -2549,7 +2511,7 @@ check_metrics["check_mk-jolokia_metrics.threads"] = {
     "TotalStartedThreadCount" : { "name" : "threads_total" },
 }
 
-check_metrics["check_mk-mem.linux"]                             = {
+check_metrics["check_mk-mem.linux"] = {
     "cached"           : { "name" : "mem_lnx_cached", },
     "buffers"          : { "name" : "mem_lnx_buffers", },
     "slab"             : { "name" : "mem_lnx_slab", },
@@ -2584,8 +2546,6 @@ check_metrics["check_mk-mem.vmalloc"] = {
     "used"  : { "name" : "mem_lnx_vmalloc_used" },
     "chunk" : { "name" : "mem_lnx_vmalloc_chunk" }
 }
-
-check_metrics["check_mk-emcvnx_hba"] = {}
 
 check_metrics["check_mk-tcp_conn_stats"] = {
     "SYN_SENT"    : { "name": "tcp_syn_sent" },
@@ -2745,64 +2705,6 @@ check_metrics["check_mk-ibm_svc_systemstats.iops"] = {
     "write" : { "name" : "disk_write_ios" }
 }
 
-check_metrics["check_mk-apc_symmetra_ext_temp"]                 = {}
-check_metrics["check_mk-adva_fsp_temp"]                         = {}
-check_metrics["check_mk-akcp_daisy_temp"]                       = {}
-check_metrics["check_mk-akcp_exp_temp"]                         = {}
-check_metrics["check_mk-akcp_sensor_temp"]                      = {}
-check_metrics["check_mk-allnet_ip_sensoric.temp"]               = {}
-check_metrics["check_mk-apc_inrow_temperature"]                 = {}
-check_metrics["check_mk-apc_symmetra_temp"]                     = {}
-check_metrics["check_mk-arris_cmts_temp"]                       = {}
-check_metrics["check_mk-bintec_sensors.temp"]                   = {}
-check_metrics["check_mk-brocade.temp"]                          = {}
-check_metrics["check_mk-brocade_mlx_temp"]                      = {}
-check_metrics["check_mk-carel_sensors"]                         = {}
-check_metrics["check_mk-casa_cpu_temp"]                         = {}
-check_metrics["check_mk-cisco_temp_perf"]                       = {}
-check_metrics["check_mk-cisco_temp_sensor"]                     = {}
-check_metrics["check_mk-cisco_ace_rserver"]                     = {}
-check_metrics["check_mk-climaveneta_temp"]                      = {}
-check_metrics["check_mk-cmciii.temp"]                           = {}
-check_metrics["check_mk-cmctc.temp"]                            = {}
-check_metrics["check_mk-cmctc_lcp.temp"]                        = {}
-check_metrics["check_mk-dell_chassis_temp"]                     = {}
-check_metrics["check_mk-dell_om_sensors"]                       = {}
-check_metrics["check_mk-dell_poweredge_temp"]                   = {}
-check_metrics["check_mk-decru_temps"]                           = {}
-check_metrics["check_mk-emc_datadomain_temps"]                  = {}
-check_metrics["check_mk-enterasys_temp"]                        = {}
-check_metrics["check_mk-f5_bigip_chassis_temp"]                 = {}
-check_metrics["check_mk-f5_bigip_cpu_temp"]                     = {}
-check_metrics["check_mk-fsc_temp"]                              = {}
-check_metrics["check_mk-hitachi_hnas_temp"]                     = {}
-check_metrics["check_mk-hp_proliant_temp"]                      = {}
-check_metrics["check_mk-hwg_temp"]                              = {}
-check_metrics["check_mk-ibm_svc_enclosurestats.temp"]           = {}
-check_metrics["check_mk-innovaphone_temp"]                      = {}
-check_metrics["check_mk-juniper_screenos_temp"]                 = {}
-check_metrics["check_mk-kentix_temp"]                           = {}
-check_metrics["check_mk-knuerr_rms_temp"]                       = {}
-check_metrics["check_mk-lnx_thermal"]                           = {}
-check_metrics["check_mk-netapp_api_temp"]                       = {}
-check_metrics["check_mk-netscaler_health.temp"]                 = {}
-check_metrics["check_mk-nvidia.temp"]                           = {}
-check_metrics["check_mk-ups_bat_temp"]                          = {}
-check_metrics["check_mk-qlogic_sanbox.temp"]                    = {}
-check_metrics["check_mk-rms200_temp"]                           = {}
-check_metrics["check_mk-sensatronics_temp"]                     = {}
-check_metrics["check_mk-smart.temp"]                            = {}
-check_metrics["check_mk-viprinet_temp"]                         = {}
-check_metrics["check_mk-wagner_titanus_topsense.temp"]          = {}
-check_metrics["check_mk-cmciii.phase"]                          = {}
-check_metrics["check_mk-ucs_bladecenter_fans.temp"]             = {}
-check_metrics["check_mk-icom_repeater.temp"]                    = {}
-check_metrics["check_mk-ucs_bladecenter_psu.chassis_temp"]      = {}
-check_metrics["check_mk-bluenet_sensor"]                        = {}
-check_metrics["check_mk-wut_webtherm"]                          = {}
-check_metrics["check_mk-siemens_plc.temp"]                      = {}
-check_metrics["check_mk-stulz_temp"]                            = {}
-check_metrics["check_mk-emerson_temp"]                          = {}
 check_metrics["check_mk-dell_powerconnect_temp"]                = { "temperature" : { "name" : "temp" } }
 check_metrics["check_mk-ipmi_sensors"]                          = { "value" : { "name" : "temp" } }
 check_metrics["check_mk-ipmi"]                                  = { "ambient_temp" : { "name" : "temp" } }
@@ -2819,10 +2721,7 @@ check_metrics["check_mk-apc_symmetra"] = {
     "runtime"    : { "name" : "lifetime_remaining", "scale" : 60 },
 }
 
-check_metrics["check_mk-mysql_capacity"]                        = {}
-check_metrics["check_mk-mysql_slave"]                           = {}
 
-check_metrics["check_mk-hr_cpu"]                                = {}
 check_metrics["check_mk-kernel.util"]                           = {
     "wait" : { "name" : "io_wait" },
     "guest" : { "name" : "cpu_util_guest" },
@@ -2834,15 +2733,8 @@ check_metrics["check_mk-ucd_cpu_util"]                          = { "wait" : { "
 check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-vms_sys.util"]                          = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-winperf.cpuusage"]                      = { "cpuusage" : { "name" : "util" } }
-check_metrics["check_mk-winperf_processor.util" ]               = {}
-check_metrics["check_mk-sni_octopuse_cpu"]                      = {}
-check_metrics["check_mk-emc_vplex_cpu"]                         = {}
 check_metrics["check_mk-h3c_lanswitch_cpu"]                     = { "usage" : { "name" : "util" } }
-check_metrics["check_mk-ibm_svc_nodestats.cpu_util"]            = {}
-check_metrics["check_mk-juniper_screenos_cpu"]                  = {}
-check_metrics["check_mk-ibm_svc_systemstats.cpu_util"]          = {}
-check_metrics["check_mk-innovaphone_cpu"]                       = {}
-check_metrics["check_mk-enterasys_cpu_util"]                    = {}
+check_metrics["check_mk-h3c_lanswitch_cpu"]                     = { "usage" : { "name" : "util" } }
 
 check_metrics["check_mk-brocade_mlx.module_cpu"] = {
     "cpu_util1"   : { "name" : "util1s" },
@@ -2857,8 +2749,6 @@ check_metrics["check_mk-dell_powerconnect"] = {
     "loadavg 5m"  : { "name" : "util5" },
 }
 
-check_metrics["check_mk-hpux_snmp_cs.cpu"]                      = {}
-
 check_metrics["check_mk-ibm_svc_nodestats.cache"] = {
     "write_cache_pc" : { "name" : "write_cache_usage" },
     "total_cache_pc" : { "name" : "total_cache_usage" }
@@ -2870,7 +2760,6 @@ check_metrics["check_mk-ibm_svc_systemstats.cache"] = {
 }
 
 check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage"]      = { "usage" : { "name" : "mem_used" } }
-check_metrics["check_mk-esx_vsphere_hostsystem.cpu_usage"]      = {}
 
 check_metrics["check_mk-ibm_svc_host"] = {
     "active"    : { "name" : "hosts_active" },
@@ -2917,18 +2806,6 @@ check_metrics["check_mk-adva_fsp_if"]                           = { "output_powe
                                                                     "input_power" : { "name" : "input_signal_power_dbm" }}
 
 check_metrics["check_mk-allnet_ip_sensoric.tension"]            = { "tension" : { "name" : "voltage_percent" }}
-check_metrics["check_mk-allnet_ip_sensoric.humidity"]           = {}
-check_metrics["check_mk-allnet_ip_sensoric.pressure"]           = {}
-check_metrics["check_mk-adva_fsp_current"]                      = {}
-
-check_metrics["check_mk-akcp_exp_humidity"]                     = {}
-check_metrics["check_mk-apc_humidity"]                          = {}
-check_metrics["check_mk-hwg_humidity"]                          = {}
-check_metrics["check_mk-bluenet_sensor.hum"]                    = {}
-check_metrics["check_mk-stulz_humidity"]                        = {}
-check_metrics["check_mk-etherbox.humidity"]                     = {}
-check_metrics["check_mk-akcp_sensor_humidity"]                  = {}
-check_metrics["check_mk-knuerr_rms_humidity"]                   = {}
 
 check_metrics["check_mk-apache_status"] = {
     "Uptime"               : { "name" : "uptime" },
@@ -2955,7 +2832,6 @@ check_metrics["check_mk-apache_status"] = {
     "State_Keepalive"      : { "name" : "apache_state_keep_alive" },
 }
 
-check_metrics["check_mk-bintec_sensors.voltage"]                = {}
 check_metrics["check_mk-ups_socomec_out_voltage"]               = { "out_voltage" : { "name" : "voltage" } }
 check_metrics["check_mk-hp_blade_psu"]                          = { "output" : { "name" : "power" }}
 check_metrics["check_mk-apc_rackpdu_power"]                     = { "amperage" : { "name" : "current" }}
@@ -2967,16 +2843,6 @@ check_metrics["check_mk-ups_out_load"] = {
 }
 
 check_metrics["check_mk-raritan_pdu_outletcount"]               = { "outletcount" : { "name" : "connector_outlets" } }
-check_metrics["check_mk-raritan_pdu_inlet"]                     = {}
-check_metrics["check_mk-raritan_pdu_inlet_summary"]             = {}
-check_metrics["check_mk-raritan_pdu_ocprot"]                    = {}
-check_metrics["check_mk-ups_socomec_outphase"]                  = {}
-check_metrics["check_mk-ucs_bladecenter_psu.switch_power"]      = {}
-check_metrics["check_mk-bluenet_meter"]                         = {}
-check_metrics["check_mk-ibm_svc_enclosurestats.power"]          = {}
-check_metrics["check_mk-apc_symmetra_power"]                    = {}
-
-check_metrics["check_mk-bluecoat_sensors"]                      = {}
 
 check_metrics["check_mk-docsis_channels_upstream"]              = {
     "total"      : { "name" : "total_modems" },
@@ -2999,24 +2865,13 @@ check_metrics["check_mk-zfs_arc_cache.l2"] = {
     "l2_hit_ratio" : { "name": "zfs_l2_hit_ratio", },
 }
 
-check_metrics["check_mk-postgres_bloat"]                        = {}
-check_metrics["check_mk-postgres_connections"]                  = {}
-check_metrics["check_mk-postgres_locks"]                        = {}
-check_metrics["check_mk-postgres_conn_time"]                    = {}
 check_metrics["check_mk-postgres_sessions"]                     = { "total": {"name": "total_sessions"}, "running": {"name": "running_sessions"} }
 
 check_metrics["check_mk-oracle_sessions"]                       = { "sessions" : {"name": "running_sessions"} }
-check_metrics["check_mk-oracle_recovery_status"]                = {}
 check_metrics["check_mk-oracle_logswitches"]                    = { "logswitches" : { "name" : "logswitches_last_hour" } }
 check_metrics["check_mk-oracle_dataguard_stats"]                = { "apply_lag" : { "name" : "database_apply_lag" } }
 
-check_metrics["check_mk-db2_bp_hitratios"]                      = {}
-check_metrics["check_mk-db2_connections"]                       = {}
-check_metrics["check_mk-db2_counters"]                          = {}
 check_metrics["check_mk-db2_logsize"]                           = { "~[_/]": { "name": "fs_used", "scale" : MB } }
-check_metrics["check_mk-db2_sort_overflow"]                     = {}
-check_metrics["check_mk-db2_tablespaces"]                       = {}
-check_metrics["check_mk-siemens_plc.hours"]                     = {}
 
 check_metrics["check_mk-steelhead_connections"] = {
     "active"      : { "name" : "fw_connections_active" },
@@ -3054,13 +2909,8 @@ check_metrics["check_mk-veeam_client"] = {
 
 check_metrics["check_mk-cups_queues"]                           = { "jobs" : { "name" : "printer_queue" } }
 
-check_metrics["check_mk-printer_pages.include"]                 = {}
 check_metrics["check_mk-printer_pages"]                         = { "pages" : { "name" : "pages_total" } }
-check_metrics["check_mk-printer_pages_ricoh"]                   = {}
-check_metrics["check_mk-canon_pages"]                           = {}
 
-check_metrics["check_mk-hitachi_hnas_cifs"]                     = {}
-check_metrics["check_mk-hitachi_hnas_fpga"]                     = {}
 
 check_metrics["check_mk-livestatus_status"] = {
     "host_checks"    : { "name" : "host_check_rate" },
@@ -3070,32 +2920,23 @@ check_metrics["check_mk-livestatus_status"] = {
     "log_messages"   : { "name" : "log_message_rate" },
 }
 
-check_metrics["check_mk-cisco_wlc_clients"]                     = { "clients" : { "name" : "connections" } }
-check_metrics["check_mk-cisco_srst_phones"]                     = {}
-check_metrics["check_mk-cisco_srst_call_legs"]                  = {}
+check_metrics["check_mk-cisco_wlc_clients"] = {
+    "clients" : { "name" : "connections" }
+}
+
 check_metrics["check_mk-cisco_qos"] = {
     "drop" : { "name" : "qos_dropped_bytes_rate" },
     "post" : { "name" : "qos_outbound_bytes_rate" },
 
 }
 
-check_metrics["check_mk-hivemanager_devices"]                   = { "clients_count" : { "name" : "connections" } }
+check_metrics["check_mk-hivemanager_devices"] = {
+    "clients_count" : { "name" : "connections" }
+}
 
-check_metrics["check_mk-apt"] = {}
-check_metrics["check_mk-icom_repeater.ps_volt"] = {}
-check_metrics["check_mk-icom_repeater.pll_volt"] = {}
-check_metrics["check_mk-isc_dhcpd"] = {}
-
-check_metrics["check_mk-logwatch.ec"] = {}
-check_metrics["check_mk-logwatch.ec_single"] = {}
-check_metrics["check_mk-omd_apache"] = {}
-check_metrics["check_mk-postfix_mailq"] = {}
-check_metrics["check_mk-datapower_cpu"] = {}
-
-check_metrics["check_mk-citrix_licenses"] = {}
-check_metrics["check_mk-ibm_svc_license"] = { "licensed" : { "name" : "licenses" } }
-
-check_metrics["check_mk-winperf_msx_queues"] = {}
+check_metrics["check_mk-ibm_svc_license"] = {
+    "licensed" : { "name" : "licenses" }
+}
 
 check_metrics["check_mk-tsm_stagingpools"] = {
     "free" : { "name" : "tapes_free" },
@@ -3105,9 +2946,6 @@ check_metrics["check_mk-tsm_stagingpools"] = {
 
 check_metrics["check_mk-hpux_tunables.shmseg"]                  = { "segments" : { "name" : "shared_memory_segments" } }
 check_metrics["check_mk-hpux_tunables.semmns"]                  = { "entries"  : { "name" : "semaphores" } }
-check_metrics["check_mk-hpux_tunables.semmni"]                  = {}
-check_metrics["check_mk-hpux_tunables.nproc"]                   = {}
-check_metrics["check_mk-hpux_tunables.nkthread"]                = {}
 check_metrics["check_mk-hpux_tunables.maxfiles_lim"]            = { "files" : { "name" : "files_open" } }
 
 check_metrics["check_mk-win_dhcp_pools"] = {
@@ -3139,15 +2977,13 @@ check_metrics["check_mk-job"] = {
     "real_time": { "name" : "job_duration" },
 }
 
-check_metrics["check_mk-ps"] = {
+ps_translation = {
     "count"   : { "name" : "processes" },
     "vsz"     : { "name" : "process_virtual_size", "scale" : KB, },
     "rss"     : { "name" : "process_resident_size", "scale" : KB, },
     "pcpu"    : { "name" : "util" },
     "pcpuavg" : { "name" : "util_average" },
 }
-
-check_metrics["check_mk-ps.perf"] = check_metrics["check_mk-ps"]
 
 check_metrics["check_mk-smart.stats"] = {
     "Power_On_Hours"            : { "name" : "uptime", "scale" : 3600 },
@@ -3162,9 +2998,9 @@ check_metrics["check_mk-smart.stats"] = {
     "UDMA_CRC_Error_Count"      : { "name" : "harddrive_udma_crc_errors" },
 }
 
-check_metrics["check_mk-ruckus_spot_ap"] = {}
+check_metrics["check_mk-ps"] = ps_translation
+check_metrics["check_mk-ps.perf"] = ps_translation
 
-check_metrics["check_mk-local"] = {}
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -4039,63 +3875,6 @@ perfometer_info.append({
 # Example: ('tablespace_size', 'area'),
 #          ('tablespace_used', 'area')
 
-def define_generic_graph(metric_name):
-    graph_info.append(generic_graph_template(metric_name))
-
-define_generic_graph("context_switches")
-define_generic_graph("major_page_faults")
-define_generic_graph("process_creations")
-define_generic_graph("threads")
-define_generic_graph("runtime")
-define_generic_graph("lifetime_remaining")
-define_generic_graph("execution_time")
-define_generic_graph("response_time")
-define_generic_graph("uptime")
-define_generic_graph("temp")
-define_generic_graph("battery_temp")
-define_generic_graph("humidity")
-define_generic_graph("time_offset")
-define_generic_graph("mem_perm_used")
-define_generic_graph("sync_latency")
-define_generic_graph("smoke_ppm")
-define_generic_graph("deviation_calibration_point")
-define_generic_graph("deviation_airflow")
-define_generic_graph("power")
-define_generic_graph("pressure")
-define_generic_graph("cifs_share_users")
-define_generic_graph("voltage_percent")
-define_generic_graph("mem_used")
-define_generic_graph("licenses")
-define_generic_graph("voltage")
-define_generic_graph("running_sessions")
-define_generic_graph("rejected_sessions")
-define_generic_graph("backup_size")
-define_generic_graph("logswitches_last_hour")
-define_generic_graph("database_apply_lag")
-define_generic_graph("processes")
-define_generic_graph("connections")
-define_generic_graph("files")
-define_generic_graph("directories")
-define_generic_graph("semaphore_ids")
-define_generic_graph("shared_memory_segments")
-define_generic_graph("semaphores")
-define_generic_graph("disk_capacity")
-define_generic_graph("zfs_l2_size")
-define_generic_graph("zfs_l2_hit_ratio")
-define_generic_graph("threads_rate")
-define_generic_graph("threads_total")
-define_generic_graph("current")
-define_generic_graph("output_load")
-define_generic_graph("gc_reclaimed_redundant_memory_areas")
-define_generic_graph("gc_reclaimed_redundant_memory_areas_time")
-define_generic_graph("backup_avgspeed")
-define_generic_graph("backup_duration")
-define_generic_graph("connector_outlets")
-define_generic_graph("job_duration")
-define_generic_graph("mails_received_time")
-define_generic_graph("request_rate")
-define_generic_graph("error_rate")
-
 graph_info.append({
     "title"   : _("Context switches"),
     "metrics" : [
@@ -4250,8 +4029,6 @@ graph_info.append({
     ],
 })
 
-define_generic_graph("caches")
-
 graph_info.append({
     "title"     : _("Cache hit ratio"),
     "metrics"   : [
@@ -4268,6 +4045,7 @@ graph_info.append({
         ( "children_user_time",   "stack" ),
         ( "system_time",          "stack" ),
         ( "children_system_time", "stack" ),
+        ( "user_time,children_user_time,system_time,children_system_time,+,+,+#888", "line", _("Total") ),
     ],
 })
 
@@ -4278,6 +4056,7 @@ graph_info.append({
         ( "system_time",          "stack" ),
         ( "user_time,system_time,+", "line", _("Total") ),
     ],
+    "conflicting_metrics" : [ "children_user_time" ],
 })
 
 graph_info.append({
@@ -4302,9 +4081,8 @@ graph_info.append({
         "load1:warn",
         "load1:crit",
     ],
+    "optional_metrics" : [ "load15" ],
 })
-
-define_generic_graph("load1")
 
 graph_info.append({
     "title"   : _( "FGPA utilization" ),
@@ -4388,8 +4166,6 @@ graph_info.append({
     ],
     "range" : (0, 0),
 })
-
-define_generic_graph("inodes_used")
 
 graph_info.append({
     "title"   : _("CPU utilization"),
@@ -4526,8 +4302,6 @@ graph_info.append({
         ( "disk_write_ios", "-area" ),
     ],
 })
-
-define_generic_graph("disk_ios")
 
 graph_info.append({
     "title" : _("Direct and buffered I/O operations"),
@@ -4672,25 +4446,6 @@ graph_info.append({
     "range" : (0, 100),
 })
 
-define_generic_graph("pages_total")
-
-graph_info.append({
-    "title" : _( "Printed pages" ),
-    "metrics" : [
-        ( "pages_bw",       "stack" ),
-        ( "pages_color",    "stack" ),
-        ( "pages_total",    "line" ),
-    ],
-})
-
-graph_info.append({
-    "title" : _( "Printed pages" ),
-    "metrics" : [
-        ( "pages_a4",       "stack" ),
-        ( "pages_a3",       "stack" ),
-        ( "pages_total",    "line" ),
-    ],
-})
 
 graph_info.append({
     "title" : _( "Printed pages" ),
@@ -4701,23 +4456,13 @@ graph_info.append({
         ( "pages_bw_a3",    "stack" ),
         ( "pages_total",    "line" ),
     ],
-})
-
-graph_info.append({
-    "title" : _( "Printed pages" ),
-    "metrics" : [
-        ( "pages_bw_a3",    "area" ),
-        ( "pages_total",    "line" ),
+    "optional_metrics" : [
+        "pages_color_a4",
+        "pages_color_a3",
+        "pages_bw_a4",
+        "pages_bw_a3",
     ],
-})
-
-graph_info.append({
-    "title" : _( "Printed pages" ),
-    "metrics" : [
-        ( "pages_bw_a4",       "stack" ),
-        ( "pages_color_a4",    "stack" ),
-        ( "pages_total",       "line" ),
-    ],
+    "omit_zero_metrics": True,
 })
 
 # Networking
@@ -4849,13 +4594,6 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title" : _("Shared memory"),
-    "metrics" : [
-        ("mem_lnx_shmem", "area"),
-    ],
-})
-
-graph_info.append({
     "title" : _("Memory that cannot be swapped out"),
     "metrics" : [
         ("mem_lnx_kernel_stack", "area"),
@@ -4882,10 +4620,6 @@ graph_info.append({
         ("mem_lnx_vmalloc_chunk", "stack"),
     ],
 })
-
-define_generic_graph("mem_lnx_page_tables")
-define_generic_graph("mem_lnx_mapped")
-define_generic_graph("mem_lnx_committed_as")
 
 # TODO: Warum ohne total? Dürfte eigentlich nicht
 # vorkommen.
@@ -5034,10 +4768,6 @@ graph_info.append({
     ]
 })
 
-define_generic_graph("registered_phones")
-define_generic_graph("messages")
-define_generic_graph("call_legs")
-
 graph_info.append({
     "title" : _("Handled Requests"),
     "metrics" : [
@@ -5122,11 +4852,6 @@ graph_info.append({
         ( "net_data_sent",     "stack" ),
     ],
 })
-
-define_generic_graph("channel_utilization")
-define_generic_graph("signal_noise")
-define_generic_graph("frequency")
-define_generic_graph("mail_queue_active_length")
 
 graph_info.append({
     "title" : _("Size of processes"),
@@ -5293,3 +5018,4 @@ for what, perfname in [ ("2.4", "2_4"), ("5", "5") ]:
             ( "ap_devices_not_responding_%sghz" % perfname, "stack" ),
         ]
     })
+

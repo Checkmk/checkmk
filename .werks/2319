@@ -1,0 +1,12 @@
+Title: winperf_if: fixed exception when using windows_if.ps1 in an old windows version
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435741362
+
+The windows_if.ps1 plugin does not provide all informations on windows installations
+older than Windows 2003. The winperf_if check was unable to work without the missing data.
+This has been fixed.

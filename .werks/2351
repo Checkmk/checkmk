@@ -1,0 +1,12 @@
+Title: FreeBSD Agent: Made plugin/local paths standard conform
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1435570513
+Class: fix
+
+The former paths <tt>/usr/lib/check_mk_agent</tt> were not correct according
+to FreeBSD standards. We have now switched the path to <tt>/usr/local/lib/check_mk_agent</tt>.
+If you currently use the old paths, you will need to move this directory to
+the new location when using the new agent.

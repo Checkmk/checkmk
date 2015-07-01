@@ -1,0 +1,13 @@
+Title: Plugin-Output: Fixed handling of URLs within output of check_http
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435580314
+
+By default the plugin outputs are searched for URLs which are then replaced
+by a "world" icon which links to this URL. This find/replace pattern was
+not working correctly with the URLs provided by the check_http plugin which
+surrounds the URLs with <tt>'</tt> characters.

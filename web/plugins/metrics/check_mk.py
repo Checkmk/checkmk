@@ -682,10 +682,22 @@ metric_info["mem_heap"] = {
     "color" : "23/a",
 }
 
+metric_info["mem_heap_committed"] = {
+    "title" : _("Heap memory committed"),
+    "unit"  : "bytes",
+    "color" : "23/b",
+}
+
 metric_info["mem_nonheap"] = {
-    "title" : _("Nonheap memory usage"),
+    "title" : _("Non-heap memory usage"),
     "unit"  : "bytes",
     "color" : "16/a",
+}
+
+metric_info["mem_nonheap_committed"] = {
+    "title" : _("Non-heap memory committed"),
+    "unit"  : "bytes",
+    "color" : "16/b",
 }
 
 metric_info["processes"] = {
@@ -875,6 +887,20 @@ metric_info["io_wait"] = {
     "help"  : _("CPU time spent waiting for I/O"),
     "unit"  : "%",
     "color" : "#00b0c0",
+}
+
+metric_info["cpu_util_guest"] = {
+    "title" : _("Guest operating systems"),
+    "help"  : _("CPU time spent for executing guest operating systems"),
+    "unit"  : "%",
+    "color" : "12/a",
+}
+
+metric_info["cpu_util_steal"] = {
+    "title" : _("Steal"),
+    "help"  : _("CPU time stolen by other operating systems"),
+    "unit"  : "%",
+    "color" : "16/a",
 }
 
 metric_info["idle"] = {
@@ -1097,8 +1123,15 @@ metric_info["total_sessions"] = {
 metric_info["running_sessions"] = {
     "title" : _("Running sessions"),
     "unit"  : "count",
-    "color" : "#999b94",
+    "color" : "42/a",
 }
+
+metric_info["rejected_sessions"] = {
+    "title" : _("Rejected sessions"),
+    "unit"  : "count",
+    "color" : "45/a",
+}
+
 
 metric_info["shared_locks"] = {
     "title" : _("Shared locks"),
@@ -2231,7 +2264,7 @@ metric_info["apache_state_keep_alive"] = {
 }
 
 metric_info["http_bandwidth"] = {
-    "title" : _("http_bandwidth"),
+    "title" : _("Http bandwidth"),
     "unit"  : "bytes/s",
     "color" : "53/b",
 }
@@ -2309,6 +2342,37 @@ metric_info["harddrive_udma_crc_errors"] = {
     "color" : "46/a",
 }
 
+for what, perfname, shading in [ ("2.4", "2_4", "a"), ("5", "5", "b") ]:
+    metric_info["ap_devices_total_%sghz" % perfname] = {
+        "title" : _("Total %s GHz devices") % what,
+        "unit"  : "count",
+        "color" : "51/%s" % shading,
+    }
+
+    metric_info["ap_devices_drifted_%sghz" % perfname] = {
+        "title" : _("Time drifted %s GHz devices") % what,
+        "unit"  : "count",
+        "color" : "23/%s" % shading,
+    }
+
+    metric_info["ap_devices_not_responding_%sghz" % perfname] = {
+        "title" : _("Not responding %s GHz devices") % what,
+        "unit"  : "count",
+        "color" : "14/%s" % shading,
+    }
+
+metric_info["request_rate"] = {
+    "title" : _("Request rate"),
+    "unit"  : "1/s",
+    "color" : "34/a",
+}
+
+metric_info["error_rate"] = {
+    "title" : _("Error rate"),
+    "unit"  : "1/s",
+    "color" : "14/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -2363,6 +2427,10 @@ check_metrics["check_mk-jolokia_metrics.gc"] = {
     "CollectionCount" : { "name" : "gc_reclaimed_redundant_memory_areas" },
     "CollectionTime"  : { "name" : "gc_reclaimed_redundant_memory_areas_time", "scale" : 1/60 },
 }
+
+check_metrics["check_mk-appdynamics_memory"] = {}
+check_metrics["check_mk-appdynamics_sessions"] = {}
+check_metrics["check_mk-appdynamics_web_container"] = {}
 
 check_metrics["check_mk-rmon_stats"] = {
     "0-63b"     : { "name" : "rmon_packets_63" },
@@ -2755,7 +2823,12 @@ check_metrics["check_mk-mysql_capacity"]                        = {}
 check_metrics["check_mk-mysql_slave"]                           = {}
 
 check_metrics["check_mk-hr_cpu"]                                = {}
-check_metrics["check_mk-kernel.util"]                           = { "wait" : { "name" : "io_wait" } }
+check_metrics["check_mk-kernel.util"]                           = {
+    "wait" : { "name" : "io_wait" },
+    "guest" : { "name" : "cpu_util_guest" },
+    "steal" : { "name" : "cpu_util_steal" },
+}
+
 check_metrics["check_mk-lparstat_aix.cpu_util"]                 = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-ucd_cpu_util"]                          = { "wait" : { "name" : "io_wait" } }
 check_metrics["check_mk-vms_cpu"]                               = { "wait" : { "name" : "io_wait" } }
@@ -3089,6 +3162,10 @@ check_metrics["check_mk-smart.stats"] = {
     "UDMA_CRC_Error_Count"      : { "name" : "harddrive_udma_crc_errors" },
 }
 
+check_metrics["check_mk-ruckus_spot_ap"] = {}
+
+check_metrics["check_mk-local"] = {}
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -3107,6 +3184,20 @@ check_metrics["check_mk-smart.stats"] = {
 # dual        -> two Perf-O-Meters next to each other, the first one from right to left
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
+
+
+perfometer_info.append(("stacked", [
+    {
+        "type"     : "linear",
+        "segments" : [ "ap_devices_drifted_2_4ghz", "ap_devices_not_responding_2_4ghz" ],
+        "total"    : "ap_devices_total_2_4ghz",
+    },
+        {
+        "type"     : "linear",
+        "segments" : [ "ap_devices_drifted_5ghz", "ap_devices_not_responding_5ghz" ],
+        "total"    : "ap_devices_total_5ghz",
+    }])
+)
 
 perfometer_info.append({
     "type"     : "linear",
@@ -3153,6 +3244,18 @@ perfometer_info.append({
     "type"       : "linear",
     "segments"  : [ "mem_perm_used"],
     "total"     : "mem_perm_used:max",
+})
+
+perfometer_info.append({
+    "type"       : "linear",
+    "segments"  : [ "mem_heap"],
+    "total"     : "mem_heap:max",
+})
+
+perfometer_info.append({
+    "type"       : "linear",
+    "segments"  : [ "mem_nonheap"],
+    "total"     : "mem_nonheap:max",
 })
 
 perfometer_info.append({
@@ -3912,6 +4015,13 @@ perfometer_info.append(("dual", [
     }
 ]))
 
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "request_rate",
+    "half_value" : 100,
+    "exponent"   : 2,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -3930,15 +4040,7 @@ perfometer_info.append(("dual", [
 #          ('tablespace_used', 'area')
 
 def define_generic_graph(metric_name):
-    graph_info.append({
-        "metrics" : [
-            ( metric_name, "area" ),
-        ],
-        "scalars" : [
-            metric_name + ":warn",
-            metric_name + ":crit",
-        ]
-    })
+    graph_info.append(generic_graph_template(metric_name))
 
 define_generic_graph("context_switches")
 define_generic_graph("major_page_faults")
@@ -3966,6 +4068,7 @@ define_generic_graph("mem_used")
 define_generic_graph("licenses")
 define_generic_graph("voltage")
 define_generic_graph("running_sessions")
+define_generic_graph("rejected_sessions")
 define_generic_graph("backup_size")
 define_generic_graph("logswitches_last_hour")
 define_generic_graph("database_apply_lag")
@@ -3990,6 +4093,8 @@ define_generic_graph("backup_duration")
 define_generic_graph("connector_outlets")
 define_generic_graph("job_duration")
 define_generic_graph("mails_received_time")
+define_generic_graph("request_rate")
+define_generic_graph("error_rate")
 
 graph_info.append({
     "title"   : _("Context switches"),
@@ -4316,6 +4421,25 @@ graph_info.append({
         ( "io_wait",                        "stack" ),
         ( "user,system,io_wait,+,+#004080", "line", _("Total") ),
     ],
+    "conflicting_metrics" : [
+        "cpu_util_guest",
+        "cpu_util_steal",
+    ],
+    "mirror_legend" : True,
+    "range" : (0, 100),
+})
+
+graph_info.append({
+    "title"   : _("CPU utilization"),
+    "metrics" : [
+        ( "user",                           "area"  ),
+        ( "system",                         "stack" ),
+        ( "io_wait",                        "stack" ),
+        ( "cpu_util_guest",                 "stack" ),
+        ( "cpu_util_steal",                 "stack" ),
+        ( "user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#004080", "line", _("Total") ),
+    ],
+    "omit_zero_metrics" : True,
     "mirror_legend" : True,
     "range" : (0, 100),
 })
@@ -4641,14 +4765,6 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title" : _("Heap and nonheap memory"),
-    "metrics" : [
-        ( "mem_heap",   "area" ),
-        ( "mem_nonheap", "stack" ),
-    ],
-})
-
-graph_info.append({
     "title" : _("RAM + Swap used"),
     "metrics" : [
         ("mem_used",  "area"),
@@ -4782,7 +4898,46 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title" : _("TCP connection states"),
+    "title" : _("Heap and non-heap memory"),
+    "metrics" : [
+        ( "mem_heap",   "area" ),
+        ( "mem_nonheap", "stack" ),
+    ],
+    "conflicting_metrics" : [
+        "mem_heap_committed",
+        "mem_nonheap_committed",
+    ],
+})
+
+
+graph_info.append({
+    "title" : _("Heap memory usage"),
+    "metrics" : [
+        ( "mem_heap_committed", "area" ),
+        ( "mem_heap",           "area" ),
+    ],
+    "scalars" : [
+        "mem_heap:warn",
+        "mem_heap:crit",
+    ]
+})
+
+graph_info.append({
+    "title" : _("Non-heap memory usage"),
+    "metrics" : [
+        ( "mem_nonheap_committed", "area" ),
+        ( "mem_nonheap",           "area" ),
+    ],
+    "scalars" : [
+        "mem_nonheap:warn",
+        "mem_nonheap:crit",
+        "mem_nonheap:max",
+    ]
+})
+
+
+graph_info.append({
+    "title" : _("TCP Connection States"),
     "metrics" : [
        ( "tcp_syn_sent",    "stack"),
        ( "tcp_syn_recv",    "stack"),
@@ -5129,5 +5284,12 @@ graph_info.append({
     ],
 })
 
-
-
+for what, perfname in [ ("2.4", "2_4"), ("5", "5") ]:
+    graph_info.append({
+        "title" : _("%s GHz band" % what),
+        "metrics" : [
+            ( "ap_devices_total_%sghz" % perfname, "area" ),
+            ( "ap_devices_drifted_%sghz" % perfname, "area" ),
+            ( "ap_devices_not_responding_%sghz" % perfname, "stack" ),
+        ]
+    })

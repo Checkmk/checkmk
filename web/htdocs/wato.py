@@ -3793,7 +3793,7 @@ def mode_bulk_inventory(phase):
                 else:
                     msg = _("Error during inventory of %s<div class=exc>%s</div>") % (", ".join(hostnames), e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre><br>" % format_exception().replace("\n", "<br>")
+                    msg += "<br><pre>%s</pre><br>" % html.attrencode(format_exception().replace("\n", "<br>"))
                 result += msg
             html.write(result)
             return ""
@@ -4230,7 +4230,7 @@ def mode_parentscan(phase):
                 else:
                     msg = _("Error during parent scan of %s: %s") % (hostname, e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre>" % format_exception().replace("\n", "<br>")
+                    msg += "<br><pre>%s</pre>" % html.attrencode(format_exception().replace("\n", "<br>"))
                 result += msg + "\n<br>"
             html.write(result)
             return ""
@@ -11924,7 +11924,7 @@ def mode_users(phase):
             clone_url = make_link([("mode", "edit_user"), ("clone", id)])
             html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-        delete_url = html.makeactionuri([("_delete", id)])
+        delete_url = make_action_link([("mode", "users"), ("_delete", id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
         notifications_url = make_link([("mode", "user_notifications"), ("user", id)])
@@ -12251,7 +12251,7 @@ def mode_edit_user(phase):
     # Let exceptions from loading notification scripts happen now
     load_notification_scripts()
 
-    html.begin_form("user")
+    html.begin_form("user", method="POST")
     forms.header(_("Identity"))
 
     # ID
@@ -14367,7 +14367,7 @@ def mode_edit_ruleset(phase):
 
     if not rulespec:
         text = html.var("service_description") or varname
-        html.write("<div class=info>" + _("There are no rules availabe for %s.") % text + "</div>")
+        html.write("<div class=info>" + _("There are no rules availabe for %s.") % html.attrencode(text) + "</div>")
         return
 
     if not hostname:

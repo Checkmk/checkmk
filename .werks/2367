@@ -1,0 +1,10 @@
+Title: win_system: Fixed exception when non-UTF-8 sequences are contained agent output
+Level: 2
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435583756
+
+

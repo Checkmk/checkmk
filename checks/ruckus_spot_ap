@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<ruckus_spot_ap:sep(9)>>>
+# [band]  1
+# 1-28    1
+# 1-25    1
+# 1-2 1
+# [band]  2
+# 1-28    1
+# 1-16    1
+# 1-9     1
+
+def inventory_ruckus_spot_ap(info):
+    # 4 tuples of warn, crit
+    yield None, ((None,None),) * 4
+
+def check_ruckus_spot_ap(_no_item, params, info):
+    bands        = {}
+    current_band = None
+    for line in info:
+        if line[0] == "[band]":
+            current_band = line[1]
+            bands.setdefault(current_band, [])
+        else:
+            bands[current_band].append(line)
+
+    for band, band_id, name, params_offset in [ ("2_4ghz", "1", "2.4 GHz", 0), ("5ghz", "2", "5 GHz", 2) ]:
+        (drift_warn, drift_crit), (down_warn, down_crit) = params[params_offset+0:params_offset+2]
+        if band_id in bands:
+            state = 0
+            info  = 0
+            num_devices = len(bands[band_id])
+            perfdata = [("ap_devices_total_%s" % band, num_devices)]
+
+            extra_info = []
+            for what, ap_state, warn, crit in [ ("drifted",        "2", drift_warn, drift_crit),
+                                                ("not responding", "0", down_warn,  down_crit) ]:
+                problems = len([x for x in bands[band_id] if x[1] == ap_state])
+
+                if crit and problems >= crit:
+                    state = 2
+                elif warn and problems >= warn:
+                    state = 1
+
+                if problems:
+                    extra_info.append("%d %s" % (problems, what))
+                perfdata.append(("ap_devices_%s_%s" % (what.replace(" ", "_"), band), problems))
+            info = "%s: %d devices" % (name, num_devices)
+            if extra_info:
+                info += " (%s)" % " / ".join(extra_info)
+
+            yield state, info, perfdata
+
+check_info["ruckus_spot_ap"] = {
+    "inventory_function"  : inventory_ruckus_spot_ap,
+    "check_function"      : check_ruckus_spot_ap,
+    "service_description" : "Ruckus Spot Access Points",
+    "group"               : "ruckus_ap",
+    "has_perfdata"        : True
+}
+
+

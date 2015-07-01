@@ -1,0 +1,10 @@
+Title: appdynamics_memory, appdynamics_sessions, appdynamics_web_container: New checks for AppDynamic
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435655960
+Class: feature
+
+Check_MK now has a new special agent for monitoring AppDynamics via its REST API. Information
+is mapped to your existing monitoring hosts via Piggyback.

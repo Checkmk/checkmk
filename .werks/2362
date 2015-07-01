@@ -1,0 +1,26 @@
+Title: mk_logwatch: fix cases where one logfile is listsed more than once in logwatch.cfg
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435578702
+Class: fix
+
+One example of such a case:
+
+F+:logwatch.cfg
+/var/log/syslog /var/log/kern.log
+ C panic
+ C Oops
+ W generic protection rip
+ W .*Unrecovered read error - auto reallocate failed
+
+/var/log/kern.log
+ C INFO
+F-:
+
+In the old implementation the line with <tt>C INFO</tt> would never be executed.
+Now it is appended at the bottom of the other patterns for <tt>kern.log</tt>.
+
+Thanks to Gregor Hoffleit for the patch!
+

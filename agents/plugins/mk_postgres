@@ -49,7 +49,7 @@ OUTPUT="$(echo "select $QNAME = '<IDLE>', count(*) from pg_stat_activity group b
     su - $USER -c "psql -X --variable ON_ERROR_STOP=1 -d postgres -A -t -F' '" 2>/dev/null)"
 
 echo "$OUTPUT"
-# line with number of idle sessions is sometimes missing on Postgre 8.x. This can lead
+# line with number of idle sessions is sometimes missing on Postgres 8.x. This can lead
 # to an altogether empty section and thus the check disappearing.
 echo "$OUTPUT" | grep -q '^t ' || echo "t 0"
 

@@ -124,6 +124,5 @@ def inv_win_cpuinfo(info):
 
 inv_info['win_cpuinfo'] = {
    "inv_function"           : inv_win_cpuinfo,
-   "unicode"                : True,
 }
 

@@ -114,6 +114,7 @@ class html:
         self.ignore_transids = False
         self.current_transid = None
         self.page_context = {}
+        self.body_classes = ['main']
 
         # Time measurement
         self.times            = {}
@@ -865,17 +866,18 @@ class html:
     def immediate_browser_redirect(self, secs, url):
         self.javascript("set_reload(%s, '%s');" % (secs, url))
 
-    def body_css_classes(self):
-        body_classes = [ "main" ]
-        if self.var("_body_class"):
-            body_classes.append(self.var("_body_class"))
+    def add_body_css_class(self, cls):
+        self.body_classes.append(cls)
+
+    def get_body_css_classes(self):
+        body_classes = self.body_classes
         if self.screenshotmode:
             body_classes.append("screenshotmode")
         return " ".join(body_classes)
 
     def body_start(self, title='', **args):
         self.html_head(title, **args)
-        self.write('<body class="%s">' % self.body_css_classes())
+        self.write('<body class="%s">' % self.get_body_css_classes())
 
     def header(self, title='', **args):
         if self.output_format == "html":
@@ -1002,7 +1004,7 @@ class html:
                 '<img class=statusicon src="images/icon_menu.png" title="%s">\n' % _("Add this view to..."),
                 'add_visual', 'add_visual', data='[\'%s\', %s, {\'name\': \'%s\'}]' %
                                                     (mode_name, self.attrencode(repr(encoded_vars)),
-                                                     self.var('view_name')))
+                                                     self.attrencode(self.var('view_name'))))
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:
@@ -1048,7 +1050,7 @@ class html:
 
         self.begin_foldable_container("html", "exc_details", False, _("Details"))
         self.write('<div class=log_output>')
-        self.write("<pre>%s</pre>" % details)
+        self.write("<pre>%s</pre>" % self.attrencode(details))
         self.write('</div>')
         self.end_foldable_container()
         self.write("</div>")
@@ -1071,13 +1073,7 @@ class html:
             cls    = 'error'
             prefix = _('ERROR')
 
-        # Only strip off some tags. We allow some simple tags like
-        # <b>, <tt>, <i> to be part of the exception message. The tags
-        # are escaped first and then fixed again after attrencode.
-        msg = self.attrencode(obj)
-        msg = re.sub(r'&lt;(/?)(b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
-        # Also repair link definitions
-        msg = re.sub(r'&lt;a href=&quot;(.*)&quot;&gt;', r'<a href="\1">', msg)
+        msg = self.permissive_attrencode(obj)
 
         if self.output_format == "html":
             if self.mobile:
@@ -1308,7 +1304,7 @@ class html:
         if not self.has_var("_do_confirm"):
             if self.mobile:
                 self.write('<center>')
-            self.write("<div class=really>%s" % msg)
+            self.write("<div class=really>%s" % self.permissive_attrencode(msg))
             self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
@@ -1370,7 +1366,14 @@ class html:
     def disable_keybindings(self):
         self.keybindings_enabled = False
 
-    # From here: Former not class functions
+    # Only strip off some tags. We allow some simple tags like
+    # <b>, <tt>, <i> to be part of the string. This is useful
+    # for messages where we still want to have formating options.
+    def permissive_attrencode(self, obj):
+        msg = self.attrencode(obj)
+        msg = re.sub(r'&lt;(/?)(b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
+        # Also repair link definitions
+        return re.sub(r'&lt;a href=&quot;(.*)&quot;&gt;', r'<a href="\1">', msg)
 
     # Encode HTML attributes: replace " with &quot;, also replace
     # < and >. This code is slow. Works on str and unicode without

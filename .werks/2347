@@ -1,0 +1,10 @@
+Title: Improved error message in notify.log when sendmail is missing
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435569167
+
+

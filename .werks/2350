@@ -1,0 +1,12 @@
+Title: FreeBSD Agent: Changed bash path to /usr/local/bin/bash
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1435570316
+Class: fix
+
+Older versions of the FreeBSD Agent used the /bin/bash path as interpreter
+which seem not to be standard conform. It has now been changed to
+<tt>/usr/local/bin/bash</tt> in the hope that this is now correct and not
+breaking existing setups.

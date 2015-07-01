@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -40,7 +40,7 @@
 export LC_ALL=C
 unset LANG
 
-export MK_LIBDIR="/usr/lib/check_mk_agent"
+export MK_LIBDIR="/usr/local/lib/check_mk_agent"
 export MK_CONFDIR="/etc/check_mk"
 export MK_TMPDIR="/var/run/check_mk"
 
@@ -167,8 +167,8 @@ mount -p -t ufs
 # processes including username, without kernel processes
 echo '<<<ps>>>'
 COLUMNS=10000
-if [ is_jailed = 0 ]; then
-    ps ax -o state,user,vsz,rss,pcpu,command | sed -e 1d  -e '/\([^ ]*J\) */d' -e 's/*\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\2,\3,\4,\5) /'
+if [ "$is_jailed" = "0" ]; then
+    ps ax -o state,user,vsz,rss,pcpu,command | sed -e 1d  -e '/\([^ ]*J\) */d' -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\2,\3,\4,\5) /'
 else
     ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 fi
@@ -343,9 +343,9 @@ fi
 # To install: pkg install libstatgrab
 if type statgrab 2>&1 >/dev/null ; then
 
-    statgrab_vars="const. cpu. disk. general. page. proc. user."
+    statgrab_vars="const. disk. general. page. proc. user."
     statgrab_vars_mem="mem. swap."
-    statgrab_sections="proc cpu disk page"
+    statgrab_sections="proc disk page"
 
     statgrab $statgrab_vars     1> /tmp/statgrab.$$
     statgrab $statgrab_vars_mem 1>>/tmp/statgrab.$$
@@ -398,9 +398,8 @@ if cd $LOCALDIR ; then
     done
 fi
 
-
 # Plugins
-if cd $PLUGINSDIR ; then
+if cd $PLUGINSDIR; then
     for skript in $(ls) ; do
         if [ -f "$skript" -a -x "$skript" ] ; then
             ./$skript

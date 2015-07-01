@@ -1,0 +1,11 @@
+Title: if: Now fixing encoding in interface descriptions according to rule
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435575163
+
+You can now use the rule "Output text coding settings for SNMP devices" to
+fix the encoding of the interface descriptions reported by devices.

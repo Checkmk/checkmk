@@ -915,26 +915,20 @@ def parse_info(lines, hostname):
             # The section data might have a different encoding
             encoding = section_options.get("encoding")
 
-            # Make the contents of the section unicode strings or UTF-8
-            # encoded bytestrings (like it was done always in the past)
-            try:
-                to_unicode = inv_info.get(section_name, {}).get('unicode', False)
-            except NameError:
-                pass # e.g. in precompiled mode we have no inv_info. That's ok.
-
         elif stripped_line != '':
             if "nostrip" not in section_options:
                 line = stripped_line
 
             if encoding:
                 try:
-                    decoded_line = line.decode(encoding)
-                    if not to_unicode:
-                        line = decoded_line.encode('utf-8')
+                    line = line.decode(encoding)
                 except:
-                    pass
-            elif to_unicode:
-                line = line.decode('utf-8')
+                    line = line.decode(fallback_agent_output_encoding)
+            else:
+                try:
+                    line = line.decode('utf-8')
+                except:
+                    line = line.decode(fallback_agent_output_encoding)
 
             section.append(line.split(separator))
 
@@ -1228,10 +1222,9 @@ def do_check(hostname, ipaddress, only_check_types = None):
         save_snmp_stats()
 
     if opt_keepalive:
-        global total_check_output
-        total_check_output += output
+        add_keepalive_result_line(output)
     else:
-        sys.stdout.write(core_state_names[status] + " - " + output)
+        sys.stdout.write(core_state_names[status] + " - " + output.encode('utf-8'))
 
     return status
 
@@ -1394,7 +1387,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                 if isinstance(info, MKParseFunctionError):
                     raise Exception(str(info))
 
-                result = convert_check_result(check_function(item, params, info), check_uses_snmp(checkname))
+                result = sanitize_check_result(check_function(item, params, info), check_uses_snmp(checkname))
                 if last_counter_wrap():
                     raise last_counter_wrap()
 
@@ -1564,47 +1557,52 @@ def convert_check_info():
             snmp_scan_functions[basename] = info["snmp_scan_function"]
 
 
-def convert_check_result(result, is_snmp):
+def sanitize_check_result(result, is_snmp):
     if type(result) == tuple:
-        return result
+        return sanitize_check_result_encoding(result)
 
     elif result == None:
         return item_not_found(is_snmp)
 
-    # The check function may either return a tuple (pair or triple) or an iterator
-    # (using yield). The latter one is new since version 1.2.5i5.
-    else: # We assume an iterator, convert to tuple
-        subresults = list(result)
-
-        # Empty list? Check returned nothing
-        if not subresults:
-            return item_not_found(is_snmp)
+    else:
+        return sanitize_yield_check_result(result, is_snmp)
 
 
-        # Simple check with no separate subchecks (yield wouldn't have been neccessary here!)
-        if len(subresults) == 1:
-            return subresults[0]
+# The check function may return an iterator (using yield) since 1.2.5i5.
+# This function handles this case and converts them to tuple results
+def sanitize_yield_check_result(result, is_snmp):
+    subresults = list(result)
 
-        # Several sub results issued with multiple yields. Make that worst sub check
-        # decide the total state, join the texts and performance data. Subresults with
-        # an infotext of None are used for adding performance data.
-        else:
-            perfdata = []
-            infotexts = []
-            status = 0
+    # Empty list? Check returned nothing
+    if not subresults:
+        return item_not_found(is_snmp)
 
-            for subresult in subresults:
-                st, text = subresult[:2]
-                if text != None:
-                    infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
-                    if st == 2 or status == 2:
-                        status = 2
-                    else:
-                        status = max(status, st)
-                if len(subresult) == 3:
-                    perfdata += subresult[2]
+    # Simple check with no separate subchecks (yield wouldn't have been neccessary here!)
+    if len(subresults) == 1:
+        return sanitize_check_result_encoding(subresults[0])
 
-            return status, ", ".join(infotexts),  perfdata
+    # Several sub results issued with multiple yields. Make that worst sub check
+    # decide the total state, join the texts and performance data. Subresults with
+    # an infotext of None are used for adding performance data.
+    else:
+        perfdata = []
+        infotexts = []
+        status = 0
+
+        for subresult in subresults:
+            st, text, perf = sanitize_check_result_encoding(subresult)
+
+            if text != None:
+                infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
+                if st == 2 or status == 2:
+                    status = 2
+                else:
+                    status = max(status, st)
+
+            if perf != None:
+                perfdata += subresult[2]
+
+        return status, ", ".join(infotexts), perfdata
 
 
 def item_not_found(is_snmp):
@@ -1612,6 +1610,19 @@ def item_not_found(is_snmp):
         return 3, "Item not found in SNMP data"
     else:
         return 3, "Item not found in agent output"
+
+
+def sanitize_check_result_encoding(result):
+    if len(result) >= 3:
+        state, infotext, perfdata = result[:3]
+    else:
+        state, infotext = result
+        perfdata = None
+
+    if type(infotext) == str:
+        infotext = infotext.decode('utf-8')
+
+    return state, infotext, perfdata
 
 
 def open_checkresult_file():
@@ -1691,12 +1702,7 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
 
     # make sure that plugin output does not contain a vertical bar. If that is the
     # case then replace it with a Uniocode "Light vertical bar"
-    if type(infotext) == unicode:
-        infotext = infotext.encode("utf-8") # should never happen
-    infotext = infotext.replace("|", "\xe2\x9d\x98")
-
-    global nagios_command_pipe
-    # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
+    infotext = infotext.replace("|", "\u2758")
 
     # Aggregated service -> store for later
     if sa != "":
@@ -1734,38 +1740,33 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
         else:
             p = ''
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
-        print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, infotext.split('\n')[0], tty_normal, p)
+        print "%-20s %s%s%-56s%s%s" % (servicedesc.encode('utf-8'),
+                                       tty_bold, color, infotext.split('\n')[0], tty_normal, p)
 
 
 def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):
-    # Save data for sending it to the Check_MK Micro Core
-    # Replace \n to enable multiline ouput
     if opt_keepalive:
-        output = output.replace("\n", "\x01", 1).replace("\n","\\n")
-        result = "\t%d\t%s\t%s\n" % (state, service, output.replace("\0", "")) # remove binary 0, CMC does not like it
-        if cached_at:
-            result = "\tcached_at=%d\tcache_interval=%d%s" % (cached_at, cache_interval, result)
-        global total_check_output
-        total_check_output += result
+        # Regular case for the CMC - check helpers are running in keepalive mode
+        add_keepalive_check_result(service, state, output, cached_at, cache_interval)
 
-    # Send to Nagios/Icinga command pipe
-    elif check_submission == "pipe" or monitoring_core == "cmc": # CMC does not support file
-        output = output.replace("\n", "\\n")
-        open_command_pipe()
-        if nagios_command_pipe:
-            nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
-                                   (int(time.time()), host, service, state, output)  )
-            # Important: Nagios needs the complete command in one single write() block!
-            # Python buffers and sends chunks of 4096 bytes, if we do not flush.
-            nagios_command_pipe.flush()
+    elif check_submission == "pipe" or monitoring_core == "cmc":
+        # In case of CMC this is used when running "cmk" manually
+        submit_via_command_pipe(host, service, state, output)
 
-    # Create check result files for Nagios/Icinga
     elif check_submission == "file":
-        output = output.replace("\n", "\\n")
-        open_checkresult_file()
-        if checkresult_file_fd:
-            now = time.time()
-            os.write(checkresult_file_fd,
+        submit_via_check_result_file(host, service, state, output)
+
+    else:
+        raise MKGeneralException("Invalid setting %r for check_submission. "
+                                 "Must be 'pipe' or 'file'" % check_submission)
+
+
+def submit_via_check_result_file(host, service, state, output):
+    output = output.replace("\n", "\\n")
+    open_checkresult_file()
+    if checkresult_file_fd:
+        now = time.time()
+        os.write(checkresult_file_fd,
                 """host_name=%s
 service_description=%s
 check_type=1
@@ -1777,9 +1778,19 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, service, now, now, state, output))
-    else:
-        raise MKGeneralException("Invalid setting %r for check_submission. Must be 'pipe' or 'file'" % check_submission)
+""" % (host, make_utf8(service), now, now, state, make_utf8(output)))
+
+
+def submit_via_command_pipe(host, service, state, output):
+    output = output.replace("\n", "\\n")
+    open_command_pipe()
+    if nagios_command_pipe:
+        # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
+        nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
+                               (int(time.time()), host, make_utf8(service), state, make_utf8(output)))
+        # Important: Nagios needs the complete command in one single write() block!
+        # Python buffers and sends chunks of 4096 bytes, if we do not flush.
+        nagios_command_pipe.flush()
 
 
 #.
@@ -1792,6 +1803,14 @@ output=%s
 #   |                              |_|                                     |
 #   +----------------------------------------------------------------------+
 #   |  Some generic helper functions                                       |
+#   +----------------------------------------------------------------------+
+
+def make_utf8(x):
+    if type(x) == unicode:
+        return x.encode('utf-8')
+    else:
+        return x
+
 
 def i_am_root():
     return os.getuid() == 0

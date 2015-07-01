@@ -1,0 +1,21 @@
+Title: agent_ruckus_spot: new special agent for querying access point statistics via web interface
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435584213
+Class: feature
+
+This new special agent queries the web interface of a Ruckus Spot service.
+It reports access point information for the 2.4 GHz and 5 GHz bands.
+
+For each band the information consists of
+<ul>
+<li>Number of devices</li>
+<li>Number of time drift problems</li>
+<li>Number of devices not responding</li>
+</ul>
+
+You can configure levels for the <i>time drift</i> and <i>not responding</i> problems.
+Without further configuration the check is always OK.
+

@@ -333,6 +333,7 @@ except Exception, e:
     status = {}
 
 
+logfile_patterns = {}
 # The filename line may contain options like 'maxlines=100' or 'maxtime=10'
 for filenames, patterns in config:
     # Initialize options with default values
@@ -385,7 +386,10 @@ for filenames, patterns in config:
             print '[[[%s:missing]]]' % glob_pattern
         else:
             for logfile in logfiles:
-                process_logfile(logfile, patterns)
+                logfile_patterns[logfile] = logfile_patterns.get(logfile, []) + patterns
+
+for logfile, patterns in logfile_patterns.items():
+    process_logfile(logfile, patterns)
 
 if not debug:
     save_status(status)

@@ -1,0 +1,107 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# Written by comNET GmbH, Ringo Hartmann
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<appdynamics_memory:sep(124)>>>
+# Hans|Non-Heap|Max Available (MB):304|Current Usage (MB):78|Used %:25|Committed (MB):267
+# Hans|Heap|Max Available (MB):455|Current Usage (MB):66|Used %:14|Committed (MB):252
+
+
+def inventory_appdynamics_memory(info):
+    for line in info:
+        yield ' '.join(line[0:2]), {}
+
+def check_appdynamics_memory(item, params, info):
+    for line in info:
+        if item == ' '.join(line[0:2]):
+            mb = 1024 * 1024.0
+
+            values = {}
+            for metric in line[2:]:
+                name, value = metric.split(':')
+                values[name] = int(value)
+
+            used            = values['Current Usage (MB)'] * mb
+            max_available   = values['Max Available (MB)'] * mb
+            committed       = values['Committed (MB)'] * mb
+
+            free = max_available - used
+            used_percent = 100.0 * used / max_available
+
+            if item.endswith('Non-Heap'):
+                what = "nonheap"
+            else:
+                what = "heap"
+
+            warn, crit = params.get(what, (None, None))
+
+            if type(crit) == float:
+                crit_label = '%.2f%%' % crit
+                crit = int((max_available / 100) * crit)
+            elif type(crit) == int:
+                crit_label = '%d MB free' % (crit)
+                crit = max_available - (crit * mb)
+            else:
+                crit_label = ''
+
+            if type(warn) == float:
+                warn_label = '%.2f%%' % warn
+                warn = int((max_available / 100) * warn)
+            elif type(warn) == int:
+                warn_label = '%d MB free' % (warn)
+                warn = max_available - (warn * mb)
+            else:
+                warn_label = ''
+
+            state = 0
+            if crit and used >= crit:
+                state = 2
+            elif warn and used >= warn:
+                state = 1
+
+            levels_label = ''
+            if state > 0:
+                levels_label = ' (warn/crit at %s/%s)' % (warn_label, crit_label)
+
+            perfdata = [('mem_%s' % what, used, warn, crit, 0, max_available)]
+            yield state, 'Used: %s of %s (%.2f%%)%s' % (
+                    get_bytes_human_readable(used),
+                    get_bytes_human_readable(max_available),
+                    used_percent,
+                    levels_label,
+                ), perfdata
+
+
+            perfdata = [('mem_%s_committed' % what, committed, None, None, 0, max_available)]
+            yield 0, 'Committed: %s' % get_bytes_human_readable(committed), perfdata
+
+check_info['appdynamics_memory'] = {
+  'inventory_function'  : inventory_appdynamics_memory,
+  'check_function'      : check_appdynamics_memory,
+  'service_description' : 'AppDynamics Memory %s',
+  'has_perfdata'        : True,
+  'group'               : 'jvm_memory',
+}

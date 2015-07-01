@@ -1265,13 +1265,14 @@ def service_description(check_type, item):
     # can by empty in some cases. Nagios silently drops leading
     # and trailing spaces in the configuration file.
 
-    if type(item) == str:
+    item_type = type(item)
+    if item_type in [ str, unicode ]:
         # Remove characters from item name that are banned by Nagios
         item_safe = sanitize_service_description(item)
         if "%s" not in descr_format:
             descr_format += " %s"
         return (descr_format % (item_safe,)).strip()
-    if type(item) == int or type(item) == long:
+    elif item_type in [ int, long ]:
         if "%s" not in descr_format:
             descr_format += " %s"
         return (descr_format % (item,)).strip()
@@ -1299,12 +1300,6 @@ def get_piggyback_translation(hostname):
 #   +----------------------------------------------------------------------+
 #   | Output an ASCII configuration file for the monitoring core.          |
 #   '----------------------------------------------------------------------'
-
-def make_utf8(x):
-    if type(x) == unicode:
-        return x.encode('utf-8')
-    else:
-        return x
 
 def output_conf_header(outfile):
     outfile.write("""#
@@ -5220,8 +5215,25 @@ def restart_myself(keepalive_fd):
     os.execvp("cmk", sys.argv + [ "--keepalive-fd=%d" % keepalive_fd ])
 
 
+def add_keepalive_result_line(result):
+    global g_total_check_output
+    g_total_check_output += result
+
+
+def add_keepalive_check_result(service, state, output, cached_at=None, cache_interval=None):
+
+    # Replace \n to enable multiline ouput
+    # remove binary 0, CMC does not like it
+    output = output.replace("\n", "\x01", 1).replace("\n","\\n").replace("\0", "")
+    result = "\t%d\t%s\t%s\n" % (state, service, output)
+    if cached_at:
+        result = "\tcached_at=%d\tcache_interval=%d%s" % (cached_at, cache_interval, result)
+    add_keepalive_result_line(result)
+
+
 def do_check_keepalive():
     global g_initial_times, g_timeout, check_max_cachefile_age, inventory_max_cachefile_age
+    global g_total_check_output
 
     def check_timeout(signum, frame):
         raise MKCheckTimeout()
@@ -5254,8 +5266,7 @@ def do_check_keepalive():
     orig_check_max_cachefile_age     = check_max_cachefile_age
     orig_inventory_max_cachefile_age = inventory_max_cachefile_age
 
-    global total_check_output
-    total_check_output = ""
+    g_total_check_output = ""
 
     if opt_verbose:
         original_global_vars = copy_globals()
@@ -5279,7 +5290,7 @@ def do_check_keepalive():
             break
 
         # Always cleanup the total check output var before handling a new task
-        total_check_output = ""
+        g_total_check_output = ""
 
         num_checks += 1
 
@@ -5339,12 +5350,12 @@ def do_check_keepalive():
                 signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
                 spec = exit_code_spec(hostname)
                 status = spec.get("timeout", 2)
-                total_check_output = "%s - Check_MK timed out after %d seconds\n" % (
+                g_total_check_output = "%s - Check_MK timed out after %d seconds\n" % (
                     core_state_names[status], g_timeout)
 
             os.write(keepalive_fd, "%03d\n%08d\n%s" %
-                 (status, len(total_check_output), total_check_output))
-            total_check_output = ""
+                 (status, len(g_total_check_output), make_utf8(g_total_check_output)))
+            g_total_check_output = ""
 
         except Exception, e:
             signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc

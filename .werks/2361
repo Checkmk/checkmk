@@ -1,0 +1,10 @@
+Title: Fix exception for missing key 'title' in certain cases of older customized views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435573224
+
+

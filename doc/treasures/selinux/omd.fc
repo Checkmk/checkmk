@@ -1,0 +1,6 @@
+/opt/omd/sites/(.+)/etc(/.*)?			system_u:object_r:httpd_nagios_rw_content_t:s0
+/opt/omd/sites/(.+)/var(/.*)?			system_u:object_r:httpd_nagios_rw_content_t:s0
+/opt/omd/sites/(.+)/tmp(/.*)?			system_u:object_r:tmp_t:s0
+/opt/omd/sites/(.+)/lib(/.*)?			system_u:object_r:lib_t:s0
+/opt/omd/sites/(.+)/bin(/.*)?			system_u:object_r:bin_t:s0
+/opt/omd/sites/(.+)/var/log/apache(/.*)?	system_u:object_r:httpd_log_t:s0

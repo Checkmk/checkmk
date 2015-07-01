@@ -35,6 +35,8 @@ def if_convert_to_if64(info):
     for line in info:
         if saveint(line[0]) > 0: #Fix for switches with empty indexes
             newinfo.append(line[0:8] + ['0'] + line[8:12] + ['0'] + line[12:16] + line[1:2] + line[16:17])
+            # Fix encoding of interface description
+            newinfo[-1][1] = snmp_decode_string(newinfo[-1][1])
     return newinfo
 
 check_includes['if'] = [ "if.include" ]

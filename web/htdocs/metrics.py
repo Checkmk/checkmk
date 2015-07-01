@@ -192,6 +192,10 @@ cmk_color_palette = {
     "53"    : (0.083, 0.8, 0.55), # brown 2
 }
 
+def get_palette_color_by_index(i, shading='a'):
+    color_key = sorted(cmk_color_palette.keys())[i % len(cmk_color_palette)]
+    return "%s/%s" % (color_key, shading)
+
 
 # 23/c -> #ff8040
 # #ff8040 -> #ff8040
@@ -326,6 +330,7 @@ def translate_metrics(perf_data, check_command):
     cm = check_metrics[check_command]
 
     translated_metrics = {}
+    color_index = 0
     for nr, entry in enumerate(perf_data):
         varname = entry[0]
 
@@ -342,12 +347,17 @@ def translate_metrics(perf_data, check_command):
 
         # Translate name
         metric_name = translation_entry.get("name", varname)
+        if metric_name in translated_metrics:
+            continue # ignore duplicate value
 
         if metric_name not in metric_info:
+            color_index += 1
+            palette_color = get_palette_color_by_index(color_index)
             mi = {
-                "title" : metric_name,
-                "unit" : "count",
-                "color" : "#888888",
+                "title" : metric_name.title(),
+                "unit" : "",
+                "color" : parse_color_into_hexrgb(palette_color),
+                "palHIRN" : palette_color,
             }
         else:
             mi = metric_info[metric_name].copy()
@@ -833,11 +843,54 @@ def build_perfometer(perfometer, translated_metrics):
 def get_graph_templates(translated_metrics):
     if not translated_metrics:
         return
+
+    explicit_templates = get_explicit_graph_templates(translated_metrics)
+    already_graphed_metrics = get_graphed_metrics(explicit_templates)
+    implicit_templates = get_implicit_graph_templates(translated_metrics, already_graphed_metrics)
+    templates = explicit_templates + implicit_templates
+    return templates
+
+
+def get_explicit_graph_templates(translated_metrics):
+    templates = []
     for graph_template in graph_info:
         if graph_possible(graph_template, translated_metrics):
-            yield graph_template
+            templates.append(graph_template)
         elif graph_possible_without_optional_metrics(graph_template, translated_metrics):
-            yield graph_without_missing_optional_metrics(graph_template, translated_metrics)
+            templates.append(graph_without_missing_optional_metrics(graph_template, translated_metrics))
+    return templates
+
+
+def get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
+    templates = []
+    for metric_name in sorted(translated_metrics.keys()):
+        if metric_name not in already_graphed_metrics:
+            templates.append(generic_graph_template(metric_name))
+    return templates
+
+
+def get_graphed_metrics(graph_templates):
+    graphed_metrics = set([])
+    for graph_template in graph_templates:
+        graphed_metrics.update(metrics_used_by_graph(graph_template))
+    return graphed_metrics
+
+
+def metrics_used_by_graph(graph_template):
+    used_metrics = []
+    for metric_definition in graph_template["metrics"]:
+        used_metrics += list(metrics_used_in_definition(metric_definition[0]))
+    return used_metrics
+
+
+def metrics_used_in_definition(metric_definition):
+    without_unit = metric_definition.split("@")[0]
+    without_color = metric_definition.split("#")[0]
+    parts = without_color.split(",")
+    for part in parts:
+        metric_name = part.split(".")[0] # drop .min, .max, .average
+        if metric_name in metric_info:
+            yield metric_name
 
 
 def graph_possible(graph_template, translated_metrics):
@@ -890,6 +943,18 @@ def add_fake_metrics(translated_metrics, metric_names):
             "color" : "#888888",
         }
     return with_fake
+
+def generic_graph_template(metric_name):
+    return {
+        "metrics" : [
+            ( metric_name, "area" ),
+        ],
+        "scalars" : [
+            metric_name + ":warn",
+            metric_name + ":crit",
+        ]
+    }
+
 
 # Called with exactly one variable: the template ID. Example:
 # "check_mk-kernel.util:guest,steal,system,user,wait".

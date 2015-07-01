@@ -1,0 +1,15 @@
+Title: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435650306
+
+On pages where an authenticated user can trigger an exception which is then displayed
+to the user as "Internal error" dialog with details about the exception, it was possible
+for the user to inject javascript code which was executed in the context of the authenticated
+user.
+
+This has been fixed that javascript/html code which is injected is being escaped correctly.

@@ -36,7 +36,7 @@
 #   '----------------------------------------------------------------------'
 
 import config, defaults
-import time, copy, traceback
+import time, copy
 
 try:
     # docs: http://www.python-ldap.org/doc/html/index.html
@@ -150,10 +150,8 @@ def ldap_test_module():
 
 
 class LDAPUserConnector(UserConnector):
-    _id           = 'ldap'
-
     def __init__(self, config):
-        super(LDAPUserConnector, self).__init__(self, config)
+        super(LDAPUserConnector, self).__init__(config)
 
         self._ldap_obj        = None
         self._ldap_obj_config = None
@@ -162,9 +160,14 @@ class LDAPUserConnector(UserConnector):
         self._group_cache = {}
 
         # File for storing the time of the last success event
-        self._sync_time_file = defaults.var_dir + '/web/ldap_%s_sync_time.mk'% self._config['_id']
+        self._sync_time_file = defaults.var_dir + '/web/ldap_%s_sync_time.mk'% self._config['id']
         # Exists when last ldap sync failed, contains exception text
-        self._sync_fail_file = defaults.var_dir + '/web/ldap_%s_sync_fail.mk' % self._config['_id']
+        self._sync_fail_file = defaults.var_dir + '/web/ldap_%s_sync_fail.mk' % self._config['id']
+
+
+    @classmethod
+    def type(self):
+        return 'ldap'
 
 
     @classmethod
@@ -184,8 +187,8 @@ class LDAPUserConnector(UserConnector):
         try:
             uri = self.format_ldap_uri(server)
             conn = ldap.ldapobject.ReconnectLDAPObject(uri)
-            conn.protocol_version = self._config['version']
-            conn.network_timeout  = self._config['connect_timeout']
+            conn.protocol_version = self._config.get('version', 3)
+            conn.network_timeout  = self._config.get('connect_timeout', 2.0)
             conn.retry_delay      = 0.5
 
             # When using the domain top level as base-dn, the subtree search stumbles with referral objects.
@@ -207,7 +210,7 @@ class LDAPUserConnector(UserConnector):
         else:
             uri = 'ldap://'
 
-        return uri + '%s:%d' % (server, self._config['port'])
+        return uri + '%s:%d' % (server, self._config.get('port', 389))
 
 
     def connect(enforce_new = False, enforce_server = None):
@@ -753,9 +756,18 @@ class LDAPUserConnector(UserConnector):
             'cache_livetime' : getattr(config, 'ldap_cache_livetime', 300),
             'active_plugins' : getattr(config, 'ldap_active_plugins', []) or {'email': {}, 'alias': {}, 'auth_expire': {}},
             'debug_log'      : getattr(config, 'ldap_debug_log', False),
+            'directory_type' : getattr(config, 'ldap_connection', {}).get('type', 'ad'),
+            'user_id_umlauts': 'replace',
+            'user_dn'        : '',
+            'user_scope'     : 'subtree',
         }
 
-        connection.update(getattr(config, 'ldap_connection', {}))
+        old_connection_cfg = getattr(config, 'ldap_connection', {})
+        try:
+            del old_connection_cfg['type']
+        except KeyError:
+            pass
+        connection.update(old_connection_cfg)
 
         for what in ["user", "group"]:
             for key, val in getattr(config, 'ldap_'+what+'spec', {}).items():

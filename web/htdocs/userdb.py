@@ -26,7 +26,7 @@
 
 import config, defaults, hooks
 from lib import *
-import time, os, pprint, shutil
+import time, os, pprint, shutil, traceback
 from valuespec import *
 
 # Datastructures and functions needed before plugins can be loaded
@@ -108,20 +108,23 @@ def cleanup_connection_id(connection_id):
 
 # Returns the connector dictionary of the given id
 def get_connection(connection_id):
-    return dict(active_connections()).get(connection_id, {})
+    return dict(active_connections()).get(connection_id)
 
 
 # Returns a list of locked attributes
 def locked_attributes(connection_id):
     return get_connection(cleanup_connection_id(connection_id)).locked_attributes()
 
+
 # Returns a list of multisite attributes
 def multisite_attributes(connection_id):
     return get_connection(cleanup_connection_id(connection_id)).multisite_attributes()
 
+
 # Returns a list of non contact attributes
 def non_contact_attributes(connection_id):
     return get_connection(cleanup_connection_id(connection_id)).non_contact_attributes()
+
 
 def new_user_template(connection_id):
     new_user = {
@@ -132,6 +135,7 @@ def new_user_template(connection_id):
     # Apply the default user profile
     new_user.update(config.default_user_profile)
     return new_user
+
 
 def create_non_existing_user(connection_id, username):
     users = load_users(lock = True)
@@ -766,12 +770,13 @@ def save_connection_config(connections):
 
 # FIXME: How to declare methods/attributes forced to be overridden?
 class UserConnector(object):
-    # The uniq identifier of the connector
-    _id = None
-
     def __init__(self, config):
         super(UserConnector, self).__init__()
         self._config = config
+
+    @classmethod
+    def type(self):
+        return None
 
     # The string representing this connector to humans
     @classmethod
@@ -803,7 +808,7 @@ class UserConnector(object):
 
     # Optional: Hook function can be registered here to be executed
     # to synchronize all users.
-    def do_sync(add_to_changelog, only_username):
+    def do_sync(self, add_to_changelog, only_username):
         pass
 
     # Optional: Tells whether or not the given user is currently
@@ -873,6 +878,14 @@ def hook_login(username, password):
         elif result == False:
             return result
 
+
+def show_exception(connection_id, title, e, debug=True):
+    html.show_error(
+        "<b>" + connection_id + ' - ' + title + "</b>"
+        "<pre>%s</pre>" % (debug and traceback.format_exc() or e)
+    )
+
+
 # Hook function can be registered here to be executed to synchronize all users.
 # Is called on:
 #   a) before rendering the user management page in WATO
@@ -891,26 +904,12 @@ def hook_sync(connection_id = None, add_to_changelog = False, only_username = No
         except MKLDAPException, e:
             if raise_exc:
                 raise
-            if config.debug:
-                import traceback
-                html.show_error(
-                    "<h3>" + _("Error during sync") + "</h3>"
-                    "<pre>%s</pre>" % (traceback.format_exc())
-                )
-            else:
-                html.show_error(
-                    "<h3>" + _("Error during sync") + "</h3>"
-                    "<pre>%s</pre>" % (e)
-                )
+            show_exception(connection_id, _("Error during sync"), e, debug=config.debug)
             no_errors = False
-        except:
+        except Exception, e:
             if raise_exc:
                 raise
-            import traceback
-            html.show_error(
-                "<h3>" + _("Error during sync") + "</h3>"
-                "<pre>%s</pre>" % (traceback.format_exc())
-            )
+            show_exception(connection_id, _("Error during sync"), e)
             no_errors = False
     return no_errors
 
@@ -920,15 +919,11 @@ def hook_save(users):
     for connection_id, connection in active_connections():
         try:
             connection.save_users(users)
-        except:
+        except Exception, e:
             if config.debug:
-                import traceback
-                html.show_error(
-                    "<h3>" + _("Error during saving") + "</h3>"
-                    "<pre>%s</pre>" % (traceback.format_exc())
-                )
-            else:
                 raise
+            else:
+                show_exception(connection_id, _("Error during saving"), e)
 
 # This function registers general stuff, which is independet of the single
 # connectors to each page load. It is exectued AFTER all other page hooks.

@@ -28,10 +28,13 @@ import crypt
 import defaults
 
 class HtpasswdUserConnector(UserConnector):
-    _id = 'htpasswd'
-
     def __init__(self, config):
-        super(HtpasswdUserConnector, self).__init__(self, config)
+        super(HtpasswdUserConnector, self).__init__(config)
+
+
+    @classmethod
+    def type(self):
+        return 'htpasswd'
 
 
     @classmethod

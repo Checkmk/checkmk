@@ -7382,7 +7382,7 @@ def vs_ldap_connection(new):
             choices = [ (2, "2"), (3, "3") ],
             default_value = 3,
         )),
-        ("type", DropdownChoice(
+        ("directory_type", DropdownChoice(
             title = _("Directory Type"),
             help  = _("Select the software the LDAP directory is based on. Depending on "
                       "the selection e.g. the attribute names used in LDAP queries will "
@@ -7593,8 +7593,8 @@ def vs_ldap_connection(new):
         render = "form",
         form_narrow = True,
         optional_keys = [
-            'no_persistent', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
-            'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids',
+            'no_persistent', 'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
+            'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
             'group_filter', 'group_member',
         ],
         default_keys = ['page_size'],
@@ -12305,11 +12305,11 @@ def mode_users(phase):
         table.row()
 
         user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
-        connector = userdb.get_connector(user_connection_id)
+        connection = userdb.get_connection(user_connection_id)
 
         # Buttons
         table.cell(_("Actions"), css="buttons")
-        if connector: # only show edit buttons when the connector is available and enabled
+        if connection: # only show edit buttons when the connector is available and enabled
             edit_url = make_link([("mode", "edit_user"), ("edit", id)])
             html.icon_button(edit_url, _("Properties"), "edit")
 
@@ -12338,13 +12338,13 @@ def mode_users(phase):
             title += ' (%s %s)' % (fmt_date(last_seen), fmt_time(last_seen))
             table.cell(_("Act."), '<img class=icon title="%s" src="images/icon_%sline.png" />' % (title, img_txt))
 
-        # Connector
-        if connector:
-            table.cell(_("Connector"), '%s (%s)' % (connector['short_title'], user_connection_id))
+        # Connection
+        if connection:
+            table.cell(_("Connection"), '%s (%s)' % (connection.short_title(), user_connection_id))
             locked_attributes = userdb.locked_attributes(user_connection_id)
         else:
-            table.cell(_("Connector"), "%s (%s) (disabled)" %
-                    (connector.get('short_title', 'UNKNOWN'), user_connection_id), css="error")
+            table.cell(_("Connection"), "%s (%s) (%s)" %
+                    (_("UNKNOWN"), user_connection_id, _("disabled")), css="error")
             locked_attributes = []
 
         # Authentication

@@ -78,7 +78,7 @@ def inventory_ps_common(invdata, invrules, info):
 
         v = rule[0]
 
-        entries.append((v['descr'], v['match'], v.get('user'), v.get('default_params', v)))
+        entries.append((v['descr'], v.get('match'), v.get('user'), v.get('default_params', v)))
 
     for servicedesc, pattern, userspec, default_params in entries:
         num_perc_s = servicedesc.count("%s")

@@ -1,0 +1,9 @@
+Title: Avoid freezing WATO during bulk discovery if hosts do not respond in a timely manner
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i2p1
+Date: 1435746279
+Class: fix
+
+

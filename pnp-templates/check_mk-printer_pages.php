@@ -22,6 +22,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+# FORMALIZED
 
 $opt[1] = "--vertical-label 'Pages printed' -X0 -l0 --title \"$servicedesc\" ";
 $def[1] = "DEF:pages=$RRDFILE[1]:$DS[1]:MAX ";

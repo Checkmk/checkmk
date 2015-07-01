@@ -22,6 +22,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+# FORMALIZED
 
 setlocale(LC_ALL, "POSIX");
 
@@ -193,4 +194,4 @@ for ($i = 0; $i < count($protocols); $i++) {
     }
 }
 
-?>
+?

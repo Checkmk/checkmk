@@ -22,6 +22,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+# FORMALIZED
 
 $queue = str_replace("_", " ", substr($servicedesc, 6));
 $opt[1] = "--vertical-label 'Queue length' -l0 --title \"$hostname / Exchange Queue: $queue\" ";

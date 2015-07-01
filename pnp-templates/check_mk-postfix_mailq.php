@@ -22,6 +22,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+# FORMALIZED
 
 # (length=22;10;20;; size=2048;;;;)
 $opt[1] = "--vertical-label Mails -l0  --title \"Mail Queue Length\" ";

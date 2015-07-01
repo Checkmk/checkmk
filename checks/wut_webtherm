@@ -75,7 +75,6 @@ def detect_webtherm(oid):
 wut_webtherm_humidity_defaultlevels = (35, 40, 60, 65)
 
 def inventory_wut_webtherm_humidity(info):
-    print info
     for index, reading in info:
         if index.split(".")[1] == "2":
             yield "2", None

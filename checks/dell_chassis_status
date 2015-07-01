@@ -39,24 +39,34 @@ def inventory_dell_chassis_status(info):
         return [ ( None, None ) ]
 
 def check_dell_chassis_status(item, _no_params, info):
-    di = dict()
-    di['URL'], di['Location'], di['Name'], di['ServiceTag'], di['DataCenter'], \
-        di['FirmwareVersion'], status = info[0]
+
+    whats = [ "URL",
+              "Locaction",
+              "Name",
+              "Service Tag",
+              "Data Center",
+              "Firmware Version",
+              "Status",
+    ]
 
     state_table = {
-        "1" : ( "other, ", 1 ),
-        "2" : ( "unknown, ", 1 ),
-        "3" : ( "", 0 ),
-        "4" : ( "nonCritical, ", 1 ),
+        "1" : ( "Other, ", 1 ),
+        "2" : ( "Unknown, ", 1 ),
+        "3" : ( "OK", 0 ),
+        "4" : ( "Non-Critical, ", 1 ),
         "5" : ( "Critical, ", 2 ),
-        "6" : ( "NonRecoverable, ", 2 ),
+        "6" : ( "Non-Recoverable, ", 2 ),
     }
-    infotext, state = state_table.get(status, ("unknown state", 2 ))
-    for parameter, value in di.items():
-        infotext += "%s: %s, " % ( parameter, value )
-    infotext = re.sub(", $","", infotext)
 
-    return state, infotext
+    things = zip(whats, info[0])
+
+    for what, value in things:
+        if what == "Status":
+            descr, status = state_table[value]
+            yield status, what + ": " + descr
+        else:
+            yield 0, what + ": " + value
+
 
 check_info["dell_chassis_status"] = {
     "check_function"        : check_dell_chassis_status,

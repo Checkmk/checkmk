@@ -28,10 +28,15 @@ import defaults, config
 
 def page_index():
     default_start_url = config.user.get("start_url") or config.start_url
-    start_url = html.var("start_url", default_start_url)
+    start_url = html.var("start_url", default_start_url).strip()
+
     # Prevent redirecting to absolute URL which could be used to redirect
-    # users to compromised pages
+    # users to compromised pages.
     if '://' in start_url:
+        start_url = default_start_url
+
+    # Also prevent using of "javascript:" URLs which could used to inject code
+    if start_url.startswith('javascript:'):
         start_url = default_start_url
 
     # Do not cache the index page -> caching problems when page is accessed
@@ -55,7 +60,7 @@ def page_index():
     <frame src="%s" name="main" noresize>
 </frameset>
 </html>
-""" % (heading, start_url))
+""" % (html.attrencode(heading), html.attrencode(start_url)))
 
 # This function does almost nothing. It just makes sure that
 # a livestatus-connection is built up, since connect_to_livestatus()

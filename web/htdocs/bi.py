@@ -1096,7 +1096,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
             "in_downtime"       : host_in_downtime,
             "acknowledged"      : host_acknowledged,
             "in_service_period" : host_in_service_period,
-            }
+        }
         if state_assumption != None:
             assumed_state = {
                 "state"             : state_assumption,
@@ -1104,7 +1104,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
                 "in_downtime"       : host_in_downtime,
                 "acknowledged"      : host_acknowledged,
                 "in_service_period" : host_in_service_period,
-                }
+            }
         else:
             assumed_state = None
         return (state, assumed_state, node)
@@ -1913,8 +1913,9 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                              row["state"],
                              row["hard_state"],
                              row["plugin_output"],
-                             not not hostrow["acknowledged"],
                              hostrow["scheduled_downtime_depth"] > 0,
+                             not not hostrow["acknowledged"],
+                             hostrow["host_in_service_period"],
                              row["services_with_fullstate"] ]
                 if status_info == None:
                     break
@@ -1924,8 +1925,9 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                 hostrow["state"],
                 hostrow["hard_state"],
                 hostrow["plugin_output"],
-                not not hostrow["acknowledged"],
                 hostrow["scheduled_downtime_depth"] > 0,
+                not not hostrow["acknowledged"],
+                hostrow["host_in_service_period"],
                 hostrow["services_with_fullstate"] ] }
 
         for group, aggregation in aggrs:
@@ -1943,8 +1945,9 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                             this_row['state'],
                             this_row['hard_state'],
                             this_row['plugin_output'],
-                            not not this_row["acknowledged"],
                             this_row["scheduled_downtime_depth"] > 0,
+                            not not this_row["acknowledged"],
+                            this_row["host_in_service_period"],
                             this_row['services_with_fullstate'],
                         ]
 

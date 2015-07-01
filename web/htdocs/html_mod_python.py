@@ -66,8 +66,16 @@ class html_mod_python(htmllib.html):
         except:
             pass
 
+    def is_ssl_request(self):
+        return self.req.headers_in.get('X-Forwarded-Proto') == 'https'
+
     def set_cookie(self, varname, value, expires = None):
-        c = Cookie.Cookie(varname, value, path = '/')
+        # httponly tells the browser not to make this cookie available to Javascript
+        c = Cookie.Cookie(varname, value, path='/', httponly=True)
+
+        if self.is_ssl_request():
+            c.secure = True
+
         if expires is not None:
             c.expires = expires
 

@@ -1,0 +1,89 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import sys, getopt, urllib2
+
+def usage():
+    sys.stderr.write("""Check_MK Ruckus Spot Agent
+
+USAGE: agent_ruckus_spot [OPTIONS] HOST
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  --address                     Address {hostname:port}
+  --venueid                     Venue ID
+  --apikey                      API key
+""")
+    sys.exit(1)
+short_options = 'h:'
+long_options  = ['help', 'address=', 'venueid=', 'apikey=']
+
+address = None
+venueid = None
+api_key = None
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+for o,a in opts:
+    if o in [ '--address' ]:
+        address = a
+    elif o in [ '--venueid' ]:
+        venueid = a
+    elif o in [ '--apikey']:
+        api_key = a
+    elif o in [ '-h', '--help' ]:
+        usage()
+
+if len(args) > 0 or not api_key or not venueid or not address:
+    usage()
+
+url = "http://%(address)s/api/v1/venues/%(venueid)s/access_points/statuses.json" % \
+            {"address": address, "venueid": venueid}
+
+try:
+    p = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    p.add_password(None, url, api_key, "X")
+
+    handler = urllib2.HTTPBasicAuthHandler(p)
+    opener = urllib2.build_opener(handler)
+    urllib2.install_opener(opener)
+
+    response = urllib2.urlopen(url).read()
+    data = eval(response)
+
+    print "<<<ruckus_spot_ap:sep(9)>>>"
+    for entry in data:
+        print "[band]\t%s" % entry["band"]
+        for ap in entry["access_points"]:
+            print "%s\t%s" % (ap["name"], ap["status"])
+except Exception, e:
+    sys.stderr.write("Connection error %s" % e)
+    sys.exit(1)
+

@@ -365,6 +365,9 @@ def need_sidebar_reload():
 def lock_exclusive():
     aquire_lock(defaults.default_config_dir + "/multisite.mk")
 
+def unlock_exclusive():
+    release_lock(defaults.default_config_dir + "/multisite.mk")
+
 
 def git_command(args):
     encoded_args = " ".join([ a.encode("utf-8") for a in args ])
@@ -3756,7 +3759,11 @@ def mode_bulk_inventory(phase):
                     arguments = [ "@scan" ] + arguments
                 if not html.get_checkbox("ignore_errors"):
                     arguments = [ "@raiseerrors" ] + arguments
+
+                unlock_exclusive() # Avoid freezing WATO when hosts do not respond timely
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
+                lock_exclusive()
+                load_hosts(folder)
 
                 # sum up host individual counts to have a total count
                 sum_counts = [ 0, 0, 0, 0 ] # added, removed, kept, new
@@ -3793,7 +3800,7 @@ def mode_bulk_inventory(phase):
                 else:
                     msg = _("Error during inventory of %s<div class=exc>%s</div>") % (", ".join(hostnames), e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre><br>" % format_exception().replace("\n", "<br>")
+                    msg += "<br><pre>%s</pre><br>" % html.attrencode(format_exception().replace("\n", "<br>"))
                 result += msg
             html.write(result)
             return ""
@@ -4230,7 +4237,7 @@ def mode_parentscan(phase):
                 else:
                     msg = _("Error during parent scan of %s: %s") % (hostname, e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre>" % format_exception().replace("\n", "<br>")
+                    msg += "<br><pre>%s</pre>" % html.attrencode(format_exception().replace("\n", "<br>"))
                 result += msg + "\n<br>"
             html.write(result)
             return ""
@@ -11924,7 +11931,7 @@ def mode_users(phase):
             clone_url = make_link([("mode", "edit_user"), ("clone", id)])
             html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-        delete_url = html.makeactionuri([("_delete", id)])
+        delete_url = make_action_link([("mode", "users"), ("_delete", id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
         notifications_url = make_link([("mode", "user_notifications"), ("user", id)])
@@ -12251,7 +12258,7 @@ def mode_edit_user(phase):
     # Let exceptions from loading notification scripts happen now
     load_notification_scripts()
 
-    html.begin_form("user")
+    html.begin_form("user", method="POST")
     forms.header(_("Identity"))
 
     # ID
@@ -14367,7 +14374,7 @@ def mode_edit_ruleset(phase):
 
     if not rulespec:
         text = html.var("service_description") or varname
-        html.write("<div class=info>" + _("There are no rules availabe for %s.") % text + "</div>")
+        html.write("<div class=info>" + _("There are no rules availabe for %s.") % html.attrencode(text) + "</div>")
         return
 
     if not hostname:

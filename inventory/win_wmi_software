@@ -55,5 +55,4 @@ def inv_win_wmi_software(info):
 
 inv_info['win_wmi_software'] = {
    "inv_function"           : inv_win_wmi_software,
-   "unicode"                : True,
 }

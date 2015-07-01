@@ -457,6 +457,67 @@ register_check_parameters(
     match_type = 'dict',
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "ruckus_ap",
+    _("Ruckus Access Points"),
+    Tuple(
+        elements = [
+            Optional(
+                Tuple(
+                    elements = [
+                        Integer(title = _("Warning at"),  default_value = 1, unit = _("devices")),
+                        Integer(title = _("Critical at"), default_value = 1, unit = _("devices")),
+                    ],
+                ),
+                sameline   = True,
+                label      = _("Levels 2.4 GHz band time drifted"),
+                none_label = _("Time drifted levels for 2.4 GHz band not set"),
+                none_value = (None, None)
+            ),
+            Optional(
+                Tuple(
+                    elements = [
+                        Integer(title = _("Warning at"),  default_value = 1, unit = _("devices")),
+                        Integer(title = _("Critical at"), default_value = 1, unit = _("devices")),
+                    ],
+                ),
+                sameline   = True,
+                label      = _("Levels 2.4 GHz band not responding"),
+                none_label = _("Not responding levels for 2.4 GHz band not set"),
+                none_value = (None, None)
+            ),
+            Optional(
+                Tuple(
+                    elements = [
+                        Integer(title = _("Warning at"),  default_value = 1, unit = _("devices")),
+                        Integer(title = _("Critical at"), default_value = 1, unit = _("devices")),
+                    ],
+                ),
+                sameline   = True,
+                label      = _("Levels 5 GHz band time drifted"),
+                none_label = _("Time drifted levels for 5 GHz not set"),
+                none_value = (None, None)
+            ),
+            Optional(
+                Tuple(
+                    elements = [
+                        Integer(title = _("Warning at"),  default_value = 1, unit = _("devices")),
+                        Integer(title = _("Critical at"), default_value = 1, unit = _("devices")),
+                    ],
+                ),
+                sameline   = True,
+                label      = _("Levels 5 GHz band not responding"),
+                none_label = _("Not responding levels for 5 GHz band not set"),
+                none_value = (None, None)
+            ),
+        ],
+    ),
+    None,
+    "first"
+)
+
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |

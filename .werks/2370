@@ -1,0 +1,11 @@
+Title: Fix computation of "in downtime" and "acknownledged" of hosts in BI aggregations
+Level: 2
+Component: bi
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435652878
+
+BI automatically aggregates downtimes and acknowledgements. But for host nodes in a
+BI tree these two states had been swapped. This has been fixed.

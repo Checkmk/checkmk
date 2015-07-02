@@ -324,10 +324,7 @@ def parse_perf_data(perf_data_string, check_command=None):
 # Result for this example:
 # { "temp" : "value" : 48.1, "warn" : 70, "crit" : 80, "unit" : { ... } }
 def translate_metrics(perf_data, check_command):
-    if check_command not in check_metrics:
-        return None
-
-    cm = check_metrics[check_command]
+    cm = check_metrics.get(check_command, {})
 
     translated_metrics = {}
     color_index = 0
@@ -357,7 +354,6 @@ def translate_metrics(perf_data, check_command):
                 "title" : metric_name.title(),
                 "unit" : "",
                 "color" : parse_color_into_hexrgb(palette_color),
-                "palHIRN" : palette_color,
             }
         else:
             mi = metric_info[metric_name].copy()
@@ -366,12 +362,16 @@ def translate_metrics(perf_data, check_command):
         # Optional scaling
         scale = translation_entry.get("scale", 1.0)
 
+
         new_entry = {
             "value"      : float_or_int(entry[1]) * scale,
             "orig_name"  : varname,
             "scale"      : scale, # needed for graph definitions
             "scalar"     : {},
         }
+
+        # Do not create graphs for ungraphed metrics if listed here
+        new_entry["auto_graph"] = translation_entry.get("auto_graph", True)
 
         # Add warn, crit, min, max
         for index, key in [ (3, "warn"), (4, "crit"), (5, "min"), (6, "max") ]:
@@ -842,7 +842,7 @@ def build_perfometer(perfometer, translated_metrics):
 
 def get_graph_templates(translated_metrics):
     if not translated_metrics:
-        return
+        return []
 
     explicit_templates = get_explicit_graph_templates(translated_metrics)
     already_graphed_metrics = get_graphed_metrics(explicit_templates)
@@ -863,8 +863,8 @@ def get_explicit_graph_templates(translated_metrics):
 
 def get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
     templates = []
-    for metric_name in sorted(translated_metrics.keys()):
-        if metric_name not in already_graphed_metrics:
+    for metric_name, metric_entry in sorted(translated_metrics.items()):
+        if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
             templates.append(generic_graph_template(metric_name))
     return templates
 
@@ -955,12 +955,29 @@ def generic_graph_template(metric_name):
         ]
     }
 
+def get_graph_range(graph_template, translated_metrics):
+    if "range" in graph_template:
+        min_value, max_value = [
+            evaluate(r, translated_metrics)[0]
+            for r in graph_template["range"]
+        ]
+
+    else:
+        # Compute range of displayed data points
+        max_value = None
+        min_value = None
+
+    return min_value, max_value
+
+
+
 
 # Called with exactly one variable: the template ID. Example:
 # "check_mk-kernel.util:guest,steal,system,user,wait".
 def page_pnp_template():
 
     template_id = html.var("id")
+
     check_command, perf_var_string = template_id.split(":", 1)
     perf_var_names = perf_var_string.split(",")
 
@@ -980,6 +997,7 @@ def page_pnp_template():
     html.write(output)
 
 
+# TODO: some_value.max not yet working
 def render_graph_pnp(graph_template, translated_metrics):
 
     graph_title = None
@@ -1034,7 +1052,9 @@ def render_graph_pnp(graph_template, translated_metrics):
             if len(metric_definition) >= 3:
                 title = metric_definition[2]
             elif not "," in metric_definition:
-                title = metric_info[metric_definition[0].split("#")[0]]["title"]
+                metric_name = metric_definition[0].split("#")[0]
+                mi = translated_metrics[metric_name]
+                title = mi["title"]
             else:
                 title = ""
             max_title_length = max(max_title_length, len(title))
@@ -1095,11 +1115,11 @@ def render_graph_pnp(graph_template, translated_metrics):
             commands += "CDEF:%s_LEGSCALED%s=%s,%f,/ " % (metric_name, upside_down_suffix, metric_name, legend_scale * upside_down_factor)
 
         else:
-            mi = metric_info[metric_name]
+            mi = translated_metrics[metric_name]
             if not title:
                 title = mi["title"]
             color = parse_color_into_hexrgb(mi["color"])
-            unit = unit_info[mi["unit"]]
+            unit = mi["unit"]
 
         if custom_color:
             color = "#" + custom_color
@@ -1170,18 +1190,15 @@ def render_graph_pnp(graph_template, translated_metrics):
     graph_title = graph_template.get("title", graph_title)
     vertical_label = graph_template.get("vertical_label", vertical_label)
 
-    rrdgraph_arguments += "--vertical-label %s --title %s -L 4" % (
-        quote_shell_string(vertical_label),
+    rrdgraph_arguments += " --vertical-label %s --title %s " % (
+        quote_shell_string(vertical_label or " "),
         quote_shell_string(graph_title))
 
-    if "range" in graph_template:
-        rrdgraph_arguments += " -l %f -u %f" % graph_template["range"]
+    min_value, max_value = get_graph_range(graph_template, translated_metrics)
+    if min_value != None and max_value != None:
+        rrdgraph_arguments += " -l %f -u %f" % (min_value, max_value)
     else:
         rrdgraph_arguments += " -l 0"
-
-
-    # Some styling options, currently hardcoded
-    rrdgraph_arguments += " --color MGRID\"#cccccc\" --color GRID\"#dddddd\" --width=600";
 
     return graph_title + "\n" + rrdgraph_arguments + "\n" + rrdgraph_commands + "\n"
 

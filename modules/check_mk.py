@@ -2286,7 +2286,7 @@ define servicedependency {
 %s%s%s  check_command\t\t\tcheck_mk-%s
 }
 
-""" % ( template, hostname, description, check_interval, logwatch,
+""" % ( template, hostname, description.encode("utf-8"), check_interval, logwatch,
         extra_service_conf_of(hostname, description), action_cfg, checkname ))
 
         checknames_to_define.add(checkname)
@@ -2928,9 +2928,8 @@ no_discovery_possible = None
                  'check_result_path', 'check_submission', 'monitoring_core',
                  'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir', 'log_dir',
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user', 'rrd_path', 'rrdcached_socket',
-                 'omd_root',
-                 'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
-                 'piggyback_max_cachefile_age',
+                 'omd_root', 'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
+                 'piggyback_max_cachefile_age', 'fallback_agent_output_encoding',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk',
                  'check_mk_perfdata_with_times', 'livestatus_unix_socket',
                  'use_inline_snmp', 'record_inline_snmp_stats',

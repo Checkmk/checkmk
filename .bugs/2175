@@ -1,0 +1,14 @@
+Title: DropdownChoice: Save incorrect values if the list of options changes in the meantime
+Component: multisite
+State: open
+Date: 2015-07-02 09:36:51
+Targetversion: 1.2.7
+Class: bug
+
+1) Go to BI Rule editor
+2) Create new rule, select Call-a-Rule
+3) Modifiy the rules in the background, create new, move rule, etc.
+4) Observe that wrong selection is stored
+
+Reason: The DropdownChoice valuespec uses the element number to identifiy an element
+If this number changes in the background the selection will be wrong

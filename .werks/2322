@@ -1,0 +1,14 @@
+Title: mkeventd: MIBs are now only loaded if SNMP Traps translation is activated
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435826874
+
+Right now the mkeventd sometimes has problems loading mib files which
+lead to errors like "list index out of range". The error can now be bypassed
+by deactivating the option <i>Translate SNMP traps</i>.
+
+The error itself will get fixed in a following werk.

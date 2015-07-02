@@ -1,3 +1,5 @@
+1.2.6p8:
+
 1.2.6p7:
     Checks & Agents:
     * 2321 FIX: process discovery: fixed exception during service discovery when no explicit process matching was set...

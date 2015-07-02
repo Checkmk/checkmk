@@ -2616,7 +2616,7 @@ class StatusServer:
     def handle_command_reload(self):
         with lock_configuration:
             load_configuration()
-            if opt_snmptrap:
+            if opt_snmptrap and g_config['translate_snmptraps']:
                 g_event_server.load_mibs()
             g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
         g_status_server.reload_configuration()

@@ -22,7 +22,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-MSITOOLS      = msitools-0.93
+MSITOOLS      = msitools-0.94
 MSITOOLS_FILE = $(MSITOOLS).tar.xz
 
 BUILD_VERSION    = 1
@@ -39,7 +39,7 @@ msibuild:
 	tar -Jxf $(MSITOOLS_FILE)
 	set -e ; for p in patches/*.dif ; do \
 	echo "applying $$p..." ; \
-	    patch -p0 -b < $$p ; \
+	    (cd $(MSITOOLS) ; patch -p1 -b < ../$$p) ; \
 	done
 	cd $(MSITOOLS) && ./configure
 	make -C $(MSITOOLS)/libmsi

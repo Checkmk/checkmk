@@ -772,12 +772,12 @@ class LDAPUserConnector(UserConnector):
         # Try to bind with the user provided credentials. This unbinds the default
         # authentication which should be rebound again after trying this.
         try:
-            ldap_bind(user_dn, password)
+            self.bind(user_dn, password)
             result = username.encode('utf-8')
         except:
             result = False
 
-        ldap_default_bind(self._ldap_obj)
+        self.default_bind(self._ldap_obj)
         return result
 
 

@@ -1,6 +1,7 @@
 1.2.6p7:
     Checks & Agents:
     * 2321 FIX: process discovery: fixed exception during service discovery when no explicit process matching was set...
+    * 2394 FIX: megaraid_ldisks: Is now supporting LSI CacheCade drives
 
 
 1.2.6p6:

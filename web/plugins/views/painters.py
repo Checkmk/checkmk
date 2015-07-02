@@ -866,7 +866,7 @@ multisite_painters["svc_group_memberlist"] = {
 
 def paint_graph(row):
     import metrics
-    if metrics.try_time_graph():
+    if metrics.new_style_graphs_possible():
         try:
             css, htmlcode = paint_time_graph(row)
             if htmlcode:

@@ -847,8 +847,7 @@ def get_graph_templates(translated_metrics):
     explicit_templates = get_explicit_graph_templates(translated_metrics)
     already_graphed_metrics = get_graphed_metrics(explicit_templates)
     implicit_templates = get_implicit_graph_templates(translated_metrics, already_graphed_metrics)
-    templates = explicit_templates + implicit_templates
-    return templates
+    return explicit_templates + implicit_templates
 
 
 def get_explicit_graph_templates(translated_metrics):
@@ -894,7 +893,6 @@ def metrics_used_in_definition(metric_definition):
 
 
 def graph_possible(graph_template, translated_metrics):
-
     for metric_definition in graph_template["metrics"]:
         try:
             evaluate(metric_definition[0], translated_metrics)
@@ -932,7 +930,6 @@ def graph_without_missing_optional_metrics(graph_template, translated_metrics):
     return reduced_graph_template
 
 
-
 def add_fake_metrics(translated_metrics, metric_names):
     with_fake = translated_metrics.copy()
     for metric_name in metric_names:
@@ -944,6 +941,7 @@ def add_fake_metrics(translated_metrics, metric_names):
         }
     return with_fake
 
+
 def generic_graph_template(metric_name):
     return {
         "metrics" : [
@@ -954,6 +952,7 @@ def generic_graph_template(metric_name):
             metric_name + ":crit",
         ]
     }
+
 
 def get_graph_range(graph_template, translated_metrics):
     if "range" in graph_template:
@@ -970,12 +969,9 @@ def get_graph_range(graph_template, translated_metrics):
     return min_value, max_value
 
 
-
-
 # Called with exactly one variable: the template ID. Example:
 # "check_mk-kernel.util:guest,steal,system,user,wait".
 def page_pnp_template():
-
     template_id = html.var("id")
 
     check_command, perf_var_string = template_id.split(":", 1)
@@ -999,7 +995,6 @@ def page_pnp_template():
 
 # TODO: some_value.max not yet working
 def render_graph_pnp(graph_template, translated_metrics):
-
     graph_title = None
     vertical_label = None
 
@@ -1203,7 +1198,6 @@ def render_graph_pnp(graph_template, translated_metrics):
     return graph_title + "\n" + rrdgraph_arguments + "\n" + rrdgraph_commands + "\n"
 
 
-
 #.
 #   .--Hover-Graph---------------------------------------------------------.
 #   |     _   _                           ____                 _           |
@@ -1214,24 +1208,26 @@ def render_graph_pnp(graph_template, translated_metrics):
 #   |                                                   |_|                |
 #   '----------------------------------------------------------------------'
 
-def try_time_graph():
-    # Filter cases where our graphing is not possible:
-    # - mobile GUI
-    # - for example IE < 8
-    try_time_graph = not html.is_mobile()
 
+def new_style_graphs_possible():
+    return browser_supports_canvas() and not html.is_mobile()
+
+
+def browser_supports_canvas():
     user_agent = html.get_user_agent()
     if 'MSIE' in user_agent:
         matches = regex('MSIE ([0-9]{1,}[\.0-9]{0,})').search(user_agent)
-        try_time_graph = not matches or float(matches.group(1)) >= 9.0
-    return try_time_graph
+        return not matches or float(matches.group(1)) >= 9.0
+    else:
+        return True
+
 
 def page_show_graph():
     site = html.var('site')
     host_name = html.var('host_name')
     service = html.var('service')
 
-    if try_time_graph():
+    if new_style_graphs_possible():
         # FIXME HACK TODO We don't have the current perfata and check command
         # here, but we only need it till metrics.render_svc_time_graph() does
         # not need these information anymore.

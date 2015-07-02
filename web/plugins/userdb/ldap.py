@@ -789,6 +789,8 @@ class LDAPUserConnector(UserConnector):
         if not self.has_user_base_dn_configured():
             return # silently skip sync without configuration
 
+        register_user_attribute_sync_plugins()
+
         # Flush ldap related before each sync to have a caching only for the
         # current sync process
         self.flush_caches()
@@ -913,8 +915,6 @@ class LDAPUserConnector(UserConnector):
 
     # Is called on every multisite http request
     def on_page_load(self):
-        register_user_attribute_sync_plugins()
-
         if self.sync_is_needed():
             try:
                 self.do_sync(False, None)
@@ -1007,6 +1007,8 @@ def ldap_list_attribute_plugins():
 
 # Returns a list of pairs (key, parameters) of all available attribute plugins
 def ldap_attribute_plugins_elements():
+    register_user_attribute_sync_plugins()
+
     elements = []
     items = sorted(ldap_attribute_plugins.items(), key = lambda x: x[1]['title'])
     for key, plugin in items:

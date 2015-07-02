@@ -142,7 +142,7 @@ def convert_winperf_if(info):
                     # it may happen that there are non-existing interfaces
                     # with the same nic_name as an active one (at least on HP
                     # hardware)
-                    if as_dict["NetConnectionStatus"] == "4":
+                    if as_dict.get("NetConnectionStatus") == "4":
                         continue
 
                     # Exact match

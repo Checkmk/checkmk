@@ -18,6 +18,9 @@
     * 2383 FIX: FreeBSD Agent: Fixed handling <<<ps>>> section when jailed
     * 2368 FIX: ucd_cpu_load: fix exception in case of dump SNMP agent sending 12,540000 instead of 12.540000
     * 2318 FIX: windows agent: no longer crashes when a cached plugin has several hundred sections...
+    * 2319 FIX: winperf_if: fixed exception when using windows_if.ps1 in an old windows version...
+    * 2320 FIX: winperf_msx_queues: no longer crashes in service discovery if there are no msx queues available
+    * 2321 FIX: process discovery: fixed exception during service discovery when no explicit process matching was set...
     * 2394 FIX: megaraid_ldisks: Is now supporting LSI CacheCade drives
 
     Multisite:
@@ -40,6 +43,7 @@
     * 2386 SEC: Fixed possible XSS on WATO rule edit page...
     * 2344 FIX: Improved validation of selected rules when editing BI aggregations...
     * 2346 FIX: Notifications: Fixed garbled page when switching on/off bulks/backlog/user rules
+    * 2372 FIX: Avoid freezing WATO during bulk discovery if hosts do not respond in a timely manner
 
     Notifications:
     * 2313 FIX: notification bulking: fixed exception for plugins which are not configured with checkboxes, e.g. sms

@@ -1,4 +1,4 @@
-Title: DropdownChoice: Save incorrect values if the list of options changes in the meantime
+Title: DropdownChoice: Selects incorrect value if the list of options changes
 Component: multisite
 State: open
 Date: 2015-07-02 09:36:51

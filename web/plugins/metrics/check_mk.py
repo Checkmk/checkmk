@@ -4147,8 +4147,6 @@ graph_info.append({
     ],
 })
 
-define_generic_graph("backup_age")
-
 graph_info.append({
     "title"   : _("NTP time offset"),
     "metrics" : [
@@ -4291,8 +4289,6 @@ graph_info.append({
     ],
     "range" : (0, "fs_used:max"),
 })
-
-define_generic_graph("fs_used")
 
 graph_info.append({
     "title" : _("Growing / Shrinking"),

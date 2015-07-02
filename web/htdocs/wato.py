@@ -7638,6 +7638,7 @@ def mode_edit_ldap_connection(phase):
 
         if new:
             connections.insert(0, connection_cfg)
+            connection_id = connection_cfg["id"]
         else:
             connection_cfg["id"] = connection_id
             connections[connection_nr] = connection_cfg

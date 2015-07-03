@@ -70,6 +70,19 @@ register_rule(group,
                        maxvalue = 65535,
                   )
                 ),
+                ( "ssl",
+                  Alternative(
+                        title = _("SSL certificate checking"),
+                        elements = [
+                            FixedValue( False, title = _("Deactivated"), totext=""),
+                            FixedValue( True,  title = _("Use hostname"), totext=""),
+                            TextAscii(  title = _("Use other hostname"),
+                                        help = _("The IP of the other hostname needs to be the same IP as the host address")
+                            )
+                        ],
+                        default_value = False
+                  )
+                ),
                 ( "timeout",
                   Integer(
                       title = _("Connect Timeout"),
@@ -171,7 +184,7 @@ register_rule(group,
         help = _("This rule selects the vSphere agent instead of the normal Check_MK Agent "
                  "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
                  "your connection settings here."),
-        forth = lambda a: dict([("skip_placeholder_vms", True), ("use_pysphere" , False), ("spaces", "underscore")] + a.items())
+        forth = lambda a: dict([("skip_placeholder_vms", True), ("ssl", False), ("use_pysphere" , False), ("spaces", "underscore")] + a.items())
     ),
     factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')

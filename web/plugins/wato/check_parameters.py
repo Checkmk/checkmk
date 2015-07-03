@@ -471,8 +471,8 @@ register_check_parameters(
                     ],
                 ),
                 sameline   = True,
-                label      = _("Levels 2.4 GHz band time drifted"),
-                none_label = _("Time drifted levels for 2.4 GHz band not set"),
+                label      = _("Levels device time drifted"),
+                none_label = _("Time drifted levels not set"),
                 none_value = (None, None)
             ),
             Optional(
@@ -483,37 +483,16 @@ register_check_parameters(
                     ],
                 ),
                 sameline   = True,
-                label      = _("Levels 2.4 GHz band not responding"),
-                none_label = _("Not responding levels for 2.4 GHz band not set"),
-                none_value = (None, None)
-            ),
-            Optional(
-                Tuple(
-                    elements = [
-                        Integer(title = _("Warning at"),  default_value = 1, unit = _("devices")),
-                        Integer(title = _("Critical at"), default_value = 1, unit = _("devices")),
-                    ],
-                ),
-                sameline   = True,
-                label      = _("Levels 5 GHz band time drifted"),
-                none_label = _("Time drifted levels for 5 GHz not set"),
-                none_value = (None, None)
-            ),
-            Optional(
-                Tuple(
-                    elements = [
-                        Integer(title = _("Warning at"),  default_value = 1, unit = _("devices")),
-                        Integer(title = _("Critical at"), default_value = 1, unit = _("devices")),
-                    ],
-                ),
-                sameline   = True,
-                label      = _("Levels 5 GHz band not responding"),
-                none_label = _("Not responding levels for 5 GHz band not set"),
+                label      = _("Levels device not responding"),
+                none_label = _("Not responding levels not set"),
                 none_value = (None, None)
             ),
         ],
     ),
-    None,
+    TextAscii(
+        title = _("Band"),
+        help = _("Name of the band, e.g. 5 GHz"),
+    ),
     "first"
 )
 

@@ -496,6 +496,63 @@ register_check_parameters(
     "first"
 )
 
+vs_license = Alternative(
+        title = _("Levels for Number of Licenses"),
+        style = "dropdown",
+        default_value = None,
+        elements = [
+              Tuple(
+                  title = _("Absolute levels for unused licenses"),
+                  elements = [
+                      Integer(title = _("Warning below"), default_value = 5, unit = _("unused licenses")),
+                      Integer(title = _("Critical below"), default_value = 0, unit = _("unused licenses")),
+                  ]
+              ),
+              Tuple(
+                  title = _("Percentual levels for unused licenses"),
+                  elements = [
+                      Percentage(title = _("Warning below"), default_value = 10.0),
+                      Percentage(title = _("Critical below"), default_value = 0),
+                  ]
+             ),
+             FixedValue(
+                 None,
+                 totext = _("Critical when all licenses are used"),
+                 title = _("Go critical if all licenses are used"),
+             ),
+             FixedValue(
+                False,
+                title = _("Always report OK"),
+                totext = _("Alerting depending on the number of used licenses is disabled"),
+             )
+          ]
+        )
+
+register_check_parameters(
+    subgroup_applications,
+    "esx_licenses",
+    _("Number of used VMware licenses"),
+    vs_license,
+    TextAscii(
+       title = _("Name of the license"),
+       help  = _("For example <tt>VMware vSphere 5 Standard</tt>"),
+       allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "ibmsvc_licenses",
+    _("Number of used IBM SVC licenses"),
+    vs_license,
+    TextAscii(
+       title = _("ID of the license, e.g. <tt>virtualization</tt>"),
+       allow_empty = False,
+    ),
+    "first"
+)
+
 register_check_parameters(
     subgroup_applications,
     "citrix_licenses",
@@ -567,10 +624,10 @@ register_check_parameters(
               Dictionary(
                 title = _("Interpretation of Registration States"),
                 elements = [
-                    ( "Unregistered", MonitoringState(title = "Unregistered", default_value = 2) ),
-                    ( "Initializing", MonitoringState(title = "Initializing", default_value = 1) ),
-                    ( "Registered",   MonitoringState(title = "Registered", default_value = 0) ),
-                    ( "AgentError",   MonitoringState(title = "AgentError", default_value = 2) ),
+                    ( "Unregistered", MonitoringState(title = _("Unregistered"), default_value = 2) ),
+                    ( "Initializing", MonitoringState(title = _("Initializing"), default_value = 1) ),
+                    ( "Registered",   MonitoringState(title = _("Registered"), default_value = 0) ),
+                    ( "AgentError",   MonitoringState(title = _("Agent Error"), default_value = 2) ),
                 ],
                 optional_keys = False,
               ),
@@ -8327,63 +8384,6 @@ register_check_parameters(
     "first"
 )
 
-
-vs_license = Alternative(
-        title = _("Levels for Number of Licenses"),
-        style = "dropdown",
-        default_value = None,
-        elements = [
-              Tuple(
-                  title = _("Absolute levels for unused licenses"),
-                  elements = [
-                      Integer(title = _("Warning below"), default_value = 5, unit = _("unused licenses")),
-                      Integer(title = _("Critical below"), default_value = 0, unit = _("unused licenses")),
-                  ]
-              ),
-              Tuple(
-                  title = _("Percentual levels for unused licenses"),
-                  elements = [
-                      Percentage(title = _("Warning below"), default_value = 10.0),
-                      Percentage(title = _("Critical below"), default_value = 0),
-                  ]
-             ),
-             FixedValue(
-                 None,
-                 totext = _("Critical when all licenses are used"),
-                 title = _("Go critical if all licenses are used"),
-             ),
-             FixedValue(
-                False,
-                title = _("Always report OK"),
-                totext = _("Alerting depending on the number of used licenses is disabled"),
-             )
-          ]
-        )
-
-register_check_parameters(
-    subgroup_applications,
-    "esx_licenses",
-    _("Number of used VMware licenses"),
-    vs_license,
-    TextAscii(
-       title = _("Name of the license"),
-       help  = _("For example <tt>VMware vSphere 5 Standard</tt>"),
-       allow_empty = False,
-    ),
-    "first"
-)
-
-register_check_parameters(
-    subgroup_applications,
-    "ibmsvc_licenses",
-    _("Number of used IBM SVC licenses"),
-    vs_license,
-    TextAscii(
-       title = _("ID of the license, e.g. <tt>virtualization</tt>"),
-       allow_empty = False,
-    ),
-    "first"
-)
 
 register_check_parameters(
     subgroup_networking,

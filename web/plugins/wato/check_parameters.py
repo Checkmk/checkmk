@@ -557,6 +557,28 @@ register_check_parameters(
     match_type = "first",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "citrix_state",
+    _("State of Citrix VMs"),
+    Dictionary(
+        elements = [
+            ( "registrationstate",
+              Dictionary(
+                title = _("Interpretation of Registration States"),
+                elements = [
+                    ( "Unregistered", MonitoringState(title = "Unregistered", default_value = 2) ),
+                    ( "Initializing", MonitoringState(title = "Initializing", default_value = 1) ),
+                    ( "Registered",   MonitoringState(title = "Registered", default_value = 0) ),
+                    ( "AgentError",   MonitoringState(title = "AgentError", default_value = 2) ),
+                ],
+                optional_keys = False,
+              ),
+            )
+        ]),
+    None,
+    match_type = "dict",
+)
 
 #.
 #   .--Environment---------------------------------------------------------.

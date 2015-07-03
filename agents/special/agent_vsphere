@@ -382,6 +382,7 @@ OPTIONS:
                                 by the Site Recovery Manager (SRM) and are identified by not
                                 having any assigned virtual disks.
   -p, --port port               Alternative port number (default is 443 for the https connection)
+  --no-cert-check               Disables the checking of the servers ssl certificate
   --pysphere                    Fallback to old pysphere based special agent. It supports
                                 ESX 4.1 but is very slow.
   -H, --hostname                Specify a hostname. This is neccessary if this is
@@ -423,7 +424,7 @@ OPTIONS:
 
 short_options = 'hi:u:s:Dat:H:Pp:S:'
 long_options  = [
-    'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=',
+    'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'no-cert-check',
     'hostname=', 'tracefile=', "pysphere", "port=", "spaces=", "host_pwr_display=", "vm_pwr_display="
 ]
 
@@ -440,6 +441,7 @@ opt_host_pwr_display    = None
 opt_vm_pwr_display      = None
 opt_tracefile           = None
 opt_spaces              = "underscore"
+opt_no_cert             = False
 
 error = None
 error_exit = 1
@@ -469,6 +471,8 @@ for o,a in opts:
         opt_skip_placeholder_vm = True
     elif o in [ '-p', '--port' ]:
         opt_port = a
+    elif o in [ '--no-cert-check' ]:
+        opt_no_cert = True
     elif o == '--pysphere':
         opt_pysphere = True
     elif o in [ '-u', '--user' ]:
@@ -642,7 +646,12 @@ def encode_url(text):
 # Initialize server connection
 try:
     netloc        = host_address + ":" + str(opt_port)
-    server_handle = httplib.HTTPSConnection(netloc)
+
+    if opt_no_cert:
+        import ssl
+        server_handle = httplib.HTTPSConnection(netloc, context = ssl._create_unverified_context())
+    else:
+        server_handle = httplib.HTTPSConnection(netloc)
 
     if opt_debug:
         sys.stderr.write("Connecting to %s..." % netloc)
@@ -906,7 +915,7 @@ if not error:
                 print "<<<esx_vsphere_sensors:sep(59)>>>"
                 for key in sorted(hostsystems_sensors[hostname].keys()):
                     data = hostsystems_sensors[hostname][key]
-                    if data["key"] in ["green", "unknown"]:
+                    if data["key"] in ["green", "unknown", "Green"]:
                         continue
                     line = '%s;%s;%s;%s;%s;' % (data["name"].replace(";", "_"), data["baseUnits"], data["currentReading"],
                                                 data["sensorType"], data["unitModifier"])

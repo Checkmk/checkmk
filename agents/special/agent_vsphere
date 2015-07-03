@@ -660,9 +660,12 @@ def encode_url(text):
 try:
     netloc        = host_address + ":" + str(opt_port)
 
-    if opt_no_cert and hasattr(ssl, '_create_unverified_context'):
-        import ssl
-        server_handle = httplib.HTTPSConnection(netloc, context = ssl._create_unverified_context())
+    if opt_no_cert:
+        try:
+            import ssl
+            server_handle = httplib.HTTPSConnection(netloc, context = ssl._create_unverified_context())
+        except:
+            server_handle = httplib.HTTPSConnection(netloc)
     else:
         server_handle = httplib.HTTPSConnection(netloc)
 

@@ -1,4 +1,7 @@
 1.2.6p8:
+    Checks & Agents:
+    * 2395 FIX: Fix conflict with legacy check_mk-agent-logwatch package in default RPM packages...
+
 
 1.2.6p7:
     Checks & Agents:

@@ -34,7 +34,7 @@ BuildRoot: %{_topdir}/buildroot
 AutoReq:   off
 AutoProv:  off
 BuildArch: noarch
-Obsoletes: check_mk-agent check_mk-agent-logwatch
+Obsoletes: check_mk-agent
 
 %description
 The Check_MK Agent uses xinetd to provide information about the system

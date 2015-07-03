@@ -576,6 +576,36 @@ def regex(r):
     regex_cache[r] = rx
     return rx
 
+orig_check_max_cachefile_age     = None
+orig_cluster_max_cachefile_age   = None
+orig_inventory_max_cachefile_age = None
+
+# TODO: Why 1000000000? Can't we really clean this up to a global variable which can
+# be toggled to enforce the cache usage (if available). This way we would not need
+# to store the original values of the different caches and modify them etc.
+def enforce_using_agent_cache():
+    global check_max_cachefile_age, cluster_max_cachefile_age, inventory_max_cachefile_age
+    global orig_check_max_cachefile_age, orig_cluster_max_cachefile_age, \
+           orig_inventory_max_cachefile_age
+
+    if check_max_cachefile_age != 1000000000:
+        orig_check_max_cachefile_age     = check_max_cachefile_age
+        orig_cluster_max_cachefile_age   = cluster_max_cachefile_age
+        orig_inventory_max_cachefile_age = inventory_max_cachefile_age
+
+    check_max_cachefile_age     = 1000000000
+    cluster_max_cachefile_age   = 1000000000
+    inventory_max_cachefile_age = 1000000000
+
+
+def restore_original_agent_caching_usage():
+    global check_max_cachefile_age, cluster_max_cachefile_age, inventory_max_cachefile_age
+    if orig_check_max_cachefile_age != None:
+        check_max_cachefile_age     = orig_check_max_cachefile_age
+        cluster_max_cachefile_age   = orig_cluster_max_cachefile_age
+        inventory_max_cachefile_age = orig_inventory_max_cachefile_age
+
+
 #.
 #   .--SNMP----------------------------------------------------------------.
 #   |                      ____  _   _ __  __ ____                         |
@@ -4981,7 +5011,7 @@ def restart_myself(keepalive_fd):
 
 
 def do_check_keepalive():
-    global g_initial_times, g_timeout, check_max_cachefile_age, inventory_max_cachefile_age
+    global g_initial_times, g_timeout
 
     def check_timeout(signum, frame):
         raise MKCheckTimeout()
@@ -5007,9 +5037,6 @@ def do_check_keepalive():
     read_packed_config()
     global vars_before_config
     vars_before_config = set([])
-
-    orig_check_max_cachefile_age     = check_max_cachefile_age
-    orig_inventory_max_cachefile_age = inventory_max_cachefile_age
 
     global total_check_output
     total_check_output = ""
@@ -5052,11 +5079,7 @@ def do_check_keepalive():
                 args = cmdline.split()
                 if '--cache' in args:
                     args.remove('--cache')
-                    check_max_cachefile_age     = 1000000000
-                    inventory_max_cachefile_age = 1000000000
-                else:
-                    check_max_cachefile_age     = orig_check_max_cachefile_age
-                    inventory_max_cachefile_age = orig_inventory_max_cachefile_age
+                    enforce_using_agent_cache()
 
                 # FIXME: remove obsolete check-inventory
                 if '--check-inventory' in args:
@@ -5116,6 +5139,7 @@ def do_check_keepalive():
         sys.stderr.flush()
 
         cleanup_globals() # Prepare for next check
+        restore_original_agent_caching_usage()
 
         # Check if all global variables are clean, but only in debug mode
         if opt_debug:
@@ -5524,8 +5548,7 @@ for o,a in opts:
             sys.exit(1)
     elif o == '--cache':
         opt_use_cachefile = True
-        check_max_cachefile_age     = 1000000000
-        inventory_max_cachefile_age = 1000000000
+        enforce_agent_caching()
     elif o == '--no-tcp':
         opt_no_tcp = True
     elif o == '--no-cache':

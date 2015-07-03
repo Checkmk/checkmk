@@ -1,0 +1,14 @@
+Title: Various Checks for Citrix XenApp 7.x Farms
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435942897
+Class: feature
+
+Several new checks to gather information on Citrix VMs, hostsystems and controllers.
+<tt>citrix_state</tt> monitors various state variables of citrix instances, such as
+the power or registration state. <tt>citrix_controller</tt> checks whether the controller
+is active or not, <tt>citrix_controller.licensing</tt> monitors the licensing state,
+<tt>citrix_controller.session</tt> checks for the number of total, active and inactive
+sessions. Also included are a number of purely informative checks that are always OK.

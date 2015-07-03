@@ -1,0 +1,171 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+#   .--Total Sessions------------------------------------------------------.
+#   |    _____     _        _   ____                _                      |
+#   |   |_   _|__ | |_ __ _| | / ___|  ___  ___ ___(_) ___  _ __  ___      |
+#   |     | |/ _ \| __/ _` | | \___ \ / _ \/ __/ __| |/ _ \| '_ \/ __|     |
+#   |     | | (_) | || (_| | |  ___) |  __/\__ \__ \ | (_) | | | \__ \     |
+#   |     |_|\___/ \__\__,_|_| |____/ \___||___/___/_|\___/|_| |_|___/     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_citrix_controller_sessions(info):
+    inv = False
+    for line in info:
+        inv = inv or ("sessions" in line[0].lower())
+
+    if inv:
+        return [ (None, None) ]
+    else:
+        return []
+
+
+def check_citrix_controller_sessions(_no_item, params, info):
+    if params == None:
+        params = {}
+
+    session = {}
+    for line in info:
+        if line[0] == "TotalFarmActiveSessions":
+            session["active"] = int(line[1])
+        elif line[0] == "TotalFarmInactiveSessions":
+            session["inactive"] = int(line[1])
+
+    session["total"] = session["active"] + session["inactive"]
+
+    state = 0
+    messages = []
+    perf = []
+    for what in [ 'total', 'active', 'inactive' ]:
+        warn, crit = params.get(what, (None, None))
+        perf.append(( what, session[what], warn, crit ))
+        if crit != None and session[what] > crit:
+            messages.append("%s: %s(!!)" % ( what, session[what] ))
+            state = 2
+        elif warn != None and session[what] > warn:
+            messages.append("%s: %s(!)" % ( what, session[what] ))
+            state = max(state, 1)
+        else:
+            messages.append("%s: %s" % ( what, session[what] ))
+
+    return state, ", ".join(messages), perf
+
+
+check_info["citrix_controller.sessions"] = {
+    "inventory_function"    : inventory_citrix_controller_sessions,
+    "check_function"        : check_citrix_controller_sessions,
+    "service_description"   : "Citrix Total Sessions",
+    "group"                 : "citrix_sessions",
+}
+
+#.
+#   .--Licensing State-----------------------------------------------------.
+#   |  _     _                    _               ____  _        _         |
+#   | | |   (_) ___ ___ _ __  ___(_)_ __   __ _  / ___|| |_ __ _| |_ ___   |
+#   | | |   | |/ __/ _ \ '_ \/ __| | '_ \ / _` | \___ \| __/ _` | __/ _ \  |
+#   | | |___| | (_|  __/ | | \__ \ | | | | (_| |  ___) | || (_| | ||  __/  |
+#   | |_____|_|\___\___|_| |_|___/_|_| |_|\__, | |____/ \__\__,_|\__\___|  |
+#   |                                     |___/                            |
+#   '----------------------------------------------------------------------'
+
+def inventory_citrix_controller_licensing(info):
+    if info:
+        return [ (None, None) ]
+
+
+def check_citrix_controller_licensing(_no_item, _no_params, info):
+
+    statedict = { "licensingserverstate"    : {
+                                            "readablename"              : "Licensing Server State: ",
+                                            "ServerNotSpecified"        : 2,
+                                            "NotConnected"              : 1,
+                                            "OK"                        : 0,
+                                            "LicenseNotInstalled"       : 2,
+                                            "LicenseExpired"            : 2,
+                                            "Incompatible"              : 2,
+                                            "Failed"                    : 2,
+                                            },
+                  "licensinggracestate"     : {
+                                            "readablename"              : "Licensing Grace State: ",
+                                            "NotActive"                 : 0,
+                                            "InOutOfBoxGracePeriod"     : 1,
+                                            "InSupplementalGracePeriod" : 1,
+                                            "InEmergencyGracePeriod"    : 2,
+                                            "GracePeriodExpired"        : 2,
+                                            },
+    }
+
+    for line in info:
+        for what in statedict:
+            if line[0].lower() == what:
+                yield statedict[what][line[1]], statedict[what]["readablename"] + line[1]
+
+
+check_info["citrix_controller.licensing"] = {
+    "inventory_function"    : inventory_citrix_controller_licensing,
+    "check_function"        : check_citrix_controller_licensing,
+    "service_description"   : "Citrix Controller Licensing",
+}
+
+
+#.
+#   .--Controller State----------------------------------------------------.
+#   |             ____            _             _ _                        |
+#   |            / ___|___  _ __ | |_ _ __ ___ | | | ___ _ __              |
+#   |           | |   / _ \| '_ \| __| '__/ _ \| | |/ _ \ '__|             |
+#   |           | |__| (_) | | | | |_| | | (_) | | |  __/ |                |
+#   |            \____\___/|_| |_|\__|_|  \___/|_|_|\___|_|                |
+#   |                                                                      |
+#   |                       ____  _        _                               |
+#   |                      / ___|| |_ __ _| |_ ___                         |
+#   |                      \___ \| __/ _` | __/ _ \                        |
+#   |                       ___) | || (_| | ||  __/                        |
+#   |                      |____/ \__\__,_|\__\___|                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_citrix_controller(info):
+    for line in info:
+        if line[0] == "ControllerState":
+            return [ (None, None) ]
+
+
+def check_citrix_controller(_no_item, _no_params, info):
+    for line in info:
+        if line[0] == "ControllerState":
+            state = 0
+            if line[1] != "Active":
+                state = 2
+            return state, line[1]
+
+
+check_info["citrix_controller"] = {
+    "inventory_function"    : inventory_citrix_controller,
+    "check_function"        : check_citrix_controller,
+    "service_description"   : "Citrix Controller State",
+}

@@ -34,11 +34,14 @@
 # 1-16    1
 # 1-9     1
 
-def inventory_ruckus_spot_ap(info):
-    # 4 tuples of warn, crit
-    yield None, ((None,None),) * 4
 
-def check_ruckus_spot_ap(_no_item, params, info):
+ruckus_spot_ap_bands = {
+    "1": "2.4 GHz",
+    "2": "5 GHz",
+}
+ruckus_spot_ap_default_levels = ((None, None), (None, None))
+
+def parse_ruckus_spot_ap(info):
     bands        = {}
     current_band = None
     for line in info:
@@ -47,38 +50,48 @@ def check_ruckus_spot_ap(_no_item, params, info):
             bands.setdefault(current_band, [])
         else:
             bands[current_band].append(line)
+    return bands
 
-    for band, band_id, name, params_offset in [ ("2_4ghz", "1", "2.4 GHz", 0), ("5ghz", "2", "5 GHz", 2) ]:
-        (drift_warn, drift_crit), (down_warn, down_crit) = params[params_offset+0:params_offset+2]
-        if band_id in bands:
-            state = 0
-            info  = 0
-            num_devices = len(bands[band_id])
-            perfdata = [("ap_devices_total_%s" % band, num_devices)]
+def inventory_ruckus_spot_ap(parsed):
+    for band in parsed.keys():
+        if band in ruckus_spot_ap_bands:
+            yield ruckus_spot_ap_bands[band], "ruckus_spot_ap_default_levels"
 
-            extra_info = []
-            for what, ap_state, warn, crit in [ ("drifted",        "2", drift_warn, drift_crit),
-                                                ("not responding", "0", down_warn,  down_crit) ]:
-                problems = len([x for x in bands[band_id] if x[1] == ap_state])
+def check_ruckus_spot_ap(item, params, parsed):
+    inverse_map = dict((v, k) for k, v in ruckus_spot_ap_bands.items())
+    band = parsed.get(inverse_map.get(item))
+    if not band:
+        return
 
-                if crit and problems >= crit:
-                    state = 2
-                elif warn and problems >= warn:
-                    state = 1
+    (drift_warn, drift_crit), (down_warn, down_crit) = params
+    state = 0
+    info  = 0
+    perfdata = [("ap_devices_total", len(band))]
 
-                if problems:
-                    extra_info.append("%d %s" % (problems, what))
-                perfdata.append(("ap_devices_%s_%s" % (what.replace(" ", "_"), band), problems))
-            info = "%s: %d devices" % (name, num_devices)
-            if extra_info:
-                info += " (%s)" % " / ".join(extra_info)
+    extra_info = []
+    for what, ap_state, warn, crit in [ ("drifted",        "2", drift_warn, drift_crit),
+                                        ("not responding", "0", down_warn,  down_crit) ]:
+        problems = len([x for x in band if x[1] == ap_state])
+        if crit and problems >= crit:
+            state = 2
+        elif warn and problems >= warn:
+            state = 1
 
-            yield state, info, perfdata
+        if problems:
+            extra_info.append("%d %s%s" % (problems, what, state_markers[state]))
+        perfdata.append(("ap_devices_%s" % what.replace(" ", "_"), problems, warn, crit))
+
+    info = "%d devices" % len(band)
+    if extra_info:
+        info += " (%s)" % " / ".join(extra_info)
+
+    yield state, info, perfdata
 
 check_info["ruckus_spot_ap"] = {
+    "parse_function"      : parse_ruckus_spot_ap,
     "inventory_function"  : inventory_ruckus_spot_ap,
     "check_function"      : check_ruckus_spot_ap,
-    "service_description" : "Ruckus Spot Access Points",
+    "service_description" : "Ruckus Spot Access Points %s",
     "group"               : "ruckus_ap",
     "has_perfdata"        : True
 }

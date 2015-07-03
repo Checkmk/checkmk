@@ -73,5 +73,5 @@ parameters (dict): A dictionary with the following keys, all of which are
 
  {"min_states"}  Tuple(warn, crit) The minimum allowed entries of the required state
 
- {"min_states"}  Tuple(warn, crit) The maximum allowed entries of the required state
+ {"max_states"}  Tuple(warn, crit) The maximum allowed entries of the required state
 

@@ -1,0 +1,15 @@
+Title: agent_vsphere: now able to opt-out of servers ssl certifcate check
+Level: 2
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435920578
+
+Starting with python 2.7.9 the ssl certificate of the target server is always validiated.
+This caused problems when the certfile was not correctly registered on the monitoring server.
+
+You can now choose in the datasource program, to disable the certificate check.
+If this check should be done, you can configure if the hostname or a better suited hostname
+should be used for this validiation.

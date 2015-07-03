@@ -496,6 +496,67 @@ register_check_parameters(
     "first"
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "citrix_licenses",
+    _("Number of used Citrix licenses"),
+    vs_license,
+    TextAscii(
+       title = _("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
+       allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "citrix_sessions",
+    _("Citrix Terminal Server Sessions"),
+    Dictionary(
+        elements = [
+            ( "total",
+              Tuple(
+                  title = _("Total number of Sessions"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = "Sessions" ),
+                      Integer(title = _("critical at"), unit = "Session" ),
+                  ])
+            ),
+            ( "active",
+              Tuple(
+                  title = _("Number of Active Sessions"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = "Sessions" ),
+                      Integer(title = _("critical at"), unit = "Session" ),
+                  ])
+            ),
+            ( "inactive",
+              Tuple(
+                  title = _("Number of Inactive Sessions"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = "Sessions" ),
+                      Integer(title = _("critical at"), unit = "Session" ),
+                  ])
+            ),
+        ]
+    ),
+    None, "dict"
+),
+
+register_check_parameters(
+    subgroup_applications,
+    "citrix_load",
+    _("Load of Citrix Server"),
+    Tuple(
+        title = _("Citrix Server load"),
+        elements = [
+            Integer(title = _("warning at"), default_value = 8500),
+            Integer(title = _("critical at"), default_value = 9500),
+        ]),
+    None,
+    match_type = "first",
+)
+
 
 #.
 #   .--Environment---------------------------------------------------------.
@@ -8292,18 +8353,6 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
-    "citrix_licenses",
-    _("Number of used Citrix licenses"),
-    vs_license,
-    TextAscii(
-       title = _("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
-       allow_empty = False,
-    ),
-    "first"
-)
-
-register_check_parameters(
-    subgroup_applications,
     "ibmsvc_licenses",
     _("Number of used IBM SVC licenses"),
     vs_license,
@@ -8313,55 +8362,6 @@ register_check_parameters(
     ),
     "first"
 )
-
-register_check_parameters(
-    subgroup_applications,
-    "citrix_load",
-    _("Load of Citrix Server"),
-    Tuple(
-        title = _("Citrix Server load"),
-        elements = [
-            Integer(title = _("warning at"), default_value = 8500),
-            Integer(title = _("critical at"), default_value = 9500),
-        ]),
-    None,
-    match_type = "first",
-)
-
-register_check_parameters(
-    subgroup_applications,
-    "citrix_sessions",
-    _("Citrix Terminal Server Sessions"),
-    Dictionary(
-        elements = [
-            ( "total",
-              Tuple(
-                  title = _("Total number of Sessions"),
-                  elements = [
-                      Integer(title = _("warning at"), unit = "Sessions" ),
-                      Integer(title = _("critical at"), unit = "Session" ),
-                  ])
-            ),
-            ( "active",
-              Tuple(
-                  title = _("Number of Active Sessions"),
-                  elements = [
-                      Integer(title = _("warning at"), unit = "Sessions" ),
-                      Integer(title = _("critical at"), unit = "Session" ),
-                  ])
-            ),
-            ( "inactive",
-              Tuple(
-                  title = _("Number of Inactive Sessions"),
-                  elements = [
-                      Integer(title = _("warning at"), unit = "Sessions" ),
-                      Integer(title = _("critical at"), unit = "Session" ),
-                  ])
-            ),
-        ]
-    ),
-    None, "dict"
-),
 
 register_check_parameters(
     subgroup_networking,

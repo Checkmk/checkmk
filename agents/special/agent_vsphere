@@ -157,6 +157,14 @@ telegram_list = {
          '<ns1:querySpec><ns1:entity type="HostSystem">%(esxhost)s</ns1:entity><ns1:maxSample>1</ns1:maxSample>%(counters)s'\
          '<ns1:intervalId>20</ns1:intervalId></ns1:querySpec></ns1:QueryPerf>',
 
+     "networksystem":
+         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'\
+         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet>'\
+         '<ns1:propSet><ns1:type>HostNetworkSystem</ns1:type><all>0</all>'\
+         '<ns1:pathSet>networkInfo</ns1:pathSet></ns1:propSet>'\
+         '<ns1:objectSet><ns1:obj type="HostNetworkSystem">networkSystem</ns1:obj>'\
+         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
+
      "esxhostdetails":
          '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
          '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet><ns1:propSet>'\
@@ -778,6 +786,26 @@ if not error:
         # Counters
         ###########################
         if "counters" in query_objects:
+            # Get additional interface counter info, this only works when querying ESX hosts
+            # TODO: get this info from the vcenter
+            net_extra_info = []
+            if opt_direct:
+                reply_code, reply_msg, reply_headers, networksystem_response = query_server(telegram_list["networksystem"])
+                nic_objects = get_pattern('<pnic><key>(.*?)</pnic>', networksystem_response)
+                for nic in nic_objects:
+                    nic_if = get_pattern('(.*?)</key><device>(.*?)</device>(.*)<mac>(.*?)</mac>', nic)
+                    try:
+                        bandwidth_block = nic_if[0][2]
+                        bandwidth = get_pattern('</driver><linkSpeed><speedMb>(.*?)</speedMb>', bandwidth_block)
+                        net_extra_info.append("net.macaddress|%s|%s|mac" % (nic_if[0][1], nic_if[0][3]))
+                        if bandwidth:
+                            net_extra_info.append("net.bandwidth|%s|%s|bytes" % (nic_if[0][1], int(bandwidth[0]) * 1000000))
+                            net_extra_info.append("net.state|%s|1|state" % nic_if[0][1])
+                        else:
+                            net_extra_info.append("net.state|%s|2|state" % nic_if[0][1])
+                    except Exception, e:
+                        continue
+
             # Get counter syntax
             counter_syntax_payload = telegram_list["perfcountersyntax"]
             needed_ids             = get_counters(systeminfo["apiVersion"])
@@ -794,6 +822,7 @@ if not error:
 
             for key, nameInfo, groupInfo, unitInfo in elements:
                 counters_syntax[key] = { "name": nameInfo, "group": groupInfo, "unit": unitInfo }
+
 
             # We need to query each ESX host system separately..
             hostnames = hostsystems.keys()
@@ -837,6 +866,9 @@ if not error:
                     value = counters_output[key]
                     print "%s.%s|%s|%s|%s" % (key + value)
 
+                for line in net_extra_info:
+                    print line
+
             if not opt_direct:
                 print '<<<<>>>>'
 
@@ -846,6 +878,7 @@ if not error:
         if "hostsystem" in query_objects:
             hostsystems_properties = {}
             hostsystems_sensors    = {}
+
 
             # Propsets
             reply_code, reply_msg, reply_headers, esxhostdetails_response = query_server(telegram_list["esxhostdetails"])

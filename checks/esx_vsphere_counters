@@ -133,7 +133,10 @@ def convert_esx_counters_if(info):
         if item and counter.startswith("net."):
             name = counter[4:]
             by_item.setdefault(item, {})
-            by_item[item][name] = int(value)
+            if name != "macaddress":
+                by_item[item][name] = int(value)
+            else:
+                by_item[item][name] = value
 
     # Example of by_item:
     # {
@@ -154,6 +157,9 @@ def convert_esx_counters_if(info):
     #         'transmitted': 134,
     #         'unknownProtos': 0,
     #         'usage': 4040,
+    #         'macaddress': 'AA:BB:CC:DD:EE:FF",
+    #         'state': 2,
+    #         'bandwidth': 10000000,
     #     },
     # }
     nics = by_item.keys()
@@ -206,13 +212,17 @@ def convert_esx_counters_if(info):
         entry = ['0'] * 20
         converted.append(entry)
         if name: # Skip summary entry without interface name
-            entry[0] = (str(index))
-            entry[1] = (name)
-            entry[2] = ('6')   # Ethernet
-            entry[3] = ('')  # Speed not known
-            entry[4] = ('1') # Assume up
-            entry[18] = (name) # ifAlias
-            entry[19] = ('')   # MAC address not known here
+            entry[0] = str(index)
+            entry[1] = name
+            entry[2] = '6'   # Ethernet
+            entry[3] = str(by_item[name].get("bandwidth", "")) # Speed not known
+            entry[4] = str(by_item[name].get("state", "1"))
+            entry[18] = name # ifAlias
+            if by_item[name].get("macaddress"):
+                mac = "".join(map(lambda x: chr(int(x, 16)), by_item[name]["macaddress"].split(':')))
+                entry[19] = mac
+            else:
+                entry[19] = ''   # MAC address not known here
             for ctr_name, ti in tableindex.items():
                 ctr_value = by_item[name].get(ctr_name, 0)
                 if ctr_name.startswith("bytes"):

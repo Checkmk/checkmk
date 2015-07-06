@@ -1,0 +1,10 @@
+Title: agent_vsphere/esx_vsphere_counters.if: now also reports interface state, bandwidth and mac address
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436168510
+Class: feature
+
+The agent_vsphere now queries more data from the esx host.
+In earlier versions the state was always set to up and the bandwidth and mac address to unknown.

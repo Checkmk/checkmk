@@ -24,6 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# <<<citrix_controller>>>
+# ControllerState Active
+# ControllerVersion 7.6.0.5024
+# DesktopsRegistered 29
+# LicensingServerState OK
+# LicensingGraceState NotActive
+# ActiveSiteServices RZ2XenPool01 - Cisco UCS VMware
+# TotalFarmActiveSessions 262
+# TotalFarmInactiveSessions 14
 
 #   .--Total Sessions------------------------------------------------------.
 #   |    _____     _        _   ____                _                      |
@@ -40,7 +49,7 @@ def inventory_citrix_controller_sessions(info):
         inv = inv or ("sessions" in line[0].lower())
 
     if inv:
-        return [ (None, None) ]
+        return [ (None, {}) ]
     else:
         return []
 
@@ -63,11 +72,11 @@ def check_citrix_controller_sessions(_no_item, params, info):
     perf = []
     for what in [ 'total', 'active', 'inactive' ]:
         warn, crit = params.get(what, (None, None))
-        perf.append(( what, session[what], warn, crit ))
-        if crit != None and session[what] > crit:
+        perf.append(( what + "_sessions", session[what], warn, crit ))
+        if crit != None and session[what] >= crit:
             messages.append("%s: %s(!!)" % ( what, session[what] ))
             state = 2
-        elif warn != None and session[what] > warn:
+        elif warn != None and session[what] >= warn:
             messages.append("%s: %s(!)" % ( what, session[what] ))
             state = max(state, 1)
         else:
@@ -100,30 +109,33 @@ def inventory_citrix_controller_licensing(info):
 
 def check_citrix_controller_licensing(_no_item, _no_params, info):
 
-    statedict = { "licensingserverstate"    : {
-                                            "readablename"              : "Licensing Server State: ",
-                                            "ServerNotSpecified"        : 2,
-                                            "NotConnected"              : 1,
-                                            "OK"                        : 0,
-                                            "LicenseNotInstalled"       : 2,
-                                            "LicenseExpired"            : 2,
-                                            "Incompatible"              : 2,
-                                            "Failed"                    : 2,
-                                            },
-                  "licensinggracestate"     : {
-                                            "readablename"              : "Licensing Grace State: ",
-                                            "NotActive"                 : 0,
-                                            "InOutOfBoxGracePeriod"     : 1,
-                                            "InSupplementalGracePeriod" : 1,
-                                            "InEmergencyGracePeriod"    : 2,
-                                            "GracePeriodExpired"        : 2,
-                                            },
+    statedict = {
+        "licensingserverstate"    : (
+            "Licensing Server State",
+            {
+                "ServerNotSpecified"        : 2,
+                "NotConnected"              : 1,
+                "OK"                        : 0,
+                "LicenseNotInstalled"       : 2,
+                "LicenseExpired"            : 2,
+                "Incompatible"              : 2,
+                "Failed"                    : 2,
+            }),
+        "licensinggracestate"     : (
+            "Licensing Grace State: ",
+            {
+                "NotActive"                 : 0,
+                "InOutOfBoxGracePeriod"     : 1,
+                "InSupplementalGracePeriod" : 1,
+                "InEmergencyGracePeriod"    : 2,
+                "GracePeriodExpired"        : 2,
+            }),
     }
 
-    for line in info:
-        for what in statedict:
+    for what, (title, states) in statedict.items():
+        for line in info:
             if line[0].lower() == what:
-                yield statedict[what][line[1]], statedict[what]["readablename"] + line[1]
+                yield states[line[1]], title + ": " + line[1]
 
 
 check_info["citrix_controller.licensing"] = {

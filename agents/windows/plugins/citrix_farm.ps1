@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# |                                            mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,33 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#// =========================================================================================================================
-#//
-#// Filename     : citrix_farm_check.ps1
-#// Version      : 0.2
-#// Descritpion  : This Check_Mk Plugin checks a Citrix XenDesktop / XenApp 7.x Farm
-#// Created on   : 24.03.2015
-#// Created by   : Meik Vogel, BKK vor Ort, meik.vogel@bkkvorort.de / thx Sacha T. blog.applcoud.ch
-#// Prerequisite : Script must run on a XenDesktop Controller as Citrix Admin
-#// 
-#// ========================================================================================================================
+# This Check_Mk Plugin checks a Citrix XenDesktop / XenApp 7.x Farm
 
+# Contributed by Meik Vogel
+
+# Prerequisites : Script must run on a XenDesktop Controller as Citrix Admin
+
+# Please configure these parameters according to your setup
+
+# Define the maximum of counted machines (default is only 250)
+$maxmachines = "500"
+
+# Define the maximum of counted users (default is only 250)
+$maxusers = "2000"
+
+# Define the name of the DNS Domain
+$DNSdomain = ".subdomain.domain"
 
 if ((Get-PSSnapin "Citrix.Common.Commands" -EA silentlycontinue) -eq $null) {
 	try { Add-PSSnapin Citrix.* -ErrorAction Stop }
 	catch { write-error "Error Citrix.* Powershell snapin"; Return }
 }
-#define the maximum of counted machines (default is only 250)
-$maxmachines = "500"
-
-#define the maximum of counted users (default is only 250)
-$maxusers = "2000"
-
-#define the name of the DNS Domain
-$DNSdomain = ".subdomain.domain"
 
 $XASessions = Get-BrokerSession -Property HostedMachineName,Sessionstate -MaxrecordCount $maxusers | Group-Object HostedMachineName, Sessionstate | Sort-Object Name | select-object Name,Count
-$XAmachines = Get-BrokerMachine  -MaxRecordCount $maxmachines 
+$XAmachines = Get-BrokerMachine  -MaxRecordCount $maxmachines
 $Controllers = Get-BrokerController
 
 foreach ($Controller in $Controllers) {
@@ -59,14 +56,14 @@ foreach ($Controller in $Controllers) {
 	$ControllerDNS = $ControllerDNS.Replace($DNSdomain,$null)
 	"<<<<$ControllerDNS>>>>"
 	"<<<citrix_controller>>>"
-	# Column ControllerState / Gets only Controllers currently in the specified state. Valid values are: Failed, Off, On, and Active. 
+	# Column ControllerState / Gets only Controllers currently in the specified state. Valid values are: Failed, Off, On, and Active.
 	$ControllerState = $Controller | %{ $_.State }
 	"ControllerState $ControllerState"
-	
+
 	# Column ControllerVersion / Gets only Controllers running the specified version of the broker service.
 	$ControllerVersion = $Controller | %{ $_.ControllerVersion }
 	"ControllerVersion $ControllerVersion"
-	
+
 	# Column DesktopsRegistered / Gets only Controllers that have the specified number of desktops currently registered.
 	$ControllerDesktopsRegistered = $Controller | %{ $_.DesktopsRegistered }
 	"DesktopsRegistered $ControllerDesktopsRegistered"
@@ -74,28 +71,28 @@ foreach ($Controller in $Controllers) {
 	# Column LicensingServerState / Gets only Controllers in the specified licensing server state. Valid values are: ServerNotSpecified, NotConnected, OK, LicenseNotInstalled, LicenseExpired, Incompatible and Failed.
 	$LicensingServerState = $Controller |  %{ $_.LicensingServerState }
 	"LicensingServerState $LicensingServerState"
-	
+
 	# Column LicensingGraceState / Gets only Controllers in the specified licensing grace state. Valid values are: NotActive, InOutOfBoxGracePeriod, InSupplementalGracePeriod, InEmergencyGracePeriod and GracePeriodExpired.
 	$LicensingGraceState = $Controller |  %{ $_.LicensingGraceState }
 	"LicensingGraceState $LicensingGraceState"
-	
+
 	# Column ActiveSiteServices / The Broker site services active on the controller.
 	$ActiveSiteServices = $Controller |  %{ $_.ActiveSiteServices }
 	"ActiveSiteServices $ActiveSiteServices"
-	
+
 	# TotalFarmActiveSessions / Gets the total Farm User Sessions
 	$totalactive_sessions = $XASessions | Where-Object {$_.Name -like "*Active*"} | %{ $_.Count }
 	if (!$totalactive_sessions) {$totalactive_sessions = 0}
 	$totalactive_sessions = $totalactive_sessions | Measure-Object -Sum | %{ $_.Sum }
 	"TotalFarmActiveSessions $totalactive_sessions"
-	
+
 	# TotalFarmInactiveSessions / Gets the total Farm User Inactive Sessions
 	$totalinactive_sessions = $XASessions | Where-Object {$_.Name -like "*Disconnected*"} | %{ $_.Count }
 	if (!$totalinactive_sessions) {$totalinactive_sessions = 0}
 	$totalinactive_sessions = $totalinactive_sessions | Measure-Object -Sum | %{ $_.Sum }
 	"TotalFarmInactiveSessions $totalinactive_sessions"
 }
-	
+
 	foreach ($XAmachine in $XAmachines) {
 
 		# Column Name of Machine / Gets machines with the specific machine name known to the hypervisor.
@@ -112,67 +109,67 @@ foreach ($Controller in $Controllers) {
 
 		# Column DesktopGroupName / Gets machines from a desktop group with the specified name.
 		$DesktopGroupName = $XAmachine | %{ $_.DesktopGroupName }
-		"DesktopGroupName $DesktopGroupName"	
-		
+		"DesktopGroupName $DesktopGroupName"
+
 		# Column FaultState / Gets machines currently in the specified fault state.
 		$FaultState = $XAmachine | %{ $_.FaultState }
 		"FaultState $FaultState"
 
 		# Column HostingServerName / Gets machines by the name of the hosting hypervisor server.
 		$HostingServerName = $XAmachine | %{ $_.HostingServerName }
-		"HostingServer $HostingServerName"	
-		
+		"HostingServer $HostingServerName"
+
 		# Column MaintenanceMode / Gets machines by whether they are in maintenance mode or not.
 		$MaintenanceMode = $XAmachine  | %{ $_.InMaintenanceMode }
-		"MaintenanceMode $MaintenanceMode"		
-		
+		"MaintenanceMode $MaintenanceMode"
+
 		# Column PowerState / Gets machines with a specific power state. Valid values are Unmanaged, Unknown, Unavailable, Off, On, Suspended, TurningOn, TurningOff, Suspending, and Resuming.
 		$PowerState = $XAmachine  | %{ $_.PowerState }
 		"PowerState $PowerState"
-	
+
 		# Column RegistrationState / Gets machines in a specific registration state. Valid values are Unregistered, Initializing, Registered, and AgentError.
 		$RegistrationState = $XAmachine  | %{ $_.RegistrationState }
 		"RegistrationState $RegistrationState"
-		
+
 		# Column VMToolsState / Gets machines with a specific VM tools state. Valid values are NotPresent, Unknown, NotStarted, and Running.
 		$VMToolsState  = $XAmachine | %{ $_.VMToolsState }
 		"VMToolsState $VMToolsState"
-		
+
 		# Column AgentVersion / Gets machines with a specific Citrix Virtual Delivery Agent version.
 		$AgentVersion  = $XAmachine | %{ $_.AgentVersion }
 		"AgentVersion $AgentVersion"
-		
+
 		# Column Serverload / Gets machines by their current load index.
 		$Serverload = $XAmachine  | %{ $_.LoadIndex }
 		"<<<citrix_serverload>>>"
 		"$Serverload"
-					
+
 		# Column SessionCount / Count of number of active / inactive sessions on the machine.
 		$Sessions = $XAmachine | %{ $_.SessionCount }
 		"<<<citrix_sessions>>>"
 		if ($XASessions -match $HostedMachineName) {
-		"sessions $Sessions" 
+		"sessions $Sessions"
 			$active_sessions = $XASessions | Where-Object {$_.Name -like "$HostedMachineName, Active"} | %{ $_.Count }
 			if (!$active_sessions) {$active_sessions = 0}
 		"active_sessions $active_sessions"
 			$inactive_sessions = $XASessions | Where-Object {$_.Name -like "$HostedMachineName, Disconnected"} | %{ $_.Count }
 			if (!$inactive_sessions) {$inactive_sessions = 0}
 		"inactive_sessions $inactive_sessions"
-		
+
 		}
 		else {
-		"sessions $Sessions" 
+		"sessions $Sessions"
 		"active_sessions 0"
 		"inactive_sessions 0"
-		
+
 		}
 		if ($HostingServerName) {
-		
+
 		$HostingServerName = $HostingServerName.Replace($DNSdomain,$null)
 		"<<<<$HostingServerName>>>>"
                 "<<<citrix_hostsystem>>>"
 		"VMName $HostedMachineName"
-		
+
 		# Column HypervisorConnectionName / Gets machines with a specific Citrix Virtual Delivery Agent version.
 		$HypervisorConnectionName  = $XAmachine | %{ $_.HypervisorConnectionName }
 		"CitrixPoolName $HypervisorConnectionName"

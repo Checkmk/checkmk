@@ -2371,7 +2371,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_networking,
     "tcp_conn_stats",
-    ("TCP connection stats (LINUX / UNIX)"),
+    _("TCP connection stats (LINUX / UNIX)"),
     Dictionary(
         elements = [
             ( "ESTABLISHED",

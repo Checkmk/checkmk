@@ -1,0 +1,18 @@
+title: Citrix Controller Sessions
+agents: windows
+catalog: app/citrix
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the active and inactive sessions of Citrix XenApp 7.x controllers.
+ The citrix_farm.ps1 plugin must be installed on the controller, and
+ the Check_MK agent must be executed with Citrix Admin permissions
+ for this to work. The check allows to set upper levels on active, inactive and total
+ sessions. Defaults are not set.
+
+perfdata:
+ Three values: The total, inactive and active sessions.
+
+inventory:
+ One service per controller is created.
+

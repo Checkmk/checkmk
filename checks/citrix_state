@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-#.
 #   .--Controller----------------------------------------------------------.
 #   |             ____            _             _ _                        |
 #   |            / ___|___  _ __ | |_ _ __ ___ | | | ___ _ __              |
@@ -156,8 +155,7 @@ def check_citrix_state(_no_item, params, info):
                                         },
     }
 
-    if params:
-        statedict.update(params)
+    statedict.update(params)
 
     for line in info:
         for what in statedict:

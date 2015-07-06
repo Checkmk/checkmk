@@ -1124,6 +1124,17 @@ metric_info["rejected_sessions"] = {
     "color" : "45/a",
 }
 
+metric_info["active_sessions"] = {
+    "title" : _("Active sessions"),
+    "unit"  : "count",
+    "color" : "11/a",
+}
+
+metric_info["inactive_sessions"] = {
+    "title" : _("Inactive sessions"),
+    "unit"  : "count",
+    "color" : "13/a",
+}
 
 metric_info["shared_locks"] = {
     "title" : _("Shared locks"),

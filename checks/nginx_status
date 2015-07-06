@@ -24,6 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example output:
+# <<<nginx_status>>>
+# 127.0.0.1 80 Active connections: 1
+# 127.0.0.1 80 server accepts handled requests
+# 127.0.0.1 80  12 12 12
+# 127.0.0.1 80 Reading: 0 Writing: 1 Waiting: 0
+
 def nginx_status_parse(info):
     if len(info) != 4:
         return {} # skip unknown data format

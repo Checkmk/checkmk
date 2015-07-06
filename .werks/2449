@@ -1,0 +1,11 @@
+Title: db2_mem: Fixed scaling of perfdata
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436192652
+
+Previously, this check would in many cases misinterpret KB as Bytes.
+This has been fixed.

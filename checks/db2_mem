@@ -39,7 +39,13 @@ def check_db2_mem(item, params, info):
     for line in info:
         if hit > 0 and hit <= 2:
             hit += 1
-            values.append(saveint(line[-2]))
+            if line[-1].lower() == "kb":
+                value = int(line[-2]) * 1024
+            elif line[-1].lower() == "mb":
+                value = int(line[-2]) * 1024 * 1024
+            else:
+                value = int(line[-2])
+            values.append(value)
             if len(values) == 2:
                 limit, usage = values
                 left = limit - usage

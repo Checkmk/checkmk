@@ -1,0 +1,8 @@
+Title: haproxy.frontend, haproxy.server: new checks and agent plugin for HAProxy
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436186276
+Class: feature
+

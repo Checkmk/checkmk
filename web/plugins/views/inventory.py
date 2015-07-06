@@ -995,7 +995,7 @@ multisite_builtin_views["inv_hosts_ports"] = {
     # General options
     'datasource'                   : 'hosts',
     'topic'                        : _('Inventory'),
-    'title'                        : _('Switch port statisticss'),
+    'title'                        : _('Switch port statistics'),
     'linktitle'                    : _('Switch ports (all Hosts)'),
     'description'                  : _('A list of all hosts with statistics about total, used and free networking interfaces'),
     'public'                       : True,

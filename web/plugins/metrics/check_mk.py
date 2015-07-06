@@ -1840,7 +1840,7 @@ metric_info["mail_queue_active_length"] = {
 metric_info["pages_total"] = {
     "title" : _("Total printed pages"),
     "unit"  : "count",
-    "color" : "#939393",
+    "color" : "46/a",
 }
 
 metric_info["pages_color"] = {
@@ -1852,67 +1852,73 @@ metric_info["pages_color"] = {
 metric_info["pages_bw"] = {
     "title" : _("B/W"),
     "unit"  : "count",
-    "color" : "#111111",
+    "color" : "51/a",
 }
 
 metric_info["pages_a4"] = {
     "title" : _("A4"),
     "unit"  : "count",
-    "color" : "#45f1ff",
+    "color" : "31/a",
 }
 
 metric_info["pages_a3"] = {
     "title" : _("A3"),
     "unit"  : "count",
-    "color" : "#48c9fb",
+    "color" : "31/b",
 }
 
 metric_info["pages_color_a4"] = {
     "title" : _("Color A4"),
     "unit"  : "count",
-    "color" : "#007ff4",
+    "color" : "41/a",
 }
 
 metric_info["pages_bw_a4"] = {
     "title" : _("B/W A4"),
     "unit"  : "count",
-    "color" : "#2f2f2f",
+    "color" : "51/b",
 }
 
 metric_info["pages_color_a3"] = {
     "title" : _("Color A3"),
     "unit"  : "count",
-    "color" : "#138eff",
+    "color" : "44/a",
 }
 
 metric_info["pages_bw_a3"] = {
     "title" : _("B/W A3"),
     "unit"  : "count",
-    "color" : "#3c3c3c",
+    "color" : "52/a",
 }
 
 metric_info["supply_toner_cyan"] = {
     "title" : _("Supply toner cyan"),
     "unit"  : "%",
-    "color" : "#00ffff",
+    "color" : "34/a",
 }
 
 metric_info["supply_toner_magenta"] = {
     "title" : _("Supply toner magenta"),
     "unit"  : "%",
-    "color" : "#ff00ff",
+    "color" : "12/a",
 }
 
 metric_info["supply_toner_yellow"] = {
     "title" : _("Supply toner yellow"),
     "unit"  : "%",
-    "color" : "#ffff00",
+    "color" : "23/a",
 }
 
 metric_info["supply_toner_black"] = {
     "title" : _("Supply toner black"),
     "unit"  : "%",
-    "color" : "#000000",
+    "color" : "51/a",
+}
+
+metric_info["supply_toner_other"] = {
+    "title" : _("Supply toner"),
+    "unit"  : "%",
+    "color" : "52/a",
 }
 
 metric_info["pressure"] = {
@@ -3836,6 +3842,12 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "supply_toner_other" ],
+    "total"    : 100.0,
+})
+
+perfometer_info.append({
     "type"      : "linear",
     "segments"  : [ "smoke_ppm" ],
     "total"     : 10,
@@ -4583,6 +4595,13 @@ graph_info.append({
 graph_info.append({
     "metrics" : [
          ( "supply_toner_black", "area" )
+    ],
+    "range" : (0, 100),
+})
+
+graph_info.append({
+    "metrics" : [
+         ( "supply_toner_other", "area" )
     ],
     "range" : (0, 100),
 })

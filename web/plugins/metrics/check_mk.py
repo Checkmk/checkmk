@@ -4595,6 +4595,8 @@ graph_info.append({
         ( "pages_color_a3", "stack" ),
         ( "pages_bw_a4",    "stack" ),
         ( "pages_bw_a3",    "stack" ),
+        ( "pages_color",    "stack" ),
+        ( "pages_bw",       "stack" ),
         ( "pages_total",    "line" ),
     ],
     "optional_metrics" : [
@@ -4602,8 +4604,10 @@ graph_info.append({
         "pages_color_a3",
         "pages_bw_a4",
         "pages_bw_a3",
+        "pages_color",
+        "pages_bw",
     ],
-    "omit_zero_metrics": True,
+    "range" : (0, "pages_total:max"),
 })
 
 # Networking

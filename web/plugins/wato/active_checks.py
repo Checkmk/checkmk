@@ -331,6 +331,12 @@ register_rule(group,
            Dictionary(
                title = _("Optional parameters"),
                elements = [
+                   ("name", 
+                        TextUnicode(
+                            title = _("Alternative Service description"),
+                            help = _("The service description will be this name instead <i>DNS Servername</i>"),
+                        )
+                   ),
                    ( "server",
                         Alternative(
                             title = _("DNS Server"),
@@ -1012,7 +1018,8 @@ register_rule(group,
         elements = [
             TextUnicode(
                 title = _("Name"),
-                help = _("The service description will be <b>LDAP</b> plus this name"),
+                help = _("The service description will be <b>LDAP</b> plus this name. If the name starts with "
+                         "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>LDAP</tt>." ),
                 allow_empty = False),
             TextAscii(
                 title = _("Base DN"),
@@ -1115,7 +1122,8 @@ register_rule(group,
         elements = [
             TextUnicode(
                 title = _("Name"),
-                help = _("The service description will be <b>SMTP</b> plus this name"),
+                help = _("The service description will be <b>SMTP</b> plus this name. If the name starts with "
+                         "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>SMTP</tt>." ),
                 allow_empty = False),
             Dictionary(
                title = _("Optional parameters"),

@@ -60,11 +60,15 @@ def check_ldap_arguments(params):
 
     return args
 
+def check_ldap_desc(params):
+    if params[0].startswith("^"):
+        return params[0][1:]
+    return "LDAP %s" % params[0]
 
 active_check_info['ldap'] = {
     "command_line"        : '$USER1$/check_ldap -H $HOSTADDRESS$ $ARG1$',
     "argument_function"   : check_ldap_arguments,
-    "service_description" : lambda args: "LDAP " + args[0],
+    "service_description" : check_ldap_desc,
     "has_perfdata"        : True,
 }
 

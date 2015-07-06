@@ -77,11 +77,15 @@ def check_smtp_arguments(params):
         args += ' -H $HOSTADDRESS$'
     return args
 
+def check_smtp_desc(params):
+    if params[0].startswith("^"):
+        return params[0][1:]
+    return "SMTP %s" % params[0]
 
 active_check_info['smtp'] = {
     "command_line"        : '$USER1$/check_smtp $ARG1$',
     "argument_function"   : check_smtp_arguments,
-    "service_description" : lambda params: "SMTP %s" % params[0],
+    "service_description" : check_smtp_desc,
     "has_perfdata"        : True,
 }
 

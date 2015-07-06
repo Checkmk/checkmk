@@ -27,6 +27,14 @@
 import crypt
 import defaults
 
+
+def encrypt_password(password, salt = None):
+    import md5crypt
+    if not salt:
+        salt = "%06d" % (1000000 * (time.time() % 1.0))
+    return md5crypt.md5crypt(password, salt, '$1$')
+
+
 class HtpasswdUserConnector(UserConnector):
     def __init__(self, config):
         super(HtpasswdUserConnector, self).__init__(config)
@@ -73,13 +81,6 @@ class HtpasswdUserConnector(UserConnector):
                 creds[username] = pwhash.rstrip('\n')
 
         return creds
-
-
-    def encrypt_password(self, password, salt = None):
-        import md5crypt
-        if not salt:
-            salt = "%06d" % (1000000 * (time.time() % 1.0))
-        return md5crypt.md5crypt(password, salt, '$1$')
 
 
     # Validate hashes taken from the htpasswd file. This method handles

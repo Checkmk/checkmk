@@ -1136,6 +1136,12 @@ metric_info["inactive_sessions"] = {
     "color" : "13/a",
 }
 
+metric_info["session_rate"] = {
+    "title" : _("Session Rate"),
+    "unit"  : "1/s",
+    "color" : "#4080a0",
+}
+
 metric_info["shared_locks"] = {
     "title" : _("Shared locks"),
     "unit"  : "count",
@@ -3188,6 +3194,13 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type"       : "logarithmic",
+    "metric"     : "session_rate",
+    "half_value" : 50.0,
+    "exponent"   : 2,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
     "metric"     : "uptime",
     "half_value" : 2592000.0,
     "exponent"   : 2,
@@ -4874,7 +4887,7 @@ graph_info.append({
     "title" : _("Livestatus Requests per Connection"),
     "metrics" : [
         ( "livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
-          _("Averate requests per connection")),
+          _("Average requests per connection")),
     ],
 })
 

@@ -1,0 +1,19 @@
+title: HAProxy: Server Status
+agents: freebsd
+catalog: hw/app/haproxy
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the status of the servers of the HAProxy loadbalancer
+ for TCP and HTTP connections. It requires the mk_haproxy.freebsd agent
+ plugin to be installed on the FreeBSD host to be monitored.
+
+ The check is {OK} if the server indicates the status {UP} and either {active}
+ or {backup}. It is {CRIT} otherwise.
+
+item:
+ The name of backend and server, separated by a "/".
+
+inventory:
+ One service for each server is created.

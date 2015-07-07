@@ -1,0 +1,15 @@
+title: Ricoh Color Printers: Number of printed pages.
+agents: snmp
+catalog: hw/printer
+license: GPL
+distribution: check_mk
+description:
+ This checks shows the total count of printed pages, the count of black/white prints
+ and the count of color prints.
+ The status is always OK.
+
+perfdata:
+ The number of printed pages: total prints, black/white prints color prints.
+
+inventory:
+ One service is created for each printer.

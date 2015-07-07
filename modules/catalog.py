@@ -106,6 +106,7 @@ manpage_catalog_titles = {
         "citrix"        : "Citrix",
         "netscaler"     : "Citrix Netscaler",
         "exchange"      : "Microsoft Exchange",
+        "haproxy"       : "HAProxy Loadbalancer",
         "java"          : "Java (Tomcat, Weblogic, JBoss, etc.)",
         "libelle"       : "Libelle Business Shadow",
         "lotusnotes"    : "IBM Lotus Domino",

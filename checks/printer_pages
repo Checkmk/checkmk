@@ -24,21 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_printer_pages(info):
-    return [ (None, None) ]
 
-def check_printer_pages(_no_item, _no_params, info):
-    pages = saveint(info[0][0])
-    infotext = "%d pages printed" % pages
-    perfdata = [ ( "pages", pages ) ]
-    return (0, "%s" % infotext, perfdata)
+def parse_printer_pages(info):
+    return { 'pages_total' : int(info[0][0]) }
+
 
 check_info["printer_pages"] = {
-    'check_function':          check_printer_pages,
-    'inventory_function':      inventory_printer_pages,
-    'service_description':     'Pages',
-    'has_perfdata':            True,
-    'snmp_info':               ('.1.3.6.1.2.1.43.10.2.1.4.1', [ 1 ]),
-    'snmp_scan_function':      \
-     lambda oid: oid(".1.3.6.1.2.1.43.10.2.1.4.1.1") != None,
+    'parse_function'        : parse_printer_pages,
+    'inventory_function'    : inventory_printer_pages_types,
+    'check_function'        : check_printer_pages_types,
+    'service_description'   : 'Pages',
+    'has_perfdata'          : True,
+    'snmp_scan_function'    : scan_generic_printer,
+    'snmp_info'             : ('.1.3.6.1.2.1.43.10.2.1.4.1', [ 1 ]),
+    'includes'              : [ 'printer_pages.include' ],
 }

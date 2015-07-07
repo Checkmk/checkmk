@@ -1,0 +1,9 @@
+Title: Modified checks for printer pages: canon_pages, printer_pages, printer_pages_ricoh, printer_pages.include
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1436249584
+Class: feature
+
+The printer pages checks monitor the printed pages (total, color, black/white) in one service.

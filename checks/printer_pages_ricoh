@@ -24,45 +24,36 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# [['301', '28495']], [['112', '24']], [['113', '14880']], [['122', '146']], [['123', '15870']], [['501', '3761']], [['101', '30920']]
 
-# 'total'       :  '101',
-# 'b/w A3'      :  '112',
-# 'b/w A4'      :  '113',
-# 'color A3'    :  '122',
-# 'color A4'    :  '123',
-# 'print total' :  '301',
-# 'scan'        :  '501',
-#
-# These counters might be customer specific. This is a test:
-# 'color A4/A3' :  '106',
-# 'b/W A4'      :  '109',
+# 1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.1 Counter: Machine Total
+# 1.3.6.1.4.1.367.3.2.1.2.19.5.1.9.1 98040
+# 1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.21 Total Prints: Color
+# 1.3.6.1.4.1.367.3.2.1.2.19.5.1.9.21 46226
+# 1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.22 Total Prints: Black & White
+# 1.3.6.1.4.1.367.3.2.1.2.19.5.1.9.22 51814
 
 
-def parse_canon_pages(info):
-    pages_codes = {
-        "301": "total",
-        "112": "bw_a3",
-        "113": "bw_a4",
-        "122": "color_a3",
-        "123": "color_a4",
-        "106": "color",
-        "109": "bw",
-    }
+def parse_printer_pages_ricoh(info):
     parsed = {}
     for name, pages_text in info:
-        if name in pages_codes:
-            parsed["pages_" + pages_codes[name]] = int(pages_text)
+        if name == 'Counter: Machine Total':
+            parsed['pages_total'] = int(pages_text)
+
+        elif name == 'Total Prints: Color':
+            parsed['pages_color'] = int(pages_text)
+
+        elif name == 'Total Prints: Black & White':
+            parsed['pages_bw'] = int(pages_text)
     return parsed
 
 
-check_info["canon_pages"] = {
-    'parse_function'        : parse_canon_pages,
+check_info["printer_pages_ricoh"] = {
+    'parse_function'        : parse_printer_pages_ricoh,
     'inventory_function'    : inventory_printer_pages_types,
     'check_function'        : check_printer_pages_types,
     'service_description'   : 'Pages',
     'has_perfdata'          : True,
-    'snmp_info'             : ( ".1.3.6.1.4.1.1602.1.11.1.3.1.4", [ OID_END, "" ]),
-    'snmp_scan_function'    : scan_canon_printer,
-    'includes'              : [ "printer_pages.include" ],
+    'snmp_info'             : (".1.3.6.1.4.1.367.3.2.1.2.19.5.1", [ 5, 9 ]),
+    'snmp_scan_function'    : scan_ricoh_printer,
+    'includes'              : [ 'printer_pages.include' ],
 }

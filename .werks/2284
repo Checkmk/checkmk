@@ -9,4 +9,3 @@ Class: feature
 The kaspersky_av_client-check monitors the signature and fullscan age,
 the mcafee_av_client-check monitors the signature age on a windows client.
 Both can be configured in WATO.
-

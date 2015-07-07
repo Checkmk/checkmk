@@ -37,6 +37,7 @@
     * 2394 FIX: megaraid_ldisks: Is now supporting LSI CacheCade drives
     * 2449 FIX: db2_mem: Fixed scaling of perfdata...
     * 1264 FIX: ad_replication: Fixed handling of agent output without Destination DC entry
+    * 1265 FIX: check_mk_agent.aix: Filesystem Section now ignores cdrfs filesystems
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

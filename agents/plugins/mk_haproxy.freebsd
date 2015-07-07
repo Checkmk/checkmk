@@ -1,0 +1,5 @@
+if [ -r /var/run/haproxy.stat ]; then
+	echo "<<<haproxy:sep(44)>>>"
+	echo "show stat" | socat - UNIX-CONNECT:/var/run/haproxy.sock
+fi
+

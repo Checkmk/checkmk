@@ -122,13 +122,12 @@ if opt_filename:
 
 else:
     url = '/controller/rest/applications/%(application)s/metric-data' \
-          '?metric-path=Application%%20Infrastructure%%20Performance|*|Individual%%20Nodes|*|%(object)s|*|*|*' \
-          '&time-range-type=BEFORE_NOW&duration-in-mins=1&output=json' % {
-              'application': arg_application,
-              'object': '*', # Object can be JVM, JMX, ...
-          }
+          '?metric-path=Application%%20Infrastructure%%20Performance|*|Individual%%20Nodes|*|%(object)s|*|*' \
+          '&time-range-type=BEFORE_NOW&duration-in-mins=1&output=json'
 
     socket.setdefaulttimeout(opt_timeout)
+
+    data = []
 
     # Initialize server connection
     try:
@@ -140,15 +139,16 @@ else:
 
         auth = b64encode('%s:%s' % (opt_username, opt_password))
         headers = { 'Authorization': 'Basic ' + auth }
-        connection.request('GET', url, headers = headers)
-        response = connection.getresponse()
+        for obj in ['Agent', '*|*']:
+            connection.request('GET', url % { 'application': arg_application, 'object': obj }, headers = headers)
+            response = connection.getresponse()
 
-        if response.status != 200:
-            sys.stderr.write('Could not fetch data from AppDynamics server. '
-                             'HTTP %s: %s\n' % (response.status, response.reason))
-            sys.exit(1)
+            if response.status != 200:
+                sys.stderr.write('Could not fetch data from AppDynamics server. '
+                                 'HTTP %s: %s\n' % (response.status, response.reason))
+                sys.exit(1)
 
-        data = json.loads(response.read())
+            data += json.loads(response.read())
 
     except Exception, e:
         sys.stderr.write('Cannot connect to AppDynamics server. %s\n' % e)

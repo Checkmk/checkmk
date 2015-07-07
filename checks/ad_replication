@@ -55,7 +55,13 @@ def parse_ad_replication_info(info):
 def inventory_ad_replication(info):
     inv = []
     for line in parse_ad_replication_info(info):
-        entry = ('%s/%s' % (line[4], line[5]), 'ad_replication_default_params')
+        if len(line) == 11:
+            sourceSite = line[4]
+            sourceDC = line[5]
+        elif len(line) == 10:
+            sourceSite = line[3]
+            sourceDC =  line[4]
+        entry = ('%s/%s' % (sourceSite, sourceDC), 'ad_replication_default_params')
         if line[0] == 'showrepl_INFO' and entry not in inv:
             inv.append(entry)
     return inv
@@ -67,9 +73,14 @@ def check_ad_replication(item, params, info):
     foundLine = False
 
     for l in parse_ad_replication_info(info):
-        (lineType, destSite, destDC, namingContext, sourceSite, sourceDC,
-         transport, numFailures, timeLastFailure, timeLastSuccess,
-         statusLastFailure ) = l
+        if len(l) == 11:
+            (lineType, destSite, destDC, namingContext, sourceSite, sourceDC,
+             transport, numFailures, timeLastFailure, timeLastSuccess,
+             statusLastFailure ) = l
+        elif len(l) == 10:
+            (lineType, destSite, namingContext, sourceSite, sourceDC,
+             transport, numFailures, timeLastFailure, timeLastSuccess,
+             statusLastFailure ) = l
 
         if lineType == 'showrepl_INFO' and sourceSite+'/'+sourceDC == item:
             foundLine = True

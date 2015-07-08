@@ -1,0 +1,12 @@
+Title: cisco_mem_asa: Special memory check for cisco asa devices.
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1436357191
+Class: fix
+
+The normal cisco_memory check now ignores Cisco Adaptive Security Appliances because of a bug in the firmware:
+http://www.cisco.com/c/en/us/support/docs/security/asa-5500-x-series-next-generation-ofirewalls/116423-troubleshoot-asa-snmp.html
+Instead, this check will appear. The name wont change and you don't loose any history, but a re discovery is needed.
+This check only ignores the MEMPOOL_GLOBAL_SHARED pool.

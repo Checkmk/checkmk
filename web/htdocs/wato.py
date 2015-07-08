@@ -7722,7 +7722,7 @@ def mode_edit_ldap_connection(phase):
                 msg = _('Found no user object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_users = None
-                msg = str(e)
+                msg = "%s" % e
                 if 'successful bind must be completed' in msg:
                     if not connection.has_bind_credentials_configured():
                         return (False, _('Please configure proper bind credentials.'))

@@ -115,8 +115,10 @@ ldap_umlaut_translation = {
     ord(u'æ'): u'ae',
 }
 
+
 class MKLDAPException(MKGeneralException):
     pass
+
 
 def ldap_test_module():
     try:
@@ -124,6 +126,13 @@ def ldap_test_module():
     except:
         raise MKLDAPException(_("The python module python-ldap seems to be missing. You need to "
                                 "install this extension to make the LDAP user connector work."))
+
+
+def make_utf8(x):
+    if type(x) == unicode:
+        return x.encode('utf-8')
+    else:
+        return x
 
 #.
 #   .--UserConnector-------------------------------------------------------.
@@ -430,7 +439,7 @@ class LDAPUserConnector(UserConnector):
                 try:
                     search_func = self._config.get('page_size') \
                                   and self.ldap_paged_async_search or self.ldap_async_search
-                    for dn, obj in search_func(base, self.ldap_get_scope(scope), filt, columns):
+                    for dn, obj in search_func(make_utf8(base), self.ldap_get_scope(scope), make_utf8(filt), columns):
                         if dn is None:
                             continue # skip unwanted answers
                         new_obj = {}
@@ -454,7 +463,7 @@ class LDAPUserConnector(UserConnector):
                 last_exc = e
                 if tries_left:
                     self.log('  Received %r. Retrying with clean connection...' % e)
-                    ldap_disconnect()
+                    self.disconnect()
                     time.sleep(0.5)
                 else:
                     self.log('  Giving up.')

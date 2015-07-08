@@ -1335,7 +1335,7 @@ def ldap_convert_groups_to_roles(connection, plugin, params, user_id, ldap_user,
     for role_id, distinguished_names in params.items():
         if type(distinguished_names) == list:
             groups_to_fetch += [ dn.lower() for dn in distinguished_names ]
-        elif type(distinguished_names) == str:
+        elif type(distinguished_names) in [ str, unicode ]:
             groups_to_fetch.append(distinguished_names.lower())
 
     ldap_groups = dict(connection.group_members(groups_to_fetch,
@@ -1355,7 +1355,7 @@ def ldap_convert_groups_to_roles(connection, plugin, params, user_id, ldap_user,
             distinguished_names = [distinguished_names]
 
         for dn in distinguished_names:
-            if not isinstance(dn, str):
+            if type(dn) not in [ str, unicode ]:
                 continue # skip non configured ones (old valuespecs allowed None)
             dn = dn.lower() # lower case matching for DNs!
 
@@ -1469,7 +1469,7 @@ def synchronize_profile_to_sites(user_id, profile):
             try:
                 result = wato.push_user_profile_to_site(site, user_id, profile)
             except Exception, e:
-                result = str(e)
+                result = "%s" % e
 
         if result == True:
             num_succeeded += 1

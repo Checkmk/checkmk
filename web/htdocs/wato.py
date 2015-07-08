@@ -7753,7 +7753,7 @@ def mode_edit_ldap_connection(phase):
                 msg = _('Found no group object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_groups = None
-                msg = str(e)
+                msg = "%s" % e
                 if 'successful bind must be completed' in msg:
                     if not connection.has_bind_credentials_configured():
                         return (False, _('Please configure proper bind credentials.'))
@@ -7772,15 +7772,19 @@ def mode_edit_ldap_connection(phase):
 
             connection.connect(enforce_new = True, enforce_server = address)
             num = 0
-            for role_id, dn in active_plugins['groups_to_roles'].items():
-                if isinstance(dn, str):
-                    num += 1
-                    try:
-                        ldap_groups = connection.get_groups(dn)
-                        if not ldap_groups:
-                            return False, _('Could not find the group specified for role %s') % role_id
-                    except Exception, e:
-                        return False, _('Error while fetching group for role %s: %s') % (role_id, str(e))
+            for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():
+                if type(group_distinguished_names) != list:
+                    group_distinguished_names = [group_distinguished_names]
+
+                for dn in group_distinguished_names:
+                    if type(dn) in [ str, unicode ]:
+                        num += 1
+                        try:
+                            ldap_groups = connection.get_groups(dn)
+                            if not ldap_groups:
+                                return False, _('Could not find the group specified for role %s') % role_id
+                        except Exception, e:
+                            return False, _('Error while fetching group for role %s: %s') % (role_id, e)
             return True, _('Found all %d groups.') % num
 
         tests = [

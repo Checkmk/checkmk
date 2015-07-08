@@ -1,0 +1,11 @@
+Title: Fixed handling of urls in views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436180901
+
+Commas after an url are now not longer part of the url.
+

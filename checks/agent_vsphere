@@ -65,7 +65,16 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     if params.get("host_pwr_display"):
         args += ' --host_pwr_display %s' % params.get("host_pwr_display")
 
-    args += " " + quote_shell_string(ipaddress)
+    if "ssl" in params:
+        if params["ssl"] == False:
+            args += ' --no-cert-check ' + quote_shell_string(ipaddress)
+        elif params["ssl"] == True:
+            args += " " + quote_shell_string(hostname)
+        else:
+            args += " " + quote_shell_string(params["ssl"])
+    else: # legacy mode
+        args += " " + quote_shell_string(ipaddress)
+
     return args
 
 special_agent_info['vsphere'] = agent_vsphere_arguments

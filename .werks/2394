@@ -1,0 +1,9 @@
+Title: megaraid_ldisks: Is now supporting LSI CacheCade drives
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p7
+Date: 1435820550
+Class: fix
+
+

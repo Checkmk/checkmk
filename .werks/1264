@@ -1,0 +1,9 @@
+Title: ad_replication: Fixed handling of agent output without Destination DC entry
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p8
+Date: 1436255904
+Class: fix
+
+

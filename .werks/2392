@@ -1,0 +1,14 @@
+Title: Auth cookie is always using "httponly" flag
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435664667
+Class: security
+
+All newly issued authentication cookies have the flag "httponly"
+set now. This makes the cookie values inaccessible from scripts
+executed in the browser, e.g. from Javascript. This secures the
+cookie against some sorts of cookie stealing attempts.
+
+See https://www.owasp.org/index.php/HttpOnly for details.

@@ -1,0 +1,8 @@
+Title: winperf_msx_queues: no longer crashes in service discovery if there are no msx queues available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p6
+Date: 1435751870
+Class: fix
+

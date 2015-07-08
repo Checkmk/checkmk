@@ -1694,6 +1694,17 @@ def move_folder(what_folder, target_folder):
     new_dir = folder_dir(target_folder)
     shutil.move(old_dir, new_dir)
 
+def delete_folder(folder):
+    parent_folder = folder[".parent"]
+
+    mark_affected_sites_dirty(parent_folder)
+    del parent_folder[".folders"][folder[".name"]]
+    folder_path = folder_dir(folder)
+    shutil.rmtree(folder_path)
+    log_pending(AFFECTED, folder, "delete-folder",
+            _("Deleted empty folder %s")% folder_path)
+    call_hook_folder_deleted(folder)
+
 def delete_folder_after_confirm(del_folder):
     msg = _("Do you really want to delete the folder %s?") % del_folder["title"]
     if not config.wato_hide_filenames:
@@ -1704,13 +1715,7 @@ def delete_folder_after_confirm(del_folder):
     c = wato_confirm(_("Confirm folder deletion"), msg)
 
     if c:
-        mark_affected_sites_dirty(g_folder)
-        del g_folder[".folders"][del_folder[".name"]]
-        folder_path = folder_dir(del_folder)
-        shutil.rmtree(folder_path)
-        log_pending(AFFECTED, del_folder, "delete-folder",
-                _("Deleted empty folder %s")% folder_dir(del_folder))
-        call_hook_folder_deleted(del_folder)
+        delete_folder(del_folder)
         return "folder"
     elif c == False: # not yet confirmed
         return ""

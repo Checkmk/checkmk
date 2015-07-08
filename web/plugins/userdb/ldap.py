@@ -124,6 +124,12 @@ ldap_umlaut_translation = {
 #   | General LDAP handling code                                           |
 #   '----------------------------------------------------------------------'
 
+def make_utf8(x):
+    if type(x) == unicode:
+        return x.encode('utf-8')
+    else:
+        return x
+
 def ldap_log(s):
     if config.ldap_debug_log:
         logger(LOG_DEBUG, 'LDAP: %s' % s)
@@ -354,7 +360,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
             try:
                 search_func = config.ldap_connection.get('page_size') \
                               and ldap_paged_async_search or ldap_async_search
-                for dn, obj in search_func(base, scope, filt, columns):
+                for dn, obj in search_func(make_utf8(base), scope, make_utf8(filt), columns):
                     if dn is None:
                         continue # skip unwanted answers
                     new_obj = {}

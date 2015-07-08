@@ -7333,7 +7333,7 @@ def mode_ldap_config(phase):
                 msg = _('Found no user object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_users = None
-                msg = str(e)
+                msg = "%s" % e
                 if 'successful bind must be completed' in msg:
                     if not userdb.ldap_bind_credentials_configured():
                         return (False, _('Please configure proper bind credentials.'))
@@ -7364,7 +7364,7 @@ def mode_ldap_config(phase):
                 msg = _('Found no group object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_groups = None
-                msg = str(e)
+                msg = "%s" % e
                 if 'successful bind must be completed' in msg:
                     if not userdb.ldap_bind_credentials_configured():
                         return (False, _('Please configure proper bind credentials.'))
@@ -7383,14 +7383,14 @@ def mode_ldap_config(phase):
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             num = 0
             for role_id, dn in config.ldap_active_plugins['groups_to_roles'].items():
-                if isinstance(dn, str):
+                if type(dn) in [str, unicode]:
                     num += 1
                     try:
                         ldap_groups = userdb.ldap_get_groups(dn)
                         if not ldap_groups:
                             return False, _('Could not find the group specified for role %s') % role_id
                     except Exception, e:
-                        return False, _('Error while fetching group for role %s: %s') % (role_id, str(e))
+                        return False, _('Error while fetching group for role %s: %s') % (role_id, e)
             return True, _('Found all %d groups.') % num
 
         tests = [

@@ -179,7 +179,7 @@ def ldap_connect_server(server):
     except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
         return None, '%s: %s' % (uri, e[0].get('info', e[0].get('desc', '')))
     except MKLDAPException, e:
-        return None, str(e)
+        return None, '%s' % e
 
 def ldap_disconnect():
     global ldap_connection, ldap_connection_options
@@ -914,7 +914,7 @@ def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     for role_id, distinguished_names in params.items():
         if type(distinguished_names) == list:
             groups_to_fetch += [ dn.lower() for dn in distinguished_names ]
-        elif type(distinguished_names) == str:
+        elif type(distinguished_names) in [ str, unicode ]:
             groups_to_fetch.append(distinguished_names.lower())
 
     ldap_groups = dict(ldap_group_members(groups_to_fetch,
@@ -934,7 +934,7 @@ def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
             distinguished_names = [distinguished_names]
 
         for dn in distinguished_names:
-            if not isinstance(dn, str):
+            if type(dn) not in [ str, unicode ]:
                 continue # skip non configured ones (old valuespecs allowed None)
             dn = dn.lower() # lower case matching for DNs!
 

@@ -1,4 +1,4 @@
-Title: kaspersky_av_client, mcafee_av_client: New Checks, Monitoring Signature and Fullscan Age
+Title: kaspersky_av_client, mcafee_av_client: New Checks and agent plugins for monitoring signature and fullscan age
 Level: 1
 Component: checks
 Compatible: compat
@@ -8,5 +8,4 @@ Class: feature
 
 The kaspersky_av_client-check monitors the signature and fullscan age,
 the mcafee_av_client-check monitors the signature age on a windows client.
-Both can be configured in WATO
-
+Both can be configured in WATO.

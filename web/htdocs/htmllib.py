@@ -365,13 +365,18 @@ class html:
     def detect_icon_path(self, icon_name):
         # Detect whether or not the icon is available as images/icon_*.png
         # or images/icons/*.png. When an icon is available as internal icon,
-        # always use this onec
+        # always use this one
+        is_internal = False
         if defaults.omd_root:
-            base_path = defaults.omd_root+"/share/check_mk/web/htdocs/images"
-        else:
-            base_path = defaults.web_dir+"/htdocs/images"
+            rel_path = "share/check_mk/web/htdocs/images/icon_"+icon_name+".png"
+            if os.path.exists(defaults.omd_root+"/"+rel_path):
+                is_internal = True
+            elif os.path.exists(defaults.omd_root+"/local/"+rel_path):
+                is_internal = True
+        elif os.path.exists(defaults.web_dir+"/htdocs/images/icon_"+icon_name+".png"):
+            is_internal = True
 
-        if os.path.exists(base_path+'/icon_'+icon_name+'.png'):
+        if is_internal:
             return "images/icon_%s.png" % icon_name
         else:
             return "images/icons/%s.png" % icon_name

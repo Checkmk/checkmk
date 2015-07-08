@@ -3094,7 +3094,7 @@ class Transform(ValueSpec):
         self._valuespec.validate_value(self.forth(value), varprefix)
         ValueSpec.custom_validate(self, value, varprefix)
 
-class LDAPDistinguishedName(TextAscii):
+class LDAPDistinguishedName(TextUnicode):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         self.enforce_suffix = kwargs.get('enforce_suffix')

@@ -124,12 +124,16 @@ ldap_umlaut_translation = {
 #   | General LDAP handling code                                           |
 #   '----------------------------------------------------------------------'
 
+def make_utf8(x):
+    if type(x) == unicode:
+        return x.encode('utf-8')
+    else:
+        return x
+
 def ldap_log(s):
     if config.ldap_debug_log:
-        if type(s) == unicode:
-            s = s.encode('utf-8')
         log_file = defaults.log_dir + '/ldap.log'
-        file(log_file, "a").write('%s %s\n' % (time.strftime('%Y-%m-%d %H:%M:%S'), s))
+        file(log_file, "a").write('%s %s\n' % (time.strftime('%Y-%m-%d %H:%M:%S'), make_utf8(s)))
 
 class MKLDAPException(MKGeneralException):
     pass
@@ -357,7 +361,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
             try:
                 search_func = config.ldap_connection.get('page_size') \
                               and ldap_paged_async_search or ldap_async_search
-                for dn, obj in search_func(base, scope, filt, columns):
+                for dn, obj in search_func(make_utf8(base), scope, make_utf8(filt), columns):
                     if dn is None:
                         continue # skip unwanted answers
                     new_obj = {}

@@ -6,6 +6,7 @@
 
     Multisite:
     * 1263 FIX: Fixed handling of urls in views...
+    * 2396 FIX: LDAP: Fixed handling of LDAP trees having special chars in the path (e.g. in OU names)...
 
     WATO:
     * 2372 FIX: Avoid freezing WATO during bulk discovery if hosts do not respond in a timely manner

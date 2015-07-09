@@ -827,6 +827,12 @@ metric_info["smoke_ppm"] = {
     "color" : "#60f088",
 }
 
+metric_info["smoke_perc"] = {
+    "title" : _("Smoke"),
+    "unit"  : "%",
+    "color" : "#60f088",
+}
+
 metric_info["deviation_calibration_point"] = {
     "title" : _("Deviation from calibration point"),
     "unit"  : "%",
@@ -2778,10 +2784,6 @@ check_metrics["check_mk-ipmi"] = {
     "ambient_temp" : { "name" : "temp" }
 }
 
-check_metrics["check_mk-wagner_titanus_topsense.smoke"] = {
-    "smoke_perc" : { "name" : "smoke_ppm" }
-}
-
 check_metrics["check_mk-wagner_titanus_topsense.airflow_deviation"] = {
     "airflow_deviation" : { "name" : "deviation_airflow" }
 }
@@ -3864,6 +3866,12 @@ perfometer_info.append({
     "type"      : "linear",
     "segments"  : [ "smoke_ppm" ],
     "total"     : 10,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "smoke_perc" ],
+    "total"     : 100,
 })
 
 perfometer_info.append({

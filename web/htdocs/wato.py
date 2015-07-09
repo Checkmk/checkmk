@@ -1694,6 +1694,17 @@ def move_folder(what_folder, target_folder):
     new_dir = folder_dir(target_folder)
     shutil.move(old_dir, new_dir)
 
+def delete_folder(folder):
+    parent_folder = folder[".parent"]
+
+    mark_affected_sites_dirty(parent_folder)
+    del parent_folder[".folders"][folder[".name"]]
+    folder_path = folder_dir(folder)
+    shutil.rmtree(folder_path)
+    log_pending(AFFECTED, folder, "delete-folder",
+            _("Deleted empty folder %s")% folder_path)
+    call_hook_folder_deleted(folder)
+
 def delete_folder_after_confirm(del_folder):
     msg = _("Do you really want to delete the folder %s?") % del_folder["title"]
     if not config.wato_hide_filenames:
@@ -1704,13 +1715,7 @@ def delete_folder_after_confirm(del_folder):
     c = wato_confirm(_("Confirm folder deletion"), msg)
 
     if c:
-        mark_affected_sites_dirty(g_folder)
-        del g_folder[".folders"][del_folder[".name"]]
-        folder_path = folder_dir(del_folder)
-        shutil.rmtree(folder_path)
-        log_pending(AFFECTED, del_folder, "delete-folder",
-                _("Deleted empty folder %s")% folder_dir(del_folder))
-        call_hook_folder_deleted(del_folder)
+        delete_folder(del_folder)
         return "folder"
     elif c == False: # not yet confirmed
         return ""
@@ -4751,8 +4756,8 @@ def mode_changelog(phase):
                           "discard if you proceed:")
 
             c = wato_confirm(title,
-              '<img class=foreignchanges src="images/icon_foreign_changes.png">' + text + table +
-              _("Do you really want to proceed?"))
+              HTML('<img class=foreignchanges src="images/icon_foreign_changes.png">' + text + table +
+              _("Do you really want to proceed?")))
             if c == False:
                 return ""
             elif not c:
@@ -7717,7 +7722,7 @@ def mode_edit_ldap_connection(phase):
                 msg = _('Found no user object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_users = None
-                msg = str(e)
+                msg = "%s" % e
                 if 'successful bind must be completed' in msg:
                     if not connection.has_bind_credentials_configured():
                         return (False, _('Please configure proper bind credentials.'))
@@ -7748,7 +7753,7 @@ def mode_edit_ldap_connection(phase):
                 msg = _('Found no group object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_groups = None
-                msg = str(e)
+                msg = "%s" % e
                 if 'successful bind must be completed' in msg:
                     if not connection.has_bind_credentials_configured():
                         return (False, _('Please configure proper bind credentials.'))
@@ -7767,15 +7772,19 @@ def mode_edit_ldap_connection(phase):
 
             connection.connect(enforce_new = True, enforce_server = address)
             num = 0
-            for role_id, dn in active_plugins['groups_to_roles'].items():
-                if isinstance(dn, str):
-                    num += 1
-                    try:
-                        ldap_groups = connection.get_groups(dn)
-                        if not ldap_groups:
-                            return False, _('Could not find the group specified for role %s') % role_id
-                    except Exception, e:
-                        return False, _('Error while fetching group for role %s: %s') % (role_id, str(e))
+            for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():
+                if type(group_distinguished_names) != list:
+                    group_distinguished_names = [group_distinguished_names]
+
+                for dn in group_distinguished_names:
+                    if type(dn) in [ str, unicode ]:
+                        num += 1
+                        try:
+                            ldap_groups = connection.get_groups(dn)
+                            if not ldap_groups:
+                                return False, _('Could not find the group specified for role %s') % role_id
+                        except Exception, e:
+                            return False, _('Error while fetching group for role %s: %s') % (role_id, e)
             return True, _('Found all %d groups.') % num
 
         tests = [

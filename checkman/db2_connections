@@ -1,5 +1,5 @@
 title: DB2 Connections and Query Latency
-agents: aix
+agents: aix, linux
 catalog: app/db2
 license: GPL
 distribution: check_mk
@@ -10,7 +10,7 @@ description:
 
  You can configure limits for the number of connections.
 
- This check needs the mk_db2.aix plugin installed in the agent.
+ This check needs the mk_db2 plugin installed in the agent.
 
 item:
  The DB2 instance name followed by a : and the database name, e.g. db2ilog1:REST1

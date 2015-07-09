@@ -301,7 +301,7 @@ register_check_parameters(
                 Levels(
                     title = _("Levels for rate of incoming IPv4 packets blocked"),
                     unit = _("pkts/s"),
-                    default_levels = (85, 90),
+                    default_levels = (100.0, 10000.0),
                     default_difference = (5, 8),
                     default_value = None,
                 ),
@@ -312,7 +312,7 @@ register_check_parameters(
                   help = _("When this option is activated then the block rate is being "
                            "averaged <b>before</b> the levels are being applied."),
                   unit = _("min"),
-                  default_value = 15,
+                  default_value = 3,
                   label = _("Compute average over last "),
             )),
         ],

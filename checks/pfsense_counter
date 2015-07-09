@@ -25,9 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["pfsense_counter_default_levels"] = {
-    "badoffset" : (0.1, 10.0),
-    "short"     : (0.1, 10.0),
-    "memdrop"   : (0.001, 10.0),
+    "badoffset"     : (100.0, 10000.0),
+    "short"         : (100.0, 10000.0),
+    "memdrop"       : (100.0, 10000.0),
+    "normalized"    : (100.0, 10000.0),
+    "fragment"      : (100.0, 10000.0),
+    "average"       : 3,
 }
 
 def parse_pfsense_counter(info):

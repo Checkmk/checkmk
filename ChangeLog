@@ -80,6 +80,7 @@
     * 2322 FIX: mkeventd: MIBs are now only loaded if SNMP Traps translation is activated...
 
     HW/SW-Inventory:
+    * 2128 mk_inventory.vbs: inventory plugin for Windows now available as vbs script...
     * 2367 FIX: win_system: Fixed exception when non-UTF-8 sequences are contained agent output
 
 

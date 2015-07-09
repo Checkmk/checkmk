@@ -41,6 +41,7 @@
     * 1265 FIX: check_mk_agent.aix: Filesystem Section now ignores cdrfs filesystems
     * 1266 FIX: cisco_mem_asa: Special memory check for cisco asa devices....
             NOTE: Please refer to the migration notes!
+    * 2400 FIX: windows_if.ps1: fixed exception in plugin when an interface team had no members
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

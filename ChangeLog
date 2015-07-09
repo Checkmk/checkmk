@@ -10,6 +10,7 @@
 
     WATO:
     * 2372 FIX: Avoid freezing WATO during bulk discovery if hosts do not respond in a timely manner
+    * 1267 FIX: Fixed confirm activating foreign changes dialog...
 
 
 1.2.6p7:

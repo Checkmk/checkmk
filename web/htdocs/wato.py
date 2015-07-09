@@ -4751,8 +4751,8 @@ def mode_changelog(phase):
                           "discard if you proceed:")
 
             c = wato_confirm(title,
-              '<img class=foreignchanges src="images/icon_foreign_changes.png">' + text + table +
-              _("Do you really want to proceed?"))
+              HTML('<img class=foreignchanges src="images/icon_foreign_changes.png">' + text + table +
+              _("Do you really want to proceed?")))
             if c == False:
                 return ""
             elif not c:

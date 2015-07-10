@@ -1,0 +1,17 @@
+Title: md: Fix exception for certain outputs of certain special MD configurations
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436539095
+
+The parser in the check did not handle lines with the format
+
+F+:
+  1463055360 blocks 64K chunks 2 near-copies [4/3] [UU_U]
+F-:
+
+correctly. This has been fixed.
+

@@ -1,0 +1,12 @@
+Title: LDAP: Fixed handling of LDAP trees having special chars in the path (e.g. in OU names)
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436362239
+
+The Check_MK LDAP integration can now deal with LDAP directories which use special characters
+like german umlauts e.g. in OU (Organisational Unit) names in the LDAP directory. Previous
+version simply did not allow to configure such DNs (Distinguished Names) as user or group DNs.

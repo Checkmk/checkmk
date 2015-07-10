@@ -1,0 +1,9 @@
+Title: db_ checks: new mk_db2.linux agent supporting the existing db2_ checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436448103
+Class: feature
+
+

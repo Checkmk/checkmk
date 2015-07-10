@@ -93,6 +93,20 @@
 # unused devices: <none>
 # ----------------------------------------------------------
 
+# And now for something completely different:
+# ---------------------------------------------------------
+# Personalities : [raid1] [raid10]
+# md1 : active raid10 sdd6[3] sdb6[1] sda6[0]
+#       1463055360 blocks 64K chunks 2 near-copies [4/3] [UU_U]
+#
+# md0 : active raid1 sdd1[3] sdb1[1] sda1[0]
+#       104320 blocks [4/3] [UU_U]
+#
+# unused devices: <none>
+# ---------------------------------------------------------
+
+# TODO: Write a parse function!
+
 def inventory_md(info):
     inventory = []
     for line in info:
@@ -106,6 +120,7 @@ def inventory_md(info):
                 disk_state = line[-1][1:-1]
                 inventory.append( (device, None) )
     return inventory
+
 
 def check_md(item, _no_params, info):
     raid_state = ''
@@ -135,7 +150,7 @@ def check_md(item, _no_params, info):
         elif state_next:
             if num_disks == expected_disks and active_disks == working_disks:
                 return (0, 'raid active, disk state is %s %s' % (disk_state_1, disk_state_2))
-            if len(line) > 6 and line[-6] != '':
+            if len(line) > 6 and line[-6] != '' and "speed=" in line[-1]:
                 build_state_1 = line[-6]
                 build_state_2 = line[-4]
                 build_est = line[-2].partition('=')[2]
@@ -144,7 +159,7 @@ def check_md(item, _no_params, info):
                            (disk_state_1, disk_state_2, expected_disks, build_state_1, build_state_2, build_speed, build_est))
             return (2, 'disk state is %s %s (expected %d disks to be up)' %
                             (disk_state_1, disk_state_2, expected_disks))
-    return (2, 'no raid device %s' % item)
+    return (2, 'no RAID device %s' % item)
 
 
 

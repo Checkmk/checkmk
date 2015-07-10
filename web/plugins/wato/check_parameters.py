@@ -301,7 +301,7 @@ register_check_parameters(
                 Levels(
                     title = _("Levels for rate of incoming IPv4 packets blocked"),
                     unit = _("pkts/s"),
-                    default_levels = (85, 90),
+                    default_levels = (100.0, 10000.0),
                     default_difference = (5, 8),
                     default_value = None,
                 ),
@@ -312,7 +312,7 @@ register_check_parameters(
                   help = _("When this option is activated then the block rate is being "
                            "averaged <b>before</b> the levels are being applied."),
                   unit = _("min"),
-                  default_value = 15,
+                  default_value = 3,
                   label = _("Compute average over last "),
             )),
         ],
@@ -380,7 +380,7 @@ register_check_parameters(
                            "averaged <b>before</b> the levels are being applied. Setting this to zero will "
                            "deactivate averaging."),
                   unit = _("min"),
-                  default_value = 15,
+                  default_value = 3,
                   label = _("Compute average over last "),
                   )),
              ( "fragment",
@@ -388,38 +388,38 @@ register_check_parameters(
                    title = _("Levels for rate of fragmented packets"),
                    elements = [
                       Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 100.0),
-                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 200.0),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10000.0),
                    ],
              )),
              ( "normalized",
                Tuple(
                    title = _("Levels for rate of normalized packets"),
                    elements = [
-                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 10.0),
-                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 50.0),
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 100.0),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10000.0),
                    ],
              )),
              ( "badoffset",
                Tuple(
                    title = _("Levels for rate of packets with bad offset"),
                    elements = [
-                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 0.1),
-                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10.0),
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 100.0),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10000.0),
                    ],
              )),
              ( "short",
                Tuple(
                    title = _("Levels for rate of short packets"),
                    elements = [
-                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 0.1),
-                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10.0),
+                      Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 100.0),
+                      Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10000.0),
                    ],
              )),
              ( "memdrop", Tuple(
                     title = _("Levels for rate of packets dropped due to memory limitations"),
                     elements = [
-                       Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 0.001),
-                       Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10.0),
+                       Float(title = _("Warning at"), unit = _("pkts/s"), default_value = 100.0),
+                       Float(title = _("Critical at"), unit = _("pkts/s"), default_value = 10000.0),
                    ],
              )),
          ],

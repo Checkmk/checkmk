@@ -1,0 +1,11 @@
+Title: Fixed confirm activating foreign changes dialog
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436427244
+
+The HTML Output is not longer displayed in the Browser
+

@@ -42,12 +42,18 @@ def inv_win_wmi_software(info):
         install_date = ""
         if len(dat) == 8 and re.match("^20", dat):
             install_date = int(time.mktime(time.strptime(dat, "%Y%m%d")))
+	# contains language as well
+	if len(line) == 5:
+	    language = line[4]
+	else:
+            language = ""
 
         entry = {
             "name"            : pacname,
             "version"         : version,
             "vendor"          : vendor.replace('\x00', ''), # Can happen, reason unclear
             "install_date"    : install_date,
+            "language"        : language,
             "package_type"    : "wmi",
         }
         paclist.append(entry)

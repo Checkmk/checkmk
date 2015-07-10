@@ -124,7 +124,6 @@ def compute_foldertree():
         wato_folder = {}
         if wato.folder_config_exists(wato.root_dir + path):
             wato_folder = wato.load_folder(wato.root_dir + path, childs = False)
-
         return {
             'title':      wato_folder.get('title', path.split('/')[-1]),
             '.path':      path,
@@ -216,9 +215,6 @@ def render_wato_foldertree():
     if not is_slave_site:
         if not config.wato_enabled:
             html.write(_("WATO is disabled."))
-            return False
-        elif not config.may("wato.use"):
-            html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
             return False
 
     user_folders = compute_foldertree()

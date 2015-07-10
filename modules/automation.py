@@ -106,11 +106,13 @@ def do_automation(cmd, args):
     output_profile()
     sys.exit(0)
 
-# Does inventory for *one* host. Possible values for how:
+# Does discovery for a list of hosts. Possible values for how:
 # "new" - find only new services (like -I)
 # "remove" - remove exceeding services
 # "fixall" - find new, remove exceeding
 # "refresh" - drop all services and reinventorize
+# Hosts on the list that are offline (unmonitored) will
+# be skipped.
 def automation_discovery(args):
 
     # Error sensivity
@@ -146,6 +148,11 @@ def automation_discovery(args):
 
     for hostname in hostnames:
         counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, total
+
+        if hostname not in all_hosts_untagged:
+            failed_hosts[hostname] = None # means offline
+            continue # unmonitored host
+
         try:
             # in "refresh" mode we first need to remove all previously discovered
             # checks of the host, so that get_host_services() does show us the

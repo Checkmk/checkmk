@@ -72,40 +72,39 @@
 def inventory_esx_vsphere_counters_diskio(info):
     for counter, item, value, unit in info:
         if counter == 'disk.read' and item == '':
-            return [(None, None)]
+            return [("SUMMARY", {})]
 
-def check_esx_vsphere_counters_diskio(_no_item, _no_params, info):
+def check_esx_vsphere_counters_diskio(item, params, info):
     if not info:
         raise MKCounterWrapped("Counter data is missing")
-
-    read_bytes  = 0
-    write_bytes = 0
-    reads       = 0
-    writes      = 0
-    latency     = 0
-    for counter, item, value, unit in info:
-        if item == '':
+    values = {}
+    values['read_throughput']  = 0
+    values['write_throughput'] = 0
+    values['read_ios']       = 0
+    values['write_ios']      = 0
+    values['latency']     = 0
+    for counter, esx_item, value, unit in info:
+        if esx_item == '':
             if counter == 'disk.read':
-                read_bytes = int(value) * 1024
+                values['read_throughput'] = int(value) * 1024
             elif counter == 'disk.write':
-                write_bytes = int(value) * 1024
+                values['write_throughput'] = int(value) * 1024
         elif counter == 'disk.numberRead':
-            reads += int(value)
+            values['read_ios'] += int(value)
         elif counter == 'disk.numberWrite':
-            writes += int(value)
+            values['write_ios'] += int(value)
         elif counter == 'disk.deviceLatency':
-            latency = max(latency, int(value))
+            values['latency'] = max(values['latency'], int(value))
 
-    return 0, "%s/sec read, %s/sec write, IOs: %.2f/sec, latency: %d ms" % (
-        get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes), reads + writes, latency), \
-        [ ("read", read_bytes), ("write", write_bytes), ("ios", reads + writes), ("latency" , latency) ]
-
+    return check_diskstat_dict(item, params, {"SUMMARY" : values})
 
 check_info['esx_vsphere_counters.diskio'] = {
-   'inventory_function'      : inventory_esx_vsphere_counters_diskio,
-   'check_function'          : check_esx_vsphere_counters_diskio,
-   'service_description':     'Disk IO SUMMARY',
-   'has_perfdata':            True,
+   'inventory_function'  : inventory_esx_vsphere_counters_diskio,
+   'check_function'      : check_esx_vsphere_counters_diskio,
+   'service_description' : 'Disk IO',
+   'has_perfdata'        : True,
+   'group'               : 'diskstat',
+   'includes'            : [ "diskstat.include" ],
 }
 
 

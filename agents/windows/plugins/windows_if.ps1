@@ -14,6 +14,11 @@ if ((([Environment]::OSVersion.Version.Major -eq "6") -and ([Environment]::OSVer
 		Write-Host "[teaming_start]"
 		Write-Host "TeamName`tTeamingMode`tLoadBalancingAlgorithm`tMemberMACAddresses`tMemberNames`tMemberDescriptions`tSpeed`tGUID"
 		foreach ($team in $teams){
+			$membermacs = $null
+			$members = $null
+			$netinterface = $null
+			$netspeed = $null
+			$netguid = $null
 			Write-Host -NoNewline $team.Name`t
 			Write-Host -NoNewline $team.tm`t
 			Write-Host -NoNewline $team.lba`t

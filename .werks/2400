@@ -1,0 +1,9 @@
+Title: windows_if.ps1: fixed exception in plugin when an interface team had no members
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436451981
+Class: fix
+
+

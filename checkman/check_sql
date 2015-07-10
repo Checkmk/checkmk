@@ -16,7 +16,7 @@ description:
   State, text and the performance data are being returned.
 
   The check works with MySQL, Postgresql, MSSQL and Oracle databases using the
-  python drivers MySQLdb, psycopg2, pymssqlm and cx_Oracle. For cx_Oracle the
+  python drivers MySQLdb, psycopg2, pymssql and cx_Oracle. For cx_Oracle the
   Oracle instantclient needs to be installed as well, and the
   LD_LIBRARY_PATH needs to be modified to point to the libclntsh.so of
   that package.

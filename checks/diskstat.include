@@ -394,7 +394,7 @@ def check_diskstat_dict(item, params, disks):
 
     # Throughput
     for what in "read", "write":
-        if what+"_throughput" in disk:
+        if what + "_throughput" in disk:
             throughput = disk[what + "_throughput"]
             state, text, extraperf = check_levels(throughput, "disk_" + what + "_throughput", params.get(what),
                                                   unit = "MB/s", scale = 1048576, statemarkers=False)

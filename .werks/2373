@@ -1,0 +1,11 @@
+Title: Skip unmonitored hosts during bulk discovery
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436520172
+Class: feature
+
+Hosts that are set to <i>unmonitored</i> (usually using the selection <i>Do not monitor this host</i>
+in the host tag group <i>Criticality</i) are now being skipped during bulk discovery. This now behaves
+the same like <i>cmk -I</i> on the command line.

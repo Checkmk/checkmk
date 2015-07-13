@@ -1,0 +1,9 @@
+Title: FreeBSD-Agent: Fixed uptime calculation
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p8
+Date: 1436779297
+Class: fix
+
+

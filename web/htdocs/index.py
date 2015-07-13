@@ -92,6 +92,10 @@ def handler(req, fields = None, profiling = True):
     __builtin__.html = html
     response_code = apache.OK
 
+    # Disable caching for all our pages as they are mostly dynamically generated,
+    # user related and are requred to be up-to-date on every refresh
+    html.set_http_header("Cache-Control", "no-cache")
+
     try:
 
         # Ajax-Functions want no HTML output in case of an error but

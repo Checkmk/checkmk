@@ -80,11 +80,9 @@ class html_mod_python(htmllib.html):
             c.expires = expires
 
         if not self.req.headers_out.has_key("Set-Cookie"):
-            self.req.headers_out.add("Cache-Control", 'no-cache="set-cookie"')
-            self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
+            self.set_http_header("Cache-Control", 'no-cache="set-cookie"')
 
-        self.req.headers_out.add("Set-Cookie", str(c))
-        self.req.err_headers_out.add("Set-Cookie", str(c))
+        self.set_http_header("Set-Cookie", str(c))
 
     def del_cookie(self, varname):
         self.set_cookie(varname, '', time.time() - 60)
@@ -159,6 +157,10 @@ class html_mod_python(htmllib.html):
 
     # Needs to set both, headers_out and err_headers_out to be sure to send
     # the header on all responses
+    #
+    # FIXME: err_headers_out are sent out when a HTTP error occures (which states are treated as "errors"?)
+    # AND when no error occures. headers_out is sent out in case of HTTP 200 (only?). This leads to duplicated
+    # HTTP headers in regular cases. Should be avoided - clean it up!
     def set_http_header(self, key, val):
         self.req.headers_out.add(key, val)
         self.req.err_headers_out.add(key, val)

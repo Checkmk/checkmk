@@ -2406,8 +2406,7 @@ metric_info["error_rate"] = {
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
 
-
-check_metrics["check_mk_active-ping"] = {
+check_metrics["check-mk-ping"] = {
     "rta" : { "scale" : m }
 }
 

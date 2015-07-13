@@ -1,0 +1,9 @@
+Title: omd_apache: Fixed handling of urls with whitespace
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i2p1
+Date: 1436789836
+Class: fix
+
+

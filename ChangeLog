@@ -47,6 +47,7 @@
     * 2400 FIX: windows_if.ps1: fixed exception in plugin when an interface team had no members
     * 2374 FIX: md: Fix exception for certain outputs of certain special MD configurations...
     * 2458 FIX: FreeBSD-Agent: Fixed uptime calculation
+    * 1271 FIX: omd_apache: Fixed handling of urls with whitespace
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

@@ -1,0 +1,11 @@
+Title: windows agent: changed executionpolicy for powershell scripts to unrestricted
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436773665
+Class: feature
+
+Powershell scripts were previously called with the execution policy <i>RemoteSigned</i>
+which did not work properly on certain windows systems.
+

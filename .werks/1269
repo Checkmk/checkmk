@@ -1,0 +1,11 @@
+Title: esx_vsphere_counters.diskio: Check now uses the default diskstat implementation
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1436528825
+Class: feature
+
+The Check has now more metricts and also levels can be configured now. Sadly a rediscovery is needed because the internal name has changed
+and also the graphs has new names what means that the graphs will start over.
+

@@ -180,12 +180,9 @@ echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ process
 
 # Calculate the uptime in seconds since epoch compatible to /proc/uptime in linux
 echo '<<<uptime>>>'
-  up_seconds=$(( `date +%s` - `sysctl -n kern.boottime  | cut -f1 -d\, | awk '{print $4}'`))
+up_seconds=$(( `date +%s` - `sysctl -n kern.boottime  | cut -f1 -d\, | awk '{print $4}'`))
 idle_seconds=$(ps axw | grep idle | grep -v grep | awk '{print $4}' | cut -f1 -d\: )
-
-# second value can be grabbed from "idle" process cpu time / num_cores
-echo "$idle_seconds $up_seconds"
-
+echo "$up_seconds $idle_seconds"
 
 # Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
 #if which cfggen > /dev/null ; then

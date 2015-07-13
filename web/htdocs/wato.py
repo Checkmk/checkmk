@@ -3755,6 +3755,8 @@ def mode_bulk_inventory(phase):
                 site_id, folderpath, hostnamesstring = html.var("_item").split("|")
                 hostnames = hostnamesstring.split(";")
                 num_hosts = len(hostnames)
+                num_skipped_hosts = 0
+                num_failed_hosts = 0
                 folder = g_folders[folderpath]
                 load_hosts(folder)
                 arguments = [how,] + hostnames
@@ -3780,22 +3782,28 @@ def mode_bulk_inventory(phase):
                     sum_counts[3] += counts[hostname][3]
                     host = folder[".hosts"][hostname]
                     if hostname in failed_hosts:
-                        result_txt += _("Failed to inventorize %s: %s<br>") % (hostname, failed_hosts[hostname])
-                        if not host.get("inventory_failed") and not host.get(".folder", {}).get("_lock_hosts"):
-                            host["inventory_failed"] = True
-                            save_hosts(folder)
+                        reason = failed_hosts[hostname]
+                        if reason == None:
+                            result_txt += _("%s: discovery skipped: host not monitored<br>") % hostname
+                            num_skipped_hosts += 1
+                        else:
+                            num_failed_hosts += 1
+                            result_txt += _("%s: discovery failed: %s<br>") % (hostname, failed_hosts[hostname])
+                            if not host.get("inventory_failed") and not host.get(".folder", {}).get("_lock_hosts"):
+                                host["inventory_failed"] = True
+                                save_hosts(folder)
                     else:
-                        result_txt += _("Inventorized %s<br>\n") % hostname
+                        result_txt += _("%s: discovery successful<br>\n") % hostname
                         mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
                         log_pending(AFFECTED, hostname, "bulk-inventory",
-                            _("Inventorized host: %d added, %d removed, %d kept, %d total services") %
+                            _("Did service discovery on host: %d added, %d removed, %d kept, %d total services") %
                                                                                 tuple(counts[hostname]))
 
                         if "inventory_failed" in host and not host.get(".folder", {}).get("_lock_hosts"):
                             del host["inventory_failed"]
                             save_hosts(folder) # Could be optimized, but difficult here
 
-                result = repr([ 'continue', num_hosts, len(failed_hosts) ] + sum_counts) + "\n" + result_txt
+                result = repr([ 'continue', num_hosts, num_failed_hosts, num_skipped_hosts ] + sum_counts) + "\n" + result_txt
 
             except Exception, e:
                 result = repr([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
@@ -3907,6 +3915,7 @@ def mode_bulk_inventory(phase):
             _("Bulk Service Discovery"),  # title
             [ (_("Total hosts"),      0),
               (_("Failed hosts"),     0),
+              (_("Skipped hosts"),    0),
               (_("Services added"),   0),
               (_("Services removed"), 0),
               (_("Services kept"),    0),
@@ -4726,7 +4735,7 @@ def mode_changelog(phase):
             html.context_button(_("Audit Log"), make_link([("mode", "auditlog")]), "auditlog")
 
     elif phase == "action":
-        action = html.var("_action")
+        action = html.var("_action", html.var("_siteaction"))
         if action == "activate":
             # Let host validators do their work
             defective_hosts = validate_all_hosts([], force_all = True)
@@ -4746,10 +4755,14 @@ def mode_changelog(phase):
                    (config.alias_of_user(user_id), count, _("changes"))
             table += '</table>'
 
-            if action == "activate":
+            if action in [ "activate", "sync_restart", "restart" ]:
                 title = _("Confirm activating foreign changes")
                 text  = _("There are some changes made by your colleagues that you will "
                           "activate if you proceed:")
+            elif action == "sync":
+                title = _("Confirm synchronizing foreign changes")
+                text  = _("There are some changes made by your colleagues that you will "
+                          "synchronize if you proceed:")
             else:
                 title = _("Confirm discarding foreign changes")
                 text  = _("There are some changes made by your colleagues that you will "

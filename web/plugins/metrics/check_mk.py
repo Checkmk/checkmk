@@ -2406,6 +2406,11 @@ metric_info["error_rate"] = {
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
 
+
+check_metrics["check_mk_active-ping"] = {
+    "rta" : { "scale" : m }
+}
+
 check_metrics["check_mk_active-mail_loop"] = {
     "duration" : { "name": "mails_received_time" }
 }

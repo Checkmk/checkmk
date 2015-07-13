@@ -27,6 +27,7 @@
     * 1264 FIX: ad_replication: Fixed handling of agent output without Destination DC entry
     * 2400 FIX: windows_if.ps1: fixed exception in plugin when an interface team had no members
     * 2374 FIX: md: Fix exception for certain outputs of certain special MD configurations...
+    * 2458 FIX: FreeBSD-Agent: Fixed uptime calculation
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

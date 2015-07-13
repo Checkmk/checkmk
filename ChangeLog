@@ -72,6 +72,7 @@
     * 2346 FIX: Notifications: Fixed garbled page when switching on/off bulks/backlog/user rules
     * 2372 FIX: Avoid freezing WATO during bulk discovery if hosts do not respond in a timely manner
     * 1267 FIX: Fixed confirm activating foreign changes dialog...
+    * 2397 FIX: Fixed wrong confirm text in distributed setup when activating foreign changes
 
     Notifications:
     * 2313 FIX: notification bulking: fixed exception for plugins which are not configured with checkboxes, e.g. sms

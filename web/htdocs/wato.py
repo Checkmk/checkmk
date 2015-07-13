@@ -4735,7 +4735,7 @@ def mode_changelog(phase):
             html.context_button(_("Audit Log"), make_link([("mode", "auditlog")]), "auditlog")
 
     elif phase == "action":
-        action = html.var("_action")
+        action = html.var("_action", html.var("_siteaction"))
         if action == "activate":
             # Let host validators do their work
             defective_hosts = validate_all_hosts([], force_all = True)
@@ -4755,10 +4755,14 @@ def mode_changelog(phase):
                    (config.alias_of_user(user_id), count, _("changes"))
             table += '</table>'
 
-            if action == "activate":
+            if action in [ "activate", "sync_restart", "restart" ]:
                 title = _("Confirm activating foreign changes")
                 text  = _("There are some changes made by your colleagues that you will "
                           "activate if you proceed:")
+            elif action == "sync":
+                title = _("Confirm synchronizing foreign changes")
+                text  = _("There are some changes made by your colleagues that you will "
+                          "synchronize if you proceed:")
             else:
                 title = _("Confirm discarding foreign changes")
                 text  = _("There are some changes made by your colleagues that you will "

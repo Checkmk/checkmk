@@ -1,0 +1,9 @@
+Title: Fixed wrong confirm text in distributed setup when activating foreign changes
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6p8
+Date: 1436772548
+Class: fix
+
+

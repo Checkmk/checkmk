@@ -679,8 +679,10 @@ vs_mkeventd_rule = Dictionary(
                        "groups in the text to match, then you can use the placeholders "
                        "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
                        "etc matching group.") +
-                     _("The placeholder <tt>\\0</tt> will be replaced by the original host name. "
-                       "This allows you to add new information in front or at the end."),
+                     _("The placeholder <tt>\\0</tt> will be replaced by the original Text "
+                       "to Match. Note that as an alternative, you may also use the rule "
+                       "Hostname translation for Incoming Messages in the Global Settings "
+                       "of the EC to accomplish your task."),
               allow_empty = False,
               attrencode = True,
           )

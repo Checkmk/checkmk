@@ -7210,6 +7210,22 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_environment,
+    "smoke",
+    _("Smoke Detection"),
+    Tuple(
+        help = _("For devices which measure smoke in percent"),
+        elements = [
+            Percentage(title = _("Warning at"),  allow_int = True, default_value= 1),
+            Percentage(title = _("Critical at"), allow_int = True, default_value= 5),
+        ]),
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identifier of the sensor.")),
+    "first",
+)
+
+register_check_parameters(
    subgroup_environment,
    "apc_ats_output",
    _("APC Automatic Transfer Switch Output"),

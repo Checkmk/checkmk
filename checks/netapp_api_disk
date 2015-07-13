@@ -54,8 +54,13 @@ def check_netapp_api_disk_summary(_no_item, params, info):
                                    "shelf-uids-of-disks": {"block-name": "shelf-uid-instance",
                                                            "key": "shelf-uid"}})
 
+    # Convert legacy levels
+    if "broken_spare_ratio" in params:
+        params = { "failed_spare_ratio": params["broken_spare_ratio"] }
+
     disks = disks_info.get("disk-list-info")
     shelfs = disks_info.get("shelf-uids-of-disks")
+
     # The device can contain disks who belongs to another filer. We only check the ones
     # belonging to this filer.
     # TODO Do we need that?
@@ -65,9 +70,10 @@ def check_netapp_api_disk_summary(_no_item, params, info):
     def find_disk_shelf_uid(disk_uid):
         if not disk_to_shelf_map:
             for shelf, values in shelfs.items():
-                disks = values["disks"].split(" ")
-                for disk in disks:
-                    disk_to_shelf_map[disk] = shelf
+                if "disks" in values:
+                    disks = values["disks"].split(" ")
+                    for disk in disks:
+                        disk_to_shelf_map[disk] = shelf
         return disk_to_shelf_map.get(disk_uid)
 
     disks_converted = []
@@ -81,8 +87,9 @@ def check_netapp_api_disk_summary(_no_item, params, info):
             disk_info += " (Shelf: %s, Bay %s)" % (shelf_uid, disk.get("bay"))
         disk['identifier'] = disk_info
         disk['type'] = False
-        raid_type = disk.get("raid-type")
-        if disk.get("raid-state", "") == "broken":
+        raid_type  = disk.get("raid-type")
+        raid_state = disk.get("raid-state")
+        if raid_state  == "broken":
             disk['state'] = 'failed'
         elif disk.get("prefailed", "false") not in [ "false", "None" ]:
             disk['state'] = 'prefailed'
@@ -90,7 +97,7 @@ def check_netapp_api_disk_summary(_no_item, params, info):
                 disk['type'] = 'parity'
             elif raid_type == "data":
                 disk['type'] = 'data'
-        elif raid_type == "spare":
+        elif raid_state == "spare":
             disk['state'] = "spare"
         else:
             disk['state'] = 'ok'

@@ -79,9 +79,6 @@ class html_mod_python(htmllib.html):
         if expires is not None:
             c.expires = expires
 
-        if not self.req.headers_out.has_key("Set-Cookie"):
-            self.set_http_header("Cache-Control", 'no-cache="set-cookie"')
-
         self.set_http_header("Set-Cookie", str(c))
 
     def del_cookie(self, varname):

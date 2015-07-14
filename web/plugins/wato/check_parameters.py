@@ -6236,20 +6236,32 @@ register_check_parameters(
     subgroup_storage,
     "netapp_disks",
     _("Filer Disk Levels (netapp, ibm svc)"),
-    Dictionary(
-        elements = [
-            ( "broken_spare_ratio",
-            Tuple(
-                title = _("Broken to spare ratio"),
-                help  = _("You can set a limit to the broken to spare disk ratio. "
-                          "The ratio is calculated with <i>broken / (broken + spare)</i>."),
-                elements = [
-                    Percentage(title = _("Warning at or above"), default_value = 1.0),
-                    Percentage(title = _("Critical at or above"), default_value = 50.0),
-                ]
-            )),
-        ],
-        optional_keys = False
+    Transform(
+        Dictionary(
+            elements = [
+                ( "failed_spare_ratio",
+                Tuple(
+                    title = _("Failed to spare ratio"),
+                    help  = _("You can set a limit to the failed to spare disk ratio. "
+                              "The ratio is calculated with <i>spare / (failed + spare)</i>."),
+                    elements = [
+                        Percentage(title = _("Warning at or above"), default_value = 1.0),
+                        Percentage(title = _("Critical at or above"), default_value = 50.0),
+                    ]
+                )),
+                ( "offline_spare_ratio",
+                Tuple(
+                    title = _("Offline to spare ratio"),
+                    help  = _("You can set a limit to the offline to spare disk ratio. "
+                              "The ratio is calculated with <i>spare / (offline + spare)</i>."),
+                    elements = [
+                        Percentage(title = _("Warning at or above"), default_value = 1.0),
+                        Percentage(title = _("Critical at or above"), default_value = 50.0),
+                    ]
+                )),
+            ],
+        ),
+        forth = lambda a: "broken_spare_ratio" in a and {"failed_spare_ratio": a["broken_spare_ratio"]} or a
     ),
     None,
     match_type = "dict",

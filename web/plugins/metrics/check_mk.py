@@ -2195,7 +2195,7 @@ graph_info.append({
     "title" : _("Livestatus Requests per Connection"),
     "metrics" : [
         ( "livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
-          _("Averate requests per connection")),
+          _("Average requests per connection")),
     ],
 })
 

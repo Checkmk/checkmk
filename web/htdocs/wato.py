@@ -1450,7 +1450,10 @@ def show_hosts(folder):
         if config.may("wato.rulesets"):
             html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
         if check_host_permissions(hostname, False) == True:
-            msg = _("Edit the services of this host, do a service discovery")
+            if config.may("wato.services"):
+                msg = _("Edit the services of this host, do a service discovery")
+            else:
+                msg = _("Display the services of this host")
             image =  "services"
             if host.get("inventory_failed"):
                 image = "inventory_failed"
@@ -3130,13 +3133,12 @@ def mode_inventory(phase, firsttime):
             # only display for non cluster hosts
             html.context_button(_("Diagnostic"),
                   make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
-        html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
+        if config.may("wato.services"):
+            html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
-        config.need_permission("wato.services")
         check_host_permissions(hostname)
         if html.check_transaction():
-
             # Settings for showing parameters
             if html.var("_show_parameters"):
                 parameter_column = True
@@ -3146,6 +3148,8 @@ def mode_inventory(phase, firsttime):
                 parameter_column = False
                 config.save_user_file("parameter_column", False)
                 return
+
+            config.need_permission("wato.services")
 
             cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
             new_target = "folder"
@@ -3241,10 +3245,11 @@ def show_service_table(host, firsttime):
             html.button("_refresh", _("Automatic Refresh (Tabula Rasa)"))
 
         html.write(" &nbsp; ")
-        if parameter_column:
-            html.button("_hide_parameters", _("Hide Check Parameters"))
-        else:
-            html.button("_show_parameters", _("Show Check Parameters"))
+
+    if parameter_column:
+        html.button("_hide_parameters", _("Hide Check Parameters"))
+    else:
+        html.button("_show_parameters", _("Show Check Parameters"))
 
     html.hidden_fields()
     if html.var("_scan"):
@@ -3368,10 +3373,11 @@ def show_service_table(host, firsttime):
                 html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
 
             # Temporary ignore checkbox
-            table.cell()
-            if checkbox != None:
-                varname = "_%s_%s" % (ct, html.varencode(item))
-                html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+            if config.may("wato.services"):
+                table.cell()
+                if checkbox != None:
+                    varname = "_%s_%s" % (ct, html.varencode(item))
+                    html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
 
     table.end()
     html.end_form()

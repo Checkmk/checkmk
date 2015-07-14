@@ -1,0 +1,14 @@
+Title: Users with access to host/services can now edit the disabled services rule for their hosts/folders
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436872721
+Class: feature
+
+In previous versions it was only possible to permit users to edit either all rulesets or no ruleset
+related to the folders they are permitted for.
+
+For example users were able to edit their hosts in their WATO folders, perform services discoveries
+on these hosts, but were not able to configure the disabled services for these hosts. This has been
+changed now for the "Disabled Services" ruleset.

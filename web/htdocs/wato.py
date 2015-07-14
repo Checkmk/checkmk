@@ -1447,7 +1447,8 @@ def show_hosts(folder):
 
         table.cell(_("Actions"), css="buttons", sortable=False)
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
-        html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
+        if config.may("wato.rulesets"):
+            html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
         if check_host_permissions(hostname, False) == True:
             msg = _("Edit the services of this host, do a service discovery")
             image =  "services"
@@ -3344,9 +3345,7 @@ def show_service_table(host, firsttime):
             manpage_url = make_link([("mode", "check_manpage"), ("check_type", ctype)])
             html.icon_button(manpage_url, _("View the manual page of the check plugin"), "check_plugins")
 
-            can_access_disabled_services_rules = config.may('wato.rulesets')
-
-            if check_source == "ignored" and can_access_disabled_services_rules:
+            if check_source == "ignored" and may_edit_ruleset("ignored_services"):
                 url = make_link([("mode", "edit_ruleset"),
                                  ("varname", "ignored_services"),
                                  ("host", hostname),
@@ -3354,7 +3353,7 @@ def show_service_table(host, firsttime):
                 html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
 
             # Permanently disable icon
-            if check_source in ['new', 'old'] and can_access_disabled_services_rules:
+            if check_source in ['new', 'old'] and may_edit_ruleset("ignored_services"):
                 url = make_link([
                     ('mode', 'edit_ruleset'),
                     ('varname', 'ignored_services'),
@@ -14663,8 +14662,12 @@ def create_new_rule_form(rulespec, hostname = None, item = None, varname = None)
     html.hidden_field('folder', html.var('folder'))
     html.end_form()
 
+
 def mode_edit_ruleset(phase):
     varname = html.var("varname")
+
+    if not may_edit_ruleset(varname):
+        raise MKAuthException(_("You are not permitted to access this ruleset."))
 
     item = None
     if html.var("check_command"):
@@ -14714,20 +14717,24 @@ def mode_edit_ruleset(phase):
 
     elif phase == "buttons":
         global_buttons()
-        if not rulespec:
-            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
-        else:
-            group = rulespec["group"].split("/")[0]
-            groupname = g_rulegroups[group][0]
-            html.context_button(groupname,
-                  make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
-        html.context_button(_("Used Rulesets"),
-             make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
+
+        if config.may('wato.rulesets'):
+            if not rulespec:
+                html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
+            else:
+                group = rulespec["group"].split("/")[0]
+                groupname = g_rulegroups[group][0]
+                html.context_button(groupname,
+                      make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
+            html.context_button(_("Used Rulesets"),
+                 make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
+
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "services")
-            html.context_button(_("Parameters"),
-                  make_link([("mode", "object_parameters"), ("host", hostname), ("service", item)]), "rulesets")
+            if config.may('wato.rulesets'):
+                html.context_button(_("Parameters"),
+                      make_link([("mode", "object_parameters"), ("host", hostname), ("service", item)]), "rulesets")
         return
 
     elif phase == "action":
@@ -15312,9 +15319,11 @@ def date_and_user():
 
 
 def mode_edit_rule(phase, new = False):
-    # Due to localization this cannot be defined in the global context!
-
     varname = html.var("varname")
+
+    if not may_edit_ruleset(varname):
+        raise MKAuthException(_("You are not permitted to access this ruleset."))
+
     rulespec = g_rulespecs[varname]
     back_mode = html.var('back_mode', 'edit_ruleset')
 
@@ -19139,6 +19148,13 @@ def validate_all_hosts(hostnames, force_all = False):
 #   | Functions needed at various places                                   |
 #   '----------------------------------------------------------------------'
 
+def may_edit_ruleset(varname):
+    if varname == "ignored_services":
+        return config.may("wato.services") or config.may("wato.rulesets")
+    else:
+        return config.may("wato.rulesets")
+
+
 import base64
 
 def mk_eval(s):
@@ -19559,9 +19575,9 @@ modes = {
    "check_manpage"      : ([], mode_check_manpage),
    "rulesets"           : (["rulesets"], mode_rulesets),
    "ineffective_rules"  : (["rulesets"], mode_ineffective_rules),
-   "edit_ruleset"       : (["rulesets"], mode_edit_ruleset),
-   "new_rule"           : (["rulesets"], lambda phase: mode_edit_rule(phase, True)),
-   "edit_rule"          : (["rulesets"], lambda phase: mode_edit_rule(phase, False)),
+   "edit_ruleset"       : ([], mode_edit_ruleset),
+   "new_rule"           : ([], lambda phase: mode_edit_rule(phase, True)),
+   "edit_rule"          : ([], lambda phase: mode_edit_rule(phase, False)),
    "host_groups"        : (["groups"], lambda phase: mode_groups(phase, "host")),
    "service_groups"     : (["groups"], lambda phase: mode_groups(phase, "service")),
    "contact_groups"     : (["users"], lambda phase: mode_groups(phase, "contact")),

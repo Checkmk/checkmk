@@ -37,6 +37,7 @@ def brocade_info_try_it(info):
         model = "-"
     try:
         wwn = info[2][0][0]
+        wwn = " ".join([ "%02X" % ord(tok) for tok in wwn ])
     except:
         wwn = "-"
     try:

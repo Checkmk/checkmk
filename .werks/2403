@@ -1,0 +1,10 @@
+Title: ibm_imm_fan: fixed exception with invalid formatted fan speed information
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436867245
+Class: fix
+
+The check now able to handle fan speed information of the type <i>40% of maximum</i>.
+

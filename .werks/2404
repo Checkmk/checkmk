@@ -1,0 +1,12 @@
+Title: apache_status: now able to handle BusyServers and IdleServers
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2p1
+Date: 1436869147
+
+The check crashed when the apache_status plugin reported the fields
+BusyServer or IdleServers.
+

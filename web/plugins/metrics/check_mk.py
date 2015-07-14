@@ -1082,6 +1082,18 @@ metric_info["idle_workers"] = {
     "color" : "43/b",
 }
 
+metric_info["busy_servers"] = {
+    "title" : _("Busy servers"),
+    "unit"  : "count",
+    "color" : "#a080b0",
+}
+
+metric_info["idle_servers"] = {
+    "title" : _("Idle servers"),
+    "unit"  : "count",
+    "color" : "43/b",
+}
+
 metric_info["open_slots"] = {
     "title" : _("Open slots"),
     "unit"  : "count",
@@ -2934,6 +2946,8 @@ check_metrics["check_mk-apache_status"] = {
     "Uptime"               : { "name" : "uptime" },
     "IdleWorkers"          : { "name" : "idle_workers" },
     "BusyWorkers"          : { "name" : "busy_workers" },
+    "IdleServers"          : { "name" : "idle_servers" },
+    "BusyServers"          : { "name" : "busy_servers" },
     "OpenSlots"            : { "name" : "open_slots" },
     "TotalSlots"           : { "name" : "total_slots" },
     "CPULoad"              : { "name" : "load1" },
@@ -4070,6 +4084,14 @@ graph_info.append({
     "metrics" : [
         ( "busy_workers", "area" ),
         ( "idle_workers", "stack" ),
+    ],
+})
+
+graph_info.append({
+    "title"   : _("Busy and idle servers"),
+    "metrics" : [
+        ( "busy_servers", "area" ),
+        ( "idle_servers", "stack" ),
     ],
 })
 

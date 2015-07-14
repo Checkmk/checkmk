@@ -1958,7 +1958,7 @@ def validate_and_compile_mib(mibname, content):
 
     # Provides the just uploaded MIB module
     compiler.addSources(
-        CallbackReader(lambda t,m,c: m==mibname and c or '', content)
+        CallbackReader(lambda m,c: m==mibname and c or '', content)
     )
 
     # Directories containing ASN1 MIB files which may be used for

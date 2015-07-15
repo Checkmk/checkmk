@@ -1,0 +1,10 @@
+Title: UDP ports for SNMP communication can now be configured via WATO
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436949085
+
+

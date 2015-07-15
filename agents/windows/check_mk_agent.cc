@@ -2783,7 +2783,7 @@ char *add_interpreter(char *path, char *newpath)
         //   1.) The powershell interpreter needs to be in PATH
         //   2.) The execution policy needs to allow the script execution
         //       -> Get-ExecutionPolicy / Set-ExecutionPolicy
-        snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy Unrestricted \"& \'%s\'\"", path);
+        snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", path);
         return newpath;
     }
     else if (!strcmp(path + strlen(path) - 3, ".pl")) {

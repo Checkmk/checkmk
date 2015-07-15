@@ -217,10 +217,7 @@ def page_handler():
 
     # Check general permission for this mode
     if modeperms != None and not config.may("wato.seeall"):
-        for pname in modeperms:
-            if '.' not in pname:
-                pname = "wato." + pname
-            config.need_permission(pname)
+        ensure_mode_permissions(modeperms)
 
     # Do actions (might switch mode)
     action_message = None
@@ -232,10 +229,7 @@ def page_handler():
             # he needs an explicit access permission for doing changes:
             if config.may("wato.seeall"):
                 if modeperms:
-                    for pname in modeperms:
-                        if '.' not in pname:
-                            pname = "wato." + pname
-                        config.need_permission(pname)
+                    ensure_mode_permissions(modeperms)
 
             result = modefunc("action")
             if type(result) == tuple:
@@ -331,6 +325,13 @@ def page_handler():
         do_git_commit()
 
     html.footer()
+
+
+def ensure_mode_permissions(modeperms):
+    for pname in modeperms:
+        if '.' not in pname:
+            pname = "wato." + pname
+        config.need_permission(pname)
 
 
 def set_current_folder(folder = None):
@@ -1446,9 +1447,13 @@ def show_hosts(folder):
 
         table.cell(_("Actions"), css="buttons", sortable=False)
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
-        html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
+        if config.may("wato.rulesets"):
+            html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
         if check_host_permissions(hostname, False) == True:
-            msg = _("Edit the services of this host, do a service discovery")
+            if config.may("wato.services"):
+                msg = _("Edit the services of this host, do a service discovery")
+            else:
+                msg = _("Display the services of this host")
             image =  "services"
             if host.get("inventory_failed"):
                 image = "inventory_failed"
@@ -2011,7 +2016,8 @@ def mode_edithost(phase, new, cluster):
 
             html.context_button(_("Services"),
                   make_link([("mode", "inventory"), ("host", hostname)]), "services")
-            html.context_button(_("Parameters"),
+            if config.may('wato.rulesets'):
+                html.context_button(_("Parameters"),
                   make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
             if not g_folder.get(".lock_hosts"):
                 html.context_button(_("Rename %s") % (cluster and _("Cluster") or _("Host")),
@@ -2893,8 +2899,9 @@ def mode_diag_host(phase):
         host_status_button(hostname, "hoststatus")
         html.context_button(_("Properties"),
                             make_link([("mode", "edithost"), ("host", hostname)]), "edit")
-        html.context_button(_("Parameters"),
-              make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
+        if config.may('wato.rulesets'):
+            html.context_button(_("Parameters"),
+                            make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
         html.context_button(_("Services"),
                             make_link([("mode", "inventory"), ("host", hostname)]), "services")
         return
@@ -3119,19 +3126,19 @@ def mode_inventory(phase, firsttime):
                             make_link([("mode", "folder")]), "back")
         host_status_button(hostname, "host")
         html.context_button(_("Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "edit")
-        html.context_button(_("Parameters"),
-              make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
+        if config.may('wato.rulesets'):
+            html.context_button(_("Parameters"),
+                                make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
         if ".nodes" not in host:
             # only display for non cluster hosts
             html.context_button(_("Diagnostic"),
                   make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
-        html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
+        if config.may("wato.services"):
+            html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
-        config.need_permission("wato.services")
         check_host_permissions(hostname)
         if html.check_transaction():
-
             # Settings for showing parameters
             if html.var("_show_parameters"):
                 parameter_column = True
@@ -3141,6 +3148,8 @@ def mode_inventory(phase, firsttime):
                 parameter_column = False
                 config.save_user_file("parameter_column", False)
                 return
+
+            config.need_permission("wato.services")
 
             cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
             new_target = "folder"
@@ -3236,10 +3245,11 @@ def show_service_table(host, firsttime):
             html.button("_refresh", _("Automatic Refresh (Tabula Rasa)"))
 
         html.write(" &nbsp; ")
-        if parameter_column:
-            html.button("_hide_parameters", _("Hide Check Parameters"))
-        else:
-            html.button("_show_parameters", _("Show Check Parameters"))
+
+    if parameter_column:
+        html.button("_hide_parameters", _("Hide Check Parameters"))
+    else:
+        html.button("_show_parameters", _("Show Check Parameters"))
 
     html.hidden_fields()
     if html.var("_scan"):
@@ -3320,7 +3330,7 @@ def show_service_table(host, firsttime):
 
             # Icon for Service parameters. Not for missing services!
             table.cell(css='buttons')
-            if check_source not in [ "new", "ignored" ]:
+            if check_source not in [ "new", "ignored" ] and config.may('wato.rulesets'):
                 # Link to list of all rulesets affecting this service
                 params_url = make_link([("mode", "object_parameters"),
                                         ("host", hostname),
@@ -3340,7 +3350,7 @@ def show_service_table(host, firsttime):
             manpage_url = make_link([("mode", "check_manpage"), ("check_type", ctype)])
             html.icon_button(manpage_url, _("View the manual page of the check plugin"), "check_plugins")
 
-            if check_source == "ignored":
+            if check_source == "ignored" and may_edit_ruleset("ignored_services"):
                 url = make_link([("mode", "edit_ruleset"),
                                  ("varname", "ignored_services"),
                                  ("host", hostname),
@@ -3348,7 +3358,7 @@ def show_service_table(host, firsttime):
                 html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
 
             # Permanently disable icon
-            if check_source in ['new', 'old']:
+            if check_source in ['new', 'old'] and may_edit_ruleset("ignored_services"):
                 url = make_link([
                     ('mode', 'edit_ruleset'),
                     ('varname', 'ignored_services'),
@@ -3363,10 +3373,11 @@ def show_service_table(host, firsttime):
                 html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
 
             # Temporary ignore checkbox
-            table.cell()
-            if checkbox != None:
-                varname = "_%s_%s" % (ct, html.varencode(item))
-                html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+            if config.may("wato.services"):
+                table.cell()
+                if checkbox != None:
+                    varname = "_%s_%s" % (ct, html.varencode(item))
+                    html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
 
     table.end()
     html.end_form()
@@ -14657,8 +14668,12 @@ def create_new_rule_form(rulespec, hostname = None, item = None, varname = None)
     html.hidden_field('folder', html.var('folder'))
     html.end_form()
 
+
 def mode_edit_ruleset(phase):
     varname = html.var("varname")
+
+    if not may_edit_ruleset(varname):
+        raise MKAuthException(_("You are not permitted to access this ruleset."))
 
     item = None
     if html.var("check_command"):
@@ -14708,20 +14723,24 @@ def mode_edit_ruleset(phase):
 
     elif phase == "buttons":
         global_buttons()
-        if not rulespec:
-            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
-        else:
-            group = rulespec["group"].split("/")[0]
-            groupname = g_rulegroups[group][0]
-            html.context_button(groupname,
-                  make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
-        html.context_button(_("Used Rulesets"),
-             make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
+
+        if config.may('wato.rulesets'):
+            if not rulespec:
+                html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
+            else:
+                group = rulespec["group"].split("/")[0]
+                groupname = g_rulegroups[group][0]
+                html.context_button(groupname,
+                      make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
+            html.context_button(_("Used Rulesets"),
+                 make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
+
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "services")
-            html.context_button(_("Parameters"),
-                  make_link([("mode", "object_parameters"), ("host", hostname), ("service", item)]), "rulesets")
+            if config.may('wato.rulesets'):
+                html.context_button(_("Parameters"),
+                      make_link([("mode", "object_parameters"), ("host", hostname), ("service", item)]), "rulesets")
         return
 
     elif phase == "action":
@@ -15306,9 +15325,11 @@ def date_and_user():
 
 
 def mode_edit_rule(phase, new = False):
-    # Due to localization this cannot be defined in the global context!
-
     varname = html.var("varname")
+
+    if not may_edit_ruleset(varname):
+        raise MKAuthException(_("You are not permitted to access this ruleset."))
+
     rulespec = g_rulespecs[varname]
     back_mode = html.var('back_mode', 'edit_ruleset')
 
@@ -19133,6 +19154,13 @@ def validate_all_hosts(hostnames, force_all = False):
 #   | Functions needed at various places                                   |
 #   '----------------------------------------------------------------------'
 
+def may_edit_ruleset(varname):
+    if varname == "ignored_services":
+        return config.may("wato.services") or config.may("wato.rulesets")
+    else:
+        return config.may("wato.rulesets")
+
+
 import base64
 
 def mk_eval(s):
@@ -19553,9 +19581,9 @@ modes = {
    "check_manpage"      : ([], mode_check_manpage),
    "rulesets"           : (["rulesets"], mode_rulesets),
    "ineffective_rules"  : (["rulesets"], mode_ineffective_rules),
-   "edit_ruleset"       : (["rulesets"], mode_edit_ruleset),
-   "new_rule"           : (["rulesets"], lambda phase: mode_edit_rule(phase, True)),
-   "edit_rule"          : (["rulesets"], lambda phase: mode_edit_rule(phase, False)),
+   "edit_ruleset"       : ([], mode_edit_ruleset),
+   "new_rule"           : ([], lambda phase: mode_edit_rule(phase, True)),
+   "edit_rule"          : ([], lambda phase: mode_edit_rule(phase, False)),
    "host_groups"        : (["groups"], lambda phase: mode_groups(phase, "host")),
    "service_groups"     : (["groups"], lambda phase: mode_groups(phase, "service")),
    "contact_groups"     : (["users"], lambda phase: mode_groups(phase, "contact")),

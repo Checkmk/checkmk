@@ -1,0 +1,11 @@
+Title: netapp_api_disk: fixed broken WATO and check configuration
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436798438
+Class: fix
+
+Incorrect parameters were used within the WATO and the check configuration.
+This check got an incomplete rework two months ago where naming for the parameters got changed.
+This fix is able to migrate any existing old configuration, so there are no further changes required.

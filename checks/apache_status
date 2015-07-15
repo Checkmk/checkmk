@@ -53,6 +53,8 @@ _apache_status_fields = {
     'ConnsAsyncWriting':   (17, int),
     'ConnsAsyncKeepAlive': (18, int),
     'ConnsAsyncClosing':   (19, int),
+    'BusyServers':         (20, int),
+    'IdleServers':         (21, int),
 }
 
 _apache_status_stats = {

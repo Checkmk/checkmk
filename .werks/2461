@@ -1,0 +1,9 @@
+Title: Service Discovery: Hiding action buttons to rules when user is not permitted to rulesets
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436868963
+Class: fix
+
+

@@ -1,0 +1,11 @@
+Title: Slightly more robust SNMP trap translation
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436866882
+Class: fix
+
+SNMP traps having specific OIDs, like e.g. just ".1.3.6.1" were causing
+an exception when the Event Console tried to parse them. This has been
+changed to be more robust now.

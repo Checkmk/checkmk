@@ -2201,6 +2201,18 @@ register_rule(group,
              "is configured with this ruleset will then use the information from that "
              "file instead of using real SNMP. "))
 
+register_rule(group,
+    "snmp_ports",
+    Integer(
+        minvalue = 1,
+        maxvalue = 65535,
+        default_value = 161
+    ),
+    title = _("UDP port used for SNMP"),
+    help = _("This variable allows you to customize the UDP port to "
+             "be used to communicate via SNMP on a per-host-basis."),
+)
+
 group = "agent/" + _("Check_MK Agent")
 
 register_rule(group,

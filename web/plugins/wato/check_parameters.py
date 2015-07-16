@@ -714,6 +714,45 @@ register_check_parameters(
     match_type = "first",
 )
 
+bvip_link_states = [
+  ( 0 , "No Link"),
+  ( 1 , "10 MBit - HalfDuplex"),
+  ( 2 , "10 MBit - FullDuplex"),
+  ( 3 , "100 Mbit - HalfDuplex"),
+  ( 4 , "100 Mbit - FullDuplex"),
+  ( 5 , "1 Gbit - FullDuplex"),
+  ( 7, "Wifi"),
+]
+
+register_check_parameters(
+    subgroup_environment,
+    "bvip_link",
+    _("Allowed Network states on Bosch IP Cameras"),
+    Dictionary(
+        title = _("Update State"),
+        elements = [
+            ("ok_states", ListChoice(
+              title = _("States which result in OK"),
+              choices = bvip_link_states,
+              default_value = [ 0, 4, 5 ]
+            )),
+            ("warn_states", ListChoice(
+              title = _("States which result in Warning"),
+              choices = bvip_link_states,
+              default_value = [ 7 ]
+            )),
+            ("crit_states", ListChoice(
+              title = _("States which result in Critical"),
+              choices = bvip_link_states,
+              default_value = [ 1, 2, 3 ]
+            )),
+        ],
+        optional_keys = None,
+    ),
+    None,
+    match_type = "dict",
+)
+
 register_check_parameters(
     subgroup_environment,
     "ocprot_current",

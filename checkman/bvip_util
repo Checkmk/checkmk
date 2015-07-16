@@ -1,0 +1,11 @@
+title: Bosch Video over IP: CPU utilization
+agents: snmp
+catalog: hw/environment/bosch
+license: GPL
+distribution: check_mk
+description:
+ This Check monitors the Total CPU utilization on the Camera. There are also two seperate Checks for the utilization used for the Coder and for the VCA.
+
+inventory:
+ Creates one check .
+

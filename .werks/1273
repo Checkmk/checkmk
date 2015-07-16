@@ -1,0 +1,9 @@
+Title: bvip_cams, bvip_fans, bvip_info, bvip_link, bvip_poe, bvip_temp, bvip_util, bvip_video_alerts: New Checks for Bosch Video over IP Cameras
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437037262
+Class: feature
+
+

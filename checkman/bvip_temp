@@ -1,0 +1,10 @@
+title: Bosch Video over IP: Temperature
+agents: snmp
+catalog: hw/environment/bosch
+license: GPL
+distribution: check_mk
+description:
+ This Check monitors the temperature for the included Temperature Sensor on the Camera.
+
+inventory:
+ Creates one check per sensor.

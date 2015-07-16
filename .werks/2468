@@ -1,0 +1,13 @@
+Title: Fixed actions for duplicate host names on different sites
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437047135
+
+When executing actions, for example setting downtimes, on equal named hosts
+existing in different sites, previous versions did only execute the action
+for the first site. The actions for the equal named hosts/services were
+not performed on the other sites.

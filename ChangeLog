@@ -1,3 +1,5 @@
+1.2.6p10:
+
 1.2.6p9:
     Core & Setup:
     * 2465 FIX: Fixed broken Check_MK Discovery checks (check reports "(null)")

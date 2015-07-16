@@ -39,10 +39,6 @@ def page_index():
     if start_url.startswith('javascript:'):
         start_url = default_start_url
 
-    # Do not cache the index page -> caching problems when page is accessed
-    # while not logged in
-    #html.req.headers_out.add("Cache-Control", "max-age=7200, public");
-    html.req.headers_out.add("Cache-Control", "no-cache");
     if "%s" in config.page_heading:
         heading = config.page_heading % (config.site(defaults.omd_site).get('alias', _("Multisite")))
     else:

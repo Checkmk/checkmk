@@ -1,0 +1,12 @@
+Title: Hiding not permitted actions from service discovery page when only permitted on host
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1436874839
+Class: feature
+
+When users are only permitted on hosts/folders in WATO, the service discovery page showed
+buttons and action icons which resulted in an error message when a user not having permissions
+on the services clicked on them. These action buttons are now hidden when the user is not
+permitted, making the page read-only when user is only permitted to host.

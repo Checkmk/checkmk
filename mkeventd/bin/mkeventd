@@ -1224,7 +1224,10 @@ class EventServer:
                 mod, sym, indices = mib_var.getMibSymbol()
                 # Only care about the first indice reported. Why should we care about multiple?
                 # Do we have such cases here?
-                translated_oid = '%s::%s.%s' % (mod, sym, indices[0].prettyPrint())
+                if not indices:
+                    translated_oid = '%s::%s' % (mod, sym)
+                else:
+                    translated_oid = '%s::%s.%s' % (mod, sym, indices[0].prettyPrint())
 
                 # This MACRO supports SYNTAX clause?
                 if hasattr(node, 'getSyntax'):

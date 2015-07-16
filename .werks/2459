@@ -1,0 +1,15 @@
+Title: Preventing caching of all HTTP requests to dynamic pages (*.py)
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436790538
+
+Especially when opening Check_MK GUI using some kind of proxy or traffic
+optimizer it might have happened that those devices were serving cached
+ (outdated) pages to the user. This was done because the Check_MK GUI
+did not set the HTTP headers correctly (when using form based authentication).
+This has been fixed now by always setting "Cache-Control: no-cache" for
+all dynamic created pages.

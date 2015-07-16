@@ -194,7 +194,7 @@ def fileinfo_check_function(check_definition, params):
     perfdata = []
     for what, val, verbfunc in check_definition:
         infos.append("%s is %s" % (what, verbfunc(val)))
-        if type(val) == int: # because strings go into infos but not into perfdata
+        if type(val) in [long, int]: # because strings go into infos but not into perfdata
             warn, crit = "", ""
             for how, comp, cfunc in [ ("min", "<", operator.lt), ("max", ">", operator.gt) ]:
                 p = params.get(how + what)

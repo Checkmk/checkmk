@@ -1,4 +1,7 @@
 1.2.6p10:
+    Checks & Agents:
+    * 2406 FIX: fileinfo: fixed missing size performance data for very large (e.g 2TB) files and fileinfo groups...
+
 
 1.2.6p9:
     Core & Setup:

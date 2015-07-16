@@ -1945,11 +1945,11 @@ def do_actions(view, what, action_rows, backurl):
     for nr, row in enumerate(action_rows):
         core_commands, title, executor = core_command(what, row, nr, len(action_rows))
         for command in core_commands:
-            if command not in already_executed:
+            if (row["site"], command) not in already_executed:
                 if type(command) == unicode:
                     command = command.encode("utf-8")
                 executor(command, row["site"])
-                already_executed.add(command)
+                already_executed.add((row["site"], command))
                 count += 1
 
     message = None

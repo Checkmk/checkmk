@@ -2,6 +2,9 @@
     Core & Setup:
     * 2465 FIX: Fixed broken Check_MK Discovery checks (check reports "(null)")
 
+    Multisite:
+    * 2468 FIX: Fixed actions for duplicate host names on different sites...
+
     WATO:
     * 2466 FIX: Fixed exception when searching for rulesets / global settings using special characters like umlauts
     * 2467 FIX: Fixed encoding exception occuring in localized GUI when a WATO action triggers an error message...

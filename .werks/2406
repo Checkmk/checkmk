@@ -1,0 +1,12 @@
+Title: fileinfo: fixed missing size performance data for very large (e.g 2TB) files and fileinfo groups
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437053468
+
+The fileinfo check failed to report the performance data value <i>size</i> for very
+large files. As a result the perfometer and graphs were broken.
+

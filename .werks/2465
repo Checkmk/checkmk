@@ -1,5 +1,5 @@
 Title: Fixed broken Check_MK Discovery checks (check reports "(null)")
-Level: 1
+Level: 2
 Component: core
 Compatible: compat
 Version: 1.2.6p9

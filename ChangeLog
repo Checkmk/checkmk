@@ -90,6 +90,7 @@
     * 2461 FIX: Service Discovery: Hiding action buttons to rules when user is not permitted to rulesets
     * 2464 FIX: UDP ports for SNMP communication can now be configured via WATO
     * 2466 FIX: Fixed exception when searching for rulesets / global settings using special characters like umlauts
+    * 2467 FIX: Fixed encoding exception occuring in localized GUI when a WATO action triggers an error message...
 
     Notifications:
     * 2313 FIX: notification bulking: fixed exception for plugins which are not configured with checkboxes, e.g. sms

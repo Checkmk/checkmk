@@ -63,6 +63,7 @@
     * 1267 FIX: Fixed confirm activating foreign changes dialog...
     * 2397 FIX: Fixed wrong confirm text in distributed setup when activating foreign changes
     * 2464 FIX: UDP ports for SNMP communication can now be configured via WATO
+    * 2466 FIX: Fixed exception when searching for rulesets / global settings using special characters like umlauts
 
     Notifications:
     * 2313 FIX: notification bulking: fixed exception for plugins which are not configured with checkboxes, e.g. sms

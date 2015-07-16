@@ -199,6 +199,13 @@ for entry, fields in [
         ("fabricDceSwSrvPc",   ["Dn",         "AdminState", "OperState",               "OperSpeed", "Name", "PortId"]),
         ("fabricDceSwSrvPcEp", ["Dn", "EpDn", "AdminState", "OperState",               "PortId", "SwitchId", "SlotId"]),
 
+        # Fault Instances
+        ("<<<ucs_bladecenter_faultinst:sep(9)>>>", None),
+        ("faultInst", ["Dn", "Descr", "Severity"]),
+
+        # TopSystem Info
+        ("<<<ucs_bladecenter_topsystem:sep(9)>>>", None),
+        ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
         ]:
     try:
         if fields == None:

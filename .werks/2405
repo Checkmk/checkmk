@@ -1,0 +1,16 @@
+Title: New checks for UCS bladecenter: ucs_bladecenter_topsystem, ucs_bladecenter_faulinst
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437049272
+Class: feature
+
+The special agent agent_ucs_bladecenter now queries the additional classes <i>faulInst</i>
+and <i>topSystem</i>. There are two new checks:
+
+<i>ucs_bladecenter_faultinst</i>: This check lists the current fault instances and goes
+WARN or CRIT in case of a severe fault.
+
+<i>ucs_bladecenter_topsystem</i>: This check is just information and always OK.
+It shows the IP-Address, current time, Ipv6-Address, bladecenter mode, system name and system uptime.

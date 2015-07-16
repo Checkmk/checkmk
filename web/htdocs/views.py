@@ -1960,7 +1960,7 @@ def do_actions(view, what, action_rows, backurl):
     for nr, row in enumerate(action_rows):
         core_commands, title, executor = core_command(what, row, nr, len(action_rows))
         for command_entry in core_commands:
-            if command_entry not in already_executed:
+            if (row["site"], command_entry) not in already_executed:
                 # Some command functions return the information about the site per-command (e.g. for BI)
                 if type(command_entry) == tuple:
                     site, command = command_entry
@@ -1972,7 +1972,7 @@ def do_actions(view, what, action_rows, backurl):
                     command = command.encode("utf-8")
 
                 executor(command, site)
-                already_executed.add(command_entry)
+                already_executed.add((row["site"], command_entry))
                 count += 1
 
     message = None

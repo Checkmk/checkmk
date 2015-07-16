@@ -1,0 +1,12 @@
+Title: alcatel_power, alcatel_temp Support for stacked environments
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1437032151
+Class: feature
+
+The Checks handle now the case of stacked switches. Before this change, some of the 
+temperature Sensors where missing. Only in this case you need to do a new discovery and the service names change.
+On normal switches, nothing will change with this werk.
+

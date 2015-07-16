@@ -27,7 +27,7 @@
 def bvip_scan_function(oid):
     sysinfo = oid(".1.3.6.1.2.1.1.1.0")
     for what in ["FLEXIDOME", "VIP", 'DINION', 'AUTODOME']:
-        if what in sysinfo:
+        if what in sysinfo.upper():
             return True
     return False
 

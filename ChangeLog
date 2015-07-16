@@ -1,4 +1,7 @@
 1.2.7i2p1:
+    Core & Setup:
+    * 2465 FIX: Fixed broken Check_MK Discovery checks (check reports "(null)")
+
     Checks & Agents:
     * 2398 agent_vsphere: now able to opt-out of servers ssl certifcate check...
     * 2315 FIX: windows agent: BOM replacement, fixed incorrect byte offset...

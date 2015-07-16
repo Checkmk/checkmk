@@ -5799,7 +5799,7 @@ for o,a in opts:
             sys.exit(1)
     elif o == '--cache':
         opt_use_cachefile = True
-        enforce_agent_caching()
+        enforce_using_agent_cache()
     elif o == '--no-tcp':
         opt_no_tcp = True
     elif o == '--no-cache':

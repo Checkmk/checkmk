@@ -34,7 +34,6 @@ def inventory_ucs_bladecenter_topsystem(info):
 def check_ucs_bladecenter_topsystem(item, _no_params, info):
     for entry in info[0][1:]:
         tokens = entry.split(" ", 1)
-        print tokens
         if len(tokens) == 2:
             yield 0, "%s: %s" % tuple(tokens)
 

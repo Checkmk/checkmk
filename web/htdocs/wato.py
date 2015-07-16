@@ -7413,7 +7413,7 @@ def mode_ldap_config(phase):
 #   '----------------------------------------------------------------------'
 
 def mode_globalvars(phase):
-    search = html.var("search")
+    search = html.var_utf8("search")
     if search != None:
         search = search.strip().lower()
 
@@ -7503,8 +7503,8 @@ def render_global_configuration_variables(default_values, current_settings, show
                 else:
                     continue
 
-            help_text  = type(valuespec.help())  == unicode and valuespec.help().encode("utf-8")  or valuespec.help() or ''
-            title_text = type(valuespec.title()) == unicode and valuespec.title().encode("utf-8") or valuespec.title()
+            help_text  = valuespec.help() or ''
+            title_text = valuespec.title()
 
             if search and search not in groupname \
                            and search not in domain \
@@ -13960,7 +13960,7 @@ def mode_rulesets(phase, group=None):
     if not group:
         group = html.var("group") # obligatory
 
-    search = html.var("search")
+    search = html.var_utf8("search")
     if search != None:
         search = search.strip().lower()
 

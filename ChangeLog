@@ -2,6 +2,9 @@
     Core & Setup:
     * 2465 FIX: Fixed broken Check_MK Discovery checks (check reports "(null)")
 
+    WATO:
+    * 2466 FIX: Fixed exception when searching for rulesets / global settings using special characters like umlauts
+
 
 1.2.6p8:
     Checks & Agents:

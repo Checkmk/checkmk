@@ -4,6 +4,7 @@
 
     WATO:
     * 2466 FIX: Fixed exception when searching for rulesets / global settings using special characters like umlauts
+    * 2467 FIX: Fixed encoding exception occuring in localized GUI when a WATO action triggers an error message...
 
 
 1.2.6p8:

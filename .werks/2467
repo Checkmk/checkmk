@@ -1,0 +1,12 @@
+Title: Fixed encoding exception occuring in localized GUI when a WATO action triggers an error message
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437036533
+
+For example this could happen when using the German localization and one deletes a contact group which
+still has contacts assigned. This could also happen for other actions like host- or service group
+management.

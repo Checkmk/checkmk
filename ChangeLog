@@ -1,4 +1,7 @@
 1.2.7i3:
+    Core & Setup:
+    * 2465 FIX: Fixed broken Check_MK Discovery checks (check reports "(null)")
+
     Checks & Agents:
     * 2312 New checks for EMC VPLEX: emc_vplex_cpu, emc_vplex_director_stats, emc_vplex_if, emc_vplex_volumes...
     * 1260 jolokia_metrics.perm_gen: New Check to monitor used Perm Space on a JVM
@@ -87,6 +90,8 @@
     * 2397 FIX: Fixed wrong confirm text in distributed setup when activating foreign changes
     * 2461 FIX: Service Discovery: Hiding action buttons to rules when user is not permitted to rulesets
     * 2464 FIX: UDP ports for SNMP communication can now be configured via WATO
+    * 2466 FIX: Fixed exception when searching for rulesets / global settings using special characters like umlauts
+    * 2467 FIX: Fixed encoding exception occuring in localized GUI when a WATO action triggers an error message...
 
     Notifications:
     * 2313 FIX: notification bulking: fixed exception for plugins which are not configured with checkboxes, e.g. sms

@@ -1,0 +1,10 @@
+Title: Fixed exception when searching for rulesets / global settings using special characters like umlauts
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437036167
+
+

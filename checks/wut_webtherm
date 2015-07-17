@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -36,7 +36,6 @@ def detect_webtherm(oid):
           ".1.3.6.1.4.1.5040.1.2.16",
           ".1.3.6.1.4.1.5040.1.2.18" ]
 
-#.
 #   .--Air Pressure--------------------------------------------------------.
 #   |          _    _        ____                                          |
 #   |         / \  (_)_ __  |  _ \ _ __ ___  ___ ___ _   _ _ __ ___        |
@@ -46,21 +45,24 @@ def detect_webtherm(oid):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-#def inventory_wut_webtherm_pressure(info):
-#    for index, reading in info:
-#        if index.split(".")[1] == "3":
-#            yield "3", None
-#
-#
-#def check_wut_webtherm_pressure(item, params, info):
-#    return 3, "Not implemented yet"
-#
-#
-#check_info["wut_webtherm.pressure"] = {
-#    "inventory_function"        : inventory_wut_webtherm_pressure,
-#    "check_function"            : check_wut_webtherm_pressure,
-#    "service_description"       : "Pressure %s",
-#}
+def inventory_wut_webtherm_pressure(info):
+    for index, reading in info:
+        if index.split(".")[1] == "3":
+            return [ ("3", None) ]
+
+
+def check_wut_webtherm_pressure(item, _no_params, info):
+    for index, reading in info:
+        if index.split(".")[1] == item:
+            pressure = float(reading.replace(",",".")) # This value is in hPa
+    return 0, "%.2f hPa" % pressure
+
+
+check_info["wut_webtherm.pressure"] = {
+    "inventory_function"        : inventory_wut_webtherm_pressure,
+    "check_function"            : check_wut_webtherm_pressure,
+    "service_description"       : "Pressure %s",
+}
 
 #.
 #   .--Humidity------------------------------------------------------------.
@@ -77,11 +79,13 @@ wut_webtherm_humidity_defaultlevels = (35, 40, 60, 65)
 def inventory_wut_webtherm_humidity(info):
     for index, reading in info:
         if index.split(".")[1] == "2":
-            yield "2", None
+            return [ ("2", "wut_webtherm_humidity_defaultlevels") ]
 
 
 def check_wut_webtherm_humidity(item, params, info):
-    humidity = float(line[1].replace(",","."))
+    for index, reading in info:
+        if index.split(".")[1] == item:
+            humidity = float(reading.replace(",","."))
     return check_humidity(humidity, params)
 
 
@@ -110,14 +114,9 @@ factory_settings["wut_webtherm_defaultlevels"] = {
 def inventory_wut_webtherm(info):
     # line[0] is 1.1, 2.1, 3.1, 6.1, 8.1, 16.1 or 18.1 depending on MIB variant. We chop
     # of the first part in order to get independent of that.
-    for line in info:
-        if len(line) == 2:
-            temp = float(line[1].replace(",", "."))
-            # If greater then 75 it can't be a temperature sensor.
-            # Maybe humidity
-            if temp > 75:
-                continue
-            yield line[0].split(".")[1], {}
+    for index, reading in info:
+        if index.split(".")[1] == "1":
+            return [ ("1", {}) ]
 
 def check_wut_webtherm(item, params, info):
     for line in info:

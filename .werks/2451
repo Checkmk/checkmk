@@ -1,0 +1,9 @@
+Title: wut_webtherm.humidity, wut_webtherm.pressure: Two new checks for humidity and air pressure sensors for WuT devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437134633
+Class: feature
+
+

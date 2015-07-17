@@ -5119,7 +5119,9 @@ def log_pending(status, linkinfo, what, message, user_id = None):
     if 'need_to_bake_agents' in globals():
         need_to_bake_agents()
 
-    if not is_distributed():
+    # The latter one condition applies to slave sites
+    # Otherwise slave sites would trigger the cmcrushd
+    if not is_distributed() and not has_distributed_wato_file():
         if status != SYNC:
             log_entry(linkinfo, what, message, "pending.log", user_id)
         cmc_rush_ahead()
@@ -11998,6 +12000,9 @@ def delete_distributed_wato_file():
     # directory!
     if os.path.exists(p):
         create_user_file(p, "w").write("")
+
+def has_distributed_wato_file():
+    return os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk")
 
 #.
 #   .--Users/Contacts------------------------------------------------------.

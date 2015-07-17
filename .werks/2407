@@ -1,0 +1,18 @@
+Title: WATO master/slave replication: fixed problem where the configuration from the master site was not activate on slave site
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437116656
+
+Changes made on a distributed WATO slave site could delay a configuration update attempt from the master.
+
+Detailed information: Any changes on a slave site which lead to a pending log entry triggered the cmcrushd.
+The cmcrushd creates a configuration for the microcore, which takes precendence over creating the configuration anew.
+When a snapshot got pushed from the master site, the slave site thought that there is already a precompiled configuration
+available and used the cmcrushd configuration.
+
+This problem is automatically resolved on the following configuration push from the master,
+because the cmcrushd configuration is only used once.

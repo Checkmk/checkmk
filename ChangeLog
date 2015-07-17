@@ -2,6 +2,9 @@
     Checks & Agents:
     * 2406 FIX: fileinfo: fixed missing size performance data for very large (e.g 2TB) files and fileinfo groups...
 
+    WATO:
+    * 2407 FIX: WATO master/slave replication: fixed problem where the configuration from the master site was not activate on slave site...
+
 
 1.2.6p9:
     Core & Setup:

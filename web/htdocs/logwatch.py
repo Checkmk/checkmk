@@ -131,7 +131,7 @@ def list_logs(host, logfiles):
         logs = parse_file(host, log_file)
         if logs == [] or type(logs) != list: # corrupted logfile
             if logs == []: logs = "empty"
-            html.write("<tr class=%s0>\n" % (rowno % 2 == 0 and "odd" or "even"))
+            html.write("<tr class=\"data %s0\">\n" % (rowno % 2 == 0 and "odd" or "even"))
             html.write("<td>-</td><td>%s</td><td>%s</td><td>0</td></tr>\n" %
                              (html.attrencode(logs), html.attrencode(file_display)))
         else:
@@ -139,7 +139,7 @@ def list_logs(host, logfiles):
             last_log = get_last_log(logs)
             state = worst_log['level']
             state_name = form_level(state)
-            html.write("<tr class=%s%d>\n" % (rowno % 2 == 0 and "odd" or "even", state))
+            html.write("<tr class=\"data %s%d\">\n" % (rowno % 2 == 0 and "odd" or "even", state))
 
             html.write("<td class=\"state%d\">%s</td>\n" % (state, state_name))
             html.write("<td><a href=\"%s\">%s</a></td>\n" %
@@ -148,7 +148,7 @@ def list_logs(host, logfiles):
                         (form_datetime(last_log['datetime']), len(logs)))
 
     if rowno == 0:
-        html.write('<tr><td colspan=4>'+_('No logs found for this host.')+'</td></tr>\n')
+        html.write('<tr><td class="data" colspan=4>'+_('No logs found for this host.')+'</td></tr>\n')
 
 
 def ack_button(host = None, int_filename = None):
@@ -292,7 +292,7 @@ def do_log_ack(host, filename):
 
 def get_worst_log(logs):
     worst_level = 0
-    worst_log = None
+    worst_log = logs[0]
 
     for log in logs:
         for line in log['lines']:

@@ -1,0 +1,12 @@
+Title: Fixed exception in logwatch log list in rare cases
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437132921
+
+When logfiles for a host exists which have only a log section header
+without related log lines, this could lead to an exception in the GUI
+when listing all existing logs.

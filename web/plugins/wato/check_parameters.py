@@ -8267,12 +8267,16 @@ register_check_parameters(
     subgroup_applications,
     "citrix_load",
     _("Load of Citrix Server"),
-    Tuple(
-        title = _("Citrix Server load"),
-        elements = [
-            Integer(title = _("warning at"), default_value = 8500),
-            Integer(title = _("critical at"), default_value = 9500),
-        ]),
+    Transform(
+        Tuple(
+            title = _("Citrix Server load"),
+            elements = [
+                Percentage(title = _("Warning at"), default_value = 85.0, unit = "percent"),
+                Percentage(title = _("Critical at"), default_value = 95.0, unit = "percent"),
+            ]),
+        forth = lambda x: (x[0]/100.0, x[1]/100.0),
+        back = lambda x: (int(x[0]*100), int(x[1]*100))
+    ),
     None,
     match_type = "first",
 )

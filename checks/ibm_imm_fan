@@ -40,7 +40,7 @@ def check_ibm_imm_fan(item, _no_params, info):
 
             # speed can be "34 %", or "34%", or "34 % of maximum"
             # or simply a text without quotes..
-            rpm_perc = int(speed.replace("[\"%]", " ").replace("%", " ").split(" ")[0])
+            rpm_perc = int(speed.strip().replace("[\"%]", " ").replace("%", " ").split(" ")[0])
             infotext = "%d%% of max rpm" % rpm_perc
 
             warn, crit = (28, 25) # preliminary estimates of levels

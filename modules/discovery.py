@@ -353,6 +353,11 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
         sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
         if sys_descr == None:
             raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
+    else:
+        # Fake OID values to prevent issues with a lot of scan functions
+        set_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
+        set_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
+
 
     found = []
     if for_inv:

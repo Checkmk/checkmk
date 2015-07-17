@@ -27,11 +27,11 @@
 
 def inventory_bvip_video_alerts(info):
     for cam, alerts in info:
-        yield cam, None
+        yield cam.replace('\x00',""), None
 
 def check_bvip_video_alerts(item, _no_params, info):
     for cam, alerts in info:
-        if cam == item:
+        if cam.replace('\x00',"") == item:
             if alerts != '0':
                 return 2, "Device on Alarm State"
             else:

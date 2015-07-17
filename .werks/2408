@@ -1,0 +1,10 @@
+Title: ibm_imm_fan: fixed exception while parsing fan percentage values
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437131588
+
+

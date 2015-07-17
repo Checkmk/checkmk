@@ -1,0 +1,10 @@
+Title: citrix_serverload: Changed representation of load to percent in rule and graphs, added perfometer
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437126717
+
+

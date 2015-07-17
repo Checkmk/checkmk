@@ -2405,6 +2405,12 @@ metric_info["error_rate"] = {
     "color" : "14/a",
 }
 
+metric_info["citrix_load"] = {
+    "title" : _("Citrix Load"),
+    "unit"  : "%",
+    "color" : "34/c",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -2454,6 +2460,10 @@ check_metrics["check_mk-netapp_api_volumes"] = {
 
 check_metrics["check_mk_active-tcp"] = {
     "time" : { "name": "response_time" }
+}
+
+check_metrics["check_mk-citrix_serverload"] = {
+    "perf" : { "name" : "citrix_load", "scale" : 0.01 }
 }
 
 check_metrics["check-mk-host-tcp"] = {
@@ -3511,6 +3521,12 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "citrix_load" ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
     "type"          : "logarithmic",
     "metric"        : "database_size",
     "half_value"    : GB,
@@ -4238,6 +4254,14 @@ graph_info.append({
         ( "prefetch_metadata_hit_ratio", "line" ),
         ( "prefetch_data_hit_ratio", "area" ),
     ],
+})
+
+graph_info.append({
+    "title"     : _("Citrix Serverload"),
+    "metrics"   : [
+        ( "citrix_load",    "area" ),
+    ],
+    "range"     : (0, 100),
 })
 
 graph_info.append({

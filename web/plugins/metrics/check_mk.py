@@ -1232,6 +1232,12 @@ metric_info["frequency"] = {
     "color" : "11/c",
 }
 
+metric_info["citrix_load"] = {
+    "title" : _("Citrix Load"),
+    "unit"  : "%",
+    "color" : "34/c",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -1271,6 +1277,8 @@ check_metrics["check_mk-kernel"]                                = {
 }
 
 check_metrics["check_mk-cpu.threads"]                           = {}
+
+check_metrics["check_mk-citrix_serverload"]                     = { "perf" : { "name" : "citrix_load", "scale" : 0.01 }}
 
 check_metrics["check_mk-aix_sap_processlist"]                   = {}
 check_metrics["check_mk-aix_memory"]                            = { "ramused" : { "name" : "mem_used", "scale": MB }, "swapused" : { "name" : "swap_used", "scale": MB }}
@@ -1566,6 +1574,12 @@ perfometer_info.append({
     "exponent"   : 4,
 })
 
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "citrix_load" ],
+    "total"     : 100.0,
+})
+
 
 perfometer_info.append(("logarithmic",  ( "rta", 0.1, 4)))
 perfometer_info.append(("linear",       ( ["execution_time"], 90.0, None)))
@@ -1771,6 +1785,14 @@ define_generic_graph("temp")
 define_generic_graph("humidity")
 define_generic_graph("time_offset")
 
+
+graph_info.append({
+    "title"     : _("Citrix Serverload"),
+    "metrics"   : [
+        ( "citrix_load",    "area" ),
+    ],
+    "range"     : (0, 100),
+})
 
 graph_info.append({
     "title" : _("Used CPU Time"),

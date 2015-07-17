@@ -811,6 +811,19 @@ def snmp_get_oid(hostname, ipaddress, oid):
         value = value[1:-1]
     return value
 
+
+def clear_other_hosts_oid_cache(hostname):
+    global g_single_oid_hostname
+    if g_single_oid_hostname != hostname:
+        g_single_oid_cache.clear()
+        g_single_oid_hostname = hostname
+
+
+def set_oid_cache(hostname, oid, value):
+    clear_other_hosts_oid_cache(hostname)
+    g_single_oid_cache[oid] = value
+
+
 def get_single_oid(hostname, ipaddress, oid):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
     # we do a snmpgetnext and try to find an OID with the prefix
@@ -822,12 +835,7 @@ def get_single_oid(hostname, ipaddress, oid):
         else:
             oid = '.' + oid
 
-    global g_single_oid_hostname
-    global g_single_oid_cache
-
-    if g_single_oid_hostname != hostname:
-        g_single_oid_hostname = hostname
-        g_single_oid_cache = {}
+    clear_other_hosts_oid_cache(hostname)
 
     if oid in g_single_oid_cache:
         return g_single_oid_cache[oid]
@@ -856,7 +864,7 @@ def get_single_oid(hostname, ipaddress, oid):
     else:
         vverbose("failed.\n")
 
-    g_single_oid_cache[oid] = value
+    set_oid_cache(hostname, oid, value)
     return value
 
 #.

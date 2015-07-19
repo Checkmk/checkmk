@@ -4274,8 +4274,8 @@ register_check_parameters(
               Integer(title = _("Critical at or above"), unit="%" ),
               ]),
     TextAscii(
-        title = _("Sensor name")
-        help = _("The identifier of the sensor.")
+        title = _("Sensor name"),
+        help = _("The identifier of the sensor."),
     ),
     match_type = "first",
 )

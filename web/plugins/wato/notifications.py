@@ -264,3 +264,52 @@ register_notification_parameters(
         ]
     )
 )
+
+register_notification_parameters("pushover", Dictionary(
+    optional_keys = ["url_prefix", "priority"],
+    elements = [
+        ("api_key", TextAscii(
+            title = _("API Key"),
+            help = _("You need to provide a valid API key to be able to send push notifications "
+                     "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "
+                     "target=\"_blank\">Pushover</a>, thn create your Check_MK installation as "
+                     "application and obtain your API key."),
+            size = 40,
+            allow_empty = False,
+            regex = "[a-zA-Z0-9]{30}",
+        )),
+        ("recipient_key", TextAscii(
+            title = _("User / Group Key"),
+            help = _("Configure the user or group to receive the notifications by providing "
+                     "the user or group key here. The key can be obtained from the Pushover "
+                     "website."),
+            size = 40,
+            allow_empty = False,
+            regex = "[a-zA-Z0-9]{30}",
+        )),
+        ("url_prefix", TextAscii(
+              title = _("URL prefix for links to Check_MK"),
+              help = _("If you specify an URL prefix here, then several parts of the "
+                       "email body are armed with hyperlinks to your Check_MK GUI, so "
+                       "that the recipient of the email can directly visit the host or "
+                       "service in question in Check_MK. Specify an absolute URL including "
+                       "the <tt>.../check_mk/</tt>"),
+              regex = "^(http|https)://.*/check_mk/$",
+              regex_error = _("The URL must begin with <tt>http</tt> or "
+                              "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+              size = 64,
+              default_value = "http://" + socket.gethostname() + "/" + (
+                      defaults.omd_site and defaults.omd_site + "/" or "") + "check_mk/",
+        )),
+        ("priority", DropdownChoice(
+            title = _("Priority"),
+            choices = [
+                ("1",  _("High: Push notification alerts bypass quiet hours")),
+                ("0",  _("Normal: Regular push notification (default)")),
+                ("-1", _("Low: No sound/vibration but show popup")),
+                ("-2", _("Lowest: No notification, update badge number")),
+            ],
+            default_value = "0",
+        )),
+    ]
+))

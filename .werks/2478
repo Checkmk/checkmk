@@ -1,0 +1,11 @@
+Title: Integrated notification plugin for mobile phone push messages via Pushover
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437379476
+Class: feature
+
+We already had a notfication plugin in the treasures directory which was very limited
+in the features and was not configurable via WATO. The new plugin provides much more
+details in the notifications and can now be configured via the GUI.

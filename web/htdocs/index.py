@@ -193,7 +193,7 @@ def handler(req, fields = None, profiling = True):
         html.set_output_format(output_format)
 
         # Is the user set by the webserver? otherwise use the cookie based auth
-        if not html.user or type(html.user) != str:
+        if not html.is_logged_in():
             config.auth_type = 'cookie'
             # When not authed tell the browser to ask for the password
             html.user = login.check_auth()

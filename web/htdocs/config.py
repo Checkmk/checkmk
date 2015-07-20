@@ -275,7 +275,7 @@ def login(u):
 
 def set_user_confdir(user_id):
     global user_confdir
-    user_confdir = config_dir + "/" + user_id
+    user_confdir = config_dir + "/" + user_id.encode("utf-8")
     make_nagios_directory(user_confdir)
 
 def get_language(default = None):

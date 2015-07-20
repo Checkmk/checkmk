@@ -389,7 +389,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
             try:
                 logarch = file(logfile, "a+")
                 logarch.write(time.strftime("<<<%Y-%m-%d %H:%M:%S " + logwatch_state(worst) + ">>>\n"))
-                logarch.write("\n".join(loglines) + "\n")
+                logarch.write(("\n".join(loglines)).encode("utf-8") + "\n")
                 logarch.close()
             except Exception, e:
                 raise MKGeneralException("User %s cannot create logfile: %s" % \
@@ -701,7 +701,7 @@ def check_logwatch_ec(item, params, info):
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.connect((method[1], method[2]))
                 for message in messages:
-                    sock.send(message + "\n")
+                    sock.send(message.encode("utf-8") + "\n")
                 sock.close()
 
             elif not method.startswith('spool:'):
@@ -712,7 +712,7 @@ def check_logwatch_ec(item, params, info):
                 # instead of the pipe!
                 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 sock.connect(method)
-                sock.send('\n'.join(messages) + '\n')
+                sock.send(('\n'.join(messages)).encode("utf-8") + '\n')
                 sock.close()
 
             else:
@@ -723,7 +723,7 @@ def check_logwatch_ec(item, params, info):
                 file_name  = '.%s_%s%d' % (g_hostname, item and item.replace('/', '\\') + '_' or '', time.time())
                 if not os.path.exists(spool_path):
                     os.makedirs(spool_path)
-                file('%s/%s' % (spool_path, file_name), 'w').write('\n'.join(messages) + '\n')
+                file('%s/%s' % (spool_path, file_name), 'w').write(('\n'.join(messages)).encode("utf-8") + '\n')
                 os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
         if forwarded_logfiles:

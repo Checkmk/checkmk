@@ -174,6 +174,8 @@ def get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed
     for (traffic_dir, up_or_low), (level_type, levels) in general_traffic_levels.items():
         if type(levels) != tuple:
             traffic_levels[(traffic_dir, 'predictive')] = levels
+            traffic_levels[(traffic_dir, up_or_low, 'warn')] = None
+            traffic_levels[(traffic_dir, up_or_low, 'crit')] = None
             continue # don't convert predictive levels config
         else:
             warn, crit = levels

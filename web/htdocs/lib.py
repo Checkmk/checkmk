@@ -94,6 +94,7 @@ class MKInternalError(MKException):
 # Create directory owned by common group of Nagios and webserver,
 # and make it writable for the group
 def make_nagios_directory(path):
+    path = make_utf8(path)
     if not os.path.exists(path):
         parent_dir, lastpart = path.rstrip('/').rsplit('/', 1)
         make_nagios_directory(parent_dir)
@@ -112,6 +113,7 @@ def make_nagios_directory(path):
 # Same as make_nagios_directory but also creates parent directories
 # Logic has been copied from os.makedirs()
 def make_nagios_directories(name):
+    name = make_utf8(name)
     head, tail = os.path.split(name)
     if not tail:
         head, tail = os.path.split(head)
@@ -127,6 +129,7 @@ def make_nagios_directories(name):
     make_nagios_directory(name)
 
 def create_user_file(path, mode):
+    path = make_utf8(path)
     f = file(path, mode, 0)
     gid = grp.getgrnam(defaults.www_group).gr_gid
     # Tackle user problem: If the file is owned by nagios, the web
@@ -151,6 +154,11 @@ def write_settings_file(path, content):
         data = repr(content)
     create_user_file(path, "w").write(data + "\n")
 
+def remove_user_file(path):
+    path = path.encode("utf-8")
+    if os.path.exists(path):
+        os.remove(path)
+
 def savefloat(f):
     try:
         return float(f)
@@ -165,6 +173,14 @@ except:
         a = l[:]
         a.sort()
         return a
+
+
+def make_utf8(x):
+    if type(x) == unicode:
+        return x.encode('utf-8')
+    else:
+        return x
+
 
 # We should use /dev/random here for cryptographic safety. But
 # that involves the great problem that the system might hang

@@ -79,7 +79,7 @@ def load_serial(username):
 # Generates the hash to be added into the cookie value
 def generate_hash(username, now, serial):
     secret = load_secret()
-    return md5(username + now + str(serial) + secret).hexdigest()
+    return md5(username.encode("utf-8") + now + str(serial) + secret).hexdigest()
 
 def del_auth_cookie():
     name = site_cookie_name()
@@ -103,6 +103,7 @@ def renew_cookie(cookie_name, username, serial):
 
 def check_auth_cookie(cookie_name):
     username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)
+    username = username.decode("utf-8")
 
     # FIXME: Ablauf-Zeit des Cookies testen
     #max_cookie_age = 10
@@ -131,11 +132,11 @@ def check_auth_cookie(cookie_name):
 
 def check_auth_automation():
     secret = html.var("_secret").strip()
-    user = html.var("_username").strip()
+    user = html.var_utf8("_username").strip()
     html.del_var('_username')
     html.del_var('_secret')
     if secret and user and "/" not in user:
-        path = defaults.var_dir + "/web/" + user + "/automation.secret"
+        path = defaults.var_dir + "/web/" + user.encode("utf-8") + "/automation.secret"
         if os.path.isfile(path) and file(path).read().strip() == secret:
             # Auth with automation secret succeeded - mark transid as unneeded in this case
             html.set_ignore_transids()
@@ -149,7 +150,7 @@ def check_auth():
     # When http header auth is enabled, try to read the username from the var
     # and when there is some available, set the auth cookie (for other addons) and proceed.
     if config.auth_by_http_header:
-        username = html.req.headers_in.get(config.auth_by_http_header, None)
+        username = html.req.headers_in.get(config.auth_by_http_header, None).decode("utf-8")
         if username:
             serial = load_serial(username)
             renew_cookie(site_cookie_name(), username, serial)
@@ -174,7 +175,7 @@ def do_login():
     err = None
     if html.var('_login'):
         try:
-            username = html.var('_username', '').rstrip()
+            username = html.var_utf8('_username', '').rstrip()
             if username == '':
                 raise MKUserError('_username', _('No username given.'))
 

@@ -79,6 +79,7 @@ __builtin__.HTML = HTML
 
 class html:
     def __init__(self):
+        self.user = None
         self.user_errors = {}
         self.focus_object = None
         self.global_vars = []

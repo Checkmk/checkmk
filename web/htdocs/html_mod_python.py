@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import Cookie, util, apache
+from lib import make_utf8
 import htmllib
 import os, time, config, weblib, re
 import defaults
@@ -59,6 +60,8 @@ class html_mod_python(htmllib.html):
         else:
             return self.site_status
 
+    def is_logged_in(self):
+        return self.user and type(self.user) in [ str, unicode ]
 
     def load_help_visible(self):
         try:
@@ -71,7 +74,7 @@ class html_mod_python(htmllib.html):
 
     def set_cookie(self, varname, value, expires = None):
         # httponly tells the browser not to make this cookie available to Javascript
-        c = Cookie.Cookie(varname, value, path='/', httponly=True)
+        c = Cookie.Cookie(varname, make_utf8(value), path='/', httponly=True)
 
         if self.is_ssl_request():
             c.secure = True
@@ -108,7 +111,7 @@ class html_mod_python(htmllib.html):
         return config.load_user_file("buttoncounts", {})
 
     def top_heading(self, title):
-        if type(self.user) == str:
+        if type(self.user) in [ str, unicode ]:
             login_text = "<b>%s</b> (%s" % (config.user_id, "+".join(config.user_role_ids))
             if self.enable_debug:
                 if config.get_language():

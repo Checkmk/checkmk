@@ -78,7 +78,7 @@ class HtpasswdUserConnector(UserConnector):
         for line in open(defaults.htpasswd_file, 'r'):
             if ':' in line:
                 username, pwhash = line.split(':', 1)
-                creds[username] = pwhash.rstrip('\n')
+                creds[username.decode("utf-8")] = pwhash.rstrip('\n')
 
         return creds
 
@@ -118,7 +118,7 @@ class HtpasswdUserConnector(UserConnector):
                     locksym = '!'
                 else:
                     locksym = ""
-                out.write("%s:%s%s\n" % (id, locksym, user["password"]))
+                out.write("%s:%s%s\n" % (make_utf8(id), locksym, user["password"]))
         out.close()
         if rename_file:
             os.rename(filename, filename[:-4])

@@ -71,24 +71,28 @@ def page_graph():
     tg_name = html.var("timegroup")
     timegroup = None
     timegroups = []
+    now = time.time()
     for f in os.listdir(dir):
         if f.endswith(".info"):
             tg_info = eval(file(dir + "/" + f).read())
             tg_info["name"] = f[:-5]
             timegroups.append(tg_info)
-            if tg_info["name"] == tg_name:
+            if tg_info["name"] == tg_name or \
+                (tg_name == None and now >= tg_info["range"][0] and now <= tg_info["range"][1]):
                 timegroup = tg_info
+                tg_name = tg_info["name"]
 
-    timegroups.sort(cmp = lambda a,b: cmp(a["range"], b["range"]))
+    timegroups.sort(cmp = lambda a,b: cmp(a["range"][0], b["range"][0]))
     if not timegroup:
         timegroup  = timegroups[0]
+        tg_name = choices[0][0]
 
     choices = [ (tg_info["name"], tg_info["name"].title())
                 for tg_info in timegroups ]
 
     html.begin_form("prediction")
     html.write(_("Show prediction for "))
-    html.select("timegroup", choices, choices[0][0], onchange="document.prediction.submit();")
+    html.select("timegroup", choices, tg_name, onchange="document.prediction.submit();")
     html.hidden_fields()
     html.end_form()
 

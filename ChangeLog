@@ -4,6 +4,7 @@
 
     Multisite:
     * 2470 FIX: Fixed exception in logwatch log list in rare cases...
+    * 2375 FIX: prediction preview: automatically select valid prediction period
 
     WATO:
     * 2407 FIX: WATO master/slave replication: fixed problem where the configuration from the master site was not activate on slave site...

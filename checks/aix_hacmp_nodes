@@ -1,0 +1,108 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<aix_hacmp_nodes>>>
+# pasv0449
+# pasv0450
+#
+# NODE pasv0449:
+#     Interfaces to network prod_net
+#         Communication Interface: Name pasv0449, Attribute public, IP address 172.22.237.14
+#         Communication Interface: Name pasc0159, Attribute public, IP address 172.22.237.17
+#         Communication Interface: Name pasc0158, Attribute public, IP address 172.22.237.16
+#
+# NODE pasv1111:
+#     Interfaces to network TEST_net
+#         Communication Interface: Name pasv0449, Attribute public, IP address 172.22.237.14
+#         Communication Interface: Name pasc0159, Attribute public, IP address 172.22.237.17
+#         Communication Interface: Name pasc0158, Attribute public, IP address 172.22.237.16
+#
+# NODE pasv0450:
+#     Interfaces to network prod_net
+#         Communication Interface: Name pasv0450, Attribute public, IP address 172.22.237.15
+#         Communication Interface: Name pasc0159, Attribute public, IP address 172.22.237.17
+#         Communication Interface: Name pasc0158, Attribute public, IP address 172.22.237.16
+
+# parsed =
+# {u'pasv0449': {u'prod_net': [(u'pasv0449', u'public', u'172.22.237.14'),
+#                              (u'pasc0159', u'public', u'172.22.237.17'),
+#                              (u'pasc0158', u'public', u'172.22.237.16')]},
+#  u'pasv0450': {u'prod_net': [(u'pasv0450', u'public', u'172.22.237.15'),
+#                              (u'pasc0159', u'public', u'172.22.237.17'),
+#                              (u'pasc0158', u'public', u'172.22.237.16')]}
+# }
+
+
+def parse_aix_hacmp_nodes(info):
+    parsed = {}
+    for line in info:
+
+        if len(line) == 1:
+            parsed[line[0]] = {}
+
+        elif 'NODE' in line[0]:
+            if line[1].replace(':','') in parsed:
+                node_name = line[1].replace(':','')
+                get_details = True
+            else:
+                get_details = False
+
+        elif 'Interfaces' in line[0] and get_details:
+            network_name = line[3].replace(',','')
+            parsed[node_name][network_name] = []
+
+        elif 'Communication' in line[0] and get_details:
+            parsed[node_name][network_name].append(
+                ( line[3].replace(',',''),
+                  line[5].replace(',',''),
+                  line[8].replace(',','')
+                ))
+
+    return parsed
+
+
+def inventory_aix_hacmp_nodes(parsed):
+    return [ (key, None) for key in parsed ]
+
+
+def check_aix_hacmp_nodes(item, _no_params, parsed):
+    if item in parsed:
+        for network_name in parsed[item]:
+            infotext = "Network: %s" % network_name
+
+            for if_name, attribute, ip_adr in parsed[item][network_name]:
+                infotext += ", interface: %s, attribute: %s, IP: %s" % (if_name, attribute, ip_adr)
+
+            return 0, infotext
+
+
+check_info['aix_hacmp_nodes'] = {
+    'parse_function'            : parse_aix_hacmp_nodes,
+    'inventory_function'        : inventory_aix_hacmp_nodes,
+    'check_function'            : check_aix_hacmp_nodes,
+    'service_description'       : 'HACMP Node %s',
+}

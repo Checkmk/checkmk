@@ -1,0 +1,139 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# hacmp-aix
+# <<<aix_hacmp_services>>>
+# Status of the RSCT subsystems used by PowerHA SystemMirror:
+# Subsystem         Group            PID          Status
+#  cthags           cthags           8257694      active
+#  ctrmc            rsct             7995636      active
+#
+# Status of the PowerHA SystemMirror subsystems:
+# Subsystem         Group            PID          Status
+#  clstrmgrES       cluster          9109590      active
+#  clevmgrdES       cluster          29098102     active
+#
+# Status of the CAA subsystems:
+# Subsystem         Group            PID          Status
+#  clcomd           caa              6619358      active
+#  clconfd          caa              10944716     active
+#
+# Details of PowerHA SystemMirror cluster manager:
+# Current state: ST_STABLE
+# sccsid = "@(#)36 1.135.1.118 src/43haes/usr/sbin/cluster/hacmprd/main.C,hacmp.pe,61haes_r713,1343A_hacmp713 10/21/"
+# build = "Oct 27 2014 16:03:01 1433C_hacmp713"
+# i_local_nodeid 1, i_local_siteid -1, my_handle 1
+# ml_idx[1]=1 ml_idx[2]=0
+# There are 0 events on the Ibcast queue
+# There are 0 events on the RM Ibcast queue
+# CLversion: 15
+# local node vrmf is 7132
+# cluster fix level is "2"
+# The following timer(s) are currently active:
+# Current DNP values
+# DNP Values for NodeId - 2  NodeName - pasv0449
+#     PgSpFree = 6280459  PvPctBusy = 0  PctTotalTimeIdle = 40.060893
+# DNP Values for NodeId - 1  NodeName - pasv0450
+#     PgSpFree = 6276175  PvPctBusy = 0  PctTotalTimeIdle = 80.135962
+# CAA Cluster Capabilities
+# CAA Cluster services are active
+# There are 4 capabilities
+# Capability 0
+#   id: 3  version: 1  flag: 1
+#   Hostname Change capability is defined and globally available
+# Capability 1
+#   id: 2  version: 1  flag: 1
+#   Unicast capability is defined and globally available
+# Capability 2
+#   id: 0  version: 1  flag: 1
+#   IPV6 capability is defined and globally available
+# Capability 3
+#   id: 1  version: 1  flag: 1
+#   Site capability is defined and globally available
+# trcOn 0, kTraceOn 0, stopTraceOnExit 0, cdNodeOn 0
+# Last event run was DA_RES_CO     on node 2
+
+# parsed = {
+#  u'CAA': [(u'clcomd', u'caa', u'6619358', u'active'),
+#           (u'clconfd', u'caa', u'10944716', u'active')],
+#  u'PowerHA SystemMirror': [(u'clstrmgrES', u'cluster', u'9109590', u'active'),
+#                            (u'clevmgrdES', u'cluster', u'29098102', u'active')],
+#  u'RSCT': [(u'cthags', u'cthags', u'8257694', u'active'),
+#            (u'ctrmc', u'rsct', u'7995636', u'active')],
+# }
+
+
+def parse_aix_hacmp_services(info):
+    parsed = {}
+    subsystem_ty_name = True
+    for line in info:
+
+        if line[0] == 'Details':
+            subsystem_ty_name = False
+
+        if subsystem_ty_name:
+            if line[0] == 'Status':
+                subsystem_ty_name = line[3]
+                if subsystem_ty_name == 'PowerHA':
+                    subsystem_ty_name += " %s" % line[4]
+
+            elif line[0] == 'Subsystem':
+                parsed.setdefault(subsystem_ty_name, [])
+
+            else:
+                parsed[subsystem_ty_name].append(
+                    (line[0], line[3])
+                )
+
+    return parsed
+
+
+def inventory_aix_hacmp_services(parsed):
+    return [ (key, None) for key in parsed ]
+
+
+def check_aix_hacmp_services(item, _no_params, parsed):
+    if item in parsed:
+        for subsytem_name, status in parsed[item]:
+
+            if status == 'active':
+                state = 0
+            else:
+                state = 2
+
+            infotext = "subsytem: %s, status: %s" \
+                       % (subsytem_name, status)
+
+            yield state, infotext
+
+
+check_info['aix_hacmp_services'] = {
+    'parse_function'            : parse_aix_hacmp_services,
+    'inventory_function'        : inventory_aix_hacmp_services,
+    'check_function'            : check_aix_hacmp_services,
+    'service_description'       : 'HACMP Service %s',
+}

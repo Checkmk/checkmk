@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<aix_hacmp_resources:sep(58)>>>
+# pdb213rg:ONLINE:pasv0450:non-concurrent:OHN:FNPN:NFB:ignore::: : :::
+# pdb213rg:OFFLINE:pasv0449:non-concurrent:OHN:FNPN:NFB:ignore::: : :::
+# pmon01rg:ONLINE:pasv0449:non-concurrent:OHN:FNPN:NFB:ignore::: : :::
+# pmon01rg:OFFLINE:pasv0450:non-concurrent:OHN:FNPN:NFB:ignore::: : :::
+
+# parsed =
+# {u'pdb213rg': [(u'pasv0450', u'online'), (u'pasv0449', u'offline')],
+#  u'pmon01rg': [(u'pasv0449', u'online'), (u'pasv0450', u'offline')]}
+
+
+def parse_aix_hacmp_resources(info):
+    parsed = {}
+    for line in info:
+        if line[0] not in parsed:
+            parsed[line[0]] = [ (line[2], line[1].lower()) ]
+        else:
+            parsed[line[0]].append(
+                tuple( [line[2], line[1].lower()] )
+            )
+
+    return parsed
+
+
+def inventory_aix_hacmp_resources(parsed):
+    return [ (key, None) for key in parsed ]
+
+
+def check_aix_hacmp_resources(item, params, parsed):
+    resource_stats_info = {
+        'online'    : "",
+        'offline'   : " (unmet dependencies or user requested)",
+        'acquiring' : " (coming up on one of the nodes)",
+        'releasing' : " (in the process of being released)",
+        'error'     : "",
+        'unmanaged' : " (currently not managed)",
+        'unknown'   : " (status cannot be attained)",
+    }
+
+    if item in parsed:
+        resource_stats = []
+        infotext = ""
+        for node_name, resource_status in parsed[item]:
+            resource_stats.append(resource_status)
+            infotext += resource_status
+
+            if resource_status in resource_stats_info:
+                infotext += resource_stats_info[resource_status]
+
+            infotext += " on node %s, " % node_name
+
+        if 'online' in resource_stats:
+            state = 0
+        else:
+            state = 1
+
+        if 'error' in resource_stats:
+            state = 2
+
+        return state, infotext[:-2]
+
+
+check_info['aix_hacmp_resources'] = {
+    'parse_function'            : parse_aix_hacmp_resources,
+    'inventory_function'        : inventory_aix_hacmp_resources,
+    'check_function'            : check_aix_hacmp_resources,
+    'service_description'       : 'HACMP RG %s',
+}

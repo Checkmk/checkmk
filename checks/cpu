@@ -28,12 +28,23 @@
 # 0.26 0.47 0.52 2/459 19531 4
 
 
+#   .--Load----------------------------------------------------------------.
+#   |                       _                    _                         |
+#   |                      | |    ___   __ _  __| |                        |
+#   |                      | |   / _ \ / _` |/ _` |                        |
+#   |                      | |__| (_) | (_| | (_| |                        |
+#   |                      |_____\___/ \__,_|\__,_|                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
 cpuload_default_levels = (5, 10)
-threads_default_levels = (2000, 4000)
+
 
 def inventory_cpu_load(info):
     if len(info) == 1 and len(info[0]) >= 5:
         return [(None, "cpuload_default_levels")]
+
 
 def check_cpu_load(item, params, info):
     if len(info[0]) >= 6:
@@ -44,6 +55,28 @@ def check_cpu_load(item, params, info):
     load = map(float, info[0][0:3])
     return check_cpu_load_generic(params, load, num_cpus)
 
+
+check_info["cpu.loads"] = {
+    "check_function"          : check_cpu_load,
+    "inventory_function"      : inventory_cpu_load,
+    "service_description"     : "CPU load",
+    "has_perfdata"            : True,
+    "group"                   : "cpu_load",
+    "includes"                : ["cpu_load.include"],
+}
+
+
+#.
+#   .--Threads-------------------------------------------------------------.
+#   |                _____ _                        _                      |
+#   |               |_   _| |__  _ __ ___  __ _  __| |___                  |
+#   |                 | | | '_ \| '__/ _ \/ _` |/ _` / __|                 |
+#   |                 | | | | | | | |  __/ (_| | (_| \__ \                 |
+#   |                 |_| |_| |_|_|  \___|\__,_|\__,_|___/                 |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+threads_default_levels = (2000, 4000)
 
 def inventory_cpu_threads(info):
     if len(info) == 1 and len(info[0]) >= 5:
@@ -63,14 +96,6 @@ def check_cpu_threads(item, params, info):
     else:
         return (0, "%d threads" % (nthreads,), perfdata)
 
-check_info["cpu.loads"] = {
-    "check_function"          : check_cpu_load,
-    "inventory_function"      : inventory_cpu_load,
-    "service_description"     : "CPU load",
-    "has_perfdata"            : True,
-    "group"                   : "cpu_load",
-    "includes"                : ["cpu_load.include"],
-}
 
 check_info["cpu.threads"] = {
     "check_function"        : check_cpu_threads,

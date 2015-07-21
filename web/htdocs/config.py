@@ -43,6 +43,11 @@ try:
 except NameError:
     from sets import Set as set
 
+# FIXME: Make clear whether or not user related values should be part
+# of the "config" module. Maybe move to dedicated module (userdb?). Then
+# move all user related stuff there. e.g. html.user should also be moved
+# there.
+
 #.
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |

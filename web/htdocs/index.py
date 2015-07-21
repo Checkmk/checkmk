@@ -196,8 +196,8 @@ def handler(req, fields = None, profiling = True):
         if not html.is_logged_in():
             config.auth_type = 'cookie'
             # When not authed tell the browser to ask for the password
-            html.user = login.check_auth()
-            if html.user == '':
+            html.login(login.check_auth())
+            if not html.is_logged_in():
                 if fail_silently:
                     # While api call don't show the login dialog
                     raise MKUnauthenticatedException(_('You are not authenticated.'))

@@ -64,6 +64,7 @@
     * 2408 FIX: ibm_imm_fan: fixed exception while parsing fan percentage values
     * 2469 FIX: Fixed service discovery on SNMP host having no system description OID
     * 2480 FIX: Fixed exception when configuring predictive levels for network interfaces
+    * 2376 FIX: Fix parsing of performance data from MRPE based checks
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

@@ -1717,7 +1717,7 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
         # list of perfdata. It is of type string. And it might be
         # needed by the graphing tool in order to choose the correct
         # template. Currently this is used only by mrpe.
-        if len(perfdata) > 0 and type(perfdata[-1]) == str:
+        if len(perfdata) > 0 and type(perfdata[-1]) in (str, unicode):
             check_command = perfdata[-1]
             del perfdata[-1]
         else:

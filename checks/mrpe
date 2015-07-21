@@ -40,7 +40,7 @@ def inventory_mrpe(info):
 def mrpe_parse_perfdata(perfinfo):
     varname, valuetxt = perfinfo.split("=", 1)
     values = valuetxt.split(";")
-    return tuple( [varname] + values)
+    return tuple([varname] + values)
 
 
 def check_mrpe(item, params, info):

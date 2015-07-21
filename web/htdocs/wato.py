@@ -7633,7 +7633,6 @@ def vs_ldap_connection(new):
             'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
             'group_filter', 'group_member',
         ],
-        default_keys = ['page_size'],
     )
 
 

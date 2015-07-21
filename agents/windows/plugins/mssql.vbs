@@ -13,6 +13,7 @@
 ' credentials of a database user to it which shal be used for monitoring:
 '
 ' [auth]
+' type = db
 ' username = monitoring
 ' password = secret-pw
 '

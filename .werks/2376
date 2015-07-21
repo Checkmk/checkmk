@@ -1,0 +1,9 @@
+Title: Fix parsing of performance data from MRPE based checks
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i2p1
+Date: 1437481734
+Class: fix
+
+

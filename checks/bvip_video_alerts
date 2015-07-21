@@ -27,7 +27,8 @@
 
 def inventory_bvip_video_alerts(info):
     for cam, alerts in info:
-        yield cam.replace('\x00',""), None
+        yield cam.replace('\x00', ""), None
+
 
 def check_bvip_video_alerts(item, _no_params, info):
     for cam, alerts in info:

@@ -33,7 +33,7 @@ def inventory_bvip_temp(info):
 def check_bvip_temp(item, params, info):
     for nr, value in info:
         if nr == item:
-            degree_celsius = float(value)/10
+            degree_celsius = float(value) / 10
             return check_temperature(degree_celsius, params)
 
 check_info["bvip_temp"] = {

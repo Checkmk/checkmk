@@ -26,9 +26,11 @@
 
 bvip_poe_default_levels = (50, 60)
 
+
 def inventory_bvip_poe(info):
     if info[0][0] != '0':
         return [(None, 'bvip_poe_default_levels')]
+
 
 def check_bvip_poe(_no_item, params, info):
     warn, crit = params
@@ -39,7 +41,8 @@ def check_bvip_poe(_no_item, params, info):
         state = 1
     else:
         state = 0
-    return state, "Currently: %s watt" % watt, [ ('watt', watt )]
+    return state, "%.3f W" % watt, [ ('power', watt )]
+
 
 check_info["bvip_poe"] = {
     "check_function"        : check_bvip_poe,

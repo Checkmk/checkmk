@@ -1,0 +1,24 @@
+Title: MSSQL Agent Plugin: Can now be configured to auth as database user
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437485882
+Class: feature
+
+The mssql.vbs script can now be configured to authenticate as database user
+using a configured username / password combination. Previously it was only
+possible to authenticate using the system privileges of the user the agent
+is running with. This is still the default.
+
+If you need to authenticate as database user, you need to create a file
+named <tt>mssql.ini</tt>, or if you need it instance specific,
+<tt>mssql_[instance-id].ini</tt>. You need to write the following content
+into this file:
+
+F+:mssql.ini
+[auth]
+type = db
+username = monitoring-user
+password = mysecretpw
+F-:

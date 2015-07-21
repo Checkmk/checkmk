@@ -5094,7 +5094,7 @@ def log_entry(linkinfo, action, message, logfilename, user_id = None):
     log_file = log_dir + logfilename
     make_nagios_directory(log_dir)
     f = create_user_file(log_file, "ab")
-    f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action, message))
+    f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id.encode("utf-8"), action, message))
 
 
 def log_audit(linkinfo, what, message, user_id = None):
@@ -7524,16 +7524,21 @@ def vs_ldap_connection(new):
             value  = True,
             totext = _("Enforce lower case User-IDs."),
         )),
-        ("user_id_umlauts", DropdownChoice(
-            title = _("Umlauts in User-IDs"),
-            help  = _("Multisite does not support umlauts in User-IDs at the moment. To deal "
-                      "with LDAP users having umlauts in their User-IDs you have the following "
-                      "choices."),
-            choices = [
-                ("replace",  _("Replace umlauts like \"&uuml;\" with \"ue\"")),
-                ("skip",     _("Skip users with umlauts in their User-IDs")),
-            ],
-            default_value = "replace",
+        ("user_id_umlauts", Transform(
+            DropdownChoice(
+                title = _("Translate Umlauts in User-IDs (deprecated)"),
+                help  = _("Check_MK was not not supporting special characters (like Umlauts) in "
+                          "User-IDs. To deal with LDAP users having umlauts in their User-IDs "
+                          "you had the choice to replace umlauts with other characters. This option "
+                          "is still available for compatibility reasons, but you are adviced to use "
+                          "the \"keep\" option for new installations."),
+                choices = [
+                    ("keep",     _("Keep special characters")),
+                    ("replace",  _("Replace umlauts like \"&uuml;\" with \"ue\"")),
+                ],
+                default_value = "keep",
+            ),
+            forth = lambda x: x == "skip" and "keep" or x
         )),
     ]
 
@@ -7628,7 +7633,6 @@ def vs_ldap_connection(new):
             'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
             'group_filter', 'group_member',
         ],
-        default_keys = ['page_size'],
     )
 
 
@@ -9620,7 +9624,7 @@ def mode_user_notifications(phase, profilemode):
         title = _("Your personal notification rules")
         config.need_permission("general.edit_notifications")
     else:
-        userid = html.var("user")
+        userid = html.var_utf8("user")
         title = _("Custom notification table for user ") + userid
 
     if phase == "title":
@@ -9704,7 +9708,7 @@ def mode_notification_rule(phase, profilemode):
         userid = config.user_id
         config.need_permission("general.edit_notifications")
     else:
-        userid = html.var("user", "")
+        userid = html.var_utf8("user", "")
 
     if userid and not profilemode:
         suffix = _(" for user ") + html.attrencode(userid)
@@ -12300,7 +12304,7 @@ def mode_users(phase):
 
     if phase == "action":
         if html.var('_delete'):
-            delid = html.var("_delete")
+            delid = html.var_utf8("_delete")
             if delid == config.user_id:
                 raise MKUserError(None, _("You cannot delete your own account!"))
 
@@ -12468,8 +12472,8 @@ def mode_edit_user(phase):
     rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
 
     users = userdb.load_users(lock = phase == 'action')
-    userid = html.var("edit") # missing -> new user
-    cloneid = html.var("clone") # Only needed in 'new' mode
+    userid = html.var_utf8("edit") # missing -> new user
+    cloneid = html.var_utf8("clone") # Only needed in 'new' mode
     new = userid == None
     if phase == "title":
         if new:
@@ -12492,7 +12496,14 @@ def mode_edit_user(phase):
         pw_suffix = 'new'
     else:
         user = users.get(userid, userdb.new_user_template('htpasswd'))
-        pw_suffix = userid
+        pw_suffix = base64.b64encode(userid.encode("utf-8"))
+
+    if new:
+        vs_user_id = UserID(
+            validate_value = validate_user_id,
+        )
+    else:
+        vs_user_id = FixedValue(userid)
 
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
@@ -12527,16 +12538,14 @@ def mode_edit_user(phase):
         if not html.check_transaction():
             return "users"
 
-        id = html.var("userid").strip()
-        if new and id in users:
-            raise MKUserError("userid", _("This username is already being used by another user."))
-        if not re.match("^[-a-z0-9A-Z_\.@]+$", id):
-            raise MKUserError("userid", _("The username must consist only of letters, digits, <tt>@</tt>, <tt>_</tt> or colon."))
-
         if new:
+            id = vs_user_id.from_html_vars("user_id")
+            vs_user_id.validate_value(id, "user_id")
+
             new_user = {}
             users[id] = new_user
         else:
+            id = html.var_utf8("edit").strip()
             new_user = users[id]
 
         # Full name
@@ -12688,12 +12697,7 @@ def mode_edit_user(phase):
 
     # ID
     forms.section(_("Username"), simple = not new)
-    if new:
-        html.text_input("userid", userid)
-        html.set_focus("userid")
-    else:
-        html.write(userid)
-        html.hidden_field("userid", userid)
+    vs_user_id.render_input("user_id", userid)
 
     def lockable_input(name, dflt):
         if not is_locked(name):
@@ -12906,11 +12910,18 @@ def mode_edit_user(phase):
     html.hidden_fields()
     html.end_form()
 
+
 def filter_hidden_users(users):
     if config.wato_hidden_users:
         return dict([ (id, user) for id, user in users.items() if id not in config.wato_hidden_users ])
     else:
         return users
+
+
+def validate_user_id(value, varprefix):
+    users = userdb.load_users(lock = phase == 'action')
+    if new and id in users:
+        raise MKUserError(varprefix, _("This username is already being used by another user."))
 
 
 def generate_wato_users_elements_function(none_value, only_contacts = False):

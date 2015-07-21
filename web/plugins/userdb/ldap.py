@@ -95,26 +95,6 @@ ldap_filter_map = {
     },
 }
 
-# All these characters are replaced from user ids by default. Check_MK
-# currently does not support special characters in user ids, so users
-# not matching this specification are cleaned up with this map. When the
-# user accounts still do not match the specification, they are skipped.
-ldap_umlaut_translation = {
-    ord(u'ü'): u'ue',
-    ord(u'ö'): u'oe',
-    ord(u'ä'): u'ae',
-    ord(u'ß'): u'ss',
-    ord(u'Ü'): u'UE',
-    ord(u'Ö'): u'OE',
-    ord(u'Ä'): u'AE',
-    ord(u'å'): u'aa',
-    ord(u'Å'): u'Aa',
-    ord(u'Ø'): u'Oe',
-    ord(u'ø'): u'oe',
-    ord(u'Æ'): u'Ae',
-    ord(u'æ'): u'ae',
-}
-
 
 class MKLDAPException(MKGeneralException):
     pass
@@ -127,12 +107,6 @@ def ldap_test_module():
         raise MKLDAPException(_("The python module python-ldap seems to be missing. You need to "
                                 "install this extension to make the LDAP user connector work."))
 
-
-def make_utf8(x):
-    if type(x) == unicode:
-        return x.encode('utf-8')
-    else:
-        return x
 
 #.
 #   .--UserConnector-------------------------------------------------------.
@@ -383,7 +357,7 @@ class LDAPUserConnector(UserConnector):
 
     def ldap_paged_async_search(self, base, scope, filt, columns):
         self.log('  PAGED ASYNC SEARCH')
-        page_size = self._config.get('page_size', 100)
+        page_size = self._config.get('page_size', 1000)
 
         if ldap_compat:
             lc = SimplePagedResultsControl(size = page_size, cookie = '')
@@ -532,21 +506,27 @@ class LDAPUserConnector(UserConnector):
         if self._config.get('lower_user_ids', False):
             user_id = user_id.lower()
 
-        umlauts = self._config.get('user_id_umlauts', 'replace')
-        new_user_id = user_id.translate(ldap_umlaut_translation)
+        umlauts = self._config.get('user_id_umlauts', 'keep')
 
+        # Be compatible to old user_id umlaut replacement. These days user_ids support special
+        # characters, so the replacement would not be needed anymore. But we keep this for
+        # compatibility reasons. FIXME TODO Remove this one day.
         if umlauts == 'replace':
-            user_id = new_user_id
-        elif umlauts == 'skip' and user_id != new_user_id:
-            return None # This makes the user being skipped
-
-        # Now check whether or not the user id matches our specification
-        try:
-            str(user_id)
-        except UnicodeEncodeError:
-            # Skipping this user: not all "bad" characters were replaced before
-            self.log('Skipped user: %s (contains not allowed special characters)' % user_id)
-            return None
+            user_id = user_id.translate({
+                ord(u'ü'): u'ue',
+                ord(u'ö'): u'oe',
+                ord(u'ä'): u'ae',
+                ord(u'ß'): u'ss',
+                ord(u'Ü'): u'UE',
+                ord(u'Ö'): u'OE',
+                ord(u'Ä'): u'AE',
+                ord(u'å'): u'aa',
+                ord(u'Å'): u'Aa',
+                ord(u'Ø'): u'Oe',
+                ord(u'ø'): u'oe',
+                ord(u'Æ'): u'Ae',
+                ord(u'æ'): u'ae',
+            })
 
         return user_id
 
@@ -568,7 +548,6 @@ class LDAPUserConnector(UserConnector):
             [user_id_attr],
             self._config['user_scope']
         )
-
         if result:
             dn = result[0][0]
             user_id = self.sanitize_user_id(result[0][1][user_id_attr][0])

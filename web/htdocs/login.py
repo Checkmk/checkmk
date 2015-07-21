@@ -79,7 +79,7 @@ def load_serial(username):
 # Generates the hash to be added into the cookie value
 def generate_hash(username, now, serial):
     secret = load_secret()
-    return md5(username + now + str(serial) + secret).hexdigest()
+    return md5(username.encode("utf-8") + now + str(serial) + secret).hexdigest()
 
 def del_auth_cookie():
     name = site_cookie_name()
@@ -103,6 +103,7 @@ def renew_cookie(cookie_name, username, serial):
 
 def check_auth_cookie(cookie_name):
     username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)
+    username = username.decode("utf-8")
 
     # FIXME: Ablauf-Zeit des Cookies testen
     #max_cookie_age = 10
@@ -131,42 +132,54 @@ def check_auth_cookie(cookie_name):
 
 def check_auth_automation():
     secret = html.var("_secret").strip()
-    user = html.var("_username").strip()
+    user_id = html.var_utf8("_username").strip()
     html.del_var('_username')
     html.del_var('_secret')
-    if secret and user and "/" not in user:
-        path = defaults.var_dir + "/web/" + user + "/automation.secret"
+    if secret and user_id and "/" not in user_id:
+        path = defaults.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
         if os.path.isfile(path) and file(path).read().strip() == secret:
             # Auth with automation secret succeeded - mark transid as unneeded in this case
             html.set_ignore_transids()
-            return user
-    raise MKAuthException(_("Invalid automation secret for user %s") % html.attrencode(user))
+            return user_id
+    raise MKAuthException(_("Invalid automation secret for user %s") % html.attrencode(user_id))
+
+# When http header auth is enabled, try to read the user_id from the var
+# and when there is some available, set the auth cookie (for other addons) and proceed.
+def check_auth_http_header():
+    user_id = html.get_request_header(config.auth_by_http_header)
+    if user_id:
+        user_id = user_id.decode("utf-8")
+        serial = load_serial(user_id)
+        renew_cookie(site_cookie_name(), user_id, serial)
+    else:
+        user_id = None
+    return user_id
 
 def check_auth():
+    user_id = None
     if html.var("_secret"):
-        return check_auth_automation()
+        user_id = check_auth_automation()
 
-    # When http header auth is enabled, try to read the username from the var
-    # and when there is some available, set the auth cookie (for other addons) and proceed.
-    if config.auth_by_http_header:
-        username = html.req.headers_in.get(config.auth_by_http_header, None)
-        if username:
-            serial = load_serial(username)
-            renew_cookie(site_cookie_name(), username, serial)
-            return username
+    elif config.auth_by_http_header:
+        user_id = check_auth_http_header()
 
-    for cookie_name in html.get_cookie_names():
-        if cookie_name.startswith('auth_'):
-            try:
-                return check_auth_cookie(cookie_name)
-            except Exception, e:
-                #if html.enable_debug:
-                #    html.write('Exception occured while checking cookie %s' % cookie_name)
-                #    raise
-                #else:
-                pass
+    if user_id == None:
+        for cookie_name in html.get_cookie_names():
+            if cookie_name.startswith('auth_'):
+                try:
+                    user_id = check_auth_cookie(cookie_name)
+                    break
+                except Exception, e:
+                    #if html.enable_debug:
+                    #    html.write('Exception occured while checking cookie %s' % cookie_name)
+                    #    raise
+                    #else:
+                    pass
 
-    return ''
+    if (user_id != None and type(user_id) != unicode) or user_id == u'':
+        raise MKInternalError(_("Invalid user authentication"))
+
+    return user_id
 
 
 def do_login():
@@ -174,7 +187,7 @@ def do_login():
     err = None
     if html.var('_login'):
         try:
-            username = html.var('_username', '').rstrip()
+            username = html.var_utf8('_username', '').rstrip()
             if username == '':
                 raise MKUserError('_username', _('No username given.'))
 
@@ -255,7 +268,7 @@ def normal_login_page(called_directly = True):
 }''')
 
     # When someone calls the login page directly and is already authed redirect to main page
-    if html.myfile == 'login' and check_auth() != '':
+    if html.myfile == 'login' and check_auth():
         html.immediate_browser_redirect(0.5, origtarget and origtarget or 'index.py')
         return apache.OK
 

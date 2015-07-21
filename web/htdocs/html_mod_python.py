@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import Cookie, util, apache
+from lib import make_utf8
 import htmllib
 import os, time, config, weblib, re
 import defaults
@@ -59,6 +60,11 @@ class html_mod_python(htmllib.html):
         else:
             return self.site_status
 
+    def login(self, user_id):
+        self.user = user_id
+
+    def is_logged_in(self):
+        return self.user and type(self.user) == unicode
 
     def load_help_visible(self):
         try:
@@ -66,12 +72,18 @@ class html_mod_python(htmllib.html):
         except:
             pass
 
+
+    def get_request_header(self, key, deflt=None):
+        return self.req.headers_in.get(key, deflt)
+
+
     def is_ssl_request(self):
-        return self.req.headers_in.get('X-Forwarded-Proto') == 'https'
+        return self.get_request_header('X-Forwarded-Proto') == 'https'
+
 
     def set_cookie(self, varname, value, expires = None):
         # httponly tells the browser not to make this cookie available to Javascript
-        c = Cookie.Cookie(varname, value, path='/', httponly=True)
+        c = Cookie.Cookie(varname, make_utf8(value), path='/', httponly=True)
 
         if self.is_ssl_request():
             c.secure = True
@@ -108,7 +120,7 @@ class html_mod_python(htmllib.html):
         return config.load_user_file("buttoncounts", {})
 
     def top_heading(self, title):
-        if type(self.user) == str:
+        if self.is_logged_in():
             login_text = "<b>%s</b> (%s" % (config.user_id, "+".join(config.user_role_ids))
             if self.enable_debug:
                 if config.get_language():

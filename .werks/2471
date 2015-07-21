@@ -1,0 +1,26 @@
+Title: User IDs are now allowed to contain special characters (like German umlauts)
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437463798
+Class: feature
+
+Using the GUI it was not possible to create users having user IDs containing special
+characters like e.g. German umlauts. But in environments where user synchronizations
+with LDAP directories is used it might happen that users with sucht user IDs need
+to be synchronized into Check_MK. This was in possible in earlier versions,
+which lead to some kind of inconsistencies.
+
+To have a consistent situation for all users independent of their source, Check_MK
+now allows you to create users which user IDs contain special characters.
+
+If you already have configured a LDAP synchronization and set the option
+"Translate Umlauts in User-IDs" to "replace", your already synchronized users will
+be left untouched for the moment. But it is recommended to set this option to
+"Keep special characters" now to allow your users to use their normal user IDs for
+logging in. But please note, if you change this option, your users having special
+characters in user IDs are deleted and re-created with the new name during next
+LDAP sync. You will need to migrate the users profile (<tt>var/check_mk/web/[user_id]</tt>)
+to make them able to use their custom views, dashboards, bookmarks etc. again after
+renaming.

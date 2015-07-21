@@ -43,6 +43,11 @@ try:
 except NameError:
     from sets import Set as set
 
+# FIXME: Make clear whether or not user related values should be part
+# of the "config" module. Maybe move to dedicated module (userdb?). Then
+# move all user related stuff there. e.g. html.user should also be moved
+# there.
+
 #.
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -275,7 +280,7 @@ def login(u):
 
 def set_user_confdir(user_id):
     global user_confdir
-    user_confdir = config_dir + "/" + user_id
+    user_confdir = config_dir + "/" + user_id.encode("utf-8")
     make_nagios_directory(user_confdir)
 
 def get_language(default = None):

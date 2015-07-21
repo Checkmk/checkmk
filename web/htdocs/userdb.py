@@ -322,11 +322,13 @@ def load_users(lock = False):
         except IOError:
             return []
 
+    # FIXME TODO: Consolidate with htpasswd user connector
     filename = defaults.htpasswd_file
     for line in readlines(filename):
         line = line.strip()
         if ':' in line:
             id, password = line.strip().split(":")[:2]
+            id = id.decode("utf-8")
             if password.startswith("!"):
                 locked = True
                 password = password[1:]
@@ -353,6 +355,7 @@ def load_users(lock = False):
         line = line.strip()
         if ':' in line:
             user_id, serial = line.split(':')[:2]
+            user_id = user_id.decode("utf-8")
             if user_id in result:
                 result[user_id]['serial'] = saveint(serial)
 
@@ -360,7 +363,7 @@ def load_users(lock = False):
     dir = defaults.var_dir + "/web/"
     for d in os.listdir(dir):
         if d[0] != '.':
-            id = d
+            id = d.decode("utf-8")
 
             # read special values from own files
             if id in result:
@@ -395,14 +398,14 @@ def load_users(lock = False):
     return result
 
 def load_custom_attr(userid, key, conv_func, default = None):
-    basedir = defaults.var_dir + "/web/" + userid
+    basedir = defaults.var_dir + "/web/" + make_utf8(userid)
     try:
         return conv_func(file(basedir + '/' + key + '.mk').read().strip())
     except IOError:
         return default
 
 def save_custom_attr(userid, key, val):
-    basedir = defaults.var_dir + "/web/" + userid
+    basedir = defaults.var_dir + "/web/" + make_utf8(userid)
     make_nagios_directory(basedir)
     create_user_file('%s/%s.mk' % (basedir, key), 'w').write('%s\n' % val)
 
@@ -497,40 +500,35 @@ def save_users(profiles):
         rename_file = False
         out = create_user_file(serials_file[:-4], "w")
 
-    def encode_utf8(value):
-        if type(value) == unicode:
-            value = value.encode("utf-8")
-        return value
-
     for user_id, user in profiles.items():
-        out.write('%s:%d\n' % (encode_utf8(user_id), user.get('serial', 0)))
+        out.write('%s:%d\n' % (make_utf8(user_id), user.get('serial', 0)))
     out.close()
     if rename_file:
         os.rename(serials_file, serials_file[:-4])
 
     # Write user specific files
-    for id, user in profiles.items():
-        user_dir = defaults.var_dir + "/web/" + id
+    for user_id, user in profiles.items():
+        user_dir = defaults.var_dir + "/web/" + user_id
         make_nagios_directory(user_dir)
 
         # authentication secret for local processes
         auth_file = user_dir + "/automation.secret"
         if "automation_secret" in user:
             create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
-        elif os.path.exists(auth_file):
-            os.remove(auth_file)
+        else:
+            remove_user_file(auth_file)
 
         # Write out user attributes which are written to dedicated files in the user
         # profile directory. The primary reason to have separate files, is to reduce
         # the amount of data to be loaded during regular page processing
-        save_custom_attr(id, 'serial', str(user.get('serial', 0)))
-        save_custom_attr(id, 'num_failed', str(user.get('num_failed', 0)))
-        save_custom_attr(id, 'enforce_pw_change', str(int(user.get('enforce_pw_change', False))))
-        save_custom_attr(id, 'last_pw_change', str(user.get('last_pw_change', int(time.time()))))
+        save_custom_attr(user_id, 'serial', str(user.get('serial', 0)))
+        save_custom_attr(user_id, 'num_failed', str(user.get('num_failed', 0)))
+        save_custom_attr(user_id, 'enforce_pw_change', str(int(user.get('enforce_pw_change', False))))
+        save_custom_attr(user_id, 'last_pw_change', str(user.get('last_pw_change', int(time.time()))))
 
         # Write out the last seent time
         if 'last_seen' in user:
-            save_custom_attr(id, 'last_seen', repr(user['last_seen']))
+            save_custom_attr(user_id, 'last_seen', repr(user['last_seen']))
 
     # Remove settings directories of non-existant users.
     # Beware: we removed this since it leads to violent destructions
@@ -546,7 +544,7 @@ def save_users(profiles):
     # created by other sources in common cases
     dir = defaults.var_dir + "/web"
     for user_dir in os.listdir(defaults.var_dir + "/web"):
-        if user_dir not in ['.', '..'] and user_dir not in profiles:
+        if user_dir not in ['.', '..'] and user_dir.decode("utf-8") not in profiles:
             entry = dir + "/" + user_dir
             if os.path.isdir(entry) and os.path.exists(entry + '/automation.secret'):
                 os.unlink(entry + '/automation.secret')
@@ -863,9 +861,9 @@ def hook_login(username, password):
         # False       -> failed
         if result not in [ False, None ]:
             username = result
-            if type(username) != str:
+            if type(username) not in [ str, unicode ]:
                 raise MKInternalError(_("The username returned by the %s "
-                    "connector is not of type string (%r).") % (connector['id'], username))
+                    "connector is not of type string (%r).") % (connection_id, username))
             # Check wether or not the user exists (and maybe create it)
             create_non_existing_user(connection_id, username)
 

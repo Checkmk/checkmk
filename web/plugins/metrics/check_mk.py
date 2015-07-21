@@ -5253,3 +5253,11 @@ graph_info.append({
     ]
 })
 
+graph_info.append({
+    "title" : _("Round trip average"),
+    "metrics" : [
+        ( "rtmax", "area" ),
+        ( "rtmin", "area" ),
+        ( "rta", "line" ),
+    ],
+})

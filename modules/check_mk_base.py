@@ -1884,8 +1884,9 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
         try:
             ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
                 get_predictive_levels(dsname, params, "MAX", levels_factor=factor * scale)
+
             if ref_value:
-                infotexts.append("predicted reference: %.2f%s" % (ref_value * factor / scale, unit))
+                infotexts.append("predicted reference: %.2f%s" % (ref_value / scale, unit))
             else:
                 infotexts.append("no reference for prediction yet")
         except Exception, e:

@@ -357,7 +357,7 @@ class LDAPUserConnector(UserConnector):
 
     def ldap_paged_async_search(self, base, scope, filt, columns):
         self.log('  PAGED ASYNC SEARCH')
-        page_size = self._config.get('page_size', 100)
+        page_size = self._config.get('page_size', 1000)
 
         if ldap_compat:
             lc = SimplePagedResultsControl(size = page_size, cookie = '')

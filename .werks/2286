@@ -1,0 +1,9 @@
+Title: hp_procurve_cpu, hp_procurve_mem, hp_procurve_sensors: now can monitor HP 2920 Switch Stack
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437488829
+Class: feature
+
+Now the checks hp_procurce_cpu, hp_procurve_mem and hp_procurve_sensors monitor HP 2920 Switches.

@@ -1,0 +1,10 @@
+Title: New checks: aix_hacmp_resources, aix_hacmp_services, aix_hacmp_nodes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437567124
+Class: feature
+
+The checks aix_hacmp_resources, aix_hacmp_services and aix_hacmp_ndoes monitor the resource groups, cluster services and active nodes of
+the HACMP cluster manager. These checks need the check_mk_agent.aix agent.

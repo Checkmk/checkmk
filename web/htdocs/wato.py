@@ -4833,7 +4833,7 @@ def mode_changelog(phase):
                             restart_site(site)
                             response = True
                         except Exception, e:
-                            response = str(e)
+                            response = "%s" % e
 
                     if response == True:
                         return
@@ -19307,6 +19307,8 @@ def host_extra_conf(hostname, conflist):
 # Create link keeping the context to the current folder / file
 def make_link(vars):
     vars = vars + [ ("folder", g_folder[".path"]) ]
+    if html.var("debug") == "1":
+        vars.append(("debug", "1"))
     return html.makeuri_contextless(vars)
 
 # Small helper for creating a link with a context to a given folder

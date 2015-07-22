@@ -96,6 +96,7 @@ def check_esx_vsphere_counters_diskio(item, params, info):
         elif counter == 'disk.deviceLatency':
             values['latency'] = max(values['latency'], int(value))
 
+    values['latency'] = values['latency'] / 1000.0
     return check_diskstat_dict(item, params, {"SUMMARY" : values})
 
 check_info['esx_vsphere_counters.diskio'] = {

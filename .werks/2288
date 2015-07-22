@@ -1,0 +1,9 @@
+Title: check_mk_agent.aix: New sections for HACMP cluster manager
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437566800
+Class: feature
+
+New sections of the aix agent to monitor resource groups, services and active nodes of HACMP cluster manager.

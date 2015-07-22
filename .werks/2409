@@ -1,0 +1,17 @@
+Title: AIX DB2 monitoring: the agent plugin now processes all db2 instances in parallel
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437559071
+Class: feature
+
+The mk_db2.aix plugin now uses a separate cache file for each db2 instance.
+This allows parallel processing of all instances at the same time.
+The performance of the system should not suffer. It was tested on a system with 50+ db2 instances.
+
+Furthermore the db2 checks will no longer all report UNKNOWN when an instance is stopped.
+The instance checks will now go stale (no data was reported) and the db2_version check will
+go to CRIT.
+
+The db2_logsizes check now finally works.. There was a typo in the previous checkname.

@@ -50,7 +50,7 @@ factory_settings["db2_tablespaces_default_levels"] = {
 }
 
 def inventory_db2_tablespaces(parsed):
-    for instance, values in parsed.items():
+    for instance, values in parsed[1].items():
         for table in values[1:]:
             yield "%s.%s" % (instance, table[0]), {}
 
@@ -61,9 +61,10 @@ def check_db2_tablespaces(item, params, parsed):
         yield 3, 'Invalid check item given (must be <instance>.<tablespace>)'
         return
 
-    db         = parsed.get(instance)
+    db = parsed[1].get(instance)
     if not db:
-        return
+        raise MKCounterWrapped("Login into database failed")
+
     db_tables  = dict(map(lambda x: (x[0], x[1:]), db[1:]))
     tablespace = db_tables.get(tbsname)
     if not tablespace:

@@ -29,6 +29,10 @@
 # db2taddm:CMDBS1 deadlocks 0
 # db2taddm:CMDBS1 lockwaits 99
 # db2taddm:CMDBS1 sortoverflows 2387
+# TIMESTAMP 1426610763
+# db2taddm:CMDBS6 deadlocks 99
+# db2taddm:CMDBS6 lockwaits 91
+# db2taddm:CMDBS6 sortoverflows 237
 
 factory_settings["db2_counters_default_levels"] = {
 }
@@ -45,22 +49,27 @@ def parse_db2_counters(info):
         if line[0].startswith("TIMESTAMP"):
             timestamp = int(line[1])
             continue
-        dbs.setdefault(line[0], {})
+        dbs.setdefault(line[0], {"TIMESTAMP": timestamp})
         if line[1] in db2_counters_map.keys():
             dbs[line[0]][line[1]] = line[2]
+
+    # The timestamp is still used for legacy reasons
+    # The instance specific timestamp is now available in the dbs
     return timestamp, dbs
 
 def inventory_db2_counters(parsed):
-    for db in parsed[1]:
-        yield db, {}
+    if len(parsed) == 2:
+        for db in parsed[1]:
+            yield db, {}
 
 def check_db2_counters(item, params, parsed):
-    timestamp = parsed[0]
+    default_timestamp = parsed[0]
     db = parsed[1].get(item)
     if not db:
-        return
+        raise MKCounterWrapped("Login into database failed")
 
     wrapped = False
+    timestamp = db.get("TIMESTAMP", default_timestamp)
     for counter, label in db2_counters_map.items():
         try:
             value = float(db[counter])

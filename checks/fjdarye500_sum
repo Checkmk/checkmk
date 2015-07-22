@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
-# ------------------------------------------------------------------+
+# +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
 # |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# ------------------------------------------------------------------+
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
@@ -24,28 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<db2_version>>>
-# db2taddm DB2v10.1.0.4,s140509(IP23577)
 
-def inventory_db2_version(info):
-    for line in info:
-        yield line[0].split(" ", 1)[0], None
-
-def check_db2_version(item, no_params, info):
-    for line in info:
-        tokens = line[0].split(" ", 1)
-        if len(tokens) < 2:
-            if item == tokens[0]:
-                return 3, "No instance information found"
-        else:
-            instance, version = tokens
-            if item == instance:
-                return 0, version
-
-    return 2, "Instance is down"
-
-check_info['db2_version'] = {
-    "service_description"     : "DB2 Instance %s",
-    "check_function"          : check_db2_version,
-    "inventory_function"      : inventory_db2_version,
+check_info['fjdarye500_sum'] = {
+    'inventory_function'        : inventory_fjdarye_sum,
+    'check_function'            : check_fjdarye_sum,
+    'service_description'       : 'Summary Status %s',
+    'snmp_info'                 : ('.1.3.6.1.4.1.211.1.21.1.150.6', ['0']),
+    'snmp_scan_function'        : lambda oid: \
+                                   oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
+    'includes'                  : [ "fjdarye.include" ],
 }

@@ -36,13 +36,14 @@ factory_settings["db2_connections_default_levels"] = {
 
 def inventory_db2_connections(parsed):
     inventory = []
-    for item in parsed:
+    for item in parsed[1]:
         yield item, None
 
 def check_db2_connections(item, params, parsed):
-    db = parsed.get(item)
+    db = parsed[1].get(item)
     if not db:
-        return
+        raise MKCounterWrapped("Login into database failed")
+
     data = dict(db)
 
     warn, crit = params["levels_total"]

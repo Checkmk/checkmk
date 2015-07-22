@@ -1,0 +1,19 @@
+title: Fujitsu ETERNUS DX storage systems: Thermal sensors
+agents: snmp
+catalog: hw/storagehw/fujitsu
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the reported status of all installed thermal
+ sensors in storage systems from Fujitsu which support the
+ FJDARY-E60.MIB like the ETERNUS DX60 and DX80.
+
+item:
+ The index of the thermal sensor in the SNMP table. It is of type
+ integer. The first module has an index of {0}.
+
+inventory:
+ The check supports automatic inventory. All available items which have
+ a state other than {invalid} (4) during the inventory run are added to the
+ configuration. The {invalid} state is excluded because it means that some
+ thermal sensor is not installed.

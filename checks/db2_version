@@ -36,14 +36,16 @@ def check_db2_version(item, no_params, info):
         tokens = line[0].split(" ", 1)
         if len(tokens) < 2:
             if item == tokens[0]:
-                return 3, "No version information found"
+                return 3, "No instance information found"
         else:
             instance, version = tokens
             if item == instance:
                 return 0, version
 
+    return 2, "Instance is down"
+
 check_info['db2_version'] = {
-    "service_description"     : "DB2 Version %s",
+    "service_description"     : "DB2 Instance %s",
     "check_function"          : check_db2_version,
     "inventory_function"      : inventory_db2_version,
 }

@@ -58,6 +58,8 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
             if event_data_available(loop_interval):
                 if last_config_timestamp != config_timestamp():
                     log_function("Configuration has changed. Restarting myself.")
+                    if shutdown_function:
+                        shutdown_function()
                     os.putenv("CMK_EVENT_RESTART", "1")
                     os.execvp("cmk", sys.argv)
 

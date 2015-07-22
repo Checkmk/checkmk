@@ -1,0 +1,19 @@
+title: Fujitsu ETERNUS DX500 S3 storage systems: Flash of channel modules
+agents: snmp
+catalog: hw/storagehw/fujitsu
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the reported status of the flash of all installed channel
+ modules in storage systems from Fujitsu which support the
+ FJDARY-E150-SNMPV2.MIB like the ETERNUS DX500 S3.
+
+item:
+ The index of the channel module flash in the SNMP table. It is of type
+ integer. The first module has an index of {0}.
+
+inventory:
+ The check supports automatic inventory. All available items which have
+ a state other than {invalid} (4) during the inventory run are added to the
+ configuration. The {invalid} state is excluded because it means that some flash
+ is not installed.

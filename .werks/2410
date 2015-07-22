@@ -1,0 +1,13 @@
+Title: ESX / agent_vsphere: Now able to re-use session cookies
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437571627
+Class: feature
+
+The agent_vsphere now reuses the session cookie as long as possible.
+This prevents large amounts of Logon/Logoff messages in the vCenter log.
+
+Whenever the cookie gets invalid the agent starts from the beginning, carries out
+a normal login and refreshes the outdated cookie.

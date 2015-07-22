@@ -272,7 +272,11 @@ then
         fi
 
         echo '<<<aix_hacmp_services>>>'
-        clshowsrv -v
+        if type clshowsrv ; then
+            clshowsrv -v
+        else # fallback, hardcoded base installation path
+            /usr/es/sbin/cluster/utilities/clshowsrv -v
+        fi
 
         echo '<<<aix_hacmp_resources:sep(58)>>>'
         clRGinfo -s

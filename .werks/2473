@@ -1,0 +1,16 @@
+Title: cisco_asa_failover: Reworked check to reflect expected primary/secondary states of devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437553052
+Class: fix
+
+The check was keeping the current cluster/node states which the devices had during service
+discovery as reference state and checks whether or not this state remains and raises an
+error when the state changed.
+
+This has been changed now. The state during discovery is not relevant anymore. The check
+now looks at the primary/secondary devices and checks whether or not the primary device
+is the active one or the secondary has been promoted to be the active one. This should
+be clearer for users.

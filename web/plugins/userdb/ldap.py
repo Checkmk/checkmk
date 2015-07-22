@@ -862,7 +862,7 @@ class LDAPUserConnector(UserConnector):
 
                 # Synchronize new user profile to remote sites if needed
                 if pw_changed and not changed and wato.is_distributed():
-                    synchronize_profile_to_sites(user_id, user)
+                    synchronize_profile_to_sites(self, user_id, user)
 
                 if changed:
                     details.append(('Changed: %s') % ', '.join(changed))
@@ -1421,13 +1421,13 @@ ldap_attribute_plugins['groups_to_roles'] = {
 # Hopefully we have no large bulks of users changing their passwords at the same
 # time. In this case the implementation does not scale well. We would need to
 # change this to some kind of profile bulk sync per site.
-def synchronize_profile_to_sites(user_id, profile):
+def synchronize_profile_to_sites(connection, user_id, profile):
     import wato # FIXME: Cleanup!
     sites = [(site_id, config.site(site_id))
               for site_id in config.sitenames()
               if not wato.site_is_local(site_id) ]
 
-    self.log('Credentials changed: %s. Trying to sync to %d sites' % (user_id, len(sites)))
+    connection.log('Credentials changed: %s. Trying to sync to %d sites' % (user_id, len(sites)))
 
     num_disabled  = 0
     num_succeeded = 0
@@ -1454,12 +1454,12 @@ def synchronize_profile_to_sites(user_id, profile):
             num_succeeded += 1
         else:
             num_failed += 1
-            self.log('  FAILED [%s]: %s' % (site_id, result))
+            connection.log('  FAILED [%s]: %s' % (site_id, result))
             # Add pending entry to make sync possible later for admins
             wato.update_replication_status(site_id, {"need_sync": True})
             wato.log_pending(wato.AFFECTED, None, "edit-users",
                             _('Password changed (sync failed: %s)') % result, user_id = '')
 
-    self.log('  Disabled: %d, Succeeded: %d, Failed: %d' %
+    connection.log('  Disabled: %d, Succeeded: %d, Failed: %d' %
                     (num_disabled, num_succeeded, num_failed))
 

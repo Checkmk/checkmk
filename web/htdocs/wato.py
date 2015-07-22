@@ -4833,7 +4833,7 @@ def mode_changelog(phase):
                             restart_site(site)
                             response = True
                         except Exception, e:
-                            response = str(e)
+                            response = "%s" % e
 
                     if response == True:
                         return
@@ -5072,9 +5072,7 @@ def foreign_changes():
 
 
 def log_entry(linkinfo, action, message, logfilename, user_id = None):
-    if type(message) == unicode:
-        message = message.encode("utf-8")
-    message = message.strip()
+    message = make_utf8(message).strip()
 
     # linkinfo is either a folder, or a hostname or None
     if type(linkinfo) == dict and linkinfo[".path"] in g_folders:
@@ -5086,15 +5084,15 @@ def log_entry(linkinfo, action, message, logfilename, user_id = None):
     else:
         link = ":" + linkinfo
 
-    if user_id == None:
-        user_id = config.user_id
+    if user_id == None and config.user_id != None:
+        user_id = config.user_id.encode("utf-8")
     elif user_id == '':
         user_id = '-'
 
     log_file = log_dir + logfilename
     make_nagios_directory(log_dir)
     f = create_user_file(log_file, "ab")
-    f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id.encode("utf-8"), action, message))
+    f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action, message))
 
 
 def log_audit(linkinfo, what, message, user_id = None):
@@ -19307,6 +19305,8 @@ def host_extra_conf(hostname, conflist):
 # Create link keeping the context to the current folder / file
 def make_link(vars):
     vars = vars + [ ("folder", g_folder[".path"]) ]
+    if html.var("debug") == "1":
+        vars.append(("debug", "1"))
     return html.makeuri_contextless(vars)
 
 # Small helper for creating a link with a context to a given folder

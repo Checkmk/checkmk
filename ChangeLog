@@ -136,6 +136,7 @@
     HW/SW-Inventory:
     * 2128 mk_inventory.vbs: inventory plugin for Windows now available as vbs script...
     * 2367 FIX: win_system: Fixed exception when non-UTF-8 sequences are contained agent output
+    * 2483 FIX: win_exefiles: more gracefully handle incomplete lines, avoid execption
 
 
 1.2.7i2:

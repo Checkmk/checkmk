@@ -1,0 +1,9 @@
+Title: win_exefiles: more gracefully handle incomplete lines, avoid execption
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.6p10
+Date: 1437646145
+Class: fix
+
+

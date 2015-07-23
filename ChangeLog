@@ -10,6 +10,9 @@
     WATO:
     * 2407 FIX: WATO master/slave replication: fixed problem where the configuration from the master site was not activate on slave site...
 
+    HW/SW-Inventory:
+    * 2483 FIX: win_exefiles: more gracefully handle incomplete lines, avoid execption
+
 
 1.2.6p9:
     Core & Setup:

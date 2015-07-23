@@ -62,6 +62,7 @@ def load_plugins():
     load_web_plugins("userdb", globals())
     builtin_user_attribute_names = user_attributes.keys()
     declare_custom_user_attrs()
+    hook_load()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -804,6 +805,12 @@ def hook_save(users):
                 )
             else:
                 raise
+
+def hook_load():
+    for connector in enabled_connectors():
+        handler = connector.get('load', None)
+        if handler:
+            handler()
 
 # This function registers general stuff, which is independet of the single
 # connectors to each page load. It is exectued AFTER all other page hooks.

@@ -1,0 +1,12 @@
+Title: Check check_mkevents: Now able to look for events matching the host alias
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437652597
+Class: feature
+
+The WATO rule <i>Check event state in Event Console</i> got an update.
+You can now also configure if the host alias should be used when looking for
+events in the event console.
+

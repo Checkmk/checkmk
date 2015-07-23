@@ -9120,7 +9120,7 @@ def mode_user_notifications(phase, profilemode):
     if phase == "title":
         return title
 
-    users = userdb.load_users(lock = phase == 'action')
+    users = userdb.load_users(lock = phase == 'action' or html.has_var("_move"))
     user = users[userid]
     rules = user.setdefault("notification_rules", [])
 

@@ -8,6 +8,7 @@
 
     WATO:
     * 2407 FIX: WATO master/slave replication: fixed problem where the configuration from the master site was not activate on slave site...
+    * 2474 FIX: Fixed possible corruption of user datasets (contact, mail, rbn config)...
 
 
 1.2.6p9:

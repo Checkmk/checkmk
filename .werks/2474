@@ -1,0 +1,13 @@
+Title: Fixed possible corruption of user datasets (contact, mail, rbn config)
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437639107
+
+When moving user notification rules in an installation where a lot of users
+are working with the GUI, it could happen that the file which stores contact,
+mail and user rbn configuration (contacts.mk) could corrupt and lead to lost
+attributes for all the users.

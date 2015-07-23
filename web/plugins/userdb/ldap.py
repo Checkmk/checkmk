@@ -1221,19 +1221,21 @@ def ldap_non_contact_attributes():
 
 ldap_builtin_attribute_plugin_names = []
 
-# Is called on every multisite http request
-def ldap_page():
-    try:
-        last_sync_time = float(file(g_ldap_sync_time_file).read().strip())
-    except:
-        last_sync_time = 0
-
+# Is called during load_plugins() phase of userdb.
+def ldap_load():
     # Save the builtin attribute names (to be able to delete removed user attributes)
     global ldap_builtin_attribute_plugin_names
     if not ldap_builtin_attribute_plugin_names:
         ldap_builtin_attribute_plugin_names = ldap_attribute_plugins.keys()
 
     register_user_attribute_sync_plugins()
+
+# Is called on every multisite http request
+def ldap_page():
+    try:
+        last_sync_time = float(file(g_ldap_sync_time_file).read().strip())
+    except:
+        last_sync_time = 0
 
     # in case of sync problems, synchronize all 20 seconds, instead of the configured
     # regular cache livetime
@@ -1263,6 +1265,7 @@ multisite_user_connectors.append({
     'login':             ldap_login,
     'sync':              ldap_sync,
     'page':              ldap_page,
+    'load':              ldap_load,
     'locked':            user_locked, # no ldap check, just check the WATO attribute.
                                       # This handles setups where the locked attribute is not
                                       # synchronized and the user is enabled in LDAP and disabled

@@ -1,0 +1,11 @@
+Title: LDAP: Fixed possible exception during sync when syncing custom user attributes
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2p1
+Date: 1437639822
+
+When using custom user attributes and populating them with data from LDAP using the
+LDAP sync, this could lead to exceptions during synchronisation.

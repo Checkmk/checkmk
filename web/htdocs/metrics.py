@@ -1029,7 +1029,6 @@ def render_graph_pnp(graph_template, translated_metrics):
 
     # Compute width of columns in case of mirrored legend
 
-    mirror_legend = graph_template.get("mirror_legend")
     total_width = 89 # characters
     left_width = max([len(_("Average")), len(_("Maximum")), len(_("Last"))]) + 2
     column_width = (total_width - left_width) / len(graph_template["metrics"]) - 2
@@ -1041,18 +1040,17 @@ def render_graph_pnp(graph_template, translated_metrics):
     have_upside_down = False
 
     # Compute width of the right column of the legend
-    if not mirror_legend:
-        max_title_length = 0
-        for nr, metric_definition in enumerate(graph_template["metrics"]):
-            if len(metric_definition) >= 3:
-                title = metric_definition[2]
-            elif not "," in metric_definition:
-                metric_name = metric_definition[0].split("#")[0]
-                mi = translated_metrics[metric_name]
-                title = mi["title"]
-            else:
-                title = ""
-            max_title_length = max(max_title_length, len(title))
+    max_title_length = 0
+    for nr, metric_definition in enumerate(graph_template["metrics"]):
+        if len(metric_definition) >= 3:
+            title = metric_definition[2]
+        elif not "," in metric_definition:
+            metric_name = metric_definition[0].split("#")[0]
+            mi = translated_metrics[metric_name]
+            title = mi["title"]
+        else:
+            title = ""
+        max_title_length = max(max_title_length, len(title))
 
 
     for nr, metric_definition in enumerate(graph_template["metrics"]):
@@ -1122,12 +1120,7 @@ def render_graph_pnp(graph_template, translated_metrics):
         # Paint the graph itself
         # TODO: Die Breite des Titels intelligent berechnen. Bei legend = "mirrored" muss man die
         # Vefügbare Breite ermitteln und aufteilen auf alle Titel
-        if mirror_legend:
-            left_pad = " " * int((column_width - len(title) - 4 + (nr*0.63)))
-            commands += "COMMENT:\"%s\" " % left_pad
-            right_pad = ""
-        else:
-            right_pad = " " * (max_title_length - len(title))
+        right_pad = " " * (max_title_length - len(title))
         commands += "%s:%s%s%s:\"%s%s\"%s " % (draw_type, metric_name, upside_down_suffix, color, title, right_pad, draw_stack)
         if line_type == "area":
             commands += "LINE:%s%s%s " % (metric_name, upside_down_suffix, render_color(darken_color(parse_color(color), 0.2)))
@@ -1148,31 +1141,15 @@ def render_graph_pnp(graph_template, translated_metrics):
 
 
     # Now create the rrdgraph commands for all metrics - according to the choosen layout
-    if mirror_legend:
-        for what, what_title in [ ("command", ""), ("AVERAGE", _("Average") + "\\:"), ("MAX", _("Maximum") + "\\:"), ("LAST", _("Last") + "\\:") ]:
-            rrdgraph_commands += "COMMENT:\"%%-%ds\" " % left_width % what_title
-            for metric_name, unit_symbol, commands in graph_metrics:
-                if what == "command":
-                    rrdgraph_commands += commands
-                else:
-                    legend_symbol = unit_symbol
-                    if unit_symbol and unit_symbol[0] == " ":
-                        legend_symbol = " %s%s" % (legend_scale_symbol, unit_symbol[1:])
-                    rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%%d.%dlf%%s\" " % (column_width - len(legend_scale_symbol), legend_precision) \
-                           % (metric_name, what, legend_symbol)
-            rrdgraph_commands += "COMMENT:\"\\n\" "
-
-    # Normal legend where for each metric there is one line containing average, max and last
-    else:
-        for metric_name, unit_symbol, commands in graph_metrics:
-            rrdgraph_commands += commands
-            legend_symbol = unit_symbol
-            if unit_symbol and unit_symbol[0] == " ":
-                legend_symbol = " %s%s" % (legend_scale_symbol, unit_symbol[1:])
-            for what, what_title in [ ("AVERAGE", _("average")), ("MAX", _("max")), ("LAST", _("last")) ]:
-                rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%8.%dlf%%s %%s\" "  % legend_precision % \
-                            (metric_name, what, legend_symbol, what_title)
-            rrdgraph_commands += "COMMENT:\"\\n\" "
+    for metric_name, unit_symbol, commands in graph_metrics:
+        rrdgraph_commands += commands
+        legend_symbol = unit_symbol
+        if unit_symbol and unit_symbol[0] == " ":
+            legend_symbol = " %s%s" % (legend_scale_symbol, unit_symbol[1:])
+        for what, what_title in [ ("AVERAGE", _("average")), ("MAX", _("max")), ("LAST", _("last")) ]:
+            rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%8.%dlf%%s %%s\" "  % legend_precision % \
+                        (metric_name, what, legend_symbol, what_title)
+        rrdgraph_commands += "COMMENT:\"\\n\" "
 
 
     # For graphs with both up and down, paint a gray rule at 0

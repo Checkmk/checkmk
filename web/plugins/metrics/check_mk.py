@@ -4425,7 +4425,6 @@ graph_info.append({
         "cpu_util_guest",
         "cpu_util_steal",
     ],
-    "mirror_legend" : True,
     "range" : (0, 100),
 })
 
@@ -4440,7 +4439,6 @@ graph_info.append({
         ( "user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#004080", "line", _("Total") ),
     ],
     "omit_zero_metrics" : True,
-    "mirror_legend" : True,
     "range" : (0, 100),
 })
 

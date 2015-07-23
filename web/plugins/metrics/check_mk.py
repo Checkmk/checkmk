@@ -2485,7 +2485,7 @@ check_metrics["check_mk-rmon_stats"] = {
 }
 
 check_metrics["check_mk-cpu.loads"] = {
-   " load5" : { "auto_graph" : False }
+    "load5" : { "auto_graph" : False }
 }
 
 check_metrics["check_mk-ucd_cpu_load"] = {

@@ -66,12 +66,13 @@ temp_unitsym = {
 
 # Checks Celsius temperature against crit/warn levels defined in params. temp must
 # be int or float. Parameters:
-# temp:              temperature reading of the device (per default interpreted as Celsius)
+# reading:           temperature reading of the device (per default interpreted as Celsius)
 # params:            check parameters (pair or dict)
 # dev_unit:          unit of the device reading if this is not Celsius ("f": Fahrenheit, "k": Kelvin)
 # dev_levels:        warn/crit levels of the device itself, if any. In the same unit as temp (dev_unit)
 # dev_level_lower:   lower warn/crit device levels
 # dev_status:        temperature state (0, 1, 2) as the device reports it (if applies)
+# dev_status_name:   the device name (will be added in the check output)
 # Note: you must not specify dev_status and dev_levels at the same time!
 
 def check_temperature(reading, params, dev_unit = "c",

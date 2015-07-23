@@ -2550,6 +2550,18 @@ register_rulegroup("eventconsole",
 group = "eventconsole"
 
 
+def convert_mkevents_hostspec(value):
+    if type(value) == list:
+        return value
+    elif value == "$HOSTADDRESS$":
+        return [ "$HOSTADDRESS$" ]
+    elif value == "$HOSTNAME$":
+        return [ "$HOSTNAME$" ]
+    elif value == "$HOSTNAME$/$HOSTADDRESS$":
+        return [ "$HOSTNAME$", "$HOSTADDRESS$" ]
+    else: # custom
+        return value
+
 register_rule(
     group,
     "active_checks:mkevents",
@@ -2561,21 +2573,28 @@ register_rule(
          "of the worst open event for that host."),
         elements = [
             ( "hostspec",
-              OptionalDropdownChoice(
-                title = _("Host specification"),
-                help = _("When quering the event status you can either use the monitoring "
-                   "host name, the IP address or a custom host name for referring to a "
-                   "host. This is needed in cases where the event source (syslog, snmptrapd) "
-                   "do not send a host name that matches the monitoring host name."),
-                choices = [
-                    ( '$HOSTNAME$',               _("Monitoring host name") ),
-                    ( '$HOSTADDRESS$',            _("Host IP address" ) ),
-                    ( '$HOSTNAME$/$HOSTADDRESS$', _("Try both host name and IP address" ) ),
-                ],
-                otherlabel = _("Specify explicitly"),
-                explicit = TextAscii(allow_empty = False, attrencode = True),
-                default_value = '$HOSTNAME$/$HOSTADDRESS$',
-              )
+                Transform(
+                    Alternative(
+                        title = _("Host specification"),
+                        elements = [
+                            ListChoice(
+                               title = _("Check with the hosts"),
+                               choices = [
+                                    ( '$HOSTNAME$',     _("Hostname") ),
+                                    ( '$HOSTADDRESS$',  _("IP address" ) ),
+                                    ( '$HOSTALIAS$',    _("Alias" ) ),
+                               ]
+                            ),
+                            TextAscii(allow_empty = False, attrencode = True, title = "Specify host explicitely"),
+                        ],
+                        default_value = [ '$HOSTNAME$', '$HOSTADDRESS$' ]
+                    ),
+                    help = _("When quering the event status you can either use the monitoring "
+                        "host name, the IP address, the host alias or a custom host name for referring to a "
+                        "host. This is needed in cases where the event source (syslog, snmptrapd) "
+                        "do not send a host name that matches the monitoring host name."),
+                    forth = convert_mkevents_hostspec
+                )
             ),
             ( "item",
               TextAscii(

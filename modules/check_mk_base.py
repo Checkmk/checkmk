@@ -656,7 +656,7 @@ def translate_piggyback_host(sourcehost, backedhost):
     # To make it possible to match umlauts we need to change the backendhost
     # to a unicode string which can then be matched with regexes etc.
     # We assume the incoming name is correctly encoded in UTF-8
-    backedhost = backedhost.decode('utf-8')
+    backedhost = decode_incoming_string(backedhost)
 
     # 3. Regular expression conversion
     if "regex" in translation:
@@ -920,19 +920,20 @@ def parse_info(lines, hostname):
                 line = stripped_line
 
             if encoding:
-                try:
-                    line = line.decode(encoding)
-                except:
-                    line = line.decode(fallback_agent_output_encoding)
+                line = decode_incoming_string(line, encoding)
             else:
-                try:
-                    line = line.decode('utf-8')
-                except:
-                    line = line.decode(fallback_agent_output_encoding)
+                line = decode_incoming_string(line)
 
             section.append(line.split(separator))
 
     return info, piggybacked, persist, agent_cache_info
+
+
+def decode_incoming_string(s, encoding="utf-8"):
+    try:
+        return s.decode('utf-8')
+    except:
+        return s.decode(fallback_agent_output_encoding)
 
 
 def cachefile_age(filename):
@@ -1741,7 +1742,7 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
             p = ''
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
         print "%-20s %s%s%-56s%s%s" % (servicedesc.encode('utf-8'),
-                                       tty_bold, color, infotext.split('\n')[0], tty_normal, p)
+                                       tty_bold, color, make_utf8(infotext.split('\n')[0]), tty_normal, p)
 
 
 def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):

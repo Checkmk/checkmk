@@ -283,7 +283,7 @@ def sanitize_snmp_table_columns(columns):
 
 def are_ascending_oids(oid_list):
     for a in range(len(oid_list) - 1):
-        if cmp_oids(oid_list[a], oid_list[a + 1) > 0: # == 0 should never happen
+        if cmp_oids(oid_list[a], oid_list[a + 1]) > 0: # == 0 should never happen
             return False
     return True
 

@@ -74,7 +74,15 @@ class FilterWatoFile(Filter):
         self.check_wato_data_update()
         current = html.var(self.name)
         if current:
-            return "Filter: host_filename ~ ^/wato/%s/\n" % current.replace("\n", "") # prevent insertions attack
+            path_regex = "^/wato/%s" % current.replace("\n", "") # prevent insertions attack
+            if current.endswith("/"): # Hosts directly in this folder
+                path_regex += "hosts.mk"
+            if "*" in current: # used by virtual host tree snapin
+                path_regex = path_regex.replace(".", "\\.").replace("*", ".*")
+                op = "~~"
+            else:
+                op = "~"
+            return "Filter: host_filename %s %s\n" % (op, path_regex)
         else:
             return ""
 

@@ -19404,6 +19404,7 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
 
     html.write("</ul></div>\n")
 
+
 def may_see_hosts():
     return config.may("wato.use") and \
        (config.may("wato.seeall") or config.may("wato.hosts"))

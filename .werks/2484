@@ -1,0 +1,12 @@
+Title: Virtual Host Tree now allows adding levels of WATO folders
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437737995
+Class: feature
+
+Amongst host tag groups you now also can add levels of your WATO
+folder hierarchy. This allows the creation of even more flexible
+virtual host tree, that combine information from the folder tree
+and from the tag groups.

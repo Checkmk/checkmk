@@ -5730,7 +5730,7 @@ def get_checkgroup_parameters(host, checktype, item):
     if item == None: # checks without an item
         return host_extra_conf(host, rules)
     else: # checks with an item need service-specific rules
-        return service_extra_conf(host, str(item), rules)
+        return service_extra_conf(host, item, rules)
 
 
 def output_profile():

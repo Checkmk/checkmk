@@ -242,10 +242,12 @@ def sanitize_snmp_table_columns(columns):
                 endoids.append(endoid)
 
     # The list needs to be sorted to prevent problems when the first
-    # column has missing values in the middle of the tree. Since we
-    # work with strings of numerical components, a simple string sort
-    # is not correct. 1.14 must come after 1.2!
-    endoids.sort(cmp = cmp_oids)
+    # column has missing values in the middle of the tree.
+    if not are_ascending_oids(endoids):
+        endoids.sort(cmp = cmp_oids)
+        need_sort = True
+    else:
+        need_sort = False
 
     # Now fill gaps in columns where some endois are missing
     new_columns = []
@@ -253,8 +255,8 @@ def sanitize_snmp_table_columns(columns):
         # It might happen that end OIDs are not ordered. Fix the OID sorting to make
         # it comparable to the already sorted endoids list. Otherwise we would get
         # some mixups when filling gaps
-        # FIXME: Performance? Maybe check whether or not endoids has changed anything and only sort in this case
-        column.sort(cmp = cmp_oid_pairs)
+        if need_sort:
+            column.sort(cmp = cmp_oid_pairs)
 
         i = 0
         new_column = []
@@ -277,6 +279,13 @@ def sanitize_snmp_table_columns(columns):
         new_columns.append(new_column)
 
     return new_columns
+
+
+def are_ascending_oids(oid_list):
+    for a in range(len(oid_list) - 1):
+        if cmp_oids(oid_list[a], oid_list[a + 1) > 0: # == 0 should never happen
+            return False
+    return True
 
 
 def construct_snmp_table_of_rows(columns):

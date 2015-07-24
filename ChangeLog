@@ -42,6 +42,7 @@
     * 2480 FIX: Fixed exception when configuring predictive levels for network interfaces
     * 2376 FIX: Fix parsing of performance data from MRPE based checks
     * 2377 FIX: cpu.loads: Fix output of reference for predition (was scaled wrongly by number of cores)
+    * 2476 FIX: check_bi_aggr: Fixed exception when authentication is enabled
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

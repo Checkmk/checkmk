@@ -1,0 +1,11 @@
+Title: Fixed broken notification analysis feature
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.6p10
+Date: 1437745296
+Class: fix
+
+The WATO page for the notification analysis was not working as long as
+there was a host RECOVERY or host PROBLEM notification in the recent notifications.
+This has been fixed.

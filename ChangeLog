@@ -13,6 +13,9 @@
     * 2474 FIX: Fixed possible corruption of user datasets (contact, mail, rbn config)...
     * 2475 FIX: LDAP: Fixed possible exception during sync when syncing custom user attributes...
 
+    Notifications:
+    * 2412 FIX: Fixed broken notification analysis feature...
+
     HW/SW-Inventory:
     * 2483 FIX: win_exefiles: more gracefully handle incomplete lines, avoid execption
 

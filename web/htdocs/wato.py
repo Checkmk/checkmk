@@ -9011,8 +9011,8 @@ def mode_notifications(phase):
                         state = context["SERVICESTATEID"]
                         css = "state svcstate state%s" % state
                     else:
-                        statename = _(entry.get("HOSTSTATE")[:4])
-                        state = entry["HOSTSTATEID"]
+                        statename = _(context.get("HOSTSTATE")[:4])
+                        state = context["HOSTSTATEID"]
                         css = "state hstate hstate%s" % state
                     table.cell(_("State"), statename, css=css)
                 elif nottype.startswith("DOWNTIME"):

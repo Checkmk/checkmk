@@ -360,7 +360,7 @@ def get_stored_snmpwalk(hostname, oid):
         try:
             lines = file(path).readlines()
         except IOError:
-            raise MKGeneralException("No snmpwalk file %s\n" % path)
+            raise MKSNMPError("No snmpwalk file %s" % path)
         g_walk_cache[hostname] = lines
 
     begin = 0

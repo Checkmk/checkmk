@@ -496,6 +496,12 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
                                                                            (hostname, check_type, repr(entry)))
                     continue
 
+            # Check_MK 1.2.7i3 defines items to be unicode strings. Convert non unicode
+            # strings here seamless. TODO remove this conversion one day and replace it
+            # with a validation that item needs to be of type unicode
+            if type(item) == str:
+                item = decode_incoming_string(item)
+
             description = service_description(check_type, item)
             # make sanity check
             if len(description) == 0:
@@ -810,6 +816,10 @@ def read_autochecks_of(hostname, world="config"):
         if len(entry) == 4: # old format where hostname is at the first place
             entry = entry[1:]
         check_type, item, parameters = entry
+        # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
+        # items from existing autocheck files for compatibility. TODO remove this one day
+        if type(item) == str:
+            item = decode_incoming_string(item)
         autochecks.append((check_type, item, compute_check_parameters(hostname, check_type, item, parameters)))
     return autochecks
 
@@ -887,7 +897,14 @@ def parse_autochecks_file(hostname):
                 raise Exception("Invalid number of parts: %d" % len(parts))
 
             checktypestring, itemstring, paramstring = parts
-            table.append((eval(checktypestring), eval(itemstring), paramstring))
+
+            item = eval(itemstring)
+            # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
+            # items from existing autocheck files for compatibility. TODO remove this one day
+            if type(item) == str:
+                item = decode_incoming_string(item)
+
+            table.append((eval(checktypestring), item, paramstring))
         except:
             if opt_debug:
                 raise

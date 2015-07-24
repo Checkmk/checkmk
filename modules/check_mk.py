@@ -34,12 +34,6 @@
 import os, sys, socket, time, getopt, glob, re, stat, py_compile, urllib, inspect
 import subprocess, fcntl
 
-# Hack needed to fix UnicodeWarning in in_servicematcher_list(). This
-# can be removed once the encoding of autocheck's items are handled correctly
-# as unicode strings
-import warnings
-warnings.simplefilter("error", UnicodeWarning)
-
 # These variable will be substituted at 'make dist' time
 check_mk_version  = '(inofficial)'
 
@@ -2000,19 +1994,7 @@ def in_extraconf_servicelist(servicelist, service):
 
 def in_servicematcher_list(service_matchers, item):
     for negate, func in service_matchers:
-        try:
-            result = func(item)
-        except (UnicodeDecodeError, UnicodeWarning), e:
-            # FIXME: items in autochecks might contain umlauts, the strings
-            # are saved as UTF-8 encoded ascii strings. should be saved as
-            # unicode strings in this case or at least converted after reading.
-            try:
-                result = func(item.decode('utf-8'))
-            except:
-                if opt_debug:
-                    raise
-                result = False
-
+        result = func(item)
         if result:
             return not negate
 

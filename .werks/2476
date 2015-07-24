@@ -1,0 +1,10 @@
+Title: check_bi_aggr: Fixed exception when authentication is enabled
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437725670
+
+

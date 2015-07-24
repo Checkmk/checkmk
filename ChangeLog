@@ -2,6 +2,7 @@
     Checks & Agents:
     * 2406 FIX: fileinfo: fixed missing size performance data for very large (e.g 2TB) files and fileinfo groups...
     * 2377 FIX: cpu.loads: Fix output of reference for predition (was scaled wrongly by number of cores)
+    * 2476 FIX: check_bi_aggr: Fixed exception when authentication is enabled
 
     Multisite:
     * 2470 FIX: Fixed exception in logwatch log list in rare cases...

@@ -106,7 +106,7 @@ def init_auth():
     if username and password:
         passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         passwdmngr.add_password(None, base_url, username, password)
-        if mode == 'digest':
+        if auth_mode == 'digest':
             authhandler = urllib2.HTTPDigestAuthHandler(passwdmngr)
         else:
             authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)

@@ -2541,8 +2541,8 @@ def ajax_popup_action_menu():
     html.write('<ul>\n')
     for icon in icons:
         html.write('<li>\n')
-        if len(icon) == 5:
-            icon_name, title, url = icon[2:]
+        if len(icon) == 4:
+            icon_name, title, url = icon[1:]
             if url:
                 url = replace_action_url_macros(url, what, row)
                 onclick = ''
@@ -2555,6 +2555,6 @@ def ajax_popup_action_menu():
             if url:
                 html.write('</a>')
         else:
-            html.write(icon[2])
+            html.write(icon[1])
         html.write('</li>\n')
     html.write('</ul>\n')

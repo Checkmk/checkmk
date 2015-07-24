@@ -1276,7 +1276,7 @@ if defaults.omd_root:
 def compute_tag_tree(taglist):
     html.live.set_prepend_site(True)
     query = "GET hosts\n" \
-            "Columns: host_name state num_services_ok num_services_warn num_services_crit num_services_unknown custom_variables"
+            "Columns: host_name filename state num_services_ok num_services_warn num_services_crit num_services_unknown custom_variables"
     hosts = html.live.query(query)
     html.live.set_prepend_site(False)
     hosts.sort()
@@ -1293,6 +1293,12 @@ def compute_tag_tree(taglist):
         # No empty entry found -> get default (i.e. first entry)
         return groupentries[0][:2]
 
+    def need_wato_folder(taglist):
+        for tag in taglist:
+            if tag.startswith("folder:"):
+                return True
+        return False
+
     # Prepare list of host tag groups and topics
     taggroups = {}
     topics = {}
@@ -1307,7 +1313,15 @@ def compute_tag_tree(taglist):
         taggroups[groupname] = group
 
     tree = {}
-    for site, host_name, state, num_ok, num_warn, num_crit, num_unknown, custom_variables in hosts:
+    for site, host_name, wato_folder, state, num_ok, num_warn, num_crit, num_unknown, custom_variables in hosts:
+        if need_wato_folder:
+            if wato_folder.startswith("/wato/"):
+                folder_path = wato_folder[6:-9]
+                folder_path_components = folder_path.split("/")
+                folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
+            else:
+                folder_titles = []
+
         # make state reflect the state of the services + host
         have_svc_problems = False
         if state:
@@ -1331,7 +1345,8 @@ def compute_tag_tree(taglist):
         # Now go through the levels of the tree. Each level may either be
         # - a tag group id, or
         # - "topic:" plus the name of a tag topic. That topic should only contain
-        #   checkbox tags.
+        #   checkbox tags, or:
+        # - "folder:3", where 3 is the folder level (starting at 1) 
         # The problem with the "topic" entries is, that a host may appear several
         # times!
 
@@ -1352,6 +1367,16 @@ def compute_tag_tree(taglist):
                                 if tag_value in tags:
                                     new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
 
+                elif tag.startswith("folder:"):
+                    level = int(tag[7:])
+                    if level <= len(folder_titles):
+                        tag_title = folder_titles[level-1]
+                        tag_value = "folder:%d:%s" % (level, folder_path_components[level-1])
+                    else:
+                        tag_title = _("Hosts in this folder")
+                        tag_value = "folder:%d:" % level
+
+                    new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
                 else:
                     if tag not in taggroups:
                         continue # Configuration error. User deleted tag group after configuring his tree
@@ -1376,6 +1401,8 @@ def compute_tag_tree(taglist):
     return tree
 
 def tag_tree_worst_state(tree):
+    if not tree.values():
+        return 3
     if "_state" in tree:
         return tree["_state"]
     else:
@@ -1385,6 +1412,7 @@ def tag_tree_worst_state(tree):
                 return 2
         return max(states)
 
+
 def tag_tree_has_svc_problems(tree):
     if "_svc_problems" in tree:
         return tree["_svc_problems"]
@@ -1393,6 +1421,7 @@ def tag_tree_has_svc_problems(tree):
             if tag_tree_has_svc_problems(x):
                 return True
         return False
+
 
 def tag_tree_url(taggroups, taglist, viewname):
     urlvars = [("view_name", viewname), ("filled_in", "filter")]
@@ -1410,10 +1439,31 @@ def tag_tree_url(taggroups, taglist, viewname):
                         urlvars.append(("host_tag_%d_op" % nr, "is"))
                         urlvars.append(("host_tag_%d_val" % nr, tag))
                         break
+        elif group.startswith("folder:"):
+            continue # handled later
         else:
             urlvars.append(("host_tag_%d_grp" % nr, group))
             urlvars.append(("host_tag_%d_op" % nr, "is"))
             urlvars.append(("host_tag_%d_val" % nr, tag or ""))
+
+    folder_components = {}
+    for tag in taglist:
+        if tag.startswith("folder:"):
+            level_text, component = tag[7:].split(":")
+            level = int(level_text)
+            folder_components[level] = component
+
+    if folder_components:
+        wato_path = []
+        for i in range(max(folder_components.keys())):
+            level = i + 1
+            if level not in folder_components:
+                wato_path.append("*")
+            else:
+                wato_path.append(folder_components[level])
+
+        urlvars.append(("wato_folder", "/".join(wato_path)))
+
     return html.makeuri_contextless(urlvars, "view.py")
 
 def tag_tree_bullet(state, path, leaf):

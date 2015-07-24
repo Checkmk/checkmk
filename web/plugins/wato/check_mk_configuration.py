@@ -278,6 +278,13 @@ def wato_host_tag_group_choices():
     return choices
 
 
+def virtual_host_tree_choices():
+    return wato_host_tag_group_choices() + [
+            ( "folder:%d" % l, _("WATO Folder Level %d") % l)
+            for l in range(1, 7)
+        ]
+
+
 register_configvar(group,
     "virtual_host_trees",
     ListOf(
@@ -290,7 +297,7 @@ register_configvar(group,
                 DualListChoice(
                     allow_empty = False,
                     custom_order = True,
-                    choices = wato_host_tag_group_choices,
+                    choices = virtual_host_tree_choices,
                 )
             ]
         ),

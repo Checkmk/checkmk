@@ -1,0 +1,14 @@
+Title: SNMP: Fixed exception when processing specific SNMP data with missing columns
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437743112
+Class: fix
+
+When processing SNMP tables which have a) end OIDs which are not increasing and
+b) some columns are missing some indexes, this could lead into mixed up rows and
+even exceptions during processing of this data.
+
+This occured e.g. on Bintec RLX125000 devices where the interfaces OIDs were
+not reported in numerical order by their end OIDs as one would expect in SNMP.

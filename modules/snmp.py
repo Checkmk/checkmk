@@ -90,6 +90,10 @@ def oid_to_intlist(oid):
 def cmp_oids(o1, o2):
     return cmp(oid_to_intlist(o1), oid_to_intlist(o2))
 
+def cmp_oid_pairs(pair1, pair2):
+    return cmp(oid_to_intlist(pair1[0].lstrip('.')),
+               oid_to_intlist(pair2[0].lstrip('.')))
+
 def snmpv3_contexts_of_host(hostname):
     return host_extra_conf(hostname, snmpv3_contexts)
 
@@ -209,68 +213,82 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
 
 
         # prepend suboid to first column
-        if suboid and len(columns) > 0:
+        if suboid and columns:
             fetchoid, first_column = columns[0]
             new_first_column = []
             for o, val in first_column:
                 new_first_column.append((o, str(suboid) + "." + str(val)))
             columns[0] = fetchoid, new_first_column
 
-        # Swap X and Y axis of table (we want one list of columns per item)
         # Here we have to deal with a nasty problem: Some brain-dead devices
         # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
         # in the interfaces MIB with 64 bit counters. So we need to look at
         # the OIDs and watch out for gaps we need to fill with dummy values.
+        new_columns = sanitize_snmp_table_columns(columns)
 
-        # First compute the complete list of end-oids appearing in the output
-        # by looping all results and putting the endoids to a flat list
-        endoids = []
-        for fetchoid, column in columns:
-            for o, value in column:
-                endoid = extract_end_oid(fetchoid, o)
-                if endoid not in endoids:
-                    endoids.append(endoid)
-
-        # The list needs to be sorted to prevent problems when the first
-        # column has missing values in the middle of the tree. Since we
-        # work with strings of numerical components, a simple string sort
-        # is not correct. 1.14 must come after 1.2!
-        endoids.sort(cmp = cmp_oids)
-
-        # Now fill gaps in columns where some endois are missing
-        new_columns = []
-        for fetchoid, column in columns:
-            i = 0
-            new_column = []
-            # Loop all lines to fill holes in the middle of the list. All
-            # columns check the following lines for the correct endoid. If
-            # an endoid differs empty values are added until the hole is filled
-            for o, value in column:
-                eo = extract_end_oid(fetchoid, o)
-                if len(column) != len(endoids):
-                    while i < len(endoids) and endoids[i] != eo:
-                        new_column.append("") # (beginoid + '.' +endoids[i], "" ) )
-                        i += 1
-                new_column.append(value)
-                i += 1
-
-            # At the end check if trailing OIDs are missing
-            while i < len(endoids):
-                new_column.append("") # (beginoid + '.' +endoids[i], "") )
-                i += 1
-            new_columns.append(new_column)
-        columns = new_columns
-
-        # Now construct table by swapping X and Y
-        new_info = []
-        index = 0
-        if len(columns) > 0:
-            for item in columns[0]:
-                new_info.append([ c[index] for c in columns ])
-                index += 1
-            info += new_info
+        info += construct_snmp_table_of_rows(new_columns)
 
     return info
+
+
+def sanitize_snmp_table_columns(columns):
+    # First compute the complete list of end-oids appearing in the output
+    # by looping all results and putting the endoids to a flat list
+    endoids = []
+    for fetchoid, column in columns:
+        for o, value in column:
+            endoid = extract_end_oid(fetchoid, o)
+            if endoid not in endoids:
+                endoids.append(endoid)
+
+    # The list needs to be sorted to prevent problems when the first
+    # column has missing values in the middle of the tree. Since we
+    # work with strings of numerical components, a simple string sort
+    # is not correct. 1.14 must come after 1.2!
+    endoids.sort(cmp = cmp_oids)
+
+    # Now fill gaps in columns where some endois are missing
+    new_columns = []
+    for fetchoid, column in columns:
+        # It might happen that end OIDs are not ordered. Fix the OID sorting to make
+        # it comparable to the already sorted endoids list. Otherwise we would get
+        # some mixups when filling gaps
+        # FIXME: Performance? Maybe check whether or not endoids has changed anything and only sort in this case
+        column.sort(cmp = cmp_oid_pairs)
+
+        i = 0
+        new_column = []
+        # Loop all lines to fill holes in the middle of the list. All
+        # columns check the following lines for the correct endoid. If
+        # an endoid differs empty values are added until the hole is filled
+        for o, value in column:
+            eo = extract_end_oid(fetchoid, o)
+            if len(column) != len(endoids):
+                while i < len(endoids) and endoids[i] != eo:
+                    new_column.append("") # (beginoid + '.' +endoids[i], "" ) )
+                    i += 1
+            new_column.append(value)
+            i += 1
+
+        # At the end check if trailing OIDs are missing
+        while i < len(endoids):
+            new_column.append("") # (beginoid + '.' +endoids[i], "") )
+            i += 1
+        new_columns.append(new_column)
+
+    return new_columns
+
+
+def construct_snmp_table_of_rows(columns):
+    if not columns:
+        return []
+
+    # Now construct table by swapping X and Y.
+    new_info = []
+    for index in range(len(columns[0])):
+        row = [ c[index] for c in columns ]
+        new_info.append(row)
+    return new_info
 
 
 # SNMP-Helper functions used in various checks

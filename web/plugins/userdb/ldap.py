@@ -713,6 +713,23 @@ class LDAPUserConnector(UserConnector):
         if config.user_connections:
             return # Don't try to migrate anything when there is at least one connection configured
 
+        if self.needs_config_migration():
+            self.do_migrate_config()
+
+
+    # Don't migrate anything when no ldap connection has been configured
+    @classmethod
+    def needs_config_migration(self):
+        ldap_connection = getattr(config, 'ldap_connection', {})
+        default_ldap_connection_config = {
+            'type'      : 'ad',
+            'page_size' : 1000,
+        }
+        return ldap_connection and ldap_connection != default_ldap_connection_config
+
+
+    @classmethod
+    def do_migrate_config(self):
         # Create a default connection out of the old config format
         connection = {
             'id'             : 'default',
@@ -822,9 +839,7 @@ class LDAPUserConnector(UserConnector):
             if user_connection_id != connection_id:
                 continue
 
-            # Gather config from convert functions of plugins
-            for key, params in self._config['active_plugins'].items():
-                user.update(ldap_attribute_plugins[key]['convert'](self, key, params or {}, user_id, ldap_user, user))
+            self.execute_active_sync_plugins(user_id, ldap_user, user)
 
             if not mode_create and user == users[user_id]:
                 continue # no modification. Skip this user.
@@ -882,6 +897,11 @@ class LDAPUserConnector(UserConnector):
             pass
 
         save_users(users)
+
+
+    def execute_active_sync_plugins(self, user_id, ldap_user, user):
+        for key, params in self._config['active_plugins'].items():
+            user.update(ldap_attribute_plugins[key]['sync_func'](self, key, params or {}, user_id, ldap_user, user))
 
 
     def flush_caches(self):
@@ -1037,8 +1057,8 @@ def register_user_attribute_sync_plugins():
             'title': val['valuespec'].title(),
             'help':  val['valuespec'].help(),
             'needed_attributes': lambda connection, params: [ params.get('attr', connection.ldap_attr(attr)).lower() ],
-            'convert':           lambda connection, plugin, params, user_id, ldap_user, user: \
-                                         ldap_convert_simple(user_id, ldap_user, user, plugin,
+            'sync_func':         lambda connection, plugin, params, user_id, ldap_user, user: \
+                                         ldap_sync_simple(user_id, ldap_user, user, plugin,
                                                         params.get('attr', connection.ldap_attr(plugin)).lower()),
             'lock_attributes': [ attr ],
             'parameters': [
@@ -1051,7 +1071,7 @@ def register_user_attribute_sync_plugins():
         }
 
 
-def ldap_convert_simple(user_id, ldap_user, user, user_attr, attr):
+def ldap_sync_simple(user_id, ldap_user, user, user_attr, attr):
     if attr in ldap_user:
         return {user_attr: ldap_user[attr][0]}
     else:
@@ -1068,7 +1088,7 @@ def ldap_convert_simple(user_id, ldap_user, user, user_attr, attr):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def ldap_convert_mail(connection, plugin, params, user_id, ldap_user, user):
+def ldap_sync_mail(connection, plugin, params, user_id, ldap_user, user):
     mail = ''
     mail_attr = params.get('attr', connection.ldap_attr('mail')).lower()
     if ldap_user.get(mail_attr):
@@ -1088,7 +1108,7 @@ ldap_attribute_plugins['email'] = {
     'title'             : _('Email address'),
     'help'              :  _('Synchronizes the email of the LDAP user account into Check_MK.'),
     'needed_attributes' : ldap_needed_attributes_mail,
-    'convert'           : ldap_convert_mail,
+    'sync_func'         : ldap_sync_mail,
     'lock_attributes'   : [ 'email' ],
     'parameters'        : [
         ("attr", TextAscii(
@@ -1110,8 +1130,8 @@ ldap_attribute_plugins['email'] = {
 #   '----------------------------------------------------------------------'
 
 
-def ldap_convert_alias(connection, plugin, params, user_id, ldap_user, user):
-    return ldap_convert_simple(user_id, ldap_user, user, 'alias',
+def ldap_sync_alias(connection, plugin, params, user_id, ldap_user, user):
+    return ldap_sync_simple(user_id, ldap_user, user, 'alias',
                                params.get('attr', connection.ldap_attr('cn')).lower())
 
 
@@ -1124,7 +1144,7 @@ ldap_attribute_plugins['alias'] = {
     'help'              :  _('Populates the alias attribute of the WATO user by syncrhonizing an attribute '
                              'from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.'),
     'needed_attributes' : ldap_needed_attributes_alias,
-    'convert'           : ldap_convert_alias,
+    'sync_func'         : ldap_sync_alias,
     'lock_attributes'   : [ 'alias' ],
     'parameters'        : [
         ("attr", TextAscii(
@@ -1150,7 +1170,7 @@ ldap_attribute_plugins['alias'] = {
 #   | and then maybe increase the serial.                                  |
 #   '----------------------------------------------------------------------'
 
-def ldap_convert_auth_expire(connection, plugin, params, user_id, ldap_user, user):
+def ldap_sync_auth_expire(connection, plugin, params, user_id, ldap_user, user):
     # Special handling for active directory: Is the user enabled / disabled?
     if connection.is_active_directory() and ldap_user.get('useraccountcontrol'):
         # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
@@ -1197,7 +1217,7 @@ ldap_attribute_plugins['auth_expire'] = {
                                  'not an already authenticated user should be deauthenticated, e.g. because '
                                  'the password has changed in LDAP or the account has been locked.'),
     'needed_attributes'      : ldap_needed_attributes_auth_expire,
-    'convert'                : ldap_convert_auth_expire,
+    'sync_func'              : ldap_sync_auth_expire,
     # When a plugin introduces new user attributes, it should declare the output target for
     # this attribute. It can either be written to the multisites users.mk or the check_mk
     # contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
@@ -1226,8 +1246,8 @@ ldap_attribute_plugins['auth_expire'] = {
 #   |                                |___/                                 |
 #   '----------------------------------------------------------------------'
 
-def ldap_convert_pager(connection, plugin, params, user_id, ldap_user, user):
-    return ldap_convert_simple(user_id, ldap_user, user, 'pager',
+def ldap_sync_pager(connection, plugin, params, user_id, ldap_user, user):
+    return ldap_sync_simple(user_id, ldap_user, user, 'pager',
                         params.get('attr', connection.ldap_attr('mobile')).lower())
 
 
@@ -1241,7 +1261,7 @@ ldap_attribute_plugins['pager'] = {
                              'of the WATO user accounts, which is then forwarded to the monitoring core and can be used'
                              'for notifications. By default the LDAP attribute <tt>mobile</tt> is used.'),
     'needed_attributes' : ldap_needed_attributes_pager,
-    'convert'           : ldap_convert_pager,
+    'sync_func'         : ldap_sync_pager,
     'lock_attributes'   : ['pager'],
     'parameters'        : [
         ('attr', TextAscii(
@@ -1262,7 +1282,7 @@ ldap_attribute_plugins['pager'] = {
 #   |                                    |___/                |_|          |
 #   '----------------------------------------------------------------------'
 
-def ldap_convert_groups_to_contactgroups(connection, plugin, params, user_id, ldap_user, user):
+def ldap_sync_groups_to_contactgroups(connection, plugin, params, user_id, ldap_user, user):
     # 0. Figure out how to check group membership.
     user_cmp_val = connection.member_attr().lower() == 'memberuid' and user_id or ldap_user['dn']
 
@@ -1282,7 +1302,7 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
     'help':  _('Adds the user to contactgroups based on the group memberships in LDAP. This '
                'plugin adds the user only to existing contactgroups while the name of the '
                'contactgroup must match the common name (cn) of the LDAP group.'),
-    'convert':           ldap_convert_groups_to_contactgroups,
+    'sync_func':         ldap_sync_groups_to_contactgroups,
     'lock_attributes':   ['contactgroups'],
     'parameters': [
         ('nested', FixedValue(
@@ -1308,7 +1328,7 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def ldap_convert_groups_to_roles(connection, plugin, params, user_id, ldap_user, user):
+def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, user):
     # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
     groups_to_fetch = []
     for role_id, distinguished_names in params.items():
@@ -1366,7 +1386,7 @@ def ldap_list_roles_with_group_dn():
                           "<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."),
                 movable = False,
             ),
-            # Convert old single distinguished names to list of :Ns
+            # sync old single distinguished names to list of :Ns
             forth = lambda v: type(v) != list and [v] or v,
         )))
 
@@ -1391,7 +1411,7 @@ ldap_attribute_plugins['groups_to_roles'] = {
                            'Please note: Additionally the user is assigned to the '
                            '<a href="wato.py?mode=edit_configvar&varname=default_user_profile&site=&folder=">Default Roles</a>. '
                            'Deactivate them if unwanted.'),
-    'convert'         : ldap_convert_groups_to_roles,
+    'sync_func'       : ldap_sync_groups_to_roles,
     'lock_attributes' : ['roles'],
     'parameters'      : ldap_list_roles_with_group_dn,
 }

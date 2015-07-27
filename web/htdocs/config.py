@@ -456,8 +456,32 @@ def save_user_file(name, content, unlock=False, user=None):
 #   |  The config module provides some helper functions for sites.         |
 #   '----------------------------------------------------------------------'
 
-sites = { "": {} }
+
 use_siteicons = False
+
+def default_single_site_configuration():
+    if defaults.omd_site:
+        site_name = defaults.omd_site
+        site_alias = _("Local site %s") % site_name
+    else:
+        site_name = "local"
+        site_alias = _("Local site")
+
+    return {
+        site_name: {
+            'alias'        : site_alias,
+            'disable_wato' : True,
+            'disabled'     : False,
+            'insecure'     : False,
+            'multisiteurl' : '',
+            'persist'      : False,
+            'replicate_ec' : False,
+            'replication'  : '',
+            'timeout'      : 10,
+            'user_login'   : True,
+    }}
+
+sites = default_single_site_configuration()
 
 def sitenames():
     return sites.keys()
@@ -489,21 +513,35 @@ def site(name):
     s["id"] = name
     return s
 
-def site_is_local(name):
-    s = sites.get(name, {})
+
+def site_is_local(site_name):
+    s = sites.get(site_name, {})
     sock = s.get("socket")
     return not sock or sock == "unix:" + defaults.livestatus_unix_socket
 
-# FIXME: Should this return True even if all sites but one are disabled?
-# -> should we use allsites() instead of "sites" directly?
+
+def default_site():
+    for site_name, site in sites.items():
+        if site_is_local(site_name):
+            return site_name
+    try:
+        return config.sites.keys()[0]
+    except:
+        return None
+
 def is_multisite():
+    # TODO: Remove all calls of this function
+    return True
+
+def is_single_local_site():
     if len(sites) > 1:
-        return True
-    elif len(sites) == 0:
         return False
-    # Also use Multisite mode if the one and only site is not local
-    sitename = sites.keys()[0]
-    return not site_is_local(sitename)
+    elif len(sites) == 0:
+        return True
+    else:
+        # Also use Multisite mode if the one and only site is not local
+        sitename = sites.keys()[0]
+        return site_is_local(sitename)
 
 def read_site_config():
     global user_siteconf

@@ -1,0 +1,15 @@
+Title: Remove special handling for non-distributed-setups in WATO
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437988947
+Class: feature
+
+The handling of the activation of changes of single site setups was completely
+different than the case where you have a distributed setup with more than one
+Check_MK site. In order to simplify code, documentation and user experiance
+this distinction now has been removed. A single-site setup now exactly looks
+like and behaves like a distributed setup with just one site. This has no
+influence on performance or security.
+

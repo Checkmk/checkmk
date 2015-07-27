@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: is_distributed() now always returns True. Remove all occurrances
+# of this function as soon as we know that everything still works without
+# the old "single" mode.
+
 
 #   .--README--------------------------------------------------------------.
 #   |               ____                _                                  |
@@ -489,7 +493,7 @@ def load_folder(dir, name="", path="", parent=None, childs = True):
         elif parent:
             folder[".siteid"] = parent[".siteid"]
         else:
-            folder[".siteid"] = default_site()
+            folder[".siteid"] = config.default_site()
 
     # Now look subdirectories
     if childs and os.path.exists(dir):
@@ -4862,31 +4866,24 @@ def mode_changelog(phase):
         if is_distributed():
             # Distributed WATO: Show replication state of each site
 
-            html.write("<h3>%s</h3>" % _("Distributed WATO - Replication Status"))
+            html.write("<h3>%s</h3>" % _("Site Status"))
             repstatus = load_replication_status()
             sites = [(name, config.site(name)) for name in config.sitenames() ]
             sort_sites(sites)
             html.write("<table class=data>")
-            html.write("<tr class=dualheader>")
-            html.write("<th rowspan=2>%s</th>" % _("ID") +
-                       "<th rowspan=2>%s</th>" % _("Alias"))
-            html.write("<th colspan=6>%s</th>" % _("Livestatus"))
-            html.write("<th colspan=%d>%s</th>" %
-                         (sitestatus_do_async_replication and 3 or 6, _("Replication")))
-            html.write("<tr>" +
-                       "<th>%s</th>" % _("Status") +
+            html.write("<tr>")
+            html.write("<th>%s</th>" % _("Actions") +
+                       "<th>%s</th>" % _("ID") +
+                       "<th>%s</th>" % _("Alias"))
+            html.write("<th>%s</th>" % _("Status") +
                        "<th>%s</th>" % _("Version") +
                        "<th>%s</th>" % _("Core") +
-                       "<th>%s</th>" % _("Ho.") +
-                       "<th>%s</th>" % _("Sv.") +
-                       "<th>%s</th>" % _("Uptime") +
-                       "<th>%s</th>" % _("Multisite URL") +
-                       "<th>%s</th>" % _("Type"))
+                       "<th>%s</th>" % _("Hosts") +
+                       "<th>%s</th>" % _("Services"))
             if sitestatus_do_async_replication:
                 html.write("<th>%s</th>" % _("Replication result"))
             else:
-                html.write("<th>%s</th>" % _("State") +
-                           "<th>%s</th>" % _("Actions") +
+                html.write("<th colspan=2>%s</th>" % _("Pending changes") +
                            "<th>%s</th>" % _("Last result"))
             html.write("</tr>")
 
@@ -4911,9 +4908,17 @@ def mode_changelog(phase):
                 html.write('<tr class="data %s0">' % odd)
                 odd = odd == "odd" and "even" or "odd"
 
+                # Multisite-URL
+                html.write("<td class=icons>")
+                edit_url = make_link([("mode", "edit_site"), ("edit", site_id)])
+                html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
+                site_url = site.get("multisiteurl")
+                if site_url:
+                    html.icon_button(site_url, _("Open this site's local web user inteface"), "url", target="_blank")
+                html.write("</td>")
+
                 # ID & Alias
-                html.write("<td><a href='%s'>%s</a></td>" %
-                   (make_link([("mode", "edit_site"), ("edit", site_id)]), site_id))
+                html.write("<td>%s</td>" % site_id)
                 html.write("<td>%s</td>" % site.get("alias", ""))
 
                 # Livestatus
@@ -4931,24 +4936,20 @@ def mode_changelog(phase):
                 html.write('<td class=number><a href="view.py?view_name=sitesvcs&site=%s">%s</a></td>' %
                   (site_id, ss.get("num_services", "")))
 
-                # Uptime / Last restart
-                if "program_start" in ss:
-                    age_text = html.age_text(time.time() - ss["program_start"])
-                else:
-                    age_text = ""
-                html.write('<td class=number>%s</td>' % age_text)
-
-                # Multisite-URL
-                html.write("<td>%s</td>" % (not is_local
-                   and "<a target=\"_blank\" href='%s'>%s</a>" % tuple([site.get("multisiteurl")]*2) or ""))
+                ## # Uptime / Last restart
+                ## if "program_start" in ss:
+                ##     age_text = html.age_text(time.time() - ss["program_start"])
+                ## else:
+                ##     age_text = ""
+                ## html.write('<td class=number>%s</td>' % age_text)
 
                 # Type
-                sitetype = ''
-                if is_local:
-                    sitetype = _("local")
-                elif site["replication"] == "slave":
-                    sitetype = _("Slave")
-                html.write("<td>%s</td>" % sitetype)
+                ## sitetype = ''
+                ## if is_local:
+                ##     sitetype = _("local")
+                ## elif site["replication"] == "slave":
+                ##     sitetype = _("Slave")
+                ## html.write("<td>%s</td>" % sitetype)
 
                 need_restart = srs.get("need_restart")
                 need_sync    = srs.get("need_sync") and not site_is_local(site_id)
@@ -5347,10 +5348,7 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
         htmlcode += "<h3>" + _("Audit log for %s") % fmt_date(times[0]) + "</h3>"
 
     elif what == 'pending':
-        if is_distributed():
-            htmlcode += "<h3>" + _("Changes that are not activated on all sites:") + "</h3>"
-        else:
-            htmlcode += "<h3>" + _("Changes that are not yet activated:") + "</h3>"
+        htmlcode += "<h3>" + _("Changes that are not yet activated") + "</h3>"
 
     if what == 'audit':
         display_paged(times)
@@ -10601,7 +10599,7 @@ def mode_sites(phase):
             html.icon_button(globals_url, _("Site-specific global configuration"), "configuration")
 
         # Site-ID
-        table.cell(_("Site-ID"), id)
+        table.cell(_("ID"), id)
 
         # Alias
         table.cell(_("Alias"), site.get("alias", ""))
@@ -11147,7 +11145,7 @@ def mode_edit_site(phase):
 def load_sites():
     try:
         if not os.path.exists(sites_mk):
-            return {}
+            return config.default_single_site_configuration()
 
         vars = { "sites" : {} }
         execfile(sites_mk, vars, vars)
@@ -11166,6 +11164,7 @@ def load_sites():
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (sites_mk, e)))
         return {}
+
 
 
 def save_sites(sites, activate=True):
@@ -11411,6 +11410,9 @@ def do_remote_automation(site, command, vars):
 # Determine, if we have any slaves to distribute
 # configuration to.
 def is_distributed(sites = None):
+    # TODO: Remove all calls of this function
+    return True
+
     if sites == None:
         sites = config.sites
     for site in sites.values():
@@ -11422,16 +11424,6 @@ def declare_site_attribute():
     undeclare_host_attribute("site")
     if is_distributed():
         declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
-
-def default_site():
-    for id, site in config.sites.items():
-        if not "socket" in site \
-            or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
-            return id
-    try:
-        return config.sites.keys()[0]
-    except:
-        return None
 
 class SiteAttribute(Attribute):
     def __init__(self):
@@ -11448,7 +11440,7 @@ class SiteAttribute(Attribute):
         self._choices_dict = dict(self._choices)
         Attribute.__init__(self, "site", _("Monitored on site"),
                     _("Specify the site that should monitor this host."),
-                    default_value = default_site())
+                    default_value = config.default_site())
 
     def paint(self, value, hostname):
         return "", self._choices_dict.get(value, value)
@@ -11918,7 +11910,7 @@ def automation_push_snapshot():
 
         our_id = our_site_id()
 
-        if mode == "slave" and is_distributed():
+        if mode == "slave" and not config.is_single_local_site():
             raise MKGeneralException(_("Configuration error. You treat us as "
                "a <b>slave</b>, but we have an own distributed WATO configuration!"))
 
@@ -16745,9 +16737,7 @@ def mode_pattern_editor(phase):
             else:
                 title = _("Host Logfiles")
 
-            master_url = ''
-            if config.is_multisite():
-                master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
+            master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
             html.context_button(title, "logwatch.py?host=%s&amp;file=%s%s" %
                 (html.urlencode(hostname), html.urlencode(item), master_url), 'logwatch')
 

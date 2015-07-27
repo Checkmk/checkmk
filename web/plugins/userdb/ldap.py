@@ -740,7 +740,7 @@ class LDAPUserConnector(UserConnector):
             'active_plugins' : getattr(config, 'ldap_active_plugins', []) or {'email': {}, 'alias': {}, 'auth_expire': {}},
             'debug_log'      : getattr(config, 'ldap_debug_log', False),
             'directory_type' : getattr(config, 'ldap_connection', {}).get('type', 'ad'),
-            'user_id_umlauts': 'replace',
+            'user_id_umlauts': 'keep',
             'user_dn'        : '',
             'user_scope'     : 'subtree',
         }

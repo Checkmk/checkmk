@@ -630,73 +630,84 @@ class LDAPUserConnector(UserConnector):
         return self.ldap_search(dn, filt, ['cn'], self._config['group_scope'])
 
 
-    def group_members(self, filters, filt_attr = 'cn', nested = False):
-        cache_key = '%s-%s-%s' % (filters, nested and 'n' or 'f', filt_attr)
+    def get_group_memberships(self, filters, filt_attr = 'cn', nested = False):
+        cache_key = (filters, nested, filt_attr)
         if cache_key in self._group_cache:
             return self._group_cache[cache_key]
 
-        # When not searching for nested memberships, it is easy when using the an AD base LDAP.
-        # The group objects can be queried using the attribute distinguishedname. Therefor we
-        # create an alternating match filter to match that attribute when searching by DNs.
-        # In OpenLDAP the distinguishedname is no user attribute, therefor it can not be used
-        # as filter expression. We have to do one ldap query per group. Maybe, in the future,
-        # we change the role sync plugin parameters to snapins to make this part a little easier.
         if not nested:
-            groups = {}
-            filt = self.ldap_filter('groups')
-            member_attr = self.member_attr().lower()
+            groups = get_direct_group_memberships(filters, filt_attr)
+        else:
+            groups = get_nested_group_memberships(filters, filt_attr)
 
-            if self.is_active_directory() or filt_attr != 'distinguishedname':
-                if filters:
-                    add_filt = '(|%s)' % ''.join([ '(%s=%s)' % (filt_attr, f) for f in filters ])
-                    filt = '(&%s%s)' % (filt, add_filt)
+        self._group_cache[cache_key] = groups
+        return groups
 
-                for dn, obj in self.ldap_search(self.replace_macros(self._config['group_dn']),
-                                                filt, ['cn', member_attr], self._config['group_scope']):
-                    groups[dn] = {
+
+    # When not searching for nested memberships, it is easy when using the an AD base LDAP.
+    # The group objects can be queried using the attribute distinguishedname. Therefor we
+    # create an alternating match filter to match that attribute when searching by DNs.
+    # In OpenLDAP the distinguishedname is no user attribute, therefor it can not be used
+    # as filter expression. We have to do one ldap query per group. Maybe, in the future,
+    # we change the role sync plugin parameters to snapins to make this part a little easier.
+    def get_direct_group_memberships(filters, filt_attr):
+        groups = {}
+        filt = self.ldap_filter('groups')
+        member_attr = self.member_attr().lower()
+
+        if self.is_active_directory() or filt_attr != 'distinguishedname':
+            if filters:
+                add_filt = '(|%s)' % ''.join([ '(%s=%s)' % (filt_attr, f) for f in filters ])
+                filt = '(&%s%s)' % (filt, add_filt)
+
+            for dn, obj in self.ldap_search(self.replace_macros(self._config['group_dn']),
+                                            filt, ['cn', member_attr], self._config['group_scope']):
+                groups[dn] = {
+                    'cn'      : obj['cn'][0],
+                    'members' : [ m.encode('utf-8').lower() for m in obj.get(member_attr,[]) ],
+                }
+        else:
+            # Special handling for OpenLDAP when searching for groups by DN
+            for f_dn in filters:
+                for dn, obj in self.ldap_search(self.replace_macros(f_dn), filt,
+                                                ['cn', member_attr], 'base'):
+                    groups[f_dn] = {
                         'cn'      : obj['cn'][0],
                         'members' : [ m.encode('utf-8').lower() for m in obj.get(member_attr,[]) ],
                     }
+
+        return groups
+
+
+    # Nested querying is more complicated. We have no option to simply do a query for group objects
+    # to make them resolve the memberships here. So we need to query all users with the nested
+    # memberof filter to get all group memberships of that group. We need one query for each group.
+    def get_nested_group_memberships(filters, filt_attr):
+        groups = {}
+        for filter_val in filters:
+            if filt_attr == 'cn':
+                result = self.ldap_search(self.replace_macros(self._config['group_dn']),
+                                     '(&%s(cn=%s))' % (self.ldap_filter('groups'), filter_val),
+                                     ['dn'], self._config['group_scope'])
+                if not result:
+                    continue # Skip groups which can not be found
+                dn = result[0][0]
+                cn = filter_val
             else:
-                # Special handling for OpenLDAP when searching for groups by DN
-                for f_dn in filters:
-                    for dn, obj in self.ldap_search(self.replace_macros(f_dn), filt,
-                                                    ['cn', member_attr], 'base'):
-                        groups[f_dn] = {
-                            'cn'      : obj['cn'][0],
-                            'members' : [ m.encode('utf-8').lower() for m in obj.get(member_attr,[]) ],
-                        }
+                dn = filter_val
+                # in case of asking with DNs in nested mode, the resulting objects have the
+                # cn set to None for all objects. We do not need it in that case.
+                cn = None
 
-        else:
-            # Nested querying is more complicated. We have no option to simply do a query for group objects
-            # to make them resolve the memberships here. So we need to query all users with the nested
-            # memberof filter to get all group memberships of that group. We need one query for each group.
-            groups = {}
-            for filter_val in filters:
-                if filt_attr == 'cn':
-                    result = self.ldap_search(self.replace_macros(self._config['group_dn']),
-                                         '(&%s(cn=%s))' % (self.ldap_filter('groups'), filter_val),
-                                         ['dn'], self._config['group_scope'])
-                    if not result:
-                        continue # Skip groups which can not be found
-                    dn = result[0][0]
-                    cn = filter_val
-                else:
-                    dn = filter_val
-                    # in case of asking with DNs in nested mode, the resulting objects have the
-                    # cn set to None for all objects. We do not need it in that case.
-                    cn = None
+            filt = '(&%s(memberOf:1.2.840.113556.1.4.1941:=%s))' % (self.ldap_filter('users'), dn)
+            groups[dn] = {
+                'members' : [],
+                'cn'      : cn,
+            }
+            for user_dn, obj in self.ldap_search(self.replace_macros(self._config['user_dn']),
+                                                 filt, ['dn'], self._config['user_scope']):
+                groups[dn]['members'].append(user_dn.lower())
 
-                filt = '(&%s(memberOf:1.2.840.113556.1.4.1941:=%s))' % (self.ldap_filter('users'), dn)
-                groups[dn] = {
-                    'members' : [],
-                    'cn'      : cn,
-                }
-                for user_dn, obj in self.ldap_search(self.replace_macros(self._config['user_dn']),
-                                                     filt, ['dn'], self._config['user_scope']):
-                    groups[dn]['members'].append(user_dn.lower())
-
-        self._group_cache[cache_key] = groups
         return groups
 
 
@@ -1291,7 +1302,7 @@ def ldap_sync_groups_to_contactgroups(connection, plugin, params, user_id, ldap_
 
     # 2. Load all LDAP groups which have a CN matching one contact
     #    group which exists in WATO
-    ldap_groups = connection.group_members(cg_names, nested = params.get('nested', False))
+    ldap_groups = connection.get_group_memberships(cg_names, nested = params.get('nested', False))
 
     # 3. Only add groups which the user is member of
     return {'contactgroups': [ g['cn'] for dn, g in ldap_groups.items() if user_cmp_val in g['members']]}
@@ -1337,7 +1348,7 @@ def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, us
         elif type(distinguished_names) in [ str, unicode ]:
             groups_to_fetch.append(distinguished_names.lower())
 
-    ldap_groups = dict(connection.group_members(groups_to_fetch,
+    ldap_groups = dict(connection.get_group_memberships(groups_to_fetch,
                                           filt_attr = 'distinguishedname',
                                           nested = params.get('nested', False)))
 

@@ -953,9 +953,10 @@ def render_master_control():
     html.live.set_prepend_site(True)
     data = html.live.query("GET status\nColumns: %s" % " ".join([ i[0] for i in items ]))
     html.live.set_prepend_site(False)
+
     for siteline in data:
         siteid = siteline[0]
-        if siteid:
+        if not config.is_single_local_site():
             sitealias = html.site_status[siteid]["site"]["alias"]
             html.begin_foldable_container("master_control", siteid, True, sitealias)
         is_cmc = html.site_status[siteid]["program_version"].startswith("Check_MK ")
@@ -976,7 +977,7 @@ def render_master_control():
             html.write("</td></tr>")
             # html.write("<a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
         html.write("</table>")
-        if siteid:
+        if not config.is_single_local_site():
             html.end_foldable_container()
 
 sidebar_snapins["master_control"] = {

@@ -1,0 +1,13 @@
+Title: Fix Icon "BI Aggregations containing this service", also avoid BI compilation without need
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.7i3
+Date: 1437748351
+Class: fix
+
+This werk contains a fix and a speedup: The fix repairs the BI icon that is now contained in
+the drop down menu rather than directly in the view. The URL where the icon pointed was broken.
+The second change is a speedup: Pages that do not show BI aggregates now do now trigger BI
+compilation anymore. This is delayed until the command/icon menu is being opened. Here the
+BI icon needs to be displayed and hence the compilation triggered.

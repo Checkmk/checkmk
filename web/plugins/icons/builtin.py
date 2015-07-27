@@ -713,7 +713,7 @@ def paint_aggregations(what, row, tags, host_custom_vars):
             urivars += [
                 ( "aggr_service_service", row["service_description"])
             ]
-        url = html.makeuri_contextless(urivars)
+        url = html.makeuri_contextless(urivars, filename="view.py")
         return 'aggr', _("BI Aggregations containing this %s") % \
                             (what == "host" and _("Host") or _("Service")), url
 

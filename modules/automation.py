@@ -499,8 +499,9 @@ def automation_restart(job = "restart", use_rushd = True):
         try:
             if monitoring_core == "nagios":
                 create_nagios_config(file(objects_file, "w"))
+                configuration_warnings = None # not supported
             else:
-                do_create_cmc_config(opt_cmc_relfilename, use_rushd = use_rushd)
+                configuration_warnings = do_create_cmc_config(opt_cmc_relfilename, use_rushd = use_rushd)
 
             if "do_bake_agents" in globals() and bake_agents_on_restart:
                 do_bake_agents()
@@ -535,6 +536,7 @@ def automation_restart(job = "restart", use_rushd = True):
         raise MKAutomationError(str(e))
 
     sys.stdout = old_stdout
+    return configuration_warnings
 
 def automation_get_configuration():
     # We read the list of variable names from stdin since

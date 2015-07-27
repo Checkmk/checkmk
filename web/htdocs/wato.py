@@ -4834,12 +4834,11 @@ def mode_changelog(phase):
                         response = synchronize_site(site, restart = action == "sync_restart")
                     else:
                         try:
-                            restart_site(site)
-                            response = True
+                            response = restart_site(site)
                         except Exception, e:
                             response = "%s" % e
 
-                    if response == True:
+                    if type(response) == list:
                         return
                     else:
                         raise MKUserError(None, _("Error on remote access to site: %s") % response)
@@ -4995,12 +4994,17 @@ def mode_changelog(phase):
                             html.buttonlink(restart_url, _("Restart"))
 
                     # Last result
+                    table.cell(_("Last Result"))
                     result = srs.get("result", "")
                     if len(result) > 20:
                         result = html.strip_tags(result)
-                        result = '<span title="%s">%s...</span>' % \
-                            (html.attrencode(result), result[:20])
-                    table.cell(_("Last Result"), result)
+                        html.write('<span title="%s">%s...</span>' % \
+                            (html.attrencode(result), result[:20]))
+
+                    else:
+                        configuration_warnings = srs.get("warnings", [])
+                        if configuration_warnings:
+                            html.write(render_replication_warnings(configuration_warnings))
 
             table.end()
 
@@ -11585,12 +11589,13 @@ def synchronize_site(site, restart):
     if site_is_local(site["id"]):
         if restart:
             start = time.time()
-            restart_site(site)
+            configuration_warnings = restart_site(site)
             update_replication_status(site["id"],
-            { "need_restart" : False },
-            { "restart" : time.time() - start})
-
-        return True
+                { "need_restart" : False },
+                { "restart" : time.time() - start})
+            return configuration_warnings
+        else:
+            return []
 
     create_sync_snapshot(site["id"])
     try:
@@ -11598,17 +11603,26 @@ def synchronize_site(site, restart):
         result = push_snapshot_to_site(site, restart)
         duration = time.time() - start
         update_replication_status(site["id"], {},
-           { restart and "sync+restart" or "restart" : duration })
+           { restart and "sync+restart" or "restart" : duration,
+           })
+
+        # Pre 1.2.7i3 sites return True on success and a string on error.
+        # 1.2.7i3 and later return a ist of warning messages on success.
+        # [] means OK and no warnings. The error handling is unchanged
         if result == True:
+            result = []
+        if type(result) == list:
             update_replication_status(site["id"], {
                 "need_sync": False,
                 "result" : _("Success"),
+                "warnings" : result,
                 })
             if restart:
                 update_replication_status(site["id"], { "need_restart": False })
         else:
             update_replication_status(site["id"], { "result" : result })
         return result
+
     except Exception, e:
         update_replication_status(site["id"], { "result" : str(e) })
         raise
@@ -11617,10 +11631,11 @@ def synchronize_site(site, restart):
 # is only being called for the local site.
 def restart_site(site):
     start = time.time()
-    check_mk_automation(site["id"], config.wato_activation_method)
+    configuration_warnings = check_mk_automation(site["id"], config.wato_activation_method)
     duration = time.time() - start
     update_replication_status(site["id"],
-        { "need_restart" : False }, { "restart" : duration })
+        { "need_restart" : False, "warnings" : configuration_warnings }, { "restart" : duration })
+    return configuration_warnings
 
 def push_snapshot_to_site(site, do_restart):
     mode = site.get("replication", "slave")
@@ -11732,7 +11747,8 @@ def ajax_profile_repl():
 
     html.write(answer)
 
-# AJAX handler for asynchronous site replication
+# AJAX handler for asynchronous site replication. This is running on the
+# master site.
 def ajax_replication():
     site_id = html.var("site")
     repstatus = load_replication_status()
@@ -11748,12 +11764,23 @@ def ajax_replication():
         if need_sync:
             result = synchronize_site(site, need_restart)
         else:
-            restart_site(site)
-            result = True
+            result = restart_site(site)
+
     except Exception, e:
         result = str(e)
+
+    # Pre 1.2.7i3 sites return True on success and a string on error.
+    # 1.2.7i3 and later return a ist of warning messages on success.
+    # [] means OK and no warnings. The error handling is unchanged
     if result == True:
-        answer = "OK:" + _("Success");
+        result = []
+
+    if type(result) == list:
+        configuration_warnings = result
+        if configuration_warnings:
+            answer = render_replication_warnings(configuration_warnings)
+        else:
+            answer = "OK:" + _("Success")
         # Make sure that the pending changes are clean as soon as the
         # last site has successfully been updated.
         if is_distributed() and global_replication_state() == "clean":
@@ -11762,6 +11789,16 @@ def ajax_replication():
         answer = "<div class=error>%s: %s</div>" % (_("Error"), hilite_errors(result))
 
     html.write(answer)
+
+def render_replication_warnings(configuration_warnings):
+    html_code  = "<div class=warning>"
+    html_code += "<b>%s</b>" % _("Warnings:")
+    html_code += "<ul>"
+    for warning in configuration_warnings:
+        html_code += "<li>%s</li>" % html.attrencode(warning)
+    html_code += "</ul>"
+    html_code += "</div>"
+    return html_code
 
 #.
 #   .--Automation-Webservice-----------------------------------------------.
@@ -11948,13 +11985,15 @@ def automation_push_snapshot():
 
         # Restart monitoring core, if neccessary
         if html.var("restart", "no") == "yes":
-            check_mk_local_automation(config.wato_activation_method)
+            configuration_warnings = check_mk_local_automation(config.wato_activation_method)
+        else:
+            configuration_warnings = []
 
         # Reload event console, if we have one
         if config.mkeventd_enabled:
             mkeventd_reload()
 
-        return True
+        return configuration_warnings
     except Exception, e:
         if config.debug:
             return _("Internal automation error: %s\n%s") % (str(e), format_exception())

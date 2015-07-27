@@ -199,10 +199,9 @@ def page_handler():
         lock_exclusive()
 
     try:
-        # Make information about current folder and hosts available
-        # To be able to perform a "factory reset" or a snapshot restore
-        # even with a broken config ignore exceptions in this function
-        # when running in "snapshot" mode
+        # Make information about current folder and hosts available To be able
+        # to restore a snapshot even with a broken config ignore exceptions
+        # in this function when running in "snapshot" mode
         prepare_folder_info()
     except:
         if current_mode == 'snapshot':
@@ -6797,8 +6796,6 @@ def mode_snapshot(phase):
     elif phase == "buttons":
         home_button()
         changelog_button()
-        html.context_button(_("Factory Reset"),
-                make_action_link([("mode", "snapshot"),("_factory_reset","Yes")]), "factoryreset")
         return
 
     # Cleanup incompletely processed snapshot upload
@@ -6983,18 +6980,6 @@ def mode_snapshot(phase):
             elif c == False: # not yet confirmed
                 return ""
 
-        elif html.has_var("_factory_reset"):
-            c = wato_confirm(_("Confirm factory reset"),
-                _("If you proceed now, all hosts, folders, rules and other configurations "
-                  "done with WATO will be deleted! Please consider making a snapshot before "
-                  "you do this. Snapshots will not be deleted. Also the password of the currently "
-                  "logged in user (%s) will be kept.<br><br>"
-                  "Do you really want to delete all or your configuration data?") % config.user_id)
-            if c:
-                factory_reset()
-                return None, _("Resetted WATO, wiped all configuration.")
-            elif c == False: # not yet confirmed
-                return ""
         return None
 
     else:
@@ -7098,30 +7083,6 @@ def create_snapshot(data = {}):
     do_snapshot_maintenance()
 
     return snapshot_name
-
-
-def factory_reset():
-    # Darn. What makes things complicated here is that we need to conserve htpasswd,
-    # at least the account of the currently logged in user.
-    users = userdb.load_users(lock = True)
-    for id in users.keys():
-        if id != config.user_id:
-            del users[id]
-
-    to_delete = [ path for c,n,path
-                  in backup_paths
-                  if n != "auth.secret" ] + [ log_dir ]
-    for path in to_delete:
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-        elif os.path.exists(path):
-            os.remove(path)
-
-    make_nagios_directory(multisite_dir)
-    make_nagios_directory(root_dir)
-
-    userdb.save_users(users) # make sure, omdadmin is present after this
-    log_pending(SYNCRESTART, None, "factory-reset", _("Complete reset to factory settings."))
 
 
 #.
@@ -19892,8 +19853,7 @@ def load_plugins():
          _("Backup & Restore"),
          _("Access to the module <i>Backup & Restore</i>. Please note: a user with "
            "write access to this module "
-           "can make arbitrary changes to the configuration by restoring uploaded snapshots "
-           "and even do a complete factory reset!"),
+           "can make arbitrary changes to the configuration by restoring uploaded snapshots."),
          [ "admin", ])
 
     config.declare_permission("wato.pattern_editor",

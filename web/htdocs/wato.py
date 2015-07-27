@@ -7581,9 +7581,9 @@ def vs_ldap_connection(new):
         ("debug_log", Checkbox(
             title = _("Connection Diagnostics"),
             label = _("Activate logging of LDAP transactions"),
-            help = _("If this option is enabled, Check_MK will create a log file in "
-                     "<tt>var/log/ldap.log</tt> within your site in OMD environments. "
-                     "You should enable this option only for debugging."),
+            help = _("If this option is enabled, Check_MK will log LDAP related debug messages to <tt>%s</tt>. "
+                     "You should enable this option only for debugging.") % \
+                        site_neutral_path(defaults.log_dir + "/web.log"),
             default_value = False
         )),
     ]

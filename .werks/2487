@@ -15,4 +15,5 @@ C+:
 RP:omd stop mysite
 RP:omd rm mysite
 RP:omd create mysite
+RP:omd start mysite
 C-:

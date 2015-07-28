@@ -210,7 +210,12 @@ egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
 
 # Load and number of processes
 echo '<<<cpu>>>'
-echo "$(cat /proc/loadavg) $(grep -E '^CPU|^processor' < /proc/cpuinfo | wc -l)"
+if [ $(uname -m) = "armv7l" ]; then
+    CPU_REGEX='^processor'
+else
+    CPU_REGEX='^CPU|^processor'
+fi
+echo "$(cat /proc/loadavg) $(grep -E $CPU_REGEX < /proc/cpuinfo | wc -l)"
 
 # Uptime
 echo '<<<uptime>>>'

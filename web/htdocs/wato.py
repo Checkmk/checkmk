@@ -199,10 +199,9 @@ def page_handler():
         lock_exclusive()
 
     try:
-        # Make information about current folder and hosts available
-        # To be able to perform a "factory reset" or a snapshot restore
-        # even with a broken config ignore exceptions in this function
-        # when running in "snapshot" mode
+        # Make information about current folder and hosts available To be able
+        # to restore a snapshot even with a broken config ignore exceptions
+        # in this function when running in "snapshot" mode
         prepare_folder_info()
     except:
         if current_mode == 'snapshot':
@@ -4834,12 +4833,11 @@ def mode_changelog(phase):
                         response = synchronize_site(site, restart = action == "sync_restart")
                     else:
                         try:
-                            restart_site(site)
-                            response = True
+                            response = restart_site(site)
                         except Exception, e:
                             response = "%s" % e
 
-                    if response == True:
+                    if type(response) == list:
                         return
                     else:
                         raise MKUserError(None, _("Error on remote access to site: %s") % response)
@@ -4995,12 +4993,17 @@ def mode_changelog(phase):
                             html.buttonlink(restart_url, _("Restart"))
 
                     # Last result
+                    table.cell(_("Last Result"))
                     result = srs.get("result", "")
                     if len(result) > 20:
                         result = html.strip_tags(result)
-                        result = '<span title="%s">%s...</span>' % \
-                            (html.attrencode(result), result[:20])
-                    table.cell(_("Last Result"), result)
+                        html.write('<span title="%s">%s...</span>' % \
+                            (html.attrencode(result), result[:20]))
+
+                    else:
+                        configuration_warnings = srs.get("warnings", [])
+                        if configuration_warnings:
+                            html.write(render_replication_warnings(configuration_warnings))
 
             table.end()
 
@@ -6793,8 +6796,6 @@ def mode_snapshot(phase):
     elif phase == "buttons":
         home_button()
         changelog_button()
-        html.context_button(_("Factory Reset"),
-                make_action_link([("mode", "snapshot"),("_factory_reset","Yes")]), "factoryreset")
         return
 
     # Cleanup incompletely processed snapshot upload
@@ -6979,18 +6980,6 @@ def mode_snapshot(phase):
             elif c == False: # not yet confirmed
                 return ""
 
-        elif html.has_var("_factory_reset"):
-            c = wato_confirm(_("Confirm factory reset"),
-                _("If you proceed now, all hosts, folders, rules and other configurations "
-                  "done with WATO will be deleted! Please consider making a snapshot before "
-                  "you do this. Snapshots will not be deleted. Also the password of the currently "
-                  "logged in user (%s) will be kept.<br><br>"
-                  "Do you really want to delete all or your configuration data?") % config.user_id)
-            if c:
-                factory_reset()
-                return None, _("Resetted WATO, wiped all configuration.")
-            elif c == False: # not yet confirmed
-                return ""
         return None
 
     else:
@@ -7094,30 +7083,6 @@ def create_snapshot(data = {}):
     do_snapshot_maintenance()
 
     return snapshot_name
-
-
-def factory_reset():
-    # Darn. What makes things complicated here is that we need to conserve htpasswd,
-    # at least the account of the currently logged in user.
-    users = userdb.load_users(lock = True)
-    for id in users.keys():
-        if id != config.user_id:
-            del users[id]
-
-    to_delete = [ path for c,n,path
-                  in backup_paths
-                  if n != "auth.secret" ] + [ log_dir ]
-    for path in to_delete:
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-        elif os.path.exists(path):
-            os.remove(path)
-
-    make_nagios_directory(multisite_dir)
-    make_nagios_directory(root_dir)
-
-    userdb.save_users(users) # make sure, omdadmin is present after this
-    log_pending(SYNCRESTART, None, "factory-reset", _("Complete reset to factory settings."))
 
 
 #.
@@ -11585,12 +11550,13 @@ def synchronize_site(site, restart):
     if site_is_local(site["id"]):
         if restart:
             start = time.time()
-            restart_site(site)
+            configuration_warnings = restart_site(site)
             update_replication_status(site["id"],
-            { "need_restart" : False },
-            { "restart" : time.time() - start})
-
-        return True
+                { "need_restart" : False },
+                { "restart" : time.time() - start})
+            return configuration_warnings
+        else:
+            return []
 
     create_sync_snapshot(site["id"])
     try:
@@ -11598,17 +11564,26 @@ def synchronize_site(site, restart):
         result = push_snapshot_to_site(site, restart)
         duration = time.time() - start
         update_replication_status(site["id"], {},
-           { restart and "sync+restart" or "restart" : duration })
+           { restart and "sync+restart" or "restart" : duration,
+           })
+
+        # Pre 1.2.7i3 sites return True on success and a string on error.
+        # 1.2.7i3 and later return a ist of warning messages on success.
+        # [] means OK and no warnings. The error handling is unchanged
         if result == True:
+            result = []
+        if type(result) == list:
             update_replication_status(site["id"], {
                 "need_sync": False,
                 "result" : _("Success"),
+                "warnings" : result,
                 })
             if restart:
                 update_replication_status(site["id"], { "need_restart": False })
         else:
             update_replication_status(site["id"], { "result" : result })
         return result
+
     except Exception, e:
         update_replication_status(site["id"], { "result" : str(e) })
         raise
@@ -11617,10 +11592,11 @@ def synchronize_site(site, restart):
 # is only being called for the local site.
 def restart_site(site):
     start = time.time()
-    check_mk_automation(site["id"], config.wato_activation_method)
+    configuration_warnings = check_mk_automation(site["id"], config.wato_activation_method)
     duration = time.time() - start
     update_replication_status(site["id"],
-        { "need_restart" : False }, { "restart" : duration })
+        { "need_restart" : False, "warnings" : configuration_warnings }, { "restart" : duration })
+    return configuration_warnings
 
 def push_snapshot_to_site(site, do_restart):
     mode = site.get("replication", "slave")
@@ -11732,7 +11708,8 @@ def ajax_profile_repl():
 
     html.write(answer)
 
-# AJAX handler for asynchronous site replication
+# AJAX handler for asynchronous site replication. This is running on the
+# master site.
 def ajax_replication():
     site_id = html.var("site")
     repstatus = load_replication_status()
@@ -11748,12 +11725,23 @@ def ajax_replication():
         if need_sync:
             result = synchronize_site(site, need_restart)
         else:
-            restart_site(site)
-            result = True
+            result = restart_site(site)
+
     except Exception, e:
         result = str(e)
+
+    # Pre 1.2.7i3 sites return True on success and a string on error.
+    # 1.2.7i3 and later return a ist of warning messages on success.
+    # [] means OK and no warnings. The error handling is unchanged
     if result == True:
-        answer = "OK:" + _("Success");
+        result = []
+
+    if type(result) == list:
+        configuration_warnings = result
+        if configuration_warnings:
+            answer = render_replication_warnings(configuration_warnings)
+        else:
+            answer = "OK:" + _("Success")
         # Make sure that the pending changes are clean as soon as the
         # last site has successfully been updated.
         if is_distributed() and global_replication_state() == "clean":
@@ -11762,6 +11750,16 @@ def ajax_replication():
         answer = "<div class=error>%s: %s</div>" % (_("Error"), hilite_errors(result))
 
     html.write(answer)
+
+def render_replication_warnings(configuration_warnings):
+    html_code  = "<div class=warning>"
+    html_code += "<b>%s</b>" % _("Warnings:")
+    html_code += "<ul>"
+    for warning in configuration_warnings:
+        html_code += "<li>%s</li>" % html.attrencode(warning)
+    html_code += "</ul>"
+    html_code += "</div>"
+    return html_code
 
 #.
 #   .--Automation-Webservice-----------------------------------------------.
@@ -11948,13 +11946,15 @@ def automation_push_snapshot():
 
         # Restart monitoring core, if neccessary
         if html.var("restart", "no") == "yes":
-            check_mk_local_automation(config.wato_activation_method)
+            configuration_warnings = check_mk_local_automation(config.wato_activation_method)
+        else:
+            configuration_warnings = []
 
         # Reload event console, if we have one
         if config.mkeventd_enabled:
             mkeventd_reload()
 
-        return True
+        return configuration_warnings
     except Exception, e:
         if config.debug:
             return _("Internal automation error: %s\n%s") % (str(e), format_exception())
@@ -19853,8 +19853,7 @@ def load_plugins():
          _("Backup & Restore"),
          _("Access to the module <i>Backup & Restore</i>. Please note: a user with "
            "write access to this module "
-           "can make arbitrary changes to the configuration by restoring uploaded snapshots "
-           "and even do a complete factory reset!"),
+           "can make arbitrary changes to the configuration by restoring uploaded snapshots."),
          [ "admin", ])
 
     config.declare_permission("wato.pattern_editor",

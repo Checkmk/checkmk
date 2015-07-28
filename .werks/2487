@@ -1,0 +1,19 @@
+Title: Remove dangerous <i>Factory Reset</i> button
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438001809
+Class: feature
+
+We removed the button <i>Factory Reset</i> completely from WATO. This button
+is dangerous. Also it does anyway just a reset of WATO - not of other data
+in the site like NagVis maps etc. For a real reset better remove and recreate
+the site with:
+
+C+:
+RP:omd stop mysite
+RP:omd rm mysite
+RP:omd create mysite
+RP:omd start mysite
+C-:

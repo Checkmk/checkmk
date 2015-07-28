@@ -331,6 +331,20 @@ div.warning a {
     color: #000;
 }
 
+/* Warnings embedded in tables without margins and padding, those are
+   just needed for body */
+
+td div.warning, td > div.error {
+    margin-top: 3px;
+    margin-bottom: 3px;
+    padding: 5px 10px;
+}
+
+td div.warning ul, td > div.error ul {
+    margin: 5px 10px;
+    padding-left: 0px;
+}
+
 /*-ValueSpec---------------------------------------------------------------.
 |          __     __    _            ____                                  |
 |          \ \   / /_ _| |_   _  ___/ ___| _ __   ___  ___                 |

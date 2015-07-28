@@ -4,6 +4,7 @@
     * 2377 FIX: cpu.loads: Fix output of reference for predition (was scaled wrongly by number of cores)
     * 2476 FIX: check_bi_aggr: Fixed exception when authentication is enabled
     * 1274 FIX: heartbeat_crm: Handle case of error messages from CRM
+    * 2494 FIX: Clasic SNMP mode now uses normal snmpwalk when bulkwalks are disabled with SNMPv3
 
     Multisite:
     * 2470 FIX: Fixed exception in logwatch log list in rare cases...

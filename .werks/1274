@@ -1,0 +1,9 @@
+Title: heartbeat_crm: Handle case of error messages from CRM
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p10
+Date: 1438068579
+Class: fix
+
+

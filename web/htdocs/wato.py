@@ -383,6 +383,12 @@ def do_git_commit():
     if not os.path.exists(git_dir):
         git_command(["init"])
 
+        # Set git repo global user/mail. seems to be needed to prevent warning message
+        # on at least ubuntu 15.04: "Please tell me who you are. Run git config ..."
+        # The individual commits by users override the author on their own
+        git_command(["config", "user.email", "check_mk"])
+        git_command(["config", "user.name", "check_mk"])
+
         # Make sure that .gitignore-files are present and uptodate
         file(defaults.default_config_dir + "/.gitignore", "w").write("*\n!*.d\n!.gitignore\n*swp\n")
         for subdir in os.listdir(defaults.default_config_dir):

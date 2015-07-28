@@ -963,6 +963,11 @@ void Query::finish()
 
     // stats without group column
     else if (doStats()) {
+        if (_need_ds_separator && _output_format != OUTPUT_FORMAT_CSV)
+            _output->addBuffer(",\n", 2);
+        else
+            _need_ds_separator = true;
+
         outputDatasetBegin();
         for (unsigned i=0; i<_stats_columns.size(); i++)
         {

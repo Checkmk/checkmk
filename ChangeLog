@@ -45,6 +45,11 @@
     * 2476 FIX: check_bi_aggr: Fixed exception when authentication is enabled
     * 1274 FIX: heartbeat_crm: Handle case of error messages from CRM
     * 1275 FIX: Fileinfo: Fixed handling of output from AIX Agent
+    * 2488 FIX: veem_jobs: fix problems with spaces or single quotes in the names of jobs...
+    * 2494 FIX: Clasic SNMP mode now uses normal snmpwalk when bulkwalks are disabled with SNMPv3
+    * 2495 FIX: printer_supply: Fixed exception when unit type is not available via SNMP
+    * 2496 FIX: Fixed CPU load checks when monitoring raspbian/babanian systems
+    * 2497 FIX: veeam_client: Fixed exception when client is missing in agent output
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...
@@ -82,6 +87,7 @@
     * 2407 FIX: WATO master/slave replication: fixed problem where the configuration from the master site was not activate on slave site...
     * 2474 FIX: Fixed possible corruption of user datasets (contact, mail, rbn config)...
     * 2475 FIX: LDAP: Fixed possible exception during sync when syncing custom user attributes...
+    * 2499 FIX: Git: Fixed message "Please tell me who you are. Run git config ..." on making changes...
 
     Notifications:
     * 2313 FIX: notification bulking: fixed exception for plugins which are not configured with checkboxes, e.g. sms
@@ -96,6 +102,9 @@
 
     Event Console:
     * 2322 FIX: mkeventd: MIBs are now only loaded if SNMP Traps translation is activated...
+
+    Livestatus:
+    * 2493 FIX: Fixed wrong JSON format when using stats queries together with header columns...
 
     HW/SW-Inventory:
     * 2367 FIX: win_system: Fixed exception when non-UTF-8 sequences are contained agent output

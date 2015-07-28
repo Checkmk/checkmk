@@ -50,12 +50,12 @@ factory_settings['ibm_svc_mdisk_default_levels'] = {
 
 def inventory_ibm_svc_mdisk(info):
     for line in info:
-        if len(line) in (11, 12):
+        if len(line) > 10:
             yield line[1], {}
 
 def check_ibm_svc_mdisk(item, params, info):
     for line in info:
-        if len(line) in (11, 12) and line[1] == item:
+        if len(line) > 10 and line[1] == item:
             mdisk_status = line[2]
             mdisk_mode = line[3]
 

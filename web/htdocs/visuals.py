@@ -1243,7 +1243,7 @@ def info_params(info_key):
 
 def get_single_info_keys(visual):
     keys = []
-    for info_key in visual['single_infos']:
+    for info_key in visual.get('single_infos', []):
         keys += info_params(info_key)
     return list(set(keys))
 

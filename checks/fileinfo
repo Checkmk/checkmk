@@ -172,7 +172,7 @@ def check_fileinfo_groups(item, params, info):
             # endswith("No such file...") is needed to
             # support the solaris perl based version of fileinfo
             if not line[0].endswith("No such file or directory") \
-                        and fnmatch.fnmatch(line[0], inclusion) and str(line[1]) != 'missing' \
+                        and fnmatch.fnmatch(line[0], inclusion) and str(line[1]) not in ['missing',''] \
                         and not fnmatch.fnmatch(line[0], exclusion):
                 size = int(line[1])
                 size_all += size

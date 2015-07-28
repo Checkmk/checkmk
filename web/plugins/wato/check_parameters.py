@@ -6102,7 +6102,7 @@ register_rule(
                                   "description. The UUID will be displayed in the pluging output."))
             ),
         ],
-        help = _("This rule controls wether the UUID or the alias is used in the service description during "
+        help = _("This rule controls whether the UUID or the alias is used in the service description during "
                  "discovery of Multipath devices on Linux."),
     ),
     match = 'dict',

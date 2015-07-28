@@ -105,7 +105,12 @@ def check_printer_supply(item, params, info):
             # 4 = supplyThatIsFilled
             # the value is contains the current level if this supply is a container
             # but when the remaining space if this supply is a receptacle
-            unit_type = int(line[3])
+            #
+            # This table can be missing on some devices. Assume type 3 in this case.
+            if line[3] == '':
+                unit_type = 3
+            else:
+                unit_type = int(line[3])
 
             if type(params) == tuple:
                 if len(params) == 2:

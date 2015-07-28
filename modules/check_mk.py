@@ -722,8 +722,10 @@ def snmp_base_command(what, hostname):
         command = 'snmpget'
     elif what == 'getnext':
         command = 'snmpgetnext -Cf'
-    else:
+    elif is_bulkwalk_host(hostname):
         command = 'snmpbulkwalk'
+    else:
+        command = 'snmpwalk'
 
     # Handle V1 and V2C
     if type(credentials) in [ str, unicode ]:

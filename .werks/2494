@@ -1,0 +1,10 @@
+Title: Clasic SNMP mode now uses normal snmpwalk when bulkwalks are disabled with SNMPv3
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1438071098
+
+

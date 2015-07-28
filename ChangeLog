@@ -43,6 +43,7 @@
     * 2376 FIX: Fix parsing of performance data from MRPE based checks
     * 2377 FIX: cpu.loads: Fix output of reference for predition (was scaled wrongly by number of cores)
     * 2476 FIX: check_bi_aggr: Fixed exception when authentication is enabled
+    * 1274 FIX: heartbeat_crm: Handle case of error messages from CRM
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...
@@ -90,6 +91,7 @@
     BI:
     * 2369 FIX: Fix exception in BI availability via table "Hostname Aggregations"
     * 2370 FIX: Fix computation of "in downtime" and "acknownledged" of hosts in BI aggregations...
+    * 2485 FIX: Fix Icon "BI Aggregations containing this service", also avoid BI compilation without need...
 
     Event Console:
     * 2322 FIX: mkeventd: MIBs are now only loaded if SNMP Traps translation is activated...

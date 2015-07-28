@@ -1713,28 +1713,6 @@ def filter_tree_only_problems(tree):
     return state, assumed_state, node, new_subtrees
 
 
-def page_timeline():
-    aggr_group = html.var("av_aggr_group")
-    aggr_name = html.var("av_aggr_name")
-
-    # First compile the required BI aggregates.
-    if config.bi_precompile_on_demand:
-        compile_forest(config.user_id, only_groups = [ aggr_group ])
-    else:
-        compile_forest(config.user_id)
-
-    # In the resulting collection of BI aggregates find
-    # our tree
-    for tree in g_user_cache["forest"][aggr_group]:
-        if tree["title"] == aggr_name:
-            break
-    else:
-        raise MKGeneralException("No aggregation with the name %s" %
-            aggr_name)
-    row = { "aggr_tree" : tree, "aggr_group" : aggr_group }
-    views.render_bi_availability(aggr_name, [row])
-
-
 
 #    ____        _
 #   |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___

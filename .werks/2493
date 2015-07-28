@@ -1,0 +1,22 @@
+Title: Fixed wrong JSON format when using stats queries together with header columns
+Level: 1
+Component: livestatus
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438069896
+Class: fix
+
+e.g. this query lead to invalid JSON output:
+
+GET statehist
+Filter: time >= 1425168000
+Filter: time < 1427846400
+Filter: host_name = name
+Filter: service_description = Description
+Stats: sum duration_part_ok
+OutputFormat: json
+ColumnHeaders: on 
+
+Output:
+[["stats_1"][0.0000000000e+00]]
+

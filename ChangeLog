@@ -48,6 +48,7 @@
     * 2494 FIX: Clasic SNMP mode now uses normal snmpwalk when bulkwalks are disabled with SNMPv3
     * 2495 FIX: printer_supply: Fixed exception when unit type is not available via SNMP
     * 2496 FIX: Fixed CPU load checks when monitoring raspbian/babanian systems
+    * 2497 FIX: veeam_client: Fixed exception when client is missing in agent output
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

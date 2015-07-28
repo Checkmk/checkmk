@@ -1,0 +1,118 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Note: The CMCIII checks for Water IN/OUT and similar stuff are
+# deep and fundamentally broken (such as the implementation of
+# Rittal). Need to rewrite an make *one* check with subchecks.
+
+# [['Fan Unit'],
+#  ['V09.005'],
+#  ['V0000'],
+#  ['OK'],
+#  ['2'],
+#  ['Air-Temperatures'],
+#  ['19.8 \xb0C'],
+#  ['19.0 \xb0C'],
+#  ['18.2 \xb0C'],
+#  ['19.9 \xb0C'],
+#  ['18.9 \xb0C'],
+#  ...
+#  ['Water Unit'],
+#  ['V09.002'],
+#  ['V0000'],
+#  ['OK'],
+#  ['2'],
+#  ['Water-In'],
+#  ['18.2 \xb0C'],
+#  ['50.0 \xb0C'],
+#  ['40.0 \xb0C'],
+#  ...
+# ]]
+
+def parse_cmciii_lcp_water(info):
+    units = {}
+    for line in info:
+        if line[0].endswith(" Unit"):
+            unit_name = line[0].split(" ")[0]
+            unit_lines = []
+            units[unit_name] = unit_lines
+        else:
+            unit_lines.append(line[0])
+
+    if "Water" in units:
+        return units["Water"]
+
+
+def inventory_cmciii_lcp_water(parsed):
+    if parsed:
+        return [ ("IN", {}), ("OUT", {}) ]
+
+
+def check_cmciii_lcp_water(item, params, parsed):
+    def parse_status(status_name):
+        if status_name.lower() == "ok":
+            return 0
+        elif status_name.lower() == "warning":
+            return 1
+        else:
+            return 2
+
+    unit_status_name = parsed[2]
+    yield parse_status(unit_status_name), "Unit: %s" % unit_status_name
+
+    if item == "IN":
+        lines = parsed[5:12]
+    else:
+        lines = parsed[14:21]
+
+    # ['18.2 \xb0C', '50.0 \xb0C', '40.0 \xb0C', '13.0 \xb0C', '10.0 \xb0C', '3 %', 'OK']
+
+    temperatures = [ float(x.split()[0]) for x in lines[0:5] ]
+    temp = temperatures[0]
+    limits = temperatures[1:]
+    status_name = lines[-1]
+
+    status, info_text, perf_data = check_temperature(temp, params,
+        dev_levels = (limits[1], limits[0]),
+        dev_levels_lower = (limits[2], limits[3]),
+        dev_status = parse_status(status_name),
+        dev_status_name = status_name)
+
+    yield status, "Temperature: " + info_text, perf_data
+
+
+check_info['cmciii_lcp_water'] = {
+    "parse_function"      : parse_cmciii_lcp_water,
+    "check_function"      : check_cmciii_lcp_water,
+    "inventory_function"  : inventory_cmciii_lcp_water,
+    "has_perfdata"        : True,
+    "service_description" : "LCP Fanunit Water %s",
+    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP") and \
+                                        oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6").startswith("Air.Temperature.DescName"),
+    "snmp_info"           : ( '.1.3.6.1.4.1.2606.7.4.2.2.1.10', [2] ),
+    "group"               : "temperature",
+}

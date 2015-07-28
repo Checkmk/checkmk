@@ -86,6 +86,7 @@
     * 2498 FIX: livestatus_status: Records the number of hosts/services now
     * 2489 FIX: cmciii_lcp_water: New check replacing cmciii_lcp_waterin/out, support for newer devices...
             NOTE: Please refer to the migration notes!
+    * 1275 FIX: Fileinfo: Fixed handling of output from AIX Agent
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

@@ -24,7 +24,7 @@
 
 
 SHELL         = /bin/bash
-VERSION       = 1.2.7i2p1
+VERSION       = 1.2.7i2p2
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i586-mingw32msvc-windres
 COPTIONS      = -s -O2 -Wall -Werror -static -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'

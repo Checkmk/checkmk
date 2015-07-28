@@ -6,6 +6,14 @@
 # directory given in veeam_backup_status.bat and the .bat file needs to be
 # started by the check_mk agent instead.
 
+$pshost = get-host
+$pswindow = $pshost.ui.rawui
+
+$newsize = $pswindow.buffersize
+$newsize.height = 300
+$newsize.width = 150
+$pswindow.buffersize = $newsize
+
 # Get Information from veeam backup and replication in cmk-friendly format
 # V0.9
 # Load Veeam Backup and Replication Powershell Snapin
@@ -30,7 +38,7 @@ $myBackupJobs = Get-VBRJob | where {$_.IsScheduleEnabled -eq $true }
 foreach ($myJob in $myBackupJobs)
 {
 	$myJobName = ""
-	$myJobName = $myJob.Name
+	$myJobName = $myJob.Name -replace "\'","_" -replace " ","_"
 
 	$myJobType = ""
 	$myJobType = $myjob.JobType
@@ -78,13 +86,13 @@ foreach ($myJob in $myBackupJobs)
 		$myTaskTotalSize = $myTask.Progress.TotalSize
 
 		$myTaskText = "$myTaskText" + "TotalSizeByte" + "`t" + "$myTaskTotalSize" + "`n"
-		
+
 		$myTaskReadSize = $myTask.Progress.ReadSize
-		
+
 		$myTaskText = "$myTaskText" + "ReadSizeByte" + "`t" + "$myTaskReadSize" + "`n"
-		
+
 		$myTaskTransferedSize = $myTask.Progress.TransferedSize
-		
+
 		$myTaskText = "$myTaskText" + "TransferedSizeByte" + "`t" + "$myTaskTransferedSize" + "`n"
 
 		$myTaskStartTime = ""

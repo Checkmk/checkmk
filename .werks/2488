@@ -1,0 +1,11 @@
+Title: veem_jobs: fix problems with spaces or single quotes in the names of jobs
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1438070733
+
+The fix is in the agent plugin <tt>veeam_backup_status.ps1_</tt> so you need to
+update that in order to deploy the fix. Thanks to Andreas Döhler.

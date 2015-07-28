@@ -82,6 +82,8 @@
     * 2494 FIX: Clasic SNMP mode now uses normal snmpwalk when bulkwalks are disabled with SNMPv3
     * 2495 FIX: printer_supply: Fixed exception when unit type is not available via SNMP
     * 2496 FIX: Fixed CPU load checks when monitoring raspbian/babanian systems
+    * 2497 FIX: veeam_client: Fixed exception when client is missing in agent output
+    * 2498 FIX: livestatus_status: Records the number of hosts/services now
     * 2489 FIX: cmciii_lcp_water: New check replacing cmciii_lcp_waterin/out, support for newer devices...
             NOTE: Please refer to the migration notes!
 

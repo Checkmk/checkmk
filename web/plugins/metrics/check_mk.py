@@ -1732,7 +1732,13 @@ metric_info["fw_connections_passthrough"] = {
 metric_info["host_check_rate"] = {
     "title" : _("Host check rate"),
     "unit"  : "1/s",
-    "color" : "#884422",
+    "color" : "52/a",
+}
+
+metric_info["monitored_hosts"] = {
+    "title" : _("Monitored hosts"),
+    "unit"  : "1/s",
+    "color" : "52/a",
 }
 
 metric_info["hosts_active"] = {
@@ -1768,7 +1774,13 @@ metric_info["hosts_other"] = {
 metric_info["service_check_rate"] = {
     "title" : _("Service check rate"),
     "unit"  : "1/s",
-    "color" : "#ffbb66",
+    "color" : "21/a",
+}
+
+metric_info["monitored_services"] = {
+    "title" : _("Monitored services"),
+    "unit"  : "1/s",
+    "color" : "21/a",
 }
 
 metric_info["livestatus_connect_rate"] = {
@@ -4947,6 +4959,14 @@ graph_info.append({
     "metrics" : [
         ( "host_check_rate",    "stack" ),
         ( "service_check_rate", "stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Number of Monitored Hosts and Services"),
+    "metrics" : [
+        ( "monitored_hosts",    "stack" ),
+        ( "monitored_services", "stack" ),
     ],
 })
 

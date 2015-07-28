@@ -1,0 +1,11 @@
+Title: Git: Fixed message "Please tell me who you are. Run git config ..." on making changes
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1438079275
+
+At least on Ubuntu 15.04 a user/mail had to be configured in the git repository. Even
+when the single changes of the users do set an own author.

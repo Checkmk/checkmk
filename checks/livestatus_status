@@ -96,6 +96,9 @@ def check_livestatus_status(item, params, parsed):
         rate = get_rate("livestatus_status.%s.%s" % (item, counter), this_time, int(status[counter]))
         yield 0, ("%.1f %s/s" % (rate, title)), [(counter, rate)]
 
+    yield 0, "%d Hosts" % int(status["num_hosts"]), [("monitored_hosts", int(status["num_hosts"]))]
+    yield 0, "%d Services" % int(status["num_services"]), [("monitored_services", int(status["num_services"]))]
+
     # Output some general information
     yield 0, "Core version: %s"       % status["program_version"]
     yield 0, "Livestatus version: %s" % status["livestatus_version"]

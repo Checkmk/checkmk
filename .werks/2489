@@ -1,0 +1,13 @@
+Title: cmciii_lcp_water: New check replacing cmciii_lcp_waterin/out, support for newer devices
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1438077951
+Class: fix
+
+This is a more robust reimplementation of the Water-In/Out checks that also works for
+newer firmware and has been converted to the new temperature handling and thus also
+allows for custom levels (if you want to override those set in the device itself).
+
+Note: You need to reinventorize the hosts in order to use the new check.

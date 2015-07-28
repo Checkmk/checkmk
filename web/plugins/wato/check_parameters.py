@@ -6370,16 +6370,16 @@ register_check_parameters(
                   Tuple(
                       title = _("Upper Temperature Levels"),
                       elements = [
-                          Integer(title = _("warning at"), unit = u"°C", default_value = 26),
-                          Integer(title = _("critical at"), unit = u"°C", default_value = 30),
+                          Integer(title = _("Warning at"), unit = u"°C", default_value = 26),
+                          Integer(title = _("Critical at"), unit = u"°C", default_value = 30),
                       ]
                 )),
                 ( "levels_lower",
                   Tuple(
                       title = _("Lower Temperature Levels"),
                       elements = [
-                          Integer(title = _("warning below"), unit = u"°C", default_value = 0),
-                          Integer(title = _("critical below"), unit = u"°C", default_value = -10),
+                          Integer(title = _("Warning below"), unit = u"°C", default_value = 0),
+                          Integer(title = _("Critical below"), unit = u"°C", default_value = -10),
                       ]
                 )),
                 ( "output_unit",

@@ -28,22 +28,22 @@ mikrotik_signal_default_levels = ( 80, 70 )
 
 def inventory_mikrotik_signal(info):
     inventory = []
-    for network, strenght, mode in info:
+    for network, strength, mode in info:
         inventory.append((network, "mikrotik_signal_default_levels"))
     return inventory
 
 def check_mikrotik_signal(item, params, info):
     warn, crit = params
-    for network, strenght, mode in info:
+    for network, strength, mode in info:
         if network == item:
-            strenght = saveint(strenght)
+            strength = saveint(strength)
             quality = "0"
-            if strenght <= -50 or strenght >= -100:
-                quality = 2 * ( strenght + 100 )
+            if strength <= -50 or strength >= -100:
+                quality = 2 * ( strength + 100 )
             if quality > 100:
                 quality = 100
 
-            infotext = "Signal quality %d%% (%ddBm). Mode is: %s" % ( quality, strenght, mode )
+            infotext = "Signal quality %d%% (%ddBm). Mode is: %s" % ( quality, strength, mode )
             perf = [ ("quality", quality, warn, crit) ]
             if quality <= crit:
                 return 2, infotext, perf

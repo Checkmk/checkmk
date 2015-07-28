@@ -94,6 +94,9 @@
     Event Console:
     * 2322 FIX: mkeventd: MIBs are now only loaded if SNMP Traps translation is activated...
 
+    Livestatus:
+    * 2493 FIX: Fixed wrong JSON format when using stats queries together with header columns...
+
     HW/SW-Inventory:
     * 2367 FIX: win_system: Fixed exception when non-UTF-8 sequences are contained agent output
 

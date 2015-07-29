@@ -50,26 +50,26 @@ End Sub
 Function readIniFile(path)
     Dim parsed : Set parsed = CreateObject("Scripting.Dictionary")
     If path <> "" Then
-		Dim FH
-		Set FH = FSO.OpenTextFile(path)
-		Dim line, sec, pair
-		Do Until FH.AtEndOfStream
-		 line = Trim(FH.ReadLine())
-		 If Left(line, 1) = "[" Then
-			sec = Mid(line, 2, Len(line) - 2)
-			Set parsed(sec) = CreateObject("Scripting.Dictionary")
-		 Else
-			If line <> "" Then
-			   pair = Split(line, "=")
-			   If 1 = UBound(pair) Then
-				  parsed(sec)(Trim(pair(0))) = Trim(pair(1))
-			   End If
-			End If
-		 End If
-		Loop
-		FH.Close
-	End If
-	Set readIniFile = parsed
+        Dim FH
+        Set FH = FSO.OpenTextFile(path)
+        Dim line, sec, pair
+        Do Until FH.AtEndOfStream
+            line = Trim(FH.ReadLine())
+            If Left(line, 1) = "[" Then
+                sec = Mid(line, 2, Len(line) - 2)
+                Set parsed(sec) = CreateObject("Scripting.Dictionary")
+            Else
+                If line <> "" Then
+                    pair = Split(line, "=")
+                    If 1 = UBound(pair) Then
+                        parsed(sec)(Trim(pair(0))) = Trim(pair(1))
+                    End If
+                End If
+            End If
+        Loop
+        FH.Close
+    End If
+    Set readIniFile = parsed
 End Function
 
 ' Dummy empty output.
@@ -151,41 +151,38 @@ For Each instId In instIds.Keys
             cfg_file = ""
         End If
     End If
-	
-	Set CFG = readIniFile(cfg_file)
-	If Not CFG.Exists("auth") Then
-		Set AUTH = CreateObject("Scripting.Dictionary")
-	Else
-		Set AUTH = CFG("auth")
-	End If
-	
+
+    Set CFG = readIniFile(cfg_file)
+    If Not CFG.Exists("auth") Then
+        Set AUTH = CreateObject("Scripting.Dictionary")
+    Else
+        Set AUTH = CFG("auth")
+    End If
+
     ' At this place one could implement to use other authentication mechanism
-	If Not AUTH.Exists("type") or AUTH("type") = "system" Then
-		CONN.Properties("Integrated Security").Value = "SSPI"
-	Else
-		CONN.Properties("User ID").Value = AUTH("username")
-		CONN.Properties("Password").Value = AUTH("password")
-	End If
-	wscript.echo instId
+    If Not AUTH.Exists("type") or AUTH("type") = "system" Then
+        CONN.Properties("Integrated Security").Value = "SSPI"
+    Else
+        CONN.Properties("User ID").Value = AUTH("username")
+        CONN.Properties("Password").Value = AUTH("password")
+    End If
 
     If InStr(instId, "__") <> 0 Then
         instName = Split(instId, "__")(1)
-		instId = Replace(instId, "__", "_")
-	Else
+    instId = Replace(instId, "__", "_")
+    Else
         instName = instId
     End If
-	wscript.echo instId
 
     ' In case of instance name "MSSQLSERVER" always use (local) as connect string
     If instName = "MSSQLSERVER" Then
         CONN.Properties("Data Source").Value = "(local)"
     Else
         CONN.Properties("Data Source").Value = hostname & "\" & instName
-	End If
-	WScript.echo (CONN)
+    End If
 
     CONN.Open
-	
+
     ' Get counter data for the whole instance
     RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
             "FROM sys.dm_os_performance_counters " & _

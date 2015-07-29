@@ -631,7 +631,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def get_group_memberships(self, filters, filt_attr = 'cn', nested = False):
-        cache_key = (filters, nested, filt_attr)
+        cache_key = (tuple(filters), nested, filt_attr)
         if cache_key in self._group_cache:
             return self._group_cache[cache_key]
 

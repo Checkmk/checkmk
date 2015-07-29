@@ -1112,6 +1112,12 @@ metric_info["signal_noise"] = {
     "color" : "#aadd66",
 }
 
+metric_info["noise_floor"] = {
+    "title" : _("Noise floor"),
+    "unit"  : "dbm",
+    "color" : "11/a",
+}
+
 metric_info["codewords_corrected"] = {
     "title" : _("Corrected codewords"),
     "unit"  : "ratio",
@@ -1392,6 +1398,12 @@ metric_info["if_in_octets"] = {
     "color" : "#00e060",
 }
 
+metric_info["if_in_pkts"] = {
+    "title" : _("Input Packets"),
+    "unit"  : "1/s",
+    "color" : "#00e060",
+}
+
 metric_info["if_out_octets"] = {
     "title" : _("Output Octets"),
     "unit"  : "bytes/s",
@@ -1411,7 +1423,7 @@ metric_info["if_in_errors"] = {
 }
 
 metric_info["if_out_discards"] = {
-    "title" : _("Output Dicards"),
+    "title" : _("Output Discards"),
     "unit"  : "1/s",
     "color" : "#ff8080",
 }
@@ -1440,10 +1452,40 @@ metric_info["if_out_unicast"] = {
     "color" : "#00c0ff",
 }
 
+metric_info["if_out_unicast_octets"] = {
+    "title" : _("Output unicast oackets"),
+    "unit"  : "bytes/s",
+    "color" : "#00c0ff",
+}
+
 metric_info["if_out_non_unicast"] = {
     "title" : _("Output non-unicast packets"),
     "unit"  : "1/s",
     "color" : "#0080c0",
+}
+
+metric_info["if_out_non_unicast_octets"] = {
+    "title" : _("Output non-unicast octets"),
+    "unit"  : "bytes/s",
+    "color" : "#0080c0",
+}
+
+metric_info["wlan_physical_errors"] = {
+    "title"     : "WLAN physical errors",
+    "unit"      : "1/s",
+    "color"     : "14/a",
+}
+
+metric_info["wlan_resets"] = {
+    "title"     : "WLAN Reset operations",
+    "unit"      : "1/s",
+    "color"     : "21/a",
+}
+
+metric_info["wlan_retries"] = {
+    "title"     : "WLAN transmission retries",
+    "unit"      : "1/s",
+    "color"     : "24/a",
 }
 
 metric_info["read_blocks"] = {
@@ -3664,6 +3706,21 @@ perfometer_info.append(("dual", [
 perfometer_info.append(("dual", [
     {
         "type"          : "logarithmic",
+        "metric"        : "if_out_unicast_octets,if_out_non_unicast_octets,+",
+        "half_value"    : 5000000,
+        "exponent"      : 5,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "if_in_octets",
+        "half_value"    : 5000000,
+        "exponent"      : 5,
+    }
+]))
+
+perfometer_info.append(("dual", [
+    {
+        "type"          : "logarithmic",
         "metric"        : "read_blocks",
         "half_value"    : 50000000,
         "exponent"      : 2,
@@ -4719,6 +4776,34 @@ graph_info.append({
         ( "if_out_octets,8,*@bits/s",  "-area", _("Output bandwidth") ),
     ],
 })
+
+graph_info.append({
+    "title" : _("Packets"),
+    "metrics" : [
+        ( "if_in_pkts",  "area" ),
+        ( "if_out_non_unicast", "-area" ),
+        ( "if_out_unicast", "-stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Traffic"),
+    "metrics" : [
+        ( "if_in_octets",  "area" ),
+        ( "if_out_non_unicast_octets", "-area" ),
+        ( "if_out_unicast_octets", "-stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("WLAN errors, reset operations and transmission retries"),
+    "metrics" : [
+        ( "wlan_physical_errors", "area" ),
+        ( "wlan_resets",          "stack" ),
+        ( "wlan_retries",         "stack" ),
+    ],
+})
+
 
 # TODO: show this graph instead of Bandwidth if this is configured
 # in the check's parameters. But is this really a good solution?

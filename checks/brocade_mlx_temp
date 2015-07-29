@@ -31,13 +31,13 @@ factory_settings["brocade_mlx_temperature_default_levels"] = {
 def parse_brocade_mlx_temp(info):
     parsed = {}
     for temp_descr, temp_value in info:
-        if temp_value:
+        if temp_value and temp_value != '0':
             item = temp_descr.replace("temperature", "")\
                     .replace("module", "Module")\
                     .replace("sensor", "Sensor")\
                     .replace(",", "")\
                     .strip()
-            parsed[item] = int(temp_value)
+            parsed[item] = float(temp_value) * 0.5
     return parsed
 
 

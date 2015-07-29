@@ -1,4 +1,7 @@
 1.2.7i2p2:
+    Checks & Agents:
+    * 1276 FIX: brocade_mlx_temperature: Fixed the shown Temperature Values
+
 
 1.2.7i2p1:
     Core & Setup:

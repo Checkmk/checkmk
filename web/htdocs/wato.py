@@ -17138,6 +17138,8 @@ def declare_bi_valuespecs(aggregation_rules):
                         explicit = TextAscii(size = 60),
                         otherlabel = _("Regex for host name"),
                         default_value = None,
+                        help = _("If you choose \"Regex for host name\", you need to provide a regex "
+                                 "which results in exactly one match group."),
                     ),
                     CascadingDropdown(
                         title = _("Nodes to create:"),

@@ -1,0 +1,11 @@
+Title: qlogic_fcport: Can now deal with missing port status information
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438151316
+Class: fix
+
+Some devices, like for example QLogic 8 Gb and 4/8 Gb Intelligent Pass-thru
+Modules for IBM BladeCenter do not report admin/oper-status information
+for their interfaces. These interfaces are allways discovered.

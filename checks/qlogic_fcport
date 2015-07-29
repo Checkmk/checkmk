@@ -47,8 +47,11 @@ def inventory_qlogic_fcport(info):
         c2_discards, c2_fbsy_frames, c2_frjt_frames, c3_in_frames, \
         c3_out_frames, c3_in_octets, c3_out_octets, c3_discards in info:
 
-        if admin_status in qlogic_fcport_inventory_admstates and \
-           oper_status in qlogic_fcport_inventory_opstates:
+        # There are devices out there which are totally missing the status related
+        # SNMP tables. In this case we add all interfaces.
+        if (admin_status == '' and oper_status == '') \
+           or (admin_status in qlogic_fcport_inventory_admstates and \
+              oper_status in qlogic_fcport_inventory_opstates):
                inventory.append( (qlogic_fcport_generate_port_id(port_id), None) )
 
     return inventory
@@ -73,13 +76,18 @@ def check_qlogic_fcport(item, params, info):
                 message  += " AdminStatus: online"
                 status = 0
             elif admin_status == "2":
-                message += "AdminStatus: offline (!!)"
+                message += " AdminStatus: offline (!!)"
                 status = 2
             elif admin_status == "3":
-                message += "AdminStatus: testing (!)"
+                message += " AdminStatus: testing (!)"
                 status = 1
+            elif admin_status == "":
+                # Is not a possible valid value in the MIB, but some devices don't
+                # provide status information at all (SNMP table missing).
+                message += " AdminStatus: not reported"
+                status = 0
             else:
-                message += "unknown AdminStatus %s (!)" % admin_status
+                message += " unknown AdminStatus %s (!)" % admin_status
                 status = 1
 
             # fcFxPortPhysOperStatus
@@ -95,6 +103,11 @@ def check_qlogic_fcport(item, params, info):
             elif oper_status == "4":
                 message += ", OperStatus: linkFailure (!!)"
                 status = max(status, 2)
+            elif admin_status == "":
+                # Is not a possible valid value in the MIB, but some devices don't
+                # provide status information at all (SNMP table missing).
+                message += ", OperStatus: not reported"
+                status = 0
             else:
                 message += ", unknown OperStatus %s (!)" % oper_status
                 status = max(status, 1)
@@ -202,9 +215,11 @@ check_info["qlogic_fcport"] = {
                                ]),
     # .1.3.6.1.4.1.3873.1.14 Qlogic-Switch
     # .1.3.6.1.4.1.3873.1.8  Qlogic-4Gb SAN Switch Module for IBM BladeCenter
+    # .1.3.6.1.4.1.3873.1.12 QLogic 8 Gb and 4/8 Gb Intelligent Pass-thru Module
     'snmp_scan_function'    : lambda oid: \
            oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.14") \
-        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8"),
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8") \
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.12"),
     'group':                   'qlogic_fcport',
     'default_levels_variable': 'qlogic_fcport_default_levels',
 }

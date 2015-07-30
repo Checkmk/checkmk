@@ -1,4 +1,4 @@
-Title: New check for the Kentix Alarmmanager Pro: kentix_amp_sensors
+Title: kentix_amp_sensors: New check for the Kentix Alarmmanager Pro
 Level: 1
 Component: checks
 Compatible: compat

@@ -1,0 +1,23 @@
+title: Kentix Alarmmanager Pro: Humidity Sensor
+agents: snmp
+catalog: hw/environment/kentix
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the humidity measured by the
+ Kentix Alarmmanager Pro device.
+ Up to 100 Kentix Multisensors are connectable
+ to the Kentix Alarmmanager Pro device.
+
+ No default levels are set in the check. Levels can be configured.
+
+ The sensor state can be OK, WARN or CRIT.
+
+perfdata:
+ One variable: the humidity.
+
+item:
+ Name of the sensor provided by the device.
+
+inventory:
+ One service per sensor.

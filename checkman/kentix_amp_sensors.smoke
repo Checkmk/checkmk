@@ -1,0 +1,23 @@
+title: Kentix Alarmmanager Pro: Smoke detection
+agents: snmp
+catalog: hw/environment/kentix
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the smoke detection measured by the
+ Kentix Alarmmanager Pro device in percent.
+ Up to 100 Kentix Multisensors are connectable to the
+ Kentix Alarmmanager Pro device.
+
+ Default levels are set in the check.
+
+ The status can be OK, WARN, CRIT.
+
+item:
+ The sensor name of the device.
+
+perfdata:
+ One variable: the smoke (in percent).
+
+inventory:
+ One service per sensor is created.

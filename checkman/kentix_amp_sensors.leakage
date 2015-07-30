@@ -1,0 +1,22 @@
+title: Kentix Alarmmanager Pro: Leakage Sensor
+agents: snmp
+catalog: hw/environment/kentix
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of a leakage sensor connected to the
+ Kentix Alarmmanger Pro device.
+ Up to 100 Kentix Multisensors are connectable to the
+ Kentix Alarmmanager Pro device.
+ The additional leakage sensor operates as a N/C contact.
+
+ The status is OK, if the device is connected and reports
+ no alarm.
+ The status changes to CRIT, if the device is disconnected or reports
+ an alarm.
+
+item:
+ The name of the sensor provided by the device.
+
+inventory:
+ One service per sensor.

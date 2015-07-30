@@ -2042,6 +2042,8 @@ def paint_log_icon(row):
         img = "command"
     elif "restarting..." in log_type:
         img = "restart"
+    elif "Reloading configuration" in log_type:
+        img = "reload"
     elif "starting..." in log_type:
         img = "start"
     elif "shutdown..." in log_type or "shutting down" in log_type:

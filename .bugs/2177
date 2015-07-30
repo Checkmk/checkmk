@@ -1,0 +1,9 @@
+Title: new windows agent: eventlog monitoring should be able to process cleared logfiles
+Component: checks
+State: open
+Date: 2015-07-30 16:04:54
+Targetversion: future
+Class: bug
+
+If someone clears the event log with the event viewer, the windows agent
+is unable to start from event log record 0. It insists to continue at 51212, for example.

@@ -32,9 +32,9 @@ def check_synology_disks(item, _no_params, info):
     states = {
         1 : ("OK", 0),
         2 : ("OK", 0),
-        3 : ("NotInitialized", 1),
-        4 : ("SystemPartitionFailed", 2),
-        5 : ("Crashed", 2)
+        3 : ("not initialized", 1),
+        4 : ("system partition failed", 2),
+        5 : ("crashed", 2)
 
     }
     for disk, model, status, temperature in info:

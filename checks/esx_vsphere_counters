@@ -69,34 +69,31 @@
 # disk.write||51|kiloBytesPerSecond
 
 
-def inventory_esx_vsphere_counters_diskio(info):
-    for counter, item, value, unit in info:
-        if counter == 'disk.read' and item == '':
-            return [("SUMMARY", {})]
+def inventory_esx_vsphere_counters_diskio(parsed):
+    if "disk.read" in parsed and "" in parsed["disk.read"]:
+        return [("SUMMARY", {})]
 
-def check_esx_vsphere_counters_diskio(item, params, info):
-    if not info:
+def check_esx_vsphere_counters_diskio(item, params, parsed):
+    if not parsed:
         raise MKCounterWrapped("Counter data is missing")
+
     values = {}
     values['read_throughput']  = 0
     values['write_throughput'] = 0
-    values['read_ios']       = 0
-    values['write_ios']      = 0
-    values['latency']     = 0
-    for counter, esx_item, value, unit in info:
-        if esx_item == '':
-            if counter == 'disk.read':
-                values['read_throughput'] = int(value) * 1024
-            elif counter == 'disk.write':
-                values['write_throughput'] = int(value) * 1024
-        elif counter == 'disk.numberRead':
-            values['read_ios'] += int(value)
-        elif counter == 'disk.numberWrite':
-            values['write_ios'] += int(value)
-        elif counter == 'disk.deviceLatency':
-            values['latency'] = max(values['latency'], int(value))
+    values['read_ios']         = 0
+    values['write_ios']        = 0
+    values['latency']          = 0
 
-    values['latency'] = values['latency'] / 1000.0
+    for what in ["read", "write"]:
+        if "disk.%s" % what in parsed and "" in parsed["disk.%s" % what]:
+            values['%s_throughput' % what] = int(parsed["disk.%s" % what][""][0][0]) * 1024
+
+        for instance, info in parsed["disk.number%s" % what.title()].items():
+            values["%s_ios" % what] += int(info[0][0])
+
+    if "disk.deviceLatency" in parsed:
+        values["latency"] = max(map(lambda x: int(x[0][0]), parsed["disk.deviceLatency"].values())) / 1000.0
+
     return check_diskstat_dict(item, params, {"SUMMARY" : values})
 
 check_info['esx_vsphere_counters.diskio'] = {
@@ -108,6 +105,61 @@ check_info['esx_vsphere_counters.diskio'] = {
    'includes'            : [ "diskstat.include" ],
 }
 
+#   .--Datastore IO--------------------------------------------------------.
+#   |        ____        _            _                   ___ ___          |
+#   |       |  _ \  __ _| |_ __ _ ___| |_ ___  _ __ ___  |_ _/ _ \         |
+#   |       | | | |/ _` | __/ _` / __| __/ _ \| '__/ _ \  | | | | |        |
+#   |       | |_| | (_| | || (_| \__ \ || (_) | | |  __/  | | |_| |        |
+#   |       |____/ \__,_|\__\__,_|___/\__\___/|_|  \___| |___\___/         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+# Example output:
+# datastore.read|4c4ece34-3d60f64f-1584-0022194fe902|0|kiloBytesPerSecond
+# datastore.read|4c4ece5b-f1461510-2932-0022194fe902|0|kiloBytesPerSecond
+# datastore.numberReadAveraged|511e4e86-1c009d48-19d2-bc305bf54b07|0|number
+# datastore.numberWriteAveraged|4c4ece34-3d60f64f-1584-0022194fe902|0|number
+# datastore.totalReadLatency|511e4e86-1c009d48-19d2-bc305bf54b07|0|millisecond
+# datastore.totalWriteLatency|4c4ece34-3d60f64f-1584-0022194fe902|0|millisecond
+
+def parse_esx_vsphere_counters(info):
+    parsed = {}
+    for counter, instance, value, unit in info:
+        parsed.setdefault(counter, {})
+        parsed[counter].setdefault(instance, [])
+        parsed[counter][instance].append((value, unit))
+    return parsed
+
+def inventory_esx_vsphere_counters_datastoreio(parsed):
+    return inventory_diskstat_generic(map(lambda x: [None, x],
+            parsed.get("datastore.read").keys()))
+
+def check_esx_vsphere_counters_datastoreio(item, params, parsed):
+    if not parsed:
+        raise MKCounterWrapped("Counter data is missing")
+
+    datastores = {}
+    for new_name, name, scaling in [ ("read_throughput",  "datastore.read",                                  1024),
+                                     ("write_throughput", "datastore.write",                                 1024),
+                                     ("read_ios",         "datastore.datastoreReadIops",                        1),
+                                     ("write_ios",        "datastore.datastoreWriteIops",                       1),
+                                     ("latency",          "datastore.sizeNormalizedDatastoreLatency", 1/1000000.0) ]:
+        field_data = parsed.get(name, {})
+
+        for instance, values in field_data.items():
+            datastores.setdefault(instance, {})
+            datastores[instance][new_name] = int(values[0][0]) * scaling
+
+    return check_diskstat_dict(item, params, datastores)
+
+check_info['esx_vsphere_counters'] = {
+   'parse_function'          : parse_esx_vsphere_counters,
+   'inventory_function'      : inventory_esx_vsphere_counters_datastoreio,
+   'check_function'          : check_esx_vsphere_counters_datastoreio,
+   'service_description'     : 'Datastore IO %s',
+   'has_perfdata'            : True,
+   'includes'                :  [ 'diskstat.include' ]
+}
 
 
 #.
@@ -126,17 +178,18 @@ check_info['esx_vsphere_counters.diskio'] = {
 # a reschedule of the check does not create new data. And: our if.include really
 # requires counters. In order to use if.include we therefore simulate counters.
 
-def convert_esx_counters_if(info):
+def convert_esx_counters_if(parsed):
     this_time = time.time()
     by_item = {}
-    for counter, item, value, unit in info:
-        if item and counter.startswith("net."):
-            name = counter[4:]
-            by_item.setdefault(item, {})
-            if name != "macaddress":
-                by_item[item][name] = int(value)
-            else:
-                by_item[item][name] = value
+
+    for name, instances in parsed.items():
+        if name.startswith("net."):
+            for instance, values in instances.items():
+                by_item.setdefault(instance, {})
+                if name == "net.macaddress":
+                    by_item[instance][name[4:]] = values[0][0]
+                else:
+                    by_item[instance][name[4:]] = int(values[0][0])
 
     # Example of by_item:
     # {
@@ -241,15 +294,15 @@ def convert_esx_counters_if(info):
     return converted
 
 
-def inventory_esx_vsphere_counters_if(info):
-    converted = convert_esx_counters_if(info)
+def inventory_esx_vsphere_counters_if(parsed):
+    converted = convert_esx_counters_if(parsed)
     return inventory_if_common(converted)
 
-def check_esx_vsphere_counters_if(item, params, info):
-    if not info:
+def check_esx_vsphere_counters_if(item, params, parsed):
+    if not parsed:
         raise MKCounterWrapped("Counter data is missing")
 
-    converted = convert_esx_counters_if(info)
+    converted = convert_esx_counters_if(parsed)
     return check_if_common(item, params, converted)
 
 check_info['esx_vsphere_counters.if'] = {
@@ -272,19 +325,18 @@ check_info['esx_vsphere_counters.if'] = {
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-def inventory_esx_vsphere_counters_uptime(info):
-    for name, instance, counter, unit in info:
-        if name == "sys.uptime":
-            return [ (None, {}) ]
+def inventory_esx_vsphere_counters_uptime(parsed):
+    if "sys.uptime" in parsed:
+        return [ (None, {}) ]
 
-def check_esx_vsphere_counters_uptime(_no_item, params, info):
-    if not info:
+def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
+    if not parsed:
         raise MKCounterWrapped("Counter data is missing")
 
-    for name, instance, counter, unit in info:
-        if name == "sys.uptime":
-            return check_uptime_seconds(params, int(counter))
-    return 3, "No uptime information found in agent output"
+    if "sys.uptime" in parsed:
+        return check_uptime_seconds(params, int(parsed["sys.uptime"][""][0][0]))
+    else:
+        return 3, "No uptime information found in agent output"
 
 
 check_info['esx_vsphere_counters.uptime'] = {
@@ -320,24 +372,23 @@ esx_vsphere_counters_ramdisk_sizes = {
     'sfcbtickets':    1,
 }
 
-def inventory_esx_vsphere_counters_ramdisk(info):
+def inventory_esx_vsphere_counters_ramdisk(parsed):
     ramdisks = []
-    for name, instance, counter, unit in info:
-        if name == 'sys.resourceMemConsumed' \
-           and instance.startswith('host/system/kernel/kmanaged/visorfs/'):
+
+    for instance in parsed.get("sys.resourceMemConsumed", {}):
+        if instance.startswith('host/system/kernel/kmanaged/visorfs/'):
             ramdisks.append(instance.split('/')[-1])
 
     return df_inventory(ramdisks)
 
-def check_esx_vsphere_counters_ramdisk(item, params, info):
-    if not info:
+def check_esx_vsphere_counters_ramdisk(item, params, parsed):
+    if not parsed:
         raise MKCounterWrapped("Counter data is missing")
 
     ramdisks = []
-    for name, instance, counter, unit in info:
-        if name == 'sys.resourceMemConsumed' \
-           and instance.startswith('host/system/kernel/kmanaged/visorfs/'):
-            name     = instance.split('/')[-1]
+    for instance, values in parsed.get("sys.resourceMemConsumed").items():
+        if instance.startswith('host/system/kernel/kmanaged/visorfs/'):
+            name = instance.split('/')[-1]
             try:
                 size_mb  = esx_vsphere_counters_ramdisk_sizes[name]
             except KeyError:
@@ -345,7 +396,7 @@ def check_esx_vsphere_counters_ramdisk(item, params, info):
                     return 3, 'Unhandled ramdisk found (%s)' % name
                 else:
                     continue
-            used_mb  = float(counter) / 1000
+            used_mb  = float(parsed["sys.resourceMemConsumed"][instance][0][0]) / 1000
             avail_mb = size_mb - used_mb
             ramdisks.append((name, size_mb, avail_mb, 0))
 

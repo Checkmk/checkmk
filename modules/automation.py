@@ -455,6 +455,7 @@ def automation_delete_host(args):
         os.system("rm -rf '%s'" % path)
 
 def automation_restart(job = "restart", use_rushd = True):
+
     # make sure, Nagios does not inherit any open
     # filedescriptors. This really happens, e.g. if
     # check_mk is called by WATO via Apache. Nagios inherits

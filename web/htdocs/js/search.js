@@ -222,10 +222,6 @@ function handle_search_response(oField, code) {
     oField = null
 }
 
-function handle_search_error(oField, statusCode) {
-
-}
-
 function mkTermSearch() {
     // Terminate eventually already running request
     if (g_ajax_obj) {
@@ -246,7 +242,7 @@ function mkSearch(oField) {
 
     mkTermSearch();
     g_ajax_obj = get_url('ajax_search.py?q=' + encodeURIComponent(val),
-            handle_search_response, oField, handle_search_error);
+            handle_search_response, oField);
 
     oField = null;
 }

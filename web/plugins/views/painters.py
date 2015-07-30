@@ -1751,7 +1751,7 @@ multisite_painters["comment_author"] = {
 multisite_painters["comment_comment"] = {
     "title"   : _("Comment text"),
     "columns" : ["comment_comment"],
-    "paint"   : lambda row: (None, html.attrencode(row["comment_comment"])),
+    "paint"   : lambda row: (None, format_plugin_output(row["comment_comment"])),
 }
 
 multisite_painters["comment_what"] = {
@@ -1837,7 +1837,7 @@ multisite_painters["downtime_comment"] = {
     "title"   : _("Downtime comment"),
     "short"   : _("Comment"),
     "columns" : ["downtime_comment"],
-    "paint"   : lambda row: (None, html.attrencode(row["downtime_comment"])),
+    "paint"   : lambda row: (None, format_plugin_output(row["downtime_comment"])),
 }
 
 multisite_painters["downtime_fixed"] = {

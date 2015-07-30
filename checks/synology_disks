@@ -25,25 +25,39 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_synology_disks(info):
-    for line in info:
-        yield line[0], None
+    for disk, model, status, temperature in info:
+        # SSD used as cache are "not initialized". We remember that
+        # here.
+        if "SSD" in model and status == '3':
+            params = { "used_as_cache" : True }
+        else:
+            params = {}
 
-def check_synology_disks(item, _no_params, info):
+        yield disk, params
+
+
+def check_synology_disks(item, params, info):
     states = {
-        1 : ("OK", 0),
-        2 : ("OK", 0),
-        3 : ("NotInitialized", 1),
-        4 : ("SystemPartitionFailed", 2),
-        5 : ("Crashed", 2)
+        1 : (0, "OK"),
+        2 : (0, "OK"),
+        3 : (1, "not initialized"),
+        4 : (2, "system partition failed"),
+        5 : (2, "crashed")
 
     }
+
     for disk, model, status, temperature in info:
         if disk == item:
-            state = int(status)
             temp = int(temperature)
-            message = "Status: %s, Temperature: %d °C, Model: %s" % \
-              ( states[state][0], temp, model )
-            return states[state][1], message, [("temp", temp )]
+            if status == '3' and params.get("used_as_cache"):
+                status_text = "used as cache"
+                status_code = 0
+            else:
+                status_code, status_text = states[int(status)]
+
+            message = "Status: %s, Temperature: %d °C, Model: %s" % ( status_text, temp, model )
+            return status_code, message, [("temp", temp )]
+
 
 check_info["synology_disks"] = {
     "check_function"        : check_synology_disks,

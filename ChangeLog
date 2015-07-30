@@ -1,6 +1,7 @@
 1.2.7i2p2:
     Checks & Agents:
     * 1276 FIX: brocade_mlx_temperature: Fixed the shown Temperature Values
+    * 2490 FIX: synology_disks: treat SSDs with state "not initialized" as OK if state does not change later
 
 
 1.2.7i2p1:

@@ -35,6 +35,7 @@
 //#   '--------------------------------------------------------------------'
 
 // Make JS understand Python source code
+// FIXME TODO remove this crap
 var True = true;
 var False = false;
 
@@ -224,6 +225,11 @@ function merge_args()
 function has_graphing()
 {
     return typeof g_graphs !== 'undefined';
+}
+
+function has_cross_domain_ajax_support()
+{
+    return 'withCredentials' in new XMLHttpRequest();
 }
 
 //#.
@@ -425,7 +431,16 @@ function call_ajax(url, args)
         url += "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
     }
 
-    AJAX.open(args.method, url, !args.sync);
+    try {
+        AJAX.open(args.method, url, !args.sync);
+    } catch (e) {
+        if (args.error_handler) {
+            args.error_handler(args.handler_data, null, e);
+            return null;
+        } else {
+            throw e;
+        }
+    }
 
     if (args.method == "POST") {
         AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -452,7 +467,7 @@ function call_ajax(url, args)
                 }
                 else {
                     if (args.error_handler)
-                        args.error_handler(args.handler_data, AJAX.status);
+                        args.error_handler(args.handler_data, AJAX.status, AJAX.statusText);
                 }
             }
         }
@@ -680,12 +695,12 @@ function toggle_other_filters(fname, disable_others) {
 //#   | Performance graph handling                                         |
 //#   '--------------------------------------------------------------------'
 
-function pnp_error_response_handler(data, statusCode) {
+function pnp_error_response_handler(data, status_code, status_msg) {
     // PNP versions that do not have the JSON webservice respond with
     // 404. Current version with the webservice answer 500 if the service
     // in question does not have any PNP graphs. So we paint the fallback
     // graphs only if the respone code is 404 (not found).
-    if (parseInt(statusCode) == 404)
+    if (parseInt(status_code) == 404)
         fallback_graphs(data);
 }
 
@@ -1005,7 +1020,7 @@ function handle_content_reload(_unused, code) {
     schedule_reload();
 }
 
-function handle_content_reload_error(_unused, status_code)
+function handle_content_reload_error(_unused, status_code, error_msg)
 {
     if(!g_reload_error) {
         var o = document.getElementById('data_container');
@@ -2748,4 +2763,99 @@ function toggle_assumption(oImg, site, host, service)
     url += '&state=' + current;
     oImg.src = "images/assume_" + current + ".png";
     get_url(url);
+}
+
+//#.
+//#   .-Crash-Report-------------------------------------------------------.
+//#   |    ____               _           ____                       _     |
+//#   |   / ___|_ __ __ _ ___| |__       |  _ \ ___ _ __   ___  _ __| |_   |
+//#   |  | |   | '__/ _` / __| '_ \ _____| |_) / _ \ '_ \ / _ \| '__| __|  |
+//#   |  | |___| | | (_| \__ \ | | |_____|  _ <  __/ |_) | (_) | |  | |_   |
+//#   |   \____|_|  \__,_|___/_| |_|     |_| \_\___| .__/ \___/|_|   \__|  |
+//#   |                                            |_|                     |
+//#   +--------------------------------------------------------------------+
+//#   | Posting crash report to official Check_MK crash reporting API      |
+//#   '--------------------------------------------------------------------'
+
+function submit_crash_report(url, post_data)
+{
+    document.getElementById("pending_msg").style.display = "block";
+
+    if (has_cross_domain_ajax_support()) {
+        call_ajax(url, {
+            method           : "POST",
+            post_data        : post_data,
+            response_handler : handle_crash_report_response,
+            error_handler    : handle_crash_report_error,
+            handler_data     : {
+                base_url: url
+            }
+        });
+    }
+    else if (typeof XDomainRequest !== "undefined") {
+        // IE < 9 does not support cross domain ajax requests in the standard way.
+        // workaround this issue by doing some iframe / form magic
+        submit_crash_report_with_ie(url, post_data);
+    }
+    else {
+        handle_crash_report_error(null, null, "Your browser does not support direct crash reporting.");
+    }
+}
+
+
+function submit_crash_report_with_ie(url, post_data) {
+    var handler_data = {
+        base_url: url
+    };
+    var xdr = new XDomainRequest();
+    xdr.onload = function() {
+        handle_crash_report_response(handler_data, xdr.responseText);
+    };
+    xdr.onerror = function() {
+        handle_crash_report_error(handler_data, null, xdr.responseText);
+    };
+    xdr.onprogress = function() {};
+    xdr.open("post", url);
+    xdr.send(post_data);
+}
+
+
+function handle_crash_report_response(handler_data, response_body)
+{
+    hide_crash_report_processing_msg();
+
+    if (response_body.substr(0, 2) == "OK") {
+        var id = response_body.split(" ")[1];
+        var success_container = document.getElementById("success_msg");
+        success_container.style.display = "block";
+        success_container.innerHTML = success_container.innerHTML.replace(/###ID###/, id);
+    }
+    else {
+        var fail_container = document.getElementById("fail_msg");
+        fail_container.style.display = "block";
+        fail_container.childNodes[0].innerHTML += " ("+response_body+").";
+    }
+}
+
+function handle_crash_report_error(handler_data, status_code, error_msg)
+{
+    hide_crash_report_processing_msg();
+
+    var fail_container = document.getElementById("fail_msg");
+    fail_container.style.display = "block";
+    if (status_code) {
+        fail_container.childNodes[0].innerHTML += " (HTTP: "+status_code+").";
+    }
+    else if (error_msg) {
+        fail_container.childNodes[0].innerHTML += " ("+error_msg+").";
+    }
+    else {
+        fail_container.childNodes[0].innerHTML += " (Maybe <tt>"+handler_data["base_url"]+"</tt> not reachable).";
+    }
+}
+
+function hide_crash_report_processing_msg()
+{
+    var msg = document.getElementById("pending_msg");
+    msg.parentNode.removeChild(msg);
 }

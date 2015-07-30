@@ -1,0 +1,10 @@
+Title: kentix_amp_sensors: New check for the Kentix Alarmmanager Pro
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438236592
+Class: feature
+
+This checks has four subchecks which monitor the temperature, humidity, smoke and leakage detection of
+sensors which are connected to the Kentix Alarmmanager Pro.

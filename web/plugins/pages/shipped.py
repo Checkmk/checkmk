@@ -42,7 +42,7 @@ import userdb
 import notify
 import webapi
 import visuals
-import crashed_check
+import crash_reporting
 import metrics
 
 # map URLs to page rendering functions
@@ -110,6 +110,7 @@ pagehandlers.update({
 
    "webapi"                   : webapi.page_api,
 
-   "crashed_check"            : crashed_check.page_crashed_check,
+   "crashed_check"            : crash_reporting.page_crashed_check,
+   "download_crash_report"    : crash_reporting.page_download_crash_report,
 })
 

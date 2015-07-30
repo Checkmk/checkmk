@@ -256,7 +256,7 @@ var progress_paused  = false;
 // Is set to true when the user hit aborted/finished
 var progress_ended   = false;
 
-function progress_handle_error(data, code) {
+function progress_handle_error(data, code, msg) {
     // code contains no parsable response but the http code
     progress_handle_response(data, '', code);
 }

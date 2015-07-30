@@ -4505,6 +4505,7 @@ def usage():
  cmk --notify                         used to send notifications from core
  cmk --create-rrd [--keepalive|SPEC]  create round robin database (only CEE)
  cmk --convert-rrds [--split] [H...]  convert exiting RRD to new format (only CEE)
+ cmk --compress-history FILES...      optimize monitoring history files for CMC
  cmk --handle-alerts                  alert handling, always in keepalive mode (only CEE)
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
@@ -5756,7 +5757,7 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "snmptranslate", "bake-agents", "force", "show-snmp-stats",
                  "usewalk", "scan-parents", "procs=", "automation=", "handle-alerts", "notify",
                  "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
-                 "convert-rrds", "split-rrds",
+                 "convert-rrds", "compress-history", "split-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                  "man", "nowiki", "config-check", "backup=", "restore=",
                  "check-inventory=", "check-discovery=", "paths",
@@ -5766,7 +5767,7 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
                       '--handle-alerts', '--notify',
                       '--man', '-V', '--version' ,'-h', '--help', '--automation',
-                      '--create-rrd', '--convert-rrds', '--keepalive', '--cap' ]
+                      '--create-rrd', '--convert-rrds', '--compress-history', '--keepalive', '--cap' ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -5983,6 +5984,10 @@ try:
             read_config_files(with_conf_d=True)
             execfile(modules_dir + "/rrd.py")
             do_convert_rrds(args)
+            done = True
+        elif o == '--compress-history':
+            execfile(modules_dir + "/compresslog.py")
+            do_compress_history(args)
             done = True
         elif o in [ '-A', '--bake-agents' ]:
             if 'do_bake_agents' not in globals():

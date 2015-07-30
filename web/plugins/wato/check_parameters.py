@@ -333,16 +333,16 @@ register_check_parameters(
             ( "signature_age",
                 Tuple( title = _("Time Settings for Signature"),
                     elements = [
-                        Age(title=_("Warning at:"), default_value = 86400),
-                        Age(title=_("Critical at:"), default_value = 7*86400),
+                        Age(title=_("Warning at"), default_value = 86400),
+                        Age(title=_("Critical at"), default_value = 7*86400),
                     ],
                 ),
             ),
             ( "fullscan_age",
                 Tuple( title = _("Time Settings for Fullscan"),
                     elements = [
-                        Age(title=_("Warning at:"), default_value = 86400),
-                        Age(title=_("Critical at:"), default_value = 7*86400),
+                        Age(title=_("Warning at"), default_value = 86400),
+                        Age(title=_("Critical at"), default_value = 7*86400),
                     ],
                 ),
             ),
@@ -1051,8 +1051,8 @@ process_level_elements = [
        title = _("Maximum allowed age"),
        help = _("Alarms you if the age of the process (not the consumed CPU time, but the real time) exceed the configured levels."),
        elements = [
-           Age(title=_("Warning at:"), default_value = 3600),
-           Age(title=_("Critical at:"), default_value = 7200),
+           Age(title=_("Warning at"), default_value = 3600),
+           Age(title=_("Critical at"), default_value = 7200),
        ]
    )),
    ( "virtual_levels",

@@ -29,7 +29,7 @@ def inventory_juniper_trpz_aps(info):
 
 def check_juniper_trpz_aps(_no_item, _no_params, info):
     aps = info[0][0]
-    message = "%s Access Points online" % aps
+    message = "%s access points online" % aps
     return 0, message
 
 check_info["juniper_trpz_aps"] = {
@@ -40,6 +40,4 @@ check_info["juniper_trpz_aps"] = {
     "snmp_info"             : (".1.3.6.1.4.1.14525.4.5.1.1",[
                                                              1, #number of Access Points
                                                              ])
-
-
 }

@@ -101,7 +101,7 @@ class Base:
             )),
             ( 1.3, 'description', TextAreaUnicode(
                 title = _('Description') + '<sup>*</sup>',
-                help = _("The description is optional and can be used for explainations or documentation"),
+                help = _("The description is optional and can be used for explanations or documentation"),
                 rows = 4,
                 cols = 50,
             )),

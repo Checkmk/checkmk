@@ -1,0 +1,14 @@
+#!/bin/bash
+# Notify via Slack
+
+# In order to use this script:
+# - copy it into your site into ~/local/share/check_mk/notificaions
+# - make sure it is executable
+# - adapt the variable TEXT= to your needs
+# - insert your correct Slack-URL into URL=
+# - create a notification rule that makes use of the new plugin
+
+TEXT="$NOTIFY_HOSTNAME: $NOTIFY_SERVICEDESC: $NOTIFY_SERVICESTATE $NOTIFY_SERVICEOUTPUT"
+URL="https://hooks.slack.com/services/A08BZU3D0/B08C03CKQ/owiefjowiejfoweijfwoeiju"
+
+curl -X POST --data-urlencode 'payload={"channel": "#check_mk", "username": "webhookbot", "text": "'"$TEXT"'", "icon_emoji": ":ghost:"}' "$URL"

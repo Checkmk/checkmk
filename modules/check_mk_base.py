@@ -1439,52 +1439,101 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     error_sections.sort()
     return agent_version, num_success, error_sections, ", ".join(problems)
 
+
+# Create a crash dump with a backtrace and the agent output.
+# This is put into a directory per service. The content is then
+# put into a tarball, base64 encoded and put into the long output
+# of the check :-)
 def create_crash_dump(hostname, check_name, item, params, description, info):
     text = "check failed - please submit a crash report!"
     try:
-        import pprint, tarfile, base64
-        # Create a crash dump with a backtrace and the agent output.
-        # This is put into a directory per service. The content is then
-        # put into a tarball, base64 encoded and put into the long output
-        # of the check :-)
         crash_dir = var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
-        if not os.path.exists(crash_dir):
-            os.makedirs(crash_dir)
-        file(crash_dir + "/trace", "w").write(
-           (
-           "  Check output:     %s\n"
-           "  Check_MK Version: %s\n"
-           "  Date:             %s\n"
-           "  Host:             %s\n"
-           "  Service:          %s\n"
-           "  Check type:       %s\n"
-           "  Item:             %r\n"
-           "  Parameters:       %s\n"
-           "  %s\n") % (
-                        text,
-                        check_mk_version,
-                        time.strftime("%Y-%d-%m %H:%M:%S"),
-                        hostname,
-                        description,
-                        check_name,
-                        item,
-                        pprint.pformat(params),
-                        traceback.format_exc().replace('\n', '\n      ')))
-        file(crash_dir + "/info", "w").write(repr(info) + "\n")
-        cachefile = tcp_cache_dir + "/" + hostname
-        if os.path.exists(cachefile):
-            file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
-        elif os.path.exists(crash_dir + "/agent_output"):
-            os.remove(crash_dir + "/agent_output")
+        prepare_crash_dump_directory(crash_dir)
 
-        tarcontent = os.popen("tar czf - -C %s ." % quote_shell_string(crash_dir)).read()
-        encoded = base64.b64encode(tarcontent)
-        text += "\n" + "Crash dump:\n" + encoded + "\n"
+        create_crash_dump_info_file(crash_dir, hostname, check_name, item, params, description, info, text)
+        write_crash_dump_agent_output(crash_dir, hostname)
+
+        text += "\n" + "Crash dump:\n" + pack_crash_dump(crash_dir) + "\n"
     except:
         if opt_debug:
             raise
 
     return text
+
+
+def prepare_crash_dump_directory(crash_dir):
+    if not os.path.exists(crash_dir):
+        os.makedirs(crash_dir)
+    # Remove all files of former crash reports
+    for f in os.listdir(crash_dir):
+        try:
+            os.unlink(crash_dir + "/" + f)
+        except OSError:
+            pass
+
+
+def create_crash_dump_info_file(crash_dir, hostname, check_name, item, params, description, info, text):
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+
+    crash_info = {
+        "crash_type" : "check",
+        "time"       : time.time(),
+        "os"         : get_os_info(),
+        "version"    : check_mk_version,
+        "details"    : {
+            "check_output"  : text,
+            "host"          : hostname,
+            "description"   : description,
+            "check_type"    : check_name,
+            "item"          : item,
+            "params"        : params,
+            "exc_type"      : exc_type.__name__,
+            "exc_value"     : "%s" % exc_value,
+            "exc_traceback" : traceback.extract_tb(exc_traceback),
+        },
+    }
+
+    try:
+        import simplejson as json
+    except ImportError:
+        import json
+
+    file(crash_dir+"/crash.info", "w").write(json.dumps(crash_info)+"\n")
+
+
+def get_os_info():
+    if omd_root:
+        return file(omd_root+"/share/omd/distro.info").readline().split("=", 1)[1].strip()
+    elif os.path.exists("/etc/redhat-release"):
+        return file("/etc/redhat-release").readline().strip()
+    elif os.path.exists("/etc/SuSE-release"):
+        return file("/etc/SuSE-release").readline().strip()
+    else:
+        info = {}
+        for f in [ "/etc/os-release", "/etc/lsb-release" ]:
+            if os.path.exists(f):
+                for line in file(f).readlines():
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        info[k.strip()] = v.strip()
+                break
+
+        if info:
+            return info
+        else:
+            return "UNKNOWN"
+
+
+def write_crash_dump_agent_output(crash_dir, hostname):
+    cachefile = tcp_cache_dir + "/" + hostname
+    if os.path.exists(cachefile):
+        file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
+
+
+def pack_crash_dump(crash_dir):
+    import base64
+    tarcontent = os.popen("cd %s ; tar czf - *" % quote_shell_string(crash_dir)).read()
+    return base64.b64encode(tarcontent)
 
 
 def check_unimplemented(checkname, params, info):

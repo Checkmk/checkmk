@@ -32,7 +32,7 @@
 # load is a triple of three floats: average load of
 # the last 1, 5 or 15 minutes
 def check_cpu_load_generic(params, load, num_cpus=1):
-    raise Exception("XXXX")
+
     # Prepare performance data
     if type(params) == tuple:
         warn, crit = [ p*num_cpus for p in params ]

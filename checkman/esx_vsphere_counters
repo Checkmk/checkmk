@@ -1,0 +1,17 @@
+title: VMWare ESX host systems: Datastore throughput
+agents: vsphere
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+ This check measures the number of read and writes bytes and the
+ latency for each datastore on an ESX host system.
+ You can configure levels for the read, write and latency values.
+
+inventory:
+ Depending on the configuration, creates a summary check or one
+ check per datastore.
+
+perfdata:
+ Three values: read, write and ios (per second)
+

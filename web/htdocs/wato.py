@@ -11739,7 +11739,7 @@ def ajax_replication():
     # Pre 1.2.7i3 sites return True on success and a string on error.
     # 1.2.7i3 and later return a ist of warning messages on success.
     # [] means OK and no warnings. The error handling is unchanged
-    if result == True:
+    if result == True or result == None:
         result = []
 
     if type(result) == list:

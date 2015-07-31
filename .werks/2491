@@ -1,0 +1,11 @@
+Title: Allow clickable URLs in comments and downtime texts
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438249800
+Class: feature
+
+When you in include an URL like <tt>http://www.mysite.de/...</tt> into the
+comment of a downtime or an acknowledgment then this URL will now be replaced
+with a clickable icon pointing to that link.

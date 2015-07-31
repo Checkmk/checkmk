@@ -1,0 +1,9 @@
+Title: synology_disks: treat SSDs with state "not initialized" as OK if state does not change later
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438248573
+Class: fix
+
+

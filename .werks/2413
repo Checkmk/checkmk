@@ -1,0 +1,9 @@
+Title: esx_vsphere_counters: new check to monitor the disk throughput and latency for ESX datastores
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438254772
+Class: feature
+
+

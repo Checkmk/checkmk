@@ -1,0 +1,11 @@
+Title: logwatch: now really ignores ignored logwatch lines
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438331344
+Class: fix
+
+When a logwatch line is set to ignored through a logwatch pattern
+it is now correctly removed from the status file of the logwatch check.
+

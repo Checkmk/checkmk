@@ -1,0 +1,21 @@
+Title: Implemented new crash report handling
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438246315
+Class: feature
+
+Some versions ago we introduced a reporting mechanism for crashes within the checks
+and the GUI. It was possible to click on a "report crash" button which opened a
+"new mail" dialog containing the crash information. The problem with this approach
+was that when using Outlook it resulted in incomplete crash dumps which were mostly
+unusable.
+
+The reporting mechanism has been completely reworked. The reports are now sent via
+HTTP POST calls to our crash reporting server. To be able to contact you in case
+of any question, we need your name and email address when you submit a crash report.
+
+All information which is submitted to our servers is displayed to you before
+submitting. You can always choose not to report a crash.
+

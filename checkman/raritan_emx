@@ -8,12 +8,11 @@ description:
  for each Rack connected to a Raritan EMX devices.
  No configuration is needed, the devices sends the state by himself
 
-
 item:
  Rack ID, Sensor Type, Sensor Name
 
 perfdata:
- Tempreature
+ Temperature
  FAN Speed
 
 inventory:

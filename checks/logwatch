@@ -455,6 +455,9 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
                     except KeyError:
                         state_counts[level] = 1
 
+                if level == "I":
+                    continue
+
                 block_lines.append(level + ' ' + text)
 
         # The last section is finished here. Add it to the list of reclassified lines if the

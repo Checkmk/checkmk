@@ -130,18 +130,27 @@ def parse_esx_vsphere_counters(info):
         parsed[counter][instance].append((value, unit))
     return parsed
 
+# esx datastores are either shown by human readable name (if available) or by the uid
+def esx_vsphere_counters_get_item_mapping(parsed):
+    map_instance_to_item = {}
+    for instance in parsed.get("datastore.read").keys():
+        map_instance_to_item[instance] = instance
+
+    for instance, values in parsed.get("datastore.name").items():
+        if instance in map_instance_to_item and values[0][0] != "":
+            map_instance_to_item[instance] = values[0][0]
+    return map_instance_to_item
+
 def inventory_esx_vsphere_counters_datastoreio(parsed):
-    return inventory_diskstat_generic(map(lambda x: [None, x[0][0]],
-            parsed.get("datastore.name").values()))
+    return inventory_diskstat_generic(map(lambda x: [None, x],
+                             esx_vsphere_counters_get_item_mapping(parsed).values()))
 
 def check_esx_vsphere_counters_datastoreio(item, params, parsed):
     if not parsed:
         raise MKCounterWrapped("Counter data is missing")
 
     datastores = {}
-    map_instance_to_name = {}
-    for instance, values in parsed.get("datastore.name").items():
-        map_instance_to_name[instance] = values[0][0]
+    item_mapping = esx_vsphere_counters_get_item_mapping(parsed)
 
     for new_name, name, scaling in [ ("read_throughput",  "datastore.read",                                  1024),
                                      ("write_throughput", "datastore.write",                                 1024),
@@ -151,7 +160,7 @@ def check_esx_vsphere_counters_datastoreio(item, params, parsed):
         field_data = parsed.get(name, {})
 
         for instance, values in field_data.items():
-            item_name = map_instance_to_name[instance]
+            item_name = item_mapping[instance]
             datastores.setdefault(item_name, {})
             datastores[item_name][new_name] = int(values[0][0]) * scaling
 

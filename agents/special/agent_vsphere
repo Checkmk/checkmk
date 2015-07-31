@@ -846,16 +846,16 @@ if not error:
             ###########################
             # Datastores
             ###########################
-            datastores = {} # We also need the datastore info later in the virtualmachines section
-            if "datastore" in query_objects:
-                reply_code, reply_msg, reply_headers, datastores_response = query_server(telegram_list["datastores"])
-                elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', datastores_response)
-                for datastore, content in elements:
-                    entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
-                    datastores[datastore] = {}
-                    for name, value in entries:
-                        datastores[datastore][name] = value
+            datastores = {} # We need the datastore info later on in the virtualmachines and counter sections
+            reply_code, reply_msg, reply_headers, datastores_response = query_server(telegram_list["datastores"])
+            elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', datastores_response)
+            for datastore, content in elements:
+                entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
+                datastores[datastore] = {}
+                for name, value in entries:
+                    datastores[datastore][name] = value
 
+            if "datastore" in query_objects:
                 output("<<<esx_vsphere_datastores:sep(9)>>>")
                 for key in sorted(datastores.keys()):
                     data = datastores[key]

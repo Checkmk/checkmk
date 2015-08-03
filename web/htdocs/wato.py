@@ -12479,6 +12479,7 @@ def mode_edit_user(phase):
     if new:
         vs_user_id = UserID(
             validate_value = validate_user_id,
+            allow_empty = False
         )
     else:
         vs_user_id = FixedValue(userid)

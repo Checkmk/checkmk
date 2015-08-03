@@ -1000,7 +1000,7 @@ def mode_mkeventd_rule_packs(phase):
             rules_url  = make_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack["id"])])
 
             table.cell(_("Actions"), css="buttons")
-            html.icon_button(edit_url, _("Edit properies of this rule pack"), "edit")
+            html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
             # Cloning does not work until we have unique IDs
             # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
             html.icon_button(delete_url, _("Delete this rule pack"), "delete")

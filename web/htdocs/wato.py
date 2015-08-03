@@ -6169,7 +6169,7 @@ def have_folder_attributes():
 # new: Boolean flag if this is a creation step or editing
 # for_what can be:
 #   "host"   -> normal host edit dialog
-#   "folder" -> properies of folder or file
+#   "folder" -> properties of folder or file
 #   "search" -> search dialog
 #   "bulk"   -> bulk change
 # parent: The parent folder of the objects to configure

@@ -4601,7 +4601,11 @@ register_check_parameters(
                  ( True, _("Ignore the state of the Job")),
                  ( False, _("Consider the state of the job")),],
              help = _("The state of the job is ignored per default.")
-            )),]
+            )),
+            ( "status_disabled_jobs", MonitoringState(
+              title = "Status of service in case of disabled job", default_value = 0
+            )),
+        ]
     ),
     TextAscii(
         title = _("Scheduler Job Name"),

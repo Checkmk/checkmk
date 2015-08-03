@@ -1,0 +1,16 @@
+title: Sentry PDU Devices: Outlets
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of the outlets of a Sentry PDU Device.
+ If the outlet status is On/Off, then the check displays OK.
+ If the outlet status is offWait/onWait, then check displays WARN.
+ Otherwise the check displays CRIT.
+
+item:
+ The name of the outlet.
+
+inventory:
+ One service per outlet.

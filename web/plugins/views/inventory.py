@@ -600,6 +600,16 @@ inventory_displayhints.update({
     ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
     ".software.packages:*.path"                        : { "title" : _("Path"), },
 
+    "software.applications."                           : { "title" : _("Applications"), },
+
+    ".software.applications.citrix."                                 : { "title" : _("Citrix") },
+    ".software.applications.citrix.controller."                      : { "title" : _("Controller") },
+    ".software.applications.citrix.controller.controller_version"   : { "title" : _("Controller Version"), },
+    ".software.applications.citrix.vm."                              : { "title" : _("Virtual Machine") },
+    ".software.applications.citrix.vm.desktop_group_name"           : { "title" : _("Desktop Group Name"), },
+    ".software.applications.citrix.vm.catalog"                      : { "title" : _("Catalog"), },
+    ".software.applications.citrix.vm.agent_version"                : { "title" : _("Agent Version"), },
+
     ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
     ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },
     ".networking.total_ethernet_ports"                 : { "title" : _("Ports"), "paint" : "count", },

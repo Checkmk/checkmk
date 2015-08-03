@@ -2242,6 +2242,12 @@ metric_info["registered_modems"] = {
     "color" : "16/c",
 }
 
+metric_info["registered_desktops"] = {
+    "title" : _("Registered desktops"),
+    "unit"  : "count",
+    "color" : "16/d",
+}
+
 metric_info["channel_utilization"] = {
     "title" : _("Channel utilization"),
     "unit"  : "%",

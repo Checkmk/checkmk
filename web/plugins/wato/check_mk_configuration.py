@@ -1813,7 +1813,7 @@ register_rule(group,
 register_rule(group,
     "snmp_character_encodings",
     DropdownChoice(
-        title = _("Output text coding settings for SNMP devices"),
+        title = _("Output text encoding settings for SNMP devices"),
         help = _("Some devices send texts in non-ASCII characters. Check_MK"
                  " always assumes UTF-8 encoding. You can declare other "
                  " other encodings here"),

@@ -32,7 +32,7 @@
 
 
 def parse_sentry_pdu_systempower(info):
-    return { 'Power Supply System' : { 'power' : (int(info[0][0]), None) } }
+    return { 'Power Supply System' : { 'power' : (int(info[0][0]), {}) } }
 
 
 check_info['sentry_pdu_systempower'] = {

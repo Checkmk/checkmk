@@ -458,7 +458,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
                 old_level, text = logwatch_parse_line(line)
                 level = reclassify_line(counts, patterns, text, old_level)
 
-                if old_level != level:
+                if old_level != level or level == "I":
                     reclassified = True
 
                 old_block_worst = block_worst

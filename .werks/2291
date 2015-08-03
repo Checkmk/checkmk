@@ -1,4 +1,4 @@
-Title: check juniper_trpz_aps: now monitor the number of access points of all juniper trapeze devices which support the TRAPEZE-NETWORKS-REGISTRATION-MIB
+Title: check juniper_trpz_aps: now monitors the number of access points of all juniper trapeze devices which support the TRAPEZE-NETWORKS-REGISTRATION-MIB
 Level: 1
 Component: checks
 Compatible: compat

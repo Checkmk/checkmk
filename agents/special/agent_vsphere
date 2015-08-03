@@ -349,6 +349,28 @@ def get_counters(esx_version_num):
         #  'disk.totalReadLatency': 131085,
         #  'disk.totalWriteLatency': 131089,
         #  'disk.usage': 131073,
+        # datastore counters
+#  'datastore.datastoreIops': 655367,
+#  'datastore.datastoreMaxQueueDepth': 655376,
+#  'datastore.datastoreNormalReadLatency': 655372,
+#  'datastore.datastoreNormalWriteLatency': 655373,
+#  'datastore.datastoreReadBytes': 655368,
+#  'datastore.datastoreReadIops': 655370,
+#  'datastore.datastoreReadLoadMetric': 655377,
+#  'datastore.datastoreReadOIO': 655374,
+#  'datastore.datastoreWriteBytes': 655369,
+#  'datastore.datastoreWriteIops': 655371,
+#  'datastore.datastoreWriteLoadMetric': 655378,
+#  'datastore.datastoreWriteOIO': 655375,
+#  'datastore.maxTotalLatency': 655379,
+#  'datastore.numberReadAveraged': 655360,
+#  'datastore.numberWriteAveraged': 655361,
+#  'datastore.read': 655362,
+#  'datastore.sizeNormalizedDatastoreLatency': 655366,
+#  'datastore.totalReadLatency': 655364,
+#  'datastore.totalWriteLatency': 655365,
+#  'datastore.write': 655363,
+        655362,655363,655370,655371,655366,
 
         # disk.read/write/deviceLatency/numberRead/numberWrite
         131078, 131079, 131091, 131076, 131077,
@@ -824,16 +846,16 @@ if not error:
             ###########################
             # Datastores
             ###########################
-            datastores = {} # We also need the datastore info later in the virtualmachines section
-            if "datastore" in query_objects:
-                reply_code, reply_msg, reply_headers, datastores_response = query_server(telegram_list["datastores"])
-                elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', datastores_response)
-                for datastore, content in elements:
-                    entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
-                    datastores[datastore] = {}
-                    for name, value in entries:
-                        datastores[datastore][name] = value
+            datastores = {} # We need the datastore info later on in the virtualmachines and counter sections
+            reply_code, reply_msg, reply_headers, datastores_response = query_server(telegram_list["datastores"])
+            elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', datastores_response)
+            for datastore, content in elements:
+                entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
+                datastores[datastore] = {}
+                for name, value in entries:
+                    datastores[datastore][name] = value
 
+            if "datastore" in query_objects:
                 output("<<<esx_vsphere_datastores:sep(9)>>>")
                 for key in sorted(datastores.keys()):
                     data = datastores[key]
@@ -922,6 +944,10 @@ if not error:
                         value = counters_value[key]
                         desc  = counters_syntax[value["id"]]
                         counters_output[ (desc["group"], desc["name"], value["instance"]) ] = ( value["value"], desc["unit"] )
+
+                    # Add datastore name to counters
+                    for key, values in datastores.items():
+                        counters_output[ ("datastore", "name", key) ] = (values.get("name"), "string")
 
                     for key in sorted(counters_output.keys()):
                         value = counters_output[key]

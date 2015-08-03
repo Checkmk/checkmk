@@ -1,0 +1,12 @@
+Title: check_mail, check_mail_loop: fixed incorrect POP3 ssl setting (thanks to Bernhard Schmidt)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1438345949
+
+The logic in the POP3 WATO configuration is wrong, it sets ssl to True
+when "Use no encryption" is selected and to False when "Encrypt POP3
+communication using SSL" is selected.

@@ -81,34 +81,6 @@ check_info["citrix_state.hosting_server"] = {
 }
 
 #.
-##   .--Catalog-------------------------------------------------------------.
-##   |                   ____      _        _                               |
-##   |                  / ___|__ _| |_ __ _| | ___   __ _                   |
-##   |                 | |   / _` | __/ _` | |/ _ \ / _` |                  |
-##   |                 | |__| (_| | || (_| | | (_) | (_| |                  |
-##   |                  \____\__,_|\__\__,_|_|\___/ \__, |                  |
-##   |                                              |___/                   |
-##   '----------------------------------------------------------------------'
-#
-#def inventory_citrix_state_catalog(info):
-#    for line in info:
-#        if line[0] == "Catalog":
-#            return [ (None, None) ]
-#
-#
-#def check_citrix_state_catalog(_no_item, _no_params, info):
-#    for line in info:
-#        if line[0] == "Catalog":
-#            return 0, " ".join(line[1:])
-#
-#
-#check_info["citrix_state.catalog"] = {
-#    "inventory_function"    : inventory_citrix_state_catalog,
-#    "check_function"        : check_citrix_state_catalog,
-#    "service_description"   : "Citrix Catalog",
-#}
-#
-##.
 #   .--State---------------------------------------------------------------.
 #   |                       ____  _        _                               |
 #   |                      / ___|| |_ __ _| |_ ___                         |

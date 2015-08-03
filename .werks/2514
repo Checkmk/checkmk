@@ -1,0 +1,9 @@
+Title: check oracle_jobs: configurable service status in case of disabled jobs
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438613862
+Class: feature
+
+If a job configured in ORACLE databases is DISABLED, the status of the service can now be set to OK, WARN, CRIT or UNKNOWN.

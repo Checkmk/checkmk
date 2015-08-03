@@ -36,6 +36,22 @@
 # IODBSZ1 EXFSYS RLM$SCHDNEGACTION SCHEDULED 0 18954 TRUE 23.04.13 14:51:57,000000 +02:00 - SUCCEEDED
 # IODBSZ1 EXFSYS RLM$EVTCLEANUP SCHEDULED 0 18202 TRUE 23.04.13 13:41:48,200000 +01:00 - SUCCEEDED
 
+# new output
+# <<<oracle_jobs:sep(124)>>>
+# QS1|SYS|SM$CLEAN_AUTO_SPLIT_MERGE|SCHEDULED|1|877|TRUE|02-AUG-15 12.00.00.500000 AM EUROPE/VIENNA|-|SUCCEEDED
+# QS1|SYS|RSE$CLEAN_RECOVERABLE_SCRIPT|SCHEDULED|0|877|TRUE|02-AUG-15 12.00.00.800000 AM EUROPE/VIENNA|-|SUCCEEDED
+# QS1|SYS|FGR$AUTOPURGE_JOB|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|-|
+# QS1|SYS|BSLN_MAINTAIN_STATS_JOB|SCHEDULED|12|128|TRUE|02-AUG-15 12.00.00.600000 AM +01:00|BSLN_MAINTAIN_STATS_SCHED|SUCCEEDED
+# QS1|SYS|DRA_REEVALUATE_OPEN_FAILURES|SCHEDULED|0|156|TRUE|01-JAN-70 12.00.00.000000 AM +02:00|MAINTENANCE_WINDOW_GROUP|SUCCEEDED
+# QS1|SYS|HM_CREATE_OFFLINE_DICTIONARY|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|MAINTENANCE_WINDOW_GROUP|
+# QS1|SYS|ORA$AUTOTASK_CLEAN|SCHEDULED|0|877|TRUE|02-AUG-15 03.00.00.200000 AM EUROPE/VIENNA|DAILY_PURGE_SCHEDULE|SUCCEEDED
+# QS1|SYS|FILE_WATCHER|DISABLED||0|FALSE|01-JAN-70 12.00.00.000000 AM +02:00|FILE_WATCHER_SCHEDULE|
+# QS1|SYS|PURGE_LOG|SCHEDULED|0|877|TRUE|02-AUG-15 03.00.00.700000 AM EUROPE/VIENNA|DAILY_PURGE_SCHEDULE|SUCCEEDED
+# QS1|ORACLE_OCM|MGMT_STATS_CONFIG_JOB|DISABLED|0|2|FALSE|01-MAY-15 01.01.01.100000 AM +01:00|-|
+# QS1|ORACLE_OCM|MGMT_CONFIG_JOB|DISABLED|0|40|FALSE|08-APR-15 01.01.01.200000 AM +01:00|-|
+# QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
+
+
 
 factory_settings["oracle_jobs_defaults"] = {
     "disabled": True,
@@ -136,7 +152,7 @@ def check_oracle_jobs(item, params, info):
 
     # 01.05.13 01:01:01,000000 +01:00
     if job_nextrun.startswith("01.01.70 00:00:00"):
-        if job_schedule == "-":
+        if job_schedule == "-" and job_state != "DISABLED":
             job_nextrun = "not scheduled(!)"
             state = max(state, 1)
         else:
@@ -149,10 +165,13 @@ def check_oracle_jobs(item, params, info):
         txt = 'Job is running forever'
     else:
         txt = "Last Run Status: %s" % (job_status)
-        if job_status != "SUCCEEDED":
+        if job_status != "SUCCEEDED" and job_status != "":
             txt += "(!!)"
             state = max(state, 2)
     output.append(txt)
+
+    if job_state == "DISABLED" and "status_disabled_jobs" in params:
+        state = params["status_disabled_jobs"]
 
     return (state, ", ".join(output), perfdata)
 

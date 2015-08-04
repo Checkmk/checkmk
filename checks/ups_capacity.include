@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_ups_capacity(item, params, info):
+def check_ups_capacity(item, params, info, socomec=False):
     # To support inventories with the old version
     if type(params) is tuple:  # old format with 2 params in tuple
         warn, crit = params
@@ -39,16 +39,17 @@ def check_ups_capacity(item, params, info):
     time_on_bat, minutes_left, percent_fuel = map(int, info[0])
 
     # Check time left on battery
-    levelsinfo = ""
-    if minutes_left <= crit:
-        state = 2
-        levelsinfo = " (crit at %d min)" % cap_crit
-    elif minutes_left < warn:
-        state = 1
-        levelsinfo = " (warn at %d min)" % cap_warn
-    else:
-        state = 0
-    yield state, "%d min left on battery" % minutes_left + levelsinfo, [ ('capacity', minutes_left, warn, crit) ]
+    if not (socomec and minutes_left == -1):
+        levelsinfo = ""
+        if minutes_left <= crit:
+            state = 2
+            levelsinfo = " (crit at %d min)" % cap_crit
+        elif minutes_left < warn:
+            state = 1
+            levelsinfo = " (warn at %d min)" % cap_warn
+        else:
+            state = 0
+        yield state, "%d min left on battery" % minutes_left + levelsinfo, [ ('capacity', minutes_left, warn, crit) ]
 
     # Check percentual capacity
     levelsinfo = ""

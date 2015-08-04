@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import subprocess, base64, time, pprint, traceback
+import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
 from lib import *
 from valuespec import *
 import table, defaults, config, userdb, forms
@@ -34,27 +34,38 @@ try:
 except ImportError:
     import json
 
-def page_crashed_check():
-    site    = html.var("site")
-    host    = html.var("host")
-    service = html.var("service")
+def page_crashed(what):
+    if what == "check":
+        site    = html.var("site")
+        host    = html.var("host")
+        service = html.var("service")
 
-    tardata = get_crash_report_archive_as_string(site, host, service)
+        tardata = get_crash_report_archive_as_string(site, host, service)
+    else:
+        tardata = create_gui_crash_report()
+
     info = get_crash_info(tardata)
 
-    if info and info["crash_type"] == "gui":
-        title = _("GUI Crash Reporting")
+    if what == "gui":
+        title = _("Internal error")
     else:
         title = _("Crashed Check Reporting")
 
     html.header(title, stylesheets=["status", "pages"])
 
-    show_context_buttons(site, host, service)
+    show_context_buttons(what)
 
     if html.check_transaction():
         details = handle_report_form(tardata)
     else:
         details = {}
+
+    if what == "gui":
+        html.show_error("<b>%s:</b> %s" % (_("Internal error"), sys.exc_info()[1]))
+        html.write("<p>%s</p>" %
+                    _("An internal error occured while processing your request. "
+                     "You can report this issue to the Check_MK team to help "
+                     "fixing this issue. Please use the form below for reporting."))
 
     if info:
         warn_about_local_files(info)
@@ -65,8 +76,12 @@ def page_crashed_check():
         else:
             show_gui_crash_details(info)
     else:
+        report_url = mailto_url = html.makeuri([
+            ("subject", "Check_MK Crash Report - " + defaults.check_mk_version),
+        ], filename="mailto:" + config.crash_report_target)
         html.message(_("This crash report is in a legacy format and can not be submitted "
-                       "automatically. Please download it manually and send it to feedback@check-mk.org"))
+                       "automatically. Please download it manually and send it to <a href=\"%s\">%s</a>")
+                                % (report_url , config.crash_report_target))
         show_old_dump_trace(tardata)
 
     show_agent_output(tardata)
@@ -74,22 +89,28 @@ def page_crashed_check():
     html.footer()
 
 
-def show_context_buttons(site, host, service):
-    html.begin_context_buttons()
-    host_url = html.makeuri([("view_name", "hoststatus"),
-                             ("host",      host),
-                             ("site",      site)], filename="view.py")
-    html.context_button(_("Host status"), host_url, "status")
+def show_context_buttons(what):
+    if what == "check":
+        html.begin_context_buttons()
+        site    = html.var("site")
+        host    = html.var("host")
+        service = html.var("service")
 
-    host_url = html.makeuri([("view_name", "service"),
-                             ("host",      host),
-                             ("service",   service),
-                             ("site",      site)], filename="view.py")
-    html.context_button(_("Service status"), host_url, "status")
+        host_url = html.makeuri([("view_name", "hoststatus"),
+                                 ("host",      host),
+                                 ("site",      site)], filename="view.py")
+        html.context_button(_("Host status"), host_url, "status")
 
-    download_url = html.makeuri([], filename="download_crash_report.py")
-    html.context_button(_("Download"), download_url, "download")
-    html.end_context_buttons()
+        host_url = html.makeuri([("view_name", "service"),
+                                 ("host",      host),
+                                 ("service",   service),
+                                 ("site",      site)], filename="view.py")
+        html.context_button(_("Service status"), host_url, "status")
+
+        # FIXME: Make download possible for GUI crash reports
+        download_url = html.makeuri([], filename="download_crash_report.py")
+        html.context_button(_("Download"), download_url, "download")
+        html.end_context_buttons()
 
 
 def get_crash_report_archive_as_string(site, host, service):
@@ -185,7 +206,11 @@ def handle_report_form(tardata):
             "checkmk_support_contract.html\" target=_blank>our website</a>.")))
         html.write("</div>")
         html.write("<div id=\"fail_msg\" style=\"display:none\">")
-        html.show_error(_("Failed to send the crash report"))
+        report_url = mailto_url = html.makeuri([
+            ("subject", "Check_MK Crash Report - " + defaults.check_mk_version),
+        ], filename="mailto:" + config.crash_report_target)
+        html.show_error(_("Failed to send the crash report. Please download it manually and send it "
+                          "to <a href=\"%s\">%s</a>") % (report_url , config.crash_report_target))
         html.write("</div>")
         html.javascript("submit_crash_report('https://mathias-kettner.de/crash_report.php', " \
                                             "'%s');" % url_encoded_params)
@@ -276,7 +301,32 @@ def format_params(params):
 
 
 def show_gui_crash_details(info):
-    pass
+    details = info["details"]
+    html.write("<h2>%s</h2>" % _("Details"))
+    html.write("<table class=\"data\">")
+    html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Page"))
+    html.write("<td>%s</td></tr>" % html.attrencode(details["page"]))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("HTTP Parameters"))
+    html.write("<td>")
+    html.debug_vars(vars=details["vars"], hide_with_mouse=False)
+    html.write("</td></tr>")
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Username"))
+    html.write("<td>%s</td></tr>" % html.attrencode(details["username"]))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("User-Agent"))
+    html.write("<td>%s</td></tr>" % html.attrencode(details["user_agent"]))
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Mobile GUI"))
+    html.write("<td>%s</td></tr>" % html.attrencode(details["is_mobile"]))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("SSL"))
+    html.write("<td>%s</td></tr>" % html.attrencode(details["is_ssl_request"]))
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Language"))
+    html.write("<td>%s</td></tr>" % html.attrencode(details["language"]))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Exception"))
+    html.write("<td><pre>%s (%s)</pre></td></tr>" % (html.attrencode(details["exc_type"]),
+                                                     html.attrencode(details["exc_value"])))
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Traceback"))
+    html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_traceback(details["exc_traceback"])))
+
+    html.write("</table>")
 
 
 def show_old_dump_trace(tardata):
@@ -297,6 +347,74 @@ def show_agent_output(tardata):
         agent_output = fetch_file_from_tar(tardata, "./agent_output")
     if agent_output:
         output_box(_("Agent output"), agent_output)
+
+
+# Slightly duplicate code with modules/check_mk_base.py. Maybe create some kind of central library?
+def create_crash_dump_info_file(tar):
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+
+    crash_info = {
+        "crash_type" : "gui",
+        "time"       : time.time(),
+        "os"         : get_os_info(),
+        "version"    : defaults.check_mk_version,
+        "details"    : {
+            "page"           : html.myfile+".py",
+            "vars"           : html.vars,
+            "username"       : html.user,
+            "user_agent"     : html.get_user_agent(),
+            "is_mobile"      : html.is_mobile(),
+            "is_ssl_request" : html.is_ssl_request(),
+            "language"       : config.get_language(),
+            "exc_type"       : exc_type.__name__,
+            "exc_value"      : "%s" % exc_value,
+            "exc_traceback"  : traceback.extract_tb(exc_traceback),
+        },
+    }
+
+    content = cStringIO.StringIO()
+    content.write(json.dumps(crash_info))
+    content.seek(0)
+
+    tarinfo = tarfile.TarInfo(name="crash.info")
+    content.seek(0, os.SEEK_END)
+    tarinfo.size = content.tell()
+    content.seek(0)
+    tar.addfile(tarinfo=tarinfo, fileobj=content)
+
+
+def get_os_info():
+    if defaults.omd_root:
+        return file(defaults.omd_root+"/share/omd/distro.info").readline().split("=", 1)[1].strip()
+    elif os.path.exists("/etc/redhat-release"):
+        return file("/etc/redhat-release").readline().strip()
+    elif os.path.exists("/etc/SuSE-release"):
+        return file("/etc/SuSE-release").readline().strip()
+    else:
+        info = {}
+        for f in [ "/etc/os-release", "/etc/lsb-release" ]:
+            if os.path.exists(f):
+                for line in file(f).readlines():
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        info[k.strip()] = v.strip()
+                break
+
+        if info:
+            return info
+        else:
+            return "UNKNOWN"
+
+
+def create_gui_crash_report():
+    c = cStringIO.StringIO()
+    tar = tarfile.open(mode="w:gz", fileobj=c)
+
+    create_crash_dump_info_file(tar)
+
+    tar.close()
+    s = c.getvalue()
+    return s
 
 
 def page_download_crash_report():

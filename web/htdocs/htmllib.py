@@ -1029,38 +1029,6 @@ class html:
                 self.write("<div>%s: %.1fms</div>" % (name, duration * 1000))
             self.write('</div>')
 
-    def show_exception(self, e):
-        details = \
-              'Check_MK Version: ' + defaults.check_mk_version + '\r\n' \
-            + 'Page: ' + self.myfile + '.py\r\n\r\n' \
-            + 'GET/POST-Variables:\r\n' \
-            + '\r\n'.join([ ' '+n+'='+v for n, v in sorted(self.vars.items()) ]) + '\r\n' \
-            + '\r\n' \
-            + format_exception()
-
-        mail_body = \
-                 "Dear Check_MK Developer team,\r\n\r\n" \
-               + "I hereby send you a report of a crash in the Check_MK Web GUI:\r\n\r\n" \
-               + details + "\r\n" \
-               + "\r\n\r\nWith best regards,\r\n\r\n"
-
-        self.begin_context_buttons()
-        mailto_url = self.makeuri_contextless([
-            ("subject", "Check_MK GUI Crash Report - " + defaults.check_mk_version),
-            ("body", mail_body)], filename="mailto:feedback@check-mk.org")
-        self.context_button(_("Submit Report"), mailto_url, "email")
-        self.end_context_buttons()
-
-        self.write("<div class=error>")
-        self.write("<b>%s:</b>\n%s<br><br>" % (_('Internal error'), self.attrencode(e)))
-
-        self.begin_foldable_container("html", "exc_details", False, _("Details"))
-        self.write('<div class=log_output>')
-        self.write("<pre>%s</pre>" % self.attrencode(details))
-        self.write('</div>')
-        self.end_foldable_container()
-        self.write("</div>")
-
     def show_error(self, msg):
         self.message(msg, 'error')
 
@@ -1113,14 +1081,18 @@ class html:
     def set_focus(self, varname):
         self.focus_object = (self.form_name, varname)
 
-    def debug_vars(self, prefix=None, hide_with_mouse=True):
+    def debug_vars(self, prefix=None, hide_with_mouse=True, vars=None):
+        if not vars:
+            vars = self.vars
+
         if hide_with_mouse:
             hover = ' onmouseover="this.style.display=\'none\';"'
         else:
             hover = ""
+
         self.write('<table %s class=debug_vars>' % hover)
-        self.write("<tr><th colspan=2>POST / GET Variables</th></tr>")
-        for name, value in sorted(self.vars.items()):
+        self.write("<tr><th colspan=2>"+_("POST / GET Variables")+"</th></tr>")
+        for name, value in sorted(vars.items()):
             if not prefix or name.startswith(prefix):
                 self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
                     (self.attrencode(name), self.attrencode(value)))

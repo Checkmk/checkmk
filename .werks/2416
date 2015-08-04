@@ -1,0 +1,14 @@
+Title: agent_netapp: fixed rare problem where environmental sensor info (fan, psus, temp) were not shown
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1438688902
+
+If the netapp filers shared an even amount of disks on a shelf, the agent had problems
+to determine which filer is responsible for the shelf sensors.
+In this case it reported "no one is responsible" which lead to missing checks.
+This has been fixed. If the disks of a shelf are evenly shared between the filers the
+shelf owner is now determined by comparing the system-name with the partner-system-name.

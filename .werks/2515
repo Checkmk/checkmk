@@ -1,0 +1,9 @@
+Title: juniper_trpz_aps: check is now cluster-aware
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438688827
+Class: feature
+
+Now this check is cluster-aware and has now performance data which show the number of access points.

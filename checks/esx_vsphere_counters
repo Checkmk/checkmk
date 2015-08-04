@@ -138,7 +138,7 @@ def esx_vsphere_counters_get_item_mapping(parsed):
 
     for instance, values in parsed.get("datastore.name").items():
         if instance in map_instance_to_item and values[0][0] != "":
-            map_instance_to_item[instance] = values[0][0]
+            map_instance_to_item[instance] = values[0][0].replace(" ", "_")
     return map_instance_to_item
 
 def inventory_esx_vsphere_counters_datastoreio(parsed):

@@ -30,28 +30,32 @@
 # A firmware update on the device fixes this.
 
 # CISCO-ENTITY-SENSOR-MIB::entSensorScale
-#     1:yocto
-#     2:zepto
-#     3:atto
-#     4:femto
-#     5:pico
-#     6:nano
-#     7:micro
-#     8:milli
-#     9:units
-#     10:kilo
-#     11:mega
-#     12:giga
-#     13:tera
-#     14:exa
-#     15:peta
-#     16:zetta
-#     17:yotta
-#
+
+cisco_entity_exponents = {
+    "1"  : -24,  #     1:yocto
+    "2"  : -21,  #     2:zepto
+    "3"  : -18,  #     3:atto
+    "4"  : -15,  #     4:femto
+    "5"  : -12,  #     5:pico
+    "6"  : -9,   #     6:nano
+    "7"  : -6,   #     7:micro
+    "8"  : -3,   #     8:milli
+    "9"  : 0,    #     9:units
+    "10" : 3,    #     10:kilo
+    "11" : 6,    #     11:mega
+    "12" : 9,    #     12:giga
+    "13" : 12,   #     13:tera
+    "14" : 18,   #     14:exa
+    "15" : 15,   #     15:peta
+    "16" : 21,   #     16:zetta
+    "17" : 24,   #     17:yotta
+}
+
 # CISCO-ENTITY-SENSOR-MIB::entSensorStatus
 #     1:ok
 #     2:unavailable
 #     3:nonoperational
+
 
 def parse_cisco_temperature(info):
     description_info, state_info, levels_info, perfstuff = info
@@ -86,8 +90,9 @@ def parse_cisco_temperature(info):
             else:
                 entity_parsed[descr] = {}
                 scale = 10**int(magnitude)
-                if scalecode == '8':
-                    scale *= 1000
+
+                scale *= 10 ** (-1 * cisco_entity_exponents[scalecode])
+
                 entity_parsed[descr]['temp'] = float(value) / scale
 
                 if len(thresholds[sensor_id]) in [ 2, 4 ]:

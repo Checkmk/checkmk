@@ -1,4 +1,7 @@
 1.2.7i2p2:
+    Core & Setup:
+    * 2502 FIX: Fixed removing autochecks when a host is configured to be ping only...
+
     Checks & Agents:
     * 1276 FIX: brocade_mlx_temperature: Fixed the shown Temperature Values
     * 2490 FIX: synology_disks: treat SSDs with state "not initialized" as OK if state does not change later

@@ -1,0 +1,12 @@
+Title: Fixed removing autochecks when a host is configured to be ping only
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1438679410
+
+When a host had already discovered services assigned and was configured to be monitored
+as ping only host, by e.g. setting "no agent" in the host properties, the former
+discovered services were not removed.

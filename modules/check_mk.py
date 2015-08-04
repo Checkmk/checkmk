@@ -937,6 +937,9 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
     global g_singlehost_checks
     global g_multihost_checks
 
+    if is_ping_host(hostname):
+        skip_autochecks = True
+
     # speed up multiple lookup of same host
     if not skip_autochecks and use_cache and hostname in g_check_table_cache:
         if remove_duplicates and is_dual_host(hostname):
@@ -2546,7 +2549,7 @@ define service {
     # Inventory checks - if user has configured them.
     if inventory_check_interval \
         and not service_ignored(hostname, None, service_discovery_name) \
-        and not "ping" in tags_of_host(hostname):
+        and not "ping" in tags_of_host(hostname): # FIXME/TODO: Why not user is_ping_host()?
         outfile.write("""
 define service {
   use\t\t\t\t%s

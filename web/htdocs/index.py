@@ -311,9 +311,7 @@ def handler(req, fields = None, profiling = True):
         if plain_error:
             html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
         elif not fail_silently:
-            html.header(_("Internal error"))
-            html.show_exception(e)
-            html.footer()
+            pagehandlers["gui_crash"]()
         response_code = apache.OK
 
     release_all_locks()

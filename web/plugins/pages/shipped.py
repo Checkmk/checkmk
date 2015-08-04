@@ -110,7 +110,8 @@ pagehandlers.update({
 
    "webapi"                   : webapi.page_api,
 
-   "crashed_check"            : crash_reporting.page_crashed_check,
+   "crashed_check"            : lambda: crash_reporting.page_crashed("check"),
+   "gui_crash"                : lambda: crash_reporting.page_crashed("gui"),
    "download_crash_report"    : crash_reporting.page_download_crash_report,
 })
 

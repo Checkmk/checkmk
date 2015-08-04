@@ -77,10 +77,6 @@ netapp_objects["netapp_api_protocol"] = {
                           }
 }
 
-netapp_objects["netapp_api_version"] = {
-    "configs"      : { "system-get-info"    : [],
-                       "system-get-version" : [] }
-}
 
 netapp_objects["netapp_api_status"] = {
     "configs"      : { "diagnosis-status-get" : [] }
@@ -90,7 +86,19 @@ netapp_objects["netapp_api_cluster"] = {
     "configs"       : { "cf-status": [] },
 }
 
+def output_api_version(result):
+    shared_data["netapp_api_version"] = {"system-get-info": {}}
+    for node in result["configs"]["system-get-info"].child_get("system-info").children_get():
+        shared_data["netapp_api_version"]["system-get-info"][node.element["name"]] = node.element["content"]
+    generic_output(results, "netapp_api_version")
 
+
+netapp_objects["netapp_api_version"] = {
+    "configs"          : { "system-get-info"    : [],
+                           "system-get-version" : [] },
+    "output_function"  : output_api_version,
+    "run_last"         : True,
+}
 
 def output_disks(results):
     bay_list   = results["configs"]["storage-shelf-bay-list-info"].child_get("shelf-bay-list")
@@ -139,27 +147,42 @@ netapp_objects["netapp_api_disk"] = {
 def output_environment(results):
     channel_list = results["configs"]["storage-shelf-environment-list-info"].child_get("shelf-environ-channel-list")
 
-    # We need to iterate over each channel. There are dozens of sensors..
+    # This functions determines if the shelf belongs to the current filer
+    # Right now, the shelf is owned by the filer if it manages more disks than the partner on this shelf.
+    # In a 50:50 scenario the filer names are compared alphanumerically
     def shelf_is_mine(shelf_uid):
         mine    = 0
         partner = 0
         if "netapp_api_disk" not in shared_data:
             return True
 
-        # TODO: We had a case where shelf_uid is not contained in shared_data["netapp_api_disk"]["shelf-uids"].
-        # I (mk) do not know why.
+        cmp_name = False
         if shelf_uid not in shared_data["netapp_api_disk"]["shelf-uids"]:
-            return False
-
-        for disk in shared_data["netapp_api_disk"]["shelf-uids"][shelf_uid]:
-            state = shared_data["netapp_api_disk"]["disks"].get(disk)
-            if state == "partner":
-                partner += 1
+            # Could be an empty shelf without disks
+            cmp_name = True
+        else:
+            for disk in shared_data["netapp_api_disk"]["shelf-uids"][shelf_uid]:
+                state = shared_data["netapp_api_disk"]["disks"].get(disk)
+                if state == "partner":
+                    partner += 1
+                else:
+                    mine    += 1
+            if mine == partner:
+                cmp_name = True
             else:
-                mine    += 1
-        return mine > partner
+                return mine > partner
+
+        my_name      = shared_data.get("netapp_api_version", {}).get("system-get-info", {}).get("system-name")
+        partner_name = shared_data.get("netapp_api_version", {}).get("system-get-info", {}).get("partner-system-name")
+        if my_name and partner_name:
+            return my_name > partner_name
+        else:
+            # As fallback, we always return true
+            # This means that the shelf is owned by both filers -> The sensor will be monitored twice
+            return True
 
     environ = {}
+    # We need to iterate over each channel. There are dozens of sensors..
     for channel in channel_list.children_get():
         channel_name = channel.child_get_string("channel-name")
         shelf_list = channel.child_get("shelf-environ-shelf-list")
@@ -214,7 +237,7 @@ def output_environment(results):
 netapp_objects["netapp_api_environ"] = {
     "configs"          : { "storage-shelf-environment-list-info": [] },
     "output_function"  : output_environment,
-    "requires"         : "netapp_api_disk" # This object needs data from netapp_api_disk
+    "run_last"         : True,
 }
 
 def output_vfiler(results):
@@ -367,7 +390,7 @@ try:
     # Basic sorting is sufficient right now...
     elements = []
     for entry in netapp_objects.items():
-        if entry[1].get("requires"):
+        if entry[1].get("run_last"):
             elements.append(entry)
         else:
             elements.insert(0, entry)

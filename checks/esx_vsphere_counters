@@ -105,6 +105,7 @@ check_info['esx_vsphere_counters.diskio'] = {
    'includes'            : [ "diskstat.include" ],
 }
 
+#.
 #   .--Datastore IO--------------------------------------------------------.
 #   |        ____        _            _                   ___ ___          |
 #   |       |  _ \  __ _| |_ __ _ ___| |_ ___  _ __ ___  |_ _/ _ \         |

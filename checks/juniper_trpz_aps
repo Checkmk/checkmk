@@ -28,14 +28,20 @@ def inventory_juniper_trpz_aps(info):
     return [ (None, None) ]
 
 def check_juniper_trpz_aps(_no_item, _no_params, info):
-    aps = info[0][0]
+    node, aps = info[0]
     message = "%s access points online" % aps
-    return 0, message
+
+    # Are we a cluster?
+    if node != None:
+        message = " (on %s)" % node
+
+    return 0, message, [ ('ap_devices_total', aps) ]
 
 check_info["juniper_trpz_aps"] = {
     "check_function"        : check_juniper_trpz_aps,
     "inventory_function"    : inventory_juniper_trpz_aps,
     "service_description"   : "Access Points",
+    "node_info"             : True,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14525.3.1"),
     "snmp_info"             : (".1.3.6.1.4.1.14525.4.5.1.1",[
                                                              1, #number of Access Points

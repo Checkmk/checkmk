@@ -636,9 +636,9 @@ class LDAPUserConnector(UserConnector):
             return self._group_cache[cache_key]
 
         if not nested:
-            groups = get_direct_group_memberships(filters, filt_attr)
+            groups = self.get_direct_group_memberships(filters, filt_attr)
         else:
-            groups = get_nested_group_memberships(filters, filt_attr)
+            groups = self.get_nested_group_memberships(filters, filt_attr)
 
         self._group_cache[cache_key] = groups
         return groups
@@ -650,7 +650,7 @@ class LDAPUserConnector(UserConnector):
     # In OpenLDAP the distinguishedname is no user attribute, therefor it can not be used
     # as filter expression. We have to do one ldap query per group. Maybe, in the future,
     # we change the role sync plugin parameters to snapins to make this part a little easier.
-    def get_direct_group_memberships(filters, filt_attr):
+    def get_direct_group_memberships(self, filters, filt_attr):
         groups = {}
         filt = self.ldap_filter('groups')
         member_attr = self.member_attr().lower()
@@ -682,7 +682,7 @@ class LDAPUserConnector(UserConnector):
     # Nested querying is more complicated. We have no option to simply do a query for group objects
     # to make them resolve the memberships here. So we need to query all users with the nested
     # memberof filter to get all group memberships of that group. We need one query for each group.
-    def get_nested_group_memberships(filters, filt_attr):
+    def get_nested_group_memberships(self, filters, filt_attr):
         groups = {}
         for filter_val in filters:
             if filt_attr == 'cn':

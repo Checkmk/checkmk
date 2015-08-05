@@ -1476,10 +1476,13 @@ def create_crash_dump_info_file(crash_dir, hostname, check_name, item, params, d
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
     crash_info = {
-        "crash_type" : "check",
-        "time"       : time.time(),
-        "os"         : get_os_info(),
-        "version"    : check_mk_version,
+        "crash_type"    : "check",
+        "time"          : time.time(),
+        "os"            : get_os_info(),
+        "version"       : check_mk_version,
+        "exc_type"      : exc_type.__name__,
+        "exc_value"     : "%s" % exc_value,
+        "exc_traceback" : traceback.extract_tb(exc_traceback),
         "details"    : {
             "check_output"  : text,
             "host"          : hostname,
@@ -1487,9 +1490,6 @@ def create_crash_dump_info_file(crash_dir, hostname, check_name, item, params, d
             "check_type"    : check_name,
             "item"          : item,
             "params"        : params,
-            "exc_type"      : exc_type.__name__,
-            "exc_value"     : "%s" % exc_value,
-            "exc_traceback" : traceback.extract_tb(exc_traceback),
         },
     }
 

@@ -71,10 +71,7 @@ def page_crashed(what):
         warn_about_local_files(info)
         show_report_form(details)
         show_crash_report(info)
-        if info["crash_type"] == "check":
-            show_crashed_check_details(info)
-        else:
-            show_gui_crash_details(info)
+        show_crash_report_details(info)
     else:
         report_url = mailto_url = html.makeuri([
             ("subject", "Check_MK Crash Report - " + defaults.check_mk_version),
@@ -87,6 +84,13 @@ def page_crashed(what):
     show_agent_output(tardata)
 
     html.footer()
+
+
+def show_crash_report_details(info):
+    if info["crash_type"] == "check":
+        show_crashed_check_details(info)
+    else:
+        show_gui_crash_details(info)
 
 
 def show_context_buttons(what):

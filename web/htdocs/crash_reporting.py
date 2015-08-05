@@ -228,7 +228,7 @@ def handle_report_form(tardata):
 def warn_about_local_files(info):
     if info["crash_type"] == "check":
         files = []
-        for filepath, lineno, func, line in info["details"]["exc_traceback"]:
+        for filepath, lineno, func, line in info["exc_traceback"]:
             if "/local/" in filepath:
                 files.append(filepath)
 
@@ -270,6 +270,11 @@ def show_crash_report(info):
     html.write("<td>%s</td></tr>" % html.attrencode(info["os"]))
     html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Check_MK Version"))
     html.write("<td>%s</td></tr>" % html.attrencode(info["version"]))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Exception"))
+    html.write("<td><pre>%s (%s)</pre></td></tr>" % (html.attrencode(info["exc_type"]),
+                                                     html.attrencode(info["exc_value"])))
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Traceback"))
+    html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_traceback(info["exc_traceback"])))
     html.write("</table>")
 
 
@@ -287,11 +292,6 @@ def show_crashed_check_details(info):
     html.write("<td>%s</td></tr>" % html.attrencode(details["description"]))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Parameters"))
     html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_params(details["params"])))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Exception"))
-    html.write("<td><pre>%s (%s)</pre></td></tr>" % (html.attrencode(details["exc_type"]),
-                                                     html.attrencode(details["exc_value"])))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Traceback"))
-    html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_traceback(details["exc_traceback"])))
 
     html.write("</table>")
 
@@ -324,11 +324,6 @@ def show_gui_crash_details(info):
     html.write("<td>%s</td></tr>" % html.attrencode(details["is_ssl_request"]))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Language"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["language"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Exception"))
-    html.write("<td><pre>%s (%s)</pre></td></tr>" % (html.attrencode(details["exc_type"]),
-                                                     html.attrencode(details["exc_value"])))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Traceback"))
-    html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_traceback(details["exc_traceback"])))
 
     html.write("</table>")
 
@@ -358,10 +353,13 @@ def create_crash_dump_info_file(tar):
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
     crash_info = {
-        "crash_type" : "gui",
-        "time"       : time.time(),
-        "os"         : get_os_info(),
-        "version"    : defaults.check_mk_version,
+        "crash_type"    : "gui",
+        "time"          : time.time(),
+        "os"            : get_os_info(),
+        "version"       : defaults.check_mk_version,
+        "exc_type"      : exc_type.__name__,
+        "exc_value"     : "%s" % exc_value,
+        "exc_traceback" : traceback.extract_tb(exc_traceback),
         "details"    : {
             "page"           : html.myfile+".py",
             "vars"           : html.vars,
@@ -370,9 +368,6 @@ def create_crash_dump_info_file(tar):
             "is_mobile"      : html.is_mobile(),
             "is_ssl_request" : html.is_ssl_request(),
             "language"       : config.get_language(),
-            "exc_type"       : exc_type.__name__,
-            "exc_value"      : "%s" % exc_value,
-            "exc_traceback"  : traceback.extract_tb(exc_traceback),
         },
     }
 

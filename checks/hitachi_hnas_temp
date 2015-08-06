@@ -24,13 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def format_node_name(nodeid, sensorid):
+def format_hitachi_hnas_name(nodeid, sensorid):
     return "Node %s Sensor %s" % (nodeid, sensorid)
 
 def inventory_hitachi_hnas_temp(info):
     inventory = []
     for clusternode, id, status, temp in info:
-        inventory.append( (format_node_name(clusternode, id), None) )
+        inventory.append( (format_hitachi_hnas_name(clusternode, id), None) )
     return inventory
 
 def check_hitachi_hnas_temp(item, params, info):
@@ -44,7 +44,7 @@ def check_hitachi_hnas_temp(item, params, info):
                       )
 
     for clusternode, id, status, temp in info:
-        if format_node_name(clusternode, id) == item:
+        if format_hitachi_hnas_name(clusternode, id) == item:
             status=int(status)
             temp=int(temp)
 

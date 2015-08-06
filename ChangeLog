@@ -35,6 +35,7 @@
 
     HW/SW-Inventory:
     * 2483 FIX: win_exefiles: more gracefully handle incomplete lines, avoid execption
+    * 2454 FIX: lnx_distro: Fixed inventory for SuSE installations with patchlevel 0
 
 
 1.2.6p9:

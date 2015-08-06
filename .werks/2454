@@ -1,0 +1,9 @@
+Title: lnx_distro: Fixed inventory for SuSE installations with patchlevel 0
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.6p10
+Date: 1438863691
+Class: fix
+
+

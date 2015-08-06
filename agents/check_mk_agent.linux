@@ -430,7 +430,7 @@ fi
 
 # Status of CUPS printer queues
 if type lpstat > /dev/null 2>&1; then
-    if pgrep cups > /dev/null 2>&1; then
+    if pgrep -x cups > /dev/null 2>&1; then
         # first define a function to check cups
         function cups_queues () {
             CPRINTCONF=/etc/cups/printers.conf

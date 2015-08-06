@@ -66,7 +66,7 @@ cmctc_lcp_sensortypes = {
 
 def inventory_cmctc_lcp(info, sensortype):
     inventory = []
-    for index, typeid, status, value, description in info:
+    for index, typeid, status, value, description, high, low, warn in info:
         typeid = saveint(typeid)
         if typeid in cmctc_lcp_sensors:
             item, st = cmctc_lcp_sensors[typeid]
@@ -80,7 +80,7 @@ def inventory_cmctc_lcp(info, sensortype):
 
 def check_cmctc_lcp(item, params, info, sensortype):
     itemindex = item.split(" - ")[-1]
-    for index, typeid, statuscode, value, description in info:
+    for index, typeid, statuscode, value, description, high, low, warn in info:
         if itemindex == index:
             unit = cmctc_lcp_sensortypes[sensortype][0]
             value = int(value)
@@ -109,6 +109,38 @@ def check_cmctc_lcp(item, params, info, sensortype):
             return (status, infotext, perfdata)
     return 3, "Sensor not found in SNMP output"
 
+def inventory_cmctc_lcp_temp(info):
+    inventory = []
+    for index, typeid, status, value, description, high, low, warn in info:
+        typeid = saveint(typeid)
+        if typeid in cmctc_lcp_sensors:
+            item, st = cmctc_lcp_sensors[typeid]
+            if st == "temp":
+                if item:
+                    item = item + " - " + index
+                else:
+                    item = index
+                inventory.append((item, None))
+    return inventory
+
+def check_cmctc_lcp_temp(item, params, info):
+    itemindex = item.split(" - ")[-1]
+    for index, typeid, statuscode, value, description, high, low, warn in info:
+        if itemindex == index:
+            status = int(statuscode)
+            levels = None if high == low == warn == "0" else \
+                     (float(warn), float(high))
+            levels_low = None if high == low == warn == "0" else \
+                         (float(low), float("-inf"))  # no lower critical level specified
+            return check_temperature(float(value), params,
+                    dev_levels=levels,
+                    dev_levels_lower=levels_low,
+                    dev_status=cmctc_translate_status(status),
+                    dev_status_name="Unit: %s" % cmctc_translate_status_text(status))
+    return 3, "Sensor not found in SNMP output", []
+
+
+
 snmp_scan_functions["cmctc_lcp"] = \
     lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0")
 
@@ -121,17 +153,28 @@ snmp_info["cmctc_lcp"] = (
      "5.2.1.4", # Status
      "5.2.1.5", # Value
      "7.2.1.2", # Description
+     "5.2.1.6", # High
+     "5.2.1.7", # Low
+     "5.2.1.8", # Warn
    ]
 )
 
 
 for _s, _i in cmctc_lcp_sensortypes.items():
-    check_info['cmctc_lcp.' + _s] = {
-        "check_function" :      (lambda st: lambda item,params,info: check_cmctc_lcp(item, params, info, st))(_s),
-        "inventory_function" :  (lambda st: lambda info: inventory_cmctc_lcp(info, st))(_s),
-        "has_perfdata" :        True,
-        "service_description" : _i[1],
-    }
+    if _s != "temp":
+        check_info['cmctc_lcp.' + _s] = {
+            "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, _s),
+            "inventory_function"  : lambda info: inventory_cmctc_lcp(info, st),
+            "has_perfdata"        : True,
+            "service_description" : _i[1],
+        }
 
-# Set WATO check group for temperature checks
-check_info['cmctc_lcp.temp']['group'] = "room_temperature"
+# temperature check is standardised
+check_info['cmctc_lcp.temp'] = {
+    "check_function"      : check_cmctc_lcp_temp,
+    "inventory_function"  : inventory_cmctc_lcp_temp,
+    "has_perfdata"        : True,
+    "service_description" : "Ambient Temperature %s",
+    "group"               : "temperature",
+    "includes"            : [ "temperature.include", "cmctc.include" ]
+    }

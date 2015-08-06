@@ -1,0 +1,9 @@
+Title: winperf_phydisk: can now work in a cluster environment
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438765575
+Class: feature
+
+

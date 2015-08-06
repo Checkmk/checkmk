@@ -44,39 +44,22 @@ def parse_casa_info_temp(info):
                             }
     return data
 
-def inventory_casa_cpu_temp(info):
-    data = parse_casa_info_temp(info)
+def inventory_casa_cpu_temp(parsed):
     inventory = []
-    for key, value in data.items():
+    for key, value in parsed.items():
         if value.get("temp_value"):
             inventory.append( (key, None) )
     return inventory
 
-def check_casa_cpu_temp(item, params, info):
-    data = parse_casa_info_temp(info)
+def check_casa_cpu_temp(item, params, parsed):
     state = 0
     perfdata = []
-    if item in data:
-        if data[item]["temp_status"] == "1":
-            value  = float(data[item]["temp_value"]) / 10
-            levels_text = ""
-            error_text  = ""
-            warn, crit = None, None
-            if params:
-                warn, crit = params
-                levels_text = "(levels at %d/%d°C)" % params
-                if value > crit:
-                    state = 2
-                    error_text = "(!!)"
-                elif value > warn:
-                    state = 1
-                    error_text = "(!)"
-            perfdata.append( ("temp", value, warn, crit, 0, 100) )
-            infotext = "Temperature is %.1f °C %s%s" % (value, error_text, levels_text)
+    if item in parsed:
+        if parsed[item]["temp_status"] == "1":
+            value  = float(parsed[item]["temp_value"]) / 10
+            return check_temperature(value, params)
         else:
-            state = 2
-            infotext = "Sensor failure!"
-        return (state, infotext, perfdata)
+            return (2, "Sensor failure!", [])
     else:
         return (3, "%s not found in snmp output" % item, perfdata)
 
@@ -84,8 +67,9 @@ def check_casa_cpu_temp(item, params, info):
 check_info["casa_cpu_temp"] = {
     "check_function"        : check_casa_cpu_temp,
     "inventory_function"    : inventory_casa_cpu_temp,
-    "service_description"   : "Temperature %s",
-    "group"                 : "hw_temperature",
+    "parse_function"        : parse_casa_info_temp,
+    "service_description"   : "CPU Temperature %s",
+    "group"                 : "temperature",
     "has_perfdata"          : True,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20858.2."),
     "snmp_info"             : [
@@ -93,5 +77,6 @@ check_info["casa_cpu_temp"] = {
                ( ".1.3.6.1.2.1.99.1.1.1.4",          [ OID_END, '' ] ), # Temperatures, Value
                ( ".1.3.6.1.2.1.99.1.1.1.5",          [ OID_END, '' ] ), # Temperatures, Status
                ( ".1.3.6.1.2.1.99.1.1.1.6",          [ OID_END, '' ] ), # Temperatures, Unit
-                              ]
+                              ],
+    "imports"               : [ "temperature.include" ]
 }

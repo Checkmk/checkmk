@@ -100,9 +100,9 @@ def get_text(context):
 
     if "PARAMETER_URL_PREFIX" in context:
         s += " <i>Link: </i>"
-        s += "<a href=\"%s\">Host</a>" % get_url("host", context)
+        s += "<a href=\"%s\">Host</a>" % get_url("HOST", context)
         if context["WHAT"] != "HOST":
-            s += ", <a href=\"%s\">Service</a>" % get_url("service", context)
+            s += ", <a href=\"%s\">Service</a>" % get_url("SERVICE", context)
 
     return substitute_context(s.replace("@", context["WHAT"]), context)
 

@@ -53,7 +53,10 @@ def inv_lnx_distro(info):
 def inv_lnx_parse_suse_release(node, line):
     node["type"] = "linux"
     node["vendor"] = "SuSE"
-    version = "%s.%s" % (line[1].split()[-1], line[2].split()[-1])
+    if len(line) == 3:
+        version = "%s.%s" % (line[1].split()[-1], line[2].split()[-1])
+    else:
+        version = "%s.0" % line[1].split()[-1]
     node["version"] = version
     if version == "11.2":
         node["code_name"] = "Emerald"

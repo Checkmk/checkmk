@@ -12,6 +12,9 @@
     * 2418 FIX: agent_vsphere.pysphere: legacy agent no longer aborts when evaluating unknown ssl option...
     * 2504 FIX: cups_queues: Fixed wrong queue discovery on hosts running apcupsd
 
+    HW/SW-Inventory:
+    * 2454 FIX: lnx_distro: Fixed inventory for SuSE installations with patchlevel 0
+
 
 1.2.7i2p1:
     Core & Setup:

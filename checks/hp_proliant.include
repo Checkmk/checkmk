@@ -1,0 +1,34 @@
+hp_proliant_status_map = {
+        1: 'unknown',
+        2: 'ok',
+        3: 'degraded',
+        4: 'failed',
+        5: 'disabled'
+        }
+
+hp_proliant_status2nagios_map = {
+        'unknown': 3,
+        'other': 3,
+        'ok': 0,
+        'degraded': 2,
+        'failed': 2,
+        'disabled': 1
+        }
+
+hp_proliant_locale = {
+        1:   "other",
+        2:   "unknown",
+        3:   "system",
+        4:   "systemBoard",
+        5:   "ioBoard",
+        6:   "cpu",
+        7:   "memory",
+        8:   "storage",
+        9:   "removableMedia",
+        10:  "powerSupply",
+        11:  "ambient",
+        12:  "chassis",
+        13:  "bridgeCard",
+        }
+
+

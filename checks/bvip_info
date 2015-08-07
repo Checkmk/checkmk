@@ -25,7 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_bvip_info(info):
-    return [(None, None)]
+    if info:
+        return [(None, None)]
+    else:
+        return []
 
 def check_bvip_info(_no_item, _no_params, info):
     unit_name, unit_id = info[0]

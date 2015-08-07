@@ -29,8 +29,9 @@ bvip_util_default_levels = (90, 95)
 
 
 def inventory_bvip_util(info):
-    for name in ["Total", "Coder", "VCA"]:
-        yield name, 'bvip_util_default_levels'
+    if info:
+        for name in ["Total", "Coder", "VCA"]:
+            yield name, 'bvip_util_default_levels'
 
 
 def check_bvip_util(item, params, info):
@@ -39,6 +40,7 @@ def check_bvip_util(item, params, info):
         "Coder" : 1,
         "VCA"   : 2,
     }
+
     usage = int(info[0][items[item]])
     if item == "Total":
         usage = 100 - usage

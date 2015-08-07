@@ -28,6 +28,8 @@ bvip_poe_default_levels = (50, 60)
 
 
 def inventory_bvip_poe(info):
+    if not info:
+        return []
     if info[0][0] != '0':
         return [(None, 'bvip_poe_default_levels')]
 

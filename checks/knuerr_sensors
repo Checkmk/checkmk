@@ -34,7 +34,7 @@ def check_knuerr_sensors(item, _no_params, info):
             if state != '0':
                 return 2, "Sensor triggered"
             return 0, "Sensor not triggered"
-    return 3, "Sensor not longer found"
+    return 3, "Sensor no longer found"
 
 check_info["knuerr_sensors"] = {
     "check_function"        : check_knuerr_sensors,

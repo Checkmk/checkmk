@@ -107,7 +107,7 @@ check_info["ucs_bladecenter_fans"] = {
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-ucs_bladecenter_fans_temp_default_levels = {
+factory_settings["ucs_bladecenter_fans_temp_default_levels"] = {
     "levels" : (40, 50),
 }
 
@@ -135,6 +135,7 @@ check_info["ucs_bladecenter_fans.temp"] = {
     'inventory_function'  : inventory_ucs_bladecenter_fans_temp,
     'check_function'      : check_ucs_bladecenter_fans_temp,
     'service_description' : 'Temperature %s FAN',
+    'group'               : 'temperature',
     'has_perfdata'        : True,
     'includes'            : [ 'ucs_bladecenter.include', 'temperature.include' ],
     'default_levels_variable' :'ucs_bladecenter_fans_temp_default_levels'

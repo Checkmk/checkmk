@@ -297,13 +297,18 @@ def diskstat_convert_info(info):
     converted_disks = dict(disks.items()) # we must not mody info!
 
     # If we have information about multipathing, then remove the
-    # physical path devices from the disks array. Also rename the
-    # generic names like "dm-8" with multipath names like "SDataCoreSANsymphony_DAT07-fscl"
+    # physical path devices from the disks array. But only do this,
+    # when there are information for the multipath device available.
+    #
+    # For multipath entries: Rename the generic names like "dm-8"
+    # with multipath names like "SDataCoreSANsymphony_DAT07-fscl"
     if multipath_info:
         for uuid, multipath in multipath_info.items():
-            for path in multipath["paths"]:
-                if path in converted_disks:
-                    del converted_disks[path]
+            if multipath["device"] in converted_disks:
+                for path in multipath["paths"]:
+                    if path in converted_disks:
+                        del converted_disks[path]
+
             if multipath["device"] in converted_disks:
                 converted_disks[uuid] = converted_disks[multipath["device"]]
                 del converted_disks[multipath["device"]]

@@ -1,0 +1,11 @@
+Title: diskstat: Only excluding multipath members when infos for multipath devices are available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438848951
+Class: fix
+
+Werk #1831 made the discovery exclude member disks of multipath devices. Only do this when
+diskstat has information for the multipath devices. Otherwise there will be no Disk IO information
+at all for these devices.

@@ -1,0 +1,9 @@
+Title: ipmi: new wato rule to set ignored sensors
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1438785639
+Class: feature
+
+

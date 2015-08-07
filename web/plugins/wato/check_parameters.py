@@ -78,6 +78,28 @@ register_rule(group + "/" + subgroup_networking,
 
 
 #.
+#   .--Inventory-----------------------------------------------------------.
+#   |            ___                      _                                |
+#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
+#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
+#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
+#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
+#   |                                                   |___/              |
+#   '----------------------------------------------------------------------'
+
+register_rule(group + '/' + subgroup_inventory,
+        varname = "ipmi_ignored_sensors_wato",
+        title = _("Discovery of IPMI sensors"),
+        valuespec = ListOfStrings(
+            title = _("Ignore the following IPMI Sensors"),
+            help  = _("Names of IPMI Sensors that should be ignored during inventory. "
+                      "The pattern specified here must match exactly the begin of "
+                      "the actual sensor name (case sensitive)."),
+            orientation = "horizontal"
+            ),
+        match = 'first')
+
+#.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |
 #   |         / \   _ __  _ __ | (_) ___ __ _| |_(_) ___  _ __  ___        |

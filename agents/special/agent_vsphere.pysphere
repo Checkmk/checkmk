@@ -58,6 +58,7 @@ OPTIONS:
                                 having any assigned virtual disks.
   -p, --port port               Alternative port number (default is 443 for the https connection)
   --pysphere                    Does nothing. For compatibility with new agent.
+  --no-cert-check               Does nothing. For compatibility with new agent.
   -H, --hostname                Specify a hostname. This is neccessary if this is
                                 different from HOST. It is being used in --direct
                                 mode as the name of the host system when outputting
@@ -91,7 +92,7 @@ OPTIONS:
 short_options = 'hi:u:s:Dat:H:cPp:S:'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters', 'profile', 'pysphere', 'spaces=', 'port='
+    'dump-counters', 'profile', 'pysphere', 'spaces=', 'port=', 'no-cert-check'
 ]
 
 try:

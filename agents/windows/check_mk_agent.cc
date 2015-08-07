@@ -5114,19 +5114,27 @@ void do_unpack_plugins(char *plugin_filename) {
                 }
             }
         }
+        if (dirname == NULL)
+            filename = filepath;
 
         if (dirname != NULL) {
             char new_dir[1024];
             snprintf(new_dir, sizeof(new_dir), "%s\\%s", g_agent_directory, dirname);
             CreateDirectory(new_dir, NULL);
+            fprintf(uninstall_file, "del \"%s\\%s\\%s\"\n", g_agent_directory, dirname, filename);
         }
+        else
+            fprintf(uninstall_file, "del \"%s\\%s\"\n", g_agent_directory, filename);
 
-        // Add uninstall information for this plugin
-        fprintf(uninstall_file, "del \"%s\\%s\\%s\"\n", g_agent_directory, dirname, filename);
+        // TODO: remove custom dirs on uninstall
 
         // Write plugin
         char plugin_path[512];
-        snprintf(plugin_path, sizeof(plugin_path), "%s\\%s\\%s", g_agent_directory, dirname, filename);
+        if (dirname != NULL)
+            snprintf(plugin_path, sizeof(plugin_path), "%s\\%s\\%s", g_agent_directory, dirname, filename);
+        else
+            snprintf(plugin_path, sizeof(plugin_path), "%s\\%s", g_agent_directory, filename);
+
         FILE *plugin_file = fopen(plugin_path, "wb");
         fwrite(content, 1, content_length, plugin_file);
         fclose(plugin_file);

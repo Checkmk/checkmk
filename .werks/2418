@@ -1,0 +1,11 @@
+Title: agent_vsphere.pysphere: legacy agent no longer aborts when evaluating unknown ssl option
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1438784205
+
+The agent_vsphere.pysphere is now able to accept the option --no-cert-check, which was introduced a month ago.
+However, it is only implemented as a dummy. SSL certificate checking is not supported in the legacy version.

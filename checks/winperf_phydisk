@@ -69,27 +69,50 @@ def winperf_phydisk_convert(info):
     # an almost empty section, where the second line is missing completely
     if len(info) == 1:
         return []
-    disks = [ d.split('_')[-1] for d in info[1][3:-1] ]
-    for line in info[2:]:
-        if line[1] == '-14':
-            disk_read_bytes  = [ int(x) / 512 for x in line[2:-2] ]
-        elif line[1] == '-12':
-            disk_write_bytes = [ int(x) / 512 for x in line[2:-2] ]
-        elif line[1] == '-20':
-            disk_reads       = [ int(x) for x in line[2:-2] ]
-        elif line[1] == '-18':
-            disk_writes      = [ int(x) for x in line[2:-2] ]
-        elif line[1] == '1168': # Average Disk Read Queue Length
-            disk_readq_ctrs  = [ int(x) for x in line[2:-2] ]
-        elif line[1] == '1170': # Average Disk Read Queue Length
-            disk_writeq_ctrs = [ int(x) for x in line[2:-2] ]
 
-    # Missing columns are donted by negative values (Linux sends here latency
-    # information)
-    empty = [ -1 for x in disks ]
-    none  = [ None for x in disks ] # Used as dummy node info
+    lines = iter(info)
+    entries = []
+    current_disks           = []
+    current_read_bytes      = []
+    current_write_bytes     = []
+    current_disk_reads      = []
+    current_disk_writes     = []
+    current_diskreadq_ctrs  = []
+    current_diskwriteq_ctrs = []
 
-    return zip(none, disks, disk_read_bytes, disk_write_bytes, disk_reads, disk_writes, empty, disk_readq_ctrs, disk_writeq_ctrs)
+    def finalize_block(nodename):
+        # Missing columns are donted by negative values (Linux sends here latency information)
+        return zip([nodename for x in current_disks], current_disks, current_disk_read_bytes,
+                   current_disk_write_bytes, current_disk_reads, current_disk_writes, [-1 for x in current_disks],
+                   current_disk_readq_ctrs, current_disk_writeq_ctrs)
+
+    current_node = ""
+    try:
+        while True:
+            line = lines.next()
+            if line[2] == "instances:":
+                if current_node != "":
+                    entries.extend(finalize_block(current_node))
+                current_node = line[0]
+                current_disks = [ d.split('_')[-1] for d in line[3:-1] ]
+            elif line[1] == '-14':
+                current_disk_read_bytes  = [ int(x) / 512 for x in line[2:-2] ]
+            elif line[1] == '-12':
+                current_disk_write_bytes = [ int(x) / 512 for x in line[2:-2] ]
+            elif line[1] == '-20':
+                current_disk_reads       = [ int(x) for x in line[2:-2] ]
+            elif line[1] == '-18':
+                current_disk_writes      = [ int(x) for x in line[2:-2] ]
+            elif line[1] == '1168': # Average Disk Read Queue Length
+                current_disk_readq_ctrs  = [ int(x) for x in line[2:-2] ]
+            elif line[1] == '1170': # Average Disk Read Queue Length
+                current_disk_writeq_ctrs = [ int(x) for x in line[2:-2] ]
+    except StopIteration:
+        if current_node != "":
+            entries.extend(finalize_block(current_node))
+        pass
+
+    return entries
 
 def inventory_winperf_phydisk(info):
     return inventory_diskstat_generic(winperf_phydisk_convert(info))

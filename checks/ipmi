@@ -97,16 +97,16 @@
 ipmi_summarize = True
 ipmi_ignore_nr = False # set to True in order to ignore entries with state 'nr'
 ipmi_ignored_sensors = [] # example: [ "Power_Meter", "Virtual_Fan" ]
-ipmi_ignored_sensors_wato = [] # ignored sensors specified from wato
-
-def ignored_sensors():
-    # merge ignored sensor list specified here and those from wato
-    ignored_sensors_combined = ipmi_ignored_sensors[:]
-    if ipmi_ignored_sensors_wato:
-        ignored_sensors_combined += host_extra_conf(g_hostname, ipmi_ignored_sensors_wato)[0]
-    return ignored_sensors_combined
+inventory_ipmi_rules = []
 
 def ipmi_ignore_entry(name, state):
+    def ignored_sensors():
+        # merge ignored sensor list specified here and those from wato
+        ignored_sensors_combined = ipmi_ignored_sensors[:]
+        rules = host_extra_conf(g_hostname, inventory_ipmi_rules)[0]
+        ignored_sensors_combined += rules.get("ignored_sensors", [])
+        return ignored_sensors_combined
+
     if ipmi_ignore_nr and state == 'nr':
         return True
     for e in ignored_sensors():
@@ -115,12 +115,15 @@ def ipmi_ignore_entry(name, state):
     return False
 
 def inventory_ipmi(info):
-    if ipmi_summarize and len(info) > 0:
-        return [ ( "Summary", None ) ]
-    else:
+    rules = host_extra_conf(g_hostname, inventory_ipmi_rules)[0]
+    # the default for summarize is always true so if either configuration key has been set
+    # to false that setting was changed by the user and needs to override the other
+    if not ipmi_summarize or not rules.get("summarize", True) or len(info) == 0:
         return [ ( line[0], None )
                  for line in info
                  if not ipmi_ignore_entry(line[0], line[3]) ]
+    else:
+        return [ ( "Summary", None ) ]
 
 def check_ipmi(item, params, info):
     if item == "Summary":
@@ -128,17 +131,25 @@ def check_ipmi(item, params, info):
     else:
         return check_ipmi_detailed(item, info)
 
+def ipmi_format_message(name, val, unit):
+    text = "%s is %s" % (name, val)
+    if unit != 'unspecified':
+        text += ' %s' % unit
+    # otherwise the unit is unknown or there is none (val could represent yes/no)
+    return text
+
+
 def check_ipmi_detailed(item, info):
     for name, val, unit, status, unrec_low, crit_low, \
         warn_low, warn_high, crit_high, unrec_high in info:
         if name == item:
             perfdata = [ (name, val + unit) ] # TODO: add warn and crit levels
             if status == 'ok':
-                return (0, "%s is %s %s" % (name, val, unit), perfdata)
+                return (0, ipmi_format_message(name, val, unit), perfdata)
             elif status == 'nc':
-                return (1, "%s is %s %s" % (name, val, unit), perfdata)
+                return (1, ipmi_format_message(name, val, unit), perfdata)
             else:
-                return (2, "%s is %s %s" % (name, val, unit), perfdata)
+                return (2, ipmi_format_message(name, val, unit), perfdata)
 
 def check_ipmi_summarized(info):
     worst_status = 0
@@ -157,10 +168,8 @@ def check_ipmi_summarized(info):
         if ipmi_ignore_entry(name, status):
             continue
 
-        text = "%s is %s" % (name, val)
-        if unit != 'unspecified':
-            text += ' %s' % unit
         count += 1
+        text = ipmi_format_message(name, val, unit)
         if status == 'nc':
             worst_status = max(worst_status, 1)
             warn_texts.append(text)

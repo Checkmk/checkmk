@@ -24,10 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-stulz_temp_default_levels = (25, 28)
+
+# TODO: This device provides multiple temperature readings, currently
+#   only one is evaluated: "Return Air"
+#   Right now the items are not named according to the guideline
+
+
+factory_settings["stulz_temp_default_levels"] = {
+    "levels": (25, 28)
+}
 
 def inventory_stulz_temp(info):
-    return [ (x[0], "stulz_temp_default_levels" ) for x in info ]
+    for line in info:
+        yield line[0], {}
 
 def check_stulz_temp(item, params, info):
     for line in info:
@@ -35,13 +44,15 @@ def check_stulz_temp(item, params, info):
             return check_temperature(int(line[1])/10, params)
 
 check_info["stulz_temp"] = {
-    "check_function"        : check_stulz_temp,
-    "inventory_function"    : inventory_stulz_temp,
-    "service_description"   : "Temperature %s ",
-    "has_perfdata"          : True,
-    "group"                 : "room_temperature",
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
-    "snmp_info"             : ( ".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1.1.1192", [ OID_END, 1] ),
-    "includes"              : [ "temperature.include" ],
+    "check_function"         : check_stulz_temp,
+    "inventory_function"     : inventory_stulz_temp,
+    "service_description"    : "Temperature %s",
+    "has_perfdata"           : True,
+    "group"                  : "temperature",
+    "snmp_scan_function"     : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
+    "snmp_info"              : ( ".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1.1.1192", [ OID_END, 1] ),
+    "includes"               : [ "temperature.include" ],
+    "default_levels_variable": "stulz_temp_default_levels"
+
 }
 

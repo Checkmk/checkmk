@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION         = 1.2.6p10
+VERSION         = 1.2.6p11
 RPM_VERSION     = $(subst -,_,$(VERSION))
 NAME            = check-mk-agent
 DISTNAME       	= $(NAME)-$(VERSION)

@@ -1,3 +1,5 @@
+1.2.6p11:
+
 1.2.6p10:
     Core & Setup:
     * 2502 FIX: Fixed removing autochecks when a host is configured to be ping only...

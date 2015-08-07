@@ -25,13 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 
-hwg_temp_defaultlevels = (30, 35)
+factory_settings["hwg_temp"] = {
+    "levels": (30, 35)
+}
 
 def inventory_hwg_temp(info):
-    return [ (line[0], "hwg_temp_defaultlevels")
-              for line in info
-              if int(line[2]) != 0 and line[4] in ["1", "2", "3"] ]
-
+    for line in info:
+        if int(line[2]) != 0 and line[4] in ["1", "2", "3"]:
+            yield line[0], {}
 
 def check_hwg_temp(item, params, info):
     status_text = {

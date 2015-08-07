@@ -49,12 +49,14 @@
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-ibm_svc_enclosurestats_temperature_default_levels = (35, 40)
+factory_settings["ibm_svc_enclosurestats_temperature"] = {
+    "levels": (35, 40)
+}
 
 def inventory_ibm_svc_enclosurestats_temp(info):
     for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
         if stat_name == "temp_c":
-            yield enclosure_id, "ibm_svc_enclosurestats_temperature_default_levels"
+            yield enclosure_id, {}
 
 def check_ibm_svc_enclosurestats_temp(item, params, info):
     for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
@@ -63,12 +65,13 @@ def check_ibm_svc_enclosurestats_temp(item, params, info):
 
 
 check_info["ibm_svc_enclosurestats.temp"] = {
-    "check_function"        : check_ibm_svc_enclosurestats_temp,
-    "inventory_function"    : inventory_ibm_svc_enclosurestats_temp,
-    "service_description"   : "Temperature Enclosure %s",
-    "has_perfdata"          : True,
-    "group"                 : "room_temperature",
-    "includes"              : [ "temperature.include" ],
+    "check_function"          : check_ibm_svc_enclosurestats_temp,
+    "inventory_function"      : inventory_ibm_svc_enclosurestats_temp,
+    "service_description"     : "Temperature Enclosure %s",
+    "has_perfdata"            : True,
+    "group"                   : "temperature",
+    "includes"                : [ "temperature.include" ],
+    'default_levels_variable' : "ibm_svc_enclosurestats_temperature"
 }
 
 #.

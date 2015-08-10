@@ -308,6 +308,9 @@ def diskstat_select_disk(disks, item):
         if disks:
             num_averaged = 0
             for device, disk in disks.items():
+                if device.startswith("LVM "):
+                    continue # skip LVM devices for summary
+
                 if disk["read_throughput"] + disk["write_throughput"] > 0: # skip idle disks
                     num_averaged += 1
                     for key, value in disk.items():

@@ -30,9 +30,8 @@ def format_hp_proliant_name(line):
     return "%s (%s)" % (line[1], hp_proliant_locale[int(line[2])])
 
 def inventory_hp_proliant_temp(info):
-    if len(info) > 0:
-        return [(format_hp_proliant_name(line), None)
-                for line in info]
+    for line in info:
+        yield format_hp_proliant_name(line), None
 
 def check_hp_proliant_temp(item, params, info):
     for line in info:

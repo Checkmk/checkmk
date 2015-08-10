@@ -28,10 +28,8 @@ def format_hitachi_hnas_name(nodeid, sensorid):
     return "Node %s Sensor %s" % (nodeid, sensorid)
 
 def inventory_hitachi_hnas_temp(info):
-    inventory = []
     for clusternode, id, status, temp in info:
-        inventory.append( (format_hitachi_hnas_name(clusternode, id), None) )
-    return inventory
+        yield format_hitachi_hnas_name(clusternode, id), None
 
 def check_hitachi_hnas_temp(item, params, info):
     temp_status_map = ( ("", 3),                  # 0

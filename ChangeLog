@@ -1,4 +1,7 @@
 1.2.6p11:
+    Checks & Agents:
+    * 2455 FIX: raritan_pdu_inlet: Fixed scaling...
+
 
 1.2.6p10:
     Core & Setup:

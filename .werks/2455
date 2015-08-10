@@ -1,0 +1,10 @@
+Title: raritan_pdu_inlet: Fixed scaling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p11
+Date: 1439211601
+Class: fix
+
+Previously, the check did not take certain OIDs defining the scaling into account.
+This has been fixed.

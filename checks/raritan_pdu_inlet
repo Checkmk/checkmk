@@ -25,14 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 def parse_raritan_pdu_inlet(info):
+    precisions = dict([(oid_end, int(decimals)) for oid_end, decimals in info[0]])
     parsed = {}
-    for oid_end, availability, sensor_state, value in info:
+    for oid_end, availability, sensor_state, value in info[1]:
         if availability == '1':
             phase, sensor_type = oid_end.split('.')[2:4]
             if int(sensor_type) in raritan_pdu_sensor_types:
                 parsed.setdefault(phase, {})
                 key = raritan_pdu_sensor_types[int(sensor_type)] # get key for elphase.include
-                value = float(value)
+                value = float(value) / 10 ** precisions[oid_end]
                 if sensor_state in [ '2', '6' ]:
                     state = 2
                 elif sensor_state != '4':
@@ -55,13 +56,16 @@ check_info['raritan_pdu_inlet'] = {
   "service_description" : "Inlet Phase %s",
   "has_perfdata"        : True,
   "group"               : "el_inphase",
-  "snmp_info"           : ( #".1.3.6.1.4.1.13742.6.5.2.4.1.4.1.1",
-                            ".1.3.6.1.4.1.13742.6.5.2.4.1",
-                                     [ OID_END,
+  "snmp_info"           : [ (".1.3.6.1.4.1.13742.6.3.3.6.1",
+                                    [ OID_END,
+                                      "7", # inletPoleSensorDecimalDigits
+                            ]),
+                            (".1.3.6.1.4.1.13742.6.5.2.4.1",
+                                    [ OID_END,
                                        2, # availability
                                        3, # state
                                        4, # value
-                            ]),
+                            ])],
   "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.6",
   "includes"            : [ 'raritan_pdu_inlet.include', 'elphase.include' ]
 }

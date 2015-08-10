@@ -55,9 +55,9 @@ def check_blade_bx_temp(item, params, info):
     return (3, "Device %s not found in SNMP data" % item, [])
 
 def inventory_blade_bx_temp(info):
-    return [(line[2], None)
-            for line in info
-            if int(line[1]) != 7]
+    for line in info:
+        if int(line[1]) != 7:
+            yield line[2], None
 
 def scan_blade_bx_temp(oid):
     return "BX600" in oid(".1.3.6.1.2.1.1.1.0") \

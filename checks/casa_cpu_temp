@@ -45,11 +45,9 @@ def parse_casa_info_temp(info):
     return data
 
 def inventory_casa_cpu_temp(parsed):
-    inventory = []
     for key, value in parsed.items():
         if value.get("temp_value"):
-            inventory.append( (key, None) )
-    return inventory
+            yield key, None
 
 def check_casa_cpu_temp(item, params, parsed):
     state = 0

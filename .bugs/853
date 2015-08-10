@@ -1,0 +1,8 @@
+Title: Wato Distributed Setup: Liveproxy
+Component: wato
+State: open
+Date: 2015-08-10 15:41:06
+Targetversion: 1.2.7
+Class: nastiness
+
+The Liveproxy has lot of settings who the most of the useres never change. This settings should be hidded per default

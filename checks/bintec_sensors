@@ -81,15 +81,15 @@ check_info["bintec_sensors.fan"] = {
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
 
-bintec_sensors_temp_default_levels = (35, 40)
+factory_settings["bintec_sensors_temp"] = {
+    "levels" : (35, 40)
+}
 
 
 def inventory_bintec_sensors_temp(info):
-    inventory = []
     for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
         if sensor_type == "1":
-            inventory.append( (sensor_descr, "bintec_sensors_temp_default_levels" ) )
-    return inventory
+            yield sensor_descr, {}
 
 
 def check_bintec_sensors_temp(item, params, info):
@@ -101,14 +101,15 @@ def check_bintec_sensors_temp(item, params, info):
 
 
 check_info["bintec_sensors.temp"] = {
-    "check_function"        : check_bintec_sensors_temp,
-    "inventory_function"    : inventory_bintec_sensors_temp,
-    "service_description"   : "Temperature %s",
-    "group"                 : "hw_temperature",
-    "has_perfdata"          : True,
-    "snmp_info"             : bintec_sensors_info,
-    "snmp_scan_function"    : bintec_sensors_scan,
-    "includes"              : [ "temperature.include" ],
+    "check_function"          : check_bintec_sensors_temp,
+    "inventory_function"      : inventory_bintec_sensors_temp,
+    "service_description"     : "Temperature %s",
+    "group"                   : "temperature",
+    "has_perfdata"            : True,
+    "snmp_info"               : bintec_sensors_info,
+    "snmp_scan_function"      : bintec_sensors_scan,
+    "includes"                : [ "temperature.include" ],
+    "default_levels_variable" : "bintec_sensors_temp"
 }
 
 #.

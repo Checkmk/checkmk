@@ -202,6 +202,21 @@ For Each instId In instIds.Keys
     Loop
     RS.Close
 
+    RS.Open "SELECT session_id, wait_duration_ms, wait_type, blocking_session_id " & _
+            "FROM sys.dm_os_waiting_tasks " & _
+            "WHERE blocking_session_id <> 0 ", CONN
+    addOutput( "<<<mssql_blocked_sessions>>>" )
+    Dim session_id, wait_duration_ms, wait_type, blocking_session_id
+    Do While NOT RS.Eof
+        session_id = Trim(RS("session_id"))
+        wait_duration_ms = Trim(RS("wait_duration_ms"))
+        wait_type = Trim(RS("wait_type"))
+        blocking_session_id = Trim(RS("blocking_session_id"))
+        addOutput( session_id & " " & wait_duration_ms & " " & wait_type & " " & blocking_session_id  )
+        RS.MoveNext
+    Loop
+    RS.Close
+
     ' First only read all databases in this instance and save it to the db names dict
     RS.Open "EXEC sp_databases", CONN
     Dim x, dbName, dbNames
@@ -257,6 +272,7 @@ For Each instId In instIds.Keys
     ' which have at least one backup 
     Dim lastBackupDate
     addOutput( "<<<mssql_backup>>>" )
+    addOutput( "Blocked _Sessions" )
     For Each dbName in dbNames.Keys
         RS.open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date " & _
                 "FROM msdb.dbo.backupset " & _

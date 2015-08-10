@@ -1,0 +1,15 @@
+title: MSSQL Blocked Sessions
+agents: windows
+catalog: app/mssql
+license: GPL
+distribution: check_mk
+description:
+ This Checks lists all bolcked sessions on a  MSSQL Server. As long at least one session is blocked,
+ it will be {CRITICAL}.
+
+ This check needs the Check_MK mssql.vbs -plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+inventory:
+ One Check per Host will be created

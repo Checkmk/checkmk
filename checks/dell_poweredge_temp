@@ -41,14 +41,16 @@ def inventory_dell_poweredge_temp(info):
             yield item, None
 
 
-def check_dell_poweredge_temp(item, _no_params, info):
+def check_dell_poweredge_temp(item, params, info):
     for chassisIndex, Index, StateSettings, Status, Reading, LocationName, \
-        UpperCritical, UpperNonCritical in info:
+        UpperCritical, UpperNonCritical, LowerNonCritical, LowerCritical in info:
 
         if item == dell_poweredge_temp_makeitem(chassisIndex, Index, LocationName):
             temp = int(Reading) / 10.0
             warn = int(UpperNonCritical) / 10.0
             crit = int(UpperCritical) / 10.0
+            lower_warn = int(LowerNonCritical) / 10.0
+            lower_crit = int(LowerCritical) / 10.0
             state_table = {
                  "1" : ("other",               1),
                  "2" : ("unknown",             1),
@@ -64,7 +66,9 @@ def check_dell_poweredge_temp(item, _no_params, info):
             state_txt, state = state_table.get(Status, ("unknown state", 3))
             if state:
                 yield state, state_txt
-            yield check_temperature(temp, (warn, crit))
+            yield check_temperature(temp, params,
+                                    dev_levels=(warn, crit),
+                                    dev_levels_lower=(lower_warn, lower_crit))
 
 
 
@@ -84,13 +88,14 @@ check_info["dell_poweredge_temp"] = {
                                       #"9", # temperatureProbeUpperNonRecoverableThreshold
                                       "10", # temperatureProbeUpperCriticalThreshold
                                       "11", # temperatureProbeUpperNonCriticalThreshold
-                                      #"12", # temperatureProbeLowerNonCriticalThreshold
-                                      #"13", # temperatureProbeLowerCriticalThreshold
+                                      "12", # temperatureProbeLowerNonCriticalThreshold
+                                      "13", # temperatureProbeLowerCriticalThreshold
                                       #"14", # temperatureProbeLowerNonRecoverableThreshold
                                       #"15", # temperatureProbeCapabilities
                                       #"16", # temperatureProbeDiscreteReading
                               ]),
     "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
     "includes"              : [ "temperature.include" ],
+    "group"                 : "temperature"
 }
 

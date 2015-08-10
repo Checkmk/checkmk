@@ -16,7 +16,7 @@
 '
 ' Updated by Bastian Kuhn, 2014-03-03: Removed all caching functions cause the current agent
 ' has a native caching support. Make sure that you activate caching for this script in check_mk.ini
-' 
+'
 ' 2014-04-17: Fix by Stefan Kick to handle errors. Payed by Adaptron.
 ' -----------------------------------------------------------------------------------------
 

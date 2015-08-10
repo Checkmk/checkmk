@@ -1,0 +1,10 @@
+Title: check_ldap: It is now possible to specify a alternative Hostname
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439196083
+Class: feature
+
+This is usefull if u want to check LDAPS servers to prevent certificate problems.
+

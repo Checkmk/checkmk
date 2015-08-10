@@ -135,7 +135,7 @@ mail_receiving_params = [
                         title = _('SSL Encryption'),
                         default_value = (False, 110),
                         choices = [
-                            (True, _('Use no encryption'),
+                            (False, _('Use no encryption'),
                                 Optional(Integer(
                                     allow_empty = False,
                                     default_value = 110,
@@ -143,7 +143,7 @@ mail_receiving_params = [
                                 title = _('TCP Port'),
                                 help = _('By default the standard POP3 Port 110 is used.'),
                             )),
-                            (False, _('Encrypt POP3 communication using SSL'),
+                            (True, _('Encrypt POP3 communication using SSL'),
                                 Optional(Integer(
                                     allow_empty = False,
                                     default_value = 995,

@@ -1,7 +1,20 @@
 1.2.7i2p2:
+    Core & Setup:
+    * 2502 FIX: Fixed removing autochecks when a host is configured to be ping only...
+
     Checks & Agents:
     * 1276 FIX: brocade_mlx_temperature: Fixed the shown Temperature Values
     * 2490 FIX: synology_disks: treat SSDs with state "not initialized" as OK if state does not change later
+    * 2414 FIX: logwatch: now really ignores ignored logwatch lines...
+    * 2415 FIX: check_mail, check_mail_loop: fixed incorrect POP3 ssl setting (thanks to Bernhard Schmidt)...
+    * 2452 FIX: cisco_temperature: Fixed handling of scaling...
+    * 2416 FIX: agent_netapp: fixed rare problem where environmental sensor info (fan, psus, temp) were not shown...
+    * 2418 FIX: agent_vsphere.pysphere: legacy agent no longer aborts when evaluating unknown ssl option...
+    * 2504 FIX: cups_queues: Fixed wrong queue discovery on hosts running apcupsd
+    * 2505 FIX: Diskstat summary: Ignoring stats from LVM devices
+
+    HW/SW-Inventory:
+    * 2454 FIX: lnx_distro: Fixed inventory for SuSE installations with patchlevel 0
 
 
 1.2.7i2p1:

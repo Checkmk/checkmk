@@ -374,10 +374,6 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     if found == False and not os.path.exists(logfile):
         return (3, "log not present anymore")
 
-    # if logfile has reached maximum size, abort with critical state
-    if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
-        return (2, "unacknowledged messages have exceeded max size (%d Bytes)" % logwatch_max_filesize)
-
     # Write out new log lines (no reclassify here. It is done later in general for all logs)
     if len(loglines) > 0:
         worst = -1
@@ -458,7 +454,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
                 old_level, text = logwatch_parse_line(line)
                 level = reclassify_line(counts, patterns, text, old_level)
 
-                if old_level != level:
+                if old_level != level or level == "I":
                     reclassified = True
 
                 old_block_worst = block_worst
@@ -474,6 +470,9 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
                         state_counts[level] += 1
                     except KeyError:
                         state_counts[level] = 1
+
+                if level == "I":
+                    continue
 
                 block_lines.append(level + ' ' + text)
 
@@ -493,6 +492,10 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
                 file(logfile, 'w').write('\n'.join(reclassified_lines) + '\n')
             else:
                 os.unlink(logfile)
+
+    # if logfile has reached maximum size, abort with critical state
+    if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
+        return (2, "unacknowledged messages have exceeded max size (%d Bytes)" % logwatch_max_filesize)
 
     #
     # Render output

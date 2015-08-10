@@ -315,6 +315,10 @@ def diskstat_select_disk(disks, item):
                 for key in disk.keys():
                     if key != "node":
                         summarized.setdefault(key, 0.0)
+
+                if device.startswith("LVM "):
+                    continue # skip LVM devices for summary
+
                 if True or disk["read_throughput"] + disk["write_throughput"] > 0: # skip idle disks
                     num_averaged += 1
                     for key, value in disk.items():

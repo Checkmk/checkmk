@@ -226,9 +226,20 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
         # the OIDs and watch out for gaps we need to fill with dummy values.
         new_columns = sanitize_snmp_table_columns(columns)
 
+        # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
+        # get normal python strings. But for Check_MK we need unicode strings now.
+        # Convert them by using the standard Check_MK approach for incoming data
+        new_columns = sanitize_snmp_encoding(new_columns)
+
         info += construct_snmp_table_of_rows(new_columns)
 
     return info
+
+
+def sanitize_snmp_encoding(columns):
+    for index, column in enumerate(columns):
+        columns[index] = map(decode_incoming_string, column)
+    return columns
 
 
 def sanitize_snmp_table_columns(columns):

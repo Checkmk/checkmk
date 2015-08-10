@@ -1074,6 +1074,15 @@ register_rule(group,
                           help = _("Use LDAPS (LDAP SSLv2 method). This sets the default port number to 636"))
 
                    ),
+                   ( "hostname",
+                     TextAscii(
+                         title = _("Alternative Hostname"),
+                         help = _("Use a alternative field as Hostname in case of SSL Certificate Problems (eg. the Hostalias )"),
+                         size = 40,
+                         allow_empty = False,
+                         default_value = "$HOSTALIAS$",
+                     )
+                   ),
                    ( "version",
                      DropdownChoice(
                         title = _("LDAP Version"),

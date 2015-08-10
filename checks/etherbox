@@ -46,15 +46,13 @@ def etherbox_convert(info):
     return sensor_data
 
 def inventory_etherbox(info, req_sensor_type):
-    inventory = []
     sensor_data = etherbox_convert(info)
     for index, name, sensor_type, value in sensor_data:
         # Ignore not connected Temperature Sensors
         if sensor_type == '1' and value == '0':
             continue
         if sensor_type == req_sensor_type:
-            inventory.append( ("%s.%s" % (index, sensor_type), None) )
-    return inventory
+            yield "%s.%s" % (index, sensor_type), None
 
 def etherbox_get_sensor(item, item_type, info):
     sensor_data = etherbox_convert(info)
@@ -95,7 +93,7 @@ def check_etherbox_temp(item, params, info):
 check_info["etherbox.temp"] = {
     "check_function"        : check_etherbox_temp,
     "inventory_function"    : lambda x: inventory_etherbox(x, "1"),
-    "service_description"   : "Sensor %s",
+    "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
     "group"                 : "temperature",
     "snmp_scan_function"    : etherbox_scan,

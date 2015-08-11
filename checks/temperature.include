@@ -25,29 +25,45 @@
 # Boston, MA 02110-1301 USA.
 
 
-def fahrenheit_to_celsius(tempf):
-    return (float(tempf) - 32) * (5.0 / 9.0)
+def fahrenheit_to_celsius(tempf, relative=False):
+    if relative:
+        return float(tempf) * (5.0 / 9.0)
+    else:
+        return (float(tempf) - 32) * (5.0 / 9.0)
 
-def celsius_to_fahrenheit(tempc):
-    return (float(tempc) * (9.0 / 5.0)) + 32
+def celsius_to_fahrenheit(tempc, relative=False):
+    if relative:
+        return float(tempc) * (9.0 / 5.0)
+    else:
+        return (float(tempc) * (9.0 / 5.0)) + 32
 
-def from_celsius(tempc, unit):
+def from_celsius(tempc, unit, relative=False):
     if unit == "f":
-        return celsius_to_fahrenheit(tempc)
+        return celsius_to_fahrenheit(tempc, relative)
     elif unit == "k":
-        return tempc + 273.15
+        if relative:
+            return tempc
+        else:
+            return tempc + 273.15
     else:
         return tempc
 
-def to_celsius(reading, unit):
+def to_celsius(reading, unit, relative=False):
     if type(reading) == tuple:
-        return tuple([to_celsius(x, unit) for x in reading])
+        return tuple([to_celsius(x, unit, relative) for x in reading])
     elif unit == "f":
-        return fahrenheit_to_celsius(reading)
+        return fahrenheit_to_celsius(reading, relative)
     elif unit == "k":
-        return reading - 273.15
+        if relative:
+            return reading
+        else:
+            return reading - 273.15
     else:
         return reading
+
+def convert_unit_relative(value, in_unit, out_unit):
+    return from_celsius(to_celsius(value, in_unit, relative=True),
+                        out_unit, relative=True)
 
 # Format number according to its datatype
 def render_temp(n, output_unit):

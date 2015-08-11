@@ -24,16 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# - Hauptcheck muss irgendwas sinnvolles machen
-#   -> Dazu den jetzigen cmciii.state nehmen (.state weglassen)
-# - nachgestelltes if entfernen
-#   a and b or c --> a ? b : c, falls b nie zu False evaluieren kann!
-#   In diesem Fall: not a or c and b
-# - get() nur dann, wenn der Key wirklich optional ist
-#   Grund: -> Exception ist gewünscht
-#          -> Lesbarkeit
-
-
 
 # Example SNMP walk:
 # .1.3.6.1.4.1.2606.7.4.2.2.1.3.1.1 Temperature.DescName
@@ -166,14 +156,17 @@
 #                     'Status': 'Off',
 #                     'Value': '0'},
 
-#   .--main----------------------------------------------------------------.
-#   |                                       _                              |
-#   |                       _ __ ___   __ _(_)_ __                         |
-#   |                      | '_ ` _ \ / _` | | '_ \                        |
-#   |                      | | | | | | (_| | | | | |                       |
-#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+
+#.
+#   .--state---------------------------------------------------------------.
+#   |                            _        _                                |
+#   |                        ___| |_ __ _| |_ ___                          |
+#   |                       / __| __/ _` | __/ _ \                         |
+#   |                       \__ \ || (_| | ||  __/                         |
+#   |                       |___/\__\__,_|\__\___|                         |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def parse_cmciii_inputs(info_inputs):
     unit_items = {}
@@ -219,9 +212,32 @@ def parse_cmciii(info):
     return parse_cmciii_inputs(info[0]), parse_cmciii_units(info[1])
 
 
-# dummy parent-entry. Never contains an item
+def inventory_cmciii_state(parsed):
+    for unit_type, unit_name, state in parsed[1]:
+        yield unit_name, None
+
+
+def check_cmciii_state(item, params, parsed):
+    units = parsed[1]
+    unit_number = cmciii_get_unit_number(units, item)
+    entry = units[int(unit_number) - 1]
+    states = {
+       '1' : (3, "not available"),
+       '2' : (0, "OK"),
+       '3' : (1, "detect"),
+       '4' : (2, "lost"),
+       '5' : (0, "changed"),
+       '6' : (2, "error"),
+    }
+    status, status_text = states[entry[2]]
+
+    return status, "Unit state is %s" % status_text
+
+
 check_info['cmciii'] = {
-    "inventory_function"  : lambda info: [],
+    "check_function"      : check_cmciii_state,
+    "inventory_function"  : inventory_cmciii_state,
+    "service_description" : "State %s",
     "parse_function"      : parse_cmciii,
     "snmp_scan_function"  : lambda oid: ".1.3.6.1.4.1.2606.7" in oid(".1.3.6.1.2.1.1.2.0"),
     "includes"            : [ "cmciii.include" ],
@@ -240,6 +256,7 @@ check_info['cmciii'] = {
         ]
     ]
 }
+
 #.
 #   .--psm current---------------------------------------------------------.
 #   |                                                           _          |
@@ -492,7 +509,7 @@ def format_cmciii_temp_name(unit_name, item_name, direction=None, spot=None):
     if not item_name:
         item_name = "Ambient"
     if direction is not None:
-        location = " %s %s" % (direction, spot if spot else "")
+        location = " %s %s" % (direction, spot or "")
     else:
         location = ""
     result = "%s %s%s" % (item_name, unit_name, location)
@@ -535,29 +552,45 @@ def check_cmciii_temp(item, params, unit_items):
     unit_name = None
 
     for (unit, item_name), candidate_entry in entries.iteritems():
-        unit_type, unit_name = units[int(unit)-1][0:2]
+        unit_type, unit_name = units[int(unit) - 1][0:2]
         if item_name.endswith("Temperature") and "Value" in candidate_entry.keys():
             if format_cmciii_temp_name(unit_name, item_name) == item:
                 entry = candidate_entry
                 break
-    if not entry:
-        return 3, "No such temperature data found"
+    if entry:
+        status = entry['Status']
+        offset = entry.get('Offset')  # Offset is indeed optional
 
-    status = entry.get('Status')
-    offset = entry.get('Offset')
+        value, t_unit = parse_cmciii_temp(entry['Value'])
+        highalarm = parse_cmciii_temp(entry['SetPtHighAlarm'])[0]
+        highwarning = parse_cmciii_temp(entry['SetPtHighWarning'])[0]
+        lowalarm = parse_cmciii_temp(entry['SetPtLowAlarm'])[0]
+        lowwarning = parse_cmciii_temp(entry['SetPtLowWarning'])[0]
 
-    value, t_unit = parse_cmciii_temp(entry['Value'])
-    highalarm = parse_cmciii_temp(entry['SetPtHighAlarm'])[0]
-    highwarning = parse_cmciii_temp(entry['SetPtHighWarning'])[0]
-    lowalarm = parse_cmciii_temp(entry['SetPtLowAlarm'])[0]
-    lowwarning = parse_cmciii_temp(entry['SetPtLowWarning'])[0]
+        status, message, perfdata = check_temperature(value, params,
+                dev_unit=t_unit.lower(),
+                dev_levels=(highwarning, highalarm),
+                dev_levels_lower=(lowwarning, lowalarm),
+                dev_status=translate_cmciii_temp_status(status),
+                dev_status_name="Unit: %s" % status)
 
-    return check_temperature(value, params,
-            dev_unit=t_unit.lower(),
-            dev_levels=(highwarning, highalarm),
-            dev_levels_lower=(lowwarning, lowalarm),
-            dev_status=translate_cmciii_temp_status(status),
-            dev_status_name="Unit: %s" % status)
+        if offset:
+            # as far as I understand it the offset is a user-configurable
+            # value that was already applied to the temperature reading we
+            # received.
+            # Therefore, to get the actual temperature reading, the calculation
+            # would be: real_reading = value - offset_value
+            offset_value, offset_unit = parse_cmciii_temp(offset)
+            offset_value = float(offset_value)
+            # ignore zero-offsets
+            if abs(offset_value) > 0.001:
+                in_unit = offset_unit.lower()
+                out_unit = params.get("output_unit", "c")
+                message += " ; Offset: %.1f %s" %\
+                    (convert_unit_relative(offset_value, in_unit, out_unit),
+                     temp_unitsym[out_unit])
+
+        return status, message, perfdata
 
 
 check_info['cmciii.temp'] = {
@@ -586,37 +619,44 @@ def inventory_cmciii_temp_in_out(parsed):
 def check_cmciii_temp_in_out(item, params, parsed):
     unit_items, units = parsed
 
-    direction = " Out" in item and "Out" or "In"
-    spot = "Bottom" if "Bottom" in item else \
-           "Top" if "Top" in item  else "Middle"
+    if " Out" in item:
+        direction = "Out"
+    else:
+        direction = "In"
+
+    if "Bottom" in item:
+        spot = "Bottom"
+    elif "Top" in item:
+        spot = "Top"
+    else:
+        spot = "Middle"
 
     entry = None
     unit_name = None
 
     for (unit, item_name), candidate_entry in unit_items.iteritems():
-        unit_type, unit_name = units[int(unit)-1][0:2]
+        unit_type, unit_name = units[int(unit) - 1][0:2]
         if item_name.endswith("Temperature"):
             if format_cmciii_temp_name(unit_name, item_name, direction, spot) == item:
                 entry = candidate_entry
                 break
-    if not entry:
-        return
 
-    status = entry.get('Status')
+    if entry:
+        status = entry['Status']
 
-    value, t_unit = parse_cmciii_temp(entry.get("%s-%s" % (direction, spot[:3])))
-    highalarm = parse_cmciii_temp(entry.get(direction, {}).get('SetPtHighAlarm', '1000.0 \xb0C'))[0]
-    highwarning = parse_cmciii_temp(entry.get(direction, {}).get('SetPtHighWarning', '1000.0 \xb0C'))[0]
-    lowalarm = parse_cmciii_temp(entry.get(direction, {}).get('SetPtLowAlarm', '-1000.0 \xb0C'))[0]
-    lowwarning = parse_cmciii_temp(entry.get(direction, {}).get('SetPtLowWarning', '-1000.0 \xb0C'))[0]
+        value, t_unit = parse_cmciii_temp(entry["%s-%s" % (direction, spot[:3])])
+        highalarm     = parse_cmciii_temp(entry[direction]['SetPtHighAlarm'])[0]
+        highwarning   = parse_cmciii_temp(entry[direction]['SetPtHighWarning'])[0]
+        lowalarm      = parse_cmciii_temp(entry[direction]['SetPtLowAlarm'])[0]
+        lowwarning    = parse_cmciii_temp(entry[direction]['SetPtLowWarning'])[0]
 
-    return check_temperature(value,
-            params,
-            dev_unit=t_unit.lower(),
-            dev_levels=(highwarning, highalarm),
-            dev_levels_lower=(lowwarning, lowalarm),
-            dev_status=translate_cmciii_temp_status(status),
-            dev_status_name="Unit: %s" % status)
+        return check_temperature(value,
+                params,
+                dev_unit=t_unit.lower(),
+                dev_levels=(highwarning, highalarm),
+                dev_levels_lower=(lowwarning, lowalarm),
+                dev_status=translate_cmciii_temp_status(status),
+                dev_status_name="Unit: %s" % status)
 
 check_info['cmciii.temp_in_out'] = {
     "check_function"      : check_cmciii_temp_in_out,
@@ -725,47 +765,6 @@ def check_cmciii_sensor(item, params, parsed):
 check_info['cmciii.sensor'] = {
     "check_function"      : check_cmciii_sensor,
     "inventory_function"  : inventory_cmciii_sensor,
-    "service_description" : "%s",
-}
-
-#.
-#   .--state---------------------------------------------------------------.
-#   |                            _        _                                |
-#   |                        ___| |_ __ _| |_ ___                          |
-#   |                       / __| __/ _` | __/ _ \                         |
-#   |                       \__ \ || (_| | ||  __/                         |
-#   |                       |___/\__\__,_|\__\___|                         |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-def inventory_cmciii_state(parsed):
-    inventory = []
-    units = parsed[1]
-    for unit_type, unit_name, state in units:
-        inventory.append((unit_name + " State", None))
-    return inventory
-
-def check_cmciii_state(item, params, parsed):
-    unit_name = item.replace(' State','')
-    units = parsed[1]
-    unit_number = cmciii_get_unit_number(units, unit_name)
-    entry = units[int(unit_number) - 1]
-    states = {
-       '1' : (3, "not available"),
-       '2' : (0, "OK"),
-       '3' : (1, "detect"),
-       '4' : (2, "lost"),
-       '5' : (0, "changed"),
-       '6' : (2, "error"),
-    }
-    status, status_text = states[entry[2]]
-
-    return status, "Device state is %s" % status_text
-
-
-check_info['cmciii.state'] = {
-    "check_function"      : check_cmciii_state,
-    "inventory_function"  : inventory_cmciii_state,
     "service_description" : "%s",
 }
 

@@ -270,10 +270,10 @@ def show_crash_report(info):
     html.write("<td>%s</td></tr>" % html.attrencode(info["os"]))
     html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Check_MK Version"))
     html.write("<td>%s</td></tr>" % html.attrencode(info["version"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Exception"))
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Exception"))
     html.write("<td><pre>%s (%s)</pre></td></tr>" % (html.attrencode(info["exc_type"]),
                                                      html.attrencode(info["exc_value"])))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Traceback"))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Traceback"))
     html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_traceback(info["exc_traceback"])))
     html.write("</table>")
 

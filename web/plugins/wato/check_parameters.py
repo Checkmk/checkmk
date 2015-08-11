@@ -88,16 +88,35 @@ register_rule(group + "/" + subgroup_networking,
 #   '----------------------------------------------------------------------'
 
 register_rule(group + '/' + subgroup_inventory,
-        varname = "ipmi_ignored_sensors_wato",
-        title = _("Discovery of IPMI sensors"),
-        valuespec = ListOfStrings(
-            title = _("Ignore the following IPMI Sensors"),
-            help  = _("Names of IPMI Sensors that should be ignored during inventory. "
-                      "The pattern specified here must match exactly the begin of "
-                      "the actual sensor name (case sensitive)."),
-            orientation = "horizontal"
-            ),
-        match = 'first')
+    varname = "inventory_ipmi_rules",
+    title = _("Discovery of IPMI sensors"),
+    valuespec = Dictionary(
+        show_titles = True,
+        elements = [
+            ( "ignored_sensors",
+                ListOfStrings(
+                    title = _("Ignore the following IPMI Sensors"),
+                    help  = _("Names of IPMI Sensors that should be ignored during inventory "
+                              "and when summarizing."
+                              "The pattern specified here must match exactly the beginning of "
+                              "the actual sensor name (case sensitive)."),
+                    orientation = "horizontal"
+                    )
+                ),
+            ( "summarize",
+                Checkbox(
+                    title = _("Display only a summary of all sensors"),
+                    label = _("Summarize"),
+                    help  = _("If active, only a single summary item is displayed. The summary "
+                              "will explicitly mention sensors in warn/crit state but the "
+                              "sensors that are ok are aggregated."),
+                    default_value = True
+                    )
+                )
+            ]
+        ),
+    match = 'first'
+)
 
 #.
 #   .--Applications--------------------------------------------------------.

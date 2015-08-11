@@ -1,4 +1,4 @@
-Title: ipmi: new wato rule to set ignored sensors
+Title: ipmi: new wato rule to set ignored sensors and activate/deactivate summarizing
 Level: 1
 Component: checks
 Compatible: compat

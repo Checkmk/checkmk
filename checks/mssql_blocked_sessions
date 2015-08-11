@@ -1,0 +1,50 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+#
+# session_id, wait_duration_ms, wait_type, blocking_session_id
+# <<<mssql_blocked_sessions>>>
+# Blocked _Sessions
+# 119 232292187 LCK_M_U 75
+# 76 221526672 LCK_M_U 115
+
+
+def inventory_mssql_blocked_sessions(info):
+    return [(None, None)]
+
+def check_mssql_blocked_sessions(item, params, info):
+    if len(info) > 1:
+        for session_id, wait_duration_ms, wait_type, blocking_session_id in  info[1:]:
+            yield 2, "Session %s blocked by %s (Wait %s ms, Type: %s)" % \
+                    ( session_id, blocking_session_id, wait_duration_ms, wait_type )
+    else:
+        yield 0, "No blocked sessions"
+
+
+check_info['mssql_blocked_sessions'] = {
+    'check_function'            : check_mssql_blocked_sessions,
+    'inventory_function'        : inventory_mssql_blocked_sessions,
+    'service_description'       : "MSSQL Blocked Sessions",
+}

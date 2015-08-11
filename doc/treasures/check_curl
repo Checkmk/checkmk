@@ -113,12 +113,20 @@ else
   PROXYOPTIONS=
 fi
 
+if [ "$1" = -NTLM ]
+then
+  NTLM=" --ntlm --negotiate -u $2 "
+  shift
+  shift
+else
+    NTLM=
+fi
 URL=$1
 PURL=$(echo $URL | awk -F "/" '{print $1"//"$3}')
 
 if [ -z "$URL" ]
 then
-    echo "Usage: [-P PROXYUSER:PROXYPASS PROXYURL] URL [SEARCHTEXT]"
+    echo "Usage: [-P PROXYUSER:PROXYPASS PROXYURL] [-NTLM NTLM_USER:NTLM_PASSWORD] URL [SEARCHTEXT]"
     exit 3
 fi
 
@@ -127,11 +135,10 @@ CONTENT=$2
 # CURL="curl -A """Mozilla/4.0 (compatible; MSIE 6.0;)""" --silent --fail --insecure $PROXYOPTIONS $URL"
 # CURL="curl -A Mozilla/4.0 (compatible; MSIE 6.0;) --silent --fail --insecure $PROXYOPTIONS $URL"
 # CURL="curl  --silent --fail --insecure $PROXYOPTIONS $URL"
-
 if [ "$CONTENT" ]
 then
     # if $CURL 2>&1 | fgrep -q "$CONTENT"
-    if curl -A "Mozilla/4.0 (compatible; MSIE 6.0;)" --silent --fail --insecure $PROXYOPTIONS $URL 2>&1 | fgrep -q "$CONTENT"
+    if curl $NTLM -A "Mozilla/4.0 (compatible; MSIE 6.0;)" --silent --fail --insecure $PROXYOPTIONS $URL 2>&1 | fgrep -q "$CONTENT"
     then
         echo "OK - $PURL found '$CONTENT' in answer"
         exit 0
@@ -149,7 +156,7 @@ then
     fi
 else
     # OUTPUT=$($CURL >/dev/null 2>&1 | head -n 1 ; exit ${PIPESTATUS[0]})
-    OUTPUT=$(curl -A "Mozilla/4.0 (compatible; MSIE 6.0;)" --silent --fail --insecure $PROXYOPTIONS $URL >/dev/null 2>&1 | head -n 1 ; exit ${PIPESTATUS[0]})
+    OUTPUT=$(curl $NTLM -A "Mozilla/4.0 (compatible; MSIE 6.0;)" --silent --fail --insecure $PROXYOPTIONS $URL >/dev/null 2>&1 | head -n 1 ; exit ${PIPESTATUS[0]})
     exitcode=$?
     if [ "$exitcode" = 0 ]
     then

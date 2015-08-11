@@ -1,0 +1,9 @@
+Title: mssql_blocked_sessions: New Check to show blocked MSSQL Sessions
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439210600
+Class: feature
+
+

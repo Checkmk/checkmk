@@ -1806,7 +1806,7 @@ class EventServer:
     def hash_rule(self, rule):
         # Construct rule hash for faster execution.
         facility = rule.get("match_facility")
-        if facility:
+        if facility and not rule.get("invert_matching"):
             self.hash_rule_facility(rule, facility)
         else:
             for facility in range(32): # all syslog facilities
@@ -1825,6 +1825,9 @@ class EventServer:
                 needed_prios = [True] * 8 # needed to check this rule for all event priorities
             elif "match_ok" in rule: # a cancelling rule where all priorities cancel
                 needed_prios = [True] * 8 # needed to check this rule for all event priorities
+
+        if rule.get("invert_matching"):
+            needed_prios = [True] * 8
 
         prio_hash = self._rule_hash.setdefault(facility, {})
         for prio, need in enumerate(needed_prios):
@@ -1871,15 +1874,17 @@ class EventServer:
 
         skip_pack = None
         for rule in rule_candidates:
-            if skip_pack and rule["pack"] != skip_pack:
+            if skip_pack and rule["pack"] == skip_pack:
                 continue # still in the rule pack that we want to skip
             skip_pack = None # new pack, reset skipping
 
             try:
                 result = self.event_rule_matches(rule, event)
+
             except Exception:
                 log('  Exception during matching:\n%s' % format_exception())
                 result = False
+
             if result:
                 g_perfcounters.count("rule_hits")
                 cancelling, groups = result
@@ -1897,7 +1902,8 @@ class EventServer:
                     if rule["drop"] == "skip_pack":
                         skip_pack = rule["pack"]
                         if g_config["debug_rules"]:
-                            log("  skipping this rule pack")
+                            log("  skipping this rule pack (%s)" % skip_pack)
+                        continue
                     else:
                         g_perfcounters.count("drops")
                         return
@@ -1978,90 +1984,104 @@ class EventServer:
     def event_rule_matches(self, rule, event):
         g_perfcounters.count("rule_tries")
         with lock_configuration:
-            debug = g_config["debug_rules"]
-            if debug:
-                log("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
-                log("  Text:   %s" % event["text"])
-                log("  Syslog: %d.%d" % (event["facility"], event["priority"]))
-                log("  Host:   %s" % event["host"])
-
-            if False == match(rule.get("match_host"), event["host"], complete=True):
-                if debug:
-                    log("  did not match because of wrong host '%s' (need '%s')" %
-                            (event["host"], pattern(rule.get("match_host"))))
-                return False
-
-            if False == match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
-                if debug:
-                    log("  did not match because of wrong source IP address '%s' (need '%s')" % (event["ipaddress"], rule.get("match_ipaddress")))
-                return False
-
-            if False == match(rule.get("match_application"), event["application"], complete=False):
-                if debug:
-                    log("  did not match because of wrong application '%s' (need '%s')" %
-                            (event["application"], pattern(rule.get("match_application"))))
-                return False
-
-            if "match_facility" in rule and event["facility"] != rule["match_facility"]:
-                if debug:
-                    log("  did not match because of wrong syslog facility")
-                return False
-
-            if "match_timeperiod" in rule and not check_timeperiod(rule["match_timeperiod"]):
-                if debug:
-                    log("  did not match, because timeperiod %s is not active" % rule["match_timeperiod"])
-                return False
-
-            if "match_ok" in rule or "cancel_priority" in rule:
-                if "cancel_priority" in rule:
-                    up, lo = rule["cancel_priority"]
-                    cp = event["priority"] >= lo and event["priority"] <= up
+            result = self.event_rule_matches_non_inverted(rule, event)
+            if rule.get("invert_matching"):
+                if result == False:
+                    result = False, ()
+                    if g_config["debug_rules"]:
+                        log("  Rule would not match, but due to inverted matching does.")
                 else:
-                    cp = True
+                    result = False
+                    if g_config["debug_rules"]:
+                        log("  Rule would match, but due to inverted matching does not.")
 
-                match_groups = match(rule.get("match_ok", ""), event["text"], complete = False)
-                if match_groups != False and cp:
-                    if debug:
-                        log("  found cancelling event")
-                    if match_groups == True:
-                        match_groups = ()
-                    return True, match_groups
+            return result
 
-            match_groups = match(rule.get("match"), event["text"], complete = False)
-            if match_groups == False:
+    def event_rule_matches_non_inverted(self, rule, event):
+        debug = g_config["debug_rules"]
+        if debug:
+            log("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
+            log("  Text:   %s" % event["text"])
+            log("  Syslog: %d.%d" % (event["facility"], event["priority"]))
+            log("  Host:   %s" % event["host"])
+
+        if False == match(rule.get("match_host"), event["host"], complete=True):
+            if debug:
+                log("  did not match because of wrong host '%s' (need '%s')" %
+                        (event["host"], pattern(rule.get("match_host"))))
+            return False
+
+        if False == match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
+            if debug:
+                log("  did not match because of wrong source IP address '%s' (need '%s')" % (event["ipaddress"], rule.get("match_ipaddress")))
+            return False
+
+        if False == match(rule.get("match_application"), event["application"], complete=False):
+            if debug:
+                log("  did not match because of wrong application '%s' (need '%s')" %
+                        (event["application"], pattern(rule.get("match_application"))))
+            return False
+
+        if "match_facility" in rule and event["facility"] != rule["match_facility"]:
+            if debug:
+                log("  did not match because of wrong syslog facility")
+            return False
+
+        if "match_timeperiod" in rule and not check_timeperiod(rule["match_timeperiod"]):
+            if debug:
+                log("  did not match, because timeperiod %s is not active" % rule["match_timeperiod"])
+            return False
+
+        if "match_ok" in rule or "cancel_priority" in rule:
+            if "cancel_priority" in rule:
+                up, lo = rule["cancel_priority"]
+                cp = event["priority"] >= lo and event["priority"] <= up
+            else:
+                cp = True
+
+            match_groups = match(rule.get("match_ok", ""), event["text"], complete = False)
+            if match_groups != False and cp:
                 if debug:
-                    log("  did not match because of wrong text")
+                    log("  found cancelling event")
+                if match_groups == True:
+                    match_groups = ()
+                return True, match_groups
+
+        match_groups = match(rule.get("match"), event["text"], complete = False)
+        if match_groups == False:
+            if debug:
+                log("  did not match because of wrong text")
+            return False
+
+        if "match_priority" in rule:
+            prio_from, prio_to = rule["match_priority"]
+            if prio_from > prio_to:
+                prio_to, prio_from = prio_from, prio_to
+            p = event["priority"]
+            if p < prio_from or p > prio_to:
+                if debug:
+                    log("  did not match because of wrong syslog priority")
                 return False
 
-            if "match_priority" in rule:
-                prio_from, prio_to = rule["match_priority"]
-                if prio_from > prio_to:
-                    prio_to, prio_from = prio_from, prio_to
-                p = event["priority"]
-                if p < prio_from or p > prio_to:
-                    if debug:
-                        log("  did not match because of wrong syslog priority")
-                    return False
+        if "match_sl" in rule:
+            sl_from, sl_to = rule["match_sl"]
+            if sl_from > sl_to:
+                sl_to, sl_from = sl_from, sl_to
+            p = event.get("sl")
+            if p == None:
+                if debug:
+                    log("  did not match, because no service level is set in event")
+                return False
 
-            if "match_sl" in rule:
-                sl_from, sl_to = rule["match_sl"]
-                if sl_from > sl_to:
-                    sl_to, sl_from = sl_from, sl_to
-                p = event.get("sl")
-                if p == None:
-                    if debug:
-                        log("  did not match, because no service level is set in event")
-                    return False
+            if p < sl_from or p > sl_to:
+                if debug:
+                    log("  did not match because of wrong service level %d (need %d..%d)" %
+                            (p, sl_from, sl_to),)
+                return False
 
-                if p < sl_from or p > sl_to:
-                    if debug:
-                        log("  did not match because of wrong service level %d (need %d..%d)" %
-                                (p, sl_from, sl_to),)
-                    return False
-
-            if match_groups == True:
-                match_groups = () # no matching groups
-            return False, match_groups
+        if match_groups == True:
+            match_groups = () # no matching groups
+        return False, match_groups
 
     # Rewrite texts and compute other fields in the event
     def rewrite_event(self, rule, event, groups):

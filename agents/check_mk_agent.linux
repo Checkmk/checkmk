@@ -64,6 +64,17 @@ else
     exec </dev/null 2>/dev/null
 fi
 
+# Prefer (relatively) new /usr/bin/timeout from coreutils against
+# our shipped waitmax. waitmax is statically linked and crashes on
+# some Ubuntu versions recently.
+if type timeout >/dev/null 2>&1 ; then
+    function waitmax () {
+        timeout "$@"
+    }
+    export -f waitmax
+fi
+
+
 # Runs a command asynchronous by use of a cache file. Usage:
 # run_cached [-s] NAME MAXAGE
 #   -s creates the section header <<<$NAME>>>
@@ -254,8 +265,6 @@ fi
 
 # Number of TCP connections in the various states
 echo '<<<tcp_conn_stats>>>'
-# waitmax 10 netstat -nt | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
-# New implementation: netstat is very slow for large TCP tables
 cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }'
 
 # Linux Multipathing

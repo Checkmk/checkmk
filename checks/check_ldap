@@ -30,7 +30,7 @@ def check_ldap_arguments(params):
     if "hostname" in settings:
         args = ' -H %s' % quote_shell_string(settings["hostname"])
     else:
-        args = ' -H $HOSTADDRESS'
+        args = ' -H $HOSTADDRESS$'
 
     args += ' -b %s' % quote_shell_string(basedn)
 

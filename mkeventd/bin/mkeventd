@@ -1868,15 +1868,17 @@ class EventServer:
 
         skip_pack = None
         for rule in rule_candidates:
-            if skip_pack and rule["pack"] != skip_pack:
+            if skip_pack and rule["pack"] == skip_pack:
                 continue # still in the rule pack that we want to skip
             skip_pack = None # new pack, reset skipping
 
             try:
                 result = self.event_rule_matches(rule, event)
+
             except Exception:
                 log('  Exception during matching:\n%s' % format_exception())
                 result = False
+
             if result:
                 g_perfcounters.count("rule_hits")
                 cancelling, groups = result
@@ -1894,7 +1896,8 @@ class EventServer:
                     if rule["drop"] == "skip_pack":
                         skip_pack = rule["pack"]
                         if g_config["debug_rules"]:
-                            log("  skipping this rule pack")
+                            log("  skipping this rule pack (%s)" % skip_pack)
+                        continue
                     else:
                         g_perfcounters.count("drops")
                         return

@@ -1444,14 +1444,17 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 # This is put into a directory per service. The content is then
 # put into a tarball, base64 encoded and put into the long output
 # of the check :-)
-def create_crash_dump(hostname, check_name, item, params, description, info):
+def create_crash_dump(hostname, check_type, item, params, description, info):
     text = "check failed - please submit a crash report!"
     try:
         crash_dir = var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
         prepare_crash_dump_directory(crash_dir)
 
-        create_crash_dump_info_file(crash_dir, hostname, check_name, item, params, description, info, text)
-        write_crash_dump_agent_output(crash_dir, hostname)
+        create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text)
+        if check_uses_snmp(check_type):
+            write_crash_dump_snmp_info(crash_dir, hostname, check_type)
+        else:
+            write_crash_dump_agent_output(crash_dir, hostname)
 
         text += "\n" + "Crash dump:\n" + pack_crash_dump(crash_dir) + "\n"
     except:
@@ -1472,7 +1475,7 @@ def prepare_crash_dump_directory(crash_dir):
             pass
 
 
-def create_crash_dump_info_file(crash_dir, hostname, check_name, item, params, description, info, text):
+def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
     crash_info = {
@@ -1487,9 +1490,10 @@ def create_crash_dump_info_file(crash_dir, hostname, check_name, item, params, d
             "check_output"  : text,
             "host"          : hostname,
             "description"   : description,
-            "check_type"    : check_name,
+            "check_type"    : check_type,
             "item"          : item,
             "params"        : params,
+            "uses_snmp"     : check_uses_snmp(check_type),
         },
     }
 
@@ -1522,6 +1526,12 @@ def get_os_info():
             return info
         else:
             return "UNKNOWN"
+
+
+def write_crash_dump_snmp_info(crash_dir, hostname, check_type):
+    cachefile = tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
+    if os.path.exists(cachefile):
+        file(crash_dir + "/snmp_info", "w").write(file(cachefile).read())
 
 
 def write_crash_dump_agent_output(crash_dir, hostname):

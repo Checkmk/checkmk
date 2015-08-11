@@ -24,30 +24,54 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-nvidia_temp_default_levels = (60, 65, 90, 95)
 
-def inventory_nvidia_temp(info):
-    return [ (l[0].strip(":"), "nvidia_temp_default_levels")
-            for l in info
-            if l[0].strip(":").lower().endswith("temp") ]
+factory_settings["nvidia_temp"] = {
+    "levels": (60, 65)
+}
+
+factory_settings["nvidia_temp_core"] = {
+    "levels": (90, 95)
+}
+
+def format_nvidia_name(identifier):
+    identifier = identifier.replace("Temp", "")
+    if identifier == "GPUCore":
+        return "GPU NVIDIA"
+    else:
+        # afaik temperature sensors can be GPU or Board, maybe memory
+        return "System NVIDIA %s" % identifier
+
+def inventory_nvidia_temp(core, info):
+    for line in info:
+        line_san = line[0].strip(":")
+        if line_san.lower().endswith("temp"):
+            if core == (line_san == "GPUCoreTemp"):
+                yield format_nvidia_name(line_san), {}
 
 def check_nvidia_temp(item, params, info):
-    for l in info:
-        if l[0].strip(":") == item:
-            temp = int(l[1])
-            if item == "GPUCoreTemp":
-                warn, crit = params[2:4]
-            else:
-                warn, crit = params[0:2]
-
-            return check_temperature(temp, (warn, crit))
+    for line in info:
+        if format_nvidia_name(line[0].strip(":")) == item:
+            return check_temperature(int(line[1]), params)
 
 check_info["nvidia.temp"] = {
-    'check_function':          check_nvidia_temp,
-    'inventory_function':      inventory_nvidia_temp,
-    'service_description':     'Temperature NVIDIA %s',
-    'has_perfdata':            True,
-    'includes':                [ 'temperature.include' ],
+    'check_function'          : check_nvidia_temp,
+    'inventory_function'      : lambda info: inventory_nvidia_temp(False, info),
+    'service_description'     : 'Temperature %s',
+    'has_perfdata'            : True,
+    'includes'                : [ 'temperature.include' ],
+    'group'                   : 'temperature',
+    'default_levels_variable' : 'nvidia_temp'
+}
+
+
+check_info["nvidia.temp_core"] = {
+    'check_function'          : check_nvidia_temp,
+    'inventory_function'      : lambda info: inventory_nvidia_temp(True, info),
+    'service_description'     : 'Temperature %s',
+    'has_perfdata'            : True,
+    'includes'                : [ 'temperature.include' ],
+    'group'                   : 'temperature',
+    'default_levels_variable' : 'nvidia_temp_core'
 }
 
 

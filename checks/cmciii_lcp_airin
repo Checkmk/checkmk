@@ -24,53 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_cmciii_lcp_airin(info):
-    if info:
-        return [( None, None )]
 
-def extract_temps(liste):
-    miste = []
-    for l in liste:
-        miste.append(float(l.split(" ")[0]))
-    return miste
+# Note: this check is obsolete, please use cmciii.temp_in_out instead
 
-def check_cmciii_lcp_airin(item, params, info):
-    unit_desc, unit_status, desc, status = info[0][0:4]
-    temps = extract_temps(info[0][4:])
-
-    state = 0
-    sym = ""
-    if status.lower() != "ok" or unit_status.lower() != "ok":
-        if status.lower() in ( "ok", "warning" ) and \
-                unit_status.lower() in  ( "ok", "warning" ):
-            state = 1
-        else:
-            state = 2
-    if temps[4] < temps[0] or temps[4] > temps[3] :
-        state = 2
-        sym = "(!!)"
-    elif temps[4] < temps[1] or temps[4] > temps[2]:
-        state = max(state, 1)
-        sym = "(!)"
-    else:
-        state = max(state, 0)
-
-    info_text = "%s %s %s %s, Temp.Average: %.1f°C%s, Top/Mid/Bottom: %.1f/%.1f/%.1f" % \
-                    (unit_desc, unit_status, desc, status, temps[4], sym, temps[5], temps[6], temps[7])
-
-    levels_text = ", lowcrit/lowwarn/highwarn/highcrit: %.1f/%.1f/%.1f/%.1f" % ( temps[0], temps[1], temps[2], temps[3] )
-
-    perfdata = [ ("temp", temps[4], str(temps[1])+":"+str(temps[2]), str(temps[0])+":"+str(temps[3]), 0 ) ]
-
-    return (state, info_text + levels_text, perfdata)
 
 check_info['cmciii_lcp_airin'] = {
-    "check_function"      : check_cmciii_lcp_airin,
-    "inventory_function"  : inventory_cmciii_lcp_airin,
+    "check_function"      : check_cmciii_lcp_fanunit,
+    "inventory_function"  : lambda info: inventory_cmciii_lcp_fanunit("Air", "In", info),
     "has_perfdata"        : True,
-    "service_description" : "LCP Fanunit Air IN",
-    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP") and \
-                                oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6").startswith("Air.Temperature.DescName"),
+    "service_description" : "Temperature %s",
+    "group"               : "temperature",
+    "includes"            : [ "temperature.include", "cmciii.include" ],
+    "snmp_scan_function"  : snmp_scan_cmciii_lcp_fanunit,
     "snmp_info"           : ( '.1.3.6.1.4.1.2606.7.4.2.2.1.10',
        [ '2.6', '2.13', '2.15', '2.23', '2.21', '2.20', '2.19', '2.18', '2.17', '2.7', '2.8', '2.9' ]
    ),

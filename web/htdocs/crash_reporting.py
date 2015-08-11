@@ -287,7 +287,7 @@ def show_crashed_check_details(info):
     html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Check Type"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["check_type"]))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Uses SNMP"))
-    html.write("<td><pre>%s</pre></td></tr>" % (details["uses_snmp"] and _("Yes") or _("No")))
+    html.write("<td><pre>%s</pre></td></tr>" % (details.get("uses_snmp", False) and _("Yes") or _("No")))
     html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Check Item"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["item"]))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Description"))

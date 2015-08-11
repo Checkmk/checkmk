@@ -216,6 +216,17 @@ def replication_mode():
 # does not know anything about the currently configured but not yet activated
 # rules. And also we do not want to have shared code.
 def event_rule_matches(rule, event):
+    result = event_rule_matches_non_inverted(rule, event)
+    if rule.get("invert_matching"):
+        if type(result) == tuple:
+            return _("The rule would match, but matching is inverted.")
+        else:
+            return False, ()
+    else:
+        return result
+
+
+def event_rule_matches_non_inverted(rule, event):
     if False == match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
         return _("The source IP address does not match.")
 

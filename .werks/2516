@@ -1,0 +1,10 @@
+Title: check juniper_trpz_aps: now lists also the sessions on the access points
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439307683
+Class: feature
+
+Now this check shows the total number of access points and sessions on the access points.
+Furthermore the check lists the access points and related sessions per node.

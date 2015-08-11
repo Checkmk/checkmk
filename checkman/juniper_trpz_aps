@@ -4,8 +4,13 @@ catalog: hw/network/juniper
 license: GPL
 distribution: check_mk
 description:
- Show the number of online access points registered on the controller.
- This check is now cluster-aware.
+ Shows the number of online access points registered on the controller
+ and the sessions on the access point.
+
+ This check is now cluster-aware: Displays the total number of active
+ access points and the total number of sessions on these access points.
+ Furthermore this check lists the online access points and related sessions
+ per node.
 
 inventory:
  One service for the number of access points

@@ -4212,10 +4212,15 @@ def do_snmpwalk_on(hostname, filename):
         try:
             verbose("Walk on \"%s\"..." % oid)
 
-            results = snmpwalk_on_suboid(hostname, ip, oid, hex_plain = True)
-            for oid, value in results:
+            if has_inline_snmp and use_inline_snmp:
+                rows = inline_snmpwalk_on_suboid(hostname, None, oid)
+                rows = inline_convert_rows_for_stored_walk(rows)
+            else:
+                rows = snmpwalk_on_suboid(hostname, ip, oid, hex_plain = True)
+
+            for oid, value in rows:
                 out.write("%s %s\n" % (oid, value))
-            verbose("%d variables.\n" % len(results))
+            verbose("%d variables.\n" % len(rows))
         except:
             if opt_debug:
                 raise

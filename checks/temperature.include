@@ -203,7 +203,7 @@ def check_temperature(reading, params, dev_unit = "c",
     # Render actual temperature, e.g. "17.8 °F"
     infotext = "%s %s" % (render_temp(temp, output_unit), temp_unitsym[output_unit])
 
-    if dev_status != None and dev_status_name:
+    if dev_status != None and dev_status != 0 and dev_status_name: # omit status in OK case
         infotext += ", %s" % dev_status_name
 
     # In case of a non-OK status output the information about the levels

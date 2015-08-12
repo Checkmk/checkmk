@@ -103,7 +103,11 @@ def ipmi_ignore_entry(name, state):
     def ignored_sensors():
         # merge ignored sensor list specified here and those from wato
         ignored_sensors_combined = ipmi_ignored_sensors[:]
-        rules = host_extra_conf(g_hostname, inventory_ipmi_rules)[0]
+        try:
+            rules = host_extra_conf(g_hostname, inventory_ipmi_rules)[0]
+        except IndexError:
+            rules = {}
+
         ignored_sensors_combined += rules.get("ignored_sensors", [])
         return ignored_sensors_combined
 
@@ -115,15 +119,18 @@ def ipmi_ignore_entry(name, state):
     return False
 
 def inventory_ipmi(info):
-    rules = host_extra_conf(g_hostname, inventory_ipmi_rules)[0]
+    try:
+        rules = host_extra_conf(g_hostname, inventory_ipmi_rules)[0]
+    except IndexError:
+        rules = {}
     # the default for summarize is always true so if either configuration key has been set
     # to false that setting was changed by the user and needs to override the other
     if not ipmi_summarize or not rules.get("summarize", True) or len(info) == 0:
-        return [ ( line[0], None )
-                 for line in info
-                 if not ipmi_ignore_entry(line[0], line[3]) ]
+        for line in info:
+            if not ipmi_ignore_entry(line[0], line[3]):
+                yield line[0], None
     else:
-        return [ ( "Summary", None ) ]
+        yield "Summary", None
 
 def check_ipmi(item, params, info):
     if item == "Summary":

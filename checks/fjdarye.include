@@ -116,31 +116,27 @@ def check_fjdarye_disks(index, expected_status, info):
     return (3, "No status for disk number %d present" % index)
 
 def inventory_fjdarye_rluns(info):
-    inventory = []
     for line in info:
         rawdata = line[1]
-        if rawdata[3] == '\xa0': # RLUN is present
-            inventory.append( (line[0], "", None) )
-    return inventory
+        if rawdata[3] == u'\xa0': # RLUN is present
+            yield line[0], "", None
 
 def check_fjdarye_rluns(item, _no_params, info):
     for line in info:
         if item == line[0]:
             rawdata = line[1]
-            if rawdata[3] != '\xa0':
+            if rawdata[3] != u'\xa0':
                 return (2, "RLUN is not present" )
-            elif rawdata[2] == '\x08':
+            elif rawdata[2] == u'\x08':
                 return (1, "RLUN is rebuilding")
-            elif rawdata[2] == '\x07':
+            elif rawdata[2] == u'\x07':
                 return (1, "RLUN copyback in progress")
-            elif rawdata[2] == '\x41':
+            elif rawdata[2] == u'\x41':
                 return (1, "RLUN spare is in use")
-            elif rawdata[2] == '\x00':
+            elif rawdata[2] == u'\x00':
                 return (0, "RLUN is in normal state") # assumption
             else:
                 return (2, "RLUN in unknown state %02x" % ord(rawdata[2]) )
-
-    return (3, "No RLUN %s in SNMP output" % item)
 
 fjdarye_sum_status = { 1: 'unknown', 2: 'unused', 3: 'ok',
                          4: 'warning', 5: 'failed' }

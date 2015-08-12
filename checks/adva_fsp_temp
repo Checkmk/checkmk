@@ -31,12 +31,10 @@ adva_fsp_temp_default_levels = {
 }
 
 def inventory_adva_fsp_temp(info):
-    inventory = []
     for line in info:
         # Ignore unconnected sensors
         if len(line) == 5 and line[0] != "" and line[4] != "" and int(line[0]) >= -2730:
-            inventory.append( (line[4], "adva_fsp_temp_default_levels") )
-    return inventory
+            yield line[4], "adva_fsp_temp_default_levels"
 
 def check_adva_fsp_temp(item, params, info):
     for line in info:
@@ -46,10 +44,10 @@ def check_adva_fsp_temp(item, params, info):
             high = float(high)/10
             low = float(low)/10
             if low > -273:
-                infotext = "Temperature is %.1f °C (limits %.1f/%.1f °C) at %s" % (temp, low, high, descr)
+                infotext = u"Temperature is %.1f °C (limits %.1f/%.1f °C) at %s" % (temp, low, high, descr)
                 perfdata = [ ("temp", temp, "", str(low)+":"+str(high),  ) ]
             else:
-                infotext = "Temperature is %.1f °C (crit at %.1f °C) at %s" % (temp, high, descr)
+                infotext = u"Temperature is %.1f °C (crit at %.1f °C) at %s" % (temp, high, descr)
                 perfdata = [ ("temp", temp, "", high,  ) ]
 
             if temp <= -2730:
@@ -71,7 +69,7 @@ def check_adva_fsp_temp(item, params, info):
 
                     # average trend, initialize with zero, rate_avg is in C/s
                     rate_avg = get_average("temp.%s.trend" % item,
-                                                    this_time, rate, range_sec / 60.0, True) #?
+                                           this_time, rate, range_sec / 60.0, True) #?
 
                     # rate_avg is growth in C/s, trend is in C per trend range minutes
                     trend = float(rate_avg * range_sec)
@@ -83,10 +81,10 @@ def check_adva_fsp_temp(item, params, info):
                     if trend_c:
                         wa, cr = trend_c
                         if trend >= cr:
-                            problems.append("rising faster than %s °C/%g min(!!)" % ( cr, range ))
+                            problems.append(u"rising faster than %s °C/%g min(!!)" % ( cr, range ))
                             state = 2
                         elif trend >= wa:
-                            problems.append("rising faster than %s °C/%g min(!)" % ( wa, range ))
+                            problems.append(u"rising faster than %s °C/%g min(!)" % ( wa, range ))
                             state = max(1, state)
                     else:
                         wa, cr = None, None
@@ -122,9 +120,7 @@ def check_adva_fsp_temp(item, params, info):
                 if problems:
                     infotext += " - %s" % ", ".join(problems)
 
-            return (state, "%s" % infotext, perfdata)
-
-    return (3, "Sensor %s not found in SNMP data" % item)
+            return state, "%s" % infotext, perfdata
 
 check_info['adva_fsp_temp'] = {
     "inventory_function"    : inventory_adva_fsp_temp,

@@ -846,7 +846,8 @@ interface_oper_states = {
     5: _("dormant"),
     6: _("not present"),
     7: _("lower layer down"),
-    8: _("degraded"),
+    8: _("degraded"),    # artificial, not official
+    9: _("admin down"),  # artificial, not official
 }
 
 interface_port_types = {

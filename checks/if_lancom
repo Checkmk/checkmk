@@ -26,7 +26,7 @@
 
 def fix_if_64_highspeed(info):
     for line in info:
-        if type(line[3]) == str: # not yet converted
+        if type(line[3]) in [ str, unicode ]: # not yet converted
             line[3] = saveint(line[3]) * 1000000
 
 def if_lancom_convert(info):

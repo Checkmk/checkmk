@@ -1,0 +1,16 @@
+Title: check_mk_agent.linux: avoid problems with crashing waitmax after Ubuntu update
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439277549
+Class: fix
+
+Some users have reported that after an update of their Ubuntu target hosts, the command
+<tt>/usr/bin/waitmax</tt>, which is shipped with the Check_MK Agent, actually segfaults
+the program being run with it. This could be related to the fact that <tt>waitmax</tt>
+is statically linked in order to be independent of 32/64 bits and of the libc in use.
+
+The agent now looks if <tt>/usr/bin/timeout</tt> exists and prefers that over <tt>waitmax</tt>.
+<tt>timeout</tt> has been introduced in the coreutils version 8+. It is missing e.g.
+on RedHat 5.X, so <tt>waitmax</tt> is still needed for a couple of years...

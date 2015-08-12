@@ -658,6 +658,15 @@ vs_mkeventd_rule = Dictionary(
               ],
           ),
         ),
+        ( "invert_matching",
+          Checkbox(
+              title = _("Invert matching"),
+              label = _("Negate match: Execute this rule if the following conditions are <b>not</b> fulfilled."),
+              help = _("By activating this checkbox the complete combined rule conditions will be inverted. That "
+                       "means that this rule with be executed, if at least on of the conditions does <b>not</b> match. "
+                       "This can e.g. be used for skipping a rule pack if the message text does not contain <tt>ORA-</tt>. "
+                       "Please note: When an inverted rule matches there can never be match groups."),
+        )),
         ( "set_text",
           TextUnicode(
               title = _("Rewrite message text"),
@@ -732,11 +741,11 @@ vs_mkeventd_rule = Dictionary(
     optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority",
                       "match_facility", "match_sl", "match_host", "match_ipaddress", "match_application", "match_timeperiod",
                       "set_text", "set_host", "set_application", "set_comment",
-                      "set_contact", "cancel_priority", "match_ok", "contact_groups" ],
+                      "set_contact", "cancel_priority", "match_ok", "contact_groups", ],
     headers = [
         ( _("Rule Properties"), [ "id", "description", "comment", "docu_url", "disabled" ] ),
         ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
-                                    "match_sl", "match_ok", "cancel_priority", "match_timeperiod" ]),
+                                    "match_sl", "match_ok", "cancel_priority", "match_timeperiod", "invert_matching" ]),
         ( _("Outcome &amp; Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "cancel_action_phases", "drop", "autodelete" ]),
         ( _("Counting &amp; Timing"), [ "count", "expect", "delay", "livetime", ]),
         ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),
@@ -1225,7 +1234,6 @@ def mode_mkeventd_rules(phase):
             table.cell("", css="buttons")
             if rule.get("disabled"):
                 html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
-
             elif event:
                 result = mkeventd.event_rule_matches(rule, event)
                 if type(result) != tuple:
@@ -1245,6 +1253,9 @@ def mode_mkeventd_rules(phase):
                     if groups:
                         msg += _(" Match groups: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
                     html.icon(msg, icon)
+
+            if rule.get("invert_matching"):
+                html.icon(_("Matching is inverted in this rule"), "inverted")
 
             if rule.get("contact_groups") != None:
                 html.icon(_("This rule attaches contact group(s) to the events: %s") %

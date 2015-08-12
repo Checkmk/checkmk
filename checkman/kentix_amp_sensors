@@ -1,6 +1,6 @@
 title: Kentix Alarmmanager Pro: Temperature
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/kentix
 license: GPL
 distribution: check_mk
 description:

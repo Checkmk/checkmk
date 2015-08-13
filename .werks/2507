@@ -1,0 +1,10 @@
+Title: mysql_slave: fixed exception caused by wrong parsing of agent data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1439469675
+
+

@@ -298,7 +298,7 @@ def handler(req, fields = None, profiling = True):
             (apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED),
             (apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY)):
         release_all_locks()
-        html.live = None
+        html.finalize(is_error=True)
         raise
 
     except Exception, e:
@@ -315,7 +315,7 @@ def handler(req, fields = None, profiling = True):
         response_code = apache.OK
 
     release_all_locks()
-    html.live = None # disconnects from livestatus
+    html.finalize()
     return response_code
 
 def page_not_found():

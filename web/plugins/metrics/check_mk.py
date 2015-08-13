@@ -4222,7 +4222,7 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title"   : _("Battery currencies"),
+    "title"   : _("Battery currents"),
     "metrics" : [
         ( "battery_current", "area" ),
         ( "current", "stack" ),

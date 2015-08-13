@@ -922,7 +922,11 @@ register_rule(group + '/' + subgroup_inventory,
         ( "portstates",
           ListChoice(title = _("Network interface port states to discover"),
               help = _("When doing discovery on switches or other devices with network interfaces "
-                       "then only ports found in one of the configured port states will be added to the monitoring."),
+                       "then only ports found in one of the configured port states will be added to the monitoring. "
+                       "Note: the state <i>admin down</i> is in fact not an <tt>ifOperStatus</tt> but represents the "
+                       "<tt>ifAdminStatus</tt> of <tt>down</tt> - a port administratively switched off. If you check this option "
+                       "then an alternate version of the check is being used that fetches the <tt>ifAdminState</tt> in addition. "
+                       "This will add about 5% of additional SNMP traffic."),
               choices = dict_choices(interface_oper_states),
               toggle_all = True,
               default_value = ['1'],
@@ -3140,9 +3144,11 @@ register_check_parameters(
                         title = _("Allowed states:"),
                         choices = dict_choices(interface_oper_states)),
                     title = _("Operational State"),
-                    help = _("Activating the monitoring of the operational state (opstate), "
-                             "the check will get warning or critical of the current state "
-                             "of the interface does not match the expected state or states."),
+                    help = _("If you activate the monitoring of the operational state (<tt>ifOperStatus</tt>) "
+                             "the check will get warning or critical if the current state "
+                             "of the interface does not match one of the expected states. Note: the status 9 (<i>admin down</i>) "
+                             "is only visible if you activate this status during switch port inventory or if you manually "
+                             "use the check plugin <tt>if64adm</tt> instead of <tt>if64</tt>."),
                     label = _("Ignore the operational state"),
                     none_label = _("ignore"),
                     negate = True)

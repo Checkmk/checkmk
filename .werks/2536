@@ -1,0 +1,9 @@
+Title: emc_isilon_fans, emc_isilon_temp, emc_isilon_temp.cpu: New checks for fans and temperatures of EMC Isilon
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439393799
+Class: feature
+
+

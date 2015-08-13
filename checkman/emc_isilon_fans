@@ -1,0 +1,13 @@
+title: EMC Isilon: Fans
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Checks the state of the fans in EMC Isilon storage devices.
+
+item:
+ The name of the fan without {Fan}, e.g. {Chassis 1} or {Power Supply 1 1}.
+
+inventory:
+ Creates one service per fan.

@@ -72,6 +72,9 @@ class html_mod_python(htmllib.html):
         except:
             pass
 
+    # Finish the HTTP request short before handing over to mod_python
+    def finalize(self, is_error=False):
+        self.live = None # disconnects from livestatus
 
     def get_request_header(self, key, deflt=None):
         return self.req.headers_in.get(key, deflt)
@@ -164,14 +167,10 @@ class html_mod_python(htmllib.html):
         self.set_http_header('Location', url)
         raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
-    # Needs to set both, headers_out and err_headers_out to be sure to send
-    # the header on all responses
-    #
-    # FIXME: err_headers_out are sent out when a HTTP error occures (which states are treated as "errors"?)
-    # AND when no error occures. headers_out is sent out in case of HTTP 200 (only?). This leads to duplicated
-    # HTTP headers in regular cases. Should be avoided - clean it up!
+    # When setting err_headers_out, don't set headers_out because setting
+    # err_headers_out is also setting headers_out within mod_python. Otherwise
+    # we would send out duplicate HTTP headers which might cause bugs.
     def set_http_header(self, key, val):
-        self.req.headers_out.add(key, val)
         self.req.err_headers_out.add(key, val)
 
     def check_limit(self, rows, limit):

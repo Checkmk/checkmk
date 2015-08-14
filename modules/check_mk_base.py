@@ -1401,7 +1401,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                 dont_submit = True
 
             except Exception, e:
-                result = 3, create_crash_dump(hostname, checkname, item, params, description, info)
+                result = 3, create_crash_dump(hostname, checkname, item, params, description, info), []
                 if opt_debug:
                     raise
 
@@ -1619,7 +1619,7 @@ def convert_check_info():
 
 def sanitize_check_result(result, is_snmp):
     if type(result) == tuple:
-        return sanitize_check_result_encoding(result)
+        return sanitize_tuple_check_result(result)
 
     elif result == None:
         return item_not_found(is_snmp)
@@ -1639,7 +1639,7 @@ def sanitize_yield_check_result(result, is_snmp):
 
     # Simple check with no separate subchecks (yield wouldn't have been neccessary here!)
     if len(subresults) == 1:
-        return sanitize_check_result_encoding(subresults[0])
+        return sanitize_tuple_check_result(subresults[0])
 
     # Several sub results issued with multiple yields. Make that worst sub check
     # decide the total state, join the texts and performance data. Subresults with
@@ -1650,7 +1650,7 @@ def sanitize_yield_check_result(result, is_snmp):
         status = 0
 
         for subresult in subresults:
-            st, text, perf = sanitize_check_result_encoding(subresult)
+            st, text, perf = sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
 
             if text != None:
                 infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
@@ -1667,22 +1667,32 @@ def sanitize_yield_check_result(result, is_snmp):
 
 def item_not_found(is_snmp):
     if is_snmp:
-        return 3, "Item not found in SNMP data"
+        return 3, "Item not found in SNMP data", []
     else:
-        return 3, "Item not found in agent output"
+        return 3, "Item not found in agent output", []
 
 
-def sanitize_check_result_encoding(result):
+def sanitize_tuple_check_result(result, allow_missing_infotext=False):
     if len(result) >= 3:
         state, infotext, perfdata = result[:3]
     else:
         state, infotext = result
         perfdata = None
 
-    if type(infotext) == str:
-        infotext = infotext.decode('utf-8')
+    if not allow_missing_infotext or infotext != None:
+        infotext = sanitize_check_result_infotext(infotext)
 
     return state, infotext, perfdata
+
+
+def sanitize_check_result_infotext(infotext):
+    if infotext == None:
+        raise MKGeneralException("Invalid infotext from check: \"None\"")
+
+    if type(infotext) == str:
+        return infotext.decode('utf-8')
+    else:
+        return infotext
 
 
 def open_checkresult_file():
@@ -1747,11 +1757,9 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
     if not result:
         result = 3, "Check plugin did not return any result"
 
-    if len(result) >= 3:
-        state, infotext, perfdata = result[:3]
-    else:
-        state, infotext = result
-        perfdata = None
+    if len(result) != 3:
+        raise MKGeneralException("Invalid check result: %s" % (result, ))
+    state, infotext, perfdata = result
 
     if not (
         infotext.startswith("OK -") or
@@ -1769,7 +1777,7 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
         store_aggregated_service_result(host, servicedesc, sa, state, infotext)
 
     # performance data - if any - is stored in the third part of the result
-    perftexts = [];
+    perftexts = []
     perftext = ""
 
     if perfdata:

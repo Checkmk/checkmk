@@ -49,7 +49,7 @@ def parse_mysql_slave(info):
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
-            parsed[instance] = []
+            parsed[instance] = {}
         elif instance:
             key, value = parse_line(line)
             if key:

@@ -163,7 +163,7 @@ check_info["allnet_ip_sensoric.tension"] = {
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
 
-factory_settings["allnet_ip_sensoric_temp"] = {
+factory_settings["allnet_ip_sensoric_temp_default_levels"] = {
     "levels" : (35, 40)
 }
 

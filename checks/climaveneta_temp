@@ -44,7 +44,7 @@ climaveneta_sensors = {
     28 : "Suction",
 }
 
-factory_settings["climaveneta_temp"] = {
+factory_settings["climaveneta_temp_default_levels"] = {
     "levels" : (28, 30)
 }
 

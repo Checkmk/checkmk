@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings["dell_om_sensors"] = {
+factory_settings["dell_om_sensors_default_levels"] = {
     "levels" : (50, 60)
 }
 

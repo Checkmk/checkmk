@@ -25,11 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 
-factory_settings["nvidia_temp"] = {
+factory_settings["nvidia_temp_default_levels"] = {
     "levels": (60, 65)
 }
 
-factory_settings["nvidia_temp_core"] = {
+factory_settings["nvidia_temp_core_default_levels"] = {
     "levels": (90, 95)
 }
 

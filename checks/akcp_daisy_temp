@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings["akcp_daisy_temp"] = {
+factory_settings["akcp_daisy_temp_defaultlevels"] = {
     "levels": (28, 32)
 }
 
@@ -41,8 +41,6 @@ def check_akcp_daisy_temp(item, params, info):
         if name == item:
             temp = float(rawtemp) / 10
             return check_temperature(temp, params, "akcp_daisy_temp_%s" % item)
-
-    return 3, "Sensor not found in SNMP data"
 
 
 check_info["akcp_daisy_temp"] = {

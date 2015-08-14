@@ -35,7 +35,7 @@
 # from a customer, its named "Emerson Energy Systems (EES) Power MIB"
 
 
-factory_settings["emerson_temp"] = {
+factory_settings["emerson_temp_default"] = {
     "levels" : (40, 50)
 }
 

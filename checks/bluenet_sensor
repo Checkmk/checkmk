@@ -59,7 +59,7 @@ def check_bluenet_sensor_temp(item, params, info):
             descr = "external %s" % sensor_id
         if descr == item:
             temperature = float(temp) / 10.0
-            return check_temperature(temperature, params, 'c')
+            return check_temperature(temperature, params, "bluenet_sensor_temp_%s" % item, 'c')
 
 
 check_info["bluenet_sensor"] = {

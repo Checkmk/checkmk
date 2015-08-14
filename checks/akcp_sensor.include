@@ -162,7 +162,7 @@ def check_akcp_sensor_temp(item, params, info):
             else:
                 temperature = float(degree)
 
-            return check_temperature(temperature, params, unit_normalised, \
+            return check_temperature(temperature, params, "akcp_sensor_temp_%s" % item, unit_normalised, \
                     (high_warn, high_crit), (low_warn, low_crit))
 
 #.

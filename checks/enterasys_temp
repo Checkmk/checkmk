@@ -42,7 +42,7 @@ def check_enterasys_temp(item, params, info):
 
     #temp = fahrenheit_to_celsius(int(info[0][0]) / 10.0)
     temp = int(info[0][0]) / 10.0
-    return check_temperature(temp, params, dev_unit='f')
+    return check_temperature(temp, params, "enterasys_temp_%s" % item, dev_unit='f')
 
 
 check_info["enterasys_temp"] = {

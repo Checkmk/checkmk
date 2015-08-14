@@ -35,7 +35,7 @@ def check_liebert_bat_temp(item, params, info):
     if not info:
         return 3, "Data Missing in SNMP Output"
     temp = saveint(info[0][0])
-    return check_temperature(temp, params)
+    return check_temperature(temp, params, "liebert_bat_temp_%s" % item)
 
 check_info['liebert_bat_temp'] = {
   "inventory_function"  : inventory_liebert_bat_temp,

@@ -322,7 +322,7 @@ def check_wagner_titanus_topsense_temp(item, params, info):
     else:
         return
 
-    return check_temperature(temp, params)
+    return check_temperature(temp, params, "wagner_titanus_topsense_%s" % item)
 
 check_info["wagner_titanus_topsense.temp"] = {
     "check_function"         : check_wagner_titanus_topsense_temp,

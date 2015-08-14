@@ -36,7 +36,7 @@ def inventory_apc_symmetra_ext_temp(info):
 def check_apc_symmetra_ext_temp(item, params, info):
     for index, status, temp in info:
         if item == index:
-            return check_temperature(int(temp), params)
+            return check_temperature(int(temp), params, "apc_symmetra_ext_temp_%s" % item)
 
     return 3, "Sensor not found in SNMP data"
 

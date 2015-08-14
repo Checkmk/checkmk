@@ -567,7 +567,7 @@ def check_cmciii_temp(item, params, unit_items):
         lowalarm = parse_cmciii_temp(entry['SetPtLowAlarm'])[0]
         lowwarning = parse_cmciii_temp(entry['SetPtLowWarning'])[0]
 
-        status, message, perfdata = check_temperature(value, params,
+        status, message, perfdata = check_temperature(value, params, "cmciii_temp_%s" % item,
                 dev_unit=t_unit.lower(),
                 dev_levels=(highwarning, highalarm),
                 dev_levels_lower=(lowwarning, lowalarm),
@@ -650,8 +650,7 @@ def check_cmciii_temp_in_out(item, params, parsed):
         lowalarm      = parse_cmciii_temp(entry[direction]['SetPtLowAlarm'])[0]
         lowwarning    = parse_cmciii_temp(entry[direction]['SetPtLowWarning'])[0]
 
-        return check_temperature(value,
-                params,
+        return check_temperature(value, params, "cmciii_temp_in_out_%s" % item,
                 dev_unit=t_unit.lower(),
                 dev_levels=(highwarning, highalarm),
                 dev_levels_lower=(lowwarning, lowalarm),

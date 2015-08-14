@@ -184,7 +184,7 @@ def check_allnet_ip_sensoric_temp(item, params, info):
 
     temp = float(parsed[sensor_id]["value_float"])
 
-    return check_temperature(temp, params)
+    return check_temperature(temp, params, "allnet_ip_sensoric_temp_%s" % item)
 
 check_info["allnet_ip_sensoric.temp"] = {
     "check_function"          : check_allnet_ip_sensoric_temp,

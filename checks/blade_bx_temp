@@ -43,7 +43,7 @@ def check_blade_bx_temp(item, params, info):
             continue
 
         statuscode, message, perfdata =\
-                check_temperature(temp, params, dev_levels=(level_warn, level_crit))
+                check_temperature(temp, params, "blade_bx_temp_%s" % item, dev_levels=(level_warn, level_crit))
 
         if crit_react != "2":
             return (2, "Temperature not present or poweroff", perfdata)

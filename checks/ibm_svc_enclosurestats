@@ -61,7 +61,7 @@ def inventory_ibm_svc_enclosurestats_temp(info):
 def check_ibm_svc_enclosurestats_temp(item, params, info):
     for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
         if enclosure_id == item and stat_name == "temp_c":
-            return check_temperature(int(stat_current), params)
+            return check_temperature(int(stat_current), params, "ibm_svc_enclosurestats_%s" % item)
 
 
 check_info["ibm_svc_enclosurestats.temp"] = {

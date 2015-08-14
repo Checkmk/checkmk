@@ -109,7 +109,7 @@ def check_netscaler_health_temp(item, params, info):
     for name, value in info:
         if name[:-11] == item and name.endswith("Temperature"):
             temp = int(value)
-            return check_temperature(temp, params)
+            return check_temperature(temp, params, "netscaler_health_%s" % item)
 
 check_info["netscaler_health.temp"] = {
     "check_function"          : check_netscaler_health_temp,

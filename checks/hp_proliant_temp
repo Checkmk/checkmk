@@ -41,7 +41,7 @@ def check_hp_proliant_temp(item, params, info):
             threshold = float(threshold)
             snmp_status = hp_proliant_status_map[int(status)]
 
-            return check_temperature(float(value), params,
+            return check_temperature(float(value), params, "hp_proliant_temp_%s" % item,
                     dev_levels=(threshold, threshold),
                     dev_status=hp_proliant_status2nagios_map[snmp_status],
                     dev_status_name="Unit: %s" % snmp_status)

@@ -85,7 +85,7 @@ def check_apc_inrow_temp(item, params, info):
     info = apc_inrow_temp_convert(info)
     for sensor, value in info.items():
         if sensor == item:
-            return check_temperature(value, params)
+            return check_temperature(value, params, "apc_inrow_temp_%s" % item)
 
 
 check_info["apc_inrow_temp"] = {

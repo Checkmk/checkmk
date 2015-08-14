@@ -57,7 +57,8 @@ def check_hwg_temp(item, params, info):
             else:
                 dev_unit = "c"
 
-            state, infotext, perfdata = check_temperature(tempval, params, dev_unit)
+            state, infotext, perfdata = check_temperature(tempval, params, "hwg_temp_%s" % item,
+                                                          dev_unit)
             if descr:
                 infotext += " (%s)" % descr
             yield state, infotext, perfdata

@@ -56,7 +56,7 @@ def check_cmciii_lcp_fanunit(item, params, info):
     temps = extract_cmciii_lcp_temps(info[0][4:])
 
     status, message, perfdata = check_temperature(
-        temps[4], params,
+        temps[4], params, "cmciii_lcp_fanunit_%s" % item,
         dev_status=translate_cmciii_lcp_status(unit_status),
         dev_status_name="Unit: %s" % unit_status,
         dev_levels=(temps[2], temps[3]),

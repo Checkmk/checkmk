@@ -38,7 +38,7 @@ def inventory_ups_bat_temp(info):
 def check_ups_bat_temp(item, params, info):
     for line in info:
 	if "Battery %s" % line[0] == item:
-            status, infotext, perfdata = check_temperature(int(line[1]), params)
+            status, infotext, perfdata = check_temperature(int(line[1]), params, "ups_bat_temp_%s" % item)
             perfdatanew = [ perfdata[0] + (80,) ]
             return status, infotext, perfdatanew
 

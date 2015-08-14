@@ -122,7 +122,7 @@ def check_wut_webtherm(item, params, info):
     for line in info:
         if line[0].split(".")[1] == item:
             temp = float(line[1].replace(",", "."))
-            return check_temperature(temp, params)
+            return check_temperature(temp, params, "wut_webtherm_%s" % item)
 
 
 check_info["wut_webtherm"] = {

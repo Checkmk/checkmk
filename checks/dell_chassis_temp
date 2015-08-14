@@ -48,7 +48,7 @@ def check_dell_chassis_temp(item, params, info):
         item_id = items[item]
 
         temp = float(info[0][item_id])
-        return check_temperature(temp, params)
+        return check_temperature(temp, params, "dell_chassis_temp_%s" % item)
 
     return 3, "Sensor not found in SNMP data"
 

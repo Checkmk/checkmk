@@ -87,7 +87,7 @@ def check_etherbox_temp(item, params, info):
 
     uom = { "0": "c", "1": "f", "2": "k" }[info[0][0][0]]
     temp = int(value) / 10.0
-    return check_temperature(temp, params, uom)
+    return check_temperature(temp, params, "etherbox_temp_%s" % item, uom)
 
 
 check_info["etherbox.temp"] = {

@@ -55,7 +55,7 @@ def check_casa_cpu_temp(item, params, parsed):
     if item in parsed:
         if parsed[item]["temp_status"] == "1":
             value  = float(parsed[item]["temp_value"]) / 10
-            return check_temperature(value, params)
+            return check_temperature(value, params, "casa_cpu_temp_%s" % item)
         else:
             return (2, "Sensor failure!", [])
     else:

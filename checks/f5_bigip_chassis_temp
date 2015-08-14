@@ -35,7 +35,7 @@ def inventory_f5_bigip_chassis_temp(info):
 def check_f5_bigip_chassis_temp(item, params, info):
     for name, temp in info:
         if name == item:
-            return check_temperature(int(temp), params)
+            return check_temperature(int(temp), params, "f5_bigip_chassis_temp_%s" % item)
 
 
 check_info["f5_bigip_chassis_temp"] = {

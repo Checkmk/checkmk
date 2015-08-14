@@ -95,7 +95,7 @@ def inventory_bintec_sensors_temp(info):
 def check_bintec_sensors_temp(item, params, info):
     for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
         if sensor_descr == item:
-            return check_temperature(int(sensor_value), params)
+            return check_temperature(int(sensor_value), params, "bintec_sensors_%s" % item)
 
     return 3, "Sensor not found in SNMP data"
 

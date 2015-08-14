@@ -48,7 +48,7 @@ def inventory_brocade_mlx_temp(parsed):
 
 def check_brocade_mlx_temp(item, params, parsed):
     if item in parsed:
-        return check_temperature(parsed[item], params)
+        return check_temperature(parsed[item], params, "brocade_mlx_temp_%s" % item)
 
 
 check_info["brocade_mlx_temp"] = {

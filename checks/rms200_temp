@@ -39,7 +39,7 @@ def inventory_rms200_temp(info):
 def check_rms200_temp(item, params, info):
     for line in info:
         if line[0] == item:
-            status, infotext, perfdata = check_temperature(float(line[2])/100, params)
+            status, infotext, perfdata = check_temperature(float(line[2])/100, params, "rms200_temp_%s" % item)
             infotext += " (%s)" % line[1]   # Name from SNMP data
             return status, infotext, perfdata
 

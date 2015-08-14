@@ -155,7 +155,7 @@ def check_smart_temp(item, params, info):
         return
 
     disk = disks[item]
-    return check_temperature(disk["Temperature_Celsius"], params)
+    return check_temperature(disk["Temperature_Celsius"], params, "smart_%s" % item)
 
 check_info["smart.temp"] = {
     'check_function'          : check_smart_temp,

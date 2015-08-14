@@ -38,7 +38,7 @@ def inventory_arris_cmts_temp(info):
 def check_arris_cmts_temp(item, params, info):
     for name, temp in info:
         if name == item:
-            return check_temperature(int(temp), params)
+            return check_temperature(int(temp), params, "arris_cmts_temp_%s" % item)
 
     return 3, "Sensor not found in SNMP data"
 

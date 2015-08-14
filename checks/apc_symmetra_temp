@@ -57,7 +57,7 @@ def inventory_apc_temp(info):
 def check_apc_temp(item, params, info):
     for name, temp in info:
         if name == item:
-            return check_temperature(int(temp), params)
+            return check_temperature(int(temp), params, "apc_temp_%s" % item)
 
     return 3, "Sensor not found in SNMP data"
 

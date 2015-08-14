@@ -51,7 +51,7 @@ def inventory_nvidia_temp(core, info):
 def check_nvidia_temp(item, params, info):
     for line in info:
         if format_nvidia_name(line[0].strip(":")) == item:
-            return check_temperature(int(line[1]), params)
+            return check_temperature(int(line[1]), params, "nvidia_%s" % item)
 
 check_info["nvidia.temp"] = {
     'check_function'          : check_nvidia_temp,

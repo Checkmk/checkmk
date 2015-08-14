@@ -87,7 +87,7 @@ def check_lnx_thermal(item, params, info):
             else:
                 dev_levels = None
 
-            return check_temperature(temp, params, dev_levels=dev_levels)
+            return check_temperature(temp, params, "lnx_thermal_%s" % item, dev_levels=dev_levels)
 
 
 check_info['lnx_thermal'] = {

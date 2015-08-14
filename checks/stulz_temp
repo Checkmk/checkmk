@@ -41,7 +41,7 @@ def inventory_stulz_temp(info):
 def check_stulz_temp(item, params, info):
     for line in info:
         if line[0] == item:
-            return check_temperature(int(line[1])/10, params)
+            return check_temperature(int(line[1])/10, params, "stulz_temp_%s" % item)
 
 check_info["stulz_temp"] = {
     "check_function"         : check_stulz_temp,

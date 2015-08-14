@@ -46,7 +46,7 @@ def check_cmctc_temp(item, params, info):
 
         status, current, crit, low, warn = map(int, line[2:7])
 
-        return check_temperature(current, params,
+        return check_temperature(current, params, "cmctc_temp_%s" % item,
                 dev_levels=(warn, crit),
                 dev_levels_lower=(low, float("-inf")),  # no lower critical level specified
                 dev_status=cmctc_translate_status(status),

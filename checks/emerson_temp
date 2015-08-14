@@ -52,7 +52,7 @@ def check_emerson_temp(item, params, info):
             return 3, "Sensor offline"
 
         temp = float(info[item][0]) / 1000.0
-        return check_temperature(temp, params)
+        return check_temperature(temp, params, "emerson_temp_%s" % item)
 
     return 3, "Sensor not found in SNMP data"
 

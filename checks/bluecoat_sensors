@@ -52,7 +52,7 @@ def check_bluecoat_sensors(item, params, info):
         if name == item:
             value = float(reading) * 10 ** float(scale)
             if unit == '5':
-                return check_temperature(value, {}, status != '1' and 2 or 0)
+                return check_temperature(value, {}, "bluecoat_sensors_%s" % item, status != '1' and 2 or 0)
             elif unit == '4':
                 varname = "voltage"
                 unitname = " V"

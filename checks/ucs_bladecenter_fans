@@ -128,7 +128,7 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
                 "Module %s Fan %s" % (loc[0], loc[1]),
                 float(values.get("AmbientTemp")),
             ))
-    return check_temperature_list(sensor_list, params)
+    return check_temperature_list(sensor_list, params, "ucs_bladecenter_fans_%s" % item)
 
 
 check_info["ucs_bladecenter_fans.temp"] = {

@@ -249,6 +249,14 @@ def do_log_ack(host, filename):
         ack_msg = _('the log file %s on host %s') % \
                        (html.attrencode(filename), html.attrencode(host))
 
+    else:
+        for this_host, logs in all_logs():
+            file_display = form_file_to_ext(filename)
+            if filename in logs:
+                todo.append((this_host, filename, file_display))
+        ack_msg = _('log file %s on all hosts') % (html.attrencode(filename))
+
+
     html.header(_("Acknowledge %s") % ack_msg, stylesheets = stylesheets)
 
     html.begin_context_buttons()

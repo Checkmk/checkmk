@@ -71,7 +71,7 @@ modules += [
       ( "pattern_editor", _("Logfile Pattern Analyzer"), "analyze", "pattern_editor",
         _("Analyze logfile pattern rules and validate logfile patterns against custom text.")),
 
-      ( "bi_rules", _("BI - Business Intelligence"), "aggr", "bi_rules",
+      ( "bi_aggregations", _("BI - Business Intelligence"), "aggr", "bi_rules",
       _("Configuration of Check_MK's Business Intelligence component.")),
 
       ( "sites",  _("Distributed Monitoring"), "sites", "sites",

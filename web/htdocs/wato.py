@@ -16899,30 +16899,87 @@ def mode_pattern_editor(phase):
         html.write('</table>\n')
         html.end_foldable_container()
 
+
 #.
-#   .--BI Rules------------------------------------------------------------.
-#   |                 ____ ___   ____        _                             |
-#   |                | __ )_ _| |  _ \ _   _| | ___  ___                   |
-#   |                |  _ \| |  | |_) | | | | |/ _ \/ __|                  |
-#   |                | |_) | |  |  _ <| |_| | |  __/\__ \                  |
-#   |                |____/___| |_| \_\\__,_|_|\___||___/                  |
+#   .--BI-Business Intelligence--------------------------------------------.
+#   |                              ____ ___                                |
+#   |                             | __ )_ _|                               |
+#   |                             |  _ \| |                                |
+#   |                             | |_) | |                                |
+#   |                             |____/___|                               |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   |  Editor for the Rules of BI                                          |
 #   '----------------------------------------------------------------------'
-def mode_bi_rules(phase):
+
+def mode_bi_aggregations(phase):
     if phase == "title":
-        return _("BI - Business Intelligence")
+        return _("BI - Business Intelligence - Aggregations")
 
     aggregations, aggregation_rules = load_bi_rules()
 
     if phase == "buttons":
         html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
+        html.context_button(_("Rules"), html.makeuri([("mode", "bi_rules")]), "aggr")
         if aggregation_rules:
             html.context_button(_("New Aggregation"),
-                      make_link([("mode", "bi_edit_aggregation")]), "new")
-        html.context_button(_("New Rule"),
-                  make_link([("mode", "bi_edit_rule")]), "new")
+                  html.makeuri([("mode", "bi_edit_aggregation")]), "new")
+        return
+
+    if phase == "action":
+        nr = int(html.var("_del_aggr"))
+        c = wato_confirm(_("Confirm aggregation deletion"),
+            _("Do you really want to delete the aggregation number <b>%s</b>?") % (nr+1))
+        if c:
+            del aggregations[nr]
+            log_pending(SYNC, None, "bi-delete-aggregation", _("Deleted BI aggregation number %d") % (nr+1))
+            save_bi_rules(aggregations, aggregation_rules)
+        elif c == False: # not yet confirmed
+            return ""
+
+        return None # browser reload
+
+    table.begin("bi_aggr", _("Aggregations"))
+    for nr, aggregation in enumerate(aggregations):
+        table.row()
+        table.cell(_("Actions"), css="buttons")
+        edit_url = html.makeuri([("mode", "bi_edit_aggregation"), ("id", nr)])
+        html.icon_button(edit_url, _("Edit this aggregation"), "edit")
+        delete_url = html.makeactionuri([("_del_aggr", nr)])
+        html.icon_button(delete_url, _("Delete this aggregation"), "delete")
+        table.cell(_("Nr."), nr + 1, css="number")
+        table.cell("", css="buttons")
+        if aggregation["disabled"]:
+            html.icon(_("This aggregation is currently disabled."), "disabled")
+        if aggregation["single_host"]:
+            html.icon(_("This aggregation covers only data from a single host."), "host")
+        table.cell(_("Groups"), ", ".join(aggregation["groups"]))
+        ruleid, description = bi_called_rule(aggregation["node"])
+        edit_url = html.makeuri([("mode", "bi_edit_rule"), ("id", ruleid)])
+        table.cell(_("Rule Tree"), css="bi_rule_tree")
+        render_aggregation_rule_tree(aggregation, aggregation_rules)
+        table.cell(_("Note"), description)
+    table.end()
+
+
+def mode_bi_rules(phase):
+    if phase == "title":
+        return _("BI - Business Intelligence - Rules")
+
+    aggregations, aggregation_rules = load_bi_rules()
+    view_type = html.var("view", "list")
+
+    if phase == "buttons":
+        html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
+
+        if view_type == "list":
+            html.context_button(_("Aggregations"), html.makeuri_contextless([("mode", "bi_aggregations")]), "aggr")
+            html.context_button(_("New Rule"), html.makeuri_contextless([("mode", "bi_edit_rule")]), "new")
+            html.context_button(_("Unused Rules"), html.makeuri_contextless([("mode", "bi_rules"), ("view", "unused")]), "unusedbirules")
+
+        else:
+            html.context_button(_("Back"), html.makeuri([("view", "list")]), "back")
+
         return
 
     if phase == "action":
@@ -16939,19 +16996,6 @@ def mode_bi_rules(phase):
                 return ""
             else:
                 return None # browser reload
-        elif html.var("_del_aggr"):
-            nr = int(html.var("_del_aggr"))
-            c = wato_confirm(_("Confirm aggregation deletion"),
-                _("Do you really want to delete the aggregation number <b>%s</b>?") % (nr+1))
-            if c:
-                del aggregations[nr]
-                log_pending(SYNC, None, "bi-delete-aggregation", _("Deleted BI aggregation number %d") % (nr+1))
-                save_bi_rules(aggregations, aggregation_rules)
-            elif c == False: # not yet confirmed
-                return ""
-            else:
-                return None # browser reload
-
         return
 
     if not aggregations and not aggregation_rules:
@@ -16964,27 +17008,14 @@ def mode_bi_rules(phase):
         return
 
 
-    table.begin("bi_aggr", _("Aggregations"))
-    for nr, aggregation in enumerate(aggregations):
-        table.row()
-        table.cell(_("Actions"), css="buttons")
-        edit_url = make_link([("mode", "bi_edit_aggregation"), ("id", nr)])
-        html.icon_button(edit_url, _("Edit this aggregation"), "edit")
-        delete_url = make_action_link([("mode", "bi_rules"), ("_del_aggr", nr)])
-        html.icon_button(delete_url, _("Delete this aggregation"), "delete")
-        table.cell(_("Nr."), nr+1, css="number")
-        table.cell("", css="buttons")
-        if aggregation["disabled"]:
-            html.icon(_("This aggregation is currently disabled."), "disabled")
-        if aggregation["single_host"]:
-            html.icon(_("This aggregation covers only data from a single host."), "host")
-        table.cell(_("Groups"), ", ".join(aggregation["groups"]))
-        ruleid, description = bi_called_rule(aggregation["node"])
-        edit_url = make_link([("mode", "bi_edit_rule"), ("id", ruleid)])
-        table.cell(_("Rule"), '<a href="%s">%s</a>' % (edit_url, ruleid))
-        table.cell(_("Note"), description)
+    if view_type == "list":
+        render_bi_rules(_("Rules"), aggregations, aggregation_rules, only_unused = False)
+    else:
+        render_bi_rules(_("Unused BI Rules"), aggregations, aggregation_rules, only_unused = True)
 
-    table.end()
+
+def render_bi_rules(title, aggregations, aggregation_rules, only_unused):
+    aggregations_that_use_rule = find_aggregation_rule_usages(aggregations, aggregation_rules)
 
     rules = aggregation_rules.items()
     # Sort rules according to nesting level, and then to id
@@ -16992,28 +17023,73 @@ def mode_bi_rules(phase):
                    for (ruleid, rule) in rules ]
     rules_refs.sort(cmp = lambda a,b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
 
-    table.begin("bi_rules", _("Rules"))
+    table.begin("bi_rules", title)
     for ruleid, rule, (aggr_refs, rule_refs, level) in rules_refs:
-        table.row()
-        table.cell(_("Actions"), css="buttons")
-        edit_url = make_link([("mode", "bi_edit_rule"), ("id", ruleid)])
-        html.icon_button(edit_url, _("Edit this rule"), "edit")
-        if rule_refs == 0:
-            tree_url = make_link([("mode", "bi_rule_tree"), ("id", ruleid)])
-            html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"), "aggr")
         refs = aggr_refs + rule_refs
-        if refs == 0:
-            delete_url = make_action_link([("mode", "bi_rules"), ("_del_rule", ruleid)])
-            html.icon_button(delete_url, _("Delete this rule"), "delete")
-        table.cell(_("Lvl"), level, css="number")
-        table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, ruleid))
-        table.cell(_("Parameters"), " ".join(rule["params"]))
-        table.cell(_("Title"), rule["title"])
-        table.cell(_("Aggregation"),  "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
-        table.cell(_("Nodes"), len(rule["nodes"]), css="number")
-        table.cell(_("Usages"), refs, css="number")
-        table.cell(_("Comment"), rule.get("comment", ""))
+        if not only_unused or refs == 0:
+            table.row()
+            table.cell(_("Actions"), css="buttons")
+            edit_url = html.makeuri([("mode", "bi_edit_rule"), ("id", ruleid)])
+            html.icon_button(edit_url, _("Edit this rule"), "edit")
+            if rule_refs == 0:
+                tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", ruleid)])
+                html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"), "bitree")
+            if refs == 0:
+                delete_url = html.makeactionuri([("mode", "bi_rules"), ("_del_rule", ruleid)])
+                html.icon_button(delete_url, _("Delete this rule"), "delete")
+            table.cell(_("Level"), level or "", css="number")
+            table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, ruleid))
+            table.cell(_("Parameters"), " ".join(rule["params"]))
+            table.cell(_("Title"), rule["title"])
+            table.cell(_("Aggregation"),  "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
+            table.cell(_("Nodes"), len(rule["nodes"]), css="number")
+            table.cell(_("Used by"))
+            have_this = set([])
+            for (aggr_id, aggregation) in aggregations_that_use_rule.get(ruleid, []):
+                if aggr_id not in have_this:
+                    aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", aggr_id)])
+                    html.write('<a href="%s">%s</a><br>' % (aggr_url, aggregation_title(aggregation, aggregation_rules)))
+                    have_this.add(aggr_id)
+            table.cell(_("Comment"), rule.get("comment", ""))
     table.end()
+
+
+def aggregation_title(aggregation, aggregation_rules):
+    rule = aggregation_toplevel_rule(aggregation, aggregation_rules)
+    return "%s (%s)" % (rule["title"], rule["id"])
+
+
+def find_aggregation_rule_usages(aggregations, aggregation_rules):
+    aggregations_that_use_rule = {}
+    for aggr_id, aggregation in enumerate(aggregations):
+        ruleid, description = bi_called_rule(aggregation["node"])
+        aggregations_that_use_rule.setdefault(ruleid, []).append((aggr_id, aggregation))
+        sub_rule_ids = aggregation_recursive_sub_rule_ids(ruleid, aggregation_rules)
+        for sub_rule_id in sub_rule_ids:
+            aggregations_that_use_rule.setdefault(sub_rule_id, []).append((aggr_id, aggregation))
+    return aggregations_that_use_rule
+
+
+def aggregation_recursive_sub_rule_ids(ruleid, aggregation_rules):
+    rule = aggregation_rules[ruleid]
+    sub_rule_ids = aggregation_sub_rule_ids(rule)
+    if not sub_rule_ids:
+        return []
+    result = sub_rule_ids[:]
+    for sub_rule_id in sub_rule_ids:
+        result += aggregation_recursive_sub_rule_ids(sub_rule_id, aggregation_rules)
+    return result
+
+
+def render_aggregation_rule_tree(aggregation, aggregation_rules):
+    toplevel_rule = aggregation_toplevel_rule(aggregation, aggregation_rules)
+    render_rule_tree(aggregation_rules, toplevel_rule["id"], toplevel_rule["id"])
+
+
+def aggregation_toplevel_rule(aggregation, aggregation_rules):
+    rule_id, description = bi_called_rule(aggregation["node"])
+    return aggregation_rules[rule_id]
+
 
 def mode_bi_rule_tree(phase):
     ruleid = html.var("id")
@@ -17025,7 +17101,7 @@ def mode_bi_rule_tree(phase):
 
     if phase == "buttons":
         html.context_button(_("Main Menu"), make_link([("mode", "main")]), "home")
-        html.context_button(_("Back"), make_link([("mode", "bi_rules")]), "back")
+        html.context_button(_("Back"), html.makeuri([("mode", "bi_rules")]), "back")
         return
 
     if phase == "action":
@@ -17033,28 +17109,40 @@ def mode_bi_rule_tree(phase):
 
     aggr_refs, rule_refs, level = count_bi_rule_references(aggregations, aggregation_rules, ruleid)
     if rule_refs == 0:
-        render_rule_tree(aggregation_rules, ruleid)
+        table.begin(sortable=False, searchable=False)
+        table.row()
+        table.cell(_("Rule Tree"), css="bi_rule_tree")
+        render_rule_tree(aggregation_rules, ruleid, ruleid)
+        table.end()
 
-def render_rule_tree(aggregation_rules, ruleid):
+
+def render_rule_tree(aggregation_rules, ruleid, tree_path):
     rule = aggregation_rules[ruleid]
-    html.write('<div class=biruletree><div class=birule>')
-    edit_url = make_link([("mode", "bi_edit_rule"), ("id", ruleid)])
-    html.write('<a href="%s">' % edit_url)
-    html.icon(rule.get("comment", rule["title"]), "aggr")
-    html.write(" " + ruleid + "</a>")
-    html.write('</div>')
+    edit_url = html.makeuri([("mode", "bi_edit_rule"), ("id", ruleid)])
+    title = "%s (%s)" % (rule["title"], ruleid)
+
+    sub_rule_ids = aggregation_sub_rule_ids(rule)
+    if not sub_rule_ids:
+        html.write('<li><a href="%s">%s</a></li>' % (edit_url, title))
+    else:
+        html.begin_foldable_container("bi_rule_trees", tree_path, False, title, title_url = edit_url)
+        for sub_rule_id in sub_rule_ids:
+            render_rule_tree(aggregation_rules, sub_rule_id, tree_path + "/" + sub_rule_id)
+        html.end_foldable_container()
+
+
+def aggregation_sub_rule_ids(rule):
+    sub_rule_ids = []
     for node in rule["nodes"]:
         r = bi_called_rule(node)
         if r:
-            subnode_id = r[0]
-            html.write('<br><div class=arrow></div>')
-            html.write('<div class=node>')
-            render_rule_tree(aggregation_rules, subnode_id)
-            html.write('</div>')
-    html.write('</div>')
+            sub_rule_ids.append(r[0])
+    return sub_rule_ids
 
 
 
+# Returns the rule called by a node - if any
+# Result is a pair of the rule and a descriptive title
 def bi_called_rule(node):
     if node[0] == "call":
         if node[1][1]:
@@ -17076,6 +17164,7 @@ def bi_called_rule(node):
         subnode = node[1][-1]
         if subnode[0] == 'call':
             return subnode[1][0], _("Called for each service...")
+
 
 def count_bi_rule_references(aggregations, aggregation_rules, ruleid):
     aggr_refs = 0
@@ -17690,7 +17779,7 @@ def mode_bi_edit_aggregation(phase):
                 aggregations[nr] = new_aggr
                 log_pending(SYNC, None, "bi-new-aggregation", _("Modified BI aggregation %d") % (nr + 1))
             save_bi_rules(aggregations, aggregation_rules)
-        return "bi_rules"
+        return "bi_aggregations"
 
     if new:
         value = { "groups" : [ _("Main") ] }
@@ -17717,7 +17806,7 @@ def mode_bi_edit_rule(phase):
 
 
     elif phase == "buttons":
-        html.context_button(_("Abort"), make_link([("mode", "bi_rules")]), "abort")
+        html.context_button(_("Abort"), html.makeuri([("mode", "bi_rules")]), "abort")
         return
 
     aggregations, aggregation_rules = load_bi_rules()
@@ -19611,6 +19700,7 @@ modes = {
    "edit_auxtag"        : (["hosttags"], mode_edit_auxtag),
    "pattern_editor"     : (["pattern_editor"], mode_pattern_editor),
    "bi_rules"           : (["bi_rules"], mode_bi_rules),
+   "bi_aggregations"    : (["bi_rules"], mode_bi_aggregations),
    "bi_rule_tree"       : (["bi_rules"], mode_bi_rule_tree),
    "bi_edit_rule"       : (["bi_rules"], mode_bi_edit_rule),
    "bi_edit_aggregation": (["bi_rules"], mode_bi_edit_aggregation),

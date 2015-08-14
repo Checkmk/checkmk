@@ -1455,7 +1455,7 @@ class html:
             ht = ht[0:x] + ht[y+9:]
         return ht
 
-    def begin_foldable_container(self, treename, id, isopen, title, indent=True, first=False, icon=None, fetch_url=None):
+    def begin_foldable_container(self, treename, id, isopen, title, indent=True, first=False, icon=None, fetch_url=None, title_url=None):
         self.folding_indent = indent
 
         if self.user:
@@ -1485,10 +1485,14 @@ class html:
                 if indent != "form":
                     self.write("<br>")
             else:
-                self.write('<b class="treeangle title" class=treeangle %s>' % onclick)
+                self.write('<b class="treeangle title" class=treeangle %s>' % (not title_url and onclick or ""))
                 if icon:
                     self.write('<img class="treeangle title" src="images/icon_%s.png">' % icon)
-                self.write('%s</b><br>' % title)
+                if title_url:
+                    self.write('<a href="%s">%s</a>' % (title_url, title))
+                else:
+                    self.write(title)
+                self.write('</b><br>')
 
             indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
             if indent == "form":

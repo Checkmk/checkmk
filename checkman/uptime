@@ -1,6 +1,6 @@
 title: Uptime of operating system
 agents: linux
-catalog: hw/environment
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:

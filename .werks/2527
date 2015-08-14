@@ -1,0 +1,9 @@
+Title: emc_isilon_power, emc_isilon_quota: New checks for power supply and fs quotas on EMC Isilon data storage devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439559501
+Class: feature
+
+

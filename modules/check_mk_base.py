@@ -1777,7 +1777,7 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
         store_aggregated_service_result(host, servicedesc, sa, state, infotext)
 
     # performance data - if any - is stored in the third part of the result
-    perftexts = [];
+    perftexts = []
     perftext = ""
 
     if perfdata:
@@ -1809,7 +1809,8 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
             p = ''
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
         print "%-20s %s%s%-56s%s%s" % (servicedesc.encode('utf-8'),
-                                       tty_bold, color, make_utf8(infotext.split('\n')[0]), tty_normal, p)
+                                       tty_bold, color, make_utf8(infotext.split('\n')[0]),
+                                       tty_normal, make_utf8(p))
 
 
 def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):

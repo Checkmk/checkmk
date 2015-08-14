@@ -2145,7 +2145,7 @@ metric_info["net_data_sent"] = {
 }
 
 for ty, unit in [ ("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s") ]:
-    metric_info[ty+"_cmk_views"] = {
+    metric_info[ty + "_cmk_views"] = {
         "title" : _("Check_MK: Views"),
         "unit"  : unit,
         "color" : "#ff8080",
@@ -4222,7 +4222,7 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title"   : _("Battery currencies"),
+    "title"   : _("Battery currents"),
     "metrics" : [
         ( "battery_current", "area" ),
         ( "current", "stack" ),

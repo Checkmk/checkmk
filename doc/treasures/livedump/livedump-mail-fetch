@@ -123,7 +123,7 @@ try:
     for entry in msglist:
         msgid, size = entry.split()
         response = M.dele(msgid)
-        if response != "+OK":
+        if not response.startswith('+OK'):
             raise Exception("Error from POP server: [%s]" % response)
             break
 

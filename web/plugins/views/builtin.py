@@ -2263,7 +2263,7 @@ multisite_builtin_views.update({
         'has_performance_data' : { 'is_has_performance_data': '1' },
     },
     'datasource': 'services',
-    'description': _('A Matrix of performance data values, group by hosts and services'),
+    'description': _('A Matrix of performance data values, grouped by hosts and services'),
     'group_painters': [('host', 'host', None)],
     'hidden': False,
     'hidebutton': False,

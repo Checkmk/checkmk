@@ -80,7 +80,7 @@ temp_unitsym = {
 }
 
 
-def check_temperature_determine_levels(params, dev_levels, dev_levels_lower):
+def check_temperature_determine_levels(params, dev_levels, dev_levels_lower, dev_unit):
     # min that deals correctly with None
     def minn(a, b):
         return min(a, b) or a or b
@@ -288,7 +288,7 @@ def check_temperature(reading, params, unique_name, dev_unit = "c",
     temp = to_celsius(reading, input_unit)
 
     warn, crit, warn_lower, crit_lower =\
-        check_temperature_determine_levels(params, dev_levels, dev_levels_lower)
+        check_temperature_determine_levels(params, dev_levels, dev_levels_lower, dev_unit)
 
     dlh = params.get("device_levels_handling", "usrdefault")
     if dlh == "usr" or (dlh == "userdefault" and usr_levels):
@@ -442,7 +442,7 @@ def check_temperature_list(sensorlist, params, unique_name):
 
     if unique_name and "trend_range" in params:
         warn, crit, warn_lower, crit_lower =\
-            check_temperature_determine_levels(params, None, None)
+            check_temperature_determine_levels(params, None, None, dev_unit)
 
         trend_status, trend_infotext = check_temperature_trend(tempavg, params, output_unit,
                                                                crit, crit_lower, unique_name)

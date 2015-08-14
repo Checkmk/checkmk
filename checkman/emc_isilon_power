@@ -1,0 +1,25 @@
+title: EMC Isilon: Power Supply sensors
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Checks power supply in EMC Isilon storage devices.
+ There are various sensors for the outputs of the PSU but those are filtered out
+ at the moment. This checks only monitors input voltage.
+
+item:
+ Power Supply 1 Input, Power Supply 2 Input, ...
+
+inventory:
+ Creates one service per voltage reading
+
+[parameters]
+parameters (tuple): A pair of numbers for warning and critical level
+
+ warning (int): The lower limit which triggers an WARNING state
+
+ critical (int): The lower limit which triggers an CRITICAL state
+
+[configuration]
+emc_isilon_power_default_levels (tuple): Default warning and critical level

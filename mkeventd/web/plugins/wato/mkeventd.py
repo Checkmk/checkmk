@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import mkeventd, defaults
+import zipfile
+import cStringIO
 
 mkeventd_enabled = config.mkeventd_enabled
 
@@ -1868,7 +1870,6 @@ def mode_mkeventd_mibs(phase):
                 try:
                     msg = upload_mib(filename, mimetype, content)
                     return None, msg
-                    log_mkeventd("uploaded-mib", _("Uploaded MIB %s: %s") % (filename, msg))
                 except Exception, e:
                     if config.debug:
                         raise
@@ -1878,7 +1879,11 @@ def mode_mkeventd_mibs(phase):
         return
 
     html.write("<h3>" + _("Upload MIB file") + "</h3>")
-    html.write(_("Allowed are single MIB files - usually with the extension <tt>.mib</tt> or <tt>.txt</tt>.<br><br>"))
+    html.write(_("Use this form to upload MIB files for translating incoming SNMP traps. "
+                 "You can upload single MIB files with the extension <tt>.mib</tt> or "
+                 "<tt>.txt</tt>, but you can also upload multiple MIB files at once by "
+                 "packing them into a <tt>.zip</tt> file. Only files in the root directory "
+                 "of the zip file will be processed.<br><br>"))
 
     html.begin_form("upload_form", method = "POST")
     forms.header(_("Upload MIB file"))
@@ -1986,6 +1991,9 @@ def validate_and_compile_mib(mibname, content):
     compiler.addSearchers(StubSearcher(*baseMibs))
 
     try:
+        if not content.strip():
+            raise Exception(_("The file is empty"))
+
         results = compiler.compile(mibname, ignoreErrors=True)
 
         errors = []
@@ -2011,15 +2019,48 @@ def validate_and_compile_mib(mibname, content):
 
 
 def upload_mib(filename, mimetype, content):
+    validate_mib_file_name(filename)
+
+    if zipfile.is_zipfile(cStringIO.StringIO(content)):
+        msg = process_uploaded_zip_file(filename, content)
+    else:
+        if mimetype == "application/tar" or filename.lower().endswith(".gz") or filename.lower().endswith(".tgz"):
+            raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
+
+        msg = process_uploaded_mib_file(filename, content)
+
+    return msg
+
+
+def process_uploaded_zip_file(filename, content):
+    zip_obj = zipfile.ZipFile(cStringIO.StringIO(content))
+    messages = []
+    for entry in zip_obj.infolist():
+        success, fail = 0, 0
+        try:
+            mib_file_name = entry.filename
+            if mib_file_name[-1] == "/":
+                continue # silently skip directories
+
+            validate_mib_file_name(mib_file_name)
+
+            mib_obj = zip_obj.open(mib_file_name)
+            messages.append(process_uploaded_mib_file(mib_file_name, mib_obj.read()))
+            success += 1
+        except Exception, e:
+            messages.append(_("Skipped %s: %s") % (html.attrencode(mib_file_name), e))
+            fail += 1
+
+    return "<br>\n".join(messages) + \
+           "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
+
+
+def validate_mib_file_name(filename):
     if filename.startswith(".") or "/" in filename:
         raise Exception(_("Invalid filename"))
 
-    if mimetype == "application/zip" or filename.lower().endswith(".zip"):
-        raise Exception(_("Sorry, uploading ZIP files is not yet implemented."))
 
-    if mimetype == "application/tar" or filename.lower().endswith(".gz") or filename.lower().endswith(".tgz"):
-        raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
-
+def process_uploaded_mib_file(filename, content):
     if '.' in filename:
         mibname = filename.split('.')[0]
     else:
@@ -2027,6 +2068,7 @@ def upload_mib(filename, mimetype, content):
 
     msg = validate_and_compile_mib(mibname.upper(), content)
     file(mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
+    log_mkeventd("uploaded-mib", _("MIB %s: %s") % (filename, msg))
     return msg
 
 

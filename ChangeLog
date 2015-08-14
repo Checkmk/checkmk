@@ -2,6 +2,9 @@
     Checks & Agents:
     * 2455 FIX: raritan_pdu_inlet: Fixed scaling...
 
+    Multisite:
+    * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
+
 
 1.2.6p10:
     Core & Setup:

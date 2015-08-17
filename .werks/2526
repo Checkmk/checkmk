@@ -1,4 +1,4 @@
-Title: Fixed failing check when performance data contains unicode strings
+Title: Fixed crash in filesystem checks in case mountpoint contains non-ascii characters
 Level: 1
 Component: core
 Compatible: compat

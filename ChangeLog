@@ -15,6 +15,7 @@
     * 2455 FIX: raritan_pdu_inlet: Fixed scaling...
     * 2492 FIX: check_mk_agent.linux: avoid problems with crashing waitmax after Ubuntu update...
     * 2507 FIX: mysql_slave: fixed exception caused by wrong parsing of agent data
+    * 1280 FIX: check_mail_loop: Fixed name auf protocol parameter
 
     Multisite:
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts

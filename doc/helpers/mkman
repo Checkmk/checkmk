@@ -1,0 +1,45 @@
+#!/bin/bash
+# useage:
+# 'mkcheck'        for a standard check
+# 'mkchecksnmp'   for a snmp check
+content_std="title:
+agents: TYPE
+catalog:
+license: GPL
+distribution: check_mk
+description:
+
+item:
+
+examples:
+
+perfdata:
+
+inventory:
+
+[parameters]
+
+[configuration]"
+path=`pwd`
+filename=$1
+snmp=$2
+path2file=$path"/"$filename
+if [ -z "$filename" ]; then
+    echo "No name given. Please determine one."
+    exit 0
+else
+    if [ ! -f "$path2file" ]; then
+        if  [ -z $snmp ]; then
+            content_std=${content_std//" TYPE"/}
+        elif [ $snmp = "snmp" ]; then
+            content_std=${content_std//" TYPE"/" snmp"}
+        else
+            echo "Wrong arguments."
+            exit 0
+        fi
+        echo "New check '$filename' created and stored in '$path2file'."
+        echo -e "${content_std}" > $path2file
+    else
+        echo "File already exists."
+    fi
+fi

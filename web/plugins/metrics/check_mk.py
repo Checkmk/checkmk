@@ -711,7 +711,7 @@ metric_info["threads_idle"] = {
 }
 
 metric_info["threads_rate"] = {
-    "title" : _("Threads per second"),
+    "title" : _("Thread creations per second"),
     "unit"  : "1/s",
     "color" : "44/a",
 }
@@ -730,7 +730,7 @@ metric_info["threads_max"] = {
 }
 
 metric_info["threads_total"] = {
-    "title" : _("Number of threads since starting JVM"),
+    "title" : _("Number of threads"),
     "unit"  : "count",
     "color" : "41/a",
 }
@@ -743,14 +743,17 @@ metric_info["threads_busy"] = {
 
 metric_info["vol_context_switches"] = {
     "title" : _("Voluntary context switches"),
-    "help"  : _("A voluntary context switch occurs when a thread blocks because it requires a resource that is unavailable"),
+    "help"  : _("A voluntary context switch occurs when a thread blocks "
+                "because it requires a resource that is unavailable"),
     "unit"  : "count",
     "color" : "36/a",
 }
 
 metric_info["invol_context_switches"] = {
     "title" : _("Involuntary context switches"),
-    "help"  : _("An involuntary context switch takes place when a thread executes for the duration of its time slice or when the system identifies a higher-priority thread to run"),
+    "help"  : _("An involuntary context switch takes place when a thread "
+                "executes for the duration of its time slice or when the "
+                "system identifies a higher-priority thread to run"),
     "unit"  : "count",
     "color" : "45/b",
 }
@@ -2126,7 +2129,7 @@ metric_info["gc_reclaimed_redundant_memory_areas"] = {
 }
 
 # TODO: ? GCs/sec? oder Avg time? Oder was?
-metric_info["gc_reclaimed_redundant_memory_areas_time"] = {
+metric_info["gc_reclaimed_redundant_memory_areas_rate"] = {
     "title" : _("Reclaiming redundant memory areas"),
     "unit"  : "1/s",
     "color" : "32/a",
@@ -2532,7 +2535,7 @@ check_metrics["check-mk-host-tcp"] = {
 
 check_metrics["check_mk-jolokia_metrics.gc"] = {
     "CollectionCount" : { "name" : "gc_reclaimed_redundant_memory_areas" },
-    "CollectionTime"  : { "name" : "gc_reclaimed_redundant_memory_areas_time", "scale" : 1/60 },
+    "CollectionTime"  : { "name" : "gc_reclaimed_redundant_memory_areas_rate", "scale" : 1 / 60.0 },
 }
 
 check_metrics["check_mk-rmon_stats"] = {
@@ -2750,6 +2753,7 @@ check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = df_translation
 check_metrics["check_mk-fast_lta_volumes"]                      = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = df_translation
 check_metrics["check_mk-netapp_api_volume"]                     = df_translation
+check_metrics["check_mk-emc_isilon_quota"]                      = df_translation
 
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
 if_translation = {

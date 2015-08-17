@@ -41,6 +41,6 @@ check_info["innovaphone_temp"] = {
     "has_perfdata"            : True,
     "group"                   : "temperature",
     "include"                 : [ "temperature.include" ],
-    "default_levels_variable" : "innovaphone_temp"
+    "default_levels_variable" : "innovaphone_temp_default_levels"
 }
 

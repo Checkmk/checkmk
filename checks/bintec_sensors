@@ -109,7 +109,7 @@ check_info["bintec_sensors.temp"] = {
     "snmp_info"               : bintec_sensors_info,
     "snmp_scan_function"      : bintec_sensors_scan,
     "includes"                : [ "temperature.include" ],
-    "default_levels_variable" : "bintec_sensors_temp"
+    "default_levels_variable" : "bintec_sensors_temp_default_levels"
 }
 
 #.

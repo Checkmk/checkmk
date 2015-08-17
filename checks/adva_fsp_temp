@@ -24,111 +24,39 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-adva_fsp_temp_default_levels = {
-    "trend_range": None, # range in minutes, default is no trend computation
-    "trend_c": (5,10), # in degrees Celcius
-    "trend_timeleft": (240, 120), # in minutes
-}
 
 def inventory_adva_fsp_temp(info):
     for line in info:
         # Ignore unconnected sensors
         if len(line) == 5 and line[0] != "" and line[4] != "" and int(line[0]) >= -2730:
-            yield line[4], "adva_fsp_temp_default_levels"
+            yield line[4], {}
 
 def check_adva_fsp_temp(item, params, info):
     for line in info:
         if len(line) == 5 and line[4] == item:
             temp, high, low, descr = line[0:4]
-            temp = float(temp)/10
-            high = float(high)/10
-            low = float(low)/10
-            if low > -273:
-                infotext = u"Temperature is %.1f °C (limits %.1f/%.1f °C) at %s" % (temp, low, high, descr)
-                perfdata = [ ("temp", temp, "", str(low)+":"+str(high),  ) ]
-            else:
-                infotext = u"Temperature is %.1f °C (crit at %.1f °C) at %s" % (temp, high, descr)
-                perfdata = [ ("temp", temp, "", high,  ) ]
+            temp = float(temp) / 10
+            high = float(high) / 10
+            low = float(low) / 10
 
             if temp <= -2730:
-                return(3, "Invalid sensor data")
-            elif temp >= high or temp <= low:
-                state = 2
+                return 3, "Invalid sensor data"
+
+            if low > -273:
+                return check_temperature(
+                    temp, params, "adva_fsp_temp_%s" % item,
+                    dev_levels=(high, high), dev_levels_lower=(low, low))
             else:
-                state = 0
-
-            if params.get("trend_range"):
-                problems = []
-                try:
-                    range = params["trend_range"] # in minutes
-                    range_sec = range * 60.0
-                    this_time = time.time()
-
-                    # first compute current rate in C/s by computing delta since last check
-                    rate = get_rate("temp.%s.delta" % item, this_time, temp, True)
-
-                    # average trend, initialize with zero, rate_avg is in C/s
-                    rate_avg = get_average("temp.%s.trend" % item,
-                                           this_time, rate, range_sec / 60.0, True) #?
-
-                    # rate_avg is growth in C/s, trend is in C per trend range minutes
-                    trend = float(rate_avg * range_sec)
-                    sign = trend > 0 and "+" or ""
-                    infotext += ", rate: %s%.2f °C/%g min" %  (sign, trend, range)
-
-                    # apply levels for absolute growth in C / interval
-                    trend_c = params.get("trend_c")
-                    if trend_c:
-                        wa, cr = trend_c
-                        if trend >= cr:
-                            problems.append(u"rising faster than %s °C/%g min(!!)" % ( cr, range ))
-                            state = 2
-                        elif trend >= wa:
-                            problems.append(u"rising faster than %s °C/%g min(!)" % ( wa, range ))
-                            state = max(1, state)
-                    else:
-                        wa, cr = None, None
-
-                    # compute time until temperature limit is reached  (only for positive trend, of course)
-                    # The start value of minutes_left is negative. The pnp graph and the perfometer
-                    # will interpret this as inifinite -> not growing
-                    minutes_left = -1
-                    if trend > 0:
-                        diff_to_high = high - temp
-                        minutes_left = diff_to_high / trend * range
-                        timeleft = params.get("trend_timeleft")
-                        def format_minutes(minutes):
-                            if minutes > 60:   # hours
-                                hours = minutes / 60
-                                minutes += - int(hours) * 60
-                                return "%dh %02dm" % (hours, minutes)
-                            else:
-                                return "%d minutes" % minutes
-
-                        if timeleft:
-                            wa, cr = timeleft
-                            if minutes_left <= cr:
-                                state = 2
-                                problems.append("%s until temp limit reached(!!)" % format_minutes(minutes_left))
-                            elif minutes_left <= wa:
-                                state = max(state, 1)
-                                problems.append("%s until temp limit reached(!)" % format_minutes(minutes_left))
-
-                except MKCounterWrapped:
-                    pass
-
-                if problems:
-                    infotext += " - %s" % ", ".join(problems)
-
-            return state, "%s" % infotext, perfdata
+                return check_temperature(
+                    temp, params, "adva_fsp_temp_%s" % item,
+                    dev_levels=(high, high))
 
 check_info['adva_fsp_temp'] = {
-    "inventory_function"    : inventory_adva_fsp_temp,
-    "check_function"        : check_adva_fsp_temp,
-    "service_description"   : "Temperature %s",
-    "has_perfdata"          : True,
-    "default_levels_variable" : "adva_fsp_temp_default_levels",
-    "snmp_info"             : ( ".1.3.6.1.4.1.2544", [
+    "inventory_function"      : inventory_adva_fsp_temp,
+    "check_function"          : check_adva_fsp_temp,
+    "service_description"     : "Temperature %s",
+    "has_perfdata"            : True,
+    "snmp_info"               : ( ".1.3.6.1.4.1.2544", [
                                     "1.11.2.4.2.1.1.1", # moduleDiagnosticsTemp
                                     "1.11.2.4.2.1.1.2", # moduleDiagnosticsUpperTempThres
                                     "1.11.2.4.2.1.1.3", # moduleDiagnosticsLowerTempThres
@@ -136,7 +64,8 @@ check_info['adva_fsp_temp'] = {
                                     "2.5.5.2.1.5",
                                     #"2.5.5.1.1.10",
                               ]),
-    "snmp_scan_function"    : lambda oid:
+    "snmp_scan_function"      : lambda oid:
                                 oid(".1.3.6.1.2.1.1.1.0") == "Fiber Service Platform F7",
-    "group"                 : "temperature_trends",
+    "group"                   : "temperature",
+    "includes"                : [ "temperature.include" ]
 }

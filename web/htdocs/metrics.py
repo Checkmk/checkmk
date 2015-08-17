@@ -1011,7 +1011,7 @@ def render_graph_pnp(graph_template, translated_metrics):
             right_pad = ""
         else:
             right_pad = " " * (max_title_length - len(title))
-        commands += "%s:%s%s%s:\"%s%s\"%s " % (draw_type, metric_name, upside_down_suffix, color, title, right_pad, draw_stack)
+        commands += "%s:%s%s%s:\"%s%s\"%s " % (draw_type, metric_name, upside_down_suffix, color, title.replace(":", "\\:"), right_pad, draw_stack)
         if line_type == "area":
             commands += "LINE:%s%s%s " % (metric_name, upside_down_suffix, render_color(darken_color(parse_color(color), 0.2)))
 

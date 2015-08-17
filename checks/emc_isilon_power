@@ -48,15 +48,21 @@ def check_emc_isilon_power(item, params, info):
     for line in info:
         if item == isilon_power_item_name(line[0]):
             volt = float(line[1])
-            yield 0, "%.1f V" % volt
-            warn_lower, crit_lower = params
 
-            limits_text = " (warn/crit below %.1f/%.1f V)" % (warn_lower, crit_lower)
+            infotext = "%.1f V" % volt
+            warn_lower, crit_lower = params
+            levelstext = " (warn/crit below %.1f/%.1f V)" % (warn_lower, crit_lower)
 
             if volt < crit_lower:
-                yield 2, limits_text
+                state = 2
+                infotext += levelstext
             elif volt < warn_lower:
-                yield 1, limits_text
+                state = 1
+                infotext += levelstext
+            else:
+                state = 0
+
+            return state, infotext
 
 
 check_info["emc_isilon_power"] = {

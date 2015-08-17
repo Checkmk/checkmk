@@ -6682,45 +6682,50 @@ register_check_parameters(
                       ],
                       default_value = "usrdefault",
                 )),
-                ( "trend_range",
-                    Optional(
-                        Integer(
-                            title = _("Observation period for temperature trend computation"),
-                            default_value = 30,
-                            minvalue = 5,
-                            unit= _("minutes")
-                        ),
-                        title = _("Trend computation"),
-                        label = _("Enable trend computation")
-                        )
+                ( "trend_compute",
+                  Dictionary(
+                      title = _("Trend computation"),
+                      label = _("Enable trend computation"),
+                      elements = [
+                          ( "period",
+                              Integer(
+                                  title = _("Observation period for temperature trend computation"),
+                                  default_value = 30,
+                                  minvalue = 5,
+                                  unit= _("minutes")
+                              )
+                              ),
+                          ( "trend_levels",
+                              Tuple(
+                                  title = _("Levels on temperature increase per period"),
+                                  elements = [
+                                      Integer(title = _("Warning at"), unit = u"°C / " + _("period"), default_value = 5),
+                                      Integer(title = _("Critical at"), unit = u"°C / " + _("period"), default_value = 10)
+                                  ]
+                              )
+                              ),
+                          ( "trend_levels_lower",
+                              Tuple(
+                                  title = _("Levels on temperature decrease per period"),
+                                  elements = [
+                                      Integer(title = _("Warning at"), unit = u"°C / " + _("period"), default_value = 5),
+                                      Integer(title = _("Critical at"), unit = u"°C / " + _("period"), default_value = 10)
+                                  ]
+                              )
+                              ),
+                          ( "trend_timeleft",
+                              Tuple(
+                                  title = _("Levels on the time left until a critical temperature (upper or lower) is reached"),
+                                  elements = [
+                                      Integer(title = _("Warning if below"), unit = _("minutes"), default_value = 240,),
+                                      Integer(title = _("Critical if below"), unit = _("minutes"), default_value = 120, ),
+                                  ]
+                              )
+                              )
+                      ],
+                      optional_keys = ["trend_levels", "trend_levels_lower", "trend_timeleft"],
+                  ),
                 ),
-                ( "trend_levels",
-                Tuple(
-                    title = _("Levels on temperature increase per period"),
-                    elements = [
-                        Integer(title = _("Warning at"), unit = u"°C / " + _("period"), default_value = 5),
-                        Integer(title = _("Critical at"), unit = u"°C / " + _("period"), default_value = 10)
-                    ]
-                    )
-                ),
-                ( "trend_levels_lower",
-                Tuple(
-                    title = _("Levels on temperature decrease per period"),
-                    elements = [
-                        Integer(title = _("Warning at"), unit = u"°C / " + _("period"), default_value = 5),
-                        Integer(title = _("Critical at"), unit = u"°C / " + _("period"), default_value = 10)
-                    ]
-                    )
-                ),
-                ( "trend_timeleft",
-                Tuple(
-                    title = _("Levels on the time left until a critical temperature (upper or lower) is reached"),
-                    elements = [
-                        Integer(title = _("Warning if below"), unit = _("minutes"), default_value = 240,),
-                        Integer(title = _("Critical if below"), unit = _("minutes"), default_value = 120, ),
-                        ]
-                    )
-                )
             ]
         ),
         forth = lambda v: type(v) == tuple and { "levels" : v } or v,

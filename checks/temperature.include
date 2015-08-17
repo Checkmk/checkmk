@@ -178,7 +178,7 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
             combiner.infotext = infotext
 
     try:
-        trend_range_min = params["trend_range"]
+        trend_range_min = params["period"]
         this_time = time.time()
 
         # first compute current rate in C/s by computing delta since last check
@@ -194,12 +194,18 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
         combiner(0, "rate: %s%s/%g min" %\
                     (sign, render_temp(trend, output_unit, True), trend_range_min))
 
-        warn_upper_trend, crit_upper_trend = params.get("trend_levels", (None, None))
+        if "trend_levels" in params:
+            warn_upper_trend, crit_upper_trend = params["trend_levels"]
+        else:
+            warn_upper_trend = crit_upper_trend = None
         # it may be unclear to the user if he should specify temperature decrease as a negative
         # number or positive. This works either way. Having a positive lower bound makes no
         # sense anyway.
-        warn_lower_trend, crit_lower_trend = map(lambda x: abs(x) * -1,
-                                        params.get("trend_levels_lower", (None, None)))
+        if "trend_levels_lower" in params:
+            warn_lower_trend, crit_lower_trend =\
+                map(lambda x: abs(x) * -1, params["trend_levels_lower"])
+        else:
+            warn_lower_trend = crit_lower_trend = None
 
         if crit_upper_trend and trend > crit_upper_trend:
             combiner(2, u"rising faster than %s/%g min(!!)" %\
@@ -366,10 +372,20 @@ def check_temperature(reading, params, unique_name, dev_unit = "c",
             if not usr_levels_lower:
                 infotext += dev_levelstext_lower
 
-    if unique_name and "trend_range" in params:
-        trend_status, trend_infotext = check_temperature_trend(temp, params, output_unit,
-                                                               dev_levels, dev_levels_lower,
-                                                               unique_name)
+    # all checks specify a unique_name but when multiple sensors are handled through
+    #   check_temperature_list, trend is only calculated for the average and then the individual
+    #   calls to check_temperate receive no unique_name
+    # "trend_compute" in params tells us if there if there is configuration for trend computation
+    #   when activating trend computation through the website, "period" is always set together with
+    #   the trend_compute dictionary. But a check may want to specify default levels for trends
+    #   without activating them. In this case they can leave period unset to deactivate the
+    #   feature.
+    if unique_name and\
+            "trend_compute" in params\
+            and "period" in params["trend_compute"]:
+        trend_status, trend_infotext =\
+            check_temperature_trend(temp, params["trend_compute"], output_unit,
+                                    crit, crit_lower, unique_name)
         status = max(status, trend_status)
         if trend_infotext:
             infotext += ", " + trend_infotext
@@ -440,12 +456,14 @@ def check_temperature_list(sensorlist, params, unique_name):
     infotext = summarytext + detailtext
     perfdata = [ ("temp", tempmax) ]
 
-    if unique_name and "trend_range" in params:
+    if "trend_compute" in params and\
+            "period" in params["trend_compute"]:
         warn, crit, warn_lower, crit_lower =\
             check_temperature_determine_levels(params, None, None, dev_unit)
 
-        trend_status, trend_infotext = check_temperature_trend(tempavg, params, output_unit,
-                                                               crit, crit_lower, unique_name)
+        trend_status, trend_infotext =\
+            check_temperature_trend(tempavg, params["trend_compute"], output_unit,
+                                    crit, crit_lower, unique_name)
         status = max(status, trend_status)
         if trend_infotext:
             infotext += ", " + trend_infotext

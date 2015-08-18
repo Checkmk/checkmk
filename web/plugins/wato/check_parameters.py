@@ -4300,6 +4300,20 @@ register_check_parameters(
                                 "the the bottleneck of your server is IO. Please note that depending on the "
                                 "applications being run this might or might not be totally normal.")),
                 ),
+                ( "core_util_time",
+                  Tuple(
+                      title = _("Alert on high utilization over an extended time period on a single core"),
+                      elements = [
+                          Percentage(title = _("High utilization at "), default_value = 100.0),
+                          Integer(title = _("Warning after "), default_value = 5, unit = "min"),
+                          Integer(title = _("Critical after "), default_value = 15, unit = "min"),
+                      ],
+                      help = _("A single thread fully utilizing a single core (potentially due to a bug) "
+                               "may go unnoticed when only monitoring the total utilization of the CPU. "
+                               "With this configuration, check_mk will alert if a single core is "
+                               "exceeding a utilization threshold over an extended period of time.")
+                    )
+                ),
             ]
         ),
         forth = lambda old: type(old) != dict and { "iowait" : old } or old,

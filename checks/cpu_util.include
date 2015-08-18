@@ -89,18 +89,17 @@ def check_cpu_util(util, params, this_time = None):
 # - 7 - steal: involuntary wait
 # - 8 - guest: time spent in guest OK
 # - 9 - guest_nice: time spent in niced guest OK
-def check_cpu_util_unix(values, params):
+def check_cpu_util_unix(values, params, cores = None):
     this_time = int(time.time())
     # Compute jiffi-differences of all relevant counters
     diff_values = []
     n = 0
-    global g_counters
     for v in values:
         n += 1
         countername = "cpu.util.%d" % n
-        last_time, last_val = g_counters.get(countername, (0, 0))
+        last_time, last_val = get_item_state(countername, (0, 0))
         diff_values.append(v - last_val)
-        g_counters[countername] = (this_time, v)
+        set_item_state(countername, (this_time, v))
 
     sum_jiffies = sum(diff_values) # do not account for steal!
     if sum_jiffies == 0:
@@ -163,3 +162,31 @@ def check_cpu_util_unix(values, params):
             levelstext = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
 
     yield state, "total: %.1f%%" % util_total_perc + levelstext
+
+    if cores and "core_util_time" in params:
+        for core, user, nice, system, idle, iowait,\
+            irq, softirq, steal, guest, guest_nice  in cores:
+
+            core_state_name = "cpu.util.core.high.%s" % core
+            total = user + nice + system + iowait + irq + softirq + steal + guest + guest_nice
+
+            prev_total = get_item_state("cpu.util.%s.total" % core, 0)
+            total_diff = total - prev_total
+            set_item_state("cpu.util.%s.total" % core, total)
+
+            total_perc = (100.0 * total_diff) / sum_jiffies
+            threshold, warn_core, crit_core = params["core_util_time"]
+            if total_perc > threshold:
+                timestamp = get_item_state(core_state_name, 0)
+                high_load_duration = (this_time - timestamp) / 60
+                if timestamp == 0:
+                    set_item_state(core_state_name, this_time)
+                elif high_load_duration > crit_core:
+                    yield 2, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
+                        (core, high_load_duration, warn_core, crit_core)
+                elif high_load_duration > warn_core:
+                    yield 1, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
+                        (core, high_load_duration, warn_core, crit_core)
+            else:
+                clear_item_state(core_state_name)
+

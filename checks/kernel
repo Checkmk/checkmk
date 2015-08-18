@@ -111,6 +111,13 @@ def inventory_cpu_utilization(info):
         if len(x) > 0 and x[0] == 'cpu':
             return [(None, {})]
 
+
+def transform_cpu_info(element):
+    if len(element) < 8:
+        element += ['0', '0', '0', '0'] # needed for Linux 2.4
+
+    return [element[0]] + [int(x) for x in element[1:]]
+
 # Columns of cpu usage /proc/stat:
 # - cpuX: number of CPU or only 'cpu' for aggregation
 # - user: normal processes executing in user mode
@@ -130,20 +137,21 @@ def kernel_check_cpu_utilization(item, params, info):
     if type(params) != dict:
         params = { "iowait": params }
 
-    # Look for entry beginning with "cpu"
-    f = [ l for l in info if l[0] == "cpu" ]
-    if len(f) != 1:
+    # Look for entry matching "cpu" (this is the combined load of all cores)
+    total = [transform_cpu_info(line)
+         for line in info
+         if line[0] == "cpu"]
+
+    if len(total) != 1:
         return 3, "More than one line with CPU info found. This check is not cluster-enabled."
 
-    line = f[0]
-    if len(line) < 8:
-        line = line + ['0', '0', '0', '0'] # needed for Linux 2.4
-
-    # line contains now the following columns:
+    cores = [transform_cpu_info(line)
+             for line in info
+             if line[0].startswith("cpu") and len(line[0]) > 3]
+    # total contains now the following columns:
     # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
     # convert number to int
-    values = [ int(x) for x in line[1:] ]
-    return check_cpu_util_unix(values, params)
+    return check_cpu_util_unix(total[0][1:], params, cores)
 
 check_info["kernel.util"] = {
     'check_function':           kernel_check_cpu_utilization,

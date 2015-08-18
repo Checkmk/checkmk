@@ -143,7 +143,7 @@ for o,a in opts:
         smtp_pass = a
     elif o == '--smtp-tls':
         smtp_tls = True
-    elif o == '--fetch-proto':
+    elif o == '--fetch-protocol':
         fetch_proto = a
     elif o == '--fetch-server':
         fetch_server = a

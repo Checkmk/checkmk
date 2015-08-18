@@ -1,0 +1,11 @@
+Title: check_mail_loop: It was not possible to use POP3 as protocol to fetch mails
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1439802536
+
+
+

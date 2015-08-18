@@ -33,8 +33,7 @@ content_std="#!/usr/bin/python
 #
 
 
-factory_settings['CHECKNAME_default_variables' = {
-    'LEVELS' : None,
+factory_settings['CHECKNAME_default_levels'] = {
 }
 
 
@@ -52,7 +51,7 @@ check_info['CHECKNAME'] = {
     'check_function'            : check_CHECKNAME,
     'service_description'       : 'DESCRIPTION %s',
     'has_perfdata'              : True,
-    'default_level_variable'    : 'CHECKNAME_default_variables',
+    'default_levels_variable'   : 'CHECKNAME_default_levels',
     'includes'                  : [],"
 content_snmp="
     'snmp_info'                 : INFO,

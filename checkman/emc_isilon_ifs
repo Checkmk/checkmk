@@ -1,0 +1,18 @@
+title: EMC Isilon: Cluster storage
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Checks space on the cluster filesystem.
+
+inventory:
+ One check will be created
+
+perfdata:
+ Two or four values: The first value is the used space on the filesystem in MB
+ (with warn, crit, min and max values) and the filesystem size.
+ If the parameter trend_perfdata is True (the default), two additional values
+ will be returned: the change in usage per period since the last check and the
+ average change per period.
+

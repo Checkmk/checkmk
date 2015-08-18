@@ -2750,6 +2750,8 @@ check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = df_translation
 check_metrics["check_mk-fast_lta_volumes"]                      = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = df_translation
 check_metrics["check_mk-netapp_api_volume"]                     = df_translation
+check_metrics["check_mk-emc_isilon_quota"]                      = df_translation
+check_metrics["check_mk-emc_isilon_ifs"]                        = df_translation
 
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
 if_translation = {

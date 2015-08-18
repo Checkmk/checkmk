@@ -1,0 +1,10 @@
+title: EMC Isilon: CPU utilization
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Checks cpu utilization as reported by EMC Isilon storage devices.
+
+inventory:
+ Creates exactly one service.

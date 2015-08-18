@@ -1,0 +1,9 @@
+Title: emc_isilon_cpu, emc_isilon_ifs: New checks for cpu utilization and the combined cluster storage on EMC Isilon data storage devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439884688
+Class: feature
+
+

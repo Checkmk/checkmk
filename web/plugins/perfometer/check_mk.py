@@ -1257,6 +1257,7 @@ perfometers["check_mk-vms_sys.util"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-vms_cpu"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-ucd_cpu_util"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-lparstat_aix.cpu_util"] = perfometer_check_mk_kernel_util
+perfometers["check_mk-emc_isilon_cpu"] = perfometer_check_mk_kernel_util
 
 def perfometer_check_mk_cpu_threads(row, check_command, perf_data):
     color = { 0: "#a4f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]

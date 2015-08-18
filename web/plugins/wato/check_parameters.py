@@ -3596,6 +3596,16 @@ register_check_parameters(
             ( "levels_committed",   UpperMemoryLevels(_("Committed memory"),    (100.0, 150.0), _("RAM + Swap"))),
             ( "levels_commitlimit", LowerMemoryLevels(_("Commit Limit"),        ( 20.0,  10.0), _("RAM + Swap"))),
             ( "levels_vmalloc",     LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
+            ( "handle_hw_corrupted_error", DropdownChoice(
+                    title = _("Handle Hardware Corrupted Error"),
+                    choices = [
+                        (0, _("Set state to OK")),
+                        (1, _("Set state to WARN")),
+                        (2, _("Set state to CRIT (Default)")),
+                        (3, _("Ignore this error")),
+                    ],
+                    default_value = 2,
+            )),
         ],
     ),
     None,

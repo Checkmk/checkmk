@@ -1016,17 +1016,18 @@ def clear_counters(pattern, older_than):
 
 
 # Store arbitrary values until the next execution of a check
-def get_item_state(itemname, default=None):
-    return g_counters.get(itemname, default)
-
-
 def set_item_state(itemname, state):
     g_counters[itemname] = state
+
+
+def get_item_state(itemname, default=None):
+    return g_counters.get(itemname, default)
 
 
 def clear_item_state(itemname):
     if itemname in g_counters:
         del g_counters[itemname]
+
 
 # Idea (1): We could keep global variables for the name of the checktype and item
 # during a check and that way "countername" would need to be unique only
@@ -1050,29 +1051,24 @@ def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP
 
 # Legacy. Do not use this function in checks directly any more!
 def get_counter(countername, this_time, this_val, allow_negative=False, is_rate=False):
-    global g_counters
+    old_state = get_item_state(countername, None)
+    set_item_state(countername, (this_time, this_val))
 
     # First time we see this counter? Do not return
     # any data!
-    if not countername in g_counters:
-        g_counters[countername] = (this_time, this_val)
+    if old_state is None:
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
         raise MKCounterWrapped('Counter initialization')
 
-    last_time, last_val = g_counters.get(countername)
+    last_time, last_val = old_state
     timedif = this_time - last_time
     if timedif <= 0: # do not update counter
-        # Reset counter to a (hopefully) reasonable value
-        g_counters[countername] = (this_time, this_val)
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
         raise MKCounterWrapped('No time difference')
-
-    # update counter for next time
-    g_counters[countername] = (this_time, this_val)
 
     if not is_rate:
         valuedif = this_val - last_val
@@ -1099,16 +1095,17 @@ def get_counter(countername, this_time, this_val, allow_negative=False, is_rate=
 # backlog: averaging horizon in minutes
 # initialize_zero: assume average of 0.0 when now previous average is stored
 def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero = True):
+    old_state = get_item_state(itemname, None)
 
     # first call: take current value as average or assume 0.0
-    if not itemname in g_counters:
+    if old_state is None:
         if initialize_zero:
             this_val = 0
-        g_counters[itemname] = (this_time, this_val)
+        set_item_state(itemname, (this_time, this_val))
         return this_val # avoid time diff of 0.0 -> avoid division by zero
 
     # Get previous value and time difference
-    last_time, last_val = g_counters.get(itemname)
+    last_time, last_val = old_state
     timedif = this_time - last_time
 
     # Gracefully handle time-anomaly of target systems. We lose
@@ -1131,7 +1128,7 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 
     new_val = last_val * weight + this_val * (1 - weight)
 
-    g_counters[itemname] = (this_time, new_val)
+    set_item_state(itemname, (this_time, new_val))
     return new_val
 
 

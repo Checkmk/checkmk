@@ -4305,8 +4305,8 @@ register_check_parameters(
                       title = _("Alert on high utilization over an extended time period on a single core"),
                       elements = [
                           Percentage(title = _("High utilization at "), default_value = 100.0),
-                          Integer(title = _("Warning after "), default_value = 5, unit = "min"),
-                          Integer(title = _("Critical after "), default_value = 15, unit = "min"),
+                          Age(title = _("Warning after "), default_value = 5 * 60),
+                          Age(title = _("Critical after "), default_value = 15 * 60),
                       ],
                       help = _("A single thread fully utilizing a single core (potentially due to a bug) "
                                "may go unnoticed when only monitoring the total utilization of the CPU. "

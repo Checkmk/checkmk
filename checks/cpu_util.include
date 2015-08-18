@@ -178,15 +178,15 @@ def check_cpu_util_unix(values, params, cores = None):
             threshold, warn_core, crit_core = params["core_util_time"]
             if total_perc > threshold:
                 timestamp = get_item_state(core_state_name, 0)
-                high_load_duration = (this_time - timestamp) / 60
+                high_load_duration = (this_time - timestamp)
                 if timestamp == 0:
                     set_item_state(core_state_name, this_time)
                 elif high_load_duration > crit_core:
                     yield 2, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
-                        (core, high_load_duration, warn_core, crit_core)
+                        (core, high_load_duration / 60, warn_core / 60, crit_core / 60)
                 elif high_load_duration > warn_core:
                     yield 1, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
-                        (core, high_load_duration, warn_core, crit_core)
+                        (core, high_load_duration / 60, warn_core / 60, crit_core / 60)
             else:
                 clear_item_state(core_state_name)
 

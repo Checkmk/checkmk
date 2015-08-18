@@ -296,14 +296,14 @@ def convert_esx_counters_if(parsed):
                 if ctr_name.startswith("bytes"):
                     ctr_value *= 1024
                 countername = "vmnic." + name + "." + ctr_name
-                if countername in g_counters:
-                    last_time, last_value = g_counters[countername]
+                last_time, last_value = get_item_state(countername, (None, None))
+                if last_time or last_value:
                     new_value = last_value + ((this_time - last_time) * ctr_value)
                 else:
                     last_time = this_time - 60
                     last_value = 0
                     new_value = ctr_value * 60
-                g_counters[countername] = (this_time, new_value)
+                set_item_state(countername, (this_time, new_value))
                 entry[ti] = str(int(new_value))
 
     return converted

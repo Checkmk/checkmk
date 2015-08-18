@@ -549,6 +549,21 @@ void debug_script_container( script_container* container )
 }
 
 
+
+template <typename FuncT> FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName) {
+    HMODULE mod = LoadLibraryW(dllName);
+    if (mod != NULL) {
+        FARPROC proc = GetProcAddress(mod, funcName);
+        if (proc != NULL) {
+            return (FuncT)proc;
+        }
+    }
+    return NULL;
+}
+
+#define DYNAMIC_FUNC(func, dllName) func ## _type func ## _dyn = dynamic_func<func ## _type>(dllName, #func)
+// GetProcessHandleCount_type GetProcessHandleCount_dyn = dynamic_func<GetProcessHandleCount_type>(L"kernel32.dll", "GetProcessHandleCount");
+
 //  .----------------------------------------------------------------------.
 //  |  ______              _                 _   _               ______    |
 //  | / / / /___ _   _ ___| |_ ___ _ __ ___ | |_(_)_ __ ___   ___\ \ \ \   |
@@ -1670,11 +1685,14 @@ void section_ps(SOCKET &out)
                        usermodetime.HighPart   = userTime.dwHighDateTime;
                 }
 
-                // GetProcessHandleCount is only available winxp upwards
-                // Win2k reports 0 handles
                 DWORD processHandleCount = 0;
-                if (osv.dwMajorVersion > 5 || (osv.dwMajorVersion == 5 && osv.dwMinorVersion > 0))
-                    GetProcessHandleCount(hProcess, &processHandleCount);
+
+                // GetProcessHandleCount is only available winxp upwards
+                typedef BOOL (*GetProcessHandleCount_type)(HANDLE, PDWORD);
+                DYNAMIC_FUNC(GetProcessHandleCount, L"kernel32.dll");
+                if (GetProcessHandleCount_dyn != NULL) {
+                    GetProcessHandleCount_dyn(hProcess, &processHandleCount);
+                }
 
                 // Process owner
                 ExtractProcessOwner(hProcess, user);

@@ -1015,6 +1015,19 @@ def clear_counters(pattern, older_than):
         del g_counters[name]
 
 
+# Store arbitrary values until the next execution of a check
+def get_item_state(itemname, default=None):
+    return g_counters.get(itemname, default)
+
+
+def set_item_state(itemname, state):
+    g_counters[itemname] = state
+
+
+def clear_item_state(itemname):
+    if itemname in g_counters:
+        del g_counters[itemname]
+
 # Idea (1): We could keep global variables for the name of the checktype and item
 # during a check and that way "countername" would need to be unique only
 # within one checked item. So e.g. you could use "bcast" as name and not "if.%s.bcast" % item
@@ -1120,7 +1133,6 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 
     g_counters[itemname] = (this_time, new_val)
     return new_val
-
 
 
 #.

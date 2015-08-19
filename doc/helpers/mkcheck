@@ -72,7 +72,7 @@ else
         if  [ -z $snmp ]; then
             content_std=$content_std"\n#\n}"
         elif [ $snmp = "snmp" ]; then
-            content_std=$content_std$content_snmp:
+            content_std=$content_std$content_snmp
         else
             echo "Wrong arguments."
             exit 0

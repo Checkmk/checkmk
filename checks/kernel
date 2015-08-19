@@ -69,7 +69,7 @@ def check_kernel(item, params, info):
 
     counter = hits[0][0]
     this_val = int(hits[0][1])
-    per_sec = get_rate("kernel." + counter, this_time, this_val)
+    per_sec = get_rate(None, this_time, this_val)
 
     if type(params) == tuple:
         warn, crit = params

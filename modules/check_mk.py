@@ -5204,8 +5204,8 @@ def copy_globals():
     global_saved = {}
     for varname, value in globals().items():
         # Some global caches are allowed to change.
-        if varname not in [ "g_service_description", "g_multihost_checks",
-                            "g_singlehost_checks",
+        if varname not in [ "g_service_description", "g_checked_item", "g_check_type",
+                            "g_multihost_checks", "g_singlehost_checks",
                             "g_nodesof_cache", "g_compiled_regexes", "vars_before_config",
                             "g_initial_times", "g_keepalive_initial_memusage",
                             "g_global_caches" ] + g_global_caches \

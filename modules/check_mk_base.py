@@ -162,7 +162,7 @@ def warning(reason):
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_cache_info           = {} # Information about agent caching
 g_agent_already_contacted    = {} # do we have agent data from this host?
-g_item_state                   = {} # storing counters of one host
+g_item_state                 = {} # storing counters of one host
 g_hostname                   = "unknown" # Host currently being checked
 g_aggregated_service_results = {}   # store results for later submission
 g_inactive_timerperiods      = None # Cache for current state of timeperiods
@@ -1000,27 +1000,29 @@ def save_item_state(hostname):
 
 
 # Store arbitrary values until the next execution of a check
-def set_item_state(itemname, state):
-    g_item_state[itemname] = state
+def set_item_state(user_key, state):
+    g_item_state[unique_item_state_key(user_key)] = state
 
 
-def get_item_state(itemname, default=None):
-    return g_item_state.get(itemname, default)
+def get_item_state(user_key, default=None):
+    return g_item_state.get(unique_item_state_key(user_key), default)
 
 
-def clear_item_state(itemname):
-    if itemname in g_item_state:
-        del g_item_state[itemname]
+def clear_item_state(user_key):
+    key = unique_item_state_key(user_key)
+    if key in g_item_state:
+        del g_item_state[key]
 
 
-# Idea (1): We could keep global variables for the name of the checktype and item
-# during a check and that way "countername" would need to be unique only
-# within one checked item. So e.g. you could use "bcast" as name and not "if.%s.bcast" % item
+def unique_item_state_key(user_key):
+    return (g_check_type, g_checked_item, user_key)
+
+
 # Idea (2): Check_MK should fetch a time stamp for each info. This should also be
 # available as a global variable, so that this_time would be an optional argument.
-def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP, is_rate=False):
+def get_rate(user_key, this_time, this_val, allow_negative=False, onwrap=SKIP, is_rate=False):
     try:
-        timedif, rate = get_counter(countername, this_time, this_val, allow_negative, is_rate)
+        timedif, rate = get_counter(user_key, this_time, this_val, allow_negative, is_rate)
         return rate
     except MKCounterWrapped, e:
         if onwrap is RAISE:
@@ -1031,6 +1033,48 @@ def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP
             return 0.0
         else:
             return onwrap
+
+
+# Helper for get_rate(). Note: this function has been part of the official check API
+# for a long time. So we cannot change its call syntax or remove it for the while.
+def get_counter(countername, this_time, this_val, allow_negative=False, is_rate=False):
+    old_state = get_item_state(countername, None)
+    set_item_state(countername, (this_time, this_val))
+
+    # First time we see this counter? Do not return
+    # any data!
+    if old_state is None:
+        # Do not suppress this check on check_mk -nv
+        if opt_dont_submit:
+            return 1.0, 0.0
+        raise MKCounterWrapped('Counter initialization')
+
+    last_time, last_val = old_state
+    timedif = this_time - last_time
+    if timedif <= 0: # do not update counter
+        # Do not suppress this check on check_mk -nv
+        if opt_dont_submit:
+            return 1.0, 0.0
+        raise MKCounterWrapped('No time difference')
+
+    if not is_rate:
+        valuedif = this_val - last_val
+    else:
+        valuedif = this_val
+
+    if valuedif < 0 and not allow_negative:
+        # Do not try to handle wrapper counters. We do not know
+        # wether they are 32 or 64 bit. It also could happen counter
+        # reset (reboot, etc.). Better is to leave this value undefined
+        # and wait for the next check interval.
+        # Do not suppress this check on check_mk -nv
+        if opt_dont_submit:
+            return 1.0, 0.0
+        raise MKCounterWrapped('Value overflow')
+
+    per_sec = float(valuedif) / timedif
+    return timedif, per_sec
+
 
 def reset_wrapped_counters():
     global g_last_counter_wrap
@@ -1056,7 +1100,6 @@ def clear_counters(prefix, older_than):
 
     for name in counters_to_delete:
         del g_item_state[name]
-
 
 
 # Compute average by gliding exponential algorithm
@@ -1102,46 +1145,6 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
     return new_val
 
 
-# DO NOT USE ANYMORE! LEGACY.
-# This is an old API function and just kept here for keeping compatibility with
-# checks from foreign sources.
-def get_counter(countername, this_time, this_val, allow_negative=False, is_rate=False):
-    old_state = get_item_state(countername, None)
-    set_item_state(countername, (this_time, this_val))
-
-    # First time we see this counter? Do not return
-    # any data!
-    if old_state is None:
-        # Do not suppress this check on check_mk -nv
-        if opt_dont_submit:
-            return 1.0, 0.0
-        raise MKCounterWrapped('Counter initialization')
-
-    last_time, last_val = old_state
-    timedif = this_time - last_time
-    if timedif <= 0: # do not update counter
-        # Do not suppress this check on check_mk -nv
-        if opt_dont_submit:
-            return 1.0, 0.0
-        raise MKCounterWrapped('No time difference')
-
-    if not is_rate:
-        valuedif = this_val - last_val
-    else:
-        valuedif = this_val
-
-    if valuedif < 0 and not allow_negative:
-        # Do not try to handle wrapper counters. We do not know
-        # wether they are 32 or 64 bit. It also could happen counter
-        # reset (reboot, etc.). Better is to leave this value undefined
-        # and wait for the next check interval.
-        # Do not suppress this check on check_mk -nv
-        if opt_dont_submit:
-            return 1.0, 0.0
-        raise MKCounterWrapped('Value overflow')
-
-    per_sec = float(valuedif) / timedif
-    return timedif, per_sec
 
 
 #.
@@ -1343,9 +1346,12 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         if only_check_types != None and checkname not in only_check_types:
             continue
 
-        # Make service description globally available
-        global g_service_description
+        # Make a bit of context information globally available, so that functions
+        # called by checks now this context
+        global g_service_description, g_check_type, g_checked_item
         g_service_description = description
+        g_check_type = checkname
+        g_checked_item = item
 
         # Skip checks that are not in their check period
         period = check_period_of(hostname, description)

@@ -36,33 +36,67 @@ factory_settings["db2_logsizes_default_levels"] = {
     "levels": (-20.0, -10.0) # Interpreted as free space in df_check_filesystem_single
 }
 
+def parse_db2_logsizes(info):
+    pre_parsed = parse_db2_dbs(info)
+    global_timestamp = pre_parsed[0]
+    parsed = {}
+    for key, values in pre_parsed[1].items():
+        instance_info = {}
+        for value in values:
+            instance_info.setdefault(value[0], []).append(" ".join(map(str, (value[1:]))))
+        # Some databases run in DPF mode. Means that the database is split over several nodes 
+        # Each node has its own logfile for the same database. We create one service for each logfile
+	if "TIMESTAMP" not in instance_info:
+	    instance_info["TIMESTAMP"] = [ global_timestamp ]
+
+        if "node" in instance_info:
+            for node in instance_info["node"]:
+                parsed["%s DPF %s" % (key, node)] = instance_info
+        else:
+            parsed[key] = instance_info
+
+    return parsed
+
 def inventory_db2_logsizes(parsed):
-    for key in parsed[1]:
+    for key in parsed:
         yield key, {}
 
 def check_db2_logsizes(item, params, parsed):
-    default_timestamp   = parsed[0]
-    db                  = parsed[1].get(item)
+    db = parsed.get(item)
 
     if not db:
         raise MKCounterWrapped("Login into database failed")
 
-    if db[0][0] == "TIMESTAMP":
-        timestamp = db[0][1]
+    # A DPF instance could look like
+    # {'TIMESTAMP': ['1439976757'],
+    #  u'logfilsiz': ['20480', '20480', '20480', '20480', '20480', '20480'],
+    #  u'logprimary': ['13', '13', '13', '13', '13', '13'],
+    #  u'logsecond': ['100', '100', '100', '100', '100', '100'],
+    #  u'node': ['0 wasv091 0',
+    #            '1 wasv091 1',
+    #            '2 wasv091 2',
+    #            '3 wasv091 3',
+    #            '4 wasv091 4',
+    #            '5 wasv091 5'],
+
+    if "node" in db:
+        node_key = " ".join(item.split()[2:])
+        for idx, node in enumerate(db["node"]):
+            if node == node_key:
+                data_offset = idx
     else:
-        timestamp = default_timestamp
+        data_offset = 0
 
-    sector_size = 4096
-
-    data  = dict(db)
-    total = int(data["logfilsiz"]) * (int(data["logprimary"]) + int(data["logsecond"])) * sector_size
-    free  = total - int(data["usedspace"])
+    timestamp = int(db["TIMESTAMP"][0])
+    total = int(db["logfilsiz"][data_offset]) * (int(db["logprimary"][data_offset])\
+            + int(db["logsecond"][data_offset])) * 4096
+    free  = total - int(db["usedspace"][data_offset])
 
     return df_check_filesystem_single(g_hostname, item, total / 1024**2, free / 1024**2, 0,
-                                      None, None, params, this_time = timestamp)
+                                  None, None, params, this_time = timestamp)
 
 check_info['db2_logsizes'] = {
-    "parse_function"          : parse_db2_dbs,
+    "parse_function"          : parse_db2_logsizes,
     "service_description"     : "DB2 Logsize %s",
     "check_function"          : check_db2_logsizes,
     "inventory_function"      : inventory_db2_logsizes,

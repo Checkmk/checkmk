@@ -1,0 +1,15 @@
+Title: mk_db2.aix: now able to monitor partitioned databases
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439995843
+Class: feature
+
+The check db2_logsizes, db2_counters and db2_bp_hitratios are now able to
+process data from partitioned databases (DBF mode). Previously, the checks ran into
+an exception because the mk_db2.aix plugin reported incorrect formatted data.
+
+Please note that you have to update the mk_db2.aix plugin on your db2 hosts
+if you want to monitor databases in DBF mode. However, there is no need to do this.
+The new checks are also able to work with the old mk_db2.aix plugin.

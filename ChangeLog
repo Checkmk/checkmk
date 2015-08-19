@@ -1,6 +1,7 @@
 1.2.7i2p2:
     Core & Setup:
     * 2502 FIX: Fixed removing autochecks when a host is configured to be ping only...
+    * 2540 FIX: Process piggy backed data even if host is set to "No Agent"...
 
     Checks & Agents:
     * 1276 FIX: brocade_mlx_temperature: Fixed the shown Temperature Values

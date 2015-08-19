@@ -6930,6 +6930,16 @@ phase_elements = [
               Integer(title = _("critical at"), unit = u"A", default_value = 10),
           ],
     )),
+    ( "frequency",
+      Tuple(
+          title = _("Frequency"),
+          elements = [
+              Integer(title = _("warning if below"), unit = u"V", default_value = 45),
+              Integer(title = _("critical if below"), unit = u"V", default_value = 40),
+              Integer(title = _("warning if above"), unit = u"V", default_value = 55),
+              Integer(title = _("critical if above"), unit = u"V", default_value = 60),
+          ],
+    ))
 ]
 
 register_check_parameters(

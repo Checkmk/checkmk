@@ -1,0 +1,9 @@
+Title: check_mail_loop: Fixed name auf protocol parameter
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p11
+Date: 1439802536
+Class: fix
+
+

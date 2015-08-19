@@ -1,0 +1,10 @@
+Title: cisco_temperature: Fixed handling of scaling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p10
+Date: 1438682640
+Class: fix
+
+The check now handles scaling codes from the ENTITY-SENSOR-MIB
+correctly.

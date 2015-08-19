@@ -40,7 +40,7 @@ def inventory_ups_socomec_capacity(info):
 
 
 check_info["ups_socomec_capacity"] = {
-    "check_function"        : check_ups_capacity,
+    "check_function"        : lambda item, params, info: check_ups_capacity(item, params, info, socomec=True),
     "inventory_function"    : inventory_ups_socomec_capacity,
     "service_description"   : "Battery capacity",
     "has_perfdata"          : True,

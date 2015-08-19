@@ -1,6 +1,7 @@
 To use the Azure Monitoring in OMD based installation:
 
  - Copy the azuremonitor folder to ~/local/lib/python
+ - install the azure python api (pip install azure)
  - Copy agent_azure to ~/local/share/check_mk/agents/special/
  - Copy the azure publishsettings file to ~/var/check_mk (you get this file from azure)
  - Copy the checks to ~/local/share/check_mk/checks/

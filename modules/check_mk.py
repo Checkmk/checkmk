@@ -5175,8 +5175,8 @@ def cleanup_globals():
     g_agent_already_contacted = {}
     global g_hostname
     g_hostname = "unknown"
-    global g_counters
-    g_counters = {}
+    global g_item_state
+    g_item_state = {}
     global g_infocache
     g_infocache = {}
     global g_agent_cache_info

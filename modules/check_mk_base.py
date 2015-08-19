@@ -162,7 +162,7 @@ def warning(reason):
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_cache_info           = {} # Information about agent caching
 g_agent_already_contacted    = {} # do we have agent data from this host?
-g_counters                   = {} # storing counters of one host
+g_item_state                   = {} # storing counters of one host
 g_hostname                   = "unknown" # Host currently being checked
 g_aggregated_service_results = {}   # store results for later submission
 g_inactive_timerperiods      = None # Cache for current state of timeperiods
@@ -945,7 +945,7 @@ def cachefile_age(filename):
         return -1
 
 #.
-#   .--Counters------------------------------------------------------------.
+#   .--Item state and counters---------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|___  _   _ _ __ | |_ ___ _ __ ___                |
 #   |              | |   / _ \| | | | '_ \| __/ _ \ '__/ __|               |
@@ -953,80 +953,64 @@ def cachefile_age(filename):
 #   |               \____\___/ \__,_|_| |_|\__\___|_|  |___/               |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  Computation of rates from counters, used by checks.                 |
+#   |  These functions allow checks to keep a memory until the next time   |
+#   |  the check is being executed. The most frequent use case is compu-   |
+#   |  tation of rates from two succeeding counter values. This is done    |
+#   |  via the helper function get_rate(). Averaging is another example    |
+#   |  and done by get_average().                                          |
+#   |                                                                      |
+#   |  While a host is being checked this memory is kept in g_item_state.  |
+#   |  That is a dictionary. The keys are unique to one check type and     |
+#   |  item. The value is free form.                                       |
+#   |                                                                      |
+#   |  Note: The item state is kept in tmpfs and not reboot-persistant.    |
+#   |  Do not store long-time things here. Also do not store complex       |
+#   |  structures like log files or stuff.
 #   '----------------------------------------------------------------------'
 
-def reset_wrapped_counters():
-    global g_last_counter_wrap
-    g_last_counter_wrap = None
 
-def last_counter_wrap():
-    return g_last_counter_wrap
-
-# Variable                 time_t    value
-# netctr.eth.tx_collisions 112354335 818
-def load_counters(hostname):
-    global g_counters
+def load_item_state(hostname):
+    global g_item_state
     filename = counters_directory + "/" + hostname
     try:
-        g_counters = eval(file(filename).read())
+        g_item_state = eval(file(filename).read())
     except:
         # Try old syntax
         try:
             lines = file(filename).readlines()
             for line in lines:
                 line = line.split()
-                g_counters[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
+                g_item_state[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
         except:
-            g_counters = {}
+            g_item_state = {}
 
-def save_counters(hostname):
+
+def save_item_state(hostname):
     if not opt_dont_submit and not i_am_root(): # never writer counters as root
-        global g_counters
+        global g_item_state
         filename = counters_directory + "/" + hostname
         try:
             if not os.path.exists(counters_directory):
                 os.makedirs(counters_directory)
-            file(filename, "w").write("%r\n" % g_counters)
+            file(filename, "w").write("%r\n" % g_item_state)
         except Exception, e:
-            raise MKGeneralException("User %s cannot write to %s: %s" % (username(), filename, e))
-
-# determine the name of the current user. This involves
-# a lookup of /etc/passwd. Because this function is needed
-# only in general error cases, the pwd module is imported
-# here - not globally
-def username():
-    import pwd
-    return pwd.getpwuid(os.getuid())[0]
-
-
-# Deletes counters from g_counters matching the given pattern and are older_than x seconds
-def clear_counters(pattern, older_than):
-    global g_counters
-    counters_to_delete = []
-    now = time.time()
-
-    for name, (timestamp, value) in g_counters.items():
-        if name.startswith(pattern):
-            if now > timestamp + older_than:
-                counters_to_delete.append(name)
-
-    for name in counters_to_delete:
-        del g_counters[name]
+            import pwd
+            username = pwd.getpwuid(os.getuid())[0]
+            raise MKGeneralException("User %s cannot write to %s: %s" % (username, filename, e))
 
 
 # Store arbitrary values until the next execution of a check
 def set_item_state(itemname, state):
-    g_counters[itemname] = state
+    g_item_state[itemname] = state
 
 
 def get_item_state(itemname, default=None):
-    return g_counters.get(itemname, default)
+    return g_item_state.get(itemname, default)
 
 
 def clear_item_state(itemname):
-    if itemname in g_counters:
-        del g_counters[itemname]
+    if itemname in g_item_state:
+        del g_item_state[itemname]
 
 
 # Idea (1): We could keep global variables for the name of the checktype and item
@@ -1048,8 +1032,79 @@ def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP
         else:
             return onwrap
 
+def reset_wrapped_counters():
+    global g_last_counter_wrap
+    g_last_counter_wrap = None
 
-# Legacy. Do not use this function in checks directly any more!
+
+def last_counter_wrap():
+    return g_last_counter_wrap
+
+
+
+# Deletes counters from g_item_state matching the given pattern and are older_than x seconds.
+# This is a neccessary cleanup just used by ps.include. Not nice.
+def clear_counters(prefix, older_than):
+    global g_item_state
+    counters_to_delete = []
+    now = time.time()
+
+    for name, (timestamp, value) in g_item_state.items():
+        if name.startswith(prefix):
+            if now > timestamp + older_than:
+                counters_to_delete.append(name)
+
+    for name in counters_to_delete:
+        del g_item_state[name]
+
+
+
+# Compute average by gliding exponential algorithm
+# itemname        : unique ID for storing this average until the next check
+# this_time       : timestamp of new value
+# backlog         : averaging horizon in minutes
+# initialize_zero : assume average of 0.0 when now previous average is stored
+def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero = True):
+    old_state = get_item_state(itemname, None)
+
+    # first call: take current value as average or assume 0.0
+    if old_state is None:
+        if initialize_zero:
+            this_val = 0
+        set_item_state(itemname, (this_time, this_val))
+        return this_val # avoid time diff of 0.0 -> avoid division by zero
+
+    # Get previous value and time difference
+    last_time, last_val = old_state
+    timedif = this_time - last_time
+
+    # Gracefully handle time-anomaly of target systems. We lose
+    # one value, but what then heck..
+    if timedif < 0:
+        timedif = 0
+
+    # Compute the weight: We do it like this: First we assume that
+    # we get one sample per minute. And that backlog_minutes is the number
+    # of minutes we should average over. Then we want that the weight
+    # of the values of the last average minutes have a fraction of W%
+    # in the result and the rest until infinity the rest (1-W%).
+    # Then the weight can be computed as backlog_minutes'th root of 1-W
+    percentile = 0.50
+
+    weight_per_minute = (1 - percentile) ** (1.0 / backlog_minutes)
+
+    # now let's compute the weight per second. This is done
+    weight = weight_per_minute ** (timedif / 60.0)
+
+    new_val = last_val * weight + this_val * (1 - weight)
+
+    set_item_state(itemname, (this_time, new_val))
+    return new_val
+
+
+# DO NOT USE ANYMORE! LEGACY.
+# This is an old API function and just kept here for keeping compatibility with
+# checks from foreign sources.
 def get_counter(countername, this_time, this_val, allow_negative=False, is_rate=False):
     old_state = get_item_state(countername, None)
     set_item_state(countername, (this_time, this_val))
@@ -1089,49 +1144,6 @@ def get_counter(countername, this_time, this_val, allow_negative=False, is_rate=
     return timedif, per_sec
 
 
-# Compute average by gliding exponential algorithm
-# itemname: unique id for storing this average until the next check
-# this_time: timestamp of new value
-# backlog: averaging horizon in minutes
-# initialize_zero: assume average of 0.0 when now previous average is stored
-def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero = True):
-    old_state = get_item_state(itemname, None)
-
-    # first call: take current value as average or assume 0.0
-    if old_state is None:
-        if initialize_zero:
-            this_val = 0
-        set_item_state(itemname, (this_time, this_val))
-        return this_val # avoid time diff of 0.0 -> avoid division by zero
-
-    # Get previous value and time difference
-    last_time, last_val = old_state
-    timedif = this_time - last_time
-
-    # Gracefully handle time-anomaly of target systems. We lose
-    # one value, but what then heck..
-    if timedif < 0:
-        timedif = 0
-
-    # Compute the weight: We do it like this: First we assume that
-    # we get one sample per minute. And that backlog_minutes is the number
-    # of minutes we should average over. Then we want that the weight
-    # of the values of the last average minutes have a fraction of W%
-    # in the result and the rest until infinity the rest (1-W%).
-    # Then the weight can be computed as backlog_minutes'th root of 1-W
-    percentile = 0.50
-
-    weight_per_minute = (1 - percentile) ** (1.0 / backlog_minutes)
-
-    # now let's compute the weight per second. This is done
-    weight = weight_per_minute ** (timedif / 60.0)
-
-    new_val = last_val * weight + this_val * (1 - weight)
-
-    set_item_state(itemname, (this_time, new_val))
-    return new_val
-
-
 #.
 #   .--Checking------------------------------------------------------------.
 #   |               ____ _               _    _                            |
@@ -1158,10 +1170,10 @@ def do_check(hostname, ipaddress, only_check_types = None):
     exit_spec = exit_code_spec(hostname)
 
     try:
-        load_counters(hostname)
+        load_item_state(hostname)
         agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress, only_check_types)
         num_errors = len(error_sections)
-        save_counters(hostname)
+        save_item_state(hostname)
         if problems:
             output = "%s, " % problems
             status = exit_spec.get("connection", 2)

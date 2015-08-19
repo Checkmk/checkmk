@@ -335,11 +335,7 @@ def check_mem_linux(_no_item, params, info):
     # HardwareCorrupted
     hwc = meminfo.get("HardwareCorrupted")
     if hwc:
-        if "handle_hw_corrupted_error" in params:
-            if params["handle_hw_corrupted_error"] != 3:
-                yield params["handle_hw_corrupted_error"], "Hardware defect of %s" % get_bytes_human_readable(hwc)
-        else:
-            yield 2, "Hardware defect of %s" % get_bytes_human_readable(hwc)
+        yield params.get("handle_hw_corrupted_error", 2), "Hardware defect of %s" % get_bytes_human_readable(hwc)
 
     # Now send performance data. We simply output *all* fields of meminfo
     # except for a few really useless values

@@ -21,6 +21,9 @@
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
     * 2538 FIX: Fix exception in PNP graph template where metric name contains colon (e.g. omd_apache)...
 
+    WATO:
+    * 2539 FIX: Fix impossibility of removing a status host from an existing site configuration
+
     Event Console:
     * 2534 FIX: Fixed implementation of skipping rule packs
 

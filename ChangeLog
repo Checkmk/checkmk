@@ -6,13 +6,12 @@
     Multisite:
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
 
-    WATO:
-    * 2539 FIX: Fix impossibility of removing a status host from an existing site configuration
-
-1.2.6p10:
     Core & Setup:
     * 2502 FIX: Fixed removing autochecks when a host is configured to be ping only...
+    * 2540 FIX: Process piggy backed data even if host is set to "No Agent"...
 
+
+1.2.6p10:
     Checks & Agents:
     * 2406 FIX: fileinfo: fixed missing size performance data for very large (e.g 2TB) files and fileinfo groups...
     * 2377 FIX: cpu.loads: Fix output of reference for predition (was scaled wrongly by number of cores)

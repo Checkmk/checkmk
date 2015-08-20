@@ -285,6 +285,10 @@ def apply_parse_function(info, section_name):
         parse_function = check_info[section_name]["parse_function"]
         if parse_function:
             try:
+                # Prepare unique context for get_rate() and get_average()
+                global g_check_type, g_checked_item
+                g_check_type = section_name
+                g_checked_item = None
                 return parse_function(info)
             except Exception, e:
                 if opt_debug:

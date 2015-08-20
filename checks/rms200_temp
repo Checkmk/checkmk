@@ -31,9 +31,9 @@ factory_settings["rms200_temp_default_levels"] = {
 
 def inventory_rms200_temp(info):
     for line in info:
-        # TODO the sensor may return -27300 instead of 0 to signal it's not working
-        if line[2] != '0':
+        if line[2] != '-27300':
             yield (line[0], {})
+        # otherwise no sensor is connected
 
 
 def check_rms200_temp(item, params, info):

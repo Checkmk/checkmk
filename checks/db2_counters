@@ -33,9 +33,29 @@
 # db2taddm:CMDBS6 deadlocks 99
 # db2taddm:CMDBS6 lockwaits 91
 # db2taddm:CMDBS6 sortoverflows 237
+#### Example for database in DPF mode
+# TIMESTAMP 1439976757
+# db2ifa:DDST1 node 0 iasv0091 0
+# db2ifa:DDST1 node 1 iasv0091 1
+# db2ifa:DDST1 node 2 iasv0091 2
+# db2ifa:DDST1 node 3 iasv0091 3
+# db2ifa:DDST1 node 4 iasv0091 4
+# db2ifa:DDST1 node 5 iasv0091 5
+# db2ifa:DDST1 deadlocks 0
+# db2ifa:DDST1 deadlocks 0
+# db2ifa:DDST1 deadlocks 0
+# db2ifa:DDST1 deadlocks 0
+# db2ifa:DDST1 deadlocks 0
+# db2ifa:DDST1 deadlocks 0
+# db2ifa:DDST1 lockwaits 0
+# db2ifa:DDST1 lockwaits 0
+# db2ifa:DDST1 lockwaits 0
+# db2ifa:DDST1 lockwaits 0
+# db2ifa:DDST1 lockwaits 0
+# db2ifa:DDST1 lockwaits 80
 
-factory_settings["db2_counters_default_levels"] = {
-}
+
+factory_settings["db2_counters_default_levels"] = {}
 
 db2_counters_map = {
     "deadlocks"     : "Deadlocks",
@@ -43,15 +63,31 @@ db2_counters_map = {
 }
 
 def parse_db2_counters(info):
-    dbs = {}
-    timestamp = 0
+    dbs            = {}
+    timestamp      = 0
+    node_infos     = []
+    element_offset = {}
     for line in info:
         if line[0].startswith("TIMESTAMP"):
+            element_offset = {}
+            node_infos     = []
             timestamp = int(line[1])
             continue
-        dbs.setdefault(line[0], {"TIMESTAMP": timestamp})
+        if line[1] == "node":
+            node_infos.append(" ".join(line[2:]))
+
+        # Some databases run in DPF mode. Means that the database is split over several nodes
+        # The counter information also differs for each node. We create one service per DPF node
         if line[1] in db2_counters_map.keys():
-            dbs[line[0]][line[1]] = line[2]
+            if node_infos:
+                element_offset.setdefault(line[1], 0)
+                offset = element_offset[line[1]]
+                key = "%s DPF %s" % (line[0], node_infos[offset])
+                element_offset[line[1]] += 1
+            else:
+                key = line[0]
+            dbs.setdefault(key, {"TIMESTAMP": timestamp})
+            dbs[key][line[1]] = line[2]
 
     # The timestamp is still used for legacy reasons
     # The instance specific timestamp is now available in the dbs

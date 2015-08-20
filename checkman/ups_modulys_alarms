@@ -1,0 +1,23 @@
+title: Socomec Modulys UPS Device: Alarms
+agents: snmp
+catalog: hw/power/socomec
+license: GPL
+distribution: check_mk
+description:
+ Monitors alarms the device reports.
+
+ {Critical alarms}:
+ 'Disconnect', 'Input power failure', 'Low batteries', 'Severley high load', 'On
+ bypass', 'General failure', 'Battery ground fault', 'UPS test failure', 'Fuse failure', 'Output
+ overload', 'Output overcurrent', 'Inverter abnormal', 'Rectifier abnormal', 'Reserve abnormal',
+ 'Bypass bad', 'Charger failure', 'Emergency power off', 'Fan failure', 'Output abnormal', 'Output
+ breaker open', 'Overheating'
+
+ {Warning alarms}: 'High load', 'On reserve', 'Output turned off', 'Shutdown', 'Smart shutdown in
+ progress'
+
+ {Unproblematic alarms}: 'UPS test in progress', 'In economic mode', 'In standby mode'
+
+inventory:
+ Creates one item.
+

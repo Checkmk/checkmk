@@ -1,0 +1,13 @@
+title: Socomec Modulys UPS Device: Battery status
+agents: snmp
+catalog: hw/power/socomec
+license: GPL
+distribution: check_mk
+description:
+ Monitors whether the battery is discharging, the remaining capacity and estimated time until
+ shutdown as well as the general health state of the battery.
+ Note: It is currently unclear whether the time until shutdown is reliably reported by the device.
+
+inventory:
+ Creates exactly one item.
+

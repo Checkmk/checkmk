@@ -26,10 +26,15 @@
 
 # Example output from agent:
 # Put here the example output from your TCP-Based agent. If the
-# check is SNMP-Based, then remove this section
+# <<<win_printers>>>
+# PrinterStockholm                      0                   3                   0
+# WH1_BC_O3_UPS                         0                   3                   0
+
 
 def inventory_win_printers(info):
-    return [ (" ".join(x[:-3]), None) for x in info ]
+    for line in info:
+        if line[-1] != '9': # Do not discovery offline printers
+            yield " ".join(line[:-3]), None
 
 def check_win_printers(item, params, info):
     status_map = {
@@ -65,7 +70,7 @@ def check_win_printers(item, params, info):
         name = " ".join(line[:-3])
         if name == item:
             state = 0
-            current_jobs, status, error = map(saveint, line[-3:])
+            current_jobs, status, error = map(int, line[-3:])
 
             error_text = ""
             if error in [ 9, 10 ]:

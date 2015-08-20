@@ -123,6 +123,7 @@
     * 2492 FIX: check_mk_agent.linux: avoid problems with crashing waitmax after Ubuntu update...
     * 2507 FIX: mysql_slave: fixed exception caused by wrong parsing of agent data
     * 1280 FIX: check_mail_loop: It was not possible to use POP3 as protocol to fetch mails
+    * 1282 FIX: win_printers: Not longer discover offline printers
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

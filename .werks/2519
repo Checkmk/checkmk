@@ -1,0 +1,11 @@
+Title: check_mk_agent.linux: New section for a Veritas Cluster Service
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440149184
+Class: feature
+
+New section for the check veritas_vcs and its subchecks which monitor
+the cluster state, systems, resources and service groups state
+of a Veritas Cluster Service if it is installed.

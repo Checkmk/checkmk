@@ -30,6 +30,7 @@
 
     HW/SW-Inventory:
     * 2454 FIX: lnx_distro: Fixed inventory for SuSE installations with patchlevel 0
+    * 2541 FIX: Round last state change of network interfaces to one day, avoid history spam...
 
 
 1.2.7i2p1:

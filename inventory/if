@@ -25,6 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 def inv_if(info, params):
+    def round_to_day(ts):
+        broken = time.localtime(ts)
+        return time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday, broken.tm_yday, broken.tm_isdst))
+
+    now = time.time()
+
     port_info, uptime_info = info
     uptime = parse_snmp_uptime(uptime_info[0][0])
 
@@ -72,6 +78,8 @@ def inv_if(info, params):
             # Assume point of time of boot as last state change.
             state_age = uptime
 
+        last_change_timestamp = round_to_day(now - state_age)
+
         node.append({
             "index"        : int(if_index),
             "description"  : if_descr,
@@ -81,7 +89,7 @@ def inv_if(info, params):
             "oper_status"  : int(if_oper_status),
             "admin_status" : int(if_admin_status), # 1(up) or 2(down)
             "port_type"    : int(if_type),
-            "state_age"    : state_age,
+            "last_change"  : int(last_change_timestamp),
         })
 
 

@@ -515,6 +515,26 @@ def inv_paint_age(age):
     else:
         return "", ""
 
+def inv_paint_timestamp_as_age(timestamp):
+    age = time.time() - timestamp
+    return inv_paint_age(age)
+
+def round_to_day(ts):
+    broken = time.localtime(ts)
+    return int(time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday, broken.tm_yday, broken.tm_isdst)))
+
+def inv_paint_timestamp_as_age_days(timestamp):
+    now_day = round_to_day(time.time())
+    change_day = round_to_day(timestamp)
+    age_days = (now_day - change_day) / 86400
+
+    if age_days == 0:
+        return "", _("today")
+    elif age_days == 1:
+        return "", _("yesterday")
+    else:
+        return "", "%d %s ago" % (int(age_days), _("days"))
+
 inventory_displayhints.update({
     "."                                                : { "title" : _("Inventory") },
     ".hardware."                                       : { "title" : _("Hardware"), "icon" : "hardware", },
@@ -636,7 +656,7 @@ inventory_displayhints.update({
     ".networking.interfaces:*.available"               : { "title" : _("Port Usage"), "short" : _("Used"), "paint" : "if_available", "filter" : visuals.FilterInvtableAvailable },
     ".networking.interfaces:*.speed"                   : { "title" : _("Speed"), "paint" : "nic_speed", },
     ".networking.interfaces:*.port_type"               : { "title" : _("Type"), "paint" : "if_port_type", "filter" : visuals.FilterInvtableInterfaceType },
-    ".networking.interfaces:*.state_age"               : { "title" : _("State Age"), "paint" : "age", "filter" : visuals.FilterInvtableAge },
+    ".networking.interfaces:*.last_change"             : { "title" : _("Last Change"), "paint" : "timestamp_as_age_days", "filter" : visuals.FilterInvtableTimestampAsAge },
 })
 
 # create painters for node with a display hint

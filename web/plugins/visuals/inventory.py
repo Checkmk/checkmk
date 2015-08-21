@@ -69,7 +69,7 @@ class FilterInvtableText(Filter):
 
 # Filter for choosing a range in which an age lies
 class FilterInvtableAge(Filter):
-    def __init__(self, infoname, name, title):
+    def __init__(self, infoname, name, title, only_days=False):
         name = infoname + "_" + name
         Filter.__init__(self, name, title, infoname + "s", [name + "_from", name + "_to"], [])
 
@@ -77,17 +77,20 @@ class FilterInvtableAge(Filter):
         html.write("<table><tr><td style='vertical-align: middle;'>")
         html.write("%s:" % _("from"))
         html.write("</td><td>")
-        Age().render_input(self.name + "_from", 0)
+        Age(display=["days"]).render_input(self.name + "_from", 0)
         html.write("</td></tr><tr><td style='vertical-align: middle;'>")
         html.write("%s:" % _("to"))
         html.write("</td><td>")
-        Age().render_input(self.name + "_to", 0)
+        Age(display=["days"]).render_input(self.name + "_to", 0)
         html.write("</tr></table>")
 
     def double_height(self):
         return True
 
     def filter_table(self, rows):
+        return filter_table_with_conversion(self, rows, lambda age: age)
+
+    def filter_table_with_conversion(self, rows, conv):
         from_value = Age().from_html_vars(self.name + "_from")
         to_value = Age().from_html_vars(self.name + "_to")
 
@@ -98,13 +101,25 @@ class FilterInvtableAge(Filter):
         for row in rows:
             value = row.get(self.name, None)
             if value != None:
-                if from_value and value < from_value:
+                age = conv(value)
+                if from_value and age < from_value:
                     continue
 
-                if to_value and value > to_value:
+                if to_value and age > to_value:
                     continue
                 newrows.append(row)
         return newrows
+
+
+class FilterInvtableTimestampAsAge(FilterInvtableAge):
+    def __init__(self, infoname, name, title, only_days=True):
+        FilterInvtableAge.__init__(self, infoname, name, title, only_days)
+
+
+    def filter_table(self, rows):
+        now = time.time()
+        return self.filter_table_with_conversion(rows, lambda timestamp: now - timestamp)
+
 
 
 
@@ -149,9 +164,11 @@ class FilterInvtableOperStatus(Filter):
     def display(self):
         html.begin_checkbox_group()
         for state, state_name in sorted(interface_oper_states.items()):
+            if state >= 8:
+                continue # skip artificial state 8 (degraded) and 9 (admin down)
             varname = self.name + "_" + str(state)
             html.checkbox(varname, True, label=state_name)
-            if state == 4:
+            if state in (4, 7):
                 html.write("<br>")
         html.end_checkbox_group()
 

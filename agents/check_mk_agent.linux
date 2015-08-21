@@ -548,9 +548,6 @@ then
     done
 fi
 
-# Status of Check_MK Notification Spooler
-
-
 
 # Welcome the ZFS check on Linux
 # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
@@ -558,6 +555,20 @@ fi
 if type zpool >/dev/null; then
    echo "<<<zpool_status>>>"
    zpool status -x
+fi
+
+
+# Veritas Cluster Server
+# Software is always installed in /opt/VRTSvcs.
+# Secure mode must be off to allow root to execute commands
+if [ -x /opt/VRTSvcs/bin/haclus ]
+then
+    echo "<<<veritas_vcs>>>"
+    vcshost=$(hostname | cut -d. -f1)
+    haclus -display -localclus | grep -e ClusterName -e ClusState
+    hasys -display -attribute SysState
+    hagrp -display -sys $vcshost -attribute State -localclus
+    hares -display -sys $vcshost -attribute State -localclus
 fi
 
 

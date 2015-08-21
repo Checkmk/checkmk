@@ -65,7 +65,7 @@ check_info['ups_modulys_outphase'] = {
     'has_perfdata'              : True,
     'default_levels_variable'   : 'ups_modulys_outphase_default_levels',
     'includes'                  : [ "elphase.include", ],
-    'group'                     : 'el_inphase',
+    'group'                     : 'ups_outphase',
     'snmp_info'                 : (".1.3.6.1.4.1.2254.2.4.5", [
                                         "1", # dupsOutputSource
                                         "2", # dupsOutputFrequency

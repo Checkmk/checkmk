@@ -10568,7 +10568,7 @@ def mode_sites(phase):
             html.write(socket)
 
         # Status host
-        if "status_host" in site:
+        if site.get("status_host"):
             sh_site, sh_host = site["status_host"]
             table.cell(_("Status host"), "%s/%s" % (sh_site, sh_host))
         else:
@@ -10879,6 +10879,8 @@ def mode_edit_site(phase):
             if not sh_host:
                 raise MKUserError("sh_host", _("Please specify the name of the status host."))
             new_site["status_host"] = ( sh_site, sh_host )
+        else:
+            new_site["status_host"] = None
 
         # Replication
         repl = html.var("replication")
@@ -11192,7 +11194,7 @@ def create_nagvis_backends(sites):
             'socket="%s"' % socket,
         ]
 
-        if 'status_host' in site:
+        if site.get("status_host"):
             cfg.append('statushost="%s"' % ':'.join(site['status_host']))
 
     file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % defaults.omd_root, 'w').write('\n'.join(cfg))

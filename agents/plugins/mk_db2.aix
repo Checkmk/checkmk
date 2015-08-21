@@ -53,13 +53,12 @@ function waitmax
 }
 
 function query_instance {
-
     INSTANCE=$1
     # find home directory
     HOMEDIR=$(grep "^$INSTANCE" /etc/passwd | awk -F: '{print $6}' | grep "$INSTANCE$")
     NOW=$(perl -e "print time();")
 
-    waitmax 100 << WAITMAX
+    waitmax 200 << WAITMAX
     su $INSTANCE << EOF
 
     if [ ! -f $HOMEDIR/sqllib/db2profile ] ;
@@ -90,6 +89,10 @@ function query_instance {
     DB_PORT='port 0'
     for DB in \\\$DBS; do
             db2 connect to \\\$DB > /dev/null;
+            if [ $? -nq 0 ] ; then
+                exit 1
+            fi
+
             if [ 1 -eq \\\$GET_PORT ] ; then
                 # Each database in an instance has the same port information
                 db2_tcp_service=\\\$(db2 -x get dbm cfg | grep $INSTANCE | grep "TCP/IP Service" | awk -v FS='=' '{print \\\$2}'|tr -d ' ')
@@ -105,18 +108,16 @@ function query_instance {
 
             echo "<<<db2_counters>>>"
             echo "TIMESTAMP $NOW"
-            echo "$INSTANCE:\\\$DB deadlocks " | tr -d '\n'
-            db2 -x "SELECT deadlocks from sysibmadm.snapdb" | tr -d ' '
-            echo "$INSTANCE:\\\$DB lockwaits " | tr -d '\n'
-            db2 -x "SELECT lock_waits from sysibmadm.snapdb" | tr -d ' '
-            echo "$INSTANCE:\\\$DB sortoverflows " | tr -d '\n'
-            db2 -x "SELECT sort_overflows from sysibmadm.snapdb" | tr -d ' '
+            cat \\\$(db2 get dbm cfg|grep "Default database path"|awk -v FS="=" '{print \\\$2"/sqllib/db2nodes.cfg"}'|tr -d ' ') | sed "s/\(.*\)/$INSTANCE:\\\$DB node \1/"
+            db2 -x "SELECT deadlocks from sysibmadm.snapdb" | tr -d ' ' | sed "s/\(.*\)/$INSTANCE:\\\$DB deadlocks \1/"
+            db2 -x "SELECT lock_waits from sysibmadm.snapdb" | tr -d ' ' | sed "s/\(.*\)/$INSTANCE:\\\$DB lockwaits \1/"
+            db2 -x "SELECT sort_overflows from sysibmadm.snapdb" | tr -d ' ' | sed "s/\(.*\)/$INSTANCE:\\\$DB sortoverflows \1/"
 
             echo "<<<db2_logsizes>>>"
             echo "[[[$INSTANCE:\\\$DB]]]"
             echo "TIMESTAMP $NOW"
-            echo "usedspace " | tr -d '\n'
-            db2 -x "SELECT total_log_used from sysibmadm.snapdb" | tr -d ' '
+            cat \\\$(db2 get dbm cfg|grep "Default database path"|awk -v FS="=" '{print \\\$2"/sqllib/db2nodes.cfg"}'|tr -d ' ') | sed 's/\(.*\)/node \1/'
+            db2 -x "SELECT 'usedspace', total_log_used from sysibmadm.snapdb" | awk '{print \\\$1" "\\\$2}'
             db2 -x "SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')"| awk '{print \\\$1" "\\\$2}'
 
             echo "<<<db2_connections>>>"
@@ -129,6 +130,7 @@ function query_instance {
 
             echo "<<<db2_bp_hitratios>>>"
             echo "[[[$INSTANCE:\\\$DB]]]"
+            cat \\\$(db2 get dbm cfg|grep "Default database path"|awk -v FS="=" '{print \\\$2"/sqllib/db2nodes.cfg"}'|tr -d ' ') | sed "s/\(.*\)/node \1/"
             db2 "SELECT SUBSTR(BP_NAME,1,14) AS BP_NAME, TOTAL_HIT_RATIO_PERCENT, DATA_HIT_RATIO_PERCENT, INDEX_HIT_RATIO_PERCENT, XDA_HIT_RATIO_PERCENT FROM SYSIBMADM.BP_HITRATIO" | grep -v "selected." | sed -e '/^$/d' -e '/^-/d'
 
             echo "<<<db2_sort_overflow>>>"
@@ -149,11 +151,12 @@ function query_instance {
         done
 EOF
 WAITMAX
-    return 0
+    return $?
 }
 
 if [ "$1" = "query" ]; then
     query_instance $2
+    exit $?
 else
     #### RUN CACHED #####
     function file_age {

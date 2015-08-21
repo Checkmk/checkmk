@@ -38,3 +38,6 @@ verursacht bei uns das Problem:
 
   > parameters or error in implementation of check logwatch.ec. Please
   > enable "Log exceptions in check plugins" for further information.
+
+MK 2015-08-19: Think we can drop the work-around now because the agent
+removes the BOM itself. Needs to be done and tested, though.

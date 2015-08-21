@@ -1,0 +1,11 @@
+Title: hyperv_checkpoints,hyperv_vmstatus: Checkpoints and Integration Services Check for HyperV VMs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440168458
+Class: feature
+
+A new agent plugin on the HyperV Host is needed: hyperv_vms_guestinfos.ps1.
+All information a returned as Piggyback informations. So you can not see anything directly under the hostsystem.
+

@@ -1,0 +1,85 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# .1.3.6.1.4.1.3717.2.1.3.1.1.1 1
+# .1.3.6.1.4.1.3717.2.1.3.1.1.2 2
+# .1.3.6.1.4.1.3717.2.1.3.1.1.3 3
+# .1.3.6.1.4.1.3717.2.1.3.1.1.4 4
+# .1.3.6.1.4.1.3717.2.1.3.1.2.1 gc2.momatec.de
+# .1.3.6.1.4.1.3717.2.1.3.1.2.2 gc1-bsge.vrznrw.de
+# .1.3.6.1.4.1.3717.2.1.3.1.2.3 gc1-bochum.vrznrw.de
+# .1.3.6.1.4.1.3717.2.1.3.1.2.4 gc1-hamm.vrznrw.de
+# .1.3.6.1.4.1.3717.2.1.3.1.3.1
+# .1.3.6.1.4.1.3717.2.1.3.1.3.2 10.99.15.250
+# .1.3.6.1.4.1.3717.2.1.3.1.3.3 10.99.13.250
+# .1.3.6.1.4.1.3717.2.1.3.1.3.4 10.99.14.250
+# .1.3.6.1.4.1.3717.2.1.3.1.4.1 172.30.230.24/32
+# .1.3.6.1.4.1.3717.2.1.3.1.4.2 172.30.230.24/32
+# .1.3.6.1.4.1.3717.2.1.3.1.4.3 172.30.230.24/32
+# .1.3.6.1.4.1.3717.2.1.3.1.4.4 172.30.230.24/32
+# .1.3.6.1.4.1.3717.2.1.3.1.5.1 192.168.100.0/24
+# .1.3.6.1.4.1.3717.2.1.3.1.5.2 10.100.15.0/24
+# .1.3.6.1.4.1.3717.2.1.3.1.5.3 10.100.13.0/24
+# .1.3.6.1.4.1.3717.2.1.3.1.5.4 10.100.14.0/24
+# .1.3.6.1.4.1.3717.2.1.3.1.6.1 2
+# .1.3.6.1.4.1.3717.2.1.3.1.6.2 2
+# .1.3.6.1.4.1.3717.2.1.3.1.6.3 2
+# .1.3.6.1.4.1.3717.2.1.3.1.6.4 2
+
+def inventory_genua_vpn(info):
+    return [ (line[0], None) for line in info ]
+
+
+def check_genua_vpn(item, params, info):
+    for vpn_id, hostname_opposite, ip_opposite, vpn_private, vpn_remote, vpn_state in info:
+        if vpn_id == item:
+            ip_info = ""
+            if ip_opposite:
+                ip_info += " (%s)" % ip_opposite
+
+            infotext = "Hostname: %s%s, VPN private: %s, VPN remote: %s" % \
+                       (hostname_opposite, ip_info, vpn_private, vpn_remote)
+
+            if vpn_state == '2':
+                return 0, "Connected, %s" % infotext
+            else:
+                return 2, "Disconnected, %s" % infotext
+
+
+check_info['genua_vpn'] = {
+    'inventory_function'        : inventory_genua_vpn,
+    'check_function'            : check_genua_vpn,
+    'service_description'       : 'VPN %s',
+    'snmp_info'                 : (".1.3.6.1.4.1.3717.2.1.3.1", [
+                                        "1",    # vpn id
+                                        "2",    # hostname opposite
+                                        "3",    # ip opposite
+                                        "4",    # vpn private
+                                        "5",    # vpn remote
+                                        "6",    # vpn status (2:OK, 1:FAULT)
+                                  ]),
+    'snmp_scan_function'        : lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+}

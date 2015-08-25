@@ -18,6 +18,7 @@
 
     Multisite:
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
+    * 2510 FIX: Fixed sidebar frame scaling in chrome when using browser zoom
 
     Event Console:
     * 2534 FIX: Fixed implementation of skipping rule packs

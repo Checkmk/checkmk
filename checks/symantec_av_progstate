@@ -30,7 +30,7 @@ def inventory_symantec_av_progstate(info):
     return [ ( None, None ) ]
 
 def check_symantec_av_progstate( _no_item, _no_params, info):
-    if info[0][0] != 'enabled':
+    if info[0][0].lower() != 'enabled':
         return 2, "Program Status is " + info[0][0]
     return 0, "Program enabled"
 

@@ -2542,22 +2542,40 @@ def ajax_popup_action_menu():
     for icon in icons:
         html.write('<li>\n')
         if len(icon) == 4:
-            icon_name, title, url = icon[1:]
-            if url:
+            icon_name, title, url_spec = icon[1:]
+            if url_spec:
+                url, target_frame = sanitize_action_url(url_spec)
+
                 url = replace_action_url_macros(url, what, row)
+
                 onclick = ''
                 if url.startswith('onclick:'):
                     onclick = ' onclick="%s"' % url[8:]
                     url = 'javascript:void(0)'
-                html.write('<a href="%s"%s>' % (url, onclick))
+
+                target = ""
+                if target_frame != "_self":
+                    target = " target=\"%s\"" % target_frame
+
+                html.write('<a href="%s"%s%s>' % (url, target, onclick))
+
             html.icon('', icon_name)
+
             if title:
                 html.write(title)
             else:
                 html.write(_("No title"))
-            if url:
+
+            if url_spec:
                 html.write('</a>')
         else:
             html.write(icon[1])
         html.write('</li>\n')
     html.write('</ul>\n')
+
+
+def sanitize_action_url(url_spec):
+    if type(url_spec) == tuple:
+        return url_spec
+    else:
+        return (url_spec, "_self")

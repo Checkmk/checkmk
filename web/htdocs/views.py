@@ -2551,7 +2551,10 @@ def ajax_popup_action_menu():
                     url = 'javascript:void(0)'
                 html.write('<a href="%s"%s>' % (url, onclick))
             html.icon('', icon_name)
-            html.write(title)
+            if title:
+                html.write(title)
+            else:
+                html.write(_("No title"))
             if url:
                 html.write('</a>')
         else:

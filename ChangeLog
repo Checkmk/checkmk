@@ -5,10 +5,7 @@
 
     Multisite:
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
-
-    Core & Setup:
-    * 2502 FIX: Fixed removing autochecks when a host is configured to be ping only...
-    * 2540 FIX: Process piggy backed data even if host is set to "No Agent"...
+    * 2510 FIX: Fixed sidebar frame scaling in chrome when using browser zoom
 
 
 1.2.6p10:

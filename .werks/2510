@@ -1,0 +1,10 @@
+Title: Fixed sidebar frame scaling in chrome when using browser zoom
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1440492580
+
+

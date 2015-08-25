@@ -1,6 +1,7 @@
 1.2.7i2p2:
     Core & Setup:
     * 2502 FIX: Fixed removing autochecks when a host is configured to be ping only...
+    * 2540 FIX: Process piggy backed data even if host is set to "No Agent"...
 
     Checks & Agents:
     * 1276 FIX: brocade_mlx_temperature: Fixed the shown Temperature Values
@@ -15,16 +16,22 @@
     * 2455 FIX: raritan_pdu_inlet: Fixed scaling...
     * 2492 FIX: check_mk_agent.linux: avoid problems with crashing waitmax after Ubuntu update...
     * 2507 FIX: mysql_slave: fixed exception caused by wrong parsing of agent data
+    * 1280 FIX: check_mail_loop: Fixed name auf protocol parameter
 
     Multisite:
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
+    * 2538 FIX: Fix exception in PNP graph template where metric name contains colon (e.g. omd_apache)...
     * 2510 FIX: Fixed sidebar frame scaling in chrome when using browser zoom
+
+    WATO:
+    * 2539 FIX: Fix impossibility of removing a status host from an existing site configuration
 
     Event Console:
     * 2534 FIX: Fixed implementation of skipping rule packs
 
     HW/SW-Inventory:
     * 2454 FIX: lnx_distro: Fixed inventory for SuSE installations with patchlevel 0
+    * 2541 FIX: Round last state change of network interfaces to one day, avoid history spam...
 
 
 1.2.7i2p1:

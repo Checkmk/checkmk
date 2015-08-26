@@ -846,7 +846,9 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
 {
     crash_log("<<<winperf_%s>>>", countername);
     output(out, "<<<winperf_%s>>>\n", countername);
-    output(out, "%.2f %u\n", current_time(), counter_base_number);
+    static LARGE_INTEGER Frequency;
+    QueryPerformanceFrequency (&Frequency);
+    output(out, "%.2f %u %lu\n", current_time(), counter_base_number, Frequency.QuadPart);
 
     // registry entry is ascii representation of counter index
     char counter_index_name[8];

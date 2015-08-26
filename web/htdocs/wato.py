@@ -8800,7 +8800,7 @@ def vs_notification_rule(userid = None):
                           label = _("Bulk up to"),
                           unit  = _("Notifications"),
                           help = _("At most that many Notifications are kept back for bulking. A value of "
-                                   "1 essentially turns of notification bulking."),
+                                   "1 essentially turns off notification bulking."),
                           default_value = 1000,
                           minvalue = 1,
                       ),
@@ -11112,7 +11112,14 @@ def load_sites():
                 site['disabled'] = True
                 del site['socket']
 
-        return vars["sites"]
+        if not vars["sites"]:
+            # There seem to be installations out there which have a sites.mk
+            # which has an empty sites dictionary. Apply the default configuration
+            # for these sites too.
+            return config.default_single_site_configuration()
+        else:
+            return vars["sites"]
+
 
     except Exception, e:
         if config.debug:

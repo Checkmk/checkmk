@@ -40,10 +40,10 @@
 # 1170 125945384 125945384 type(550500)        ----> Average Disk Write Queue Length
 # -28 3526915777 3526915777 average_timer
 # -28 36283 36283 average_base
-# -26 1888588843 1888588843 average_timer
+# -26 1888588843 1888588843 average_timer     ----> Average Disk Seconds/Read
 # -26 17835 17835 average_base
 # -24 1638326933 1638326933 average_timer
-# -24 18448 18448 average_base
+# -24 18448 18448 average_base                ----> Average Disk Seconds/Write
 # -22 36283 36283 counter
 # -20 17835 17835 counter                     ----> Disk Reads/sec
 # -18 18448 18448 counter                     ----> Disk Writes/sec
@@ -72,22 +72,33 @@ def winperf_phydisk_convert(info):
 
     lines = iter(info)
     entries = []
-    current_disks           = []
-    current_read_bytes      = []
-    current_write_bytes     = []
-    current_disk_reads      = []
-    current_disk_writes     = []
-    current_diskreadq_ctrs  = []
-    current_diskwriteq_ctrs = []
 
     def finalize_block(nodename):
         # Missing columns are donted by negative values (Linux sends here latency information)
-        return zip([nodename for x in current_disks], current_disks, current_disk_read_bytes,
-                   current_disk_write_bytes, current_disk_reads, current_disk_writes, [-1 for x in current_disks],
-                   current_disk_readq_ctrs, current_disk_writeq_ctrs)
+        return zip(
+            [nodename for x in current_disks],
+            current_disks                        or [],
+            current_disk_read_bytes              or [],
+            current_disk_write_bytes             or [],
+            current_disk_reads                   or [],
+            current_disk_writes                  or [],
+            [-1 for x in current_disks],
+            current_disk_readq_ctrs              or [],
+            current_disk_writeq_ctrs             or [],
+            current_disk_seconds_per_read        or [],
+            current_disk_seconds_per_read_base   or [],
+            current_disk_seconds_per_write       or [],
+            current_disk_seconds_per_write_base  or []
+        )
+
 
     current_node = ""
     try:
+        # averages are calculated on two values so we always need to store one
+        # until the second is available
+        average_counters_write = [[], []]
+        average_counters_read = [[], []]
+
         while True:
             line = lines.next()
             if line[2] == "instances:":
@@ -96,17 +107,27 @@ def winperf_phydisk_convert(info):
                 current_node = line[0]
                 current_disks = [ d.split('_')[-1] for d in line[3:-1] ]
             elif line[1] == '-14':
-                current_disk_read_bytes  = [ int(x) / 512 for x in line[2:-2] ]
+                current_disk_read_bytes  = map(int, line[2:-2])
             elif line[1] == '-12':
-                current_disk_write_bytes = [ int(x) / 512 for x in line[2:-2] ]
+                current_disk_write_bytes = map(int, line[2:-2])
             elif line[1] == '-20':
-                current_disk_reads       = [ int(x) for x in line[2:-2] ]
+                current_disk_reads       = map(int, line[2:-2])
             elif line[1] == '-18':
-                current_disk_writes      = [ int(x) for x in line[2:-2] ]
+                current_disk_writes      = map(int, line[2:-2])
             elif line[1] == '1168': # Average Disk Read Queue Length
-                current_disk_readq_ctrs  = [ int(x) for x in line[2:-2] ]
+                current_disk_readq_ctrs  = map(int, line[2:-2])
             elif line[1] == '1170': # Average Disk Read Queue Length
-                current_disk_writeq_ctrs = [ int(x) for x in line[2:-2] ]
+                current_disk_writeq_ctrs = map(int, line[2:-2])
+            elif line[1] == '-24':
+                if line[-1] == 'average_base':
+                    current_disk_seconds_per_write_base = map(int, line[2:-2])
+                else:
+                    current_disk_seconds_per_write = map(int, line[2:-2])
+            elif line[1] == '-26':
+                if line[-1] == 'average_base':
+                    current_disk_seconds_per_read_base = map(int, line[2:-2])
+                else:
+                    current_disk_seconds_per_read = map(int, line[2:-2])
     except StopIteration:
         if current_node != "":
             entries.extend(finalize_block(current_node))
@@ -118,8 +139,46 @@ def inventory_winperf_phydisk(info):
     return inventory_diskstat_generic(winperf_phydisk_convert(info))
 
 def check_winperf_phydisk(item, params, info):
-    this_time = int(time.time())
-    return check_diskstat_generic(item, params, this_time, winperf_phydisk_convert(info))
+    init_line = info[0]
+    if len(init_line) >= 4:
+        frequency = int(init_line[3])
+    else:
+        frequency = None
+
+    this_time = float(init_line[1])
+
+    # convert input data to a dictionary. This also calculates rates, the non-dict
+    # version of check_diskstat calculates those itself. Also, this means we don't create
+    # useless counters during inventory which is neater
+    def dictify(converted_info):
+        result = {}
+
+        for disk in converted_info:
+            disk_id = "%s_%s" % (disk[0], disk[1])
+
+
+            result[disk[1]] = {
+                'node'               : disk[0],
+                'read_ios'           : disk[4],
+                'read_throughput'    : get_rate("readtp_" + disk_id, this_time, disk[2]),
+                'write_ios'          : disk[5],
+                'write_throughput'   : get_rate("writetp_" + disk_id, this_time, disk[3]),
+            }
+            if frequency:
+                # using 1 for the base if the counter didn't increase. This makes little to no sense
+                sec_per_read_counter  = get_rate("spr_counter_" + disk_id, this_time, disk[9])
+                sec_per_read_base     = get_rate("spr_base_" + disk_id, this_time, disk[10]) or 1
+                sec_per_write_counter = get_rate("spw_counter_" + disk_id, this_time, disk[11])
+                sec_per_write_base    = get_rate("spw_base_" + disk_id, this_time, disk[12]) or 1
+                result[disk[1]].update({
+                    'average_read_wait'  : (sec_per_read_counter / frequency) / sec_per_read_base,
+                    'average_write_wait' : (sec_per_write_counter / frequency) / sec_per_write_base,
+                })
+
+        return result
+
+    return check_diskstat_dict(item, params, dictify(winperf_phydisk_convert(info)))
+
 
 
 check_info["winperf_phydisk"] = {

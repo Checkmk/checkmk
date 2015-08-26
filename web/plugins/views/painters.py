@@ -288,16 +288,23 @@ def paint_icons(what, row):
     output = ''
     for icon in toplevel_icons:
         if len(icon) == 4:
-            icon_name, title, url = icon[1:]
-            if url:
+            icon_name, title, url_spec = icon[1:]
+            if url_spec:
+                url, target_frame = sanitize_action_url(url_spec)
                 url = replace_action_url_macros(url, what, row)
+
                 onclick = ''
                 if url.startswith('onclick:'):
                     onclick = ' onclick="%s"' % url[8:]
                     url = 'javascript:void(0)'
-                output += '<a href="%s"%s>' % (url, onclick)
+
+                target = ""
+                if target_frame != "_self":
+                    target = " target=\"%s\"" % target_frame
+
+                output += '<a href="%s"%s%s>' % (url, target, onclick)
             output += html.render_icon(icon_name, title)
-            if url:
+            if url_spec:
                 output += '</a>'
         else:
             output += icon[1]

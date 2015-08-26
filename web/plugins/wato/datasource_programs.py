@@ -504,9 +504,27 @@ def validate_siemens_plc_values(value, varprefix):
         valuetypes[valuetype].append(ident)
 
 _siemens_plc_value = [
-    Integer(
-        title = "<nobr>%s</nobr>" % _("DB Number"),
-        minvalue = 1,
+    Transform(
+        CascadingDropdown(
+            title = _("Area"),
+            choices = [
+                ("db", _("Datenbaustein"),
+                    Integer(
+                        title = "<nobr>%s</nobr>" % _("DB Number"),
+                        minvalue = 1,
+                    )
+                ),
+                ("input",   _("Input")),
+                ("output",  _("Output")),
+                ("merker",  _("Merker")),
+                ("timer",   _("Timer")),
+                ("counter", _("Counter")),
+            ],
+            orientation = "horizontal",
+            sorted = True,
+        ),
+        # Transform old Integer() value spec to new cascading dropdown value
+        forth = lambda x: type(x) == int and ("db", x) or x,
     ),
     Float(
         title = _("Address"),

@@ -51,6 +51,7 @@
 # sys.uptime||630664|second
 
 
+
 #   .--Disk IO-------------------------------------------------------------.
 #   |                     ____  _     _      ___ ___                       |
 #   |                    |  _ \(_)___| | __ |_ _/ _ \                      |
@@ -74,7 +75,7 @@ def inventory_esx_vsphere_counters_diskio(parsed):
         return [("SUMMARY", {})]
 
 def check_esx_vsphere_counters_diskio(item, params, parsed):
-    if not parsed:
+    if "disk.read" not in parsed:
         raise MKCounterWrapped("Counter data is missing")
 
     values = {}
@@ -147,7 +148,7 @@ def inventory_esx_vsphere_counters_datastoreio(parsed):
                              esx_vsphere_counters_get_item_mapping(parsed).values()))
 
 def check_esx_vsphere_counters_datastoreio(item, params, parsed):
-    if not parsed:
+    if "datastore.read" not in parsed:
         raise MKCounterWrapped("Counter data is missing")
 
     datastores = {}
@@ -314,7 +315,7 @@ def inventory_esx_vsphere_counters_if(parsed):
     return inventory_if_common(converted)
 
 def check_esx_vsphere_counters_if(item, params, parsed):
-    if not parsed:
+    if "net.bytesRx" not in parsed:
         raise MKCounterWrapped("Counter data is missing")
 
     converted = convert_esx_counters_if(parsed)
@@ -345,13 +346,10 @@ def inventory_esx_vsphere_counters_uptime(parsed):
         return [ (None, {}) ]
 
 def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
-    if not parsed:
+    if "sys.uptime" not in parsed:
         raise MKCounterWrapped("Counter data is missing")
 
-    if "sys.uptime" in parsed:
-        return check_uptime_seconds(params, int(parsed["sys.uptime"][""][0][0]))
-    else:
-        return 3, "No uptime information found in agent output"
+    return check_uptime_seconds(params, int(parsed["sys.uptime"][""][0][0]))
 
 
 check_info['esx_vsphere_counters.uptime'] = {
@@ -397,7 +395,7 @@ def inventory_esx_vsphere_counters_ramdisk(parsed):
     return df_inventory(ramdisks)
 
 def check_esx_vsphere_counters_ramdisk(item, params, parsed):
-    if not parsed:
+    if "sys.resourceMemConsumed" not in parsed:
         raise MKCounterWrapped("Counter data is missing")
 
     ramdisks = []

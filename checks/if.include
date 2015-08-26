@@ -753,16 +753,23 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                     pacrate = urate + nurate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
                         errperc = 100.0 * errorrate / pacrate
-
                         if errperc > 0:
                             infotext += ", %s-errors: %.2f%%" % (what, errperc)
+                            if type(err_crit) == float: # percentual levels
+                                if errperc >= err_crit:
+                                    state = 2
+                                    infotext += "(!!) >= %s%%" % str(err_crit)
+                                elif errperc >= err_warn:
+                                    state = max(state, 1)
+                                    infotext += "(!) >= %s%%" % str(err_warn)
+                            elif type(err_crit) == int: # absolute levels
+                                if errorrate >= err_crit:
+                                    state = 2
+                                    infotext += ", %s-error packets: %d (!!) >= %s" % (what, errorrate, err_crit)
+                                elif errorrate >= err_warn:
+                                    state = max(state, 1)
+                                    infotext += ", %s-errors packets: %d (!!) >= %s" % (what, errorrate, err_warn)
 
-                        if err_crit != None and errperc >= err_crit:
-                            state = 2
-                            infotext += "(!!) >= " + str(err_crit)
-                        elif err_warn != None and errperc >= err_warn:
-                            state = max(state, 1)
-                            infotext += "(!) >= " + str(err_warn)
 
                     # check rate of non-unicast packets
                     if nucast_crit or nucast_warn:

@@ -3107,17 +3107,31 @@ register_check_parameters(
     # keys where each was configured with an Alternative valuespec
     Transform(Dictionary(
         elements = [
-            ( "errors",
-              Tuple(
+             ( "errors",
+               Alternative(
                   title = _("Levels for error rates"),
                   help = _("These levels make the check go warning or critical whenever the "
-                           "<b>percentual error rate</b> of the monitored interface reaches "
-                           "the given bounds. The error rate is computed by dividing number of "
+                           "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
+                           "the given bounds. The percentual error rate is computed by dividing number of "
                            "errors by the total number of packets (successful plus errors)."),
                   elements = [
-                      Percentage(title = _("Warning at"), label = _("errors"), default_value = 0.01, display_format = '%.3f' ),
-                      Percentage(title = _("Critical at"), label = _("errors"), default_value = 0.1, display_format = '%.3f' )
-                  ])),
+                      Tuple(
+                          title = _("Percentual levels for error rates"),
+                          elements = [
+                              Percentage(title = _("Warning at"), unit = _("percent errors"), default_value = 0.01, display_format = '%.3f' ),
+                              Percentage(title = _("Critical at"), unit = _("percent errors"), default_value = 0.1, display_format = '%.3f' )
+                          ]
+                      ),
+                      Tuple(
+                          title = _("Absolute levels for error rates"),
+                          elements = [
+                              Integer(title = _("Warning at"), unit= _("errors") ),
+                              Integer(title = _("Critical at"), unit = _("errors") )
+                          ]
+                      )
+                    ]
+                )
+             ),
              ( "speed",
                OptionalDropdownChoice(
                    title = _("Operating speed"),
@@ -3353,6 +3367,27 @@ register_check_parameters(
     ),
     None,
     "first"
+)
+
+register_check_parameters(
+    subgroup_os,
+    "mem_pages",
+    _("Memory Pages Statistics"),
+    Dictionary(
+        elements = [
+            ("pages_per_second",
+                Tuple(
+                   title = _("Pages per second"),
+                   elements = [
+                      Integer(title = _("Warning at"), unit = _("pages/s") ),
+                      Integer(title = _("Critical at"), unit = _("pages/s") ),
+                   ]
+                ),
+            )
+        ]
+    ),
+    None,
+    "dict"
 )
 
 register_check_parameters(

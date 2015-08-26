@@ -446,6 +446,12 @@ metric_info["caches"] = {
     "color" : "51/a",
 }
 
+metric_info["mem_pages_rate"] = {
+    "title" : _("Memory Pages"),
+    "unit" : "1/s",
+    "color": "34/a",
+}
+
 metric_info["mem_lnx_cached"] = {
     "title" : _("File contents"),
     "color": "#91cceb",
@@ -4151,6 +4157,13 @@ perfometer_info.append({
     "exponent"   : 2,
 })
 
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "mem_pages_rate",
+    "half_value" : 5000,
+    "exponent"   : 2,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -4327,6 +4340,7 @@ graph_info.append({
         ( "zfs_metadata_limit", "line" ),
     ],
 })
+
 
 graph_info.append({
     "title"     : _("Cache hit ratio"),

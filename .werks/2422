@@ -1,0 +1,12 @@
+Title: winperf_mem: new check to monitor memory pages per second
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440585785
+Class: feature
+
+To use this check you need to activate the output of Memory information in
+{check_mk.ini}. You can do this by adding {counters = 4:mem} to the section {[winperf]}.
+or through the agent bakery rule "Windows Performance-Counter objects".
+

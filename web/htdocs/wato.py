@@ -19620,7 +19620,7 @@ class UserIconOrAction(DropdownChoice):
             if 'title' in action:
                 label += ' - '+action['title']
             if 'url' in action:
-                label += ' ('+action['url']+')'
+                label += ' ('+action['url'][0]+')'
 
             choices.append((key, label))
         return sorted(choices, key = lambda x: x[1])

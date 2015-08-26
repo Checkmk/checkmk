@@ -390,7 +390,7 @@ function update_content_location() {
 }
 
 function debug(s) {
-  window.parent.frames[1].document.write(s+'<br />');
+    window.parent.frames[1].document.write(s+'<br />');
 }
 
 
@@ -399,30 +399,30 @@ function debug(s) {
 // to be treated here.
 var g_just_resizing = 0;
 function setSidebarHeight() {
-  var oHeader  = document.getElementById('side_header');
-  var oContent = document.getElementById('side_content');
-  var oFooter  = document.getElementById('side_footer');
-  var height   = pageHeight();
+    var oHeader  = document.getElementById('side_header');
+    var oContent = document.getElementById('side_content');
+    var oFooter  = document.getElementById('side_footer');
+    var height   = pageHeight();
 
-  // Resize sidebar frame on Chrome (and other webkit browsers)
-  if (isWebkit()) {
-      var oldcols = parent.document.body.cols.split(",");
-      var oldwidth = parseInt(oldcols[0]);
-      var width = oHeader.clientWidth;
-      var target_width = oldwidth * 280.0 / width;
-      var newcols = target_width.toString() + ",*";
-      parent.document.body.cols = newcols;
-  }
+    // Resize sidebar frame on Chrome (and other webkit browsers)
+    if (isWebkit()) {
+        var oldcols = parent.document.body.cols.split(",");
+        var oldwidth = parseInt(oldcols[0]);
+        var width = oHeader.clientWidth;
+        var target_width = parseInt(oldwidth * 280.0 / width);
+        var newcols = target_width.toString() + ",*";
+        parent.document.body.cols = newcols;
+    }
 
-  // Don't handle zero heights
-  if (height == 0)
-    return;
+    // Don't handle zero heights
+    if (height == 0)
+      return;
 
-  oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight + 4) + 'px';
+    oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight + 4) + 'px';
 
-  oFooter = null;
-  oContent = null;
-  oHeader = null;
+    oFooter = null;
+    oContent = null;
+    oHeader = null;
 }
 
 var scrolling = true;

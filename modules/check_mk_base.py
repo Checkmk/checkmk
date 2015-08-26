@@ -1670,7 +1670,11 @@ def sanitize_yield_check_result(result, is_snmp):
 
     # Simple check with no separate subchecks (yield wouldn't have been neccessary here!)
     if len(subresults) == 1:
-        return sanitize_tuple_check_result(subresults[0])
+        state, infotext, perfdata = sanitize_tuple_check_result(subresults[0], allow_missing_infotext=True)
+        if infotext == None:
+            return state, u"", perfdata
+        else:
+            return state, infotext, perfdata
 
     # Several sub results issued with multiple yields. Make that worst sub check
     # decide the total state, join the texts and performance data. Subresults with
@@ -1683,6 +1687,7 @@ def sanitize_yield_check_result(result, is_snmp):
         for subresult in subresults:
             st, text, perf = sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
 
+            # FIXME/TODO: Why is the state only aggregated when having text != None?
             if text != None:
                 infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
                 if st == 2 or status == 2:
@@ -1710,14 +1715,13 @@ def sanitize_tuple_check_result(result, allow_missing_infotext=False):
         state, infotext = result
         perfdata = None
 
-    if not allow_missing_infotext or infotext != None:
-        infotext = sanitize_check_result_infotext(infotext)
+    infotext = sanitize_check_result_infotext(infotext, allow_missing_infotext)
 
     return state, infotext, perfdata
 
 
-def sanitize_check_result_infotext(infotext):
-    if infotext == None:
+def sanitize_check_result_infotext(infotext, allow_missing_infotext):
+    if infotext == None and not allow_missing_infotext:
         raise MKGeneralException("Invalid infotext from check: \"None\"")
 
     if type(infotext) == str:

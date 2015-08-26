@@ -494,16 +494,32 @@ register_configvar(group,
                                 allow_empty = False
                             )),
                             ('title', TextUnicode(title = _('Title'))),
-                            ('url', TextAscii(
-                                title = _('Action URL'),
-                                help = _('This URL is opened when clicking on the action / icon. You '
-                                         'can use some macros within the URL which are dynamically '
-                                         'replaced for each object. These are:<br>'
-                                         '<ul><li>$HOSTNAME$: Contains the name of the host</li>'
-                                         '<li>$SERVICEDESC$: Contains the service description '
-                                         '(in case this is a service)</li>'
-                                         '<li>$HOSTADDRESS$: Contains the network address of the host</li></ul>'),
-                                size = 80,
+                            ('url', Transform(
+                                Tuple(
+                                    title = _('Action'),
+                                    elements = [
+                                        TextAscii(
+                                            title = _('URL'),
+                                            help = _('This URL is opened when clicking on the action / icon. You '
+                                                     'can use some macros within the URL which are dynamically '
+                                                     'replaced for each object. These are:<br>'
+                                                     '<ul><li>$HOSTNAME$: Contains the name of the host</li>'
+                                                     '<li>$SERVICEDESC$: Contains the service description '
+                                                     '(in case this is a service)</li>'
+                                                     '<li>$HOSTADDRESS$: Contains the network address of the host</li></ul>'),
+                                            size = 80,
+                                        ),
+                                        DropdownChoice(
+                                            title = _("Open in"),
+                                            choices = [
+                                                ("_blank",  _("Load in a new window / tab")),
+                                                ("_self",   _("Load in current content area (keep sidebar)")),
+                                                ("_top",    _("Load as new page (hide sidebar)")),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                                forth = lambda x: type(x) != tuple and (x, "_self") or x,
                             )),
                             ('toplevel', FixedValue(True,
                                 title = _('Show in column'),

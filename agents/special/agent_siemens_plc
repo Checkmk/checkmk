@@ -27,6 +27,7 @@
 import getopt, sys, socket, traceback, re, pprint
 import snap7
 from snap7.util import *
+from snap7.snap7types import S7AreaPE, S7AreaPA, S7AreaMK, S7AreaDB, S7AreaCT, S7AreaTM
 
 def usage():
     sys.stderr.write("""Check_MK Siemens PLC Agent
@@ -51,7 +52,9 @@ VALUES:
   A value is specified by the following single data fields, which are
   concatenated by a ",":
 
-    DB_NUMBER                   Numeric identified of the DB
+    AREA[:DB_NUMBER]            Identifier of the memory area to fetch (db, input,
+                                output, merker, timer or counter), plus the optional
+                                numeric identifier of the DB separeated by a ":".
     ADDRESS                     Memory address to read
     DATATYPE                    The datatype of the value to read
     VALUETYPE                   The logical type of the value
@@ -112,14 +115,23 @@ for arg in args:
             sys.stderr.write("ERROR: Invalid value specified: %s\n" % spec)
             usage()
             sys.exit(1)
+
+        if ':' in p[0]:
+            area_name, db_number = p[0].split(':')
+            area = (area_name, int(db_number))
+        else:
+            area = ("db", int(p[0]))
+
         byte, bit = map(int, p[1].split('.'))
+
         if ':' in p[2]:
             typename, size = p[2].split(':')
             datatype = typename, int(size)
         else:
             datatype = p[2]
-        # db_number, address, datatype, valuetype, ident
-        values.append((int(p[0]), (byte, bit), datatype, p[3], p[4]))
+
+        # area, address, datatype, valuetype, ident
+        values.append((area, (byte, bit), datatype, p[3], p[4]))
 
     devices.append({
         'host_name'     : parts[0],
@@ -132,6 +144,7 @@ for arg in args:
 
 socket.setdefaulttimeout(opt_timeout)
 
+
 def get_dint(_bytearray, byte_index):
     """
     Get int value from bytearray.
@@ -143,6 +156,18 @@ def get_dint(_bytearray, byte_index):
     byte1 = _bytearray[byte_index + 1]
     byte0 = _bytearray[byte_index]
     return byte3 + (byte2 << 8) + (byte1 << 16) + (byte0 << 32)
+
+
+def area_name_to_area_id(name):
+    return {
+        'db'      : S7AreaDB,
+        'input'   : S7AreaPE,
+        'output'  : S7AreaPA,
+        'merker'  : S7AreaMK,
+        'timer'   : S7AreaTM,
+        'counter' : S7AreaCT,
+    }[name]
+
 
 datatypes = {
     # type-name   size(bytes) parse-function
@@ -167,36 +192,40 @@ for device in devices:
         addresses = {}
         start_address = None
         end_address   = None
-        for db_number, (byte, bit), datatype, valuetype, ident in device['values']:
+        for area, (byte, bit), datatype, valuetype, ident in device['values']:
             if type(datatype) == tuple:
                 size = datatype[1]
             else:
                 size = datatypes[datatype][0]
-            addresses.setdefault(db_number, [None, None])
-            start_address, end_address = addresses[db_number]
+            addresses.setdefault(area, [None, None])
+            start_address, end_address = addresses[area]
 
             if start_address == None or byte < start_address:
-                addresses[db_number][0] = byte
+                addresses[area][0] = byte
 
             end = byte + size
             if end_address == None or end > end_address:
-                addresses[db_number][1] = end
+                addresses[area][1] = end
 
         # Now fetch the data from each db number
         data = {}
-        for db_number, (start, end) in addresses.items():
-            data[db_number] = client.db_read(db_number, start, size=end-start)
+        for (area_name, db_number), (start, end) in addresses.items():
+            area_id = area_name_to_area_id(area_name)
+            data[(area_name, db_number)] = client.read_area(area_id, db_number, start, size=end-start)
 
         # Now loop all values to be fetched and extract the data
         # from the bytes fetched above
-        for db_number, (byte, bit), datatype, valuetype, ident in device['values']:
+        for (area_name, db_number), (byte, bit), datatype, valuetype, ident in device['values']:
             if type(datatype) == tuple:
                 typename, size = datatype
                 parse_func = datatypes[typename][1]
             else:
                 size, parse_func = datatypes[datatype]
-            data_offset = addresses[db_number][0]
-            data  = client.db_read(db_number, byte-data_offset, size)
+
+            data_offset = addresses[(area_name, db_number)][0]
+            area_id = area_name_to_area_id(area_name)
+
+            data  = client.read_area(area_id, db_number, byte-data_offset, size)
             value = parse_func(data, 0, bit)
             sys.stdout.write("%s %s %s %s\n" % (device['host_name'], valuetype, ident, value))
     except:

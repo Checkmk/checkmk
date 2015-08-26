@@ -1,0 +1,9 @@
+Title: check_mk_agent.aix: now handles different output formats of the uptime function
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440597462
+Class: fix
+
+

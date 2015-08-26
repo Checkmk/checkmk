@@ -218,7 +218,7 @@ fi
 
 
 echo '<<<uptime>>>'
-uptime | awk '{print $3,$5}' | tr ":" " " | sed 's/,//' | awk '{a=86400*int($1)+3600*int($2)+60*int($3);printf("%d\n",a)}'
+uptime | sed -e 's/^.*up//g' -e 's/user.*$//g' -e 's/hrs/0/g' -e 's/:/ /g' -e 's/days,//g' -e 's/mins//g' | sed -r 's/(.*),.*/\1/' | awk '{if (NF == 3) a=86400*int($1)+3600*int($2)+60*int($3); else if (NF ==2) a=3600*int($1)+60*int($2); else a=60*int($1); printf("%d\n",a)}'
 
 
 if cd $PLUGINSDIR 2>/dev/null

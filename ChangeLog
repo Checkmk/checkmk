@@ -140,6 +140,7 @@
     * 1284 FIX: symantec_av_progstate: Now Supports the current version of Symantec AV
     * 1285 FIX: blade_bx_powerfan: Fixed exception in case of fan failure
     * 1287 FIX: akcp_temperature: Fixed interpretation of device levels...
+    * 2522 FIX: check_mk_agent.aix: now handles different output formats of the uptime function
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

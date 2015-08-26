@@ -1,4 +1,7 @@
 1.2.7i2p3:
+    Checks & Agents:
+    * 1287 FIX: akcp_temperature: Fixed interpretation of device levels...
+
 
 1.2.7i2p2:
     Core & Setup:

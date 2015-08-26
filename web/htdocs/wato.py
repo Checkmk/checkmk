@@ -8800,7 +8800,7 @@ def vs_notification_rule(userid = None):
                           label = _("Bulk up to"),
                           unit  = _("Notifications"),
                           help = _("At most that many Notifications are kept back for bulking. A value of "
-                                   "1 essentially turns of notification bulking."),
+                                   "1 essentially turns off notification bulking."),
                           default_value = 1000,
                           minvalue = 1,
                       ),

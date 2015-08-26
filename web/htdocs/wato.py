@@ -11112,7 +11112,14 @@ def load_sites():
                 site['disabled'] = True
                 del site['socket']
 
-        return vars["sites"]
+        if not vars["sites"]:
+            # There seem to be installations out there which have a sites.mk
+            # which has an empty sites dictionary. Apply the default configuration
+            # for these sites too.
+            return config.default_single_site_configuration()
+        else:
+            return vars["sites"]
+
 
     except Exception, e:
         if config.debug:

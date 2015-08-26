@@ -1,0 +1,9 @@
+Title: blade_bx_powerfan: Discovery ignores not present fans now
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440596160
+Class: feature
+
+

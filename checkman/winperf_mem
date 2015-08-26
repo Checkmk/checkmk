@@ -1,0 +1,19 @@
+title: Windows memory statistics
+agents: windows
+catalog: os/networking
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of memory pages per second.
+ To use this check you need to activate the output of Memory information in
+ {check_mk.ini}. You can do this by adding {counters = 4:mem} to the section {[winperf]}.
+ This {check_mk.ini} configuration can also be done via WATO in the agent bakery rules.
+ You can configure levels for the number of pages per second.
+
+perfdata:
+ The number of pages per second
+
+inventory:
+ If the windows agents has the section {<<<winperf_mem>>>}, then one check
+ will be created
+

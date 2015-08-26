@@ -3357,6 +3357,27 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "mem_pages",
+    _("Memory Pages Statistics"),
+    Dictionary(
+        elements = [
+            ("pages_per_second",
+                Tuple(
+                   title = _("Pages per second"),
+                   elements = [
+                      Integer(title = _("Warning at"), unit = _("pages/s") ),
+                      Integer(title = _("Critical at"), unit = _("pages/s") ),
+                   ]
+                ),
+            )
+        ]
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_os,
     "statgrab_mem",
     _("Statgrab Memory Usage"),
     Alternative(

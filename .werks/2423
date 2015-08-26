@@ -1,0 +1,15 @@
+Title: interface checks: now able to configure absolute levels for error packets
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440590161
+Class: feature
+
+You can now configure absolute levels for the error package rate.
+
+Note: These new levels are configured as a tuple of integers.
+The previous version of this check did not distinguish between percentual levels
+configured as pair of int or float.
+If you configured the old error rates as int tuples (which was an error in the first place),
+you have to update these rules accordingly.

@@ -1582,7 +1582,7 @@ def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, param
         actions = set(service_extra_conf(hostname, svcdesc, service_icons_and_actions))
 
         # Some WATO rules might register icons on their own
-        checkgroup = checkgroup_of.get(checkname, checkname)
+        checkgroup = check_info[checkname]["group"]
         if checkgroup in [ 'ps', 'services' ] and type(params) == dict:
             icon = params.get('icon')
             if icon:

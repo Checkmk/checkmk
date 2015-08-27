@@ -1581,6 +1581,8 @@ def pack_crash_dump(crash_dir):
 def check_unimplemented(checkname, params, info):
     return (3, 'UNKNOWN - Check not implemented')
 
+# FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
+# use the legacy variables which are not set by newer checks.
 def convert_check_info():
     for check_type, info in check_info.items():
         basename = check_type.split(".")[0]

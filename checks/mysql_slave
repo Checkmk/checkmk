@@ -52,7 +52,7 @@ def parse_mysql_slave(info):
             instance = line[0][2:-2]
             if instance == "":
                 instance = "mysql"
-            parsed[instance] = []
+            parsed[instance] = {}
         elif instance:
             key, value = parse_line(line)
             if key:

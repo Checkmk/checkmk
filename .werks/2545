@@ -1,0 +1,10 @@
+Title: akcp_daisy_temp: sensorProbe8-X20 not trying to discover services on these devices
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1440679593
+
+

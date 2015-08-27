@@ -494,7 +494,7 @@ def render_bi_availability(title, aggr_rows):
         elif len(aggr_rows) == 1:
             aggr_name = aggr_rows[0]["aggr_name"]
             aggr_group = aggr_rows[0]["aggr_group"]
-            timeline_url = html.makeuri([("timeline", "1"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
+            timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
             html.context_button(_("Timeline"), timeline_url, "timeline")
         html.end_context_buttons()
 

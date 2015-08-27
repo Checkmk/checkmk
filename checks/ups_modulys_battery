@@ -107,7 +107,7 @@ check_info["ups_modulys_battery"] = {
 def inventory_ups_modulys_battery_temp(info):
     for condition, elapsed_sec, remaining_min, capacity, temperature in info:
         if temperature:
-            yield "", {}
+            yield "Battery", {}
 
 
 def check_ups_modulys_battery_temp(item, params, info):
@@ -119,7 +119,7 @@ check_info["ups_modulys_battery.temp"] = {
     "inventory_function"      : inventory_ups_modulys_battery_temp,
     "check_function"          : check_ups_modulys_battery_temp,
     "has_perfdata"            : True,
-    "service_description"     : "Temperature Battery",
+    "service_description"     : "Temperature %s",
     "group"                   : "temperature",
     "default_levels_variable" : "ups_modulys_battery_temp_default_levels",
 }

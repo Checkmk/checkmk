@@ -1,0 +1,11 @@
+Title: cisco_vpn_tunnel: Added Metrics for trafic, please beware:
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440685847
+Class: feature
+
+It can be possible that the check reports wrong values. There is maybe a mismatch in the the cisco mib documentation for in and out octets.
+If you have an advice, please contact me.
+

@@ -130,7 +130,7 @@ for _s, _i in cmctc_lcp_sensortypes.items():
         "check_function" :      (lambda st: lambda item,params,info: check_cmctc_lcp(item, params, info, st))(_s),
         "inventory_function" :  (lambda st: lambda info: inventory_cmctc_lcp(info, st))(_s),
         "has_perfdata" :        True,
-        "service_description" : _i[1],
+        "service_description" : _i[1] + " %s",
     }
 
 # Set WATO check group for temperature checks

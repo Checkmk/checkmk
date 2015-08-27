@@ -368,6 +368,38 @@ def load_checks():
 
     # Now convert check_info to new format.
     convert_check_info()
+    verify_checkgroups()
+
+
+# This function validates the checks which are members of checkgroups to have either
+# all or none an item. Mixed checkgroups lead to strange exceptions when processing
+# the check parameters. So it is much better to catch these errors in a central place
+# with a clear error message.
+def verify_checkgroups():
+    groups = {}
+    for check_type, check in check_info.items():
+        group_name = check["group"]
+        if group_name:
+            groups.setdefault(group_name, [])
+            groups[group_name].append((check_type, check))
+
+    for group_name, checks in groups.items():
+        with_item, without_item = [], []
+        for check_type, check in checks:
+            # Trying to detect whether or not the check has an item. But this mechanism is not
+            # 100% reliable since Check_MK appends an item to the service_description when "%s"
+            # is not in the checks service_description template.
+            # Maybe we need to define a new rule which enforces the developer to use the %s in
+            # the service_description. At least for grouped checks.
+            if "%s" in check["service_description"]:
+                with_item.append(check_type)
+            else:
+                without_item.append(check_type)
+
+        if with_item and without_item:
+            raise MKGeneralException("Checkgroup %s has checks with and without item! At least one of "
+                                     "the checks in this group needs to be changed (With item: %s, "
+                                     "Without item: %s)" % (group_name, ", ".join(with_item), ", ".join(without_item)))
 
 
 #.

@@ -1092,13 +1092,14 @@ def last_counter_wrap():
 
 # Deletes counters from g_item_state matching the given pattern and are older_than x seconds.
 # This is a neccessary cleanup just used by ps.include. Not nice.
-def clear_counters(prefix, older_than):
+def clear_counters(check_type_prefix, older_than):
     global g_item_state
     counters_to_delete = []
     now = time.time()
 
     for name, (timestamp, value) in g_item_state.items():
-        if name.startswith(prefix):
+        joined_name = type(name) == tuple and name[0] or name
+        if joined_name.startswith(check_type_prefix):
             if now > timestamp + older_than:
                 counters_to_delete.append(name)
 

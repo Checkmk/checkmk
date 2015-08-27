@@ -173,6 +173,7 @@
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
     * 2538 FIX: Fix exception in PNP graph template where metric name contains colon (e.g. omd_apache)...
     * 2510 FIX: Fixed sidebar frame scaling in chrome when using browser zoom
+    * 2544 FIX: Fixed links to availability timeline using the context buttons
 
     WATO:
     * 2365 Removed old deprecated notification global options for plain emails...

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_slave(info):
     def parse_line(l):
         if ':' in l[0]:
@@ -49,6 +50,8 @@ def parse_mysql_slave(info):
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
+            if instance == "":
+                instance = "mysql"
             parsed[instance] = {}
         elif instance:
             key, value = parse_line(line)

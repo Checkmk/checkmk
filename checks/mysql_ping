@@ -35,12 +35,15 @@
 #                   "error: 'Access denied for user 'root'@'localhost' (using password: NO)'" ]
 # }
 
+# FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_ping(info):
     parsed = {}
     instance = False
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
+            if instance == "":
+                instance = "mysql"
             parsed[instance] = []
         elif instance:
             parsed[instance].append(" ".join(line))

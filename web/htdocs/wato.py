@@ -18561,6 +18561,87 @@ def mode_icons(phase):
     table.end()
 
 #.
+#   .--Builtin Agents------------------------------------------------------.
+#   |    ____        _ _ _   _            _                    _           |
+#   |   | __ ) _   _(_) | |_(_)_ __      / \   __ _  ___ _ __ | |_ ___     |
+#   |   |  _ \| | | | | | __| | '_ \    / _ \ / _` |/ _ \ '_ \| __/ __|    |
+#   |   | |_) | |_| | | | |_| | | | |  / ___ \ (_| |  __/ | | | |_\__ \    |
+#   |   |____/ \__,_|_|_|\__|_|_| |_| /_/   \_\__, |\___|_| |_|\__|___/    |
+#   |                                         |___/                        |
+#   +----------------------------------------------------------------------+
+#   | Simple download page for the builtin agents and plugins              |
+#   '----------------------------------------------------------------------'
+
+import glob
+
+def download_table(title, paths):
+    forms.header(title)
+    forms.container()
+    for path in paths:
+        os_path  = path
+        relpath  = path.replace(defaults.agents_dir+'/', '')
+        filename = path.split('/')[-1]
+
+        size_kb = os.stat(os_path).st_size / 1024.0
+
+        # FIXME: Rename classes etc. to something generic
+        html.write('<div class="ruleset"><div class="text" style="width:250px;">')
+        html.write('<a href="agents/%s">%s</a>' % (relpath, filename))
+        html.write('<span class=dots>%s</span></div>' % ("." * 100))
+        html.write('<div class="rulecount" style="width:30px;">%d&nbsp;KB</div>' % size_kb)
+        html.write('</div></div>')
+    forms.end()
+
+def mode_download_agents(phase):
+    if phase == "title":
+        return _("Builtin Agents")
+
+    elif phase == "buttons":
+        global_buttons()
+        return
+
+    elif phase == "action":
+        return
+
+    html.write('<div class="rulesets">')
+    packed = glob.glob(defaults.agents_dir + "/*.deb") \
+            + glob.glob(defaults.agents_dir + "/*.rpm") \
+            + glob.glob(defaults.agents_dir + "/windows/c*.msi")
+
+    download_table(_("Packed Agents"), packed)
+
+    titles = {
+        ''                 : _('Linux / Unix Agents'),
+        '/plugins'         : _('Linux / Unix Plugins'),
+        '/windows'         : _('Windows Agent'),
+        '/windows/plugins' : _('Windows Plugins'),
+        '/windows/mrpe'    : _('Windows MRPE Scripts'),
+        '/cfg_examples'    : _('Example Configurations'),
+        '/z_os'            : _('z/OS'),
+        '/sap'             : _('SAP'),
+        '/special'         : _('Special Agents'),
+    }
+
+    others = []
+    for root, dirs, files in os.walk(defaults.agents_dir):
+        file_paths = []
+        relpath = root.split('agents')[1]
+        title = titles.get(relpath, relpath)
+        for filename in files:
+            path = root + '/' + filename
+            if path not in packed and 'deprecated' not in path:
+                file_paths.append(path)
+
+        others.append((title, file_paths))
+
+    others.sort()
+
+    for title, file_paths in others:
+        if file_paths:
+            download_table(title, sorted(file_paths))
+    html.write('</div>')
+
+#.
 #   .--Hooks-&-API---------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |
 #   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |
@@ -19714,6 +19795,7 @@ modes = {
    "bi_edit_rule"       : (["bi_rules"], mode_bi_edit_rule),
    "bi_edit_aggregation": (["bi_rules"], mode_bi_edit_aggregation),
    "icons"              : (["icons"], mode_icons),
+   "download_agents"    : (["download_agents"], mode_download_agents),
 }
 
 loaded_with_language = False
@@ -19978,6 +20060,12 @@ def load_plugins():
          _("Manage Custom Icons"),
          _("Upload or delete custom icons"),
          [ "admin" ])
+
+    config.declare_permission("wato.download_agents",
+        _("Monitoring Agents"),
+        _("Download the default Check_MK monitoring agents for Linux, "
+          "Windows and other operating systems."),
+       [ "admin", "user", "guest" ])
 
     load_web_plugins("wato", globals())
 

@@ -32,13 +32,23 @@
 # performance_schema  0   0
 # wa-confluence   15499264    13805551616
 
+# new: can have instance headers (can be empty), e.g.:
+# <<<mysql_capacity>>>
+# [[]]
+# information_schema      147456  0
+# mysql   665902  292
+# performance_schema      0       0
+# test 409255936       54525952
 
+# FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_capacity(info):
     parsed = {}
     instance = False
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
+            if instance == "":
+                instance = "mysql"
             parsed[instance] = []
         elif instance:
             parsed[instance].append(line)

@@ -1,0 +1,11 @@
+Title: brocade_mlx_power: Only discover power supplies in state normal/failure, skip other states
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1440680714
+
+When power supplies are removed from a device, they remain in the SNMP data with state "other".
+Check_MK was still discovering those power supplies but should not.

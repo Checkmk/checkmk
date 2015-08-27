@@ -231,7 +231,7 @@ check_info["icom_repeater.temp"] = {
     "inventory_function"        : inventory_icom_repeater_temp,
     "default_levels_variable"   : "icom_repeater_temp_default_levels",
     "check_function"            : check_icom_repeater_temp,
-    "service_description"       : "Temperature",
+    "service_description"       : "Temperature %s",
     "has_perfdata"              : True,
     "group"                     : "temperature",
     "includes"                  : [ "temperature.include" ],

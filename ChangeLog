@@ -1,4 +1,7 @@
 1.2.7i2p3:
+    Core & Setup:
+    * 2543 FIX: Fixed usage of icons/actions configured directly with process rules
+
     Checks & Agents:
     * 1287 FIX: akcp_temperature: Fixed interpretation of device levels...
 

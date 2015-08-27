@@ -1,0 +1,9 @@
+Title: Fixed usage of icons/actions configured directly with process rules
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440665444
+Class: fix
+
+

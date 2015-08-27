@@ -31,7 +31,7 @@ factory_settings["emc_isilon_ifs"] = {}
 
 def inventory_emc_isilon_ifs(info):
     # this check handles the cluster file system so there is only one
-    return [ (None, None) ]
+    return [ ("Cluster", None) ]
 
 def check_emc_isilon_ifs(item, params, info):
     ONE_MB = 1024 * 1024
@@ -45,7 +45,7 @@ def check_emc_isilon_ifs(item, params, info):
 check_info["emc_isilon_ifs"] = {
     "check_function"          : check_emc_isilon_ifs,
     "inventory_function"      : inventory_emc_isilon_ifs,
-    "service_description"     : "Filesystem Cluster",
+    "service_description"     : "Filesystem %s",
     "includes"                : [ "df.include" ],
     "group"                   : "filesystem",
     "default_levels_variable" : "emc_isilon_ifs",

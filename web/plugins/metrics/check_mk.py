@@ -182,6 +182,18 @@ unit_info["bar"] = {
     "render"    : lambda v: physical_precision(v, 6, _("bar")),
 }
 
+unit_info["Pa"] = {
+    "title"     : _("Pascal"),
+    "symbol"    : _("Pa"),
+    "render"    : lambda v: physical_precision(v, 3, _("Pa")),
+}
+
+unit_info["l/s"] = {
+    "title"     : _("Liter per second"),
+    "symbol"    : _("l/s"),
+    "render"    : lambda v: physical_precision(v, 3, _("l/s")),
+}
+
 #.
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
@@ -840,6 +852,18 @@ metric_info["smoke_perc"] = {
     "title" : _("Smoke"),
     "unit"  : "%",
     "color" : "#60f088",
+}
+
+metric_info["airflow"] = {
+    "title" : _("Air flow"),
+    "unit"  : "l/s",
+    "color" : "#ff6234",
+}
+
+metric_info["fluidflow"] = {
+    "title" : _("Fluid flow"),
+    "unit"  : "l/s",
+    "color" : "#ff6234",
 }
 
 metric_info["deviation_calibration_point"] = {
@@ -2011,6 +2035,12 @@ metric_info["supply_toner_other"] = {
 metric_info["pressure"] = {
     "title" : _("Pressure"),
     "unit"  : "bar",
+    "color" : "#ff6234",
+}
+
+metric_info["pressure_pa"] = {
+    "title" : _("Pressure"),
+    "unit"  : "Pa",
     "color" : "#ff6234",
 }
 
@@ -3369,6 +3399,13 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type"       : "logarithmic",
+    "metric"     : "pressure_pa",
+    "half_value" : 10,
+    "exponent"   : 2,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
     "metric"     : "cifs_share_users",
     "half_value" : 10,
     "exponent"   : 2,
@@ -3851,6 +3888,13 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "energy",
+    "half_value" : 10000,
+    "exponent"   : 3,
+})
+
+perfometer_info.append({
     "type"      : "linear",
     "segments"  : [ "voltage_percent" ],
     "total"     : 100.0,
@@ -4005,6 +4049,20 @@ perfometer_info.append({
     "type"      : "linear",
     "segments"  : [ "deviation_airflow" ],
     "total"     : 10,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "airflow",
+    "half_value" : 300,
+    "exponent"   : 2,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "fluidflow",
+    "half_value" : 0.2,
+    "exponent"   : 5,
 })
 
 perfometer_info.append(("stacked", [

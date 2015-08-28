@@ -1,0 +1,206 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+import getopt, sys, socket, urllib2, traceback, re, hashlib
+
+def usage():
+    sys.stderr.write("""Check_MK HP MSA Agent
+
+USAGE: agent_hp_msa [OPTIONS] HOST
+       agent_hp_msa -h
+
+ARGUMENTS:
+  HOST                          Host name or IP address
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -u                            Username
+  -p                            Password
+  --debug                       Debug mode: let Python exceptions come through
+""")
+
+short_options = 'h:du:p:'
+long_options  = [
+    'help', 'debug'
+]
+
+host_address  = None
+opt_debug     = False
+username      = None
+password      = None
+opt_timeout   = 10
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+for o,a in opts:
+    if o in [ '--debug' ]:
+        opt_debug = True
+    elif o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+    elif o in [ '-u' ]:
+        username = a
+    elif o in [ '-p' ]:
+        password = a
+
+
+if len(args) == 1:
+    host_address = args[0]
+elif not args:
+    sys.stderr.write("ERROR: No host given.\n")
+    sys.exit(1)
+else:
+    sys.stderr.write("ERROR: Please specify exactly one host.\n")
+    sys.exit(1)
+
+if not username or not password:
+    sys.stderr.write("ERROR: Credentials are missing.\n")
+    sys.exit(1)
+
+
+# The dict key is the section, the values the list of lines
+sections = {}
+
+# Which objects to get
+api_get_objects = [
+    "controllers",
+    "controller-statistics",
+    "disks",
+    "disk-statistics",
+    "frus",
+    "port",
+    "host-port-statistics",
+    "power-supplies",
+    "system",
+    "volumes",
+    "volume-statistics"
+]
+
+# Where to put the properties from any response
+# There is no mapping of object:property -> check_mk section, so far
+# Just a simple mapping of property -> check_mk section
+property_to_section = {
+    "controller-statistics" : "controller",
+    "controller"            : "controller",
+    "disk-statistics"       : "disks",
+    "drives"                : "disks",
+    "enclosure-fru"         : "fru",
+    "port"                  : "if",
+    "fc-port"               : "if",
+    "host-port-statistics"  : "if",
+    "power-supplies"        : "psu",
+    "fan"                   : "fan",
+    "system"                : "system",
+    "redundancy"            : "system",
+    "volumes"               : "volumes",
+    "volume-statistics"     : "volumes",
+}
+
+# Debug parameter. Contains full list of variables
+complete_list      = []
+
+def store_property(prop):
+    complete_list.append(prop) # Used for debugging
+    if prop[0] in property_to_section:
+        sections.setdefault(property_to_section[prop[0]], []).append(" ".join(prop))
+
+from HTMLParser import HTMLParser
+class HTMLObjectParser(HTMLParser):
+    def feed(self, body):
+        self.current_object_key = None
+        self.current_property   = None
+        HTMLParser.feed(self, body)
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "object":
+            keys = dict(attrs)
+            self.current_object_key = [ keys["basetype"], keys["oid"] ]
+        elif tag == "property":
+            keys = dict(attrs)
+            if self.current_object_key:
+                self.current_property = self.current_object_key + [ keys["name"] ]
+
+    def handle_endtag(self, tag):
+        if tag in [ "property", "object" ]:
+            if self.current_property:
+                store_property(self.current_property)
+            self.current_property = None
+            if tag == "object":
+                self.current_object_key = None
+
+    def handle_data(self, data):
+        if self.current_property:
+            self.current_property.append(data.replace("\n", "").replace("\r", ""))
+
+parser = HTMLObjectParser()
+
+try:
+    # Login
+    login_hash = hashlib.md5()
+    login_hash.update("%s_%s" % (username, password))
+    login_url = "https://%s/v3/api/login/%s" % (host_address, login_hash.hexdigest())
+    socket.setdefaulttimeout(opt_timeout)
+    req = urllib2.Request(login_url)
+    handle = urllib2.urlopen(req)
+    contents = handle.read()
+
+    # Extract sessionKey
+    session_key = re.match('.*"response">(.*?)<.*', contents).groups()[0]
+
+    headers = {
+        'User-agent': 'Check_MK agent_hp_msa',
+        'sessionKey': session_key,
+    }
+
+    # Query objects
+    for element in api_get_objects:
+        show_url = "https://%s/v3/api/show/%s" % (host_address, element)
+        req      = urllib2.Request(show_url, None, headers)
+        handle   = urllib2.urlopen(req)
+
+        contents = handle.read()
+        parser.feed(contents)
+
+    # Output sections
+    for section, lines in sections.items():
+        print "<<<hp_msa_%s>>>" % section
+        print "\n".join(lines)
+
+except Exception, e:
+    if opt_debug:
+        sys.stdout.write('----------------------------\n')
+        sys.stdout.write(traceback.format_exc())
+        sys.stdout.write('============================\n')
+        import pprint
+        pprint.pprint(complete_list)
+    sys.stderr.write("Connection error: %s" % e)
+    sys.exit(1)
+

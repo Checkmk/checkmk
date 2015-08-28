@@ -1,0 +1,17 @@
+title: HP MSA 2040: Disk IO
+agents: hp_msa
+catalog: hw/storagehw/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the disk IO of a HP MSA 2040 storage system.
+ To make it work you have to configure the hp_msa datasource program via WATO.
+
+ The levels are configurable.
+ No default levels are set.
+
+item:
+ The disk summary.
+
+inventory:
+ One service is created

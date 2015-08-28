@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<hp_msa_system>>>
+# system 1 system-name IMSAKO2B1
+# system 1 system-contact cia@cgm.com
+# system 1 system-location Rack B1
+# system 1 system-information Uninitialized Info
+# system 1 midplane-serial-number 00C0FF1E82BB
+# system 1 vendor-name HP
+# system 1 product-id MSA 2040 SAN
+# system 1 product-brand MSA Storage
+# system 1 scsi-vendor-id HP
+# system 1 scsi-product-id MSA 2040 SAN
+# system 1 enclosure-count 1
+# system 1 health OK
+# system 1 health-numeric 0
+# system 1 health-reason
+# system 1 other-MC-status Operational
+# system 1 other-MC-status-numeric 4754
+# system 1 pfuStatus Idle
+# system 1 supported-locales English (English), Spanish (español), French (français), German (Deutsch), Italian (italiano), Japanese (日本語), Dutch (Nederlands), Chinese-Simplified (简体中文), Chinese-Traditional (繁體中文), Korean (한국어)
+# system 1 current-node-wwn 208000c0ff1e82bb
+# system 1 fde-security-status Unsecured
+# system 1 fde-security-status-numeric 1
+# system 1 platform-type Gallium
+# system 1 platform-type-numeric 3
+# system 1 platform-brand HP Cardinals
+# system 1 platform-brand-numeric 15
+# redundancy 2 redundancy-mode Active-Active ULP
+# redundancy 2 redundancy-mode-numeric 8
+# redundancy 2 redundancy-status Redundant
+# redundancy 2 redundancy-status-numeric 2
+# redundancy 2 controller-a-status Operational
+# redundancy 2 controller-a-status-numeric 0
+# redundancy 2 controller-a-serial-number 7CE501N158
+# redundancy 2 controller-b-status Operational
+# redundancy 2 controller-b-status-numeric 0
+# redundancy 2 controller-b-serial-number 7CE501M190
+# redundancy 2 other-MC-status Operational
+# redundancy 2 other-MC-status-numeric 4754
+
+def inventory_hp_msa_system(parsed):
+    return [ (None, None) ]
+
+
+def check_hp_msa_system(_no_item, _no_params, info):
+    for line in info:
+        if line[2] == "system-name":
+            system_name = " ".join(line[3:])
+        elif line[2] == "health":
+            health = " ".join(line[3:])
+        elif line[2] == "health-reason":
+            health_reason = " ".join(line[3:])
+
+    yield 0, "Name: %s" % system_name
+
+    extra_info = ""
+    if health_reason:
+        extra_info = " (%s)" % health_reason
+
+    if hp_msa_state_map[health] > 0:
+        yield hp_msa_state_map[health], "%s%s" % (health, extra_info)
+
+
+
+check_info['hp_msa_system'] = {
+    'inventory_function'        : inventory_hp_msa_system,
+    'check_function'            : check_hp_msa_system,
+    'service_description'       : 'System Health',
+    'includes'                  : [ "hp_msa.include" ],
+}

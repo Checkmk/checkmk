@@ -1,0 +1,17 @@
+title: HP MSA 2040: Controller CPU
+agents: hp_msa
+catalog: hw/storagehw/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the CPU of the controllers of a HP MSA 2040 storage system.
+ To make it work you have to configure the hp_msa datasource program via WATO.
+
+ The levels are configurable.
+ Default levels are set to (80.0, 90.0).
+
+item:
+ The controller identifier.
+
+inventory:
+ One service per controller is created.

@@ -1,0 +1,15 @@
+title: HP MSA 2040: Volume Health Status
+agents: linux
+catalog: hw/storagehw/hp
+license: GPL
+distribution: check_mk
+description:
+ This check reports the number of volumes and the health states of all volumes
+ of a HP MSA 2040 storage system.
+
+ If the states of all volumes are "OK" then the service state is OK.
+ Otherwise the service shows the health status and reason of the volumes
+ which are not "OK" and changes to WARN or CRIT.
+
+inventory:
+ One service is created.

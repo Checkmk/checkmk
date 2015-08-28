@@ -1,0 +1,18 @@
+title: HP MSA 2040: Fan Speed and Status
+agents: hp_msa
+catalog: hw/storagehw/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the fan speed and status a HP MSA 2040 storage system.
+ To make it work you have to configure the hp_msa datasource program via WATO.
+
+ Furthermore it reports the health status and reason if it is not "OK".
+ If the status of the fan is not "Up" or the health status is not "OK"
+ then the status of the service changes to WARN or CRIT.
+
+item:
+ The fan identifier.
+
+inventory:
+ One service per fan is created.

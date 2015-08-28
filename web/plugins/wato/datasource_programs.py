@@ -190,6 +190,30 @@ register_rule(group,
     match = 'first')
 
 register_rule(group,
+    "special_agents:hp_msa",
+    Dictionary(
+        elements = [
+            ( "username",
+              TextAscii(
+                  title = _("Username"),
+                  allow_empty = False,
+              )
+            ),
+            ( "password",
+              TextAscii(
+                  title = _("Password"),
+                  allow_empty = False,
+              )
+            )
+        ],
+        optional_keys = False
+    ),
+    title = _("Check HP MSA via Web Interface"),
+    help = _("This rule selects the Agent HP MSA instead of the normal Check_MK Agent "
+             "which collects the data through the HP MSA web interface"),
+    match = 'first')
+
+register_rule(group,
     "special_agents:netapp",
     Dictionary(
             title = _("Username and password for the NetApp Filer."),

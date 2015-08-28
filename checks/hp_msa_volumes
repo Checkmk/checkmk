@@ -1,0 +1,238 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<hp_msa_volumes>>>
+# volumes 1 durable-id V0
+# volumes 1 virtual-disk-name IMSAKO2B1_U1_B01-04
+# volumes 1 storage-pool-name IMSAKO2B1_U1_B01-04
+# volumes 1 volume-name IMSAKO2B1_U1_B01-04_v0001
+# volumes 1 size 1198.9GB
+# volumes 1 size-numeric 2341789696
+# volumes 1 total-size 1198.9GB
+# volumes 1 total-size-numeric 2341789696
+# volumes 1 allocated-size 1198.9GB
+# volumes 1 allocated-size-numeric 2341789696
+# volumes 1 storage-type Linear
+# volumes 1 storage-type-numeric 0
+# volumes 1 preferred-owner A
+# volumes 1 preferred-owner-numeric 1
+# volumes 1 owner A
+# volumes 1 owner-numeric 1
+# volumes 1 serial-number 00c0ff1ec44a00008425415501000000
+# volumes 1 write-policy write-back
+# volumes 1 write-policy-numeric 1
+# volumes 1 cache-optimization standard
+# volumes 1 cache-optimization-numeric 0
+# volumes 1 read-ahead-size Adaptive
+# volumes 1 read-ahead-size-numeric -1
+# volumes 1 volume-type standard
+# volumes 1 volume-type-numeric 0
+# volumes 1 volume-class standard
+# volumes 1 volume-class-numeric 0
+# volumes 1 profile-preference Standard
+# volumes 1 profile-preference-numeric 0
+# volumes 1 snapshot No
+# volumes 1 volume-qualifier N/A
+# volumes 1 volume-qualifier-numeric 0
+# volumes 1 blocks 2341789696
+# volumes 1 capabilities dmscer
+# volumes 1 volume-parent
+# volumes 1 snap-pool
+# volumes 1 replication-set
+# volumes 1 attributes
+# volumes 1 virtual-disk-serial 00c0ff1ec44a00001e23415500000000
+# volumes 1 volume-description
+# volumes 1 wwn 600C0FF0001EC44A8425415501000000
+# volumes 1 progress 0%
+# volumes 1 progress-numeric 0
+# volumes 1 container-name IMSAKO2B1_U1_B01-04
+# volumes 1 container-serial 00c0ff1ec44a00001e23415500000000
+# volumes 1 allowed-storage-tiers N/A
+# volumes 1 allowed-storage-tiers-numeric 0
+# volumes 1 threshold-percent-of-pool 0
+# volumes 1 reserved-size-in-pages 0
+# volumes 1 allocate-reserved-pages-first Disabled
+# volumes 1 allocate-reserved-pages-first-numeric 0
+# volumes 1 zero-init-page-on-allocation Disabled
+# volumes 1 zero-init-page-on-allocation-numeric 0
+# volumes 1 raidtype RAID10
+# volumes 1 raidtype-numeric 10
+# volumes 1 pi-format T0
+# volumes 1 pi-format-numeric 0
+# volumes 1 health OK
+# volumes 1 health-numeric 0
+# volumes 1 health-reason
+# volumes 1 health-recommendation
+# volumes 1 volume-group UNGROUPEDVOLUMES
+# volumes 1 group-key VGU
+# volume-statistics 1 volume-name IMSAKO2B1_U1_B01-04_v0001
+# volume-statistics 1 serial-number 00c0ff1ec44a00008425415501000000
+# volume-statistics 1 bytes-per-second 2724.3KB
+# volume-statistics 1 bytes-per-second-numeric 2724352
+# volume-statistics 1 iops 66
+# volume-statistics 1 number-of-reads 11965055
+# volume-statistics 1 number-of-writes 80032996
+# volume-statistics 1 data-read 1241.3GB
+# volume-statistics 1 data-read-numeric 1241361379840
+# volume-statistics 1 data-written 6462.6GB
+# volume-statistics 1 data-written-numeric 6462660316672
+# volume-statistics 1 allocated-pages 0
+# volume-statistics 1 percent-tier-ssd 0
+# volume-statistics 1 percent-tier-sas 0
+# volume-statistics 1 percent-tier-sata 0
+# volume-statistics 1 percent-allocated-rfc 0
+# volume-statistics 1 pages-alloc-per-minute 0
+# volume-statistics 1 pages-dealloc-per-minute 0
+# volume-statistics 1 shared-pages 0
+# volume-statistics 1 write-cache-hits 93581599
+# volume-statistics 1 write-cache-misses 345571865
+# volume-statistics 1 read-cache-hits 29276023
+# volume-statistics 1 read-cache-misses 54728207
+# volume-statistics 1 small-destages 36593447
+# volume-statistics 1 full-stripe-write-destages 4663277
+# volume-statistics 1 read-ahead-operations 4804068203594569116
+# volume-statistics 1 write-cache-space 74
+# volume-statistics 1 write-cache-percent 8
+# volume-statistics 1 reset-time 2015-05-22 13:54:36
+# volume-statistics 1 reset-time-numeric 1432302876
+# volume-statistics 1 start-sample-time 2015-08-21 11:51:17
+# volume-statistics 1 start-sample-time-numeric 1440157877
+# volume-statistics 1 stop-sample-time 2015-08-21 11:51:48
+# volume-statistics 1 stop-sample-time-numeric 1440157908
+
+#   .--health--------------------------------------------------------------.
+#   |                    _                _ _   _                          |
+#   |                   | |__   ___  __ _| | |_| |__                       |
+#   |                   | '_ \ / _ \/ _` | | __| '_ \                      |
+#   |                   | | | |  __/ (_| | | |_| | | |                     |
+#   |                   |_| |_|\___|\__,_|_|\__|_| |_|                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                            main check                                |
+#   '----------------------------------------------------------------------'
+
+def parse_hp_msa_volumes(info):
+    parsed = {}
+    for line in info:
+        if line[0] == "volumes":
+            if line[2] == "durable-id":
+                volume_id = " ".join(line[3:])
+                parsed[volume_id] = {"item_type" : "Volume"}
+            else:
+                parsed[volume_id][line[2]] = " ".join(line[3:])
+        else:
+            if line[2] == "volume-name":
+                volume_name = " ".join(line[3:])
+            else:
+                for key, values in parsed.items():
+                    if volume_name == values["volume-name"]:
+                        parsed[key][line[2]] = " ".join(line[3:])
+
+    return parsed
+
+
+check_info['hp_msa_volumes'] = {
+    'parse_function'            : parse_hp_msa_volumes,
+    'inventory_function'        : inventory_hp_msa_health,
+    'check_function'            : check_hp_msa_health,
+    'service_description'       : 'Volumes Health',
+    'includes'                  : [ "hp_msa.include" ],
+}
+
+#.
+#   .--volume df-----------------------------------------------------------.
+#   |                       _                            _  __             |
+#   |           __   _____ | |_   _ _ __ ___   ___    __| |/ _|            |
+#   |           \ \ / / _ \| | | | | '_ ` _ \ / _ \  / _` | |_             |
+#   |            \ V / (_) | | |_| | | | | | |  __/ | (_| |  _|            |
+#   |             \_/ \___/|_|\__,_|_| |_| |_|\___|  \__,_|_|              |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def inventory_hp_msa_volumes_df(parsed):
+    for key in parsed.keys():
+        yield key, {}
+
+
+def check_hp_msa_volumes_df(item, params, parsed):
+    if item in parsed:
+        yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
+
+        size_mb  = (int(parsed[item]["total-size-numeric"]) * 512) / 1024 ** 2
+        alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) / 1024 ** 2
+        avail_mb = size_mb - alloc_mb
+
+        yield df_check_filesystem(g_hostname, item, size_mb, avail_mb, 0, params)
+
+
+check_info['hp_msa_volumes.df'] = {
+    'inventory_function'        : inventory_hp_msa_volumes_df,
+    'check_function'            : check_hp_msa_volumes_df,
+    'service_description'       : 'Filesystem %s',
+    'has_perfdata'              : True,
+    "group"                     : "filesystem",
+    'default_levels_variable'   : "filesystem_default_levels",
+    'includes'                  : [ "hp_msa.include", "df.include" ],
+}
+
+#.
+#   .--volume IO-----------------------------------------------------------.
+#   |                       _                        ___ ___               |
+#   |           __   _____ | |_   _ _ __ ___   ___  |_ _/ _ \              |
+#   |           \ \ / / _ \| | | | | '_ ` _ \ / _ \  | | | | |             |
+#   |            \ V / (_) | | |_| | | | | | |  __/  | | |_| |             |
+#   |             \_/ \___/|_|\__,_|_| |_| |_|\___| |___\___/              |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def check_hp_msa_volumes_io(item, params, parsed):
+    disks = {}
+    for key, values in parsed.items():
+        now = time.time()
+        disks[key] = {
+            "read_throughput"  : get_rate("%s_read" %  key, now, int(values["data-read-numeric"])),
+            "write_throughput" : get_rate("%s_write" % key, now, int(values["data-written-numeric"])),
+        }
+
+    states, outputs, perfdatas = check_diskstat_dict(item, params, disks)
+    if item != "SUMMARY":
+        yield 0, parsed[item]["virtual-disk-name"]
+
+    for state, output, perfdata in [states, outputs, perfdatas]:
+        yield state, output, perfdata
+
+
+check_info['hp_msa_volumes.io'] = {
+    'inventory_function'        : inventory_hp_msa_io,
+    'check_function'            : check_hp_msa_volumes_io,
+    'service_description'       : 'Volume IO %s',
+    'has_perfdata'              : True,
+    'group'                     : 'diskstat',
+    'includes'                  : [ "hp_msa.include", "diskstat.include" ],
+}
+
+#.
+

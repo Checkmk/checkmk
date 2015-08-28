@@ -1,0 +1,32 @@
+Title: agent_hp_msa: New special agent to monitor "HP MSA Storage" devices
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440773228
+Class: feature
+
+This new special agent can be configured, just like the other special agents,
+via the <i>Datasource Programs</i> in WATO.
+It queries the Web-API for the data collection.
+
+The following new checks are available with this agent
+<table>
+<tr><th>Check</th><th>Description</th></tr>
+<tr>hp_msa_controller<td></td> <td>CPU utilization for each controller</td></tr>
+<tr>hp_msa_controller.io<td></td> <td>IO througput for each controller</td></tr>
+<tr>hp_msa_disk<td></td> <td>Disk summary check which shows the disks health</td></tr>
+<tr>hp_msa_disk.io<td></td> <td>Disk IO throughput</td></tr>
+<tr>hp_msa_disk.temp<td></td> <td>Summary check over all temperature sensors</td></tr>
+<tr>hp_msa_fan<td></td> <td>Fan health status and rpm information</td></tr>
+<tr>hp_msa_if<td></td> <td>Fibrechannel interfaces traffic and status</td></tr>
+<tr>hp_msa_psu<td></td> <td>Power supply health</td></tr>
+<tr>hp_msa_psu.sensor<td></td> <td>Power supply voltage</td></tr>
+<tr>hp_msa_psu.temp<td></td> <td>Power supply temperature sensor</td></tr>
+<tr>hp_msa_system<td></td> <td>Overall system health</td></tr>
+<tr>hp_msa_volume<td></td> <td>Summary check of health state over all volumes.</td></tr>
+<tr>hp_msa_volume.df<td></td> <td>Filesystem usage for each volume</td></tr>
+<tr>hp_msa_volume.io<td></td> <td>Data IO for each volume </td></tr>
+</table>
+
+For further details regarding these checks please have a look at the manpages.

@@ -1700,12 +1700,15 @@ def move_folder(what_folder, target_folder):
     elif target_folder.get(".lock_subfolders"):
         raise MKUserError(None, _("Cannot move folder: Target folder is locked."))
 
+    new_dir = folder_dir(target_folder)
+    if os.path.exists(new_dir):
+        raise MKUserError(None, _("Cannot move folder: A folder with this name already exists in the target folder."))
+
     old_parent = what_folder[".parent"]
     old_dir = folder_dir(what_folder)
     del old_parent[".folders"][what_folder[".name"]]
     target_folder[".folders"][what_folder[".name"]] = what_folder
     what_folder[".parent"] = target_folder
-    new_dir = folder_dir(target_folder)
     shutil.move(old_dir, new_dir)
 
 def delete_folder(folder):

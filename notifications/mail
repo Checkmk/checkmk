@@ -544,7 +544,7 @@ def construct_content(context):
         html_info = "Custom Notification (while " + html_state + ")"
 
     else:
-        txt_info = notification_type # Should neven happen
+        txt_info = notification_type # Should never happen
 
     if not html_info:
         html_info = txt_info

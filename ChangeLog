@@ -10,6 +10,7 @@
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
     * 2510 FIX: Fixed sidebar frame scaling in chrome when using browser zoom
     * 2548 FIX: Fixed exceptions in different places in case of user errors...
+    * 2549 FIX: Silently ignore not existing painters and sorters in views...
 
 
 1.2.6p10:

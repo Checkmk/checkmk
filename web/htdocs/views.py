@@ -323,8 +323,8 @@ def page_create_view(next_url = None):
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form('create_view')
     html.hidden_field('mode', 'create')
@@ -1204,8 +1204,8 @@ def render_view(view, rows, datasource, group_painters, painters,
                 backurl = html.makeuri([], delvars=['filled_in', 'actions'])
                 has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
             except MKUserError, e:
-                html.show_error(e.message)
-                html.add_user_error(e.varname, e.message)
+                html.show_error(e)
+                html.add_user_error(e.varname, e)
                 if 'C' in display_options:
                     show_command_form(True, datasource)
 

@@ -246,7 +246,12 @@ class html:
         else:
             return self.has_var("filled_in")
 
-    def add_user_error(self, varname, message):
+    def add_user_error(self, varname, msg_or_exc):
+        if isinstance(msg_or_exc, Exception):
+            message = "%s" % msg_or_exc
+        else:
+            message = msg_or_exc
+
         if type(varname) == list:
             for v in varname:
                 self.add_user_error(v, message)

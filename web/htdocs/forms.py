@@ -82,8 +82,8 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                         vs.validate_value(v, keyname + "_" + varprefix + name)
                         new_value[keyname][name] = v
                     except MKUserError, e:
-                        messages.append("%s: %s" % (title, e.message))
-                        html.add_user_error(e.varname, e.message)
+                        messages.append("%s: %s" % (title, e))
+                        html.add_user_error(e.varname, e)
 
             else:
                 new_value[keyname] = {}
@@ -92,15 +92,15 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                     entries.validate_value(edited_value, keyname)
                     new_value[keyname].update(edited_value)
                 except Exception, e:
-                    messages.append("%s: %s" % (entries.title() or _("Properties"), e.message))
-                    html.add_user_error(e.varname, e.message)
+                    messages.append("%s: %s" % (entries.title() or _("Properties"), e))
+                    html.add_user_error(e.varname, e)
 
             if validate and not html.has_user_errors():
                 try:
                     validate(new_value[keyname])
                 except MKUserError, e:
-                    messages.append(e.message)
-                    html.add_user_error(e.varname, e.message)
+                    messages.append(e)
+                    html.add_user_error(e.varname, e)
 
         if messages:
             if not preview:

@@ -303,8 +303,8 @@ def page_list(what, title, visuals, custom_columns = [],
                 html.footer()
                 return
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     keys_sorted = visuals.keys()
     keys_sorted.sort(cmp = lambda a,b: -cmp(a[0],b[0]) or cmp(a[1], b[1]))
@@ -441,8 +441,8 @@ def page_create_visual(what, info_keys, next_url = None):
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form('create_visual')
     html.hidden_field('mode', 'create')
@@ -738,8 +738,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form("visual", method = "POST")
     html.hidden_field("back", back_url)

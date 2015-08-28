@@ -2946,7 +2946,7 @@ class Dictionary(ValueSpec):
                 try:
                     vs.validate_datatype(value[param], vp)
                 except MKUserError, e:
-                    raise MKUserError(e.varname, _("%s: %s") % (vs.title(), e.message))
+                    raise MKUserError(e.varname, _("%s: %s") % (vs.title(), e))
             elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 

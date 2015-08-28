@@ -10493,8 +10493,8 @@ def mode_sites(phase):
                 except MKAutomationException, e:
                     error = _("Cannot connect to remote site: %s") % e
                 except MKUserError, e:
-                    html.add_user_error(e.varname, e.message)
-                    error = e.message
+                    html.add_user_error(e.varname, e)
+                    error = "%s" % e
                 except Exception, e:
                     if config.debug:
                         raise
@@ -16445,7 +16445,7 @@ def page_user_profile(change_pw=False):
             userdb.save_users(users)
             success = True
         except MKUserError, e:
-            html.add_user_error(e.varname, e.message)
+            html.add_user_error(e.varname, e)
     else:
         users = userdb.load_users()
 
@@ -19286,7 +19286,7 @@ def validate_host(host, folder):
             try:
                 hk(eff)
             except MKUserError, e:
-                errors.append(e.message)
+                errors.append("%s" % e)
         return errors
     else:
         return []
@@ -19310,7 +19310,7 @@ def validate_all_hosts(hostnames, force_all = False):
                 try:
                     hk(eff, all_hosts)
                 except MKUserError, e:
-                    errors.append(e.message)
+                    errors.append("%s" % e)
             hosts_errors[name] = errors
         return hosts_errors
     else:

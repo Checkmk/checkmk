@@ -271,8 +271,8 @@ def render_view(view, rows, datasource, group_painters, painters,
 		    try:
 			show_commands = do_commands(view, datasource["infos"][0], rows)
 		    except MKUserError, e:
-			html.show_error(e.message)
-			html.add_user_error(e.varname, e.message)
+			html.show_error(e)
+			html.add_user_error(e.varname, e)
 			show_commands = True
 		if show_commands:
 		    show_command_form(view, datasource, rows)

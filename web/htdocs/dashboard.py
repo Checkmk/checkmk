@@ -841,8 +841,8 @@ def choose_view(name):
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form('choose_view')
     forms.header(_('Select View'))
@@ -1020,8 +1020,8 @@ def page_edit_dashlet():
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form("dashlet", method="POST")
     vs_general.render_input("general", dashlet)
@@ -1084,7 +1084,7 @@ def page_delete_dashlet():
 
             html.message(_('The dashlet has been deleted.'))
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % html.attrencode(e.message))
+            html.write("<div class=error>%s</div>\n" % html.attrencode(e))
             return
 
     html.immediate_browser_redirect(1, back_url)

@@ -76,7 +76,7 @@ def render_availability_options():
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
             except MKUserError, e:
-                html.add_user_error(e.varname, e.message)
+                html.add_user_error(e.varname, e)
                 is_open = True
 
     range_vs = None
@@ -88,7 +88,7 @@ def render_availability_options():
         range, range_title = range_vs.compute_range(avoptions["rangespec"])
         avoptions["range"] = range, range_title
     except MKUserError, e:
-        html.add_user_error(e.varname, e.message)
+        html.add_user_error(e.varname, e)
 
     if html.has_user_errors():
         html.show_user_errors()

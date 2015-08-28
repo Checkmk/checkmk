@@ -1006,15 +1006,18 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Sorting - use view sorters and URL supplied sorters
     if not only_count:
         sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
-        sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list ]
+        sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list
+                        if s[0] in multisite_sorters ]
     else:
         sorters = []
 
     # Prepare grouping information
-    group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
+    group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"]
+                        if e[0] in multisite_painters ]
 
     # Prepare columns to paint
-    painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"] if e[0] in multisite_painters ]
+    painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"]
+                    if e[0] in multisite_painters ]
 
     # Now compute the list of all columns we need to query via Livestatus.
     # Those are: (1) columns used by the sorters in use, (2) columns use by

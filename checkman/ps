@@ -86,7 +86,7 @@ examples:
                                 'user': 'ntp',
                                 'warnmin': 1,
                                 'warnmax': 1,
-                                'okmin': 1
+                                'okmin': 1,
                                 'okmax': 1,
                                 'cpulevels': (90.0, 98.0),
                                 'cpu_average': 15,

@@ -6969,10 +6969,10 @@ phase_elements = [
       Tuple(
           title = _("Frequency"),
           elements = [
-              Integer(title = _("warning if below"), unit = u"V", default_value = 45),
-              Integer(title = _("critical if below"), unit = u"V", default_value = 40),
-              Integer(title = _("warning if above"), unit = u"V", default_value = 55),
-              Integer(title = _("critical if above"), unit = u"V", default_value = 60),
+              Integer(title = _("warning if below"), unit = u"Hz", default_value = 45),
+              Integer(title = _("critical if below"), unit = u"Hz", default_value = 40),
+              Integer(title = _("warning if above"), unit = u"Hz", default_value = 55),
+              Integer(title = _("critical if above"), unit = u"Hz", default_value = 60),
           ],
     ))
 ]

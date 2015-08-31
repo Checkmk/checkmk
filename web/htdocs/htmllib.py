@@ -836,18 +836,24 @@ class html:
             # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
             # c) load the minified javascript when not in debug mode
             for js in [ "checkmk", "graphs" ] + javascripts:
+                filename_for_browser = None
                 if defaults.omd_root:
-                    base_dir = defaults.omd_root + "/share/check_mk/web/htdocs/js"
-                    if not self.enable_debug and os.path.exists(base_dir + "/" + js + "_min.js"):
-                        fname = '%s_min-%s' % (js, defaults.check_mk_version)
-                    elif os.path.exists(base_dir + "/" + js + ".js"):
-                        fname = '%s-%s' % (js, defaults.check_mk_version)
+                    rel_path = "/share/check_mk/web/htdocs/js"
+                    if self.enable_debug:
+                        min_parts = [ "", "_min" ]
                     else:
-                        continue
-                else:
-                    fname = '%s' % js
+                        min_parts = [ "_min", "" ]
 
-                self.javascript_file(fname)
+                    for min_part in min_parts:
+                        path_pattern = defaults.omd_root + "%s" + rel_path + "/" + js + min_part + ".js"
+                        if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
+                            filename_for_browser = '%s%s-%s' % (js, min_part, defaults.check_mk_version)
+                            break
+                else:
+                    filename_for_browser = js
+
+                if filename_for_browser:
+                    self.javascript_file(filename_for_browser)
 
             if self.browser_reload != 0:
                 if self.browser_redirect != '':

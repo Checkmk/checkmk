@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<hp_msa_volumes>>>
+# <<<hp_msa_volume>>>
 # volumes 1 durable-id V0
 # volumes 1 virtual-disk-name IMSAKO2B1_U1_B01-04
 # volumes 1 storage-pool-name IMSAKO2B1_U1_B01-04
@@ -134,7 +134,7 @@
 #   |                            main check                                |
 #   '----------------------------------------------------------------------'
 
-def parse_hp_msa_volumes(info):
+def parse_hp_msa_volume(info):
     parsed = {}
     for line in info:
         if line[0] == "volumes":
@@ -154,8 +154,8 @@ def parse_hp_msa_volumes(info):
     return parsed
 
 
-check_info['hp_msa_volumes'] = {
-    'parse_function'            : parse_hp_msa_volumes,
+check_info['hp_msa_volume'] = {
+    'parse_function'            : parse_hp_msa_volume,
     'inventory_function'        : inventory_hp_msa_health,
     'check_function'            : check_hp_msa_health,
     'service_description'       : 'Volumes Health',
@@ -172,12 +172,12 @@ check_info['hp_msa_volumes'] = {
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def inventory_hp_msa_volumes_df(parsed):
+def inventory_hp_msa_volume_df(parsed):
     for key in parsed.keys():
         yield key, {}
 
 
-def check_hp_msa_volumes_df(item, params, parsed):
+def check_hp_msa_volume_df(item, params, parsed):
     if item in parsed:
         yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
 
@@ -188,9 +188,9 @@ def check_hp_msa_volumes_df(item, params, parsed):
         yield df_check_filesystem(g_hostname, item, size_mb, avail_mb, 0, params)
 
 
-check_info['hp_msa_volumes.df'] = {
-    'inventory_function'        : inventory_hp_msa_volumes_df,
-    'check_function'            : check_hp_msa_volumes_df,
+check_info['hp_msa_volume.df'] = {
+    'inventory_function'        : inventory_hp_msa_volume_df,
+    'check_function'            : check_hp_msa_volume_df,
     'service_description'       : 'Filesystem %s',
     'has_perfdata'              : True,
     "group"                     : "filesystem",
@@ -208,7 +208,7 @@ check_info['hp_msa_volumes.df'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def check_hp_msa_volumes_io(item, params, parsed):
+def check_hp_msa_volume_io(item, params, parsed):
     disks = {}
     for key, values in parsed.items():
         now = time.time()
@@ -219,15 +219,15 @@ def check_hp_msa_volumes_io(item, params, parsed):
 
     states, outputs, perfdatas = check_diskstat_dict(item, params, disks)
     if item != "SUMMARY":
-        yield 0, parsed[item]["virtual-disk-name"]
+        yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
 
     for state, output, perfdata in [states, outputs, perfdatas]:
         yield state, output, perfdata
 
 
-check_info['hp_msa_volumes.io'] = {
+check_info['hp_msa_volume.io'] = {
     'inventory_function'        : inventory_hp_msa_io,
-    'check_function'            : check_hp_msa_volumes_io,
+    'check_function'            : check_hp_msa_volume_io,
     'service_description'       : 'Volume IO %s',
     'has_perfdata'              : True,
     'group'                     : 'diskstat',

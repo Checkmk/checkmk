@@ -1,0 +1,9 @@
+Title: Quotes in generated confirmation messages are htmlized incorrectly
+Component: multisite
+State: open
+Date: 2015-08-31 16:18:23
+Targetversion: 1.2.7
+Class: bug
+
+Apparently the mechanism to convert " into &quot; is incorrect or applied in places where this isn't required. One reproducable example is when hitting the "Send monitoring notification" button in the Event Console the confirmation message is "Do you really want to execute that action &quot;Send monitoring notification&quot the following 1 Event Console Events?".
+Apart from the that the grammer is quite bad imho.

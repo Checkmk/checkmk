@@ -132,6 +132,11 @@ check_info['hp_msa_psu.sensor'] = {
 #   |                       |_|                                            |
 #   +----------------------------------------------------------------------+
 
+factory_settings["hp_msa_psu_temp_default_levels"] = {
+    "levels"        : (35.0, 40.0),
+    "levels_lower"  : (25.0, 20.0),
+}
+
 def inventory_hp_msa_psu_temp(parsed):
     for key in parsed.keys():
         yield key, {}
@@ -148,6 +153,7 @@ check_info['hp_msa_psu.temp'] = {
     'service_description'       : 'Temperature PSU %s',
     'has_perfdata'              : True,
     'group'                     : 'temperature',
+    'default_levels_variable'   : 'hp_msa_psu_temp_default_levels',
     'includes'                  : [ "temperature.include", "hp_msa.include" ],
 }
 

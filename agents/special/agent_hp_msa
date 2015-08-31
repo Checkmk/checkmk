@@ -110,8 +110,8 @@ api_get_objects = [
 property_to_section = {
     "controller-statistics" : "controller",
     "controller"            : "controller",
-    "disk-statistics"       : "disks",
-    "drives"                : "disks",
+    "disk-statistics"       : "disk",
+    "drives"                : "disk",
     "enclosure-fru"         : "fru",
     "port"                  : "if",
     "fc-port"               : "if",
@@ -120,8 +120,8 @@ property_to_section = {
     "fan"                   : "fan",
     "system"                : "system",
     "redundancy"            : "system",
-    "volumes"               : "volumes",
-    "volume-statistics"     : "volumes",
+    "volumes"               : "volume",
+    "volume-statistics"     : "volume",
 }
 
 # Debug parameter. Contains full list of variables

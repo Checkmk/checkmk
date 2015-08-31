@@ -51,7 +51,7 @@ if the host is being monitored by a remote system.</li>
 <li>EC notifications do not have a <i>previous</i> host or service state,
 since the Event Console is a stateless monitoring.
 Do not set any matching criteria on the event type since none of these
-can be fullfilled currently.</li>
+can be fulfilled currently.</li>
 <li>All EC notifications are sent as <i>service</i> notifications. The name
 of the event's application is taken as service description.</li>
 </ul>

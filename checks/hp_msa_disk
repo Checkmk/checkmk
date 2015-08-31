@@ -201,6 +201,11 @@ check_info['hp_msa_disk.io'] = {
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
+factory_settings["hp_msa_disk_temp_default_levels"] = {
+    "levels"        : (40.0, 45.0),
+    "levels_lower"  : (20.0, 15.0),
+}
+
 def inventory_hp_msa_disk_temp(parsed):
     return [ ("Disks", {}) ]
 
@@ -219,6 +224,7 @@ check_info['hp_msa_disk.temp'] = {
     'service_description'       : 'Temperature %s',
     'group'                     : 'temperature',
     'has_perfdata'              : True,
+    'default_levels_variable'   : "hp_msa_disk_temp_default_levels",
     'includes'                  : [ "hp_msa.include", "temperature.include" ],
 }
 

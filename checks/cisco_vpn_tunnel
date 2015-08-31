@@ -51,8 +51,8 @@ def check_cisco_vpn_tunnel(item, params, info):
     for tunnel, in_octets, out_octets in info:
         if tunnel == item:
             this_time = time.time()
-            in_octets_sec  = get_rate("cisco_vpn_tunnel_in" + item, this_time, int(in_octets))
-            out_octets_sec = get_rate("cisco_vpn_tunnel_out" + item, this_time, int(out_octets))
+            in_octets_sec  = get_rate("input", this_time, int(in_octets))
+            out_octets_sec = get_rate("output", this_time, int(out_octets))
             perfdata = [
                ("if_in_octets", in_octets_sec ),
                ("if_out_octets", out_octets_sec),

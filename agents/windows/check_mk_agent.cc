@@ -561,17 +561,7 @@ void debug_script_container( script_container* container )
     crash_log("buffer_work: \n<<<<\n%s\n>>>>", container->buffer_work);
 }
 
-bool ci_compare_pred(unsigned char lhs, unsigned char rhs)
-{
-    return std::tolower(lhs) == std::tolower(rhs);
-}
 
-// case insensitive compare
-bool ci_equal(const std::string &lhs, const std::string &rhs)
-{
-    return std::lexicographical_compare(lhs.begin(), lhs.end(),
-            rhs.begin(), rhs.end(), ci_compare_pred);
-}
 
 template <typename FuncT> FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName) {
     HMODULE mod = LoadLibraryW(dllName);
@@ -1817,9 +1807,13 @@ void save_logwatch_offsets()
 {
     FILE *file = fopen(g_logwatch_statefile, "w");
     if (!file) {
-        crash_log("Cannot open %s for writing.\n", g_logwatch_statefile);
-        // not stopping the agent from crashing. This way the user at least
-        // notices something went wrong
+        fprintf(stderr, "Cannot open %s for writing.\n", g_logwatch_statefile);
+        // what to do, what to do?
+        // If we continue, the whole log will be delivered all the time and
+        //   this error message may go unnoticed which will feel like a bug.
+        // Allow the agent to crash? Even more of a bug.
+        // Try to fix the problem automatically? Won't work reliably anyway.
+        exit(1);
     }
     for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
          it_tf != g_logwatch_textfiles.end(); it_tf++) {
@@ -1891,7 +1885,7 @@ void save_eventlog_offsets()
         for (eventlog_config_t::iterator conf_iter = g_eventlog_config.begin();
                 conf_iter != g_eventlog_config.end();
                 ++conf_iter) {
-            if ((conf_iter->name == "*") || ci_equal(conf_iter->name, state_iter->name)) {
+            if ((conf_iter->name == "*") || (conf_iter->name == state_iter->name)) {
                 level = conf_iter->level;
                 break;
             }
@@ -2543,7 +2537,7 @@ void section_eventlog(SOCKET &out)
                 int hide_context = 0;
                 for (eventlog_config_t::iterator conf_iter  = g_eventlog_config.begin();
                                                  conf_iter != g_eventlog_config.end(); ++conf_iter) {
-                    if ((conf_iter->name == "*") || ci_equal(conf_iter->name, it_st->name)) {
+                    if ((conf_iter->name == "*") || (conf_iter->name == it_st->name)) {
                         level = conf_iter->level;
                         hide_context = conf_iter->hide_context;
                         break;
@@ -4992,15 +4986,6 @@ void determine_directories(bool use_cwd)
     snprintf(g_state_dir,   sizeof(g_state_dir),   "%s\\state",   g_agent_directory);
     snprintf(g_temp_dir,    sizeof(g_temp_dir),    "%s\\temp",    g_agent_directory);
     snprintf(g_log_dir,     sizeof(g_log_dir),     "%s\\log",     g_agent_directory);
-
-    char *dirs[] = { g_plugins_dir, g_config_dir, g_local_dir, g_spool_dir, g_state_dir, g_temp_dir, g_log_dir };
-    for (size_t i = 0; i < sizeof(dirs) / sizeof(char*); ++i) {
-        if (!CreateDirectoryA(dirs[i], NULL)) {
-            if (GetLastError() != ERROR_ALREADY_EXISTS) {
-                crash_log("Failed to create directory %s: %s", GetLastError(), get_last_error_as_string().c_str());
-            }
-        }
-    }
 
     snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt",   g_state_dir);
     snprintf(g_eventlog_statefile, sizeof(g_eventlog_statefile), "%s\\eventstate.txt", g_state_dir);

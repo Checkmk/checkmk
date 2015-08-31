@@ -71,7 +71,7 @@ class ValueSpec:
 
     # Create a canonical, minimal, default value that
     # matches the datatype of the value specification and
-    # fullfills also data validation.
+    # fulfills also data validation.
     def canonical_value(self):
         return None
 

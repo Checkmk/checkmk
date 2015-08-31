@@ -485,7 +485,7 @@ def collect_hosttags():
 g_hosttag_taglist_cache = {}
 g_global_caches.append('g_hosttag_taglist_cache')
 
-# Check if a host fullfills the requirements of a tags
+# Check if a host fulfills the requirements of a tags
 # list. The host must have all tags in the list, except
 # for those negated with '!'. Those the host must *not* have!
 # New in 1.1.13: a trailing + means a prefix match
@@ -1128,12 +1128,12 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config"):
         left = []
         at_least_one_hit = False
         for check in unsorted:
-            deps_fullfilled = True
+            deps_fulfilled = True
             for dep in check[4]: # deps
                 if dep in unsorted_descrs:
-                    deps_fullfilled = False
+                    deps_fulfilled = False
                     break
-            if deps_fullfilled:
+            if deps_fulfilled:
                 sorted.append(check)
                 at_least_one_hit = True
             else:

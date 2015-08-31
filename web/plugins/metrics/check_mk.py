@@ -182,7 +182,7 @@ unit_info["bar"] = {
     "render"    : lambda v: physical_precision(v, 6, _("bar")),
 }
 
-unit_info["Pa"] = {
+unit_info["pa"] = {
     "title"     : _("Pascal"),
     "symbol"    : _("Pa"),
     "render"    : lambda v: physical_precision(v, 3, _("Pa")),
@@ -2040,7 +2040,7 @@ metric_info["pressure"] = {
 
 metric_info["pressure_pa"] = {
     "title" : _("Pressure"),
-    "unit"  : "Pa",
+    "unit"  : "pa",
     "color" : "#ff6234",
 }
 

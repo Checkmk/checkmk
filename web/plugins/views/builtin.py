@@ -762,7 +762,7 @@ multisite_builtin_views.update({
           'linktitle' : _('Host Problems'),
           'title': _('Problems of host')},
  'hostgroup': {'browser_reload': 30,
-               'column_headers': 'off',
+               'column_headers': 'pergroup',
                'datasource': 'hosts',
                'description': _('Lists members of a host group with the number of services in the different states.'),
                'group_painters': [('site_icon', None),

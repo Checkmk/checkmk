@@ -8,7 +8,8 @@ description:
  To make it work you have to configure the hp_msa datasource program via WATO.
 
  The levels are configurable.
- No default levels are set.
+ Lower levels are set to 25 and 20 celsius.
+ Upper levels are set to 45 and 50 celsius.
 
 item:
  The PSU identifier.

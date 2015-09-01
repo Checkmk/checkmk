@@ -140,7 +140,13 @@ struct winperf_counter {
 
 // Configuration entries from [logwatch] for individual logfiles
 struct eventlog_config_entry {
-    char name[256];
+    eventlog_config_entry(int level, int hide_context, const char *name)
+        : name(name)
+        , level(level)
+        , hide_context(hide_context)
+    {}
+
+    std::string name;
     int level;
     int hide_context;
 };
@@ -330,12 +336,19 @@ int eventlog_buffer_size = 0;
 
 // Our memory of what event logs we know and up to
 // which record entry we have seen its messages so
-// far. We do not want to make use of C++ features
-// here so sorry for the mess...
-unsigned num_eventlogs = 0;
-DWORD    known_record_numbers[MAX_EVENTLOGS];
-char    *eventlog_names[MAX_EVENTLOGS];
-bool     newly_found[MAX_EVENTLOGS];
+// far.
+struct eventlog_file_state {
+    eventlog_file_state(char *name)
+        : name(name)
+        , num_known_records(0)
+        , newly_discovered(true)
+    {}
+    std::string name;
+    DWORD num_known_records;
+    bool newly_discovered;
+};
+typedef vector<eventlog_file_state> eventlog_state_t;
+eventlog_state_t g_eventlog_state;
 
 struct eventlog_hint_t {
     char  *name;
@@ -364,8 +377,8 @@ char g_logwatch_statefile[256];
 char g_eventlog_statefile[256];
 
 // Configuration of eventlog monitoring (see config parser)
-int num_eventlog_configs = 0;
-eventlog_config_entry eventlog_config[MAX_EVENTLOGS];
+typedef std::vector<eventlog_config_entry> eventlog_config_t;
+eventlog_config_t g_eventlog_config;
 
 // Configuration of only_from
 typedef vector<ipspec*> only_from_t;
@@ -1416,37 +1429,32 @@ void output_eventlog(SOCKET &out, const char *logname,
 // might already be known and will not be stored twice.
 void register_eventlog(char *logname)
 {
-    if (num_eventlogs >= MAX_EVENTLOGS)
-        return; // veeery unlikely
-
     // check if we already know this one...
-    for (unsigned i=0; i < num_eventlogs; i++) {
-        if (!strcmp(logname, eventlog_names[i])) {
-            newly_found[i] = true; // remember its still here
+    for (eventlog_state_t::iterator iter  = g_eventlog_state.begin();
+                                    iter != g_eventlog_state.end(); ++iter) {
+        if (iter->name.compare(logname) == 0) {
+            iter->newly_discovered = true;
             return;
         }
     }
 
     // yet unknown. register it.
-    known_record_numbers[num_eventlogs] = 0;
-    eventlog_names[num_eventlogs] = strdup(logname);
-    newly_found[num_eventlogs] = true;
-    num_eventlogs ++;
+    g_eventlog_state.push_back(eventlog_file_state(logname));
 }
 
 void unregister_all_eventlogs()
 {
-    for (unsigned i=0; i < num_eventlogs; i++)
-        free(eventlog_names[i]);
-    num_eventlogs = 0;
+    g_eventlog_state.clear();
 }
 
 /* Look into the registry in order to find out, which
    event logs are available. */
 bool find_eventlogs(SOCKET &out)
 {
-    for (unsigned i=0; i<num_eventlogs; i++)
-        newly_found[i] = 0;
+    for (eventlog_state_t::iterator iter  = g_eventlog_state.begin();
+                                    iter != g_eventlog_state.end(); ++iter) {
+        iter->newly_discovered = false;
+    }
 
     char regpath[128];
     snprintf(regpath, sizeof(regpath),
@@ -1798,6 +1806,15 @@ globline_container *g_current_globline_container = NULL;
 void save_logwatch_offsets()
 {
     FILE *file = fopen(g_logwatch_statefile, "w");
+    if (!file) {
+        fprintf(stderr, "Cannot open %s for writing.\n", g_logwatch_statefile);
+        // what to do, what to do?
+        // If we continue, the whole log will be delivered all the time and
+        //   this error message may go unnoticed which will feel like a bug.
+        // Allow the agent to crash? Even more of a bug.
+        // Try to fix the problem automatically? Won't work reliably anyway.
+        exit(1);
+    }
     for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
          it_tf != g_logwatch_textfiles.end(); it_tf++) {
         logwatch_textfile *tf = *it_tf;
@@ -1862,18 +1879,19 @@ void load_logwatch_offsets()
 void save_eventlog_offsets()
 {
     FILE *file = fopen(g_eventlog_statefile, "w");
-    for (unsigned i=0; i < num_eventlogs; i++) {
+    for (eventlog_state_t::iterator state_iter  = g_eventlog_state.begin();
+                                    state_iter != g_eventlog_state.end(); ++state_iter) {
         int level = 1;
-        for (int j=0; j<num_eventlog_configs; j++) {
-            const char *cname = eventlog_config[j].name;
-            if (!strcmp(cname, "*") || !strcasecmp(cname, eventlog_names[i]))
-            {
-                level = eventlog_config[j].level;
+        for (eventlog_config_t::iterator conf_iter = g_eventlog_config.begin();
+                conf_iter != g_eventlog_config.end();
+                ++conf_iter) {
+            if ((conf_iter->name == "*") || (conf_iter->name == state_iter->name)) {
+                level = conf_iter->level;
                 break;
             }
         }
         if (level != -1)
-            fprintf(file, "%s|%lu\n", eventlog_names[i], known_record_numbers[i]);
+            fprintf(file, "%s|%lu\n", state_iter->name.c_str(), state_iter->num_known_records);
     }
     fclose(file);
 }
@@ -2161,7 +2179,6 @@ void revalidate_logwatch_textfiles()
             process_glob_expression(*it_token, (*it_line)->patterns);
         }
     }
-
 }
 
 
@@ -2484,53 +2501,50 @@ void section_eventlog(SOCKET &out)
         // The last processed record number of each eventlog is stored in the file eventstate.txt
         // If there is no entry for the given eventlog we start at the end
         if (first_run && !logwatch_send_initial_entries) {
-            for (unsigned i=0; i < num_eventlogs; i++) {
-                char *logname      = eventlog_names[i];
+            for (eventlog_state_t::iterator it_st  = g_eventlog_state.begin();
+                                            it_st != g_eventlog_state.end(); ++it_st) {
                 bool found_hint = false;
                 for (eventlog_hints_t::iterator it_el  = g_eventlog_hints.begin();
                                                 it_el != g_eventlog_hints.end(); it_el++) {
                     eventlog_hint_t *hint = *it_el;
-                    if (!strcmp(hint->name, logname)) {
-                        known_record_numbers[i] = hint->record_no;
+                    if (it_st->name.compare(hint->name) == 0) {
+                        it_st->num_known_records = hint->record_no;
                         found_hint = true;
                         break;
                     }
                 }
-                if (!found_hint)
-                {
-                    HANDLE hEventlog = OpenEventLog(NULL, logname);
-                    if (hEventlog)
-                    {
+                if (!found_hint) {
+                    HANDLE hEventlog = OpenEventLog(NULL, it_st->name.c_str());
+                    if (hEventlog) {
                         DWORD no_records;
                         DWORD oldest_record;
                         GetNumberOfEventLogRecords(hEventlog, &no_records);
                         GetOldestEventLogRecord(hEventlog, &oldest_record);
                         if (no_records > 0)
-                           known_record_numbers[i] = oldest_record + no_records - 1;
+                            it_st->num_known_records = oldest_record + no_records - 1;
                     }
                 }
             }
         }
 
-        for (unsigned i=0; i < num_eventlogs; i++) {
-            if (!newly_found[i]) // not here any more!
-                output(out, "[[[%s:missing]]]\n", eventlog_names[i]);
+        for (eventlog_state_t::iterator it_st  = g_eventlog_state.begin();
+                                        it_st != g_eventlog_state.end(); ++it_st) {
+            if (!it_st->newly_discovered) // not here any more!
+                output(out, "[[[%s:missing]]]\n", it_st->name.c_str());
             else {
                 // Get the configuration of that log file (which messages to send)
                 int level = 1;
                 int hide_context = 0;
-                for (int j=0; j<num_eventlog_configs; j++) {
-                    const char *cname = eventlog_config[j].name;
-                    if (!strcmp(cname, "*") ||
-                            !strcasecmp(cname, eventlog_names[i]))
-                    {
-                        level = eventlog_config[j].level;
-                        hide_context = eventlog_config[j].hide_context;
+                for (eventlog_config_t::iterator conf_iter  = g_eventlog_config.begin();
+                                                 conf_iter != g_eventlog_config.end(); ++conf_iter) {
+                    if ((conf_iter->name == "*") || (conf_iter->name == it_st->name)) {
+                        level = conf_iter->level;
+                        hide_context = conf_iter->hide_context;
                         break;
                     }
                 }
                 if (level != -1) {
-                    output_eventlog(out, eventlog_names[i], &known_record_numbers[i], level, hide_context);
+                    output_eventlog(out, it_st->name.c_str(), &it_st->num_known_records, level, hide_context);
                 }
             }
         }
@@ -4194,12 +4208,7 @@ bool handle_logwatch_config_variable(char *var, char *value)
             return false;
         }
 
-        if (num_eventlog_configs < MAX_EVENTLOGS) {
-            eventlog_config[num_eventlog_configs].level = level;
-            eventlog_config[num_eventlog_configs].hide_context = hide_context;
-            strncpy(eventlog_config[num_eventlog_configs].name, logfilename, 256);
-            num_eventlog_configs++;
-        }
+        g_eventlog_config.push_back(eventlog_config_entry(level, hide_context, logfilename));
 
         return true;
     }

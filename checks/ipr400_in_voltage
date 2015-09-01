@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 
-ipr400_in_voltage_default_levels = (12.0, 11.5) # 11.5-13.8V is the operational voltage according
-                                                # to the manual
+ipr400_in_voltage_default_levels = (12, 11) # 11.5-13.8V is the operational voltage according
+                                            # to the manual
 
 def inventory_ipr400_in_voltage(info):
     if len(info) > 0:
@@ -37,7 +37,7 @@ def check_ipr400_in_voltage(item, params, info):
     power = int(info[0][0]) / 1000.0  # appears to be in mV
     perfdata = [ ( "in_voltage", power, warn, crit ) ]
     infotext = "in voltage: %.1fV" % power
-    limitstext = "(warn/crit below %.1fV/%.1fV)" % (warn, crit)
+    limitstext = "(warn/crit below %dV/%dV)" % (warn, crit)
 
     if power <= crit:
         return 2, infotext + ", " + limitstext, perfdata

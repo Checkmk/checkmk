@@ -1,0 +1,9 @@
+Title: ipr400_temp, ipr400_in_voltage: New checks for the Omnitronics IPR400
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441112436
+Class: feature
+
+

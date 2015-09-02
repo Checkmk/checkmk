@@ -83,12 +83,13 @@ def page_graph():
                 tg_name = tg_info["name"]
 
     timegroups.sort(cmp = lambda a,b: cmp(a["range"][0], b["range"][0]))
-    if not timegroup:
-        timegroup  = timegroups[0]
-        tg_name = choices[0][0]
 
     choices = [ (tg_info["name"], tg_info["name"].title())
                 for tg_info in timegroups ]
+
+    if not timegroup:
+        timegroup  = timegroups[0]
+        tg_name = choices[0][0]
 
     html.begin_form("prediction")
     html.write(_("Show prediction for "))

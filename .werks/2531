@@ -1,0 +1,11 @@
+Title: Fixed graph hover for services containing backslashes
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2p3
+Date: 1441004586
+
+Hovering over the graph icon caused error messages on services containing backslashes (esp. on
+windows checks)

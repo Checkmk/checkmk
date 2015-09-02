@@ -69,15 +69,15 @@ def check_oracle_longactivesessions(item, params, info):
             state = 0
 
         if sessioncount == 0:
-            return 0, "%d long active sessions (%d, levels at %d/%d)" \
+            return 0, "%d long active sessions (%d, warn/crit at %d/%d)" \
                 % (sessioncount, sessioncount, warn, crit), \
                 [("count", sessioncount, warn, crit)]
         elif sessioncount <= 10:
-            return state, "%d long active sessions (%d, levels at %d/%d) %s" \
+            return state, "%d long active sessions (%d, warn/crit at %d/%d) %s" \
                 % (sessioncount, sessioncount, warn, crit, longoutput), \
                 [("count", sessioncount, warn, crit)]
         elif sessioncount > 10:
-            return state, "%d long active sessions (%d, levels at %d/%d)" \
+            return state, "%d long active sessions (%d, warn/crit at %d/%d)" \
                 % (sessioncount, sessioncount, warn, crit), \
                 [("count", sessioncount, warn, crit)]
 

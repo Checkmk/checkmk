@@ -129,8 +129,8 @@ def check_isc_dhcpd(item, params, parsed):
         state = 0
         levels_text = ""
 
-    if state:
-        levels_text = " (levels at %d%%/%d%%)" % (perc_warn, perc_crit)
+    if state > 0:
+        levels_text = " (warn/crit below %d%%/%d%%)" % (perc_warn, perc_crit)
 
     yield state, "%d leases used, %d leases free (%s)%s" % (
         num_used, num_free, get_percent_human_readable(perc_free), levels_text), \

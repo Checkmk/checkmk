@@ -97,7 +97,7 @@ def check_cmctc_lcp(item, params, info, sensortype):
                 elif value >= warn:
                     status = 1
                 if status:
-                    infotext += " (levels at %d%s/%d%s)" % (warn, unit, crit, unit)
+                    infotext += " (warn/crit at %d%s/%d%s)" % (warn, unit, crit, unit)
             else:
                 perfdata = [(sensortype, value)]
                 if statuscode == "4":

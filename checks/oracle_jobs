@@ -139,7 +139,7 @@ def check_oracle_jobs(item, params, info):
     if "run_duration" in params:
         warn, crit = params["run_duration"]
 
-        output.append(" levels at (%ds/%ds)" % (warn, crit))
+        output.append(" (warn/crit at %ds/%ds)" % (warn, crit))
 
         if last_duration >= crit:
             output.append("(!!)")

@@ -64,8 +64,8 @@ def check_appdynamics_sessions(item, params, info):
 
             active_label = ''
             if state > 0:
-                active_label = ' (levels at %d-%d / %d-%d)' \
-                               % (min_warn, max_warn, min_crit, max_crit)
+                active_label = ' (warn/crit below %d/%d / warn/crit at %d/%d)' \
+                               % (min_warn, min_crit, max_warn, max_crit)
 
             yield state, 'Active: %d (%.2f/sec)%s' % (active, counter_rate, active_label), perfdata
 

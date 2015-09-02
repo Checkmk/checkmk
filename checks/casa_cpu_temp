@@ -64,7 +64,7 @@ def check_casa_cpu_temp(item, params, info):
             warn, crit = None, None
             if params:
                 warn, crit = params
-                levels_text = "(levels at %d/%d°C)" % params
+                levels_text = "(warn/crit at %d/%d°C)" % params
                 if value > crit:
                     state = 2
                     error_text = "(!!)"

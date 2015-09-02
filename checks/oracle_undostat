@@ -72,7 +72,7 @@ def check_oracle_undostat(item, params, info):
                     nospaceerrcntpic = "(?)"
 
             if tuned_undoretention >= 0:
-                infotext = "%s Undoretention (levels at %s/%s), %d active undoblocks, " \
+                infotext = "%s Undoretention (warn/crit at %s/%s), %d active undoblocks, " \
                     % (get_age_human_readable(tuned_undoretention),
                    get_age_human_readable(warn),
                    get_age_human_readable(crit),

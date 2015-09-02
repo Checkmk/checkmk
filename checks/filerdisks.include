@@ -97,7 +97,7 @@ def check_filer_disks(disks, params):
             elif ratio >= warn:
                 return_state = 1
             if return_state:
-                yield return_state, "Too many %s disks (levels at %.1f%%/%.1f%%)" % (disk_state, warn, crit)
+                yield return_state, "Too many %s disks (warn/crit at %.1f%%/%.1f%%)" % (disk_state, warn, crit)
 
 
 

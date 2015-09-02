@@ -53,6 +53,6 @@ def license_check_levels(have, used, params):
         status = 0
 
     if status:
-        infotext += " (levels at %d/%d)" % (warn, crit)
+        infotext += " (warn/crit at %d/%d)" % (warn, crit)
 
     return status, infotext, perfdata

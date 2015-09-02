@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors the status of the Cisco Unified SRST feature
  of a Cisco device which supports that feature.
- There are two possible states: active (WARN) or inactive (OK).
+ There are two possible states: active (CRIT) or inactive (OK).
 
  Moreover the check displays the time (in minutes) since the SRST feature
  switched to active mode.

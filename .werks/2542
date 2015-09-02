@@ -1,0 +1,10 @@
+Title: Fix segmentation fault when filtering for service columns in log table
+Level: 2
+Component: livestatus
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441184018
+Class: fix
+
+The crash occurred when you filtered for a text type service column in the
+log table while entries did not have service information (host alerts).

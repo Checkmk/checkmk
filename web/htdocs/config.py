@@ -427,7 +427,8 @@ def save_user_file(name, content, unlock=False, user=None):
     make_nagios_directory(dirname)
     path = dirname + "/" + name + ".mk"
     try:
-        write_settings_file(path, content)
+        write_settings_file(path+".new", content)
+        os.rename(path+".new", path)
 
         if unlock:
             release_lock(path)

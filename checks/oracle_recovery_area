@@ -60,7 +60,7 @@ def check_oracle_recovery_area(item, params, info):
                 state = 0
 
             mb = 1024*1024
-            return state, "%s out of %s used (%.1f%%, levels at %s%%/%s%%), %s reclaimable" \
+            return state, "%s out of %s used (%.1f%%, warn/crit at %s%%/%s%%), %s reclaimable" \
                 % (get_bytes_human_readable(used_mb*mb), get_bytes_human_readable(size_mb*mb), \
                    perc_used, warn, crit, get_bytes_human_readable(reclaimable_mb*mb)), \
                    [('used', used_mb, warn_mb, crit_mb, 0, size_mb), ('reclaimable', reclaimable_mb)]

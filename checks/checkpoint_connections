@@ -36,7 +36,7 @@ def check_checkpoint_connections(item, params, info):
     warn, crit = params
     current = int(info[0][0])
     state = 0
-    levels = " (levels at %d/%d)" % (warn, crit)
+    levels = " (warn/crit at %d/%d)" % (warn, crit)
     infotext = "%d Current Connections" % (current)
     if current >= warn:
         state = 1

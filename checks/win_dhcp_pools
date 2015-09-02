@@ -140,7 +140,7 @@ def check_win_dhcp_pools(item, params, info):
 
         infotext = 'Addresses Free: %d, Used: %d, Pending: %d' % (free, used, pending)
         if status:
-            infotext += " (levels at %d/%d)" % (warn_abs, crit_abs)
+            infotext += " (warn/crit at %d/%d)" % (warn_abs, crit_abs)
         return status, infotext, perfdata
     else:
         return (3, 'Pool information not found')

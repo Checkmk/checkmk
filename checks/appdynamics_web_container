@@ -62,7 +62,7 @@ def check_appdynamics_web_container(item, params, info):
 
                 thread_levels_label = ''
                 if state > 0:
-                    thread_levels_label = ' (levels at %d/%d)' % (warn, crit)
+                    thread_levels_label = ' (warn/crit at %d/%d)' % (warn, crit)
 
                 if max_threads != None:
                     perfdata = [('current_threads', current_threads, warn, crit, 0, max_threads)]

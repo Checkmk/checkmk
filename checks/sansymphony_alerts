@@ -35,7 +35,7 @@ def check_sansymphony_alerts(_no_item, params, info):
     nr_of_alerts = int(info[0][0])
     perfdata = [ ( "alerts", nr_of_alerts, warn, crit ) ]
     infotxt = "Unacknowlegded alerts: %d" % nr_of_alerts
-    levels = " (levels at %d/%d)" % (warn, crit)
+    levels = " (warn/crit at %d/%d)" % (warn, crit)
 
     state = 0
     if nr_of_alerts >= crit:

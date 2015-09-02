@@ -43,7 +43,7 @@ def check_sansymphony_pool(item, params, info):
 
             allocated = int(allocated)
             infotxt = "Pool allocation: %d%%"  % allocated
-            levels = " (levels at %d/%d%%)" % (warn, crit)
+            levels = " (warn/crit at %d/%d%%)" % (warn, crit)
             perfdata = [("pool_allocation", allocated, warn, crit)]
 
             if allocated >= crit:

@@ -104,10 +104,11 @@ def save(what, visuals, user_id = None):
     for (owner_id, name), visual in visuals.items():
         if user_id == owner_id:
             uservisuals[name] = visual
-    config.save_user_file('user_' + what, uservisuals, user = user_id)
+    config.save_user_file('user_' + what, uservisuals, user = user_id, unlock=True)
 
-
-def load(what, builtin_visuals, skip_func = None):
+# FIXME: Currently all user visual files of this type are locked. We could optimize
+# this not to lock all files but only lock the files the user is about to modify.
+def load(what, builtin_visuals, skip_func = None, lock=False):
     visuals = {}
 
     # first load builtins. Set username to ''
@@ -140,6 +141,9 @@ def load(what, builtin_visuals, skip_func = None):
 
             if not os.path.exists(path):
                 continue
+
+            if lock:
+                aquire_lock(path)
 
             user_visuals = eval(file(path).read())
             for name, visual in user_visuals.items():

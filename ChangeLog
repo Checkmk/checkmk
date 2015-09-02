@@ -19,6 +19,9 @@
     WATO:
     * 2550 FIX: Catching exception when having name conflicts while moving a folder
 
+    BI:
+    * 2573 FIX: Fix influance of service period to the availability of BI aggregates...
+
 
 1.2.7i2p2:
     Core & Setup:

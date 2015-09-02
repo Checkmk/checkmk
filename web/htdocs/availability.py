@@ -1355,7 +1355,7 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
             "host_name"              : aggr_group,
             "service_description"    : tree['title'],
             "in_notification_period" : 1,
-            "in_service_period"      : True,
+            "in_service_period"      : tree_state[0]['in_service_period'],
             "in_downtime"            : tree_state[0]['in_downtime'],
             "in_host_downtime"       : 0,
             "host_down"              : 0,

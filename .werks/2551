@@ -1,0 +1,11 @@
+Title: Fixed locking issues when editing dashboards
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p11
+Date: 1441194578
+Class: fix
+
+In previous versions it might occur that users experience exceptions about non
+parsable user_dashboards.mk files when editing dashboards. This was caused by
+non existant file locking during editing of dashboards.

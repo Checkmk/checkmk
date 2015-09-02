@@ -422,7 +422,8 @@ def load_user_file(name, deflt, lock = False):
 def save_user_file(name, content, unlock = False):
     path = user_confdir + "/" + name + ".mk"
     try:
-        write_settings_file(path, content)
+        write_settings_file(path+".new", content)
+        os.rename(path+".new", path)
 
         if unlock:
             release_lock(path)

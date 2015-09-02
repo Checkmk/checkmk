@@ -87,10 +87,10 @@ def load_plugins():
     # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('dashboards'))
 
-def load_dashboards():
+def load_dashboards(lock=False):
     global dashboards, available_dashboards
     transform_builtin_dashboards()
-    dashboards = visuals.load('dashboards', builtin_dashboards)
+    dashboards = visuals.load('dashboards', builtin_dashboards, lock=lock)
     transform_dashboards(dashboards)
     available_dashboards = visuals.available('dashboards', dashboards)
 
@@ -691,7 +691,7 @@ def ajax_dashlet():
 #   '----------------------------------------------------------------------'
 
 def page_edit_dashboards():
-    load_dashboards()
+    load_dashboards(lock=html.is_transaction())
     visuals.page_list('dashboards', _("Edit Dashboards"), dashboards)
 
 #.
@@ -725,7 +725,7 @@ def page_create_dashboard():
 global vs_dashboard
 
 def page_edit_dashboard():
-    load_dashboards()
+    load_dashboards(lock=html.is_transaction())
 
     # This is not defined here in the function in order to be l10n'able
     global vs_dashboard
@@ -822,7 +822,7 @@ def choose_view(name):
             view_name = vs_view.from_html_vars('view')
             vs_view.validate_value(view_name, 'view')
 
-            load_dashboards()
+            load_dashboards(lock=True)
             dashboard = available_dashboards[name]
 
             # Add the dashlet!
@@ -874,7 +874,7 @@ def page_edit_dashlet():
     if ident == None and not ty:
         raise MKGeneralException(_('The ID of the dashlet is missing.'))
 
-    load_dashboards()
+    load_dashboards(lock=html.is_transaction())
 
     if board not in available_dashboards:
         raise MKGeneralException(_('The requested dashboard does not exist.'))
@@ -1050,7 +1050,7 @@ def page_delete_dashlet():
     except ValueError:
         raise MKGeneralException(_('Invalid dashlet id'))
 
-    load_dashboards()
+    load_dashboards(lock=True)
 
     if board not in available_dashboards:
         raise MKGeneralException(_('The requested dashboard does not exist.'))
@@ -1109,7 +1109,7 @@ def check_ajax_update():
 
     ident = int(html.var('id'))
 
-    load_dashboards()
+    load_dashboards(lock=True)
 
     if board not in available_dashboards:
         raise MKGeneralException(_('The requested dashboard does not exist.'))
@@ -1171,7 +1171,7 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
 	# Exceptions do not work here.
 	return
 
-    load_dashboards()
+    load_dashboards(lock=True)
 
     if dashboard_name not in available_dashboards:
 	return

@@ -88,15 +88,15 @@ def check_ucs_bladecenter_psu(item, params, parsed):
         if key in psu.keys():
             warn_lower, crit_lower = params[param_key + "lower"]
             if voltage <= crit_lower:
-                yield 2, "too low (levels at %.2f/%.2f V)" % params[param_key + "lower"]
+                yield 2, "too low (warn/crit below %.2f/%.2f V)" % params[param_key + "lower"]
             elif voltage <= warn_lower:
-                yield 1, "too low (levels at %.2f/%.2f V)" % params[param_key + "lower"]
+                yield 1, "too low (warn/crit below %.2f/%.2f V)" % params[param_key + "lower"]
 
             warn_upper, crit_upper = params[param_key + "upper"]
             if voltage >= crit_upper:
-                yield 2, "too high (levels at %.2f/%.2f V)" % params[param_key + "upper"]
+                yield 2, "too high (warn/crit at %.2f/%.2f V)" % params[param_key + "upper"]
             elif voltage >= warn_upper:
-                yield 1, "too high (levels at %.2f/%.2f V)" % params[param_key + "upper"]
+                yield 1, "too high (warn/crit at %.2f/%.2f V)" % params[param_key + "upper"]
 
 
 check_info["ucs_bladecenter_psu"] = {

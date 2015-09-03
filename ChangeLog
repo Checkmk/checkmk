@@ -15,6 +15,7 @@
     * 2554 FIX: oracle_recovery_status: Fixed exception when files have no checkpoints
     * 2568 FIX: apache_status: fixed computation of bytes and requests per second...
     * 2558 FIX: cmciii.temp: Do not discover air temperature sensors anymore...
+    * 1290 FIX: brocade_mlx_fan: Fix: Not longer add fans who not are present while discovery
 
     Multisite:
     * 2544 FIX: Fixed links to availability timeline using the context buttons

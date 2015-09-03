@@ -317,12 +317,23 @@ netstat -na | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 # Only handle the last 6 lines (includes the summary line at the bottom and
 # the last message in the queue. The last message is not used at the moment
 # but it could be used to get the timestamp of the last message.
-if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
-  echo '<<<postfix_mailq>>>'
-  mailq | tail -n 6
+if type postconf >/dev/null ; then
+    echo '<<<postfix_mailq>>>'
+    postfix_queue_dir=$(postconf -h queue_directory)
+    postfix_count=$(find $postfix_queue_dir/deferred -type f | wc -l)
+    postfix_size=$(du -ks $postfix_queue_dir/deferred | awk '{print $1 }')
+    if [ $postfix_count -gt 0 ]
+    then
+       echo -- $postfix_size Kbytes in $postfix_count Requests.
+    else
+       echo Mail queue is empty
+    fi
+elif [ -x /usr/sbin/ssmtp ] ; then
+    echo '<<<postfix_mailq>>>'
+    mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
 fi
 
-#Check status of qmail mailqueue
+# Check status of qmail mailqueue
 if type qmail-qstat >/dev/null
 then
    echo "<<<qmail_stats>>>"

@@ -1,0 +1,9 @@
+Title: cmciii.temp: Do not discover air temperature sensors anymore
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p11
+Date: 1441283161
+Class: fix
+
+Fixes an exception in the check as the air temperature data can not be used by this check.

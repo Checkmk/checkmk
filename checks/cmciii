@@ -454,7 +454,7 @@ def inventory_cmciii_temp(info):
     units = parse_units(info[1])
     for (unit, item_name), entry in parsed.iteritems():
         unit_type, unit_name = units[int(unit)-1][0:2]
-        if re.search(r'Temperature$',item_name):
+        if "Temperature" in item_name and "Air." not in item_name:
             inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
     return inventory
 

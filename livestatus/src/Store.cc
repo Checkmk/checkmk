@@ -89,7 +89,15 @@ Store::Store()
     {
         _table_columns.addTable(it->second);
     }
+
+    pthread_mutex_init(&_command_mutex, NULL);
 }
+
+Store::~Store()
+{
+    pthread_mutex_destroy(&_command_mutex);
+}
+
 
 Table *Store::findTable(string name)
 {
@@ -147,6 +155,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
 
 void Store::answerCommandRequest(const char *command)
 {
+    pthread_mutex_lock(&_command_mutex);
 #ifdef NAGIOS4
     process_external_command1((char *)command);
 #else
@@ -154,6 +163,7 @@ void Store::answerCommandRequest(const char *command)
     /* int ret = */
     submit_external_command((char *)command, &buffer_items);
 #endif
+    pthread_mutex_unlock(&_command_mutex);
 }
 
 

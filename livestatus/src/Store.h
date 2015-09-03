@@ -68,8 +68,11 @@ class Store
     typedef map<string, Table *> _tables_t;
     _tables_t _tables;
 
+    pthread_mutex_t    _command_mutex;
+
 public:
     Store();
+    ~Store();
     LogCache* logCache() { return &_log_cache; };
     void registerHostgroup(hostgroup *);
     void registerComment(nebstruct_comment_data *);

@@ -34,6 +34,9 @@
     BI:
     * 2573 FIX: Fix influance of service period to the availability of BI aggregates...
 
+    Livestatus:
+    * 2581 FIX: Fix crashing Nagios core in rare case when excessive commands are being executed...
+
     HW/SW-Inventory:
     * 2553 FIX: solaris_prtdiag: Can now handle Supermicro servers using Solaris 10
 

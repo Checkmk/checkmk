@@ -830,8 +830,6 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
 void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const char *countername)
 {
     crash_log("<<<winperf_%s>>>", countername);
-    output(out, "<<<winperf_%s>>>\n", countername);
-    output(out, "%.2f %u\n", current_time(), counter_base_number);
 
     // registry entry is ascii representation of counter index
     char counter_index_name[8];
@@ -872,6 +870,10 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
     // Determine first object in list of objects
     PERF_OBJECT_TYPE *objectPtr = FirstObject(dataBlockPtr);
 
+    // awkward way to ensure we really really only create the section header if there
+    // are performance counters
+    bool first_counter = true;
+
     // Now walk through the list of objects. The bad news is:
     // even if we expect only one object, windows might send
     // us more than one object. We need to scan a list of objects
@@ -899,6 +901,12 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
             int num_instances = objectPtr->NumInstances;
             if (num_instances >= 0)
             {
+                if (first_counter) {
+                    output(out, "<<<winperf_%s>>>\n", countername);
+                    output(out, "%.2f %u\n", current_time(), counter_base_number);
+                    first_counter = false;
+                }
+
                 output(out, "%d instances:", num_instances);
                 char name[512];
                 PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
@@ -915,6 +923,12 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
                     instancePtr = NextInstance(instancePtr);
                 }
                 output(out, "\n");
+            }
+
+            if (first_counter && (objectPtr->NumCounters > 0)) {
+                output(out, "<<<winperf_%s>>>\n", countername);
+                output(out, "%.2f %u\n", current_time(), counter_base_number);
+                first_counter = false;
             }
 
             // Now walk through the counter list a second time and output all counters

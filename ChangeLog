@@ -17,6 +17,7 @@
     * 1290 FIX: brocade_mlx_fan: Fix: Not longer add fans who not are present while discovery
     * 2569 FIX: fixed crash in aix lvm check after volume disappears...
     * 2559 FIX: job: Trying to read job result files as non root when agent is not executed as root
+    * 2570 FIX: winperf_msx_queues: fixed crash when winperf data is missing...
 
     Multisite:
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts

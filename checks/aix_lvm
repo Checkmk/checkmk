@@ -104,7 +104,7 @@ def check_aix_lvm(item, _no_params, info):
     # Get structured LVM info
     lvmconf = parse_aix_lvm(info)
 
-    if target_lv in lvmconf[target_vg].keys():
+    if target_vg in lvmconf and target_lv in lvmconf[target_vg]:
         msgtxt = []
         state  = 0
 

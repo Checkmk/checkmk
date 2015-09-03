@@ -21,6 +21,7 @@
     * 1289 FIX: Fixed missing table headers in hostgroup view
     * 2551 FIX: Fixed locking issues when editing dashboards...
     * 2578 FIX: Fix exception in case a user has a non-existant role...
+    * 2555 FIX: Availability: Fixed exception when trying to group BI aggregations by host/service-groups
 
     WATO:
     * 2550 FIX: Catching exception when having name conflicts while moving a folder

@@ -93,9 +93,6 @@ def render_availability(view, datasource, filterheaders, display_options,
     if handle_edit_annotations():
         return
 
-    avoptions = get_availability_options_from_url()
-    range, range_title = avoptions["range"]
-
     timeline = not not html.var("timeline")
     if timeline:
         tl_site = html.var("timeline_site")
@@ -114,6 +111,14 @@ def render_availability(view, datasource, filterheaders, display_options,
     else:
         title = _("Availability: ") + view_title(view)
         html.add_status_icon("download_csv", _("Export as CSV"), html.makeuri([("output_format", "csv_export")]))
+
+    if timeline and tl_aggr:
+        what = "bi"
+    else:
+        what = "service" in datasource["infos"] and "service" or "host"
+
+    avoptions = get_availability_options_from_url(what)
+    range, range_title = avoptions["range"]
 
     title += " - " + range_title
 
@@ -153,7 +158,7 @@ def render_availability(view, datasource, filterheaders, display_options,
     if not do_csv:
         # Render the avoptions again to get the HTML code, because the HTML vars have changed
         # above (anno_ and editanno_ has been removed, which must not be part of the form
-        avoptions = render_availability_options()
+        avoptions = render_availability_options(what)
 
     if not html.has_user_errors():
         if timeline and tl_aggr:
@@ -162,11 +167,9 @@ def render_availability(view, datasource, filterheaders, display_options,
             aggr_group = html.var("aggr_group")
             tree = bi.get_bi_tree(aggr_group, tl_aggr)
             rows = [{ "aggr_tree" : tree , "aggr_group" : aggr_group}]
-            what = "bi"
         else:
             rows = get_availability_data(datasource, filterheaders, range, only_sites,
                                          limit, timeline, timeline or avoptions["show_timeline"], avoptions)
-            what = "service" in datasource["infos"] and "service" or "host"
         do_render_availability(rows, what, avoptions, timeline, "")
 
     if 'Z' in display_options:
@@ -188,7 +191,21 @@ def av_output_csv_mimetype(title):
 # 2. show in single or double height box
 # 3. use this in reporting
 # 4. the valuespec
-avoption_entries = [
+def get_avoption_entries(what):
+    if what == "bi":
+        grouping_choices = [
+          ( None,             _("Do not group") ),
+          ( "host",           _("By Aggregation Group") ),
+        ]
+    else:
+        grouping_choices = [
+          ( None,             _("Do not group") ),
+          ( "host",           _("By Host")       ),
+          ( "host_groups",    _("By Host group") ),
+          ( "service_groups", _("By Service group") ),
+        ]
+
+    return [
   # Time range selection
   ( "rangespec",
     "double",
@@ -416,12 +433,7 @@ avoption_entries = [
     True,
     DropdownChoice(
         title = _("Grouping"),
-        choices = [
-          ( None,             _("Do not group") ),
-          ( "host",           _("By Host")       ),
-          ( "host_groups",    _("By Host group") ),
-          ( "service_groups", _("By Service group") ),
-        ],
+        choices = grouping_choices,
         default_value = None,
     )
   ),
@@ -519,9 +531,9 @@ avoption_entries = [
 ]
 
 # Get availability options without rendering the valuespecs
-def get_availability_options_from_url():
+def get_availability_options_from_url(what):
     html.plug()
-    avoptions = render_availability_options()
+    avoptions = render_availability_options(what)
     html.drain()
     html.unplug()
     return avoptions
@@ -560,7 +572,7 @@ def get_default_avoptions():
         "timelimit"         : 30,
     }
 
-def render_availability_options():
+def render_availability_options(what):
     if html.var("_reset") and html.check_transaction():
         config.save_user_file("avoptions", {})
         for varname in html.vars.keys():
@@ -577,6 +589,7 @@ def render_availability_options():
     is_open = False
     html.begin_form("avoptions")
     html.hidden_field("avoptions", "set")
+    avoption_entries = get_avoption_entries(what)
     if html.var("avoptions") == "set":
         for name, height, show_in_reporting, vs in avoption_entries:
             try:
@@ -756,7 +769,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode, fetch=
             considered_duration = 0
             for span in service_entry:
                 # Information about host/service groups are in the actual entries
-                if grouping and grouping != "host":
+                if grouping and grouping != "host" and what != "bi":
                     group_ids.update(span[grouping]) # List of host/service groups
 
                 display_name = span.get("service_display_name", service)
@@ -1540,7 +1553,7 @@ def render_bi_availability(title, aggr_rows):
         html.end_context_buttons()
 
     html.plug()
-    avoptions = render_availability_options()
+    avoptions = render_availability_options("bi")
     range, range_title = avoptions["range"]
     avoptions_html = html.drain()
     html.unplug()

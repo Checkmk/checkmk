@@ -1,0 +1,12 @@
+Title: apache_status: fixed computation of bytes and requests per second
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441279892
+
+Bytes/second and Requests/second were previously averages since the start of the server and did
+therefore not hold useful information about the current server load.
+Now these values are "live" rates, calculated based on changes in Total Accesses and Total kBytes.

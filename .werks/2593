@@ -1,0 +1,9 @@
+Title: cisco_wlc, cisco_wlc_clients: Fix discovery so that Cisco Virtual Wireless Controller are detected
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p11
+Date: 1441288768
+Class: fix
+
+Thanks to Jonas Alexandersson.

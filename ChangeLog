@@ -213,6 +213,7 @@
     * 2499 FIX: Git: Fixed message "Please tell me who you are. Run git config ..." on making changes...
     * 2539 FIX: Fix impossibility of removing a status host from an existing site configuration
     * 2550 FIX: Catching exception when having name conflicts while moving a folder
+    * 2552 FIX: API: Service Discovery action is now creating missing pending log entry and marks the site dirty
 
     Notifications:
     * 2478 Integrated notification plugin for mobile phone push messages via Pushover...

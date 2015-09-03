@@ -616,9 +616,9 @@ void section_uptime(SOCKET &out)
 {
     crash_log("<<<uptime>>>");
     output(out, "<<<uptime>>>\n");
-    static LARGE_INTEGER Frequency,Ticks;
-    QueryPerformanceFrequency (&Frequency);
-    QueryPerformanceCounter (&Ticks);
+    static LARGE_INTEGER Frequency, Ticks;
+    QueryPerformanceFrequency(&Frequency);
+    QueryPerformanceCounter(&Ticks);
     Ticks.QuadPart = Ticks.QuadPart - Frequency.QuadPart;
     unsigned int uptime = (double)Ticks.QuadPart / Frequency.QuadPart;
     output(out, "%s\n", llu_to_string(uptime));

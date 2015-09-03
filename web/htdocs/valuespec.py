@@ -1094,10 +1094,14 @@ class Float(Integer):
             _("The text <b><tt>%s</tt></b> is not a valid floating point number." % html.var(varprefix)))
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != float and not \
-            (type(value) not in [ int, long ] and self._allow_int):
-            raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float%s") %
-                 (value, type_name(value), self._allow_int and _(" or int") or ""))
+        if type(value) == float:
+            return
+
+        if type(value) in [ int, long ] and self._allow_int:
+            return
+
+        raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float%s") %
+             (value, type_name(value), self._allow_int and _(" or int") or ""))
 
 
 class Percentage(Float):

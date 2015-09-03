@@ -1,0 +1,10 @@
+Title: brocade_mlx_fan: Fix: Not longer add fans who not are present while discovery
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441284316
+
+

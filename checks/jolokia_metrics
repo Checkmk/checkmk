@@ -142,6 +142,10 @@ def inventory_jolokia_metrics(info, what):
     for instance, data in parsed.items():
         if what == 'uptime' and "Uptime" not in data:
             continue
+        if what == 'mem' and ("HeapMemoryUsage" not in data or "NonHeapMemoryUsage" not in data
+                              or "HeapMemoryMax" not in data or "NonHeapMemoryMax" not in data):
+            # don't add memory check if we don't have the necessary data
+            continue
         yield instance, levels
 
 
@@ -259,6 +263,11 @@ def check_jolokia_metrics_mem(item, params, info):
 
     d = parsed[item]
     mb = 1024 * 1024.0
+
+    if "HeapMemoryUsage" not in d or "NonHeapMemoryUsage" not in d\
+        or "HeapMemoryMax" not in d or "NonHeapMemoryMax" not in d:
+            return 3, "data in agent output incomplete"
+
     heap = saveint(d["HeapMemoryUsage"]) / mb
     heapmax = saveint(d.get("HeapMemoryMax",-1)) / mb
     nonheap = saveint(d["NonHeapMemoryUsage"]) / mb

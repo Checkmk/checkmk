@@ -1,0 +1,11 @@
+Title: Fix exception in case a user has a non-existant role
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441274165
+
+Such a situation might be caused by manual configurations or other non-standard
+operation.

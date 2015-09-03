@@ -17,6 +17,7 @@
     * 2532 FIX: Fixed undefined variable exception in prediction in rare cases...
     * 1289 FIX: Fixed missing table headers in hostgroup view
     * 2551 FIX: Fixed locking issues when editing dashboards...
+    * 2426 FIX: pnptemplate: fixed template for netapp_api_volumes
 
     WATO:
     * 2550 FIX: Catching exception when having name conflicts while moving a folder

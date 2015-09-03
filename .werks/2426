@@ -1,0 +1,10 @@
+Title: pnptemplate: fixed template for netapp_api_volumes
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i2p3
+Date: 1441268284
+
+

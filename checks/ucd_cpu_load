@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-cpuload_default_levels = (5, 10)
+cpuload_default_levels = (5.0, 10.0)
 
 def inventory_ucd_cpu_load(info):
     if len(info) == 3:

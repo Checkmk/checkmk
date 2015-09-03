@@ -33,7 +33,9 @@ def brocade_mlx_fan_combine_item(id, descr):
 def inventory_brocade_mlx_fan(info):
     inventory = []
     for fan_id, fan_descr, fan_state in info:
-        inventory.append((brocade_mlx_fan_combine_item(fan_id, fan_descr), None))
+        # Only add Fans who are present
+        if fan_state != "1":
+            inventory.append((brocade_mlx_fan_combine_item(fan_id, fan_descr), None))
     return inventory
 
 def check_brocade_mlx_fan(item, _no_params, info):

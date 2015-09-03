@@ -1,0 +1,10 @@
+Title: jolokia_metrics: fixed crash if agent output is missing memory metrics
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441272789
+
+

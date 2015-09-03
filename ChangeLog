@@ -18,6 +18,7 @@
     * 2532 FIX: Fixed undefined variable exception in prediction in rare cases...
     * 1289 FIX: Fixed missing table headers in hostgroup view
     * 2551 FIX: Fixed locking issues when editing dashboards...
+    * 2426 FIX: pnptemplate: fixed template for netapp_api_volumes
 
     WATO:
     * 2550 FIX: Catching exception when having name conflicts while moving a folder
@@ -25,6 +26,9 @@
 
     BI:
     * 2573 FIX: Fix influance of service period to the availability of BI aggregates...
+
+    HW/SW-Inventory:
+    * 2553 FIX: solaris_prtdiag: Can now handle Supermicro servers using Solaris 10
 
 
 1.2.7i2p2:

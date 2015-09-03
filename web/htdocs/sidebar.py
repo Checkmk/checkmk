@@ -226,6 +226,7 @@ def page_side():
                'onunload="storeScrollPos()">\n' % interval)
     html.write('<div id="check_mk_sidebar">\n')
 
+    # FIXME: Move this to the code where views are needed (snapins?)
     views.load_views()
     sidebar_head()
     user_config = load_user_config()

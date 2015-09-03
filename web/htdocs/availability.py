@@ -111,8 +111,21 @@ statistics_headers = {
 # 2. show in single or double height box
 # 3. use this in reporting
 # 4. the valuespec
+def get_avoption_entries(what):
+    if what == "bi":
+        grouping_choices = [
+          ( None,             _("Do not group") ),
+          ( "host",           _("By Aggregation Group") ),
+        ]
+    else:
+        grouping_choices = [
+          ( None,             _("Do not group") ),
+          ( "host",           _("By Host")       ),
+          ( "host_groups",    _("By Host group") ),
+          ( "service_groups", _("By Service group") ),
+        ]
 
-avoption_entries = [
+    return [
   # Time range selection
   ( "rangespec",
     "double",
@@ -357,12 +370,7 @@ avoption_entries = [
     True,
     DropdownChoice(
         title = _("Grouping"),
-        choices = [
-          ( None,             _("Do not group") ),
-          ( "host",           _("By Host")       ),
-          ( "host_groups",    _("By Host group") ),
-          ( "service_groups", _("By Service group") ),
-        ],
+        choices = grouping_choices,
         default_value = None,
     )
   ),
@@ -617,7 +625,7 @@ def compute_availability(what, av_rawdata, avoptions):
             considered_duration = 0
             for span in service_entry:
                 # Information about host/service groups are in the actual entries
-                if grouping and grouping != "host":
+                if grouping and grouping != "host" and what != "bi":
                     group_ids.update(span[grouping]) # List of host/service groups
 
                 display_name = span.get("service_display_name", service)

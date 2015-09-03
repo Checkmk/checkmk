@@ -46,15 +46,15 @@ from valuespec import *
 #   '----------------------------------------------------------------------'
 
 # Get availability options without rendering the valuespecs
-def get_availability_options_from_url():
+def get_availability_options_from_url(what):
     html.plug()
-    avoptions = render_availability_options()
+    avoptions = render_availability_options(what)
     html.drain()
     html.unplug()
     return avoptions
 
 
-def render_availability_options():
+def render_availability_options(what):
     if html.var("_reset") and html.check_transaction():
         config.save_user_file("avoptions", {})
         for varname in html.vars.keys():
@@ -71,8 +71,9 @@ def render_availability_options():
     is_open = False
     html.begin_form("avoptions")
     html.hidden_field("avoptions", "set")
+    avoption_entries = availability.get_avoption_entries(what)
     if html.var("avoptions") == "set":
-        for name, height, show_in_reporting, vs in availability.avoption_entries:
+        for name, height, show_in_reporting, vs in avoption_entries:
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
             except MKUserError, e:
@@ -80,7 +81,7 @@ def render_availability_options():
                 is_open = True
 
     range_vs = None
-    for name, height, show_in_reporting, vs in availability.avoption_entries:
+    for name, height, show_in_reporting, vs in avoption_entries:
         if name == 'rangespec':
             range_vs = vs
 
@@ -97,7 +98,7 @@ def render_availability_options():
             % (not is_open and 'style="display: none"' or '') )
     html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
 
-    for name, height, show_in_reporting, vs in availability.avoption_entries:
+    for name, height, show_in_reporting, vs in avoption_entries:
         html.write('<div class="floatfilter %s %s">' % (height, name))
         html.write('<div class=legend>%s</div>' % vs.title())
         html.write('<div class=content>')
@@ -157,9 +158,6 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
     if handle_edit_annotations():
         return
 
-    avoptions = get_availability_options_from_url()
-    time_range, range_title = avoptions["range"]
-
     # We make reports about hosts, services or BI aggregates
     if "service" in datasource["infos"]:
         what = "service"
@@ -167,6 +165,9 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
         what = "bi"
     else:
         what = "host"
+
+    avoptions = get_availability_options_from_url(what)
+    time_range, range_title = avoptions["range"]
 
     # We have two display modes:
     # - Show availability table (stats) "table"
@@ -244,7 +245,7 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
 
     # Render the avoptions again to get the HTML code, because the HTML vars have changed
     # above (anno_ and editanno_ has been removed, which must not be part of the form
-    avoptions = render_availability_options()
+    avoptions = render_availability_options(what)
 
     if not html.has_user_errors():
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
@@ -469,7 +470,7 @@ def render_timeline_bar(timeline_layout, style):
 def render_bi_availability(title, aggr_rows):
     av_mode = html.var("av_mode", "availability")
 
-    avoptions = get_availability_options_from_url()
+    avoptions = get_availability_options_from_url("bi")
     time_range, range_title = avoptions["range"]
 
     if av_mode == "timeline":
@@ -498,7 +499,7 @@ def render_bi_availability(title, aggr_rows):
             html.context_button(_("Timeline"), timeline_url, "timeline")
         html.end_context_buttons()
 
-        avoptions = render_availability_options()
+        avoptions = render_availability_options("bi")
 
 
     if not html.has_user_errors():

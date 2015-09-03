@@ -513,7 +513,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
 
     except Exception, e:
         if on_error != "ignore":
-            warning("  Exception in discovery function of check type %s" % check_type)
+            warning("  Exception in discovery function of check type '%s'." % check_type)
         if on_error == "raise":
             raise
         return []

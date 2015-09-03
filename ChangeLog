@@ -12,6 +12,8 @@
     * 2576 FIX: symantec_av_updates: fix crash due to missing datetime module, also handle DD.MM.YYYY date format
     * 2567 FIX: jolokia_metrics: fixed crash if agent output is missing memory metrics
     * 2577 FIX: printer_input, printer_output: Fix exception on Brother NC-340h
+    * 2554 FIX: oracle_recovery_status: Fixed exception when files have no checkpoints
+    * 2568 FIX: apache_status: fixed computation of bytes and requests per second...
 
     Multisite:
     * 2544 FIX: Fixed links to availability timeline using the context buttons

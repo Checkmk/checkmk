@@ -8,6 +8,7 @@
     * 2546 FIX: brocade_mlx_power: Only discover power supplies in state normal/failure, skip other states...
     * 2547 FIX: mysql mysql_capacity mysql_ping mysql_slave: Fixed broken service discovery when instance id is empty...
     * 2564 FIX: logins: missing manpage
+    * 2554 FIX: oracle_recovery_status: Fixed exception when files have no checkpoints
 
     Multisite:
     * 2544 FIX: Fixed links to availability timeline using the context buttons

@@ -28,6 +28,9 @@
     * 2550 FIX: Catching exception when having name conflicts while moving a folder
     * 2552 FIX: API: Service Discovery action is now creating missing pending log entry and marks the site dirty
 
+    Livestatus:
+    * 2579 FIX: Fixed syntax of JSON in case of column headers turned on...
+
     HW/SW-Inventory:
     * 2553 FIX: solaris_prtdiag: Can now handle Supermicro servers using Solaris 10
 

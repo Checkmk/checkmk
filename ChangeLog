@@ -24,6 +24,9 @@
     BI:
     * 2573 FIX: Fix influance of service period to the availability of BI aggregates...
 
+    HW/SW-Inventory:
+    * 2553 FIX: solaris_prtdiag: Can now handle Supermicro servers using Solaris 10
+
 
 1.2.7i2p2:
     Core & Setup:

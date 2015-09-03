@@ -4,7 +4,6 @@ bluecat_command_server
 bluecat_threads
 cmk_inv
 docsis_channels_upstream
-fjdarye500_disks.summary
 fortigate_cpu_base
 fortigate_sessions_base
 ftp

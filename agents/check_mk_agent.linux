@@ -567,7 +567,11 @@ if pushd $MK_VARDIR/job >/dev/null; then
     for username in *
     do
         if [ -d "$username" ] && cd "$username" ; then
-            su "$username" -c "head -n -0 -v *"
+            if [ $EUID -eq 0 ]; then
+                su "$username" -c "head -n -0 -v *"
+            else
+                head -n -0 -v *
+            fi
             cd ..
         fi
     done

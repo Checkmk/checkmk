@@ -28,15 +28,9 @@ def inventory_cmciii_lcp_airin(info):
     if info:
         return [( None, None )]
 
-def extract_temps(liste):
-    miste = []
-    for l in liste:
-        miste.append(float(l.split(" ")[0]))
-    return miste
-
 def check_cmciii_lcp_airin(item, params, info):
     unit_desc, unit_status, desc, status = info[0][0:4]
-    temps = extract_temps(info[0][4:])
+    temps = cmciii_extract_temps(info[0][4:])
 
     state = 0
     sym = ""
@@ -73,7 +67,8 @@ check_info['cmciii_lcp_airin'] = {
                                 oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6").startswith("Air.Temperature.DescName"),
     "snmp_info"           : ( '.1.3.6.1.4.1.2606.7.4.2.2.1.10',
        [ '2.6', '2.13', '2.15', '2.23', '2.21', '2.20', '2.19', '2.18', '2.17', '2.7', '2.8', '2.9' ]
-   ),
+    ),
+    "includes"            : [ 'cmciii.include' ],
 }
 #
 # .1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6 Air.Temperature.DescName

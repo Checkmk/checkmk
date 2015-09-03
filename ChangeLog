@@ -161,6 +161,7 @@
     * 2577 FIX: printer_input, printer_output: Fix exception on Brother NC-340h
     * 2554 FIX: oracle_recovery_status: Fixed exception when files have no checkpoints
     * 2568 FIX: apache_status: fixed computation of bytes and requests per second...
+    * 2557 FIX: cmciii_lcp_airin cmciii_lcp_airout cmciii_lcp_waterin cmciii_lcp_waterout: Fixed exception parsing data from some devices
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

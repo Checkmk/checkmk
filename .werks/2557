@@ -1,0 +1,10 @@
+Title: cmciii_lcp_airin cmciii_lcp_airout cmciii_lcp_waterin cmciii_lcp_waterout: Fixed exception parsing data from some devices
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441281589
+
+

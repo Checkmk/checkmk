@@ -34,6 +34,12 @@
 # TUX2|tux2|PRIMARY|READ WRITE|1|1419771465|317|ONLINE|NO|YES|8149107|NOT ACTIVE|489
 # TUX2|tux2|PRIMARY|READ WRITE|2|1419771465|317|ONLINE|NO|YES|8149107|NOT ACTIVE|489
 
+# Databases seem to also report lines with some data missing:
+# PV|PV|PRIMARY|READ WRITE|397|1433251398|7297|ONLINE|NO|YES|10740614283
+# PV|PV|PRIMARY|READ WRITE|398|1433251398|7297|ONLINE|NO|YES|10740614283
+# PV|PV|PRIMARY|READ WRITE|399|||ONLINE|||0
+# PV|PV|PRIMARY|READ WRITE|400|||ONLINE|||0
+# PV|PV|PRIMARY|READ WRITE|401|||ONLINE|||0
 
 def inventory_oracle_recovery_status(info):
     return [ ( line[0], {} ) for line in info ]
@@ -73,9 +79,9 @@ def check_oracle_recovery_status(item, params, info):
                 oldest_backup_age = max(int(backup_age), oldest_backup_age)
 
             if datafilestatus == 'ONLINE':
-                checkpoint_age = int(checkpoint_age)
-
-                oldest_checkpoint_age = max(oldest_checkpoint_age, checkpoint_age)
+                if checkpoint_age:
+                    checkpoint_age = int(checkpoint_age)
+                    oldest_checkpoint_age = max(oldest_checkpoint_age, checkpoint_age)
             else:
                 offlinecount += 1
 

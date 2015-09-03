@@ -8,6 +8,7 @@
     * 2564 FIX: logins: missing manpage
     * 2575 FIX: cpu.loads: Fix exception in displaying parameters for CPU load check...
     * 2576 FIX: symantec_av_updates: fix crash due to missing datetime module, also handle DD.MM.YYYY date format
+    * 2567 FIX: jolokia_metrics: fixed crash if agent output is missing memory metrics
 
     Multisite:
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts

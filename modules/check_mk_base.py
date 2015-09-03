@@ -1507,6 +1507,13 @@ def prepare_crash_dump_directory(crash_dir):
             pass
 
 
+def is_manual_check(hostname, check_type, item):
+    manual_checks = get_check_table(hostname, remove_duplicates=True,
+                                    world=opt_keepalive and "active" or "config",
+                                    skip_autochecks=True)
+    return (check_type, item) in manual_checks
+
+
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
@@ -1521,11 +1528,14 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
         "details"    : {
             "check_output"  : text,
             "host"          : hostname,
+            "is_cluster"    : is_cluster(hostname),
             "description"   : description,
             "check_type"    : check_type,
             "item"          : item,
             "params"        : params,
             "uses_snmp"     : check_uses_snmp(check_type),
+            "inline_snmp"   : has_inline_snmp and use_inline_snmp,
+            "manual_check"  : is_manual_check(hostname, check_type, item),
         },
     }
 

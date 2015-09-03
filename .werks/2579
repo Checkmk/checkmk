@@ -1,0 +1,9 @@
+Title: Fixed syntax of JSON in case of column headers turned on
+Level: 1
+Component: livestatus
+Compatible: compat
+Version: 1.2.6p11
+Date: 1441280157
+Class: fix
+
+Thanks to Gwendan Coradelle.

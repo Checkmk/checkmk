@@ -18535,24 +18535,32 @@ class API:
         self.__prepare_folder_info()
         all_hosts = self.__get_all_hosts()
 
+        host   = all_hosts[hostname]
+        folder = host[".folder"]
+
         config.need_permission("wato.services")
         self.__validate_host_parameters(None, hostname, {}, all_hosts, True, ["host_missing"])
-        check_host_permissions(hostname, folder = all_hosts[hostname][".folder"])
+        check_host_permissions(hostname, folder=folder)
 
         ### Start inventory
-        host = all_hosts[hostname]
         counts, failed_hosts = check_mk_automation(host[".siteid"], "inventory", [ "@scan", mode ] + [hostname])
         if failed_hosts:
-            if not host.get("inventory_failed") and not host.get(".folder", {}).get(".lock_hosts"):
+            if not host.get("inventory_failed") and not folder.get(".lock_hosts"):
                 host["inventory_failed"] = True
-                save_hosts(host[".folder"])
+                save_hosts(folder)
             raise MKUserError(None, _("Failed to inventorize %s: %s") % (hostname, failed_hosts[hostname]))
 
-        if host.get("inventory_failed") and not host.get(".folder", {}).get(".lock_hosts"):
+        if host.get("inventory_failed") and not folder.get(".lock_hosts"):
             del host["inventory_failed"]
-            save_hosts(host[".folder"])
+            save_hosts(folder)
 
-        return _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d") % tuple(counts[hostname])
+        msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d") % \
+                                                                        tuple(counts[hostname])
+
+        mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
+        log_pending(AFFECTED, hostname, "api-inventory", msg)
+
+        return msg
 
     def activate_changes(self, sites, mode = "dirty", allow_foreign_changes = False):
         self.__prepare_folder_info()

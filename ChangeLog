@@ -17,6 +17,7 @@
 
     WATO:
     * 2550 FIX: Catching exception when having name conflicts while moving a folder
+    * 2552 FIX: API: Service Discovery action is now creating missing pending log entry and marks the site dirty
 
 
 1.2.6p10:

@@ -15,6 +15,7 @@
     * 2554 FIX: oracle_recovery_status: Fixed exception when files have no checkpoints
     * 2568 FIX: apache_status: fixed computation of bytes and requests per second...
     * 2558 FIX: cmciii.temp: Do not discover air temperature sensors anymore...
+    * 2559 FIX: job: Trying to read job result files as non root when agent is not executed as root
 
     Multisite:
     * 2544 FIX: Fixed links to availability timeline using the context buttons

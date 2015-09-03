@@ -294,7 +294,7 @@ def roles_of_user(user):
             roles[br] = {}
 
     if user in multisite_users:
-        return multisite_users[user]["roles"]
+        return existing_role_ids(multisite_users[user]["roles"])
     elif user in admin_users:
         return [ "admin" ]
     elif user in guest_users:
@@ -304,11 +304,19 @@ def roles_of_user(user):
     elif os.path.exists(config_dir + "/" + user + "/automation.secret"):
         return [ "guest" ] # unknown user with automation account
     elif 'roles' in default_user_profile:
-        return default_user_profile['roles']
+        return existing_role_ids(default_user_profile['roles'])
     elif default_user_role:
-        return [ default_user_role ]
+        return existing_role_ids([ default_user_role ])
     else:
         return []
+
+
+def existing_role_ids(role_ids):
+    return [
+        role_id for role_id in role_ids
+        if role_id in roles
+    ]
+
 
 def alias_of_user(user):
     if user in multisite_users:

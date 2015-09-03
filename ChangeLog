@@ -252,6 +252,7 @@
     * 2483 FIX: win_exefiles: more gracefully handle incomplete lines, avoid execption
     * 2454 FIX: lnx_distro: Fixed inventory for SuSE installations with patchlevel 0
     * 2541 FIX: Round last state change of network interfaces to one day, avoid history spam...
+    * 2553 FIX: solaris_prtdiag: Can now handle Supermicro servers using Solaris 10
 
 
 1.2.7i2:

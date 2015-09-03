@@ -99,18 +99,27 @@ def inv_solaris_prtdiag(info):
         elif line[0].startswith("SerialNumber:"):
             node = inv_tree("hardware.system.")
             node["serial"] = line[0].split(':')[1]
-        elif line[0].startswith("System Configuration:"):
-        # 'System Configuration:  Oracle Corporation  sun4v SPARC T4-1'
-        # 'System Configuration:  Sun Microsystems  sun4u SPARC Enterprise M4000 Server'
-            node = inv_tree("hardware.system.")
-            system_info = "%s" %(line[0].split(':')[1])
-            system_info_list = system_info.split()
-            node["vendor"] = "%s" %(system_info.split(system_info_list[2])[0])
-            node["product"] = "%s" %(system_info.split(system_info_list[2])[1])
 
-            if system_info_list[-1].startswith('T'):
+        elif line[0].startswith("System Configuration:"):
+            # 'System Configuration:  Oracle Corporation  sun4v SPARC T4-1'
+            # 'System Configuration:  Sun Microsystems  sun4u SPARC Enterprise M4000 Server'
+            # 'System Configuration: Supermicro H8DG6/H8DGi'
+            node = inv_tree("hardware.system.")
+            system_info = line[0].split(':', 1)[1].rstrip('\'')
+
+            # Fields are separated by double spaces for some outputs
+            if "  " in system_info:
+                system_info_list = system_info.split("  ")
+            else:
+                system_info_list = system_info.split()
+
+            node["vendor"] = system_info_list[0]
+            node["product"] = system_info_list[1]
+
+            product_list = node["product"].split()
+            if product_list[-1].startswith('T'):
                 node["family"] = "T-series"
-            elif system_info_list[-2].startswith('M'):
+            elif product_list[-2].startswith('M'):
                 node["family"] = "M-series"
 
 inv_info['solaris_prtdiag'] = {

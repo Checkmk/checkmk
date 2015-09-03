@@ -1,0 +1,10 @@
+Title: solaris_prtdiag: Can now handle Supermicro servers using Solaris 10
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441269224
+
+

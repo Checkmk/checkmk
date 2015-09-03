@@ -86,12 +86,12 @@ def local_compute_state(perfdata):
 
 def inventory_local(info):
     inventory = []
-    # Ignore invalid lines, tolerate bugs in local checks
-    # of unexperianced users. Lines with P do not need to
-    # supply a text
+    # Lines with P do not need to supply a text
     for line in info:
         if len(line) >= 4 or len(line) == 3 and line[0] == 'P':
             inventory.append( (line[1], None) )
+        else:
+            raise MKGeneralException("Invalid local check output: %s" % line)
     return inventory
 
 def check_local(item, params, info):
@@ -99,6 +99,9 @@ def check_local(item, params, info):
         # Ignore invalid lines, tolerate bugs in local checks
         # of unexperienced users
         if len(line) >= 2 and line[1] == item:
+            if not (len(line) >= 4 or (len(line) == 3 and line[0] == 'P')):
+                return 3, "Invalid local check output: %s" % line
+
             statechar = line[0]
             perftxt = line[2]
             output = " ".join(line[3:])
@@ -106,9 +109,12 @@ def check_local(item, params, info):
             if perftxt != "-":
                 # new: allow multiple perfdata by using | as separator
                 for entry in perftxt.split('|'):
-                    varname, valuetxt = entry.split('=')
-                    values = valuetxt.split(';')
-                    perfdata.append(tuple( [varname] + values ))
+                    try:
+                        varname, valuetxt = entry.split('=')
+                        values = valuetxt.split(';')
+                        perfdata.append(tuple( [varname] + values ))
+                    except ValueError:
+                        return 3, "Invalid local check output: %s" % line
             if statechar == 'P':
                 state, texts = local_compute_state(perfdata)
                 if output:

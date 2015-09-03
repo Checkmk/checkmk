@@ -157,6 +157,7 @@
     * 2566 FIX: ups_modulys_battery.temp: fixed missing manpage
     * 2585 FIX: include file for elecritcal phases handles warn/crit levels correct
     * 2576 FIX: symantec_av_updates: fix crash due to missing datetime module, also handle DD.MM.YYYY date format
+    * 2577 FIX: printer_input, printer_output: Fix exception on Brother NC-340h
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

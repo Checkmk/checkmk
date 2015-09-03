@@ -55,7 +55,7 @@ def check_cmciii_lcp_airin(item, params, info):
     else:
         state = max(state, 0)
 
-    info_text = "%s %s %s %s, Temp.Average: %.1f°C%s, Top/Mid/Bottom: %.1f/%.1f/%.1f" % \
+    info_text = u"%s %s %s %s, Temp.Average: %.1f°C%s, Top/Mid/Bottom: %.1f/%.1f/%.1f" % \
                     (unit_desc, unit_status, desc, status, temps[4], sym, temps[5], temps[6], temps[7])
 
     levels_text = ", lowcrit/lowwarn/highwarn/highcrit: %.1f/%.1f/%.1f/%.1f" % ( temps[0], temps[1], temps[2], temps[3] )

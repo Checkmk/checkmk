@@ -14,6 +14,7 @@
     * 2577 FIX: printer_input, printer_output: Fix exception on Brother NC-340h
     * 2554 FIX: oracle_recovery_status: Fixed exception when files have no checkpoints
     * 2568 FIX: apache_status: fixed computation of bytes and requests per second...
+    * 2593 FIX: cisco_wlc, cisco_wlc_clients: Fix discovery so that Cisco Virtual Wireless Controller are detected...
 
     Multisite:
     * 2544 FIX: Fixed links to availability timeline using the context buttons

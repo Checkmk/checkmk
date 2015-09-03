@@ -15,6 +15,10 @@
     * 2557 FIX: cmciii_lcp_airin cmciii_lcp_airout cmciii_lcp_waterin cmciii_lcp_waterout: Fixed exception parsing data from some devices
     * 2558 FIX: cmciii.temp: Do not discover air temperature sensors anymore...
     * 2582 FIX: printer_supply_ricoh: Fix exception when parameters have been set via WATO
+    * 1290 FIX: brocade_mlx_fan: Fix: Not longer add fans who not are present while discovery
+    * 2569 FIX: fixed crash in aix lvm check after volume disappears...
+    * 2559 FIX: job: Trying to read job result files as non root when agent is not executed as root
+    * 2570 FIX: winperf_msx_queues: fixed crash when winperf data is missing...
 
     Multisite:
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
@@ -29,8 +33,10 @@
     * 2580 FIX: Remove bogus ;0 in comment of problem acknowledgements...
 
     WATO:
+    * 2264 WATO Web API: new function get_all_hosts (returns all host attributes)
     * 2550 FIX: Catching exception when having name conflicts while moving a folder
     * 2552 FIX: API: Service Discovery action is now creating missing pending log entry and marks the site dirty
+    * 2560 FIX: Fixed rare exception when using bulk host move...
 
     Livestatus:
     * 2579 FIX: Fixed syntax of JSON in case of column headers turned on...

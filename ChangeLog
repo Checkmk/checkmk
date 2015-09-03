@@ -33,6 +33,7 @@
     WATO:
     * 2550 FIX: Catching exception when having name conflicts while moving a folder
     * 2552 FIX: API: Service Discovery action is now creating missing pending log entry and marks the site dirty
+    * 2560 FIX: Fixed rare exception when using bulk host move...
 
     BI:
     * 2573 FIX: Fix influance of service period to the availability of BI aggregates...

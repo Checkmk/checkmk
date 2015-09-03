@@ -951,7 +951,7 @@ def mode_folder(phase):
         elif html.var("_bulk_move"):
             config.need_permission("wato.edit_hosts")
             config.need_permission("wato.move_hosts")
-            target_folder_name = html.var("bulk_moveto")
+            target_folder_name = html.var("bulk_moveto", html.var("_top_bulk_moveto"))
             if target_folder_name == "@":
                 raise MKUserError("bulk_moveto", _("Please select the destination folder"))
             target_folder = g_folders[target_folder_name]

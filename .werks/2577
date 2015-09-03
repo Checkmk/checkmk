@@ -1,0 +1,9 @@
+Title: printer_input, printer_output: Fix exception on Brother NC-340h
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p11
+Date: 1441272917
+Class: fix
+
+

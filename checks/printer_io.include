@@ -25,8 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 printer_io_units = {
-     '-1' : "unk.",
-     '3'  : 'tenThousandthsOfInches',
+     '-1' : 'unknown',
+     '0'  : 'unknown',
+     '3'  : '1/10000 in',
      '4'  : 'micrometers',
      '8'  : 'sheets',
     '16'  : 'feet',
@@ -72,6 +73,10 @@ def inventory_printer_io(info):
         index, name, descr, status = line[:4]
         if descr == '':
             continue
+        snmp_status, capacity_unit, capacity_max, level = line[3:]
+        if capacity_max == '0': # useless
+            continue
+
         ignore = False
         snmp_status = saveint(status)
         for state_val in sorted(printer_io_states,reverse=True):

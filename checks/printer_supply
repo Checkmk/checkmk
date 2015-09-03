@@ -154,7 +154,7 @@ def check_printer_supply(item, params, info):
                 leftperc = 100 - leftperc
 
 
-            infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)
+            infotext = "%.0f%% (warn/crit at %.0f%% / %.0f%%)" % (leftperc, warn, crit)
             if leftperc <= crit:
                 return (2, infotext, perfdata)
             elif leftperc <= warn:

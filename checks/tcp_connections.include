@@ -1,0 +1,92 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+tcp_conn_stats_default_levels = {}
+
+tcp_connections_state_map = [
+    ("ESTABLISHED",  1),    # connection up and passing data
+    ("SYN_SENT",     2),    # session has been requested by us; waiting for reply from remote endpoint
+    ("SYN_RECV",     3),    # session has been requested by a remote endpoint for a socket on which we were listening
+    ("LAST_ACK",     9),    # our socket is closed; remote endpoint has also shut down; we are waiting for a final acknowledgement
+    ("CLOSE_WAIT",   8),    # remote endpoint has shut down; the kernel is waiting for the application to close the socket
+    ("TIME_WAIT",    6),    # socket is waiting after closing for any packets left on the network
+    ("CLOSED",       7),    # socket is not being used (FIXME. What does mean?)
+    ("CLOSING",      11),   # our socket is shut down; remote endpoint is shut down; not all data has been sent
+    ("FIN_WAIT1",    4),    # our socket has closed; we are in the process of tearing down the connection
+    ("FIN_WAIT2",    5),    # the connection has been closed; our socket is waiting for the remote endpoint to shut down
+    ("LISTEN",       10),   # represents waiting for a connection request from any remote TCP and port
+    ("BOUND",        None), # Socket did a bound() but TCP stack not yet active (Solaris)
+    ("IDLE",         None), # TCP endpoints are in IDLE state when first created
+]
+
+# parsed can be:
+# parsed = {
+#     1  : 6,
+#     6  : 17,
+#     8  : 1,
+#     10 : 10,
+# }
+# parsed = {
+#     "ESTABLISHED" : 6,
+#     "BOUND"       : 17,
+#     "SYN_SENT"    : 1,
+#     "LISTEN"      : 10,
+# }
+
+
+def inventory_tcp_connections(parsed):
+    if len(parsed) > 0:
+        return [ (None, 'tcp_conn_stats_default_levels') ]
+
+
+def check_tcp_connections(item, params, parsed):
+    hit = False
+    for tcp_state_readable, tcp_state_int_str in tcp_connections_state_map:
+        num = parsed.get(tcp_state_readable, \
+                   parsed.get(tcp_state_int_str, 0))
+        state = 0
+        perf = [tcp_state_readable, num]
+        if num > 0: # Only check positive counts
+            hit = True
+            infotext = "%s: %d" % (tcp_state_readable, num)
+            levels = params.get(tcp_state_readable)
+            if levels:
+                warn, crit = levels
+                perf.append(warn)
+                perf.append(crit)
+                if num >= crit:
+                    state = 2
+                elif num >= warn:
+                    state = 1
+                if state > 0:
+                    infotext += " (warn/crit at %d/%d)" % (warn, crit)
+            yield state, infotext, [ tuple(perf) ]
+        else:
+            yield 0, None, [ tuple(perf) ]
+
+    if not hit:
+        yield 0, "Currently no TCP connections"
+

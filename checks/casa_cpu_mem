@@ -56,7 +56,7 @@ def check_casa_cpu_mem(item, params, info):
         if "levels" in params:
             warn, crit = params["levels"]
             if type(warn) == int:
-                levels_text = "(levels at %s/%s)" % (
+                levels_text = "(warn/crit at %s/%s)" % (
                                 get_bytes_human_readable(warn),
                                 get_bytes_human_readable(crit),
                             )
@@ -67,7 +67,7 @@ def check_casa_cpu_mem(item, params, info):
                     state = 1
                     error_text = "(!)"
             else:
-                levels_text = "(levels at %s%%/%s%% used)" % (warn, crit)
+                levels_text = "(warn/crit at %s%%/%s%% used)" % (warn, crit)
                 perc_used = (mem_used / mem_total) * 100.0
                 if perc_used > crit:
                     state = 2

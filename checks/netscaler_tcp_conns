@@ -54,7 +54,7 @@ def check_netscaler_tcp_conns(_no_item, params, info):
         elif value >= warn:
             state = 1
         if state > 0:
-            infotext += " (levels at %d/%d)" % (warn,crit)
+            infotext += " (warn/crit at %d/%d)" % (warn,crit)
 
         yield state, infotext, perfdata
 

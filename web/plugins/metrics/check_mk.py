@@ -1708,6 +1708,12 @@ metric_info["rmon_packets_1518"] = {
     "color" : "44/a",
 }
 
+metric_info["tcp_listen"] = {
+    "title" : _("State %s") % "LISTEN",
+    "unit"  : "count",
+    "color" : "44/a",
+}
+
 metric_info["tcp_established"] = {
     "title" : _("State %s") % "ESTABLISHED",
     "unit"  : "count",
@@ -1772,6 +1778,12 @@ metric_info["tcp_bound"] = {
     "title" : _("State %s") % "BOUND",
     "unit"  : "count",
     "color" : "#4060a0",
+}
+
+metric_info["tcp_idle"] = {
+    "title" : _("State %s") % "IDLE",
+    "unit"  : "count",
+    "color" : "41/a",
 }
 
 metric_info["fw_connections_active"] = {
@@ -2743,10 +2755,11 @@ check_metrics["check_mk-mem.vmalloc"] = {
     "chunk" : { "name" : "mem_lnx_vmalloc_chunk" }
 }
 
-check_metrics["check_mk-tcp_conn_stats"] = {
+tcp_conn_stats_translation = {
     "SYN_SENT"    : { "name": "tcp_syn_sent" },
     "SYN_RECV"    : { "name": "tcp_syn_recv" },
     "ESTABLISHED" : { "name": "tcp_established" },
+    "LISTEN"      : { "name": "tcp_listen" },
     "TIME_WAIT"   : { "name": "tcp_time_wait" },
     "LAST_ACK"    : { "name": "tcp_last_ack" },
     "CLOSE_WAIT"  : { "name": "tcp_close_wait" },
@@ -2755,7 +2768,10 @@ check_metrics["check_mk-tcp_conn_stats"] = {
     "FIN_WAIT1"   : { "name": "tcp_fin_wait1" },
     "FIN_WAIT2"   : { "name": "tcp_fin_wait2" },
     "BOUND"       : { "name": "tcp_bound" },
+    "IDLE"        : { "name": "tcp_idle" },
 }
+check_metrics["check_mk-tcp_conn_stats"] = tcp_conn_stats_translation
+check_metrics["check_mk-datapower_tcp"] = tcp_conn_stats_translation
 
 check_metrics["check_mk_active-disk_smb"] = {
     "~.*" : { "name" : "fs_used" }
@@ -5087,6 +5103,7 @@ graph_info.append({
 graph_info.append({
     "title" : _("TCP Connection States"),
     "metrics" : [
+       ( "tcp_listen",      "stack"),
        ( "tcp_syn_sent",    "stack"),
        ( "tcp_syn_recv",    "stack"),
        ( "tcp_established", "stack"),
@@ -5098,6 +5115,7 @@ graph_info.append({
        ( "tcp_fin_wait1",   "stack"),
        ( "tcp_fin_wait2",   "stack"),
        ( "tcp_bound",       "stack"),
+       ( "tcp_idle",        "stack"),
     ],
     "omit_zero_metrics" : True,
 })

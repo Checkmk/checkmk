@@ -82,7 +82,7 @@ def check_printer_supply_ricoh(item, params, parsed):
                 state = 0
 
             if state > 0:
-                infotext += " (levels at %.0f%%/%.0f%%)" % (warn, crit)
+                infotext += " (warn/crit at %.0f%%/%.0f%%)" % (warn, crit)
 
             if "black" in name.lower():
                 perf_type = "black"

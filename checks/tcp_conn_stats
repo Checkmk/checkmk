@@ -24,60 +24,36 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-tcp_conn_stats_states = [
- ( "ESTABLISHED", "01"),  # connection up and passing data
- ( "SYN_SENT",    "02"),  # session has been requested by us; waiting for reply from remote endpoint
- ( "SYN_RECV",    "03"),  # session has been requested by a remote endpoint for a socket on which we were listening
- ( "LAST_ACK",    "09"),  # our socket is closed; remote endpoint has also shut down; we are waiting for a final acknowledgement
- ( "CLOSE_WAIT",  "08"),  # remote endpoint has shut down; the kernel is waiting for the application to close the socket
- ( "TIME_WAIT",   "06"),  # socket is waiting after closing for any packets left on the network
- ( "CLOSED",      "07"),  # socket is not being used (FIXME. What does mean?)
- ( "CLOSING",     "0B"),  # our socket is shut down; remote endpoint is shut down; not all data has been sent
- ( "FIN_WAIT1",   "04"),  # our socket has closed; we are in the process of tearing down the connection
- ( "FIN_WAIT2",   "05"),  # the connection has been closed; our socket is waiting for the remote endpoint to shut down
- ( "BOUND",       None),  # Socket did a bound() but TCP stack not yet active (Solaris)
-]
+# <<<tcp_conn_stats>>>
+# 01 29
+# 02 3
+# 0A 26
+# 05 1
+# 06 187
+
+# <<<tcp_conn_stats>>>
+# LISTEN 39
+# IDLE 3
+# TIME_WAIT 1
+# ESTABLISHED 68
+# BOUND 1
 
 
-tcp_conn_stats_default_levels = { }
-
-def inventory_tcp_conn_stats(info):
-    if len(info) > 0:
-        return [ (None, 'tcp_conn_stats_default_levels') ]
-
-def check_tcp_conn_stats(item, params, info):
-    stats = dict(info)
-    hit = False
-    for stat_state, hex in tcp_conn_stats_states:
-        num = int(stats.get(stat_state, stats.get(hex, 0)))
-        state = 0
-        perf = [stat_state, num]
-        if num > 0: # Only check positive counts
-            hit = True
-            infotext = "%s: %d" % (stat_state, num)
-            levels = params.get(stat_state)
-            if levels:
-                warn, crit = levels
-                perf.append(warn)
-                perf.append(crit)
-                if num >= crit:
-                    state = 2
-                    infotext += " (critical at %d)" % crit
-                elif num >= warn:
-                    state = 1
-                    infotext += " (warning at %d)" % warn
-            yield state, infotext, [ tuple(perf) ]
-        else:
-            yield 0, None, [ tuple(perf) ]
-
-    if not hit:
-        yield 0, "Currently no TCP connections"
+def parse_tcp_conn_stats(info):
+    parsed = {}
+    for tcp_state, tcp_count in info:
+        if len(tcp_state) == 2:
+            tcp_state = int(tcp_state, 16) # Hex
+        parsed[tcp_state] = int(tcp_count)
+    return parsed
 
 
 check_info["tcp_conn_stats"] = {
-    'check_function':          check_tcp_conn_stats,
-    'inventory_function':      inventory_tcp_conn_stats,
-    'service_description':     'TCP Connections',
-    'has_perfdata':            True,
-    'group':                   'tcp_conn_stats',
+    'parse_function'        : parse_tcp_conn_stats,
+    'check_function'        : check_tcp_connections,
+    'inventory_function'    : inventory_tcp_connections,
+    'service_description'   : 'TCP Connections',
+    'has_perfdata'          : True,
+    'group'                 : 'tcp_conn_stats',
+    'includes'              : [ "tcp_connections.includes" ],
 }

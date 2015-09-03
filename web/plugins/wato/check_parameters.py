@@ -2441,7 +2441,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_networking,
     "tcp_conn_stats",
-    _("TCP connection stats (LINUX / UNIX)"),
+    _("TCP connection statistics"),
     Dictionary(
         elements = [
             ( "ESTABLISHED",
@@ -2550,12 +2550,33 @@ register_check_parameters(
                   ]
               )
             ),
+            ( "LISTEN",
+              Tuple(
+                  title = _("LISTEN"),
+                  help = _("represents waiting for a connection request from any remote TCP and port"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
             ( "BOUND",
               Tuple(
                   title = _("BOUND"),
                   help = _("the socket has been created and an address assigned "
                            "to with bind(). The TCP stack is not active yet. "
                            "This state is only reported on Solaris."),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "IDLE",
+              Tuple(
+                  title = _("IDLE"),
+                  help = _("a TCP session that is active but that has no data being "
+                           "transmitted by either device for a prolonged period of time"),
                   elements = [
                       Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))

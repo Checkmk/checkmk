@@ -147,7 +147,7 @@ def check_oracle_rman(item, params, info):
                     state = 2
                 elif backupage >= warn:
                     state = 1
-                infotext += " (levels at %s/%s)" % (
+                infotext += " (warn/crit at %s/%s)" % (
                     get_age_human_readable(warn),
                     get_age_human_readable(crit))
 

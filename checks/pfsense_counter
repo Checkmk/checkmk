@@ -92,7 +92,7 @@ def check_pfsense_counter(_no_item, params, parsed):
             perfrate += params[what]
             if perfavg:
                 perfavg += params[what]
-            levelstext = " (levels at %.2f/%.2f pkts/s)" % (warn, crit)
+            levelstext = " (warn/crit at %.2f/%.2f pkts/s)" % (warn, crit)
             if crit and check_against >= crit:
                 status = 2
                 infotext += levelstext

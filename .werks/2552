@@ -1,0 +1,10 @@
+Title: API: Service Discovery action is now creating missing pending log entry and marks the site dirty
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441266258
+
+

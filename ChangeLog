@@ -15,6 +15,7 @@
     * 2557 FIX: cmciii_lcp_airin cmciii_lcp_airout cmciii_lcp_waterin cmciii_lcp_waterout: Fixed exception parsing data from some devices
     * 2558 FIX: cmciii.temp: Do not discover air temperature sensors anymore...
     * 1290 FIX: brocade_mlx_fan: Fix: Not longer add fans who not are present while discovery
+    * 2569 FIX: fixed crash in aix lvm check after volume disappears...
 
     Multisite:
     * 2509 FIX: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts

@@ -76,7 +76,7 @@ def check_elphase(item, params, parsed):
                     warn_lower, crit_lower = params[what]
 
                 if warn_lower:
-                    levelstext = " (warn/crit Lower %s/%s%s)" %\
+                    levelstext = " (warn/crit lower %s/%s%s)" %\
                         (tostring(warn_lower), tostring(crit_lower), unit)
                     if value < crit_lower:
                         status = 2
@@ -85,7 +85,7 @@ def check_elphase(item, params, parsed):
                         status = max(status, 1)
                         infotext += levelstext
 
-                if crit_lower:
+                if warn:
                     levelstext = " (warn/crit at %s/%s%s)" %\
                         (tostring(warn), tostring(crit), unit)
                     if value > crit:

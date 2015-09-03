@@ -155,6 +155,8 @@
     * 2575 FIX: cpu.loads: Fix exception in displaying parameters for CPU load check...
     * 2574 FIX: postfix_mailq: speed up agent part on FreeBSD
     * 2566 FIX: ups_modulys_battery.temp: fixed missing manpage
+    * 2584 FIX: include file for electrical phases handles warn/crit levels correct
+    * 2585 FIX: include file for elecritcal phases handles warn/crit levels correct
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

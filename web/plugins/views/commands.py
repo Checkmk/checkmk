@@ -290,13 +290,14 @@ def command_acknowledgement(cmdtag, spec, row):
         expire_secs = Age().from_html_vars("_ack_expire")
         if expire_secs:
             expire = int(time.time()) + expire_secs
+            expire_text = ";%d" % expire
         else:
-            expire = 0
+            expire_text = ""
 
         def make_command(spec, cmdtag):
             return "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
                           (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % lqencode(comment)) \
-                          + (";%d" % expire)
+                          + expire_text
 
         if "aggr_tree" in row: # BI mode
             commands = [(site, make_command(spec, cmdtag)) for (site, spec, cmdtag) in specs ]
@@ -304,7 +305,7 @@ def command_acknowledgement(cmdtag, spec, row):
             commands = [ make_command(spec, cmdtag) ]
 
         title = _("<b>acknowledge the problems%s</b> of") % \
-                    (expire and (_(" for a period of %s") % Age().value_to_text(expire_secs)) or "")
+                    (expire_text and (_(" for a period of %s") % Age().value_to_text(expire_secs)) or "")
         return commands, title
 
     elif html.var("_remove_ack"):

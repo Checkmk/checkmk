@@ -89,9 +89,10 @@ def inventory_winperf_msx_queues(info):
             return [ (name, { "offset" : offset } ) for name, offset in queues.items() ]
 
 def check_winperf_msx_queues(item, params, info):
-    num_instances = int(info[1][0])
-    if num_instances < 1:
-        return (3, "no counters available, transport service running?")
+    # current windows  agents should not produce winperf sections with no data after the header but
+    # this ensures compatibility with older agents
+    if len(info) < 2 or int(info[1][0]):
+        return 3, "no counters available, transport service running?"
 
     # Old default case:
     if type(params) == tuple:

@@ -1,0 +1,13 @@
+Title: winperf_msx_queues: fixed crash when winperf data is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441287640
+
+Previously the windows agent would return empty sections if it couldn't retrieve performance data.
+The winperf_msx_queues check responded to this empty section by crashing.
+This has been fixed by making sure the agent doesn't return empty winperf sections and by making the
+check handle empty sections gracefully

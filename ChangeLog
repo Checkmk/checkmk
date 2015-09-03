@@ -10,6 +10,7 @@
     * 2564 FIX: logins: missing manpage
     * 2575 FIX: cpu.loads: Fix exception in displaying parameters for CPU load check...
     * 2576 FIX: symantec_av_updates: fix crash due to missing datetime module, also handle DD.MM.YYYY date format
+    * 2577 FIX: printer_input, printer_output: Fix exception on Brother NC-340h
 
     Multisite:
     * 2544 FIX: Fixed links to availability timeline using the context buttons

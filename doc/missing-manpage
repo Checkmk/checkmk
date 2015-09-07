@@ -5,7 +5,6 @@ docsis_channels_upstream
 fortigate_cpu_base
 fortigate_sessions_base
 ftp
-hitatchi_hus_status2
 ibm_svc_disks
 icom_repeater.ps_volt
 mail

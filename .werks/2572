@@ -1,4 +1,4 @@
-Title: omreport_vdisk: New check for virtual disks on Dell OpenManage supported devices
+Title: dell_om_vdisks: New check for virtual disks on Dell OpenManage supported devices
 Level: 1
 Component: checks
 Compatible: compat

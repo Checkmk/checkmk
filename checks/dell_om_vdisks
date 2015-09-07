@@ -68,6 +68,6 @@ check_info["omreport_vdisk"] = {
     "inventory_function"  : inventory_omreport_vdisk,
     "parse_function"      : parse_omreport,
     "service_description" : "Virtual Disk %s",
-    "includes"            : ["omreport.include"]
+    "includes"            : ["dell_om.include"]
 }
 

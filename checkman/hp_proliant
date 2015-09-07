@@ -9,8 +9,7 @@ description:
  In addition it also returns the serial number and firmware version.
 
  The status is {OK} only if the agent signals {Ok}, {WARN} on
- {Degraded} and {CRIT} on {Failed}. If you get an {UKNOWN} state you may need a Fireware Update:
- http://h20566.www2.hp.com/hpsc/doc/public/display?docId=c03939085&jum
+ {Degraded} and {CRIT} on {Failed}. If you get an {UKNOWN} state you may need a Firmware Update
 
 inventory:
  One check is automatically created for each supported server.

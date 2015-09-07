@@ -1360,7 +1360,7 @@ class html:
     # for messages where we still want to have formating options.
     def permissive_attrencode(self, obj):
         msg = self.attrencode(obj)
-        msg = re.sub(r'&lt;(/?)(b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
+        msg = re.sub(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
         # Also repair link definitions
         return re.sub(r'&lt;a href=&quot;(.*)&quot;&gt;', r'<a href="\1">', msg)
 

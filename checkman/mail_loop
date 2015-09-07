@@ -1,0 +1,13 @@
+title: POP3/IMAP connection and optional mail forwarding
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ Sends out special eMails to a defined mail address using the SMTP protocol
+ and then tries to receive these mails back by querying the inbox of a IMAP
+ or POP3 mailbox.
+
+ With this check you can verify that your whole mail delivery progress is working.
+
+ This check can be configured using WATO.

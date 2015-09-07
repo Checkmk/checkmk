@@ -17,7 +17,6 @@ oracle_longactivesessions
 oracle_processes
 oracle_recovery_area
 postgres_version
-sap.value-groups
 siemens_plc.counter
 ucs_bladecenter_psu.switch_power
 ups_modulys_battery.temp

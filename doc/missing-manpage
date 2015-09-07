@@ -1,13 +1,10 @@
-alcatel_fan
 bi_aggr
-bluecat_command_server
 bluecat_threads
 cmk_inv
 docsis_channels_upstream
 fortigate_cpu_base
 fortigate_sessions_base
 ftp
-hitatchi_hus_status2
 ibm_svc_disks
 icom_repeater.ps_volt
 mail
@@ -20,7 +17,6 @@ oracle_longactivesessions
 oracle_processes
 oracle_recovery_area
 postgres_version
-sap.value-groups
 siemens_plc.counter
 ucs_bladecenter_psu.switch_power
 ups_modulys_battery.temp

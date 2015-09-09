@@ -25,6 +25,6 @@
 
 if which omreport >/dev/null
 then
-    echo "<<<omreport_vdisk>>>"
+    echo "<<<dell_om_vdisks>>>"
     omreport storage vdisk
 fi

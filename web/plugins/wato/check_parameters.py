@@ -7055,7 +7055,7 @@ register_check_parameters(
             ),
             ( "upper",
             Tuple(
-                help = _("Upper levels for the Fan speed of a hardware device"),
+                help = _("Upper levels for the fan speed of a hardware device"),
                 title = _("Upper levels"),
                 elements = [
                     Integer(title = _("warning at"), unit = u"rpm", default_value = 8000),
@@ -7069,6 +7069,36 @@ register_check_parameters(
         title = _("Fan Name"),
         help = _("The identificator of the fan.")),
     match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "hw_fans_perc",
+    _("Fan speed of hardware devices (in percent)"),
+    Dictionary(
+        elements = [
+            ( "levels",
+              Tuple(
+                  title = _("Upper fan speed levels"),
+                  elements = [
+                      Percentage(title = _("warning if at")),
+                      Percentage(title = _("critical if at")),
+                  ]
+            )),
+            ( "levels_lower",
+              Tuple(
+                  title = _("Lower fan speed levels"),
+                  elements = [
+                      Percentage(title = _("warning if below")),
+                      Percentage(title = _("critical if below")),
+                  ]
+            )),
+        ]
+    ),
+    TextAscii(
+        title = _("Fan Name"),
+        help = _("The identifier of the fan.")),
+    "dict",
 )
 
 register_check_parameters(

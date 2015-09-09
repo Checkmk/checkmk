@@ -58,7 +58,7 @@ def check_hitatchi_hus_status2(_no_item, _no_params, info):
           if status & int(info[0][0]):
               yield state, message
 
-check_info["hitatchi_hus_status2"] = {
+check_info["hitatchi_hus_status"] = {
     "check_function"        : check_hitatchi_hus_status2,
     "inventory_function"    : inventory_hitatchi_hus_status2,
     "service_description"   : "Status",

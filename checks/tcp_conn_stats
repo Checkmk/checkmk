@@ -55,5 +55,5 @@ check_info["tcp_conn_stats"] = {
     'service_description'   : 'TCP Connections',
     'has_perfdata'          : True,
     'group'                 : 'tcp_conn_stats',
-    'includes'              : [ "tcp_connections.includes" ],
+    'includes'              : [ "tcp_connections.include" ],
 }

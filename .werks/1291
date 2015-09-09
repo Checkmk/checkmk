@@ -1,0 +1,11 @@
+Title: alcatel_fans: The internal name of the Check changed
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1441634604
+Class: fix
+
+The internal name of the check was wrong. This is corrected now, but it is needed to make a rediscovery after update.
+You will not lost any history data since the service description remains.
+

@@ -371,8 +371,8 @@ def git_command(args):
     output = p.read()
     status = p.close()
     if status != None:
-        raise MKGeneralException(_("Error executing GIT command %s: %s") %
-                (command.decode('utf-8'), output))
+        raise MKGeneralException(_("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
+                (command.decode('utf-8'), output.replace("\n", "<br>\n")))
 
 def shell_quote(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"

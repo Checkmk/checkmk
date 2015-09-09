@@ -24,51 +24,57 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-ibm_imm_fan_default_levels = (28, 25)
+
+factory_settings["ibm_imm_fan_default_levels"] = {
+    "levels_lower" : (28, 25), # Just a guess. Please give feedback.
+}
+
 
 def inventory_ibm_imm_fan(info):
-    for descr, speed in info:
-        if speed.lower() != 'offline':
-            yield descr, "ibm_imm_fan_default_levels"
+    for descr, speed_text in info:
+        if speed_text.lower() != 'offline':
+            yield descr, {}
+
 
 def check_ibm_imm_fan(item, params, info):
-    for descr, speed in info:
+    for descr, speed_text in info:
         if descr == item:
 
-            if speed.lower() == "offline":
-                return 2, "is offline"
+            if speed_text.lower() == "offline":
+                yield 2, "is offline"
+                return
 
-            # speed can be "34 %", or "34%", or "34 % of maximum"
+            # speed_text can be "34 %", or "34%", or "34 % of maximum"
             # or simply a text without quotes..
-            rpm_perc = int(speed.strip().replace("[\"%]", " ").replace("%", " ").split(" ")[0])
-            infotext = "%d%% of max rpm" % rpm_perc
+            rpm_perc = int(speed_text.strip().replace("[\"%]", " ").replace("%", " ").split(" ")[0])
+            yield 0, "%d%% of max RPM" % rpm_perc
 
-            state = 0
             levels_info = ""
-            if type(params) == tuple:
-                params = {'levels_lower' : params}
 
-            warn_lower, crit_lower = params.get('levels_lower', (None, None))
+            warn_lower, crit_lower = params['levels_lower']
             warn, crit = params.get('levels', (None, None))
 
             if warn_lower:
-                if rpm_perc <= crit_lower:
+                if rpm_perc < crit_lower:
                     state = 2
-                elif rpm_perc <= warn_lower:
+                elif rpm_perc < warn_lower:
                     state = 1
-                levels_info += " (warn/crit below %d%%/%d%%)" % (warn_lower, crit_lower)
+                else:
+                    state = 0
+                if state > 0:
+                    yield state, "(warn/crit below %d%%/%d%%)" % (warn_lower, crit_lower)
 
             if warn:
                 if rpm_perc >= crit:
                     state = 2
                 elif rpm_perc >= warn:
                     state = 1
-                levels_info += " (warn/crit at %d%%/%d%%)" % (warn, crit)
+                else:
+                    state = 0
+                if state > 0:
+                    yield state, "(warn/crit at %d%%/%d%%)" % (warn, crit)
 
-            if state > 0:
-                infotext += levels_info
 
-            return state, infotext
 
 check_info["ibm_imm_fan"] = {
     'check_function'          : check_ibm_imm_fan,
@@ -79,7 +85,8 @@ check_info["ibm_imm_fan"] = {
                         oid('.1.3.6.1.2.1.1.1.0').lower().endswith(" sh4a"),
     'snmp_info'               : ('.1.3.6.1.4.1.2.3.51.3.1.3.2.1', [ # fanTable.fanEntry
                                         2, # fanDescr
-                                        3, # fanSpeed
+                                        3, # fanSpeed (as text)
                                 ]),
+    "default_levels_variable" : "ibm_imm_fan_default_levels",
     'group'                   : 'hw_fans_perc',
 }

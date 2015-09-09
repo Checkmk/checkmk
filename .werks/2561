@@ -1,0 +1,10 @@
+Title: check-mk-agent rpm is now also replacing check_mk_agent named rpms
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441785546
+Class: fix
+
+We used the package name check_mk_agent only for some versions. To make
+upgrade as easy as possible we also support upgrade from these packages.

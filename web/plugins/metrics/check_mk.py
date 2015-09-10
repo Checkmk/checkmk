@@ -638,6 +638,13 @@ metric_info["mem_lnx_vmalloc_chunk"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_lnx_hardware_corrupted"] = {
+    "title" : _("Hardware corrupted memory"),
+    "color": "13/a",
+    "unit" : "bytes",
+}
+
+
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
     "unit"  : "",
@@ -2748,6 +2755,23 @@ check_metrics["check_mk-mem.linux"] = {
     "vmalloc_total"    : { "name" : "mem_lnx_vmalloc_total", },
     "vmalloc_used"     : { "name" : "mem_lnx_vmalloc_used", },
     "vmalloc_chunk"    : { "name" : "mem_lnx_vmalloc_chunk", },
+    "hardware_corrupted" : { "name" : "mem_lnx_hardware_corrupted", },
+
+    # Several computed values should not be graphed because they
+    # are already contained in the other graphs.
+    "sreclaimable"     : { "auto_graph" : False },
+    "pending"          : { "auto_graph" : False },
+    "sunreclaim"       : { "auto_graph" : False },
+    "anon_huge_pages"  : { "auto_graph" : False },
+    "anon_pages"       : { "auto_graph" : False },
+    "caches"           : { "auto_graph" : False },
+    "mapped"           : { "auto_graph" : False },
+    "active"           : { "auto_graph" : False },
+    "inactive"         : { "auto_graph" : False },
+    "swap_free"        : { "auto_graph" : False },
+    "total_used"       : { "auto_graph" : False },
+    "unevictable"      : { "auto_graph" : False },
+    "mem_free"         : { "auto_graph" : False },
 }
 
 check_metrics["check_mk-mem.vmalloc"] = {
@@ -4946,6 +4970,7 @@ graph_info.append({
         ("swap_used",  "stack"),
         ("mem_total",  "line"),
     ],
+    "conflicting_metrics" : [ "swap_total" ],
 })
 
 # Linux memory graphs. They are a lot...

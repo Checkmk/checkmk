@@ -399,7 +399,7 @@ def do_git_commit():
         git_command(["config", "user.name", "check_mk"])
 
         # Make sure that .gitignore-files are present and uptodate
-        file(defaults.default_config_dir + "/.gitignore", "w").write("*\n!*.d\n!.gitignore\n*swp\n")
+        file(defaults.default_config_dir + "/.gitignore", "w").write("*\n!*.d\n!.gitignore\n*swp\n*.mk.new\n")
         for subdir in os.listdir(defaults.default_config_dir):
             if subdir.endswith(".d"):
                 file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write("*\n!wato\n!wato/*\n")

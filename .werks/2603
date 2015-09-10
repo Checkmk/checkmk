@@ -1,0 +1,10 @@
+Title: Git integration: Preventing issues with *.mk.new files
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441878037
+Class: fix
+
+Ignoring *.mk.new files in git. These are temporary files which are being created
+during saving of changed configs files like the users.mk.new.

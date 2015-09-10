@@ -833,8 +833,9 @@ class LDAPUserConnector(UserConnector):
             user_connection_id = cleanup_connection_id(user.get('connector'))
             if user_connection_id == connection_id and user_id not in ldap_users:
                 del users[user_id] # remove the user
-                wato.log_pending(wato.SYNCRESTART, None, "edit-users",
-                    _("LDAP [%s]: Removed user %s") % (connection_id, user_id), user_id = '')
+                if config.wato_enabled:
+                    wato.log_pending(wato.SYNCRESTART, None, "edit-users",
+                        _("LDAP [%s]: Removed user %s") % (connection_id, user_id), user_id = '')
 
         for user_id, ldap_user in ldap_users.items():
             if user_id in users:
@@ -866,8 +867,9 @@ class LDAPUserConnector(UserConnector):
             users[user_id] = user # Update the user record
 
             if mode_create:
-                wato.log_pending(wato.SYNCRESTART, None, "edit-users",
-                                 _("LDAP [%s]: Created user %s") % (connection_id, user_id), user_id = '')
+                if config.wato_enabled:
+                    wato.log_pending(wato.SYNCRESTART, None, "edit-users",
+                                     _("LDAP [%s]: Created user %s") % (connection_id, user_id), user_id = '')
             else:
                 details = []
                 if added:
@@ -893,7 +895,7 @@ class LDAPUserConnector(UserConnector):
                 if changed:
                     details.append(('Changed: %s') % ', '.join(changed))
 
-                if details:
+                if details and config.wato_enabled:
                     wato.log_pending(wato.SYNCRESTART, None, "edit-users",
                          _("LDAP [%s]: Modified user %s (%s)") % (connection_id, user_id, ', '.join(details)),
                          user_id = '')
@@ -1487,9 +1489,10 @@ def synchronize_profile_to_sites(connection, user_id, profile):
             num_failed += 1
             connection.log('  FAILED [%s]: %s' % (site_id, result))
             # Add pending entry to make sync possible later for admins
-            wato.update_replication_status(site_id, {"need_sync": True})
-            wato.log_pending(wato.AFFECTED, None, "edit-users",
-                            _('Password changed (sync failed: %s)') % result, user_id = '')
+            if config.wato_enabled:
+                wato.update_replication_status(site_id, {"need_sync": True})
+                wato.log_pending(wato.AFFECTED, None, "edit-users",
+                                _('Password changed (sync failed: %s)') % result, user_id = '')
 
     connection.log('  Disabled: %d, Succeeded: %d, Failed: %d' %
                     (num_disabled, num_succeeded, num_failed))

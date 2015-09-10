@@ -2394,9 +2394,9 @@ function handle_popup_close(event) {
     close_popup();
 }
 
-function toggle_popup(event, trigger_obj, ident, what, data, params)
+function toggle_popup(event, trigger_obj, ident, what, data, url_vars)
 {
-    var params = typeof(params) === "undefined" ? '' : '?'+params;
+    var url_vars = typeof(url_vars) === "undefined" ? '' : '?'+url_vars;
 
     if(!event)
         event = window.event;
@@ -2432,7 +2432,7 @@ function toggle_popup(event, trigger_obj, ident, what, data, params)
     //if (ident in popup_contents)
     //    menu.innerHTML = popup_contents[ident];
     //else
-    get_url('ajax_popup_'+what+'.py'+params, handle_render_popup_contents, [ident, event]);
+    get_url('ajax_popup_'+what+'.py'+url_vars, handle_render_popup_contents, [ident, event]);
 }
 
 function handle_render_popup_contents(data, response_text)

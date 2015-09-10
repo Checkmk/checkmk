@@ -45,7 +45,7 @@
 #    input to str or unicode must happen as early as possible,
 #    directly when reading from file or URL.
 
-import time, os, pwd, urllib, random, re, __builtin__
+import time, os, pwd, urllib, random, re, __builtin__, json
 
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
@@ -969,18 +969,20 @@ class html:
         else:
             self.status_icons[img] = tooltip
 
-    def render_popup_trigger(self, content, ident, what, data=None, params=None):
+    def render_popup_trigger(self, content, ident, what, data=None, url_vars=None):
         src = '<div class="popup_trigger">\n'
         onclick = 'toggle_popup(event, this, \'%s\', \'%s\', %s, %s)' % \
-                    (ident, what, data or 'null', params and "'"+params+"'" or 'null')
+                    (ident, what,
+                     data and self.attrencode(json.dumps(data)) or 'null',
+                     url_vars and "'"+self.urlencode_vars(url_vars)+"'" or 'null')
         src += '<a class="popup_trigger" href="javascript:void(0)" onclick="%s">\n' % onclick
         src += content
         src += '</a>\n'
         src += '</div>\n'
         return src
 
-    def popup_trigger(self, content, ident, what, data=None, params=None):
-        self.write(self.render_popup_trigger(content, ident, what, data, params))
+    def popup_trigger(self, content, ident, what, data=None, url_vars=None):
+        self.write(self.render_popup_trigger(content, ident, what, data, url_vars))
 
     def write_status_icons(self):
         self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
@@ -1007,9 +1009,7 @@ class html:
 
             self.popup_trigger(
                 '<img class=statusicon src="images/icon_menu.png" title="%s">\n' % _("Add this view to..."),
-                'add_visual', 'add_visual', data='[\'%s\', %s, {\'name\': \'%s\'}]' %
-                                                    (mode_name, self.attrencode(repr(encoded_vars)),
-                                                     self.attrencode(self.var('view_name'))))
+                'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}])
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

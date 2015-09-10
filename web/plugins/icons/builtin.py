@@ -86,7 +86,7 @@ def paint_action_menu(what, row, tags, host_custom_vars):
 
     return html.render_popup_trigger(
         html.render_icon('menu', _('Open the action menu')),
-        'action_menu', 'action_menu', params=html.urlencode_vars(url_vars))
+        'action_menu', 'action_menu', url_vars=url_vars)
 
 multisite_icons_and_actions['action_menu'] = {
     'columns':         [],

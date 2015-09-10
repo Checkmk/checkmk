@@ -1407,12 +1407,8 @@ def ajax_add_visual():
     # type of the visual to add (e.g. view)
     element_type = html.var("type")
 
-    # Context and params are | separated lists of : separated triples
-    # of name, datatype and value. Datatype is int or string
     extra_data = []
     for what in [ 'context', 'params' ]:
-        value = html.var(what)
-        if value:
-            extra_data.append(json.loads(value))
+        extra_data.append(json.loads(html.var(what)))
 
     handler(visual_name, element_type, *extra_data)

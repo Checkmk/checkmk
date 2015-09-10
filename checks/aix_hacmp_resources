@@ -61,12 +61,10 @@ def check_aix_hacmp_resources(item, params, parsed):
             resource_stats.append(resource_status)
             infotext += "%s on node %s, " % (resource_status, node_name)
 
-        if 'online' in resource_stats:
-            state = 0
-        else:
-            state = 1
-
-        if 'error' in resource_stats:
+        # The first node is always online in an OK scenario
+        # Something is wrong if an other node is online
+        state = 0
+        if resource_stats[0] != "online":
             state = 2
 
         return state, infotext[:-2]

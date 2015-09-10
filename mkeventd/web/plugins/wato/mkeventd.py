@@ -1994,7 +1994,7 @@ def validate_and_compile_mib(mibname, content):
         if not content.strip():
             raise Exception(_("The file is empty"))
 
-        results = compiler.compile(mibname, ignoreErrors=True)
+        results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)
 
         errors = []
         for name, state in sorted(results.items()):
@@ -2498,13 +2498,30 @@ if mkeventd_enabled:
 
     register_configvar(group,
         "translate_snmptraps",
-        Checkbox(title = _("Translate SNMP traps"),
-                 label = _("Use the available SNMP MIBs to translate contents of the SNMP traps"),
-                 help = _("When this option is enabled all available SNMP MIB files will be used "
-                          "to translate the incoming SNMP traps. Information which can not be "
-                          "translated, e.g. because a MIB is missing, are written untouched to "
-                          "the event message."),
-                 default_value = False),
+        Transform(
+            CascadingDropdown(
+                choices = [
+                    (False, _("Do not translate SNMP traps")),
+                    (True,  _("Translate SNMP traps using the available MIBs"),
+                        Dictionary(
+                            elements = [
+                                ("add_description", FixedValue(True,
+                                    title = _("Add OID descriptions"),
+                                    totext = _("Append descriptions of OIDs to message texts"),
+                                )),
+                            ],
+                        ),
+                    ),
+                ],
+            ),
+            title = _("Translate SNMP traps"),
+            label = _("Use the available SNMP MIBs to translate contents of the SNMP traps"),
+            help = _("When this option is enabled all available SNMP MIB files will be used "
+                     "to translate the incoming SNMP traps. Information which can not be "
+                     "translated, e.g. because a MIB is missing, are written untouched to "
+                     "the event message."),
+            forth = lambda v: v == True and (v, {}) or v,
+        ),
         domain = "mkeventd",
     )
 

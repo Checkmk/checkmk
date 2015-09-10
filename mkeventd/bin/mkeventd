@@ -1235,9 +1235,16 @@ class EventServer:
                     value = node.getSyntax().clone(value)
                     units = node.getUnits()
 
-                    var_binds.append((translated_oid, value.prettyPrint() + ' ' + units))
+                    translated_value = value.prettyPrint() + ' ' + units
                 else:
-                    var_binds.append((translated_oid, value))
+                    translated_value = value
+
+                if hasattr(node, "getDescription") \
+                   and type(g_config["translate_snmptraps"]) == tuple \
+                   and "add_description" in g_config["translate_snmptraps"][1]:
+                    translated_value += "(%s)" % node.getDescription()
+
+                var_binds.append((translated_oid, translated_value))
         return var_binds
 
     def process_snmptrap(self, (whole_msg, (ipaddress, port))):
@@ -1265,7 +1272,7 @@ class EventServer:
             else:
                 break # Skip unhandled version
 
-            if g_config['translate_snmptraps']:
+            if snmptrap_translation_enabled():
                 trap = self.snmptrap_translate_varbinds(proto.apiPDU.getVarBinds(pdu))
             else:
                 trap = self.snmptrap_convert_var_binds(proto.apiPDU.getVarBinds(pdu))
@@ -2639,7 +2646,7 @@ class StatusServer:
     def handle_command_reload(self):
         with lock_configuration:
             load_configuration()
-            if opt_snmptrap and g_config['translate_snmptraps']:
+            if opt_snmptrap and snmptrap_translation_enabled():
                 g_event_server.load_mibs()
             g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
         g_status_server.reload_configuration()
@@ -3596,6 +3603,7 @@ def load_slave_status():
 #   +----------------------------------------------------------------------+
 #   |  Loading of the configuration files                                  |
 #   '----------------------------------------------------------------------'
+
 def load_configuration():
     global g_config, g_last_config_reload
     g_config = {
@@ -3651,6 +3659,10 @@ def load_configuration():
         g_config["action"][action["id"]] = action
 
     g_last_config_reload = time.time()
+
+
+def snmptrap_translation_enabled():
+    return g_config["translate_snmptraps"] != False
 
 
 #.
@@ -3883,7 +3895,7 @@ try:
     g_event_status.load_status()
     g_status_server = StatusServer()
     g_event_server  = EventServer()
-    if opt_snmptrap and g_config['translate_snmptraps']:
+    if opt_snmptrap and snmptrap_translation_enabled():
         g_event_server.load_mibs()
     g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 

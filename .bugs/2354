@@ -1,0 +1,10 @@
+Title: Automatische Anmeldung nach Seitenkopie
+Component: multisite
+State: open
+Date: 2015-09-11 21:28:12
+Targetversion: 1.2.7
+Class: nastiness
+
+Wird eine Seite mit omd cp kopiert und man hat sich bei einer Seite angemeldet,
+dann muss man sich an der Kopie nicht mehr anmelden. Es werden wohl die gleichen
+Daten fuer die Prüfung genommen. Der Cookie sollte aber nur bei einer Seite passen.

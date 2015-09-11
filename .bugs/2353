@@ -1,0 +1,12 @@
+Title: Discovery Anzeige der Check Parameter
+Component: wato
+State: open
+Date: 2015-09-11 21:21:42
+Targetversion: 1.2.7
+Class: bug
+
+Bei einer Discovery und der Anzeige der Check Parameter erscheinen bei vielen Services folgende Meldungen bzw.
+ähnliche Meldungen:
+85 is int but float is required
+Hier sind die Regeln oder die Auswertung dieser fehlerhaft und führen zu solchen Anzeigen.
+Aufgefallen bei APC Geräten.

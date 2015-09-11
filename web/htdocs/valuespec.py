@@ -3322,11 +3322,13 @@ class IconSelector(ValueSpec):
             content = self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img')
         else:
             content = _('Select an Icon')
-        html.popup_trigger(content, varprefix+'_icon_selector', 'icon_selector',
-                           params=[('value',       value),
-                                   ('varprefix',   varprefix),
-                                   ('allow_empty', self._allow_empty and '1' or '0'),
-                                   ('back',        html.makeuri([]))])
+        html.popup_trigger(content, varprefix + '_icon_selector', 'icon_selector',
+                           url_vars = [
+                                ('value',       value),
+                                ('varprefix',   varprefix),
+                                ('allow_empty', self._allow_empty and '1' or '0'),
+                                ('back',        html.makeuri([])),
+                            ])
 
     def render_popup_input(self, varprefix, value):
         html.write('<div class="icons">')

@@ -2532,7 +2532,13 @@ metric_info["error_rate"] = {
 metric_info["citrix_load"] = {
     "title" : _("Citrix Load"),
     "unit"  : "%",
-    "color" : "34/c",
+    "color" : "34/a",
+}
+
+metric_info["storage_processor_util"] = {
+    "title" : _("Storage Processor Utilization"),
+    "unit"  : "%",
+    "color" : "34/a",
 }
 
 #.
@@ -4272,6 +4278,13 @@ perfometer_info.append({
     "half_value" : 5000,
     "exponent"   : 2,
 })
+
+perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "storage_processor_util" ],
+    "total"    : 100.0,
+})
+
 
 #.
 #   .--Graphs--------------------------------------------------------------.

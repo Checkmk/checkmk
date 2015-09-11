@@ -11,7 +11,6 @@ description:
  Furthermore it displays the number of temperature sensors.
 
  The levels are configurable.
- Lower levels are set to 20 and 15 celsius.
  Upper levels are set to 40 and 45 celsius.
 
 item:

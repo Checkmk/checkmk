@@ -63,25 +63,23 @@ def parse_hp_msa(info):
 
 
 def inventory_hp_msa_health(parsed):
-    return [ (None, None) ]
+    return [ (key, None) for key in parsed ]
 
 
-def check_hp_msa_health(item, params, parsed):
-    yield 0, "Total: %s" % len(parsed)
-    for key, values in parsed.items():
-        item_info = ""
-        if values.get("item_type", ""):
-            item_info = "%s " % values["item_type"]
-
-        health_state = hp_msa_state_map[values["health"]]
-        health_reason = values.get("health-reason", "")
+def check_hp_msa_health(item, _no_params, parsed):
+    if item in parsed:
+        infotext = "Status: %s" % parsed[item]["health"]
+        health_state = hp_msa_state_map[parsed[item]["health"]]
+        health_reason = parsed[item].get("health-reason", "")
 
         extra_info = ""
         if health_reason:
             extra_info = " (%s)" % health_reason
 
         if health_state > 0:
-            yield health_state, "%s%s: %s%s" % (item_info, key, values["health"], extra_info)
+            infotext += extra_info
+
+        return health_state, infotext
 
 
 def inventory_hp_msa_io(parsed):

@@ -69,10 +69,10 @@ def check_hp_msa_fan(item, params, parsed):
         fan_health_reason = parsed[item].get("health-reason", "")
 
         yield hp_msa_state_map[fan_status], \
-              "Status: %s, Speed: %s rpm" % (fan_status, fan_speed)
+              "Status: %s, speed: %s RPM" % (fan_status, fan_speed)
 
         if hp_msa_state_map[fan_health] > 0 and fan_health_reason:
-            yield hp_msa_state_map[fan_health], "Health: %s (%s)" % \
+            yield hp_msa_state_map[fan_health], "health: %s (%s)" % \
                   (fan_health, fan_health_reason)
 
 

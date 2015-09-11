@@ -72,7 +72,7 @@ check_info['hp_msa_psu'] = {
     'parse_function'            : parse_hp_msa,
     'inventory_function'        : inventory_hp_msa_health,
     'check_function'            : check_hp_msa_health,
-    'service_description'       : 'PSU Health',
+    'service_description'       : 'Power Supply Health',
     'includes'                  : [ "hp_msa.include" ],
 }
 
@@ -86,41 +86,55 @@ check_info['hp_msa_psu'] = {
 #   |                                        |___/                         |
 #   '----------------------------------------------------------------------'
 
-def parse_hp_msa_psu_sensor(parsed_raw):
-    parsed = {}
-    for key, values in parsed_raw.items():
-        for psu_sensor_type in ["dc12v", "dc5v", "dc33v"]:
-            sensor_name = psu_sensor_type.replace("dc","")
-            sensor_name = "%s %s" % (key, sensor_name.replace("33","3.3"))
-            parsed[sensor_name] = {
-                "voltage" : (
-                    float(values[psu_sensor_type]) / 100,
-                    (hp_msa_state_map[values["status"]], None)
-                )
-            }
-    return parsed
+# Just an assumption
+factory_settings["hp_msa_psu_default_levels"] = {
+    "levels_33v_lower" : (3.25, 3.20),
+    "levels_33v_upper" : (3.4,  3.45),
+    "levels_5v_lower"  : (4.9,  4.8),
+    "levels_5v_upper"  : (5.1,  5.2),
+    "levels_12v_lower" : (11.9, 11.8),
+    "levels_12v_upper" : (12.1, 12.2),
+}
 
 
-def inventory_hp_msa_psu(parsed_raw):
-    parsed = parse_hp_msa_psu_sensor(parsed_raw)
-    for key in parsed.keys():
-        yield key, {}
+def inventory_hp_msa_psu(parsed):
+    return [ (key, {}) for key in parsed]
 
 
-def check_hp_msa_psu(item, params, parsed_raw):
-    parsed = parse_hp_msa_psu_sensor(parsed_raw)
+def check_hp_msa_psu(item, params, parsed):
+    infotexts = []
+    state = 0
     if item in parsed:
-        return check_elphase(item, params, parsed)
+        for psu_type, psu_type_readable, levels_type in [
+            ("dc12v", "12 V",  "levels_12v_"),
+            ("dc5v",  "5 V",   "levels_5v_"),
+            ("dc33v", "3.3 V", "levels_33v_")
+        ]:
+            psu_voltage = float(parsed[item][psu_type]) / 100
+            yield state, "%s: %.2f V" % (psu_type_readable, psu_voltage)
+
+            warn_lower, crit_lower = params[levels_type + "lower"]
+            if psu_voltage < crit_lower:
+                yield 2, "too low (warn/crit below %.2f V/%.2f V)" % (warn_lower, crit_lower)
+            elif psu_voltage < warn_lower:
+                yield 1, "too low (warn/crit below %.2f V/%.2f V)" % (warn_lower, crit_lower)
+
+            warn, crit = params[levels_type + "upper"]
+            if psu_voltage >= crit:
+                yield 2, "too high (warn/crit at %.2f V/%.2f V)" % (warn, crit)
+            elif psu_voltage >= warn:
+                yield 1, "too high (warn/crit at %.2f V/%.2f V)" % (warn, crit)
 
 
 check_info['hp_msa_psu.sensor'] = {
     'inventory_function'        : inventory_hp_msa_psu,
     'check_function'            : check_hp_msa_psu,
-    'service_description'       : 'PSU %s',
-    'group'                     : 'el_inphase',
-    'has_perfdata'              : True,
-    'includes'                  : [ "hp_msa.include", "elphase.include" ],
+    'service_description'       : 'Power Supply Voltage %s',
+    'default_levels_variable'   : "hp_msa_psu_default_levels",
+    'group'                     : 'hp_msa_psu_voltage',
+    'includes'                  : [ "hp_msa.include" ],
 }
+
 
 #.
 #   .--temperature---------------------------------------------------------.
@@ -132,9 +146,11 @@ check_info['hp_msa_psu.sensor'] = {
 #   |                       |_|                                            |
 #   +----------------------------------------------------------------------+
 
+
 factory_settings["hp_msa_psu_temp_default_levels"] = {
     "levels"        : (40.0, 45.0), # Just assumed
 }
+
 
 def inventory_hp_msa_psu_temp(parsed):
     for key in parsed.keys():
@@ -149,12 +165,9 @@ def check_hp_msa_psu_temp(item, params, parsed):
 check_info['hp_msa_psu.temp'] = {
     'inventory_function'        : inventory_hp_msa_psu_temp,
     'check_function'            : check_hp_msa_psu_temp,
-    'service_description'       : 'Temperature PSU %s',
+    'service_description'       : 'Temperature Power Supply %s',
     'has_perfdata'              : True,
     'group'                     : 'temperature',
     'default_levels_variable'   : 'hp_msa_psu_temp_default_levels',
     'includes'                  : [ "temperature.include", "hp_msa.include" ],
 }
-
-#.
-

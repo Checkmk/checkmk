@@ -62,7 +62,9 @@
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
+
 hp_msa_controller_cpu_default_levels = (80.0, 90.0)
+
 
 def inventory_hp_msa_controller_cpu(parsed):
     for key in parsed.keys():

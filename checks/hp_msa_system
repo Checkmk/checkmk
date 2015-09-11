@@ -63,33 +63,25 @@
 # redundancy 2 other-MC-status Operational
 # redundancy 2 other-MC-status-numeric 4754
 
-def inventory_hp_msa_system(parsed):
-    return [ (None, None) ]
 
-
-def check_hp_msa_system(_no_item, _no_params, info):
+def parse_hp_msa_system(info):
+    parsed = {}
     for line in info:
         if line[2] == "system-name":
             system_name = " ".join(line[3:])
+            parsed[system_name] = {}
         elif line[2] == "health":
-            health = " ".join(line[3:])
+            parsed[system_name]["health"] = " ".join(line[3:])
         elif line[2] == "health-reason":
-            health_reason = " ".join(line[3:])
+            parsed[system_name]["health-reason"] = " ".join(line[3:])
 
-    yield 0, "Name: %s" % system_name
-
-    extra_info = ""
-    if health_reason:
-        extra_info = " (%s)" % health_reason
-
-    if hp_msa_state_map[health] > 0:
-        yield hp_msa_state_map[health], "%s%s" % (health, extra_info)
-
+    return parsed
 
 
 check_info['hp_msa_system'] = {
-    'inventory_function'        : inventory_hp_msa_system,
-    'check_function'            : check_hp_msa_system,
-    'service_description'       : 'System Health',
+    'parse_function'            : parse_hp_msa_system,
+    'inventory_function'        : inventory_hp_msa_health,
+    'check_function'            : check_hp_msa_health,
+    'service_description'       : 'System Health %s',
     'includes'                  : [ "hp_msa.include" ],
 }

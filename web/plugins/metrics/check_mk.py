@@ -1009,7 +1009,7 @@ metric_info["time_offset"] = {
 }
 
 metric_info["jitter"] = {
-    "title" : _("Time dispersion"),
+    "title" : _("Time dispersion (jitter)"),
     "unit"  : "s",
     "color" : "43/b",
 }
@@ -4447,6 +4447,13 @@ graph_info.append({
         ( "time_offset", "area" ),
         ( "jitter", "line" )
     ],
+    "scalars" : [
+        ( "time_offset:crit",     _("Upper critical level")),
+        ( "time_offset:warn",     _("Upper warning level")),
+        ( "0,time_offset:warn,-", _("Lower warning level")),
+        ( "0,time_offset:crit,-", _("Lower critical level")),
+    ],
+    "range" : ( "0,time_offset:crit,-", "time_offset:crit" ),
 })
 
 graph_info.append({

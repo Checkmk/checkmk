@@ -119,6 +119,8 @@ for arg in args:
         if ':' in p[0]:
             area_name, db_number = p[0].split(':')
             area = (area_name, int(db_number))
+        elif p[0] in ["merker", "input", "output", "counter", "timer"]:
+            area = (p[0], None)
         else:
             area = ("db", int(p[0]))
 
@@ -172,10 +174,12 @@ def area_name_to_area_id(name):
 datatypes = {
     # type-name   size(bytes) parse-function
     # A size of None means the size is provided by configuration
-    'dint':      (4,          lambda data, offset, bit: get_dint(data, offset)),
-    'real':      (8,          lambda data, offset, bit: get_real(data, offset)),
-    'bit':       (1,          lambda data, offset, bit: get_bool(data, offset, bit)),
-    'str':       (None,       lambda data, offset, bit: get_string(data, offset)),
+    'dint':      (4,          lambda data, offset, size, bit: get_dint(data, offset)),
+    'real':      (8,          lambda data, offset, size, bit: get_real(data, offset)),
+    'bit':       (1,          lambda data, offset, size, bit: get_bool(data, offset, bit)),
+    # str currently handles "zeichen" (character?) formated strings. For byte coded strings
+    # we would have to use get_string(data, offset-1)) from snap7.utils
+    'str':       (None,       lambda data, offset, size, bit: data[offset:offset+size]),
 }
 
 unhandled_error = False
@@ -222,11 +226,10 @@ for device in devices:
             else:
                 size, parse_func = datatypes[datatype]
 
-            data_offset = addresses[(area_name, db_number)][0]
-            area_id = area_name_to_area_id(area_name)
+            start, end = addresses[(area_name, db_number)]
+            fetched_data = data[(area_name, db_number)]
 
-            data  = client.read_area(area_id, db_number, byte-data_offset, size)
-            value = parse_func(data, 0, bit)
+            value = parse_func(fetched_data, byte-start, size, bit)
             sys.stdout.write("%s %s %s %s\n" % (device['host_name'], valuetype, ident, value))
     except:
         sys.stderr.write('%s: Unhandled error: %s' % (device['host_name'], traceback.format_exc()))

@@ -1,0 +1,11 @@
+Title: new check emcvnx_sp_util: monitors the storage processor utilization of an EMC VNX Storage System
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441973337
+Class: feature
+
+To use this check you have to configure the
+{agent_emcvnx} special agent via the {Datasource Programs}
+'Check state of EMC VNS storage system' in WATO.

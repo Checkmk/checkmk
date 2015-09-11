@@ -3481,6 +3481,25 @@ register_check_parameters(
     "first"
 )
 
+# TODO: Remove situations where a rule is used once with and once without items
+register_check_parameters(
+    subgroup_os,
+    "juniper_mem_modules",
+    _("Juniper Modules Memory Usage"),
+    Tuple(
+        title = _("Specify levels in percentage of total memory usage"),
+        elements = [
+            Percentage(title = _("Warning at a usage of"), unit =_("% of RAM"), default_value = 80.0, maxvalue = 100.0 ),
+            Percentage(title = _("Critical at a usage of"), unit =_("% of RAM"), default_value = 90.0, maxvalue = 100.0 )
+        ]
+    ),
+    TextAscii(
+        title = _("Module Name"),
+        help = _("The identificator of the module."),
+    ),
+    "first",
+)
+
 register_check_parameters(
     subgroup_os,
     "netscaler_mem",

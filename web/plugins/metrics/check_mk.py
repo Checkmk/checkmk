@@ -422,6 +422,12 @@ metric_info["mem_used"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_used_percent"] = {
+    "color": "#80ff40",
+    "title" : _("RAM used"),
+    "unit" : "%",
+}
+
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
     "title" : _("Perm used"),
@@ -3357,6 +3363,11 @@ check_metrics["check_mk-ps.perf"] = ps_translation
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
+perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "mem_used_percent" ],
+    "total"    : 100.0,
+})
 
 perfometer_info.append({
     "type"     : "linear",
@@ -4971,6 +4982,17 @@ graph_info.append({
         ("mem_total",  "line"),
     ],
     "conflicting_metrics" : [ "swap_total" ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ("mem_used_percent",  "area"),
+    ],
+    "scalars" : [
+        "mem_used_percent:warn",
+        "mem_used_percent:crit",
+    ],
+    "range" : (0, 100),
 })
 
 # Linux memory graphs. They are a lot...

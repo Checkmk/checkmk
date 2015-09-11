@@ -539,20 +539,22 @@ dashboard_scheduler(1);
 
     html.body_end() # omit regular footer with status icons, etc.
 
-def render_dashlet_content(nr, the_dashlet, stash_html_vars = False):
+def render_dashlet_content(nr, the_dashlet, stash_html_vars=True):
     if stash_html_vars:
         html.stash_vars()
         html.del_all_vars()
-    visuals.add_context_to_uri_vars(the_dashlet)
 
-    dashlet_type = dashlet_types[the_dashlet['type']]
-    if 'iframe_render' in dashlet_type:
-        dashlet_type['iframe_render'](nr, the_dashlet)
-    else:
-        dashlet_type['render'](nr, the_dashlet)
+    try:
+        visuals.add_context_to_uri_vars(the_dashlet)
 
-    if stash_html_vars:
-        html.unstash_vars()
+        dashlet_type = dashlet_types[the_dashlet['type']]
+        if 'iframe_render' in dashlet_type:
+            dashlet_type['iframe_render'](nr, the_dashlet)
+        else:
+            dashlet_type['render'](nr, the_dashlet)
+    finally:
+        if stash_html_vars:
+            html.unstash_vars()
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
@@ -1199,4 +1201,4 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
 
     # Directly go to the dashboard in edit mode. We send the URL as an answer
     # to the AJAX request
-    html.write('dashboard.py?name=' + dashboard_name + '&edit=1')
+    html.write('OK dashboard.py?name=' + dashboard_name + '&edit=1')

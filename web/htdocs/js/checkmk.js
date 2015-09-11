@@ -412,6 +412,7 @@ function call_ajax(url, args)
 {
     args = merge_args({
         add_ajax_id      : true,
+        plain_error      : false,
         response_handler : null,
         error_handler    : null,
         handler_data     : null,
@@ -429,6 +430,11 @@ function call_ajax(url, args)
     if (args.add_ajax_id) {
         url += url.indexOf('\?') !== -1 ? "&" : "?";
         url += "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
+    }
+
+    if (args.plain_error) {
+        url += url.indexOf('\?') !== -1 ? "&" : "?";
+        url += "_plain_error=1";
     }
 
     try {
@@ -2488,21 +2494,29 @@ function add_to_visual(visual_type, visual_name)
 {
     close_popup();
 
-    response = get_url_sync('ajax_add_visual.py?visual_type=' + visual_type
-                                  + '&visual_name=' + visual_name
-                                  + '&type=' + popup_data[0]
-                                  + '&context=' + encodeURIComponent(JSON.stringify(popup_data[1]))
-                                  + '&params=' + encodeURIComponent(JSON.stringify(popup_data[2])));
+    var AJAX = call_ajax('ajax_add_visual.py?visual_type=' + visual_type
+                         + '&visual_name=' + visual_name
+                         + '&type=' + popup_data[0]
+                         + '&context=' + encodeURIComponent(JSON.stringify(popup_data[1]))
+                         + '&params=' + encodeURIComponent(JSON.stringify(popup_data[2])), {
+        sync: true,
+        plain_error : true
+    })
+    var response = AJAX.responseText;
     popup_data = null;
 
     // After adding a dashlet, go to the choosen dashboard
-    if (response)
-        window.location.href = response;
+    if (response.substr(0, 2) == "OK") {
+        window.location.href = response.substr(3);
+    } else {
+        alert("Failed to add element: "+response);
+    }
 }
 
+// FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime
 function pagetype_add_to_container(page_type, page_name)
 {
-    var element_type = popup_data[0]; // e.g. 'graph'
+    var element_type = popup_data[0]; // e.g. 'pnpgraph'
     var create_info  = popup_data[1]; // complex JSON struct describing the thing
     var create_info_json = JSON.stringify(create_info);
 

@@ -2502,7 +2502,7 @@ function add_to_visual(visual_type, visual_name)
 
 function pagetype_add_to_container(page_type, page_name)
 {
-    var element_type = popup_data[0]; // e.g. 'graph'
+    var element_type = popup_data[0]; // e.g. 'pnpgraph'
     var create_info  = popup_data[1]; // complex JSON struct describing the thing
     var create_info_json = JSON.stringify(create_info);
 

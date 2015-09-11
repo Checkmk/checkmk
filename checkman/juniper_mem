@@ -1,0 +1,17 @@
+title: Juniper Ethernet Switch: Memory
+agents: snmp
+catalog: hw/network/juniper
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the memory of the modules
+ of a Juniper Ethernet Switch Chassis.
+
+ The upper default levels are set to (80%, 90%).
+ These levels are configurable.
+
+item:
+ The module name.
+
+inventory:
+ One sevice per module is created.

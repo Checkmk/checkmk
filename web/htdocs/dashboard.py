@@ -1201,4 +1201,4 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
 
     # Directly go to the dashboard in edit mode. We send the URL as an answer
     # to the AJAX request
-    html.write('dashboard.py?name=' + dashboard_name + '&edit=1')
+    html.write('OK dashboard.py?name=' + dashboard_name + '&edit=1')

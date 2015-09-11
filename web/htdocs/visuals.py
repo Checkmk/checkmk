@@ -1396,8 +1396,8 @@ def ajax_popup_add():
 
 
 def ajax_add_visual():
-    visual_type = html.var('visual_type') # dashboards / views / ...
-    visual_type = visual_types[visual_type]
+    visual_type_name = html.var('visual_type') # dashboards / views / ...
+    visual_type = visual_types[visual_type_name]
     module_name = visual_type["module_name"]
     visual_module = __import__(module_name)
     handler = visual_module.__dict__[visual_type["add_visual_handler"]]

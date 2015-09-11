@@ -422,6 +422,12 @@ metric_info["mem_used"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_used_percent"] = {
+    "color": "#80ff40",
+    "title" : _("RAM used"),
+    "unit" : "%",
+}
+
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
     "title" : _("Perm used"),
@@ -637,6 +643,13 @@ metric_info["mem_lnx_vmalloc_chunk"] = {
     "color": "#c6f7e9",
     "unit" : "bytes",
 }
+
+metric_info["mem_lnx_hardware_corrupted"] = {
+    "title" : _("Hardware corrupted memory"),
+    "color": "13/a",
+    "unit" : "bytes",
+}
+
 
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
@@ -2748,6 +2761,23 @@ check_metrics["check_mk-mem.linux"] = {
     "vmalloc_total"    : { "name" : "mem_lnx_vmalloc_total", },
     "vmalloc_used"     : { "name" : "mem_lnx_vmalloc_used", },
     "vmalloc_chunk"    : { "name" : "mem_lnx_vmalloc_chunk", },
+    "hardware_corrupted" : { "name" : "mem_lnx_hardware_corrupted", },
+
+    # Several computed values should not be graphed because they
+    # are already contained in the other graphs.
+    "sreclaimable"     : { "auto_graph" : False },
+    "pending"          : { "auto_graph" : False },
+    "sunreclaim"       : { "auto_graph" : False },
+    "anon_huge_pages"  : { "auto_graph" : False },
+    "anon_pages"       : { "auto_graph" : False },
+    "caches"           : { "auto_graph" : False },
+    "mapped"           : { "auto_graph" : False },
+    "active"           : { "auto_graph" : False },
+    "inactive"         : { "auto_graph" : False },
+    "swap_free"        : { "auto_graph" : False },
+    "total_used"       : { "auto_graph" : False },
+    "unevictable"      : { "auto_graph" : False },
+    "mem_free"         : { "auto_graph" : False },
 }
 
 check_metrics["check_mk-mem.vmalloc"] = {
@@ -3333,6 +3363,11 @@ check_metrics["check_mk-ps.perf"] = ps_translation
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
+perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "mem_used_percent" ],
+    "total"    : 100.0,
+})
 
 perfometer_info.append({
     "type"     : "linear",
@@ -4946,6 +4981,18 @@ graph_info.append({
         ("swap_used",  "stack"),
         ("mem_total",  "line"),
     ],
+    "conflicting_metrics" : [ "swap_total" ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ("mem_used_percent",  "area"),
+    ],
+    "scalars" : [
+        "mem_used_percent:warn",
+        "mem_used_percent:crit",
+    ],
+    "range" : (0, 100),
 })
 
 # Linux memory graphs. They are a lot...

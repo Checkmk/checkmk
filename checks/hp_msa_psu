@@ -133,8 +133,7 @@ check_info['hp_msa_psu.sensor'] = {
 #   +----------------------------------------------------------------------+
 
 factory_settings["hp_msa_psu_temp_default_levels"] = {
-    "levels"        : (45.0, 50.0),
-    "levels_lower"  : (25.0, 20.0),
+    "levels"        : (40.0, 45.0), # Just assumed
 }
 
 def inventory_hp_msa_psu_temp(parsed):

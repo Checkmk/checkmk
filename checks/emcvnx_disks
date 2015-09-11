@@ -130,8 +130,7 @@ def parse_emcvnx_disks(info):
     return parsed
 
 
-def inventory_emcvnx_disks(info):
-    parsed = parse_emcvnx_disks(info)
+def inventory_emcvnx_disks(parsed):
     inventory = []
     for disk in parsed:
         if parsed[disk]["state"] != "Empty":
@@ -139,10 +138,9 @@ def inventory_emcvnx_disks(info):
     return inventory
 
 
-def check_emcvnx_disks(item, _no_params, info):
+def check_emcvnx_disks(item, _no_params, parsed):
     now = time.time()
     perfdata = []
-    parsed = parse_emcvnx_disks(info)
     if item not in parsed:
         return 3, "Enclosure %s not found in agent output" % item
 
@@ -188,6 +186,7 @@ def check_emcvnx_disks(item, _no_params, info):
 
 
 check_info['emcvnx_disks'] = {
+    "parse_function"          : parse_emcvnx_disks,
     "inventory_function"      : inventory_emcvnx_disks,
     "check_function"          : check_emcvnx_disks,
     "service_description"     : "Enclosure %s",

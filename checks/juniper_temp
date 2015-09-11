@@ -40,9 +40,9 @@ def parse_juniper_temp(info):
         temperature = float(reading_str)
         if temperature > 0:
             description = description.replace(":", "") \
-                                      .split("/")[0] \
-                                      .replace("@ ", "") \
-                                      .strip()
+                                     .replace("/*", "") \
+                                     .replace("@ ", "") \
+                                     .strip()
             parsed[description] = temperature
     return parsed
 

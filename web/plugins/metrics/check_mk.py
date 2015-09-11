@@ -4522,6 +4522,17 @@ graph_info.append({
 })
 
 graph_info.append({
+    "title"   : _("Storage Processor utilization"),
+    "metrics" : [
+        ( "storage_processor_util", "area" ),
+    ],
+    "scalars" : [
+        "storage_processor_util:warn",
+        "storage_processor_util:crit",
+    ]
+})
+
+graph_info.append({
     "title"   : _("CPU Load - %(load1:max@count) CPU Cores"),
     "metrics" : [
         ( "load1", "area" ),

@@ -416,7 +416,8 @@ def output_check_info():
     all_check_manuals = all_manuals()
     read_manpage_catalog()
 
-    checks_sorted = check_info.items() + active_check_info.items()
+    checks_sorted = check_info.items() + \
+       [ ("check_" + name, entry) for (name, entry) in active_check_info.items() ]
     checks_sorted.sort()
     for check_type, check in checks_sorted:
         man_filename = all_check_manuals.get(check_type)

@@ -1,0 +1,16 @@
+title: DOCSIS: Upstream Channels
+agents: snmp
+catalog: hw/network/generic
+license: GPL
+distribution:
+description:
+ This check monitors the signal/noise ratio, the corrected and
+ uncorrectable errors and the registered and total number of modems
+ of upstream channels of DOCSIS devices.
+
+item:
+ Channel ID
+
+inventory:
+ One service will be created for each channel
+

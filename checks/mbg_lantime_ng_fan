@@ -48,6 +48,7 @@ def check_mbg_lantime_ng_fan(item, _no_params, info):
             state = max(fan_state, error_state)
             return state, infotext
 
+
 check_info["mbg_lantime_ng_fan"] = {
     "check_function"        : check_mbg_lantime_ng_fan,
     "inventory_function"    : inventory_mbg_lantime_ng_fan,

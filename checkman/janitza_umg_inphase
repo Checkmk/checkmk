@@ -1,0 +1,19 @@
+title: Janitza Power Analyzer: Input phases
+agents: snmp
+catalog: hw/power/janitza
+license: GPL
+distribution: check_mk
+description:
+ Monitors voltage, current, power, apparent power and energy on Janitza Power
+ Analyzers. This currently supports the devices UMG 604 and UMG 96 though others
+ from the same line may be very similar.
+
+item:
+ The identifier of the phase ({"Phase 1"}, {"Phase 2"}, {"Phase 3"}).
+
+perfdata:
+ Five values: voltage, current, power, appower and energy.
+
+inventory:
+ Creates three or four items - one per input phase.
+

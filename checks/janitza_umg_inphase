@@ -1,0 +1,100 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_janitza_umg_inphase(info):
+    def flatten(line):
+        return [x[0] for x in line]
+
+    rmsphase  = flatten(info[0])
+    sumphase  = flatten(info[1])
+    energy    = flatten(info[2])
+    sumenergy = flatten(info[3])
+
+    num_phases = 3
+    if len(rmsphase) == 27:
+        num_phases = 4
+    num_deltas = 3
+
+    num_currents = 6
+    if num_phases == 4:
+        num_currents = 4
+
+    # the number of elements in each "block" within the snmp. This differs between
+    # devices
+    counts = [
+        num_phases,                    # voltages
+        3,                             # L1-L2, L2-L3, L3-L1
+        num_currents == 4 and 4 or 6,  # umg96 reports voltage for 3 phases and current for 6
+        num_phases,                    # real power
+        num_phases,                    # reactive power
+        num_phases,                    # Power in VA
+        num_phases                     # Cos(Phi)
+    ]
+
+    def offset(block_id, phase):
+        return sum(counts[:block_id], phase)
+
+    # voltages are in 100mv, currents in 1mA, power in Watts / VA
+    result = {}
+
+    for phase in range(num_phases):
+        result["Phase %d" % (phase + 1)] = {
+            "voltage": int(rmsphase[offset(0, phase)]) / 10.0,
+            "current": int(rmsphase[offset(2, phase)]) / 1000.0,
+            "power"  : int(rmsphase[offset(3, phase)]),
+            "appower": int(rmsphase[offset(5, phase)]),
+            "energy" : int(energy  [phase]) / 10,
+        }
+
+    result["Total"] = {
+        "power" : int(sumphase[0]),
+        "energy": int(sumenergy[0])
+    }
+    return result
+
+
+check_info['janitza_umg_inphase'] = {
+    'parse_function'            : parse_janitza_umg_inphase,
+    'inventory_function'        : inventory_elphase,
+    'check_function'            : check_elphase,
+    'service_description'       : 'Input %s',
+    'has_perfdata'              : True,
+    'default_levels_variable'   : 'janitza_umg_inphase_default_levels',
+    'includes'                  : [ "elphase.include", ],
+    'group'                     : 'el_inphase',
+    'snmp_info'                 : [
+                                    (".1.3.6.1.4.1.34278", [ "1" ]), # rmsPhase
+                                    (".1.3.6.1.4.1.34278", [ "2" ]), # rmsSum
+                                    (".1.3.6.1.4.1.34278", [ "3" ]), # energyPhase
+                                    (".1.3.6.1.4.1.34278", [ "4" ]), # energySum
+                                    (".1.3.6.1.4.1.34278", [ "5" ]), # thd
+                                    (".1.3.6.1.4.1.34278", [ "6" ]), # misc
+                                  ],
+    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.34278.8.6",
+                                                                            ".1.3.6.1.4.1.34278.10.1"]
+}
+

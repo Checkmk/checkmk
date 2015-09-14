@@ -1,0 +1,13 @@
+Title: check raritan_emx: splitted into three subchecks
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1442245258
+Class: feature
+
+Now the raritan_emx check has three subchecks:
+raritan_emx monitors the temperature,
+raritan_emx.fan monitors the fan state and speed and
+raritan_emx.binary reports the state of the door contact of
+the rack units of a Raritan EMX Device.

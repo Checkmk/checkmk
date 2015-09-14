@@ -30,7 +30,7 @@ def inventory_mbg_lantime_ng_fan(info):
         yield line[0], None
 
 def check_mbg_lantime_ng_fan(item, _no_params, info):
-    fan_stati = {
+    fan_states = {
         "1": (0, "on"),
         "2": (2, "off"),
     }

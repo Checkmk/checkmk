@@ -1,5 +1,6 @@
 1.2.7i3:
     Core & Setup:
+    * 2595 Discovery check can now automatically add missing services and also activate changes...
     * 2465 FIX: Fixed broken Check_MK Discovery checks (check reports "(null)")
     * 2502 FIX: Fixed removing autochecks when a host is configured to be ping only...
     * 2526 FIX: Fixed crash in filesystem checks in case mountpoint contains non-ascii characters

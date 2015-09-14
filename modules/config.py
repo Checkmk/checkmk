@@ -76,6 +76,8 @@ inventory_max_cachefile_age        = 120  # seconds
 inventory_check_autotrigger        = True # Automatically trigger inv-check after automation-inventory
 always_cleanup_autochecks          = None # For compatiblity with old configuration
 
+periodic_discovery                 = []
+
 # Nagios templates and other settings concerning generation
 # of Nagios configuration files. No need to change these values.
 # Better adopt the content of the templates

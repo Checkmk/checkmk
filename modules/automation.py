@@ -147,66 +147,12 @@ def automation_discovery(args):
     failed_hosts = {}
 
     for hostname in hostnames:
-        counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, total
-
-        if hostname not in all_hosts_untagged:
-            failed_hosts[hostname] = None # means offline
-            continue # unmonitored host
-
-        try:
-            # in "refresh" mode we first need to remove all previously discovered
-            # checks of the host, so that get_host_services() does show us the
-            # new discovered check parameters.
-            if how == "refresh":
-                counts[hostname][1] += remove_autochecks_of(hostname) # this is cluster-aware!
-
-            # Compute current state of new and existing checks
-            services = get_host_services(hostname, use_caches=use_caches,
-                                         do_snmp_scan=do_snmp_scan, on_error=on_error)
-
-            # Create new list of checks
-            new_items = {}
-            for (check_type, item), (check_source, paramstring) in services.items():
-                if check_source in ("custom", "legacy", "active", "manual"):
-                    continue # this is not an autocheck or ignored and currently not checked
-                    # Note discovered checks that are shadowed by manual checks will vanish
-                    # that way.
-
-                if check_source in ("new"):
-                    if how in ("new", "fixall", "refresh"):
-                        counts[hostname][0] += 1 # added
-                        counts[hostname][3] += 1 # total
-                        new_items[(check_type, item)] = paramstring
-
-                elif check_source in ("old", "ignored"):
-                    # keep currently existing valid services in any case
-                    new_items[(check_type, item)] = paramstring
-                    counts[hostname][2] += 1 # kept
-                    counts[hostname][3] += 1 # total
-
-                elif check_source in ("obsolete", "vanished"):
-                    # keep item, if we are currently only looking for new services
-                    # otherwise fix it: remove ignored and non-longer existing services
-                    if how not in ("fixall", "remove"):
-                        new_items[(check_type, item)] = paramstring
-                        counts[hostname][2] += 1 # kept
-                        counts[hostname][3] += 1 # total
-                    else:
-                        counts[hostname][1] += 1 # removed
-
-                # Silently keep clustered services
-                elif check_source.startswith("clustered_"):
-                    new_items[(check_type, item)] = paramstring
-
-                else:
-                    raise MKGeneralException("Unknown check source '%s'" % check_source)
-
-            set_autochecks_of(hostname, new_items)
-
-        except Exception, e:
-	    if opt_debug:
-                raise
-            failed_hosts[hostname] = str(e)
+        result, error = discover_on_host(how, hostname, do_snmp_scan, use_caches, on_error)
+        counts[hostname] = result
+        if error is not None:
+            failed_hosts[hostname] = error
+        else:
+            trigger_discovery_check(hostname)
 
     return counts, failed_hosts
 
@@ -251,51 +197,13 @@ def automation_set_autochecks(args):
     hostname = args[0]
     new_items = eval(sys.stdin.read())
     set_autochecks_of(hostname, new_items)
-
-def set_autochecks_of(hostname, new_items):
-    # A Cluster does not have an autochecks file
-    # All of its services are located in the nodes instead
-    # So we cycle through all nodes remove all clustered service
-    # and add the ones we've got from stdin
-    if is_cluster(hostname):
-        for node in nodes_of(hostname):
-            new_autochecks = []
-            existing = parse_autochecks_file(node)
-            for check_type, item, paramstring in existing:
-                descr = service_description(check_type, item)
-                if hostname != host_of_clustered_service(node, descr):
-                    new_autochecks.append((check_type, item, paramstring))
-            for (check_type, item), paramstring in new_items.items():
-                new_autochecks.append((check_type, item, paramstring))
-            # write new autochecks file for that host
-            automation_write_autochecks_file(node, new_autochecks)
-    else:
-        existing = parse_autochecks_file(hostname)
-        # write new autochecks file, but take paramstrings from existing ones
-        # for those checks which are kept
-        new_autochecks = []
-        for ct, item, paramstring in existing:
-            if (ct, item) in new_items:
-                new_autochecks.append((ct, item, paramstring))
-                del new_items[(ct, item)]
-
-        for (ct, item), paramstring in new_items.items():
-            new_autochecks.append((ct, item, paramstring))
-
-        # write new autochecks file for that host
-        automation_write_autochecks_file(hostname, new_autochecks)
+    trigger_discovery_check(hostname)
 
 
-def automation_write_autochecks_file(hostname, table):
-    if not os.path.exists(autochecksdir):
-        os.makedirs(autochecksdir)
-    path = "%s/%s.mk" % (autochecksdir, hostname)
-    f = file(path, "w")
-    f.write("[\n")
-    for check_type, item, paramstring in table:
-        f.write("  (%r, %r, %s),\n" % (check_type, item, paramstring))
-    f.write("]\n")
-    if inventory_check_autotrigger and inventory_check_interval:
+# if required, schedule an inventory check
+def trigger_discovery_check(hostname):
+    if (inventory_check_autotrigger and inventory_check_interval) and\
+            (not is_cluster(hostname) or nodes_of(hostname)):
         schedule_inventory_check(hostname)
 
 

@@ -129,6 +129,76 @@ def do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
     else:
         verbose("  nothing%s\n" % (only_new and " new" or ""))
 
+
+# determine changed services on host.
+# param mode: can be one of "new", "remove", "fixall", "refresh"
+# param do_snmp_scan: if True, a snmp host will be scanned, otherwise uses only the check types
+#                     previously discovered
+def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"):
+    counts = {
+        "added"   : 0,
+        "removed" : 0,
+        "kept"    : 0
+    }
+
+    if hostname not in all_hosts_untagged:
+        return [0, 0, 0, 0], ""
+
+    err = None
+
+    try:
+        # in "refresh" mode we first need to remove all previously discovered
+        # checks of the host, so that get_host_services() does show us the
+        # new discovered check parameters.
+        if mode == "refresh":
+            counts["removed"] += remove_autochecks_of(hostname) # this is cluster-aware!
+
+        # Compute current state of new and existing checks
+        services = get_host_services(hostname, use_caches=use_caches,
+                                        do_snmp_scan=do_snmp_scan, on_error=on_error)
+
+        # Create new list of checks
+        new_items = {}
+        for (check_type, item), (check_source, paramstring) in services.items():
+            if check_source in ("custom", "legacy", "active", "manual"):
+                continue # this is not an autocheck or ignored and currently not checked
+                # Note discovered checks that are shadowed by manual checks will vanish
+                # that way.
+
+            if check_source in ("new"):
+                if mode in ("new", "fixall", "refresh"):
+                    counts["added"] += 1
+                    new_items[(check_type, item)] = paramstring
+
+            elif check_source in ("old", "ignored"):
+                # keep currently existing valid services in any case
+                new_items[(check_type, item)] = paramstring
+                counts["kept"]  += 1
+
+            elif check_source in ("obsolete", "vanished"):
+                # keep item, if we are currently only looking for new services
+                # otherwise fix it: remove ignored and non-longer existing services
+                if mode not in ("fixall", "remove"):
+                    new_items[(check_type, item)] = paramstring
+                    counts["kept"] += 1
+                else:
+                    counts["removed"] += 1
+
+            # Silently keep clustered services
+            elif check_source.startswith("clustered_"):
+                new_items[(check_type, item)] = paramstring
+
+            else:
+                raise MKGeneralException("Unknown check source '%s'" % check_source)
+        set_autochecks_of(hostname, new_items)
+
+    except Exception, e:
+        if opt_debug:
+            raise
+        err = str(e)
+    return [counts["added"], counts["removed"], counts["kept"], counts["added"] + counts["kept"]], err
+
+
 #.
 #   .--Discovery Check-----------------------------------------------------.
 #   |           ____  _                   _               _                |
@@ -141,27 +211,93 @@ def do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
 #   |  Active check for checking undiscovered services.                    |
 #   '----------------------------------------------------------------------'
 
+# Compute the parameters for the discovery check for a host. Note:
+# if the discovery check is disabled for that host, default parameters
+# will be returned.
+def discovery_check_parameters(hostname):
+    entries = host_extra_conf(hostname, periodic_discovery)
+    if entries:
+        return entries[0]
+    # Support legacy global configurations
+    elif inventory_check_interval:
+        return default_discovery_check_parameters()
+    else:
+        return None
+
+
+def default_discovery_check_parameters():
+    return {
+        "check_interval"          : inventory_check_interval,
+        "severity_unmonitored"    : inventory_check_severity,
+        "severity_vanished"       : 0,
+        "inventory_check_do_scan" : inventory_check_do_scan,
+    }
+
+
+
 def check_discovery(hostname, ipaddress=None):
-    new_check_types = {}
-    lines = []
+    params = discovery_check_parameters(hostname) or \
+             default_discovery_check_parameters()
 
     try:
-        services = get_host_services(hostname, use_caches=opt_use_cachefile,
-                                     do_snmp_scan=inventory_check_do_scan, on_error="raise", ipaddress=ipaddress)
-        for (check_type, item), (check_source, paramstring) in services.items():
-            if check_source == "new":
-                new_check_types.setdefault(check_type, 0)
-                new_check_types[check_type] += 1
-                lines.append("%s: %s\n" % (check_type, service_description(check_type, item)))
+        # scan services, register changes
+        try:
+            services = get_host_services(hostname, use_caches=opt_use_cachefile,
+                                        do_snmp_scan=params["inventory_check_do_scan"],
+                                        on_error="raise",
+                                        ipaddress=ipaddress)
+        except socket.gaierror, e:
+            if e[0] == -2:
+                # Don't crash on unknown host name, it may be provided by the user
+                sys.stderr.write("Discovery failed: %s\n" % e[1])
+                return
+            else:
+                raise
 
-        if lines:
-            info = ", ".join([ "%s:%d" % e for e in new_check_types.items() ])
-            output = "%d unchecked services (%s)\n" % (len(lines), info)
-            output += "".join(lines)
-            status = inventory_check_severity
-        else:
-            output = "no unchecked services found\n"
-            status = 0
+        # generate status and infotext
+        status = 0
+        infotexts = []
+        long_infotexts = []
+        need_rediscovery = False
+
+        for check_state, title, params_key, default_state in [
+               ( "new",      "unmonitored", "severity_unmonitored", inventory_check_severity ),
+               ( "vanished", "vanished",    "severity_vanished",   0 ),
+            ]:
+
+            affected_check_types = {}
+            count = 0
+
+            for (check_type, item), (check_source, paramstring) in services.items():
+                if check_source == check_state:
+                    count += 1
+                    affected_check_types.setdefault(check_type, 0)
+                    affected_check_types[check_type] += 1
+                    long_infotexts.append("%s: %s: %s" % (title, check_type, service_description(check_type, item)))
+
+            if affected_check_types:
+                info = ", ".join([ "%s:%d" % e for e in affected_check_types.items() ])
+                st = params.get(params_key, default_state)
+                status = worst_monitoring_state(status, st)
+                infotexts.append("%d %s services (%s)%s" % (count, title, info, state_markers[st]))
+
+                if params.get("inventory_rediscovery", False):
+                    mode = params["inventory_rediscovery"]["mode"]
+                    if (check_state == "new"      and mode in ( 0, 2, 3 )) or \
+                        check_state == "vanished" and mode in ( 1, 2, 3 ):
+                        need_rediscovery = True
+            else:
+                infotexts.append("no %s services found" % title)
+
+        set_rediscovery_flag(hostname, need_rediscovery)
+        if need_rediscovery:
+            infotexts.append("rediscovery scheduled")
+
+        output = ", ".join(infotexts)
+        if long_infotexts:
+            output += "\n" + "\n".join(long_infotexts)
+        output += "\n"
+
     except (MKSNMPError, MKAgentError), e:
         output = "Discovery failed: %s" % e
         # Honor rule settings for "Status of the Check_MK service". In case of
@@ -171,6 +307,7 @@ def check_discovery(hostname, ipaddress=None):
 
     except SystemExit, e:
         raise e
+
     except Exception, e:
         output = create_crash_dump(hostname, "discovery", None, None, "Check_MK Discovery", [])\
             .replace("Crash dump:\n", "Crash dump:\\n")
@@ -191,6 +328,128 @@ def check_discovery(hostname, ipaddress=None):
     else:
         sys.stdout.write(core_state_names[status] + " - " + output)
         sys.exit(status)
+
+
+def set_rediscovery_flag(hostname, need_rediscovery):
+    def touch(filename):
+        if not os.path.exists(filename):
+            f = open(filename, "w")
+            f.close()
+
+    autodiscovery_dir = var_dir + '/autodiscovery'
+    discovery_filename = os.path.join(autodiscovery_dir, hostname)
+    if need_rediscovery:
+        if not os.path.exists(autodiscovery_dir):
+            os.makedirs(autodiscovery_dir)
+        touch(discovery_filename)
+    else:
+        if os.path.exists(discovery_filename):
+            os.remove(discovery_filename)
+
+
+
+# Run the discovery queued by check_discovery() - if any
+marked_host_discovery_timeout = 120
+
+def discover_marked_hosts():
+    verbose("Doing discovery for all marked hosts:\n")
+
+    def queue_age():
+        oldest = time.time()
+        for filename in os.listdir(autodiscovery_dir):
+            oldest = min(oldest, os.path.getmtime(autodiscovery_dir + "/" + filename))
+        return oldest
+
+    def may_rediscover(params):
+        if "inventory_rediscovery" not in params:
+            return "automatic discovery disabled for this host"
+
+        now = datetime.datetime.utcfromtimestamp(now_ts)
+        for start_hours_mins, end_hours_mins in params["inventory_rediscovery"]["excluded_time"]:
+            start_time = datetime.datetime(now.year, now.month, now.day, start_hours_mins[0], start_hours_mins[1])
+            end_time = datetime.datetime(now.year, now.month, now.day, end_hours_mins[0], end_hours_mins[1])
+            if start_time <= now <= end_time:
+                return "we are currently in a disallowed time of day"
+
+        if now_ts - oldest_queued < params["inventory_rediscovery"]["group_time"]:
+            return "last activation is too recent"
+
+        return None
+
+    autodiscovery_dir = var_dir + '/autodiscovery'
+
+    if not os.path.exists(autodiscovery_dir):
+        # there is obviously nothing to do
+        verbose("  Nothing to do. %s is missing.\n" % autodiscovery_dir)
+        return
+
+    now_ts = time.time()
+    end_time_ts = now_ts + marked_host_discovery_timeout  # don't run for more than 2 minutes
+    oldest_queued = queue_age()
+
+    mode_table = {
+        0: "new",
+        1: "remove",
+        2: "fixall",
+        3: "refresh"
+    }
+
+    hosts = os.listdir(autodiscovery_dir)
+    if not hosts:
+        verbose("  Nothing to do. No hosts marked by discovery check.\n")
+        return
+
+    activation_required = False
+
+    for hostname in hosts:
+        verbose("%s%s%s:\n" % (tty_bold, hostname, tty_normal))
+        host_flag_path = autodiscovery_dir + "/" + hostname
+
+        if hostname not in all_configured_hosts():
+            os.remove(host_flag_path)
+            verbose("  Skipped. Host does not exist in configuration. Removing mark.\n")
+            continue
+
+        if time.time() > end_time_ts:
+            warning("  Timeout of %d seconds reached. Lets do the remaining hosts next time." % marked_host_discovery_timeout)
+            break
+
+        # have to do hosts one-by-one because each could have a different configuration
+        params = discovery_check_parameters(hostname) or default_discovery_check_parameters()
+        why_not = may_rediscover(params)
+        if not why_not:
+            redisc_params = params["inventory_rediscovery"]
+            verbose("  Doing discovery with mode '%s'...\n" % mode_table[redisc_params["mode"]])
+            result, error = discover_on_host(mode_table[redisc_params["mode"]], hostname,
+                                             params["inventory_check_do_scan"], True)
+            if error is not None:
+                if error:
+                    verbose("failed: %s\n" % error)
+                else:
+                    # for offline hosts the error message is empty. This is to remain
+                    # compatible with the automation code
+                    verbose("  failed: host is offline\n")
+            else:
+                new_services, removed_services, kept_services, total_services = result
+                if new_services == 0 and removed_services == 0 and kept_services == total_services:
+                    verbose("  nothing changed.\n")
+                else:
+                    verbose("  %d new, %d removed, %d kept, %d total services.\n" % (tuple(result)))
+                    if redisc_params["activation"]:
+                        activation_required = True
+
+            # delete the file even in error case, otherwise we might be causing the same error
+            # every time the cron job runs
+            os.remove(host_flag_path)
+        else:
+            verbose("  skipped: %s\n" % why_not)
+
+    if activation_required:
+        verbose("\nRestarting monitoring core with updated configuration...\n")
+        if monitoring_core == "cmc":
+            do_reload()
+        else:
+            do_restart()
 
 
 #.
@@ -332,8 +591,13 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
     discovered_services = []
     try:
         for check_type in check_types:
-            for item, paramstring in discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
-                discovered_services.append((check_type, item, paramstring))
+            try:
+                for item, paramstring in discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
+                    discovered_services.append((check_type, item, paramstring))
+            except KeyboardInterrupt:
+                raise
+            except Exception, e:
+                raise MKGeneralException("Exception in check plugin '%s': %s" % (check_type, e))
 
         return discovered_services
     except KeyboardInterrupt:
@@ -513,7 +777,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
 
     except Exception, e:
         if on_error != "ignore":
-            warning("  Exception in discovery function of check type '%s'." % check_type)
+            warning("  Exception in discovery function of check type '%s': %s" % (check_type, e))
         if on_error == "raise":
             raise
         return []
@@ -919,14 +1183,46 @@ def has_autochecks(hostname):
 def save_autochecks_file(hostname, items):
     if not os.path.exists(autochecksdir):
         os.makedirs(autochecksdir)
-    filepath = autochecksdir + "/" + hostname + ".mk"
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    filepath = "%s/%s.mk" % (autochecksdir, hostname)
     out = file(filepath, "w")
     out.write("[\n")
-    for entry in items:
-        out.write("  (%r, %r, %s),\n" % entry)
+    for check_type, item, paramstring in items:
+        out.write("  (%r, %r, %s),\n" % (check_type, item, paramstring))
     out.write("]\n")
+
+
+def set_autochecks_of(hostname, new_items):
+    # A Cluster does not have an autochecks file
+    # All of its services are located in the nodes instead
+    # So we cycle through all nodes remove all clustered service
+    # and add the ones we've got from stdin
+    if is_cluster(hostname):
+        for node in nodes_of(hostname):
+            new_autochecks = []
+            existing = parse_autochecks_file(node)
+            for check_type, item, paramstring in existing:
+                descr = service_description(check_type, item)
+                if hostname != host_of_clustered_service(node, descr):
+                    new_autochecks.append((check_type, item, paramstring))
+            for (check_type, item), paramstring in new_items.items():
+                new_autochecks.append((check_type, item, paramstring))
+            # write new autochecks file for that host
+            save_autochecks_file(node, new_autochecks)
+    else:
+        existing = parse_autochecks_file(hostname)
+        # write new autochecks file, but take paramstrings from existing ones
+        # for those checks which are kept
+        new_autochecks = []
+        for ct, item, paramstring in existing:
+            if (ct, item) in new_items:
+                new_autochecks.append((ct, item, paramstring))
+                del new_items[(ct, item)]
+
+        for (ct, item), paramstring in new_items.items():
+            new_autochecks.append((ct, item, paramstring))
+
+        # write new autochecks file for that host
+        save_autochecks_file(hostname, new_autochecks)
 
 
 # Remove all autochecks of a host while being cluster-aware!

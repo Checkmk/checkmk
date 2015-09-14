@@ -3245,12 +3245,12 @@ def show_service_table(host, firsttime):
                 break
         for entry in checktable:
             if entry[0] in [ 'obsolete', 'vanished', ]:
-                html.button("_cleanup", _("Remove exceeding"))
+                html.button("_cleanup", _("Remove vanished"))
                 fixall += 1
                 break
 
         if fixall == 2:
-            html.button("_fixall", _("Fix all missing/exceeding"))
+            html.button("_fixall", _("Fix all missing/vanished"))
 
         if len(checktable) > 0:
             html.button("_save", _("Save manual check configuration"))
@@ -3275,7 +3275,7 @@ def show_service_table(host, firsttime):
     for state_name, check_source, checkbox in [
         ( _("Available (missing) services"), "new", firsttime ),
         ( _("Already configured services"), "old", True, ),
-        ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ),
+        ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ), # Cannot happen anymore
         ( _("Disabled services (configured away by admin)"), "ignored", None),
         ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
         ( _("Active checks"), "active", None ),
@@ -3960,9 +3960,9 @@ def mode_bulk_inventory(phase):
                      "services to be checked on your hosts."))
         forms.header(_("Bulk Discovery"))
         forms.section(_("Mode"))
-        html.radiobutton("how", "new",     True,  _("Find only new services") + "<br>")
-        html.radiobutton("how", "remove",  False, _("Remove obsolete services") + "<br>")
-        html.radiobutton("how", "fixall",  False, _("Find new &amp; remove obsolete") + "<br>")
+        html.radiobutton("how", "new",     True,  _("Add unmonitored services") + "<br>")
+        html.radiobutton("how", "remove",  False, _("Remove vanished services") + "<br>")
+        html.radiobutton("how", "fixall",  False, _("Add unmonitored & remove vanished services") + "<br>")
         html.radiobutton("how", "refresh", False, _("Refresh all services (tabula rasa)") + "<br>")
 
         forms.section(_("Selection"))

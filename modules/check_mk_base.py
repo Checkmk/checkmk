@@ -1703,10 +1703,7 @@ def sanitize_yield_check_result(result, is_snmp):
             # FIXME/TODO: Why is the state only aggregated when having text != None?
             if text != None:
                 infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
-                if st == 2 or status == 2:
-                    status = 2
-                else:
-                    status = max(status, st)
+                status = worst_monitoring_state(st, status)
 
             if perf != None:
                 perfdata += subresult[2]
@@ -1964,6 +1961,14 @@ def regex(pattern):
             raise MKGeneralException("Invalid regular expression '%s': %s" % (pattern, e))
         g_compiled_regexes[pattern] = reg
     return reg
+
+
+def worst_monitoring_state(status_a, status_b):
+    if status_a == 2 or status_b == 2:
+        return 2
+    else:
+        return max(status_a, status_b)
+
 
 
 #.

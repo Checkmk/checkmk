@@ -2579,8 +2579,11 @@ define service {
     if 'cmk-inventory' in use_new_descriptions_for:
         service_discovery_name = 'Check_MK Discovery'
 
+    params = discovery_check_parameters(hostname) or \
+             default_discovery_check_parameters()
+
     # Inventory checks - if user has configured them.
-    if inventory_check_interval \
+    if params["check_interval"] \
         and not service_ignored(hostname, None, service_discovery_name) \
         and not "ping" in tags_of_host(hostname): # FIXME/TODO: Why not user is_ping_host()?
         outfile.write("""
@@ -2591,8 +2594,8 @@ define service {
   retry_check_interval\t\t%d
 %s  service_description\t\t%s
 }
-""" % (inventory_check_template, hostname, inventory_check_interval,
-       inventory_check_interval,
+""" % (inventory_check_template, hostname, params["check_interval"],
+       params["check_interval"],
        extra_service_conf_of(hostname, service_discovery_name),
        service_discovery_name))
 
@@ -4524,6 +4527,7 @@ def usage():
  cmk -D, --dump [H1 H2 ..]            dump all or some hosts
  cmk -d HOSTNAME|IPADDRESS            show raw information from agent
  cmk --check-discovery HOSTNAME       check for items not yet checked
+ cmk --discover-marked-hosts                 run discover-marked-hosts for hosts known to have changed services
  cmk --update-dns-cache               update IP address lookup cache
  cmk -l, --list-hosts [G1 G2 ...]     print list of all hosts
  cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
@@ -4609,7 +4613,14 @@ NOTES:
   real hosts.
 
   --check-discovery make check_mk behave as monitoring plugins that
-  checks if an inventory would find new services for the host.
+  checks if an inventory would find new or vanished services for the host.
+  If configured to do so, this will queue those hosts for automatic
+  discover-marked-hosts
+
+  --discover-marked-hosts run actual service discovery on all hosts that
+  are known to have new/vanished services due to an earlier run of
+  check-discovery. The results of this discovery may be activated
+  automatically if that was discovered.
 
   --list-hosts called without argument lists all hosts. You may
   specify one or more host groups to restrict the output to hosts
@@ -4842,7 +4853,7 @@ def do_restart(only_reload = False):
                 do_precompile_hostchecks()
             do_core_action(only_reload and "reload" or "restart")
         else:
-            sys.stderr.write("Nagios configuration is invalid. Rolling back.\n")
+            sys.stderr.write("Configuration for monitoring core is invalid. Rolling back.\n")
             if backup_path:
                 os.rename(backup_path, nagios_objects_file)
             else:
@@ -5801,7 +5812,7 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "convert-rrds", "compress-history", "split-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                  "man", "nowiki", "config-check", "backup=", "restore=",
-                 "check-inventory=", "check-discovery=", "paths",
+                 "check-inventory=", "check-discovery=", "discover-marked-hosts", "paths",
                  "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=",
                  "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap" ]
 
@@ -5990,6 +6001,9 @@ try:
             done = True
         elif o in [ '--check-discovery', '--check-inventory' ]:
             check_discovery(a)
+            done = True
+        elif o == '--discover-marked-hosts':
+            discover_marked_hosts()
             done = True
         elif o == '--scan-parents':
             do_scan_parents(args)

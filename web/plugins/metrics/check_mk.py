@@ -1077,19 +1077,19 @@ metric_info["current"] = {
 metric_info["voltage"] = {
     "title" : _("Electrical voltage"),
     "unit"  : "v",
-    "color" : "#ffc060",
+    "color" : "14/a",
 }
 
 metric_info["power"] = {
     "title" : _("Electrical power"),
     "unit"  : "w",
-    "color" : "#8848c0",
+    "color" : "22/a",
 }
 
 metric_info["appower"] = {
     "title" : _("Electrical apparent power"),
     "unit"  : "va",
-    "color" : "#aa68d80",
+    "color" : "22/b",
 }
 
 metric_info["energy"] = {

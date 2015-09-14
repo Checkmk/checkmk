@@ -7,5 +7,5 @@ Date: 1441973337
 Class: feature
 
 To use this check you have to configure the
-{agent_emcvnx} special agent via the {Datasource Programs}
-'Check state of EMC VNS storage system' in WATO.
+<tt>agent_emcvnx</tt> special agent via the Datasource Programs
+<i>Check state of EMC VNS storage system</i> in WATO.

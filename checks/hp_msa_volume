@@ -158,7 +158,7 @@ check_info['hp_msa_volume'] = {
     'parse_function'            : parse_hp_msa_volume,
     'inventory_function'        : inventory_hp_msa_health,
     'check_function'            : check_hp_msa_health,
-    'service_description'       : 'Volumes Health %s',
+    'service_description'       : 'Volume Health %s',
     'includes'                  : [ "hp_msa.include" ],
 }
 

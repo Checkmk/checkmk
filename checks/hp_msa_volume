@@ -217,12 +217,12 @@ def check_hp_msa_volume_io(item, params, parsed):
             "write_throughput" : get_rate("%s_write" % key, now, int(values["data-written-numeric"])),
         }
 
-    states, outputs, perfdatas = check_diskstat_dict(item, params, disks)
     if item != "SUMMARY":
         yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
 
-    for state, output, perfdata in [states, outputs, perfdatas]:
-        yield state, output, perfdata
+    subresults = list(check_diskstat_dict(item, params, disks))
+    for entry in subresults:
+        yield entry
 
 
 check_info['hp_msa_volume.io'] = {

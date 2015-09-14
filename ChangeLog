@@ -288,7 +288,6 @@
     * 2553 FIX: solaris_prtdiag: Can now handle Supermicro servers using Solaris 10
 
 
-
 1.2.7i2:
     Core & Setup:
     * 2339 FIX: Discovery service: Fixed handling of agent / SNMP communication errors...

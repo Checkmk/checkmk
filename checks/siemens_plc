@@ -248,3 +248,40 @@ check_info['siemens_plc.info'] = {
     "service_description"     : "Info %s",
     "has_perfdata"            : False,
 }
+
+#.
+#   .--CPU-State-----------------------------------------------------------.
+#   |             ____ ____  _   _      ____  _        _                   |
+#   |            / ___|  _ \| | | |    / ___|| |_ __ _| |_ ___             |
+#   |           | |   | |_) | | | |____\___ \| __/ _` | __/ _ \            |
+#   |           | |___|  __/| |_| |_____|__) | || (_| | ||  __/            |
+#   |            \____|_|    \___/     |____/ \__\__,_|\__\___|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_siemens_plc_cpu_state(info):
+    return [ (None, None) ]
+
+
+def check_siemens_plc_cpu_state(_no_item, _no_params, info):
+    try:
+        state = info[0][0]
+    except IndexError:
+        return
+
+    if state == "S7CpuStatusRun":
+        return 0, "CPU is running"
+    elif state == "S7CpuStatusStop":
+        return 2, "CPU is stopped"
+    else:
+        return 3, "CPU is in unknown state"
+
+
+check_info['siemens_plc_cpu_state'] = {
+    "inventory_function"      : inventory_siemens_plc_cpu_state,
+    "check_function"          : check_siemens_plc_cpu_state,
+    "service_description"     : "CPU state",
+    "has_perfdata"            : False,
+}

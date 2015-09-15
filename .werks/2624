@@ -1,0 +1,9 @@
+Title: fixed vbscript based inventory script (windows) only sending updated data every 39 years
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442318089
+Class: fix
+
+

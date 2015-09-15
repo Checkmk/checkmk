@@ -1,0 +1,18 @@
+title: Raritan EMX Devices External Sensors: Pressure
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors air pressure sensors connected to a Raritan EMX device.
+ No configuration is needed, the devices send their states by themselves.
+
+item:
+ Sensor number, sensor name
+
+perfdata:
+ Pressure
+
+inventory:
+ One service per sensor is created.
+

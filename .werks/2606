@@ -1,0 +1,21 @@
+Title: cisco_temperature: Reduced SNMP overhead for large devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442319875
+Class: fix
+
+The cisco_temperature check makes use of the SNMP table
+.1.3.6.1.2.1.47.1.1.1.1.2 to gather the description of the sensors.
+
+This table can be very large on some devices. Check_MK normally
+needs to fetch the whole table because of it's architecture e.g.
+to make the service discovery possible.
+
+But since this table is normally static, it is not needed to fetch
+this large table during every check.
+
+Check_MK is now caching this table during checking. The cache is
+renewed when performing service discovery (either manually or
+automatically via the discovery service).

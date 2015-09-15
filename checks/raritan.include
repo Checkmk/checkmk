@@ -189,6 +189,15 @@ def inventory_raritan_sensors(parsed, sensor_type):
     return inventory
 
 
+def inventory_raritan_sensors_temp(parsed, sensor_type):
+    inventory = []
+    for key, values in parsed.items():
+        if values['is_available'] == '1' and values['sensor_type'] == sensor_type:
+            inventory.append( (key, {}) )
+
+    return inventory
+
+
 def check_raritan_sensors(item, _no_params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]['state']
@@ -212,11 +221,11 @@ def check_raritan_sensors_binary(item, _no_params, parsed):
         return state, "Status: %s" % state_readable
 
 
-def check_raritan_sensors_temp(item, _no_params, parsed):
+def check_raritan_sensors_temp(item, params, parsed):
     if item in parsed:
         state, state_readable =  parsed[item]['state']
         reading, crit_lower, warn_lower, crit, warn = parsed[item]['sensor_data']
-        return check_temperature(reading, params = None,
+        return check_temperature(reading, params,
                                  dev_unit = parsed[item]['sensor_unit'],
                                  dev_levels = (warn, crit),
                                  dev_levels_lower = (warn_lower, crit_lower),

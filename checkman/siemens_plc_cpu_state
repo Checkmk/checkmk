@@ -1,0 +1,18 @@
+title: Siemens PLC: CPU state
+agents: siemens_plc
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ Monitors the current CPU state of Siemens PLC (SPS) devices.
+
+ You need to use and configure the special agent {agent_siemens_plc} which is using the SNAP7
+ library to communicate with the Siemens PLC. When you are using OMD, everything is already
+ installed and configured. In manual setups, you will need to ensure that the snap7 library
+ and python module {snap7} are installed.
+
+ The CPU state can either be reported as running ({OK}), stopped ({CRITICAL}) and unknown
+ ({UNKNOWN}).
+
+inventory:
+ One check for each device is created automatically.

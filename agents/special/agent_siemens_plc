@@ -29,7 +29,8 @@
 import getopt, sys, socket, traceback, re, pprint
 import snap7
 from snap7.util import *
-from snap7.snap7types import S7AreaPE, S7AreaPA, S7AreaMK, S7AreaDB, S7AreaCT, S7AreaTM
+from snap7.snap7types import S7AreaPE, S7AreaPA, S7AreaMK, S7AreaDB, \
+                             S7AreaCT, S7AreaTM
 
 def usage():
     sys.stderr.write("""Check_MK Siemens PLC Agent
@@ -185,13 +186,16 @@ datatypes = {
 }
 
 unhandled_error = False
-sys.stdout.write("<<<siemens_plc>>>\n")
 for device in devices:
     try:
         client = snap7.client.Client()
         client.connect(device['host_address'], device['rack'],
                        device['slot'], device['port'])
 
+        sys.stdout.write("<<<siemens_plc_cpu_state>>>\n")
+        sys.stdout.write(client.get_cpu_state()+"\n")
+
+        sys.stdout.write("<<<siemens_plc>>>\n")
         # We want to have a minimum number of reads. We try to only use
         # a single read and detect the memory area to fetch dynamically
         # based on the configured values

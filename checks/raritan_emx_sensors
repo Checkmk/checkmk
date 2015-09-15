@@ -35,8 +35,6 @@
 #   |                             main check                               |
 #   '----------------------------------------------------------------------'
 
-# TODO: Binary -> weg mit dem Wort
-
 check_info['raritan_emx_sensors'] = {
     'parse_function'            : parse_raritan_sensors,
     'inventory_function'        : lambda parsed: inventory_raritan_sensors(parsed, 'binary' or ''),
@@ -71,13 +69,12 @@ check_info['raritan_emx_sensors'] = {
 #   |                       |_|                                            |
 #   +----------------------------------------------------------------------+
 
-# TODO: params-Gruppe setzen!
-
 check_info['raritan_emx_sensors.temp'] = {
-    'inventory_function'        : lambda parsed: inventory_raritan_sensors(parsed, 'temp'),
+    'inventory_function'        : lambda parsed: inventory_raritan_sensors_temp(parsed, 'temp'),
     'check_function'            : check_raritan_sensors_temp,
     'service_description'       : 'Temperature %s',
     'has_perfdata'              : True,
+    'group'                     : "temperature",
     'includes'                  : [ "temperature.include" ],
 }
 

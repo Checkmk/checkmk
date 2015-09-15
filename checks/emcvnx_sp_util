@@ -43,8 +43,11 @@ def check_emcvnx_sp_util(item, params, info):
         elif len(line) == 2 and "idle" in line[0]:
             idle_ticks = float(line[1])
 
+    now = time.time()
     warn, crit = params
-    sp_util = get_rate(None, time.time(), busy_ticks / (busy_ticks + idle_ticks) )
+    busy_ticks_rate = get_rate("emcvnx_sp_util.busy_ticks", now, busy_ticks )
+    idle_ticks_rate = get_rate("emcvnx_sp_util.idle_ticks", now, idle_ticks )
+    sp_util = 100 * (busy_ticks_rate / (busy_ticks_rate + idle_ticks_rate))
     infotext = "%.1f%%" % sp_util
     if sp_util >= crit:
         state = 2

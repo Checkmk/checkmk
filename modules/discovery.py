@@ -492,7 +492,8 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
             return info
 
     max_cachefile_age = use_caches and inventory_max_cachefile_age or 0
-    rh_info = get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval=True)
+    rh_info = get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age,
+                                ignore_check_interval=True, use_snmpwalk_cache=False)
     if rh_info != None:
         info = apply_parse_function(add_nodeinfo(rh_info, section_name), section_name)
     else:
@@ -501,7 +502,8 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
         info = [ info ]
         for es in check_info[section_name]["extra_sections"]:
             try:
-                bare_info = get_realhost_info(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=True)
+                bare_info = get_realhost_info(hostname, ipaddress, es, max_cachefile_age,
+                                              ignore_check_interval=True, use_snmpwalk_cache=False)
                 with_node_info = add_nodeinfo(bare_info, es)
                 parsed = apply_parse_function(with_node_info, es)
                 info.append(parsed)
@@ -597,6 +599,8 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
             except KeyboardInterrupt:
                 raise
             except Exception, e:
+                if opt_debug:
+                    raise
                 raise MKGeneralException("Exception in check plugin '%s': %s" % (check_type, e))
 
         return discovered_services

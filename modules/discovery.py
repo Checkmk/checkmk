@@ -989,6 +989,10 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
             opt_use_cachefile = old_opt_use_cachefile
 
+            global g_check_type, g_checked_item
+            g_check_type = check_type
+            g_checked_item = item
+
             if exitcode == None:
                 check_function = check_info[check_type]["check_function"]
                 if check_source != 'manual':

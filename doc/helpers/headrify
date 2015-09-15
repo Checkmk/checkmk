@@ -97,7 +97,7 @@ headrify ()
   secondline="$(sed -n 2p < $file)"
   thirdline="$(sed -n 3p < $file)"
   shouldbe="$comment+---------------------------------------------------"
-  endline='.*Boston, MA 02110-1301 USA.'
+  endline='.*(Boston, MA 02110-1301 USA.|address provided at www.mathias-kettner.de)'
 
   if [ -n "$lastline" ] ; then endline="${lastline//\//\/}" ; fi
   if [ "${firstline:0:20}" = "${shouldbe:0:20}"  \

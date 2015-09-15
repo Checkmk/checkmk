@@ -7,50 +7,22 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | copyright mathias kettner 2013             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
-# this file is part of check_mk.
-# the official homepage is at http://mathias-kettner.de/check_mk.
+# This file is part of Check_MK.
+# Copyright by Mathias Kettner and Mathias Kettner GmbH.  All rights reserved.
 #
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  gnu general public license  as published by
-# the free software foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but without any warranty;  with-
-# out even the implied warranty of  merchantability  or  fitness for a
-# particular purpose. see the  gnu general public license for more de-
-# ails.  you should have  received  a copy of the  gnu  general public
-# license along with gnu make; see the file  copying.  if  not,  write
-# to the free software foundation, inc., 51 franklin st,  fifth floor,
-# boston, ma 02110-1301 usa.
+# Check_MK is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.
+#
+# Check_MK is  distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY;  without even the implied warranty of
+# MERCHANTABILITY  or  FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have  received  a copy of the  GNU  General Public
+# License along with Check_MK.  If  not, email to mk@mathias-kettner.de
+# or write to the postal address provided at www.mathias-kettner.de
 
-sansymphony_alerts_default_values = (1, 2)
-
-def inventory_sansymphony_alerts(info):
-    return [ (None, "sansymphony_alerts_default_values") ]
-
-
-def check_sansymphony_alerts(_no_item, params, info):
-    warn, crit = params
-    nr_of_alerts = int(info[0][0])
-    perfdata = [ ( "alerts", nr_of_alerts, warn, crit ) ]
-    infotxt = "Unacknowlegded alerts: %d" % nr_of_alerts
-    levels = " (warn/crit at %d/%d)" % (warn, crit)
-
-    state = 0
-    if nr_of_alerts >= crit:
-        state = 2
-        infotxt += levels
-    elif nr_of_alerts >= warn:
-        state = 1
-        infotxt += levels
-    return state, infotxt, perfdata
-
-
-check_info["sansymphony_alerts"] = {
-    "check_function"        : check_sansymphony_alerts,
-    "inventory_function"    : inventory_sansymphony_alerts,
-    "service_description"   : "sansymphony Alerts",
-    "has_perfdata"          : True,
-    "group"                 : "sansymphony_alerts",
-}

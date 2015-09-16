@@ -1,0 +1,66 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# .1.3.6.1.4.1.2604.1.1.1.4.1.2.1 Legit --> SOPHOS::counterType.1
+# .1.3.6.1.4.1.2604.1.1.1.4.1.2.2 Blocked --> SOPHOS::counterType.2
+# .1.3.6.1.4.1.2604.1.1.1.4.1.2.9 InvalidRecipient --> SOPHOS::counterType.9
+# .1.3.6.1.4.1.2604.1.1.1.4.1.3.1 92 --> SOPHOS::counterInbound.1
+# .1.3.6.1.4.1.2604.1.1.1.4.1.3.2 10 --> SOPHOS::counterInbound.2
+# .1.3.6.1.4.1.2604.1.1.1.4.1.3.9 2 --> SOPHOS::counterInbound.9
+# .1.3.6.1.4.1.2604.1.1.1.4.1.4.1 8 --> SOPHOS::counterOutbound.1
+# .1.3.6.1.4.1.2604.1.1.1.4.1.4.2 0 --> SOPHOS::counterOutbound.2
+# .1.3.6.1.4.1.2604.1.1.1.4.1.4.9 0 --> SOPHOS::counterOutbound.9
+# .1.3.6.1.4.1.2604.1.1.1.4.1.5.1 100 --> SOPHOS::counterTotal.1
+# .1.3.6.1.4.1.2604.1.1.1.4.1.5.2 10 --> SOPHOS::counterTotal.2
+# .1.3.6.1.4.1.2604.1.1.1.4.1.5.9 2 --> SOPHOS::counterTotal.9
+
+
+def inventory_sophos_mail(info):
+    return [ (line[0].replace("InvalidRecipient", "Invalid Recipient"), None) for line in info ]
+
+
+def check_sophos_mail(item, params, info):
+    for counter_type, inbound_str, outbound_str, total_str in info:
+        if counter_type.replace("InvalidRecipient", "Invalid Recipient") == item:
+            infotext = "Total: %s, Inbound: %s, Outbound: %s" % \
+                        (total_str, inbound_str, outbound_str)
+            return 0, infotext, [ ("mail_inbound",  int(inbound_str)),
+                                  ("mail_outbound", int(outbound_str)) ]
+
+
+check_info['sophos_mail'] = {
+    'inventory_function'        : inventory_sophos_mail,
+    'check_function'            : check_sophos_mail,
+    'service_description'       : 'Messages %s',
+    'has_perfdata'              : True,
+    'snmp_info'                 : (".1.3.6.1.4.1.2604.1.1.1.4.1",[
+                                        "2",    # counterType -> read-only
+                                        "3",    # counterInbound
+                                        "4",    # counterOutbound
+                                        "5",    # counterTotal
+                                  ]),
+    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2604",
+}

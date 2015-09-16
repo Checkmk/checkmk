@@ -4,7 +4,7 @@ catalog: hw/other
 license: GPL
 distribution: check_mk
 description:
- This check monitors the system power supply of a Extreme Networks Switch
+ This check monitors the system power of a Extreme Networks Switch
  which supports the EXTREME-MIB.
 
  Upper default levels are 110, 120 Watt. These levels are configurable.

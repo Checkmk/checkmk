@@ -30,7 +30,7 @@ from valuespec import *
 def get_gui_messages(user_id = None):
     if user_id is None:
         user_id = config.user_id
-    path = config.config_dir + "/" + user_id + '/messages.mk'
+    path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
 
     try:
         messages = eval(file(path).read())
@@ -61,7 +61,7 @@ def delete_gui_message(msg_id):
 def save_gui_messages(messages, user_id = None):
     if user_id is None:
         user_id = config.user_id
-    path = config.config_dir + "/" + user_id + '/messages.mk'
+    path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
     make_nagios_directory(os.path.dirname(path))
     file(path, 'w').write(repr(messages) + "\n")
 

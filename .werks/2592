@@ -1,4 +1,4 @@
-Title: new checks: netextreme_{fan/psu/psu_in/psu_out/temp} for Extreme Networks Switches
+Title: new checks netextreme_fan, netextreme_psu, netextreme_psu_in, netextreme_psu_out, netextreme_temp for Extreme Networks Switches
 Level: 1
 Component: checks
 Compatible: compat

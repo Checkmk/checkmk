@@ -1,0 +1,10 @@
+Title: Fix exception in availabiliy table if average number of events and summary are both being displayed
+Level: 2
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1442397255
+
+The exception was about <tt>group_availability</tt> not being defined. This has been fixed.

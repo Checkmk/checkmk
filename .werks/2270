@@ -8,7 +8,7 @@ Class: feature
 
 The windows agent now expands the section headers of plugin scripts
 with cached information, if applicable. For example, if you configure
-the windows_udpates plugin to be cached for one day the section header
+the windows_updates plugin to be cached for one day the section header
 will now look like <tt>&lt;&lt;&lt;windows_updates:cached(143115035535:86400)&gt;&gt;&gt;</tt>
 instead of <tt>&lt;&lt;&lt;windows_updates&gt;&gt;&gt;</tt>
 

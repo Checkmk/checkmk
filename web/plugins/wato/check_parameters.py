@@ -4354,6 +4354,17 @@ register_check_parameters(
                   default_value = 15,
                   label = _("Compute average over last "),
             )),
+            ( "core_util_graph",
+                Checkbox(
+                    title = _("Graphs for individual cores (windows only)"),
+                    label = _("Enable performance graph for utilization of individual cores"),
+                    help  = _("This adds another graph to the performance CPU utilization "
+                            "details page, showing utilization of individual cores. "
+                            "Please note that this graph may be impractical on "
+                            "device with very many cores. "
+                            "This is currently only supported on windows.")
+                ),
+            ),
         ]
     ),
     None,
@@ -4407,6 +4418,16 @@ register_check_parameters(
                                "With this configuration, check_mk will alert if a single core is "
                                "exceeding a utilization threshold over an extended period of time.")
                     )
+                ),
+                ( "core_util_graph",
+                  Checkbox(
+                      title = _("Graphs for individual cores"),
+                      label = _("Enable performance graph for utilization of individual cores"),
+                      help  = _("This adds another graph to the performance CPU utilization "
+                                "details page, showing utilization of individual cores. "
+                                "Please note that this graph may be impractical on "
+                                "device with very many cores.")
+                  ),
                 ),
             ]
         ),

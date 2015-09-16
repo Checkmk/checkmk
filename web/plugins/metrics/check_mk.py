@@ -236,6 +236,41 @@ unit_info["l/s"] = {
 # Example:
 # "color" : "23/a" (basic color yellow)
 # "color" : "23/b" (nuance of color yellow)
+#
+# As an alternative you can call indexed_color with a color index and the maximum
+# number of colors you will need to generate a color. This function tries to return
+# high contrast colors for "close" indices, so the colors of idx 1 and idx 2 may
+# have stronger contrast than the colors at idx 3 and idx 10.
+
+# retrieve an indexed color.
+# param idx: the color index
+# param total: the total number of colors needed in one graph.
+COLOR_WHEEL_SIZE = 48
+def indexed_color(idx, total):
+    if idx < COLOR_WHEEL_SIZE:
+        # use colors from the color wheel if possible
+        base_col = (idx % 4) + 1
+        tone = ((idx / 4) % 6) + 1
+        if idx % 8 < 4:
+            shade = "a"
+        else:
+            shade = "b"
+        return "%d%d/%s" % (base_col, tone, shade)
+    else:
+        # generate distinct rgb values. these may be ugly ; also, they
+        # may overlap with the colors from the wheel
+        idx        = idx - COLOR_WHEEL_SIZE
+        base_color = idx % 7  # red, green, blue, red+green, red+blue,
+                              # green+blue, red+green+blue
+        delta      = 255 / ((total - COLOR_WHEEL_SIZE) / 7)
+        offset     = 255 - (delta * ((idx / 7) + 1))
+
+        red   = int(base_color in [0, 3, 4, 6])
+        green = int(base_color in [1, 3, 5, 6])
+        blue  = int(base_color in [2, 4, 5, 6])
+        return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
+
+
 
 metric_info["rta"] = {
     "title" : _("Round trip average"),
@@ -1001,6 +1036,19 @@ metric_info["util15"] = {
     "unit"  : "%",
     "color" : "#9a52bf",
 }
+
+MAX_CORES = 128
+
+for i in range(MAX_CORES):
+    # generate different colors for each core.
+    # unfortunately there are only 24 colors on our
+    # color wheel, times two for two shades each, we
+    # can only draw 48 differently colored graphs
+    metric_info["cpu_core_util_%d" % i] = {
+        "title" : _("Utilization Core %d") % (i + 1),
+        "unit"  : "%",
+        "color" : indexed_color(i, MAX_CORES),
+    }
 
 metric_info["time_offset"] = {
     "title" : _("Time offset"),
@@ -4495,7 +4543,7 @@ graph_info.append({
         ( "children_user_time",   "stack" ),
         ( "system_time",          "stack" ),
         ( "children_system_time", "stack" ),
-        ( "user_time,children_user_time,system_time,children_system_time,+,+,+#888", "line", _("Total") ),
+        ( "user_time,children_user_time,system_time,children_system_time,+,+,+#888888", "line", _("Total") ),
     ],
 })
 
@@ -4596,6 +4644,19 @@ graph_info.append({
         "util1:crit",
     ],
     "range" : (0, 100),
+})
+
+graph_info.append({
+    "title"  : _( "Per Core utilization" ),
+    "metrics" : [
+        ( "cpu_core_util_%d" % num, "line" )
+        for num in range(MAX_CORES)
+    ],
+    "range" : (0, 100),
+    "optional_metrics" : [
+        "cpu_core_util_%d" % num
+        for num in range(2, MAX_CORES)
+    ]
 })
 
 graph_info.append({

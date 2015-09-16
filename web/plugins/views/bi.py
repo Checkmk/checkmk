@@ -45,7 +45,7 @@ multisite_datasources["bi_aggregations"] = {
 multisite_datasources["bi_host_aggregations"] = {
     "title"       : _("BI Aggregations affected by one host"),
     "table"       : bi.host_table,
-    "infos"       : [ "host", "aggr" ],
+    "infos"       : [ "aggr", "host" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }
@@ -55,7 +55,7 @@ multisite_datasources["bi_host_aggregations"] = {
 multisite_datasources["bi_hostname_aggregations"] = {
     "title"       : _("BI Hostname Aggregations"),
     "table"       : bi.hostname_table,
-    "infos"       : [ "host", "aggr" ],
+    "infos"       : [ "aggr", "host" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }
@@ -64,7 +64,7 @@ multisite_datasources["bi_hostname_aggregations"] = {
 multisite_datasources["bi_hostnamebygroup_aggregations"] = {
     "title"       : _("BI Aggregations for Hosts by Hostgroups"),
     "table"       : bi.hostname_by_group_table,
-    "infos"       : [ "host", "aggr", "hostgroup" ],
+    "infos"       : [ "aggr", "host" "hostgroup" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }

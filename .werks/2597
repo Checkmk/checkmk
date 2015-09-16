@@ -1,0 +1,9 @@
+Title: Fix settings downtimes on BI aggregates in distributed environment
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i2p3
+Date: 1442412858
+Class: fix
+
+This fixes the exception about a missing key <tt>site</tt>.

@@ -2021,6 +2021,18 @@ metric_info["mail_queue_active_length"] = {
     "color" : "#ff6000",
 }
 
+metric_info["messages_inbound"] = {
+    "title" : _("Inbound messages"),
+    "unit"  : "1/s",
+    "color" : "31/a",
+}
+
+metric_info["messages_outbound"] = {
+    "title" : _("Outbound messages"),
+    "unit"  : "1/s",
+    "color" : "36/a",
+}
+
 metric_info["pages_total"] = {
     "title" : _("Total printed pages"),
     "unit"  : "count",
@@ -4259,6 +4271,13 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "messages_inbound,messages_outbound,+",
+    "half_value"    : 100,
+    "exponent"      : 5,
+})
+
+perfometer_info.append({
     "type"     : "linear",
     "segments" : [ "tapes_util" ],
     "total"    : 100.0,
@@ -5412,6 +5431,14 @@ graph_info.append({
     "metrics" : [
         ( "mail_queue_deferred_length",   "stack" ),
         ( "mail_queue_active_length",     "stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Inbound and Outbound Messages"),
+    "metrics" : [
+        ( "messages_outbound", "stack" ),
+        ( "messages_inbound",  "stack" ),
     ],
 })
 

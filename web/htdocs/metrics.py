@@ -301,13 +301,16 @@ def parse_perf_data(perf_data_string, check_command=None):
             value_parts = values.split(";")
             while len(value_parts) < 5:
                 value_parts.append(None)
-            value, warn, crit, min, max = value_parts[0:5]
+            value_text, warn, crit, min, max = value_parts[0:5]
+            if value_text == "":
+                continue # ignore useless empty variable
+
             # separate value from unit
             i = 0
-            while i < len(value) and (isdigit(value[i]) or value[i] in ['.', ',', '-']):
+            while i < len(value_text) and (isdigit(value_text[i]) or value_text[i] in ['.', ',', '-']):
                 i += 1
-            unit_name = value[i:]
-            value = value[:i]
+            unit_name = value_text[i:]
+            value = value_text[:i]
             perf_data.append((varname, value, unit_name, warn, crit, min, max))
     except:
         if config.debug:
@@ -330,6 +333,7 @@ def translate_metrics(perf_data, check_command):
     color_index = 0
     for nr, entry in enumerate(perf_data):
         varname = entry[0]
+        value_text = entry[1]
 
         translation_entry = {} # Default: no translation neccessary
 
@@ -362,9 +366,8 @@ def translate_metrics(perf_data, check_command):
         # Optional scaling
         scale = translation_entry.get("scale", 1.0)
 
-
         new_entry = {
-            "value"      : float_or_int(entry[1]) * scale,
+            "value"      : float_or_int(value_text) * scale,
             "orig_name"  : varname,
             "scale"      : scale, # needed for graph definitions
             "scalar"     : {},

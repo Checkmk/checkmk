@@ -42,6 +42,9 @@
     BI:
     * 2573 FIX: Fix influance of service period to the availability of BI aggregates...
 
+    Reporting & Availability:
+    * 2596 FIX: Fix exception in availabiliy table if average number of events and summary are both being displayed...
+
     Livestatus:
     * 2581 FIX: Fix crashing Nagios core in rare case when excessive commands are being executed...
 

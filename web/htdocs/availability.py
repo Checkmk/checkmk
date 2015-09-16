@@ -1012,7 +1012,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                     if aggr == "cnt":
                         count = summary_counts.get(sid, 0)
                         if show_summary == "average":
-                            count = float(count) / len(group_availability)
+                            count = float(count) / len(availability_table)
                             text = "%.2f" % count
                         else:
                             text = str(count)

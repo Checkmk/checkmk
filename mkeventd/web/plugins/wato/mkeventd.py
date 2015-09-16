@@ -2021,7 +2021,7 @@ def validate_and_compile_mib(mibname, content):
 def upload_mib(filename, mimetype, content):
     validate_mib_file_name(filename)
 
-    if zipfile.is_zipfile(cStringIO.StringIO(content)):
+    if is_zipfile(cStringIO.StringIO(content)):
         msg = process_uploaded_zip_file(filename, content)
     else:
         if mimetype == "application/tar" or filename.lower().endswith(".gz") or filename.lower().endswith(".tgz"):
@@ -2053,6 +2053,17 @@ def process_uploaded_zip_file(filename, content):
 
     return "<br>\n".join(messages) + \
            "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
+
+
+# Used zipfile.is_zipfile(cStringIO.StringIO(content)) before, but this only
+# possible with python 2.7. zipfile is only supporting checking of files by
+# their path.
+def is_zipfile(fo):
+    try:
+        zipfile.ZipFile(fo)
+        return True
+    except zipfile.BadZipfile:
+        return False
 
 
 def validate_mib_file_name(filename):

@@ -9,18 +9,25 @@
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
-// Copyright by Mathias Kettner and Mathias Kettner GmbH.  All rights reserved.
+// The official homepage is at http://mathias-kettner.de/check_mk.
 //
-// Check_MK is free software;  you can redistribute it and/or modify it
+// check_mk is free software;  you can redistribute it and/or modify it
 // under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.
-//
-// Check_MK is  distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY;  without even the implied warranty of
-// MERCHANTABILITY  or  FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have  received  a copy of the  GNU  General Public
-// License along with Check_MK.  If  not, email to mk@mathias-kettner.de
-// or write to the postal address provided at www.mathias-kettner.de
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// ails.  You should have  received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
 
+// This program causes itself to crash. You can use it to provoke an entry
+// into the "Application" eventlog (at your own risk). Compile it with
+// 'make crash'
+
+int main(int argc, char **argv)
+{
+    char *p = 0x00000000;
+    *p = 17;
+}

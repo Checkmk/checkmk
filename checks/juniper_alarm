@@ -28,7 +28,8 @@
 
 
 def inventory_juniper_alarm(info):
-    return [ (None, None) ]
+    if info[0][0] != "1":
+        return [ (None, None) ]
 
 
 def check_juniper_alarm(item, params, info):

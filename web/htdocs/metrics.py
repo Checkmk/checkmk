@@ -231,7 +231,10 @@ def hsv_to_hexrgb(hsv):
 
 # "#ff0080" -> (1.0, 0.0, 0.5)
 def parse_color(color):
-    return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
+    try:
+        return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
+    except Exception, e:
+        raise MKGeneralException(_("Invalid color specification '%s'") % color)
 
 
 def render_color(color_rgb):

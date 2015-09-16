@@ -4495,7 +4495,7 @@ graph_info.append({
         ( "children_user_time",   "stack" ),
         ( "system_time",          "stack" ),
         ( "children_system_time", "stack" ),
-        ( "user_time,children_user_time,system_time,children_system_time,+,+,+#888", "line", _("Total") ),
+        ( "user_time,children_user_time,system_time,children_system_time,+,+,+#888888", "line", _("Total") ),
     ],
 })
 

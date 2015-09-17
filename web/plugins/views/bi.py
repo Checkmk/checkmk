@@ -64,7 +64,7 @@ multisite_datasources["bi_hostname_aggregations"] = {
 multisite_datasources["bi_hostnamebygroup_aggregations"] = {
     "title"       : _("BI Aggregations for Hosts by Hostgroups"),
     "table"       : bi.hostname_by_group_table,
-    "infos"       : [ "aggr", "host" "hostgroup", "aggr_group" ],
+    "infos"       : [ "aggr", "host", "hostgroup", "aggr_group" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }

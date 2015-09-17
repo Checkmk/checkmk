@@ -35,14 +35,18 @@
 def inventory_mysql_size(info):
     inventory = []
     for dbname, used, avail in info:
-        if dbname not in [ "information_schema", "mysql", "performance_schema" ]:
+        if dbname not in [ "information_schema", "mysql", "performance_schema" ] \
+           and used != 'NULL' and avail != 'NULL':
             inventory.append((dbname, None))
     return inventory
+
 
 def check_mysql_size(item, params, info):
     # size and avail are given as bytes
     for dbname, size, avail in info:
         if item == dbname:
+            if size == 'NULL':
+                return 3, "Missing information - Size is reported as 'NULL'"
             size = int(size)
             infotext = "Size is %s" % get_bytes_human_readable(size)
             if params:

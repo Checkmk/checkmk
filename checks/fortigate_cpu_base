@@ -40,7 +40,7 @@ def check_fortigate_cpu_base(item, params, info):
 
     util = float(util) / num_cpus
 
-    state, infotext, perfdata = check_cpu_util(util, params)
+    state, infotext, perfdata = check_cpu_util(util, params).next()
     infotext += " at %d CPUs" % num_cpus
 
     return state, infotext, perfdata

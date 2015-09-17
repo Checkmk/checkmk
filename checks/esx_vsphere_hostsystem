@@ -73,7 +73,7 @@ def check_esx_vsphere_hostsystem_cpu(item, params, info):
 
     # Convert legacy parameters
     this_time = time.time()
-    state, infotext, perfdata = check_cpu_util(usage, params)
+    state, infotext, perfdata = check_cpu_util(usage, params).next()
 
     infotext += ", %.2fGHz/%.2fGHz" % (used_mhz / 1024.0, total_mhz / 1024.0)
     infotext += ", %d sockets, %d cores/socket, %d threads" % (
@@ -201,10 +201,10 @@ def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, info):
     sorted_params = sorted(params, reverse = True)
     for count, levels in sorted_params:
         if node_count >= count:
-            state, infotext, perfdata = check_cpu_util(usage, levels)
+            state, infotext, perfdata = check_cpu_util(usage, levels).next()
             break
     else:
-        state, infotext, perfdata = check_cpu_util(usage, None)
+        state, infotext, perfdata = check_cpu_util(usage, None).next()
 
     yield 0, "%d Nodes" % node_count
     yield 0, "%.2fGHz/%.2fGHz" % (sum_used / 1024.0, sum_total / 1024.0)

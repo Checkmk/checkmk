@@ -43,7 +43,7 @@ def check_cpu_load_generic(params, load, num_cpus=1):
 
     state, text, perf = check_levels(load[2], 'load15', params, factor = num_cpus)
     perfdata += perf
-    infotext = "15min load %.2f" % load[2]
+    infotext = "15 min load %.2f" % load[2]
     if num_cpus > 1:
         infotext += " at %d Cores (%.2f per Core)" % (num_cpus, load[2]/num_cpus)
     if text:

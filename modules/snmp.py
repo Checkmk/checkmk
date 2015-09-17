@@ -218,7 +218,7 @@ def get_snmpwalk(hostname, check_type, oid, fetchoid, column, use_snmpwalk_cache
         if opt_use_snmp_walk or is_usewalk_host(hostname):
             rowinfo = get_stored_snmpwalk(hostname, fetchoid)
         else:
-            rowinfo = perform_snmpwalk(hostname, check_type, oid, fetchoid)
+            rowinfo = perform_snmpwalk(hostname, ip, check_type, oid, fetchoid)
 
         if is_cachable:
             save_snmpwalk_cache(hostname, fetchoid, rowinfo)
@@ -226,7 +226,7 @@ def get_snmpwalk(hostname, check_type, oid, fetchoid, column, use_snmpwalk_cache
     return rowinfo
 
 
-def perform_snmpwalk(hostname, check_type, base_oid, fetchoid):
+def perform_snmpwalk(hostname, ip, check_type, base_oid, fetchoid):
     added_oids = set([])
     rowinfo = []
     if is_snmpv3_host(hostname):

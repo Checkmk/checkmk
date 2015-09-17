@@ -156,7 +156,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
                 index_format = column
                 continue
 
-            rowinfo = get_snmpwalk(hostname, check_type, oid, fetchoid, column, use_snmpwalk_cache)
+            rowinfo = get_snmpwalk(hostname, ip, check_type, oid, fetchoid, column, use_snmpwalk_cache)
 
             columns.append((fetchoid, rowinfo))
             number_of_rows = len(rowinfo)
@@ -207,7 +207,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
     return info
 
 
-def get_snmpwalk(hostname, check_type, oid, fetchoid, column, use_snmpwalk_cache):
+def get_snmpwalk(hostname, ip, check_type, oid, fetchoid, column, use_snmpwalk_cache):
     is_cachable = is_snmpwalk_cachable(column)
     rowinfo = None
     if is_cachable and use_snmpwalk_cache:

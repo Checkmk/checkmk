@@ -139,6 +139,8 @@ def transform_old_views():
                     view['single_infos'] = ['service']
                 elif 'aggr_name' in hide_filters:
                     view['single_infos'] = ['aggr']
+                elif 'aggr_group' in hide_filters:
+                    view['single_infos'] = ['aggr_group']
                 elif 'log_contact_name' in hide_filters:
                     view['single_infos'] = ['contact']
                 elif 'event_host' in hide_filters:

@@ -1,0 +1,9 @@
+Title: Fixed broken links from BI views to aggregation group views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p11
+Date: 1442472836
+Class: fix
+
+

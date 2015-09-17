@@ -116,3 +116,13 @@ infos['invswpac'] = {
     'title'       : _('Software Package'),
     'single_spec' : None,
 }
+
+infos['aggr_group'] = {
+    'title'       : _('BI Aggregation Group'),
+    'title_plural': _('BI Aggregation Groups'),
+    'single_spec' : [
+        ('aggr_group', TextAscii(
+            title = _('Aggregation group'),
+        )),
+    ],
+}

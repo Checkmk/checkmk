@@ -790,7 +790,7 @@ def parse_history_file(path, headers, filters, greptexts, limit):
             break
 
         try:
-            parts = line.rstrip('\n').split('\t')
+            parts = line.decode('utf-8').rstrip('\n').split('\t')
             convert_history_line(parts)
             values = [line_no] + parts
             if g_status_server.filter_row(headers, filters, values):

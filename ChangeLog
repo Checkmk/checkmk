@@ -47,6 +47,9 @@
     * 2610 FIX: Fixed host search showing results of not permitted folder
     * 2611 FIX: Fixed host view permission checks on host related pages...
 
+    Event Console:
+    * 2614 FIX: Fixed exception when processing events with umlaut in names from history
+
     Livestatus:
     * 2579 FIX: Fixed syntax of JSON in case of column headers turned on...
     * 2581 FIX: Fix crashing Nagios core in rare case when excessive commands are being executed...

@@ -1240,6 +1240,22 @@ register_rule(group + '/' + subgroup_inventory,
                     title = _("Add custom icon or action"),
                     help = _("You can assign icons or actions to the found services in the status GUI."),
                 )),
+                ('process_info', DropdownChoice(
+                    title = _("Enable per-process details in long-output"),
+                    label = _("Enable per-process details"),
+                    help  = _("If active, the long output of this service will contain a list of "
+                              "all the matching processes and their details (i.e. pid, cpu usage, memory usage. "
+                              "Please note that HTML output will only work if \"Escape HTML codes in plugin output\" is "
+                              "disabled in global settings. This might expose you to Cross-Site-Scripting (everyone "
+                              "with write-access to checks could get scripts executed on the monitoring site in the context "
+                              "of the user of the monitoring site) so please do this if you understand the consequences."),
+                    choices = [
+                        ("disable", _("Disable")),
+                        ("text", _("Text output")),
+                        ("html", _("HTML output"))
+                    ],
+                    default_value = "disable",
+                )),
                 ('default_params',
                  Dictionary(
                      title = _("Default parameters for detected services"),
@@ -1249,7 +1265,7 @@ register_rule(group + '/' + subgroup_inventory,
                               "State and Count of Processes</a> instead. "
                               "A change there will immediately be active, while a change in this rule "
                               "requires a re-discovery of the services."),
-                    elements = process_level_elements,
+                     elements = process_level_elements,
                 )),
             ],
             required_keys = [ "descr" ],

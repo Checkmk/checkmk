@@ -61,7 +61,7 @@ def inventory_ps_common(invdata, invrules, info):
             inv_entry += ([],)
             default_levels = inv_entry[3:7]
 
-        entries.append(inv_entry[:3] + [None] + ({ "levels" : default_levels },))
+        entries.append(inv_entry[:3] + [None] + ({ "levels" : default_levels },) + ["disable"])
 
     # Handle new WATO style inventory rules
     for rule in invrules:
@@ -78,9 +78,9 @@ def inventory_ps_common(invdata, invrules, info):
 
         v = rule[0]
 
-        entries.append((v['descr'], v.get('match'), v.get('user'), v.get('icon'), v.get('default_params', v)))
+        entries.append((v['descr'], v.get('match'), v.get('user'), v.get('icon'), v.get('default_params', v), v.get('process_info', 'disable')))
 
-    for servicedesc, pattern, userspec, icon, default_params in entries:
+    for servicedesc, pattern, userspec, icon, default_params, process_info in entries:
         num_perc_s = servicedesc.count("%s")
         for line in info:
             # First entry in line is the node name or None for non-clusters
@@ -121,6 +121,8 @@ def inventory_ps_common(invdata, invrules, info):
 
                 if icon:
                     inv_params["icon"] = icon
+
+                inv_params["process_info"] = process_info
 
                 # default_params is either a clean dict with optional parameters to set as default
                 # or - from version 1.2.4 - the dict from the rule itself. In the later case
@@ -193,6 +195,60 @@ def process_matches(ps, procname, l_user):
             return [ g and g or "" for g in matchobject.groups() ]
     return False
 
+
+# produce text or html output intended for the long output field of a check from details about a
+# process.
+# the input is expected to be a list (one per process) of lists (one per data field) of key-value
+# tuples where the value is again a 2-field tuple, first is the value, second is the unit.
+# This function is actually fairly generic so it could be used for other data structured the same
+# way
+def format_process_list(processes, html_output):
+    def format_value(value):
+        value, unit = value
+        if isinstance(value, float):
+            return "%.2f%s" % (value, unit)
+        else:
+            return "%s%s" % (value, unit)
+
+    if html_output:
+        table_bracket  = "<table>%s</table>"
+        line_bracket   = "<tr>%s</tr>"
+        cell_bracket   = "<td>%.0s%s</td>"
+        cell_seperator = ""
+
+        headers = []
+        headers_found = set()
+
+        for process in processes:
+            for key, value in process:
+                if key not in headers_found:
+                    headers.append(key)
+                    headers_found.add(key)
+
+        # make sure each process has all fields from the table
+        processes_filled = []
+        for process in processes:
+            dictified = dict(process)
+            processes_filled.append([
+                (key, dictified.get(key, "")) for key in headers
+            ])
+        processes = processes_filled
+        header_line = "<tr><th>" + "</th><th>".join(headers) + "</th></tr>"
+    else:
+        table_bracket  = "%s"
+        line_bracket   = "%s\r\n"
+        cell_bracket   = "%s %s"
+        cell_seperator = ", "
+        header_line    = ""
+
+    return table_bracket % (header_line + "".join([
+        line_bracket % cell_seperator.join([
+            cell_bracket % (key, format_value(value)) for key, value in process
+        ])
+        for process in processes
+    ]))
+
+
 # New parameter format: dictionary. Example:
 # {
 #    "user" : "foo",
@@ -257,27 +313,43 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes", 
     max_elapsed    = None
     min_elapsed    = None
     extended_perfdata = False
+    processes = []
 
     # The counter names for the ps check are quite volatile, because there is
     # dynamic part (the pid) in the name. Therefore we clear any counters
     # older than one day. Affected are ps_wmic.user, ps_wmic.kernel, ps_stat.pcpu
     clear_counters("ps_", 86400)
 
-    running_on = set([]) # collect information about nodes the processes run on
+    running_on = set() # collect information about nodes the processes run on
     for line in info:
         node_name = line[0]
         ps = line[1:]
         if process_matches(ps, params.get("process"), [params.get("user")]) != False:
+            process = []
             count += 1
             if node_name != None:
                 running_on.add(node_name)
             if ps[0][0] == '(':
+                if len(line) > 2:
+                    # linux agent style ps has the data fields at line[1] and the process name at
+                    # line[2] (same is true for windows agent
+                    process.append(("name", (line[2], "")))
                 addinfo = ps[0][1:-1].split(",")
                 if len(addinfo) >= 4: # extended performance data: virtualsize, residentsize, %cpu
-                    virtual_size += int(addinfo[1])  # kB
+                    process.append(("user",          (addinfo[0], "")))
+                    process.append(("virtual size",  (int(addinfo[1]), "kB")))
+                    process.append(("resident size", (int(addinfo[2]), "kB")))
+
+                    virtual_size  += int(addinfo[1])  # kB
                     resident_size += int(addinfo[2]) # kB
                     if len(addinfo) >= 10: # even more data: processId, pagefile_usage, usermodetime, kernelmodetime, threadCount, openHandles
                         pid, pagefile_usage, user_c, kernel_c, handle_c = map(saveint, addinfo[4:9])
+
+                        process.append(("pagefile usage",           (pagefile_usage, "")))
+                        process.append(("cpu usage (user space)",   (user_c, "%")))
+                        process.append(("cpu_usage (kernel space)", (kernel_c, "%")))
+                        process.append(("handle count",             (handle_c, "")))
+
                         counter_wrapped = False
                         try:
                             user_per_sec   = get_rate("ps_wmic.user.%d" % pid, now, user_c, onwrap=RAISE)
@@ -323,8 +395,17 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes", 
                         else:
                             pcpu = savefloat(addinfo[3])
                         percent_cpu += pcpu
+                        process.append(("cpu usage", (pcpu, "%")))
+
+                    process.append(("pid", (pid, "")))
 
                     extended_perfdata = True
+            elif len(line) > 1:
+                # otherwise we have only two fields, one of which is the node. if the remaining
+                # field is not the process name, that ps makes no sense at all
+                process.append(("name", (line[1], "")))
+
+            processes.append(process)
 
     if "cpulevels" in params:
         warn_cpu, crit_cpu = params["cpulevels"]
@@ -440,5 +521,8 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes", 
         elif max_elapsed >= crit_age:
             state = max(state, 1)
             infotext += "(!)"
+
+    if "process_info" in params and params["process_info"] != "disable":
+        infotext += "\r\n" + format_process_list(processes, params["process_info"] == "html")
 
     return state, infotext, perfdata

@@ -1985,11 +1985,14 @@ def mode_edithost(phase, new, cluster):
         host = g_folder[".hosts"][clonename]
         cluster = ".nodes" in host
         mode = "clone"
+        check_host_permissions(clonename)
+
     elif not new and hostname in g_folder[".hosts"]:
         title = _("Properties of host") + " " + hostname
         host = g_folder[".hosts"][hostname]
         cluster = ".nodes" in host
         mode = "edit"
+        check_host_permissions(hostname)
     else:
         if cluster:
             title = _("Create new cluster")
@@ -1999,6 +2002,7 @@ def mode_edithost(phase, new, cluster):
             host = {}
         mode = "new"
         new = True
+        check_new_host_permissions(g_folder, host, hostname)
 
     if phase == "title":
         return title
@@ -2233,6 +2237,8 @@ def mode_rename_host(phase):
 
     if hostname not in g_folder[".hosts"]:
         raise MKGeneralException(_("You called this page with an invalid host name."))
+
+    check_host_permissions(hostname)
 
     host = g_folder[".hosts"][hostname]
     is_cluster = ".nodes" in host
@@ -2515,6 +2521,9 @@ def mode_object_parameters(phase):
     host = g_folder[".hosts"][hostname]
     is_cluster = ".nodes" in host
     service = html.var("service")
+
+    if hostname:
+        check_host_permissions(hostname)
 
     if phase == "title":
         title = _("Parameters of") + " " + hostname
@@ -2874,6 +2883,8 @@ def mode_diag_host(phase):
     if not hostname:
         raise MKGeneralException(_('The hostname is missing.'))
 
+    check_host_permissions(hostname)
+
     if phase == 'title':
         return _('Diagnostic of host') + " " + hostname
 
@@ -3094,6 +3105,8 @@ def mode_inventory(phase, firsttime):
     if hostname not in g_folder[".hosts"]:
         raise MKGeneralException(_("You called this page for a non-existing host."))
     host = g_folder[".hosts"][hostname]
+
+    check_host_permissions(hostname)
 
     if phase == "title":
         title = _("Services of host %s") % hostname

@@ -36,7 +36,7 @@ def page_index():
         start_url = default_start_url
 
     # Also prevent using of "javascript:" URLs which could used to inject code
-    if start_url.startswith('javascript:'):
+    if start_url.lower().startswith('javascript:'):
         start_url = default_start_url
 
     if "%s" in config.page_heading:

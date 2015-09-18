@@ -1,0 +1,12 @@
+Title: Fixed host view permission checks on host related pages
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1442559852
+
+Different host related pages (properties, services, rulesets, diagnose) were lacking
+a "read host" permission checks. So user were able to view details about hosts which
+they were not permitted.

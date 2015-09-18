@@ -180,7 +180,7 @@ def transform_builtin_dashboards():
                 view_name = dashlet['view'].split('&')[0]
 
                 # Copy the view definition into the dashlet
-                load_view_into_dashlet(dashlet, nr, view_name)
+                load_view_into_dashlet(dashlet, nr, view_name, load_from_all_views=True)
                 del dashlet['view']
 
             else:
@@ -206,21 +206,44 @@ def transform_builtin_dashboards():
         dashboard.setdefault('description', dashboard.get('title', ''))
     builtin_dashboards_transformed = True
 
-def load_view_into_dashlet(dashlet, nr, view_name, add_context=None):
+def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_all_views=False):
     import views
     views.load_views()
-    views = views.permitted_views()
-    if view_name in views:
-        view = copy.deepcopy(views[view_name])
-        dashlet.update(view)
-        if add_context:
-            dashlet['context'].update(add_context)
 
-        # Overwrite the views default title with the context specific title
-        dashlet['title'] = visuals.visual_title('view', view)
-        dashlet['title_url'] = html.makeuri_contextless(
-                [('view_name', view_name)] + visuals.get_singlecontext_vars(view).items(),
-                filename='view.py')
+    permitted_views = views.permitted_views()
+
+    # it is random which user is first accessing
+    # an apache python process, initializing the dashboard loading and conversion of
+    # old dashboards. In case of the conversion we really try hard to make the conversion
+    # work in all cases. So we need all views instead of the views of the user.
+    if load_from_all_views and view_name not in permitted_views:
+        # This is not really 100% correct according to the logic of visuals.available(),
+        # but we do this for the rare edge case during legacy dashboard conversion, so
+        # this should be sufficient
+        view = None
+        for (u, n), this_view in views.all_views().items():
+            # take the first view with a matching name
+            if view_name == n:
+                view = this_view
+                break
+
+        if not view:
+            raise MKGeneralException(_("Failed to convert a builtin dashboard which is referencing "
+                                       "the view \"%s\". You will have to migrate it to the new "
+                                       "dashboard format on your own to work properly." % view_name))
+    else:
+        view = permitted_views[view_name]
+
+    view = copy.deepcopy(view) # Clone the view
+    dashlet.update(view)
+    if add_context:
+        dashlet['context'].update(add_context)
+
+    # Overwrite the views default title with the context specific title
+    dashlet['title'] = visuals.visual_title('view', view)
+    dashlet['title_url'] = html.makeuri_contextless(
+            [('view_name', view_name)] + visuals.get_singlecontext_vars(view).items(),
+            filename='view.py')
 
     dashlet['type']       = 'view'
     dashlet['name']       = 'dashlet_%d' % nr
@@ -675,7 +698,6 @@ def ajax_dashlet():
 
     if the_dashlet['type'] not in dashlet_types:
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
-
     render_dashlet_content(ident, the_dashlet, stash_html_vars=False)
 
 #.

@@ -38,6 +38,7 @@
     * 2555 FIX: Availability: Fixed exception when trying to group BI aggregations by host/service-groups
     * 2580 FIX: Remove bogus ;0 in comment of problem acknowledgements...
     * 2607 FIX: Fixed broken links from BI views to aggregation group views
+    * 2615 FIX: Fixed bug in legacy dashboard conversion when having users not permitted to access embedded views...
 
     WATO:
     * 2264 WATO Web API: new function get_all_hosts (returns all host attributes)

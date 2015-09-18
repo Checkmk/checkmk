@@ -1,0 +1,14 @@
+Title: Remove button for removing downtimes an BI aggregates because it cannot work
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1442414132
+
+This button has never worked and was never intended. Currently you can set
+a downtime on all services and hosts contained in a BI aggregation. But
+there is no way - alas - to revert this and remove all those downtimes. The
+reason is that for creating a downtime you just need the name of a host and
+service. For removing one you need its ID. And that is not available in BI.

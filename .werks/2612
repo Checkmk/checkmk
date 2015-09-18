@@ -1,0 +1,23 @@
+Title: Fixed possible XSS on service detail page using the long service output
+Level: 2
+Component: multisite
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1442563370
+
+Normaly all check results displayed in the GUI are HTML escaped by default.
+The escaping was missing for the long service output of the service detail
+page. So one could create multi line check results containing HTML/Javascript
+code which would be executed when a user opens the service detail page of
+the service with the check result containing the injected code.
+
+The issue has been fixed by escaping the long output exactly like the normal
+plugin output. One difference is left: newline characters are replaced by
+HTML newlines to make displaying of multiple lines still possible.
+
+If you want the old behaviour back, you can disable the plugin output escaping
+using the global settings. But please note that an attacker might be able to
+inject javascript code.
+

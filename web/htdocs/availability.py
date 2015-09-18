@@ -469,37 +469,40 @@ def get_avoption_entries(what):
 
 def get_default_avoptions():
     return {
-        "range"          : (time.time() - 86400, time.time()),
-        "rangespec"      : "d0",
-        "labelling"      : [],
-        "downtimes"      : {
+        "range"               : (time.time() - 86400, time.time()),
+        "rangespec"           : "d0",
+        "labelling"           : [],
+        "av_levels"           : None,
+        "av_filter_outages"   : { "warn" : 0.0, "crit" : 0.0, "non-ok" : 0.0 },
+        "outage_statistics"   : ([],[]),
+        "av_mode"             : False,
+        "service_period"      : "honor",
+        "notification_period" : "ignore",
+        "grouping"            : None,
+        "dateformat"          : "yyyy-mm-dd hh:mm:ss",
+        "timeformat"          : "percentage_2",
+        "short_intervals"     : 0,
+        "dont_merge"          : False,
+        "summary"             : "sum",
+        "show_timeline"       : False,
+        "timelimit"           : 30,
+
+        "downtimes" : {
             "include" : "honor",
             "exclude_ok" : False,
         },
-        "consider"       : {
-            "flapping"            : True,
-            "host_down"           : True,
-            "unmonitored"         : True,
+
+        "consider" : {
+            "flapping"    : True,
+            "host_down"   : True,
+            "unmonitored" : True,
         },
+
         "state_grouping" : {
-            "warn"      : "warn",
-            "unknown"   : "unknown",
-            "host_down" : "host_down",
+            "warn"        : "warn",
+            "unknown"     : "unknown",
+            "host_down"   : "host_down",
         },
-        "av_levels"         : None,
-        "av_filter_outages" : { "warn" : 0.0, "crit" : 0.0, "non-ok" : 0.0 },
-        "outage_statistics" : ([],[]),
-        "av_mode"           : False,
-        "service_period"      : "honor",
-        "notification_period" : "ignore",
-        "grouping"          : None,
-        "dateformat"     : "yyyy-mm-dd hh:mm:ss",
-        "timeformat"     : "percentage_2",
-        "short_intervals"   : 0,
-        "dont_merge"        : False,
-        "summary"           : "sum",
-        "show_timeline"     : False,
-        "timelimit"         : 30,
     }
 
 #.
@@ -1020,7 +1023,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                     if aggr == "cnt":
                         count = summary_counts.get(sid, 0)
                         if show_summary == "average":
-                            count = float(count) / len(group_availability)
+                            count = float(count) / len(availability_table)
                             text = "%.2f" % count
                         else:
                             text = str(count)

@@ -45,7 +45,12 @@
 #    input to str or unicode must happen as early as possible,
 #    directly when reading from file or URL.
 
-import time, os, pwd, urllib, random, re, __builtin__, json
+import time, os, pwd, urllib, random, re, __builtin__
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.

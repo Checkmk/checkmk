@@ -1,0 +1,9 @@
+Title: kemp_loadmaster_ha: Fixed wrong discovery on snmp monitored linux systems
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442491773
+Class: fix
+
+

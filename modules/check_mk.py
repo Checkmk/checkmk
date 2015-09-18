@@ -931,8 +931,10 @@ def host_of_clustered_service(hostname, servicedesc):
         return hostname
 
     cluster_mapping = service_extra_conf(hostname, servicedesc, clustered_services_mapping)
-    if cluster_mapping:
-        return cluster_mapping[0]
+    for cluster in cluster_mapping:
+        # Check if the host is in this cluster
+        if cluster in the_clusters:
+            return cluster
 
     # 1. New style: explicitly assigned services
     for cluster, conf in clustered_services_of.items():

@@ -1,0 +1,13 @@
+Title: mysql_capacity: Can now handle sizes reported being NULL
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442497282
+Class: fix
+
+The discovery is now skipping all databases reported with a size
+or capacity of 'NULL'. The check function can also deal with this
+situation to prevent crash reports. Users experiencing this situation
+should update and rediscover the services of the affected hosts to
+remove the useless database checks.

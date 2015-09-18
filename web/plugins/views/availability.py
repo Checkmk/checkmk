@@ -55,7 +55,7 @@ def get_availability_options_from_url(what):
 
 
 def render_availability_options(what):
-    if html.var("_reset") and html.check_transaction():
+    if html.var("_reset"):
         config.save_user_file("avoptions", {})
         for varname in html.vars.keys():
             if varname.startswith("avo_"):
@@ -110,12 +110,13 @@ def render_availability_options(what):
 
     html.write("<tr><td>")
     html.button("apply", _("Apply"), "submit")
-    html.button("_reset", _("Reset to defaults"), "submit")
+    html.hidden_fields()
+    html.end_form()
+
+    html.buttonlink(html.makeuri([("_reset", "1")], remove_prefix="avo_"), _("Reset to defaults"))
     html.write("</td></tr></table>")
     html.write("</div>")
 
-    html.hidden_fields()
-    html.end_form()
 
     if html.form_submitted():
         config.save_user_file("avoptions", avoptions)

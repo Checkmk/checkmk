@@ -52,7 +52,7 @@ def check_netapp_api_vf_stats_cpu_util(item, params, info):
         elif used_perc > 100:
             used_perc = 100
 
-        state, infotext, perfdata = check_cpu_util(used_perc, params, now)
+        state, infotext, perfdata = check_cpu_util(used_perc, params, now).next()
         perfdata[0] = perfdata[0][:5]
         return state, infotext, perfdata
 

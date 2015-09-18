@@ -1,0 +1,10 @@
+Title: Additional fix for refleced XSS on index page using start_url
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p11
+Date: 1442565029
+Class: security
+
+The issue has already been addressed in werk #2388, but was not really
+fixing the problem for all cases.

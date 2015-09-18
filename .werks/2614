@@ -1,0 +1,10 @@
+Title: Fixed exception when processing events with umlaut in names from history
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1442572943
+
+

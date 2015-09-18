@@ -101,6 +101,9 @@ def permitted_views():
         load_views()
         return available_views
 
+def all_views():
+    return multisite_views
+
 # Convert views that are saved in the pre 1.2.6-style
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
 def transform_old_views():

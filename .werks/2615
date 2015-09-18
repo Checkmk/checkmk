@@ -1,0 +1,12 @@
+Title: Fixed bug in legacy dashboard conversion when having users not permitted to access embedded views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1442578060
+
+When you have legacy dashoards (defined via plugin, located below local/share/check_mk/web/plugins/dashboards) defined which include a view where some of your users don't have access to and these
+users are the first ones to access the GUI after apache reload/restart, this could result
+in exceptions like this for other users: "KeyError: 'datasource'".

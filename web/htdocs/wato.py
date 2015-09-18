@@ -3491,6 +3491,10 @@ def search_hosts_in_folders(folder, crit):
 
 def search_hosts_in_folder(folder, crit):
     found = []
+
+    if check_folder_permissions(folder, "read", exception=False) != True:
+        return 0
+
     hosts = load_hosts(folder)
     for hostname, host in hosts.items():
         if crit[".name"] and crit[".name"].lower() not in hostname.lower():

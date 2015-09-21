@@ -1,0 +1,10 @@
+Title: knuerr_sensors: no longer creates a service for unnamed sensor
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442822660
+Class: fix
+
+The device seems to send readings for unconnected sensor slots. A missing name seems to be the only
+indication that no sensor is connected.

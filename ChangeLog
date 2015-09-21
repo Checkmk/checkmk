@@ -1,4 +1,7 @@
 1.2.6p12:
+    WATO:
+    * 2599 FIX: Fix newly introduced fatal bug preventing creation of new hosts in WATO...
+
 
 1.2.6p11:
     Checks & Agents:

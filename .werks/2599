@@ -1,0 +1,9 @@
+Title: Fix newly introduced fatal bug preventing creation of new hosts in WATO
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.6p12
+Date: 1442832955
+Class: fix
+
+This fixes the error message <i>Invalid User Input, Please specify a hostname</i>.

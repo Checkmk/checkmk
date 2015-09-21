@@ -1,0 +1,12 @@
+Title: check_bi_aggr: $HOSTNAME$ in aggregation name does not work with CMC
+Component: checks
+State: open
+Date: 2015-09-21 15:43:27
+Targetversion: 1.2.6
+Class: bug
+
+The reason seems to be, that $HOSTNAME$ is correctly be added
+to the command line arguments, but they are put into the commandlie
+as $ARG1$. The CMC does not recursively expand macros in $ARG1$, so
+$HOSTNAME$ keeps unexpanded. Recursive expansion is not a good idea,
+however! Maybe we need to redefine the API for active checks here...

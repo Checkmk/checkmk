@@ -1647,7 +1647,7 @@ register_rule(group,
         title = _("Periodic service discovery"),
         style = "dropdown",
         default_value = {
-            "check_interval"          : 2 * 60 * 60,
+            "check_interval"          : 2 * 60,
             "severity_unmonitored"    : 1,
             "severity_vanished"       : 0,
             "inventory_check_do_scan" : True,
@@ -1665,9 +1665,16 @@ register_rule(group,
                         "that are currently not monitored."),
                 elements = [
                     ( "check_interval",
-                      Age(
-                          title = _("Perform service discovery every"),
-                    )),
+                        Transform(
+                            Age(
+                                minvalue=1,
+                                display = [ "days", "hours", "minutes" ]
+                            ),
+                            forth = lambda v: int(v * 60),
+                            back = lambda v: float(v) / 60.0,
+                            title = _("Perform service discovery every"),
+                        ),
+                    ),
                     ( "severity_unmonitored",
                       DropdownChoice(
                          title = _("Severity of unmonitored services"),

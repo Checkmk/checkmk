@@ -331,7 +331,7 @@ register_rule(group,
            Dictionary(
                title = _("Optional parameters"),
                elements = [
-                   ("name", 
+                   ("name",
                         TextUnicode(
                             title = _("Alternative Service description"),
                             help = _("The service description will be this name instead <i>DNS Servername</i>"),
@@ -1515,6 +1515,15 @@ register_rule(group,
                             ( "ok", _("Force to be OK") ),
                             ( "warn", _("Force to be WARN, if aggregate is not OK") ),
                           ]
+                    )),
+                    ("track_downtimes",
+                     Checkbox(
+                        title = _("Track downtimes"),
+                        label = _("Automatically track downtimes of aggregation"),
+                        help = _("If this is active, the check will automatically go into downtime "
+                                "whenever the aggregation does. This downtime is also cleaned up "
+                                "automatically when the aggregation leaves downtime. "
+                                "Downtimes you set manually for this check are unaffected."),
                     )),
                 ]
             ),

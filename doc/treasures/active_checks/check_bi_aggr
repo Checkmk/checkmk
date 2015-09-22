@@ -229,7 +229,6 @@ if track_downtime:
     if downtime_tracked != (row["aggr_in_downtime"] == '1'):
         # there is a discrepance between tracked downtime state and the real state
         if row["aggr_in_downtime"] == '1':
-            print("schedule tracked downtime")
             # need to track downtime
             conn.command("[%d] SCHEDULE_SVC_DOWNTIME;%s;Aggr Host %s;%d;%d;1;0;0;"
                          "tracking;Automatic downtime" % (now, hostname, hostname, now, 2147483647))

@@ -482,12 +482,12 @@ def paint_downtimes(what, row, tags, host_custom_vars):
     # for this host / service
     if row[what + "_scheduled_downtime_depth"] > 0:
         if what == "host":
-            icon = "hostdowntime"
+            icon = "derived_downtime"
         else:
             icon = "downtime"
         return icon, _("Currently in downtime"), url_to_view(row, 'downtimes_of_' + what)
     elif what == "service" and row["host_scheduled_downtime_depth"] > 0:
-        return 'hostdowntime', _("The host is currently in downtime"), url_to_view(row, 'downtimes_of_host')
+        return 'derived_downtime', _("The host is currently in downtime"), url_to_view(row, 'downtimes_of_host')
 
 multisite_icons_and_actions['status_downtimes'] = {
     'host_columns':    [ 'scheduled_downtime_depth' ],

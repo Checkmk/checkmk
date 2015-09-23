@@ -1,4 +1,4 @@
-Title: New check hp_procurve_temp: monitors the system temperature of HP Switches which support the HP-ICF-CHASSIS-Mib
+Title: hp_procurve_temp: new check which monitors the system temperature of HP Switches which support the HP-ICF-CHASSIS-Mib
 Level: 1
 Component: checks
 Compatible: compat

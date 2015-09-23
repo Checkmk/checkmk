@@ -1,4 +1,4 @@
-Title: new check raritan_px2_sensors: monitors the temperature, humidity, air flow and pressure sensors connected to a Raritan PX2 Device
+Title: raritan_px2_sensors: new check which monitors the temperature, humidity, air flow and pressure sensors connected to a Raritan PX2 Device
 Level: 1
 Component: checks
 Compatible: compat

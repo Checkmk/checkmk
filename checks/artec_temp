@@ -34,7 +34,7 @@ factory_settings["artec_temp_default_levels"] = {
 
 
 def inventory_artec_temp(info):
-    return [ ("HDD", {}) ]
+    return [ ("Disk", {}) ]
 
 
 def check_artec_temp(item, params, info):

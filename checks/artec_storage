@@ -52,7 +52,7 @@ def check_artec_storage(_no_item, _no_params, info):
 check_info['artec_storage'] = {
     'inventory_function'        : inventory_artec_storage,
     'check_function'            : check_artec_storage,
-    'service_description'       : 'Storage SUMMARY',
+    'service_description'       : 'Storage',
 #    'has_perfdata'              : True, # TODO define perf var and adapt man page
     'snmp_info'                 : (".1.3.6.1.4.1.31560.0.1.3.1", [
                                         "3",    # artecStorageName

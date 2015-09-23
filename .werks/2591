@@ -1,4 +1,4 @@
-Title: new check raritan_emx_sensors: monitors contact, temperature, humidity, air flow and pressure sensors connected to a Raritan EMX Device
+Title: raritan_emx_sensors: new check which monitors contact, temperature, humidity, air flow and pressure sensors connected to a Raritan EMX Device
 Level: 1
 Component: checks
 Compatible: compat

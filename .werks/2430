@@ -1,0 +1,11 @@
+Title: Fixed crash with availability queries when using nagios as core
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1442997503
+
+The nagios core crashed when a query on the statehist table did return zero entries.
+This happened when a timewindow was queried where the hosts/services in question did not exist.

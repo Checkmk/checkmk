@@ -186,7 +186,7 @@ void TableStateHistory::addColumns(Table *table)
 
 LogEntry *TableStateHistory::getPreviousLogentry()
 {
-    if (_it_entries == _entries->begin()) {
+    while (_it_entries == _entries->begin()) {
         // open previous logfile
         if (_it_logs == g_store->logCache()->logfiles()->begin())
             return 0;
@@ -196,25 +196,28 @@ LogEntry *TableStateHistory::getPreviousLogentry()
             _it_entries = _entries->end();
         }
     }
+
     return (--_it_entries)->second;
 }
 
 LogEntry *TableStateHistory::getNextLogentry()
 {
-    if (++_it_entries == _entries->end()) {
-        if (++_it_logs == g_store->logCache()->logfiles()->end()) {
-            // No further logfiles available
-            // prevent errors on subsequent getNextLogentry()
-            --_it_entries;
-            --_it_logs;
+    if (_it_entries != _entries->end())
+        ++_it_entries;
+
+    while (_it_entries == _entries->end()) {
+        _logfiles_t::iterator _it_logs_cpy = _it_logs;
+        if (++_it_logs_cpy == g_store->logCache()->logfiles()->end()) {
             return 0;
         }
         else {
+            ++_it_logs;
             _entries = _it_logs->second->getEntriesFromQuery(_query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
             _it_entries = _entries->begin();
         }
     }
     return _it_entries->second;
+
 }
 
 void TableStateHistory::answerQuery(Query *query)
@@ -306,10 +309,11 @@ void TableStateHistory::answerQuery(Query *query)
         return;
     }
 
+
     // Determine initial logentry
     LogEntry* entry;
     _entries = _it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
-    if (_it_logs != newest_log) {
+    if (_entries->size() > 0 &&_it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--_it_entries != _entries->begin()) {
@@ -320,7 +324,6 @@ void TableStateHistory::answerQuery(Query *query)
         }
     } else
         _it_entries = _entries->begin();
-
 
     // From now on use getPreviousLogentry() / getNextLogentry()
     HostServiceKey key;

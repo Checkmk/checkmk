@@ -1,4 +1,4 @@
-Title: new check cisco_stackpower: monitors the link status of stack ports of Cisco Switches 3750-E Series
+Title: cisco_stackpower: new check which monitors the link status of stack ports of Cisco Switches 3750-E Series
 Level: 1
 Component: checks
 Compatible: compat

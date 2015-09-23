@@ -2623,7 +2623,7 @@ class Tuple(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
         self._show_titles = kwargs.get("show_titles", True)
-        self._orientation = kwargs.get("orientation", "vertical")
+        self._orientation = kwargs.get("orientation", "vertical") # also: horizontal, float
         self._separator = kwargs.get("separator", " ") # in case of float
         self._title_br = kwargs.get("title_br", True)
 

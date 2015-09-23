@@ -26,7 +26,7 @@
 
 import math, grp, pprint, os, errno, gettext, marshal, re, fcntl, __builtin__, time
 
-# Workarround when the file is included outsite multisite
+# Workaround when the file is included from outside of Multisite
 try:
     import defaults
 except:
@@ -511,6 +511,13 @@ def cmp_service_name_equiv(r):
         return -2
     else:
         return 0
+
+def cmp_version(a, b):
+    if a == None or b == None:
+        return cmp(a, b)
+    aa = map(tryint, a.split("."))
+    bb = map(tryint, b.split("."))
+    return cmp(aa, bb)
 
 
 def frexpb(x, base):
@@ -1090,3 +1097,48 @@ def dict_choices(types):
         in sorted(types.items()) ]
 
 interface_port_type_choices = dict_choices(interface_port_types)
+
+
+#.
+#   .--Floating Options----------------------------------------------------.
+#   |                _____ _             _   _                             |
+#   |               |  ___| | ___   __ _| |_(_)_ __   __ _                 |
+#   |               | |_  | |/ _ \ / _` | __| | '_ \ / _` |                |
+#   |               |  _| | | (_) | (_| | |_| | | | | (_| |                |
+#   |               |_|   |_|\___/ \__,_|\__|_|_| |_|\__, |                |
+#   |                                                |___/                 |
+#   |                   ___        _   _                                   |
+#   |                  / _ \ _ __ | |_(_) ___  _ __  ___                   |
+#   |                 | | | | '_ \| __| |/ _ \| '_ \/ __|                  |
+#   |                 | |_| | |_) | |_| | (_) | | | \__ \                  |
+#   |                  \___/| .__/ \__|_|\___/|_| |_|___/                  |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+#   |  Rendering of filter boxes like (used by availability options and    |
+#   |  Werks).
+#   '----------------------------------------------------------------------'
+
+def begin_floating_options(div_id, is_open):
+    html.write('<div class="view_form" id="%s" %s>'
+            % (div_id, not is_open and 'style="display: none"' or '') )
+    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
+
+def end_floating_options(reset_url=None):
+    html.write("</td></tr>")
+    html.write("<tr><td>")
+    html.button("apply", _("Apply"), "submit")
+    if reset_url:
+        html.buttonlink(reset_url, _("Reset to defaults"))
+
+    html.write("</td></tr></table>")
+    html.write("</div>")
+
+def render_floating_option(name, height, varprefix, valuespec, value):
+    html.write('<div class="floatfilter %s %s">' % (height, name))
+    html.write('<div class=legend>%s</div>' % valuespec.title())
+    html.write('<div class=content>')
+    valuespec.render_input(varprefix + name, value)
+    html.write("</div>")
+    html.write("</div>")
+
+

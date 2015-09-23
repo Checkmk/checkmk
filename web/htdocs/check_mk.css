@@ -572,3 +572,74 @@ div#hover_menu div.error {
     width:350px;
     margin: 0;
 }
+
+
+/*--Werks------------------------------------------------------------------.
+|                    __        __        _                                 |
+|                    \ \      / /__ _ __| | _____                          |
+|                     \ \ /\ / / _ \ '__| |/ / __|                         |
+|                      \ V  V /  __/ |  |   <\__ \                         |
+|                       \_/\_/ \___|_|  |_|\_\___/                         |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Pages showing the Check_MK change log (werks.py)                         |
+'-------------------------------------------------------------------------*/
+td.werklevel, td.werkclass, td.werkcomp {
+    text-align: center;
+    white-space: nowrap;
+}
+
+tr:nth-child(odd) td.werklevel2 {
+    background-color: #00bbff;
+}
+tr:nth-child(even) td.werklevel2 {
+    background-color: #44ccff;
+}
+td.werklevel3 {
+    font-weight: bold;
+}
+tr:nth-child(odd) td.werklevel3 {
+    background-color: #6cffff;
+}
+tr:nth-child(even) td.werklevel3 {
+    background-color: #66ffff;
+}
+
+tr:nth-child(odd) td.werkclassfeature {
+    background-color: #a8f0a8;
+}
+tr:nth-child(even) td.werkclassfeature {
+    background-color: #afa;
+}
+tr:nth-child(even) td.werkclassfix {
+    background-color: #ff9;
+}
+tr:nth-child(odd) td.werkclassfix {
+    background-color: #f8f877;
+}
+td.werkclasssecurity {
+    color: white;
+    font-weight: bold;
+}
+tr:nth-child(odd) td.werkclasssecurity {
+    background-color: #ff0000;
+}
+tr:nth-child(even) td.werkclasssecurity {
+    background-color: #ff3030;
+}
+
+table.werks td a {
+    color: black;
+    text-decoration: underline;
+}
+
+td.werkcompincomp {
+    font-weight: bold;
+}
+
+tr:nth-child(odd) td.werkcompincomp {
+    background-color: #ff7777;
+}
+tr:nth-child(even) td.werkcompincomp {
+    background-color: #ff8888;
+}

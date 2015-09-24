@@ -314,6 +314,7 @@
     * 2541 FIX: Round last state change of network interfaces to one day, avoid history spam...
     * 2553 FIX: solaris_prtdiag: Can now handle Supermicro servers using Solaris 10
     * 2624 FIX: fixed vbscript based inventory script (windows) only sending updated data every 39 years
+    * 1293 FIX: dmidecode: Sanitized CPU Vendor field for some Intel CPUs...
 
 
 1.2.7i2:

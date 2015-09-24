@@ -6,4 +6,4 @@ Version: 1.2.7i3
 Date: 1443085698
 Class: feature
 
-These checks monitor the disk space of the mount points, the number of documents, the CPD load, the used memory, the number of processes and the temperature of the ARTEC Mail Archive Appliance.
+These checks monitor the used disk space of the mount points, the number of documents, the CPU load, the used memory, the number of processes and the temperature of the ARTEC Mail Archive Appliance.

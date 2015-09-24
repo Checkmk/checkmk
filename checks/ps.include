@@ -346,8 +346,6 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes", 
                         pid, pagefile_usage, user_c, kernel_c, handle_c = map(saveint, addinfo[4:9])
 
                         process.append(("pagefile usage",           (pagefile_usage, "")))
-                        process.append(("cpu usage (user space)",   (user_c, "%")))
-                        process.append(("cpu_usage (kernel space)", (kernel_c, "%")))
                         process.append(("handle count",             (handle_c, "")))
 
                         counter_wrapped = False
@@ -369,6 +367,8 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes", 
                         kernel_perc = kernel_per_sec / 100000.0 / cpu_cores
                         percent_cpu += user_perc + kernel_perc
                         handle_count += handle_c
+                        process.append(("cpu usage (user space)",   (user_perc, "%")))
+                        process.append(("cpu_usage (kernel space)", (kernel_perc, "%")))
                     else:
                         # addinfo[3] contains the used CPU time and possibly, separated by /, also
                         # the total elapsed time since the birth of the process.

@@ -589,43 +589,47 @@ td.werklevel, td.werkclass, td.werkcomp {
     white-space: nowrap;
 }
 
-tr:nth-child(odd) td.werklevel2 {
+table.data.werks tr:nth-child(odd) td.werklevel2 {
     background-color: #00bbff;
 }
-tr:nth-child(even) td.werklevel2 {
+table.data.werks tr:nth-child(even) td.werklevel2 {
     background-color: #44ccff;
 }
-td.werklevel3 {
+table.data.werks td.werklevel3 {
     font-weight: bold;
 }
-tr:nth-child(odd) td.werklevel3 {
+table.data.werks tr:nth-child(odd) td.werklevel3 {
     background-color: #6cffff;
 }
-tr:nth-child(even) td.werklevel3 {
+table.data.werks tr:nth-child(even) td.werklevel3 {
     background-color: #66ffff;
 }
 
-tr:nth-child(odd) td.werkclassfeature {
+table.data.werks tr:nth-child(odd) td.werkclassfeature {
     background-color: #a8f0a8;
 }
-tr:nth-child(even) td.werkclassfeature {
+table.data.werks tr:nth-child(even) td.werkclassfeature {
     background-color: #afa;
 }
-tr:nth-child(even) td.werkclassfix {
+table.data.werks tr:nth-child(even) td.werkclassfix {
     background-color: #ff9;
 }
-tr:nth-child(odd) td.werkclassfix {
+table.data.werks tr:nth-child(odd) td.werkclassfix {
     background-color: #f8f877;
 }
-td.werkclasssecurity {
+table.data.werks td.werkclasssecurity {
     color: white;
     font-weight: bold;
 }
-tr:nth-child(odd) td.werkclasssecurity {
+table.data.werks tr:nth-child(odd) td.werkclasssecurity {
     background-color: #ff0000;
 }
-tr:nth-child(even) td.werkclasssecurity {
+table.data.werks tr:nth-child(even) td.werkclasssecurity {
     background-color: #ff3030;
+}
+
+table.data.headerleft.werks td {
+    text-align: left;
 }
 
 table.werks td a {
@@ -642,4 +646,40 @@ tr:nth-child(odd) td.werkcompincomp {
 }
 tr:nth-child(even) td.werkcompincomp {
     background-color: #ff8888;
+}
+
+/* NOWIKI formatting in Werks */
+td.nowiki h3 {
+    color: black;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+td.nowiki pre {
+    padding: 3px 8px;
+}
+
+td.nowiki pre.code {
+    background-color: white;
+}
+td.nowiki pre.file {
+    background-color: #fff0b5;
+}
+
+td.nowiki div.filename {
+    margin-bottom: -12px;
+    background-color: #E6D8A3;
+    padding: 3px 8px;
+    font-family: Hack, courier;
+    font-weight: bold;
+}
+
+
+td.nowiki table {
+    border: 1px solid black;
+    border-collapse: collapse;
+    margin: 10px 0px;
+}
+td.nowiki table td, td.nowiki table th {
+    border: 1px solid #888;
 }

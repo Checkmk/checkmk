@@ -27,9 +27,11 @@
 # Functions for parsing Werks and showing the users a browsable change
 # log
 
-import defaults, os, table
+import defaults, config, os, table
 from lib import *
 from valuespec import *
+
+acknowledgement_path = defaults.var_dir + "/acknowledged_werks.mk"
 
 
 werk_classes = {
@@ -45,8 +47,9 @@ werk_levels = {
 }
 
 werk_compatibilities = {
-    "compat" : _("Compatible"),
-    "incomp" : _("Incompatible"),
+    "compat"       : _("Compatible"),
+    "incomp_ack"   : _("Incompatible"),
+    "incomp_unack" : _("Incompatible - TODO"),
 }
 
 werk_components = {
@@ -84,8 +87,24 @@ werks_stylesheets = [ "pages", "check_mk", "status", "wato", "views" ]
 def page_version():
     load_werks()
     html.header(_("Check_MK %s Release Notes") % defaults.check_mk_version, stylesheets = werks_stylesheets)
+    handle_acknowledgement()
     render_werks_table()
     html.footer()
+
+
+def handle_acknowledgement():
+    if html.var("_werk_ack") and html.check_transaction():
+        werk_id = int(html.var("werk_ack"))
+        werk = g_werks[werk_id]
+        if werk["compatible"] == "incomp_unack":
+            acknowledge_werk(werk)
+            html.message(HTML(_("Werk %s - %s has been acknowledged.") % (render_werk_id(werk, with_link=True), render_werk_title(werk))))
+
+    elif html.var("_ack_all"):
+        if (html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"), method="GET")):
+            acknowledge_all_werks()
+
+    render_unacknowleged_werks()
 
 
 def page_werk():
@@ -97,6 +116,9 @@ def page_werk():
     html.begin_context_buttons()
     back_url = html.makeuri([], filename="version.py") # keeps filter settings
     html.context_button(_("Back"), back_url, "back")
+    if werk["compatible"] == "incomp_unack" and may_acknowledge():
+        ack_url = html.makeactionuri([("_werk_ack", werk["id"])], filename="version.py") 
+        html.context_button(_("Acknowledge"), ack_url, "werk_ack") 
     html.end_context_buttons()
 
     html.write('<table class="data headerleft werks">')
@@ -132,6 +154,44 @@ def load_werks():
                 werk["id"] = werk_id
                 g_werks[werk_id] = werk
 
+    ack_ids = load_acknowledgements()
+    for werk in g_werks.values():
+        if werk["compatible"] in [ "incomp", "incomp_unack" ]:
+            if werk["id"] in ack_ids or werk_is_pre_127(werk):
+                werk["compatible"] = "incomp_ack"
+            else:
+                werk["compatible"] = "incomp_unack"
+
+
+def may_acknowledge():
+    return config.may("general.acknowledge_werks")
+
+
+def acknowledge_werk(werk):
+    config.need_permission("general.acknowledge_werks")
+    ack_ids = load_acknowledgements()
+    ack_ids.append(werk["id"])
+    werk["compatible"] = "incomp_ack"
+    save_acknowledgements(ack_ids)
+
+
+def save_acknowledgements(acknowledged_werks):
+    file(acknowledgement_path, "w").write("%r\n" % acknowledged_werks)
+
+
+def acknowledge_all_werks():
+    num = 0
+    for werk in g_werks.values():
+        if werk["compatible"] == "incomp_unack":
+            acknowledge_werk(werk)
+            num += 1
+    html.message(_("%d incompatible Werks have been acknowledged.") % num)
+
+
+def werk_is_pre_127(werk):
+    return werk["version"].startswith("1.2.5") \
+        or werk["version"].startswith("1.2.6")
+
 
 def load_werk(path):
     werk = {
@@ -150,6 +210,20 @@ def load_werk(path):
     if "compatible" not in werk: # missing in some legacy werks
         werk["compatible"] = "compat"
     return werk
+
+
+def load_acknowledgements():
+    if os.path.exists(acknowledgement_path):
+        return literal_eval(file(acknowledgement_path).read())
+    else:
+        return []
+
+
+def unacknowledged_incompatible_werks():
+    return werks_sorted_by_date([ 
+        werk 
+        for werk in g_werks.values() 
+        if werk["compatible"] == "incomp_unack"])
 
 
 werk_table_option_entries = [
@@ -192,12 +266,14 @@ werk_table_option_entries = [
       DropdownChoice(
           title = _("Compatibility"),
           choices = [
-            ( [ "compat", "incomp" ], _("Show compatible and incompatible Werks") ),
-            ( [ "compat" ],           _("Show only compatible Werks") ),
-            ( [ "incomp" ],           _("Show only incompatible Werks") ),
+            ( [ "compat", "incomp_ack", "incomp_unack" ], _("Compatible and incompatible Werks") ),
+            ( [ "compat" ],                                _("Compatible Werks") ),
+            ( [ "incomp_ack", "incomp_unack" ],           _("Incompatible Werks") ),
+            ( [ "incomp_unack" ],                         _("Unacknowledged incompatible Werks") ),
+            ( [ "incomp_ack" ],                            _("Acknowledged incompatible Werks") ),
           ]
       ),
-      [ "compat", "incomp" ],
+      [ "compat", "incomp_ack", "incomp_unack" ],
     ),
     ( "component",
       "single",
@@ -257,16 +333,35 @@ werk_table_option_entries = [
 ]
 
 
+def render_unacknowleged_werks():
+    werks = unacknowledged_incompatible_werks()
+    if werks and may_acknowledge():
+        html.begin_context_buttons()
+        html.context_button(_("Acknowledge all"), html.makeactionuri([("_ack_all", "1")]), "werk_ack")
+        html.end_context_buttons()
+
+    if werks and not html.has_var("show_unack"):
+        html.write("<div class=warning>")
+        html.write("%s<br><br>" % _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks))
+        url = html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")])
+        html.write('<a href="%s">Show unacknowledged incompatible werks</a>' % url)
+        html.write("</div>")
+
+
 def render_werks_table():
 
     werk_table_options = render_werk_table_options()
+
+    if html.var("show_unack") and not html.var("wo_set"):
+        werk_table_options = default_werk_table_options()
+        werk_table_options["compatibility"] = [ "incomp_unack" ]
 
     current_group = False
 
     def begin_group(title):
         table.begin(title=title, limit=None, searchable = False, sortable = False, css="werks")
 
-    for werk in werks_sorted_by_date():
+    for werk in werks_sorted_by_date(g_werks.values()):
         if werk_matches_options(werk, werk_table_options):
             group = werk_group_value(werk, werk_table_options["grouping"])
             if group != current_group:
@@ -287,6 +382,8 @@ def render_werks_table():
 
     if current_group != False:
         table.end()
+    else:
+        html.write("<h3>%s</h3>" % _("No matching Werks found."))
 
 def werk_group_value(werk, grouping):
     if grouping == None:
@@ -301,18 +398,15 @@ def werk_group_value(werk, grouping):
             return time.strftime("%s %%U - %%Y" % _("Week"), broken_time)
 
 def werk_matches_options(werk, werk_table_options):
-    # html.debug((werk["date"], werk_table_options["date_range"]))
-    matches =  \
-           (not werk_table_options["id"] or werk["id"] == tryint(werk_table_options["id"])) and \
+    if not ((not werk_table_options["id"] or werk["id"] == tryint(werk_table_options["id"])) and \
            werk["level"] in werk_table_options["levels"] and \
            werk["class"] in werk_table_options["classes"] and \
            werk["compatible"] in werk_table_options["compatibility"] and \
            werk_table_options["component"] in ( None, werk["component" ]) and \
            werk["date"] >= werk_table_options["date_range"][0] and \
-           werk["date"] <= werk_table_options["date_range"][1]
+           werk["date"] <= werk_table_options["date_range"][1]):
+           return False
 
-    if not matches:
-        return False
 
     if werk_table_options["edition"]:
         if werk_table_options["edition"] == "cre" and werk["id"] >= 8000:
@@ -340,11 +434,18 @@ def werk_matches_options(werk, werk_table_options):
     return True
 
 
+def default_werk_table_options():
+    werk_table_options = {}
+    for name, height, vs, default_value in werk_table_option_entries:
+        werk_table_options[name] = default_value
+    werk_table_options["date_range"] = (1, time.time())
+    return werk_table_options
+
 
 def render_werk_table_options():
     werk_table_options = {}
 
-    html.begin_foldable_container("werks", None, isopen=True, title=_("Searching and Filtering"), indent=False)
+    html.begin_foldable_container("werks", "options", isopen=True, title=_("Searching and Filtering"), indent=False)
     html.begin_form("werks")
     html.hidden_field("wo_set", "set")
     begin_floating_options("werks", is_open=True)
@@ -455,8 +556,6 @@ def insert_manpage_links(text):
     return " ".join(new_parts)
 
 
-def werks_sorted_by_date():
-    werks_by_date = g_werks.values()
-    werks_by_date.sort(cmp = lambda a, b: -cmp(a["date"], b["date"]))
-    return werks_by_date
+def werks_sorted_by_date(werks):
+    return sorted(werks, cmp = lambda a, b: -cmp(a["date"], b["date"]))
 

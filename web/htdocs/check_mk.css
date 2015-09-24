@@ -584,7 +584,8 @@ div#hover_menu div.error {
 +--------------------------------------------------------------------------+
 | Pages showing the Check_MK change log (werks.py)                         |
 '-------------------------------------------------------------------------*/
-td.werklevel, td.werkclass, td.werkcomp {
+
+tr.data td.werklevel, tr.data td.werkclass, tr.data td.werkcomp {
     text-align: center;
     white-space: nowrap;
     width: 100px;
@@ -638,15 +639,22 @@ table.werks td a {
     text-decoration: underline;
 }
 
-td.werkcompincomp {
+table.data.werks td.werkcompincomp_unack {
     font-weight: bold;
 }
 
-tr:nth-child(odd) td.werkcompincomp {
+table.data.werks tr:nth-child(odd) td.werkcompincomp_unack {
     background-color: #ff7777;
 }
-tr:nth-child(even) td.werkcompincomp {
+table.data.werks tr:nth-child(even) td.werkcompincomp_unack {
     background-color: #ff8888;
+}
+
+table.data.werks tr:nth-child(odd) td.werkcompincomp_ack {
+    background-color: #ffbb99;
+}
+table.data.werks tr:nth-child(even) td.werkcompincomp_ack {
+    background-color: #ffbfaa;
 }
 
 /* NOWIKI formatting in Werks */

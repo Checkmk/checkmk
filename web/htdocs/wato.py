@@ -18399,7 +18399,7 @@ def mode_check_manpage(phase):
     # the dump context button, that will always be shown - even if the
     # plugin is not in use.
 
-    html.write('<table class="data manpage">')
+    html.write('<table class="data headerleft">')
 
     html.write('<tr><th>%s</th><td><b>%s</b></td></tr>' % (
       _("Title"), manpage["header"]["title"]))

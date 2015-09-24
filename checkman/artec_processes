@@ -1,0 +1,18 @@
+witle: ARTEC Mail Archive Appliance: Processes
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the processes of the ARTEC Mail Archive Appliance.
+
+ Upper default levels are set to 80, 90 %. These levels are configurable.
+
+item:
+ The index and type of processes.
+
+perfdata:
+ The number of processes.
+
+inventory:
+ One service per process type is created.

@@ -47,7 +47,10 @@ def check_emcvnx_sp_util(item, params, info):
     warn, crit = params
     busy_ticks_rate = get_rate("emcvnx_sp_util.busy_ticks", now, busy_ticks )
     idle_ticks_rate = get_rate("emcvnx_sp_util.idle_ticks", now, idle_ticks )
-    sp_util = 100 * (busy_ticks_rate / (busy_ticks_rate + idle_ticks_rate))
+    if busy_ticks_rate + idle_ticks_rate == 0:
+        sp_util = 0
+    else:
+        sp_util = 100 * (busy_ticks_rate / (busy_ticks_rate + idle_ticks_rate))
     infotext = "%.1f%%" % sp_util
     if sp_util >= crit:
         state = 2

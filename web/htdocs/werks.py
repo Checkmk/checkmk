@@ -79,12 +79,45 @@ werk_components = {
 # Keep global variable for caching werks between requests. The never change.
 g_werks = None
 
+werks_stylesheets = [ "pages", "check_mk", "status", "wato", "views" ]
 
 def page_version():
     load_werks()
-    html.header(_("Check_MK %s Release Notes") % defaults.check_mk_version, stylesheets=["pages", "check_mk", "status", "wato", "views" ])
+    html.header(_("Check_MK %s Release Notes") % defaults.check_mk_version, stylesheets = werks_stylesheets)
     render_werks_table()
     html.footer()
+
+
+def page_werk():
+    load_werks()
+    werk_id = int(html.var("werk"))
+    werk = g_werks[werk_id]
+
+    html.header(("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"]), stylesheets = werks_stylesheets)
+    html.begin_context_buttons()
+    back_url = html.makeuri([], filename="version.py") # keeps filter settings
+    html.context_button(_("Back"), back_url, "back")
+    html.end_context_buttons()
+
+    html.write('<table class="data headerleft werks">')
+
+    def werk_table_row(caption, content, css=""):
+        html.write('<tr><th>%s</th><td class="%s">%s</td></tr>' % (caption, css, content))
+
+    werk_table_row(_("ID"), render_werk_id(werk, with_link=False))
+    werk_table_row(_("Title"), "<b>" + render_werk_title(werk) + "</b>")
+    werk_table_row(_("Component"), render_werk_component(werk))
+    werk_table_row(_("Date"), render_werk_date(werk))
+    werk_table_row(_("Check_MK Version"), werk["version"])
+    werk_table_row(_("Level"), render_werk_level(werk), css="werklevel werklevel%d" % werk["level"])
+    werk_table_row(_("Class"), render_werk_class(werk), css="werkclass werkclass%s" % werk["class"])
+    werk_table_row(_("Compatibility"), render_werk_compatibility(werk), css="werkcomp werkcomp%s" % werk["compatible"])
+    werk_table_row(_("Description"), render_werk_description(werk), css="nowiki")
+
+    html.write("</table>")
+
+    html.footer()
+
 
 
 def load_werks():
@@ -208,14 +241,19 @@ werk_table_option_entries = [
        ),
        ( "", "" ),
      ),
-#"
-#"     Gruppierung:
-#"     - Version
-#"     - Tag
-#"     - Woche??
-#"     - Nix
-#"
-
+     ( "grouping",
+       "single",
+       DropdownChoice(
+           title = _("Group Werks by"),
+           choices = [
+             ( "version", _("Check_MK Version") ),
+             ( "day",     _("Day of creation") ),
+             ( "week",    _("Week of creation") ),
+             ( None,      _("Do not group") ),
+           ],
+       ),
+       "version",
+     ),
 ]
 
 
@@ -223,22 +261,44 @@ def render_werks_table():
 
     werk_table_options = render_werk_table_options()
 
-    table.begin(title=_("Change log of Check_MK version %s") % defaults.check_mk_version,
-                searchable = False,
-                sortable = False,
-                css="werks")
+    current_group = False
+
+    def begin_group(title):
+        table.begin(title=title, limit=None, searchable = False, sortable = False, css="werks")
+
     for werk in werks_sorted_by_date():
         if werk_matches_options(werk, werk_table_options):
+            group = werk_group_value(werk, werk_table_options["grouping"])
+            if group != current_group:
+                if current_group != False:
+                    table.end()
+                begin_group(group)
+                current_group = group
+
             table.row()
-            table.cell(_("ID"), render_werk_id(werk), css="number")
-            table.cell(_("Version"), werk["version"], css="number")
-            table.cell(_("Date"), render_werk_date(werk), css="number")
+            table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
+            table.cell(_("Version"), werk["version"], css="number narrow")
+            table.cell(_("Date"), render_werk_date(werk), css="number narrow")
             table.cell(_("Class"), render_werk_class(werk), css="werkclass werkclass%s" % werk["class"])
             table.cell(_("Level"), render_werk_level(werk), css="werklevel werklevel%d" % werk["level"])
             table.cell(_("Compatibility"), render_werk_compatibility(werk), css="werkcomp werkcomp%s" % werk["compatible"])
             table.cell(_("Component"), render_werk_component(werk), css="nowrap")
             table.cell(_("Title"), render_werk_title(werk))
-    table.end()
+
+    if current_group != False:
+        table.end()
+
+def werk_group_value(werk, grouping):
+    if grouping == None:
+        return None
+    elif grouping == "version":
+        return werk["version"]
+    else:
+        broken_time = time.localtime(werk["date"])
+        if grouping == "day":
+            return time.strftime("%Y-%m-%d", broken_time)
+        else:
+            return time.strftime("%s %%U - %%Y" % _("Week"), broken_time)
 
 def werk_matches_options(werk, werk_table_options):
     # html.debug((werk["date"], werk_table_options["date_range"]))
@@ -283,6 +343,8 @@ def werk_matches_options(werk, werk_table_options):
 
 def render_werk_table_options():
     werk_table_options = {}
+
+    html.begin_foldable_container("werks", None, isopen=True, title=_("Searching and Filtering"), indent=False)
     html.begin_form("werks")
     html.hidden_field("wo_set", "set")
     begin_floating_options("werks", is_open=True)
@@ -296,6 +358,7 @@ def render_werk_table_options():
     end_floating_options(reset_url = html.makeuri([], remove_prefix = ""))
     html.hidden_fields()
     html.end_form()
+    html.end_foldable_container()
 
     from_date, until_date = Timerange().compute_range(werk_table_options["date"])[0]
     werk_table_options["date_range"] = from_date, until_date
@@ -303,11 +366,15 @@ def render_werk_table_options():
     return werk_table_options
 
 
-def render_werk_id(werk):
-    return "#%04d" % werk["id"]
+def render_werk_id(werk, with_link):
+    if with_link:
+        url = html.makeuri([("werk", werk["id"])], filename="werk.py")
+        return '<a href="%s">%s</a>' % (url, render_werk_id(werk, with_link=False))
+    else:
+        return "#%04d" % werk["id"]
 
 def render_werk_date(werk):
-    return time.strftime("%Y-%m-%d", time.localtime(werk["date"]))
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 def render_werk_level(werk):
     return werk_levels[werk["level"]]
@@ -321,7 +388,7 @@ def render_werk_compatibility(werk):
 def render_werk_component(werk):
     if werk["component"] not in werk_components:
         werk_components[werk["component"]] = werk["component"]
-        html.write("<li>Invalid component %s in werk %s</li>" % (werk["component"], render_werk_id(werk)))
+        html.write("<li>Invalid component %s in werk %s</li>" % (werk["component"], render_werk_id(werk, with_link=True)))
     return werk_components[werk["component"]]
 
 def render_werk_title(werk):
@@ -333,6 +400,50 @@ def render_werk_title(werk):
         title = insert_manpage_links(parts[0]) + ":" + parts[1]
     return title
 
+def render_werk_description(werk):
+    html_code = "<p>"
+    in_list = False
+    in_code = False
+    for line in werk["body"]:
+        if line.startswith("LI:"):
+            if not in_list:
+                html_code += "<ul>"
+                in_list = True
+            html_code += "<li>%s</li>\n" % line[3:]
+        else:
+            if in_list:
+                html_code += "</ul>"
+                in_list = False
+
+            if line.startswith("H2:"):
+                html_code += "<h3>%s</h3>\n" % line[3:]
+            elif line.startswith("C+:"):
+                html_code += "<pre class=code>"
+                in_code = True
+            elif line.startswith("F+:"):
+                file_name = line[3:]
+                if file_name:
+                    html_code += "<div class=filename>%s</div>" % file_name
+                html_code += "<pre class=file>"
+                in_code = True
+            elif line.startswith("C-:") or line.startswith("F-:"):
+                html_code += "</pre>"
+                in_code = False
+            elif line.startswith("OM:"):
+                html_code += "OMD[mysite]:~$ <b>" + line[3:] + "</b>\n"
+            elif line.startswith("RP:"):
+                html_code += "root@myhost:~# <b>" + line[3:] + "</b>\n"
+            elif not line.strip() and not in_code:
+                html_code += "</p><p>"
+            else:
+                html_code += line + "\n"
+
+    if in_list:
+        html_code += "</ul>"
+
+    html_code += "</p>"
+    return html_code
+
 def insert_manpage_links(text):
     parts = text.replace(",", " ").split()
     new_parts = []
@@ -341,7 +452,7 @@ def insert_manpage_links(text):
             part = '<a href="wato.py?mode=check_manpage&check_type=%s">%s</a>' % (
                 part, part)
         new_parts.append(part)
-    return ", ".join(new_parts)
+    return " ".join(new_parts)
 
 
 def werks_sorted_by_date():

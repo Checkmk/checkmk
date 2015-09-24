@@ -454,6 +454,32 @@ img.iconbutton {
     width: 100px;
 }*/
 
+/* Table with captions on the left side. Used e.g. for man pages and werks */
+
+table.data.headerleft th {
+    text-align: left;
+    padding: 4px 5px;
+}
+table.data.headerleft td {
+    padding: 4px 5px;
+}
+
+table.data.headerleft > tbody > tr:nth-child(odd) > th {
+    background-color: #73a1b4;
+}
+
+table.data.headerleft > tbody > tr:nth-child(even) > th {
+    background-color: #7fadc0;
+}
+
+table.data.headerleft > tbody > tr:nth-child(odd) > td {
+    background-color: #ddd;
+}
+table.data.headerleft > tbody > tr:nth-child(even) > td {
+    background-color: #eee;
+}
+
+
 /*-------------------------------------------------------------------------.
 |                    _____                                                 |
 |                   |  ___|__  _ __ _ __ ___  ___                          |

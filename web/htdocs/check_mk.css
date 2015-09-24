@@ -587,6 +587,7 @@ div#hover_menu div.error {
 td.werklevel, td.werkclass, td.werkcomp {
     text-align: center;
     white-space: nowrap;
+    width: 100px;
 }
 
 table.data.werks tr:nth-child(odd) td.werklevel2 {

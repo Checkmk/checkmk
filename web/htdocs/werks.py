@@ -241,14 +241,19 @@ werk_table_option_entries = [
        ),
        ( "", "" ),
      ),
-#"
-#"     Gruppierung:
-#"     - Version
-#"     - Tag
-#"     - Woche??
-#"     - Nix
-#"
-
+     ( "grouping",
+       "single",
+       DropdownChoice(
+           title = _("Group Werks by"),
+           choices = [
+             ( "version", _("Check_MK Version") ),
+             ( "day",     _("Day of creation") ),
+             ( "week",    _("Week of creation") ),
+             ( None,      _("Do not group") ),
+           ],
+       ),
+       "version",
+     ),
 ]
 
 
@@ -256,22 +261,44 @@ def render_werks_table():
 
     werk_table_options = render_werk_table_options()
 
-    table.begin(title=_("Change log of Check_MK version %s") % defaults.check_mk_version,
-                searchable = False,
-                sortable = False,
-                css="werks")
+    current_group = False
+
+    def begin_group(title):
+        table.begin(title=title, limit=None, searchable = False, sortable = False, css="werks")
+
     for werk in werks_sorted_by_date():
         if werk_matches_options(werk, werk_table_options):
+            group = werk_group_value(werk, werk_table_options["grouping"])
+            if group != current_group:
+                if current_group != False:
+                    table.end()
+                begin_group(group)
+                current_group = group
+
             table.row()
-            table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number")
-            table.cell(_("Version"), werk["version"], css="number")
-            table.cell(_("Date"), render_werk_date(werk), css="number")
+            table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
+            table.cell(_("Version"), werk["version"], css="number narrow")
+            table.cell(_("Date"), render_werk_date(werk), css="number narrow")
             table.cell(_("Class"), render_werk_class(werk), css="werkclass werkclass%s" % werk["class"])
             table.cell(_("Level"), render_werk_level(werk), css="werklevel werklevel%d" % werk["level"])
             table.cell(_("Compatibility"), render_werk_compatibility(werk), css="werkcomp werkcomp%s" % werk["compatible"])
             table.cell(_("Component"), render_werk_component(werk), css="nowrap")
             table.cell(_("Title"), render_werk_title(werk))
-    table.end()
+
+    if current_group != False:
+        table.end()
+
+def werk_group_value(werk, grouping):
+    if grouping == None:
+        return None
+    elif grouping == "version":
+        return werk["version"]
+    else:
+        broken_time = time.localtime(werk["date"])
+        if grouping == "day":
+            return time.strftime("%Y-%m-%d", broken_time)
+        else:
+            return time.strftime("%s %%U - %%Y" % _("Week"), broken_time)
 
 def werk_matches_options(werk, werk_table_options):
     # html.debug((werk["date"], werk_table_options["date_range"]))
@@ -425,7 +452,7 @@ def insert_manpage_links(text):
             part = '<a href="wato.py?mode=check_manpage&check_type=%s">%s</a>' % (
                 part, part)
         new_parts.append(part)
-    return ", ".join(new_parts)
+    return " ".join(new_parts)
 
 
 def werks_sorted_by_date():

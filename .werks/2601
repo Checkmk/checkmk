@@ -1,0 +1,13 @@
+Title: Access to Werks (change log) directly in the user interface
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443092672
+Class: feature
+
+Your Check_MK installation now has a new GUI page for showing the
+complete history of changes (Werks) that are included in the version
+that is running. You can set several filters for searching within
+this log. You reach the new page by clicking on the Check_MK version
+number at the top of the side bar.

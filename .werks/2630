@@ -1,0 +1,10 @@
+Title: fixed incorrect check interval of Check_MK Discovery
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442925162
+Class: fix
+
+After werk #2595 the periodic discovery time configured through the rule was stored as seconds
+instead of minutes, causing the check frequency to be 60 times slower than intended.

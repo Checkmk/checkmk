@@ -2216,7 +2216,8 @@ def check_new_host_permissions(folder, host, hostname):
     config.need_permission("wato.manage_hosts")
     check_folder_permissions(folder, "write")
     check_user_contactgroups(host.get("contactgroups", (False, [])))
-    check_new_hostname("host", hostname)
+    if hostname != None: # otherwise: name not known yet
+        check_new_hostname("host", hostname)
 
 def check_edit_host_permissions(folder, host, hostname):
     config.need_permission("wato.edit_hosts")

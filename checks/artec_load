@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,37 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_bi_aggr_arguments(params):
-    base_url, aggr_name, username, secret, opt_params = params
-    args = ''
-
-    args += ' -b %s' % quote_shell_string(base_url)
-    args += ' -a %s' % quote_shell_string(aggr_name)
-    args += ' -u %s' % quote_shell_string(username)
-    args += ' -s %s' % quote_shell_string(secret)
-
-    if "auth_mode" in opt_params:
-        args += ' -m %s' % quote_shell_string(opt_params['auth_mode'])
-
-    if "timeout" in opt_params:
-        args += ' -t %d' % opt_params['timeout']
-
-    if opt_params.get("in_downtime"):
-        args += ' --in-downtime %s' % opt_params['in_downtime']
-
-    if opt_params.get("acknowledged"):
-        args += ' --acknowledged %s' % opt_params['acknowledged']
-
-    if opt_params.get("track_downtimes"):
-        args += ' -r -n $HOSTNAME$'
-
-    return args
+# .1.3.6.1.4.1.2021.10.1.6.1 0.010000 --> UCD-SNMP-MIB::laLoadFloat.1 --> 1  min
+# .1.3.6.1.4.1.2021.10.1.6.2 0.070000 --> UCD-SNMP-MIB::laLoadFloat.2 --> 5  min
+# .1.3.6.1.4.1.2021.10.1.6.3 0.120000 --> UCD-SNMP-MIB::laLoadFloat.3 --> 15 min
 
 
-active_check_info['bi_aggr'] = {
-    "command_line"        : '$USER1$/check_bi_aggr $ARG1$',
-    "argument_function"   : check_bi_aggr_arguments,
-    "service_description" : lambda params: "Aggr %s" % params[1],
-    "has_perfdata"        : False,
+# suggested by customer
+artec_load_default_levels = (50, 80)
+
+
+def inventory_artec_load(info):
+    return [ (None, "artec_load_default_levels") ]
+
+
+def check_artec_load(_no_item, params, info):
+    return check_cpu_load_generic(params, [ float(load[0]) for load in info ] )
+
+
+check_info['artec_load'] = {
+    'inventory_function'        : inventory_artec_load,
+    'check_function'            : check_artec_load,
+    'service_description'       : 'CPU load',
+    'has_perfdata'              : True,
+    'snmp_info'                 : ('.1.3.6.1.4.1.2021.10.1.6', [ '' ]),
+    'snmp_scan_function'        : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.8072.3.2.10',
+    'group'                     : 'cpu_load',
+    'includes'                  : [ 'cpu_load.include' ],
 }
-

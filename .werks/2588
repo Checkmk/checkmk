@@ -1,4 +1,4 @@
-Title: new check emcvnx_sp_util: monitors the storage processor utilization of an EMC VNX Storage System
+Title: emcvnx_sp_util: new check which monitors the storage processor utilization of an EMC VNX Storage System
 Level: 1
 Component: checks
 Compatible: compat

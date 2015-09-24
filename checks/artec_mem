@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,37 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_bi_aggr_arguments(params):
-    base_url, aggr_name, username, secret, opt_params = params
-    args = ''
-
-    args += ' -b %s' % quote_shell_string(base_url)
-    args += ' -a %s' % quote_shell_string(aggr_name)
-    args += ' -u %s' % quote_shell_string(username)
-    args += ' -s %s' % quote_shell_string(secret)
-
-    if "auth_mode" in opt_params:
-        args += ' -m %s' % quote_shell_string(opt_params['auth_mode'])
-
-    if "timeout" in opt_params:
-        args += ' -t %d' % opt_params['timeout']
-
-    if opt_params.get("in_downtime"):
-        args += ' --in-downtime %s' % opt_params['in_downtime']
-
-    if opt_params.get("acknowledged"):
-        args += ' --acknowledged %s' % opt_params['acknowledged']
-
-    if opt_params.get("track_downtimes"):
-        args += ' -r -n $HOSTNAME$'
-
-    return args
+# .1.3.6.1.4.1.2021.4.5.0 4003584 --> UCD-SNMP-MIB::memTotalReal.0
+# .1.3.6.1.4.1.2021.4.6.0 188296  --> UCD-SNMP-MIB::memAvailReal.0
 
 
-active_check_info['bi_aggr'] = {
-    "command_line"        : '$USER1$/check_bi_aggr $ARG1$',
-    "argument_function"   : check_bi_aggr_arguments,
-    "service_description" : lambda params: "Aggr %s" % params[1],
-    "has_perfdata"        : False,
+# suggested by cutomer
+factory_settings["artec_mem_default_levels"] = {
+    "levels" : ("perc_used", (50.0, 90.0))
 }
 
+
+def inventory_artec_mem(info):
+    return [ (None, {}) ]
+
+
+def check_artec_mem(_no_item, params, info):
+    mem_total_bytes, mem_avail_bytes = map(lambda x: int(x) * 1024, info[0])
+    mem_used_bytes = mem_total_bytes - mem_avail_bytes
+    return check_memory_simple(mem_used_bytes, mem_total_bytes, params)
+
+
+check_info['artec_mem'] = {
+    'inventory_function'        : inventory_artec_mem,
+    'check_function'            : check_artec_mem,
+    'service_description'       : 'Memory',
+    'has_perfdata'              : True,
+    'snmp_info'                 : (".1.3.6.1.4.1.2021.4", [
+                                        "5",    # memTotal     -> kB
+                                        "6",    # memAvailable -> kB
+                                  ]),
+    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.8072.3.2.10",
+    'default_levels_variable'    : 'artec_mem_default_levels',
+    'group'                     : 'memory_simple',
+    'includes'                  : [ "memory.include" ],
+}

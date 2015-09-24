@@ -94,28 +94,13 @@ def render_availability_options(what):
     if html.has_user_errors():
         html.show_user_errors()
 
-    html.write('<div class="view_form" id="avoptions" %s>'
-            % (not is_open and 'style="display: none"' or '') )
-    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
-
+    begin_floating_options("avoptions", is_open)
     for name, height, show_in_reporting, vs in avoption_entries:
-        html.write('<div class="floatfilter %s %s">' % (height, name))
-        html.write('<div class=legend>%s</div>' % vs.title())
-        html.write('<div class=content>')
-        vs.render_input("avo_" + name, avoptions.get(name))
-        html.write("</div>")
-        html.write("</div>")
+        render_floating_option(name, height, "avo_", vs, avoptions.get(name))
+    end_floating_options(reset_url = html.makeuri([("_reset", "1")], remove_prefix="avo_"))
 
-    html.write("</td></tr>")
-
-    html.write("<tr><td>")
-    html.button("apply", _("Apply"), "submit")
     html.hidden_fields()
     html.end_form()
-
-    html.buttonlink(html.makeuri([("_reset", "1")], remove_prefix="avo_"), _("Reset to defaults"))
-    html.write("</td></tr></table>")
-    html.write("</div>")
 
 
     if html.form_submitted():

@@ -156,7 +156,7 @@ def sidebar_head():
     html.write('<div id="side_header">')
     html.write('<div id="side_fold"></div>')
     html.write('<a title="%s" target="main" href="%s">'
-               '<div id="side_version">%s</div>'
+               '<div id="side_version"><a href="version.py" target="main">%s</a></div>'
                '</a>'
                '</div>\n' % (_("Go to main overview"), html.attrencode(config.user.get("start_url") or config.start_url), defaults.check_mk_version))
 

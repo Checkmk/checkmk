@@ -136,6 +136,9 @@ def paint_reschedule(what, row, tags, host_custom_vars):
         return "cannot_reschedule", _("This service is based on cached agent data and cannot be rescheduled"), None
 
     # Reschedule button
+    if row[what + "_check_type"] == 2:
+        return # shadow hosts/services cannot be rescheduled
+
     if (row[what + "_active_checks_enabled"] == 1
         or row[what + '_check_command'].startswith('check_mk-')) \
        and config.may('action.reschedule'):
@@ -160,7 +163,7 @@ def paint_reschedule(what, row, tags, host_custom_vars):
         return icon, txt, url
 
 multisite_icons_and_actions['reschedule'] = {
-    'columns':         [ 'active_checks_enabled', 'check_command' ],
+    'columns':         [ 'check_type', 'active_checks_enabled', 'check_command' ],
     'service_columns': [ 'cached_at' ],
     'paint':           paint_reschedule,
     'toplevel':        False,
@@ -179,6 +182,9 @@ multisite_icons_and_actions['reschedule'] = {
 #   '----------------------------------------------------------------------'
 
 def paint_rule_editor(what, row, tags, host_custom_vars):
+    if row[what + "_check_type"] == 2:
+        return # shadow services have no parameters
+
     if config.wato_enabled and config.may("wato.rulesets") and config.multisite_draw_ruleicon:
         urlvars = [("mode", "object_parameters"),
                    ("host", row["host_name"])]
@@ -192,7 +198,7 @@ def paint_rule_editor(what, row, tags, host_custom_vars):
         return 'rulesets', title, html.makeuri_contextless(urlvars, "wato.py")
 
 multisite_icons_and_actions['rule_editor'] = {
-    'service_columns': [ 'description', 'check_command', "host_name" ],
+    'service_columns': [ 'check_type', 'description', 'check_command', "host_name" ],
     'paint':           paint_rule_editor,
 }
 
@@ -476,12 +482,12 @@ def paint_downtimes(what, row, tags, host_custom_vars):
     # for this host / service
     if row[what + "_scheduled_downtime_depth"] > 0:
         if what == "host":
-            icon = "hostdowntime"
+            icon = "derived_downtime"
         else:
             icon = "downtime"
         return icon, _("Currently in downtime"), url_to_view(row, 'downtimes_of_' + what)
     elif what == "service" and row["host_scheduled_downtime_depth"] > 0:
-        return 'hostdowntime', _("The host is currently in downtime"), url_to_view(row, 'downtimes_of_host')
+        return 'derived_downtime', _("The host is currently in downtime"), url_to_view(row, 'downtimes_of_host')
 
 multisite_icons_and_actions['status_downtimes'] = {
     'host_columns':    [ 'scheduled_downtime_depth' ],
@@ -813,3 +819,5 @@ multisite_icons_and_actions['crashed_check'] = {
     'paint'           : paint_icon_crashed_check,
     'toplevel'        : True,
 }
+
+#.

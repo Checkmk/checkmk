@@ -1,7 +1,7 @@
 Title: cisco_temp_sensor: Removed dicey detection for temperature value.
 Level: 1
 Component: checks
-Compatible: compa
+Compatible: compat
 Version: 1.2.5i6
 Date: 1407250309
 Class: fix

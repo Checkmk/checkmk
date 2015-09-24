@@ -1,0 +1,9 @@
+Title: janitza_umg_freq: fixed crash when no frequency measurements were reported by the device
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443103718
+Class: fix
+
+

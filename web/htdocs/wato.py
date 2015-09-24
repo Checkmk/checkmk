@@ -113,7 +113,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, cStringIO, math, fcntl, pickle, random
+       shutil, tarfile, cStringIO, math, fcntl, pickle, random, glob
 import config, table, multitar, userdb, hooks, weblib, login
 from hashlib import sha256
 from lib import *
@@ -2032,6 +2032,9 @@ def mode_edithost(phase, new, cluster):
 
             html.context_button(_("Services"),
                   make_link([("mode", "inventory"), ("host", hostname)]), "services")
+            if config.may('wato.agents'):
+                html.context_button(_("Monitoring Agent"),
+                  make_link([("mode", "agent_of_host"), ("host", hostname)]), "agents")
             if config.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
                   make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
@@ -18592,8 +18595,6 @@ def mode_icons(phase):
 #   +----------------------------------------------------------------------+
 #   | Simple download page for the builtin agents and plugins              |
 #   '----------------------------------------------------------------------'
-
-import glob
 
 def download_table(title, paths):
     forms.header(title)

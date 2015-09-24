@@ -1,4 +1,4 @@
-Title: check_bi_aggr service now also goes into downtime if the monitored bi is in downtime
+Title: check_bi_aggr service now also goes into downtime if the monitored BI aggregation is in downtime
 Level: 1
 Component: checks
 Compatible: compat

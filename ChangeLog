@@ -2,6 +2,9 @@
     Core & Setup:
     * 2430 FIX: Fixed crash with availability queries when using nagios as core...
 
+    Event Console:
+    * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters
+
 
 1.2.6p12:
     WATO:

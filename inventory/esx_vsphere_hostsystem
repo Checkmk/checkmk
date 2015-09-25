@@ -101,7 +101,7 @@ def inv_esx_vsphere_hostsystem(info):
         node["product"] = data["hardware.systemInfo"]["model"]
         node["vendor"]  = data["hardware.systemInfo"]["vendor"]
         # We only know for HP that ServiceTag is the serial
-        if vendor == "HP":
+        if node["vendor"] == "HP":
             node["serial"]	= data["hardware.systemInfo.otherIdentifyingInfo.ServiceTag"]["0"]
 
 inv_info['esx_vsphere_hostsystem'] = {

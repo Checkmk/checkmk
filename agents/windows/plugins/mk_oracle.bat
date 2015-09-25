@@ -1,5 +1,5 @@
 @echo off
-
+REM Old deprecated ORACLE plugin (Batch)
 REM ; If you not run this plugin with the environment variable ORACLE_SID set,
 REM ; you can uncomment (Remove the "REM " prefix) the line below to
 REM ; use e.g. "localhost" as oracle sid.

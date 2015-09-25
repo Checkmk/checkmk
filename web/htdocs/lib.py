@@ -758,7 +758,16 @@ def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
 
     return "%%s%%.%df %%s%%s" % digits % (prefix, b, symbol, unit)
 
-
+def file_size_human_readable(file_size):
+    if file_size < 10000:
+        return str(file_size)
+    as_string = str(file_size)
+    result = ""
+    while len(as_string) > 3:
+        result = "." + as_string[-3:] + result
+        as_string = as_string[:-3]
+    result = as_string + result
+    return result
 
 __builtin__.default_user_localizations = {
      u'Agent type':                          { "de": u"Art des Agenten", },

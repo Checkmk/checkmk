@@ -1,0 +1,9 @@
+Title: oracle_diva_csm, oracle_diva_csm.actor, oracle_diva_csm.archive, oracle_diva_csm.drive: new checks for DIVA CSM devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443180802
+Class: feature
+
+

@@ -1,0 +1,134 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# .1.3.6.1.4.1.110901.1.2.1.1.1.2.1       lib status
+# .1.3.6.1.4.1.110901.1.2.2.1.1.8.1.1.x   drive x status
+# .1.3.6.1.4.1.110901.1.3.1.1.4.1         actor status
+
+# .1.3.6.1.4.1.110901.1.4.1.0             archive status
+# .1.3.6.1.4.1.110901.1.4.2.0             archive objects count
+# .1.3.6.1.4.1.110901.1.4.3.0             blank tapes count
+# .1.3.6.1.4.1.110901.1.4.4.0             remaining size on tapes
+# .1.3.6.1.4.1.110901.1.4.5.0             total size on tapes
+
+
+
+#.
+#   .--Status--------------------------------------------------------------.
+#   |                    ____  _        _                                  |
+#   |                   / ___|| |_ __ _| |_ _   _ ___                      |
+#   |                   \___ \| __/ _` | __| | | / __|                     |
+#   |                    ___) | || (_| | |_| |_| \__ \                     |
+#   |                   |____/ \__\__,_|\__|\__,_|___/                     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+
+def item_name_oracle_diva_csm(name, element_id):
+    return "%s %s" % (name, element_id)
+
+
+def inventory_oracle_diva_csm_status(name, idx, info):
+    for element_id, reading in info[idx]:
+        yield item_name_oracle_diva_csm(name, element_id), None
+
+
+def status_result_oracle_diva_csm(reading):
+    if reading == '1':
+        return 0, "online"
+    elif reading == '2':
+        return 2, "offline"
+    elif reading == '3':
+        return 1, "unknown"
+    else:
+        return 3, "unexpected state"
+
+
+def check_oracle_diva_csm_status(name, idx, item, params, info):
+    for element_id, reading in info[idx]:
+        if item_name_oracle_diva_csm(name, element_id) == item:
+            return status_result_oracle_diva_csm(reading)
+
+
+check_info['oracle_diva_csm'] = {
+    "check_function"      : lambda item, params, info: check_oracle_diva_csm_status("Library", 0, item, params, info),
+    "inventory_function"  : lambda info: inventory_oracle_diva_csm_status("Library", 0, info),
+    "service_description" : "Status %s",
+    "snmp_info"           : [ ( ".1.3.6.1.4.1.110901.1.2.1.1.1", [ '1',   '2' ] ),   # lib status
+                              ( ".1.3.6.1.4.1.110901.1.2.2.1.1", [ '3.1', '8.1' ] ), # drive status
+                              ( ".1.3.6.1.4.1.110901.1.3.1.1",   [ '1',   '4' ] ),   # actor status
+                              ( ".1.3.6.1.4.1.110901.1.4",       [ '1',      # archive status
+                                                                   '2',      # object count
+                                                                   '3',      # blank tape count
+                                                                   '4',      # remaining size
+                                                                   '5'] )    # total size
+                            ],
+    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
+}
+
+check_info['oracle_diva_csm.drive'] = {
+    "check_function"      : lambda item, params, info: check_oracle_diva_csm_status("Drive", 1, item, params, info),
+    "inventory_function"  : lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
+    "service_description" : "Status %s",
+}
+
+check_info['oracle_diva_csm.actor'] = {
+    "check_function"      : lambda item, params, info: check_oracle_diva_csm_status("Actor", 2, item, params, info),
+    "inventory_function"  : lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
+    "service_description" : "Status %s",
+}
+
+
+#.
+#   .--Archive-------------------------------------------------------------.
+#   |                    _             _     _                             |
+#   |                   / \   _ __ ___| |__ (_)_   _____                   |
+#   |                  / _ \ | '__/ __| '_ \| \ \ / / _ \                  |
+#   |                 / ___ \| | | (__| | | | |\ V /  __/                  |
+#   |                /_/   \_\_|  \___|_| |_|_| \_/ \___|                  |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_oracle_diva_csm_archive(info):
+    yield "Archive", None
+
+
+def check_oracle_diva_csm_archive(item, params, info):
+    dev_status, object_count, blank_tape_count, remaining_size, total_size = info[3][0]
+    status, infotext = status_result_oracle_diva_csm(dev_status)
+    return status, infotext + ", managed objects: %s, blank tapes: %s, remaining size: %s of %s" %\
+        (object_count, blank_tape_count, remaining_size, total_size)
+
+
+check_info['oracle_diva_csm.archive'] = {
+    "check_function"      : check_oracle_diva_csm_archive,
+    "inventory_function"  : inventory_oracle_diva_csm_archive,
+    "service_description" : "DIVA %s",
+}
+

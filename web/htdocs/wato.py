@@ -9036,6 +9036,8 @@ def event_rule_match_conditions(flavour):
                           "types then this rule will never hold for host notifications!"),
                choices = [
                    ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
+                   ( 'rr', _("OK")      + u" ➤ " + _("OK")),
+
                    ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
                    ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
 

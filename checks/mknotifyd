@@ -139,7 +139,7 @@ def check_mknotifyd(item, _no_params, parsed):
 
     # Check age of status file. It's updated every 20 seconds
     status_age = now - stat["Updated"]
-    if status_age > 30:
+    if status_age > 90:
         yield 2, "Status last updated %s ago, spooler seems crashed or busy" % get_age_human_readable(status_age)
     else:
         yield 0, "Spooler running"

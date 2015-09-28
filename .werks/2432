@@ -1,0 +1,10 @@
+Title: Forwarded notifications are now visible within the rule based notifications analysis
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443449084
+Class: feature
+
+The context of forwarded notifications was not stored for debug purposes on the notification receiver.
+Therefore forwarded notifications were never shown in the analysis page of the master site.

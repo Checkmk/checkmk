@@ -30,17 +30,20 @@ backup_domains = {}
 backup_perfdata_enabled = True
 def performancedata_restore(pre_restore = True):
     global backup_perfdata_enabled
-    site = default_site()
+    site = config.default_site()
     html.live.set_only_sites([site])
 
     if pre_restore:
         data = html.live.query("GET status\nColumns: process_performance_data")
-        backup_perfdata_enabled = data[0][0] == 1
-        # Return if perfdata is not activated - nothing to do..
-        if not backup_perfdata_enabled:
-            return []
-    elif not backup_perfdata_enabled:
+        if data:
+            backup_perfdata_enabled = data[0][0] == 1
+        else:
+            backup_perfdata_enabled = None # Core is offline
+
+    # Return if perfdata is not activated - nothing to do..
+    if not backup_perfdata_enabled: # False or None
         return []
+
     command = pre_restore and "DISABLE_PERFORMANCE_DATA" or "ENABLE_PERFORMANCE_DATA"
     html.live.command("[%d] %s" % (int(time.time()), command), site)
     html.live.set_only_sites()

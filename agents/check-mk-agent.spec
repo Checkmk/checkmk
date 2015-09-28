@@ -51,7 +51,7 @@ rm -rf $R
 # install agent
 # xinitd
 mkdir -p $R/etc/xinetd.d
-install -m 644 xinetd.conf $R/etc/xinetd.d/check_mk
+install -m 644 cfg_examples/xinetd.conf $R/etc/xinetd.d/check_mk
 # Systemd
 mkdir -p $R/etc/systemd/system
 install -m 644 systemd/check_mk\@.service $R/etc/systemd/system

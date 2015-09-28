@@ -1,6 +1,6 @@
 title: Postgres Version
-agents: windows
-catalog: app/mssql
+agents: linux
+catalog: app/postgresql
 license: GPL
 distribution: check_mk
 description:

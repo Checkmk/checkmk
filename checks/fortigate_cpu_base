@@ -29,7 +29,7 @@ fortigate_cpu_base_default_levels = (80.0, 90.0)
 
 
 check_info["fortigate_cpu_base"] = {
-    "inventory_function"    : lambda info: (inventory_fortigate_cpu, "fortigate_cpu_base_default_levels"),
+    "inventory_function"    : lambda info: inventory_fortigate_cpu(info, "fortigate_cpu_base_default_levels"),
     "check_function"        : check_fortigate_cpu,
     "service_description"   : "CPU utilization",
     "has_perfdata"          : True,

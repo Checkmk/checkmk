@@ -49,12 +49,12 @@
 # .1.3.6.1.4.1.9.9.500.1.3.2.1.5.4001.1 1 --> CISCO-STACKWISE-MIB::cswStackPowerPortLinkStatus.4001.1
 
 
-def inventory_cisco_stackports(info):
+def inventory_cisco_stackpower(info):
     return [ ("%s %s" % (oid.split(".")[0], port_name), None) \
              for oid, port_name, port_status in info ]
 
 
-def check_cisco_stackports(item, params, info):
+def check_cisco_stackpower(item, params, info):
     map_status = {
         "1" : (0, "connected and operational"),
         "2" : (2, "forced down or not connected"),
@@ -65,9 +65,9 @@ def check_cisco_stackports(item, params, info):
             return state, "link status: %s" % state_readable
 
 
-check_info['cisco_stackports'] = {
-    'inventory_function'        : inventory_cisco_stackports,
-    'check_function'            : check_cisco_stackports,
+check_info['cisco_stackpower'] = {
+    'inventory_function'        : inventory_cisco_stackpower,
+    'check_function'            : check_cisco_stackpower,
     'service_description'       : 'Stackpower Interface %s',
     'snmp_info'                 : (".1.3.6.1.4.1.9.9.500.1.3.2.1", [
                                         OID_END,

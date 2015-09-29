@@ -2601,6 +2601,21 @@ metric_info["storage_processor_util"] = {
     "color" : "34/a",
 }
 
+metric_info["storage_used"] = {
+    "title" : _("Storage space used"),
+    "unit"  : "bytes",
+    "color" : "36/a",
+}
+
+metric_info["managed_object_count"] = {
+    "title" : _("Managed Objects"),
+    "unit"  : "count",
+    "color" : "45/a"
+}
+
+
+
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

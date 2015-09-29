@@ -3558,6 +3558,7 @@ def parse_man_header(checkname, path):
 
     return parsed
 
+
 def load_manpage(checkname):
     filename = all_manuals().get(checkname)
     if not filename:

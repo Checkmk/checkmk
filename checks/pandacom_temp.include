@@ -27,7 +27,7 @@
 
 # suggested by customer
 factory_settings["pandacom_temp_default_levels"] = {
-    "levels" : (35.0, 40.0)
+    "levels" : (35, 40)
 }
 
 

@@ -597,9 +597,12 @@ vs_mkeventd_rule = Dictionary(
         ),
         ( "match_ok",
           RegExpUnicode(
-            title = _("Text to cancel event"),
-            help = _("If a matching message appears with this text, then an event created "
-                     "by this rule will automatically be cancelled (if host, application and match groups match). "),
+            title = _("Text to cancel event(s)"),
+            help = _("If a matching message appears with this text, then events created "
+                     "by this rule will automatically be cancelled if host, application and match groups match. "
+                     "If this expression has fewer match groups than \"Text to match\", "
+                     "it will cancel all events where the specified groups match the same number "
+                     "of groups in the initial text, starting from the left."),
             size = 64,
           )
         ),

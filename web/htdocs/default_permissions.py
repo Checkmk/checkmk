@@ -141,6 +141,14 @@ def load():
          _("Allows to ignore the hard query limit imposed upon the number of datasets returned by a query"),
          [ "admin" ])
 
+    config.declare_permission("general.acknowledge_werks",
+         _("Acknowledge Incompatible Werks"),
+         _("In the change log of the Check_MK software version the administrator can manage change log entries "
+           "(Werks) that requrire user interaction. These <i>incompatible Werks</i> can be acknowledged only "
+           "if the user has this permission."),
+         [ "admin" ])
+
+
     loaded_with_language = current_language
 
 # TODO: This has been obsoleted by pagetypes.py

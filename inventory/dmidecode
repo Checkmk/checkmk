@@ -146,6 +146,7 @@ def inv_dmidecode_parse_processor(lines):
         if line[0] == "Manufacturer":
             cpu_info["vendor"] = {
                 "GenuineIntel" : "intel",
+                "Intel(R) Corporation" : "intel",
                 "AuthenticAMD" : "amd",
             }.get(line[1], line[1])
         elif line[0] == "Max Speed": # 2530 MHz

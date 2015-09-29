@@ -1,4 +1,4 @@
-Title: New checks for UCS bladecenter: ucs_bladecenter_topsystem, ucs_bladecenter_faulinst
+Title: ucs_bladecenter_topsystem, ucs_bladecenter_faulinst: new checks for UCS bladecenter
 Level: 1
 Component: checks
 Compatible: compat

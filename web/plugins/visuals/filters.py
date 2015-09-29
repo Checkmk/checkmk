@@ -58,6 +58,8 @@ class FilterText(Filter):
             negate = ""
 
         if current_value:
+            if type(current_value) == unicode:
+                current_value = current_value.encode("utf-8")
             return "Filter: %s %s%s %s\n" % (self.column, negate, self.op, lqencode(current_value))
         else:
             return ""
@@ -70,16 +72,12 @@ class FilterText(Filter):
 
 
 class FilterUnicode(FilterText):
+    def __init__(self, *args):
+        FilterText.__init__(self, *args)
+
     def _current_value(self):
         htmlvar = self.htmlvars[0]
         return html.var_utf8(htmlvar, "")
-
-    def filter(self, infoname):
-        current_value = self._current_value()
-        if current_value:
-            return "Filter: %s %s %s\n" % (self.column, self.op, lqencode(current_value.encode('utf-8')))
-        else:
-            return ""
 
 #                               filter          title              info       column           htmlvar
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host_regex",    "~~" , True),
@@ -91,7 +89,7 @@ declare_filter(101, FilterText("host",    _("Hostname (exact match)"),          
 declare_filter(102, FilterUnicode("hostalias",   _("Hostalias"),      "host",     "host_alias",      "hostalias",    "~~", True),
                           _("Search field allowing regular expressions and partial matches"))
 
-declare_filter(200, FilterUnicode("serviceregex", _("Service"),         "service", "service_description",   "service_regex", "~~"),
+declare_filter(200, FilterUnicode("serviceregex", _("Service"),         "service", "service_description",   "service_regex", "~~", True),
                           _("Search field allowing regular expressions and partial matches"))
 
 declare_filter(201, FilterUnicode("service", _("Service (exact match)"),              "service", "service_description",   "service", "="),

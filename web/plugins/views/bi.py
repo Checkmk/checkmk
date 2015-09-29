@@ -85,12 +85,12 @@ def paint_bi_icons(row):
     html.icon_button(single_url, _("Show only this aggregation"), "showbi")
     avail_url = single_url + "&mode=availability"
     html.icon_button(avail_url, _("Analyse availability of this aggregation"), "availability")
-    if row["aggr_effective_state"]["in_downtime"]:
-	html.icon(_("This aggregation is currently in a scheduled downtime."), "downtime")
+    if row["aggr_effective_state"]["in_downtime"] != 0:
+        html.icon(_("A service or host in this aggregation is in downtime."), "derived_downtime")
     if row["aggr_effective_state"]["acknowledged"]:
-	html.icon(_("The critical problems that make this aggregation non-OK have been acknowledged."), "ack")
+        html.icon(_("The critical problems that make this aggregation non-OK have been acknowledged."), "ack")
     if not row["aggr_effective_state"]["in_service_period"]:
-	html.icon(_("This aggregation is currently out of its service period."), "outof_serviceperiod")
+        html.icon(_("This aggregation is currently out of its service period."), "outof_serviceperiod")
     code = html.drain()
     html.unplug()
     return "buttons", code

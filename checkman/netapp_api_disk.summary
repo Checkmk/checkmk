@@ -15,10 +15,3 @@ perfdata:
 
 inventory:
  Configures one check on each filer.
-
-[parameters]
-parameters (dict): The following keys are available
-
- {"broken_spare_ratio"}: Warning and critical levels of {broken / (broken + spare)} ratio.
- For example: If you have 6 broken and 9 spare disks (15 total) the ratio would be 40%.
- A {WARN}/{CRIT} at this limit is configured with (40.0, 60.0)

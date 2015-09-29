@@ -1,0 +1,5 @@
+#!/bin/bash
+SITE=${SITE:-$(cat ../.site)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+sudo mkdir -p /omd/sites/$SITE/share/check_mk/werks/
+sudo rsync -varx [0-9]* /omd/sites/$SITE/share/check_mk/werks/

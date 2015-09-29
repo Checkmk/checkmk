@@ -1,0 +1,11 @@
+Title: BI Aggregations now adopt downtime from hosts
+Level: 1
+Component: bi
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442920839
+Class: feature
+
+Up till now, bi aggregations did not display host downtimes, only service downtimes.
+Now a host downtime is propagated through all levels of the aggregation the same as service
+downtimes.

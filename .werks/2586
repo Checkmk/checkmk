@@ -1,4 +1,4 @@
-Title: check ibm_imm_fan: lower and upper levels are now configurable
+Title: ibm_imm_fan: lower and upper levels are now configurable
 Level: 1
 Component: checks
 Compatible: compat

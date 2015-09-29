@@ -1,4 +1,4 @@
-Title: new checks sentry_pdu_outlets sentry_pdu_systempower: monitor the system power consumption and outlet states of sentry pdu devices which support the Sentry3-MIB
+Title: sentry_pdu_outlets sentry_pdu_systempower: new checks which monitor the system power consumption and outlet states of sentry pdu devices which support the Sentry3-MIB
 Level: 1
 Component: checks
 Compatible: compat

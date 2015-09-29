@@ -36,13 +36,6 @@ def try_int(x):
     except:
         return x
 
-def cmp_version(a, b):
-    if a == None or b == None:
-        return cmp(a, b)
-    aa = map(try_int, a.split("."))
-    bb = map(try_int, b.split("."))
-    return cmp(aa, bb)
-
 class FilterInvtableText(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name

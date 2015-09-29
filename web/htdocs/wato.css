@@ -52,10 +52,8 @@ Boston, MA 02110-1301 USA.
 
 .wato table.data th {
     border-radius: 0px;
-    background-color: #508aa1;
     background-color: #73a1b4;
 }
-
 
 
 .wato th.left {
@@ -1247,21 +1245,3 @@ table.nform.rulesettings td.legend div.title {
     width: 200px;
 }
 
-.wato table.data.manpage th {
-    text-align: left;
-    padding: 4px 5px;
-}
-.wato table.data.manpage td {
-    padding: 4px 5px;
-}
-
-.wato table.data.manpage > tbody > tr:nth-child(even) > th {
-    background-color: #7fadc0;
-}
-
-.wato table.data.manpage > tbody > tr:nth-child(odd) > td {
-    background-color: #ddd;
-}
-.wato table.data.manpage > tbody > tr:nth-child(even) > td {
-    background-color: #eee;
-}

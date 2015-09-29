@@ -1,0 +1,9 @@
+Title: cups_queues: Agent liefer keine Daten mehr
+Component: checks
+State: open
+Date: 2015-09-26 10:35:31
+Targetversion: 1.2.6
+Class: bug
+
+Werk #2504 macht eine Anpassung fuer apcupsd. Dies macht die Ausgabe fuer den normalen cups kaputt.
+Lokal bei mir geht es nur mit pgrep cups. Die Anpassung mit pgrep -x cups bringt bei mir keine Ausgabe mehr.

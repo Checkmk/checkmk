@@ -72,19 +72,23 @@ def inv_esx_vsphere_hostsystem(info):
     #                                          'vendor': 'intel'}}}
 
     node = inv_tree("hardware.cpu.")
-    node["max_speed"]       = float(data["hardware.cpuInfo"]["hz"])
-    node["cpus"]            = int(data["hardware.cpuInfo"]["numCpuPackages"])
-    node["cores"]           = int(data["hardware.cpuInfo"]["numCpuCores"])
+    if "hardware.cpuInfo" in data:
+        node["max_speed"]       = float(data["hardware.cpuInfo"]["hz"])
+        node["cpus"]            = int(data["hardware.cpuInfo"]["numCpuPackages"])
+        node["cores"]           = int(data["hardware.cpuInfo"]["numCpuCores"])
+        node["threads"]         = int(data["hardware.cpuInfo"]["numCpuThreads"])
+
     node["cores_per_cpu"]   = node["cores"] / node["cpus"]
-    node["threads"]         = int(data["hardware.cpuInfo"]["numCpuThreads"])
     node["threads_per_cpu"] = node["threads"] / node["cpus"]
     if "hardware.cpuPkg" in data:
         node["model"]           = data["hardware.cpuPkg"]["0"]["description"]
         node["vendor"]          = data["hardware.cpuPkg"]["0"]["vendor"]
         node["bus_speed"]       = float(data["hardware.cpuPkg"]["0"]["busHz"])
 
-    node = inv_tree("hardware.bios.")
-    node["version"] = data["hardware.biosInfo"]["biosVersion"]
+    if "hardware.biosInfo" in data:
+        node = inv_tree("hardware.bios.")
+        node["version"] = data["hardware.biosInfo"]["biosVersion"]
+
     import time
     try:
         node["date"] = float(time.strftime("%s", \
@@ -92,9 +96,13 @@ def inv_esx_vsphere_hostsystem(info):
     except Exception, e:
         pass
 
-    node = inv_tree("hardware.system.")
-    node["product"] = data["hardware.systemInfo"]["model"]
-    node["vendor"]  = data["hardware.systemInfo"]["vendor"]
+    if "hardware.systemInfo" in data:
+        node = inv_tree("hardware.system.")
+        node["product"] = data["hardware.systemInfo"]["model"]
+        node["vendor"]  = data["hardware.systemInfo"]["vendor"]
+        # We only know for HP that ServiceTag is the serial
+        if node["vendor"] == "HP":
+            node["serial"]	= data["hardware.systemInfo.otherIdentifyingInfo.ServiceTag"]["0"]
 
 inv_info['esx_vsphere_hostsystem'] = {
    "inv_function"           : inv_esx_vsphere_hostsystem,

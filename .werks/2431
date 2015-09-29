@@ -1,0 +1,10 @@
+Title: WATO Snapshots: Fixed broken performancedata backup
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443186252
+Class: fix
+
+WATO was unable to import snapshots with included performance data.
+This error was a side effect of werk #2486.

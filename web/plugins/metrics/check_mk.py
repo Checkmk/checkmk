@@ -2623,7 +2623,7 @@ check_metrics["check_mk_active-mail_loop"] = {
 }
 
 check_metrics["check_mk_active-http"] = {
-    "time" : { "name": "responese_time" },
+    "time" : { "name": "response_time" },
     "size" : { "name": "http_bandwidth" },
 }
 

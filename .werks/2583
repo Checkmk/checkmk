@@ -1,4 +1,4 @@
-Title: new check datapower_tcp: monitors the number of TCP connections in the various possible states
+Title: datapower_tcp: new check which monitors the number of TCP connections in the various possible states
 Level: 1
 Component: checks
 Compatible: compat

@@ -492,12 +492,12 @@ def compile_rule_node(aggr_type, calllist, lvl):
             config.FOREACH_SERVICE ]:
         matches = find_matching_services(aggr_type, what, calllist[1:])
         new_elements = []
-	handled_args = set([]) # avoid duplicate rule incarnations
+        handled_args = set() # avoid duplicate rule incarnations
         for match in matches:
             args = [ substitute_matches(a, match) for a in arglist ]
-	    if tuple(args) not in handled_args:
+            if tuple(args) not in handled_args:
                 new_elements += compile_aggregation_rule(aggr_type, rule, args, lvl)
-		handled_args.add(tuple(args))
+                handled_args.add(tuple(args))
         return new_elements
 
     else:
@@ -775,12 +775,12 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                     calllist.append(n)
                 matches = find_matching_services(aggr_type, node[0], calllist)
                 new_elements = []
-		handled_args = set([]) # avoid duplicate rule incarnations
+                handled_args = set() # avoid duplicate rule incarnations
                 for match in matches:
                     sub_arginfo = dict([(str(n+1), x) for (n,x) in enumerate(match)])
-		    if tuple(args) + match not in handled_args:
+                    if tuple(args) + match not in handled_args:
                         new_elements += compile_leaf_node(subst_vars(node[-2], sub_arginfo), subst_vars(node[-1], sub_arginfo))
-		        handled_args.add(tuple(args) + match)
+                        handled_args.add(tuple(args) + match)
 
                 host_name, service_description = node[-2:]
             else:
@@ -1029,7 +1029,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
         return ({
             "state"               : MISSING,
             "output"              : _("Host %s not found") % host,
-            "in_downtime"         : False,
+            "in_downtime"         : 0,
             "acknowledged"        : False,
             "in_service_period"   : True,
         }, None, node)
@@ -1059,7 +1059,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
                 state = {
                     "state"             : st,
                     "output"            : output,
-                    "in_downtime"       : downtime_depth > 0,
+                    "in_downtime"       : downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
                     "acknowledged"      : not not acknowledged,
                     "in_service_period" : in_service_period,
                 }
@@ -1067,7 +1067,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
                     assumed_state = {
                         "state"             : state_assumption,
                         "output"            : _("Assumed to be %s") % service_state_names[state_assumption],
-                        "in_downtime"       : downtime_depth > 0,
+                        "in_downtime"       : downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
                         "acknowledged"      : not not acknowledged,
                         "in_service_period" : in_service_period,
                     }
@@ -1079,7 +1079,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
         return ({
                 "state"             : MISSING,
                 "output"            : _("This host has no such service"),
-                "in_downtime"       : False,
+                "in_downtime"       : host_in_downtime,
                 "acknowledged"      : False,
                 "in_service_period" : True,
             }, None, node)
@@ -1101,7 +1101,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
             assumed_state = {
                 "state"             : state_assumption,
                 "output"            : _("Assumed to be %s") % host_state_names[state_assumption],
-                "in_downtime"       : host_in_downtime,
+                "in_downtime"       : host_in_downtime != 0,
                 "acknowledged"      : host_acknowledged,
                 "in_service_period" : host_in_service_period,
             }
@@ -1126,6 +1126,7 @@ def execute_rule_node(node, status_info, use_hard_states):
     node_states = []
     assumed_states = []
     downtime_states = []
+    host_downtime_states = []
     service_period_states = []
     ack_states = [] # Needed for computing the acknowledgement of non-OK nodes
     one_assumption = False
@@ -1134,7 +1135,7 @@ def execute_rule_node(node, status_info, use_hard_states):
         subtrees.append(result)
 
         # Assume items in downtime as CRIT when computing downtime state
-        downtime_states.append(({"state": result[0]["in_downtime"] and 2 or 0, "output" : ""}, result[2]))
+        downtime_states.append(({"state": result[0]["in_downtime"] != 0 and 2 or 0, "output" : ""}, result[2]))
 
         # Assume non-OK nodes that are acked as OK
         if result[0]["acknowledged"]:
@@ -1158,6 +1159,8 @@ def execute_rule_node(node, status_info, use_hard_states):
 
     # Compute downtime state
     downtime_state = func(*([downtime_states] + funcargs))
+    host_downtime_state = func(*([host_downtime_states] + funcargs))
+
     state["in_downtime"] = downtime_state["state"] >= 2
 
     # Compute acknowledgedment state
@@ -1597,7 +1600,6 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
     return "aggrtree" + (boxes and "_box" or ""), htmlcode
 
 def aggr_render_node(tree, title, mousecode, show_host):
-
     # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
     if tree[1] and tree[0] != tree[1]:
         addclass = " " + _("assumed")
@@ -1606,9 +1608,13 @@ def aggr_render_node(tree, title, mousecode, show_host):
         addclass = ""
         effective_state = tree[0]
 
-    if tree[0]["in_downtime"]:
+    if tree[0]["in_downtime"] == 2:
         title = ('<img class="icon bi" src="images/icon_downtime.png" title="%s">' % \
             _("This element is currently in a scheduled downtime.")) + title
+    elif tree[0]["in_downtime"] == 1:
+        # only display host downtime if the service has no own downtime
+        title = ('<img class="icon bi" src="images/icon_derived_downtime.png" title="%s">' % \
+                 _("One of the subelements is in a scheduled downtime.")) + title
 
     if tree[0]["acknowledged"]:
         title = ('<img class="icon bi" src="images/icon_ack.png" title="%s">' % \

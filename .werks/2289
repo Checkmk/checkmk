@@ -1,4 +1,4 @@
-Title: New checks: aix_hacmp_resources, aix_hacmp_services, aix_hacmp_nodes
+Title: aix_hacmp_resources, aix_hacmp_services, aix_hacmp_nodes: new checks for HACMP Cluster Manager
 Level: 1
 Component: checks
 Compatible: compat

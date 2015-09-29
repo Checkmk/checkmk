@@ -1,5 +1,5 @@
 ﻿#
-# Hyper-V VM state for Check MK monitoring
+# Hyper-V VM state
 #
 # Script must executed with local administrator credentials!
 #

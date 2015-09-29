@@ -1,0 +1,10 @@
+Title: RBN Rules can now also match service event type OK to OK
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443164531
+Class: feature
+
+Whit this change it's possible that the rules can match e.g. to Custom Notifications.
+

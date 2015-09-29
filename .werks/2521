@@ -1,4 +1,4 @@
-Title: new check juniper_trpz_aps_sessions: shows the radio data and sessions per online access point
+Title: juniper_trpz_aps_sessions: new check shows the radio data and sessions per online access point
 Level: 1
 Component: checks
 Compatible: compat

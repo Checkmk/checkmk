@@ -25,6 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import sys, getopt, urllib2, traceback
+import os
+import time
+
 
 # tell urllib2 not to honour "http(s)_proxy" env variables
 urllib2.getproxies = lambda: {}
@@ -32,7 +35,7 @@ urllib2.getproxies = lambda: {}
 def usage():
     sys.stderr.write("""
 USAGE: check_bi_aggr -b <BASE_URL> -a <AGGR_NAME> -u <USER> -s <SECRET>
-                     [-m <AUTH_MODE>] [-t <TIMEOUT>] [-d]
+                     [-m <AUTH_MODE>] [-r] [-n <HOSTNAME>] [-t <TIMEOUT>] [-d]
 
 OPTIONS:
   -b BASE_URL       The base URL to the monitoring environment, e.g.
@@ -47,6 +50,8 @@ OPTIONS:
   -m AUTH_MODE      Authentication mode, either "cookie", "basic" or "digest",
                     defaults to "cookie"
   -t TIMEOUT        HTTP connect timeout in seconds (Default: 60)
+  -r                track downtimes. This requires the hostname to be set.
+  -n HOSTNAME       The hostname for which this check is run.
   --in-downtime S   S can be "ok" or "warn". Force this state if the
                     aggregate is in scheduled downtime. OK states will always
                     be unchanged.
@@ -56,7 +61,7 @@ OPTIONS:
 
 """)
 
-short_options = 'b:a:u:s:m:t:dh'
+short_options = 'b:a:u:s:m:t:n:dhr'
 long_options = [ "help", "in-downtime=", "acknowledged=" ]
 
 try:
@@ -74,6 +79,9 @@ timeout          = 60
 debug            = False
 opt_in_downtime  = None
 opt_acknowledged = None
+track_downtime   = False
+hostname         = None
+
 
 for o,a in opts:
     if o in [ '-h', '--help' ]:
@@ -91,6 +99,10 @@ for o,a in opts:
         auth_mode = a
     elif o == '-t':
         timeout = int(a)
+    elif o == '-r':
+        track_downtime = True
+    elif o == '-n':
+        hostname = a
     elif o == '-d':
         debug = True
     elif o == '--in-downtime':
@@ -113,6 +125,13 @@ if not username or not password:
     sys.stderr.write('Please provide valid user credentials.\n')
     usage()
     sys.exit(1)
+
+if track_downtime and not hostname:
+    sys.stderr.write('Please provide a hostname when using '
+                     'downtime tracking.\n')
+    usage()
+    sys.exit(1)
+
 
 def init_auth():
     if username and password:
@@ -186,6 +205,38 @@ if opt_in_downtime and row["aggr_in_downtime"] == '1':
     else: # "warn"
         aggr_state = min(aggr_state, 1)
 
+if track_downtime:
+    # connect to livestatus
+    try:
+        import livestatus
+    except ImportError:
+        sys.stderr.write('The python livestatus api module is missing. Please install from\n'
+                        'Check_MK livestatus sources to a python import path.\n')
+        sys.exit(1)
+
+    socket_path = os.environ['OMD_ROOT'] + '/tmp/run/live'
+
+    conn = livestatus.SingleSiteConnection('unix:' + socket_path)
+
+    now = time.time()
+    # find out if, according to previous tracking, there already is a downtime
+    ids = conn.query_table(("GET downtimes\n"
+                            "Columns: id\n"
+                            "Filter: service_description = Aggr Host %s\n"
+                            "Filter: author = tracking\n"
+                            "Filter: end_time > %d") % (hostname, now))
+    downtime_tracked = len(ids) > 0
+    if downtime_tracked != (row["aggr_in_downtime"] == '1'):
+        # there is a discrepance between tracked downtime state and the real state
+        if row["aggr_in_downtime"] == '1':
+            # need to track downtime
+            conn.command("[%d] SCHEDULE_SVC_DOWNTIME;%s;Aggr Host %s;%d;%d;1;0;0;"
+                         "tracking;Automatic downtime" % (now, hostname, hostname, now, 2147483647))
+        else:
+            for dt_id in ids:
+                conn.command("[%d] DEL_SVC_DOWNTIME;%d" % (now, dt_id[0]))
+
+
 if opt_acknowledged and row["aggr_acknowledged"] == '1':
     aggr_output += ", is acknowledged"
     if opt_acknowledged == "ok":
@@ -196,3 +247,4 @@ if opt_acknowledged and row["aggr_acknowledged"] == '1':
 
 sys.stdout.write('%s\n' % aggr_output)
 sys.exit(aggr_state)
+

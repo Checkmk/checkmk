@@ -25,42 +25,25 @@
 # Boston, MA 02110-1301 USA.
 
 
-janitza_umg_freq_default_levels = {}
+# .1.3.6.1.4.1.3652.3.1.1.6.0 27
 
 
-def inventory_janitza_umg_freq(info):
-    # info[0][0] is frequency, info[0][1] is first freqerature reading, info[0][2] is second.
-    yield "1", {}
+def inventory_pandacom_sys_temp(info):
+    return [ ("System", {}) ]
 
 
-def check_janitza_umg_freq(item, params, info):
-    warn, crit = params.get("levels", (0, 0))
-
-    reading = float(info[0][0][0]) / 100.0
-    perfdata = [ ( "in_freq", reading, warn, crit ) ]
-
-    infotext = "Frequency: %.1f Hz" % reading
-    levelstext = "(warn/crit at %d/%d Hz)" % (warn, crit)
-
-    if reading <= crit:
-        return 2, infotext + " " + levelstext, perfdata
-    elif reading <= warn:
-        return 1, infotext + " " + levelstext, perfdata
-    else:
-        return 0, infotext, perfdata
+def check_pandacom_sys_temp(item, params, info):
+    return check_temperature(int(info[0][0]), params)
 
 
-check_info['janitza_umg_freq'] = {
-    'inventory_function'      : inventory_janitza_umg_freq,
-    'check_function'          : check_janitza_umg_freq,
-    'service_description'     : 'Frequency %s',
-    'has_perfdata'            : True,
-    'default_levels_variable' : 'janitza_umg_freq_default_levels',
-    'group'                   : 'efreq',
-    'snmp_info'               : [
-                                    (".1.3.6.1.4.1.34278", [ "6" ]), # misc
-                                  ],
-    'snmp_scan_function'      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.34278.8.6",
-                                                                            ".1.3.6.1.4.1.34278.10.1"]
+check_info['pandacom_sys_temp'] = {
+    'inventory_function'        : inventory_pandacom_sys_temp,
+    'check_function'            : check_pandacom_sys_temp,
+    'service_description'       : 'Temperature %s',
+    'has_perfdata'              : True,
+    'snmp_info'                 : (".1.3.6.1.4.1.3652.3.1.1.6", [ "" ] ),
+    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
+    'default_levels_variable'   : "pandacom_temp_default_levels",
+    'group'                     : 'temperature',
+    'includes'                  : [ "temperature.include", "pandacom_temp.include" ],
 }
-

@@ -1,4 +1,4 @@
-Title: kernel.util and winperf_processor.util checks now support an optional graph showing utilization of individual cores
+Title: kernel.util, winperf_processor.util: now support an optional graph showing utilization of individual cores
 Level: 1
 Component: checks
 Compatible: compat

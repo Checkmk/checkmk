@@ -113,7 +113,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, cStringIO, math, fcntl, pickle, random
+       shutil, tarfile, cStringIO, math, fcntl, pickle, random, glob
 import config, table, multitar, userdb, hooks, weblib, login
 from hashlib import sha256
 from lib import *
@@ -2032,6 +2032,9 @@ def mode_edithost(phase, new, cluster):
 
             html.context_button(_("Services"),
                   make_link([("mode", "inventory"), ("host", hostname)]), "services")
+            if config.may('wato.agents'):
+                html.context_button(_("Monitoring Agent"),
+                  make_link([("mode", "agent_of_host"), ("host", hostname)]), "agents")
             if config.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
                   make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
@@ -2216,7 +2219,8 @@ def check_new_host_permissions(folder, host, hostname):
     config.need_permission("wato.manage_hosts")
     check_folder_permissions(folder, "write")
     check_user_contactgroups(host.get("contactgroups", (False, [])))
-    check_new_hostname("host", hostname)
+    if hostname != None: # otherwise: name not known yet
+        check_new_hostname("host", hostname)
 
 def check_edit_host_permissions(folder, host, hostname):
     config.need_permission("wato.edit_hosts")
@@ -9054,6 +9058,8 @@ def event_rule_match_conditions(flavour):
                           "types then this rule will never hold for host notifications!"),
                choices = [
                    ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
+                   ( 'rr', _("OK")      + u" ➤ " + _("OK")),
+
                    ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
                    ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
 
@@ -18420,7 +18426,7 @@ def mode_check_manpage(phase):
     # the dump context button, that will always be shown - even if the
     # plugin is not in use.
 
-    html.write('<table class="data manpage">')
+    html.write('<table class="data headerleft">')
 
     html.write('<tr><th>%s</th><td><b>%s</b></td></tr>' % (
       _("Title"), manpage["header"]["title"]))
@@ -18614,23 +18620,22 @@ def mode_icons(phase):
 #   | Simple download page for the builtin agents and plugins              |
 #   '----------------------------------------------------------------------'
 
-import glob
-
-def download_table(title, paths):
+def download_table(title, file_titles, paths):
     forms.header(title)
     forms.container()
     for path in paths:
         os_path  = path
         relpath  = path.replace(defaults.agents_dir+'/', '')
         filename = path.split('/')[-1]
+        title = file_titles.get(os_path, filename)
 
-        size_kb = os.stat(os_path).st_size / 1024.0
+        file_size = os.stat(os_path).st_size
 
         # FIXME: Rename classes etc. to something generic
-        html.write('<div class="ruleset"><div class="text" style="width:250px;">')
-        html.write('<a href="agents/%s">%s</a>' % (relpath, filename))
+        html.write('<div class="ruleset"><div class="text" style="width:300px;">')
+        html.write('<a href="agents/%s">%s</a>' % (relpath, title))
         html.write('<span class=dots>%s</span></div>' % ("." * 100))
-        html.write('<div class="rulecount" style="width:30px;">%d&nbsp;KB</div>' % size_kb)
+        html.write('<div class="rulecount" style="width:50px;">%s</div>' % file_size_human_readable(file_size))
         html.write('</div></div>')
     forms.end()
 
@@ -18640,6 +18645,7 @@ def mode_download_agents(phase):
 
     elif phase == "buttons":
         global_buttons()
+        html.context_button(_("Release Notes"), "version.py", "mk")
         return
 
     elif phase == "action":
@@ -18650,38 +18656,91 @@ def mode_download_agents(phase):
             + glob.glob(defaults.agents_dir + "/*.rpm") \
             + glob.glob(defaults.agents_dir + "/windows/c*.msi")
 
-    download_table(_("Packed Agents"), packed)
+    download_table(_("Packaged Agents"), {}, packed)
 
     titles = {
-        ''                 : _('Linux / Unix Agents'),
-        '/plugins'         : _('Linux / Unix Plugins'),
-        '/windows'         : _('Windows Agent'),
-        '/windows/plugins' : _('Windows Plugins'),
-        '/windows/mrpe'    : _('Windows MRPE Scripts'),
-        '/cfg_examples'    : _('Example Configurations'),
-        '/z_os'            : _('z/OS'),
-        '/sap'             : _('SAP'),
-        '/special'         : _('Special Agents'),
+        ''                         : _('Linux/Unix Agents'),
+        '/plugins'                 : _('Linux/Unix Agents - Plugins'),
+        '/cfg_examples'            : _('Linux/Unix Agents - Example Configurations'),
+        '/cfg_examples/systemd'    : _('Linux Agent - Example configuration using with systemd'),
+        '/windows'                 : _('Windows Agent'),
+        '/windows/plugins'         : _('Windows Agent - Plugins'),
+        '/windows/mrpe'            : _('Windows Agent - MRPE Scripts'),
+        '/windows/cfg_examples'    : _('Windows Agent - Example Configurations'),
+        '/z_os'                    : _('z/OS'),
+        '/sap'                     : _('SAP R/3'),
     }
 
-    others = []
+    banned_paths = [
+        '/bakery',
+        '/special',
+        '/windows/msibuild',
+        '/windows/msibuild/patches',
+    ]
+
+    file_titles = {}
+    other_sections = []
     for root, dirs, files in os.walk(defaults.agents_dir):
         file_paths = []
         relpath = root.split('agents')[1]
-        title = titles.get(relpath, relpath)
-        for filename in files:
-            path = root + '/' + filename
-            if path not in packed and 'deprecated' not in path:
-                file_paths.append(path)
+        if relpath not in banned_paths:
+            title = titles.get(relpath, relpath)
+            for filename in files:
+                if filename == "CONTENTS":
+                    file_titles.update(read_agent_contents_file(root))
 
-        others.append((title, file_paths))
+                path = root + '/' + filename
+                if path not in packed and 'deprecated' not in path:
+                    file_paths.append(path)
 
-    others.sort()
+            other_sections.append((title, file_paths))
 
-    for title, file_paths in others:
-        if file_paths:
-            download_table(title, sorted(file_paths))
+    other_sections.sort()
+
+    for title, file_paths in other_sections:
+        useful_file_paths = [
+            p for p in file_paths
+            if file_titles.get(p, "") != None \
+                and not p.endswith("/CONTENTS")
+        ]
+        file_titles.update(read_plugin_inline_comments(useful_file_paths))
+        if useful_file_paths:
+            download_table(title, file_titles, sorted(useful_file_paths))
     html.write('</div>')
+
+
+
+def read_plugin_inline_comments(file_paths):
+    comment_prefixes = [ "# ", "REM ", "$!# " ]
+    windows_bom = "\xef\xbb\xbf"
+    file_titles = {}
+    for path in file_paths:
+        first_bytes = file(path).read(500)
+        if first_bytes.startswith(windows_bom):
+            first_bytes = first_bytes[len(windows_bom):]
+        first_lines = first_bytes.splitlines()
+        for line in first_lines:
+            for prefix in comment_prefixes:
+                if line.startswith(prefix) and len(line) > len(prefix) and line[len(prefix)].isalpha():
+                    file_titles[path] = line[len(prefix):].strip()
+                    break
+            if path in file_titles:
+                break
+    return file_titles
+
+
+def read_agent_contents_file(root):
+    file_titles = {}
+    for line in file(root + "/CONTENTS"):
+        line = line.strip()
+        if line and not line.startswith("#"):
+            file_name, title = line.split(None, 1)
+            if title == "(hide)":
+                file_titles[root + "/" + file_name] = None
+            else:
+                file_titles[root + "/" + file_name] = title
+    return file_titles
+
 
 #.
 #   .--Hooks-&-API---------------------------------------------------------.

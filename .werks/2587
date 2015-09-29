@@ -1,4 +1,4 @@
-Title: new checks juniper_temp, juniper_fru, juniper_mem, juniper_alarm for a Juniper Ethernet Switch
+Title: juniper_temp, juniper_fru, juniper_mem, juniper_alarm: new checks for a Juniper Ethernet Switch
 Level: 1
 Component: checks
 Compatible: compat

@@ -6,5 +6,5 @@ Version: 1.2.7i3
 Date: 1441635061
 Class: fix
 
-The internal name of the check changed. You will not loose any history data, but it is needed to make rediscovery.
-
+The internal name of the check changed. You will not loose any history data,
+but it is needed to make rediscovery.

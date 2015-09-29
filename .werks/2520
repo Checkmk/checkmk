@@ -1,4 +1,4 @@
-Title: New check genua_vpn: monitors the VPN state of a genuscreen VPN appliance
+Title: genua_vpn: new check which monitors the VPN state of a genuscreen VPN appliance
 Level: 1
 Component: checks
 Compatible: compat

@@ -1191,6 +1191,8 @@ def handle_spoolfile(spoolfile):
             raw_context = data["context"]
             notify_log("Got spool file %s (%s) from remote host for local delivery." % (
                        notif_uuid[:8], find_host_service_in_context(raw_context)))
+
+            store_notification_backlog(data["context"])
             locally_deliver_raw_context(data["context"])
             return 0 # No error handling for async delivery
 

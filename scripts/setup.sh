@@ -802,6 +802,8 @@ do
 	   fi &&
            mkdir -p $DESTDIR$sharedir &&
            tar xzf $SRCDIR/share.tar.gz -C $DESTDIR$sharedir &&
+           mkdir -p $DESTDIR$sharedir/werks &&
+           tar xzf $SRCDIR/werks.tar.gz -C $DESTDIR$sharedir/werks &&
 	   mkdir -p $DESTDIR$modulesdir &&
 	   create_defaults > $DESTDIR$modulesdir/defaults &&
            mkdir -p $DESTDIR$localedir &&

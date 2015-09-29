@@ -6457,7 +6457,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_storage,
     "netapp_disks",
-    _("Filer Disk Levels (netapp, ibm svc)"),
+    _("Filer Disk Levels (NetApp, IBM SVC)"),
     Transform(
         Dictionary(
             elements = [

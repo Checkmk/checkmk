@@ -1,0 +1,12 @@
+Title: Fix spurious CRIT status on check on mknotifyd
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443172664
+Class: fix
+
+In case the total run time of the Linux agent was more than 10 seconds,
+the check would go CRIT from time to time and say that the notification
+spooler might be crashed. This was due to a to rigid timeout. This
+as been fixed.

@@ -1,0 +1,11 @@
+Title: artec_disk, artec_documents, artec_load, artec_mem, artec_processes, artec_temp: new checks for ARTEC Mail Archive Appliance
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443085698
+Class: feature
+
+These checks monitor the used disk space of the mount points, the number of
+documents, the CPU load, the used memory, the number of processes and the
+temperature of the ARTEC Mail Archive Appliance.

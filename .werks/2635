@@ -1,0 +1,10 @@
+Title: pandacom_psu, pandacom_fan, pandacom_sys_temp, pandacom_10gm_temp, pandacom_fc_temp: new checks for Pandacom SpeedCarrier Chassis 5u
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443519683
+Class: feature
+
+These checks monitor the power supply and fan states, the system temperature and the FC and 10GM modules
+temperature of a Pandacom SpeedCarrier Chassis 5u.

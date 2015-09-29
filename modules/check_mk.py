@@ -3546,15 +3546,18 @@ def parse_man_header(checkname, path):
                     lineno, path, line))
             break
 
-    if "agents" not in parsed:
-        raise Exception("Section agents missing in man page of %s\n" % (checkname))
-    else:
-        parsed["agents"] = parsed["agents"].replace(" ","").split(",")
+    # verify mandatory keys. FIXME: This list may be incomplete
+    for key in [ "title", "agents", "license", "distribution", "description", ]:
+        if key not in parsed:
+            raise Exception("Section %s missing in man page of %s" % (key, checkname))
+
+    parsed["agents"] = parsed["agents"].replace(" ","").split(",")
 
     if parsed.get("catalog"):
         parsed["catalog"] = parsed["catalog"].split("/")
 
     return parsed
+
 
 def load_manpage(checkname):
     filename = all_manuals().get(checkname)

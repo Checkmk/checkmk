@@ -24,37 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# .1.3.6.1.4.1.2021.4.5.0 4003584 --> UCD-SNMP-MIB::memTotalReal.0
-# .1.3.6.1.4.1.2021.4.6.0 188296  --> UCD-SNMP-MIB::memAvailReal.0
+
+# .1.3.6.1.4.1.3652.3.1.1.6.0 27
 
 
-# suggested by cutomer
-factory_settings["artec_mem_default_levels"] = {
-    "levels" : ("perc_used", (50.0, 90.0))
-}
+def inventory_pandacom_sys_temp(info):
+    return [ ("System", {}) ]
 
 
-def inventory_artec_mem(info):
-    return [ ("", {}) ]
+def check_pandacom_sys_temp(item, params, info):
+    return check_temperature(int(info[0][0]), params)
 
 
-def check_artec_mem(_no_item, params, info):
-    mem_total_bytes, mem_avail_bytes = map(lambda x: int(x) * 1024, info[0])
-    mem_used_bytes = mem_total_bytes - mem_avail_bytes
-    return check_memory_simple(mem_used_bytes, mem_total_bytes, params)
-
-
-check_info['artec_mem'] = {
-    'inventory_function'        : inventory_artec_mem,
-    'check_function'            : check_artec_mem,
-    'service_description'       : 'Memory',
+check_info['pandacom_sys_temp'] = {
+    'inventory_function'        : inventory_pandacom_sys_temp,
+    'check_function'            : check_pandacom_sys_temp,
+    'service_description'       : 'Temperature %s',
     'has_perfdata'              : True,
-    'snmp_info'                 : (".1.3.6.1.4.1.2021.4", [
-                                        "5",    # memTotal     -> kB
-                                        "6",    # memAvailable -> kB
-                                  ]),
-    'snmp_scan_function'        : artec_scan_function,
-    'default_levels_variable'   : 'artec_mem_default_levels',
-    'group'                     : 'memory_simple',
-    'includes'                  : [ "artec.include", "memory.include" ],
+    'snmp_info'                 : (".1.3.6.1.4.1.3652.3.1.1.6", [ "" ] ),
+    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
+    'default_levels_variable'   : "pandacom_temp_default_levels",
+    'group'                     : 'temperature',
+    'includes'                  : [ "temperature.include", "pandacom_temp.include" ],
 }

@@ -121,6 +121,9 @@ def ldap_test_module():
 #   '----------------------------------------------------------------------'
 
 class LDAPUserConnector(UserConnector):
+    # stores the ldap connection suffixes of all connections
+    connection_suffixes = {}
+
     def __init__(self, config):
         super(LDAPUserConnector, self).__init__(config)
 
@@ -134,6 +137,8 @@ class LDAPUserConnector(UserConnector):
         self._sync_time_file = defaults.var_dir + '/web/ldap_%s_sync_time.mk'% self._config['id']
         # Exists when last ldap sync failed, contains exception text
         self._sync_fail_file = defaults.var_dir + '/web/ldap_%s_sync_fail.mk' % self._config['id']
+
+        self.save_suffix()
 
 
     @classmethod
@@ -149,6 +154,12 @@ class LDAPUserConnector(UserConnector):
     @classmethod
     def short_title(self):
         return _('LDAP')
+
+
+    @classmethod
+    def get_connection_suffixes(self):
+        return self.connection_suffixes
+
 
     def log(self, s):
         if self._config['debug_log']:
@@ -306,6 +317,28 @@ class LDAPUserConnector(UserConnector):
 
     def has_group_base_dn_configured(self):
         return self._config['group_dn'] != ''
+
+
+    def get_suffix(self):
+        return self._config.get('suffix')
+
+
+    def has_suffix(self):
+        return self._config.get('suffix') != None
+
+
+    def save_suffix(self):
+        suffix = self.get_suffix()
+        if suffix:
+            if suffix in LDAPUserConnector.connection_suffixes \
+               and LDAPUserConnector.connection_suffixes[suffix] != self._config['id']:
+                raise MKUserError(None, _("Found duplicate LDAP connection suffix. "
+                                          "The LDAP connections %s and %s both use "
+                                          "the suffix %s which is not allowed." %
+                                          (LDAPUserConnector.connection_suffixes[suffix],
+                                           self._config['id'], suffix)))
+            else:
+                LDAPUserConnector.connection_suffixes[suffix] = self._config['id']
 
 
     # Returns a list of all needed LDAP attributes of all enabled plugins
@@ -776,12 +809,29 @@ class LDAPUserConnector(UserConnector):
     # This function only validates credentials, no locked checking or similar
     def check_credentials(self, username, password):
         self.connect()
+
+        # Did the user provide an suffix with his username? This might enforce
+        # LDAP connections to be choosen or skipped.
+        # self.user_enforces_this_connection can return either:
+        #   True:  This connection is enforced
+        #   False: Another connection is enforced
+        #   None:  No connection is enforced
+        enforce_this_connection = self.user_enforces_this_connection(username)
+        if enforce_this_connection == False:
+            return None # Skip this connection, another one is enforced
+        else:
+            username = self.strip_suffix(username)
+
         # Returns None when the user is not found or not uniq, else returns the
         # distinguished name and the username as tuple which are both needed for
         # the further login process.
         result = self.get_user(username, True)
         if not result:
-            return None # The user does not exist. Skip this connector.
+            # The user does not exist
+            if enforce_this_connection:
+                return False # Refuse login
+            else:
+                return None # Try next connection (if available)
 
         user_dn, username = result
 
@@ -795,6 +845,39 @@ class LDAPUserConnector(UserConnector):
 
         self.default_bind(self._ldap_obj)
         return result
+
+
+    def user_enforces_this_connection(self, username):
+        suffixes = LDAPUserConnector.get_connection_suffixes()
+
+        matched_connection_ids = []
+        for suffix, connection_id in LDAPUserConnector.get_connection_suffixes().items():
+            if self.username_matches_suffix(username, suffix):
+                matched_connection_ids.append(connection_id)
+
+        if not matched_connection_ids:
+            return None
+        elif len(matched_connection_ids) > 1:
+            raise MKUserError(None, _("Unable to match connection"))
+        else:
+            return matched_connection_ids[0] == self._config["id"]
+
+
+    def username_matches_suffix(self, username, suffix):
+        return username.endswith('@' + suffix)
+
+
+    def strip_suffix(self, username):
+        suffix = self.get_suffix()
+        if suffix and self.username_matches_suffix(username, suffix):
+            return username[:-(len(suffix)+1)]
+        else:
+            return username
+
+
+    def add_suffix(self, username):
+        suffix = self.get_suffix()
+        return '%s@%s' % (username, suffix)
 
 
     def do_sync(self, add_to_changelog, only_username):
@@ -827,29 +910,45 @@ class LDAPUserConnector(UserConnector):
         import wato
         users = load_users(lock = True)
 
+        def load_user(user_id):
+            if user_id in users:
+                user = copy.deepcopy(users[user_id])
+                mode_create = False
+            else:
+                user = new_user_template(self._config['id'])
+                mode_create = True
+            return mode_create, user
+
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore
         for user_id, user in users.items():
             user_connection_id = cleanup_connection_id(user.get('connector'))
-            if user_connection_id == connection_id and user_id not in ldap_users:
+            if user_connection_id == connection_id and self.strip_suffix(user_id) not in ldap_users:
                 del users[user_id] # remove the user
                 if config.wato_enabled:
                     wato.log_pending(wato.SYNCRESTART, None, "edit-users",
                         _("LDAP [%s]: Removed user %s") % (connection_id, user_id), user_id = '')
 
         for user_id, ldap_user in ldap_users.items():
-            if user_id in users:
-                user = copy.deepcopy(users[user_id])
-                mode_create = False
-            else:
-                user = new_user_template(connection_id)
-                mode_create = True
-
+            mode_create, user = load_user(user_id)
             user_connection_id = cleanup_connection_id(user.get('connector'))
 
-            # Skip all users not controlled by this connector
+            # Name conflict: Found a user that has an equal name, but is not controlled
+            # by this connector. Don't sync it. When an LDAP connection suffix is configured
+            # use this for constructing a unique username. If not or if the name+suffix is
+            # already taken too, skip this user silently.
             if user_connection_id != connection_id:
-                continue
+                if self.has_suffix():
+                    user_id = self.add_suffix(user_id)
+                    mode_create, user = load_user(user_id)
+                    user_connection_id = cleanup_connection_id(user.get('connector'))
+                    if user_connection_id != connection_id:
+                        self.log('  SKIP SYNC "%s" (name conflict after adding suffix '
+                                 'with user from "%s" connector)' % (user_id, user_connection_id))
+                        continue # added suffix, still name conflict
+                else:
+                    self.log('  SKIP SYNC "%s" (name conflict with user from "%s" connector)' % (user_id, user_connection_id))
+                    continue # name conflict, different connector
 
             self.execute_active_sync_plugins(user_id, ldap_user, user)
 
@@ -1091,6 +1190,21 @@ def ldap_sync_simple(user_id, ldap_user, user, user_attr, attr):
         return {}
 
 
+def get_connection_choices(add_this=True):
+    choices = []
+
+    if add_this:
+        choices.append((None, _("This connection")))
+
+    for connection in load_connection_config():
+        descr = connection['description']
+        if not descr:
+            descr = connection['id']
+        choices.append((connection['id'], descr))
+
+    return choices
+
+
 #.
 #   .--Mail----------------------------------------------------------------.
 #   |                          __  __       _ _                            |
@@ -1302,11 +1416,20 @@ def ldap_sync_groups_to_contactgroups(connection, plugin, params, user_id, ldap_
     # 1. Fetch all existing group names in WATO
     cg_names = load_group_information().get("contact", {}).keys()
 
-    # 2. Load all LDAP groups which have a CN matching one contact
-    #    group which exists in WATO
-    ldap_groups = connection.get_group_memberships(cg_names, nested = params.get('nested', False))
+    # 2. Get list of LDAP connections to query
+    connections = set([connection])
+    for connection_id in params.get("other_connections", []):
+        c = get_connection(connection_id)
+        if c:
+            connections.add(c)
 
-    # 3. Only add groups which the user is member of
+    # 3. Load all LDAP groups which have a CN matching one contact
+    #    group which exists in WATO
+    ldap_groups = {}
+    for conn in connections:
+        ldap_groups.update(conn.get_group_memberships(cg_names, nested = params.get('nested', False)))
+
+    # 4. Only add groups which the user is member of
     return {'contactgroups': [ g['cn'] for dn, g in ldap_groups.items() if user_cmp_val in g['members']]}
 
 
@@ -1327,7 +1450,16 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
                 value    = True,
                 totext   = _('Nested group memberships are resolved'),
             )
-        )
+        ),
+        ('other_connections', ListChoice(
+            title = _("Sync group memberships from other connections"),
+            help = _("This is a special feature for environments where user accounts are located "
+                     "in one LDAP directory and groups objects having them as members are located "
+                     "in other directories. You should only enable this feature when you are in this "
+                     "situation and really need it. The current connection is always used."),
+            choices = lambda: get_connection_choices(add_this=False),
+            default_value = [None],
+        )),
     ],
 }
 
@@ -1343,16 +1475,14 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
 
 def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, user):
     # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
-    groups_to_fetch = []
-    for role_id, distinguished_names in params.items():
-        if type(distinguished_names) == list:
-            groups_to_fetch += [ dn.lower() for dn in distinguished_names ]
-        elif type(distinguished_names) in [ str, unicode ]:
-            groups_to_fetch.append(distinguished_names.lower())
+    groups_to_fetch = get_groups_to_fetch(connection, params)
 
-    ldap_groups = dict(connection.get_group_memberships(groups_to_fetch,
-                                          filt_attr = 'distinguishedname',
-                                          nested = params.get('nested', False)))
+    ldap_groups = {}
+    for connection_id, group_dns in get_groups_to_fetch(connection, params).items():
+        conn = get_connection(connection_id)
+        ldap_groups.update(dict(conn.get_group_memberships(group_dns,
+                                filt_attr = 'distinguishedname',
+                                nested = params.get('nested', False))))
 
     # posixGroup objects use the memberUid attribute to specify the group
     # memberships. This is the username instead of the users DN. So the
@@ -1362,13 +1492,17 @@ def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, us
     roles = set([])
 
     # Loop all roles mentioned in params (configured to be synchronized)
-    for role_id, distinguished_names in params.items():
-        if type(distinguished_names) != list:
-            distinguished_names = [distinguished_names]
+    for role_id, group_specs in params.items():
+        if type(group_specs) != list:
+            group_specs = [group_specs] # be compatible to old single group configs
 
-        for dn in distinguished_names:
-            if type(dn) not in [ str, unicode ]:
+        for group_spec in group_specs:
+            if type(group_spec) in [ str, unicode ]:
+                dn = group_spec # be compatible to old config without connection spec
+            elif type(group_spec) != tuple:
                 continue # skip non configured ones (old valuespecs allowed None)
+            else:
+                dn = group_spec[0]
             dn = dn.lower() # lower case matching for DNs!
 
             # if group could be found and user is a member, add the role
@@ -1383,23 +1517,63 @@ def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, us
     return {'roles': list(roles)}
 
 
+def get_groups_to_fetch(connection, params):
+    groups_to_fetch = {}
+    for role_id, group_specs in params.items():
+        if type(group_specs) == list:
+            for group_spec in group_specs:
+                if type(group_spec) == tuple:
+                    this_conn_id = group_spec[1]
+                    if this_conn_id == None:
+                        this_conn_id = connection["id"]
+                    groups_to_fetch.setdefault(this_conn_id, [])
+                    groups_to_fetch[this_conn_id].append(group_spec[0].lower())
+                else:
+                    # Be compatible to old config format (no connection specified)
+                    this_conn_id = connection["id"]
+                    groups_to_fetch.setdefault(this_conn_id, [])
+                    groups_to_fetch[this_conn_id].append(group_spec.lower())
+
+        elif type(group_specs) in [ str, unicode ]:
+            # Need to be compatible to old config formats
+            this_conn_id = connection["id"]
+            groups_to_fetch.setdefault(this_conn_id, [])
+            groups_to_fetch[this_conn_id].append(group_specs.lower())
+
+    return groups_to_fetch
+
+
 def ldap_list_roles_with_group_dn():
     elements = []
     for role_id, role in load_roles().items():
         elements.append((role_id, Transform(
             ListOf(
-                LDAPDistinguishedName(
-                    size = 80,
-                    allow_empty = False,
+                Transform(
+                    Tuple(
+                        elements = [
+                            LDAPDistinguishedName(
+                                title = _("Group<nobr> </nobr>DN"),
+                                size = 80,
+                                allow_empty = False,
+                            ),
+                            DropdownChoice(
+                                title = _("Search<nobr> </nobr>in"),
+                                choices = get_connection_choices,
+                                default_value = None,
+                            ),
+                        ],
+                    ),
+                    # convert old distinguished names to tuples
+                    forth = lambda v: type(v) != tuple and (v, ) or v,
                 ),
-                title = role['alias'] + ' - ' + _("Specify the Group DN"),
+                title = role['alias'],
                 help  = _("Distinguished Names of the LDAP groups to add users this role. "
                           "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> "
                           "This group must be defined within the scope of the "
                           "<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."),
                 movable = False,
             ),
-            # sync old single distinguished names to list of :Ns
+            # convert old single distinguished names to list of :Ns
             forth = lambda v: type(v) != list and [v] or v,
         )))
 

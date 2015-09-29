@@ -1,0 +1,17 @@
+title: Pandacom SpeedCarrier Chassis 5u: System Temperature
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the system temperature of
+ Pandacom SpeedCarrier Chassis 5u.
+
+ Upper default levels are 35, 40 celsius.
+ Upper and lower levels are configurable.
+
+item:
+ System.
+
+inventory:
+ One service is created.

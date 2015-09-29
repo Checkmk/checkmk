@@ -1,0 +1,33 @@
+Title: LDAP: Improved handling of multiple connections (Name conflicts, cross directory sync)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443518032
+Class: feature
+
+Since Check_MK can synchronize with multiple LDAP directories at the same time, new situations
+could occur which Check_MK did not handle properly for all cases yet.
+
+For example it is possible that name conflicts (user id) occur between LDAP connections when
+different LDAP directories have equal named users. Previous versions did synchronize the user
+using the first connection to be synchronized (take a look at the configuration to check the
+connection order) and silently skipped equal named users from other directories.
+
+This version intruces so called "LDAP connection suffixes" to solve this situation. This suffix
+is used identify name conflicting users between directories. You can use whatever you like as
+suffix, but for better identification it is recommended to use the official domain name as suffix.
+For example "corp.de" if you domain is identified like this.
+The connection suffix is appended to the user id for all user accounts having name conflicts during
+the synchronisation.
+Additionally, when a user tries to log in with his regular user name, for example <tt>hh</tt>, but
+the login is refused due to the name conflict, he can add the domain suffix to his username, e.g.
+<tt>hh@corp.de</tt> to tell Check_MK which directory he is associated to.
+
+Addionionally, it is now possible to configure the role and group sync plugins to gather group
+memberships for the users of a connection from another one. This might be needed when you have
+multiple LDAP directories somehow connected (Active Directory forest) where the users belong
+to one LDAP directory and the groups are found in another LDAP directory. Now, when these
+groups have members of the other LDAP directory, these memberships could not be synchronized
+to Check_MK in previous versions. This is now possible to be configured. But the default is
+to gather the group memberships of users from the connection they are associated with.

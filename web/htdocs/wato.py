@@ -7343,45 +7343,6 @@ def vs_ldap_connection(new):
                      'LDAP is not reachable or the local webserver is restarted.'),
             allow_empty = False,
         )),
-        ("port", Integer(
-            title = _("TCP Port"),
-            help  = _("This variable allows to specify the TCP port to "
-                      "be used to connect to the LDAP server. "),
-            minvalue = 1,
-            maxvalue = 65535,
-            default_value = 389,
-        )),
-        ("use_ssl", FixedValue(
-            title  = _("Use SSL"),
-            help   = _("Connect to the LDAP server with a SSL encrypted connection. You might need "
-                       "to configure the OpenLDAP installation on your monitoring server to accept "
-                       "the certificates of the LDAP server. This is normally done via system wide "
-                       "configuration of the CA certificate which signed the certificate of the LDAP "
-                       "server. Please refer to the <a target=\"_blank\" "
-                       "href=\"http://mathias-kettner.de/checkmk_multisite_ldap_integration.html\">"
-                       "documentation</a> for details."),
-            value  = True,
-            totext = _("Encrypt the network connection using SSL."),
-        )),
-        ("no_persistent", FixedValue(
-            title  = _("No persistent connection"),
-            help   = _("The connection to the LDAP server is not persisted."),
-            value  = True,
-            totext = _("Don't use persistent LDAP connections."),
-        )),
-        ("connect_timeout", Float(
-            title = _("Connect Timeout (sec)"),
-            help = _("Timeout for the initial connection to the LDAP server in seconds."),
-            minvalue = 1.0,
-            default_value = 2.0,
-        )),
-        ("version", DropdownChoice(
-            title = _("LDAP Version"),
-            help  = _("Select the LDAP version the LDAP server is serving. Most modern "
-                      "servers use LDAP version 3."),
-            choices = [ (2, "2"), (3, "3") ],
-            default_value = 3,
-        )),
         ("directory_type", DropdownChoice(
             title = _("Directory Type"),
             help  = _("Select the software the LDAP directory is based on. Depending on "
@@ -7416,6 +7377,46 @@ def vs_ldap_connection(new):
                 ),
             ],
         )),
+        ("port", Integer(
+            title = _("TCP Port"),
+            help  = _("This variable allows to specify the TCP port to "
+                      "be used to connect to the LDAP server. "),
+            minvalue = 1,
+            maxvalue = 65535,
+            default_value = 389,
+        )),
+        ("use_ssl", FixedValue(
+            title  = _("Use SSL"),
+            help   = _("Connect to the LDAP server with a SSL encrypted connection. You might need "
+                       "to configure the OpenLDAP installation on your monitoring server to accept "
+                       "the certificates of the LDAP server. This is normally done via system wide "
+                       "configuration of the CA certificate which signed the certificate of the LDAP "
+                       "server. Please refer to the <a target=\"_blank\" "
+                       "href=\"http://mathias-kettner.de/checkmk_multisite_ldap_integration.html\">"
+                       "documentation</a> for details."),
+            value  = True,
+            totext = _("Encrypt the network connection using SSL."),
+        )),
+        ("no_persistent", FixedValue(
+            title  = _("No persistent connection"),
+            help   = _("The connection to the LDAP server is not persisted."),
+            value  = True,
+            totext = _("Don't use persistent LDAP connections."),
+        )),
+        ("connect_timeout", Float(
+            title = _("Connect Timeout"),
+            help = _("Timeout for the initial connection to the LDAP server in seconds."),
+            unit = _("Seconds"),
+            minvalue = 1.0,
+            default_value = 2.0,
+        )),
+        ("version", DropdownChoice(
+            title = _("LDAP Version"),
+            help  = _("Select the LDAP version the LDAP server is serving. Most modern "
+                      "servers use LDAP version 3."),
+            choices = [ (2, "2"), (3, "3") ],
+            default_value = 3,
+        )),
         ("page_size", Integer(
             title = _("Page Size"),
             help = _("LDAP searches can be performed in paginated mode, for example to improve "
@@ -7424,10 +7425,31 @@ def vs_ldap_connection(new):
             default_value = 1000,
         )),
         ("response_timeout", Integer(
-            title = _("Response Timeout (sec)"),
+            title = _("Response Timeout"),
+            unit = _("Seconds"),
             help = _("Timeout for LDAP query responses."),
             minvalue = 0,
             default_value = 5,
+        )),
+        ("suffix", TextUnicode(
+            allow_empty = False,
+            title = _("LDAP connection suffix"),
+            help = _("The LDAP connection suffix can be used to distinguish equal named objects "
+                     "(name conflicts), for example user accounts, from different LDAP connections.<br>"
+                     "It is used in the following situations:<br><br>"
+                     "During LDAP synchronization, the LDAP sync might discover that a user to be "
+                     "synchronized from from the current LDAP is already being synchronized from "
+                     "another LDAP connection. Without the suffix configured this results in a name "
+                     "conflict and the later user not being synchronized. If the connection has a "
+                     "suffix configured, this suffix is added to the later username in case of the name "
+                     "conflict to resolve it. The user will then be named <tt>[username]@[suffix]</tt> "
+                     "instead of just <tt>[username]</tt>.<br><br>"
+                     "In the case a user which users name is existing in multiple LDAP directories, "
+                     "but associated to different persons, your user can insert <tt>[username]@[suffix]</tt>"
+                     " during login instead of just the plain <tt>[username]</tt> to tell which LDAP "
+                     "directory he is assigned to. Users without name conflict just need to provide their "
+                     "regular username as usual."),
+            regex = re.compile('^[A-Z0-9.-]+(?:\.[A-Z]{2,24})?$', re.I),
         )),
     ]
 
@@ -7600,7 +7622,7 @@ def vs_ldap_connection(new):
         optional_keys = [
             'no_persistent', 'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
             'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
-            'group_filter', 'group_member',
+            'group_filter', 'group_member', 'suffix',
         ],
     )
 

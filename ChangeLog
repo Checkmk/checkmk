@@ -2,6 +2,9 @@
     Core & Setup:
     * 2430 FIX: Fixed crash with availability queries when using nagios as core...
 
+    Checks & Agents:
+    * 2653 FIX: winperf_msx_queues: fixed incorrect cancelation of check claiming no counters were available...
+
     Event Console:
     * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters
 

@@ -1,0 +1,11 @@
+Title: winperf_msx_queues: fixed incorrect cancelation of check claiming no counters were available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1443535176
+
+In versions 1.2.6p11 and 1.2.6p12 this check would report unknown state with the message "no
+counters available, transport service running?" even though there were counters

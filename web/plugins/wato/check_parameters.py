@@ -797,6 +797,31 @@ register_check_parameters(
 
 
 #.
+#   .--Storage-------------------------------------------------------------.
+#   |                 ____  _                                              |
+#   |                / ___|| |_ ___  _ __ __ _  __ _  ___                  |
+#   |                \___ \| __/ _ \| '__/ _` |/ _` |/ _ \                 |
+#   |                 ___) | || (_) | | | (_| | (_| |  __/                 |
+#   |                |____/ \__\___/|_|  \__,_|\__, |\___|                 |
+#   |                                          |___/                       |
+#   '----------------------------------------------------------------------'
+
+register_check_parameters(
+    subgroup_storage,
+    "blank_tapes",
+    _("Remaining blank tabes in DIVA CSM Devices"),
+    Tuple(
+        elements = [
+            Integer(title = _("Warning below"), default_value = 5),
+            Integer(title = _("Critical below"), default_value = 1),
+        ],
+    ),
+    None,
+    match_type = "first",
+)
+
+
+#.
 #   .--Unsorted--(Don't create new stuff here!)----------------------------.
 #   |              _   _                      _           _                |
 #   |             | | | |_ __  ___  ___  _ __| |_ ___  __| |               |

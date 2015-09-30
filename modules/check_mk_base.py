@@ -482,7 +482,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     piggy_output = get_piggyback_info(hostname) + get_piggyback_info(ipaddress)
 
     output = ""
-    agent_failed = False
+    agent_failed_exc = None
     if is_tcp_host(hostname):
         try:
             output = get_agent_info(hostname, ipaddress, max_cache_age)
@@ -490,7 +490,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
             raise
 
         except Exception, e:
-            agent_failed = True
+            agent_failed_exc = e
             # Remove piggybacked information from the host (in the
             # role of the pig here). Why? We definitely haven't
             # reached that host so its data from the last time is
@@ -498,6 +498,8 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
             remove_piggyback_info_from(hostname)
 
             if not piggy_output:
+                raise
+            elif opt_debug:
                 raise
 
     output += piggy_output
@@ -523,8 +525,8 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     # If the agent has failed and the information we seek is
     # not contained in the piggy data, raise an exception
     if check_type not in info:
-        if agent_failed:
-            raise MKAgentError("Cannot get information from agent, processing only piggyback data.")
+        if agent_failed_exc:
+            raise MKAgentError("Cannot get information from agent (%s), processing only piggyback data." % agent_failed_exc)
         else:
             return []
 

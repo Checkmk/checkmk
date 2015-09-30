@@ -236,8 +236,8 @@ def notify_notify(raw_context, analyse=False):
         notify_log("Analysing notification (%s) context with %s variables" % (
             find_host_service_in_context(raw_context), len(raw_context)))
     else:
-        notify_log("Got raw notification (%s) context with %s variables" % (
-            find_host_service_in_context(raw_context), len(raw_context)))
+        notify_log("Got raw notification (%s) context with %s variables (%r)" % (
+            find_host_service_in_context(raw_context), len(raw_context), raw_context))
 
     # Add some further variable for the conveniance of the plugins
 

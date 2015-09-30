@@ -85,8 +85,8 @@ g_werks = None
 werks_stylesheets = [ "pages", "check_mk", "status", "wato", "views" ]
 
 def page_version():
-    load_werks()
     html.header(_("Check_MK %s Release Notes") % defaults.check_mk_version, stylesheets = werks_stylesheets)
+    load_werks()
     handle_acknowledgement()
     render_werks_table()
     html.footer()
@@ -147,12 +147,21 @@ def load_werks():
     if g_werks == None:
         g_werks = {}
         werks_dir = defaults.share_dir + "/werks/"
-        for file_name in os.listdir(werks_dir):
-            if file_name[0].isdigit():
-                werk_id = int(file_name)
-                werk = load_werk(werks_dir + file_name)
-                werk["id"] = werk_id
-                g_werks[werk_id] = werk
+        try:
+            for file_name in os.listdir(werks_dir):
+                if file_name[0].isdigit():
+                    werk_id = int(file_name)
+                    try:
+                        werk = load_werk(werks_dir + file_name)
+                        werk["id"] = werk_id
+                        g_werks[werk_id] = werk
+                    except Exception, e:
+                        html.show_error(_("Failed to load werk \"%s\": %s") % (werk_id, e))
+        except OSError, e:
+            if e.errno == 2:
+                pass # werk directory not existing
+            else:
+                raise
 
     ack_ids = load_acknowledgements()
     for werk in g_werks.values():

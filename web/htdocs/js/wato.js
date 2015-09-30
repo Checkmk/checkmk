@@ -772,25 +772,17 @@ function wato_toggle_move_folder(event, oButton) {
 
     var id = oButton.id.substr(5);
     var obj = document.getElementById('move_dialog_' + id);
-    if(obj) {
-        if(obj.style.display == 'none') {
+    if (obj) {
+        if (obj.style.display == 'none') {
             obj.style.display = 'block';
+            fix_popup_menu_position(event, obj);
         } else {
             obj.style.display = 'none';
         }
         obj = null;
     }
 
-    if (event.stopPropagation)
-        event.stopPropagation();
-    event.cancelBubble = true;
-
-    // Disable the default events for all the different browsers
-    if (event.preventDefault)
-        event.preventDefault();
-    else
-        event.returnValue = false;
-    return false;
+    return prevent_default_events(event);
 }
 
 // .--Host Diag-----------------------------------------------------------.

@@ -258,6 +258,7 @@
     * 2607 FIX: Fixed broken links from BI views to aggregation group views
     * 2615 FIX: Fixed bug in legacy dashboard conversion when having users not permitted to access embedded views...
     * 2429 FIX: check_mk-netapp_api_disk.summary.php: fixed broken php-template
+    * 2618 FIX: Fixed "move folder" popup being positioned out of screen on the right
 
     WATO:
     * 2365 Removed old deprecated notification global options for plain emails...

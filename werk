@@ -40,11 +40,11 @@ else:
     def tty_colors(c):
         return ""
 
-grep_colors = [ 
+grep_colors = [
    tty_bold + tty_magenta,
    tty_bold + tty_cyan,
    tty_bold + tty_green,
-] 
+]
 
 def get_tty_size():
     import termios,struct,fcntl
@@ -63,7 +63,7 @@ def bail_out(text):
     sys.exit(1)
 
 def goto_werksdir():
-    global g_base_dir 
+    global g_base_dir
     g_base_dir = os.path.abspath('.')
     while not os.path.exists(".werks") and os.path.abspath('.') != '/':
         os.chdir("..")
@@ -453,7 +453,7 @@ def main_show(args):
         ids = [ g_last_werk ]
     elif ids[0] == 'all':
         ids = [ id for (id, werk) in g_werks.items() ]
-        
+
     for id in ids:
         if id != ids[0]:
             sys.stdout.write("-------------------------------------------------------------------------------\n")
@@ -471,7 +471,7 @@ def get_input(what, default = ""):
         return default
     else:
         return value
-    
+
 def get_long_input(what):
     sys.stdout.write("Enter %s. End with CTRL-D.\n" % what)
     usertext = sys.stdin.read()
@@ -563,7 +563,7 @@ def main_blame(args):
 
 def main_url(args):
     id = get_werk_arg(args)
-    sys.stdout.write("http://mathias-kettner.de/check_mk_werks.php?werk_id=%d\n" % id)
+    sys.stdout.write(online_url % id + "\n")
 
 
 def main_resolve(args):
@@ -602,7 +602,7 @@ def grep(line, kw, n):
     else:
         col = grep_colors[n % len(grep_colors)]
         return line[0:i] + col + line[i:i+len(kw)] + tty_normal + line[i+len(kw):]
-    
+
 
 def main_grep(args):
     if '-v' in args:

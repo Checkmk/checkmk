@@ -64,18 +64,19 @@ def parse_lnx_quota(info):
                 mode, fs = parts
 
             # new filesystem for quota
-            if fs not in parsed:
-                parsed[fs] = {}
-            if mode not in parsed[fs]:
-                parsed[fs][mode] = {}
+            parsed.setdefault(fs, {})
+            parsed[fs].setdefault(mode, {})
+
         elif fs and mode and len(line) == 10:
             # new table entry for quota
             parsed[fs][mode][line[0]] = map(int, line[2:])
+
     return parsed
 
 
 def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
-    fmt = lambda value, what: what == 'files' and '%d' % value or get_bytes_human_readable(value*1000, 1000)
+    fmt = lambda value, what: what == 'files' and '%d' % value \
+                                or get_bytes_human_readable(value*1000, 1000)
 
     if mode == 'usr':
         txt = 'User %s' % user
@@ -109,7 +110,7 @@ def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
                 txt += ', within grace time'
     else:
         state = 0
-        txt = ''
+        txt = None
     return state, txt
 
 
@@ -132,57 +133,35 @@ def check_lnx_quota(item, params, parsed):
         # params were empty dictionary and enabled by standard user checking
         params = { 'user': True }
 
-    if 'user' in params and params['user'] == True:
-        # check user quota only
-        i = 0
-        for user, values in parsed[item]['usr'].items():
-            for what, (used, soft, hard, grace) in [
-                ('blocks', values[:4]),
-                ('files',  values[4:]) ]:
+    for param_key, perf_prefix, thing, name in [
+        ('user',  '',       'usr', 'users'),
+        ('group', 'group_', 'grp', 'groups')
+       ]:
+        if params.get(param_key) == True:
+            at_least_one_problematic = False
+            for user, values in parsed[item][thing].items():
+                for what, (used, soft, hard, grace) in [
+                    ('blocks', values[:4]),
+                    ('files',  values[4:]) ]:
 
-                if soft == 0 and hard == 0:
-                    continue # skip entries without limits
+                    if soft == 0 and hard == 0:
+                        continue # skip entries without limits
 
-                # check function
-                state, txt = lnx_quota_limit_check('usr', what, user, used, soft, hard, grace)
+                    state, txt = lnx_quota_limit_check(thing, what, user, used, soft, hard, grace)
 
-                # calculate performance data
-                perfdata.append(('%s_%s' % (user, what), used*1000, soft*1000, hard*1000, 0, hard*1000))
+                    perfdata.append(('%s%s_%s' % (perf_prefix, user, what),
+                                    used*1000, soft*1000, hard*1000, 0, hard*1000))
 
-                if txt == '':
-                    continue
-                else:
-                    yield state, (txt + ', '), perfdata
-                    i += 1
-        if i == 0:
-            yield 0, 'All users within quota limits', perfdata
+                    if txt:
+                        at_least_one_problematic = True
+                        yield state, (txt + ', '), perfdata
+                    else:
+                        yield state, None, perfdata
 
-    if 'group' in params and params['group'] == True:
-        # check group quota only
-        i = 0
-        for group, values in parsed[item]['grp'].items():
-            for what, (used, soft, hard, grace) in [
-                ('blocks', values[:4]),
-                ('files',  values[4:]) ]:
+            if not at_least_one_problematic:
+                yield 0, 'All %s within quota limits' % name
 
-                if soft == 0 and hard == 0:
-                    continue # skip entries without limits
-
-                # check function
-                state, txt = lnx_quota_limit_check('grp', what, group, used, soft, hard, grace)
-
-                # calculate performance data
-                perfdata.append(('group_%s_%s' % (group, what), used*1000, soft*1000, hard*1000, 0, hard*1000))
-
-                if txt == '':
-                    continue
-                else:
-                    yield state, txt + ', ', perfdata
-                    i += 1
-        if i == 0:
-            yield 0, 'All groups within quota limits', perfdata
-
-    if 'user' in params and params['user'] == False and 'group' in params and params['group'] == False:
+    if params.get('user') == False and params.get('group') == False:
         yield 0, 'Disabled quota checking'
 
 

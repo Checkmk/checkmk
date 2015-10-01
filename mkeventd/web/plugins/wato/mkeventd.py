@@ -2000,14 +2000,14 @@ def validate_and_compile_mib(mibname, content):
         results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)
 
         errors = []
-        for name, state in sorted(results.items()):
-            if mibname == name and state == 'failed':
-                raise Exception(_('Failed to compile your module.'))
+        for name, state_obj in sorted(results.items()):
+            if mibname == name and state_obj == 'failed':
+                raise Exception(_('Failed to compile your module: %s') % state_obj.error)
 
-            if state == 'missing':
+            if state_obj == 'missing':
                 errors.append(_('%s - Dependency missing') % name)
-            elif state == 'failed':
-                errors.append(_('%s - Failed to compile') % name)
+            elif state_obj == 'failed':
+                errors.append(_('%s - Failed to compile (%s)') % (name, state_obj.error))
 
         msg = _("MIB file %s uploaded.") % mibname
         if errors:

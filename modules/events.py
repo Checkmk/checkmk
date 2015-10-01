@@ -123,19 +123,26 @@ def raw_context_from_string(data):
     try:
         for line in data.split('\n'):
             varname, value = line.strip().split("=", 1)
-            context[varname] = value.replace(r"\n", "\n").replace("\\\\", "\\")
+            context[varname] = expand_backslashes(value)
     except Exception, e: # line without '=' ignored or alerted
         if opt_debug:
             raise
     return context
 
-
 def raw_context_from_stdin():
     context = {}
     for line in sys.stdin:
         varname, value = line.strip().split("=", 1)
-        context[varname] = value.replace(r"\n", "\n").replace("\\\\", "\\")
+        context[varname] = expand_backslashes(value)
     return context
+
+
+def expand_backslashes(value):
+    # We cannot do the following:
+    # value.replace(r"\n", "\n").replace("\\\\", "\\")
+    # \\n would be exapnded to \<LF> instead of \n. This was a bug
+    # in previous versions.
+    return value.replace("\\\\", "\0").replace("\\n", "\n").replace("\0", "\\")
 
 
 def convert_context_to_unicode(context):

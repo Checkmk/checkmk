@@ -301,6 +301,7 @@
     * 2347 FIX: Improved error message in notify.log when sendmail is missing
     * 2348 FIX: HTML-Mails: Added missing link to service descriptions
     * 2349 FIX: HTML-Mails: Fixed state colors in Outlook
+    * 2645 FIX: Fix garbled notification context when \n appears in service description...
 
     BI:
     * 2537 BI Editor: restructured, now show tree structure of aggregations, show unused rules...

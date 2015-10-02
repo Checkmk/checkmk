@@ -978,25 +978,30 @@ def get_graph_range(graph_template, translated_metrics):
 # Called with exactly one variable: the template ID. Example:
 # "check_mk-kernel.util:guest,steal,system,user,wait".
 def page_pnp_template():
-    template_id = html.var("id")
+    try:
+        template_id = html.var("id")
 
-    check_command, perf_var_string = template_id.split(":", 1)
-    perf_var_names = perf_var_string.split(",")
+        check_command, perf_var_string = template_id.split(":", 1)
+        perf_var_names = perf_var_string.split(",")
 
-    # Fake performance values in order to be able to find possible graphs
-    perf_data = [ ( varname, 1, "", 1, 1, 1, 1 ) for varname in perf_var_names ]
-    translated_metrics = translate_metrics(perf_data, check_command)
-    if not translated_metrics:
-        return # check not supported
+        # Fake performance values in order to be able to find possible graphs
+        perf_data = [ ( varname, 1, "", 1, 1, 1, 1 ) for varname in perf_var_names ]
+        translated_metrics = translate_metrics(perf_data, check_command)
+        if not translated_metrics:
+            return # check not supported
 
-    # Collect output in string. In case of an exception to not output
-    # any definitions
-    output = ""
-    for graph_template in get_graph_templates(translated_metrics):
-        graph_code = render_graph_pnp(graph_template, translated_metrics)
-        output += graph_code
+        # Collect output in string. In case of an exception to not output
+        # any definitions
+        output = ""
+        for graph_template in get_graph_templates(translated_metrics):
+            graph_code = render_graph_pnp(graph_template, translated_metrics)
+            output += graph_code
 
-    html.write(output)
+        html.write(output)
+
+    except Exception, e:
+        import traceback
+        html.write("An error occured:\n%s\n" % traceback.format_exc())
 
 
 # TODO: some_value.max not yet working

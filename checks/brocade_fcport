@@ -40,9 +40,9 @@ brocade_fcport_speed     = [ 'unknown', '1Gbit', '2Gbit', 'auto-Neg', '4Gbit', '
 isl_speed = {
         "1": 0, # other (1) - None of the following.
         "2": 0.155, # oneEighth (2) - 155 Mbaud.
-        "4": 0.266, #•quarter (4) - 266 Mbaud.
+        "4": 0.266, # quarter (4) - 266 Mbaud.
         "8": 0.532, # half (8) - 532 Mbaud.
-        "16": 1, #•full (16) - 1 Gbaud.
+        "16": 1, # full (16) - 1 Gbaud.
         "32": 2, # double (32) - 2 Gbaud.
         "64": 4, # quadruple (64) - 4 Gbaud.
         "128": 8, # octuple (128) - 8 Gbaud.

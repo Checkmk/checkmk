@@ -61,7 +61,7 @@ def inventory_ps_common(invdata, invrules, info):
             inv_entry += ([],)
             default_levels = inv_entry[3:7]
 
-        entries.append(inv_entry[:3] + [None] + ({ "levels" : default_levels },) + ["disable"])
+        entries.append(inv_entry[:3] + [None] + ({ "levels" : default_levels },))
 
     # Handle new WATO style inventory rules
     for rule in invrules:
@@ -78,9 +78,9 @@ def inventory_ps_common(invdata, invrules, info):
 
         v = rule[0]
 
-        entries.append((v['descr'], v.get('match'), v.get('user'), v.get('icon'), v.get('default_params', v), v.get('process_info', 'disable')))
+        entries.append((v['descr'], v.get('match'), v.get('user'), v.get('icon'), v.get('default_params', v)))
 
-    for servicedesc, pattern, userspec, icon, default_params, process_info in entries:
+    for servicedesc, pattern, userspec, icon, default_params in entries:
         num_perc_s = servicedesc.count("%s")
         for line in info:
             # First entry in line is the node name or None for non-clusters
@@ -121,8 +121,6 @@ def inventory_ps_common(invdata, invrules, info):
 
                 if icon:
                     inv_params["icon"] = icon
-
-                inv_params["process_info"] = process_info
 
                 # default_params is either a clean dict with optional parameters to set as default
                 # or - from version 1.2.4 - the dict from the rule itself. In the later case
@@ -369,6 +367,7 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes", 
                         handle_count += handle_c
                         process.append(("cpu usage (user space)",   (user_perc, "%")))
                         process.append(("cpu_usage (kernel space)", (kernel_perc, "%")))
+                        process.append(("pid", (pid, "")))
                     else:
                         # addinfo[3] contains the used CPU time and possibly, separated by /, also
                         # the total elapsed time since the birth of the process.
@@ -392,12 +391,11 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes", 
                                 cputime = 0
 
                             pcpu = cputime * 100
+                            process.append(("pid", (pid, "")))
                         else:
                             pcpu = savefloat(addinfo[3])
                         percent_cpu += pcpu
                         process.append(("cpu usage", (pcpu, "%")))
-
-                    process.append(("pid", (pid, "")))
 
                     extended_perfdata = True
             elif len(line) > 1:
@@ -522,7 +520,7 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes", 
             state = max(state, 1)
             infotext += "(!)"
 
-    if "process_info" in params and params["process_info"] != "disable":
+    if params.get("process_info", None) is not None:
         infotext += "\r\n" + format_process_list(processes, params["process_info"] == "html")
 
     return state, infotext, perfdata

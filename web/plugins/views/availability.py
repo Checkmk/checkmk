@@ -487,7 +487,7 @@ def render_bi_availability(title, aggr_rows):
 
         avoptions = render_availability_options("bi")
 
-
+    timewarpcode = ""
     if not html.has_user_errors():
         spans = []
         for aggr_row in aggr_rows:
@@ -544,8 +544,6 @@ def render_bi_availability(title, aggr_rows):
                                '<table class="data table timewarp"><tr class="data odd0"><td class="%s">' % tdclass + \
                                htmlcode + \
                                '</td></tr></table>'
-            else:
-                timewarpcode = ""
 
         av_rawdata = availability.spans_by_object(spans)
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)

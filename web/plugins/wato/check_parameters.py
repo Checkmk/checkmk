@@ -3291,6 +3291,22 @@ register_check_parameters(
                        ( "bit",  _("Bits") ),
                        ( "byte", _("Bytes") ),],
                )),
+              ( "infotext_format",
+                   DropdownChoice(
+                        title = _("Change infotext in check output"),
+                        help = _("This setting allows you to modify the information text which is displayed between "
+                                 "the two brackets in the check output. Please note that this setting does not work for "
+                                 "grouped interfaces, since the additional information of grouped interfaces is different"),
+                        choices = [
+                            ("alias",                 _("Show alias")),
+                            ("description",           _("Show description")),
+                            ("alias_and_description", _("Show alias and description")),
+                            ("alias_or_description",  _("Show alias if set, else description")),
+                            ("desription_or_alias",   _("Show description if set, else alias")),
+                            ("hide",                  _("Hide infotext")),
+                        ]
+                   )
+              ),
               ( "traffic",
                 ListOf(CascadingDropdown(
                         title = _("Direction"),

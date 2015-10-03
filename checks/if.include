@@ -576,20 +576,41 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 # The detailed group info is added later on
                 infotext = group_name + " Status "
             else:
-                # Display port number or alias in infotext if that is not part
-                # of the service description anyway
-                if item.lstrip("0") == ifIndex \
-                    and (item == ifAlias or ifAlias == '') \
-                    and (item == ifDescr or ifDescr == ''): # description trivial
-                    infotext = ""
-                elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '': # non-unique Alias
-                    infotext = "[%s/%s]" % (ifAlias, ifDescr)
-                elif item != ifAlias and ifAlias != '': # alias useful
-                    infotext = "[%s] " % ifAlias
-                elif item != ifDescr and ifDescr != '': # description useful
-                    infotext = "[%s] " % ifDescr
+                if "infotext_format" in params:
+                    bracket_info = ""
+                    if   params["infotext_format"] == "alias":
+                        bracket_info = ifAlias
+                    elif params["infotext_format"] == "description":
+                        bracket_info = ifDescr
+                    elif params["infotext_format"] == "alias_and_description":
+                        bracket_info = []
+                        ifAlias and bracket_info.append(ifAlias)
+                        ifDescr and bracket_info.append(ifDescr)
+                        bracket_info = ", ".join(bracket_info)
+                    elif params["infotext_format"] == "alias_or_description":
+                        bracket_info = ifAlias and ifAlias or ifDescr
+                    elif params["infotext_format"] == "desription_or_alias":
+                        bracket_info = ifDescr and ifDescr or ifAlias
+
+                    if bracket_info:
+                        infotext = "[%s]" % bracket_info
+                    else:
+                        infotext = ""
                 else:
-                    infotext = "[%s] " % ifIndex
+                    # Display port number or alias in infotext if that is not part
+                    # of the service description anyway
+                    if item.lstrip("0") == ifIndex \
+                        and (item == ifAlias or ifAlias == '') \
+                        and (item == ifDescr or ifDescr == ''): # description trivial
+                        infotext = ""
+                    elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '': # non-unique Alias
+                        infotext = "[%s/%s]" % (ifAlias, ifDescr)
+                    elif item != ifAlias and ifAlias != '': # alias useful
+                        infotext = "[%s] " % ifAlias
+                    elif item != ifDescr and ifDescr != '': # description useful
+                        infotext = "[%s] " % ifDescr
+                    else:
+                        infotext = "[%s] " % ifIndex
 
                 if node != None:
                     infotext = "%son %s: " % ( infotext, node )

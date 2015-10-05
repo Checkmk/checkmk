@@ -2411,38 +2411,9 @@ def rename_host(host, newname):
     # taken place a new configuration will be created and the core started
     # again.
     ip_lookup_failed = True
-    for what in check_mk_automation(host[".siteid"], "rename-host", [oldname, newname]):
-        if what == "cache":
-            actions.append(_("Cached output of monitoring agents"))
-        elif what == "counters":
-            actions.append(_("Files with performance counters"))
-        elif what == "piggyback-load":
-            actions.append(_("Piggyback information from other host"))
-        elif what == "piggyback-pig":
-            actions.append(_("Piggyback information for other hosts"))
-        elif what == "autochecks":
-            actions.append(_("Auto-disovered services of the host"))
-        elif what == "logwatch":
-            actions.append(_("Logfile information of logwatch plugin"))
-        elif what == "snmpwalk":
-            actions.append(_("A stored SNMP walk"))
-        elif what == "rrd":
-            actions.append(_("RRD databases with performance data"))
-        elif what == "rrdcached":
-            actions.append(_("RRD updates in journal of RRD Cache"))
-        elif what == "pnpspool":
-            actions.append(_("Spool files of PNP4Nagios"))
-        elif what == "nagvis":
-            actions.append(_("NagVis maps"))
-        elif what == "history":
-            actions.append(_("Monitoring history entries (events and availability)"))
-        elif what == "retention":
-            actions.append(_("The current monitoring state (including acknowledgements and downtimes)"))
-        elif what == "ipfail":
-            actions.append("<div class=error>%s</div>" % (_("<b>WARNING:</b> the IP address lookup of "
-                   "<tt>%s</tt> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. "
-                   "You will not be able to activate any changes until you have either updated your "
-                   "DNS or configured an explicit address for <tt>%s</tt>.") % (newname, newname)))
+    # TODO: inventory and inventory_archive
+    action_counts = check_mk_automation(host[".siteid"], "rename-hosts", [], [(oldname, newname)])
+    actions = render_renaming_actions(action_counts)
 
     # Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
@@ -2533,6 +2504,39 @@ def rename_host(host, newname):
     call_hook_hosts_changed(g_root_folder)
     return actions
 
+
+def render_renaming_actions(action_counts):
+    action_titles = {
+        "cache"          : _("Cached output of monitoring agents"),
+        "counters"       : _("Files with performance counters"),
+        "agent"          : _("Baked host specific agents"),
+        "piggyback-load" : _("Piggyback information from other host"),
+        "piggyback-pig"  : _("Piggyback information for other hosts"),
+        "autochecks"     : _("Auto-disovered services of the host"),
+        "logwatch"       : _("Logfile information of logwatch plugin"),
+        "snmpwalk"       : _("A stored SNMP walk"),
+        "rrd"            : _("RRD databases with performance data"),
+        "rrdcached"      : _("RRD updates in journal of RRD Cache"),
+        "pnpspool"       : _("Spool files of PNP4Nagios"),
+        "nagvis"         : _("NagVis maps"),
+        "history"        : _("Monitoring history entries (events and availability)"),
+        "retention"      : _("The current monitoring state (including acknowledgements and downtimes)"),
+        "inv"            : _("Recent hardware/software inventory"),
+        "invarch"        : _("History of hardware/software inventory"),
+        "ipfail"         : _("<b>WARNING                                                                 : </b> the IP address lookup has failed. The core has been "
+                             "started by using the address <tt>0.0.0.0</tt> for the while. "
+                             "You will not be able to activate any changes until you have either updated your "
+                             "DNS or configure an explicit address for."),
+    }
+
+    texts = []
+    for what, count in sorted(action_counts.items()):
+        text = action_titles[what]
+        if count > 1:
+            text += _(" (%d times)" % count)
+        texts.append(text)
+
+    return texts
 
 
 #.

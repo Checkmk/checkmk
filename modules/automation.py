@@ -68,8 +68,8 @@ def do_automation(cmd, args):
                 result = automation_diag_host(args)
             elif cmd == "delete-host":
                 result = automation_delete_host(args)
-            elif cmd == "rename-host":
-                result = automation_rename_host(args)
+            elif cmd == "rename-hosts":
+                result = automation_rename_hosts()
             elif cmd == "create-snapshot":
                 result = automation_create_snapshot(args)
 	    elif cmd == "notification-replay":
@@ -639,20 +639,56 @@ def automation_diag_host(args):
             raise
         return 1, str(e)
 
-# WATO calls this automation when a host has been renamed. We need to change
-# several file and directory names.
-# HIRN: Hier auch das neue Format berücksichtigen! Andererseits sollte
-# eigentlich auch nix Schlimmes passieren, wenn der Hostname *nicht* in
-# der Datei steht.
-def automation_rename_host(args):
-    oldname = args[0]
-    newname = args[1]
+# WATO calls this automation when hosts have been renamed. We need to change
+# several file and directory names. This function has no argument but reads
+# Python pair-list from stdin:
+# [("old1", "new1"), ("old2", "new2")])
+def automation_rename_hosts():
+    renamings = eval(sys.stdin.read())
+
     actions = []
 
-    # Autochecks: simply read and write out the file again. We do
-    # not store a host name here anymore - but old versions did.
-    # by rewriting we get rid of the host name.
+    # At this place WATO already has changed it's configuration. All further
+    # data might be changed by the still running core. So we need to stop
+    # it now.
+    core_was_running = core_is_running()
+    if core_was_running:
+        do_core_action("stop", quiet=True)
 
+    for oldname, newname in renamings:
+        # Autochecks: simply read and write out the file again. We do
+        # not store a host name here anymore - but old versions did.
+        # by rewriting we get rid of the host name.
+        actions += rename_host_autochecks(oldname, newname)
+        actions += rename_host_files(oldname, newname)
+
+    # Start monitoring again. In case of CMC we need to ignore
+    # any configuration created by the CMC Rushahead daemon
+    if core_was_running:
+        global ignore_ip_lookup_failures
+        ignore_ip_lookup_failures = True # force config generation to succeed. The core *must* start.
+        automation_restart("start", use_rushd = False)
+        if monitoring_core == "cmc":
+            try:
+                os.remove(var_dir + "/core/config.rush")
+                os.remove(var_dir + "/core/config.rush.id")
+            except:
+                pass
+
+        if failed_ip_lookups:
+            actions.append("ipfail")
+
+    # Convert actions into a dictionary { "what" : count }
+    action_counts = {}
+    for action in actions:
+        action_counts.setdefault(action, 0)
+        action_counts[action] += 1
+
+    return action_counts
+
+
+def rename_host_autochecks(oldname, newname):
+    actions = []
     acpath = autochecksdir + "/" + oldname + ".mk"
     if os.path.exists(acpath):
         old_autochecks = parse_autochecks_file(oldname)
@@ -664,13 +700,11 @@ def automation_rename_host(args):
         out.close()
         os.remove(acpath) # Remove old file
         actions.append("autochecks")
+    return actions
 
-    # At this place WATO already has changed it's configuration. All further
-    # data might be changed by the still running core. So we need to stop
-    # it now.
-    core_was_running = core_is_running()
-    if core_was_running:
-        do_core_action("stop", quiet=True)
+
+def rename_host_files(oldname, newname):
+    actions = []
 
     # Rename temporary files of the host
     for d in [ "cache", "counters" ]:
@@ -695,27 +729,28 @@ def automation_rename_host(args):
     if rename_host_file(snmpwalks_dir, oldname, newname):
         actions.append("snmpwalk")
 
+    # HW/SW-Inventory
+    if rename_host_file(var_dir + "/inventory", oldname, newname):
+        rename_host_file(var_dir + "/inventory", oldname + ".gz", newname + ".gz")
+        actions.append("inv")
+
+    if rename_host_dir(var_dir + "/inventory_archive", oldname, newname):
+        actions.append("invarch")
+
+    # Baked agents
+    agents_dir = var_dir + "/agents/"
+    have_renamed_agent = False
+    for opsys in os.listdir(agents_dir):
+        if rename_host_file(agents_dir + opsys, oldname, newname):
+            have_renamed_agent = True
+    if have_renamed_agent:
+        actions.append("agent")
+
     # OMD-Stuff. Note: The question really is whether this should be
     # included in Check_MK. The point is - however - that all these
     # actions need to take place while the core is stopped.
     if omd_root:
         actions += omd_rename_host(oldname, newname)
-
-    # Start monitoring again. In case of CMC we need to ignore
-    # any configuration created by the CMC Rushahead daemon
-    if core_was_running:
-        global ignore_ip_lookup_failures
-        ignore_ip_lookup_failures = True # force config generation to succeed. The core *must* start.
-        automation_restart("start", use_rushd = False)
-        if monitoring_core == "cmc":
-            try:
-                os.remove(var_dir + "/core/config.rush")
-                os.remove(var_dir + "/core/config.rush.id")
-            except:
-                pass
-
-        if failed_ip_lookups:
-            actions.append("ipfail")
 
     return actions
 

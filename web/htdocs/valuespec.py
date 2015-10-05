@@ -612,7 +612,7 @@ class AbsoluteDirname(TextAscii):
 class HTTPUrl(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
-        self._target= kwargs.get("target")
+        self._target = kwargs.get("target")
 
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)

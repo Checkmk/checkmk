@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 2653 FIX: winperf_msx_queues: fixed incorrect cancelation of check claiming no counters were available...
+    * 2619 FIX: services_summary: Fixed exception on WATO services summary page...
 
     Event Console:
     * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters

@@ -1,0 +1,10 @@
+Title: services_summary: Fixed exception on WATO services summary page
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p13
+Date: 1444039289
+Class: fix
+
+When using the default parameters, the service summary services were
+showing up invalid an check parameters error message.

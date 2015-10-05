@@ -236,7 +236,7 @@ check_info['services'] = {
 }
 
 factory_settings["services_summary_default_levels"] = {
-        "ignored": (),
+        "ignored": [],
         "state_if_stopped": 0
 }
 

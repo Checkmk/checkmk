@@ -6036,7 +6036,7 @@ try:
             read_config_files(with_conf_d=True, validate_hosts=False)
             sys.exit(do_notify(args))
         elif o == '--create-rrd':
-            read_config_files(with_conf_d=True)
+            read_config_files(with_conf_d=True, validate_hosts=False)
             execfile(modules_dir + "/rrd.py")
             do_create_rrd(args)
             done = True

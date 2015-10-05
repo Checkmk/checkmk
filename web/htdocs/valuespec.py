@@ -801,8 +801,8 @@ class ListOfStrings(ValueSpec):
 
     def validate_datatype(self, value, vp):
         if type(value) != list:
-            raise MKUserError(varprefix, _("Expected data type is "
-            "list, but your type is %s." % type_name(value)))
+            raise MKUserError(vp, _("Expected data type is list, but your type is %s." %
+                                                                        type_name(value)))
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, vp + "_%d" % nr)
 

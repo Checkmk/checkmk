@@ -1,0 +1,12 @@
+Title: Fix crash of CMC in case of duplicate host
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444037957
+Class: fix
+
+In certain situtations when you have a non-valid configuration (e.g. a duplicate
+host) than the Check_MK Micro Core would not be able to start correctly due to
+a problem in the handling of errors in the RRD creation helper. This has been
+fixed.

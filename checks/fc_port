@@ -55,8 +55,8 @@ fc_port_phystates = {
                 4: ('active', 0),
                 5: ('loopback', 1),
                 6: ('txfault', 1),
-                7: ('noMedia', 1),
-                8: ('linkDown',2),
+                7: ('no media', 1),
+                8: ('link down',2),
 }
 
 # taken from connUnitPortType

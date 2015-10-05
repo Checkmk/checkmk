@@ -1,0 +1,30 @@
+Title: New system for displaying time graphs of metrics
+Level: 3
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443792930
+Class: feature
+
+Check_MK now has a new implementation of how metrics time graphs (formerly
+known as performance graphs or PNP graphs) are being created.  Instead of
+hand crafted PNP templates, templates are now being created by Check_MK's
+new metrics system.
+
+In the new declaration file
+<tt>share/check_mk/web/plugins/metrics/check_mk.py</tt> all names of
+performance variables are being assigned to units, titles and colors.
+Graph and Perf-O-Meter definitions both make use of these.
+
+The advantages are:
+
+LI:Graphs and Perf-O-Meters are much simpler to declare
+LI:Graphs and Perf-O-Meters now share the same color scheme
+LI:Graphs are more streamlined
+LI:It is now much easier to change some general properties of all graphs
+LI:Default graphs are more intelligent
+LI:Future addons that work with metrics data are easier to implement
+
+Note: existing PNP templates have not been removed but still exist and
+have precedence over the automatically generated ones. But they will not be
+maintained anymore and no new manual templates will be created by us anymore.

@@ -405,6 +405,9 @@ inline bool LogEntry::handleProgrammEntry()
 
 inline int LogEntry::serviceStateToInt(char *s)
 {
+    if (!s)
+        return 3; // can happen at garbled log line
+
     char *last = s + strlen(s) - 1;
     if (*last == ')')
         last--;
@@ -423,6 +426,9 @@ inline int LogEntry::serviceStateToInt(char *s)
 
 inline int LogEntry::hostStateToInt(char *s)
 {
+    if (!s)
+        return 2; // can happen at garbled log line
+
     char *last = s + strlen(s) - 1;
     if (*last == ')') // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN)
         last--;

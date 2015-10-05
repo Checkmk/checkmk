@@ -2316,6 +2316,7 @@ def mode_rename_host(phase):
     html.hidden_fields()
     html.end_form()
 
+
 def rename_host_in_list(thelist, oldname, newname):
     did_rename = False
     for nr, element in enumerate(thelist):
@@ -2326,6 +2327,7 @@ def rename_host_in_list(thelist, oldname, newname):
             thelist[nr] = '!'+newname
             did_rename = True
     return did_rename
+
 
 def rename_host(host, newname):
 
@@ -2410,8 +2412,6 @@ def rename_host(host, newname):
     # this automation the core will be stopped, after the renaming has
     # taken place a new configuration will be created and the core started
     # again.
-    ip_lookup_failed = True
-    # TODO: inventory and inventory_archive
     action_counts = check_mk_automation(host[".siteid"], "rename-hosts", [], [(oldname, newname)])
     actions = render_renaming_actions(action_counts)
 

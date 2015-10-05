@@ -1,0 +1,10 @@
+Title: Fix crash of core in case of case of certain garbled log lines
+Level: 1
+Component: livestatus
+Compatible: compat
+Version: 1.2.6p13
+Date: 1444038366
+Class: fix
+
+A query to the table <tt>log</tt> could crash the core when certain garbled lines
+in the history file are being seen. This has been fixed.

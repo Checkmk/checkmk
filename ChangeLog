@@ -8,6 +8,9 @@
     Event Console:
     * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters
 
+    Livestatus:
+    * 2648 FIX: Fix crash of core in case of case of certain garbled log lines...
+
 
 1.2.6p12:
     WATO:

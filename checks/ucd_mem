@@ -30,7 +30,7 @@
 
 # suggested by cutomer
 factory_settings["ucd_mem_default_levels"] = {
-    "levels" : ("perc_used", (50.0, 90.0))
+    "levels" : ("perc_used", (80.0, 90.0))
 }
 
 

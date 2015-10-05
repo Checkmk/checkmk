@@ -1,0 +1,11 @@
+Title: ucd_mem, ucd_processes, ucd_disk: new checks for systems using UCD SNMP Daemon
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444035440
+Class: feature
+
+These checks monitor the total and used memory, the number of processes and
+the available und used space of mounted disks via SNMP on systems running
+the UCD SNMP daemon.

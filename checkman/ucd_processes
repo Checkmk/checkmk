@@ -1,0 +1,20 @@
+title: Processes on systems using UCD SNMP Daemon
+agents: snmp
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the processes via SNMP on systems running the UCD SNMP daemon.
+ This daemon is mostly found on Linux systems and used by some hardware
+ appliances (such as Riverbed Steelhead).
+
+ The upper and lower crit levels are sent by the device itself.
+
+item:
+ The index and type of processes.
+
+perfdata:
+ The number of processes.
+
+inventory:
+ One service per process type is created.

@@ -1,0 +1,21 @@
+Title: Bulk renaming of hosts in WATO
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444123966
+Class: feature
+
+The function for renaming hosts in WATO is now available in a new bulk
+mode. This is a new button in each folder, where you can recursively rename
+hosts in a generic way. There are several types of renamings that can be done:
+
+LI:case translation into lower or upper case
+LI:adding and removing suffixes
+LI:adding prefixes
+LI:regular expression operations (much like <tt>sed</tt>)
+LI:explicit mappings
+
+For each affected site only <b>one</b> restart of the site is needed. This
+can speed up renaming operations with lots of hosts drastically when compared
+to renaming each host apart.

@@ -675,8 +675,8 @@ def automation_rename_hosts():
             except:
                 pass
 
-        if failed_ip_lookups:
-            actions.append("ipfail")
+        for hostname in failed_ip_lookups:
+            actions.append("dnsfail-" + hostname)
 
     # Convert actions into a dictionary { "what" : count }
     action_counts = {}

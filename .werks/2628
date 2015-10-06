@@ -1,6 +1,6 @@
 Title: check_bi_aggr service now also goes into downtime if the monitored BI aggregation is in downtime
 Level: 1
-Component: checks
+Component: bi
 Compatible: compat
 Version: 1.2.7i3
 Date: 1442910035

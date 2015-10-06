@@ -1,6 +1,8 @@
 check_mk.ini
 logstate.txt
 spool
+obj
+obj64
 success.log
 *.res
 *.rc

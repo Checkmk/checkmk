@@ -26,20 +26,21 @@
 SHELL         = /bin/bash
 VERSION       = 1.2.7i3
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
-WINDRES       = i586-mingw32msvc-windres
+WINDRES       = i686-w64-mingw32-windres
 COPTIONS      = -s -O2 -Wall -Werror -static -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'
+MKDIR         = mkdir -p
 
 ifeq ($(shell uname),Linux)
-  CXX        = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
+  CXX        = i686-w64-mingw32-g++
   CXX_64     = x86_64-w64-mingw32-g++
   WINDRES_64 = x86_64-w64-mingw32-windres
 else
   CXX = mingw32-g++
 endif
 
-all: fix_linebreaks install_agent.exe install_agent-64.exe msi_installer
+all: directories fix_linebreaks install_agent.exe install_agent-64.exe msi_installer
 
-.PHONY: inc_build_version fix_linebreaks
+.PHONY: directories inc_build_version fix_linebreaks
 
 setversion:
 	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi ; \
@@ -50,9 +51,9 @@ setversion:
 # Converts all files which are targeted to a windows system to CRLF
 fix_linebreaks:
 	for F in mrpe/* plugins/* *.ini; do \
-	    if [ -f $$F ]; then \
-	        sed -i 's/\r//' $$F ; \
-	        sed -i 's/$$/\r/' $$F ; \
+	    if [ -f "$$F" ]; then \
+	        sed -i 's/\r//' "$$F" ; \
+	        sed -i 's/$$/\r/' "$$F" ; \
 	    fi ; \
 	done
 
@@ -74,25 +75,41 @@ check_mk_agent.res: check_mk_agent.rc
 check_mk_agent-64.res: check_mk_agent.rc
 	$(WINDRES_64) $< -O coff -o $@
 
+# -----------------------------------------------------------------------------
+# 2. Create directories for the object files
+# -----------------------------------------------------------------------------
+
+directories:
+	${MKDIR} obj
+	${MKDIR} obj64
+
 
 # -----------------------------------------------------------------------------
-# 2. Compile the Windows agent from the sources, without a specific version
-# number. Instead a placeholder is being used as version.
+# 3. Compile the Windows agent from the sources, without a specific version
+# number. Instead a placeholder is being used as version.a
 # -----------------------------------------------------------------------------
-check_mk_agent.unversioned.exe: check_mk_agent.cc
+
+obj/%.o: %.cc
+	$(CXX) -c $(COPTIONS) -o $@  $<
+
+obj64/%.o: %.cc
+	$(CXX_64) -c $(COPTIONS) -o $@  $<
+
+
+check_mk_agent.unversioned.exe: obj/check_mk_agent.o obj/SettingsCollector.o obj/Configuration.o obj/Environment.o obj/stringutil.o
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent.res
-	$(CXX) $(COPTIONS) -o $@ $< check_mk_agent.res -lwsock32
+	$(CXX) $(COPTIONS) -o $@ $^ check_mk_agent.res -lwsock32
 
-check_mk_agent-64.unversioned.exe: check_mk_agent.cc
+check_mk_agent-64.unversioned.exe: obj64/check_mk_agent.o obj64/SettingsCollector.o obj64/Configuration.o obj64/Environment.o obj64/stringutil.o
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent-64.res
-	$(CXX_64) $(COPTIONS) -o $@ $< check_mk_agent-64.res -lwsock32
+	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32
 
 
 
 # -----------------------------------------------------------------------------
-# 3. Create final executable files by inserting actual version number. No
+# 4. Create final executable files by inserting actual version number. No
 # recompilation is thus needed during 'make version'
 # -----------------------------------------------------------------------------
 %.exe: %.unversioned.exe

@@ -331,6 +331,12 @@ def parse_file(host, file, hidecontext = False):
         f = open(file_path, 'r')
         chunk_open = False
         log = None
+
+        # skip hash line. this doesn't exist in older files
+        hash_line = f.readline().rstrip('\n')
+        if not hash_line.startswith('[[[') or not hash_line.endswith(']]]'):
+            f.seek(0)
+
         for line in f.readlines():
             line = line.strip()
             if line == '':

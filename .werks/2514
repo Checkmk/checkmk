@@ -1,6 +1,6 @@
 Title: check oracle_jobs: configurable service status in case of disabled jobs
 Level: 1
-Component: wato
+Component: checks
 Compatible: compat
 Version: 1.2.7i3
 Date: 1438613862

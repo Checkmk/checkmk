@@ -1,6 +1,6 @@
 Title: lvm_vgs: Check now has his own configuration in wato
 Level: 1
-Component: wato
+Component: checks
 Compatible: incomp
 Version: 1.2.7i2
 Date: 1433839820

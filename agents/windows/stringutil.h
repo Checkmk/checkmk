@@ -23,11 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 
-#ifndef STRINGUTIL_H
-#define STRINGUTIL_H
+#ifndef stringutil_h
+#define stringutil_h
 
 #include <vector>
 #include <string>
+#include <sstream>
 // umm, this is a C header, not actually part of C++ until C++11. This may be a problem in older
 // MSVCs
 #include <stdint.h>
@@ -41,7 +42,7 @@ std::vector<const char*> split_line(char *pos, int (*split_pred)(int));
 char *next_word(char **line);
 
 char *llu_to_string(unsigned long long value);
-unsigned long long string_to_llu(char *s);
+unsigned long long string_to_llu(const char *s);
 
 char *ipv4_to_text(uint32_t ip);
 
@@ -55,4 +56,27 @@ bool globmatch(const char *pattern, const char *astring);
 
 std::string get_last_error_as_string();
 
-#endif // STRINGUTIL_H
+
+// to_string and to_wstring supplied in C++11 but not before
+#if _cplusplus < 201103L
+
+namespace std {
+    template <typename T>
+    std::wstring to_wstring(const T &source) {
+        std::wostringstream str;
+        str << source;
+        return str.str();
+    }
+
+    template <typename T>
+    std::string to_string(const T &source) {
+        std::ostringstream str;
+        str << source;
+        return str.str();
+    }
+}
+
+#endif // _cplusplus < 201103L
+
+
+#endif // stringutil_h

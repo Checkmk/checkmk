@@ -41,6 +41,8 @@ Configuration::Configuration(const Environment &env)
     , _crash_debug(false)
     , _logwatch_send_initial_entries(false)
     , _environment(env)
+    , _ps_use_wmi(false)
+    , _ps_full_path(false)
 {
     _logwatch_globlines.setGroupFunction(&Configuration::addConditionPattern);
 
@@ -793,6 +795,25 @@ bool Configuration::handleLocalConfigVariable(char *var, char *value)
 }
 
 
+bool Configuration::handlePSConfigVariable(char *var, char *value)
+{
+    if (strcmp(var, "use_wmi") == 0) {
+        int s = parse_boolean(value);
+        if (s != -1) {
+            _ps_use_wmi = s;
+            return true;
+        }
+    } else if (strcmp(var, "full_path") == 0) {
+        int s = parse_boolean(value);
+        if (s != -1) {
+            _ps_full_path = s;
+            return true;
+        }
+    }
+    return false;
+}
+
+
 bool Configuration::checkHostRestriction(char *patterns)
 {
     char *word;
@@ -851,6 +872,8 @@ void Configuration::readConfigFile(const std::string &filename)
                 variable_handler.setFunc(&Configuration::handlePluginConfigVariable);
             else if (!strcmp(section, "local"))
                 variable_handler.setFunc(&Configuration::handleLocalConfigVariable);
+            else if (!strcmp(section, "ps"))
+                variable_handler.setFunc(&Configuration::handlePSConfigVariable);
             else {
                 fprintf(stderr, "Invalid section [%s] in %s in line %d.\r\n",
                         section, filename.c_str(), lineno);

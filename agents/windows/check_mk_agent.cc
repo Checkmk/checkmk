@@ -52,6 +52,7 @@
 #include <winbase.h>
 #include <winreg.h>    // performance counters from registry
 #include <tlhelp32.h>  // list of processes
+#include <shellapi.h>
 #include <stdarg.h>
 #include <time.h>
 #include <locale.h>
@@ -69,6 +70,7 @@
 #include "Environment.h"
 #include "Configuration.h"
 #include "types.h"
+#include "wmiHelper.h"
 
 //  .----------------------------------------------------------------------.
 //  |       ____            _                 _   _                        |
@@ -207,6 +209,8 @@ HANDLE g_connectionlog_file;
 struct timeval g_crashlog_start;
 bool   g_found_crash = false;
 
+wmi::Helper *g_wmi_helper = NULL;
+
 
 
 
@@ -300,6 +304,7 @@ void debug_script_container( script_container* container )
     crash_log("buffer:      \n<<<<\n%s\n>>>>", container->buffer);
     crash_log("buffer_work: \n<<<<\n%s\n>>>>", container->buffer_work);
 }
+
 
 bool ci_compare_pred(unsigned char lhs, unsigned char rhs)
 {
@@ -1424,6 +1429,70 @@ process_entry_t get_process_perfdata()
     return process_info;
 }
 
+
+void section_ps_wmi(SOCKET &out)
+{
+    crash_log("<<<ps>>>");
+
+    wmi::Result result = g_wmi_helper->query(L"SELECT * FROM Win32_Process");
+    bool more = result.valid();
+    if (!more) {
+        return;
+    }
+    output(out, "<<<ps:sep(9)>>>\n");
+
+    try {
+        while (more) {
+            int processId = result.get<int>(L"ProcessId");
+
+            HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+            string user = "SYSTEM";
+            ExtractProcessOwner(process, user);
+            std::wstring process_name;
+
+            if (g_config->psFullCommandLine() && result.contains(L"ExecutablePath")) {
+                process_name = result.get<std::wstring>(L"ExecutablePath");
+            } else {
+                process_name = result.get<std::wstring>(L"Caption");
+            }
+
+            if (g_config->psFullCommandLine() && result.contains(L"CommandLine")) {
+                int argc;
+                LPWSTR *argv = CommandLineToArgvW(result.get<std::wstring>(L"CommandLine").c_str(), &argc);
+                for (int i = 1; i < argc; ++i) {
+                    process_name += std::wstring(L" ") + argv[i];
+                }
+                LocalFree(argv);
+            }
+
+            output(out, "(%s,%s,%s,%d,%d,%lu,%ls,%ls,%u,%d)\t%ls\n",
+                    user.c_str(),
+                    llu_to_string(string_to_llu(result.get<string>(L"VirtualSize").c_str()) / 1024),
+                    llu_to_string(string_to_llu(result.get<string>(L"WorkingSetSize").c_str()) / 1024),
+                    0,
+                    processId,
+                    result.get<int>(L"PagefileUsage") / 1024,
+                    result.get<wstring>(L"UserModeTime").c_str(),
+                    result.get<wstring>(L"KernelModeTime").c_str(),
+                    result.get<int>(L"HandleCount"),
+                    result.get<int>(L"ThreadCount"),
+                    process_name.c_str());
+            more = result.next();
+        }
+    } catch (const wmi::ComTypeException &e) {
+        crash_log("Exception: %s", e.what());
+        std::wstring types;
+        std::vector<std::wstring> names;
+        for (std::vector<std::wstring>::const_iterator iter = names.begin(); iter != names.end(); ++iter) {
+            types += *iter + L"=" + std::to_wstring(result.typeId(iter->c_str())) + L", ";
+        }
+        crash_log("Data types are different than expected, please report this and include "
+                  "the following: %ls", types.c_str());
+        abort();
+    }
+}
+
+
 void section_ps(SOCKET &out)
 {
     crash_log("<<<ps>>>");
@@ -1483,9 +1552,15 @@ void section_ps(SOCKET &out)
                 }
 
                 //// Note: CPU utilization is determined out of usermodetime and kernelmodetime
-                output(out, "(%s,%llu,%llu,%d,%d,%llu,%lld,%lld,%d,%d)\t%s\n", user.c_str(), virtual_size / 1024, working_set_size / 1024, 0,
-                                                                  pe32.th32ProcessID, pagefile_usage / 1024, usermodetime.QuadPart, kernelmodetime.QuadPart,
-                                                                  processHandleCount, pe32.cntThreads, pe32.szExeFile);
+                output(out, "(%s,%s,%s,%d,%d,%s,%s,%s,%d,%d)\t%s\n",
+                        user.c_str(),
+                        llu_to_string(virtual_size / 1024),
+                        llu_to_string(working_set_size / 1024),
+                        0, pe32.th32ProcessID,
+                        llu_to_string(pagefile_usage / 1024),
+                        llu_to_string(usermodetime.QuadPart),
+                        llu_to_string(kernelmodetime.QuadPart),
+                        processHandleCount, pe32.cntThreads, pe32.szExeFile);
 
                 CloseHandle(hProcess);
             } while (Process32Next(hProcessSnap, &pe32));
@@ -1500,6 +1575,7 @@ void section_ps(SOCKET &out)
         output(out, "(SYSTEM,0,0,0,0,0,0,0,0,%d)\tSystem Idle Process\n", sysinfo.dwNumberOfProcessors);
     }
 }
+
 
 
 // .-----------------------------------------------------------------------.
@@ -3621,8 +3697,13 @@ void output_data(SOCKET &out, const Environment &env)
         section_uptime(out);
     if (g_config->sectionEnabled(SECTION_DF))
         section_df(out);
-    if (g_config->sectionEnabled(SECTION_PS))
-        section_ps(out);
+    if (g_config->sectionEnabled(SECTION_PS)) {
+        if (g_config->psUseWMI()) {
+            section_ps_wmi(out);
+        } else {
+            section_ps(out);
+        }
+    }
     if (g_config->sectionEnabled(SECTION_MEM))
         section_mem(out);
     if (g_config->sectionEnabled(SECTION_FILEINFO))
@@ -3664,6 +3745,8 @@ void output_data(SOCKET &out, const Environment &env)
 
 void cleanup()
 {
+    delete g_wmi_helper;
+
     if (eventlog_buffer_size > 0)
         delete [] eventlog_buffer;
 
@@ -3821,6 +3904,10 @@ void show_config()
             iter != g_config->mrpeIncludes().end(); ++iter) {
         printf("include = %s %s\n", (*iter)->user, (*iter)->path);
     }
+
+    printf("\n[ps]\n");
+    printf("use_wmi = %s\n", g_config->psUseWMI() ? "yes" : "no");
+    printf("full_path = %s\n", g_config->psFullCommandLine() ? "yes" : "no");
 }
 
 
@@ -3955,6 +4042,15 @@ void RunImmediate(const char *mode, int argc, char **argv)
     Environment env(use_cwd);
 
     g_config = new Configuration(env);
+
+    if (g_config->useWMI()) {
+        try {
+            g_wmi_helper = new wmi::Helper();
+        } catch (const std::runtime_error &ex) {
+            fprintf(stderr, "Failed to initialize wmi: %s", ex.what());
+            exit(1);
+        }
+    }
 
     load_state(env);
 

@@ -74,6 +74,12 @@ public:
     bool crashDebug() const { return _crash_debug; }
     bool logwatchSendInitialEntries() const { return _logwatch_send_initial_entries; }
 
+    // return true if any section requires wmi functionality
+    bool useWMI() const { return _ps_use_wmi; }
+
+    bool psUseWMI() const { return _ps_use_wmi; }
+    bool psFullCommandLine() const { return _ps_full_path; }
+
     script_execution_mode  defaultScriptExecutionMode()  const { return _default_script_execution_mode; }
     script_async_execution defaultScriptAsyncExecution() const { return _default_script_async_execution; }
 
@@ -117,6 +123,7 @@ private:
     bool handleLogwatchConfigVariable(char *var, char *value);
     bool handleMrpeConfigVariable(char *var, char *value);
     bool handleFileinfoConfigVariable(char *var, char *value);
+    bool handlePSConfigVariable(char *var, char *value);
 
     bool handlePluginConfigVariable(char *var, char *value);
     bool handleLocalConfigVariable(char *var, char *value);
@@ -154,6 +161,9 @@ private:
     bool _logwatch_send_initial_entries;
 
     Environment _environment;
+
+    bool _ps_use_wmi;
+    bool _ps_full_path;
 
     // fileinfo
     ListCollector<fileinfo_paths_t,

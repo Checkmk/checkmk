@@ -100,11 +100,11 @@ char *llu_to_string(unsigned long long value)
 }
 
 
-unsigned long long string_to_llu(char *s)
+unsigned long long string_to_llu(const char *s)
 {
     unsigned long long value = 0;
     unsigned long long mult = 1;
-    char *e = s + strlen(s);
+    const char *e = s + strlen(s);
     while (e > s) {
         --e;
         value += mult * (*e - '0');

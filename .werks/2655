@@ -1,0 +1,18 @@
+Title: Windows Agent can now read additional settings from an optional check_mk_local.ini file
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444140084
+Class: feature
+
+The settings from check_mk_local.ini (if it exists) will be merged with the settings from
+check_mk.ini in a reasonable way.
+What is reasonable depends a lot on the parameter. Settings that have only one value (i.e. port)
+will simply be overwritten by the "local" settings.
+Many settings that can appear repeatedly, i.e. performance counters, will be appended.
+Yet other settings, especially those with pattern where only the first match applies, the "local"
+settings will be prepended to the existing settings (thus have higher priority).
+
+If in doubt about how the files are being combined, you can run "check_mk_agent.exe showconfig" to
+display the effective settings after merging the two files.

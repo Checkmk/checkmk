@@ -2267,8 +2267,14 @@ def mode_bulk_rename_host(phase):
         renaming_config = HostnameRenamingConfig().from_html_vars("")
         HostnameRenamingConfig().validate_value(renaming_config, "")
         renamings = collect_host_renamings(renaming_config)
+
         if not renamings:
             return None, _("No matching host names")
+
+        warning = renaming_collision_error(renamings)
+        if warning:
+            return None, warning
+
 
         message = _("<b>Do you really want to rename to following hosts?</b>")
         message += "<table>"
@@ -2276,18 +2282,13 @@ def mode_bulk_rename_host(phase):
             message += u"<tr><td>%s</td><td> → %s</td></tr>" % (host_name, target_name)
         message += "</table>"
 
-# TODO:
-# - Sortieren der Renamings nach .site und dann nach folder
-# - Umbau der Rename-Funktion, so dass erst alle WATO-Folder umgebaut werden, dann
-#   die automation für alle Folder kommt
-# - Doppelte Hostnamen prüfen: Zielnamen dürfen weder in alten vorkommen, noch untereinander
-#   kollidieren
-
-
         c = wato_confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
         if c:
-            return "folder", _("Sorry, bulk renaming not yet implemented.")
-            # return "folder", "%d Hosts umbenannt" % len(renamings)
+            actions = rename_hosts(renamings) # Already activates the changes!
+            log_commit_pending() # All activated by the underlying rename automation
+            action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
+            return "edithost", HTML(_("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (
+                                 len(renamings), action_txt))
         elif c == False: # not yet confirmed
             return ""
         else:
@@ -2299,6 +2300,27 @@ def mode_bulk_rename_host(phase):
         html.button("_start", _("Bulk Rename"))
         html.hidden_fields()
         html.end_form()
+
+
+def renaming_collision_error(renamings):
+    name_collisions = set()
+    new_names = [ new_name for (folder, old_name, new_name) in renamings ]
+    all_host_names = load_all_hosts().keys()
+    for name in new_names:
+        if name in all_host_names:
+            name_collisions.add(name)
+    for name in new_names:
+        if new_names.count(name) > 1:
+            name_collisions.add(name)
+
+    if name_collisions:
+        warning = "<b>%s</b><ul>" % _("You cannot do this renaming since the following host names would collide:")
+        for name in sorted(list(name_collisions)):
+            warning += "<li>%s</li>" % name
+        warning += "</ul>"
+        return warning
+
+    return None
 
 
 
@@ -2362,7 +2384,7 @@ def host_renaming_operation(operation, hostname):
         match = regex(match_regex).match(hostname)
         if match:
             for nr, group in enumerate(match.groups()):
-                new_name = new_name.replace("\\%d" % (nr+1))
+                new_name = new_name.replace("\\%d" % (nr+1), group)
             new_name = new_name.replace("\\0", hostname)
             return new_name
         else:
@@ -2405,15 +2427,6 @@ def HostnameRenaming(**kwargs):
         help = help,
         orientation = "horizontal",
         choices = [
-            ( "explicit",
-              _("Explicit renaming"),
-              Tuple(
-                  orientation = "horizontal",
-                  elements = [
-                      Hostname(title = _("current host name"), allow_empty = False),
-                      Hostname(title = _("new host name"), allow_empty = False),
-                  ]
-            )),
             ( "case",
               _("Case translation"),
               DropdownChoice(
@@ -2425,7 +2438,7 @@ def HostnameRenaming(**kwargs):
             ( "add_suffix",
               _("Add Suffix"),
               Hostname()),
-            ( "add_suffix",
+            ( "add_prefix",
               _("Add Prefix"),
               Hostname()),
             ( "drop_domain",
@@ -2457,6 +2470,15 @@ def HostnameRenaming(**kwargs):
                           allow_empty = False,
                       )
                  ]
+            )),
+            ( "explicit",
+              _("Explicit renaming"),
+              Tuple(
+                  orientation = "horizontal",
+                  elements = [
+                      Hostname(title = _("current host name"), allow_empty = False),
+                      Hostname(title = _("new host name"), allow_empty = False),
+                  ]
             )),
         ])
 
@@ -2496,7 +2518,6 @@ def mode_rename_host(phase):
         if c:
             # Creating pending entry. That makes the site dirty and that will force a sync of
             # the config to that site before the automation is being done.
-            log_pending(AFFECTED, newname, "rename-host", _("Renamed host %s into %s") % (hostname, newname))
             actions = rename_host(host, newname) # Already activates the changes!
             log_commit_pending() # All activated by the underlying rename automation
             html.set_var("host", newname)
@@ -2537,24 +2558,23 @@ def rename_host_in_list(thelist, oldname, newname):
 
 
 def rename_host(host, newname):
-
-    actions = []
-
-    # 1. Fix WATO configuration itself ----------------
-
-    # Hostname itself in the current folder
     oldname = host[".name"]
-    g_folder[".hosts"][newname] = host
-    host[".name"] = newname
-    del g_folder[".hosts"][oldname]
-    save_folder_and_hosts(g_folder)
-    mark_affected_sites_dirty(g_folder)
-    actions.append(_("The WATO folder"))
+    folder = g_folder
+    return rename_hosts([(folder, oldname, newname)])
 
-    # Is this host node of a cluster?
-    all_hosts = load_all_hosts()
+
+def rename_host_in_folder(folder, oldname, newname):
+    host = folder[".hosts"][oldname]
+    folder[".hosts"][newname] = host
+    host[".name"] = newname
+    del folder[".hosts"][oldname]
+    save_folder_and_hosts(folder)
+    mark_affected_sites_dirty(folder)
+    return [ "folder" ]
+
+
+def rename_host_as_cluster_node(all_hosts, oldname, newname):
     clusters = []
-    parents = []
     for somehost in all_hosts.values():
         if ".nodes" in somehost:
             nodes = somehost[".nodes"]
@@ -2563,7 +2583,15 @@ def rename_host(host, newname):
                 folder = somehost['.folder']
                 save_folder_and_hosts(folder)
                 mark_affected_sites_dirty(folder)
+    if clusters:
+        return [ "cluster_nodes" ] * len(clusters)
+    else:
+        return []
 
+
+def rename_host_as_parent(all_hosts, oldname, newname):
+    parents = []
+    for somehost in all_hosts.values():
         if somehost.get("parents"):
             if rename_host_in_list(somehost["parents"], oldname, newname):
                 parents.append(somehost[".name"])
@@ -2571,14 +2599,17 @@ def rename_host(host, newname):
                 save_folder_and_hosts(folder)
                 mark_affected_sites_dirty(folder)
 
-    if clusters:
-        actions.append(_("The following cluster definitions: %s") % (", ".join(clusters)))
 
     if parents:
-        actions.append(_("The parents of the following hosts: %s") % (", ".join(parents)))
+        return [ "parents" ] * len(parents)
+    else:
+        return []
 
+
+def rename_host_in_rulesets(folder, oldname, newname):
     # Rules that explicitely name that host (no regexes)
     changed_rulesets = []
+
     def rename_host_in_folder_rules(folder):
         rulesets = load_rulesets(folder)
         changed = False
@@ -2600,30 +2631,18 @@ def rename_host(host, newname):
 
     rename_host_in_folder_rules(g_root_folder)
     if changed_rulesets:
+        actions = []
         unique = set(changed_rulesets)
         for varname in unique:
-            actions.append(_("%d WATO rules in ruleset <i>%s</i>") % (
-              changed_rulesets.count(varname), g_rulespecs[varname]["title"]))
+            actions += [ "wato_rules" ] * changed_rulesets.count(varname)
+        return actions
+    else:
+        return []
 
-    # Business Intelligence rules
-    num_bi = rename_host_in_bi(oldname, newname)
-    if num_bi:
-        actions.append(_("%d BI rules and aggregations") % num_bi)
 
-    # Now make sure that the remote site that contains that host is being
-    # synced.
+def rename_host_in_event_rules(oldname, newname):
+    actions = []
 
-    # 3. Check_MK stuff ------------------------------------------------
-    # Things like autochecks, counters, etc. This has to be done via an
-    # automation, since it might have to happen on a remote site. During
-    # this automation the core will be stopped, after the renaming has
-    # taken place a new configuration will be created and the core started
-    # again.
-    action_counts = check_mk_automation(host[".siteid"], "rename-hosts", [], [(oldname, newname)])
-    actions = render_renaming_actions(action_counts)
-
-    # Notification settings ----------------------------------------------
-    # Notification rules - both global and users' ones
     def rename_in_event_rules(rules):
         num_changed = 0
         for rule in rules:
@@ -2640,13 +2659,13 @@ def rename_host(host, newname):
             rules = user["notification_rules"]
             num_changed = rename_in_event_rules(rules)
             if num_changed:
-                actions.append("%d notification rules of user %s" % (num_changed, userid))
+                actions += [ "notify_user" ] * num_changed
                 some_changed = True
 
     rules = load_notification_rules()
     num_changed = rename_in_event_rules(rules)
     if num_changed:
-        actions.append(_("%d global notification rules") % num_changed)
+        actions += [ "notify_global" ] * num_changed
         save_notification_rules(rules)
 
     try:
@@ -2657,7 +2676,7 @@ def rename_host(host, newname):
     if rules:
         num_changed = rename_in_event_rules(rules)
         if num_changed:
-            actions.append(_("%d alert handler rules") % num_changed)
+            actions += [ "alert_rules" ] * num_changed
             save_alert_handler_rules(rules)
 
     # Notification channels of flexible notifcations also can have host conditions
@@ -2672,11 +2691,15 @@ def rename_host(host, newname):
                         channels_changed += 1
                         some_user_changed = True
             if channels_changed:
-                actions.append("%d flexible notification configurations of user %s" % (channels_changed, userid))
+                actions += [ "notify_flexible" ] * channels_changed
 
     if some_user_changed:
         userdb.save_users(users)
 
+    return actions
+
+
+def rename_host_in_multisite(oldname, newname):
     # State of Multisite ---------------------------------------
     # Favorites of users and maybe other settings. We simply walk through
     # all directories rather then through the user database. That way we
@@ -2706,39 +2729,148 @@ def rename_host(host, newname):
                     if config.debug:
                         raise
     if users_changed:
-        actions.append(_("%d favorite entries of %d users") % (total_changed, users_changed))
+        return [ "favorites" ] * total_changed
+    else:
+        return []
+
+
+def rename_host_in_bi(oldname, newname):
+    renamed = 0
+    aggregations, rules = load_bi_rules()
+    for aggregation in aggregations:
+        renamed += rename_host_in_bi_aggregation(aggregation, oldname, newname)
+    for rule in rules.values():
+        renamed += rename_host_in_bi_rule(rule, oldname, newname)
+    if renamed:
+        save_bi_rules(aggregations, rules)
+        return [ "bi" ] * renamed
+    else:
+        return []
+
+
+def rename_host_in_bi_aggregation(aggregation, oldname, newname):
+    node = aggregation["node"]
+    if node[0] == 'call':
+        if rename_host_in_list(aggregation["node"][1][1], oldname, newname):
+            return 1
+    return 0
+
+
+def rename_host_in_bi_rule(rule, oldname, newname):
+    renamed = 0
+    nodes = rule["nodes"]
+    for nr, node in enumerate(nodes):
+        if node[0] in [ "host", "service", "remaining" ]:
+            if node[1][0] == oldname:
+                nodes[nr] = (node[0], ( newname, ) + node[1][1:])
+                renamed = 1
+        elif node[0] == "call":
+            if rename_host_in_list(node[1][1], oldname, newname):
+                renamed = 1
+    return renamed
+
+
+def rename_hosts_in_check_mk(renamings):
+    action_counts = {}
+    for site_id, name_pairs in group_renamings_by_site(renamings).items():
+        site = config.site(site_id)
+        update_replication_status(site_id, { "need_sync" : True })
+        message = _("Renamed host %s") % ", ".join(
+            [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs])
+        log_pending(AFFECTED, None, "renamed-hosts", message)
+        synchronize_site(site, False)
+        new_counts = check_mk_automation(site_id, "rename-hosts", [], name_pairs)
+        merge_action_counts(action_counts, new_counts)
+    return action_counts
+
+
+def merge_action_counts(action_counts, new_counts):
+    for key, count in new_counts.items():
+        action_counts.setdefault(key, 0)
+        action_counts[key] += count
+
+
+def group_renamings_by_site(renamings):
+    renamings_per_site = {}
+    for folder, oldname, newname in renamings:
+        host = folder[".hosts"][newname] # already renamed here!
+        site_id = host[".siteid"]
+        renamings_per_site.setdefault(site_id, []).append((oldname, newname))
+    return renamings_per_site
+
+
+# renamings is a list of tuples of (folder, oldname, newname)
+def rename_hosts(renamings):
+
+    actions = []
+    all_hosts = load_all_hosts()
+
+    # 1. Fix WATO configuration itself ----------------
+    for folder, oldname, newname in renamings:
+        actions += rename_host_in_folder(folder, oldname, newname)
+        actions += rename_host_as_cluster_node(all_hosts, oldname, newname)
+        actions += rename_host_as_parent(all_hosts, oldname, newname)
+        actions += rename_host_in_rulesets(folder, oldname, newname)
+        actions += rename_host_in_bi(oldname, newname)
+
+    # 2. Check_MK stuff ------------------------------------------------
+    action_counts = rename_hosts_in_check_mk(renamings)
+
+    # 3. Notification settings ----------------------------------------------
+    # Notification rules - both global and users' ones
+    for folder, oldname, newname in renamings:
+        actions += rename_host_in_event_rules(oldname, newname)
+        actions += rename_host_in_multisite(oldname, newname)
+
+    for action in actions:
+        action_counts.setdefault(action, 0)
+        action_counts[action] += 1
 
     call_hook_hosts_changed(g_root_folder)
-    return actions
+
+    action_texts = render_renaming_actions(action_counts)
+    return action_texts
 
 
 def render_renaming_actions(action_counts):
     action_titles = {
-        "cache"          : _("Cached output of monitoring agents"),
-        "counters"       : _("Files with performance counters"),
-        "agent"          : _("Baked host specific agents"),
-        "piggyback-load" : _("Piggyback information from other host"),
-        "piggyback-pig"  : _("Piggyback information for other hosts"),
-        "autochecks"     : _("Auto-disovered services of the host"),
-        "logwatch"       : _("Logfile information of logwatch plugin"),
-        "snmpwalk"       : _("A stored SNMP walk"),
-        "rrd"            : _("RRD databases with performance data"),
-        "rrdcached"      : _("RRD updates in journal of RRD Cache"),
-        "pnpspool"       : _("Spool files of PNP4Nagios"),
-        "nagvis"         : _("NagVis maps"),
-        "history"        : _("Monitoring history entries (events and availability)"),
-        "retention"      : _("The current monitoring state (including acknowledgements and downtimes)"),
-        "inv"            : _("Recent hardware/software inventory"),
-        "invarch"        : _("History of hardware/software inventory"),
-        "ipfail"         : _("<b>WARNING                                                                 : </b> the IP address lookup has failed. The core has been "
-                             "started by using the address <tt>0.0.0.0</tt> for the while. "
-                             "You will not be able to activate any changes until you have either updated your "
-                             "DNS or configure an explicit address for."),
+        "folder"          : _("WATO folder"),
+        "notify_user"     : _("Users' notification rule"),
+        "notify_global"   : _("Global notification rule"),
+        "notify_flexible" : _("Flexible notification rule"),
+        "wato_rules"      : _("Host and service configuration rule"),
+        "alert_rules"     : _("Alert handler rule"),
+        "parents"         : _("Parent definition"),
+        "cluster_nodes"   : _("Cluster node definition"),
+        "bi"              : _("BI rule or aggregation"),
+        "favorites"       : _("Favorite entry of user"),
+        "cache"           : _("Cached output of monitoring agent"),
+        "counters"        : _("File with performance counter"),
+        "agent"           : _("Baked host specific agent"),
+        "piggyback-load"  : _("Piggyback information from other host"),
+        "piggyback-pig"   : _("Piggyback information for other hosts"),
+        "autochecks"      : _("Auto-disovered services of the host"),
+        "logwatch"        : _("Logfile information of logwatch plugin"),
+        "snmpwalk"        : _("A stored SNMP walk"),
+        "rrd"             : _("RRD databases with performance data"),
+        "rrdcached"       : _("RRD updates in journal of RRD Cache"),
+        "pnpspool"        : _("Spool files of PNP4Nagios"),
+        "nagvis"          : _("NagVis map"),
+        "history"         : _("Monitoring history entries (events and availability)"),
+        "retention"       : _("The current monitoring state (including acknowledgements and downtimes)"),
+        "inv"             : _("Recent hardware/software inventory"),
+        "invarch"         : _("History of hardware/software inventory"),
     }
 
     texts = []
     for what, count in sorted(action_counts.items()):
-        text = action_titles[what]
+        if what.startswith("dnsfail-"):
+            text = _("<b>WARNING: </b> the IP address lookup of <b>%s</b> has failed. The core has been "
+                                 "started by using the address <tt>0.0.0.0</tt> for the while. "
+                                 "You will not be able to activate any changes until you have either updated your "
+                                 "DNS or configure an explicit address for.") % what.split("-", 1)[1]
+        else:
+            text = action_titles.get(what, what)
         if count > 1:
             text += _(" (%d times)" % count)
         texts.append(text)
@@ -11789,18 +11921,12 @@ def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True
                 changes["need_restart"] = True
             update_replication_status(site_id, changes)
 
-# def mark_all_sites_dirty(sites):
-#     changes = {
-#         "need_sync" : True,
-#         "need_restart" : True,
-#     }
-#     for site_id, site in sites.items():
-#         update_replication_status(site_id, changes)
 
 def remove_sync_snapshot(siteid):
     path = sync_snapshot_file(siteid)
     if os.path.exists(path):
         os.remove(path)
+
 
 def sync_snapshot_file(siteid):
     return defaults.tmp_dir + "/sync-%s.tar.gz" % siteid
@@ -17505,9 +17631,6 @@ class HostTagCondition(ValueSpec):
         pass
 
 
-
-
-
 # We need to replace the BI constants internally with something
 # that we can replace back after writing the BI-Rules out
 # with pprint.pformat
@@ -17557,6 +17680,7 @@ def load_bi_rules():
         raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
 
+
 def save_bi_rules(aggregations, aggregation_rules):
     def replace_constants(s):
         for name, uuid in bi_constants.items():
@@ -17588,36 +17712,6 @@ def save_bi_rules(aggregations, aggregation_rules):
     # direct user login
     update_login_sites_replication_status()
 
-def rename_host_in_bi(oldname, newname):
-    renamed = 0
-    aggregations, rules = load_bi_rules()
-    for aggregation in aggregations:
-        renamed += rename_host_in_bi_aggregation(aggregation, oldname, newname)
-    for rule in rules.values():
-        renamed += rename_host_in_bi_rule(rule, oldname, newname)
-    if renamed:
-        save_bi_rules(aggregations, rules)
-    return renamed
-
-def rename_host_in_bi_aggregation(aggregation, oldname, newname):
-    node = aggregation["node"]
-    if node[0] == 'call':
-        if rename_host_in_list(aggregation["node"][1][1], oldname, newname):
-            return 1
-    return 0
-
-def rename_host_in_bi_rule(rule, oldname, newname):
-    renamed = 0
-    nodes = rule["nodes"]
-    for nr, node in enumerate(nodes):
-        if node[0] in [ "host", "service", "remaining" ]:
-            if node[1][0] == oldname:
-                nodes[nr] = (node[0], ( newname, ) + node[1][1:])
-            renamed = 1
-        elif node[0] == "call":
-            if rename_host_in_list(node[1][1], oldname, newname):
-                renamed = 1
-    return renamed
 
 
 bi_aggregation_functions = {}

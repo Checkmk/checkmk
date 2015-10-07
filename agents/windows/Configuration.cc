@@ -25,6 +25,8 @@
 
 #include "Configuration.h"
 #include "stringutil.h"
+#include <cstdio>
+
 
 
 extern void verbose(const char *format, ...);

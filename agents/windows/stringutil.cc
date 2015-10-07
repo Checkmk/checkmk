@@ -1,6 +1,7 @@
 #include "stringutil.h"
 #include <cstring>
 #include <cctype>
+#include <cstdio>
 #include <windows.h>
 
 

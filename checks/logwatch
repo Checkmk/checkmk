@@ -445,8 +445,9 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
 
     current_block = None
 
+    log_exists = os.path.exists(logfile)
     try:
-        if os.path.exists(logfile):
+        if log_exists:
             logwatch_file = open(logfile, 'r+')
         else:
             logwatch_file = open(logfile, 'w')
@@ -455,8 +456,10 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
 
     pattern_hash = hash(tuple(patterns))
 
+    net_lines = 0
+
     # parse cached log lines
-    if os.path.exists(logfile):
+    if log_exists:
         # new format contains hash of patterns on the first line so we only reclassify if they
         # changed
         initline = logwatch_file.readline().rstrip('\n')
@@ -485,6 +488,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
                 current_block = LogwatchBlock(line)
             elif current_block is not None:
                 current_block.add_line(line, skip_reclassification)
+                net_lines += 1
 
         # The last section is finished here. Add it to the list of reclassified lines if the
         # state of the block is not "I" -> "ignore"
@@ -496,6 +500,9 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
             collect_block.output_lines = []
         else:
             output_size = sum([len(line) for line in collect_block.output_lines])
+    else:
+        output_size = 0
+        skip_reclassification = False
 
     header = time.strftime("<<<%Y-%m-%d %H:%M:%S UNKNOWN>>>\n")
     output_size += len(header)
@@ -505,23 +512,23 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
         current_block = LogwatchBlock(header)
         for line in loglines:
             current_block.add_line(line.encode("utf-8"), False)
+            net_lines += 1
             output_size += len(line)
             if output_size >= logwatch_max_filesize:
                 break
         collect_block(current_block)
 
     # when reclassifying, rewrite the whole file, outherwise append
-    if not skip_reclassification:
+    if not skip_reclassification and collect_block.output_lines:
         logwatch_file.seek(0)
         logwatch_file.truncate()
         logwatch_file.write("[[[%d]]]\n" % pattern_hash)
 
-    logwatch_file.writelines(collect_block.output_lines)
+    if collect_block.output_lines:
+        logwatch_file.writelines(collect_block.output_lines)
     # correct output size
-    output_size = logwatch_file.tell()
     logwatch_file.close()
-
-    if output_size == 0:
+    if net_lines == 0:
         os.unlink(logfile)
 
     # if logfile has reached maximum size, abort with critical state

@@ -41,7 +41,7 @@
 
 # suggested by customer
 factory_settings['etherbox_temp_default_levels'] = {
-    'levels'       : (25, 30),
+    'levels'       : (30, 35),
 }
 
 

@@ -1,0 +1,9 @@
+Title: Fixed issue loading correct graph templates when HTTP is disabled on system apache level
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444216764
+Class: fix
+
+

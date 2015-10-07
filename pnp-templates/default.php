@@ -2,9 +2,19 @@
 
 # Fetch dynamic PNP template from Check_MK's new metrics system
 
+function get_apache_port() {
+    $path = getenv("OMD_ROOT") . "/etc/omd/site.conf";
+    foreach (file($path) as $line) {
+        if (strpos($line, "CONFIG_APACHE_TCP_PORT") === 0) {
+            list($key, $val) = explode("=", $line);
+            return trim($val, "'\n\r");
+        }
+    }
+}
+
 $omd_site = getenv("OMD_SITE");
 if ($omd_site) {
-    $url = "http://localhost/$omd_site/check_mk/";
+    $url = "http://localhost:".get_apache_port()."/$omd_site/check_mk/";
     $template_cache_dir = getenv("OMD_ROOT") . "/var/check_mk/pnp_template_cache";
 }
 else {

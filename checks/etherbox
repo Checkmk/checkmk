@@ -94,7 +94,7 @@ def check_etherbox_temp(item, params, info):
 
 check_info["etherbox.temp"] = {
     "check_function"        : check_etherbox_temp,
-    "inventory_function"    : lambda x: inventory_etherbox(x, "1"),
+    "inventory_function"    : lambda info: inventory_etherbox(info, "1"),
     "service_description"   : "Sensor %s",
     "has_perfdata"          : True,
     "group"                 : "temperature",

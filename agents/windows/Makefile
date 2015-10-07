@@ -38,7 +38,7 @@ else
   CXX = mingw32-g++
 endif
 
-all: directories fix_linebreaks install_agent.exe install_agent-64.exe msi_installer
+all: directories fix_linebreaks check_mk_agent.exe check_mk_agent-64.exe install_agent.exe install_agent-64.exe msi_installer
 
 .PHONY: directories inc_build_version fix_linebreaks
 
@@ -46,7 +46,7 @@ setversion:
 	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi ; \
 	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	rm check_mk_agent.exe check_mk_agent-64.exe check_mk_agent.msi ; \
-	make
+	make install_agent.exe install_agent-64.exe msi_installer
 
 # Converts all files which are targeted to a windows system to CRLF
 fix_linebreaks:
@@ -111,14 +111,23 @@ check_mk_agent-64.unversioned.exe: obj64/check_mk_agent.o obj64/SettingsCollecto
 # 4. Create final executable files by inserting actual version number. No
 # recompilation is thus needed during 'make version'
 # -----------------------------------------------------------------------------
-%.exe: %.unversioned.exe
-	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < $< > $@
-	chmod 755 $@
+
+check_mk_agent.exe.versioned:
+	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < check_mk_agent.unversioned.exe > check_mk_agent.exe
+	chmod 755 check_mk_agent.exe
+
+check_mk_agent-64.exe.versioned:
+	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < check_mk_agent-64.unversioned.exe > check_mk_agent-64.exe
+	chmod 755 check_mk_agent-64.exe
+
+
+%.exe: %.unversioned.exe %.exe.versioned
+	
 
 # -----------------------------------------------------------------------------
 # NSIS installer will be removed and replaced by multiarch MSI installer
 # -----------------------------------------------------------------------------
-install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
+install_agent.exe: check_mk_agent.exe.versioned crash.exe nowin.exe
 	if ! which makensis; then \
 	    echo "ERROR: makensis missing. Please install the nsis package." ; \
 	    exit 1 ; \
@@ -126,7 +135,7 @@ install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
 	makensis installer.nsi
 	chmod +x install_agent.exe
 
-install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
+install_agent-64.exe: check_mk_agent-64.exe.versioned crash.exe nowin.exe
 	if ! which makensis; then \
 	    echo "ERROR: makensis missing. Please install the nsis package." ; \
 	    exit 1 ; \

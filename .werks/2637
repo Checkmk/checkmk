@@ -1,0 +1,9 @@
+Title: etherbox2_temp: new check for the etherbox 2 (from firmware version 1.21 on) / MessPC
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444214094
+Class: feature
+
+To run this check you have to configure the WATO rule <i>Hosts without system description OID</i>.

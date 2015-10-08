@@ -67,7 +67,7 @@ StringColumnFilter::~StringColumnFilter()
 bool StringColumnFilter::accepts(void *data)
 {
     bool pass = true;
-    char *act_string = _column->getValue(data);
+    const char *act_string = _column->getValue(data);
     if (!act_string)
         act_string = ""; // e.g. current_service_perf_data in host entry in log table
 

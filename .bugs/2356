@@ -1,0 +1,11 @@
+Title: Bei den Views anstelle des Zeitraumes den Zeitstempel anzeigen
+Component: multisite
+State: open
+Date: 2015-10-08 11:38:41
+Targetversion: 1.2.7
+Class: nastiness
+
+Unter Views -> Other können die letzten Ereignisse angezeigt werden. In diesen Ansichten
+werden die Zeitspannen seit auftreten des Ereignisses angezeigt. Hier wäre es vielleicht
+passender, den Zeitstemple von dem Ereignis anzuzeigen. Dies hilft bei der Analyse eines
+Fehlers.

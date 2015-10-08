@@ -336,6 +336,8 @@
     * 2534 FIX: Fixed implementation of skipping rule packs
     * 2614 FIX: Fixed exception when processing events with umlaut in names from history
     * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters
+    * 2673 FIX: SNMP-Traps: Fixed translation of OIDs which are parts of trap values...
+            NOTE: Please refer to the migration notes!
 
     Livestatus:
     * 2493 FIX: Fixed wrong JSON format when using stats queries together with header columns...

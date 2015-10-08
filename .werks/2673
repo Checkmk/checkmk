@@ -1,0 +1,15 @@
+Title: SNMP-Traps: Fixed translation of OIDs which are parts of trap values
+Level: 1
+Component: ec
+Compatible: incomp
+Version: 1.2.7i3
+Date: 1444307734
+Class: fix
+
+Some traps send SNMP OIDs as values of traps which were not translated correctly
+in the past. For example default SNMPv2 traps had a non-translated numeric OID
+in the "Application" field of the events. This has now been changed to be
+translated too.
+
+Please note: If you already have created rules which refer to the numeric OIDs
+while having trap translation enabled, you will need to update the rules.

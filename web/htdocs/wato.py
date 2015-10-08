@@ -18952,7 +18952,7 @@ def download_table(title, file_titles, paths):
 
 def mode_download_agents(phase):
     if phase == "title":
-        return _("Builtin Agents")
+        return _("Agents and Plugins")
 
     elif phase == "buttons":
         global_buttons()

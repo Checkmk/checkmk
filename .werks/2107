@@ -1,4 +1,4 @@
-Title: mkeventd: can now handle syslog format of Sophos firewalls
+Title: Can now parse syslog format of Sophos firewalls correctly
 Level: 1
 Component: ec
 Compatible: compat

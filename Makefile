@@ -51,7 +51,6 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 	       agents/check_mk_*agent* agents/*.c agents/cfg_examples/* \
 	       agents/special/* $$(find agents/plugins -type f)
 
-
 .PHONY: help install clean
 
 all: dist packages

@@ -213,6 +213,8 @@
     * 2653 FIX: winperf_msx_queues: fixed incorrect cancelation of check claiming no counters were available...
     * 2619 FIX: services_summary: Fixed exception on WATO services summary page
     * 2654 FIX: logwatch: fixed high memory and cpu usage caused by too many unacknowledged messages...
+    * 2622 FIX: postfix_mailq: Fixed exception when postfix is installed but not configured properly
+    * 2675 FIX: checkpoint_connections checkpoint_packets: Fixed wrong discovered services on non checkpoint devices
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...
@@ -335,6 +337,8 @@
     * 2534 FIX: Fixed implementation of skipping rule packs
     * 2614 FIX: Fixed exception when processing events with umlaut in names from history
     * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters
+    * 2673 FIX: SNMP-Traps: Fixed translation of OIDs which are parts of trap values...
+            NOTE: Please refer to the migration notes!
 
     Livestatus:
     * 2493 FIX: Fixed wrong JSON format when using stats queries together with header columns...

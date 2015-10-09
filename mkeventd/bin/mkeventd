@@ -1212,32 +1212,14 @@ class EventServer:
     def snmptrap_translate_varbinds(self, var_bind_list):
         var_binds = []
         for oid, value in var_bind_list:
-            mib_var = MibVariable(oid).resolveWithMib(self._mib_resolver)
+            try:
+                mib_var = ObjectType(ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
+                node             = mib_var[0].getMibNode()
+                translated_oid   = mib_var[0].prettyPrint().replace("\"", "")
+                translated_value = mib_var[1].prettyPrint()
 
-            if not mib_var.isFullyResolved():
-                log('MIB for %s is not loaded' % oid.prettyPrint())
-                var_binds.append((str(oid), value)) # add untranslated
-            else:
-                # MIB node object (like OBJECT-TYPE or other SMI MACROs)
-                node = mib_var.getMibNode()
-
-                mod, sym, indices = mib_var.getMibSymbol()
-                # Only care about the first indice reported. Why should we care about multiple?
-                # Do we have such cases here?
-                if not indices:
-                    translated_oid = '%s::%s' % (mod, sym)
-                else:
-                    translated_oid = '%s::%s.%s' % (mod, sym, indices[0].prettyPrint())
-
-                # This MACRO supports SYNTAX clause?
-                if hasattr(node, 'getSyntax'):
-                    # Cast value to MIB SYNTAX type (TEXTUAL-CONVENTION)
-                    value = node.getSyntax().clone(value)
-                    units = node.getUnits()
-
-                    translated_value = value.prettyPrint() + ' ' + units
-                else:
-                    translated_value = value
+                if hasattr(node, "getUnits"):
+                    translated_value += ' ' + node.getUnits()
 
                 if hasattr(node, "getDescription") \
                    and type(g_config["translate_snmptraps"]) == tuple \
@@ -1245,6 +1227,12 @@ class EventServer:
                     translated_value += "(%s)" % node.getDescription()
 
                 var_binds.append((translated_oid, translated_value))
+
+            except SmiError, e:
+                # Failed to translate? add untranslated
+                log('Failed to translate OID %s: %s' % (oid.prettyPrint(), e))
+                var_binds.append((str(oid), str(value))) # add untranslated
+
         return var_binds
 
     def process_snmptrap(self, (whole_msg, (ipaddress, port))):
@@ -3851,9 +3839,10 @@ try:
         from pyasn1.codec.ber import decoder as pyasn_decoder
         import pysnmp.proto.proxy.rfc2576
         # Needed for trap translation
-        from pysnmp.entity.rfc3413.oneliner.mibvar import MibVariable
         from pysnmp.smi.builder import MibBuilder, DirMibSource
         from pysnmp.smi.view import MibViewController
+        from pysnmp.smi.rfc1902 import ObjectType, ObjectIdentity
+        from pysnmp.smi.error import SmiError
 
     if not g_pipe_path:
         bail_out("Please specify the path to the pipe (using -P).")

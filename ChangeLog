@@ -214,6 +214,7 @@
     * 2619 FIX: services_summary: Fixed exception on WATO services summary page
     * 2654 FIX: logwatch: fixed high memory and cpu usage caused by too many unacknowledged messages...
     * 2622 FIX: postfix_mailq: Fixed exception when postfix is installed but not configured properly
+    * 2675 FIX: checkpoint_connections checkpoint_packets: Fixed wrong discovered services on non checkpoint devices
 
     Multisite:
     * 2385 SEC: Fixed possible reflected XSS on all GUI pages where users can produce unhandled exceptions...

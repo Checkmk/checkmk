@@ -977,7 +977,7 @@ void Query::finish()
             delete _stats_aggregators[i];
         }
         outputDatasetEnd();
-        delete _stats_aggregators;
+        delete[] _stats_aggregators;
     }
 
     // normal query

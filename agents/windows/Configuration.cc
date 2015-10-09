@@ -171,51 +171,52 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
 }
 
 
+// retrieve the next line from a multi-sz registry key
+const TCHAR *get_next_multi_sz(const std::vector<TCHAR> &data, size_t &offset)
+{
+    const TCHAR *next = &data[offset];
+    size_t len = strlen(next);
+    if ((len == 0) || (offset + len > data.size())) {
+        // the second condition would only happen with an invalid registry value but that's not
+        // unheard of
+        return NULL;
+    } else {
+        offset += len + 1;
+        return next;
+    }
+}
+
+
 int Configuration::getCounterIdFromLang(const char *language, const char *counter_name)
 {
-    HKEY hKey;
-    LONG result;
-    TCHAR szValueName[300000];
-    DWORD dwcbData = sizeof(szValueName);
     char regkey[512];
     snprintf(regkey, sizeof(regkey), "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\%s", language);
-    result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regkey, REG_MULTI_SZ, KEY_READ, &hKey);
-    RegQueryValueEx(
-        hKey,
-        "Counter",
-        NULL,
-        NULL,
-        (LPBYTE) szValueName,
-        &dwcbData
-    );
+    HKEY hKey;
+    LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regkey, REG_MULTI_SZ, KEY_READ, &hKey);
+
+    // preflight
+    std::vector<TCHAR> szValueName;
+    DWORD dwcbData = 0;
+    RegQueryValueEx(hKey, "Counter", NULL, NULL, (LPBYTE)&szValueName[0], &dwcbData);
+    szValueName.resize(dwcbData);
+    // actual read op
+    RegQueryValueEx(hKey, "Counter", NULL, NULL, (LPBYTE) &szValueName[0], &dwcbData);
     RegCloseKey (hKey);
 
     if (result != ERROR_SUCCESS) {
         return -1;
     }
 
-    int   length      = 0;
-    int   last_ctr_id = 0;
-    bool  is_name     = false;
-    DWORD offset      = 0;
-
-    TCHAR* ptr_perf = szValueName;
+    size_t offset = 0;
     for(;;) {
-        if (offset > dwcbData)
+        const TCHAR *id = get_next_multi_sz(szValueName, offset);
+        const TCHAR *name = get_next_multi_sz(szValueName, offset);
+        if ((id == NULL) || (name == NULL)) {
             break;
-
-        length = strlen(ptr_perf);
-        if (length == 0)
-            break;
-
-        if (is_name && !strcmp(counter_name, ptr_perf))
-            return last_ctr_id;
-        else
-            last_ctr_id = atoi(ptr_perf);
-
-        offset   = offset + length + 1;
-        ptr_perf = szValueName + offset;
-        is_name = !is_name;
+        }
+        if (strcmp(name, counter_name) == 0) {
+            return strtol(id, NULL, 10);
+        }
     }
 
     return -1;

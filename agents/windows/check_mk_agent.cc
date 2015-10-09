@@ -832,8 +832,9 @@ void section_winperf(SOCKET &out)
 
     // also output additionally configured counters
     for (winperf_counters_t::const_iterator it_wp = g_config->winperfCounters().begin();
-            it_wp != g_config->winperfCounters().end(); ++it_wp)
+            it_wp != g_config->winperfCounters().end(); ++it_wp) {
         dump_performance_counters(out, (*it_wp)->id, (*it_wp)->name);
+    }
 }
 
 

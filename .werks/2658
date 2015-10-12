@@ -1,0 +1,12 @@
+Title: logwatch: unacknowledged messages exceeding the max size are now dropped, even if they were already stored due to a previous bug
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1444649368
+
+A previous modification to the logwatch check caused the internal message buffer
+(var/check_mk/logwatch) to become bloated, causing high cpu load and memory usage.
+This change now auto-corrects those files for those affected.

@@ -1,0 +1,11 @@
+Title: cisco_asa_failover: Failover state is not treated as warning state anymore
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444635713
+Class: fix
+
+The Cisco ASA cluster is operating as expected and in practice, it does not really
+matter which of the cluster members is the primary one. So the failover state, where
+the secondary device is the active one, is not treated as warning anymore.

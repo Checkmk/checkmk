@@ -3676,8 +3676,13 @@ def show_service_table(host, firsttime):
             table.row(css="data", state=state)
 
             # Status, Checktype, Item, Description, Check Output
+            if check_source == "active":
+                ctype = "check_" + ct
+            else:
+                ctype = ct
+            manpage_url = make_link([("mode", "check_manpage"), ("check_type", ctype)])
             table.cell(_("Status"),              statename, css=stateclass)
-            table.cell(_("Checkplugin"),         ct)
+            table.cell(_("Checkplugin"),         '<a href="%s">%s</a>' % (manpage_url, ctype))
             table.cell(_("Item"),                item)
             table.cell(_("Service Description"), html.attrencode(descr))
             table.cell(_("Plugin output"))
@@ -3731,13 +3736,6 @@ def show_service_table(host, firsttime):
                                  ("host", hostname),
                                  ("item", mk_repr(item))])
                 html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
-
-            if check_source == "active":
-                ctype = "check_" + ct
-            else:
-                ctype = ct
-            manpage_url = make_link([("mode", "check_manpage"), ("check_type", ctype)])
-            html.icon_button(manpage_url, _("View the manual page of the check plugin"), "check_plugins")
 
             if check_source == "ignored" and may_edit_ruleset("ignored_services"):
                 url = make_link([("mode", "edit_ruleset"),

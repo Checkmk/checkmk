@@ -724,6 +724,27 @@ def get_host_attributes(hostname):
     return attrs
 
 
+def get_cluster_attributes(hostname, nodes):
+    attrs = {}
+    node_ips_4 = []
+    if is_ipv4_host(hostname):
+        node_ips_4 = [ ip_address_of(h, 4) for h in nodes ]
+
+    node_ips_6 = []
+    if is_ipv6_host(hostname):
+        node_ips_6 = [ ip_address_of(h, 6) for h in nodes ]
+
+    if is_ipv6_primary(hostname):
+        node_ips = node_ips_6
+    else:
+        node_ips = node_ips_4
+
+    for suffix, val in [ ("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6) ]:
+        attrs["_NODEIPS%s" % suffix] = " ".join(val)
+
+    return attrs
+
+
 def ip_address_of(hostname, family=None):
     try:
         return lookup_ip_address(hostname, family)
@@ -2225,16 +2246,16 @@ def create_nagios_config_host(outfile, hostname):
     outfile.write("\n# ----------------------------------------------------\n")
     outfile.write("# %s\n" % hostname)
     outfile.write("# ----------------------------------------------------\n")
+    host_attrs = get_host_attributes(hostname)
     if generate_hostconf:
-        create_nagios_hostdefs(outfile, hostname)
-    create_nagios_servicedefs(outfile, hostname)
+        create_nagios_hostdefs(outfile, hostname, host_attrs)
+    create_nagios_servicedefs(outfile, hostname, host_attrs)
 
-def create_nagios_hostdefs(outfile, hostname):
+def create_nagios_hostdefs(outfile, hostname, attrs):
     is_clust = is_cluster(hostname)
 
     # Determine IP address. For cluster hosts this is optional.
     # A cluster might have or not have a service ip address.
-    attrs = get_host_attributes(hostname)
     if not is_clust and attrs["address"] in [ "0.0.0.0", "::" ]:
         if ignore_ip_lookup_failures:
             failed_ip_lookups.append(hostname)
@@ -2246,6 +2267,16 @@ def create_nagios_hostdefs(outfile, hostname):
             raise MKGeneralException("Cannot determine ip address of %s. Please add to %s." %
                                                                            (hostname, varname))
     ip = attrs["address"]
+
+    if is_clust:
+        verify_cluster_address_family(hostname)
+
+        nodes = nodes_of(hostname)
+        for node in nodes:
+            if node not in all_active_realhosts():
+                raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, hostname))
+
+        attrs.update(get_cluster_attributes(hostname, nodes))
 
     #   _
     #  / |
@@ -2306,15 +2337,7 @@ def create_nagios_hostdefs(outfile, hostname):
 
     # Special handling of clusters
     if is_clust:
-        verify_cluster_address_family(hostname)
-
-        nodes = nodes_of(hostname)
-        for node in nodes:
-            if node not in all_active_realhosts():
-                raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, hostname))
-        node_ips = [ lookup_ip_address(h) for h in nodes ]
         alias = "cluster of %s" % ", ".join(nodes)
-        outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
         if not extra_conf_parents:
             outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
 
@@ -2378,7 +2401,7 @@ def create_nagios_hostdefs(outfile, hostname):
         outfile.write("}\n")
     outfile.write("\n")
 
-def create_nagios_servicedefs(outfile, hostname):
+def create_nagios_servicedefs(outfile, hostname, host_attrs):
     #   _____
     #  |___ /
     #    |_ \
@@ -2752,22 +2775,38 @@ define servicedependency {
 }
 """ % (service_dependency_template, hostname, hostname, service_discovery_name))
 
-    # Levels for host check
-    if is_cluster(hostname):
-        ping_command = 'check-mk-ping-cluster'
-    else:
-        ping_command = 'check-mk-ping'
-
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not legchecks and not actchecks and not custchecks:
-        outfile.write("""
+        add_ping_service(outfile, hostname, host_attrs["address"], is_ipv6_primary(hostname) and 6 or 4,
+                         "PING", host_attrs.get("_NODEIPS"))
+
+    if is_ipv4v6_host(hostname):
+        if is_ipv6_primary(hostname):
+            add_ping_service(outfile, hostname, host_attrs["_ADDRESS_4"], 4,
+                             "PING IPv4", host_attrs.get("_NODEIPS_4"))
+        else:
+            add_ping_service(outfile, hostname, host_attrs["_ADDRESS_6"], 6,
+                             "PING IPv6", host_attrs.get("_NODEIPS_6"))
+
+
+def add_ping_service(outfile, hostname, ipaddress, family, descr, node_ips):
+    arguments = check_icmp_arguments_of(hostname, family=family)
+
+    ping_command = 'check-mk-ping'
+    if is_cluster(hostname):
+        arguments += ' -m 1 ' + node_ips
+    else:
+        arguments += ' ' + ipaddress
+
+    outfile.write("""
 define service {
   use\t\t\t\t%s
+  service_description\t\t%s
   check_command\t\t\t%s!%s
 %s  host_name\t\t\t%s
 }
 
-""" % (pingonly_template, ping_command, check_icmp_arguments_of(hostname), extra_service_conf_of(hostname, "PING"), hostname))
+""" % (pingonly_template, descr, ping_command, arguments, extra_service_conf_of(hostname, descr), hostname))
 
 
 def verify_cluster_address_family(hostname):

@@ -1611,7 +1611,8 @@ multisite_painters["host_custom_vars"] = {
     "title"   : _("Host custom variables"),
     "columns" : [ "host_custom_variables" ],
     "groupby" : lambda row: tuple(row["host_custom_variables"].items()),
-    "paint"   : lambda row: paint_custom_vars('host', row, [ 'FILENAME', 'TAGS', 'ADDRESS_4', 'ADDRESS_6', 'ADDRESS_FAMILY' ]),
+    "paint"   : lambda row: paint_custom_vars('host', row, [ 'FILENAME', 'TAGS', 'ADDRESS_4', 'ADDRESS_6',
+                                                             'ADDRESS_FAMILY', 'NODEIPS', 'NODEIPS_4', 'NODEIPS_6' ]),
 }
 
 

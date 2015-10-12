@@ -558,11 +558,12 @@ def snmp_decode_string(text):
 #   '----------------------------------------------------------------------'
 
 def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False, context_name = None):
+    protospec = snmp_proto_spec(hostname)
     portspec = snmp_port_spec(hostname)
     command = snmp_walk_command(hostname)
     if context_name != None:
         command += " -n %s" % quote_shell_string(context_name)
-    command += " -OQ -OU -On -Ot %s%s %s" % (ip, portspec, oid)
+    command += " -OQ -OU -On -Ot %s%s%s %s" % (protospec, ip, portspec, oid)
     vverbose('   Running %s\n' % command)
 
     snmp_process = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)

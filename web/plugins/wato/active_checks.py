@@ -688,6 +688,18 @@ def transform_check_http_cert_days(cert_days):
         cert_days = (cert_days, 0)
     return cert_days
 
+ip_address_family_element = ("address_family",
+        DropdownChoice(
+            title = _("IP Address Family"),
+            choices = [
+                (None,   _("Primary Address Family") ),
+                ('ipv4', _("Enforce IPv4") ),
+                ('ipv6', _("Enforce IPv6") ),
+            ],
+            default_value = None
+        ),
+    )
+
 register_rule(group,
     "active_checks:http",
     Tuple(
@@ -750,6 +762,7 @@ register_rule(group,
                                     default_value = 80
                                 )
                             ),
+                            ip_address_family_element,
                             ( "ssl",
                                 FixedValue(
                                     value = True,
@@ -991,6 +1004,7 @@ register_rule(group,
                                     default_value = 443,
                                 ),
                             ),
+                            ip_address_family_element,
                             ( "sni",
                                 FixedValue(
                                     value = True,

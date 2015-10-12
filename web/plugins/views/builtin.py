@@ -1016,7 +1016,7 @@ multisite_builtin_views.update({
                     ('host',                       'host'),
                     ('host_parents',               None),
                     ('host_childs',                None),
-                    ('host_address',               None),
+                    ('host_addresses',             None),
                     ('alias',                      None),
                     ('host_icons',                 None),
 

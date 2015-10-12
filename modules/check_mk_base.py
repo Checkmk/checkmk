@@ -346,7 +346,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
             # If an error with the agent occurs, we still can (and must)
             # try the other nodes.
             try:
-                ipaddress = lookup_ipaddress(node)
+                ipaddress = lookup_ip_address(node)
                 new_info = get_realhost_info(node, ipaddress, checkname,
                                max_cachefile_age == None and cluster_max_cachefile_age or max_cache_age,
                                ignore_check_interval)
@@ -787,7 +787,8 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
         port = agent_port_of(hostname)
 
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s = socket.socket(is_ipv6_primary(hostname) and socket.AF_INET6 or socket.AF_INET,
+                          socket.SOCK_STREAM)
         try:
             s.settimeout(tcp_connect_timeout)
         except:

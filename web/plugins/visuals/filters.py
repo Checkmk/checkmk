@@ -101,38 +101,130 @@ declare_filter(202, FilterUnicode("service_display_name", _("Service alternative
 declare_filter(202, FilterUnicode("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
 
 class FilterIPAddress(Filter):
-    def __init__(self):
-        Filter.__init__(self, "host_address", _("Host IP Address"), "host", ["host_address", "host_address_prefix"], ["host_address"])
+    def __init__(self, what):
+        self._what = what
+
+        if what == "primary":
+            varname = "host_address"
+            title = _("Host address (Primary)")
+            link_columns = ["host_address"]
+        elif what == "ipv4":
+            varname = "host_ipv4_address"
+            title = _("Host address (IPv4)")
+            link_columns = []
+        else:
+            varname = "host_ipv6_address"
+            title = _("Host address (IPv6)")
+            link_columns = []
+
+        # name, title, info, htmlvars, link_columns
+        Filter.__init__(self, varname, title, "host", [varname, varname+"_prefix"], link_columns)
 
     def display(self):
-        html.text_input("host_address")
+        html.text_input(self.htmlvars[0])
         html.write("<br><br>")
         html.begin_radio_group()
-        html.radiobutton("host_address_prefix", "yes", True, _("Prefix match"))
-        html.radiobutton("host_address_prefix", "no", False, _("Exact match"))
+        html.radiobutton(self.htmlvars[1], "yes", True, _("Prefix match"))
+        html.radiobutton(self.htmlvars[1], "no", False, _("Exact match"))
         html.end_radio_group()
 
     def double_height(self):
         return True
 
     def filter(self, infoname):
-        address = html.var("host_address")
+        address = html.var(self.htmlvars[0])
         if address:
-            if html.var("host_address_prefix") == "yes":
-                return "Filter: host_address ~ ^%s\n" % lqencode(address)
+            op = "="
+            if html.var(self.htmlvars[1]) == "yes":
+                op = "~"
+                address = "^" + lqencode(address)
             else:
-                return "Filter: host_address = %s\n" % lqencode(address)
+                address = lqencode(address)
+
+            if self._what == "primary":
+                return "Filter: host_address %s %s\n" % (op, address)
+            else:
+                varname = self._what == "ipv4" and "ADDRESS_4" or "ADDRESS_6"
+                return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
         else:
             return ""
 
     def variable_settings(self, row):
-        return [ ("host_address", row["host_address"]) ]
+        return [ (self.htmlvars[0], row["host_address"]) ]
 
     def heading_info(self):
-        return html.var("host_address")
+        return html.var(self.htmlvars[0])
 
-declare_filter(102, FilterIPAddress())
 
+declare_filter(102, FilterIPAddress(what="primary"))
+declare_filter(102, FilterIPAddress(what="ipv4"))
+declare_filter(102, FilterIPAddress(what="ipv6"))
+
+
+class FilterAddressFamily(Filter):
+    def __init__(self):
+        Filter.__init__(self, name="address_family", title=_("Host address family (Primary)"),
+                        info="host", htmlvars=[ "address_family" ], link_columns=[])
+
+    def display(self):
+        html.begin_radio_group()
+        html.radiobutton("address_family", "4", False, _("IPv4"))
+        html.radiobutton("address_family", "6", False, _("IPv6"))
+        html.radiobutton("address_family", "both", True, _("Both"))
+        html.end_radio_group()
+
+    def filter(self, infoname):
+        family = html.var("address_family", "both")
+        if family == "both":
+            return ""
+        else:
+            return "Filter: host_custom_variables = ADDRESS_FAMILY %s\n" % lqencode(family)
+
+
+declare_filter(103, FilterAddressFamily())
+
+class FilterAddressFamilies(Filter):
+    def __init__(self):
+        Filter.__init__(self,
+            name="address_families", title=_("Host address families"),
+            info="host", htmlvars=[ "address_families", ], link_columns=[])
+
+    def display(self):
+        html.begin_radio_group()
+        html.radiobutton("address_families", "4", False, label="v4")
+        html.radiobutton("address_families", "6", False, label="v6")
+        html.radiobutton("address_families", "both", False, label=_("both"))
+        html.radiobutton("address_families", "4_only", False, label=_("only v4"))
+        html.radiobutton("address_families", "6_only", False, label=_("only v6"))
+        html.radiobutton("address_families", "", True, label=_("(ignore)"))
+        html.end_radio_group()
+
+    def filter(self, infoname):
+        family = html.var("address_families")
+        if not family:
+            return ""
+
+        elif family == "both":
+            return "Filter: host_custom_variables ~ TAGS (^|[ ])ip-v4($|[ ])\n" \
+                   "Filter: host_custom_variables ~ TAGS (^|[ ])ip-v6($|[ ])\n"
+        else:
+            if family[0] == "4":
+                tag = "ip-v4"
+            elif family[0] == "6":
+                tag = "ip-v6"
+            filt = "Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])\n" % lqencode(tag)
+
+            if family.endswith("_only"):
+                if family[0] == "4":
+                    tag = "ip-v6"
+                elif family[0] == "6":
+                    tag = "ip-v4"
+                filt += "Filter: host_custom_variables !~ TAGS (^|[ ])%s($|[ ])\n" % lqencode(tag)
+
+            return filt
+
+
+declare_filter(103, FilterAddressFamilies())
 
 # Helper that retrieves the list of host/service/contactgroups via Livestatus
 # use alias by default but fallback to name if no alias defined

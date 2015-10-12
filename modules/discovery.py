@@ -247,12 +247,10 @@ def check_discovery(hostname, ipaddress=None):
                                         on_error="raise",
                                         ipaddress=ipaddress)
         except socket.gaierror, e:
-            if e[0] == -2:
+            if e[0] == -2 and not opt_debug:
                 # Don't crash on unknown host name, it may be provided by the user
-                sys.stderr.write("Discovery failed: %s\n" % e[1])
-                return
-            else:
-                raise
+                raise MKAgentError(e[1])
+            raise
 
         # generate status and infotext
         status = 0
@@ -558,7 +556,7 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
 # "raise"  -> let the exception come through
 def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error, ipaddress=None):
     if ipaddress == None:
-        ipaddress = lookup_ipaddress(hostname)
+        ipaddress = lookup_ip_address(hostname)
 
     # Check types not specified (via --checks=)? Determine automatically
     if not check_types:
@@ -596,7 +594,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
             try:
                 for item, paramstring in discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
                     discovered_services.append((check_type, item, paramstring))
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, MKAgentError, MKSNMPError):
                 raise
             except Exception, e:
                 if opt_debug:
@@ -933,7 +931,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     if is_cluster(hostname):
         ipaddress = None
     else:
-        ipaddress = lookup_ipaddress(hostname)
+        ipaddress = lookup_ip_address(hostname)
 
     table = []
     for (check_type, item), (check_source, paramstring) in services.items():

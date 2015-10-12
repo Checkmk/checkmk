@@ -568,7 +568,7 @@ def automation_diag_host(args):
 
     if not ipaddress:
         try:
-            ipaddress = lookup_ipaddress(hostname)
+            ipaddress = lookup_ipv4_address(hostname)
         except:
             raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
@@ -1146,16 +1146,14 @@ def load_resource_file(macros):
         if opt_debug:
             raise
 
+
 # Simulate replacing some of the more important macros of hosts. We
 # cannot use dynamic macros, of course. Note: this will not work
 # without OMD, since we do not know the value of $USER1$ and $USER2$
 # here. We could read the Nagios resource.cfg file, but we do not
 # know for sure the place of that either.
 def replace_core_macros(hostname, commandline):
-    macros  = {
-        "$HOSTNAME$"    : hostname,
-        "$HOSTADDRESS$" : lookup_ipaddress(hostname),
-    }
+    macros = get_basic_host_macros_from_attributes(hostname, get_host_attributes(hostname))
     load_resource_file(macros)
     for varname, value in macros.items():
         commandline = commandline.replace(varname, value)

@@ -600,6 +600,22 @@ def is_ping_host(hostname):
 def is_dual_host(hostname):
     return is_tcp_host(hostname) and is_snmp_host(hostname)
 
+def is_ipv4_host(hostname):
+    # Either explicit IPv4 or implicit (when host is not an IPv6 host)
+    return "ip-v4" in tags_of_host(hostname) or "ip-v6" not in tags_of_host(hostname)
+
+def is_ipv6_host(hostname):
+    return "ip-v6" in tags_of_host(hostname)
+
+def is_ipv6_primary(hostname):
+    dual_stack_host = is_ipv4v6_host(hostname)
+    return (not dual_stack_host and is_ipv6_host(hostname)) \
+            or (dual_stack_host and host_extra_conf(hostname, primary_address_family) == "ipv6")
+
+def is_ipv4v6_host(hostname):
+    tags = tags_of_host(hostname)
+    return "ip-v6" in tags and "ip-v4" in tags
+
 def check_period_of(hostname, service):
     periods = service_extra_conf(hostname, service, check_periods)
     if periods:
@@ -663,6 +679,74 @@ def restore_original_agent_caching_usage():
         check_max_cachefile_age     = orig_check_max_cachefile_age
         cluster_max_cachefile_age   = orig_cluster_max_cachefile_age
         inventory_max_cachefile_age = orig_inventory_max_cachefile_age
+
+
+def get_basic_host_macros_from_attributes(hostname, attrs):
+    macros = {
+        "$HOSTNAME$"    : hostname,
+        "$HOSTADDRESS$" : attrs['address'],
+        "$HOSTALIAS$"   : attrs['alias'],
+    }
+
+    # Add custom macros
+    for macro_name, value in attrs.items():
+        if macro_name[0] == '_':
+            macros["$HOST" + macro_name + "$"] = value
+
+    return macros
+
+
+def get_host_attributes(hostname):
+    attrs = extra_host_attributes(hostname)
+
+    if "alias" not in attrs:
+        attrs["alias"] = alias_of(hostname, hostname)
+
+    # Now lookup configured IP addresses
+    if is_ipv4_host(hostname):
+        attrs["_ADDRESS_4"] = ip_address_of(hostname, 4)
+    else:
+        attrs["_ADDRESS_4"] = ""
+
+    if is_ipv6_host(hostname):
+        attrs["_ADDRESS_6"] = ip_address_of(hostname, 6)
+    else:
+        attrs["_ADDRESS_6"] = ""
+
+    ipv6_primary = is_ipv6_primary(hostname)
+    if ipv6_primary:
+        attrs["address"]        = attrs["_ADDRESS_6"]
+        attrs["_ADDRESS_FAMILY"] = "6"
+    else:
+        attrs["address"]        = attrs["_ADDRESS_4"]
+        attrs["_ADDRESS_FAMILY"] = "4"
+
+    return attrs
+
+
+def ip_address_of(hostname, family=None):
+    try:
+        return lookup_ip_address(hostname, family)
+    except Exception, e:
+        if is_cluster(hostname):
+            return ""
+        else:
+            failed_ip_lookups.append(hostname)
+            addr = fallback_ip_for(hostname, family)
+            if not ignore_ip_lookup_failures:
+                configuration_warning("Cannot lookup IP address of '%s': %s, using "
+                                      "address %s instead" % (hostname, e, addr))
+            return addr
+
+
+def fallback_ip_for(hostname, family=None):
+    if family == None:
+        family = is_ipv6_primary(hostname) and 6 or 4
+
+    if family == 4:
+        return "0.0.0.0"
+    else:
+        return "::"
 
 
 #.
@@ -733,6 +817,14 @@ def snmp_port_spec(hostname):
     else:
         return ":%d" % port
 
+
+def snmp_proto_spec(hostname):
+    if is_ipv6_primary(hostname):
+        return "udp6:"
+    else:
+        return ""
+
+
 # Returns command lines for snmpwalk and snmpget including
 # options for authentication. This handles communities and
 # authentication for SNMP V3. Also bulkwalk hosts
@@ -802,9 +894,10 @@ def snmp_get_oid(hostname, ipaddress, oid):
         oid_prefix = oid
         commandtype = "get"
 
+    protospec = snmp_proto_spec(hostname)
     portspec = snmp_port_spec(hostname)
     command = snmp_base_command(commandtype, hostname) + \
-              " -On -OQ -Oe -Ot %s%s %s" % (ipaddress, portspec, oid_prefix)
+              " -On -OQ -Oe -Ot %s%s%s %s" % (protospec, ipaddress, portspec, oid_prefix)
 
     if opt_debug:
         sys.stdout.write("Running '%s'\n" % command)
@@ -1182,8 +1275,17 @@ failed_ip_lookups = []
 g_dns_cache = {}
 g_global_caches.append('g_dns_cache')
 
+def lookup_ipv4_address(hostname):
+    return lookup_ip_address(hostname, 4)
+
+def lookup_ipv6_address(hostname):
+    return lookup_ip_address(hostname, 6)
+
 # Determine the IP address of a host
-def lookup_ipaddress(hostname):
+def lookup_ip_address(hostname, family=None):
+    if family == None: # choose primary family
+        family = is_ipv6_primary(hostname) and 6 or 4
+
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if fake_dns:
         return fake_dns
@@ -1191,10 +1293,16 @@ def lookup_ipaddress(hostname):
     # Honor simulation mode und usewalk hosts. Never contact the network.
     elif simulation_mode or opt_use_snmp_walk or \
          (is_usewalk_host(hostname) and is_snmp_host(hostname)):
-        return "127.0.0.1"
+        if family == 4:
+            return "127.0.0.1"
+        else:
+            return "::1"
 
     # Now check, if IP address is hard coded by the user
-    ipa = ipaddresses.get(hostname)
+    if family == 4:
+        ipa = ipaddresses.get(hostname)
+    else:
+        ipa = ipv6addresses.get(hostname)
     if ipa:
         return ipa
 
@@ -1204,39 +1312,39 @@ def lookup_ipaddress(hostname):
         return hostname
 
     # Address has already been resolved in prior call to this function?
-    if hostname in g_dns_cache:
-        return g_dns_cache[hostname]
+    if (hostname, family) in g_dns_cache:
+        return g_dns_cache[(hostname, family)]
 
     # Prepare file based fall-back DNS cache in case resolution fails
     init_ip_lookup_cache()
 
-    cached_ip = g_ip_lookup_cache.get(hostname)
+    cached_ip = g_ip_lookup_cache.get((hostname, family))
     if cached_ip and use_dns_cache:
-        g_dns_cache[hostname] = cached_ip
+        g_dns_cache[(hostname, family)] = cached_ip
         return cached_ip
 
     # Now do the actual DNS lookup
     try:
-        ipa = socket.gethostbyname(hostname)
+        ipa = socket.getaddrinfo(hostname, None, family == 4 and socket.AF_INET or socket.AF_INET6)[0][4][0]
 
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
             if opt_verbose:
-                print "Updating DNS cache for %s: %s" % (hostname, ipa)
-            g_ip_lookup_cache[hostname] = ipa
+                print "Updating IPv%d DNS cache for %s: %s" % (family, hostname, ipa)
+            g_ip_lookup_cache[(hostname, family)] = ipa
             write_ip_lookup_cache()
 
-        g_dns_cache[hostname] = ipa # Update in-memory-cache
+        g_dns_cache[(hostname, family)] = ipa # Update in-memory-cache
         return ipa
 
     except:
         # DNS failed. Use cached IP address if present, even if caching
         # is disabled.
         if cached_ip:
-            g_dns_cache[hostname] = cached_ip
+            g_dns_cache[(hostname, family)] = cached_ip
             return cached_ip
         else:
-            g_dns_cache[hostname] = None
+            g_dns_cache[(hostname, family)] = None
             raise
 
 g_global_caches.append('g_ip_lookup_cache')
@@ -1245,6 +1353,13 @@ def init_ip_lookup_cache():
     if g_ip_lookup_cache is None:
         try:
             g_ip_lookup_cache = eval(file(var_dir + '/ipaddresses.cache').read())
+
+            # be compatible to old caches which were created by Check_MK without IPv6 support
+            if g_ip_lookup_cache and type(g_ip_lookup_cache.keys()[0]) != tuple:
+                new_cache = {}
+                for key, val in g_ip_lookup_cache.items():
+                    new_cache[(key, 4)] = val
+                g_ip_lookup_cache = new_cache
         except:
             g_ip_lookup_cache = {}
 
@@ -1262,26 +1377,28 @@ def do_update_dns_cache():
     updated = 0
     failed = []
 
-    if opt_verbose:
-        print "Updating DNS cache..."
+    verbose("Updating DNS cache...\n")
     for hostname in all_active_hosts():
-        if opt_verbose:
-            sys.stdout.write("%s..." % hostname)
-            sys.stdout.flush()
         # Use intelligent logic. This prevents DNS lookups for hosts
         # with statically configured addresses, etc.
-        try:
-            ip = lookup_ipaddress(hostname)
-            if opt_verbose:
-                sys.stdout.write("%s\n" % ip)
-            updated += 1
-        except Exception, e:
-            failed.append(hostname)
-            if opt_verbose:
-                sys.stdout.write("lookup failed: %s\n" % e)
-            if opt_debug:
-                raise
-            continue
+        for family in [ 4, 6]:
+            if (family == 4 and is_ipv4_host(hostname)) \
+               or (family == 6 and is_ipv6_host(hostname)):
+                verbose("%s (IPv%d)..." % (hostname, family))
+                try:
+                    if family == 4:
+                        ip = lookup_ipv4_address(hostname)
+                    else:
+                        ip = lookup_ipv6_address(hostname)
+
+                    verbose("%s\n" % ip)
+                    updated += 1
+                except Exception, e:
+                    failed.append(hostname)
+                    verbose("lookup failed: %s\n" % e)
+                    if opt_debug:
+                        raise
+                    continue
 
     return updated, failed
 
@@ -1573,7 +1690,7 @@ def host_check_command(hostname, ip, is_clust):
     if value == "smart" and not is_clust:
         return "check-mk-host-smart"
 
-    elif value in [ "ping", "smart" ]:
+    elif value in [ "ping", "smart" ]: # Cluster host
         ping_args = check_icmp_arguments_of(hostname)
         if is_clust and ip: # Do check cluster IP address if one is there
             return "check-mk-host-ping!%s" % ping_args
@@ -1626,15 +1743,22 @@ def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, param
         return list(actions)
 
 
-def check_icmp_arguments_of(hostname):
+def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
     values = host_extra_conf(hostname, ping_levels)
     levels = {}
     for value in values[::-1]: # make first rules have precedence
         levels.update(value)
-    if len(levels) == 0:
+    if not add_defaults and not levels:
         return ""
 
+    if family == None:
+        family = is_ipv6_primary(hostname) and 6 or 4
+
     args = []
+
+    if family == 6:
+        args.append("-6")
+
     rta = 200, 500
     loss = 80, 100
     for key, value in levels.items():
@@ -2110,15 +2234,18 @@ def create_nagios_hostdefs(outfile, hostname):
 
     # Determine IP address. For cluster hosts this is optional.
     # A cluster might have or not have a service ip address.
-    try:
-        ip = lookup_ipaddress(hostname)
-    except:
-        if not is_clust:
-            if ignore_ip_lookup_failures:
-                failed_ip_lookups.append(hostname)
+    attrs = get_host_attributes(hostname)
+    if not is_clust and attrs["address"] in [ "0.0.0.0", "::" ]:
+        if ignore_ip_lookup_failures:
+            failed_ip_lookups.append(hostname)
+        else:
+            if is_ipv6_primary(hostname):
+                varname = "ip6addresses"
             else:
-                raise MKGeneralException("Cannot determine ip address of %s. Please add to ipaddresses." % hostname)
-        ip = None
+                varname = "ipaddresses"
+            raise MKGeneralException("Cannot determine ip address of %s. Please add to %s." %
+                                                                           (hostname, varname))
+    ip = attrs["address"]
 
     #   _
     #  / |
@@ -2130,8 +2257,14 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("\ndefine host {\n")
     outfile.write("  host_name\t\t\t%s\n" % hostname)
     outfile.write("  use\t\t\t\t%s\n" % (is_clust and cluster_template or host_template))
-    outfile.write("  address\t\t\t%s\n" % (ip and make_utf8(ip) or "0.0.0.0"))
+    outfile.write("  address\t\t\t%s\n" % (ip and make_utf8(ip) or fallback_ip_for(hostname)))
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
+
+    # Add custom macros
+    for key, value in attrs.items():
+        if key[0] == '_':
+            tabs = len(key) > 13 and "\t\t" or "\t\t\t"
+            outfile.write("  %s%s%s\n" % (key, tabs, value))
 
     # Host check command might differ from default
     command = host_check_command(hostname, ip, is_clust)
@@ -2173,11 +2306,13 @@ def create_nagios_hostdefs(outfile, hostname):
 
     # Special handling of clusters
     if is_clust:
+        verify_cluster_address_family(hostname)
+
         nodes = nodes_of(hostname)
         for node in nodes:
             if node not in all_active_realhosts():
                 raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, hostname))
-        node_ips = [ lookup_ipaddress(h) for h in nodes ]
+        node_ips = [ lookup_ip_address(h) for h in nodes ]
         alias = "cluster of %s" % ", ".join(nodes)
         outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
         if not extra_conf_parents:
@@ -2211,10 +2346,15 @@ def create_nagios_hostdefs(outfile, hostname):
         outfile.write("  host_name\t\t\t%s\n" % summary_hostname(hostname))
         outfile.write("  use\t\t\t\t%s-summary\n" % (is_clust and cluster_template or host_template))
         outfile.write("  alias\t\t\t\tSummary of %s\n" % alias)
-        outfile.write("  address\t\t\t%s\n" % (ip and ip or "0.0.0.0"))
+        outfile.write("  address\t\t\t%s\n" % (ip and ip or fallback_ip(hostname)))
         outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
         outfile.write("  __REALNAME\t\t\t%s\n" % hostname)
         outfile.write("  parents\t\t\t%s\n" % hostname)
+
+        # Add custom macros
+        for key, value in attrs.items():
+            if key[0] == '_':
+                outfile.write("  %s\t\t\t%s\n" % (key, value))
 
         if path:
             outfile.write("  _FILENAME\t\t\t%s\n" % path)
@@ -2628,6 +2768,29 @@ define service {
 }
 
 """ % (pingonly_template, ping_command, check_icmp_arguments_of(hostname), extra_service_conf_of(hostname, "PING"), hostname))
+
+
+def verify_cluster_address_family(hostname):
+    cluster_host_family = is_ipv6_primary(hostname) and "IPv6" or "IPv4"
+
+    address_families = [
+        "%s: %s" % (hostname, cluster_host_family),
+    ]
+
+    address_family = cluster_host_family
+    mixed = False
+    for nodename in nodes_of(hostname):
+        family = is_ipv6_primary(nodename) and "IPv6" or "IPv4"
+        address_families.append("%s: %s" % (nodename, family))
+        if address_family == None:
+            address_family = family
+        elif address_family != family:
+            mixed = True
+
+    if mixed:
+        raise MKGeneralException("Cluster '%s' has different primary address families: %s" %
+                                                         (hostname, ", ".join(address_families)))
+
 
 def autodetect_plugin(command_line):
     plugin_name = command_line.split()[0]
@@ -3118,29 +3281,38 @@ no_discovery_possible = None
         output.write("def snmp_credentials_of(hostname):\n   return % s\n\n" % pprint.pformat(snmp_credentials_of(hostname)))
         output.write("def snmp_port_of(hostname):\n   return        % r\n\n" % snmp_port_of(hostname))
     else:
+        output.write("def snmp_proto_spec(hostname):\n    return   % r\n\n" % snmp_proto_spec(hostname))
         output.write("def snmp_port_spec(hostname):\n    return   % r\n\n" % snmp_port_spec(hostname))
         output.write("def snmp_walk_command(hostname):\n   return % r\n\n" % snmp_walk_command(hostname))
 
     # IP addresses
     needed_ipaddresses = {}
+    ipv6_primary_hosts = {}
     nodes = []
     if is_cluster(hostname):
         for node in nodes_of(hostname):
-            ipa = lookup_ipaddress(node)
+            ipa = lookup_ip_address(node)
             needed_ipaddresses[node] = ipa
+            ipv6_primary_hosts[node] = is_ipv6_primary(node)
             nodes.append( (node, ipa) )
+
         try:
-            ipaddress = lookup_ipaddress(hostname) # might throw exception
+            ipaddress = lookup_ip_address(hostname) # might throw exception
             needed_ipaddresses[hostname] = ipaddress
         except:
             ipaddress = None
     else:
-        ipaddress = lookup_ipaddress(hostname) # might throw exception
+        ipaddress = lookup_ip_address(hostname) # might throw exception
         needed_ipaddresses[hostname] = ipaddress
         nodes = [ (hostname, ipaddress) ]
 
+    ipv6_primary_hosts[hostname] = is_ipv6_primary(hostname)
+
     output.write("ipaddresses = %r\n\n" % needed_ipaddresses)
-    output.write("def lookup_ipaddress(hostname):\n   return ipaddresses.get(hostname)\n\n");
+    output.write("def lookup_ip_address(hostname):\n   return ipaddresses.get(hostname)\n\n");
+
+    output.write("ipv6_primary_hosts = %r\n\n" % ipv6_primary_hosts)
+    output.write("def is_ipv6_primary(hostname):\n   return ipv6_primary_hosts.get(hostname, False)\n\n");
 
     # datasource programs. Is this host relevant?
     # ACHTUNG: HIER GIBT ES BEI CLUSTERN EIN PROBLEM!! WIR MUESSEN DIE NODES
@@ -4151,7 +4323,7 @@ def output_plain_hostinfo(hostname):
         return
     if is_tcp_host(hostname):
         try:
-            ipaddress = lookup_ipaddress(hostname)
+            ipaddress = lookup_ip_address(hostname)
             sys.stdout.write(get_agent_info(hostname, ipaddress, 0))
         except MKAgentError, e:
             sys.stderr.write("Problem contacting agent: %s\n" % (e,))
@@ -4239,7 +4411,7 @@ def do_snmpwalk(hostnames):
 
 def do_snmpwalk_on(hostname, filename):
     verbose("%s:\n" % hostname)
-    ip = lookup_ipaddress(hostname)
+    ip = lookup_ipv4_address(hostname)
 
     out = file(filename, "w")
     oids_to_walk = opt_oids
@@ -4276,7 +4448,7 @@ def do_snmpget(oid, hostnames):
                 hostnames.append(host)
 
     for host in hostnames:
-        ip = lookup_ipaddress(host)
+        ip = lookup_ipv4_address(host)
         value = get_single_oid(host, ip, oid)
         sys.stdout.write("%s (%s): %r\n" % (host, ip, value))
 
@@ -4370,24 +4542,52 @@ def dump_all_hosts(hostlist):
     for hostname in hostlist:
         dump_host(hostname)
 
+def ip_address_for_dump_host(hostname, family=None):
+    if is_cluster(hostname):
+        try:
+            ipaddress = lookup_ip_address(hostname, family)
+        except:
+            ipaddress = ""
+    else:
+        try:
+            ipaddress = lookup_ip_address(hostname, family)
+        except:
+            ipaddress = fallback_ip_for(hostname, family)
+    return ipaddress
+
+
 def dump_host(hostname):
     print
     if is_cluster(hostname):
         color = tty_bgmagenta
-        add_txt = " (cluster of " + (",".join(nodes_of(hostname))) + ")"
-        try:
-            ipaddress = lookup_ipaddress(hostname)
-        except:
-            ipaddress = "0.0.0.0"
+        add_txt = " (cluster of " + (", ".join(nodes_of(hostname))) + ")"
     else:
         color = tty_bgblue
-        try:
-            ipaddress = lookup_ipaddress(hostname)
-            add_txt = " (%s)" % ipaddress
-        except:
-            add_txt = " (no DNS, no entry in ipaddresses)"
-            ipaddress = "X.X.X.X"
+        add_txt = ""
     print "%s%s%s%-78s %s" % (color, tty_bold, tty_white, hostname + add_txt, tty_normal)
+
+    ipaddress = ip_address_for_dump_host(hostname)
+
+    addresses = ""
+    if not is_ipv4v6_host(hostname):
+        addresses = ipaddress
+    else:
+        ipv6_primary = is_ipv6_primary(hostname)
+        try:
+            if ipv6_primary:
+                secondary = ip_address_for_dump_host(hostname, 4)
+            else:
+                secondary = ip_address_for_dump_host(hostname, 6)
+        except:
+            secondary = "X.X.X.X"
+
+        addresses = "%s, %s" % (ipaddress, secondary)
+        if ipv6_primary:
+            addresses += " (Primary: IPv6)"
+        else:
+            addresses += " (Primary: IPv4)"
+
+    print tty_yellow + "Addresses:              " + tty_normal + addresses
 
     tags = tags_of_host(hostname)
     print tty_yellow + "Tags:                   " + tty_normal + ", ".join(tags)
@@ -5018,7 +5218,7 @@ def gateway_reachable_via_ping(ip, probes):
 
 def scan_parents_of(hosts, silent=False, settings={}):
     if monitoring_host:
-        nagios_ip = lookup_ipaddress(monitoring_host)
+        nagios_ip = lookup_ipv4_address(monitoring_host)
     else:
         nagios_ip = None
 
@@ -5032,7 +5232,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             sys.stdout.write("%s " % host)
             sys.stdout.flush()
         try:
-            ip = lookup_ipaddress(host)
+            ip = lookup_ipv4_address(host)
             command = "traceroute -w %d -q %d -m %d -n '%s' 2>&1" % (
                 settings.get("timeout", 8),
                 settings.get("probes", 2),
@@ -5185,7 +5385,7 @@ def ip_to_hostname(ip):
         ip_to_hostname_cache = {}
         for host in all_active_realhosts():
             try:
-                ip_to_hostname_cache[lookup_ipaddress(host)] = host
+                ip_to_hostname_cache[lookup_ipv4_address(host)] = host
             except:
                 pass
     return ip_to_hostname_cache.get(ip)
@@ -5408,7 +5608,7 @@ def do_check_keepalive():
                             ipaddress = None
                         else:
                             try:
-                                ipaddress = lookup_ipaddress(hostname)
+                                ipaddress = lookup_address(hostname)
                             except:
                                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
                         ipaddress_cache[hostname] = ipaddress
@@ -6097,7 +6297,7 @@ try:
                     ipaddress = None
                 else:
                     try:
-                        ipaddress = lookup_ipaddress(hostname)
+                        ipaddress = lookup_ip_address(hostname)
                     except:
                         print "Cannot resolve hostname '%s'." % hostname
                         sys.exit(2)

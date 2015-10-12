@@ -1866,6 +1866,7 @@ register_rulegroup("agent", _("Access to Agents"),
    _("Settings concerning the connection to the Check_MK and SNMP agents"))
 
 group = "agent/" + _("General Settings")
+
 register_rule(group,
     "dyndns_hosts",
     title = _("Hosts with dynamic DNS lookup during monitoring"),
@@ -1874,6 +1875,20 @@ register_rule(group,
              "activate the changes. In some rare cases DNS lookups must be done each time "
              "a host is connected to, e.g. when the IP address of the host is dynamic "
              "and can change."))
+
+register_rule(group,
+    "primary_address_family",
+    DropdownChoice(
+        choices = [
+            ("ipv4", _("IPv4")),
+            ("ipv6", _("IPv6")),
+        ],
+        title = _("Primary IP address family of dual-stack hosts"),
+        help = _("When you configure dual-stack host (IPv4 + IPv6) monitoring in Check_MK, "
+                 "normally IPv4 is used as primary address family to communicate with this "
+                 "host. The other family, IPv6, is just being pinged. You can use this rule "
+                 "to invert this behaviour to use IPv6 as primary address family.")))
+
 group = "agent/" + _("SNMP")
 
 _snmpv3_auth_elements = [

@@ -1343,10 +1343,78 @@ multisite_painters["alias"] = {
 }
 
 multisite_painters["host_address"] = {
-    "title"   : _("Host IP address"),
+    "title"   : _("Host address (Primary)"),
     "short"   : _("IP address"),
     "columns" : ["host_address"],
     "paint"   : lambda row: ("", row["host_address"]),
+}
+
+multisite_painters["host_ipv4_address"] = {
+    "title"   : _("Host address (IPv4)"),
+    "short"   : _("IPv4 address"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : lambda row: paint_custom_var('host', 'ADDRESS_4', row),
+}
+
+multisite_painters["host_ipv6_address"] = {
+    "title"   : _("Host address (IPv6)"),
+    "short"   : _("IPv6 address"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : lambda row: paint_custom_var('host', 'ADDRESS_6', row),
+}
+
+
+def paint_host_addresses(row):
+    custom_vars = dict(zip(row["host_custom_variable_names"],
+                           row["host_custom_variable_values"]))
+
+    if custom_vars.get("ADDRESS_FAMILY", "4") == "4":
+        primary   = custom_vars["ADDRESS_4"]
+        secondary = custom_vars["ADDRESS_6"]
+    else:
+        primary   = custom_vars["ADDRESS_6"]
+        secondary = custom_vars["ADDRESS_4"]
+
+    if secondary:
+        secondary = " (%s)" % secondary
+    return "", primary + secondary
+
+
+multisite_painters["host_addresses"] = {
+    "title"   : _("Host addresses"),
+    "short"   : _("IP addresses"),
+    "columns" : [ "host_address", "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : paint_host_addresses,
+}
+
+multisite_painters["host_address_family"] = {
+    "title"   : _("Host address family (Primary)"),
+    "short"   : _("Address family"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : lambda row: paint_custom_var('host', 'ADDRESS_FAMILY', row),
+}
+
+
+def paint_host_address_families(row):
+    custom_vars = dict(zip(row["host_custom_variable_names"],
+                           row["host_custom_variable_values"]))
+
+    primary = custom_vars.get("ADDRESS_FAMILY", "4")
+
+    families = [primary]
+    if primary == "6" and custom_vars["ADDRESS_4"]:
+        families.append("4")
+    elif primary == "4" and custom_vars["ADDRESS_6"]:
+        families.append("6")
+
+    return "", ", ".join(families)
+
+
+multisite_painters["host_address_families"] = {
+    "title"   : _("Host address families"),
+    "short"   : _("Address families"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : paint_host_address_families,
 }
 
 def paint_svc_count(id, count):
@@ -1543,7 +1611,8 @@ multisite_painters["host_custom_vars"] = {
     "title"   : _("Host custom variables"),
     "columns" : [ "host_custom_variables" ],
     "groupby" : lambda row: tuple(row["host_custom_variables"].items()),
-    "paint"   : lambda row: paint_custom_vars('host', row, [ 'FILENAME', 'TAGS']),
+    "paint"   : lambda row: paint_custom_vars('host', row, [ 'FILENAME', 'TAGS', 'ADDRESS_4', 'ADDRESS_6',
+                                                             'ADDRESS_FAMILY', 'NODEIPS', 'NODEIPS_4', 'NODEIPS_6' ]),
 }
 
 

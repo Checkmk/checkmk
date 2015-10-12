@@ -572,6 +572,7 @@ def load_hosts_file(folder):
             "all_hosts"                 : [],
             "clusters"                  : {},
             "ipaddresses"               : {},
+            "ipv6addresses"             : {},
             "explicit_snmp_communities" : {},
             "extra_host_conf"           : { "alias" : [] },
             "extra_service_conf"        : { "_WATO" : [] },
@@ -600,14 +601,15 @@ def load_hosts_file(folder):
                 # Some of the attributes are handled with special care. We do not
                 # want them to be redundant in the configuration file. We
                 # want to stay compatible with check_mk.
-                ipaddress = variables["ipaddresses"].get(hostname)
                 aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"])
                 if len(aliases) > 0:
                     alias = aliases[0]
                 else:
                     alias = None
                 host["alias"]           = alias
-                host["ipaddress"]       = ipaddress
+
+                host["ipaddress"]       = variables["ipaddresses"].get(hostname)
+                host["ipv6address"]     = variables["ipv6addresses"].get(hostname)
                 host["snmp_community"]  = variables["explicit_snmp_communities"].get(hostname)
 
                 # Retrieve setting for each individual host tag
@@ -671,7 +673,8 @@ def save_hosts(folder = None):
 
     all_hosts = [] # list of [Python string for all_hosts]
     clusters = [] # tuple list of (Python string, nodes)
-    ipaddresses = {}
+    ipv4_addresses = {}
+    ipv6_addresses = {}
     explicit_snmp_communities = {}
     hostnames = hosts.keys()
     hostnames.sort()
@@ -684,7 +687,8 @@ def save_hosts(folder = None):
 
         host = cleaned_hosts[hostname]
         effective = effective_attributes(host, folder)
-        ipaddress      = effective.get("ipaddress")
+        ipv4_address   = effective.get("ipaddress")
+        ipv6_address   = effective.get("ipv6address")
         snmp_community = effective.get("snmp_community")
 
         # Compute tags from settings of each individual tag. We've got
@@ -709,8 +713,10 @@ def save_hosts(folder = None):
         else:
             all_hosts.append(hostentry)
 
-        if ipaddress:
-            ipaddresses[hostname] = ipaddress
+        if ipv4_address:
+            ipv4_addresses[hostname] = ipv4_address
+        if ipv6_address:
+            ipv6_addresses[hostname] = ipv6_address
         if snmp_community:
             explicit_snmp_communities[hostname] = snmp_community
 
@@ -753,10 +759,16 @@ def save_hosts(folder = None):
             out.write('\n  %s : %s,\n' % (entry, repr(nodes)))
         out.write("})\n")
 
-    if len(ipaddresses) > 0:
-        out.write("\n# Explicit IP addresses\n")
+    if len(ipv4_addresses) > 0:
+        out.write("\n# Explicit IPv4 addresses\n")
         out.write("ipaddresses.update(")
-        out.write(pprint.pformat(ipaddresses))
+        out.write(pprint.pformat(ipv4_addresses))
+        out.write(")\n")
+
+    if len(ipv6_addresses) > 0:
+        out.write("\n# Explicit IPv6 addresses\n")
+        out.write("ipv6addresses.update(")
+        out.write(pprint.pformat(ipv6_addresses))
         out.write(")\n")
 
     if len(explicit_snmp_communities) > 0:
@@ -6436,10 +6448,10 @@ class ContactGroupsAttribute(Attribute):
 # Also make sure that the tags are reconfigured as soon as the
 # configuration of the tags has changed.
 def declare_host_tag_attributes():
-    global configured_host_tags
+    global currently_configured_host_tags
     global host_attributes
 
-    if configured_host_tags != config.wato_host_tags:
+    if currently_configured_host_tags != configured_host_tags():
         # Remove host tag attributes from list, if existing
         host_attributes = [ (attr, topic)
                for (attr, topic)
@@ -6451,7 +6463,7 @@ def declare_host_tag_attributes():
             if attr.name().startswith("tag_"):
                 del host_attribute[attr.name()]
 
-        for topic, grouped_tags in group_hosttags_by_topic(config.wato_host_tags):
+        for topic, grouped_tags in group_hosttags_by_topic(configured_host_tags()):
             for entry in grouped_tags:
                 # if the entry has o fourth component, then its
                 # the tag dependency defintion.
@@ -6477,7 +6489,7 @@ def declare_host_tag_attributes():
                         depends_on_roles = depends_on_roles,
                         topic = topic)
 
-        configured_host_tags = config.wato_host_tags
+        currently_configured_host_tags = configured_host_tags()
 
 def undeclare_host_tag_attribute(tag_id):
     attrname = "tag_" + tag_id
@@ -6554,7 +6566,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
     # Make sure, that the topics "Basic settings" and host tags
     # are always show first.
     topics = [None]
-    if len(config.wato_host_tags):
+    if configured_host_tags():
         topics.append(_("Host tags"))
 
     # The remaining topics are shown in the order of the
@@ -12350,15 +12362,11 @@ def automation_push_snapshot():
         create_distributed_wato_file(site_id, mode)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
 
-        # Restart monitoring core, if neccessary
+        # Restart/reload monitoring core, if neccessary
         if html.var("restart", "no") == "yes":
             configuration_warnings = check_mk_local_automation(config.wato_activation_method)
         else:
             configuration_warnings = []
-
-        # Reload event console, if we have one
-        if config.mkeventd_enabled:
-            mkeventd_reload()
 
         return configuration_warnings
     except Exception, e:
@@ -13730,6 +13738,7 @@ def mode_hosttags(phase):
         return
 
     hosttags, auxtags = load_hosttags()
+    builtin_hosttags, builtin_auxtags = load_builtin_hosttags()
 
     if phase == "action":
         # Deletion of tag groups
@@ -13818,7 +13827,7 @@ def mode_hosttags(phase):
                 log_pending(SYNCRESTART, None, "edit-hosttags", _("Changed order of host tag groups"))
         return
 
-    if len(hosttags) + len(auxtags) == 0:
+    if not hosttags + auxtags:
         render_main_menu([
             ("edit_hosttag", _("Create new tag group"), "new", "hosttags",
                 _("Each host tag group will create one dropdown choice in the host configuration.")),
@@ -13827,30 +13836,43 @@ def mode_hosttags(phase):
             ])
 
     else:
-        table.begin("hosttags", _("Host tag groups"),
-                    help = (_("Host tags are the basis of Check_MK's rule based configuration. "
-                             "If the first step you define arbitrary tag groups. A host "
-                             "has assigned exactly one tag out of each group. These tags can "
-                             "later be used for defining parameters for hosts and services, "
-                             "such as <i>disable notifications for all hosts with the tags "
-                             "<b>Network device</b> and <b>Test</b></i>.")),
-                    empty_text = _("You haven't defined any tag groups yet."),
-                    searchable = False, sortable = False)
+        render_host_tag_list(hosttags, builtin_hosttags)
+        render_aux_tag_list(auxtags, builtin_auxtags)
 
-        if hosttags:
-            for nr, entry in enumerate(hosttags):
-                tag_id, title, choices = entry[:3] # fourth: tag dependency information
-                topic, title = map(_u, parse_hosttag_title(title))
-                table.row()
+
+def render_host_tag_list(hosttags, builtin_hosttags):
+    table.begin("hosttags", _("Host tag groups"),
+                help = (_("Host tags are the basis of Check_MK's rule based configuration. "
+                         "If the first step you define arbitrary tag groups. A host "
+                         "has assigned exactly one tag out of each group. These tags can "
+                         "later be used for defining parameters for hosts and services, "
+                         "such as <i>disable notifications for all hosts with the tags "
+                         "<b>Network device</b> and <b>Test</b></i>.")),
+                empty_text = _("You haven't defined any tag groups yet."),
+                searchable = False, sortable = False)
+
+    if not hosttags + builtin_hosttags:
+        table.end()
+        return
+
+    for tag_type, tag_list in [ ('custom', hosttags),
+                                ('builtin', builtin_hosttags), ]:
+        for nr, entry in enumerate(tag_list):
+            tag_id, title, choices = entry[:3] # fourth: tag dependency information
+            topic, title = map(_u, parse_hosttag_title(title))
+            table.row()
+            table.cell(_("Actions"), css="buttons")
+            if tag_type == "builtin":
+                html.write("<i>(builtin)</i>")
+            else:
                 edit_url     = make_link([("mode", "edit_hosttag"), ("edit", tag_id)])
                 delete_url   = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
-                table.cell(_("Actions"), css="buttons")
                 if nr == 0:
                     html.empty_icon_button()
                 else:
                     html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
                                 _("Move this tag group one position up"), "up")
-                if nr == len(hosttags) - 1:
+                if nr == len(tag_list) - 1:
                     html.empty_icon_button()
                 else:
                     html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
@@ -13858,38 +13880,50 @@ def mode_hosttags(phase):
                 html.icon_button(edit_url,   _("Edit this tag group"), "edit")
                 html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
-                table.cell(_("ID"), tag_id)
-                table.cell(_("Title"), title)
-                table.cell(_("Topic"), topic or '')
-                table.cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
-                table.cell(_("Choices"), str(len(choices)))
-                table.cell(_("Demonstration"), sortable=False)
-                html.begin_form("tag_%s" % tag_id)
-                host_attribute["tag_%s" % tag_id].render_input(None)
-                html.end_form()
+            table.cell(_("ID"), tag_id)
+            table.cell(_("Title"), title)
+            table.cell(_("Topic"), topic or '')
+            table.cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
+            table.cell(_("Choices"), str(len(choices)))
+            table.cell(_("Demonstration"), sortable=False)
+            html.begin_form("tag_%s" % tag_id)
+            host_attribute["tag_%s" % tag_id].render_input(None)
+            html.end_form()
+    table.end()
+
+
+
+def render_aux_tag_list(auxtags, builtin_auxtags):
+    table.begin("auxtags", _("Auxiliary tags"),
+                help = _("Auxiliary tags can be attached to other tags. That way "
+                         "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
+                         "get also the tag <tt>tcp</tt>. This makes the configuration of "
+                         "your hosts easier."),
+                empty_text = _("You haven't defined any auxiliary tags."),
+                searchable = False)
+
+    if not auxtags:
         table.end()
+        return
 
-        table.begin("auxtags", _("Auxiliary tags"),
-                    help = _("Auxiliary tags can be attached to other tags. That way "
-                             "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
-                             "get also the tag <tt>tcp</tt>. This makes the configuration of "
-                             "your hosts easier."),
-                    empty_text = _("You haven't defined any auxiliary tags."),
-                    searchable = False)
-
-        if auxtags:
-            for nr, (tag_id, title) in enumerate(auxtags):
-                table.row()
-                topic, title = parse_hosttag_title(title)
+    for tag_type, tag_list in [ ('custom', auxtags),
+                                ('builtin', builtin_auxtags), ]:
+        for nr, (tag_id, title) in enumerate(tag_list):
+            table.row()
+            topic, title = parse_hosttag_title(title)
+            table.cell(_("Actions"), css="buttons")
+            if tag_type == "builtin":
+                html.write("<i>(builtin)</i>")
+            else:
                 edit_url     = make_link([("mode", "edit_auxtag"), ("edit", nr)])
                 delete_url   = make_action_link([("mode", "hosttags"), ("_delaux", nr)])
-                table.cell(_("Actions"), css="buttons")
                 html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
                 html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
-                table.cell(_("ID"), tag_id)
-                table.cell(_("Title"), _u(title))
-                table.cell(_("Topic"), _u(topic) or '')
-        table.end()
+            table.cell(_("ID"), tag_id)
+
+            table.cell(_("Title"), _u(title))
+            table.cell(_("Topic"), _u(topic) or '')
+    table.end()
 
 
 def mode_edit_auxtag(phase):
@@ -13940,7 +13974,7 @@ def mode_edit_auxtag(phase):
                 title = '%s/%s' % (topic, title)
 
             # Make sure that this ID is not used elsewhere
-            for entry in config.wato_host_tags:
+            for entry in configured_host_tags():
                 tgid = entry[0]
                 tit  = entry[1]
                 ch   = entry[2]
@@ -14086,7 +14120,7 @@ def mode_edit_hosttag(phase):
                     raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
                 if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
                     raise MKUserError("tag_id", _("Invalid tag group ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-                for entry in config.wato_host_tags:
+                for entry in configured_host_tags():
                     tgid = entry[0]
                     tit  = entry[1]
                     if tgid == tag_id:
@@ -14117,7 +14151,7 @@ def mode_edit_hosttag(phase):
 
                 if id:
                     # Make sure this ID is not used elsewhere
-                    for entry in config.wato_host_tags:
+                    for entry in configured_host_tags():
                         tgid = entry[0]
                         tit  = entry[1]
                         ch   = entry[2]
@@ -14308,7 +14342,8 @@ def export_hosttags(hosttags, auxtags):
 
     # Transform WATO internal data structures into easier usable ones
     hosttags_dict =  {}
-    for id, title, choices in hosttags:
+    for entry in hosttags:
+        id, title, choices = entry[:3]
         tags = {}
         for tag_id, tag_title, tag_auxtags in choices:
             tags[tag_id] = tag_title, tag_auxtags
@@ -14395,6 +14430,54 @@ def load_hosttags():
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
         return [], []
+
+
+def configured_host_tags():
+    return config.wato_host_tags + builtin_host_tags
+
+
+def configured_aux_tags():
+    return config.wato_aux_tags + builtin_aux_tags
+
+
+# Construct lists of builtin host tags. Users might already have the
+# tag groups defined. Skip these builtin groups.
+def load_builtin_hosttags():
+    hosttags, auxtags = [], []
+    # First add the regular tag groups
+    for builtin_taggroup in builtin_host_tags:
+        tag_id = builtin_taggroup[0]
+
+        has_customized = bool([ g[0] for g in hosttags
+                                if g[0] == tag_id ])
+        if not has_customized:
+            hosttags.append(builtin_taggroup)
+
+    # then add the aux tags
+    for builtin_auxtag in builtin_aux_tags:
+        tag_id = builtin_auxtag[0]
+
+        has_customized = bool([ g[0] for g in auxtags
+                                if g[0] == tag_id ])
+        if not has_customized:
+            auxtags.append(builtin_auxtag)
+
+    return hosttags, auxtags
+
+
+def is_builtin_host_tag(taggroup_id):
+    for builtin_taggroup in builtin_host_tags:
+        if builtin_taggroup[0] == taggroup_id:
+            return True
+    return False
+
+
+def is_builtin_aux_tag(taggroup_id):
+    for builtin_taggroup in builtin_aux_tags:
+        if builtin_taggroup[0] == taggroup_id:
+            return True
+    return False
+
 
 def save_hosttags(hosttags, auxtags):
     make_nagios_directory(multisite_dir)
@@ -15967,7 +16050,7 @@ def render_condition_editor(tag_specs, varprefix=""):
     if varprefix:
         varprefix += "_"
 
-    if len(config.wato_aux_tags) + len(config.wato_host_tags) == 0:
+    if not configured_aux_tags() + configured_host_tags():
         html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
         return
 
@@ -16014,8 +16097,8 @@ def render_condition_editor(tag_specs, varprefix=""):
             varprefix, id, not div_is_open and "display: none;" or ""))
 
 
-    auxtags = group_hosttags_by_topic(config.wato_aux_tags)
-    hosttags = group_hosttags_by_topic(config.wato_host_tags)
+    auxtags = group_hosttags_by_topic(configured_aux_tags())
+    hosttags = group_hosttags_by_topic(configured_host_tags())
     all_topics = set([])
     for topic, taggroups in auxtags + hosttags:
         all_topics.add(topic)
@@ -16065,7 +16148,7 @@ def get_tag_conditions(varprefix=""):
         varprefix += "_"
     # Main tags
     tag_list = []
-    for entry in config.wato_host_tags:
+    for entry in configured_host_tags():
         id, title, tags = entry[:3]
         mode = html.var(varprefix + "tag_" + id)
         if len(tags) == 1:
@@ -16079,7 +16162,7 @@ def get_tag_conditions(varprefix=""):
             tag_list.append("!" + tagvalue)
 
     # Auxiliary tags
-    for id, title in config.wato_aux_tags:
+    for id, title in configured_aux_tags():
         mode = html.var(varprefix + "auxtag_" + id)
         if mode == "is":
             tag_list.append(id)
@@ -17021,7 +17104,8 @@ def create_sample_config():
       u'Networking Segment',
       [('lan', u'Local network (low latency)', []),
        ('wan', u'WAN (high latency)', []),
-       ('dmz', u'DMZ (low latency, secure access)', [])])]
+       ('dmz', u'DMZ (low latency, secure access)', [])]),
+    ]
 
     wato_aux_tags = \
     [('snmp', u'monitor via SNMP'),
@@ -20229,9 +20313,9 @@ def load_plugins():
         return
 
     # Reset global vars
-    global extra_buttons, configured_host_tags, host_attributes, modules
+    global extra_buttons, currently_configured_host_tags, host_attributes, modules
     extra_buttons = []
-    configured_host_tags = None
+    currently_configured_host_tags = None
     host_attributes = []
     modules = []
 
@@ -20271,6 +20355,7 @@ def load_plugins():
         # ( "dir", "autochecks", defaults.autochecksdir ),
     ]
 
+    register_builtin_host_tags()
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))
@@ -20494,3 +20579,21 @@ def load_plugins():
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = current_language
+
+
+def register_builtin_host_tags():
+    global builtin_host_tags, builtin_aux_tags
+    builtin_host_tags = [
+        ('address_family', u'/IP Address Family',
+            [
+                ('ip-v4-only', u'IPv4 only', ['ip-v4']),
+                ('ip-v6-only', u'IPv6 only', ['ip-v6']),
+                ('ip-v4v6', u'IPv4/IPv6 dual-stack', ['ip-v4', 'ip-v6'])
+            ]
+        ),
+    ]
+
+    builtin_aux_tags = [
+        ('ip-v4', u'IPv4'),
+        ('ip-v6', u'IPv6')
+    ]

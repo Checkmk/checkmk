@@ -2908,5 +2908,5 @@ register_hook("pre-activate-changes", mkeventd_update_notifiation_configuration)
 
 # Only register the reload hook when mkeventd is enabled
 if mkeventd_enabled:
-    register_hook("activate-changes", lambda hosts: mkeventd_reload())
+    register_hook("activate-changes", lambda hosts: config.mkeventd_enabled and mkeventd_reload())
 

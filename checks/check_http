@@ -43,6 +43,17 @@ def check_http_arguments(params):
     if "port" in settings:
         args += ' -p %d' % settings["port"]
 
+    # Use the address family of the monitored host by default
+    address_family = settings.get("address_family")
+    if address_family == None:
+        address_family = is_ipv6_primary(g_hostname) and "ipv6" or "ipv4"
+
+    if address_family == "ipv6":
+        args += " -6"
+        address = "$HOST_ADDRESS_6$"
+    else:
+        address = "$HOST_ADDRESS_4$"
+
     if settings.get("ssl"):
         args += ' --ssl'
 
@@ -51,7 +62,7 @@ def check_http_arguments(params):
         if settings.get("sni"):
             args += ' -H %s' % quote_shell_string(settings['cert_host'])
         else:
-            args += ' -H $HOSTADDRESS$'
+            args += ' -H ' + address
             args += ' -I %s' % quote_shell_string(settings['cert_host'])
 
     if "cert_days" in settings:
@@ -132,7 +143,7 @@ def check_http_arguments(params):
         args += ' -L'
 
     if not omit_ip:
-        args = " -I $HOSTADDRESS$" + args
+        args = " -I " + address + args
     return args
 
 def check_http_desc(params):

@@ -234,7 +234,7 @@ def count_nodes(tree):
 
 def do_inv_for(hostname):
     try:
-        ipaddress = lookup_ipaddress(hostname)
+        ipaddress = lookup_ip_address(hostname)
     except:
         raise MKGeneralException("Cannot resolve hostname '%s'." % hostname)
 

@@ -12362,15 +12362,11 @@ def automation_push_snapshot():
         create_distributed_wato_file(site_id, mode)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
 
-        # Restart monitoring core, if neccessary
+        # Restart/reload monitoring core, if neccessary
         if html.var("restart", "no") == "yes":
             configuration_warnings = check_mk_local_automation(config.wato_activation_method)
         else:
             configuration_warnings = []
-
-        # Reload event console, if we have one
-        if config.mkeventd_enabled:
-            mkeventd_reload()
 
         return configuration_warnings
     except Exception, e:

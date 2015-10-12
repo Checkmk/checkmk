@@ -319,6 +319,16 @@ check_info['logwatch.groups'] = {
 precompile_params['logwatch.groups'] = logwatch_group_precompile
 #.
 
+
+# truncate a file near the specified offset while keeping lines intact
+def truncate_by_line(filename, offset):
+    f = open(filename, 'r+')
+    f.seek(offset)
+    f.readline()  # ensures we don't cut inside a line
+    f.truncate()
+    f.close()
+
+
 def check_logwatch_generic(item, params, loglines, found, groups=False):
     # Create directories, if neccessary
     try:
@@ -354,8 +364,12 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     if found == False and not os.path.exists(logfile):
         return (3, "log not present anymore")
 
+    logfile_size = os.path.getsize(logfile)
     # if logfile has reached maximum size, abort with critical state
-    if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
+    if os.path.exists(logfile) and logfile_size > logwatch_max_filesize:
+        if logfile_size > logwatch_max_filesize * 2:
+            # if the file is far too large, truncate it
+            truncate_by_line(logfile, logwatch_max_filesize)
         return (2, "unacknowledged messages have exceeded max size (%d Bytes)" % logwatch_max_filesize)
 
     # Write out new log lines (no reclassify here. It is done later in general for all logs)

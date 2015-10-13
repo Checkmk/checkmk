@@ -27,7 +27,7 @@ SHELL         = /bin/bash
 VERSION       = 1.2.7i3
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
-COPTIONS      = -s -O2 -Wall -Werror -static -fno-rtti -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'
+COPTIONS      = -s -O2 -Wall -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'
 MKDIR         = mkdir -p
 
 ifeq ($(shell uname),Linux)

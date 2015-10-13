@@ -1074,8 +1074,12 @@ class LDAPUserConnector(UserConnector):
     # by this connector
     def locked_attributes(self):
         locked = set([ 'password' ]) # This attributes are locked in all cases!
-        for key in self._config['active_plugins'].keys():
-            locked.update(ldap_attribute_plugins.get(key, {}).get('lock_attributes', []))
+        for key, params in self._config['active_plugins'].items():
+            lock_attrs = ldap_attribute_plugins.get(key, {}).get('lock_attributes', [])
+            if type(lock_attrs) == list:
+                locked.update(lock_attrs)
+            else: # maby be a function which returns a list
+                locked.update(lock_attrs(params))
         return list(locked)
 
 
@@ -1203,6 +1207,61 @@ def get_connection_choices(add_this=True):
         choices.append((connection['id'], descr))
 
     return choices
+
+
+# This is either the user id or the user distinguished name,
+# depending on the LDAP server to communicate with
+def get_group_member_cmp_val(connection, user_id, ldap_user):
+    return connection.member_attr().lower() == 'memberuid' and user_id or ldap_user['dn']
+
+
+def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):
+    # Figure out how to check group membership.
+    user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
+
+    # Get list of LDAP connections to query
+    connections = set([connection])
+    for connection_id in other_connection_ids:
+        c = get_connection(connection_id)
+        if c:
+            connections.add(c)
+
+    # Load all LDAP groups which have a CN matching one contact
+    # group which exists in WATO
+    ldap_groups = {}
+    for conn in connections:
+        ldap_groups.update(conn.get_group_memberships(cg_names, nested=nested))
+
+    # Now add the groups the user is a member off
+    group_cns = []
+    for dn, group in ldap_groups.items():
+        if user_cmp_val in group['members']:
+            group_cns.append(group['cn'])
+
+    return group_cns
+
+
+group_membership_parameters = [
+    ('nested', FixedValue(
+            title    = _('Handle nested group memberships (Active Directory only at the moment)'),
+            help     = _('Once you enable this option, this plugin will not only handle direct '
+                         'group memberships, instead it will also dig into nested groups and treat '
+                         'the members of those groups as contact group members as well. Please mind '
+                         'that this feature might increase the execution time of your LDAP sync.'),
+            value    = True,
+            totext   = _('Nested group memberships are resolved'),
+        )
+    ),
+    ('other_connections', ListChoice(
+        title = _("Sync group memberships from other connections"),
+        help = _("This is a special feature for environments where user accounts are located "
+                 "in one LDAP directory and groups objects having them as members are located "
+                 "in other directories. You should only enable this feature when you are in this "
+                 "situation and really need it. The current connection is always used."),
+        choices = lambda: get_connection_choices(add_this=False),
+        default_value = [None],
+    )),
+]
 
 
 #.
@@ -1410,27 +1469,12 @@ ldap_attribute_plugins['pager'] = {
 #   '----------------------------------------------------------------------'
 
 def ldap_sync_groups_to_contactgroups(connection, plugin, params, user_id, ldap_user, user):
-    # 0. Figure out how to check group membership.
-    user_cmp_val = connection.member_attr().lower() == 'memberuid' and user_id or ldap_user['dn']
-
-    # 1. Fetch all existing group names in WATO
+    # Gather all group names to search for in LDAP
     cg_names = load_group_information().get("contact", {}).keys()
 
-    # 2. Get list of LDAP connections to query
-    connections = set([connection])
-    for connection_id in params.get("other_connections", []):
-        c = get_connection(connection_id)
-        if c:
-            connections.add(c)
-
-    # 3. Load all LDAP groups which have a CN matching one contact
-    #    group which exists in WATO
-    ldap_groups = {}
-    for conn in connections:
-        ldap_groups.update(conn.get_group_memberships(cg_names, nested = params.get('nested', False)))
-
-    # 4. Only add groups which the user is member of
-    return {'contactgroups': [ g['cn'] for dn, g in ldap_groups.items() if user_cmp_val in g['members']]}
+    return {"contactgroups": get_groups_of_user(connection, user_id, ldap_user, cg_names,
+                                                params.get('nested', False),
+                                                params.get("other_connections", [])) }
 
 
 ldap_attribute_plugins['groups_to_contactgroups'] = {
@@ -1440,27 +1484,103 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
                'contactgroup must match the common name (cn) of the LDAP group.'),
     'sync_func':         ldap_sync_groups_to_contactgroups,
     'lock_attributes':   ['contactgroups'],
-    'parameters': [
-        ('nested', FixedValue(
-                title    = _('Handle nested group memberships (Active Directory only at the moment)'),
-                help     = _('Once you enable this option, this plugin will not only handle direct '
-                             'group memberships, instead it will also dig into nested groups and treat '
-                             'the members of those groups as contact group members as well. Please mind '
-                             'that this feature might increase the execution time of your LDAP sync.'),
-                value    = True,
-                totext   = _('Nested group memberships are resolved'),
-            )
-        ),
-        ('other_connections', ListChoice(
-            title = _("Sync group memberships from other connections"),
-            help = _("This is a special feature for environments where user accounts are located "
-                     "in one LDAP directory and groups objects having them as members are located "
-                     "in other directories. You should only enable this feature when you are in this "
-                     "situation and really need it. The current connection is always used."),
-            choices = lambda: get_connection_choices(add_this=False),
-            default_value = [None],
+    'parameters':        group_membership_parameters,
+}
+
+#.
+#   .--Group-Attrs.--------------------------------------------------------.
+#   |      ____                               _   _   _                    |
+#   |     / ___|_ __ ___  _   _ _ __         / \ | |_| |_ _ __ ___         |
+#   |    | |  _| '__/ _ \| | | | '_ \ _____ / _ \| __| __| '__/ __|        |
+#   |    | |_| | | | (_) | |_| | |_) |_____/ ___ \ |_| |_| |  \__ \_       |
+#   |     \____|_|  \___/ \__,_| .__/     /_/   \_\__|\__|_|  |___(_)      |
+#   |                          |_|                                         |
+#   +----------------------------------------------------------------------+
+#   | Populate user attributes based on group memberships within LDAP      |
+#   '----------------------------------------------------------------------'
+
+def ldap_sync_groups_to_attributes(connection, plugin, params, user_id, ldap_user, user):
+    # Which groups need to be checked whether or not the user is a member?
+    cg_names = list(set([ g["cn"] for g in params["groups"] ]))
+
+    # Get the group names the user is member of
+    groups = get_groups_of_user(connection, user_id, ldap_user, cg_names,
+                              params.get('nested', False),
+                              params.get("other_connections", []))
+
+    # Now construct the user update dictionary
+    update = {}
+
+    # First clean all previously set values from attributes to be synced where
+    # user is not a member of
+    user_attrs = dict(get_user_attributes())
+    for group_spec in params["groups"]:
+        attr_name, value = group_spec["attribute"]
+        if group_spec["cn"] not in groups \
+           and attr_name in user \
+           and attr_name in user_attrs:
+            # not member, but set -> set to default. Maybe it would be cleaner
+            # to just remove the attribute from the user, but the sync plugin
+            # API does not support this at the moment.
+            update[attr_name] = user_attrs[attr_name]['valuespec'].default_value()
+
+    # Set the values of the groups the user is a member of
+    for group_spec in params["groups"]:
+        attr_name, value = group_spec["attribute"]
+        if group_spec["cn"] in groups:
+            # is member, set the configured value
+            update[attr_name] = value
+
+    return update
+
+
+# find out locked attributes depending on configuration
+def ldap_locked_attributes_groups_to_attributes(params):
+    attrs = []
+    for group_spec in params["groups"]:
+        attr_name, value = group_spec["attribute"]
+        attrs.append(attr_name)
+    return attrs
+
+
+def get_user_attribute_choices():
+    choices = []
+    for attr, val in get_user_attributes():
+        choices.append((attr, val['valuespec'].title(), val['valuespec']))
+    return choices
+
+
+ldap_attribute_plugins['groups_to_attributes'] = {
+    'title': _('Groups to custom user attributes'),
+    'help':  _('Sets custom user attributes based on the group memberships in LDAP. This '
+               'plugin can be used to set custom user attributes to specified values '
+               'for all users which are member of a group in LDAP. The specified group '
+               'name must match the common name (CN) of the LDAP group.'),
+    'sync_func':         ldap_sync_groups_to_attributes,
+    'lock_attributes':   ldap_locked_attributes_groups_to_attributes,
+    'parameters': group_membership_parameters + [
+        ('groups', ListOf(
+            Dictionary(
+                elements = [
+                    ('cn', TextUnicode(
+                        title = _("Group<nobr> </nobr>CN"),
+                        size = 40,
+                        allow_empty = False,
+                    )),
+                    ('attribute', CascadingDropdown(
+                        title = _("Attribute to set"),
+                        choices = get_user_attribute_choices,
+                    )),
+                ],
+                optional_keys = [],
+            ),
+            title = _("Groups to synchronize"),
+            help = _("Specify the groups to control the value of a given user attribute. If a user is "
+                     "not a member of a group, the attribute will be left at it's default value. When "
+                     "a single attribute is set by multiple groups and a user is member of multiple "
+                     "of these groups, the later plugin in the list will override the others."),
         )),
-    ],
+    ]
 }
 
 #.
@@ -1487,7 +1607,7 @@ def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, us
     # posixGroup objects use the memberUid attribute to specify the group
     # memberships. This is the username instead of the users DN. So the
     # username needs to be used for filtering here.
-    user_cmp_val = connection.member_attr().lower() == 'memberuid' and user_id or ldap_user['dn']
+    user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
 
     roles = set([])
 

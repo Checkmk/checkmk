@@ -1,0 +1,18 @@
+Title: LDAP: New sync plugin: Groups to custom user attributes
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444722384
+Class: feature
+
+The new LDAP sync plugin can be used to set custom user attributes
+based on the group memberships in LDAP.
+
+This plugin can be used to set custom user attributes to specified values
+for all users which are member of a group in LDAP.
+
+If a user is not a member of a group, the attribute will be left at it's
+default value. When a single attribute is set by multiple groups and a
+user is member of multiple of these groups, the later plugin in the list
+will override the others.

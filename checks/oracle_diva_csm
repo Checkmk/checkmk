@@ -182,7 +182,6 @@ def inventory_oracle_diva_csm_tapes(info):
 
 
 def check_oracle_diva_csm_tapes(item, params, info):
-    pprint.pprint(info)
     blank_tapes = int(info[5][0][0])
     warn, crit = params
     state = blank_tapes <= crit and 2 \

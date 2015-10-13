@@ -43,8 +43,6 @@ def check_akcp_daisy_temp(item, params, info):
             temp = float(rawtemp) / 10
             return check_temperature(temp, params)
 
-    return 3, "Sensor not found in SNMP data"
-
 
 check_info["akcp_daisy_temp"] = {
     'check_function':          check_akcp_daisy_temp,

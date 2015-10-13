@@ -7,6 +7,9 @@
     * 2619 FIX: services_summary: Fixed exception on WATO services summary page...
     * 2658 FIX: logwatch: unacknowledged messages exceeding the max size are now dropped, even if they were already stored due to a previous bug...
 
+    WATO:
+    * 2693 FIX: Restoring backup: fixed crash 'failed to extract tarballs'
+
     Event Console:
     * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters
 

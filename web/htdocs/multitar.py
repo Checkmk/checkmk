@@ -265,7 +265,7 @@ def extract(tar, components):
             try:
                 subtarstream = tar.extractfile(name + ".tar")
             except:
-                pass # may be missing, e.g. sites.tar is only present
+                continue # may be missing, e.g. sites.tar is only present
                      # if some sites have been created.
 
             if what == "dir":

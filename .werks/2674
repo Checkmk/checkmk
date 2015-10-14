@@ -41,7 +41,6 @@ components in the Check_MK environment left which need to be extended to be full
 compatible with IPv6. Some of them are:
 
 LI: Parent scanning (check_mk --scan-parents)
-LI: WATO - Host-Diagnose
 LI: WATO - Most active checks
 LI: Event Console
 LI: Notification Forwarding

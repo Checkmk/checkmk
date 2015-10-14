@@ -568,13 +568,16 @@ def automation_diag_host(args):
 
     if not ipaddress:
         try:
-            ipaddress = lookup_ipv4_address(hostname)
+            ipaddress = lookup_ip_address(hostname)
         except:
             raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
+    ipv6_primary = is_ipv6_primary(hostname)
+
     try:
         if test == 'ping':
-            p = subprocess.Popen('ping -A -i 0.2 -c 2 -W 5 %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
+            base_cmd = ipv6_primary and "ping6" or "ping"
+            p = subprocess.Popen('%s -A -i 0.2 -c 2 -W 5 %s 2>&1' % (base_cmd, ipaddress), shell = True, stdout = subprocess.PIPE)
             response = p.stdout.read()
             return (p.wait(), response)
 
@@ -592,7 +595,8 @@ def automation_diag_host(args):
             if not traceroute_prog:
                 return 1, "Cannot find binary <tt>traceroute</tt>."
             else:
-                p = subprocess.Popen('traceroute -n %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
+                family_flag = ipv6_primary and "-6" or "-4"
+                p = subprocess.Popen('traceroute %s -n %s 2>&1' % (family_flag, ipaddress), shell = True, stdout = subprocess.PIPE)
                 response = p.stdout.read()
                 return (p.wait(), response)
 

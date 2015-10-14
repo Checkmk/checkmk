@@ -24,15 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# .2 cpqHePowerMeterStatus
+#    Description:        This value specifies whether Power Meter reading is supported by this Server .
+#    The following values are supported:
+#       other(1) Could not read the Power Meter status.
+#       present(2) The Power Meter data is available.
+#       absent(3) The Power Meter data is not available at this time.
+
 hp_prolaint_power_default_levels = ( 300, 400 )
 
 def inventory_hp_proliant_power(info):
-    if len(info) > 0 and info[0][0] != '0':
+    if len(info) > 0 and info[0][0] not in ['0', '3']:
         return [ ( None, 'hp_prolaint_power_default_levels') ]
 
 def check_hp_proliant_power(item, params, info):
     status_table = {
         1 : "other",
+        2 : "present",
         3 : "absent",
     }
     status, reading = map(int, info[0])
@@ -43,10 +51,10 @@ def check_hp_proliant_power(item, params, info):
     levels = ''
     if reading >= crit:
         state = 2
-        levels = '( Warning/Critical %s/%s )' % ( warn, crit )
+        levels = ' (Warning/Critical %s/%s)' % ( warn, crit )
     elif reading >= warn:
         state = 1
-        levels = '( Warning/Critical %s/%s )' % ( warn, crit )
+        levels = ' (Warning/Critical %s/%s)' % ( warn, crit )
 
     perf = [ ('watt', reading, warn, crit ) ]
     return state, "Current reading: %d Watt" % reading + levels, perf

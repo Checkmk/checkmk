@@ -45,7 +45,7 @@ def do_automation(cmd, args):
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
-            read_config_files()
+            read_config_files(validate_hosts=False)
             if cmd == "try-inventory":
                 result = automation_try_discovery(args)
             elif cmd == "inventory":
@@ -408,9 +408,15 @@ def automation_restart(job = "restart", use_rushd = True):
         try:
             if monitoring_core == "nagios":
                 create_nagios_config(file(objects_file, "w"))
-                configuration_warnings = None # not supported
+                configuration_warnings = [] # not supported
             else:
                 configuration_warnings = do_create_cmc_config(opt_cmc_relfilename, use_rushd = use_rushd)
+
+            duplicates = duplicate_hosts()
+            if duplicates:
+                configuration_warnings.append(
+                      "The following host names have duplicates: %s. "
+                      "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
 
             if "do_bake_agents" in globals() and bake_agents_on_restart:
                 do_bake_agents()

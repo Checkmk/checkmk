@@ -1,0 +1,13 @@
+Title: Do not allow adding of duplicate hosts anymore
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444824195
+Class: feature
+
+WATO now makes sure that you cannot add a host with a name that already
+exists in some folder anymore. That avoids problems when later activating
+changes (where duplicate hosts are not allowed anyway).  Note: In previous
+versions you <i>could</i> have created a host with the same name on different
+sites. This is not possible anymore.

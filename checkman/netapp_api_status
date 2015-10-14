@@ -9,5 +9,5 @@ description:
  whereas the other two values result in a {CRIT}.
 
 inventory:
- One check is created.
+ Creates one check
 

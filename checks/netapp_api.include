@@ -25,27 +25,27 @@
 # Boston, MA 02110-1301 USA.
 
 
-# Environ info looks like
-# 50:05:0c:c0:02:20:d1:16 shelf-owned true
-# 50:05:0c:c0:02:20:d1:16 temp-sensor-is-ambient  true    false   false
-# 50:05:0c:c0:02:20:d1:16 temp-sensor-low-warning 10  10  10
-# 50:05:0c:c0:02:20:d1:16 temp-sensor-hi-warning  40  53  53
-# 50:05:0c:c0:02:20:d1:16 temp-sensor-hi-critical 50  63  63
-# 50:05:0c:c0:02:20:d1:16 temp-sensor-current-temperature 28  33  35
-# 50:05:0c:c0:02:20:d1:16 temp-sensor-low-critical 0   0   0
-def netapp_api_parse_info_environ(info):
-    shelfs = {}
-    lines  = iter(info)
+# Transforms all lines into a dictionary.
+# The first key is the dictionary key, unless modified by the custom_keys
+def netapp_api_parse_lines(info, custom_keys = []):
+    instances = {}
+    for line in info:
+        instance = {}
+        name = line[0].split(" ", 1)[1]
+        for element in line:
+            tokens = element.split(" ", 1)
+            instance[tokens[0]] = tokens[1]
 
-    try:
-        while True:
-            line = lines.next()
-            shelf, key, values = line[0], line[1], line[2:]
-            shelfs.setdefault(shelf, {})[key] = values
-    except StopIteration:
-        pass
+        if custom_keys:
+            custom_name = []
+            for key in custom_keys:
+                if key in instance:
+                    custom_name.append(instance[key])
+            name = ".".join(custom_name)
 
-    return shelfs
+        instances[name] = instance
+
+    return instances
 
 # Converts the given info into
 # - A config dictionary with config_key as identifier. If the counter_key of the

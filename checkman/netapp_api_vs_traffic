@@ -1,0 +1,14 @@
+title: NetApp Filer: vServer Traffic Summary Ethernet Interfaces
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the summary of all ethernet interfaces used by a vServer.
+ It is always {OK}.
+
+inventory:
+ Creates one check per vServer
+
+perfdata:
+ Sent/Received data, Sent/Received errors, Send/Received packets

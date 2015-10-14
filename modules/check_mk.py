@@ -1536,6 +1536,18 @@ def all_configured_hosts():
 def all_active_hosts():
     return all_active_realhosts() + all_active_clusters()
 
+def duplicate_hosts():
+    # Sanity check for duplicate hostnames
+    seen_hostnames = set([])
+    duplicates = set([])
+    for hostname in all_active_hosts():
+        if hostname in seen_hostnames:
+            duplicates.add(hostname)
+        else:
+            seen_hostnames.add(hostname)
+    return sorted(list(duplicates))
+
+
 # Returns a list of all host names to be handled by this site
 # hosts of other sitest or disabled hosts are excluded
 all_hosts_untagged = None
@@ -5764,6 +5776,7 @@ def marks_hosts_with_path(old, all, filename):
         if host not in old:
             host_paths[host] = path
 
+
 # Helper functions that determines the sort order of the
 # configuration files. The following two rules are implemented:
 # 1. *.mk files in the same directory will be read
@@ -5779,11 +5792,13 @@ def cmp_config_paths(a, b):
            cmp(len(pa), len(pb)) or \
            cmp(pa, pb)
 
+
 # Abort after an error, but only in interactive mode.
 def interactive_abort(error):
     if sys.stdout.isatty() or opt_interactive:
         sys.stderr.write(error + "\n")
         sys.exit(1)
+
 
 def read_config_files(with_conf_d=True, validate_hosts=True):
     global vars_before_config, final_mk, local_mk, checks
@@ -5845,13 +5860,10 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     collect_hosttags()
 
     if validate_hosts:
-        # Sanity check for duplicate hostnames
-        seen_hostnames = set([])
-        for hostname in all_active_hosts():
-            if hostname in seen_hostnames:
-                sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
-                sys.exit(3)
-            seen_hostnames.add(hostname)
+        duplicates = duplicate_hosts()
+        if duplicates:
+            sys.stderr.write("Error in configuration: duplicate hosts: %s\n" % ", ".join(duplicates))
+            sys.exit(3)
 
     # Add WATO-configured explicit checks to (possibly empty) checks
     # statically defined in checks.

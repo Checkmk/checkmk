@@ -31,10 +31,15 @@ the only check working vith IPv6 is <tt>check_http</tt>.
 This is the default and recommended way for monitoring dual-stack hosts. You use one
 address family for monitoring the whole system and the other one is just being pinged.
 
-Note: If you use the Check_MK Enterprise Edition togehter with the Micro Core,
+Note: If you use the Check_MK Enterprise Edition together with the Micro Core,
 the Smart PING mechanism is not used for IPv6 hosts at the moment. This mechanism has
 a slightly slower performance, but if you don't have too many IPv6 hosts, this should
 be OK for the beginning.
+
+If you use the xinetd for serving the Check_MK agent output, you need to configure
+xinetd to create an IPv6 socket. By default it only creates an IPv4 socket. If you
+use the Agent Bakery, the baked agents configure xinetd to use the primary IP address
+family of the hosts.
 
 The basic implementation for IPv6 monitoring has been done. But there are several
 components in the Check_MK environment left which need to be extended to be fully

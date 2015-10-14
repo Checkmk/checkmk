@@ -1,0 +1,12 @@
+Title: jolokia_metrics: better handling of situation where agent does not respond
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444828628
+Class: fix
+
+In case the Jolokia agent cannot be queried the Check_MK services does not
+any longer complain about missing agent sections. Instead on the main
+service of the instance goes CRIT and all other services will be skipped
+and become stale. This avoids bogus notifcations.

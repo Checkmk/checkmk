@@ -25,17 +25,20 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<netapp_api_aggr:sep(9)>>>
-# aggregation aggr0_root_n1       size-available 940666880        size-total 1793064960
-# aggregation aggr0_root_n2       size-available 940556288        size-total 1793064960
-# aggregation aggr1_n1    size-available 2915315712       size-total 9437184000
-# aggregation aggr1_n2    size-available 2936561664       size-total 9437184000
+# [config_instance]       aggr-list-info
+# aggregates
+#   aggr-info
+#     name        aggr0
+#     size-total  6606028800
+#     size-available      5707771904
 
 def inventory_netapp_api_aggr(parsed):
-    for name in parsed.keys():
-        yield name, {}
+    aggrs = parsed.get("aggr-list-info")
+    return [ (values.get("name"), {}) for name, values in aggrs.items() if values.get("name") ]
 
 def check_netapp_api_aggr(item, params, parsed):
-    aggr = parsed.get(item)
+    aggrs = parsed.get("aggr-list-info")
+    aggr  = aggrs.get(item)
     if not aggr:
         return (3, "Aggregation not found in agent output")
 
@@ -46,7 +49,8 @@ def check_netapp_api_aggr(item, params, parsed):
 
 check_info["netapp_api_aggr"] = {
     'check_function'          : check_netapp_api_aggr,
-    'parse_function'          : netapp_api_parse_lines,
+    'parse_function'          : lambda info: netapp_api_convert_info(info,
+                                         configs = {"aggr-list-info": {"block-name": "aggr-info", "key": "name"}}),
     'inventory_function'      : inventory_netapp_api_aggr,
     'service_description'     : 'Aggregation %s',
     'group'                   : 'filesystem',

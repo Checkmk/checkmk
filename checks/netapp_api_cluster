@@ -25,14 +25,26 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<netapp_api_cluster:sep(9)>>>
-# current-time    1443882397
+# [config_instance] cf-status
+# current-time    1415200211
 # current-mode    non_ha
-# is-enabled      true
+# is-enabled  true
+# partner
 # state   ERROR
-# is-interconnect-up      false
-# partner-in-headswap     false
-# local-in-headswap       false
-# new-partner-sysid       0
+# is-interconnect-up  false
+# partner-in-headswap false
+# local-in-headswap   false
+# new-partner-sysid   0
+#
+# <<<netapp_api_cluster:sep(9)>>>
+# [config_instance]   cf-status
+# current-time    1415280951
+# is-enabled  true
+# partner zmucfd
+# state   CONNECTED
+# time-master-status  unknown
+# is-interconnect-up  true
+
 
 def inventory_netapp_api_cluster(info):
     data = dict([line for line in info if len(line) == 2])

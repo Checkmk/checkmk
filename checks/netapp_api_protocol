@@ -24,36 +24,52 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<netapp_api_protocol:sep(9)>>>
-# protocol nfs nfsv3_write_ops 0   instance_name nfs   nfsv3_read_ops 0
-# protocol nfsv4   instance_name nfsv4 nfsv4_read_ops 0    nfsv4_write_ops 0
-# protocol iscsi   instance_name iscsi iscsi_read_ops 0    iscsi_write_ops 0
-# protocol cifs    instance_name cifs  cifs_read_ops 0 cifs_write_ops 0
-# protocol fcp instance_name fcp   fcp_write_ops 0 fcp_read_ops 0
+#<<<netapp_api_protocol:sep(9)>>>
+#[counters]
+#---new_counter---
+#instance_name   nfsv4
+#nfsv4_read_data  0
+#nfsv4_write_data 0
+#---new_counter---
+#instance_name   iscsi
+#iscsi_read_data  0
+#iscsi_write_data 0
+#---new_counter---
+#instance_name   cifs
+#cifs_read_data   0
+#cifs_write_data  0
+#---new_counter---
+#instance_name   nfs
+#nfsv3_read_data  0
+#nfsv3_write_data 0
 
 
 def inventory_netapp_api_protocol(parsed):
-    for key, values in parsed.items():
-        if len(values) > 2: # only report instances which actuall have infos
-            yield values["instance_name"], None
+    for key in parsed:
+        yield key, None
 
 def check_netapp_api_protocol(item, _no_params, parsed):
     counter_data = parsed.get(item)
     if not counter_data:
          return
 
+    # Fix for nfsv3. The item nfs is internally handled as nfsv3
+    if item == "nfs":
+        item = "nfsv3"
+
+    infotext = ""
     now = time.time()
-    for key, value in counter_data.items():
-        for what in ["read", "write"]:
-            if key.endswith("%s_ops" % what):
-                per_sec = get_rate(key, now, int(value))
-                yield 0, "%s OPS %s" % (what.title(), get_bytes_human_readable(per_sec, 1000, unit = "")), [("%s_ops" % what, per_sec)]
+    for entry, text in [ ("read_ops", "Read OPS"), ("write_ops", "Write OPS") ]:
+        key = "%s_%s" % (item, entry)
+        value = int(counter_data.get(entry, counter_data.get(key, "0")))
+        timedif, per_sec = get_counter("netapp_api_protocol.%s.%s" % (item, entry), now, value)
+        yield 0, "%s %s" % (text, get_bytes_human_readable(per_sec, 1000, unit = "")), [(entry, per_sec)]
 
 
 check_info["netapp_api_protocol"] = {
-    'parse_function'      : netapp_api_parse_lines,
     'check_function'      : check_netapp_api_protocol,
     'inventory_function'  : inventory_netapp_api_protocol,
+    'parse_function'      : lambda info: netapp_api_convert_info(info, counter_key = "instance_name", counter_as_key = True),
     'service_description' : 'Protocol %s',
     'has_perfdata'        : True,
     'includes'            : [ "netapp_api.include" ]

@@ -3355,71 +3355,6 @@ register_check_parameters(
         allow_empty = False),
     "dict",
 )
-
-register_check_parameters(
-    subgroup_networking,
-    "fcp",
-    _("Fibrechannel Interfaces"),
-    Dictionary(
-        elements = [
-            ( "speed",
-              OptionalDropdownChoice(
-                  title = _("Operating speed"),
-                  help = _("If you use this parameter then the check goes warning if the "
-                           "interface is not operating at the expected speed (e.g. it "
-                           "is working with 8Gbit/s instead of 16Gbit/s."),
-                 choices = [
-                    ( None,       _("ignore speed") ),
-                    ( 4000000000,   "4 Gbit/s" ),
-                    ( 8000000000,   "8 Gbit/s" ),
-                    ( 16000000000,  "16 Gbit/s" ) ],
-                 otherlabel = _("specify manually ->"),
-                 explicit = \
-                     Integer(title = _("Other speed in bits per second"),
-                             label = _("Bits per second")))
-            ),
-            ( "traffic",
-              ListOf(CascadingDropdown(
-                      title = _("Direction"),
-                      orientation = "horizontal",
-                      choices = [
-                          ('both', _("In / Out"), vs_interface_traffic()),
-                          ('in',   _("In"),       vs_interface_traffic()),
-                          ('out',  _("Out"),      vs_interface_traffic()),
-                      ]
-                  ),
-                  title = _("Used bandwidth (minimum or maximum traffic)"),
-                  help = _("Setting levels on the used bandwidth is optional. If you do set "
-                           "levels you might also consider using averaging."),
-              )
-            ),
-            ( "read_latency",
-              Levels(
-                  title = _("Read latency"),
-                  unit = _("ms"),
-                  default_value = None,
-                  default_levels = (50.0, 100.0))),
-            ( "write_latency",
-              Levels(
-                  title = _("Write latency"),
-                  unit = _("ms"),
-                  default_value = None,
-                  default_levels = (50.0, 100.0))),
-            ( "latency",
-              Levels(
-                  title = _("Overall latency"),
-                  unit = _("ms"),
-                  default_value = None,
-                  default_levels = (50.0, 100.0))),
-        ]
-    ),
-    TextAscii(
-        title = _("Port specification"),
-        allow_empty = False),
-    "dict",
-)
-
-
 register_check_parameters(
     subgroup_networking,
     "signal_quality",
@@ -6558,31 +6493,6 @@ register_check_parameters(
     ),
     TextAscii( title = _("DRBD device") ),
     match_type = "dict",
-)
-
-register_check_parameters(
-    subgroup_storage,
-    "snapvault",
-    _("NetApp Snapvaults"),
-    Dictionary(
-         elements = [
-             ("lag_time",
-               Tuple(
-                   title = _("Maximum age of lag-time"),
-                   elements = [
-                       Age(title = _("Warning at")),
-                       Age(title = _("Critical at")),
-                    ],
-               ),
-             ),
-         ],
-         optional_keys = False
-    ),
-    TextAscii(
-        title = _("Source Path"),
-        allow_empty = False
-    ),
-    "dict",
 )
 
 register_check_parameters(

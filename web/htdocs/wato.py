@@ -2104,6 +2104,7 @@ def mode_edithost(phase, new, cluster):
             go_to_diag     = html.var("diag_host")
             if html.check_transaction():
                 if new:
+                    validate_host_uniqueness(hostname)
                     add_hosts_to_folder(g_folder, {hostname: host})
                 else:
                     update_hosts_in_folder(g_folder, {hostname: {"set": host}})
@@ -19817,6 +19818,17 @@ def validate_all_hosts(hostnames, force_all = False):
         return hosts_errors
     else:
         return {}
+
+
+def validate_host_uniqueness(host_name):
+    for existing_host_name, existing_host in collect_hosts(g_root_folder).items():
+        if existing_host_name == host_name:
+            folder = existing_host[".folder"]
+            folder_name = get_folder_aliaspath(folder)
+            folder_url = html.makeuri_contextless([("mode", "folder"), ("folder", folder[".path"])])
+            raise MKUserError("host", _('A host with the name <b><tt>%s</tt></b> already '
+                   'exists in the folder <a href="%s">%s</a>.') %
+                     (host_name, folder_url, folder_name))
 
 #.
 #   .--Helpers-------------------------------------------------------------.

@@ -45,7 +45,7 @@ def do_automation(cmd, args):
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
-            read_config_files()
+            read_config_files(validate_hosts=False)
             if cmd == "try-inventory":
                 result = automation_try_discovery(args)
             elif cmd == "inventory":
@@ -408,9 +408,15 @@ def automation_restart(job = "restart", use_rushd = True):
         try:
             if monitoring_core == "nagios":
                 create_nagios_config(file(objects_file, "w"))
-                configuration_warnings = None # not supported
+                configuration_warnings = [] # not supported
             else:
                 configuration_warnings = do_create_cmc_config(opt_cmc_relfilename, use_rushd = use_rushd)
+
+            duplicates = duplicate_hosts()
+            if duplicates:
+                configuration_warnings.append(
+                      "The following host names have duplicates: %s. "
+                      "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
 
             if "do_bake_agents" in globals() and bake_agents_on_restart:
                 do_bake_agents()
@@ -568,13 +574,16 @@ def automation_diag_host(args):
 
     if not ipaddress:
         try:
-            ipaddress = lookup_ipv4_address(hostname)
+            ipaddress = lookup_ip_address(hostname)
         except:
             raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
+    ipv6_primary = is_ipv6_primary(hostname)
+
     try:
         if test == 'ping':
-            p = subprocess.Popen('ping -A -i 0.2 -c 2 -W 5 %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
+            base_cmd = ipv6_primary and "ping6" or "ping"
+            p = subprocess.Popen('%s -A -i 0.2 -c 2 -W 5 %s 2>&1' % (base_cmd, ipaddress), shell = True, stdout = subprocess.PIPE)
             response = p.stdout.read()
             return (p.wait(), response)
 
@@ -592,7 +601,8 @@ def automation_diag_host(args):
             if not traceroute_prog:
                 return 1, "Cannot find binary <tt>traceroute</tt>."
             else:
-                p = subprocess.Popen('traceroute -n %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
+                family_flag = ipv6_primary and "-6" or "-4"
+                p = subprocess.Popen('traceroute %s -n %s 2>&1' % (family_flag, ipaddress), shell = True, stdout = subprocess.PIPE)
                 response = p.stdout.read()
                 return (p.wait(), response)
 

@@ -193,16 +193,16 @@ bool globmatch(const char *pattern, const char *astring)
 }
 
 
-std::string get_last_error_as_string()
+std::string get_win_error_as_string(DWORD error_id)
 {
     //Get the error message, if any.
-    DWORD errorMessageID = ::GetLastError();
-    if(errorMessageID == 0)
+    //DWORD errorMessageID = ::GetLastError();
+    if(error_id == 0)
         return "No error message has been recorded";
 
     LPSTR messageBuffer = NULL;
     size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+                                 NULL, error_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
 
     std::string message(messageBuffer, size);
 

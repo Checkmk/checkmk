@@ -1,0 +1,10 @@
+Title: Added IPv6 support to the windows agent
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444896994
+Class: feature
+
+added support for connecting to the windows agent via IPv6.
+This support is active by default and can be disabled via configuration file.

@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <winsock2.h>
+#include <ws2ipdef.h>
 #include <windows.h>
 #include <winbase.h>
 #include <winreg.h>    // performance counters from registry
@@ -69,6 +70,7 @@
 #include "stringutil.h"
 #include "Environment.h"
 #include "Configuration.h"
+#include "ListenSocket.h"
 #include "types.h"
 #include "wmiHelper.h"
 
@@ -2933,12 +2935,21 @@ void section_check_mk(SOCKET &out, const Environment &env)
         for ( only_from_t::const_iterator it_from = g_config->onlyFrom().begin();
                 it_from != g_config->onlyFrom().end(); ++it_from ) {
             ipspec *is = *it_from;
-            output(out, " %d.%d.%d.%d/%d",
-                    is->address & 0xff,
-                    is->address >> 8 & 0xff,
-                    is->address >> 16 & 0xff,
-                    is->address >> 24 & 0xff,
-                    is->bits);
+            if (is->ipv6) {
+                output(out, " %04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x/%d",
+                        is->ip.v6.address[0], is->ip.v6.address[1],
+                        is->ip.v6.address[2], is->ip.v6.address[3],
+                        is->ip.v6.address[4], is->ip.v6.address[5],
+                        is->ip.v6.address[6], is->ip.v6.address[7],
+                        is->bits);
+            } else {
+                output(out, " %d.%d.%d.%d/%d",
+                        is->ip.v4.address & 0xff,
+                        is->ip.v4.address >> 8 & 0xff,
+                        is->ip.v4.address >> 16 & 0xff,
+                        is->ip.v4.address >> 24 & 0xff,
+                        is->bits);
+            }
         }
         output(out, "\n");
     }
@@ -3283,30 +3294,6 @@ void wsa_startup()
     }
 }
 
-bool check_only_from(uint32_t ip)
-{
-    if (g_config->onlyFrom().size() == 0)
-        return true; // no restriction set
-
-    for (only_from_t::const_iterator it_from = g_config->onlyFrom().begin();
-            it_from != g_config->onlyFrom().end(); ++it_from) {
-        uint32_t signibits = ip & (*it_from)->netmask;
-        if (signibits == (*it_from)->address)
-            return true;
-    }
-    return false;
-}
-
-
-SOCKET RemoveSocketInheritance(SOCKET oldsocket)
-{
-    HANDLE newhandle;
-    DuplicateHandle(GetCurrentProcess(), (HANDLE)oldsocket,
-            GetCurrentProcess(), &newhandle, 0, FALSE,
-            DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS);
-    return (SOCKET)newhandle;
-}
-
 void stop_threads()
 {
     // Signal any threads to shut down
@@ -3327,115 +3314,6 @@ void stop_threads()
     WaitForMultipleObjects(active_thread_count, hThreadArray, TRUE, 5000);
     TerminateJobObject(g_workers_job_object, 0);
 }
-
-void listen_tcp_loop(const Environment &env)
-{
-    // We need to create a socket which listen for incoming connections
-    // but we do not want that it is inherited to child processes (local/plugins)
-    // Therefore we open the socket - this one is inherited by default
-    // Now we duplicate this handle and explicitly say that inheritance is forbidden
-    // and use the duplicate from now on
-    SOCKET tmp_s = socket(AF_INET, SOCK_STREAM, 0);
-    SOCKET s = RemoveSocketInheritance(tmp_s);
-
-    SOCKADDR_IN addr;
-    memset(&addr, 0, sizeof(SOCKADDR_IN));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(g_config->port());
-    addr.sin_addr.s_addr = ADDR_ANY;
-
-    int optval = 1;
-    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval));
-
-    if (SOCKET_ERROR == bind(s, (SOCKADDR *)&addr, sizeof(SOCKADDR_IN))) {
-        fprintf(stderr, "Cannot bind socket to port %d\n", g_config->port());
-        exit(1);
-    }
-
-    if (SOCKET_ERROR == listen(s, 5)) {
-        fprintf(stderr, "Cannot listen to socket\n");
-        exit(1);
-    }
-
-    // Job object for worker jobs. All worker are within this object
-    // and receive a terminate when the agent ends
-    g_workers_job_object = CreateJobObject(NULL, "workers_job");
-
-    // Run all ASYNC scripts on startup, so that their data is available on
-    // the first query of a client. Obviously, this slows down the agent startup...
-    // This procedure is mandatory, since we want to prevent missing agent sections
-    find_scripts(env);
-    collect_script_data(ASYNC);
-    DWORD dwExitCode = 0;
-    while (true)
-    {
-        if (GetExitCodeThread(g_collection_thread, &dwExitCode))
-        {
-            if (dwExitCode != STILL_ACTIVE)
-                break;
-            Sleep(200);
-        }
-        else
-            break;
-    }
-
-    SOCKET connection;
-    // Loop for ever.
-    debug("Starting main loop.");
-    while (!g_should_terminate)
-    {
-        // Das Dreckswindows kann nicht vernuenftig gleichzeitig auf
-        // ein Socket und auf ein Event warten. Weil ich nicht extra
-        // deswegen mit Threads arbeiten will, verwende ich einfach
-        // select() mit einem Timeout und polle should_terminate.
-
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(s, &fds);
-        struct timeval timeout;
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 500000;
-
-        SOCKADDR_IN remote_addr;
-        int addr_len = sizeof(SOCKADDR_IN);
-
-        if (1 == select(1, &fds, NULL, NULL, &timeout))
-        {
-            connection = accept(s, (SOCKADDR *)&remote_addr, &addr_len);
-            connection = RemoveSocketInheritance(connection);
-            if (connection != INVALID_SOCKET) {
-                uint32_t ip = 0;
-                char     ip_hr[256];
-                if (remote_addr.sin_family == AF_INET) {
-                    ip = remote_addr.sin_addr.s_addr;
-                    snprintf(ip_hr, sizeof(ip_hr), "%u.%u.%u.%u",
-                             ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
-                }
-                else
-                    snprintf(ip_hr, sizeof(ip_hr), "None");
-                if (check_only_from(ip)) {
-                    open_crash_log(env.logDirectory());
-                    crash_log("Accepted client connection from %s.", ip_hr);
-
-                    SetEnvironmentVariable("REMOTE_HOST", ip_hr);
-                    output_data(connection, env);
-                    close_crash_log();
-                }
-                closesocket(connection);
-            }
-        }
-        else if (!g_should_terminate) {
-            Sleep(1); // should never happen
-        }
-    }
-
-    stop_threads();
-
-    closesocket(s);
-    WSACleanup();
-
-}
-
 
 void output(SOCKET &out, const char *format, ...)
 {
@@ -3659,13 +3537,61 @@ void collect_script_data(script_execution_mode mode)
 void do_adhoc(const Environment &env)
 {
     do_tcp = true;
-    printf("Listening for TCP connections on port %d\n", g_config->port());
-    printf("Close window or press Ctrl-C to exit\n");
-    fflush(stdout);
 
     g_should_terminate = false;
 
-    listen_tcp_loop(env); // runs for ever or until Ctrl-C
+    ListenSocket sock(g_config->port(), g_config->onlyFrom(), g_config->supportIPV6());
+
+    printf("Listening for TCP connections (%s) on port %d\n",
+            sock.supportsIPV6() ? sock.supportsIPV4() ? "IPv4 and IPv6"
+                                : "IPv6 only"
+                                : "IPv4 only",
+            g_config->port());
+    printf("Close window or press Ctrl-C to exit\n");
+    fflush(stdout);
+
+    // Job object for worker jobs. All worker are within this object
+    // and receive a terminate when the agent ends
+    g_workers_job_object = CreateJobObject(NULL, "workers_job");
+
+    // Run all ASYNC scripts on startup, so that their data is available on
+    // the first query of a client. Obviously, this slows down the agent startup...
+    // This procedure is mandatory, since we want to prevent missing agent sections
+    find_scripts(env);
+    collect_script_data(ASYNC);
+    DWORD dwExitCode = 0;
+    while (true)
+    {
+        if (GetExitCodeThread(g_collection_thread, &dwExitCode))
+        {
+            if (dwExitCode != STILL_ACTIVE)
+                break;
+            Sleep(200);
+        }
+        else
+            break;
+    }
+
+    // Das Dreckswindows kann nicht vernuenftig gleichzeitig auf
+    // ein Socket und auf ein Event warten. Weil ich nicht extra
+    // deswegen mit Threads arbeiten will, verwende ich einfach
+    // select() mit einem Timeout und polle should_terminate.
+    while (!g_should_terminate) {
+        SOCKET connection = sock.acceptConnection();
+        if ((void*)connection != NULL) {
+            open_crash_log(env.logDirectory());
+            std::string ip_hr = sock.readableIP(connection);
+            crash_log("Accepted client connection from %s.", ip_hr.c_str());
+
+            SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
+            output_data(connection, env);
+            close_crash_log();
+            closesocket(connection);
+        }
+    }
+
+    stop_threads();
+    WSACleanup();
 }
 
 void find_scripts(const Environment &env)

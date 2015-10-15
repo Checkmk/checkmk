@@ -73,6 +73,8 @@ public:
     bool crashDebug() const { return _crash_debug; }
     bool logwatchSendInitialEntries() const { return _logwatch_send_initial_entries; }
 
+    bool supportIPV6() const { return _support_ipv6; }
+
     // return true if any section requires wmi functionality
     bool useWMI() const { return _ps_use_wmi; }
 
@@ -139,13 +141,21 @@ private:
     void updateOrCreateLogwatchTextfile(const char *full_filename, glob_token* token, condition_patterns_t &patterns);
     void processGlobExpression(glob_token *glob_token, condition_patterns_t &patterns);
     void addGlobline(char *value);
-    void addOnlyFrom(const char *value);
     bool checkHostRestriction(char *patterns);
 
     int getCounterIdFromLang(const char *language, const char *counter_name);
     int getPerfCounterId(const char *counter_name);
 
     static void addConditionPattern(globline_container *&globline, const char *state, const char *value);
+
+    // only-from needs to be initialised in two phases because it depends on whether ipv6 is
+    // supported
+    void postProcessOnlyFrom();
+    void addOnlyFrom(const char *value);
+    void stringToIPv6(const char *value, uint16_t *address);
+    void stringToIPv4(const char *value, uint32_t &address);
+    void netmaskFromPrefixIPv6(int bits, uint16_t *netmask);
+    void netmaskFromPrefixIPv4(int bits, uint32_t &netmask);
 
 private:
 
@@ -158,6 +168,8 @@ private:
 
     bool _crash_debug;
     bool _logwatch_send_initial_entries;
+
+    bool _support_ipv6;
 
     Environment _environment;
 

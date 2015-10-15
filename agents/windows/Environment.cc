@@ -100,7 +100,7 @@ string Environment::assignDirectory(const char *name)
     string result(_agent_directory + "\\" + name);
     if (!CreateDirectoryA(result.c_str(), NULL)) {
         if (GetLastError() != ERROR_ALREADY_EXISTS) {
-            crash_log("Failed to create directory %s: %s", GetLastError(), get_last_error_as_string().c_str());
+            crash_log("Failed to create directory %s: %s", GetLastError(), get_win_error_as_string().c_str());
         }
     }
     return result;

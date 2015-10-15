@@ -26,7 +26,8 @@
 #include "Configuration.h"
 #include "stringutil.h"
 #include <cstdio>
-
+#include <cstdlib>
+#include <cassert>
 
 
 extern void verbose(const char *format, ...);
@@ -42,6 +43,7 @@ Configuration::Configuration(const Environment &env)
     , _default_script_async_execution(SEQUENTIAL)
     , _crash_debug(false)
     , _logwatch_send_initial_entries(false)
+    , _support_ipv6(true)
     , _environment(env)
     , _ps_use_wmi(false)
     , _ps_full_path(false)
@@ -53,6 +55,8 @@ Configuration::Configuration(const Environment &env)
 
     CollectorRegistry::instance().startFile();
     readConfigFile(configFileName(true));
+
+    postProcessOnlyFrom();
 }
 
 
@@ -94,6 +98,11 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
     else if (!strcmp(var, "port")) {
         _port = atoi(value);
         return true;
+    }
+    else if (!strcmp(var, "ipv6")) {
+        int s = parse_boolean(value);
+        _support_ipv6 = s != 0;
+        return s != -1;
     }
     else if (!strcmp(var, "execute")) {
         parseExecute(value);
@@ -562,48 +571,157 @@ void Configuration::revalidateLogwatchTextfiles()
 }
 
 
-void Configuration::addOnlyFrom(const char *value)
+void Configuration::stringToIPv6(const char *value, uint16_t *address)
+{
+    const char *pos = value;
+    std::vector<uint16_t> segments;
+    int skip_offset = -1;
+    segments.reserve(8);
+
+    while (pos != NULL) {
+        char *endpos = NULL;
+        unsigned long segment = strtoul(pos, &endpos, 16);
+        if (segment > 0xFFFFu) {
+            fprintf(stderr, "Invalid ipv6 address %s\n", value);
+            exit(1);
+        }
+        else if (endpos == pos) {
+            skip_offset = segments.size();
+        }
+        else {
+            segments.push_back((unsigned short)segment);
+        }
+        if (*endpos != ':') {
+            break;
+        }
+        pos = endpos + 1;
+        ++segment;
+    }
+
+    int idx = 0;
+    for (std::vector<uint16_t>::const_iterator iter = segments.begin(); iter != segments.end(); ++iter) {
+        if (idx == skip_offset) {
+            // example with ::42: segments.size() = 1
+            //   this will fill the first 7 fields with 0 and increment idx by 7
+            for (size_t i = 0; i < 8 - segments.size(); ++i) {
+                address[idx + i] = 0;
+            }
+            idx += 8 - segments.size();
+        }
+
+        address[idx++] = htons(*iter);
+        assert(idx <= 8);
+    }
+}
+
+
+void Configuration::stringToIPv4(const char *value, uint32_t &address)
 {
     unsigned a, b, c, d;
-    int bits = 32;
-
-    if (strchr(value, '/')) {
-        if (5 != sscanf(value, "%u.%u.%u.%u/%d", &a, &b, &c, &d, &bits)) {
-            fprintf(stderr, "Invalid value %s for only_hosts\n", value);
-            exit(1);
-        }
-    }
-    else {
-        if (4 != sscanf(value, "%u.%u.%u.%u", &a, &b, &c, &d)) {
-            fprintf(stderr, "Invalid value %s for only_hosts\n", value);
-            exit(1);
-        }
+    if (4 != sscanf(value, "%u.%u.%u.%u", &a, &b, &c, &d)) {
+        fprintf(stderr, "Invalid value %s for only_hosts\n", value);
+        exit(1);
     }
 
-    uint32_t ip = a + b * 0x100 + c * 0x10000 + d * 0x1000000;
+    address = a + b * 0x100 + c * 0x10000 + d * 0x1000000;
+}
+
+
+void Configuration::netmaskFromPrefixIPv6(int bits, uint16_t *netmask)
+{
+    memset(netmask, 0, sizeof(uint16_t) * 8);
+    for (int i = 0; i < 8; ++i) {
+        if (bits > 0) {
+            int consume_bits = std::min(16, bits);
+            netmask[i] = htons(0xFFFF << (16 - consume_bits));
+            bits -= consume_bits;
+        }
+    }
+}
+
+
+void Configuration::netmaskFromPrefixIPv4(int bits, uint32_t &netmask)
+{
     uint32_t mask_swapped = 0;
     for (int bit = 0; bit < bits; bit ++)
         mask_swapped |= 0x80000000 >> bit;
-    uint32_t mask;
     unsigned char *s = (unsigned char *)&mask_swapped;
-    unsigned char *t = (unsigned char *)&mask;
+    unsigned char *t = (unsigned char *)&netmask;
     t[3] = s[0];
     t[2] = s[1];
     t[1] = s[2];
     t[0] = s[3];
+}
 
 
-    if ((ip & mask) != ip) {
-        fprintf(stderr, "Invalid only_hosts entry: host part not 0: %s/%u",
-                ipv4_to_text(ip), bits);
-        exit(1);
+void Configuration::addOnlyFrom(const char *value)
+{
+    ipspec *result = new ipspec();
+
+    char *slash_pos = strchr(value, '/');
+    if (slash_pos != NULL) {
+        // ipv4/ipv6 agnostic
+        result->bits = strtol(slash_pos + 1, NULL, 10);
+    }
+    else {
+        result->bits = 0;
     }
 
-    ipspec *tmp_ipspec = new ipspec();
-    tmp_ipspec->address = ip;
-    tmp_ipspec->netmask = mask;
-    tmp_ipspec->bits    = bits;
-    _only_from.add(tmp_ipspec);
+    result->ipv6 = strchr(value, ':') != NULL;
+
+    if (result->ipv6) {
+        if (result->bits == 0) {
+            result->bits = 128;
+        }
+        stringToIPv6(value, result->ip.v6.address);
+        netmaskFromPrefixIPv6(result->bits, result->ip.v6.netmask);
+
+        // TODO verify that host part is 0
+    } else {
+        if (result->bits == 0) {
+            result->bits = 32;
+        }
+
+        stringToIPv4(value, result->ip.v4.address);
+        netmaskFromPrefixIPv4(result->bits, result->ip.v4.netmask);
+
+        if ((result->ip.v4.address & result->ip.v4.netmask) != result->ip.v4.address) {
+            fprintf(stderr, "Invalid only_hosts entry: host part not 0: %s",
+                    value);
+            exit(1);
+        }
+    }
+    _only_from.add(result);
+}
+
+
+void Configuration::postProcessOnlyFrom()
+{
+    if (_support_ipv6) {
+        // find all ipv4 specs, later insert a the same spec as a v6 adress.
+        std::vector<ipspec*> v4specs;
+        for (only_from_t::iterator iter = _only_from->begin(); iter != _only_from->end(); ++iter) {
+            if (!(*iter)->ipv6) {
+                v4specs.push_back(*iter);
+            }
+        }
+
+        for (std::vector<ipspec*>::const_iterator iter = v4specs.begin(); iter != v4specs.end(); ++iter) {
+            // also add a v4->v6 coverted filter
+            ipspec *spec = *iter;
+
+            ipspec *result = new ipspec();
+            // first 96 bits are fixed: 0:0:0:0:0:ffff
+            result->bits = 96 + spec->bits;
+            result->ipv6 = true;
+            memset(result->ip.v6.address, 0, sizeof(uint16_t) * 5);
+            result->ip.v6.address[5] = 0xFFFFu;
+            result->ip.v6.address[6] = static_cast<uint16_t>(spec->ip.v4.address & 0xFFFFu);
+            result->ip.v6.address[7] = static_cast<uint16_t>(spec->ip.v4.address >> 16);
+            netmaskFromPrefixIPv6(result->bits, result->ip.v6.netmask);
+            _only_from.add(result);
+        }
+    }
 }
 
 

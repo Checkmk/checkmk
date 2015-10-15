@@ -23,61 +23,43 @@
 // Boston, MA 02110-1301 USA.
 
 
-#ifndef stringutil_h
-#define stringutil_h
+#ifndef ListenSocket_h
+#define ListenSocket_h
 
-#include <vector>
+
+#include <winsock2.h>
+#include <ws2ipdef.h>
+#include "types.h"
 #include <string>
-#include <sstream>
-// umm, this is a C header, not actually part of C++ until C++11. This may be a problem in older
-// MSVCs
-#include <stdint.h>
-#include <windows.h>
 
 
-char *lstrip(char *s);
-void rstrip(char *s);
-char *strip(char *s);
+class ListenSocket {
 
-std::vector<const char*> split_line(char *pos, int (*split_pred)(int));
-char *next_word(char **line);
+    SOCKET _socket;
+    only_from_t _source_whitelist;
+    bool _supports_ipv4;
+    bool _use_ipv6;
 
-char *llu_to_string(unsigned long long value);
-unsigned long long string_to_llu(const char *s);
+public:
 
-char *ipv4_to_text(uint32_t ip);
+    ListenSocket(int port, const only_from_t &source_whitelist, bool supportIPV6);
+    ~ListenSocket();
 
-void lowercase(char *s);
+    bool supportsIPV4() const;
+    bool supportsIPV6() const;
 
-int parse_boolean(char *value);
+    SOCKET acceptConnection();
 
-// Do a simple pattern matching with the jokers * and ?.
-// This is case insensitive (windows-like).
-bool globmatch(const char *pattern, const char *astring);
+    std::string readableIP(SOCKET connection);
 
-std::string get_win_error_as_string(DWORD error_id = ::GetLastError());
+private:
 
+    SOCKET init_listen_socket(int port);
+    bool check_only_from(sockaddr *ip);
+    sockaddr *create_sockaddr(int *addr_len);
 
-// to_string and to_wstring supplied in C++11 but not before
-#if _cplusplus < 201103L
-
-namespace std {
-    template <typename T>
-    std::wstring to_wstring(const T &source) {
-        std::wostringstream str;
-        str << source;
-        return str.str();
-    }
-
-    template <typename T>
-    std::string to_string(const T &source) {
-        std::ostringstream str;
-        str << source;
-        return str.str();
-    }
-}
-
-#endif // _cplusplus < 201103L
+};
 
 
-#endif // stringutil_h
+#endif // ListenSocket_h
+

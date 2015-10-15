@@ -29,6 +29,7 @@
 
 #include <windows.h>
 #include <string>
+#include <vector>
 // umm, this is a C header, not actually part of C++ until C++11. This may be a problem in older
 // MSVCs
 #include <stdint.h>
@@ -53,9 +54,19 @@ static const unsigned int SECTION_LOGFILES     = 0x00004000;
 
 // Needed for only_from
 struct ipspec {
-    uint32_t address;
-    uint32_t netmask;
-    int      bits;
+    union {
+        struct {
+            uint32_t address;
+            uint32_t netmask;
+        } v4;
+        struct {
+            uint16_t address[8];
+            uint16_t netmask[8];
+        } v6;
+    } ip;
+    int  bits;
+    bool ipv6;
+
 };
 
 // Configuration for section [winperf]

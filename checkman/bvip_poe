@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This Check monitors the power consumation in Watt if Power over Ehternet is used for the device. Leves can be set in Wato.
- 
+
 
 
 inventory:

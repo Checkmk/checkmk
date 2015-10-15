@@ -117,8 +117,8 @@ def page_werk():
     back_url = html.makeuri([], filename="version.py") # keeps filter settings
     html.context_button(_("Back"), back_url, "back")
     if werk["compatible"] == "incomp_unack" and may_acknowledge():
-        ack_url = html.makeactionuri([("_werk_ack", werk["id"])], filename="version.py") 
-        html.context_button(_("Acknowledge"), ack_url, "werk_ack") 
+        ack_url = html.makeactionuri([("_werk_ack", werk["id"])], filename="version.py")
+        html.context_button(_("Acknowledge"), ack_url, "werk_ack")
     html.end_context_buttons()
 
     html.write('<table class="data headerleft werks">')
@@ -229,9 +229,9 @@ def load_acknowledgements():
 
 
 def unacknowledged_incompatible_werks():
-    return werks_sorted_by_date([ 
-        werk 
-        for werk in g_werks.values() 
+    return werks_sorted_by_date([
+        werk
+        for werk in g_werks.values()
         if werk["compatible"] == "incomp_unack"])
 
 

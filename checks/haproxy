@@ -48,7 +48,7 @@ def check_haproxy_frontend(item, _no_params, info):
 
             infotext = "%s, Session Rate: %.2f/s" % (status, session_rate)
             perfdata = [ ("session_rate", session_rate) ]
- 
+
             if status == "OPEN":
                     state = 0
             else:

@@ -35,7 +35,7 @@ def parse_if64adm(info):
 
     return parse_if64(prepared)
 
-    
+
 def inventory_if64adm(parsed):
     return inventory_if_common(parsed, has_nodeinfo = True)
 

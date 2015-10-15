@@ -445,6 +445,9 @@ def output_check_info():
             sys.stderr.write("ERROR in check_type %s: %s\n" % (check_type, e))
 
 
+def active_check_service_description(act_info, params):
+    return sanitize_service_description(act_info["service_description"](params).replace('$HOSTNAME$', g_hostname))
+
 #.
 #   .--Host tags-----------------------------------------------------------.
 #   |              _   _           _     _                                 |
@@ -2643,9 +2646,7 @@ define service {
             g_hostname = hostname
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = sanitize_service_description(
-                 act_info["service_description"](params)
-                 .replace('$HOSTNAME$', g_hostname))
+            description = active_check_service_description(act_info, params)
 
             if do_omit_service(hostname, description):
                 continue

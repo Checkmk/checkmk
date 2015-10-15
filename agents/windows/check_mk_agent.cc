@@ -2936,7 +2936,7 @@ void section_check_mk(SOCKET &out, const Environment &env)
                 it_from != g_config->onlyFrom().end(); ++it_from ) {
             ipspec *is = *it_from;
             if (is->ipv6) {
-                output(out, " %04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x/%d",
+                output(out, " %x:%x:%x:%x:%x:%x:%x:%x/%d",
                         is->ip.v6.address[0], is->ip.v6.address[1],
                         is->ip.v6.address[2], is->ip.v6.address[3],
                         is->ip.v6.address[4], is->ip.v6.address[5],

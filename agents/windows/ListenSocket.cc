@@ -36,6 +36,10 @@ extern void debug(char *text);
 #define debug(C)
 #endif
 
+
+static const size_t INET6_ADDRSTRLEN = 46;
+
+
 ListenSocket::ListenSocket(int port, const only_from_t &source_whitelist, bool supportIPV6)
     : _source_whitelist(source_whitelist)
     , _supports_ipv4(true)
@@ -172,17 +176,25 @@ SOCKET ListenSocket::init_listen_socket(int port)
 
 std::string ListenSocket::readableIP(SOCKET connection)
 {
-    SOCKADDR_IN6 remote_addr;
-    int addrlen = sizeof(SOCKADDR_IN6);
-    getpeername(connection, (sockaddr*)&remote_addr, &addrlen);
-    char     ip_hr[256];
-    if (remote_addr.sin6_family == AF_INET6) {
-        u_char *ip = remote_addr.sin6_addr.u.Byte;
-        snprintf(ip_hr, sizeof(ip_hr), "%c.%c.%c.%c",
+    sockaddr_storage addr;
+    int addrlen = sizeof(sockaddr_storage);
+    getpeername(connection, (sockaddr*)&addr, &addrlen);
+
+    char ip_hr[INET6_ADDRSTRLEN];
+
+    if (addr.ss_family == AF_INET) {
+        sockaddr_in *s = (sockaddr_in*)&addr;
+        u_char *ip = (u_char*)&s->sin_addr;
+        snprintf(ip_hr, INET6_ADDRSTRLEN, "%u.%u.%u.%u",
                  ip[0], ip[1], ip[2], ip[3]);
+    } else if (addr.ss_family == AF_INET6) { // AF_INET6
+        sockaddr_in6 *s = (sockaddr_in6*)&addr;
+        uint16_t *ip = s->sin6_addr.u.Word;
+        snprintf(ip_hr, INET6_ADDRSTRLEN, "%x:%x:%x:%x:%x:%x:%x:%x",
+                 ip[0], ip[1], ip[2], ip[3], ip[4], ip[5], ip[6], ip[7]);
+    } else {
+        snprintf(ip_hr, INET6_ADDRSTRLEN, "None");
     }
-    else
-        snprintf(ip_hr, sizeof(ip_hr), "None");
     return ip_hr;
 }
 

@@ -43,7 +43,7 @@ def do_discovery(hostnames, check_types, only_new):
     use_caches = False
     if not hostnames:
         verbose("Discovering services on all hosts:\n")
-        hostnames = all_hosts_untagged
+        hostnames = all_active_realhosts()
         use_caches = True
     else:
         verbose("Discovering services on %s:\n" % ", ".join(hostnames))
@@ -141,7 +141,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
         "kept"    : 0
     }
 
-    if hostname not in all_hosts_untagged:
+    if hostname not in all_active_realhosts():
         return [0, 0, 0, 0], ""
 
     err = None

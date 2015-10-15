@@ -5,6 +5,10 @@ license: GPL
 distribution: check_mk
 description:
  Check the state of blowers of a Rittal CMC-TC LCP.
+ Moreover this check monitors the device levels if they
+ are configured. In this case if the value is
+ above or below these levels, the service state
+ will be critical.
 
 item:
  A descriptive name of the sensor, followed by " - ", followed by

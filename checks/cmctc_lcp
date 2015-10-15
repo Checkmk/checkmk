@@ -57,7 +57,7 @@ cmctc_lcp_sensors = {
 }
 
 cmctc_lcp_sensortypes = {
-    "temp" :        ( "°C",    "Temperature" ),
+    "temp" :        ( u" °C",    "Temperature" ),
     "blower" :      ( " RPM",   "Blower" ),
     "blowergrade" : ( "",      "Blower Grade" ),
     "flow" :        ( " l/min", "Waterflow" ),
@@ -66,7 +66,7 @@ cmctc_lcp_sensortypes = {
 
 def inventory_cmctc_lcp(info, sensortype):
     inventory = []
-    for index, typeid, status, value, description in info:
+    for index, typeid, status, value, high, low, description in info:
         typeid = saveint(typeid)
         if typeid in cmctc_lcp_sensors:
             item, st = cmctc_lcp_sensors[typeid]
@@ -79,35 +79,49 @@ def inventory_cmctc_lcp(info, sensortype):
     return inventory
 
 def check_cmctc_lcp(item, params, info, sensortype):
+    map_sensor_state = {
+        "1" : (3, "not available"),
+        "2" : (2, "lost"),
+        "3" : (1, "changed"),
+        "4" : (0, "ok"),
+        "5" : (2, "off"),
+        "6" : (0, "on"),
+        "7" : (1, "warning"),
+        "8" : (2, "too low"),
+        "9" : (2, "too high"),
+    }
     itemindex = item.split(" - ")[-1]
-    for index, typeid, statuscode, value, description in info:
+    for index, typeid, statuscode, value, high, low, description in info:
         if itemindex == index:
             unit = cmctc_lcp_sensortypes[sensortype][0]
             value = int(value)
             infotext = ""
             if description:
-                infotext += description + ", "
-            infotext += "%d%s" % (value, unit)
-            status = 0
+                infotext += "[%s] " % description
+            state, extra_info = map_sensor_state[statuscode]
+            yield state, "%s%d%s" % (infotext, value, unit)
+
+            extra_state = 0
             if params:
                 warn, crit = params
                 perfdata = [(sensortype, value, warn, crit)]
                 if value >= crit:
-                    status = 2
+                    extra_state = 2
                 elif value >= warn:
-                    status = 1
-                if status:
-                    infotext += " (warn/crit at %d%s/%d%s)" % (warn, unit, crit, unit)
+                    extra_state = 1
+                if states[-1]:
+                    extra_info += " (warn/crit at %d/%d%s)" % (warn, crit, unit)
             else:
                 perfdata = [(sensortype, value)]
-                if statuscode == "4":
-                    status = 0
-                elif statuscode == "7":
-                    status = 1
-                else:
-                    status = 2
-            return (status, infotext, perfdata)
-    return 3, "Sensor not found in SNMP output"
+                # Assumption: if high and low are both 0
+                # then there are no device levels
+                if not (int(high) == 0 and int(low) == 0) and int(high) > int(low):
+                    if value >= int(high) or value <= int(low):
+                        extra_state = 2
+                        extra_info += " (device lower/upper crit at %s/%s%s)" % (low, high, unit)
+
+            yield extra_state, extra_info, perfdata
+
 
 snmp_scan_functions["cmctc_lcp"] = \
     lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0")
@@ -120,6 +134,8 @@ snmp_info["cmctc_lcp"] = (
      "5.2.1.2", # Sensor Type
      "5.2.1.4", # Status
      "5.2.1.5", # Value
+     "5.2.1.6", # high
+     "5.2.1.7", # low
      "7.2.1.2", # Description
    ]
 )

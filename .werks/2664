@@ -1,0 +1,10 @@
+Title: ps: Speedup in situation with many matching processes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445002617
+Class: fix
+
+In one situation with about 7500 matching processes out of 8000 the check now saves
+about 20% of the CPU ressources.

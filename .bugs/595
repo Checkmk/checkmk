@@ -1,9 +1,9 @@
-Title: Wato Replikation Transaktionssicher machen
+Title: WATO replication is not transaction safe
 Component: multisite
 State: open
 Date: 2012-01-13 11:05:09
 Targetversion: 1.2.0
 Class: todo
 
-Repliziert User A in Wato änderungen und User B produziert gleichzeitig neue,
-verhält sich die Replizierung falsch.
+If user A makes a change in WATO and simultaneously user b will change settings,
+the changes are not accepted from both users. There is missing a transaction condition.

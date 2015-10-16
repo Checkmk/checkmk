@@ -1093,17 +1093,28 @@ def last_counter_wrap():
 
 
 
-# Deletes counters from g_item_state matching the given pattern and are older_than x seconds.
-# This is a neccessary cleanup just used by ps.include. Not nice.
-def clear_counters(check_type_prefix, older_than):
+# Makes sure, that no counter with a give prefix is kept longer
+# than min_keep_seconds * 2. Counter is kept at least min_keep_seconds.
+def clear_counters(counter_name_prefix, min_keep_seconds):
     global g_item_state
-    counters_to_delete = []
-    now = time.time()
 
-    for name, (timestamp, value) in g_item_state.items():
-        joined_name = type(name) == tuple and name[0] or name
-        if joined_name.startswith(check_type_prefix):
-            if now > timestamp + older_than:
+    cleared_key = "last.cleared." + counter_name_prefix
+    if cleared_key in g_item_state:
+        last_cleared, none = g_item_state[cleared_key]
+        if last_cleared + min_keep_seconds > time.time():
+            return # recent enough
+    g_item_state[cleared_key] = (time.time(), None)
+
+    counters_to_delete = []
+    remove_if_min_keep_seconds = time.time() - min_keep_seconds
+
+    for name, (timestamp, value) in g_item_state.iteritems():
+        if type(name) == tuple:
+            counter_name = name[0] # never needed, since only called by ps currently
+        else:
+            counter_name = name
+        if counter_name.startswith(counter_name_prefix):
+            if timestamp < remove_if_min_keep_seconds:
                 counters_to_delete.append(name)
 
     for name in counters_to_delete:

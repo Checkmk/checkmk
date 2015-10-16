@@ -5602,16 +5602,16 @@ graph_info.append({
 graph_info.append({
     "title" : _("ISCSI traffic"),
     "metrics" : [
-        ("icsci_read_data", "-area"),
-        ("icsci_write_data", "area"),
+        ("iscsi_read_data", "-area"),
+        ("iscsi_write_data", "area"),
     ],
 })
 
 graph_info.append({
-    "title" : _("ICSCI latency"),
+    "title" : _("ISCSI latency"),
     "metrics" : [
-        ("icsci_read_latency", "-area"),
-        ("icsci_write_latency", "area"),
+        ("iscsi_read_latency", "-area"),
+        ("iscsi_write_latency", "area"),
     ],
 })
 

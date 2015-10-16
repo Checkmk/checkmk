@@ -1,0 +1,10 @@
+Title: New graphing system: fixed broken graphs for iSCSI checks
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p1
+Date: 1444988430
+
+The graph metrics for iSCSI contained a typo. This has been fixed.

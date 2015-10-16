@@ -4,6 +4,7 @@
 
     Multisite:
     * 2680 FIX: LDAP: Fixed exception when syncing groups using configurations from previous versions...
+    * 2435 FIX: New graphing system: fixed broken graphs for iSCSI checks...
 
 
 1.2.7i3:

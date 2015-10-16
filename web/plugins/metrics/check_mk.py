@@ -4245,7 +4245,7 @@ perfometer_info.append(("stacked", [
     {
         "type"          : "logarithmic",
         "metric"        : "security_updates",
-        "hal_value"     : 10,
+        "half_value"    : 10,
         "exponent"      : 2,
     }
 ]))

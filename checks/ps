@@ -77,7 +77,7 @@ inventory_processes_perf = []
 ANY_USER = None
 GRAB_USER = False
 
-def ps_parse_info(info):
+def parse_ps(info):
     ps_result = []
     lines = iter(info)
     wmic_info = {}
@@ -151,12 +151,13 @@ def ps_parse_info(info):
 
 
 def inventory_ps(info):
-    ps_info, mem_info, solaris_mem_info, statgrab_mem_info = info
-    cpu_cores, info = ps_parse_info(ps_info) # parse windows wmic information
-    return inventory_ps_common(inventory_processes, inventory_processes_rules, info)
+    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info = info
+    return inventory_ps_common(inventory_processes, inventory_processes_rules, parsed)
+
 
 def check_ps(item, params, info):
-    ps_info, mem_info, solaris_mem_info, statgrab_mem_info = info
+    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info = info
+    # ps_info, mem_info, solaris_mem_info, statgrab_mem_info = info
     if mem_info:
         total_ram = parse_proc_meminfo_bytes(mem_info).get("MemTotal")
     elif solaris_mem_info:
@@ -166,11 +167,11 @@ def check_ps(item, params, info):
     else:
         total_ram = None
 
-    cpu_cores, info = ps_parse_info(ps_info) # parse windows wmic information
-    return check_ps_common(item, params, info, cpu_cores = cpu_cores, total_ram = total_ram)
+    return check_ps_common(item, params, parsed, cpu_cores = cpu_cores, total_ram = total_ram)
 
 
 check_info['ps'] = {
+    "parse_function"          : parse_ps,
     "inventory_function"      : inventory_ps,
     "check_function"          : check_ps,
     "service_description"     : "Process %s",

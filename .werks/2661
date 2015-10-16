@@ -1,0 +1,10 @@
+Title: windows agent: fixed incomplete process list
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445007640
+Class: fix
+
+in 1.2.7i3p0 and 1.2.7i3p1 the process list of the windows agent is cut off after a few entries
+unless wmi is activated for that check.

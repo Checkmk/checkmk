@@ -86,7 +86,7 @@ def inventory_ps_common(invdata, invrules, info):
             # First entry in line is the node name or None for non-clusters
             ps = line[1:]
             l_user = [userspec]
-            matches = process_matches(ps, pattern, l_user)
+            matches = process_matches_for_discovery(ps, pattern, l_user)
             if matches != False:
                 if len(matches) < num_perc_s:
                     raise MKGeneralException("Invalid entry in inventory_processes: service description '%s' contains "
@@ -148,17 +148,7 @@ def escape_regex_chars(match):
     return r
 
 
-def process_matches(ps, procname, l_user):
-    # procname is either:
-    # 1. a string beginning with ~. Then it is interpreted as regular expression
-    # that must match the *beginning* of the process line. Please check the output of
-    # check_mk -d HOSTNAME. Note: groups of whitespaces are reduced to one single
-    # whitespace!
-    # 2. a string *not* beginning with ~: It must be equal to the first column
-    # in the process table (i.e. the process name). No regular expressions are
-    # applied. A simple string compare is done.
-
-    # agent might output username in brackets in the first columns
+def process_matches_for_discovery(ps, procname, l_user):
     userspec = l_user[0]
     if ps[0].startswith("(") and ps[0].endswith(")") and len(ps) > 1:
         addinfo = ps[0][1:-1].split(",")
@@ -190,6 +180,39 @@ def process_matches(ps, procname, l_user):
         if matchobject:
             return [ g and g or "" for g in matchobject.groups() ]
     return False
+
+
+# Returns True or False
+def process_matches_for_check(process_line, process_pattern, user_pattern):
+
+    # Check process owner. Note: the first field with process information is
+    # optional and might be missing (old agents).
+    if process_line[0].startswith("(") and process_line[0].endswith(")") and len(process_line) > 1:
+        if user_pattern:
+            addinfo = process_line[0][1:-1].split(",")
+            user = addinfo[0]
+            if user_pattern and user_pattern.startswith('~'):
+                if not regex(user_pattern[1:]).match(user):
+                    return False
+
+            elif user_pattern and user_pattern != user:
+                return False
+
+        process_line = process_line[1:]
+
+    # Process name not relevant
+    if not process_pattern:
+        return True
+
+    # Regex for complete process command line
+    elif process_pattern.startswith("~"):
+        reg = regex(process_pattern[1:]) # skip "~"
+        return reg.match(" ".join(process_line))
+
+    # Exact match on name of executable
+    else:
+        return process_line[0] == process_pattern
+
 
 # New parameter format: dictionary. Example:
 # {
@@ -259,7 +282,8 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" )
     for line in info:
         node_name = line[0]
         ps = line[1:]
-        if process_matches(ps, params.get("process"), [params.get("user")]) != False:
+        if process_matches_for_check(ps, params.get("process"), params.get("user")):
+            process = []
             count += 1
             if node_name != None:
                 running_on.add(node_name)

@@ -44,7 +44,7 @@ def parse_db2_logsizes(info):
         instance_info = {}
         for value in values:
             instance_info.setdefault(value[0], []).append(" ".join(map(str, (value[1:]))))
-        # Some databases run in DPF mode. Means that the database is split over several nodes 
+        # Some databases run in DPF mode. Means that the database is split over several nodes
         # Each node has its own logfile for the same database. We create one service for each logfile
 	if "TIMESTAMP" not in instance_info:
 	    instance_info["TIMESTAMP"] = [ global_timestamp ]

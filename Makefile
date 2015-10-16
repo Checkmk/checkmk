@@ -48,8 +48,10 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 	       $$(find pnp-templates -type f -name "*.php") \
                mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py \
 	       mkeventd/src/*.c mkeventd/checks/* check_mk_templates.cfg \
-	       agents/check_mk_*agent* agents/*.c agents/cfg_examples/* \
-	       agents/special/* $$(find agents/plugins -type f)
+	       agents/check_mk_*agent* agents/*.c \
+	       $$(find agents/cfg_examples -type f) \
+	       agents/special/* \
+	       $$(find agents/plugins -type f)
 
 .PHONY: help install clean
 
@@ -163,6 +165,8 @@ version:
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.04" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.10" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 14.04" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.04" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.10" \
           -o "$$(head -c 20 /etc/issue)" = "Debian GNU/Linux 6.0" ] \
           || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \

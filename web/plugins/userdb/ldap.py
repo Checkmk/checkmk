@@ -134,9 +134,9 @@ class LDAPUserConnector(UserConnector):
         self._group_cache = {}
 
         # File for storing the time of the last success event
-        self._sync_time_file = defaults.var_dir + '/web/ldap_%s_sync_time.mk'% self._config['id']
+        self._sync_time_file = defaults.var_dir + '/web/ldap_%s_sync_time.mk'% self.id()
         # Exists when last ldap sync failed, contains exception text
-        self._sync_fail_file = defaults.var_dir + '/web/ldap_%s_sync_fail.mk' % self._config['id']
+        self._sync_fail_file = defaults.var_dir + '/web/ldap_%s_sync_fail.mk' % self.id()
 
         self.save_suffix()
 
@@ -161,9 +161,14 @@ class LDAPUserConnector(UserConnector):
         return self.connection_suffixes
 
 
+    def id(self):
+        return self._config['id']
+
+
     def log(self, s):
         if self._config['debug_log']:
-            logger(LOG_DEBUG, 'LDAP [%s]: %s' % (self._config['id'], s))
+            logger(LOG_DEBUG, 'LDAP [%s]: %s' % (self.id(), s))
+
 
     def connect_server(self, server):
         try:
@@ -195,7 +200,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def connect(self, enforce_new = False, enforce_server = None):
-        connection_id = self._config['id']
+        connection_id = self.id()
 
         if not enforce_new \
            and not "no_persistent" in self._config \
@@ -331,14 +336,14 @@ class LDAPUserConnector(UserConnector):
         suffix = self.get_suffix()
         if suffix:
             if suffix in LDAPUserConnector.connection_suffixes \
-               and LDAPUserConnector.connection_suffixes[suffix] != self._config['id']:
+               and LDAPUserConnector.connection_suffixes[suffix] != self.id():
                 raise MKUserError(None, _("Found duplicate LDAP connection suffix. "
                                           "The LDAP connections %s and %s both use "
                                           "the suffix %s which is not allowed." %
                                           (LDAPUserConnector.connection_suffixes[suffix],
-                                           self._config['id'], suffix)))
+                                           self.id(), suffix)))
             else:
-                LDAPUserConnector.connection_suffixes[suffix] = self._config['id']
+                LDAPUserConnector.connection_suffixes[suffix] = self.id()
 
 
     # Returns a list of all needed LDAP attributes of all enabled plugins
@@ -860,7 +865,7 @@ class LDAPUserConnector(UserConnector):
         elif len(matched_connection_ids) > 1:
             raise MKUserError(None, _("Unable to match connection"))
         else:
-            return matched_connection_ids[0] == self._config["id"]
+            return matched_connection_ids[0] == self.id()
 
 
     def username_matches_suffix(self, username, suffix):
@@ -895,7 +900,7 @@ class LDAPUserConnector(UserConnector):
         self.flush_caches()
 
         start_time = time.time()
-        connection_id = self._config['id']
+        connection_id = self.id()
 
         self.log('SYNC STARTED')
         self.log('  SYNC PLUGINS: %s' % ', '.join(self._config['active_plugins'].keys()))
@@ -915,7 +920,7 @@ class LDAPUserConnector(UserConnector):
                 user = copy.deepcopy(users[user_id])
                 mode_create = False
             else:
-                user = new_user_template(self._config['id'])
+                user = new_user_template(self.id())
                 mode_create = True
             return mode_create, user
 
@@ -1645,18 +1650,18 @@ def get_groups_to_fetch(connection, params):
                 if type(group_spec) == tuple:
                     this_conn_id = group_spec[1]
                     if this_conn_id == None:
-                        this_conn_id = connection["id"]
+                        this_conn_id = connection.id()
                     groups_to_fetch.setdefault(this_conn_id, [])
                     groups_to_fetch[this_conn_id].append(group_spec[0].lower())
                 else:
                     # Be compatible to old config format (no connection specified)
-                    this_conn_id = connection["id"]
+                    this_conn_id = connection.id()
                     groups_to_fetch.setdefault(this_conn_id, [])
                     groups_to_fetch[this_conn_id].append(group_spec.lower())
 
         elif type(group_specs) in [ str, unicode ]:
             # Need to be compatible to old config formats
-            this_conn_id = connection["id"]
+            this_conn_id = connection.id()
             groups_to_fetch.setdefault(this_conn_id, [])
             groups_to_fetch[this_conn_id].append(group_specs.lower())
 

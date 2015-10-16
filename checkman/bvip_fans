@@ -4,7 +4,7 @@ catalog: hw/environment/bosch
 license: GPL
 distribution: check_mk
 description:
-  If the Camera or the Camera Stack from BVIP has a included fan, you can set 
+  If the Camera or the Camera Stack from BVIP has a included fan, you can set
   upper and lower leves for the rounds per minute.
 
 inventory:

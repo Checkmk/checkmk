@@ -1347,7 +1347,7 @@ def compute_tag_tree(taglist):
         # - a tag group id, or
         # - "topic:" plus the name of a tag topic. That topic should only contain
         #   checkbox tags, or:
-        # - "folder:3", where 3 is the folder level (starting at 1) 
+        # - "folder:3", where 3 is the folder level (starting at 1)
         # The problem with the "topic" entries is, that a host may appear several
         # times!
 

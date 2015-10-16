@@ -207,7 +207,7 @@ void *main_thread(void *data __attribute__ ((__unused__)))
             int cc = accept(g_unix_socket, NULL, NULL);
             if (cc > g_max_fd_ever)
                 g_max_fd_ever = cc;
-            if (0 < fcntl(cc, F_SETFD, FD_CLOEXEC))
+            if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0)
                 logger(LG_INFO, "Cannot set FD_CLOEXEC on client socket: %s", strerror(errno));
             queue_add_connection(cc); // closes fd
             g_num_queued_connections++;
@@ -327,7 +327,7 @@ int open_unix_socket()
     }
 
     // Imortant: close on exec -> check plugins must not inherit it!
-    if (0 < fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC))
+    if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) < 0)
         logger(LG_INFO, "Cannot set FD_CLOEXEC on socket: %s", strerror(errno));
 
     // Bind it to its address. This creates the file with the name g_socket_path

@@ -84,7 +84,7 @@
 # drives 1 sector-format-numeric 0
 # drives 1 transfer-rate 6.0
 # drives 1 transfer-rate-numeric 3
-# drives 1 attributes 
+# drives 1 attributes
 # drives 1 attributes-numeric 2
 # drives 1 enclosure-wwn 500C0FF01E82BB3C
 # drives 1 recon-state N/A

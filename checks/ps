@@ -160,6 +160,7 @@ def inventory_ps(info):
     (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info = info
     return inventory_ps_common(inventory_processes, inventory_processes_rules, parsed)
 
+
 def check_ps(item, params, info):
     (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info = info
     return check_ps_common(item, params, parsed, cpu_cores = cpu_cores)

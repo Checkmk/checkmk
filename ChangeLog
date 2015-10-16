@@ -1,4 +1,7 @@
 1.2.7i3p1:
+    Checks & Agents:
+    * 2660 FIX: fixed windows agent using the wrong working directory...
+
     Multisite:
     * 2680 FIX: LDAP: Fixed exception when syncing groups using configurations from previous versions...
 

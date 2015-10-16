@@ -3033,7 +3033,7 @@ void WINAPI ServiceMain(DWORD, TCHAR* [] )
         serviceStatus.dwCurrentState = SERVICE_RUNNING;
         SetServiceStatus( serviceStatusHandle, &serviceStatus );
 
-        RunImmediate("adhoc", 0, NULL);
+        RunImmediate("service", 0, NULL);
 
         // service is now stopped
         serviceStatus.dwControlsAccepted &= ~(SERVICE_ACCEPT_STOP |
@@ -3997,7 +3997,7 @@ void RunImmediate(const char *mode, int argc, char **argv)
         do_test(false, env);
         fclose(fileout);
     }
-    else if (!strcmp(mode, "adhoc"))
+    else if (!strcmp(mode, "adhoc") || !strcmp(mode, "service"))
         do_adhoc(env);
     else if (!strcmp(mode, "install"))
         do_install();

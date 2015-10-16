@@ -7,4 +7,4 @@ Date: 1445002617
 Class: fix
 
 In one situation with about 7500 matching processes out of 8000 the check now saves
-about 15% of the CPU ressources.
+about 20% of the CPU ressources.

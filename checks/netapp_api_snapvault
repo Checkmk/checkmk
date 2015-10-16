@@ -24,27 +24,41 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<netapp_api_status:sep(9)>>>
-# status ok
+# <<<netapp_api_vf_snapvault:sep(9)>>>
+# snapvault /vol/ipb_datap/   status idle state snapvaulted   lag-time 53812  source-system 172.31.12.15
+# snapvault /vol/ipb_datas/   status idle state snapvaulted   lag-time 53812  source-system 172.31.12.15
+# snapvault /vol/ipb_user/    status idle state snapvaulted   lag-time 97007  source-system 172.31.12.15
+# snapvault /vol/ipb_vol0/    status idle state snapvaulted   lag-time 97011  source-system 172.31.12.15
 
-def inventory_netapp_api_status(info):
-    return [ (None, None) ]
+def inventory_netapp_api_snapvault(parsed):
+    for volume in parsed:
+        yield volume, {}
 
-def check_netapp_api_status(item, _no_params, info):
-    data = dict([line for line in info if len(line) == 2])
+def check_netapp_api_snapvault(item, params, parsed):
+    volume = parsed.get(item)
+    if not volume:
+        return
 
-    if data.get("status"):
-        state = data["status"].lower() not in ["ok", "ok-with-suppressed"] and 2 or 0
-        yield state, "Status: %s" % data["status"]
-        del data["status"]
+    info = []
+    for what in [ "source-system", "status", "state", "destination-system" ]:
+        yield 0, "%s: %s" % (what.title(), volume[what])
 
-    for key, value in data.items():
-        yield 0, "%s: %s" % (key.title(), value)
+    lag_time = int(volume["lag-time"])
+    state = 0
+    if params:
+        warn, crit = params["lag_time"]
+        if lag_time >= crit:
+            state = 2
+        elif lag_time >= warn:
+            state = 1
 
-check_info["netapp_api_status"] = {
-    'check_function'      : check_netapp_api_status,
-    'inventory_function'  : inventory_netapp_api_status,
-    'service_description' : 'Diagnosis Status',
+    yield state, "Lag-Time: %s" % get_age_human_readable(lag_time)
+
+check_info["netapp_api_snapvault"] = {
+    'parse_function'      : netapp_api_parse_lines,
+    'check_function'      : check_netapp_api_snapvault,
+    'inventory_function'  : inventory_netapp_api_snapvault,
+    'group'               : "snapvault",
+    'service_description' : 'Snapvault %s',
+    'includes'            : ["netapp_api.include"]
 }
-
-

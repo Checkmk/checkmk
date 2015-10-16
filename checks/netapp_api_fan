@@ -25,45 +25,34 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<netapp_api_fan:sep(9)>>>
-# 50:05:0c:c0:02:21:95:d9 shelf-owned     false
-# 50:05:0c:c0:02:21:95:d9 cooling-element-number  1       2       3       4       5       6       7       8
-# 50:05:0c:c0:02:21:95:d9 cooling-element-is-error        false   false   None    None    None    None    None    None
-# 50:05:0c:c0:02:21:95:d9 cooling-element-is-not-installed        None    None    true    true    true    true    true    true
+# cooling-element-list 20 cooling-element-number 1    rpm 3000    cooling-element-is-error false
+# cooling-element-list 20 cooling-element-number 2    rpm 3000    cooling-element-is-error false
+# cooling-element-list 20 cooling-element-number 3    rpm 3000    cooling-element-is-error false
 
-def inventory_netapp_api_fan(info):
-    yield None, None
+def inventory_netapp_api_fan(parsed):
+    for key, values in parsed.items():
+        if values.get("cooling-element-is-not-installed") != "true":
+            item_name = "%s/%s" % tuple(key.split("."))
+            yield item_name, None
 
-def check_netapp_api_fan(_no_item, _no_params, parsed):
-    fan_count   = 0
-    fan_errors  = []
+def check_netapp_api_fan(item, _no_params, parsed):
+    tokens = item.split("/")
 
-    for shelf, fans in parsed.items():
-        if fans["shelf-owned"][0] != "true":
-            continue
+    fan = parsed.get("%s.%s" % tuple(item.split("/")))
+    if not fan:
+        return
 
-        for idx, not_installed in enumerate(fans["cooling-element-is-not-installed"]):
-            if not_installed == "true" or fans["cooling-element-number"][idx] == "None":
-                continue
-            fan_count += 1
-            if fans["cooling-element-is-error"][idx] == "true":
-                fan_errors.append((2, "Error in Shelf %s Fan %s" % (shelf, fans["cooling-element-number"][idx])))
-
-
-    yield 0, "%s fans assigned to this filer" % fan_count
-
-    max_fans = 5
-    for state, text in fan_errors[:max_fans]:
-        yield state, text
-
-    if len(fan_errors) > max_fans:
-        yield 0, "more fans failed (%d total) - only the first %d errors are shown..." % (len(fan_errors), max_fans)
-
+    if fan["cooling-element-is-error"] == "true":
+        yield 2, "Error in Fan %s" % fan["cooling-element-number"]
+    else:
+        yield 0, "Operational state OK"
 
 check_info["netapp_api_fan"] = {
     'check_function'      : check_netapp_api_fan,
-    'parse_function'      : netapp_api_parse_info_environ,
+    'parse_function'      : lambda info: netapp_api_parse_lines(info,
+                                custom_keys = ["cooling-element-list", "cooling-element-number"]),
     'inventory_function'  : inventory_netapp_api_fan,
-    'service_description' : 'Fan Status Shelves',
+    'service_description' : 'Fan Shelf %s',
     'includes'            : ["netapp_api.include"]
 }
 

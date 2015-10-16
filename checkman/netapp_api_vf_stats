@@ -1,0 +1,17 @@
+title: NetApp Filer 7Mode: vFiler CPU Utilization
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ Checks the CPU utilization (in percent) of a vFiler in a 7Mode environment.
+
+ {WARN} or {CRIT} is returned, if the usage in the last 60 sec was above
+ given thresholds. {OK} is returned otherwise.
+
+perfdata:
+ One value: The vFilers CPU utilization in percent.
+
+inventory:
+ Creates one check for each vFiler.
+

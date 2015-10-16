@@ -91,7 +91,6 @@ void Environment::getAgentDirectory(char *buffer, int size, bool use_cwd)
         if (buffer[strlen(buffer)-1] == '\\') // Remove trailing backslash
             buffer[strlen(buffer)-1] = 0;
     }
-
 }
 
 

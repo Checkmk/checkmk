@@ -1,6 +1,7 @@
 1.2.7i4:
     Checks & Agents:
     * 2695 hp_msa_disk, hp_msa_volume: these checks now report more information about disks and volumes of a HP MSA 2040 Storage System
+    * 2660 FIX: fixed windows agent using the wrong working directory...
 
     Multisite:
     * 2680 FIX: LDAP: Fixed exception when syncing groups using configurations from previous versions...

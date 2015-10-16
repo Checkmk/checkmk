@@ -28,8 +28,8 @@
 # zcs1v    running
 # zhs01    running
 # zmppl01  running
-# zmdp running
-# cdefs1v   running
+# zmdp     running
+# cdefs1v  running
 
 def inventory_netapp_api_vf_status(info):
     return map(lambda x: (x[0], None), info)
@@ -40,7 +40,7 @@ def check_netapp_api_vf_status(item, _no_params, info):
         return
 
     state = filer_states[item] not in ["running", "DR backup", "migrating"] and 2 or 0
-    return state, "Status is %s" % filer_states[item]
+    return state, "State is %s" % filer_states[item]
 
 check_info["netapp_api_vf_status"] = {
     'check_function'      : check_netapp_api_vf_status,

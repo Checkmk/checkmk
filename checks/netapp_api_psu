@@ -25,40 +25,28 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<netapp_api_psu:sep(9)>>>
-# 50:05:0c:c0:02:20:d2:c4 shelf-owned     true
-# 50:05:0c:c0:02:20:d2:c4 power-supply-serial-no  PMW944430115711 PMW944430115700 None    None
-# 50:05:0c:c0:02:20:d2:c4 power-supply-is-error   false   false   None    None
-# 50:05:0c:c0:02:20:d2:c4 power-supply-is-not-installed   None    None    true    true
-# 50:05:0c:c0:02:20:d2:c4 power-control-status    ok
-# 50:05:0c:c0:02:20:d2:c4 power-supply-element-number     1       2       3       4
+# power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
+# power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
 
-def inventory_netapp_api_psu(info):
-    yield None, None
+def inventory_netapp_api_psu(parsed):
+    for key, values in parsed.items():
+        if values.get("power-supply-is-not-installed") != "true":
+            item_name = "%s/%s" % tuple(key.split("."))
+            yield item_name, None
 
-def check_netapp_api_psu(_no_item, _no_params, parsed):
-    psu_count   = 0
-    psu_errors  = []
-    for shelf, psus in parsed.items():
-        if psus["shelf-owned"][0] != "true":
-            continue
-
-        for idx, not_installed in enumerate(psus["power-supply-is-not-installed"]):
-            if not_installed == "true" or psus["power-supply-element-number"][idx] == "None":
-                continue
-            psu_count += 1
-            if psus["power-supply-is-error"][idx] == "true":
-                psu_errors.append((2, "Error in Shelf %s PSU %s" % (shelf, psus["power-supply-element-number"][idx])))
-
-    yield 0, "%s power supplies assigned to this filer" % psu_count
-
-    for state, text in psu_errors:
-        yield state, text
+def check_netapp_api_psu(item, _no_params, parsed):
+    psu = parsed.get("%s.%s" % tuple(item.split("/")))
+    if psu.get("power-supply-is-error") == "true":
+        yield 2, "Error in PSU %s" % psu["power-supply-element-number"]
+    else:
+        yield 0, "Operational state OK"
 
 
 check_info["netapp_api_psu"] = {
     'check_function'      : check_netapp_api_psu,
     'inventory_function'  : inventory_netapp_api_psu,
-    'parse_function'      : netapp_api_parse_info_environ,
-    'service_description' : 'Power Supplies Shelves',
+    'parse_function'      : lambda info: netapp_api_parse_lines(info,
+                                custom_keys = ["power-supply-list", "power-supply-element-number"]),
+    'service_description' : 'Power Supply Shelf %s',
     'includes'            : ["netapp_api.include"]
 }

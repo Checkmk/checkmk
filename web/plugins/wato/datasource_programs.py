@@ -215,23 +215,36 @@ register_rule(group,
 
 register_rule(group,
     "special_agents:netapp",
-    Dictionary(
-            title = _("Username and password for the NetApp Filer."),
-            elements = [
-                ( "username",
-                  TextAscii(
-                      title = _("Username"),
-                      allow_empty = False,
-                  )
-                ),
-                ( "password",
-                  Password(
-                      title = _("Password"),
-                      allow_empty = False,
-                  )
-                ),
-            ],
-            optional_keys = False
+    Transform(
+        Dictionary(
+                title = _("Username and password for the NetApp Filer."),
+                elements = [
+                    ( "username",
+                      TextAscii(
+                          title = _("Username"),
+                          allow_empty = False,
+                      )
+                    ),
+                    ( "password",
+                      Password(
+                          title = _("Password"),
+                          allow_empty = False,
+                      )
+                    ),
+                    ( "skip_elements",
+                        ListChoice(
+                           choices = [
+                                ("ctr_volumes",  _("Do not query volume performance counters")),
+                           ],
+                        title = _("Performance improvements"),
+                        help = _("Here you can configure whether the performance counters should get queried. "
+                                 "This can save quite a lot of CPU load on larger systems."),
+                        ),
+                    )
+                ],
+                optional_keys = False
+        ),
+        forth = lambda x: dict([("skip_elements", [])] + x.items())
     ),
     title = _("Check NetApp via WebAPI"),
     help  = _("This rule set selects the NetApp special agent instead of the normal Check_MK Agent "

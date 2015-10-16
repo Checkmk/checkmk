@@ -165,6 +165,8 @@ version:
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.04" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.10" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 14.04" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.04" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.10" \
           -o "$$(head -c 20 /etc/issue)" = "Debian GNU/Linux 6.0" ] \
           || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \

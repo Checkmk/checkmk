@@ -1,12 +1,13 @@
-Title: Discovery Anzeige der Check Parameter
+Title: Error messages from discovery output of check parameters
 Component: wato
 State: open
 Date: 2015-09-11 21:21:42
 Targetversion: 1.2.7
 Class: bug
 
-Bei einer Discovery und der Anzeige der Check Parameter erscheinen bei vielen Services folgende Meldungen bzw.
-ähnliche Meldungen:
+If you perform a discovery and display the check parameters of the checks,
+there will be displayed several messages with invalid check parameters.
+This or similar messages will be showed:
 85 is int but float is required
-Hier sind die Regeln oder die Auswertung dieser fehlerhaft und führen zu solchen Anzeigen.
-Aufgefallen bei APC Geräten.
+
+Noticed on APC devices.

@@ -281,6 +281,7 @@
     * 2429 FIX: check_mk-netapp_api_disk.summary.php: fixed broken php-template
     * 2618 FIX: Fixed "move folder" popup being positioned out of screen on the right
     * 2620 FIX: Fixed issue loading correct graph templates when HTTP is disabled on system apache level
+    * 2680 FIX: LDAP: Fixed exception when syncing groups using configurations from previous versions...
 
     WATO:
     * 2365 Removed old deprecated notification global options for plain emails...

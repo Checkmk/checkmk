@@ -1,4 +1,7 @@
 1.2.7i3p2:
+    Multisite:
+    * 2696 FIX: Fixed broken perfometer for update checks
+
 
 1.2.7i3p1:
     Checks & Agents:

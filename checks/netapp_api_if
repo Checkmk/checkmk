@@ -25,44 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 #<<<netapp_api_if:sep(9)>>>
-#[config_instance]       net-ifconfig-get
-#interface-config-info
-#  interface-config-info
-#    interface-name      e0a
-#    ipspace-name        default-ipspace
-#    v4-primary-address
-#      ip-address-info
-#        addr-family     af-inet
-#        address 10.1.1.188
-#        netmask-or-prefix       255.255.0.0
-#        broadcast       10.1.255.255
-#        creator vfiler:vfiler0
-#    mac-address 00:0c:29:d8:98:26
-#    mediatype   auto-1000t-fd-up
-#    flowcontrol full
-#...
-#[counter_instance]      ifnet
-#---new_counter---
-#instance_name   e0a
-#recv_errors     0
-#send_errors     0
-#recv_data       90123412
-#send_data       208265211
-#recv_mcasts     699719
-#send_mcasts     7302
+# interface clu1-01_clus1 use-failover-group unused       address 222.254.110.11  dns-domain-name none    is-auto-revert true     lif-uuid 3d682f64-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0a        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0a   is-home true    send_data 4265424  send_errors 0   recv_errors 0   instance_name clu1-01_clus1     recv_data 5988948
+# interface clu1-01_clus2 use-failover-group unused       address 222.254.110.12  dns-domain-name none    is-auto-revert true     lif-uuid 3d6817c9-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0b        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0b   is-home true    send_data 4389886  send_errors 0   recv_errors 0   instance_name clu1-01_clus2     recv_data 6113182
 
 
 def netapp_convert_to_if64(info):
-    parsed_data = netapp_api_convert_info(info,
-                      configs = {"net-ifconfig-get":
-                                {"block-name": "interface-config-info", "key": "interface-name"}},
-                      counter_key = "instance_name")
-    interfaces = parsed_data.get("net-ifconfig-get")
+    interfaces = netapp_api_parse_lines(info)
 
     # Calculate speed, state and create mac-address list
     if_mac_list = {} # Dictionary with lists of common mac addresses
     vif_list    = [] # List of virtual interfaces
     for name, values in interfaces.items():
+        # Reported by 7Mode
         mediatype = values.get("mediatype")
         if mediatype:
             tokens = mediatype.split("-")
@@ -78,10 +52,23 @@ def netapp_convert_to_if64(info):
             else:
                 speed = 0
             values["speed"] = speed
+
             values["state"] = tokens[-1].lower() == "up" and "1" or "2"
         elif values.get("port-role") != "storage-acp":
             # If an interface has no media type and is not a storage-acp it is considered as virtual interface
             vif_list.append(name)
+
+        # Reported by Clustermode
+        if "link-status" in values:
+            if values["link-status"] == "up":
+                values["state"] = "1"
+            else:
+                values["state"] = "2"
+
+        # Reported by Clustermode
+        if "operational-speed" in values:
+            values["speed"] = int(values["operational-speed"]) * 1000 * 1000
+
         if "mac-address" in values:
             if_mac_list.setdefault(values["mac-address"], [])
             if_mac_list[values["mac-address"]].append(name)
@@ -128,8 +115,7 @@ def netapp_convert_to_if64(info):
                         break
 
         # Only add interfaces with counters
-        if "counters" in values:
-            counter_data = values.get("counters")
+        if "recv_data" in values:
             if values.get("mac-address"):
                 mac = "".join(map(lambda x: chr(int(x, 16)), values["mac-address"].split(':')))
             else:
@@ -142,19 +128,19 @@ def netapp_convert_to_if64(info):
             nic[3]  = speed                                 # Speed
             nic[4]  = state                                 # Status
             # IN
-            nic[5]  = counter_data.get("recv_data", 0)      # inoctets
+            nic[5]  = values.get("recv_data", 0)            # inoctets
             nic[6]  = 0                                     # inucast
-            nic[7]  = counter_data.get("recv_mcasts", 0)    # inmcast
+            nic[7]  = values.get("recv_mcasts", 0)          # inmcast
             nic[8]  = 0                                     # ibcast
             nic[9]  = 0                                     # indiscards
-            nic[10] = counter_data.get("recv_errors", 0)    # inerrors
+            nic[10] = values.get("recv_errors", 0)          # inerrors
             # OUT
-            nic[11] = counter_data.get("send_data", 0)      # outoctets
+            nic[11] = values.get("send_data", 0)            # outoctets
             nic[12] = 0                                     # outucast
-            nic[13] = counter_data.get("send_mcasts", 0)    # outmcast
+            nic[13] = values.get("send_mcasts", 0)          # outmcast
             nic[14] = 0                                     # outbcast
             nic[15] = 0                                     # outdiscards
-            nic[16] = counter_data.get("send_errors", 0)    # outspeed
+            nic[16] = values.get("send_errors", 0)          # outspeed
             nic[17] = 0                                     # outqlen
             nic[18] = values.get("interface-name", "")      # Alias
             nic[19] = mac                                   # MAC

@@ -1,0 +1,44 @@
+Title: NetApp monitoring: Cluster-Mode is now supported, changes in existing 7Mode checks
+Level: 2
+Component: checks
+Class: feature
+Compatible: incomp
+State: unknown
+Version: 1.2.7i4
+Date: 1444823036
+
+This update enables to monitor NetApp Filers running in Cluster-Mode.
+The new <i>agent_netapp</i> is able to automatically detect whether the filer
+is running in 7Mode or Cluster-Mode, so you only have to configure the
+credentials in the datasource rule as usual.
+
+Some of the existing 7Mode checks have been adjusted. Overall there are now less summary
+checks available (e.g. fan, temperature, psu). You need to do a service discovery on each NetApp filer.
+
+The following table shows the list of available checks and the currently
+supported NetApp mode.
+
+<table>
+<tr><th>Check</th><th>Description</th><th>7Mode</th><th>Cluster-Mode</th></tr>
+<tr> <td>netapp_api_aggr</td> <td>Used space and trend of aggregations</td> <td>X</td> <td>X</td></tr>
+<tr> <td>netapp_api_volumes</td> <td>Used space an trend of volumes. Able to record detailed performance data for each protocol</td> <td>X</td> <td>X</td></tr>
+<tr> <td>netapp_api_info</td> <td>Displays NetApp version</td> <td>X</td> <td>X</td></tr>
+<tr> <td>netapp_api_cpu</td> <td>CPU utilization of nodes</td> <td></td> <td>X</td></tr>
+<tr> <td>netapp_api_cpu.utilization</td> <td>CPU utilization for 7Mode filer</td> <td>X</td> <td></td></tr>
+<tr> <td>netapp_api_cluster</td> <td>Cluster status</td> <td>X</td> <td></td></tr>
+<tr> <td>netapp_api_cpu.nvram_bat</td> <td>NVRAM battery status</td> <td></td> <td>X</td></tr>
+<tr> <td>netapp_api_disk.summary</td> <td>Disk summary check. Includes total raw capacity and info about broken/spare ratio</td> <td>X</td> <td>X</td></tr>
+<tr> <td>netapp_api_fcp</td> <td>Fibrechannel interfaces traffic and latency</td> <td></td> <td>X</td></tr>
+<tr> <td>netapp_api_if</td> <td>Ethernet interfaces</td> <td>X</td> <td>X</td></tr>
+<tr> <td>netapp_api_protocol</td> <td>Read OPS / Write OPS for each protocol (nfs, nfsv4, cifs, fcp, iscsci)</td> <td>X</td> <td></td></tr>
+<tr> <td>netapp_api_temp</td> <td>Temperature sensors, grouped by shelf</td> <td>X</td> <td>X</td></tr>
+<tr> <td>netapp_api_psu</td> <td>Power supplies</td> <td>X</td> <td>X</td></tr>
+<tr> <td>netapp_api_fan</td> <td>Fan status</td> <td>X</td> <td>X</td></tr>
+<tr> <td>netapp_api_snapvault</td> <td>Snapvault Lag-time</td> <td>X</td> <td></td></tr>
+<tr> <td>netapp_api_status</td> <td>Diagnosis status</td> <td>X</td> <td>X</td></tr>
+<tr> <td>netapp_api_vf_stats.traffic</td> <td>vFiler traffic (Read/Write OPS, Net-Data Send/Recv, Read/Write Bytes)</td> <td>X</td> <td></td></tr>
+<tr> <td>netapp_api_vf_stats</td> <td>CPU utilization of vFilers</td> <td>X</td> <td></td></tr>
+<tr> <td>netapp_api_vf_status</td> <td>vFiler status, e.g running</td> <td>X</td> <td></td></tr>
+<tr> <td>netapp_api_vs_status</td> <td>vServer status, e.g running</td> <td></td> <td>X</td></tr>
+<tr> <td>netapp_api_vs_traffic</td> <td>vServer Traffic Summary</td> <td></td> <td>X</td></tr>
+</table>

@@ -41,15 +41,7 @@ def parse_hp_msa(info):
     for line in info:
         if line[2] == "durable-id":
             item_id = " ".join(line[3:])
-            if line[0] == "drives":
-                item_type = "Disk"
-            elif line[0] == "fan":
-                item_type = "Fan"
-            elif line[0] == "power-supplies":
-                item_type = "PSU"
-            else:
-                item_type = ""
-            info_enrolment.setdefault(item_id, {"item_type" : item_type})
+            info_enrolment.setdefault(item_id, {"item_type" : line[0]})
         else:
             info_enrolment[item_id][line[2]] = " ".join(line[3:])
 
@@ -68,18 +60,33 @@ def inventory_hp_msa_health(parsed):
 
 def check_hp_msa_health(item, _no_params, parsed):
     if item in parsed:
-        infotext = "Status: %s" % parsed[item]["health"]
-        health_state = hp_msa_state_map[parsed[item]["health"]]
-        health_reason = parsed[item].get("health-reason", "")
+        infotexts = []
+        health_state  = hp_msa_state_map[parsed[item]["health"]]
+        health_info = "Status: %s" % parsed[item]["health"]
+        if health_state and parsed[item].get("health-reason", ""):
+            health_info += " (%s)" % parsed[item]["health-reason"]
 
-        extra_info = ""
-        if health_reason:
-            extra_info = " (%s)" % health_reason
+        infotexts.append(health_info)
 
-        if health_state > 0:
-            infotext += extra_info
+        # extra info of volumes
+        if parsed[item]["item_type"] == "volumes":
+            volume_info = parsed[item].get("container-name", "")
+            if volume_info:
+                if parsed[item].get("raidtype", ""):
+                    volume_info += " (%s)" % parsed[item]["raidtype"]
+                infotexts.append("container name: %s" % volume_info)
 
-        return health_state, infotext
+        # extra info of disks
+        elif parsed[item]["item_type"] == "drives":
+            for disk_info in ["serial-number", "vendor", "model", "description", "size"]:
+                if parsed[item].get(disk_info, ""):
+                    infotexts.append("%s: %s" % \
+                        (disk_info.replace("-", " "), parsed[item][disk_info].replace("GB", " GB") ))
+
+            if parsed[item].get("rpm", ""):
+                infotexts.append("speed: %s RPM" % (parsed[item]["rpm"]))
+
+        return health_state, ", ".join(infotexts)
 
 
 def inventory_hp_msa_io(parsed):

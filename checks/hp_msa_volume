@@ -140,7 +140,7 @@ def parse_hp_msa_volume(info):
         if line[0] == "volumes":
             if line[2] == "durable-id":
                 volume_id = " ".join(line[3:])
-                parsed[volume_id] = {"item_type" : "Volume"}
+                parsed[volume_id] = {"item_type" : line[0]}
             else:
                 parsed[volume_id][line[2]] = " ".join(line[3:])
         else:

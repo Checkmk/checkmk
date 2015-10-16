@@ -1,0 +1,18 @@
+title: NetApp Clustermode Filer: NVRAM Battery
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ Reports the status of the NVRAM battery for each cluster node.
+ The check is {OK} when the node reports {battery_ok}, {battery_partially_discharged} or
+ {battery_fully_charged}. The check is {WARN} when the node reports {battery_near_end_of_life}
+ or {battery_over_charged}. The check is {CRIT} when the node reports {battery_full_discharged},
+ {battery_not_present} or {battery_at_end_of_life}. The check is {UNKNOWN} when the node reports
+ {battery_unknown}.
+
+item:
+ The name of the node
+
+inventory:
+ One check per node

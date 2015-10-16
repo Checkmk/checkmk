@@ -1498,6 +1498,12 @@ metric_info["if_in_pkts"] = {
     "color" : "#00e060",
 }
 
+metric_info["if_out_pkts"] = {
+    "title" : _("Output Packets"),
+    "unit"  : "1/s",
+    "color" : "#0080e0",
+}
+
 metric_info["if_out_octets"] = {
     "title" : _("Output Octets"),
     "unit"  : "bytes/s",
@@ -2488,8 +2494,8 @@ metric_info["http_bandwidth"] = {
 
 # netapp api volumes
 
-for volume_info in [ "NFS", "CIFS", "SAN", "FCP", "ISCSI" ]:
-    for what, unit in [ ("data", "bytes"), ("latency", "s") ]:
+for volume_info in [ "NFS", "NFSv4", "NFSv4_1", "CIFS", "SAN", "FCP", "ISCSI" ]:
+    for what, unit in [ ("data", "bytes"), ("latency", "s"), ("ios", "1/s") ]:
 
         volume = volume_info.lower()
 
@@ -3015,11 +3021,6 @@ check_metrics["check_mk-emcvnx_disks"] = {
 check_metrics["check_mk-diskstat"] = {
     "read" : { "name" : "disk_read_throughput" },
     "write": { "name" : "disk_write_throughput" }
-}
-
-check_metrics["check_mk-netapp_api_protocol"] = {
-    "read_ops" : { "name" : "disk_read_ios" },
-    "write_ops": { "name" : "disk_write_ios" }
 }
 
 check_metrics["check_mk-ibm_svc_systemstats.iops"] = {
@@ -5535,85 +5536,30 @@ graph_info.append({
     ]
 })
 
-graph_info.append({
-    "title" : _("NFS traffic"),
-    "metrics" : [
-        ("nfs_read_data", "-area"),
-        ("nfs_write_data", "area"),
-    ],
-})
+for what, text in [ ("nfs",     "NFS"),
+                    ("cifs",    "CIFS"),
+                    ("san",     "SAN"),
+                    ("fcp",     "FCP"),
+                    ("iscsi",   "iSCSI"),
+                    ("nfsv4",   "NFSv4"),
+                    ("nfsv4_1", "NFSv4.1"),
+                  ]:
+    graph_info.append({
+        "title" : _("%s traffic") % text,
+        "metrics" : [
+            ("%s_read_data" % what, "-area"),
+            ("%s_write_data" % what, "area"),
+        ],
+    })
 
-graph_info.append({
-    "title" : _("NFS latency"),
-    "metrics" : [
-        ("nfs_read_latency", "-area"),
-        ("nfs_write_latency", "area"),
-    ],
-})
+    graph_info.append({
+        "title" : _("%s latency") % text,
+        "metrics" : [
+            ("%s_read_latency" % what, "-area"),
+            ("%s_write_latency" % what, "area"),
+        ],
+    })
 
-graph_info.append({
-    "title" : _("CIFS traffic"),
-    "metrics" : [
-        ("cifs_read_data", "-area"),
-        ("cifs_write_data", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("CIFS latency"),
-    "metrics" : [
-        ("cifs_read_latency", "-area"),
-        ("cifs_write_latency", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("SAN traffic"),
-    "metrics" : [
-        ("san_read_data", "-area"),
-        ("san_write_data", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("SAN latency"),
-    "metrics" : [
-        ("san_read_latency", "-area"),
-        ("san_write_latency", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("FCP traffic"),
-    "metrics" : [
-        ("fcp_read_data", "-area"),
-        ("fcp_write_data", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("FCP latency"),
-    "metrics" : [
-        ("fcp_read_latency", "-area"),
-        ("fcp_write_latency", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("ISCSI traffic"),
-    "metrics" : [
-        ("iscsi_read_data", "-area"),
-        ("iscsi_write_data", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("ISCSI latency"),
-    "metrics" : [
-        ("iscsi_read_latency", "-area"),
-        ("iscsi_write_latency", "area"),
-    ],
-})
 
 graph_info.append({
     "title" : _("Harddrive health statistic"),

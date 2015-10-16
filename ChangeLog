@@ -1,5 +1,7 @@
 1.2.7i3p1:
     Checks & Agents:
+    * 2434 NetApp monitoring: Cluster-Mode is now supported, changes in existing 7Mode checks...
+            NOTE: Please refer to the migration notes!
     * 2660 FIX: fixed windows agent using the wrong working directory...
 
     Multisite:

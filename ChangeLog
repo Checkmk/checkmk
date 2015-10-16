@@ -1,4 +1,7 @@
 1.2.7i3p1:
+    Multisite:
+    * 2680 FIX: LDAP: Fixed exception when syncing groups using configurations from previous versions...
+
 
 1.2.7i3:
     Core & Setup:

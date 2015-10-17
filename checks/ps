@@ -111,7 +111,15 @@ def ps_parse_info(info):
                 ps_result.append(line)
             else:
                 row = dict(zip(wmic_headers, line))
-                wmic_info[(row["node"], row["Name"], row["ProcessId"])] = row
+                # Row might be damaged. I've seen this agent output:
+                # Node - TILE-BUILDER02
+                # ERROR:
+                # Description = Quota violation
+                #
+                # Node,
+                if "Name" in row and "ProcessId" in row:
+                    wmic_info[(row["node"], row["Name"], row["ProcessId"])] = row
+
     except StopIteration:
         pass
 

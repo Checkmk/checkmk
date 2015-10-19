@@ -773,6 +773,17 @@ def fallback_ip_for(hostname, family=None):
         return "::"
 
 
+def extra_host_attributes(hostname):
+    attrs = {}
+    for key, conflist in extra_host_conf.items():
+        values = host_extra_conf(hostname, conflist)
+        if values:
+            if key[0] == "_":
+                key = key.upper()
+            attrs[key] = values[0]
+    return attrs
+
+
 #.
 #   .--SNMP----------------------------------------------------------------.
 #   |                      ____  _   _ __  __ ____                         |
@@ -1891,6 +1902,7 @@ def host_extra_conf_merged(hostname, conf):
         for key, value in rule.items():
             rule_dict.setdefault(key, value)
     return rule_dict
+
 
 def in_binary_hostlist(hostname, conf):
     # if we have just a list of strings just take it as list of hostnames

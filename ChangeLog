@@ -1,5 +1,10 @@
 1.2.7i4:
+    Core & Setup:
+    * 2682 FIX: Fixed exception Error creating configuration: global name 'extra_host_attributes' is not defined
+
     Checks & Agents:
+    * 2434 NetApp monitoring: Cluster-Mode is now supported, changes in existing 7Mode checks...
+            NOTE: Please refer to the migration notes!
     * 2695 hp_msa_disk, hp_msa_volume: these checks now report more information about disks and volumes of a HP MSA 2040 Storage System
     * 2663 knuerr_rms_temp: switch to new generic temperature logic, allow e.g. lower levels...
             NOTE: Please refer to the migration notes!

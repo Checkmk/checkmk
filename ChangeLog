@@ -3,6 +3,7 @@
     * 2682 FIX: Fixed exception Error creating configuration: global name 'extra_host_attributes' is not defined
 
     Checks & Agents:
+    * 2661 FIX: windows agent: fixed incomplete process list...
     * 2665 FIX: ps: fix crash in case of quota violation on Windows
 
     Multisite:

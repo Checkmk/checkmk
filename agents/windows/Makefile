@@ -122,7 +122,7 @@ check_mk_agent-64.exe.versioned:
 
 
 %.exe: %.unversioned.exe %.exe.versioned
-
+	
 
 # -----------------------------------------------------------------------------
 # NSIS installer will be removed and replaced by multiarch MSI installer

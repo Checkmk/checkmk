@@ -1509,6 +1509,7 @@ void section_ps(SOCKET &out)
     if (hProcessSnap != INVALID_HANDLE_VALUE)
     {
         pe32.dwSize = sizeof(PROCESSENTRY32);
+
         if (Process32First(hProcessSnap, &pe32))
         {
             do
@@ -1534,7 +1535,7 @@ void section_ps(SOCKET &out)
                 DWORD processHandleCount = 0;
 
                 // GetProcessHandleCount is only available winxp upwards
-                typedef BOOL (*GetProcessHandleCount_type)(HANDLE, PDWORD);
+                typedef BOOL WINAPI (*GetProcessHandleCount_type)(HANDLE, PDWORD);
                 DYNAMIC_FUNC(GetProcessHandleCount, L"kernel32.dll");
                 if (GetProcessHandleCount_dyn != NULL) {
                     GetProcessHandleCount_dyn(hProcess, &processHandleCount);

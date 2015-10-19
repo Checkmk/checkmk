@@ -2,7 +2,11 @@
 #include <cstring>
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
+
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 
 char *lstrip(char *s)
@@ -146,6 +150,19 @@ int parse_boolean(char *value)
     return -1;
 }
 
+
+bool ci_compare_pred(unsigned char lhs, unsigned char rhs)
+{
+    return std::tolower(lhs) == std::tolower(rhs);
+}
+
+
+bool ci_equal(const std::string &lhs, const std::string &rhs)
+{
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin(), ci_compare_pred);
+}
+
+
 bool globmatch(const char *pattern, const char *astring)
 {
     const char *p = pattern;
@@ -193,6 +210,7 @@ bool globmatch(const char *pattern, const char *astring)
 }
 
 
+#ifdef _WIN32
 std::string get_win_error_as_string(DWORD error_id)
 {
     //Get the error message, if any.
@@ -211,4 +229,5 @@ std::string get_win_error_as_string(DWORD error_id)
 
     return message;
 }
+#endif // WIN32
 

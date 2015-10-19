@@ -8,6 +8,9 @@
     Multisite:
     * 2696 FIX: Fixed broken perfometer for update checks
 
+    HW/SW-Inventory:
+    * 2436 NetApp monitoring: Now able to gather data for inventory...
+
 
 1.2.7i3p1:
     Checks & Agents:

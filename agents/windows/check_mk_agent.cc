@@ -308,18 +308,6 @@ void debug_script_container( script_container* container )
 }
 
 
-bool ci_compare_pred(unsigned char lhs, unsigned char rhs)
-{
-    return std::tolower(lhs) == std::tolower(rhs);
-}
-
-// case insensitive compare
-bool ci_equal(const std::string &lhs, const std::string &rhs)
-{
-    return std::lexicographical_compare(lhs.begin(), lhs.end(),
-            rhs.begin(), rhs.end(), ci_compare_pred);
-}
-
 template <typename FuncT> FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName) {
     HMODULE mod = LoadLibraryW(dllName);
     if (mod != NULL) {

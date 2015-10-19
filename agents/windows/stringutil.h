@@ -32,7 +32,11 @@
 // umm, this is a C header, not actually part of C++ until C++11. This may be a problem in older
 // MSVCs
 #include <stdint.h>
+
+#ifdef _WIN32
 #include <windows.h>
+#endif
+
 
 
 char *lstrip(char *s);
@@ -51,12 +55,16 @@ void lowercase(char *s);
 
 int parse_boolean(char *value);
 
+// case insensitive compare
+bool ci_equal(const std::string &lhs, const std::string &rhs);
+
 // Do a simple pattern matching with the jokers * and ?.
 // This is case insensitive (windows-like).
 bool globmatch(const char *pattern, const char *astring);
 
+#ifdef _WIN32
 std::string get_win_error_as_string(DWORD error_id = ::GetLastError());
-
+#endif
 
 // to_string and to_wstring supplied in C++11 but not before
 #if _cplusplus < 201103L

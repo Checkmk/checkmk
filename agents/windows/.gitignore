@@ -6,3 +6,4 @@ obj64
 success.log
 *.res
 *.rc
+tests

@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,31 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<netapp_api_info:sep(9)>>>
-# build-timestamp 1425927992
-# is-clustered    true
-# version NetApp Release 8.3: Mon Mar 09 19:06:32 PDT 2015
-# clu1-01 board-speed 2933
-# clu1-01 board-type  NetApp VSim
-# clu1-01 cpu-microcode-version   21
-# clu1-01 cpu-processor-id    0x206c2
-# clu1-01 cpu-serial-number   999999
-# clu1-01 memory-size 8192
-# clu1-01 number-of-processors    2
-# clu1-01 prod-type   FAS
+# Example output:
+# <<<netapp_api_disk:sep(9)>>>
+# disk 4E455441:50502020:56442D39:3030304D:422D465A:2D353230:38383633:32303037:00000000:00000000  used-space 9458679808   serial-number 88632007  raid-type pending vendor-id ..
 
-def inventory_netapp_api_info(info):
-    return [ (None, None) ]
-
-def check_netapp_api_info(item, _no_params, info):
+def inv_netapp_api_disk(info):
+    node = inv_tree("hardware.storage.disks:")
     for line in info:
-        if line[0] == "version":
-            return 0, "Version: %s" % line[1]
+        disk = {}
+        line_dict = dict(map(lambda x: x.split(" ", 1), line))
 
-check_info["netapp_api_info"] = {
-    'check_function'      : check_netapp_api_info,
-    'inventory_function'  : inventory_netapp_api_info,
-    'service_description' : 'NetApp Version',
+        for what, inv_name in [ ("serial-number", "serial"), ("vendor-id", "vendor") ]:
+            if line_dict.get(what):
+                disk[inv_name] = line_dict[what]
+        if line_dict.get("bay") not in [None, "?"]:
+            disk["bay"] = line_dict["bay"]
+
+        node.append(disk)
+
+
+inv_info['netapp_api_disk'] = {
+   "inv_function"           : inv_netapp_api_disk,
 }
-
-

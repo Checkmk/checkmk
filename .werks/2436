@@ -1,0 +1,14 @@
+Title: NetApp monitoring: Now able to gather data for inventory
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445248952
+Class: feature
+
+There are now inventory plugins which store various system infos
+like <i>Backplane serial number</i>, <i>System Model</i>, <i>System Machine Type</i>
+or the <i>Number of processors</i>.
+
+The inventory data is only available for NetApp-7Mode right now.
+The NetApp-Clustermode version is following soon.

@@ -1,0 +1,9 @@
+Title: Fixed exception Error creating configuration: global name 'extra_host_attributes' is not defined
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.7i3p2
+Date: 1445237097
+Class: fix
+
+

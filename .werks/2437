@@ -1,0 +1,9 @@
+Title: joloka_metrics.perm_gen: fixed broken check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445333509
+Class: fix
+
+This check never worked. It has been fixed.

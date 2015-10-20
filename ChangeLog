@@ -1,3 +1,5 @@
+1.2.7i3p3:
+
 1.2.7i3p2:
     Core & Setup:
     * 2682 FIX: Fixed exception Error creating configuration: global name 'extra_host_attributes' is not defined

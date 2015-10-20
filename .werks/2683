@@ -1,0 +1,9 @@
+Title: Fixed exceptions occuring in some ps checks
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p2
+Date: 1445342126
+Class: fix
+
+An exception like "'int' object is not iterable" could occur during execution of the ps checks.

@@ -5,6 +5,7 @@
     Checks & Agents:
     * 2661 FIX: windows agent: fixed incomplete process list...
     * 2665 FIX: ps: fix crash in case of quota violation on Windows
+    * 2437 FIX: joloka_metrics.perm_gen: fixed broken check...
 
     Multisite:
     * 2696 FIX: Fixed broken perfometer for update checks

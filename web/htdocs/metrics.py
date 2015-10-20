@@ -1210,6 +1210,46 @@ def browser_supports_canvas():
         return True
 
 
+def get_graph_data_from_livestatus(site, host_name, service):
+    if service == "_HOST_":
+        query = "GET hosts\n" \
+                "Filter: host_name = %s\n" \
+                "Columns: perf_data metrics check_command\n" % host_name
+
+    else:
+        query = "GET services\n" \
+                "Filter: host_name = %s\n" \
+                "Filter: service_description = %s\n" \
+                "Columns: perf_data metrics check_command\n" % (host_name, service)
+
+    if site:
+        html.live.set_only_sites([site])
+    html.live.set_prepend_site(True)
+    data = html.live.query_row(query)
+    html.live.set_prepend_site(False)
+
+    if site:
+        html.live.set_only_sites(None)
+
+    if service == "_HOST_":
+        return {
+            'site'                  : data[0],
+            'host_name'             : host_name,
+            'host_perf_data'        : data[1],
+            'host_metrics'          : data[2],
+            'host_check_command'    : data[3],
+        }
+    else:
+        return {
+            'site'                  : data[0],
+            'host_name'             : host_name,
+            'service_description'   : service,
+            'service_perf_data'     : data[1],
+            'service_metrics'       : data[2],
+            'service_check_command' : data[3],
+        }
+
+
 def page_show_graph():
     site = html.var('site')
     host_name = html.var('host_name')
@@ -1219,43 +1259,12 @@ def page_show_graph():
         # FIXME HACK TODO We don't have the current perfata and check command
         # here, but we only need it till metrics.render_svc_time_graph() does
         # not need these information anymore.
-        if service == "_HOST_":
-            query = "GET hosts\n" \
-                    "Filter: host_name = %s\n" \
-                    "Columns: perf_data metrics check_command\n" % host_name
-
-        else:
-            query = "GET services\n" \
-                    "Filter: host_name = %s\n" \
-                    "Filter: service_description = %s\n" \
-                    "Columns: perf_data metrics check_command\n" % (host_name, service)
-
-        html.live.set_only_sites([site])
         try:
-            data = html.live.query_row(query)
+            row = get_graph_data_from_livestatus(site, host_name, service)
         except livestatus.MKLivestatusNotFoundError:
             html.write('<div class="error">%s</div>' %
                 _('Failed to fetch data for graph. Maybe the site is not reachable?'))
             return
-        html.live.set_only_sites(None)
-
-        if service == "_HOST_":
-            row = {
-                'site'                  : site,
-                'host_name'             : host_name,
-                'host_perf_data'        : data[0],
-                'host_metrics'          : data[1],
-                'host_check_command'    : data[2],
-            }
-        else:
-            row = {
-                'site'                  : site,
-                'host_name'             : host_name,
-                'service_description'   : service,
-                'service_perf_data'     : data[0],
-                'service_metrics'       : data[1],
-                'service_check_command' : data[2],
-            }
 
         # now try to render the graph with our graphing. If it is not possible,
         # add JS code to let browser fetch the PNP graph

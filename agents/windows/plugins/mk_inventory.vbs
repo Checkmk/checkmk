@@ -31,7 +31,7 @@ Sub outPut(strOut)
     objStdout.WriteLine strOut
 End Sub
 
-timestamp = state_dir & "\mk_inventory." & remote_host
+timestamp = state_dir & "\mk_inventory." & Replace(remote_host, ":", "_")
 
 ' does timestamp exist?
 If (fso.FileExists(timestamp)) Then

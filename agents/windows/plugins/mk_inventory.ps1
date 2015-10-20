@@ -17,7 +17,7 @@ if (!$state_dir) {
     $state_dir = "c:\Program Files (x86)\check_mk\state"
 }
 
-$timestamp = $state_dir + "\timestamp."+ $remote_host
+$timestamp = $state_dir + "\timestamp."+ $remote_host.Replace(":", "_")
 
 # does $timestamp exist?
 If (Test-Path $timestamp){

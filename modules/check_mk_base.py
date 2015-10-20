@@ -994,7 +994,6 @@ def load_item_state(hostname):
 
 def save_item_state(hostname):
     if not opt_dont_submit and not i_am_root(): # never writer counters as root
-        global g_item_state
         filename = counters_directory + "/" + hostname
         try:
             if not os.path.exists(counters_directory):
@@ -1108,11 +1107,17 @@ def clear_counters(counter_name_prefix, min_keep_seconds):
     counters_to_delete = []
     remove_if_min_keep_seconds = time.time() - min_keep_seconds
 
-    for name, (timestamp, value) in g_item_state.iteritems():
+    for name, state in g_item_state.iteritems():
         if type(name) == tuple:
             counter_name = name[0] # never needed, since only called by ps currently
         else:
             counter_name = name
+
+        if type(state) == tuple:
+            timestamp, value = state
+        else:
+            continue # unable to cleanup values without timestamp info, skip
+
         if counter_name.startswith(counter_name_prefix):
             if timestamp < remove_if_min_keep_seconds:
                 counters_to_delete.append(name)

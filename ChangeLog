@@ -3,6 +3,8 @@
     * 2682 FIX: Fixed exception Error creating configuration: global name 'extra_host_attributes' is not defined
 
     Checks & Agents:
+    * 2434 NetApp monitoring: Cluster-Mode is now supported, changes in existing 7Mode checks...
+            NOTE: Please refer to the migration notes!
     * 2661 FIX: windows agent: fixed incomplete process list...
     * 2665 FIX: ps: fix crash in case of quota violation on Windows
     * 2437 FIX: joloka_metrics.perm_gen: fixed broken check...
@@ -16,8 +18,6 @@
 
 1.2.7i3p1:
     Checks & Agents:
-    * 2434 NetApp monitoring: Cluster-Mode is now supported, changes in existing 7Mode checks...
-            NOTE: Please refer to the migration notes!
     * 2660 FIX: fixed windows agent using the wrong working directory...
 
     Multisite:

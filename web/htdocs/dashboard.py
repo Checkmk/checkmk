@@ -1214,10 +1214,15 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
         dashlet.update(params)
 
     # When a view shal be added to the dashboard, load the view and put it into the dashlet
+    # FIXME: Mave this to the dashlet plugins
     if dashlet_type == 'view':
         # save the original context and override the context provided by the view
         context = dashlet['context']
         load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name, add_context=context)
+    elif dashlet_type == "pnpgraph":
+        # The "add to visual" popup does not provide a timerang information,
+        # but this is not an optional value. Set it to 25h initially.
+        dashlet.setdefault("timerange", "1")
 
     add_dashlet(dashlet, dashboard)
 

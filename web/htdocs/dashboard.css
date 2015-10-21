@@ -68,7 +68,7 @@ div.dashlet iframe {
     border-style: none;
 }
 
-div.dashlet div.title {
+div.dashlet > div.title {
     position: absolute;
     background-color: rgba(0, 0, 0, 0.3);
     /* IE < 9 */

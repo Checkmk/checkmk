@@ -63,17 +63,18 @@ def inventory_hp_msa_fan(parsed):
 
 def check_hp_msa_fan(item, params, parsed):
     if item in parsed:
-        fan_status        = parsed[item]["status"]
-        fan_speed         = int(parsed[item]["speed"])
-        fan_health        = parsed[item]["health"]
+        fan_speed = int(parsed[item]["speed"])
+        fan_state, fan_state_readable = \
+            hp_msa_state_map[parsed[item]["status"]]
+        fan_health_state, fan_health_state_readable = \
+            hp_msa_state_map[parsed[item]["health"]]
         fan_health_reason = parsed[item].get("health-reason", "")
 
-        yield hp_msa_state_map[fan_status], \
-              "Status: %s, speed: %s RPM" % (fan_status, fan_speed)
+        yield fan_state, "Status: %s, speed: %s RPM" % (fan_state_readable, fan_speed)
 
-        if hp_msa_state_map[fan_health] > 0 and fan_health_reason:
-            yield hp_msa_state_map[fan_health], "health: %s (%s)" % \
-                  (fan_health, fan_health_reason)
+        if fan_health_state > 0 and fan_health_reason:
+            yield fan_health_state, "health: %s (%s)" % \
+                  (fan_health_state_readable, fan_health_reason)
 
 
 check_info['hp_msa_fan'] = {

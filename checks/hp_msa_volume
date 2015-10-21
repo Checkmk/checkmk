@@ -134,8 +134,10 @@
 #   |                            main check                                |
 #   '----------------------------------------------------------------------'
 
+
 def parse_hp_msa_volume(info):
     parsed = {}
+    now = time.time()
     for line in info:
         if line[0] == "volumes":
             if line[2] == "durable-id":
@@ -149,8 +151,14 @@ def parse_hp_msa_volume(info):
             else:
                 for key, values in parsed.items():
                     if volume_name == values["volume-name"]:
-                        parsed[key][line[2]] = " ".join(line[3:])
-
+                        if line[2] == "data-read-numeric":
+                            parsed[key][line[2]] = \
+                                get_rate("%s_read" % key, now, int(line[3]))
+                        elif line[2] == "data-written-numeric":
+                            parsed[key][line[2]] = \
+                                get_rate("%s_write" % key, now, int(line[3]))
+                        else:
+                            parsed[key][line[2]] = " ".join(line[3:])
     return parsed
 
 
@@ -162,6 +170,7 @@ check_info['hp_msa_volume'] = {
     'includes'                  : [ "hp_msa.include" ],
 }
 
+
 #.
 #   .--volume df-----------------------------------------------------------.
 #   |                       _                            _  __             |
@@ -171,6 +180,7 @@ check_info['hp_msa_volume'] = {
 #   |             \_/ \___/|_|\__,_|_| |_| |_|\___|  \__,_|_|              |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+
 
 def inventory_hp_msa_volume_df(parsed):
     for key in parsed.keys():
@@ -198,6 +208,7 @@ check_info['hp_msa_volume.df'] = {
     'includes'                  : [ "hp_msa.include", "df.include" ],
 }
 
+
 #.
 #   .--volume IO-----------------------------------------------------------.
 #   |                       _                        ___ ___               |
@@ -208,13 +219,13 @@ check_info['hp_msa_volume.df'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def check_hp_msa_volume_io(item, params, parsed):
     disks = {}
     for key, values in parsed.items():
-        now = time.time()
         disks[key] = {
-            "read_throughput"  : get_rate("%s_read" %  key, now, int(values["data-read-numeric"])),
-            "write_throughput" : get_rate("%s_write" % key, now, int(values["data-written-numeric"])),
+            "read_throughput"  : values["data-read-numeric"],
+            "write_throughput" : values["data-written-numeric"],
         }
 
     if item != "SUMMARY":
@@ -233,6 +244,3 @@ check_info['hp_msa_volume.io'] = {
     'group'                     : 'diskstat',
     'includes'                  : [ "hp_msa.include", "diskstat.include" ],
 }
-
-#.
-

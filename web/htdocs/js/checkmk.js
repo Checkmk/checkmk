@@ -199,6 +199,10 @@ function rad(g) {
     return (g * 360 / 100 * Math.PI) / 180;
 }
 
+// Returns timestamp in seconds incl. subseconds as decimal
+function time() {
+    return (new Date()).getTime() / 1000;
+}
 
 // simple implementation of function default arguments when
 // using objects as function parameters. Example:
@@ -2157,18 +2161,41 @@ function view_toggle_form(oButton, idForm) {
     add_class(oButton, down);
 }
 
-function init_optiondial(id) {
+function wheel_event_name()
+{
+    if ("onwheel" in window)
+        return "wheel";
+    else if (weAreFirefox)
+        return "DOMMouseScroll";
+    else
+        return "mousewheel";
+}
+
+function wheel_event_delta(event)
+{
+    return event.deltaY ? event.deltaY
+                        : event.detail ? event.detail * (-120)
+                                       : event.wheelDelta;
+}
+
+function init_optiondial(id)
+{
     var container = document.getElementById(id);
     make_unselectable(container);
-
-    var eventname = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel"
-    add_event_handler(eventname, optiondial_wheel, container);
+    add_event_handler(wheel_event_name(), optiondial_wheel, container);
 }
 
 var g_dial_direction = 1;
+var g_last_optiondial = null;
 function optiondial_wheel(event) {
     event = event || window.event;
-    var delta = event.detail ? event.detail * (-120) : event.wheelDelta;
+    var delta = wheel_event_delta(event);
+
+    // allow updates every 100ms
+    if (g_last_optiondial > time() - 0.1) {
+        return prevent_default_events(event);
+    }
+    g_last_optiondial = time();
 
     var container = getTarget(event);
     if (event.nodeType == 3) // defeat Safari bug

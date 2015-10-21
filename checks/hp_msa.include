@@ -25,14 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 hp_msa_state_map = {
-    "Up"          : 0,
-    "OK"          : 0,
-    "Warning"     : 1,
-    "Degraded"    : 1,
-    "Error"       : 2,
-    "Not Present" : 2,
-    "Fault"       : 2,
-    "Unknown"     : 3,
+    "Up"          : (0, "up"),
+    "OK"          : (0, "OK"),
+    "Warning"     : (1, "warning"),
+    "Degraded"    : (1, "degraded"),
+    "Error"       : (2, "error"),
+    "Not Present" : (2, "not present"),
+    "Fault"       : (2, "fault"),
+    "Unknown"     : (3, "unknown"),
 }
 
 
@@ -41,22 +41,21 @@ def parse_hp_msa(info):
     for line in info:
         if line[2] == "durable-id":
             item_id = " ".join(line[3:])
-            if line[0] == "drives":
-                item_type = "Disk"
-            elif line[0] == "fan":
-                item_type = "Fan"
-            elif line[0] == "power-supplies":
-                item_type = "PSU"
-            else:
-                item_type = ""
-            info_enrolment.setdefault(item_id, {"item_type" : item_type})
+            info_enrolment.setdefault(item_id, {"item_type" : line[0]})
         else:
             info_enrolment[item_id][line[2]] = " ".join(line[3:])
 
     parsed = {}
+    now = time.time()
     for key, values in info_enrolment.items():
         item_name = values.get("location", key).replace("- ", "")
         item_name = (item_name.rsplit("_", 1)[-1]).strip()
+        if values.get("data-read-numeric", ""):
+            values["data-read-numeric"] = \
+                get_rate("%s_read" % item_name, now, int(values["data-read-numeric"]))
+        if values.get("data-written-numeric", ""):
+            values["data-written-numeric"] = \
+                get_rate("%s_write" % item_name, now, int(values["data-written-numeric"]))
         parsed[item_name] = values
 
     return parsed
@@ -68,18 +67,33 @@ def inventory_hp_msa_health(parsed):
 
 def check_hp_msa_health(item, _no_params, parsed):
     if item in parsed:
-        infotext = "Status: %s" % parsed[item]["health"]
-        health_state = hp_msa_state_map[parsed[item]["health"]]
-        health_reason = parsed[item].get("health-reason", "")
+        infotexts = []
+        health_state, health_state_readable = hp_msa_state_map[parsed[item]["health"]]
+        health_info = "Status: %s" % health_state_readable
+        if health_state and parsed[item].get("health-reason", ""):
+            health_info += " (%s)" % parsed[item]["health-reason"]
 
-        extra_info = ""
-        if health_reason:
-            extra_info = " (%s)" % health_reason
+        infotexts.append(health_info)
 
-        if health_state > 0:
-            infotext += extra_info
+        # extra info of volumes
+        if parsed[item]["item_type"] == "volumes":
+            volume_info = parsed[item].get("container-name", "")
+            if volume_info:
+                if parsed[item].get("raidtype", ""):
+                    volume_info += " (%s)" % parsed[item]["raidtype"]
+                infotexts.append("container name: %s" % volume_info)
 
-        return health_state, infotext
+        # extra info of disks
+        elif parsed[item]["item_type"] == "drives":
+            for disk_info in ["serial-number", "vendor", "model", "description", "size"]:
+                if parsed[item].get(disk_info, ""):
+                    infotexts.append("%s: %s" % \
+                        (disk_info.replace("-", " "), parsed[item][disk_info].replace("GB", " GB") ))
+
+            if parsed[item].get("rpm", ""):
+                infotexts.append("speed: %s RPM" % (parsed[item]["rpm"]))
+
+        return health_state, ", ".join(infotexts)
 
 
 def inventory_hp_msa_io(parsed):
@@ -89,10 +103,9 @@ def inventory_hp_msa_io(parsed):
 def check_hp_msa_io(item, params, parsed):
     disks = {}
     for key, values in parsed.items():
-        now = time.time()
         disks[key] = {
-            "read_throughput"  : get_rate("%s_read" %  key, now, int(values["data-read-numeric"])),
-            "write_throughput" : get_rate("%s_write" % key, now, int(values["data-written-numeric"])),
+            "read_throughput"  : values["data-read-numeric"],
+            "write_throughput" : values["data-written-numeric"],
         }
 
     return check_diskstat_dict(item, params, disks)

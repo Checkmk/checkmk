@@ -15,6 +15,7 @@
     * 2672 FIX: mounts: ignore options that are allowed to change on btrfs filesystems...
     * 2446 FIX: Active checks check_mail, check_mail_loop: did not work with POP3 protocol...
     * 1300 FIX: ovs_bonding: Fixed discovery exception in case of not active bond
+    * 1296 FIX: aix_memory: Check can now handle systems without swap partition
 
     WATO:
     * 2693 FIX: Restoring backup: fixed crash 'failed to extract tarballs'

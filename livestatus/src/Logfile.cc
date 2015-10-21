@@ -48,6 +48,7 @@ Logfile::Logfile(const char *path, bool watch)
   , _watch(watch)
   , _inode(0)
   , _lineno(0)
+  , _world(0)
   , _logclasses_read(0)
 {
     int fd = open(path, O_RDONLY);

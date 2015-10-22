@@ -1,0 +1,9 @@
+Title: mssql agent plugin can now handle clustered MSSQL instances
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445507809
+Class: feature
+
+

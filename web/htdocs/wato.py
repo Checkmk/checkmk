@@ -17025,6 +17025,54 @@ def page_user_profile(change_pw=False):
     html.end_form()
     html.footer()
 
+
+#.
+#   .--Agent-Output--------------------------------------------------------.
+#   |     _                    _         ___        _               _      |
+#   |    / \   __ _  ___ _ __ | |_      / _ \ _   _| |_ _ __  _   _| |_    |
+#   |   / _ \ / _` |/ _ \ '_ \| __|____| | | | | | | __| '_ \| | | | __|   |
+#   |  / ___ \ (_| |  __/ | | | ||_____| |_| | |_| | |_| |_) | |_| | |_    |
+#   | /_/   \_\__, |\___|_| |_|\__|     \___/ \__,_|\__| .__/ \__,_|\__|   |
+#   |         |___/                                    |_|                 |
+#   +----------------------------------------------------------------------+
+#   | Page for downloading the current agent output / SNMP walk of a host  |
+#   '----------------------------------------------------------------------'
+
+def page_download_agent_output():
+    config.need_permission("wato.download_agent_output")
+
+    hostname = html.var("host")
+    if not hostname:
+        raise MKGeneralException(_("The hostname is missing."))
+
+    ty = html.var("type")
+    if ty not in [ "walk", "agent" ]:
+        raise MKGeneralException(_("Invalid type specified."))
+
+    prepare_folder_info()
+
+    check_host_permissions(hostname)
+
+    if hostname not in g_folder[".hosts"]:
+        raise MKGeneralException(_("Invalid hostname."))
+
+    host = g_folder[".hosts"][hostname]
+
+    success, output, agent_data = check_mk_automation(host[".siteid"], "get-agent-output",
+                                                      [hostname, ty])
+
+    if success:
+        html.set_content_type("text/plain; charset=UTF-8")
+        html.set_http_header("Content-Disposition", "Attachment; filename=" + hostname)
+        html.write(agent_data)
+    else:
+        html.header(_("Failed to fetch agent data"), stylesheets=["status", "pages"])
+        html.write("<p>%s</p>" % _("There was a problem fetching data from the host."))
+        if output:
+            html.show_error(html.attrencode(output))
+        html.write("<pre>%s</pre>" % html.attrencode(agent_data))
+        html.footer()
+
 #.
 #   .--Sampleconfig--------------------------------------------------------.
 #   |   ____                        _                       __ _           |
@@ -20582,6 +20630,12 @@ def load_plugins():
         _("Download the default Check_MK monitoring agents for Linux, "
           "Windows and other operating systems."),
        [ "admin", "user", "guest" ])
+
+    config.declare_permission("wato.download_agent_output",
+        _("Download Agent Output / SNMP Walks"),
+        _("Allows to download the current agent output or SNMP walks of the monitored hosts."),
+        [ "admin" ])
+
 
     load_web_plugins("wato", globals())
 

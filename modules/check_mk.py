@@ -4379,29 +4379,35 @@ def list_all_hosts_with_tags(tags):
     return hosts
 
 
-# Implementation of option -d
-def output_plain_hostinfo(hostname):
+def get_plain_hostinfo(hostname):
     info = read_cache_file(hostname, 999999999)
     if info:
-        sys.stdout.write(info)
-        return
-    if is_tcp_host(hostname):
-        try:
+        return info
+    else:
+        info = ""
+        if is_tcp_host(hostname):
             ipaddress = lookup_ip_address(hostname)
-            sys.stdout.write(get_agent_info(hostname, ipaddress, 0))
-        except MKAgentError, e:
-            sys.stderr.write("Problem contacting agent: %s\n" % (e,))
-            sys.exit(3)
-        except MKGeneralException, e:
-            sys.stderr.write("General problem: %s\n" % (e,))
-            sys.exit(3)
-        except socket.gaierror, e:
-            sys.stderr.write("Network error: %s\n" % e)
-        except Exception, e:
-            sys.stderr.write("Unexpected exception: %s\n" % (e,))
-            sys.exit(3)
+            info += get_agent_info(hostname, ipaddress, 0)
+        info += get_piggyback_info(hostname)
+        return info
 
-    sys.stdout.write(get_piggyback_info(hostname))
+
+# Implementation of option -d
+def output_plain_hostinfo(hostname):
+    try:
+        sys.stdout.write(get_plain_hostinfo(hostname))
+    except MKAgentError, e:
+        sys.stderr.write("Problem contacting agent: %s\n" % (e,))
+        sys.exit(3)
+    except MKGeneralException, e:
+        sys.stderr.write("General problem: %s\n" % (e,))
+        sys.exit(3)
+    except socket.gaierror, e:
+        sys.stderr.write("Network error: %s\n" % e)
+    except Exception, e:
+        sys.stderr.write("Unhandled exception: %s\n" % (e,))
+        sys.exit(3)
+
 
 def do_snmptranslate(args):
     if not args:

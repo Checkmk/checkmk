@@ -173,6 +173,9 @@ class html_mod_python(htmllib.html):
     def set_http_header(self, key, val):
         self.req.err_headers_out.add(key, val)
 
+    def set_content_type(self, ty):
+        self.req.content_type = ty
+
     def check_limit(self, rows, limit):
         count = len(rows)
         if limit != None and count >= limit + 1:

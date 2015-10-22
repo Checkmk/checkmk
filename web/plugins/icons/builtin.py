@@ -819,5 +819,3 @@ multisite_icons_and_actions['crashed_check'] = {
     'paint'           : paint_icon_crashed_check,
     'toplevel'        : True,
 }
-
-#.

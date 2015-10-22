@@ -114,6 +114,7 @@ pagehandlers.update({
    "crashed_check"            : lambda: crash_reporting.page_crashed("check"),
    "gui_crash"                : lambda: crash_reporting.page_crashed("gui"),
    "download_crash_report"    : crash_reporting.page_download_crash_report,
+
    "version"                  : werks.page_version,
    "werk"                     : werks.page_werk,
 })

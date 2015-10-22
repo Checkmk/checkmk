@@ -80,6 +80,8 @@ def do_automation(cmd, args):
                 result = automation_update_dns_cache()
             elif cmd == "bake-agents":
                 result = automation_bake_agents()
+            elif cmd == "get-agent-output":
+                result = automation_get_agent_output(args)
             else:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
@@ -1200,3 +1202,25 @@ def automation_bake_agents():
     if "do_bake_agents" in globals():
         return do_bake_agents()
 
+
+def automation_get_agent_output(args):
+    hostname, ty = args
+
+    if ty == "agent":
+        return get_plain_hostinfo(hostname)
+
+    else:
+        path = snmpwalks_dir + "/" + hostname
+        success = True
+        output = ""
+        agent_data = ""
+        try:
+            do_snmpwalk_on(hostname, snmpwalks_dir + "/" + hostname)
+            agent_data = file(snmpwalks_dir + "/" + hostname).read()
+        except Exception, e:
+            success = False
+            output = "Error walking %s: %s\n" % (hostname, e)
+            if opt_debug:
+                raise
+
+        return success, output, agent_data

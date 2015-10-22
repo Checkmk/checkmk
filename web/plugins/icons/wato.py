@@ -45,13 +45,18 @@ def wato_link(folder, site, hostname, where):
     else:
         return
 
+
+def wato_folder_from_filename(filename):
+    if filename.startswith("/wato/") and filename.endswith("hosts.mk"):
+        return filename[6:-8].rstrip("/")
+
+
 def paint_wato(what, row, tags, custom_vars):
     if not wato.may_see_hosts() or html.mobile:
         return
 
-    filename = row["host_filename"]
-    if filename.startswith("/wato/") and filename.endswith("hosts.mk"):
-        wato_folder = filename[6:-8].rstrip("/")
+    wato_folder = wato_folder_from_filename(row["host_filename"])
+    if wato_folder:
         if what == "host":
             return wato_link(wato_folder, row["site"], row["host_name"], "edithost")
         elif row["service_description"] in [ "Check_MK inventory", "Check_MK Discovery" ]:
@@ -60,4 +65,54 @@ def paint_wato(what, row, tags, custom_vars):
 multisite_icons_and_actions['wato'] = {
     'host_columns' : [ "filename" ],
     'paint'        :  paint_wato,
+}
+
+#.
+#   .--Agent-Output--------------------------------------------------------.
+#   |     _                    _         ___        _               _      |
+#   |    / \   __ _  ___ _ __ | |_      / _ \ _   _| |_ _ __  _   _| |_    |
+#   |   / _ \ / _` |/ _ \ '_ \| __|____| | | | | | | __| '_ \| | | | __|   |
+#   |  / ___ \ (_| |  __/ | | | ||_____| |_| | |_| | |_| |_) | |_| | |_    |
+#   | /_/   \_\__, |\___|_| |_|\__|     \___/ \__,_|\__| .__/ \__,_|\__|   |
+#   |         |___/                                    |_|                 |
+#   +----------------------------------------------------------------------+
+#   | Action for downloading the current agent output                      |
+#   '----------------------------------------------------------------------'
+
+def paint_download_agent_output(what, row, tags, host_custom_vars, ty):
+    if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
+       and config.may("wato.download_agent_output"):
+
+        # Not 100% acurate to use the tags here, but this is the best we can do
+        # with the available information.
+        # Render "download agent output" for non agent hosts, because there might
+        # be piggyback data available which should be downloadable.
+        if ty == "walk" and "snmp" not in tags:
+            return
+        elif ty == "agent" and "snmp" in tags and "agent" not in tags:
+            return
+
+        params = [("host",   row["host_name"]),
+                  ("folder", wato_folder_from_filename(row["host_filename"])),
+                  ("type",   ty)]
+
+        if ty == "agent":
+            title = _("Download agent output")
+        else:
+            title = _("Download SNMP walk")
+
+        url = html.makeuri_contextless(params, filename="download_agent_output.py")
+        return "agent_output", title, url
+
+
+multisite_icons_and_actions['download_agent_output'] = {
+    'paint'           : lambda *args: paint_download_agent_output(*args, ty="agent"),
+    'toplevel'        : False,
+    'sort_index'      : 50,
+}
+
+multisite_icons_and_actions['download_snmp_walk'] = {
+    'paint'           : lambda *args: paint_download_agent_output(*args, ty="walk"),
+    'toplevel'        : False,
+    'sort_index'      : 50,
 }

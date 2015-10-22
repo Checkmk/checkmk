@@ -1,0 +1,10 @@
+Title: LDAP: Fixed failing synchronization when migrating some old configs
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3p3
+Date: 1445497370
+Class: fix
+
+When updating from previous Check_MK versions having an LDAP configuration,
+it might happen that errors like "Invalid scope specified: subtree" occur.

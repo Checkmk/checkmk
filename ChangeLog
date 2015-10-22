@@ -2,6 +2,9 @@
     Checks & Agents:
     * 2697 FIX: hp_msa_controller.io, hp_msa_disk.io, hp_msa_volume.io: fixed broken I/O calculation
 
+    Multisite:
+    * 2685 FIX: LDAP: Fixed failing synchronization when migrating some old configs...
+
 
 1.2.7i3p2:
     Core & Setup:

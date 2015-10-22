@@ -144,6 +144,7 @@ def check_fileinfo_groups(item, params, info):
 
     outof_range_txt = fileinfo_check_timeranges(params)
 
+    # TODO: import in check functions is not allowed
     import fnmatch
     reftime = int(info[0][0])
 
@@ -152,7 +153,8 @@ def check_fileinfo_groups(item, params, info):
     # not been exectued yet. The precompile function creates an empty
     # list when no rules/patterns are defined.
     if 'precompiled_patterns' not in params:
-        params = fileinfo_groups_precompile(g_hostname, item, params)
+        # TODO: it's not allowed to modify params!!
+        fileinfo_groups_precompile(g_hostname, item, params)
 
     count_all = 0
     age_oldest = None
@@ -212,6 +214,7 @@ def check_fileinfo_groups(item, params, info):
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 def fileinfo_check_function(check_definition, params, outof_range_txt):
+    # TODO: use lambda a, b: a<b instead....
     import operator
     state = 0
     infos = []

@@ -316,7 +316,7 @@ check_info                         = {} # all known checks
 inv_info                           = {} # inventory plugins
 checkgroup_of                      = {} # groups of checks with compatible parametration
 check_includes                     = {} # library files needed by checks
-precompile_params                  = {} # optional functions for parameter precompilation, look at df for an example
+precompile_params                  = {} # optional functions for parameter precompilation
 check_default_levels               = {} # dictionary-configured checks declare their default level variables here
 factory_settings                   = {} # factory settings for dictionary-configured checks
 check_config_variables             = [] # variables (names) in checks/* needed for check itself
@@ -3121,17 +3121,6 @@ def find_check_plugins(checktype):
 
     return paths
 
-def get_precompiled_check_table(hostname):
-    host_checks = get_sorted_check_table(hostname, remove_duplicates=True)
-    precomp_table = []
-    for checktype, item, params, description, deps in host_checks:
-        aggr_name = aggregated_service_name(hostname, description)
-        # some checks need precompilation of parameters
-        precomp_func = precompile_params.get(checktype)
-        if precomp_func:
-            params = precomp_func(hostname, item, params)
-        precomp_table.append((checktype, item, params, description, aggr_name)) # deps not needed while checking
-    return precomp_table
 
 def precompile_hostchecks():
     if not os.path.exists(precompiled_hostchecks_dir):
@@ -3144,6 +3133,7 @@ def precompile_hostchecks():
                 raise
             sys.stderr.write("Error precompiling checks for host %s: %s\n" % (host, e))
             sys.exit(5)
+
 
 # read python file and strip comments
 g_stripped_file_cache = {}
@@ -3158,6 +3148,7 @@ def stripped_python_file(filename):
     g_stripped_file_cache[filename] = a
     return a
 
+# TODO: move this into a new module nagios.py (for creating Nagios config)
 def precompile_hostcheck(hostname):
     if opt_verbose:
         sys.stderr.write("%s%s%-16s%s:" % (tty_bold, tty_blue, hostname, tty_normal))
@@ -3481,6 +3472,21 @@ no_discovery_possible = None
 
     if opt_verbose:
         sys.stderr.write(" ==> %s.\n" % compiled_filename)
+
+
+def get_precompiled_check_table(hostname):
+    host_checks = get_sorted_check_table(hostname, remove_duplicates=True)
+    precomp_table = []
+    for checktype, item, params, description, deps in host_checks:
+        aggr_name = aggregated_service_name(hostname, description)
+        # some checks need precompilation of parameters
+        precomp_func = precompile_params.get(checktype)
+        if precomp_func:
+            params = precomp_func(hostname, item, params)
+        precomp_table.append((checktype, item, params, description, aggr_name)) # deps not needed while checking
+    return precomp_table
+
+
 
 #.
 #   .--Pack config---------------------------------------------------------.

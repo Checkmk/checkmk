@@ -3139,6 +3139,12 @@ class Transform(ValueSpec):
         else:
             return self._valuespec.title()
 
+    def help(self):
+        if self._help:
+            return self._help
+        else:
+            return self._valuespec.help()
+
     def render_input(self, varprefix, value):
         self._valuespec.render_input(varprefix, self.forth(value))
 

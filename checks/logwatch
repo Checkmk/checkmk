@@ -731,7 +731,8 @@ def check_logwatch_ec(item, params, info):
                         continue
 
             msg = '<%d>' % (facility + logwatch_to_prio(rclfd_level or line[0]),)
-            msg += '@%s %s %s: %s' % (cur_time, g_hostname, logfile, line[2:])
+            msg += '@%s;%d;; %s %s: "%s"' % (cur_time, params.get("service_level", 0), g_hostname, logfile, line[2:])
+
             messages.append(msg)
             forwarded_logfiles.add(logfile)
 
@@ -800,6 +801,8 @@ def check_logwatch_ec(item, params, info):
 def logwatch_ec_precompile(hostname, item, params):
     params = params.copy()
 
+    params["service_level"] = get_effective_service_level()
+
     # HACK: opt_keepalive is used to detect cmc
     if (opt_keepalive or not params.get("logwatch_reclassify")):
         params.update({"logwatch_patterns": []})
@@ -846,6 +849,7 @@ def logwatch_ec_precompile(hostname, item, params):
     return params
 
 precompile_params['logwatch.ec'] = logwatch_ec_precompile
+precompile_params['logwatch.ec_single'] = logwatch_ec_precompile
 
 check_info['logwatch.ec'] = {
     'check_function':      check_logwatch_ec,

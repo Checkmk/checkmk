@@ -29,7 +29,8 @@
 
 Option Explicit
 
-Dim WMI, FSO, SHO, prop, instId, instIdx, instVersion, instIds, instName, output
+Dim WMI, FSO, SHO, items, objItem, prop, instId, instIdx, instVersion
+Dim instIds, instName, output, isClustered
 Dim WMIservice, colRunningServices, objService, cfg_dir, cfg_file, hostname
 
 WScript.Timeout = 10
@@ -72,6 +73,26 @@ Function readIniFile(path)
     Set readIniFile = parsed
 End Function
 
+' Detect whether or not the script is called in a clustered environment.
+' Saves the virtual server names of the DB instances
+Set instServers = CreateObject("Scripting.Dictionary")
+On Error Resume Next
+Set WMI = GetObject("WINMGMTS:\\.\root\mscluster")
+Set items = WMI.execQuery("SELECT Name, Status, State, Type, PrivateProperties " & _
+                          "FROM MsCluster_Resource WHERE Type = 'SQL Server'")
+For Each objItem in items
+    instName = objItem.PrivateProperties.InstanceName
+    instServers(instName) = objItem.PrivateProperties.VirtualServerName
+Next
+
+If Err.Number <> 0 Then
+    Err.Clear()
+    isClustered = FALSE
+Else
+    isClustered = TRUE
+End If
+On Error Goto 0
+
 ' Dummy empty output.
 ' Contains timeout error if this scripts runtime exceeds the timeout
 WScript.echo "<<<mssql_versions>>>"
@@ -111,7 +132,8 @@ For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE "
                                "SQLServiceType = 1 AND PropertyName = 'VERSION'")
 
 
-    Set colRunningServices = WMIservice.ExecQuery("SELECT State FROM Win32_Service WHERE Name = '" & prop.ServiceName & "'")
+    Set colRunningServices = WMIservice.ExecQuery("SELECT State FROM Win32_Service " & _
+                                                  "WHERE Name = '" & prop.ServiceName & "'")
     instId      = Replace(prop.ServiceName, "$", "__")
     instVersion = prop.PropertyStrValue
     instIdx = Replace(instId, "__", "_")
@@ -135,9 +157,6 @@ Dim CONN, RS, CFG, AUTH
 Set CONN = CreateObject("ADODB.Connection")
 Set RS = CreateObject("ADODB.Recordset")
 CONN.Provider = "sqloledb"
-
-' Select a special DB
-'CONN.Properties("Initial Catalog").Value = "test123"
 
 ' Loop all found server instances and connect to them
 ' In my tests only the connect using the "named instance" string worked
@@ -175,10 +194,19 @@ For Each instId In instIds.Keys
     End If
 
     ' In case of instance name "MSSQLSERVER" always use (local) as connect string
-    If instName = "MSSQLSERVER" Then
-        CONN.Properties("Data Source").Value = "(local)"
+    If Not isClustered Then
+        If instName = "MSSQLSERVER" Then
+            CONN.Properties("Data Source").Value = "(local)"
+        Else
+            CONN.Properties("Data Source").Value = hostname & "\" & instName
+        End If
     Else
-        CONN.Properties("Data Source").Value = hostname & "\" & instName
+        ' In case the instance name is "MSSQLSERVER" always use the virtual server name
+        If instName = "MSSQLSERVER" Then
+            CONN.Properties("Data Source").Value = instServers(instName)
+        Else
+            CONN.Properties("Data Source").Value = instServers(instName) & "\" & instName
+        End If
     End If
 
     CONN.Open

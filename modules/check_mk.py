@@ -3478,6 +3478,12 @@ def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"
     host_checks = get_sorted_check_table(hostname, remove_duplicates, world)
     precomp_table = []
     for check_type, item, params, description, deps in host_checks:
+        # make these globals available to the precompile function
+        global g_service_description, g_check_type, g_checked_item
+        g_service_description = description
+        g_check_type = check_type
+        g_checked_item = item
+
         aggr_name = aggregated_service_name(hostname, description)
         params = get_precompiled_check_parameters(hostname, item, params, check_type)
         precomp_table.append((check_type, item, params, description, aggr_name)) # deps not needed while checking

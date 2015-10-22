@@ -8312,11 +8312,11 @@ def render_global_configuration_variables(default_values, current_settings, show
             help_text  = valuespec.help() or ''
             title_text = valuespec.title()
 
-            if search and search not in groupname \
-                           and search not in domain \
-                           and search not in varname \
-                           and search not in help_text \
-                           and search not in title_text:
+            if search and search not in groupname.lower() \
+                      and search not in domain.lower() \
+                      and search not in varname \
+                      and search not in help_text.lower() \
+                      and search not in title_text.lower():
                 continue # skip variable when search is performed and nothing matches
             at_least_one_painted = True
 

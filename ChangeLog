@@ -27,6 +27,9 @@
     * 2686 FIX: Fixed showing graphs for cluster ping services
     * 2687 FIX: Quicksearch: Improved error handling
 
+    WATO:
+    * 2666 FIX: Fix search for global configuration variables: ignore case now
+
     HW/SW-Inventory:
     * 2436 NetApp monitoring: Now able to gather data for inventory...
 

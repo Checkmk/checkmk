@@ -3510,7 +3510,10 @@ def get_precompiled_check_parameters(hostname, item, params, check_type):
 # use those files, so that changes in the actual config do not harm
 # the running system.
 
-derived_config_variable_names = [ "hosttags" ]
+# Make service levels available during check execution
+service_service_levels = extra_service_conf.get("_ec_sl", [])
+host_service_levels = extra_host_conf.get("_ec_sl", [])
+derived_config_variable_names = [ "hosttags", "service_service_levels", "host_service_levels" ]
 
 # These variables are part of the Check_MK configuration, but are not needed
 # by the Check_MK keepalive mode, so exclude them from the packed config

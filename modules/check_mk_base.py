@@ -2253,6 +2253,20 @@ def check_timeperiod(timeperiod):
 
     return timeperiod not in g_inactive_timerperiods
 
+# retrive the service level that applies to the calling check.
+def get_effective_service_level():
+    service_levels = service_extra_conf(g_hostname, g_service_description,
+                                        service_service_levels)
+
+    if service_levels:
+        return service_levels[0]
+    else:
+        service_levels = host_extra_conf(g_hostname, host_service_levels)
+        if service_levels:
+            return service_levels[0]
+    return 0
+
+
 #.
 #   .--Aggregation---------------------------------------------------------.
 #   |         _                                    _   _                   |

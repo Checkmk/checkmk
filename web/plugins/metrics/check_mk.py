@@ -2639,6 +2639,13 @@ check_metrics["check-mk-ping"] = {
     "rta" : { "scale" : m }
 }
 
+check_metrics["check-mk-ping-cluster"] = {
+    "~.*rta": { "name" : "rta" },
+    "~.*pl": { "name" : "pl" },
+    "~.*rtmax": { "name" : "rtmax" },
+    "~.*rtmin": { "name" : "rtmin" },
+}
+
 check_metrics["check_mk_active-mail_loop"] = {
     "duration" : { "name": "mails_received_time" }
 }

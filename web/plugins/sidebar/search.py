@@ -94,6 +94,10 @@ sidebar_snapins["search"] = {
     background-color: #BFBFBF;
 }
 
+#mk_search_results div.error {
+    padding: 2px;
+}
+
 """
 }
 

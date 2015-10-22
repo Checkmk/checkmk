@@ -99,7 +99,7 @@ register_configvar(group,
         forth = lambda x: x == 0 and 1 or x, # transform deprecated value 0 (no logging) to 1
         title = _("Notification log level"),
         help = _("You can configure the notification mechanism to log more details about "
-                 "the notifications into the notification log. These information are logged "
+                 "the notifications into the notification log. This information are logged "
                  "into the file <tt>%s</tt>") % site_neutral_path(defaults.log_dir + "/notify.log"),
     ),
     domain = "check_mk")

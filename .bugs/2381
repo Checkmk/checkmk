@@ -1,0 +1,11 @@
+Title: Remove service_aggregations
+Component: core
+State: open
+Date: 2015-10-22 13:44:00
+Targetversion: future
+Class: todo
+
+We should finally remove this obscure feature. First step is to let the code
+still live, but fail with an error if it is used and provide a setting where
+it can be reenabled. That way users are aware that they need to find another
+solution.

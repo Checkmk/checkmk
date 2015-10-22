@@ -1361,12 +1361,12 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     g_hostname = hostname
     num_success = 0
     error_sections = set([])
-    check_table = get_sorted_check_table(hostname, remove_duplicates=True, world=opt_keepalive and "active" or "config")
+    check_table = get_precompiled_check_table(hostname, remove_duplicates=True, world=opt_keepalive and "active" or "config")
     problems = []
 
     parsed_infos = {} # temporary cache for section infos, maybe parsed
 
-    for checkname, item, params, description, aggrinfo in check_table:
+    for checkname, item, params, description, aggrname in check_table:
         if only_check_types != None and checkname not in only_check_types:
             continue
 
@@ -1387,13 +1387,6 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         elif period and opt_debug:
             sys.stderr.write("Service %s: timeperiod %s is currently active.\n" %
                     (description, period))
-
-        # In case of a precompiled check table aggrinfo is the aggrated
-        # service name. In the non-precompiled version there are the dependencies
-        if type(aggrinfo) == str:
-            aggrname = aggrinfo
-        else:
-            aggrname = aggregated_service_name(hostname, description)
 
         infotype = checkname.split('.')[0]
         try:

@@ -3218,7 +3218,7 @@ no_discovery_possible = None
         output.write("%s = %r\n" % (var, globals()[var]))
 
     output.write("\n# Checks for %s\n\n" % hostname)
-    output.write("def get_sorted_check_table(hostname, remove_duplicates=False, world='config'):\n    return %r\n\n" % check_table)
+    output.write("def get_precompiled_check_table(hostname, remove_duplicates=False, world='config'):\n    return %r\n\n" % check_table)
 
     # Do we need to load the SNMP module? This is the case, if the host
     # has at least one SNMP based check. Also collect the needed check
@@ -3474,18 +3474,22 @@ no_discovery_possible = None
         sys.stderr.write(" ==> %s.\n" % compiled_filename)
 
 
-def get_precompiled_check_table(hostname):
-    host_checks = get_sorted_check_table(hostname, remove_duplicates=True)
+def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"):
+    host_checks = get_sorted_check_table(hostname, remove_duplicates, world)
     precomp_table = []
-    for checktype, item, params, description, deps in host_checks:
+    for check_type, item, params, description, deps in host_checks:
         aggr_name = aggregated_service_name(hostname, description)
-        # some checks need precompilation of parameters
-        precomp_func = precompile_params.get(checktype)
-        if precomp_func:
-            params = precomp_func(hostname, item, params)
-        precomp_table.append((checktype, item, params, description, aggr_name)) # deps not needed while checking
+        params = get_precompiled_check_parameters(hostname, item, params, check_type)
+        precomp_table.append((check_type, item, params, description, aggr_name)) # deps not needed while checking
     return precomp_table
 
+
+def get_precompiled_check_parameters(hostname, item, params, check_type):
+    precomp_func = precompile_params.get(check_type)
+    if precomp_func:
+        return precomp_func(hostname, item, params)
+    else:
+        return params
 
 
 #.

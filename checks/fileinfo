@@ -135,8 +135,11 @@ def fileinfo_groups_precompile(hostname, item, params):
                 if type(pattern) == str: # support old format
                     pattern = (pattern, '')
                 patterns.append(pattern)
-    params['precompiled_patterns'] = patterns
-    return params
+
+    precomped = params.copy()
+    precomped['precompiled_patterns'] = patterns
+    return precomped
+
 
 def check_fileinfo_groups(item, params, info):
     if not info:
@@ -147,14 +150,6 @@ def check_fileinfo_groups(item, params, info):
     # TODO: import in check functions is not allowed
     import fnmatch
     reftime = int(info[0][0])
-
-    # Get the grouping patterns (either compile or reuse the precompiled ones)
-    # Check_MK creates an empty string if the precompile function has
-    # not been exectued yet. The precompile function creates an empty
-    # list when no rules/patterns are defined.
-    if 'precompiled_patterns' not in params:
-        # TODO: it's not allowed to modify params!!
-        fileinfo_groups_precompile(g_hostname, item, params)
 
     count_all = 0
     age_oldest = None

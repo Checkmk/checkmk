@@ -998,7 +998,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             if exitcode == None:
                 check_function = check_info[check_type]["check_function"]
                 if check_source != 'manual':
-                    params = compute_check_parameters(hostname, check_type, item, params)
+                    params = get_precompiled_check_parameters(hostname, item, compute_check_parameters(hostname, check_type, item, params), check_type)
 
                 try:
                     reset_wrapped_counters()

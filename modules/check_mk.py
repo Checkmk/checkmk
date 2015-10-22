@@ -3511,8 +3511,8 @@ def get_precompiled_check_parameters(hostname, item, params, check_type):
 # the running system.
 
 # Make service levels available during check execution
-service_service_levels = extra_service_conf.get("_ec_sl", [])
-host_service_levels = extra_host_conf.get("_ec_sl", [])
+service_service_levels = None
+host_service_levels = None
 derived_config_variable_names = [ "hosttags", "service_service_levels", "host_service_levels" ]
 
 # These variables are part of the Check_MK configuration, but are not needed
@@ -5890,6 +5890,10 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
                 interactive_abort("Cannot read in configuration file %s: %s" % (_f, e))
 
     collect_hosttags()
+
+    global service_service_levels, host_service_levels
+    service_service_levels = extra_service_conf.get("_ec_sl", [])
+    host_service_levels = extra_host_conf.get("_ec_sl", [])
 
     if validate_hosts:
         duplicates = duplicate_hosts()

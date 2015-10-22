@@ -434,7 +434,7 @@ class LDAPUserConnector(UserConnector):
         return results
 
 
-    def ldap_search(self, base, filt='(objectclass=*)', columns=[], scope='subtree'):
+    def ldap_search(self, base, filt='(objectclass=*)', columns=[], scope='sub'):
         self.log('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
         start_time = time.time()
 
@@ -499,7 +499,8 @@ class LDAPUserConnector(UserConnector):
 
 
     def ldap_get_scope(self, scope):
-        if scope == 'sub':
+        # Had "subtree" in Check_MK for several weeks. Better be compatible to both definitions.
+        if scope in [ 'sub', 'subtree' ]:
             return ldap.SCOPE_SUBTREE
         elif scope == 'base':
             return ldap.SCOPE_BASE
@@ -791,7 +792,7 @@ class LDAPUserConnector(UserConnector):
             'directory_type' : getattr(config, 'ldap_connection', {}).get('type', 'ad'),
             'user_id_umlauts': 'keep',
             'user_dn'        : '',
-            'user_scope'     : 'subtree',
+            'user_scope'     : 'sub',
         }
 
         old_connection_cfg = getattr(config, 'ldap_connection', {})

@@ -717,7 +717,7 @@ def to_regex(s):
         re.compile(s)
     except re.error:
         raise MKGeneralException(_('You search statement is not valid. You need to provide a regular '
-            'expression (regex). For example you need to e use <tt>\\\\</tt> instead of <tt>\\</tt> '
+            'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
             'if you like to search for a single backslash.'))
     return s
 
@@ -996,17 +996,19 @@ def ajax_search():
     if not q:
         return
 
-    data, used_filters = process_search(q)
-    if not data:
-        return
-
     try:
+        data, used_filters = process_search(q)
+        if not data:
+            return
+
         render_search_results(used_filters, data)
+    except MKException, e:
+        html.show_error(e)
     except Exception, e:
-        html.write("error")
+        if config.debug:
+            raise
         import traceback
-        html.write(traceback.format_exc())
-        html.write(repr(e))
+        html.show_error(traceback.format_exc())
 
 
 def search_open():

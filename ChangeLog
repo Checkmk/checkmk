@@ -25,6 +25,7 @@
     * 2696 FIX: Fixed broken perfometer for update checks
     * 2685 FIX: LDAP: Fixed failing synchronization when migrating some old configs...
     * 2686 FIX: Fixed showing graphs for cluster ping services
+    * 2687 FIX: Quicksearch: Improved error handling
 
     HW/SW-Inventory:
     * 2436 NetApp monitoring: Now able to gather data for inventory...

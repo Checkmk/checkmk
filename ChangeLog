@@ -4,6 +4,7 @@
 
     Multisite:
     * 2685 FIX: LDAP: Fixed failing synchronization when migrating some old configs...
+    * 2686 FIX: Fixed showing graphs for cluster ping services
 
 
 1.2.7i3p2:

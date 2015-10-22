@@ -837,15 +837,16 @@ class ListOfIntegers(ListOfStrings):
 class ListOf(ValueSpec):
     def __init__(self, valuespec, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._valuespec = valuespec
-        self._magic = kwargs.get("magic", "@!@")
-        self._rowlabel = kwargs.get("row_label")
-        self._add_label = kwargs.get("add_label", _("Add new element"))
-        self._del_label = kwargs.get("del_label", _("Delete this entry"))
-        self._movable = kwargs.get("movable", True)
-        self._totext = kwargs.get("totext")
-        self._allow_empty = kwargs.get("allow_empty", True)
-        self._empty_text  = kwargs.get("empty_text")
+        self._valuespec     = valuespec
+        self._magic         = kwargs.get("magic", "@!@")
+        self._rowlabel      = kwargs.get("row_label")
+        self._add_label     = kwargs.get("add_label", _("Add new element"))
+        self._del_label     = kwargs.get("del_label", _("Delete this entry"))
+        self._movable       = kwargs.get("movable", True)
+        self._totext        = kwargs.get("totext") # pattern with option %d
+        self._text_if_empty = kwargs.get("text_if_empty", _("No entries"))
+        self._allow_empty   = kwargs.get("allow_empty", True)
+        self._empty_text    = kwargs.get("empty_text") # complain text if empty
         if not self._empty_text:
             self._empty_text = _("Please specify at least one entry")
 
@@ -930,8 +931,10 @@ class ListOf(ValueSpec):
             "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic));
         html.javascript("valuespec_listof_fixarrows(document.getElementById('%s_table').childNodes[0]);" % varprefix)
 
+
     def canonical_value(self):
         return []
+
 
     def value_to_text(self, value):
         if self._totext:
@@ -939,11 +942,14 @@ class ListOf(ValueSpec):
                 return self._totext % len(value)
             else:
                 return self._totext
+        elif not value:
+            return self._text_if_empty
         else:
             s = '<table>'
             for v in value:
                 s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
             return s + '</table>'
+
 
     def get_indexes(self, varprefix):
         count = int(html.var(varprefix + "_count"))

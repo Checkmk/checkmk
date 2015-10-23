@@ -621,7 +621,7 @@ class LDAPUserConnector(UserConnector):
 
             # Apply configured group ldap filter
             try:
-                group = self.ldap_search(self.replace_macros(filter_group_dn), [member_attr], 'base')
+                group = self.ldap_search(self.replace_macros(filter_group_dn), columns=[member_attr], scope='base')
             except MKLDAPException:
                 group = None
 

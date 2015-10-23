@@ -6,6 +6,7 @@
     * 2685 FIX: LDAP: Fixed failing synchronization when migrating some old configs...
     * 2686 FIX: Fixed showing graphs for cluster ping services
     * 2687 FIX: Quicksearch: Improved error handling
+    * 2689 FIX: LDAP: Fixed broken sync when using "Filter Group" in the user sync settings
 
 
 1.2.7i3p2:

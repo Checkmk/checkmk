@@ -1109,6 +1109,8 @@ class html:
         self.write('<table %s class=debug_vars>' % hover)
         self.write("<tr><th colspan=2>"+_("POST / GET Variables")+"</th></tr>")
         for name, value in sorted(vars.items()):
+            if name in [ "_password", "password" ]:
+                value = "***"
             if not prefix or name.startswith(prefix):
                 self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
                     (self.attrencode(name), self.attrencode(value)))

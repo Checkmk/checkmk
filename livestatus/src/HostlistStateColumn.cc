@@ -31,7 +31,7 @@
 extern TableServices *g_table_hosts;
 
 
-inline bool hst_state_is_worse(int32_t state1, int32_t state2)
+static inline bool hst_state_is_worse(int32_t state1, int32_t state2)
 {
     if (state1 == 0) return false;        // UP is worse than nothing
     else if (state2 == 0) return true;    // everything else is worse then UP

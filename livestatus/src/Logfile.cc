@@ -180,7 +180,7 @@ long Logfile::freeMessages(unsigned logclasses)
     return freed;
 }
 
-inline bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
+bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 {
     LogEntry *entry = new LogEntry(lineno, _linebuffer);
     // ignored invalid lines

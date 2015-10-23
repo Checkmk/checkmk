@@ -1,0 +1,10 @@
+Title: logwatch.ec: now transfers the service level to the event console
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445524766
+Class: feature
+
+if a service level is configured for a logwatch->ec forwarding service, that service level will now
+appear in the event console.

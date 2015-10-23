@@ -29,6 +29,7 @@
     * 2686 FIX: Fixed showing graphs for cluster ping services
     * 2687 FIX: Quicksearch: Improved error handling
     * 2689 FIX: LDAP: Fixed broken sync when using "Filter Group" in the user sync settings
+    * 2438 FIX: Manpage icons: fixed manpage links for active checks
 
     WATO:
     * 2666 FIX: Fix search for global configuration variables: ignore case now

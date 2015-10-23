@@ -1,0 +1,9 @@
+Title: Fixed exception in host address painter when displaying hosts/services of older sites
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3p3
+Date: 1445607971
+Class: fix
+
+

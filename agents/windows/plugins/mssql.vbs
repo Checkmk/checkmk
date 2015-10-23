@@ -5,7 +5,7 @@
 ' on the local system.
 '
 ' The current implementation of the check uses the "trusted authentication"
-' where no user/password needs to be created in the MSSQL server instance by 
+' where no user/password needs to be created in the MSSQL server instance by
 ' default. It is only needed to grant the user as which the Check_MK windows
 ' agent service is running access to the MSSQL database.
 '
@@ -30,7 +30,7 @@
 Option Explicit
 
 Dim WMI, FSO, SHO, items, objItem, prop, instId, instIdx, instVersion
-Dim instIds, instName, output, isClustered
+Dim instIds, instName, output, isClustered, instServers
 Dim WMIservice, colRunningServices, objService, cfg_dir, cfg_file, hostname
 
 WScript.Timeout = 10
@@ -297,10 +297,9 @@ For Each instId In instIds.Keys
     Next
 
     ' Loop all databases to get the date of the last backup. Only show databases
-    ' which have at least one backup 
+    ' which have at least one backup
     Dim lastBackupDate
     addOutput( "<<<mssql_backup>>>" )
-    addOutput( "Blocked _Sessions" )
     For Each dbName in dbNames.Keys
         RS.open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date " & _
                 "FROM msdb.dbo.backupset " & _

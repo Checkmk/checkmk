@@ -220,7 +220,10 @@ def paint_manpage_icon(what, row, tags, host_custom_vars):
         if command.startswith("check_mk-"):
             check_type = command[9:]
         elif command.startswith("check_mk_active-"):
-            check_type = "check_" + command[16:]
+            check_name = command[16:].split("!")[0]
+            if check_name == "cmk_inv":
+                return
+            check_type = "check_" + check_name
         else:
             return
         urlvars = [("mode", "check_manpage"), ("check_type", check_type)]

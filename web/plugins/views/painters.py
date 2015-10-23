@@ -1369,11 +1369,11 @@ def paint_host_addresses(row):
                            row["host_custom_variable_values"]))
 
     if custom_vars.get("ADDRESS_FAMILY", "4") == "4":
-        primary   = custom_vars["ADDRESS_4"]
-        secondary = custom_vars["ADDRESS_6"]
+        primary   = custom_vars.get("ADDRESS_4", "")
+        secondary = custom_vars.get("ADDRESS_6", "")
     else:
-        primary   = custom_vars["ADDRESS_6"]
-        secondary = custom_vars["ADDRESS_4"]
+        primary   = custom_vars.get("ADDRESS_6", "")
+        secondary = custom_vars.get("ADDRESS_4", "")
 
     if secondary:
         secondary = " (%s)" % secondary
@@ -1402,9 +1402,9 @@ def paint_host_address_families(row):
     primary = custom_vars.get("ADDRESS_FAMILY", "4")
 
     families = [primary]
-    if primary == "6" and custom_vars["ADDRESS_4"]:
+    if primary == "6" and custom_vars.get("ADDRESS_4"):
         families.append("4")
-    elif primary == "4" and custom_vars["ADDRESS_6"]:
+    elif primary == "4" and custom_vars.get("ADDRESS_6"):
         families.append("6")
 
     return "", ", ".join(families)

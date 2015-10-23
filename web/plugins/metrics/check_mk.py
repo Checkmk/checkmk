@@ -2636,14 +2636,16 @@ metric_info["managed_object_count"] = {
 #   '----------------------------------------------------------------------'
 
 check_metrics["check-mk-ping"] = {
-    "rta" : { "scale" : m }
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
 }
 
 check_metrics["check-mk-ping-cluster"] = {
-    "~.*rta": { "name" : "rta" },
-    "~.*pl": { "name" : "pl" },
-    "~.*rtmax": { "name" : "rtmax" },
-    "~.*rtmin": { "name" : "rtmin" },
+    "~.*rta"   : { "name" : "rta",   "scale": m },
+    "~.*pl"    : { "name" : "pl",    "scale": m },
+    "~.*rtmax" : { "name" : "rtmax", "scale": m },
+    "~.*rtmin" : { "name" : "rtmin", "scale": m },
 }
 
 check_metrics["check_mk_active-mail_loop"] = {

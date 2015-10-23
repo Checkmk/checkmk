@@ -596,10 +596,12 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
                     discovered_services.append((check_type, item, paramstring))
             except (KeyboardInterrupt, MKAgentError, MKSNMPError):
                 raise
-            except Exception, e:
+            except Exception:
                 if opt_debug:
                     raise
-                raise MKGeneralException("Exception in check plugin '%s': %s" % (check_type, e))
+                ty, exc, tb = sys.exc_info()
+                # Re-raise with own error message but keep trace
+                raise MKGeneralException("Exception in check plugin '%s' [%s]: %s" % (check_type, ty.__name__, exc)), None, tb
 
         return discovered_services
     except KeyboardInterrupt:

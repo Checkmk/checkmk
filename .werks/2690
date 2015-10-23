@@ -1,0 +1,10 @@
+Title: ps: Fixed processing of old inventory_processes rules in discovery function
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p3
+Date: 1445602090
+Class: fix
+
+Fixed exception "TypeError: can only concatenate tuple (not "list") to tuple" during
+service discovery when having legacy inventory_processes rules defined.

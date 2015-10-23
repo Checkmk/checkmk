@@ -1,6 +1,7 @@
 1.2.7i3p3:
     Checks & Agents:
     * 2697 FIX: hp_msa_controller.io, hp_msa_disk.io, hp_msa_volume.io: fixed broken I/O calculation
+    * 2690 FIX: ps: Fixed processing of old inventory_processes rules in discovery function...
 
     Multisite:
     * 2685 FIX: LDAP: Fixed failing synchronization when migrating some old configs...

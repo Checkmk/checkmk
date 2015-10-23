@@ -61,7 +61,7 @@ def inventory_ps_common(invdata, invrules, info):
             inv_entry += ([],)
             default_levels = inv_entry[3:7]
 
-        entries.append(inv_entry[:3] + [None] + ({ "levels" : default_levels },))
+        entries.append(inv_entry[:3] + (None,) + ({ "levels" : default_levels },))
 
     # Handle new WATO style inventory rules
     for rule in invrules:

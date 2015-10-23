@@ -40,7 +40,6 @@
 def do_output_nagios_conf(args):
     if len(args) == 0:
         args = None
-    execfile(modules_dir + '/nagios.py', globals())
     create_nagios_config(sys.stdout, args)
 
 

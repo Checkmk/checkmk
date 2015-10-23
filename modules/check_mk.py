@@ -261,9 +261,17 @@ old_service_descriptions = {
 #   |  Load the other modules                                              |
 #   '----------------------------------------------------------------------'
 
+def module_exists(name):
+    path = modules_dir + "/" + name + ".py"
+    return os.path.exists(path)
+
+def load_module(name):
+    path = modules_dir + "/" + name + ".py"
+    execfile(path, globals())
+
 known_vars = set(vars().keys())
 known_vars.add('known_vars')
-execfile(modules_dir + '/config.py')
+load_module("config")
 config_variable_names = set(vars().keys()).difference(known_vars)
 
 # at check time (and many of what is also needed at administration time).
@@ -271,9 +279,8 @@ try:
     modules = [ 'check_mk_base', 'discovery', 'snmp', 'agent_simulator', 'notify', 'events',
                  'alert_handling', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
     for module in modules:
-        filename = modules_dir + "/" + module + ".py"
-        if os.path.exists(filename):
-            execfile(filename)
+        if module_exists(module):
+            load_module(module)
 
 except Exception, e:
     sys.stderr.write("Cannot read file %s: %s\n" % (filename, e))
@@ -2386,7 +2393,7 @@ def list_all_manuals():
     print_table(['Check type', 'Title'], [tty_bold, tty_normal], table)
 
 def read_manpage_catalog():
-    execfile(modules_dir + "/catalog.py", globals())
+    load_module("catalog")
     global g_manpage_catalog
     g_manpage_catalog = {}
     for checkname, path in all_manuals().items():
@@ -3741,7 +3748,7 @@ def do_create_config(with_agents=True):
     if monitoring_core == "cmc":
         do_create_cmc_config(opt_cmc_relfilename, False) # do not use rushed ahead config
     else:
-        execfile(modules_dir + '/nagios.py', globals())
+        load_module("nagios")
         out = file(nagios_objects_file, "w")
         create_nagios_config(out)
     sys.stdout.write(tty_ok + "\n")
@@ -4942,14 +4949,14 @@ try:
             sys.stderr.write("'generate_hostconf = False' in main.mk.\n")
             done = True
         elif o == '-N':
-            execfile(modules_dir + '/nagios.py', globals())
+            load_module("nagios")
             do_output_nagios_conf(args)
             done = True
         elif o == '-B':
             do_update(with_precompile=False)
             done = True
         elif o in [ '-C', '--compile' ]:
-            execfile(modules_dir + '/nagios.py', globals())
+            load_module("nagios")
             precompile_hostchecks()
             done = True
         elif o in [ '-U', '--update' ] :
@@ -4977,11 +4984,11 @@ try:
             show_paths()
             done = True
         elif o in ['-P', '--package']:
-            execfile(modules_dir + "/packaging.py")
+            load_module("packaging")
             do_packaging(args)
             done = True
         elif o in ['--localize']:
-            execfile(modules_dir + "/localize.py")
+            load_module("localize")
             do_localize(args)
             done = True
         elif o == '--donate':
@@ -5040,11 +5047,11 @@ try:
             do_scan_parents(args)
             done = True
         elif o == '--automation':
-            execfile(modules_dir + "/automation.py")
+            load_module("automation")
             do_automation(a, args)
             done = True
         elif o in [ '-i', '--inventory' ]:
-            execfile(modules_dir + "/inventory.py")
+            load_module("inventory")
             if args:
                 hostnames = parse_hostname_list(args, with_clusters = False)
             else:
@@ -5052,7 +5059,7 @@ try:
             do_inv(hostnames)
             done = True
         elif o == '--inventory-as-check':
-            execfile(modules_dir + "/inventory.py")
+            load_module("inventory")
             do_inv_check(a)
             done = True
         elif o == '--handle-alerts':
@@ -5063,16 +5070,16 @@ try:
             sys.exit(do_notify(args))
         elif o == '--create-rrd':
             read_config_files(with_conf_d=True, validate_hosts=False)
-            execfile(modules_dir + "/rrd.py")
+            load_module("rrd")
             do_create_rrd(args)
             done = True
         elif o == '--convert-rrds':
             read_config_files(with_conf_d=True)
-            execfile(modules_dir + "/rrd.py")
+            load_module("rrd")
             do_convert_rrds(args)
             done = True
         elif o == '--compress-history':
-            execfile(modules_dir + "/compresslog.py")
+            load_module("compresslog")
             do_compress_history(args)
             done = True
         elif o in [ '-A', '--bake-agents' ]:

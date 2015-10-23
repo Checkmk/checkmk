@@ -637,7 +637,7 @@ bool TableStateHistory::objectFilteredOut(Query *query, void *entry)
     return false;
 }
 
-inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){
+int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){
     int state_changed = 1;
 
     // Revive host / service if it was unmonitored
@@ -814,7 +814,7 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
 }
 
 
-inline void TableStateHistory::process(Query *query, HostServiceState *hs_state)
+void TableStateHistory::process(Query *query, HostServiceState *hs_state)
 {
     hs_state->_duration = hs_state->_until - hs_state->_from;
     hs_state->_duration_part = (double)hs_state->_duration / (double)_query_timeframe;

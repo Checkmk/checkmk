@@ -467,7 +467,6 @@ def active_check_service_description(act_info, params):
 #   +----------------------------------------------------------------------+
 #   |  Helper functions for dealing with hosts.                            |
 #   '----------------------------------------------------------------------'
-#.
 
 # Returns a list of all host names, regardless if currently
 # disabled or monitored on a remote site. Does not return
@@ -1120,7 +1119,7 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
     return " ".join(args)
 
 
-
+#.
 #   .--Host tags-----------------------------------------------------------.
 #   |              _   _           _     _                                 |
 #   |             | | | | ___  ___| |_  | |_ __ _  __ _ ___                |

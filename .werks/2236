@@ -1,0 +1,13 @@
+Title: cups_queues: Correct not working discovery after werk #2504
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1445729860
+
+Corrected not working discovery of cups_queues after werk #2504.
+APC uses a equal service name which ends with cupsd. A strict matching
+is needed to get both working.
+

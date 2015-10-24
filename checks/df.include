@@ -66,7 +66,6 @@ factory_settings["filesystem_default_levels"] = {
 }
 
 def df_inventory(mplist):
-    import fnmatch
     group_patterns = {}
     for line in host_extra_conf(g_hostname, filesystem_groups):
         for group_name, pattern in line:
@@ -248,8 +247,6 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, reserved_mb, pa
 # New function for checks that support groups.
 def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
     if "patterns" in params:
-        import fnmatch
-
         patterns = params["patterns"]
         count = 0
         total_size_mb      = 0

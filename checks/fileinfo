@@ -70,7 +70,6 @@ def fileinfo_process_date(pattern,reftime):
     return pattern
 
 def fileinfo_groups_of_file(check_filename,reftime):
-    import fnmatch
     groups = []
     for line in host_extra_conf(g_hostname, fileinfo_groups):
         for group_name, pattern in line:
@@ -148,7 +147,6 @@ def check_fileinfo_groups(item, params, info):
     outof_range_txt = fileinfo_check_timeranges(params)
 
     # TODO: import in check functions is not allowed
-    import fnmatch
     reftime = int(info[0][0])
 
     count_all = 0

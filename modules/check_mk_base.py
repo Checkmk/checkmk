@@ -44,6 +44,7 @@ sys.path.pop(0)
 
 import socket
 import os
+import fnmatch
 import time
 import re
 import signal

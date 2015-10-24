@@ -280,7 +280,6 @@ def logwatch_group_precompile(hostname, item, _unused):
     return logwatch_precompile(hostname, item, None), host_extra_conf(hostname, logwatch_groups)
 
 def logwatch_groups_of_logfile(filename, params=False):
-    import fnmatch
     groups = []
     if not params:
         params = host_extra_conf(g_hostname, logwatch_groups)

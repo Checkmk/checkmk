@@ -31,8 +31,18 @@
 # - cluster_name  - Name of a cluster (string)
 # - realhost_name - Name of a *real* host, not a cluster (string)
 
-import os, sys, socket, time, getopt, re, stat, py_compile, urllib, inspect
-import subprocess, fcntl
+import os
+import sys
+import time
+import socket
+import getopt
+import re
+import stat
+import urllib
+import subprocess
+import fcntl
+import py_compile
+import inspect
 
 # These variable will be substituted at 'make dist' time
 check_mk_version  = '(inofficial)'

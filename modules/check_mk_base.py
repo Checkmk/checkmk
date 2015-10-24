@@ -42,7 +42,14 @@ import sys
 # to python module names like "random"
 sys.path.pop(0)
 
-import socket, os, time, re, signal, math, tempfile, traceback
+import socket
+import os
+import time
+import re
+import signal
+import math
+import tempfile
+import traceback
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing

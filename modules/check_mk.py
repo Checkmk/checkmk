@@ -31,7 +31,7 @@
 # - cluster_name  - Name of a cluster (string)
 # - realhost_name - Name of a *real* host, not a cluster (string)
 
-import os, sys, socket, time, getopt, glob, re, stat, py_compile, urllib, inspect
+import os, sys, socket, time, getopt, re, stat, py_compile, urllib, inspect
 import subprocess, fcntl
 
 # These variable will be substituted at 'make dist' time
@@ -338,14 +338,8 @@ special_agent_info                 = {}
 # values user can override those variables in his configuration.
 # Do not read in the checks if check_mk is called as module
 def load_checks():
-    filelist = glob.glob(checks_dir + "/*")
-    filelist.sort()
-
-    # read local checks *after* shipped ones!
-    if local_checks_dir:
-        local_files = glob.glob(local_checks_dir + "/*")
-        local_files.sort()
-        filelist += local_files
+    filelist = plugin_pathnames_in_directory(checks_dir) \
+             + plugin_pathnames_in_directory(local_checks_dir)
 
     # read include files always first, but still in the sorted
     # order with local ones last (possibly overriding variables)
@@ -467,6 +461,32 @@ def active_check_service_description(act_info, params):
 #   +----------------------------------------------------------------------+
 #   |  Helper functions for dealing with hosts.                            |
 #   '----------------------------------------------------------------------'
+
+def is_tcp_host(hostname):
+    return in_binary_hostlist(hostname, tcp_hosts)
+
+def is_ping_host(hostname):
+    return not is_snmp_host(hostname) and not is_tcp_host(hostname) and not has_piggyback_info(hostname)
+
+def is_dual_host(hostname):
+    return is_tcp_host(hostname) and is_snmp_host(hostname)
+
+def is_ipv4_host(hostname):
+    # Either explicit IPv4 or implicit (when host is not an IPv6 host)
+    return "ip-v4" in tags_of_host(hostname) or "ip-v6" not in tags_of_host(hostname)
+
+def is_ipv6_host(hostname):
+    return "ip-v6" in tags_of_host(hostname)
+
+def is_ipv6_primary(hostname):
+    dual_stack_host = is_ipv4v6_host(hostname)
+    return (not dual_stack_host and is_ipv6_host(hostname)) \
+            or (dual_stack_host and host_extra_conf(hostname, primary_address_family) == "ipv6")
+
+def is_ipv4v6_host(hostname):
+    tags = tags_of_host(hostname)
+    return "ip-v6" in tags and "ip-v4" in tags
+
 
 # Returns a list of all host names, regardless if currently
 # disabled or monitored on a remote site. Does not return
@@ -1265,30 +1285,15 @@ def aggregated_service_name(hostname, servicedesc):
 #   | Misc functions which do not belong to any other topic                |
 #   '----------------------------------------------------------------------'
 
-def is_tcp_host(hostname):
-    return in_binary_hostlist(hostname, tcp_hosts)
-
-def is_ping_host(hostname):
-    return not is_snmp_host(hostname) and not is_tcp_host(hostname) and not has_piggyback_info(hostname)
-
-def is_dual_host(hostname):
-    return is_tcp_host(hostname) and is_snmp_host(hostname)
-
-def is_ipv4_host(hostname):
-    # Either explicit IPv4 or implicit (when host is not an IPv6 host)
-    return "ip-v4" in tags_of_host(hostname) or "ip-v6" not in tags_of_host(hostname)
-
-def is_ipv6_host(hostname):
-    return "ip-v6" in tags_of_host(hostname)
-
-def is_ipv6_primary(hostname):
-    dual_stack_host = is_ipv4v6_host(hostname)
-    return (not dual_stack_host and is_ipv6_host(hostname)) \
-            or (dual_stack_host and host_extra_conf(hostname, primary_address_family) == "ipv6")
-
-def is_ipv4v6_host(hostname):
-    tags = tags_of_host(hostname)
-    return "ip-v6" in tags and "ip-v4" in tags
+def plugin_pathnames_in_directory(path):
+    if os.path.exists(path):
+        return sorted([
+            path + "/" + f
+            for f in os.listdir(path)
+            if not f.startswith(".")
+        ])
+    else:
+        return []
 
 def check_period_of(hostname, service):
     periods = service_extra_conf(hostname, service, check_periods)

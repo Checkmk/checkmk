@@ -47,14 +47,8 @@ inv_info = {}   # Inventory plugins
 inv_export = {} # Inventory export hooks
 
 # Read all inventory plugins right now
-filelist = glob.glob(inventory_dir + "/*")
-filelist.sort()
-
-# read local checks *after* shipped ones!
-if local_inventory_dir:
-    local_files = glob.glob(local_inventory_dir + "/*")
-    local_files.sort()
-    filelist += local_files
+filelist = plugin_pathnames_in_directory(inventory_dir) \
+         + plugin_pathnames_in_directory(local_inventory_dir)
 
 
 # read include files always first, but still in the sorted

@@ -1,4 +1,7 @@
 1.2.7i3p4:
+    HW/SW-Inventory:
+    * 2667 FIX: solaris_mem: fix exception in inventory plugin
+
 
 1.2.7i3p3:
     Checks & Agents:

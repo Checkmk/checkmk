@@ -34,17 +34,21 @@
 # swap.total 203939356672
 # swap.used 116191281152
 
-def inv_solaris_mem(info):
+# statgrab_mem has a parse function with the following output:
+# {
+#    'SwapTotal' : 0,
+#    'Cached'    : 0,
+#    'MemFree'   : 1582464, # kB
+#    'MemTotal'  : 2017928, # kB
+#    'SwapFree'  : 0,
+# }
+
+def inv_solaris_mem(parsed):
     node = inv_tree("hardware.memory.")
-    for key, value in info:
-        if key == "mem.total":
-            node["total_ram_usable"] = int(value)
-        if key == "swap.total":
-            node["total_swap"] = int(value)
+    node["total_ram_usable"] = parsed["MemTotal"] * 1024
+    node["total_swap"] = parsed["SwapTotal"] * 1024
 
 
 inv_info['statgrab_mem'] = {
    "inv_function"           : inv_solaris_mem,
 }
-
-

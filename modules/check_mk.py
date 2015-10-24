@@ -1286,7 +1286,7 @@ def aggregated_service_name(hostname, servicedesc):
 #   '----------------------------------------------------------------------'
 
 def plugin_pathnames_in_directory(path):
-    if os.path.exists(path):
+    if path and os.path.exists(path):
         return sorted([
             path + "/" + f
             for f in os.listdir(path)

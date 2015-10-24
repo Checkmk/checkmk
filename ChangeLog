@@ -38,6 +38,7 @@
 
     HW/SW-Inventory:
     * 2436 NetApp monitoring: Now able to gather data for inventory...
+    * 2667 FIX: solaris_mem: fix exception in inventory plugin
 
 
 1.2.7i3:

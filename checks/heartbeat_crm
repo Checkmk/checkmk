@@ -42,7 +42,7 @@
 #     resource_slapmaster (ocf::heartbeat:OpenLDAP):  Started mwp
 # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
 
-import time, datetime
+import datetime
 
 # Nails down the DC to the node which is the DC during inventory. The check
 # will report CRITICAL when another node becomes the DC during later checks.

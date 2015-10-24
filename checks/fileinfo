@@ -146,7 +146,6 @@ def check_fileinfo_groups(item, params, info):
 
     outof_range_txt = fileinfo_check_timeranges(params)
 
-    # TODO: import in check functions is not allowed
     reftime = int(info[0][0])
 
     count_all = 0
@@ -207,8 +206,6 @@ def check_fileinfo_groups(item, params, info):
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 def fileinfo_check_function(check_definition, params, outof_range_txt):
-    # TODO: use lambda a, b: a<b instead....
-    import operator
     state = 0
     infos = []
     perfdata = []
@@ -216,7 +213,10 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
         infos.append("%s is %s" % (what, verbfunc(val)))
         if type(val) in [long, int]: # because strings go into infos but not into perfdata
             warn, crit = "", ""
-            for how, comp, cfunc in [ ("min", "<", operator.lt), ("max", ">", operator.gt) ]:
+            for how, comp, cfunc in [
+                ("min", "<", lambda a, b: a < b),
+                ("max", ">", lambda a, b: a > b),
+            ]:
                 p = params.get(how + what)
                 if p:
                     warn, crit = p

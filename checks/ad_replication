@@ -36,15 +36,13 @@
 # showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Schema,CN=Configuration,DC=corp,\
 #DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:46:28,0
 
-import datetime
-
 ad_replication_default_params = (15,20)
 
 def parse_ad_replication_dates(s):
     if s == '0' or s == '(never)':
         return None
     else:
-        return datetime.datetime(*time.strptime(s, '%Y-%m-%d %H:%M:%S')[:6])
+        return time.mktime(time.strptime(s, '%Y-%m-%d %H:%M:%S'))
 
 def parse_ad_replication_info(info):
     lines = []
@@ -56,12 +54,12 @@ def inventory_ad_replication(info):
     inv = []
     for line in parse_ad_replication_info(info):
         if len(line) == 11:
-            sourceSite = line[4]
-            sourceDC = line[5]
+            source_site = line[4]
+            source_dc = line[5]
         elif len(line) == 10:
-            sourceSite = line[3]
-            sourceDC =  line[4]
-        entry = ('%s/%s' % (sourceSite, sourceDC), 'ad_replication_default_params')
+            source_site = line[3]
+            source_dc =  line[4]
+        entry = ('%s/%s' % (source_site, source_dc), 'ad_replication_default_params')
         if line[0] == 'showrepl_INFO' and entry not in inv:
             inv.append(entry)
     return inv
@@ -69,50 +67,53 @@ def inventory_ad_replication(info):
 def check_ad_replication(item, params, info):
     status    = 0
     output    = ''
-    now       = datetime.datetime.now()
     foundLine = False
 
     for l in parse_ad_replication_info(info):
         if len(l) == 11:
-            (lineType, destSite, destDC, namingContext, sourceSite, sourceDC,
-             transport, numFailures, timeLastFailure, timeLastSuccess,
+            (lineType, destSite, destDC, naming_context, source_site, source_dc,
+             transport, num_failures, time_last_failure, time_last_success,
              statusLastFailure ) = l
         elif len(l) == 10:
-            (lineType, destSite, namingContext, sourceSite, sourceDC,
-             transport, numFailures, timeLastFailure, timeLastSuccess,
+            (lineType, destSite, naming_context, source_site, source_dc,
+             transport, num_failures, time_last_failure, time_last_success,
              statusLastFailure ) = l
 
-        if lineType == 'showrepl_INFO' and sourceSite+'/'+sourceDC == item:
+        if lineType == 'showrepl_INFO' and source_site+'/'+source_dc == item:
             foundLine = True
-            timeLastFailure = parse_ad_replication_dates(timeLastFailure)
-            timeLastSuccess = parse_ad_replication_dates(timeLastSuccess)
+            time_last_failure = parse_ad_replication_dates(time_last_failure)
+            time_last_success = parse_ad_replication_dates(time_last_success)
 
-            maxFailuresWarn = params[0]
-            maxFailuresCrit = params[1]
+            max_failures_warn = params[0]
+            max_failures_crit = params[1]
 
-            if int(numFailures) > maxFailuresWarn:
+            if int(num_failures) > max_failures_warn:
                 status = 1
                 output += '(!) %s/%s replication of context %s reached ' \
-                          ' the threshold of maximum failures (%s) (Last Success: %s, ' \
-                          'LastFailure: %s NumFailures: %s Status: %s), ' % \
-                         (sourceSite, sourceDC, namingContext, maxFailuresWarn, timeLastSuccess,
-                          timeLastFailure, numFailures, statusLastFailure)
+                          ' the threshold of maximum failures (%s) (last success: %s, ' \
+                          'last failure: %s, num failures: %s Status: %s), ' % \
+                         (source_site, source_dc, naming_context, max_failures_warn,
+                          get_relative_date_human_readable(time_last_success),
+                          get_relative_date_human_readable(time_last_failure), num_failures, statusLastFailure)
 
-            if int(numFailures) > maxFailuresCrit:
+            if int(num_failures) > max_failures_crit:
                 status = 2
                 output += '(!!) %s/%s replication of context %s reached ' \
-                          ' the threshold of maximum failures (%s) (Last Success: %s, ' \
-                          'LastFailure: %s NumFailures: %s Status: %s), ' % \
-                         (sourceSite, sourceDC, namingContext, maxFailuresCrit, timeLastSuccess,
-                          timeLastFailure, numFailures, statusLastFailure)
+                          ' the threshold of maximum failures (%s) (last success: %s, ' \
+                          'last failure: %s, num failures: %s, status: %s), ' % \
+                         (source_site, source_dc, naming_context, max_failures_crit,
+                          get_relative_date_human_readable(time_last_success),
+                          get_relative_date_human_readable(time_last_failure), num_failures, statusLastFailure)
 
-            if timeLastFailure is not None and timeLastSuccess is not None \
-               and timeLastFailure > timeLastSuccess:
+            if time_last_failure != None and time_last_success != None \
+               and time_last_failure > time_last_success:
                 status = 2
                 output += '(!!) %s/%s replication of context %s failed ' \
-                         '(Last Success: %s, LastFailure: %s NumFailures: %s Status: %s), ' % \
-                         (sourceSite, sourceDC, namingContext, timeLastSuccess,
-                          timeLastFailure, numFailures, statusLastFailure)
+                         '(last success: %s, last failure: %s num_failures: %s, status: %s), ' % \
+                         (source_site, source_dc, naming_context,
+                          get_relative_date_human_readable(time_last_success),
+                          get_relative_date_human_readable(time_last_failure),
+                          num_failures, statusLastFailure)
     if not foundLine:
         return (3, 'Replication information for %s not found' % item)
 

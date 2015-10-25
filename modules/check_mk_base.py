@@ -2119,6 +2119,18 @@ def savefloat(f):
     except:
         return 0.0
 
+# Convert a string to an integer. This is done by consideren the string to by a
+# little endian byte string.  Such strings are sometimes used by SNMP to encode
+# 64 bit counters without needed COUNTER64 (which is not available in SNMP v1)
+def binstring_to_int(binstring):
+    value = 0
+    mult = 1
+    for byte in binstring[::-1]:
+        value += mult * ord(byte)
+        mult *= 256
+    return value
+
+
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to GB/MB/KB
 # The unit parameter simply changes the returned string, but does not interfere

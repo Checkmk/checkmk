@@ -51,6 +51,7 @@ import signal
 import math
 import tempfile
 import traceback
+import subprocess
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -769,9 +770,7 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
 def get_agent_info_program(commandline):
     exepath = commandline.split()[0] # for error message, hide options!
 
-    import subprocess
-    if opt_verbose:
-        sys.stderr.write("Calling external program %s\n" % commandline)
+    vverbose("Calling external program %s\n" % commandline)
     try:
         p = subprocess.Popen(commandline, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         stdout, stderr = p.communicate()

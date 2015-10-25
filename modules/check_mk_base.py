@@ -2198,6 +2198,14 @@ def get_age_human_readable(secs):
         return "%d days %d hours" % (days, hours)
     return "%d days" % days
 
+
+def get_relative_date_human_readable(timestamp):
+    now = time.time()
+    if timestamp > now:
+        return "in " + get_age_human_readable(timestamp - now)
+    else:
+        return get_age_human_readable(now - timestamp) + " ago"
+
 # Format perc (0 <= perc <= 100 + x) so that precision
 # digits are being displayed. This avoids a "0.00%" for
 # very small numbers

@@ -1,6 +1,7 @@
 1.2.7i3p4:
     Checks & Agents:
     * 2236 FIX: cups_queues: Correct not working discovery after werk #2504...
+    * 2669 FIX: mcdata_fcport: fix computation of in and out traffic...
 
     HW/SW-Inventory:
     * 2667 FIX: solaris_mem: fix exception in inventory plugin

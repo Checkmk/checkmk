@@ -34,7 +34,7 @@ class FixedIntColumn : public IntColumn
 public:
     FixedIntColumn(string name, string description, int value) :
         IntColumn(name, description, -1), _value(value) {}
-    int32_t getValue(void *data, Query *) { return _value; }
+    int32_t getValue(void *, Query *) { return _value; }
 };
 
 #endif // FixedIntColumn_h

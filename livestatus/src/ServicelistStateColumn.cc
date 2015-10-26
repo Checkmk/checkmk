@@ -51,7 +51,6 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem, Que
 {
     contact *auth_user = query->authUser();
     int32_t result = 0;
-    int lt;
 
     while (mem) {
         service *svc = mem->service_ptr;

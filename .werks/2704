@@ -1,0 +1,10 @@
+Title: logwatch: fixed crash caused by missing logwatch buffer
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.6p13
+Date: 1445847930
+Class: fix
+
+logwatch previously had a bug causing the buffer files to grow indefinitely. werk 2658 drops
+excessive log messages but this now caused an error if there was no buffer at all.

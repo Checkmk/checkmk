@@ -50,9 +50,9 @@ def check_http_arguments(params):
 
     if address_family == "ipv6":
         args += " -6"
-        address = "$HOST_ADDRESS_6$"
+        address = "$_HOSTADDRESS_6$"
     else:
-        address = "$HOST_ADDRESS_4$"
+        address = "$_HOSTADDRESS_4$"
 
     if settings.get("ssl"):
         args += ' --ssl'

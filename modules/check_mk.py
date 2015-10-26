@@ -695,6 +695,8 @@ def get_basic_host_macros_from_attributes(hostname, attrs):
     for macro_name, value in attrs.items():
         if macro_name[0] == '_':
             macros["$HOST" + macro_name + "$"] = value
+            # Be compatible to nagios making $_HOST<VARNAME>$ out of the config _<VARNAME> configs
+            macros["$_HOST" + macro_name[1:] + "$"] = value
 
     return macros
 

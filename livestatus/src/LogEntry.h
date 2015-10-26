@@ -34,7 +34,7 @@
 #define LOGCLASS_STATE             6 // initial or current states
 #define LOGCLASS_TEXT              7 // specific text passages. e.g "logging initial states"
                                      // TODO: This LOGCLASS sets different logclasses on match -> fix this
-#define LOGCLASS_INVALID          -1 // never stored
+#define LOGCLASS_INVALID  0x7fffffff // never stored
 #define LOGCLASS_ALL          0xffff
 
 #include "nagios.h"

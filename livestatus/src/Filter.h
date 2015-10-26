@@ -46,7 +46,7 @@ protected:
     void setError(unsigned code, const char *format, ...);
 
 public:
-    Filter() : _query(0), _column(0) {}
+    Filter() : _column(0), _query(0) {}
     virtual ~Filter() {}
     virtual bool isAndingFilter() { return false; }
     virtual bool isNegatingFilter() { return false; }

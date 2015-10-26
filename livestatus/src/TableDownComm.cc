@@ -104,7 +104,6 @@ TableDownComm::~TableDownComm()
 }
 
 void TableDownComm::addComment(nebstruct_comment_data *data) {
-    unsigned long id = data->comment_id;
     if (data->type == NEBTYPE_COMMENT_ADD || data->type == NEBTYPE_COMMENT_LOAD) {
         add(new Comment(data));
     }
@@ -116,7 +115,6 @@ void TableDownComm::addComment(nebstruct_comment_data *data) {
 
 void TableDownComm::addDowntime(nebstruct_downtime_data *data)
 {
-    unsigned long id = data->downtime_id;
     if (data->type == NEBTYPE_DOWNTIME_ADD || data->type == NEBTYPE_DOWNTIME_LOAD) {
         add(new Downtime(data));
     }

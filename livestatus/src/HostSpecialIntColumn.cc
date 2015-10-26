@@ -49,5 +49,6 @@ int32_t HostSpecialIntColumn::getValue(void *data, Query *)
             return mk_inventory_last(hst->name);
 
     }
-    // never reached
+    // never reached, make -Wall happy
+    return 0;
 }

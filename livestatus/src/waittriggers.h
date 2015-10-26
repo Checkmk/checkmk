@@ -27,7 +27,7 @@
 
 #include "pthread.h"
 
-#define WT_NONE         -1
+#define WT_NONE 0x7fffffff
 #define WT_ALL           0
 #define WT_CHECK         1
 #define WT_STATE         2

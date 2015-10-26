@@ -26,6 +26,6 @@
 
 Column *DynamicColumn::createColumn(const char *arguments)
 {
-    createColumn(_indirect_offset, arguments);
+    return createColumn(_indirect_offset, arguments);
 }
 

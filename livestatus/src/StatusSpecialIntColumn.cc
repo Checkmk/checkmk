@@ -32,5 +32,6 @@ int32_t StatusSpecialIntColumn::getValue(void *, Query *)
         case SPIC_MK_INVENTORY_LAST:
             return mk_inventory_last_of_all();
     }
-    // never reached
+    // never reached, make -Wall happy
+    return 0;
 }

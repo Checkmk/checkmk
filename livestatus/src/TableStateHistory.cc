@@ -721,7 +721,7 @@ int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entr
             } else
                 state_changed = 0;
         }
-        else if (hs_state->_host_down != entry->_state > 0)
+        else if (hs_state->_host_down != (entry->_state > 0))
         {
             if (!only_update)
                 process(query, hs_state);

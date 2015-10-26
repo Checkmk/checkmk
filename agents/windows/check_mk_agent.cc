@@ -67,6 +67,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "stringutil.h"
 #include "Environment.h"
 #include "Configuration.h"
@@ -132,17 +133,19 @@ typedef map<unsigned long long, process_entry> process_entry_t;
 
 // Forward declarations of functions
 void listen_tcp_loop(const Environment &env);
-void output(SOCKET &out, const char *format, ...);
 char *ipv4_to_text(uint32_t ip);
 void output_data(SOCKET &out, const Environment &env);
 double file_time(const FILETIME *filetime);
 void open_crash_log(const std::string &log_directory);
 void close_crash_log();
-void crash_log(const char *format, ...);
 void lowercase(char* value);
 void collect_script_data(script_execution_mode mode);
 void find_scripts(const Environment &env);
 void RunImmediate(const char *mode, int argc, char **argv);
+
+void output(SOCKET &out, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+void crash_log(const char *format, ...) __attribute__ ((format (printf, 1, 2)));
+void verbose(const char *format, ...) __attribute__ ((format (printf, 1, 2)));
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -2294,7 +2297,6 @@ int launch_program(script_container* cont)
 {
     int exit_code  = 0;
     int out_offset = 0;
-    char buf[16635];           // i/o buffer
 
     STARTUPINFO si;
     SECURITY_ATTRIBUTES sa;
@@ -2356,7 +2358,9 @@ int launch_program(script_container* cont)
     unsigned long bread;   // bytes read
     unsigned long avail;   // bytes available
 
-    memset(buf, 0, sizeof(buf));
+    static const size_t BUFFER_SIZE = 16635;
+    char buf[BUFFER_SIZE];           // i/o buffer
+    memset(buf, 0, BUFFER_SIZE);
     time_t process_start = time(0);
     bool buffer_full = false;
 
@@ -2400,9 +2404,9 @@ int launch_program(script_container* cont)
                 break;
 
             if (bread > 0) {
-                memset(buf, 0, sizeof(buf));
-                ReadFile(read_stdout, buf, sizeof(buf) - 1, &bread, NULL);
-                out_offset += snprintf(cont->buffer_work + out_offset, current_heap_size - out_offset, buf);
+                ReadFile(read_stdout, cont->buffer_work + out_offset,
+                         std::min<size_t>(BUFFER_SIZE - 1, current_heap_size - out_offset), &bread, NULL);
+                out_offset += bread;
             }
         }
         if (buffer_full) {
@@ -2416,7 +2420,6 @@ int launch_program(script_container* cont)
 
         Sleep(10);
     }
-
     TerminateJobObject(cont->job_object, exit_code);
 
     // cleanup the mess
@@ -2585,7 +2588,7 @@ void output_external_programs(SOCKET &out, script_type type)
                             snprintf(cache_buffer + cache_buffer_offset, write_bytes, "%s", line);
                             cache_buffer_offset += write_bytes - 1;
 
-                            snprintf(cache_buffer + cache_buffer_offset, cache_len, cache_info);
+                            snprintf(cache_buffer + cache_buffer_offset, cache_len, "%s", cache_info);
                             cache_buffer_offset += cache_len - 1;
 
                             write_bytes = 3 + cr_offset + 1 + 1; // >>> + \r + \n + \0
@@ -2614,7 +2617,7 @@ void output_external_programs(SOCKET &out, script_type type)
                 cont->buffer = NULL;
             }
             if (cont->buffer)
-                output(out, cont->buffer);
+                output(out, "%s", cont->buffer);
         }
         it_cont++;
     }
@@ -2701,10 +2704,8 @@ void update_mrpe_includes()
                     p = strrchr(plugin_name, '\\');
                 if (p)
                     plugin_name = p + 1;
-                strncpy(tmp_entry->plugin_name, plugin_name,
-                        sizeof(tmp_entry->plugin_name));
-
-                snprintf(tmp_entry->run_as_user, sizeof(tmp_entry->run_as_user), (*it_include)->user);
+                strncpy(tmp_entry->plugin_name, plugin_name, sizeof(tmp_entry->plugin_name));
+                strncpy(tmp_entry->run_as_user, (*it_include)->user, sizeof(tmp_entry->run_as_user));
                 g_included_mrpe_entries.push_back(tmp_entry);
             }
         }

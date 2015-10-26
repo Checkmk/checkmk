@@ -822,8 +822,8 @@ bool Configuration::handleMrpeConfigVariable(char *var, char *value)
         memset(tmp, 0, sizeof(*tmp));
 
         if (user)
-            snprintf(tmp->user, sizeof(tmp->user), user);
-        snprintf(tmp->path, sizeof(tmp->path), value);
+            snprintf(tmp->user, sizeof(tmp->user), "%s", user);
+        snprintf(tmp->path, sizeof(tmp->path), "%s", value);
         _mrpe_includes.add(tmp);
         return true;
     }

@@ -34,7 +34,7 @@
 #include "Aggregator.h"
 #include "StatsColumn.h"
 
-void PerfdataAggregator::consume(void *data, Query *query)
+void PerfdataAggregator::consume(void *data, Query *)
 {
     char *perf_data = strdup(_column->getValue(data));
     char *scan = perf_data;

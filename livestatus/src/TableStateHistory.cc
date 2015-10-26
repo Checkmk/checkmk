@@ -641,7 +641,7 @@ void TableStateHistory::answerQuery(Query *query)
     g_store->logCache()->unlockLogCache();
 }
 
-bool TableStateHistory::objectFilteredOut(Query *query, void *entry)
+bool TableStateHistory::objectFilteredOut(Query *, void *)
 {
     return false;
 }

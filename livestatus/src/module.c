@@ -262,7 +262,7 @@ void start_threads()
         if (g_debug_level > 0)
             logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
 
-        unsigned t;
+        int t;
         g_clientthread_id = (pthread_t *)malloc(sizeof(pthread_t) * g_num_clientthreads);
         pthread_attr_t attr;
         pthread_attr_init(&attr);
@@ -291,13 +291,13 @@ void terminate_threads()
         pthread_join(g_mainthread_id, NULL);
         logger(LG_INFO, "Waiting for client threads to terminate...");
         queue_wakeup_all();
-        unsigned t;
+        int t;
         for (t=0; t < g_num_clientthreads; t++) {
             if (0 != pthread_join(g_clientthread_id[t], NULL))
                 logger(LG_INFO, "Warning: could not join thread %p", g_clientthread_id[t]);
         }
         if (g_debug_level > 0)
-            logger(LG_INFO, "Main thread + %u client threads have finished", g_num_clientthreads);
+            logger(LG_INFO, "Main thread + %d client threads have finished", g_num_clientthreads);
         g_thread_running = 0;
         g_should_terminate = false;
     }

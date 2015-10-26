@@ -368,6 +368,14 @@ void TableStateHistory::answerQuery(Query *query)
         key = 0;
         bool is_service = false;
         switch (entry->_type) {
+	case NONE:
+	case CORE_STARTING:
+	case CORE_STOPPING:
+	case LOG_VERSION:
+	case ACKNOWLEDGE_ALERT_HOST:
+	case ACKNOWLEDGE_ALERT_SERVICE:
+	    // TODO: Check if a no-op is really the right thing to do here.
+	    break;
         case ALERT_SERVICE:
         case STATE_SERVICE:
         case STATE_SERVICE_INITIAL:
@@ -375,6 +383,7 @@ void TableStateHistory::answerQuery(Query *query)
         case FLAPPING_SERVICE:
             key = entry->_service;
             is_service = true;
+	    // TODO: Do we really want to fall through? If yes, add a comment, otherwise fix it.
         case ALERT_HOST:
         case STATE_HOST:
         case STATE_HOST_INITIAL:
@@ -689,6 +698,15 @@ int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entr
 
     switch (entry->_type)
     {
+    case NONE:
+    case CORE_STARTING:
+    case CORE_STOPPING:
+    case LOG_VERSION:
+    case LOG_INITIAL_STATES:
+    case ACKNOWLEDGE_ALERT_HOST:
+    case ACKNOWLEDGE_ALERT_SERVICE:
+	// TODO: Check if a no-op is really the right thing to do here.
+	break;
     case STATE_HOST:
     case STATE_HOST_INITIAL:
     case ALERT_HOST:

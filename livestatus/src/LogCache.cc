@@ -219,7 +219,7 @@ void LogCache::dumpLogfiles()
  */
 void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((__unused__)), time_t until __attribute__ ((__unused__)), unsigned logclasses)
 {
-    if ( ++num_cached_log_messages <= _max_cached_messages  )
+    if ( static_cast<unsigned long>(++num_cached_log_messages) <= _max_cached_messages  )
         return; // current message count still allowed, everything ok
 
     /* Memory checking an freeing consumes CPU ressources. We save
@@ -228,7 +228,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
        memory can be freed. We do this by suppressing the check when
        the number of messages loaded into memory has not grown
        by at least CHECK_MEM_CYCLE messages */
-    if (num_cached_log_messages < _num_at_last_check + CHECK_MEM_CYCLE)
+    if (static_cast<unsigned long>(num_cached_log_messages) < _num_at_last_check + CHECK_MEM_CYCLE)
         return; // Do not check this time
 
     // [1] Begin by deleting old logfiles
@@ -244,7 +244,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
         if (log->numEntries() > 0) {
             num_cached_log_messages -= log->numEntries();
             log->flush(); // drop all messages of that file
-            if (num_cached_log_messages <= _max_cached_messages) {
+            if (static_cast<unsigned long>(num_cached_log_messages) <= _max_cached_messages) {
                 // remember the number of log messages in cache when
                 // the last memory-release was done. No further
                 // release-check shall be done until that number changes.
@@ -269,7 +269,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
                 debug("Freeing classes 0x%02x of file %s", ~logclasses, log->path());
             long freed = log->freeMessages(~logclasses); // flush only messages not needed for current query
             num_cached_log_messages -= freed;
-            if (num_cached_log_messages <= _max_cached_messages) {
+            if (static_cast<unsigned long>(num_cached_log_messages) <= _max_cached_messages) {
                 _num_at_last_check = num_cached_log_messages;
                 return;
             }
@@ -287,7 +287,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
             debug("Flush newer log, msgs %d", log->numEntries());
             num_cached_log_messages -= log->numEntries();
             log->flush();
-            if (num_cached_log_messages <= _max_cached_messages) {
+            if (static_cast<unsigned long>(num_cached_log_messages) <= _max_cached_messages) {
                 _num_at_last_check = num_cached_log_messages;
                 return;
             }

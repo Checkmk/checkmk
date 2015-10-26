@@ -28,6 +28,7 @@
 #include "logger.h"
 #include "Query.h"
 #include "tables.h"
+#include <stdint.h>
 
 void DownCommColumn::output(void *data, Query *query)
 {
@@ -89,8 +90,8 @@ void DownCommColumn::output(void *data, Query *query)
 
 void *DownCommColumn::getNagiosObject(char *name)
 {
-    unsigned int id = strtoul(name, 0, 10);
-    return (void *)id; // Hack. Convert number into pointer.
+    unsigned long id = strtoul(name, 0, 10);
+    return reinterpret_cast<void *>(static_cast<uintptr_t>(id)); // Hack. Convert number into pointer.
 }
 
 bool DownCommColumn::isNagiosMember(void *data, void *member)

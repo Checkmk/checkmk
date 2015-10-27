@@ -4,6 +4,9 @@
     * 2669 FIX: mcdata_fcport: fix computation of in and out traffic...
     * 2692 FIX: check_http: Fixed broken check when using Nagios (introduced with 1.2.7i3)
 
+    WATO:
+    * 2715 FIX: Fixed visibility of BI aggregations in editor
+
     HW/SW-Inventory:
     * 2667 FIX: solaris_mem: fix exception in inventory plugin
     * 2714 FIX: Fixed visibility of folding arrows by making them dark

@@ -1,0 +1,10 @@
+Title: If check files are available in local, we must not read in those in share!
+Component: core
+State: open
+Date: 2015-10-27 17:14:55
+Targetversion: future
+Class: bug
+
+When creating precompiled Nagios files this is already exactly the implemented
+behaviour. But when you run cmk -v or CMC then *both* files are being read.
+This can lead to a different (wrong) behaviour.

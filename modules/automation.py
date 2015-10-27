@@ -409,6 +409,7 @@ def automation_restart(job = "restart", use_rushd = True):
 
         try:
             if monitoring_core == "nagios":
+                load_module("nagios")
                 create_nagios_config(file(objects_file, "w"))
                 configuration_warnings = [] # not supported
             else:

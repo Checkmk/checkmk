@@ -45,6 +45,7 @@
 // the ps section. Only available in winxp upwards
 #define _WIN32_WINNT 0x0501
 
+
 #include <stdio.h>
 #include <stdint.h>
 #include <winsock2.h>
@@ -61,6 +62,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/types.h>
+#include <stdarg.h>
 #include <ctype.h>     // isspace()
 #include <sys/stat.h>  // stat()
 #include <sys/time.h>  // gettimeofday()
@@ -74,6 +76,8 @@
 #include "ListenSocket.h"
 #include "types.h"
 #include "wmiHelper.h"
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 //  .----------------------------------------------------------------------.
 //  |       ____            _                 _   _                        |
@@ -115,6 +119,16 @@ const char *check_mk_version = CHECK_MK_VERSION;
 #endif
 #endif
 
+
+#ifdef _LP64
+#define PRIdword  "d"
+#define PRIudword "u"
+#else
+#define PRIdword  "ld"
+#define PRIudword "lu"
+#endif
+
+
 using namespace std;
 
 
@@ -143,9 +157,9 @@ void collect_script_data(script_execution_mode mode);
 void find_scripts(const Environment &env);
 void RunImmediate(const char *mode, int argc, char **argv);
 
-void output(SOCKET &out, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
-void crash_log(const char *format, ...) __attribute__ ((format (printf, 1, 2)));
-void verbose(const char *format, ...) __attribute__ ((format (printf, 1, 2)));
+void output(SOCKET &out, const char *format, ...) __attribute__ ((format (gnu_printf, 2, 3)));
+void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
+void verbose(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -359,7 +373,7 @@ void section_uptime(SOCKET &out)
     QueryPerformanceCounter(&Ticks);
     Ticks.QuadPart = Ticks.QuadPart - Frequency.QuadPart;
     unsigned int uptime = (double)Ticks.QuadPart / Frequency.QuadPart;
-    output(out, "%s\n", llu_to_string(uptime));
+    output(out, "%u\n", uptime);
 }
 
 
@@ -397,9 +411,9 @@ void df_output_filesystem(SOCKET &out, char *volid)
             strncpy(volume, volid, sizeof(volume));
 
         output(out, "%s %s ", volume, fsname);
-        output(out, "%s ", llu_to_string(total.QuadPart / KiloByte));
-        output(out, "%s ", llu_to_string((total.QuadPart - free_avail.QuadPart) / KiloByte));
-        output(out, "%s ", llu_to_string(free_avail.QuadPart / KiloByte));
+        output(out, "%" PRIu64 " ", total.QuadPart / KiloByte);
+        output(out, "%" PRIu64 " ", (total.QuadPart - free_avail.QuadPart) / KiloByte);
+        output(out, "%" PRIu64 " ", free_avail.QuadPart / KiloByte);
         output(out, "%3.0f%% ", perc_used);
         output(out, "%s\n", volid);
     }
@@ -641,7 +655,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
             return;
         }
     }
-    crash_log(" - read performance data, buffer size %d", size);
+    crash_log(" - read performance data, buffer size %" PRIudword, size);
 
     PERF_DATA_BLOCK *dataBlockPtr = (PERF_DATA_BLOCK *)data;
 
@@ -681,7 +695,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
             {
                 if (first_counter) {
                     output(out, "<<<winperf_%s>>>\n", countername);
-                    output(out, "%.2f %u %lu\n", current_time(), counter_base_number, Frequency.QuadPart);
+                    output(out, "%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
                     first_counter = false;
                 }
 
@@ -705,7 +719,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
 
             if (first_counter && (objectPtr->NumCounters > 0)) {
                 output(out, "<<<winperf_%s>>>\n", countername);
-                output(out, "%.2f %u %lu\n", current_time(), counter_base_number, Frequency.QuadPart);
+                output(out, "%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
                 first_counter = false;
             }
 
@@ -760,7 +774,7 @@ void outputCounter(SOCKET &out, BYTE *datablock, int counter_base_number,
     }
 
     // Output index of counter object and counter, and timestamp
-    output(out, "%d", counterPtr->CounterNameTitleIndex - counter_base_number);
+    output(out, "%d", static_cast<int>(counterPtr->CounterNameTitleIndex) - counter_base_number);
 
     // If this is a multi-instance-counter, loop over the instances
     int num_instances = objectPtr->NumInstances;
@@ -796,10 +810,10 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
     BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
 
     if (counterPtr->CounterType & PERF_SIZE_DWORD)
-        output(out, " %llu", (ULONGLONG)(*(DWORD*)pData));
+        output(out, " %lu", *(DWORD*)pData);
 
     else if (counterPtr->CounterType & PERF_SIZE_LARGE)
-        output(out, " %llu", *(UNALIGNED ULONGLONG*)pData);
+        output(out, " %" PRIu64, *(UNALIGNED ULONGLONG*)pData);
 
     // handle other data generically. This is wrong in some situation.
     // Once upon a time in future we might implement a conversion as
@@ -811,7 +825,7 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
     else if (size == 8) {
         DWORD *data_at = (DWORD *)pData;
         DWORDLONG value = (DWORDLONG)*data_at + ((DWORDLONG)*(data_at + 1) << 32);
-        output(out, " %s", llu_to_string(value));
+        output(out, " %" PRIu64, value);
     }
     else
         output(out, " unknown");
@@ -973,7 +987,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
     EVENTLOGRECORD *event = (EVENTLOGRECORD *)buffer;
     while (bytesread > 0)
     {
-        crash_log("     - record %d: process_eventlog_entries bytesread %d, event->Length %d", *record_number, bytesread, event->Length);
+        crash_log("     - record %lu: process_eventlog_entries bytesread %lu, event->Length %lu", *record_number, bytesread, event->Length);
         *record_number = event->RecordNumber;
 
         char type_char;
@@ -1056,7 +1070,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
                 memset(dllpath, 0, sizeof(dllpath));
                 if (ERROR_SUCCESS == RegQueryValueEx(key, "EventMessageFile", NULL, NULL, dllpath, &size))
                 {
-                    crash_log("     - record %d: DLLs to load: %s", *record_number, dllpath);
+                    crash_log("     - record %lu: DLLs to load: %s", *record_number, dllpath);
                     // Answer may contain more than one DLL. They are separated
                     // by semicola. Not knowing which one is the correct one, I have to try
                     // all...
@@ -1072,19 +1086,19 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
                 RegCloseKey(key);
             }
             else {
-                crash_log("     - record %d: no DLLs listed in registry", *record_number);
+                crash_log("     - record %lu: no DLLs listed in registry", *record_number);
             }
 
             // No text conversion succeeded. Output without text anyway
             if (!success) {
-                crash_log("     - record %d: translation failed", *record_number);
+                crash_log("     - record %lu: translation failed", *record_number);
                 output_eventlog_entry(out, NULL, event, type_char, logname, source_name, strings);
             }
 
         } // type_char != '.'
 
         bytesread -= event->Length;
-        crash_log("     - record %d: event_processed, bytesread %d, event->Length %d", *record_number, bytesread, event->Length);
+        crash_log("     - record %lu: event_processed, bytesread %lu, event->Length %lu", *record_number, bytesread, event->Length);
         event = (EVENTLOGRECORD *) ((LPBYTE) event + event->Length);
     }
 }
@@ -1118,7 +1132,7 @@ void output_eventlog(SOCKET &out, const char *logname,
         for (int cycle = 0; cycle < 2; cycle++)
         {
             *record_number = old_record_number;
-            verbose("Starting from entry number %u", old_record_number);
+            verbose("Starting from entry number %lu", old_record_number);
             while (true) {
                 DWORD flags;
                 if (*record_number == 0) {
@@ -1135,7 +1149,7 @@ void output_eventlog(SOCKET &out, const char *logname,
                     flags = EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ;
                 }
                 else {
-                    verbose("Previous record number was %d. Doing seek read.", *record_number);
+                    verbose("Previous record number was %lu. Doing seek read.", *record_number);
                     flags = EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ;
                 }
 
@@ -1147,7 +1161,7 @@ void output_eventlog(SOCKET &out, const char *logname,
                             &bytesread,
                             &bytesneeded))
                 {
-                    crash_log("   . got entries starting at %d (%d bytes)", *record_number + 1, bytesread);
+                    crash_log("   . got entries starting at %lu (%lu bytes)", *record_number + 1, bytesread);
 
 
                     process_eventlog_entries(out, logname, eventlog_buffer,
@@ -1157,22 +1171,22 @@ void output_eventlog(SOCKET &out, const char *logname,
                     DWORD error = GetLastError();
                     if (error == ERROR_INSUFFICIENT_BUFFER) {
                         grow_eventlog_buffer(bytesneeded);
-                        crash_log("   . needed to grow buffer to %d bytes", bytesneeded);
+                        crash_log("   . needed to grow buffer to %lu bytes", bytesneeded);
                     }
                     // found current end of log
                     else if (error == ERROR_HANDLE_EOF) {
-                        verbose("End of logfile reached at entry %u. Worst state is %d",
+                        verbose("End of logfile reached at entry %lu. Worst state is %d",
                                 *record_number, worst_state);
                         break;
                     }
                     // invalid parameter can also mean end of log
                     else if (error == ERROR_INVALID_PARAMETER) {
-                        verbose("Invalid parameter at entry %u (could mean end of logfile). Worst state is %d",
+                        verbose("Invalid parameter at entry %lu (could mean end of logfile). Worst state is %d",
                                 *record_number, worst_state);
                         break;
                     }
                     else {
-                        output(out, "ERROR: Cannot read eventlog '%s': error %u\n", logname, error);
+                        output(out, "ERROR: Cannot read eventlog '%s': error %lu\n", logname, error);
                         break;
                     }
                 }
@@ -1240,7 +1254,7 @@ bool find_eventlogs(SOCKET &out)
             else if (r != ERROR_MORE_DATA)
             {
                 if (r != ERROR_NO_MORE_ITEMS) {
-                    output(out, "ERROR: Cannot enumerate over event logs: error code %d\n", r);
+                    output(out, "ERROR: Cannot enumerate over event logs: error code %lu\n", r);
                     success = false;
                 }
                 break;
@@ -1251,7 +1265,7 @@ bool find_eventlogs(SOCKET &out)
     }
     else {
         success = false;
-        output(out, "ERROR: Cannot open registry key %s for enumeration: error code %d\n",
+        output(out, "ERROR: Cannot open registry key %s for enumeration: error code %lu\n",
                 regpath, GetLastError());
     }
     return success;
@@ -1459,10 +1473,10 @@ void section_ps_wmi(SOCKET &out)
                 LocalFree(argv);
             }
 
-            output(out, "(%s,%s,%s,%d,%d,%lu,%ls,%ls,%u,%d)\t%ls\n",
+            output(out, "(%s,%" PRIu64 ",%" PRIu64 ",%d,%d,%d,%ls,%ls,%u,%d)\t%ls\n",
                     user.c_str(),
-                    llu_to_string(string_to_llu(result.get<string>(L"VirtualSize").c_str()) / 1024),
-                    llu_to_string(string_to_llu(result.get<string>(L"WorkingSetSize").c_str()) / 1024),
+                    string_to_llu(result.get<string>(L"VirtualSize").c_str()) / 1024,
+                    string_to_llu(result.get<string>(L"WorkingSetSize").c_str()) / 1024,
                     0,
                     processId,
                     result.get<int>(L"PagefileUsage") / 1024,
@@ -1547,14 +1561,14 @@ void section_ps(SOCKET &out)
                 }
 
                 //// Note: CPU utilization is determined out of usermodetime and kernelmodetime
-                output(out, "(%s,%s,%s,%d,%d,%s,%s,%s,%d,%d)\t%s\n",
+                output(out, "(%s,%" PRIu64 ",%" PRIu64 ",%d,%lu,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%lu,%lu)\t%s\n",
                         user.c_str(),
-                        llu_to_string(virtual_size / 1024),
-                        llu_to_string(working_set_size / 1024),
+                        virtual_size / 1024,
+                        working_set_size / 1024,
                         0, pe32.th32ProcessID,
-                        llu_to_string(pagefile_usage / 1024),
-                        llu_to_string(usermodetime.QuadPart),
-                        llu_to_string(kernelmodetime.QuadPart),
+                        pagefile_usage / 1024,
+                        usermodetime.QuadPart,
+                        kernelmodetime.QuadPart,
                         processHandleCount, pe32.cntThreads, pe32.szExeFile);
 
                 CloseHandle(hProcess);
@@ -1567,7 +1581,7 @@ void section_ps(SOCKET &out)
         // We simply fake this entry..
         SYSTEM_INFO sysinfo;
         GetSystemInfo(&sysinfo);
-        output(out, "(SYSTEM,0,0,0,0,0,0,0,0,%d)\tSystem Idle Process\n", sysinfo.dwNumberOfProcessors);
+        output(out, "(SYSTEM,0,0,0,0,0,0,0,0,%lu)\tSystem Idle Process\n", sysinfo.dwNumberOfProcessors);
     }
 }
 
@@ -1636,10 +1650,8 @@ void save_logwatch_offsets(const std::string &logwatch_statefile)
          it_tf != g_config->logwatchTextfiles().end(); ++it_tf) {
         logwatch_textfile *tf = *it_tf;
         if (!tf->missing) {
-            // llu_to_string is not reentrant, so do this in three steps
-            fprintf(file, "%s|%s", tf->path, llu_to_string(tf->file_id));
-            fprintf(file, "|%s", llu_to_string(tf->file_size));
-            fprintf(file, "|%s\r\n", llu_to_string(tf->offset));
+            fprintf(file, "%s|%" PRIu64 "|%" PRIu64 "|%" PRIu64 "\r\n",
+                    tf->path, tf->file_id, tf->file_size, tf->offset);
         }
     }
     fclose(file);
@@ -2092,14 +2104,14 @@ void section_mem(SOCKET &out)
     statex.dwLength = sizeof (statex);
     GlobalMemoryStatusEx (&statex);
 
-    output(out, "MemTotal:     %s kB\n", llu_to_string(statex.ullTotalPhys     / 1024));
-    output(out, "MemFree:      %s kB\n", llu_to_string(statex.ullAvailPhys     / 1024));
-    output(out, "SwapTotal:    %s kB\n", llu_to_string((statex.ullTotalPageFile - statex.ullTotalPhys) / 1024));
-    output(out, "SwapFree:     %s kB\n", llu_to_string((statex.ullAvailPageFile - statex.ullAvailPhys) / 1024));
-    output(out, "PageTotal:    %s kB\n", llu_to_string(statex.ullTotalPageFile / 1024));
-    output(out, "PageFree:     %s kB\n", llu_to_string(statex.ullAvailPageFile / 1024));
-    output(out, "VirtualTotal: %s kB\n", llu_to_string(statex.ullTotalVirtual / 1024));
-    output(out, "VirtualFree:  %s kB\n", llu_to_string(statex.ullAvailVirtual / 1024));
+    output(out, "MemTotal:     %" PRIu64 " kB\n", statex.ullTotalPhys     / 1024);
+    output(out, "MemFree:      %" PRIu64 " kB\n", statex.ullAvailPhys     / 1024);
+    output(out, "SwapTotal:    %" PRIu64 " kB\n", (statex.ullTotalPageFile - statex.ullTotalPhys) / 1024);
+    output(out, "SwapFree:     %" PRIu64 " kB\n", (statex.ullAvailPageFile - statex.ullAvailPhys) / 1024);
+    output(out, "PageTotal:    %" PRIu64 " kB\n", statex.ullTotalPageFile / 1024);
+    output(out, "PageFree:     %" PRIu64 " kB\n", statex.ullAvailPageFile / 1024);
+    output(out, "VirtualTotal: %" PRIu64 " kB\n", statex.ullTotalVirtual / 1024);
+    output(out, "VirtualFree:  %" PRIu64 " kB\n", statex.ullAvailVirtual / 1024);
 }
 
 // .-----------------------------------------------------------------------.
@@ -2147,11 +2159,11 @@ void output_fileinfos(SOCKET &out, const char *path)
         FindClose(h);
 
         if (!found_file)
-            output(out, "%s|missing|%d\n", path, current_time());
+            output(out, "%s|missing|%f\n", path, current_time());
     }
     else {
         DWORD e = GetLastError();
-        output(out, "%s|missing|%d\n", path, e);
+        output(out, "%s|missing|%lu\n", path, e);
     }
 }
 
@@ -2162,7 +2174,7 @@ bool output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data)
         + (((unsigned long long)data->nFileSizeHigh) << 32);
 
     if (0 == (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-        output(out, "%s\\%s|%llu|%.0f\n", basename,
+        output(out, "%s\\%s|%" PRIu64 "|%.0f\n", basename,
                 data->cFileName, size, file_time(&data->ftLastWriteTime));
         return true;
     }
@@ -2888,6 +2900,7 @@ void section_check_mk(SOCKET &out, const Environment &env)
 {
     crash_log("<<<check_mk>>>");
     output(out, "<<<check_mk>>>\n");
+
     output(out, "Version: %s\n", check_mk_version);
     output(out, "BuildDate: %s\n", __DATE__);
 #ifdef ENVIRONMENT32
@@ -3651,7 +3664,7 @@ void output_data(SOCKET &out, const Environment &env)
     // Send remaining data in out buffer
     if (do_tcp) {
         force_tcp_output = true;
-        output(out, "");
+        output(out, "%s", "");
         force_tcp_output = false;
     }
 

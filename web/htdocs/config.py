@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os, pprint, glob
+import i18n
 from lib import *
 
 # In case we start standalone and outside a Check_MK enviroment,

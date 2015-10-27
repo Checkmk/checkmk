@@ -463,7 +463,7 @@ register_configvar(group,
                         title = _("Translations"),
                         elements = [
                             ( l or "en", TextUnicode(title = a, size = 32) )
-                              for (l,a) in get_languages()
+                              for (l,a) in i18n.get_languages()
                         ],
                         columns = 2,
                     ),
@@ -472,7 +472,7 @@ register_configvar(group,
             title = _("Custom localizations"),
             movable = False,
             totext = _("%d translations"),
-            default_value = sorted(default_user_localizations.items()),
+            default_value = sorted(config.user_localizations.items()),
         ),
         forth = lambda d: sorted(d.items()),
         back = lambda l: dict(l),

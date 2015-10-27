@@ -114,11 +114,13 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, cStringIO, math, fcntl, pickle, random, glob
+import i18n
 import config, table, multitar, userdb, hooks, weblib, login
 from hashlib import sha256
 from lib import *
 from valuespec import *
 import forms
+import modules
 
 
 class MKAutomationException(Exception):
@@ -5308,7 +5310,7 @@ def mode_changelog(phase):
 
                 # Livestatus
                 table.cell(_("Status"))
-                html.write('<img src="images/button_sitestatus_%s_lo.png">' % (status))
+                html.write('<img src="images/button_sitestatus_%s.png">' % (status))
 
                 # Livestatus-Version
                 table.cell(_("Version"), ss.get("livestatus_version", ""))
@@ -7560,8 +7562,6 @@ def render_main_menu(some_modules, columns = 2):
             url = make_link([("mode", mode_or_url)])
 
         html.write('<a href="%s" onfocus="if (this.blur) this.blur();"' % url)
-        # html.write(r''' onmouseover='this.style.backgroundImage="url(\"images/wato_mainmenu_button_hi.png\")"; ''')
-        # html.write(r''' onmouseout='this.style.backgroundImage="url(\"images/wato_mainmenu_button_lo.png\")"; ''')
         html.write(">")
         html.write('<img src="images/icon_%s.png">' % icon)
         html.write('<div class=title>%s</div>' % title)
@@ -16732,11 +16732,11 @@ def verify_password_policy(password):
 
 
 def select_language(user):
-    languages = [ l for l in get_languages() if not config.hide_language(l[0]) ]
+    languages = [ l for l in i18n.get_languages() if not config.hide_language(l[0]) ]
     if languages:
         active = 'language' in user
         forms.section(_("Language"), checkbox = ('_set_lang', active, 'language'))
-        default_label = _('Default: %s') % (get_language_alias(config.default_language) or _('English'))
+        default_label = _('Default: %s') % (i18n.get_language_alias(config.default_language) or _('English'))
         html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
                                             ((active) and "display: none" or "", default_label))
         html.write('<div id="attr_entry_language" style="%s">' % ((not active) and "display: none" or ""))
@@ -16854,8 +16854,8 @@ def page_user_profile(change_pw=False):
                             del config.user['language']
 
                     # load the new language
-                    load_language(config.get_language())
-                    load_all_plugins()
+                    i18n.localize(config.get_language())
+                    modules.load_all_plugins()
 
                     user = users.get(config.user_id)
                     if config.may('general.edit_notifications') and user.get("notifications_enabled"):
@@ -17656,7 +17656,8 @@ def render_rule_tree(aggregation_rules, ruleid, tree_path):
     if not sub_rule_ids:
         html.write('<li><a href="%s">%s</a></li>' % (edit_url, title))
     else:
-        html.begin_foldable_container("bi_rule_trees", tree_path, False, title, title_url = edit_url)
+        html.begin_foldable_container("bi_rule_trees", tree_path, False, title,
+                                      title_url=edit_url, tree_img="tree_black")
         for sub_rule_id in sub_rule_ids:
             render_rule_tree(aggregation_rules, sub_rule_id, tree_path + "/" + sub_rule_id)
         html.end_foldable_container()
@@ -20223,7 +20224,7 @@ def rule_option_elements(disabling=True):
           TextAscii(
             title = _("Documentation-URL"),
             help = _("An optional URL pointing to documentation or any other page. This will be displayed "
-                     "as an icon <img class=icon src='images/button_url_lo.png'> and open a new page when clicked. "
+                     "as an icon <img class=icon src='images/button_url.png'> and open a new page when clicked. "
                      "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
                      "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
             size = 80,

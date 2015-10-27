@@ -232,7 +232,25 @@ default_user_profile  = {
 lock_on_logon_failures = False
 password_policy        = {}
 
-user_localizations = default_user_localizations
+user_localizations = {
+    u'Agent type':                          { "de": u"Art des Agenten", },
+    u'Business critical':                   { "de": u"Geschäftskritisch", },
+    u'Check_MK Agent (Server)':             { "de": u"Check_MK Agent (Server)", },
+    u'Criticality':                         { "de": u"Kritikalität", },
+    u'DMZ (low latency, secure access)':    { "de": u"DMZ (geringe Latenz, hohe Sicherheit", },
+    u'Do not monitor this host':            { "de": u"Diesen Host nicht überwachen", },
+    u'Dual: Check_MK Agent + SNMP':         { "de": u"Dual: Check_MK Agent + SNMP", },
+    u'Legacy SNMP device (using V1)':       { "de": u"Alte SNMP-Geräte (mit Version 1)", },
+    u'Local network (low latency)':         { "de": u"Lokales Netzwerk (geringe Latenz)", },
+    u'Networking Segment':                  { "de": u"Netzwerksegment", },
+    u'No Agent':                            { "de": u"Kein Agent", },
+    u'Productive system':                   { "de": u"Produktivsystem", },
+    u'Test system':                         { "de": u"Testsystem", },
+    u'WAN (high latency)':                  { "de": u"WAN (hohe Latenz)", },
+    u'monitor via Check_MK Agent':          { "de": u"Überwachung via Check_MK Agent", },
+    u'monitor via SNMP':                    { "de": u"Überwachung via SNMP", },
+    u'SNMP (Networking device, Appliance)': { "de": u"SNMP (Netzwerkgerät, Appliance)", },
+}
 
 # Contains user specified icons and actions for hosts and services
 user_icons_and_actions = {}

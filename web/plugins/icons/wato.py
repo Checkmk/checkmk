@@ -106,12 +106,14 @@ def paint_download_agent_output(what, row, tags, host_custom_vars, ty):
 
 
 multisite_icons_and_actions['download_agent_output'] = {
+    'host_columns'    : [ "filename" ],
     'paint'           : lambda *args: paint_download_agent_output(*args, ty="agent"),
     'toplevel'        : False,
     'sort_index'      : 50,
 }
 
 multisite_icons_and_actions['download_snmp_walk'] = {
+    'host_columns'    : [ "filename" ],
     'paint'           : lambda *args: paint_download_agent_output(*args, ty="walk"),
     'toplevel'        : False,
     'sort_index'      : 50,

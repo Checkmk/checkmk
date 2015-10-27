@@ -30,14 +30,24 @@ import htmllib
 import os, time, config, weblib, re
 import defaults
 import livestatus
+import mobile
+
+# Is used to end the HTTP request processing from deeper code levels
+class FinalizeRequest(Exception):
+    def __init__(self, code = None):
+        self.status = code or apache.OK
+
 
 class html_mod_python(htmllib.html):
 
     def __init__(self, req, fields):
+        req.content_type = "text/html; charset=UTF-8"
+        req.header_sent = False
 
         # All URIs end in .py. We strip away the .py and get the
         # name of the page.
         self.myfile = req.uri.split("/")[-1][:-3]
+
         self.req = req
         htmllib.html.__init__(self)
         self.user = req.user
@@ -47,6 +57,49 @@ class html_mod_python(htmllib.html):
             self.fields = util.FieldStorage(self.req, keep_blank_values = 1)
         self.read_get_vars()
         self.read_cookies()
+
+        # Disable caching for all our pages as they are mostly dynamically generated,
+        # user related and are required to be up-to-date on every refresh
+        self.set_http_header("Cache-Control", "no-cache")
+
+        self.init_mobile()
+        self.set_output_format(self.var("output_format", "html"))
+
+
+    # Initializes the operation mode of the html() object. This is called
+    # after the ChecK_MK GUI configuration has been loaded, so it is safe
+    # to rely on the config.
+    def init_modes(self):
+        self.init_screenshot_mode()
+        self.init_debug_mode()
+        self.set_buffering(config.buffered_http_stream)
+
+
+    def init_debug_mode(self):
+        # Debug flag may be set via URL to override the configuration
+        if self.var("debug"):
+            config.debug = True
+        self.enable_debug = config.debug
+
+
+    # Enabling the screenshot mode omits the fancy background and
+    # makes it white instead.
+    def init_screenshot_mode(self):
+        if self.var("screenshotmode", config.screenshotmode):
+            self.screenshotmode = True
+
+
+    def init_mobile(self):
+        if self.has_var("mobile"):
+            self.mobile = bool(self.var("mobile"))
+        else:
+            self.mobile = mobile.is_mobile(self.get_user_agent())
+
+        # Redirect to mobile GUI if we are a mobile device and
+        # the URL is /
+        if self.myfile == "index" and self.mobile:
+            self.myfile = "mobile"
+
 
     # Install magic "live" object that connects to livestatus
     # on-the-fly
@@ -60,11 +113,18 @@ class html_mod_python(htmllib.html):
         else:
             return self.site_status
 
+
+    def request_uri(self):
+        return self.req.uri
+
+
     def login(self, user_id):
         self.user = user_id
 
+
     def is_logged_in(self):
         return self.user and type(self.user) == unicode
+
 
     def load_help_visible(self):
         try:
@@ -203,9 +263,8 @@ class html_mod_python(htmllib.html):
         config.save_user_file("treestates", self.treestates)
 
     def load_tree_states(self):
-        if self.id is not self.treestates_for_id:
+        if self.treestates == None:
             self.treestates = config.load_user_file("treestates", {})
-            self.treestates_for_id = self.id
 
     def add_custom_style_sheet(self):
         for css in self.plugin_stylesheets():

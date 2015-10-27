@@ -69,6 +69,7 @@ class InvalidUserInput(Exception):
         self.varname = varname
         self.text = text
 
+
 # This is a simple class which wraps a string provided by the caller
 # to make html.attrencode() know that this string should not be
 # encoded, html.attrencode() will then return the unmodified value.
@@ -113,8 +114,7 @@ class html:
         self.enable_debug = False
         self.screenshotmode = False
         self.help_visible = False
-        self.treestates = {}
-        self.treestates_for_id = None
+        self.treestates = None
         self.caches = {}
         self.new_transids = []
         self.ignore_transids = False
@@ -405,7 +405,8 @@ class html:
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')
 
-    def icon_button(self, url, help, icon, id="", onclick="", style="", target="", cssclass=""):
+
+    def render_icon_button(self, url, help, icon, id="", onclick="", style="", target="", cssclass=""):
         if id:
             id = "id='%s' " % id
 
@@ -422,19 +423,16 @@ class html:
         if cssclass:
             cssclass = 'class="%s" ' % cssclass
 
-        self.write('<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">'
-                   '<img align=absmiddle class=iconbutton title="%s" '
-                   'src="images/button_%s_lo.png" '
-                   'onmouseover=\"hilite_icon(this, 1)\" '
-                   'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon))
+        return '<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">' \
+                   '<img align=absmiddle class=iconbutton title="%s" ' \
+                   'src="images/button_%s.png" ' \
+                   'onmouseover=\"hilite_icon(this, 1)\" ' \
+                   'onmouseout=\"hilite_icon(this, 0)\">' \
+                   '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon)
 
-    def render_icon_button(self, *args, **kwargs):
-        self.plug()
-        self.icon_button(*args, **kwargs)
-        code = self.drain()
-        self.unplug()
-        return code
+
+    def icon_button(self, *args, **kwargs):
+        self.write(self.render_icon_button(*args, **kwargs))
 
 
     def empty_icon_button(self):
@@ -1473,7 +1471,9 @@ class html:
             ht = ht[0:x] + ht[y+9:]
         return ht
 
-    def begin_foldable_container(self, treename, id, isopen, title, indent=True, first=False, icon=None, fetch_url=None, title_url=None):
+    def begin_foldable_container(self, treename, id, isopen, title, indent=True,
+                                 first=False, icon=None, fetch_url=None, title_url=None,
+                                 tree_img="tree"):
         self.folding_indent = indent
 
         if self.user:
@@ -1490,14 +1490,14 @@ class html:
             if icon:
                 self.write('<img class="treeangle title" src="images/icon_%s.png">' % icon)
             else:
-                self.write('<img align=absbottom class="treeangle nform" src="images/tree_%s.png">' % (
-                        isopen and "90" or "00"))
+                self.write('<img align=absbottom class="treeangle nform" src="images/%s_%s.png">' %
+                                                (tree_img, isopen and "90" or "00"))
             self.write('%s</td></tr>' % title)
         else:
             if not icon:
                 self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
-                           'src="images/tree_%s.png" %s>' %
-                        (treename, id, img_num, onclick))
+                           'src="images/%s_%s.png" %s>' %
+                        (treename, id, tree_img, img_num, onclick))
             if title.startswith('<'): # custom HTML code
                 self.write(title)
                 if indent != "form":
@@ -1588,7 +1588,7 @@ class html:
 
     def magic_move(self, helptext, ajax_url):
         self.write('<img align=absmiddle class=iconbutton '
-                    'src="images/button_magic_move_lo.png" '
+                    'src="images/button_magic_move.png" '
                     'title="%s" '
                     'onmouseover="hilite_icon(this, 1)" '
                     'onmouseout="hilite_icon(this, 0)" '

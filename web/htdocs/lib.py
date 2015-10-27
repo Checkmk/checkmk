@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, grp, pprint, os, errno, gettext, marshal, re, fcntl, __builtin__, time
+import math, grp, pprint, os, errno, marshal, re, fcntl, time
 
 # Workaround when the file is included from outside of Multisite
 try:
@@ -239,75 +239,6 @@ def load_web_plugins(forwhat, globalvars):
                         code_bytes = file(file_path).read()[8:]
                         code = marshal.loads(code_bytes)
                         exec code in globalvars
-
-def get_language_dirs():
-    dirs = [ defaults.locale_dir ]
-    if defaults.omd_root:
-        dirs.append(defaults.omd_root + "/local/share/check_mk/locale")
-    return dirs
-
-def get_language_alias(lang):
-    alias = lang
-    for lang_dir in get_language_dirs():
-        try:
-            alias = file('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
-        except (OSError, IOError):
-            pass
-    return alias
-
-def get_languages():
-    # Add the hard coded english language to the language list
-    # It must be choosable even if the administrator changed the default
-    # language to a custom value
-    languages = set([ (None, _('English')) ])
-
-    for lang_dir in get_language_dirs():
-        try:
-            languages.update([ (val, get_language_alias(val))
-                for val in os.listdir(lang_dir) if not '.' in val ])
-        except OSError:
-            # Catch "OSError: [Errno 2] No such file or
-            # directory:" when directory not exists
-            pass
-
-    return list(languages)
-
-def load_language(lang):
-    # Make current language globally known to all of our modules
-    __builtin__.current_language = lang
-
-    if lang:
-        locale_base = defaults.locale_dir
-
-        # OMD users can put their localization into a local path into the site
-        if defaults.omd_root:
-            local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
-            po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
-            # Use file in OMD local strucuture when existing
-            if os.path.exists(local_locale_path + po_path):
-                locale_base = local_locale_path
-
-        try:
-            i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')
-            i18n.install(unicode = True)
-        except IOError, e:
-            # Fallback to non localized multisite
-            # I'd prefer to fallback to multisite default language but can not import config module here
-            __builtin__.current_language = None
-    else:
-        # Replace the _() function to disable i18n again
-        __builtin__._ = lambda x: x
-
-# Localization of user supplied texts
-def _u(text):
-    import config
-    ldict = config.user_localizations.get(text)
-    if ldict:
-        return ldict.get(current_language, text)
-    else:
-        return text
-
-__builtin__._u = _u
 
 def pnp_cleanup(s):
     return s \
@@ -768,26 +699,6 @@ def file_size_human_readable(file_size):
         as_string = as_string[:-3]
     result = as_string + result
     return result
-
-__builtin__.default_user_localizations = {
-     u'Agent type':                          { "de": u"Art des Agenten", },
-     u'Business critical':                   { "de": u"Geschäftskritisch", },
-     u'Check_MK Agent (Server)':             { "de": u"Check_MK Agent (Server)", },
-     u'Criticality':                         { "de": u"Kritikalität", },
-     u'DMZ (low latency, secure access)':    { "de": u"DMZ (geringe Latenz, hohe Sicherheit", },
-     u'Do not monitor this host':            { "de": u"Diesen Host nicht überwachen", },
-     u'Dual: Check_MK Agent + SNMP':         { "de": u"Dual: Check_MK Agent + SNMP", },
-     u'Legacy SNMP device (using V1)':       { "de": u"Alte SNMP-Geräte (mit Version 1)", },
-     u'Local network (low latency)':         { "de": u"Lokales Netzwerk (geringe Latenz)", },
-     u'Networking Segment':                  { "de": u"Netzwerksegment", },
-     u'No Agent':                            { "de": u"Kein Agent", },
-     u'Productive system':                   { "de": u"Produktivsystem", },
-     u'Test system':                         { "de": u"Testsystem", },
-     u'WAN (high latency)':                  { "de": u"WAN (hohe Latenz)", },
-     u'monitor via Check_MK Agent':          { "de": u"Überwachung via Check_MK Agent", },
-     u'monitor via SNMP':                    { "de": u"Überwachung via SNMP", },
-     u'SNMP (Networking device, Appliance)': { "de": u"SNMP (Netzwerkgerät, Appliance)", },
-}
 
 try:
     import ast

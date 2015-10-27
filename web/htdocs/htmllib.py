@@ -392,8 +392,8 @@ class html:
         else:
             return "images/icons/%s.png" % icon_name
 
-    def icon(self, help, icon):
-       self.write(self.render_icon(icon, help))
+    def icon(self, help, icon, **kwargs):
+       self.write(self.render_icon(icon, help, **kwargs))
 
     def render_icon(self, icon_name, help="", middle=True, id=None, cssclass=None):
         align = middle and ' align=absmiddle' or ''
@@ -1008,16 +1008,17 @@ class html:
         self.write(self.render_popup_trigger(content, ident, what, data, url_vars))
 
     def write_status_icons(self):
-        self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
-             (self.makeuri([]), _("URL to this frame")))
-        self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
-             ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar")))
+        self.icon_button(self.makeuri([]), _("URL to this frame"),
+                         "frameurl", target="_top", cssclass="statusicon")
+        self.icon_button("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
+                         _("URL to this page including sidebar"),
+                         "pageurl", target="_top", cssclass="statusicon")
 
         # TODO: Move this away from here. Make a context button. The view should handle this
         if self.myfile == "view" and self.var('mode') != 'availability':
-            self.write('<a target="_top" href="%s">' \
-                 '<img class=statusicon src="images/status_download_csv.png" title="%s"></a>\n' % \
-                 (self.makeuri([("output_format", "csv_export")]), _("Export as CSV")))
+            self.icon_button(self.makeuri([("output_format", "csv_export")]),
+                             _("Export as CSV"),
+                             "download_csv", target="_top", cssclass="statusicon")
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
@@ -1031,16 +1032,15 @@ class html:
                 encoded_vars[k] = v
 
             self.popup_trigger(
-                '<img class=statusicon src="images/icon_menu.png" title="%s">\n' % _("Add this view to..."),
+                self.render_icon("menu", _("Add this view to..."), cssclass="statusicon iconbutton"),
                 'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}])
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:
                 tooltip, url = tooltip
-                self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_%s.png" title="%s"></a>\n' % \
-                     (url, img, tooltip))
+                self.icon_button(url, tooltip, img)
             else:
-                self.write('<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip))
+                self.icon(tooltip, img, cssclass="statusicon")
 
         if self.times:
             self.measure_time('body')

@@ -104,12 +104,15 @@ def inv_solaris_prtdiag(info):
             # 'System Configuration:  Oracle Corporation  sun4v SPARC T4-1'
             # 'System Configuration:  Sun Microsystems  sun4u SPARC Enterprise M4000 Server'
             # 'System Configuration: Supermicro H8DG6/H8DGi'
+            # 'System Configuration: Oracle Corporation SUN FIRE X4170 M2 SERVER'
             node = inv_tree("hardware.system.")
             system_info = line[0].split(':', 1)[1].rstrip('\'')
 
             # Fields are separated by double spaces for some outputs
             if "  " in system_info:
                 system_info_list = system_info.split("  ")
+            elif system_info.startswith(" Oracle Corporation") and len(system_info) > 20:
+                system_info_list = system_info[1:19], system_info[20:]
             else:
                 system_info_list = system_info.split()
 
@@ -117,6 +120,7 @@ def inv_solaris_prtdiag(info):
             node["product"] = system_info_list[1]
 
             product_list = node["product"].split()
+
             if product_list[-1].startswith('T'):
                 node["family"] = "T-series"
             elif product_list[-2].startswith('M'):

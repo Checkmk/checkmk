@@ -1473,7 +1473,9 @@ class html:
             ht = ht[0:x] + ht[y+9:]
         return ht
 
-    def begin_foldable_container(self, treename, id, isopen, title, indent=True, first=False, icon=None, fetch_url=None, title_url=None):
+    def begin_foldable_container(self, treename, id, isopen, title, indent=True,
+                                 first=False, icon=None, fetch_url=None, title_url=None,
+                                 tree_img="tree"):
         self.folding_indent = indent
 
         if self.user:
@@ -1490,14 +1492,14 @@ class html:
             if icon:
                 self.write('<img class="treeangle title" src="images/icon_%s.png">' % icon)
             else:
-                self.write('<img align=absbottom class="treeangle nform" src="images/tree_%s.png">' % (
-                        isopen and "90" or "00"))
+                self.write('<img align=absbottom class="treeangle nform" src="images/%s_%s.png">' %
+                                                (tree_img, isopen and "90" or "00"))
             self.write('%s</td></tr>' % title)
         else:
             if not icon:
                 self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
-                           'src="images/tree_%s.png" %s>' %
-                        (treename, id, img_num, onclick))
+                           'src="images/%s_%s.png" %s>' %
+                        (treename, id, tree_img, img_num, onclick))
             if title.startswith('<'): # custom HTML code
                 self.write(title)
                 if indent != "form":

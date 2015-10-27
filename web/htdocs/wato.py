@@ -114,6 +114,7 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, cStringIO, math, fcntl, pickle, random, glob
+import i18n
 import config, table, multitar, userdb, hooks, weblib, login
 from hashlib import sha256
 from lib import *
@@ -16733,11 +16734,11 @@ def verify_password_policy(password):
 
 
 def select_language(user):
-    languages = [ l for l in get_languages() if not config.hide_language(l[0]) ]
+    languages = [ l for l in i18n.get_languages() if not config.hide_language(l[0]) ]
     if languages:
         active = 'language' in user
         forms.section(_("Language"), checkbox = ('_set_lang', active, 'language'))
-        default_label = _('Default: %s') % (get_language_alias(config.default_language) or _('English'))
+        default_label = _('Default: %s') % (i18n.get_language_alias(config.default_language) or _('English'))
         html.write('<div class="inherited" id="attr_default_language" style="%s">%s</div>' %
                                             ((active) and "display: none" or "", default_label))
         html.write('<div id="attr_entry_language" style="%s">' % ((not active) and "display: none" or ""))
@@ -16855,7 +16856,7 @@ def page_user_profile(change_pw=False):
                             del config.user['language']
 
                     # load the new language
-                    load_language(config.get_language())
+                    i18n.localize(config.get_language())
                     modules.load_all_plugins()
 
                     user = users.get(config.user_id)

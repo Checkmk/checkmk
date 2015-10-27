@@ -24,20 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# Prepare builtin-scope for localization function _()
-import __builtin__
-__builtin__._ = lambda x: x
-__builtin__.current_language = None
-
-# Load modules
 from mod_python import apache
-import sys, os, pprint
-from lib import *
+import sys, os, pprint, __builtin__
+import i18n
 import livestatus
 import modules
 import mobile
 import defaults, config, login, userdb, hooks, visuals, pagetypes
+from lib import *
 from html_mod_python import *
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
@@ -160,7 +154,7 @@ def handler(req, fields = None, profiling = True):
 
                 # Initialize the i18n for the login dialog. This might be overridden
                 # later after user login
-                load_language(html.var("lang", config.get_language()))
+                i18n.localize(html.var("lang", config.get_language()))
 
                 # This either displays the login page or validates the information submitted
                 # to the login form. After successful login a http redirect to the originally
@@ -185,7 +179,7 @@ def handler(req, fields = None, profiling = True):
         # Initialize the multiste i18n. This will be replaced by
         # language settings stored in the user profile after the user
         # has been initialized
-        load_language(html.var("lang", config.get_language()))
+        i18n.localize(html.var("lang", config.get_language()))
 
         # All plugins might have to be reloaded due to a language change
         modules.load_all_plugins()

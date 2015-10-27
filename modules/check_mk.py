@@ -1436,6 +1436,27 @@ def get_cluster_attributes(hostname, nodes):
     return attrs
 
 
+def verify_cluster_address_family(hostname):
+    cluster_host_family = is_ipv6_primary(hostname) and "IPv6" or "IPv4"
+
+    address_families = [
+        "%s: %s" % (hostname, cluster_host_family),
+    ]
+
+    address_family = cluster_host_family
+    mixed = False
+    for nodename in nodes_of(hostname):
+        family = is_ipv6_primary(nodename) and "IPv6" or "IPv4"
+        address_families.append("%s: %s" % (nodename, family))
+        if address_family == None:
+            address_family = family
+        elif address_family != family:
+            mixed = True
+
+    if mixed:
+        raise MKGeneralException("Cluster '%s' has different primary address families: %s" %
+                                                         (hostname, ", ".join(address_families)))
+
 def ip_address_of(hostname, family=None):
     try:
         return lookup_ip_address(hostname, family)

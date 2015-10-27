@@ -48,6 +48,7 @@
     * 2436 NetApp monitoring: Now able to gather data for inventory...
     * 2667 FIX: solaris_mem: fix exception in inventory plugin
     * 2714 FIX: Fixed visibility of folding arrows by making them dark
+    * 2439 FIX: solaris_prtdiag: Can now handle Oracle Corporation SUN FIRE X4170 M2 SERVER...
 
 
 1.2.7i3:

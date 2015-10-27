@@ -6,6 +6,7 @@
 
     HW/SW-Inventory:
     * 2667 FIX: solaris_mem: fix exception in inventory plugin
+    * 2714 FIX: Fixed visibility of folding arrows by making them dark
 
 
 1.2.7i3p3:

@@ -125,7 +125,8 @@ def render_inv_subtree_foldable(hostname, tree_id, invpath, node):
             title = title % list_index
 
         fetch_url = html.makeuri_contextless([("host", hostname), ("path", invpath), ("treeid", tree_id)], "ajax_inv_render_tree.py")
-        if html.begin_foldable_container("inv_" + hostname + tree_id, invpath, False, title, icon=icon, fetch_url=fetch_url):
+        if html.begin_foldable_container("inv_" + hostname + tree_id, invpath, False,
+                                         title, icon=icon, fetch_url=fetch_url, tree_img="tree_black"):
             # Render only if it is open. We'll get the stuff via ajax later if it's closed
             render_inv_subtree_container(hostname, tree_id, invpath, node)
         html.end_foldable_container()

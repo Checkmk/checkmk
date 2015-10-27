@@ -29,86 +29,27 @@ import sys, os, pprint, __builtin__
 import i18n
 import livestatus
 import modules
-import mobile
-import defaults, config, login, userdb, hooks, visuals, pagetypes
+import defaults, config, login, userdb
 from lib import *
 from html_mod_python import *
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
-def handler(req, fields = None, profiling = True):
-    req.content_type = "text/html; charset=UTF-8"
-    req.header_sent = False
-
+def handler(req, fields = None, is_profiling = False):
     # Create an object that contains all data about the request and
     # helper functions for creating valid HTML. Parse URI and
     # store results in the request object for later usage.
-    html = html_mod_python(req, fields)
-    html.enable_debug = config.debug
-    html.id = {} # create unique ID for this request
-    __builtin__.html = html
-
-    # Disable caching for all our pages as they are mostly dynamically generated,
-    # user related and are requred to be up-to-date on every refresh
-    html.set_http_header("Cache-Control", "no-cache")
+    __builtin__.html = html_mod_python(req, fields)
 
     response_code = apache.OK
-    fail_silently = False
-    plain_error   = False
     try:
-        # Ajax-Functions want no HTML output in case of an error but
-        # just a plain server result code of 500
-        fail_silently = html.has_var("_ajaxid")
-
-        # Webservice functions may decide to get a normal result code
-        # but a text with an error message in case of an error
-        plain_error = html.has_var("_plain_error")
-
-        config.load_config() # load multisite.mk
-        if html.var("debug"): # Debug flag may be set via URL
-            config.debug = True
-
-        if html.var("screenshotmode") or config.screenshotmode: # Omit fancy background, make it white
-            html.screenshotmode = True
-
-        html.enable_debug = config.debug
-        html.set_buffering(config.buffered_http_stream)
-
-        # profiling can be enabled in multisite.mk
-        if profiling and config.profile:
-            import cProfile # , pstats, sys, StringIO, tempfile
-            # the profiler loses the memory about all modules. We need to hand over
-            # the request object in the apache module.
-            # Ubuntu: install python-profiler when using this feature
-            profilefile = defaults.var_dir + "/web/multisite.profile"
-            retcode = cProfile.runctx(
-                "import index; "
-                "index.handler(profile_req, profile_fields, False)",
-                {'profile_req': req, 'profile_fields': html.fields}, {}, profilefile)
-            file(profilefile + ".py", "w").write(
-                "#!/usr/bin/python\n"
-                "import pstats\n"
-                "stats = pstats.Stats(%r)\n"
-                "stats.sort_stats('time').print_stats()\n" % profilefile)
-            os.chmod(profilefile + ".py", 0755)
-            release_all_locks()
-            return apache.OK
+        config.load_config() # load multisite.mk etc.
+        html.init_modes()
+        init_profiling(is_profiling)
 
         # Make sure all plugins are avaiable as early as possible. At least
         # we need the plugins (i.e. the permissions declared in these) at the
         # time before the first login for generating auth.php.
         modules.load_all_plugins()
-
-        # Detect mobile devices
-        if html.has_var("mobile"):
-            html.mobile = not not html.var("mobile")
-        else:
-            user_agent = html.get_user_agent()
-            html.mobile = mobile.is_mobile(user_agent)
-
-        # Redirect to mobile GUI if we are a mobile device and
-        # the URL is /
-        if html.myfile == "index" and html.mobile:
-            html.myfile = "mobile"
 
         # Get page handler.
         handler = modules.get_handler(html.myfile, page_not_found)
@@ -128,12 +69,7 @@ def handler(req, fields = None, profiling = True):
                     html.write(str(e))
                     if config.debug:
                         html.write(html.attrencode(format_exception()))
-                release_all_locks()
-                return apache.OK
-
-        # Prepare output format
-        output_format = html.var("output_format", "html")
-        html.set_output_format(output_format)
+                raise FinalizeRequest()
 
         # Is the user set by the webserver? otherwise use the cookie based auth
         if not html.is_logged_in():
@@ -141,7 +77,7 @@ def handler(req, fields = None, profiling = True):
             # When not authed tell the browser to ask for the password
             html.login(login.check_auth())
             if not html.is_logged_in():
-                if fail_silently:
+                if fail_silently():
                     # While api call don't show the login dialog
                     raise MKUnauthenticatedException(_('You are not authenticated.'))
 
@@ -159,9 +95,8 @@ def handler(req, fields = None, profiling = True):
                 # This either displays the login page or validates the information submitted
                 # to the login form. After successful login a http redirect to the originally
                 # requested page is performed.
-                login.page_login(plain_error)
-                release_all_locks()
-                return apache.OK
+                login.page_login(plain_error())
+                raise FinalizeRequest()
         else:
             # In case of basic auth the user is already known, but we still need to decide
             # whether or not the user is an automation user (which is allowed to use transid=-1)
@@ -203,6 +138,9 @@ def handler(req, fields = None, profiling = True):
 
         handler()
 
+    except FinalizeRequest, e:
+        response_code = e.status
+
     except (MKUserError, MKAuthException, MKUnauthenticatedException, MKConfigError, MKGeneralException,
             livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusException), e:
         ty = type(e)
@@ -216,9 +154,9 @@ def handler(req, fields = None, profiling = True):
             title       = e.title
             plain_title = e.plain_title
 
-        if plain_error:
+        if plain_error():
             html.write("%s: %s\n" % (plain_title, e))
-        elif not fail_silently:
+        elif not fail_silently():
             html.header(title)
             html.show_error(e)
             html.footer()
@@ -244,19 +182,51 @@ def handler(req, fields = None, profiling = True):
     except Exception, e:
         html.unplug()
         import traceback
-        msg = "%s %s: %s" % (req.uri, _('Internal error'), traceback.format_exc())
+        msg = "%s %s: %s" % (html.request_uri(), _('Internal error'), traceback.format_exc())
         if type(msg) == unicode:
             msg = msg.encode('utf-8')
         logger(LOG_ERR, msg)
-        if plain_error:
+        if plain_error():
             html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
-        elif not fail_silently:
+        elif not fail_silently():
             modules.get_handler("gui_crash")()
         response_code = apache.OK
 
     release_all_locks()
     html.finalize()
     return response_code
+
+
+# Profiling of the Check_MK GUI can be enabled via global settings
+def init_profiling(is_profiling):
+    if not is_profiling and config.profile:
+        import cProfile
+        # the profiler loses the memory about all modules. We need to hand over
+        # the request object in the apache module.
+        # Ubuntu: install python-profiler when using this feature
+        profile_file = defaults.var_dir + "/web/multisite.profile"
+        retcode = cProfile.runctx(
+            "import index; "
+            "index.handler(profile_req, profile_fields, is_profiling=True)",
+            {'profile_req': html.req, 'profile_fields': html.fields}, {}, profile_file)
+        file(profile_file + ".py", "w").write(
+            "#!/usr/bin/python\n"
+            "import pstats\n"
+            "stats = pstats.Stats(%r)\n"
+            "stats.sort_stats('time').print_stats()\n" % profile_file)
+        os.chmod(profile_file + ".py", 0755)
+        raise FinalizeRequest(apache.OK)
+
+
+# Ajax-Functions want no HTML output in case of an error but
+# just a plain server result code of 500
+def fail_silently():
+    return html.has_var("_ajaxid")
+
+# Webservice functions may decide to get a normal result code
+# but a text with an error message in case of an error
+def plain_error():
+    return html.has_var("_plain_error")
 
 
 def page_not_found():

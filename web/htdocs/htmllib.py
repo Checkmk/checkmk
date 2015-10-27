@@ -69,6 +69,7 @@ class InvalidUserInput(Exception):
         self.varname = varname
         self.text = text
 
+
 # This is a simple class which wraps a string provided by the caller
 # to make html.attrencode() know that this string should not be
 # encoded, html.attrencode() will then return the unmodified value.
@@ -113,8 +114,7 @@ class html:
         self.enable_debug = False
         self.screenshotmode = False
         self.help_visible = False
-        self.treestates = {}
-        self.treestates_for_id = None
+        self.treestates = None
         self.caches = {}
         self.new_transids = []
         self.ignore_transids = False

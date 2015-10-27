@@ -5310,7 +5310,7 @@ def mode_changelog(phase):
 
                 # Livestatus
                 table.cell(_("Status"))
-                html.write('<img src="images/button_sitestatus_%s_lo.png">' % (status))
+                html.write('<img src="images/button_sitestatus_%s.png">' % (status))
 
                 # Livestatus-Version
                 table.cell(_("Version"), ss.get("livestatus_version", ""))
@@ -7562,8 +7562,6 @@ def render_main_menu(some_modules, columns = 2):
             url = make_link([("mode", mode_or_url)])
 
         html.write('<a href="%s" onfocus="if (this.blur) this.blur();"' % url)
-        # html.write(r''' onmouseover='this.style.backgroundImage="url(\"images/wato_mainmenu_button_hi.png\")"; ''')
-        # html.write(r''' onmouseout='this.style.backgroundImage="url(\"images/wato_mainmenu_button_lo.png\")"; ''')
         html.write(">")
         html.write('<img src="images/icon_%s.png">' % icon)
         html.write('<div class=title>%s</div>' % title)
@@ -20226,7 +20224,7 @@ def rule_option_elements(disabling=True):
           TextAscii(
             title = _("Documentation-URL"),
             help = _("An optional URL pointing to documentation or any other page. This will be displayed "
-                     "as an icon <img class=icon src='images/button_url_lo.png'> and open a new page when clicked. "
+                     "as an icon <img class=icon src='images/button_url.png'> and open a new page when clicked. "
                      "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
                      "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
             size = 80,

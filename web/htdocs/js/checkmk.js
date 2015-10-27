@@ -90,12 +90,11 @@ function change_class(o, a, b) {
     add_class(o, b);
 }
 
-function hilite_icon(oImg, onoff) {
-    src = oImg.src;
+function hilite_icon(elem, onoff) {
     if (onoff == 0)
-        oImg.src = oImg.src.replace("hi.png", "lo.png");
+        remove_class(elem, "active");
     else
-        oImg.src = oImg.src.replace("lo.png", "hi.png");
+        add_class(elem, "active");
 }
 
 function pageHeight() {

@@ -449,10 +449,11 @@ img.iconbutton {
     height: 20px;
     padding: 0px 2px;
 }
-/* Don't know why this style is/was here. Destroys ListOf()... */
-/* img.iconbutton.trans {
-    width: 100px;
-}*/
+
+img.iconbutton.active {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
 
 /* Table with captions on the left side. Used e.g. for man pages and werks */
 
@@ -842,10 +843,10 @@ div.togglebutton.checkbox.down {
     left: -2px;
 }
 
-div.togglebutton.checkbox         { background-image: url("images/button_checkbox_lo.png"); }
-div.togglebutton.checkbox:hover   { background-image: url("images/button_checkbox_hi.png"); }
-div.togglebutton.checkbox.down       { background-image: url("images/button_checkbox_down_lo.png"); }
-div.togglebutton.checkbox.down:hover { background-image: url("images/button_checkbox_down_hi.png"); }
+div.togglebutton.checkbox         { background-image: url("images/button_checkbox.png"); }
+div.togglebutton.checkbox:hover   { opacity: 0.5; filter: alpha(opacity=50); }
+div.togglebutton.checkbox.down       { background-image: url("images/button_checkbox_down.png"); }
+div.togglebutton.checkbox.down:hover { opacity: 0.5; filter: alpha(opacity=50); }
 div.togglebutton.checkbox.off      { background-image: url("images/button_checkbox_off.png"); }
 
 

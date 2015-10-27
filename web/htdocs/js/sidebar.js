@@ -657,13 +657,13 @@ function toggle_sidebar_snapin(oH2, url) {
         oContent.style.display = "block";
         oFoot.style.display = "block";
         oHead.className = "head open";
-        oImgMini.src = "images/button_minisnapin_lo.png";
+        oImgMini.src = "images/button_minisnapin.png";
     }
     else {
         oContent.style.display = "none";
         oFoot.style.display = "none";
         oHead.className = "head closed";
-        oImgMini.src = "images/button_maxisnapin_lo.png";
+        oImgMini.src = "images/button_maxisnapin.png";
     }
     /* make this persistent -> save */
     get_url(url + (closed ? "open" : "closed"));

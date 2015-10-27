@@ -35,54 +35,10 @@ from mod_python import apache
 import sys, os, pprint
 from lib import *
 import livestatus
-import defaults, config, login, userdb, hooks, visuals, default_permissions, pagetypes
-
-if os.path.exists(os.path.dirname(os.path.abspath(__file__)) + '/reporting.py'):
-    import reporting
-else:
-    reporting = None
-
+import modules
+import mobile
+import defaults, config, login, userdb, hooks, visuals, pagetypes
 from html_mod_python import *
-
-# prepare local-structure within OMD sites
-if defaults.omd_root:
-    local_module_path = defaults.omd_root + "/local/share/check_mk/web/htdocs"
-    local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
-    if local_module_path not in sys.path:
-        sys.path[0:0] = [ local_module_path, defaults.web_dir + "/htdocs" ]
-
-# Load page handlers
-def load_page_handlers():
-    global pagehandlers
-    pagehandlers = {}
-    pagehandlers_dir = defaults.web_dir + "/plugins/pages"
-    for fn in os.listdir(pagehandlers_dir):
-        if fn.endswith(".py"):
-            execfile(pagehandlers_dir + "/" + fn, globals(), globals())
-
-    if defaults.omd_root:
-        local_pagehandlers_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/pages"
-        if os.path.exists(local_pagehandlers_dir):
-            for fn in os.listdir(local_pagehandlers_dir):
-                if fn.endswith(".py"):
-                    execfile(local_pagehandlers_dir + "/" + fn, globals(), globals())
-
-load_page_handlers()
-
-
-# Call the load_plugins() function in all modules
-def load_all_plugins():
-    for module in [ hooks, userdb, visuals, views, metrics, sidebar, dashboard,
-                    wato, bi, mobile, notify, webapi, reporting, cron ]:
-        try:
-            module.load_plugins # just check if this function exists
-        except AttributeError:
-            pass
-        else:
-            module.load_plugins()
-
-
-__builtin__.load_all_plugins = load_all_plugins
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, fields = None, profiling = True):
@@ -96,12 +52,14 @@ def handler(req, fields = None, profiling = True):
     html.enable_debug = config.debug
     html.id = {} # create unique ID for this request
     __builtin__.html = html
-    response_code = apache.OK
 
     # Disable caching for all our pages as they are mostly dynamically generated,
     # user related and are requred to be up-to-date on every refresh
     html.set_http_header("Cache-Control", "no-cache")
 
+    response_code = apache.OK
+    fail_silently = False
+    plain_error   = False
     try:
         # Ajax-Functions want no HTML output in case of an error but
         # just a plain server result code of 500
@@ -144,10 +102,7 @@ def handler(req, fields = None, profiling = True):
         # Make sure all plugins are avaiable as early as possible. At least
         # we need the plugins (i.e. the permissions declared in these) at the
         # time before the first login for generating auth.php.
-        load_all_plugins()
-
-        # Install page handlers created by the pagetypes.py modules
-        pagehandlers.update(pagetypes.page_handlers())
+        modules.load_all_plugins()
 
         # Detect mobile devices
         if html.has_var("mobile"):
@@ -162,18 +117,12 @@ def handler(req, fields = None, profiling = True):
             html.myfile = "mobile"
 
         # Get page handler.
-        handler = pagehandlers.get(html.myfile, page_not_found)
-
-        # First initialization of the default permissions. Needs to be done before the auth_file
-        # (auth.php) ist written (it's done during showing the login page for the first time).
-        # Must be loaded before the "automation" call to have the general.* permissions available
-        # during automation action processing (e.g. hooks triggered by restart)
-        default_permissions.load()
+        handler = modules.get_handler(html.myfile, page_not_found)
 
         # Some pages do skip authentication. This is done by adding
         # noauth: to the page hander, e.g. "noauth:run_cron" : ...
         if handler == page_not_found:
-            handler = pagehandlers.get("noauth:" + html.myfile, page_not_found)
+            handler = modules.get_handler("noauth:" + html.myfile, page_not_found)
             if handler != page_not_found:
                 try:
                     # Call userdb page hooks which are executed on a regular base to e.g. syncronize
@@ -239,10 +188,7 @@ def handler(req, fields = None, profiling = True):
         load_language(html.var("lang", config.get_language()))
 
         # All plugins might have to be reloaded due to a language change
-        load_all_plugins()
-
-        # Reload default permissions (maybe reload due to language change)
-        default_permissions.load()
+        modules.load_all_plugins()
 
         # User allowed to login at all?
         if not config.may("general.use"):
@@ -311,12 +257,13 @@ def handler(req, fields = None, profiling = True):
         if plain_error:
             html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
         elif not fail_silently:
-            pagehandlers["gui_crash"]()
+            modules.get_handler("gui_crash")()
         response_code = apache.OK
 
     release_all_locks()
     html.finalize()
     return response_code
+
 
 def page_not_found():
     if html.has_var("_plain_error"):
@@ -325,3 +272,24 @@ def page_not_found():
         html.header(_("Page not found"))
         html.show_error(_("This page was not found. Sorry."))
     html.footer()
+
+
+# prepare local-structure within OMD sites
+# FIXME: Still needed?
+def init_sys_path():
+    if defaults.omd_root:
+        local_module_path = defaults.omd_root + "/local/share/check_mk/web/htdocs"
+        local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
+        if local_module_path not in sys.path:
+            sys.path[0:0] = [ local_module_path, defaults.web_dir + "/htdocs" ]
+
+
+# Early initialization upon first start of the application by the server
+def initialize():
+    init_sys_path()
+    modules.init_modules()
+
+
+# Run the global application initialization code here. It is called
+# only once during the startup of the application server.
+initialize()

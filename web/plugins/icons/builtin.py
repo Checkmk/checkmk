@@ -85,7 +85,7 @@ def paint_action_menu(what, row, tags, host_custom_vars):
         url_vars.append(('_display_options', html.var('_display_options')))
 
     return html.render_popup_trigger(
-        html.render_icon('menu', _('Open the action menu')),
+        html.render_icon('menu', _('Open the action menu'), cssclass="iconbutton"),
         'action_menu', 'action_menu', url_vars=url_vars)
 
 multisite_icons_and_actions['action_menu'] = {

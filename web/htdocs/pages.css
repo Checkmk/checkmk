@@ -1162,3 +1162,7 @@ tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
     box-shadow: none;
     margin: 0;
 }
+
+div.popup_trigger img.iconbutton {
+    padding: 0;
+}

@@ -395,18 +395,21 @@ class html:
     def icon(self, help, icon):
        self.write(self.render_icon(icon, help))
 
-    def render_icon(self, icon_name, help="", middle=True, id=None):
+    def render_icon(self, icon_name, help="", middle=True, id=None, cssclass=None):
         align = middle and ' align=absmiddle' or ''
         title = help and ' title="%s"' % self.attrencode(help) or ""
         id = id and ' id="%s"' % id or ''
+        cssclass = cssclass and ' ' + cssclass
 
-        return '<img src="%s" class=icon%s%s%s />' % (self.detect_icon_path(icon_name), align, title, id)
+        return '<img src="%s" class="icon%s"%s%s%s />' % \
+            (self.detect_icon_path(icon_name), cssclass, align, title, id)
 
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')
 
 
-    def render_icon_button(self, url, help, icon, id="", onclick="", style="", target="", cssclass=""):
+    def render_icon_button(self, url, help, icon, id="", onclick="",
+                           style="", target="", cssclass="", ty="button"):
         if id:
             id = "id='%s' " % id
 
@@ -423,10 +426,15 @@ class html:
         if cssclass:
             cssclass = 'class="%s" ' % cssclass
 
+        if ty == "icon":
+            icon = self.detect_icon_path(icon)
+        else:
+            icon = "images/button_" + icon + ".png"
+
         return '<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">' \
                    '<img align=absmiddle class=iconbutton title="%s" ' \
-                   'src="images/button_%s.png">' \
-                   '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon)
+                   'src="%s"></a>' % (id, onclick, style, target, cssclass,
+                             url, self.attrencode(help), icon)
 
 
     def icon_button(self, *args, **kwargs):
@@ -477,7 +485,9 @@ class html:
             self.begin_context_buttons()
 
         if icon:
-            title = '<img src="%s">%s' % (self.attrencode(self.detect_icon_path(icon)), self.attrencode(title))
+            title = '<img src="%s">%s' % \
+                        (self.attrencode(self.detect_icon_path(icon)),
+                         self.attrencode(title))
 
         if id:
             idtext = " id='%s'" % self.attrencode(id)

@@ -17658,7 +17658,8 @@ def render_rule_tree(aggregation_rules, ruleid, tree_path):
     if not sub_rule_ids:
         html.write('<li><a href="%s">%s</a></li>' % (edit_url, title))
     else:
-        html.begin_foldable_container("bi_rule_trees", tree_path, False, title, title_url = edit_url)
+        html.begin_foldable_container("bi_rule_trees", tree_path, False, title,
+                                      title_url=edit_url, tree_img="tree_black")
         for sub_rule_id in sub_rule_ids:
             render_rule_tree(aggregation_rules, sub_rule_id, tree_path + "/" + sub_rule_id)
         html.end_foldable_container()

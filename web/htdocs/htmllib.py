@@ -425,9 +425,7 @@ class html:
 
         return '<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">' \
                    '<img align=absmiddle class=iconbutton title="%s" ' \
-                   'src="images/button_%s.png" ' \
-                   'onmouseover=\"hilite_icon(this, 1)\" ' \
-                   'onmouseout=\"hilite_icon(this, 0)\">' \
+                   'src="images/button_%s.png">' \
                    '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon)
 
 
@@ -1590,8 +1588,6 @@ class html:
         self.write('<img align=absmiddle class=iconbutton '
                     'src="images/button_magic_move.png" '
                     'title="%s" '
-                    'onmouseover="hilite_icon(this, 1)" '
-                    'onmouseout="hilite_icon(this, 0)" '
                     'onclick="start_magic_move(\'%s\')" >' % (
                         (helptext, ajax_url)))
 

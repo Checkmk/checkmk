@@ -90,13 +90,6 @@ function change_class(o, a, b) {
     add_class(o, b);
 }
 
-function hilite_icon(elem, onoff) {
-    if (onoff == 0)
-        remove_class(elem, "active");
-    else
-        add_class(elem, "active");
-}
-
 function pageHeight() {
   var h;
 

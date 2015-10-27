@@ -450,7 +450,7 @@ img.iconbutton {
     padding: 0px 2px;
 }
 
-img.iconbutton.active {
+img.iconbutton:hover {
     opacity: 0.5;
     filter: alpha(opacity=50); /* For IE8 and earlier */
 }

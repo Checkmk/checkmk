@@ -311,7 +311,7 @@ class PageRenderer:
     @classmethod
     def _page_handlers(self, clazz):
         return {
-            clazz.type_name(): lambda: self.page_show(),
+            clazz.type_name(): lambda: clazz.page_show(),
         }
 
 

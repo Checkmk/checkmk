@@ -754,13 +754,6 @@ function sidebar_scheduler() {
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }
 
-function addBookmark() {
-    href = parent.frames[1].location;
-    title = parent.frames[1].document.title;
-    get_url("add_bookmark.py?title=" + encodeURIComponent(title)
-            + "&href=" + encodeURIComponent(href), updateContents, "snapin_bookmarks");
-}
-
 /************************************************
  * Save/Restore scroll position
  *************************************************/

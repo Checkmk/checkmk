@@ -25,14 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import views, time, defaults, dashboard
+import pagetypes, table
+from valuespec import *
 from lib import *
-
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
 
 # --------------------------------------------------------------
 #       _    _                 _
@@ -1015,41 +1010,278 @@ div.snapin table.master_control td img.iconbutton {
 """
 }
 
-# ---------------------------------------------------------
-#   ____              _                         _
-#  | __ )  ___   ___ | | ___ __ ___   __ _ _ __| | _____
-#  |  _ \ / _ \ / _ \| |/ / '_ ` _ \ / _` | '__| |/ / __|
-#  | |_) | (_) | (_) |   <| | | | | | (_| | |  |   <\__ \
-#  |____/ \___/ \___/|_|\_\_| |_| |_|\__,_|_|  |_|\_\___/
-#
-# ---------------------------------------------------------
-def load_bookmarks():
+#.
+#   .--Bookmark List-------------------------------------------------------.
+#   | ____              _                         _      _     _     _     |
+#   || __ )  ___   ___ | | ___ __ ___   __ _ _ __| | __ | |   (_)___| |_   |
+#   ||  _ \ / _ \ / _ \| |/ / '_ ` _ \ / _` | '__| |/ / | |   | / __| __|  |
+#   || |_) | (_) | (_) |   <| | | | | | (_| | |  |   <  | |___| \__ \ |_   |
+#   ||____/ \___/ \___/|_|\_\_| |_| |_|\__,_|_|  |_|\_\ |_____|_|___/\__|  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Shareable lists of bookmarks                                         |
+#   '----------------------------------------------------------------------'
+
+class BookmarkList(pagetypes.Overridable, pagetypes.Base):
+    def __init__(self, d):
+        pagetypes.Base.__init__(self, d)
+
+
+    @classmethod
+    def type_name(self):
+        return "bookmark_list"
+
+
+    @classmethod
+    def phrase(self, what):
+        return {
+            "title"          : _("Bookmark List"),
+            "title_plural"   : _("Bookmark Lists"),
+            "add_to"         : _("Add to Bookmark List"),
+            "clone"          : _("Clone Bookmark List"),
+            "create"         : _("Create Bookmark List"),
+            "edit"           : _("Edit Bookmark List"),
+        }.get(what, pagetypes.Base.phrase(what))
+
+
+    @classmethod
+    def parameters(self, clazz):
+        vs_topic = TextUnicode(
+            title = _("Topic") + "<sup>*</sup>",
+            size = 50,
+            allow_empty = False,
+        )
+
+        def bookmark_config_to_vs(v):
+            return (v["title"], v["url"], v["icon"], v["topic"])
+
+        def bookmark_vs_to_config(v):
+            return {
+                "title" : v[0],
+                "url"   : v[1],
+                "icon"  : v[2],
+                "topic" : v[3],
+            }
+
+        return [(_("Bookmarks"), [
+            # sort-index, key, valuespec
+            (2.5, "default_topic", TextUnicode(
+                title = _("Default Topic") + "<sup>*</sup>",
+                size = 50,
+                allow_empty = False,
+            )),
+            (3.0, "bookmarks", ListOf(
+                # For the editor we want a compact dialog. The tuple horizontal editin mechanism
+                # is exactly the thing we want. But we want to store the data as dict. This is a
+                # nasty hack to use the transform by default. Better would be to make Dict render
+                # the same way the tuple is rendered.
+                Transform(
+                    Tuple(
+                        elements = [
+                            (TextUnicode(
+                                title = _("Title") + "<sup>*</sup>",
+                                size = 30,
+                                allow_empty = False,
+                            )),
+                            (TextUnicode(
+                                title = _("URL"),
+                                size = 50,
+                                allow_empty = False,
+                            )),
+                            (IconSelector(
+                                title = _("Icon"),
+                            )),
+                            (Alternative(
+                                elements = [
+                                    FixedValue(None,
+                                        title = _("Use default topic"),
+                                        totext = _("(default topic)"),
+                                    ),
+                                    TextUnicode(
+                                        title = _("Individual topic"),
+                                        size = 30,
+                                        allow_empty = False,
+                                    ),
+                                ],
+                                title = _("Topic") + "<sup>*</sup>",
+                                style = "dropdown",
+                            )),
+                        ],
+                        orientation = "horizontal",
+                        title = _("Bookmarks"),
+                    ),
+                    forth = bookmark_config_to_vs,
+                    back = bookmark_vs_to_config,
+                ),
+            )),
+        ])]
+
+
+    # FIXME: Better switch to "new style classes" and use super() and then override load()
+    # in the subclass. Brings more flexibility.
+    @classmethod
+    def _load(self):
+        self.load_legacy_bookmarks()
+
+
+    @classmethod
+    def load_legacy_bookmarks(self):
+        if self.has_instance((config.user_id, "my_bookmarks")):
+            return
+
+        bookmark_list = {
+            "title"         : u"My Bookmarks",
+            "public"        : False,
+            "owner"         : config.user_id,
+            "name"          : "my_bookmarks",
+            "description"   : u"Your personal bookmarks",
+            "default_topic" : u"My Bookmarks",
+            "bookmarks"     : [],
+        }
+
+        for title, url in load_legacy_bookmarks():
+            bookmark_list["bookmarks"].append(self.new_bookmark(title, url))
+
+        self.add_instance((config.user_id, "my_bookmarks"), self(bookmark_list))
+
+    @classmethod
+    def new_bookmark(self, title, url):
+        return {
+           "title" : title,
+           "url"   : url,
+           "icon"  : None,
+           "topic" : None,
+        }
+
+
+    def default_bookmark_topic(self):
+        return self._["default_topic"]
+
+
+    def bookmarks_by_topic(self):
+        topics = {}
+        for bookmark in self._["bookmarks"]:
+            topic = topics.setdefault(bookmark["topic"], [])
+            topic.append(bookmark)
+        return sorted(topics.items())
+
+    def add_bookmark(self, title, url):
+        self._["bookmarks"].append(BookmarkList.new_bookmark(title, url))
+
+
+pagetypes.declare(BookmarkList)
+
+
+def load_legacy_bookmarks():
     path = config.user_confdir + "/bookmarks.mk"
     try:
         return eval(file(path).read())
     except:
         return []
 
-def save_bookmarks(bookmarks):
+
+def save_legacy_bookmarks(bookmarks):
     config.save_user_file("bookmarks", bookmarks)
 
-def render_bookmarks():
-    bookmarks = load_bookmarks()
-    n = 0
-    for title, href in bookmarks:
-        html.write("<div class=bookmark id=\"bookmark_%d\">" % n)
-        iconbutton("delete", "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks', css_class = 'bookmark')
-        iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main", css_class = 'bookmark')
-        html.write(link(title, href))
-        html.write("</div>")
-        n += 1
 
-    html.write("<div class=footnotelink><a href=\"#\" onclick=\"addBookmark()\">%s</a></div>\n" % _('Add Bookmark'))
+def get_bookmarks_by_topic():
+    topics = {}
+    BookmarkList.load()
+    for instance in BookmarkList.instances_sorted():
+        if instance.may_see():
+            for topic, bookmarks in instance.bookmarks_by_topic():
+                if topic == None:
+                    topic = instance.default_bookmark_topic()
+                bookmark_list = topics.setdefault(topic, [])
+                bookmark_list += bookmarks
+    return sorted(topics.items())
+
+
+def render_bookmarks():
+    html.javascript("""
+function add_bookmark() {
+    url = parent.frames[1].location;
+    title = parent.frames[1].document.title;
+    get_url("add_bookmark.py?title=" + encodeURIComponent(title)
+            + "&url=" + encodeURIComponent(url), updateContents, "snapin_bookmarks");
+}""")
+
+    for topic, bookmarks in get_bookmarks_by_topic():
+        html.begin_foldable_container("bookmarks", topic, False, topic)
+
+        for bookmark in bookmarks:
+            icon = bookmark["icon"]
+            if not icon:
+                icon = "kreversi"
+
+            linktext = '<img class=iconlink src="images/icons/%s.png">%s' % \
+                 (html.attrencode(icon), html.attrencode(bookmark["title"]))
+            html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
+                    (html.attrencode(bookmark["url"]), linktext))
+
+        html.end_foldable_container()
+
+    begin_footnote_links()
+    html.write("<a href=\"javascript:void(0)\" "
+               "onclick=\"add_bookmark()\">%s</a>" % _('Add Bookmark'))
+    html.write(link(_("EDIT"), "bookmark_lists.py"))
+    end_footnote_links()
+
+
+def try_shorten_url(url):
+    referer = html.req.headers_in.get("Referer")
+    if referer:
+        ref_p = urlparse.urlsplit(referer)
+        url_p = urlparse.urlsplit(url)
+
+        # If http/https or user, pw, host, port differ, don't try to shorten
+        # the URL to be linked. Simply use the full URI
+        if ref_p.scheme == url_p.scheme and ref_p.netloc == url_p.netloc:
+            # We try to remove http://hostname/some/path/check_mk from the
+            # URI. That keeps the configuration files (bookmarks) portable.
+            # Problem here: We have not access to our own URL, only to the
+            # path part. The trick: we use the Referrer-field from our
+            # request. That points to the sidebar.
+            referer = ref_p.path
+            url     = url_p.path
+            if url_p.query:
+                url += '?' + url_p.query
+            removed = 0
+            while '/' in referer and referer.split('/')[0] == url.split('/')[0]:
+                referer = referer.split('/', 1)[1]
+                url = url.split('/', 1)[1]
+                removed += 1
+
+            if removed == 1:
+                # removed only the first "/". This should be an absolute path.
+                url = '/' + url
+            elif '/' in referer:
+                # there is at least one other directory layer in the path, make
+                # the link relative to the sidebar.py's topdir. e.g. for pnp
+                # links in OMD setups
+                url = '../' + url
+    return url
+
+
+def add_bookmark(title, url):
+    BookmarkList.load()
+    bookmarks = BookmarkList.instance((config.user_id, "my_bookmarks"))
+    bookmarks.add_bookmark(title, try_shorten_url(url))
+    bookmarks.save_user_instances()
+
+
+def ajax_add_bookmark():
+    title = html.var("title")
+    url   = html.var("url")
+    if title and url:
+        add_bookmark(title, url)
+    render_bookmarks()
 
 
 sidebar_snapins["bookmarks"] = {
     "title" : _("Bookmarks"),
-    "description" : _("A simple and yet practical snapin allowing to create bookmarks to views and other content in the main frame"),
+    "description" : _("A simple and yet practical snapin allowing to create "
+                      "bookmarks to views and other content in the main frame"),
     "render" : render_bookmarks,
     "allowed": [ "user", "admin", "guest" ],
     "styles" : """
@@ -1064,7 +1296,6 @@ div.bookmark {
 }
 """
 }
-
 
 
 # ------------------------------------------------------------

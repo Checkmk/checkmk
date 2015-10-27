@@ -1053,7 +1053,10 @@ class BookmarkList(pagetypes.Overridable, pagetypes.Base):
         )
 
         def bookmark_config_to_vs(v):
-            return (v["title"], v["url"], v["icon"], v["topic"])
+            if v:
+                return (v["title"], v["url"], v["icon"], v["topic"])
+            else:
+                return v
 
         def bookmark_vs_to_config(v):
             return {

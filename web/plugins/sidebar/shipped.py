@@ -1726,15 +1726,9 @@ def render_tag_tree_level(taggroups, path, cwd, title, tree):
     if path != cwd and is_tag_subdir(path, cwd):
         bullet = tag_tree_bullet(tag_tree_worst_state(tree), path, False)
         if tag_tree_has_svc_problems(tree):
-            # We cannot use html.plug() here, since this is not (yet)
-            # reentrant and it is used by the sidebar snapin updater.
-            # So we need to duplicate the code of icon_button here:
-            bullet += ('<a target="main" onfocus="if (this.blur) this.blur();" href="%s">'
-                       '<img align=absmiddle class=iconbutton title="%s" src="images/button_svc_problems_lo.png" '
-                       'onmouseover="hilite_icon(this, 1)" onmouseout="hilite_icon(this, 0)"></a>' % (
-                        tag_tree_url(taggroups, path, "svcproblems"),
-                       _("Show the service problems contained in this branch")))
-
+            bullet += html.render_icon_button(tag_tree_url(taggroups, path, "svcproblems"),
+                                        _("Show the service problems contained in this branch"),
+                                        "svc_problems")
 
         if path:
             html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False, bullet + title)

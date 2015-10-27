@@ -405,7 +405,8 @@ class html:
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')
 
-    def icon_button(self, url, help, icon, id="", onclick="", style="", target="", cssclass=""):
+
+    def render_icon_button(self, url, help, icon, id="", onclick="", style="", target="", cssclass=""):
         if id:
             id = "id='%s' " % id
 
@@ -422,19 +423,16 @@ class html:
         if cssclass:
             cssclass = 'class="%s" ' % cssclass
 
-        self.write('<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">'
-                   '<img align=absmiddle class=iconbutton title="%s" '
-                   'src="images/button_%s_lo.png" '
-                   'onmouseover=\"hilite_icon(this, 1)\" '
-                   'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon))
+        return '<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">' \
+                   '<img align=absmiddle class=iconbutton title="%s" ' \
+                   'src="images/button_%s_lo.png" ' \
+                   'onmouseover=\"hilite_icon(this, 1)\" ' \
+                   'onmouseout=\"hilite_icon(this, 0)\">' \
+                   '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon)
 
-    def render_icon_button(self, *args, **kwargs):
-        self.plug()
-        self.icon_button(*args, **kwargs)
-        code = self.drain()
-        self.unplug()
-        return code
+
+    def icon_button(self, *args, **kwargs):
+        self.write(self.render_icon_button(*args, **kwargs))
 
 
     def empty_icon_button(self):

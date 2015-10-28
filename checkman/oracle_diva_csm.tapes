@@ -1,6 +1,6 @@
 title: DIVA Content Storage Management: Blank Tapes
 agents: snmp
-catalog: hw/storagehw/oracle
+catalog: hw/storagehw/oraclehw
 license: GPL
 distribution: check_mk
 description:

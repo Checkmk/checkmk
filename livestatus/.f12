@@ -1,19 +1,26 @@
 #!/bin/bash
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
+C_CXX_FLAGS="-g -O3 -Wall -Wextra"
 
 set -e
-if [ ! -f configure ]; then
-    aclocal && autoheader && automake --add-missing && autoconf
-fi
 
-if [ ! -f Makefile ]; then
-    ./configure
-fi
+for i in aclocal.m4 ar-lib compile config.h.in configure depcomp install-sh Makefile.in missing; do
+    if test ! -f $i; then
+	autoreconf --install
+	break
+    fi
+done
 
-make CFLAGS=-g -j 8
+# See AC_CONFIG_HEADER and AC_CONFIG_FILES in configure.ac
+for i in config.h Makefile src/Makefile; do
+    if test ! -f $i; then
+	./configure CFLAGS="$C_CXX_FLAGS" CXXFLAGS="$C_CXX_FLAGS"
+	break
+    fi
+done
 
-
+make -j8
 sudo install src/livestatus.o /omd/sites/$SITE/lib/mk-livestatus/livestatus.o
 echo "Restarting site $SITE"
 sudo omd restart $SITE nagios

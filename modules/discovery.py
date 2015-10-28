@@ -64,7 +64,7 @@ def do_discovery(hostnames, check_types, only_new):
     # Now loop through all hosts
     for hostname in hostnames:
         try:
-            verbose(tty_white + tty_bold + hostname + tty_normal + ":\n")
+            verbose(tty_bold + hostname + tty_normal + ":\n")
             if opt_debug:
                 on_error = "raise"
             else:

@@ -399,7 +399,7 @@ class html:
         align = middle and ' align=absmiddle' or ''
         title = help and ' title="%s"' % self.attrencode(help) or ""
         id = id and ' id="%s"' % id or ''
-        cssclass = cssclass and ' ' + cssclass
+        cssclass = cssclass and (" " + cssclass) or ""
 
         return '<img src="%s" class="icon%s"%s%s%s />' % \
             (self.detect_icon_path(icon_name), cssclass, align, title, id)

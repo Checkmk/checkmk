@@ -285,6 +285,17 @@ def check_if_dhcp(item, params, info, nic_names, nic_index):
     header = lines.next()
 
     for line in lines:
+        # wmic is bugged on some windows versions such that we can't use proper csv output, only
+        # visual tables. Those aren't properly split up by the check_mk parser.
+        # Try to fix that mess
+
+        # assumption 1: header fields contain no spaces
+        num_fields = len(header)
+        # assumption 2: only the leftmost field contains spaces
+        lm_field = " ".join(line[:(num_fields - 1) * -1])
+
+        line = [lm_field] + line[(len(line) - num_fields + 1):]
+
         as_dict = dict(zip(header, map(lambda x: x.rstrip(), line)))
         name = winperf_if_normalize_nic_name(as_dict["Description"], nic_names)
         idx = nic_index.get(name)

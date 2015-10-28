@@ -1444,6 +1444,7 @@ def view_optiondial(view, option, choices, help):
 def view_optiondial_off(option):
     html.write('<div class="optiondial off %s"></div>' % option)
 
+# FIXME: Consolidate toggle rendering functions
 def toggler(id, icon, help, onclick, value, hidden = False):
     html.begin_context_buttons() # just to be sure
     hide = hidden and ' style="display:none"' or ''
@@ -1471,12 +1472,14 @@ def ajax_set_viewoption():
     vo[view_name][option] = value
     config.save_user_file("viewoptions", vo)
 
+# FIXME: Consolidate toggle rendering functions
 def togglebutton_off(id, icon, hidden = False):
     html.begin_context_buttons()
     hide = hidden and ' style="display:none"' or ''
     html.write('<div id="%s_off" class="togglebutton off %s"%s>'
-               '<img src="images/icon_%s.png"></div>' % (id, icon, icon, hide))
+               '<img src="images/icon_%s.png"></div>' % (id, icon, hide, icon))
 
+# FIXME: Consolidate toggle rendering functions
 def togglebutton(id, isopen, icon, help, hidden = False):
     html.begin_context_buttons()
     if isopen:

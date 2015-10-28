@@ -298,7 +298,7 @@ char *Logfile::readIntoBuffer(int *size)
         return 0;
     }
 
-    int r = read(fd, buffer + 1, *size);
+    ssize_t r = read(fd, buffer + 1, *size);
     if (r < 0) {
         logger(LOG_WARNING, "Cannot read %d bytes from %s: %s", *size, _path, strerror(errno));
         free(buffer);

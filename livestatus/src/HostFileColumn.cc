@@ -86,7 +86,7 @@ char *HostFileColumn::getBlob(void *data, int *size)
         return 0;
     }
 
-    int read_bytes = read(fd, buffer, *size);
+    ssize_t read_bytes = read(fd, buffer, *size);
     close(fd);
     if (read_bytes != *size) {
         logger(LG_WARN, "Cannot read %d from %s", *size, path);

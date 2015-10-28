@@ -1,6 +1,6 @@
 title: Kaspersky Anti-Virus: Signature and Fullscan
 agents: windows
-catalog: app/
+catalog: app/kaspersky
 license: GPL
 distribution: check_mk
 description:

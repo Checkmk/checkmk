@@ -142,7 +142,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
         output->setDoKeepalive(true);
     }
     else if (!strncmp(line, "LOGROTATE", 9)) {
-    	logger(LG_INFO, "Forcing logfile rotation");
+        logger(LG_INFO, "Forcing logfile rotation");
         rotate_log_file(time(0));
         schedule_new_event(EVENT_LOG_ROTATION,TRUE,get_next_log_rotation_time(),FALSE,0,(void *)get_next_log_rotation_time,TRUE,NULL,NULL,0);
     }
@@ -195,5 +195,3 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
             logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
     }
 }
-
-

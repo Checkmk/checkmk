@@ -213,13 +213,14 @@ int main(int argc, char** argv)
     }
 
     // Send message
-    int length = write(sock, query_message.c_str(), query_message.length());
+    ssize_t length = write(sock, query_message.c_str(), query_message.length());
+    (void)length;  // Make GCC happy
 
     // Get response
     char response_chunk[4096];
     memset(response_chunk, 0, sizeof(response_chunk));
     stringstream response_stream;
-    int read_length;
+    ssize_t read_length;
     while (0 < (read_length = read(sock, response_chunk, sizeof(response_chunk))))
     {
         // replace binary 0 in response with space

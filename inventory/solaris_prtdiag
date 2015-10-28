@@ -105,6 +105,11 @@ def inv_solaris_prtdiag(info):
             # 'System Configuration:  Sun Microsystems  sun4u SPARC Enterprise M4000 Server'
             # 'System Configuration: Supermicro H8DG6/H8DGi'
             # 'System Configuration: Oracle Corporation SUN FIRE X4170 M2 SERVER'
+            # 'System Configuration: Sun Microsystems     Sun Fire X4540'
+            # 'System Configuration: VMware, Inc. VMware Virtual Platform'
+            # 'System Configuration: HP ProLiant DL380 G5'
+            # 'System Configuration: SUN MICROSYSTEMS SUN FIRE X4270 SERVER'
+            # 'System Configuration: Sun Microsystems SUN FIRE X4450'
             node = inv_tree("hardware.system.")
             system_info = line[0].split(':', 1)[1].rstrip('\'')
 
@@ -120,7 +125,6 @@ def inv_solaris_prtdiag(info):
             node["product"] = system_info_list[1]
 
             product_list = node["product"].split()
-
             if product_list[-1].startswith('T'):
                 node["family"] = "T-series"
             elif product_list[-2].startswith('M'):

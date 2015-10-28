@@ -112,7 +112,7 @@ void *copy_thread(void *info)
                 r -= w;
             else if (w == 0 && r > 0) {
                 fprintf(stderr, "Error: Cannot write %" PRIdMAX " bytes to %d: %s\n",
-			(intmax_t)w, to, strerror(errno));
+                        (intmax_t)w, to, strerror(errno));
                 break;
             }
         }
@@ -166,4 +166,3 @@ int main(int argc, char **argv)
     close(sock);
     return 0;
 }
-

@@ -392,21 +392,24 @@ class html:
         else:
             return "images/icons/%s.png" % icon_name
 
-    def icon(self, help, icon):
-       self.write(self.render_icon(icon, help))
+    def icon(self, help, icon, **kwargs):
+       self.write(self.render_icon(icon, help, **kwargs))
 
-    def render_icon(self, icon_name, help="", middle=True, id=None):
+    def render_icon(self, icon_name, help="", middle=True, id=None, cssclass=None):
         align = middle and ' align=absmiddle' or ''
         title = help and ' title="%s"' % self.attrencode(help) or ""
         id = id and ' id="%s"' % id or ''
+        cssclass = cssclass and ' ' + cssclass
 
-        return '<img src="%s" class=icon%s%s%s />' % (self.detect_icon_path(icon_name), align, title, id)
+        return '<img src="%s" class="icon%s"%s%s%s />' % \
+            (self.detect_icon_path(icon_name), cssclass, align, title, id)
 
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')
 
 
-    def render_icon_button(self, url, help, icon, id="", onclick="", style="", target="", cssclass=""):
+    def render_icon_button(self, url, help, icon, id="", onclick="",
+                           style="", target="", cssclass="", ty="button"):
         if id:
             id = "id='%s' " % id
 
@@ -423,12 +426,15 @@ class html:
         if cssclass:
             cssclass = 'class="%s" ' % cssclass
 
+        if ty == "icon":
+            icon = self.detect_icon_path(icon)
+        else:
+            icon = "images/button_" + icon + ".png"
+
         return '<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">' \
                    '<img align=absmiddle class=iconbutton title="%s" ' \
-                   'src="images/button_%s.png" ' \
-                   'onmouseover=\"hilite_icon(this, 1)\" ' \
-                   'onmouseout=\"hilite_icon(this, 0)\">' \
-                   '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon)
+                   'src="%s"></a>' % (id, onclick, style, target, cssclass,
+                             url, self.attrencode(help), icon)
 
 
     def icon_button(self, *args, **kwargs):
@@ -479,7 +485,9 @@ class html:
             self.begin_context_buttons()
 
         if icon:
-            title = '<img src="%s">%s' % (self.attrencode(self.detect_icon_path(icon)), self.attrencode(title))
+            title = '<img src="%s">%s' % \
+                        (self.attrencode(self.detect_icon_path(icon)),
+                         self.attrencode(title))
 
         if id:
             idtext = " id='%s'" % self.attrencode(id)
@@ -1000,16 +1008,17 @@ class html:
         self.write(self.render_popup_trigger(content, ident, what, data, url_vars))
 
     def write_status_icons(self):
-        self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
-             (self.makeuri([]), _("URL to this frame")))
-        self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
-             ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar")))
+        self.icon_button(self.makeuri([]), _("URL to this frame"),
+                         "frameurl", target="_top", cssclass="statusicon")
+        self.icon_button("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
+                         _("URL to this page including sidebar"),
+                         "pageurl", target="_top", cssclass="statusicon")
 
         # TODO: Move this away from here. Make a context button. The view should handle this
         if self.myfile == "view" and self.var('mode') != 'availability':
-            self.write('<a target="_top" href="%s">' \
-                 '<img class=statusicon src="images/status_download_csv.png" title="%s"></a>\n' % \
-                 (self.makeuri([("output_format", "csv_export")]), _("Export as CSV")))
+            self.icon_button(self.makeuri([("output_format", "csv_export")]),
+                             _("Export as CSV"),
+                             "download_csv", target="_top", cssclass="statusicon")
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
@@ -1023,16 +1032,15 @@ class html:
                 encoded_vars[k] = v
 
             self.popup_trigger(
-                '<img class=statusicon src="images/icon_menu.png" title="%s">\n' % _("Add this view to..."),
+                self.render_icon("menu", _("Add this view to..."), cssclass="statusicon iconbutton"),
                 'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}])
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:
                 tooltip, url = tooltip
-                self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_%s.png" title="%s"></a>\n' % \
-                     (url, img, tooltip))
+                self.icon_button(url, tooltip, img)
             else:
-                self.write('<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip))
+                self.icon(tooltip, img, cssclass="statusicon")
 
         if self.times:
             self.measure_time('body')
@@ -1585,15 +1593,6 @@ class html:
 
     def uploaded_file(self, varname, default = None):
         return self.uploads.get(varname, default)
-
-    def magic_move(self, helptext, ajax_url):
-        self.write('<img align=absmiddle class=iconbutton '
-                    'src="images/button_magic_move.png" '
-                    'title="%s" '
-                    'onmouseover="hilite_icon(this, 1)" '
-                    'onmouseout="hilite_icon(this, 0)" '
-                    'onclick="start_magic_move(\'%s\')" >' % (
-                        (helptext, ajax_url)))
 
     #
     # Per request caching

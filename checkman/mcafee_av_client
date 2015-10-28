@@ -1,6 +1,6 @@
 title: McAfee Anti-Virus Signature Date
 agents: windows
-catalog: app/kaspersky
+catalog: app/mcafee
 license: GPL
 distribution: check_mk
 description:

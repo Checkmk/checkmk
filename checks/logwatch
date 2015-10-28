@@ -553,7 +553,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     # Render output
     #
 
-    if not collect_block.output_lines:
+    if collect_block.worst <= 0:
         return (0, "no error messages")
     else:
         count_txt = []

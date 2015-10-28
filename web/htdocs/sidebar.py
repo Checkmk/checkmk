@@ -112,9 +112,9 @@ def iconbutton(what, url, target="side", handler="", name="", css_class = ""):
         href = "%scheck_mk/%s" % (defaults.url_prefix, url)
         tg = "target=%s" % target
     css_class = css_class and " " + css_class or ""
-    html.write("<a href=\"%s\" %s %s><img class=\"iconbutton%s\" onmouseover=\"hilite_icon(this, 1)\" "
-               "onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%scheck_mk/images/button_%s.png\"></a>\n " %
-                            (href, onclick, tg, css_class, defaults.url_prefix, what))
+    html.write("<a href=\"%s\" %s %s><img class=\"iconbutton%s\" "
+               "align=absmiddle src=\"%scheck_mk/images/button_%s.png\"></a>\n " %
+                  (href, onclick, tg, css_class, defaults.url_prefix, what))
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%snagios/cgi-bin/%s\">%s</a></li>" % \

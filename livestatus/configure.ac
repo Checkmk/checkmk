@@ -38,6 +38,8 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_RANLIB
 AM_CONDITIONAL([HAVE_DIET], [which diet >/dev/null 2>&1])
+# automake 1.12 seems to require this, but automake 1.11 doesn't recognize it. :-P
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 # Checks for libraries.
 AC_CHECK_LIB(socket, socket)

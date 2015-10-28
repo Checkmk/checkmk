@@ -295,17 +295,13 @@ def paint_icons(what, row):
 
                 onclick = ''
                 if url.startswith('onclick:'):
-                    onclick = ' onclick="%s"' % url[8:]
+                    onclick = url[8:]
                     url = 'javascript:void(0)'
 
-                target = ""
-                if target_frame != "_self":
-                    target = " target=\"%s\"" % target_frame
-
-                output += '<a href="%s"%s%s>' % (url, target, onclick)
-            output += html.render_icon(icon_name, title)
-            if url_spec:
-                output += '</a>'
+                output += html.render_icon_button(url, title, icon_name,
+                                onclick=onclick, target=target_frame, ty="icon")
+            else:
+                output += html.render_icon(icon_name, title)
         else:
             output += icon[1]
 

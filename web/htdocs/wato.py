@@ -1359,15 +1359,16 @@ def show_hosts(folder):
     def bulk_actions(at_least_one_imported, top, withsearch, colspan, show_checkboxes):
         table.row(collect_headers=False, fixed=True)
         table.cell(css="bulksearch", colspan=3)
+        # FIXME: Consolidate with generic togglebox rendering function
         if not show_checkboxes:
             html.write('<div id="%s_on" title="%s" class="togglebutton %s up" '
-                       'onclick="location.href=\'%s\'"></div>' % (
+                       'onclick="location.href=\'%s\'"><img src="images/icon_checkbox.png"></div>' % (
                         'checkbox', _('Show Checkboxes and bulk actions'), 'checkbox',
                         html.makeuri([('show_checkboxes', '1'), ('selection', weblib.selection_id())])))
 
         else:
             html.write('<div id="%s_on" title="%s" class="togglebutton %s down" '
-                       'onclick="location.href=\'%s\'"></div>' % (
+                       'onclick="location.href=\'%s\'"><img src="images/icon_checkbox.png"></div>' % (
                         'checkbox', _('Hide Checkboxes and bulk actions'), 'checkbox',
                         html.makeuri([('show_checkboxes', '0')])))
         if withsearch:

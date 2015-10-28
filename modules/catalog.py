@@ -96,6 +96,7 @@ manpage_catalog_titles = {
             "emc"        : "EMC",
             "qlogic"     : "QLogic",
             "quantum"    : "Quantum",
+            "oraclehw"   : "ORACLE",
         "phone"       : "Telephony",
 
     "app"      : "Applications",
@@ -125,6 +126,8 @@ manpage_catalog_titles = {
         "tsm"           : "IBM Tivoli Storage Manager (TSM)",
         "unitrends"     : "Unitrends",
         "sansymphony"   : "Datacore SANsymphony",
+        "kaspersky"     : "Kaspersky Lab",
+        "mcafee"        : "McAfee",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",

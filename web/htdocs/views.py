@@ -1448,8 +1448,8 @@ def toggler(id, icon, help, onclick, value, hidden = False):
     html.begin_context_buttons() # just to be sure
     hide = hidden and ' style="display:none"' or ''
     html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" '
-       'onclick="%s"%s></div>' % (
-        id, help, icon, value and "down" or "up", onclick, hide))
+       'onclick="%s"%s><img src="images/icon_%s.png"></div>' % (
+        id, help, icon, value and "down" or "up", onclick, hide, icon))
 
 
 # Will be called when the user presses the upper button, in order
@@ -1474,7 +1474,8 @@ def ajax_set_viewoption():
 def togglebutton_off(id, icon, hidden = False):
     html.begin_context_buttons()
     hide = hidden and ' style="display:none"' or ''
-    html.write('<div id="%s_off" class="togglebutton off %s"%s></div>' % (id, icon, hide))
+    html.write('<div id="%s_off" class="togglebutton off %s"%s>'
+               '<img src="images/icon_%s.png"></div>' % (id, icon, icon, hide))
 
 def togglebutton(id, isopen, icon, help, hidden = False):
     html.begin_context_buttons()
@@ -1484,7 +1485,8 @@ def togglebutton(id, isopen, icon, help, hidden = False):
         cssclass = "up"
     hide = hidden and ' style="display:none"' or ''
     html.write('<div id="%s_on" class="togglebutton %s %s" title="%s" '
-               'onclick="view_toggle_form(this, \'%s\');"%s></div>' % (id, icon, cssclass, help, id, hide))
+               'onclick="view_toggle_form(this, \'%s\');"%s>'
+               '<img src="images/icon_%s.png"></div>' % (id, icon, cssclass, help, id, hide, icon))
 
 def show_context_links(thisview, show_filters, display_options,
                        painter_options, enable_commands, enable_checkboxes, show_checkboxes,

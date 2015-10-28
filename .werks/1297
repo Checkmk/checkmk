@@ -1,0 +1,11 @@
+Title: emcvnx_hba: Prevent old emc versions from inventory
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446047081
+
+Old Versions of EMC don't have any information about Read and Write blocks, so that check crashed.
+

@@ -842,12 +842,34 @@ div.togglebutton.checkbox.down {
     left: -2px;
 }
 
-div.togglebutton.checkbox         { background-image: url("images/button_checkbox.png"); }
-div.togglebutton.checkbox:hover   { opacity: 0.5; filter: alpha(opacity=50); }
-div.togglebutton.checkbox.down       { background-image: url("images/button_checkbox_down.png"); }
-div.togglebutton.checkbox.down:hover { opacity: 0.5; filter: alpha(opacity=50); }
-div.togglebutton.checkbox.off      { background-image: url("images/button_checkbox_off.png"); }
+div.togglebutton img {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    left: 5px;
+}
 
+div.togglebutton.down img {
+    top: 1px;
+    left: 7px;
+}
+
+div.togglebutton.checkbox.down img {
+    top: 1px;
+    left: 5px;
+}
+
+div.togglebutton         { background-image: url("images/togglebutton_lo.png"); }
+div.togglebutton:hover   { background-image: url("images/togglebutton_hi.png"); }
+div.togglebutton.down       { background-image: url("images/togglebutton_down_lo.png"); }
+div.togglebutton.down:hover { background-image: url("images/togglebutton_down_hi.png"); }
+div.togglebutton.off      { opacity: 0.5; filter: alpha(opacity=50); }
+
+div.togglebutton.checkbox         { background-image: url("images/togglebutton_check_lo.png"); }
+div.togglebutton.checkbox:hover   { background-image: url("images/togglebutton_check_hi.png"); }
+div.togglebutton.checkbox.down       { background-image: url("images/togglebutton_check_down_lo.png"); }
+div.togglebutton.checkbox.down:hover { background-image: url("images/togglebutton_check_down_hi.png"); }
+div.togglebutton.checkbox.off      { opacity: 0.5; filter: alpha(opacity=50); }
 
 /*-------------------------------------------------------------------------.
 |                         _   _      _                                     |

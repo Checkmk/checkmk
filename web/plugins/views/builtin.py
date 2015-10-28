@@ -1376,7 +1376,7 @@ multisite_builtin_views.update({
                   'title': _('Service Group'),
                   'topic': _('Other')},
  'sitehosts': {'browser_reload': 30,
-               'column_headers': 'off',
+               'column_headers': 'pergroup',
                'datasource': 'hosts',
                'description': _('Link view showing all hosts of one site'),
                'group_painters': [('site_icon', None), ('sitealias', 'sitesvcs')],

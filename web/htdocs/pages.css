@@ -859,6 +859,10 @@ div.togglebutton.checkbox.down img {
     left: 5px;
 }
 
+div.togglebutton.checkbox img {
+    left: 4px;
+}
+
 div.togglebutton         { background-image: url("images/togglebutton_lo.png"); }
 div.togglebutton:hover   { background-image: url("images/togglebutton_hi.png"); }
 div.togglebutton.down       { background-image: url("images/togglebutton_down_lo.png"); }

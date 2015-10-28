@@ -382,7 +382,7 @@ void TableStateHistory::answerQuery(Query *query)
         case FLAPPING_SERVICE:
             key = entry->_service;
             is_service = true;
-	    // fall-though
+	    // fall-through
         case ALERT_HOST:
         case STATE_HOST:
         case STATE_HOST_INITIAL:

@@ -3335,7 +3335,7 @@ void output(SOCKET &out, const char *format, ...)
 
     if (do_tcp) {
         while (write_to_socket && !g_should_terminate) {
-            int result = send(out, outbuffer, len, 0);
+            ssize_t result = send(out, outbuffer, len, 0);
             if (result == SOCKET_ERROR) {
                 debug("send() failed");
                 int error = WSAGetLastError();

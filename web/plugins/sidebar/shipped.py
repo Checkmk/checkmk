@@ -48,7 +48,8 @@ def render_about():
 
 sidebar_snapins["about"] = {
     "title" : _("About Check_MK"),
-    "description" : _("Version information and Links to Documentation, Homepage and Download of Check_MK"),
+    "description" : _("Version information and Links to Documentation, "
+                      "Homepage and Download of Check_MK"),
     "render" : render_about,
     "allowed" : [ "admin", "user", "guest" ],
 }
@@ -212,14 +213,14 @@ def render_groups(what):
     html.write('</ul>')
 
 sidebar_snapins["hostgroups"] = {
-    "title" : _("Hostgroups"),
+    "title" : _("Host Groups"),
     "description" : _("Directs links to all host groups"),
     "render" : lambda: render_groups("host"),
     "restart":     True,
     "allowed" : [ "user", "admin", "guest" ]
 }
 sidebar_snapins["servicegroups"] = {
-    "title" : _("Servicegroups"),
+    "title" : _("Service Groups"),
     "description" : _("Direct links to all service groups"),
     "render" : lambda: render_groups("service"),
     "restart":     True,
@@ -305,8 +306,9 @@ snapin_allhosts_styles = """
 """
 
 sidebar_snapins["hosts"] = {
-    "title" : _("All hosts"),
-    "description" : _("A summary state of each host with a link to the view showing its services"),
+    "title" : _("All Hosts"),
+    "description" : _("A summary state of each host with a link to the view "
+                      "showing its services"),
     "render" : lambda: render_hosts("hosts"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : True,
@@ -314,8 +316,9 @@ sidebar_snapins["hosts"] = {
 }
 
 sidebar_snapins["summary_hosts"] = {
-    "title" : _("Summary hosts"),
-    "description" : _("A summary state of all summary hosts (summary hosts hold aggregated service states and are a feature of Check_MK)"),
+    "title" : _("Summary Hosts"),
+    "description" : _("A summary state of all summary hosts (summary hosts hold "
+                      "aggregated service states and are a feature of Check_MK)"),
     "render" : lambda: render_hosts("summary"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : True,
@@ -323,8 +326,9 @@ sidebar_snapins["summary_hosts"] = {
 }
 
 sidebar_snapins["problem_hosts"] = {
-    "title" : _("Problem hosts"),
-    "description" : _("A summary state of all hosts that have a problem, with links to problems of those hosts"),
+    "title" : _("Problem Hosts"),
+    "description" : _("A summary state of all hosts that have a problem, with "
+                      "links to problems of those hosts"),
     "render" : lambda: render_hosts("problems"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : True,
@@ -471,8 +475,9 @@ def render_sitestatus():
 
 
 sidebar_snapins["sitestatus"] = {
-  "title" : _("Site status"),
-  "description" : _("Connection state of each site and button for enabling and disabling the site connection"),
+  "title" : _("Site Status"),
+  "description" : _("Connection state of each site and button for enabling "
+                    "and disabling the site connection"),
   "render" : render_sitestatus,
   "allowed" : [ "user", "admin" ],
   "refresh" : True,
@@ -657,7 +662,7 @@ def render_performance():
     html.write("</table>\n")
 
 sidebar_snapins["performance"] = {
-    "title" : _("Server performance"),
+    "title" : _("Server Performance"),
     "description" : _("Live monitor of the overall performance of all monitoring servers"),
     "refresh" : True,
     "render" : render_performance,
@@ -838,7 +843,7 @@ def render_current_time():
     html.write("<div class=time>%s</div>" % time.strftime("%H:%M"))
 
 sidebar_snapins["time"] = {
-    "title" : _("Server time"),
+    "title" : _("Server Time"),
     "description" : _("A large clock showing the current time of the web server"),
     "refresh" : True,
     "render" : render_current_time,
@@ -921,7 +926,8 @@ def render_nagios():
 
 sidebar_snapins["nagios_legacy"] = {
     "title" : _("Old Nagios GUI"),
-    "description" : _("The classical sidebar of Nagios 3.2.0 with links to your local Nagios instance (no multi site support)"),
+    "description" : _("The classical sidebar of Nagios 3.2.0 with links to "
+                      "your local Nagios instance (no multi site support)"),
     "render" : render_nagios,
     "allowed" : [ "user", "admin", "guest", ],
 }
@@ -976,8 +982,9 @@ def render_master_control():
             html.end_foldable_container()
 
 sidebar_snapins["master_control"] = {
-    "title" : _("Master control"),
-    "description" : _("Buttons for switching globally states such as enabling checks and notifications"),
+    "title" : _("Master Control"),
+    "description" : _("Buttons for switching globally states such as enabling "
+                      "checks and notifications"),
     "render" : render_master_control,
     "allowed" : [ "admin", ],
     "styles" : """
@@ -1346,7 +1353,9 @@ def render_custom_links():
 
 sidebar_snapins["custom_links"] = {
     "title" : _("Custom Links"),
-    "description" : _("This snapin contains custom links which can be configured via the configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"),
+    "description" : _("This snapin contains custom links which can be "
+                      "configured via the configuration variable "
+                      "<tt>custom_links</tt> in <tt>multisite.mk</tt>"),
     "render" : render_custom_links,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
@@ -1807,8 +1816,9 @@ def render_tag_tree():
 
 sidebar_snapins["tag_tree"] = {
     "title" : _("Virtual Host Tree"),
-    "description" : _("This snapin shows tree views of your hosts based on their tag classifications. You "
-                      "can configure which tags to use in your global settings of Multisite."),
+    "description" : _("This snapin shows tree views of your hosts based on their tag "
+                      "classifications. You can configure which tags to use in your "
+                      "global settings of Multisite."),
     "render" : render_tag_tree,
     "refresh" : True,
     "allowed" : [ "admin", "user", "guest" ],

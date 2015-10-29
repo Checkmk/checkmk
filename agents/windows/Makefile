@@ -155,7 +155,7 @@ nowin.exe: nowin.cc
 	$(CXX) -o $@ $<
 
 clean:
-	rm -f *.o *~ svn-*.tmp *.rc *.res
+	rm -f *.o *~ svn-*.tmp *.rc *.res obj/*.o obj64/*.o
 	make -C msibuild clean
 
 mrproper: clean

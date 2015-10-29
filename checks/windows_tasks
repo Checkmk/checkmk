@@ -67,7 +67,7 @@ def check_windows_tasks(item, _no_params, info):
             state = 0
             label = ""
             msg = []
-            if last_result not in [ 0, 0x00041301, 0x00041325, 0x00041306 ]: # RUNNING, QUEUED, CANCELD
+            if last_result not in [ 0, 0x00041301, 0x00041325, 0x00041306, 0x8004131F ]: # RUNNING, QUEUED, CANCELD, Instance RUNNING
                 state = 2
                 label = "(!!)"
             msg.append("Service in state: %s%s" % ( last_result, label ) )
@@ -75,6 +75,8 @@ def check_windows_tasks(item, _no_params, info):
                 msg[-1] += " (currently running)"
             elif last_result == 0x00041325:
                 msg[-1] += " (queued)"
+            elif last_result == 0x8004131F:
+                msg[-1] += " (an instance of the task already running)"
 
             if values['Scheduled Task State'] != 'Enabled':
                 msg.append("Task not Enabled(!!)")

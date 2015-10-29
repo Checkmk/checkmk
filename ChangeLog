@@ -5,6 +5,9 @@
     * 2692 FIX: check_http: Fixed broken check when using Nagios (introduced with 1.2.7i3)
     * 1297 FIX: emcvnx_hba: Prevent old emc versions from inventory...
 
+    Multisite:
+    * 2670 FIX: Fix problem that no site is configured when user has deleted only site...
+
     WATO:
     * 2715 FIX: Fixed visibility of BI aggregations in editor
 

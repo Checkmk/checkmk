@@ -140,7 +140,7 @@ def include(filename):
 # Load multisite.mk and all files in multisite.d/. This will happen
 # for *each* HTTP request.
 def load_config():
-    global modification_timestamps
+    global modification_timestamps, sites
     modification_timestamps = []
 
     # Set default values for all user-changable configuration settings
@@ -161,6 +161,12 @@ def load_config():
     filelist.sort()
     for p in filelist:
         include(p)
+
+    # Prevent problem when user has deleted all sites from his configuration
+    # and sites is {}. We assume a default single site configuration in
+    # that case.
+    if not sites:
+        sites = default_single_site_configuration()
 
 
 def reporting_available():

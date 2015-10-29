@@ -120,7 +120,7 @@ def inv_solaris_prtdiag(info):
                 vendor = "Oracle Corporation"
                 index  = 2
             elif "supermicro" in system_info.lower():
-                vendor = "Supermirco"
+                vendor = "Supermicro"
                 index  = 1
             elif "vmware, inc." in system_info.lower():
                 vendor = "VMWare, Inc."

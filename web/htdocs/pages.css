@@ -889,22 +889,20 @@ div.togglebutton.checkbox.off      { opacity: 0.5; filter: alpha(opacity=50); }
 a#helpbutton {
     width: 19px;
     height: 19px;
-    margin: 0px 5px;
+    margin: 0 5px;
     position: relative;
-    top: 2px;
-    left: 3px;
+    top: -8px;
+    left: -2px;
 }
-a#helpbutton.active:hover {
-    background-image: url("images/helpbutton_active_hi.png");
-}
-a#helpbutton.passive:hover {
-    background-image: url("images/helpbutton_passive_hi.png");
-}
-a#helpbutton.active {
-    background-image: url("images/helpbutton_active.png");
-}
+
 a#helpbutton.passive {
-    background-image: url("images/helpbutton_passive.png");
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    filter: gray;
+    -webkit-filter: grayscale(1);
 }
 
 div.help {

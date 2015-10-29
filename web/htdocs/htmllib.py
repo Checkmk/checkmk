@@ -923,8 +923,9 @@ class html:
 
     def top_heading_right(self):
         cssclass = self.help_visible and "active" or "passive"
-        self.write('<a id=helpbutton class=%s href="#" onclick="help_toggle();" style="display: none"></a>' %
-            cssclass)
+        self.icon_button(None, _("Toggle context help texts"), "help", id="helpbutton",
+                         onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
+
         self.write("%s</td></tr></table>" %
                    _("<a href=\"http://mathias-kettner.de\"><img src=\"images/logo_mk_small.png\"/></a>"))
         self.write("<hr class=header>\n")
@@ -968,7 +969,7 @@ class html:
 
     def body_end(self):
         if self.have_help:
-            self.javascript("help_enable();")
+            self.javascript("enable_help();")
         if self.keybindings_enabled and self.keybindings:
             self.javascript("var keybindings = %r;\n"
                             "document.body.onkeydown = keybindings_keydown;\n"

@@ -1,0 +1,8 @@
+Title: generated pnp templates don't support placeholders
+Component: multisite
+State: open
+Date: 2015-10-29 09:05:03
+Targetversion: 1.2.7
+Class: bug
+
+If a template for the new graphing system contains a placeholder (i.e. %(util:max@count)), that placeholder is resolved fine in new graphs but not in the generated pnp templates.

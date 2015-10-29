@@ -14,6 +14,7 @@
 
     WATO:
     * 2693 FIX: Restoring backup: fixed crash 'failed to extract tarballs'
+    * 2716 FIX: Fixed error reporting on disabled checks page in case of broken man pages
 
     Event Console:
     * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters

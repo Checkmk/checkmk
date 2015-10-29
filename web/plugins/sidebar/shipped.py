@@ -1215,8 +1215,9 @@ function add_bookmark() {
         for bookmark in bookmarks:
             icon = bookmark["icon"]
             if not icon:
-                icon = "kreversi"
+                icon = "kdict"
 
+            # FIXME: Use standard rendering functions
             linktext = '<img class=iconlink src="images/icons/%s.png">%s' % \
                  (html.attrencode(icon), html.attrencode(bookmark["title"]))
             html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
@@ -1225,8 +1226,7 @@ function add_bookmark() {
         html.end_foldable_container()
 
     begin_footnote_links()
-    html.write("<a href=\"javascript:void(0)\" "
-               "onclick=\"add_bookmark()\">%s</a>" % _('Add Bookmark'))
+    html.write(link(_("Add Bookmark"), "javascript:void(0)", onclick="add_bookmark()"))
     html.write(link(_("EDIT"), "bookmark_lists.py"))
     end_footnote_links()
 

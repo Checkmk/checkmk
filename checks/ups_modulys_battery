@@ -58,7 +58,7 @@ def check_ups_modulys_battery(item, params, info):
         if elapsed_sec == 0:
             yield 0, "on mains"
         else:
-            yield 0, "discharging for %d minutes" % (elapsed_sec / 60)
+            yield 0, "discharging for %d minutes" % (elapsed_sec / 60) # TODO: Echt OK?
 
         # test 2: battery health
         if condition == 1:

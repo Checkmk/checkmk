@@ -1,0 +1,12 @@
+Title: Fix problem that no site is configured when user has deleted only site
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446117423
+Class: fix
+
+This problem was introduced by dropping the "single site" mode internally totally
+in version 1.2.7i3 and treating a single site setup automatically as multi site
+setup with just one site. The problem occurred when you had <tt>sites = {}</tt>
+in your configuration (instead of having no <tt>sites = </tt> at all).

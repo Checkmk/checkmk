@@ -111,24 +111,46 @@ def inv_solaris_prtdiag(info):
             # 'System Configuration: SUN MICROSYSTEMS SUN FIRE X4270 SERVER'
             # 'System Configuration: Sun Microsystems SUN FIRE X4450'
             node = inv_tree("hardware.system.")
-            system_info = line[0].split(':', 1)[1].rstrip('\'')
+            system_info = line[0].split(":", 1)[1].strip().replace("SERVER", "").replace("Server", "")
 
-            # Fields are separated by double spaces for some outputs
-            if "  " in system_info:
-                system_info_list = system_info.split("  ")
-            elif system_info.startswith(" Oracle Corporation") and len(system_info) > 20:
-                system_info_list = system_info[1:19], system_info[20:]
+            if "sun microsystems" in system_info.lower():
+                vendor = "Sun Microsystems"
+                index  = 2
+            elif "oracle corporation" in system_info.lower():
+                vendor = "Oracle Corporation"
+                index  = 2
+            elif "supermicro" in system_info.lower():
+                vendor = "Supermirco"
+                index  = 1
+            elif "vmware, inc." in system_info.lower():
+                vendor = "VMWare, Inc."
+                index  = 2
+            elif "hp" in system_info.lower():
+                vendor = "HP"
+                index  = 1
             else:
-                system_info_list = system_info.split()
+                vendor = system_info.split(" ")[0]
+                index  = 1
 
-            node["vendor"] = system_info_list[0]
-            node["product"] = system_info_list[1]
+            system_info    = " ".join(system_info.split(" ")[index:]).strip()
+            node["vendor"] = vendor
 
-            product_list = node["product"].split()
-            if product_list[-1].startswith('T'):
-                node["family"] = "T-series"
-            elif product_list[-2].startswith('M'):
-                node["family"] = "M-series"
+            if "sun fire" in system_info.lower():
+                index = 3
+            elif "sun4u" in system_info.lower() or \
+                 "proliant" in system_info.lower():
+                index = 2
+            elif "vmware" in system_info.lower():
+                index = 3
+            else:
+                index = 1
+
+            node["product"] = " ".join(system_info.split(" ")[:index])
+            family          = " ".join(system_info.split(" ")[index:])
+
+            if family:
+                node["family"] = "%s-series" % family[0].upper()
+
 
 inv_info['solaris_prtdiag'] = {
    "inv_function"           : inv_solaris_prtdiag,

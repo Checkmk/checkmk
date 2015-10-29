@@ -43,7 +43,7 @@ int32_t HostSpecialIntColumn::getValue(void *data, Query *)
                 return hst->last_hard_state;
 
         case HSIC_PNP_GRAPH_PRESENT:
-            return pnpgraph_present(hst->name, 0);
+            return pnpgraph_present(hst->name);
 
         case HSIC_MK_INVENTORY_LAST:
             return mk_inventory_last(hst->name);

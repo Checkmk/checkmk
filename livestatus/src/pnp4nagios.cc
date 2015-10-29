@@ -22,96 +22,59 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "pnp4nagios.h"
 
+using namespace std;
 
-extern char *g_pnp_path;
 
-char *cleanup_pnpname(char *name)
-{
-    char *p = name;
-    while (*p) {
-        if (*p == ' ' || *p == '/' || *p == '\\' || *p == ':')
-            *p = '_';
-        p++;
+// Note: If the path is not empty, it always ends with '/', see
+// livestatus_parse_arguments.
+extern char* g_pnp_path;
+
+namespace {
+
+string replace_all(const string& str, const string& chars, char replacement) {
+    string result(str);
+    size_t i = 0;
+    while ((i = result.find_first_of(chars, i)) != string::npos) {
+        result[i++] = replacement;
     }
-    return name;
+    return result;
 }
 
 
-int pnpgraph_present(const char *host, const char *service)
-{
-    if (!g_pnp_path[0])
-        return -1;
+string cleanup(const string& name) { return replace_all(name, " /\\:", '_'); }
 
-    char path[4096];
-    size_t needed_size = strlen(g_pnp_path) + strlen(host) + 16;
-    if (service)
-        needed_size += strlen(service);
-    if (needed_size > sizeof(path))
-        return -1;
+}  // namespace
 
-    strcpy(path, g_pnp_path);
-    char *end = path + strlen(path);
-    strcpy(end, host);
-    cleanup_pnpname(end);
-    strcat(end, "/");
-    end = end + strlen(end);
-    if (service) {
-        strcat(end, service);
-        cleanup_pnpname(end);
-        strcat(end, ".xml");
-    }
-    else
-        strcat(end, "_HOST_.xml");
 
-    if (0 == access(path, R_OK))
-        return 1;
-    else
-        return 0;
+int pnpgraph_present(const std::string& host, const std::string& service) {
+    string pnp_path(g_pnp_path);
+    if (pnp_path.empty()) return -1;
+    string path(pnp_path.append(cleanup(host))
+                    .append("/")
+                    .append(cleanup(service))
+                    .append(".xml"));
+    return access(path.c_str(), R_OK) == 0 ? 1 : 0;
 }
 
 
-// Determines if a RRD database is existent and returns its path name.
-// Returns an empty string otherwise.
-// This assumes paths created in the PNP4Nagios style with storage type MULTIPLE.
-string rrd_path(const char *host, const char *service, const char *varname)
-{
-    if (!g_pnp_path[0])
-        return "";
-
-    string path = g_pnp_path;
-    path += "/";
-
-    char *cleaned_up;
-    cleaned_up = cleanup_pnpname(strdup(host));
-    path += cleaned_up;
-    free(cleaned_up);
-
-    path += "/";
-
-    cleaned_up = cleanup_pnpname(strdup(service));
-    path += cleaned_up;
-    free(cleaned_up);
-
-    path += "_";
-
-    cleaned_up = cleanup_pnpname(strdup(varname));
-    path += cleaned_up;
-    free(cleaned_up);
-
-    path += ".rrd";
-
+string rrd_path(const string& host, const string& service,
+                const string& varname) {
+    string pnp_path(g_pnp_path);
+    if (pnp_path.empty()) return "";
+    string path(pnp_path.append("/")
+                    .append(cleanup(host))
+                    .append("/")
+                    .append(cleanup(service))
+                    .append("_")
+                    .append(cleanup(varname))
+                    .append(".rrd"));
     struct stat st;
-    if (0 == stat(path.c_str(), &st))
-        return path;
-    else
-        return "";
+    return stat(path.c_str(), &st) == 0 ? path : "";
 }

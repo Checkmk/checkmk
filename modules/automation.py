@@ -1212,21 +1212,21 @@ def automation_bake_agents():
 def automation_get_agent_output(args):
     hostname, ty = args
 
-    if ty == "agent":
-        return get_plain_hostinfo(hostname)
+    success    = True
+    output     = ""
+    agent_data = ""
 
-    else:
-        path = snmpwalks_dir + "/" + hostname
-        success = True
-        output = ""
-        agent_data = ""
-        try:
+    try:
+        if ty == "agent":
+            agent_data = get_plain_hostinfo(hostname)
+        else:
+            path = snmpwalks_dir + "/" + hostname
             do_snmpwalk_on(hostname, snmpwalks_dir + "/" + hostname)
             agent_data = file(snmpwalks_dir + "/" + hostname).read()
-        except Exception, e:
-            success = False
-            output = "Error walking %s: %s\n" % (hostname, e)
-            if opt_debug:
-                raise
+    except Exception, e:
+        success = False
+        output = "Failed to fetch data from %s: %s\n" % (hostname, e)
+        if opt_debug:
+            raise
 
-        return success, output, agent_data
+    return success, output, agent_data

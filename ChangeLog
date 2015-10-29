@@ -44,6 +44,7 @@
     WATO:
     * 2666 FIX: Fix search for global configuration variables: ignore case now
     * 2715 FIX: Fixed visibility of BI aggregations in editor
+    * 2716 FIX: Fixed error reporting on disabled checks page in case of broken man pages
 
     HW/SW-Inventory:
     * 2436 NetApp monitoring: Now able to gather data for inventory...

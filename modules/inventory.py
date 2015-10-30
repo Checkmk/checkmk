@@ -171,6 +171,7 @@ def do_inv(hostnames):
                 raise
             verbose("Failed: %s\n" % e)
             errors.append("Failed to inventorize %s: %s" % (hostname, e))
+        cleanup_globals()
 
     if errors:
         raise MKGeneralException("\n".join(errors))

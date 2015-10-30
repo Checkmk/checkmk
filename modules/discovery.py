@@ -76,6 +76,8 @@ def do_discovery(hostnames, check_types, only_new):
                 raise
             verbose(" -> Failed: %s\n" % e)
 
+        cleanup_globals()
+
 
 def do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
     # Usually we disable SNMP scan if cmk -I is used without a list of

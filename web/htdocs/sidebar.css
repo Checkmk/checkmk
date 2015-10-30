@@ -355,6 +355,11 @@ div.snapin img.iconbutton {
     height: 10px;
 }
 
+img.iconbutton:hover {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
 div.snapin img.iconbutton.bookmark {
     width:  16px;
     height: 16px;

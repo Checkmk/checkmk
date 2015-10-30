@@ -3682,13 +3682,15 @@ void cleanup()
 
     unregister_all_eventlogs(); // frees a few bytes
 
-    for (fileinfo_paths_t::iterator it_path = g_config->fileinfoPaths().begin();
-            it_path != g_config->fileinfoPaths().end(); it_path++) {
-        free(*it_path);
-    }
-    g_config->fileinfoPaths().clear();
+    if (g_config != NULL) {
+        for (fileinfo_paths_t::iterator it_path = g_config->fileinfoPaths().begin();
+                it_path != g_config->fileinfoPaths().end(); it_path++) {
+            free(*it_path);
+        }
+        g_config->fileinfoPaths().clear();
 
-    cleanup_logwatch();
+        cleanup_logwatch();
+    }
 }
 
 void show_version()

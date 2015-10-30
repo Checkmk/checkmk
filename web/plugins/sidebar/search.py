@@ -58,6 +58,19 @@ sidebar_snapins["search"] = {
     z-index:100;
 }
 
+#mk_side_search img.iconbutton {
+    opacity: 1;
+    filter: alpha(opacity=100); /* For IE8 and earlier */
+}
+
+#mk_side_search img.iconbutton:hover {
+    filter: grayscale(20%);
+    -webkit-filter: grayscale(20%);
+    -moz-filter: grayscale(20%);
+    -ms-filter: grayscale(20%);
+    -o-filter: grayscale(20%);
+}
+
 #mk_side_search input {
     margin:  0;
     padding: 0px 5px;

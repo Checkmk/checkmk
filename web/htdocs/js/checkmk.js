@@ -2070,24 +2070,28 @@ function vs_listofmultiple_init(varprefix) {
 //#   |                                                                    |
 //#   '--------------------------------------------------------------------'
 
-function help_enable() {
-    var aHelp = document.getElementById('helpbutton');
-    aHelp.style.display = "inline-block";
+function enable_help()
+{
+    var help = document.getElementById('helpbutton');
+    help.style.display = "inline-block";
 }
 
-function help_toggle() {
-    var aHelp = document.getElementById('helpbutton');
-    if (aHelp.className == "active") {
-        aHelp.className = "passive";
-        help_switch(false);
-    }
-    else {
-        aHelp.className = "active";
-        help_switch(true);
+function toggle_help()
+{
+    var help = document.getElementById('helpbutton');
+    if (has_class(help, "active")) {
+        remove_class(help, "active");
+        add_class(help, "passive");
+        switch_help(false);
+    } else {
+        add_class(help, "active");
+        remove_class(help, "passive");
+        switch_help(true);
     }
 }
 
-function help_switch(how) {
+function switch_help(how)
+{
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName('help');
     for (var i=0; i<helpdivs.length; i++) {

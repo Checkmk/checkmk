@@ -1,7 +1,10 @@
-*.o
 *.a
-*.la
+.cproject
 .deps
-*.so
-Makefile.in
+*.la
 livecheck
+Makefile
+Makefile.in
+*.o
+*.so
+unixcat

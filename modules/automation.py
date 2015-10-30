@@ -507,16 +507,21 @@ def automation_get_check_information():
 
     checks = {}
     for check_type, check in check_info.items():
-        manfile = manuals.get(check_type)
-        if manfile:
-            title = file(manfile).readline().strip().split(":", 1)[1].strip()
-        else:
-            title = check_type
-        checks[check_type] = { "title" : title }
-        if check["group"]:
-            checks[check_type]["group"] = check["group"]
-        checks[check_type]["service_description"] = check.get("service_description","%s")
-        checks[check_type]["snmp"] = check_uses_snmp(check_type)
+        try:
+            manfile = manuals.get(check_type)
+            if manfile:
+                title = file(manfile).readline().strip().split(":", 1)[1].strip()
+            else:
+                title = check_type
+            checks[check_type] = { "title" : title }
+            if check["group"]:
+                checks[check_type]["group"] = check["group"]
+            checks[check_type]["service_description"] = check.get("service_description","%s")
+            checks[check_type]["snmp"] = check_uses_snmp(check_type)
+        except Exception, e:
+            if opt_debug:
+                raise
+            raise MKAutomationError("Failed to parse man page '%s': %s" % (check_type, e))
     return checks
 
 
@@ -1207,21 +1212,21 @@ def automation_bake_agents():
 def automation_get_agent_output(args):
     hostname, ty = args
 
-    if ty == "agent":
-        return get_plain_hostinfo(hostname)
+    success    = True
+    output     = ""
+    agent_data = ""
 
-    else:
-        path = snmpwalks_dir + "/" + hostname
-        success = True
-        output = ""
-        agent_data = ""
-        try:
+    try:
+        if ty == "agent":
+            agent_data = get_plain_hostinfo(hostname)
+        else:
+            path = snmpwalks_dir + "/" + hostname
             do_snmpwalk_on(hostname, snmpwalks_dir + "/" + hostname)
             agent_data = file(snmpwalks_dir + "/" + hostname).read()
-        except Exception, e:
-            success = False
-            output = "Error walking %s: %s\n" % (hostname, e)
-            if opt_debug:
-                raise
+    except Exception, e:
+        success = False
+        output = "Failed to fetch data from %s: %s\n" % (hostname, e)
+        if opt_debug:
+            raise
 
-        return success, output, agent_data
+    return success, output, agent_data

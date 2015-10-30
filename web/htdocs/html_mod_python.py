@@ -123,7 +123,9 @@ class html_mod_python(htmllib.html):
 
 
     def is_logged_in(self):
-        return self.user and type(self.user) == unicode
+        # Form based authentication always provides unicode strings, but the basic
+        # authentication of mod_python provides regular strings.
+        return self.user and type(self.user) in [ str, unicode ]
 
 
     def load_help_visible(self):

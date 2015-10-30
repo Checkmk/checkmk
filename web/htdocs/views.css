@@ -202,11 +202,9 @@ div.optiondial.refresh {
 }
 
 div.optiondial.num_columns { background-image: url("images/dial_num_columns.png"); }
-/* div.optiondial.num_columns:hover { background-image: url("images/dial_num_columns_hi.png"); }  */
 div.optiondial.num_columns.off { background-image: url("images/dial_num_columns_off.png"); }
 
 div.optiondial.refresh { background-image: url("images/dial_refresh.png"); }
-/* div.optiondial.refresh:hover { background-image: url("images/dial_refresh_hi.png"); }  */
 div.optiondial.refresh.off { background-image: url("images/dial_refresh_off.png"); }
 
 div.view_form {
@@ -279,7 +277,6 @@ table.tiled td {
 }
 .tile.sstate0, .tile.hhstate0 {
     border-color: #0f0;
-    /* background-color: #afa; */
 }
 .tile.sstate1 {
     border-color: #ff0;
@@ -527,8 +524,6 @@ table.data.availability tr.summary td {
 }
 
 table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
-    /* background-image: url("images/bg_flapping.png");
-    background-repeat: repeat; */
     background-color: #f0f;
 }
 
@@ -804,4 +799,3 @@ td.if_state.if_not_available {
     color: black;
     background-color: #cccccc;
 }
-

@@ -1,0 +1,11 @@
+Title: Fixed broken webserver level authentication integration (e.g. basic, kerberos)
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446198173
+
+Fixed a regression which broke the integration of the Check_MK GUI into an authentication
+which is done by the web server. This is for example a basic or kerberos authentication.

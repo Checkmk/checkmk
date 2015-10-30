@@ -160,7 +160,7 @@ def save_user_config(user_config):
 def get_check_mk_edition_title():
     if not defaults.omd_root:
         return "Raw"
-    version_link = os.readlink("/omd/sites/heute/version")
+    version_link = os.readlink(defaults.omd_root)
     if version_link.endswith(".cee.demo"):
         return "Enterprise (Demo)"
     elif "cee" in version_link:

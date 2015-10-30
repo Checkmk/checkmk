@@ -71,6 +71,7 @@ def do_discovery(hostnames, check_types, only_new):
             if opt_debug:
                 raise
             verbose(" -> Failed: %s\n" % e)
+        cleanup_globals()
 
 
 def do_discovery_for(hostname, check_types, only_new, use_caches):

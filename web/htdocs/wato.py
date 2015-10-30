@@ -19258,7 +19258,7 @@ def activate_changes():
 # Checks if the given host_tags are all in known host tag groups and have a valid value
 def check_host_tags(host_tags):
     for key, value in host_tags.items():
-        for group_entry in configured_host_tags:
+        for group_entry in configured_host_tags():
             if group_entry[0] == key:
                 for value_entry in group_entry[2]:
                     if value_entry[0] == value:

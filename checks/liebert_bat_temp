@@ -38,7 +38,7 @@ def check_liebert_bat_temp(item, params, info):
     line = info[0]
     temp = saveint(line[0])
     perfdata = [ ( "temp", temp, warn, crit, 80 ) ]
-    infotext = "temperature: %d°C , (warn/crit at %d°C/%d°C) " % \
+    infotext = "%d°C (warn/crit at %d°C/%d°C) " % \
                 (temp, warn, crit)
 
     if temp >= crit:

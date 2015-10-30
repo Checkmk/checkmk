@@ -2635,13 +2635,13 @@ metric_info["managed_object_count"] = {
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
 
-check_metrics["check-mk-ping"] = {
+check_metrics["check_mk_active-icmp"] = {
     "rta"   : { "scale" : m },
     "rtmax" : { "scale" : m },
     "rtmin" : { "scale" : m },
 }
 
-check_metrics["check-mk-ping-cluster"] = {
+check_metrics["check-mk-host-ping-cluster"] = {
     "~.*rta"   : { "name" : "rta",   "scale": m },
     "~.*pl"    : { "name" : "pl",    "scale": m },
     "~.*rtmax" : { "name" : "rtmax", "scale": m },

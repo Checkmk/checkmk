@@ -94,14 +94,16 @@ def parse_emcvnx_hba(info):
     return parsed
 
 
-def inventory_emcvnx_hba(info):
-    return [ (hba, None) for hba in parse_emcvnx_hba(info).keys() ]
+def inventory_emcvnx_hba(parsed):
+    for hba, values in parsed.items():
+        # Old Versions of EMC don't have any Information
+        if values:
+            yield hba, None
 
 
-def check_emcvnx_hba(item, _no_params, info):
+def check_emcvnx_hba(item, _no_params, parsed):
     now = time.time()
     perfdata = []
-    parsed = parse_emcvnx_hba(info)
     if item not in parsed:
         return 3, "HBA %s not found in agent output" % item
 
@@ -121,6 +123,7 @@ def check_emcvnx_hba(item, _no_params, info):
 
 
 check_info['emcvnx_hba'] = {
+    "parse_function"          : parse_emcvnx_hba,
     "inventory_function"      : inventory_emcvnx_hba,
     "check_function"          : check_emcvnx_hba,
     "service_description"     : "HBA %s",

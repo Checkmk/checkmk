@@ -17512,7 +17512,7 @@ def render_bi_rules(title, aggregations, aggregation_rules, only_unused):
         if not only_unused or refs == 0:
             table.row()
             table.cell(_("Actions"), css="buttons")
-            edit_url = html.makeuri([("mode", "bi_edit_rule"), ("id", ruleid)])
+            edit_url = html.makeuri_contextless([("mode", "bi_edit_rule"), ("id", ruleid)])
             html.icon_button(edit_url, _("Edit this rule"), "edit")
             if rule_refs == 0:
                 tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", ruleid)])

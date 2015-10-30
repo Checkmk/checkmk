@@ -17561,7 +17561,7 @@ def render_bi_rules(title, aggregations, aggregation_rules, only_unused):
         if not only_unused or refs == 0:
             table.row()
             table.cell(_("Actions"), css="buttons")
-            edit_url = html.makeuri([("mode", "bi_edit_rule"), ("id", ruleid)])
+            edit_url = html.makeuri_contextless([("mode", "bi_edit_rule"), ("id", ruleid)])
             html.icon_button(edit_url, _("Edit this rule"), "edit")
             if rule_refs == 0:
                 tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", ruleid)])
@@ -19307,7 +19307,7 @@ def activate_changes():
 # Checks if the given host_tags are all in known host tag groups and have a valid value
 def check_host_tags(host_tags):
     for key, value in host_tags.items():
-        for group_entry in configured_host_tags:
+        for group_entry in configured_host_tags():
             if group_entry[0] == key:
                 for value_entry in group_entry[2]:
                     if value_entry[0] == value:

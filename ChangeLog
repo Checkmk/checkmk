@@ -8,6 +8,7 @@
 
     Multisite:
     * 2670 FIX: Fix problem that no site is configured when user has deleted only site...
+    * 2717 FIX: Fixed broken webserver level authentication integration (e.g. basic, kerberos)...
 
     WATO:
     * 2715 FIX: Fixed visibility of BI aggregations in editor

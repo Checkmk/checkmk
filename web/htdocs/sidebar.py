@@ -159,9 +159,12 @@ def sidebar_head():
     html.write('<div id="side_header">')
     html.write('<div id="side_fold"></div>')
     html.write('<a title="%s" target="main" href="%s">'
+               '<img id="side_bg" src="images/sidebar_top.png">'
                '<div id="side_version"><a href="version.py" target="main">%s</a></div>'
                '</a>'
-               '</div>\n' % (_("Go to main overview"), html.attrencode(config.user.get("start_url") or config.start_url), defaults.check_mk_version))
+               '</div>\n' % (_("Go to main overview"),
+                             html.attrencode(config.user.get("start_url") or config.start_url),
+                             defaults.check_mk_version))
 
 def render_messages():
     for msg in notify.get_gui_messages():

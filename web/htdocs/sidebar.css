@@ -53,14 +53,22 @@ body.side.screenshotmode {
 
 /* Top logo part */
 #side_header {
-    position: absolute;
+    position: relative;
     top: 0px;
     left: 0px;
     width: 100%;
     height: 55px;
     z-index: 10;
     background-repeat: no-repeat;
-    background-image: url("images/sidebar_top.png");
+}
+
+#side_bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 55px;
+    z-index: 10;
 }
 
 #side_header > a {
@@ -71,20 +79,13 @@ body.side.screenshotmode {
     margin-left: 10px; /* space for sidebar folding */
 }
 
-#side_version a  {
-    text-decoration: none;
-}
-
-#side_version a:hover  {
-    text-decoration: underline;
-}
-
 #side_fold {
     position: absolute;
     left: 0px;
     top: 0px;
     width: 10px;
     height: 55px;
+    z-index: 15;
 }
 #side_fold:hover {
     background-repeat: no-repeat;
@@ -96,12 +97,20 @@ body.side.screenshotmode {
 #side_version {
     position: absolute;
     top: 24px;
-    left: 64px;
+    right: 20px;
     z-index: 54;
     color: #fff;
     text-align: right;
-    width: 200px;
     font-size: 8pt;
+    max-width: 150px;
+}
+
+#side_version a  {
+    text-decoration: none;
+}
+
+#side_version a:hover  {
+    text-decoration: underline;
 }
 
 /* Scrolling part with snapins */

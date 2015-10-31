@@ -619,6 +619,19 @@ else:
         print format_config(aggregations, "aggregation", "name",
                             config_report = ["name", "size-total", "size-available"])
 
+    # Snapshot info
+    for volume in volumes.children_get():
+        name = volume.child_get_string("name")
+
+        volume_snapshots_reserved = server.invoke("snapshot-get-reserve", "volume", name)
+        dict_reserved = create_dict(volume_snapshots_reserved)
+        dict_reserved["size-total"] = volume.child_get_string("size-total")
+        print format_dict(dict_reserved, prefix = "volume_snapshot %s" % name, as_line  = True)
+
+        volume_snapshots          = server.invoke("snapshot-list-info", "target-name", name, "target-type", "volume")
+        print format_config(volume_snapshots.child_get("snapshots"), "volume_snapshot", name,
+                            report = ["volume_snapshot", "percentage-of-total-blocks", "cumulative-total"])
+
 
     # Protocols
     print "<<<netapp_api_protocol:sep(9)>>>"

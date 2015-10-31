@@ -26,13 +26,6 @@
 
 import bi
 
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
-
 def render_bi_groups():
     html.write("<ul>")
     for group in bi.aggregation_groups():

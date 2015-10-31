@@ -3260,6 +3260,7 @@ def do_snmptranslate(args):
     for translation, line in translated_lines:
         sys.stdout.write("%s --> %s\n" % (line, translation))
 
+
 def do_snmpwalk(hostnames):
     if opt_oids and opt_extra_oids:
         raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
@@ -3267,8 +3268,10 @@ def do_snmpwalk(hostnames):
     if len(hostnames) == 0:
         sys.stderr.write("Please specify host names to walk on.\n")
         return
+
     if not os.path.exists(snmpwalks_dir):
         os.makedirs(snmpwalks_dir)
+
     for host in hostnames:
         try:
             do_snmpwalk_on(host, snmpwalks_dir + "/" + host)
@@ -3276,6 +3279,8 @@ def do_snmpwalk(hostnames):
             sys.stderr.write("Error walking %s: %s\n" % (host, e))
             if opt_debug:
                 raise
+        cleanup_globals()
+
 
 def do_snmpwalk_on(hostname, filename):
     verbose("%s:\n" % hostname)
@@ -3309,6 +3314,7 @@ def do_snmpwalk_on(hostname, filename):
     out.close()
     verbose("Successfully Wrote %s%s%s.\n" % (tty_bold, filename, tty_normal))
 
+
 def do_snmpget(oid, hostnames):
     if len(hostnames) == 0:
         for host in all_active_realhosts():
@@ -3319,6 +3325,7 @@ def do_snmpget(oid, hostnames):
         ip = lookup_ipv4_address(host)
         value = get_single_oid(host, ip, oid)
         sys.stdout.write("%s (%s): %r\n" % (host, ip, value))
+        cleanup_globals()
 
 
 def show_paths():
@@ -3600,7 +3607,7 @@ def usage():
  cmk -D, --dump [H1 H2 ..]            dump all or some hosts
  cmk -d HOSTNAME|IPADDRESS            show raw information from agent
  cmk --check-discovery HOSTNAME       check for items not yet checked
- cmk --discover-marked-hosts                 run discover-marked-hosts for hosts known to have changed services
+ cmk --discover-marked-hosts          run discovery for hosts known to have changed services
  cmk --update-dns-cache               update IP address lookup cache
  cmk -l, --list-hosts [G1 G2 ...]     print list of all hosts
  cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags

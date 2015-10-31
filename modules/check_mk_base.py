@@ -65,13 +65,6 @@ import subprocess
 #   or define a new output function
 # - Also create a function bail_out() for printing and error and exiting
 
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
-
 #.
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |

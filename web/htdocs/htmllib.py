@@ -53,12 +53,6 @@ except ImportError:
     import json
 
 from lib import *
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
 
 # Only parse variable adhering to the following regular expressions
 varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')

@@ -36,14 +36,6 @@ try:
 except:
     import defaults_standalone as defaults
 
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-# FIXME: We should officially drop Python 2.3 support
-try:
-    set()
-except NameError:
-    from sets import Set as set
-
 # FIXME: Make clear whether or not user related values should be part
 # of the "config" module. Maybe move to dedicated module (userdb?). Then
 # move all user related stuff there. e.g. html.user should also be moved

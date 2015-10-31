@@ -151,19 +151,34 @@ def load_user_config():
 
     return user_config
 
+
 def save_user_config(user_config):
     if config.may("general.configure_sidebar"):
         config.save_user_file("sidebar", user_config)
+
+
+def get_check_mk_edition_title():
+    if not defaults.omd_root:
+        return "Raw"
+    version_link = os.readlink(defaults.omd_root)
+    if version_link.endswith(".cee.demo"):
+        return "Enterprise (Demo)"
+    elif "cee" in version_link:
+        return "Enterprise"
+    else:
+        return "Raw"
+
 
 def sidebar_head():
     html.write('<div id="side_header">')
     html.write('<div id="side_fold"></div>')
     html.write('<a title="%s" target="main" href="%s">'
                '<img id="side_bg" src="images/sidebar_top.png">'
-               '<div id="side_version"><a href="version.py" target="main">%s</a></div>'
+               '<div id="side_version"><a href="version.py" target="main">%s<br>%s</a></div>'
                '</a>'
                '</div>\n' % (_("Go to main overview"),
                              html.attrencode(config.user.get("start_url") or config.start_url),
+                             get_check_mk_edition_title(),
                              defaults.check_mk_version))
 
 def render_messages():

@@ -26,10 +26,14 @@
 #define pnp4nagios_h
 
 #include <string>
-using namespace std;
 
-int pnpgraph_present(const char *host, const char *service);
-string rrd_path(const char *host, const char *service, const char *varname);
+int pnpgraph_present(const std::string& host,
+                     const std::string& service = "_HOST_");
 
-#endif // pnp4nagios_h
+// Determines if a RRD database exists and returns its path name. Returns an
+// empty string otherwise. This assumes paths created in the PNP4Nagios style
+// with storage type MULTIPLE.
+std::string rrd_path(const std::string& host, const std::string& service,
+                     const std::string& varname);
 
+#endif  // pnp4nagios_h

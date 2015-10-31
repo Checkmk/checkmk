@@ -29,13 +29,6 @@ from valuespec import *
 from lib import *
 import wato
 
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
-
 loaded_with_language = False
 builtin_dashboards = {}
 dashlet_types = {}

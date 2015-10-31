@@ -1,0 +1,14 @@
+Title: df: avoid duplicate items for btrfs that is mounted several times
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i4
+Date: 1446287956
+Class: feature
+
+With SLES 12 btrfs has been introduced. Here one filesystem (e.g. <tt>/dev/sda1</tt>) is
+mounted at a lot of directories at the same times and Check_MK had created one service
+for each of this - showing exactly the same stats. This has now been fixed so that only
+one filesystem check is being created for each btrfs device. The service in our example
+has the name <tt>Filesystem btrfs /dev/sda1</tt>. You need to redo service discovery
+or the affected hosts.

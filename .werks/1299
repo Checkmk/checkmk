@@ -1,0 +1,10 @@
+Title: BI: Fixed recently introduced bug when editing BI Rules
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i3p4
+Date: 1446202185
+Class: fix
+
+The BI edit has always overwritten the last rule with the information from the rule before when editing rules in series.
+

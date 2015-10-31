@@ -504,16 +504,21 @@ def automation_get_check_information():
 
     checks = {}
     for check_type, check in check_info.items():
-        manfile = manuals.get(check_type)
-        if manfile:
-            title = file(manfile).readline().strip().split(":", 1)[1].strip()
-        else:
-            title = check_type
-        checks[check_type] = { "title" : title }
-        if check["group"]:
-            checks[check_type]["group"] = check["group"]
-        checks[check_type]["service_description"] = check.get("service_description","%s")
-        checks[check_type]["snmp"] = check_uses_snmp(check_type)
+        try:
+            manfile = manuals.get(check_type)
+            if manfile:
+                title = file(manfile).readline().strip().split(":", 1)[1].strip()
+            else:
+                title = check_type
+            checks[check_type] = { "title" : title }
+            if check["group"]:
+                checks[check_type]["group"] = check["group"]
+            checks[check_type]["service_description"] = check.get("service_description","%s")
+            checks[check_type]["snmp"] = check_uses_snmp(check_type)
+        except Exception, e:
+            if opt_debug:
+                raise
+            raise MKAutomationError("Failed to parse man page '%s': %s" % (check_type, e))
     return checks
 
 

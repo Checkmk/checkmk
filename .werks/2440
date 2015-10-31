@@ -1,0 +1,9 @@
+Title: VMware ESX inventory: Now able to display ESX hostsystems and virtualmachines of clusters
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446303802
+Class: feature
+
+

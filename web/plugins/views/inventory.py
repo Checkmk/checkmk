@@ -631,6 +631,9 @@ inventory_displayhints.update({
     ".software.applications.citrix.vm.catalog"                      : { "title" : _("Catalog"), },
     ".software.applications.citrix.vm.agent_version"                : { "title" : _("Agent Version"), },
 
+    ".software.applications.vmwareesx:*."               : { "title" : _("Datacenter %d") },
+    ".software.applications.vmwareesx:*.clusters:*."    : { "title" : _("Cluster %d") },
+
     ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
     ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },
     ".networking.total_ethernet_ports"                 : { "title" : _("Ports"), "paint" : "count", },

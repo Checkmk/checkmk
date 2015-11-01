@@ -235,6 +235,14 @@ cat /proc/uptime
 
 
 # New variant: Information about speed and state in one section
+if type ip > /dev/null
+then
+    echo '<<<lnx_if>>>'
+    echo "[start_iplink]"
+        ip link
+    echo "[end_iplink]"
+fi
+
 echo '<<<lnx_if:sep(58)>>>'
 sed 1,2d /proc/net/dev
 if type ethtool > /dev/null

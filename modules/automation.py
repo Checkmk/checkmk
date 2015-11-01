@@ -370,6 +370,7 @@ def automation_delete_host(args):
         "%s/inventory/%s.gz" % (var_dir, hostname)]:
         os.system("rm -rf '%s'" % path)
 
+    import glob
     for path in [ "%s/%s.*"        % (tcp_cache_dir, hostname),
                   "%s/agents/*/%s" % (var_dir, hostname) ]:     # only remove bakery symlinks
         for filename in glob.glob(path):

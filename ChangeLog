@@ -1,6 +1,7 @@
 1.2.7i4:
     Core & Setup:
     * 2682 FIX: Fixed exception Error creating configuration: global name 'extra_host_attributes' is not defined
+    * 2443 FIX: Fixed quoting of ! in classical nagios checks configured via WATO...
 
     Checks & Agents:
     * 2434 NetApp monitoring: Cluster-Mode is now supported, changes in existing 7Mode checks...

@@ -559,7 +559,7 @@ define service {
                 continue
 
             if command_line:
-                command_line = autodetect_plugin(command_line).replace("\\", "\\\\")
+                command_line = autodetect_plugin(command_line).replace("\\", "\\\\").replace("!", "\\!")
 
             if "freshness" in entry:
                 freshness = "  check_freshness\t\t1\n" + \

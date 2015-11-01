@@ -24,16 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-mkeventd_enabled             = False
-mkeventd_pprint_rules        = False
-mkeventd_notify_contactgroup = None
-mkeventd_notify_facility     = 16
-mkeventd_notify_remotehost   = None
-mkeventd_connect_timeout     = 10
-debug_mkeventd_queries       = False
-log_level                    = 0
-log_rulehits                 = False
-rule_optimizer               = True
+mkeventd_enabled                = False
+mkeventd_pprint_rules           = False
+mkeventd_notify_contactgroup    = None
+mkeventd_notify_facility        = 16
+mkeventd_notify_remotehost      = None
+mkeventd_connect_timeout        = 10
+debug_mkeventd_queries          = False
+log_level                       = 0
+log_rulehits                    = False
+rule_optimizer                  = True
+mkeventd_contact_group_handling = "host"
 
 mkeventd_service_levels = [
     (0,  _("(no Service level)")),

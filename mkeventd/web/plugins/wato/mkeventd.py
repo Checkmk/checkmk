@@ -316,12 +316,15 @@ vs_mkeventd_rule = Dictionary(
         ( "contact_groups",
           ListOf(
               GroupSelection("contact"),
-              title = _("Fallback Contact Groups"),
+              title = _("Contact Groups"),
               help = _("When displaying events in the Check_MK GUI, you can make a user see only events "
                        "for hosts he is a contact for. When you expect this rule to receive events from "
                        "hosts that are <i>not</i> known to the monitoring, you can specify contact groups "
-                       "for visibility here. Note: If you activate this option and do not specify "
-                       "any group, then users with restricted permissions can never see these events."),
+                       "for visibility here. Notes: 1. If you activate this option and do not specify "
+                       "any group, then users with restricted permissions can never see these events."
+                       "2. If both the host is found in the monitoring <b>and</b> contact groups are "
+                       "specified in the rule then usually the host's contact groups have precedence. But you "
+                       "can change that via a global setting in the section <i>User Interface</i>."),
               movable = False,
           )
         ),
@@ -2566,6 +2569,21 @@ if mkeventd_enabled:
                           "which nicely indents everything. While this is a bit slower for large "
                           "rulesets it makes debugging and manual editing simpler."),
                 default_value = False),
+        domain = "multisite",
+    )
+
+    register_configvar(_("User Interface"),
+        "mkeventd_contact_group_handling",
+        DropdownChoice(
+            title = _("Precedence of contact groups of events"),
+            choices = [
+                ( "host", _("Host's contact groups have precedence") ),
+                ( "rule", _("Contact groups in rule have precedence") ),
+            ],
+            help = _("Here you can specify whether which contact groups shall have "
+                     "precedence when both the host of an event can be found in the "
+                     "monitoring and the event rule has defined contact groups for the event."),
+        ),
         domain = "multisite",
     )
 

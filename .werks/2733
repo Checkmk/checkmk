@@ -1,0 +1,19 @@
+Title: Visibility of Event Console events more flexible now
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446372985
+Class: feature
+
+The assignment of Event Console events to contact groups is a bit more
+flexible now. There is a new global option in <i>User Interface</i> called
+<i>Precedence of contact groups of events</i>. The default setting is <i>Host's
+contact groups have precedence</i> and implements the previos behaviour. You
+now can change that to <i>Contact groups in rule have precedence</i>.
+This handles the case where an event can successfully be mapped to a host
+in the monitoring while there are specified explicit contact groups in the
+event rule. Those will have then precedence and not only be used as a fall
+back. That way you can explicitely assign events to arbitrary contact groups
+and by that way control the visibility. Note: this has now influence on
+notification.

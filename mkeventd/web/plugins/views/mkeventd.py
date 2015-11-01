@@ -115,7 +115,7 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     # Wir können das aber nochmal global steuern über eine Permission.
 
     if not config.may("mkeventd.seeall"):
-        host_contact_groups = {}
+        hosts_contact_groups = {}
         query = "GET hosts\nColumns: name address contact_groups\n" + host_filters
         html.live.set_only_sites(only_sites)
         html.live.set_auth_domain('mkeventd')
@@ -123,11 +123,11 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
         html.live.set_auth_domain('read')
         html.live.set_only_sites(None)
         for host, address, groups in data:
-            host_contact_groups[host.lower()] = groups
-            host_contact_groups[address] = groups
+            hosts_contact_groups[host.lower()] = groups
+            hosts_contact_groups[address] = groups
 
     else:
-        host_contact_groups = None
+        hosts_contact_groups = None
 
     # Create lookup dict from hostname/alias/address to the dataset of the host.
     # This speeds up the mapping to the events.
@@ -159,50 +159,63 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     new_rows = []
     user_contact_groups = None
     for event in rows:
-        host = event["event_host"].lower()
+        host_name_lower = event["event_host"].lower()
+        monitoring_host = hostdict.get(host_name_lower)
 
-        # Users without the mkeventd.seeall permission only may see the host if
-        # they are a contact via the monitoring. In case the host is not known
-        # to the monitoring the permission mkeventd.seeunrelated is being neccessary
-        # as well.
-        if host_contact_groups != None:
-            if host in host_contact_groups:
-                if host not in hostdict:
-                    continue # Host known to monitoring, but user is now allowed
-            else: # Host not known to monitoring
-                # Has the event explicit contact groups assigned? Use them!
-                cgs = event.get("event_contact_groups")
-                if cgs == None:
-                    if not config.may("mkeventd.seeunrelated"):
-                        continue
-                else:
-                    if user_contact_groups == None:
-                        user_contact_groups = get_user_contact_groups()
+        if not user_may_see_event(event, monitoring_host, hosts_contact_groups):
+            continue
 
-                    allowed = False
-                    for g in cgs:
-                        if g in user_contact_groups:
-                            allowed = True
-                    if not allowed:
-                        continue
-
-        if host in hostdict:
-            event.update(hostdict[host])
+        if monitoring_host:
+            event.update(monitoring_host)
             new_rows.append(event)
+
+        # If we have any host filters we cannot add an incomplete host here
+        # since the filters will crash. So simply drop those hosts.
         elif not have_host_filter:
             # This event does not belong to any host known by
             # the monitoring. We need to create the columns nevertheless.
-            # TODO: If there are any host filters, these events should
-            # be dropped.
-            # Hier könnten wir Leerdaten eintragen. Dann
-            # kann man auch Events sehen, die keinem
-            # Host zugeordnet sind. Wenn wir nichts machen,
-            # dann fehlen Spalten und die Painter fallen
-            # auf die Nase.
             event.update(empty_host)
             new_rows.append(event)
 
     return new_rows
+
+
+def user_may_see_event(event, monitoring_host, hosts_contact_groups):
+    if config.may("mkeventd.seeall"):
+        return True
+
+    host_name_lower = event["event_host"].lower()
+
+    # Get contact groups of host from monitoring
+    if hosts_contact_groups and host_name_lower in hosts_contact_groups:
+        host_contact_groups = hosts_contact_groups[host_name_lower]
+    else:
+        host_contact_groups = None
+
+    # Get contact groups specified in event
+    event_contact_groups = event.get("event_contact_groups")
+
+    # Handle precedence
+    if host_contact_groups != None and event_contact_groups != None:
+        if config.mkeventd_contact_group_handling == "host":
+            contact_groups = host_contact_groups
+        else:
+            contact_groups = event_contact_groups
+    elif host_contact_groups:
+        contact_groups = host_contact_groups
+    elif event_contact_groups:
+        contact_groups = event_contact_groups
+    else:
+        contact_groups = None
+
+    if contact_groups == None:
+        return config.may("mkeventd.seeunrelated")
+    else:
+        for user_cg in get_user_contact_groups():
+            if user_cg in contact_groups:
+                return True
+
+        return False
 
 
 def event_hostrows(columns, only_sites, filters, host_filters):
@@ -512,8 +525,8 @@ if mkeventd_enabled:
             return "", "<i>"  + _("none") + "</i>"
 
     multisite_painters["event_contact_groups"] = {
-        "title"   : _("Fallback Contact Groups"),
-        "short"   : _("Contact Groups"),
+        "title"   : _("Contact groups defined in rule"),
+        "short"   : _("Rule Contact Groups"),
         "columns" : [ "event_contact_groups" ],
         "paint"   : paint_event_contact_groups,
     }

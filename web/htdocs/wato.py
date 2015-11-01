@@ -1687,6 +1687,17 @@ def move_hosts_to(hostnames, path):
 def move_host_to(hostname, target_filename):
     return move_hosts_to([hostname], target_filename)
 
+
+def delete_host_files(site_id, hostname):
+    check_mk_automation(site_id, "delete-host", [hostname])
+    if not site_is_local(site_id):
+        # Delete inventory data from remote sites (not the archive)
+        for filename in [ "%s/inventory/%s"    % (defaults.var_dir, hostname),
+                          "%s/inventory/%s.gz" % (defaults.var_dir, hostname) ]:
+            if os.path.exists(filename):
+                os.unlink(filename)
+    log_pending(AFFECTED, hostname, "delete-host", _("Deleted host %s") % hostname)
+
 def delete_hosts_after_confirm(hosts):
     c = wato_confirm(_("Confirm deletion of %d hosts") % len(hosts),
                      _("Do you really want to delete the %d selected hosts?") % len(hosts))
@@ -1697,10 +1708,9 @@ def delete_hosts_after_confirm(hosts):
         for delname in hosts:
             mark_affected_sites_dirty(g_folder, delname)
             host = g_folder[".hosts"][delname]
-            # check_mk_automation(host[".siteid"], "delete-host", [delname])
+            delete_host_files(host[".siteid"], delname)
             del g_folder[".hosts"][delname]
             g_folder["num_hosts"] -= 1
-            log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
 
         save_folder_and_hosts(g_folder)
         call_hook_hosts_changed(g_folder)
@@ -2212,12 +2222,11 @@ def delete_host_after_confirm(delname):
             raise MKUserError(None, _("Cannot delete host. Hosts in this folder are locked"))
 
         mark_affected_sites_dirty(g_folder, delname)
-        log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
         host = g_folder[".hosts"][delname]
         del g_folder[".hosts"][delname]
         g_folder["num_hosts"] -= 1
         save_folder_and_hosts(g_folder)
-        check_mk_automation(host[".siteid"], "delete-host", [delname])
+        delete_host_files(host[".siteid"], delname)
         call_hook_hosts_changed(g_folder)
         return "folder"
     elif c == False: # not yet confirmed

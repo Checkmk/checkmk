@@ -258,6 +258,7 @@ void debug(char *text)
 #define debug(C)
 #endif
 
+
 void verbose(const char *format, ...)
 {
     if (!verbose_mode)
@@ -487,13 +488,13 @@ void section_df(SOCKET &out)
 
 // Determine the start type of a service. Unbelievable how much
 // code is needed for that...
-const char *service_start_type(SC_HANDLE scm, LPCTSTR service_name)
+const char *service_start_type(SC_HANDLE scm, LPCWSTR service_name)
 {
     // Query the start type of the service
     const char *start_type = "invalid1";
     SC_HANDLE schService;
     LPQUERY_SERVICE_CONFIG lpsc;
-    schService = OpenService(scm, service_name, SERVICE_QUERY_CONFIG);
+    schService = OpenServiceW(scm, service_name, SERVICE_QUERY_CONFIG);
     if (schService) {
         start_type = "invalid2";
         DWORD dwBytesNeeded, cbBufSize;
@@ -532,16 +533,16 @@ void section_services(SOCKET &out)
         DWORD bytes_needed = 0;
         DWORD num_services = 0;
         // first determine number of bytes needed
-        EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+        EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
                 NULL, 0, &bytes_needed, &num_services, 0, 0);
         if (GetLastError() == ERROR_MORE_DATA && bytes_needed > 0) {
             BYTE *buffer = (BYTE *)malloc(bytes_needed);
             if (buffer) {
-                if (EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+                if (EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
                             buffer, bytes_needed,
                             &bytes_needed, &num_services, 0, 0))
                 {
-                    ENUM_SERVICE_STATUS_PROCESS *service = (ENUM_SERVICE_STATUS_PROCESS *)buffer;
+                    ENUM_SERVICE_STATUS_PROCESSW *service = (ENUM_SERVICE_STATUS_PROCESSW*)buffer;
                     for (unsigned i=0; i<num_services; i++) {
                         DWORD state = service->ServiceStatusProcess.dwCurrentState;
                         const char *state_name = "unknown";
@@ -566,9 +567,9 @@ void section_services(SOCKET &out)
                                 *w = '_';
                         }
 
-                        output(out, "%s %s/%s %s\n",
+                        output(out, "%ls %s/%s %s\n",
                                 service->lpServiceName, state_name, start_type,
-                                service->lpDisplayName);
+                                to_utf8(service->lpDisplayName).c_str());
                         service ++;
                     }
                 }
@@ -1284,8 +1285,8 @@ bool find_eventlogs(SOCKET &out)
 bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
 {
     // Get process token
-    HANDLE hProcessToken = NULL;
-    if (!OpenProcessToken(hProcess_i, TOKEN_READ, &hProcessToken) || !hProcessToken)
+    WinHandle hProcessToken;
+    if (!OpenProcessToken(hProcess_i, TOKEN_READ, hProcessToken.ptr()) || !hProcessToken)
         return false;
 
     // First get size needed, TokenUser indicates we want user information from given token
@@ -1322,7 +1323,6 @@ bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
                     WideCharToMultiByte(CP_UTF8, 0, (WCHAR*) &szUser, -1, info, sizeof(info), NULL, NULL);
                     csOwner_o += info;
 
-                    CloseHandle( hProcessToken );
                     delete [] pUserToken;
                     return true;
                 }
@@ -1330,7 +1330,6 @@ bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
             delete [] pUserToken;
         }
     }
-    CloseHandle( hProcessToken );
     return false;
 }
 
@@ -1510,12 +1509,11 @@ void section_ps(SOCKET &out)
 {
     crash_log("<<<ps>>>");
     output(out, "<<<ps:sep(9)>>>\n");
-    HANDLE hProcessSnap;
     PROCESSENTRY32 pe32;
 
     process_entry_t process_perfdata = get_process_perfdata();
 
-    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    WinHandle hProcessSnap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (hProcessSnap != INVALID_HANDLE_VALUE)
     {
         pe32.dwSize = sizeof(PROCESSENTRY32);
@@ -1526,7 +1524,7 @@ void section_ps(SOCKET &out)
             {
                 string user = "unknown";
                 DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
-                HANDLE hProcess = OpenProcess(dwAccess, FALSE, pe32.th32ProcessID);
+                WinHandle hProcess(OpenProcess(dwAccess, FALSE, pe32.th32ProcessID));
 
                 if (NULL == hProcess)
                     continue;
@@ -1575,11 +1573,8 @@ void section_ps(SOCKET &out)
                         usermodetime.QuadPart,
                         kernelmodetime.QuadPart,
                         processHandleCount, pe32.cntThreads, pe32.szExeFile);
-
-                CloseHandle(hProcess);
             } while (Process32Next(hProcessSnap, &pe32));
         }
-        CloseHandle(hProcessSnap);
         process_perfdata.clear();
 
         // The process snapshot doesn't show the system idle process (used to determine the number of cpu cores)
@@ -2260,7 +2255,16 @@ char *add_interpreter(char *path, char *newpath)
         //   1.) The powershell interpreter needs to be in PATH
         //   2.) The execution policy needs to allow the script execution
         //       -> Get-ExecutionPolicy / Set-ExecutionPolicy
-        snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", path);
+        //
+        // actually, microsoft always installs the powershell interpreter to the same
+        // directory (independent of the version) so even if it's not in the path,
+        // we have a good chance with this fallback.
+        char dummy;
+        ::SearchPathA(NULL, "powershell.exe", NULL, 1, &dummy, NULL);
+        const char *interpreter = ::GetLastError() != ERROR_FILE_NOT_FOUND
+            ? "powershell.exe"
+            : "C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell.exe";
+        snprintf(newpath, 256, "%s -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", interpreter, path);
         return newpath;
     }
     else if (!strcmp(path + strlen(path) - 3, ".pl")) {
@@ -2320,8 +2324,8 @@ int launch_program(script_container* cont)
     SECURITY_DESCRIPTOR sd;   // security information for pipes
 
     PROCESS_INFORMATION pi;
-    HANDLE script_stdout,read_stdout;  // pipe handles
-    HANDLE script_stderr,read_stderr;
+    WinHandle script_stdout, read_stdout;  // pipe handles
+    WinHandle script_stderr,read_stderr;
 
     // initialize security descriptor (Windows NT)
     if (IsWinNT())
@@ -2336,10 +2340,10 @@ int launch_program(script_container* cont)
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.bInheritHandle = true;                       // allow inheritable handles
 
-    if (!CreatePipe(&read_stdout,&script_stdout,&sa,0)) // create stdout pipe
+    if (!CreatePipe(read_stdout.ptr(),script_stdout.ptr(),&sa,0)) // create stdout pipe
         return 1;
 
-    if (!CreatePipe(&read_stderr,&script_stderr,&sa,0)) // create stderr pipe
+    if (!CreatePipe(read_stderr.ptr(),script_stderr.ptr(),&sa,0)) // create stderr pipe
         return 1;
 
     //set startupinfo for the spawned process
@@ -2355,13 +2359,8 @@ int launch_program(script_container* cont)
 
     // spawn the child process
     if (!CreateProcess(NULL,cont->path,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
-                NULL,NULL,&si,&pi))
-    {
-        CloseHandle(script_stdout);
-        CloseHandle(read_stdout);
-
-        CloseHandle(script_stderr);
-        CloseHandle(read_stderr);
+                NULL,NULL,&si,&pi)) {
+        crash_log("failed to spawn process %s: %s", cont->path, get_win_error_as_string().c_str());
         return 1;
     }
 
@@ -2371,7 +2370,6 @@ int launch_program(script_container* cont)
     AssignProcessToJobObject(cont->job_object, pi.hProcess);
     AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
 
-    unsigned long exit=0;  // process exit code
     unsigned long bread;   // bytes read
     unsigned long avail;   // bytes available
 
@@ -2391,16 +2389,16 @@ int launch_program(script_container* cont)
             break;
         }
 
-        GetExitCodeProcess(pi.hProcess, &exit);      // while the process is running
+        GetExitCodeProcess(pi.hProcess, &cont->exit_code);      // while the process is running
         while (!buffer_full) {
             if (!with_stderr) {
-                PeekNamedPipe(read_stderr, buf, sizeof(buf), &bread, &avail, NULL);
+                PeekNamedPipe(read_stderr, buf, BUFFER_SIZE, &bread, &avail, NULL);
                 if (avail > 0)
                     // Just read from the pipe, we do not use this data
-                    ReadFile(read_stderr, buf, sizeof(buf) - 1, &bread, NULL);
+                    ReadFile(read_stderr, buf, BUFFER_SIZE - 1, &bread, NULL);
             }
 
-            PeekNamedPipe(read_stdout, buf, sizeof(buf), &bread, &avail, NULL);
+            PeekNamedPipe(read_stdout, buf, BUFFER_SIZE, &bread, &avail, NULL);
 
             if (avail == 0)
                 break;
@@ -2427,12 +2425,13 @@ int launch_program(script_container* cont)
             }
         }
         if (buffer_full) {
+            crash_log("plugin produced more than 2MB output -> dropped");
             // Buffer full -> delete incomplete data
             exit_code = 1;
             break;
         }
 
-        if (exit != STILL_ACTIVE)
+        if (cont->exit_code != STILL_ACTIVE)
             break;
 
         Sleep(10);
@@ -2443,10 +2442,6 @@ int launch_program(script_container* cont)
     CloseHandle(cont->job_object);
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
-    CloseHandle(script_stdout);
-    CloseHandle(read_stdout);
-    CloseHandle(script_stderr);
-    CloseHandle(read_stderr);
 
     return exit_code;
 }
@@ -2504,8 +2499,10 @@ void run_script_container(script_container *cont)
 
     // Return if this script is no longer present
     // However, the script container is preserved
-    if (!script_exists(cont))
+    if (!script_exists(cont)) {
+        crash_log("script %s no longer exists", cont->script_path);
         return;
+    }
 
     time_t now = time(0);
     if (now - cont->buffer_time >= cont->max_age) {
@@ -2519,6 +2516,7 @@ void run_script_container(script_container *cont)
         if (cont->worker_thread != INVALID_HANDLE_VALUE)
             CloseHandle(cont->worker_thread);
 
+        crash_log("invoke script %s", cont->script_path);
         cont->worker_thread  = CreateThread(
                 NULL,                 // default security attributes
                 0,                    // use default stack size
@@ -2530,6 +2528,8 @@ void run_script_container(script_container *cont)
         if (cont->execution_mode == SYNC ||
             (cont->execution_mode == ASYNC && g_config->defaultScriptAsyncExecution() == SEQUENTIAL))
             WaitForSingleObject(cont->worker_thread, INFINITE);
+
+        crash_log("finished with status %d (exit code %" PRIudword ")", cont->status, cont->exit_code);
     }
 }
 
@@ -2542,6 +2542,7 @@ void output_external_programs(SOCKET &out, script_type type)
     {
         cont = it_cont->second;
         if (!script_exists(cont)) {
+            crash_log("script %s missing", cont->script_path);
             it_cont++;
             continue;
         }
@@ -2573,10 +2574,10 @@ void output_external_programs(SOCKET &out, script_type type)
                     cont->buffer_work[2] = '\n';
                 }
 
-                if (cont->max_age == 0)
+                if (cont->max_age == 0) {
                     cont->buffer      = cont->buffer_work;
-                else
-                {
+                }
+                else {
                     // Determine chache_info text
                     char cache_info[32];
                     snprintf(cache_info, sizeof(cache_info), ":cached(%d,%d)", (int)cont->buffer_time, cont->max_age);
@@ -3271,8 +3272,7 @@ void output_crash_log(SOCKET &out)
         FILE *f = fopen(g_crash_log, "r");
         char line[1024];
         while (0 != fgets(line, sizeof(line), f)) {
-            output(out, "W ");
-            output(out, line);
+            output(out, "W %s", line);
         }
         ReleaseMutex(crashlogMutex);
         fclose(f);

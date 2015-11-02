@@ -1,0 +1,8 @@
+Title: ibm_svc_disks: fixed crash in case special agent reports too much data columns per line
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p4
+Date: 1446455633
+Class: fix
+

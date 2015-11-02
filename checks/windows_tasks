@@ -41,6 +41,20 @@
 # A list of all task state can be found here:
 # http://msdn.microsoft.com/en-us/library/aa383604%28VS.85%29.aspx
 
+
+# From here: http://systemcentercore.com/?GetElement=Custom.TaskScheduler2.Task.LastResult.Monitor&Type=UnitMonitor&ManagementPack=Custom.Windows.TaskScheduler.Windows2008.Monitoring&Version=1.1.1.0
+
+# Windows Scheduled Task Last Result Monitor.
+#The monitor checks the last result code (exit code) of a scheduled task.
+#Anything other than the following values is considered a warning condition for an enabled scheduled task.
+#- '0'
+#- '1' (for tasks containing a popup action)
+#- '267009': currently running
+#- '267014': was terminated by user
+#- '267045': queued
+#- '-2147216609': instance of this task already running -> being taken care of by the separate monitor
+#- '-2147750687': task already running -> being taken care of by the separate monitor
+
 def windows_tasks_convert(info):
     data = {}
     last_task = False
@@ -67,16 +81,20 @@ def check_windows_tasks(item, _no_params, info):
             state = 0
             label = ""
             msg = []
-            if last_result not in [ 0, 0x00041301, 0x00041325, 0x00041306, 0x8004131F ]: # RUNNING, QUEUED, CANCELD, Instance RUNNING
+            if last_result not in [ 0, 1, 267009, 267014, 267045, -2147216609, -2147750687 ]:
                 state = 2
                 label = "(!!)"
             msg.append("Service in state: %s%s" % ( last_result, label ) )
-            if last_result == 0x00041301:
+            if last_result == 267009:
                 msg[-1] += " (currently running)"
-            elif last_result == 0x00041325:
+            elif last_result == 267014:
+                msg[-1] += " (terminated by user)"
+            elif last_result == 267045:
                 msg[-1] += " (queued)"
-            elif last_result == 0x8004131F:
+            elif last_result == -2147216609:
                 msg[-1] += " (an instance of the task already running)"
+            elif last_result == -2147750687:
+                msg[-1] += " (task already running)"
 
             if values['Scheduled Task State'] != 'Enabled':
                 msg.append("Task not Enabled(!!)")

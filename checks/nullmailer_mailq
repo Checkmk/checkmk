@@ -1,0 +1,79 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example agent output:
+# <<<nullmailer_mailq>>>
+# 8 1
+
+factory_settings['nullmailer_mailq_default_levels'] = {
+    "deferred" : (10, 20),
+}
+
+def inventory_nullmailer_mailq(info):
+    return [(None, {})]
+
+def check_nullmailer_mailq(_no_item, params, info):
+    if type(params) != dict:
+        params = {
+            "deferred" : params,
+        }
+
+    if not info:
+        return
+
+    warn, crit = params["deferred"]
+    size_bytes, length = map(int, info[0])
+
+    state    = 0
+    output   = ""
+    perfdata = [ ("length", length), ("size", size_bytes) ]
+
+    if length == 0:
+        output = "Mailqueue is empty"
+    else:
+        output = "Mailqueue length is %d" % length
+
+    if length >= crit:
+        state = 2
+    elif length >= warn:
+        state = 1
+    if state:
+        output += " (warn/crit at %d/%d)" % (warn, crit)
+
+    if length != 0:
+        output += " having a size of %s" % \
+                      (get_bytes_human_readable(size_bytes))
+
+    return state, output, perfdata
+
+check_info["nullmailer_mailq"] = {
+    'check_function'          : check_nullmailer_mailq,
+    'inventory_function'      : inventory_nullmailer_mailq,
+    'service_description'     : 'Nullmailer Queue',
+    'default_levels_variable' : 'nullmailer_mailq_default_levels',
+    'group'                   : 'mailqueue_length',
+    'has_perfdata'            : True,
+}

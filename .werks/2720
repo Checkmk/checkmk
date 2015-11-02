@@ -1,0 +1,10 @@
+Title: nullmailer_mailq: New check for monitoring the outgoing mail queue of Nullmailer
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446458345
+Class: feature
+
+This check monitors the number of mails in the deferred / outgoing mail queue of
+the Nullmailer daemon.

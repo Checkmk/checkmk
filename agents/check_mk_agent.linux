@@ -507,8 +507,7 @@ if type cl_status > /dev/null 2>&1; then
 fi
 
 # Postfix mailqueue monitoring
-#
-# we determine the number of mails and their size in several postfix mail queues
+# Determine the number of mails and their size in several postfix mail queues
 if type postconf >/dev/null ; then
     postfix_queue_dir=$(postconf -h queue_directory 2>/dev/null)
 
@@ -531,6 +530,15 @@ if type qmail-qstat >/dev/null
 then
    echo "<<<qmail_stats>>>"
    qmail-qstat
+fi
+
+# Nullmailer queue monitoring
+if type nullmailer-send >/dev/null && [ -d /var/spool/nullmailer/queue ]
+then
+    echo '<<<nullmailer_mailq>>>'
+    COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
+    SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
+    echo "$SIZE $COUNT"
 fi
 
 # Check status of OMD sites and Check_MK Notification spooler

@@ -41,18 +41,25 @@ def check_netapp_api_snapshots(item, _no_params, parsed):
 
     snapshot_total   = int(data[-1]["cumulative-total"]) * 1024.0
     size_total       = int(data[0]["size-total"])
-    reserved_percent = snapshot_total / size_total
     reserved_bytes   = int(data[0]["blocks-reserved"]) * 1024.0
 
+    if not reserved_bytes:
+        yield 0, "Used snapshot space: %s" % get_bytes_human_readable(snapshot_total),[("bytes", snapshot_total)]
+        yield 1, "No snapshot reserve configured"
+        return
+
+    used_percent     = snapshot_total / reserved_bytes * 100.0
+    volume_total     = size_total + reserved_bytes
+
     state = 0
-    if reserved_percent > 100:
+    if used_percent > 100:
         state = 2
-    yield state, "Reserve used: %.1f%% (%s)" % (reserved_percent,
+    yield state, "Reserve used: %.1f%% (%s)" % (used_percent,
                                                 get_bytes_human_readable(snapshot_total))
 
     yield 0, "Total Reserve: %s%% (%s) of %s" % (data[0]["percent-reserved"],
                                                  get_bytes_human_readable(reserved_bytes),
-                                                 get_bytes_human_readable(size_total)),\
+                                                 get_bytes_human_readable(volume_total)),\
                                                  [("bytes", snapshot_total, 0, 0, 0, reserved_bytes)]
 
 check_info["netapp_api_snapshots"] = {

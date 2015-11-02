@@ -10824,7 +10824,7 @@ def find_usages_of_timeperiod(tpname):
 # Sort given sites argument by local, followed by slaves
 def sort_sites(sites):
     def custom_sort(a,b):
-        return cmp(a[1].get("replication","peer"), b[1].get("replication","peer")) or \
+        return cmp(a[1].get("replication"), b[1].get("replication")) or \
                cmp(a[1].get("alias"), b[1].get("alias"))
     sites.sort(cmp = custom_sort)
 
@@ -11800,6 +11800,16 @@ def is_distributed(sites = None):
             return True
     return False
 
+
+def has_wato_slave_sites():
+    return bool(wato_slave_sites())
+
+
+def wato_slave_sites():
+    return [ (site_id, site) for site_id, site in config.sites.items()
+                                                  if site.get("replication") ]
+
+
 def declare_site_attribute():
     undeclare_host_attribute("site")
     if is_distributed():
@@ -12129,11 +12139,16 @@ def ajax_profile_repl():
         answer = "0 %s" % _("Replication completed successfully.");
     else:
         answer = "1 %s" % (_("Error: %s") % result)
-        # Add pending entry to make sync possible later for admins
-        update_replication_status(site_id, {"need_sync": True})
-        log_pending(AFFECTED, None, "edit-users", _('Password changed (sync failed: %s)') % result)
+        add_profile_replication_change(site_id, result)
 
     html.write(answer)
+
+
+def add_profile_replication_change(site_id, result):
+    # Add pending entry to make sync possible later for admins
+    update_replication_status(site_id, {"need_sync": True})
+    log_pending(AFFECTED, None, "edit-users", _('Profile changed (sync failed: %s)') % result)
+
 
 # AJAX handler for asynchronous site replication. This is running on the
 # master site.
@@ -12284,9 +12299,6 @@ def automation_push_profile():
 
         our_id = our_site_id()
 
-        # In peer mode, we have a replication configuration ourselves and
-        # we have a site ID our selves. Let's make sure that ID matches
-        # the ID our peer thinks we have.
         if our_id != None and our_id != site_id:
             raise MKGeneralException(
               _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
@@ -12321,9 +12333,6 @@ def automation_push_snapshot():
             raise MKGeneralException(_("Configuration error. You treat us as "
                "a <b>slave</b>, but we have an own distributed WATO configuration!"))
 
-        # In peer mode, we have a replication configuration ourselves and
-        # we have a site ID our selves. Let's make sure that ID matches
-        # the ID our peer thinks we have.
         if our_id != None and our_id != site_id:
             raise MKGeneralException(
               _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
@@ -16775,7 +16784,7 @@ def user_profile_async_replication_page():
 
 
 def user_profile_async_replication_dialog():
-    sites = [(name, config.site(name)) for name in config.sitenames() ]
+    sites = wato_slave_sites()
     sort_sites(sites)
     repstatus = load_replication_status()
 
@@ -16818,6 +16827,8 @@ def user_profile_async_replication_dialog():
             html.javascript('wato_do_profile_replication(\'%s\', %d, \'%s\');' %
                       (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
             num_replsites += 1
+        else:
+            add_profile_replication_change(site_id, status_txt)
         html.write('<span>%s</span>' % site.get('alias', site_id))
         html.write('</div>')
 
@@ -16922,7 +16933,7 @@ def page_user_profile(change_pw=False):
 
             # Now, if in distributed environment, set the trigger for pushing the new
             # auth information to the slave sites asynchronous
-            if is_distributed():
+            if has_wato_slave_sites():
                 start_async_replication = True
 
             userdb.save_users(users)

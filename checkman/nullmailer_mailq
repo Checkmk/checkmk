@@ -1,0 +1,22 @@
+title: Length of the nullmailer mailqueue
+agents: linux
+catalog: app/nullmailer
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the number of deferred mails in the outgoing mail
+ queue, as sent by the linux agent of Check_MK.
+
+ This check creates one service per host which represents the state
+ of the outgoing mailqueue.
+
+ The check will result in WARNING/CRITICAL states when the number of items
+ in the queues have reached the defined thresholds.
+
+perfdata:
+ Two variables for each queue: the number of messages and the
+ total size of the messages in the queue in bytes.
+
+inventory:
+ On each system which provides the {nullmailer-send} command one service is created.

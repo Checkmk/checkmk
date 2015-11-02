@@ -330,48 +330,6 @@ if (has_canvas_support()) {
 #   | Renders a single performance graph                                   |
 #   '----------------------------------------------------------------------'
 
-def make_graph_url(dashlet, what):
-    host = dashlet['context'].get('host')
-    if not host:
-        raise MKUserError('host', _('Missing needed host parameter.'))
-
-    service = dashlet['context'].get('service')
-    if not service:
-        service = "_HOST_"
-
-    # When the site is available via URL context, use it. Otherwise it is needed
-    # to check all sites for the requested host
-    if html.has_var('site'):
-        site = html.var('site')
-    else:
-        html.live.set_prepend_site(True)
-        query = "GET hosts\nFilter: name = %s\nColumns: name" % lqencode(host)
-        site = html.live.query_column(query)[0]
-        html.live.set_prepend_site(False)
-
-    if not site:
-        base_url = defaults.url_prefix
-    else:
-        base_url = html.site_status[site]["site"]["url_prefix"]
-
-    # New graphs which have been added via "add to visual" option don't have a timerange
-    # configured. So we assume the default timerange here by default.
-    timerange = dashlet.get('timerange', '1')
-
-    # When the new style graphs can be rendered and this is not host graph, first
-    # try the new style graphing system for rendering the dashlets graph
-    import metrics
-    if metrics.new_style_graphs_possible() and service != "_HOST_":
-        return "show_graph.py?site=%s&host_name=%s&service=%s&source=%s&timerange=%s&what=dashlet" % \
-                    (site, host, service, dashlet['source'], timerange)
-
-    # Fallback to PNP graph handling
-    base_url += "pnp4nagios/index.php/"
-    var_part = "?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \
-            (pnp_cleanup(dashlet['context']['host']), pnp_cleanup(service),
-             dashlet['source'], timerange)
-    return base_url + what + var_part
-
 
 def dashlet_graph(nr, dashlet):
     html.write('<div id="dashlet_graph_%d"></div>' % (nr))
@@ -463,6 +421,7 @@ function dashboard_render_graph(nr, site, host_name, service, source, timerange)
                           +"&timerange="+encodeURIComponent(timerange)
                           +"&width="+c_w
                           +"&height="+c_h
+                          +"&id="+nr
                           +"&what=dashlet", {
         response_handler : handle_dashboard_render_graph_response,
         handler_data     : nr,

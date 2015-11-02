@@ -2255,7 +2255,16 @@ char *add_interpreter(char *path, char *newpath)
         //   1.) The powershell interpreter needs to be in PATH
         //   2.) The execution policy needs to allow the script execution
         //       -> Get-ExecutionPolicy / Set-ExecutionPolicy
-        snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", path);
+        //
+        // actually, microsoft always installs the powershell interpreter to the same
+        // directory (independent of the version) so even if it's not in the path,
+        // we have a good chance with this fallback.
+        char dummy;
+        ::SearchPathA(NULL, "powershell.exe", NULL, 1, &dummy, NULL);
+        const char *interpreter = ::GetLastError() != ERROR_FILE_NOT_FOUND
+            ? "powershell.exe"
+            : "C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell.exe";
+        snprintf(newpath, 256, "%s -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", interpreter, path);
         return newpath;
     }
     else if (!strcmp(path + strlen(path) - 3, ".pl")) {

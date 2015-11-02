@@ -31,7 +31,7 @@
 #include "Table.h"
 #include "nagios.h"
 
-class DowntimeOrComment;
+struct DowntimeOrComment;
 class TableHosts;
 class TableContacts;
 class TableServices;

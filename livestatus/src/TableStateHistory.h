@@ -37,7 +37,7 @@
 
 #define CLASSMASK_STATEHIST 0xC6
 
-class HostServiceState;
+struct HostServiceState;
 
 class TableStateHistory : public Table
 {

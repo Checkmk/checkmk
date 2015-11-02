@@ -34,7 +34,7 @@ using namespace std;
 
 #define MAX_LOGLINE 65536
 
-class LogEntry;
+struct LogEntry;
 class Query;
 class LogCache;
 class World;

@@ -1,0 +1,11 @@
+Title: Fixed some icon links from views opening in dashlet frames instead of the whole page
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p4
+Date: 1446477951
+
+e.g. the "crashed checks" icon was providing a link which opened the crashed check page
+inside a dashlet when clicked on the icon within a dashlet view.

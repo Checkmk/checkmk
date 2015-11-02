@@ -148,6 +148,21 @@ VARIANT ObjectWrapper::getVarByKey(const wchar_t *key) const
 }
 
 
+Result::Result()
+    : ObjectWrapper(NULL)
+    , _enumerator(NULL)
+{
+}
+
+
+Result::Result(const Result &reference)
+    : ObjectWrapper(NULL)
+    , _enumerator(reference._enumerator)
+{
+    next();
+}
+
+
 Result::Result(IEnumWbemClassObject *enumerator)
     : ObjectWrapper(NULL)
     , _enumerator(enumerator)
@@ -159,6 +174,19 @@ Result::Result(IEnumWbemClassObject *enumerator)
 Result::~Result()
 {
     _enumerator->Release();
+}
+
+
+Result &Result::operator=(const Result &reference)
+{
+    if (&reference != this) {
+        if (_enumerator != NULL) {
+            _enumerator->Release();
+        }
+        _enumerator = reference._enumerator;
+        next();
+    }
+    return *this;
 }
 
 
@@ -200,6 +228,10 @@ vector<wstring> Result::names() const
 
 bool Result::next()
 {
+    if (_enumerator == NULL) {
+        return false;
+    }
+
     IWbemClassObject *obj;
     ULONG numReturned;
     // always retrieve only one element

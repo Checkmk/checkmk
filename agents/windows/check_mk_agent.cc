@@ -1442,14 +1442,15 @@ void section_ps_wmi(SOCKET &out)
 {
     crash_log("<<<ps>>>");
 
-    wmi::Result result = g_wmi_helper->query(L"SELECT * FROM Win32_Process");
-    bool more = result.valid();
-    if (!more) {
-        return;
-    }
-    output(out, "<<<ps:sep(9)>>>\n");
-
+    wmi::Result result;
     try {
+        result = g_wmi_helper->query(L"SELECT * FROM Win32_Process");
+        bool more = result.valid();
+       if (!more) {
+            return;
+        }
+        output(out, "<<<ps:sep(9)>>>\n");
+
         while (more) {
             int processId = result.get<int>(L"ProcessId");
 
@@ -1487,6 +1488,10 @@ void section_ps_wmi(SOCKET &out)
                     process_name.c_str());
             more = result.next();
         }
+    } catch (const wmi::ComException &e) {
+        // the most likely cause is that the wmi query fails, i.e. because the service is
+        // currently offline.
+        crash_log("Exception: %s", e.what());
     } catch (const wmi::ComTypeException &e) {
         crash_log("Exception: %s", e.what());
         std::wstring types;

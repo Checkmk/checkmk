@@ -4476,6 +4476,21 @@ register_check_parameters(
                   default_value = 15,
                   label = _("Compute average over last "),
             )),
+            ( "core_util_time",
+                Tuple(
+                    title = _("Alert on high utilization over an extended time period on a single "
+                              "core (windows only)"),
+                    elements = [
+                        Percentage(title = _("High utilization at "), default_value = 100.0),
+                        Age(title = _("Warning after "), default_value = 5 * 60),
+                        Age(title = _("Critical after "), default_value = 15 * 60),
+                    ],
+                    help = _("A single thread fully utilizing a single core (potentially due to a bug) "
+                            "may go unnoticed when only monitoring the total utilization of the CPU. "
+                            "With this configuration, check_mk will alert if a single core is "
+                            "exceeding a utilization threshold over an extended period of time.")
+                )
+            ),
             ( "core_util_graph",
                 Checkbox(
                     title = _("Graphs for individual cores (windows only)"),

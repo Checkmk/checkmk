@@ -78,17 +78,20 @@ def paint_mkeventd(what, row, tags, custom_vars):
     if getattr(config, 'mkeventd_distributed', False):
         url_prefix = site['url_prefix'] + 'check_mk/'
 
-    title = _('Events of Host %s') % (row["host_name"])
-    url   = 'view.py?' + html.urlencode_vars([
+    url_vars = [
           ("view_name", "ec_events_of_monhost"),
           ("site", row["site"]),
           ("host", row["host_name"]),
-        ])
+    ]
+
+    title = _('Events of Host %s') % (row["host_name"])
 
     if len(args) >= 2:
-        app   = args[1].strip('\'')
+        app   = args[1].strip('\'').replace("\\\\", "\\")
         title = _('Events of Application "%s" on Host %s') % (app, host)
-        url   += '&event_application=' + app
+        url_vars.append(("event_application", app))
+
+    url = 'view.py?' + html.urlencode_vars(url_vars)
 
     return 'mkeventd', title, url_prefix + url
 

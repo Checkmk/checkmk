@@ -2559,7 +2559,7 @@ def ajax_popup_action_menu():
                     url = 'javascript:void(0)'
 
                 target = ""
-                if target_frame != "_self":
+                if target_frame and target_frame != "_self":
                     target = " target=\"%s\"" % target_frame
 
                 html.write('<a href="%s"%s%s>' % (url, target, onclick))
@@ -2583,4 +2583,4 @@ def sanitize_action_url(url_spec):
     if type(url_spec) == tuple:
         return url_spec
     else:
-        return (url_spec, "_self")
+        return (url_spec, None)

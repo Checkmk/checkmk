@@ -1076,7 +1076,7 @@ function do_reload(url)
         // Enforce specific display_options to get only the content data.
         // All options in "opts" will be forced. Existing upper-case options will be switched.
         var display_options = getUrlParam('display_options');
-        // Removed 'w' to reflect original rengering mechanism during reload
+        // Removed 'w' to reflect original rendering mechanism during reload
         // For example show the "Your query produced more than 1000 results." message
         // in views even during reload.
         var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r', 'u' ];
@@ -1099,7 +1099,11 @@ function do_reload(url)
         if(real_display_options !== '')
             params['display_options'] = real_display_options;
 
-        params['_do_actions'] = getUrlParam('_do_actions')
+        params['_do_actions'] = getUrlParam('_do_actions');
+
+        // For dashlet reloads add a parameter to mark this request as reload
+        if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
+            params["_reload"] = "1";
 
         call_ajax(makeuri(params), {
             response_handler : handle_content_reload,

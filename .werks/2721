@@ -1,0 +1,10 @@
+Title: Fixed user profile sync in distributed environments after profile change
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p4
+Date: 1446474015
+
+

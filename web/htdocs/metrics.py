@@ -1273,12 +1273,14 @@ def page_show_graph():
         # height: title height
         size = (int(((float(html.var("width")) - 49 - 5)/html_size_per_ex)),
                 int((float(html.var("height")) - 23)/html_size_per_ex))
-        font_size   = 11
-        show_legend = True
+        font_size       = 11
+        show_legend     = True
+        graph_id_prefix = "dashlet_" + html.var("id")
     else:
-        size        = (30, 10)
-        font_size   = 8
-        show_legend = False
+        size            = (30, 10)
+        font_size       = 8
+        show_legend     = False
+        graph_id_prefix = "hover"
 
     if new_style_graphs_possible():
         # FIXME HACK TODO We don't have the current perfata and check command
@@ -1302,7 +1304,7 @@ def page_show_graph():
                 # Render all graphs (e.g. for the hover menu)
                 htmlcode = render_time_graph(row, start_time, end_time, size=(30, 10),
                                              font_size=8, show_legend=False, show_controls=False,
-                                             graph_id_prefix="hover")
+                                             resizable=False, graph_id_prefix=graph_id_prefix)
             else:
                 # render specific graph (e.g. for the dashlet)
                 perf_data_string, check_command, graph_templates = find_possible_graphs(row)
@@ -1317,7 +1319,8 @@ def page_show_graph():
                     htmlcode = render_graph_html(row["site"], host_name, service, perf_data_string,
                                                  check_command, graph_template,
                                                  start_time, end_time, size=size,
-                                                 show_controls=False, show_legend=False)
+                                                 show_controls=False, show_legend=False,
+                                                 resizable=False, graph_id_prefix=graph_id_prefix)
 
             if htmlcode:
                 html.write(htmlcode)

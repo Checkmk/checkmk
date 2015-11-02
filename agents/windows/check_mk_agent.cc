@@ -258,6 +258,7 @@ void debug(char *text)
 #define debug(C)
 #endif
 
+
 void verbose(const char *format, ...)
 {
     if (!verbose_mode)
@@ -1284,8 +1285,8 @@ bool find_eventlogs(SOCKET &out)
 bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
 {
     // Get process token
-    HANDLE hProcessToken = NULL;
-    if (!OpenProcessToken(hProcess_i, TOKEN_READ, &hProcessToken) || !hProcessToken)
+    WinHandle hProcessToken;
+    if (!OpenProcessToken(hProcess_i, TOKEN_READ, hProcessToken.ptr()) || !hProcessToken)
         return false;
 
     // First get size needed, TokenUser indicates we want user information from given token
@@ -1322,7 +1323,6 @@ bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
                     WideCharToMultiByte(CP_UTF8, 0, (WCHAR*) &szUser, -1, info, sizeof(info), NULL, NULL);
                     csOwner_o += info;
 
-                    CloseHandle( hProcessToken );
                     delete [] pUserToken;
                     return true;
                 }
@@ -1330,7 +1330,6 @@ bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
             delete [] pUserToken;
         }
     }
-    CloseHandle( hProcessToken );
     return false;
 }
 
@@ -1510,12 +1509,11 @@ void section_ps(SOCKET &out)
 {
     crash_log("<<<ps>>>");
     output(out, "<<<ps:sep(9)>>>\n");
-    HANDLE hProcessSnap;
     PROCESSENTRY32 pe32;
 
     process_entry_t process_perfdata = get_process_perfdata();
 
-    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    WinHandle hProcessSnap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (hProcessSnap != INVALID_HANDLE_VALUE)
     {
         pe32.dwSize = sizeof(PROCESSENTRY32);
@@ -1526,7 +1524,7 @@ void section_ps(SOCKET &out)
             {
                 string user = "unknown";
                 DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
-                HANDLE hProcess = OpenProcess(dwAccess, FALSE, pe32.th32ProcessID);
+                WinHandle hProcess(OpenProcess(dwAccess, FALSE, pe32.th32ProcessID));
 
                 if (NULL == hProcess)
                     continue;
@@ -1575,11 +1573,8 @@ void section_ps(SOCKET &out)
                         usermodetime.QuadPart,
                         kernelmodetime.QuadPart,
                         processHandleCount, pe32.cntThreads, pe32.szExeFile);
-
-                CloseHandle(hProcess);
             } while (Process32Next(hProcessSnap, &pe32));
         }
-        CloseHandle(hProcessSnap);
         process_perfdata.clear();
 
         // The process snapshot doesn't show the system idle process (used to determine the number of cpu cores)
@@ -2320,8 +2315,8 @@ int launch_program(script_container* cont)
     SECURITY_DESCRIPTOR sd;   // security information for pipes
 
     PROCESS_INFORMATION pi;
-    HANDLE script_stdout,read_stdout;  // pipe handles
-    HANDLE script_stderr,read_stderr;
+    WinHandle script_stdout, read_stdout;  // pipe handles
+    WinHandle script_stderr,read_stderr;
 
     // initialize security descriptor (Windows NT)
     if (IsWinNT())
@@ -2336,10 +2331,10 @@ int launch_program(script_container* cont)
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.bInheritHandle = true;                       // allow inheritable handles
 
-    if (!CreatePipe(&read_stdout,&script_stdout,&sa,0)) // create stdout pipe
+    if (!CreatePipe(read_stdout.ptr(),script_stdout.ptr(),&sa,0)) // create stdout pipe
         return 1;
 
-    if (!CreatePipe(&read_stderr,&script_stderr,&sa,0)) // create stderr pipe
+    if (!CreatePipe(read_stderr.ptr(),script_stderr.ptr(),&sa,0)) // create stderr pipe
         return 1;
 
     //set startupinfo for the spawned process
@@ -2355,13 +2350,8 @@ int launch_program(script_container* cont)
 
     // spawn the child process
     if (!CreateProcess(NULL,cont->path,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
-                NULL,NULL,&si,&pi))
-    {
-        CloseHandle(script_stdout);
-        CloseHandle(read_stdout);
-
-        CloseHandle(script_stderr);
-        CloseHandle(read_stderr);
+                NULL,NULL,&si,&pi)) {
+        crash_log("failed to spawn process %s: %s", cont->path, get_win_error_as_string().c_str());
         return 1;
     }
 
@@ -2443,10 +2433,6 @@ int launch_program(script_container* cont)
     CloseHandle(cont->job_object);
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
-    CloseHandle(script_stdout);
-    CloseHandle(read_stdout);
-    CloseHandle(script_stderr);
-    CloseHandle(read_stderr);
 
     return exit_code;
 }
@@ -2573,10 +2559,10 @@ void output_external_programs(SOCKET &out, script_type type)
                     cont->buffer_work[2] = '\n';
                 }
 
-                if (cont->max_age == 0)
+                if (cont->max_age == 0) {
                     cont->buffer      = cont->buffer_work;
-                else
-                {
+                }
+                else {
                     // Determine chache_info text
                     char cache_info[32];
                     snprintf(cache_info, sizeof(cache_info), ":cached(%d,%d)", (int)cont->buffer_time, cont->max_age);
@@ -3271,8 +3257,7 @@ void output_crash_log(SOCKET &out)
         FILE *f = fopen(g_crash_log, "r");
         char line[1024];
         while (0 != fgets(line, sizeof(line), f)) {
-            output(out, "W ");
-            output(out, line);
+            output(out, "W %s", line);
         }
         ReleaseMutex(crashlogMutex);
         fclose(f);

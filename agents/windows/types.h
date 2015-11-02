@@ -296,4 +296,36 @@ private:
 };
 
 
+// wrapper for windows handles that automatically closes the
+// handle on leaving scope
+class WinHandle {
+public:
+
+    WinHandle(HANDLE hdl = INVALID_HANDLE_VALUE)
+        : _handle(hdl)
+    {}
+
+    ~WinHandle() {
+        if (_handle != INVALID_HANDLE_VALUE) {
+            ::CloseHandle(_handle);
+        }
+    }
+
+    WinHandle &operator=(HANDLE hdl) {
+        if (_handle != INVALID_HANDLE_VALUE) {
+            ::CloseHandle(_handle);
+        }
+        _handle = hdl;
+        return *this;
+    }
+
+    operator HANDLE() const { return _handle; }
+
+    HANDLE *ptr() { return &_handle; }
+
+private:
+    HANDLE _handle;
+};
+
+
 #endif // types_h

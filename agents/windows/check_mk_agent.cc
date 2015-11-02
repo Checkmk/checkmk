@@ -488,13 +488,13 @@ void section_df(SOCKET &out)
 
 // Determine the start type of a service. Unbelievable how much
 // code is needed for that...
-const char *service_start_type(SC_HANDLE scm, LPCTSTR service_name)
+const char *service_start_type(SC_HANDLE scm, LPCWSTR service_name)
 {
     // Query the start type of the service
     const char *start_type = "invalid1";
     SC_HANDLE schService;
     LPQUERY_SERVICE_CONFIG lpsc;
-    schService = OpenService(scm, service_name, SERVICE_QUERY_CONFIG);
+    schService = OpenServiceW(scm, service_name, SERVICE_QUERY_CONFIG);
     if (schService) {
         start_type = "invalid2";
         DWORD dwBytesNeeded, cbBufSize;
@@ -533,16 +533,16 @@ void section_services(SOCKET &out)
         DWORD bytes_needed = 0;
         DWORD num_services = 0;
         // first determine number of bytes needed
-        EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+        EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
                 NULL, 0, &bytes_needed, &num_services, 0, 0);
         if (GetLastError() == ERROR_MORE_DATA && bytes_needed > 0) {
             BYTE *buffer = (BYTE *)malloc(bytes_needed);
             if (buffer) {
-                if (EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+                if (EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
                             buffer, bytes_needed,
                             &bytes_needed, &num_services, 0, 0))
                 {
-                    ENUM_SERVICE_STATUS_PROCESS *service = (ENUM_SERVICE_STATUS_PROCESS *)buffer;
+                    ENUM_SERVICE_STATUS_PROCESSW *service = (ENUM_SERVICE_STATUS_PROCESSW*)buffer;
                     for (unsigned i=0; i<num_services; i++) {
                         DWORD state = service->ServiceStatusProcess.dwCurrentState;
                         const char *state_name = "unknown";
@@ -567,9 +567,9 @@ void section_services(SOCKET &out)
                                 *w = '_';
                         }
 
-                        output(out, "%s %s/%s %s\n",
+                        output(out, "%ls %s/%s %s\n",
                                 service->lpServiceName, state_name, start_type,
-                                service->lpDisplayName);
+                                to_utf8(service->lpDisplayName).c_str());
                         service ++;
                     }
                 }

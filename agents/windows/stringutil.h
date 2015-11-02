@@ -55,6 +55,8 @@ void lowercase(char *s);
 
 int parse_boolean(char *value);
 
+std::string to_utf8(const wchar_t *input);
+
 // case insensitive compare
 bool ci_equal(const std::string &lhs, const std::string &rhs);
 

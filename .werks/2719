@@ -1,0 +1,11 @@
+Title: Events Check: Links to EC were broken when using regular expressions as application
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i3p4
+Date: 1446450077
+Class: fix
+
+When using a regular expression to find Event Console events for an "Events" service, the
+icon linking from the service to the Event Console linked to a view which did not show
+the corrent amount of events.

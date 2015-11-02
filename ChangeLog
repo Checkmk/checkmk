@@ -22,6 +22,9 @@
     * 1298 FIX: Fixed broken WebAPI...
     * 1299 FIX: BI: Fixed recently introduced bug when editing BI Rules...
 
+    Event Console:
+    * 2719 FIX: Events Check: Links to EC were broken when using regular expressions as application...
+
     HW/SW-Inventory:
     * 2667 FIX: solaris_mem: fix exception in inventory plugin
     * 2714 FIX: Fixed visibility of folding arrows by making them dark

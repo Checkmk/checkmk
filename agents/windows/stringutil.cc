@@ -9,6 +9,9 @@
 #endif
 
 
+using std::string;
+
+
 char *lstrip(char *s)
 {
     while (isspace(*s))
@@ -148,6 +151,28 @@ int parse_boolean(char *value)
     else
         fprintf(stderr, "Invalid boolean value. Only yes and no are allowed.\r\n");
     return -1;
+}
+
+
+string to_utf8(const wchar_t *input)
+{
+    string result;
+    // preflight: how many bytes to we need?
+    int required_size = WideCharToMultiByte(CP_UTF8, 0, input, -1, NULL, 0, NULL, NULL);
+    if (required_size == 0) {
+        // conversion failure. What to do?
+        return string();
+    }
+    result.resize(required_size);
+
+    // real conversion
+    WideCharToMultiByte(CP_UTF8, 0, input, -1, &result[0], required_size, NULL, NULL);
+
+    // strip away the zero termination. This is necessary, otherwise the stored string length
+    // in the string is wrong
+    result.resize(required_size - 1);
+
+    return result;
 }
 
 

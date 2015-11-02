@@ -142,6 +142,7 @@ struct script_container {
     volatile bool          should_terminate;
     HANDLE                 worker_thread;
     HANDLE                 job_object;
+    DWORD                  exit_code;
 };
 
 struct retry_config{
@@ -293,6 +294,38 @@ private:
     ObjectT *_obj;
     Function _func;
 
+};
+
+
+// wrapper for windows handles that automatically closes the
+// handle on leaving scope
+class WinHandle {
+public:
+
+    WinHandle(HANDLE hdl = INVALID_HANDLE_VALUE)
+        : _handle(hdl)
+    {}
+
+    ~WinHandle() {
+        if (_handle != INVALID_HANDLE_VALUE) {
+            ::CloseHandle(_handle);
+        }
+    }
+
+    WinHandle &operator=(HANDLE hdl) {
+        if (_handle != INVALID_HANDLE_VALUE) {
+            ::CloseHandle(_handle);
+        }
+        _handle = hdl;
+        return *this;
+    }
+
+    operator HANDLE() const { return _handle; }
+
+    HANDLE *ptr() { return &_handle; }
+
+private:
+    HANDLE _handle;
 };
 
 

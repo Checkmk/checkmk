@@ -57,7 +57,7 @@ bool ServicelistColumnFilter::accepts(void *data)
     servicesmember *mem = _servicelist_column->getMembers(data);
 
     // test for empty list
-    if (abs(_opid == OP_EQUAL) && _ref_host == "")
+    if (abs(_opid) == OP_EQUAL && _ref_host == "")
         return (mem == 0) == (_opid == OP_EQUAL);
 
     bool is_member = false;

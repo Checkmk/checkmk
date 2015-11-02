@@ -92,7 +92,7 @@ def check_winperf_util(_no_item, params, info):
                     cores.append(("core%d" % i, core_used_perc))
 
                 for status, infotext, perfdata in check_cpu_util(used_perc, params, this_time, cores):
-                    if perfdata[0][0] == "util":
+                    if perfdata and perfdata[0][0] == "util":
                         perfdata[0] = perfdata[0][:5] + (num_cpus,)
                     yield status, infotext, perfdata
             elif what == "user":

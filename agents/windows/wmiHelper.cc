@@ -148,6 +148,21 @@ VARIANT ObjectWrapper::getVarByKey(const wchar_t *key) const
 }
 
 
+Result::Result()
+    : ObjectWrapper(NULL)
+    , _enumerator(NULL)
+{
+}
+
+
+Result::Result(const Result &reference)
+    : ObjectWrapper(NULL)
+    , _enumerator(reference._enumerator)
+{
+    next();
+}
+
+
 Result::Result(IEnumWbemClassObject *enumerator)
     : ObjectWrapper(NULL)
     , _enumerator(enumerator)
@@ -159,6 +174,19 @@ Result::Result(IEnumWbemClassObject *enumerator)
 Result::~Result()
 {
     _enumerator->Release();
+}
+
+
+Result &Result::operator=(const Result &reference)
+{
+    if (&reference != this) {
+        if (_enumerator != NULL) {
+            _enumerator->Release();
+        }
+        _enumerator = reference._enumerator;
+        next();
+    }
+    return *this;
 }
 
 
@@ -200,6 +228,10 @@ vector<wstring> Result::names() const
 
 bool Result::next()
 {
+    if (_enumerator == NULL) {
+        return false;
+    }
+
     IWbemClassObject *obj;
     ULONG numReturned;
     // always retrieve only one element
@@ -222,28 +254,6 @@ bool Result::next()
     }
     _current = obj;
     return true;
-}
-
-
-string to_utf8(const wchar_t *input)
-{
-    string result;
-    // preflight: how many bytes to we need?
-    int required_size = WideCharToMultiByte(CP_UTF8, 0, input, -1, NULL, 0, NULL, NULL);
-    if (required_size == 0) {
-        // conversion failure. What to do?
-        return string();
-    }
-    result.resize(required_size);
-
-    // real conversion
-    WideCharToMultiByte(CP_UTF8, 0, input, -1, &result[0], required_size, NULL, NULL);
-
-    // strip away the zero termination. This is necessary, otherwise the stored string length
-    // in the string is wrong
-    result.resize(required_size - 1);
-
-    return result;
 }
 
 

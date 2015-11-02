@@ -120,7 +120,7 @@ from hashlib import sha256
 from lib import *
 from valuespec import *
 import forms
-import modules
+import modules as multisite_modules
 
 
 class MKAutomationException(Exception):
@@ -16865,7 +16865,7 @@ def page_user_profile(change_pw=False):
 
                     # load the new language
                     i18n.localize(config.get_language())
-                    modules.load_all_plugins()
+                    multisite_modules.load_all_plugins()
 
                     user = users.get(config.user_id)
                     if config.may('general.edit_notifications') and user.get("notifications_enabled"):

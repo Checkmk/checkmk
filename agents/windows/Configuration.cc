@@ -892,10 +892,10 @@ bool Configuration::handleScriptConfigVariable(char *var, char *value, script_ty
         memset(tmp, 0, sizeof(*tmp));
 
         if (user)
-            snprintf(tmp->user, sizeof(tmp->user), user);
+            snprintf(tmp->user, sizeof(tmp->user), "%s", user);
 
         tmp->type = type;
-        snprintf(tmp->path, sizeof(tmp->path), value);
+        snprintf(tmp->path, sizeof(tmp->path), "%s", value);
         _script_includes.add(tmp);
         return true;
     }

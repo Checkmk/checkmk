@@ -548,8 +548,14 @@ def dashlet_view(nr, dashlet):
     import bi # FIXME: Cleanup?
     bi.reset_cache_status() # needed for status icon
 
-    html.set_var('display_options', 'HRSIXL')
-    html.set_var('_display_options', 'HRSIXL')
+    is_reload = html.has_var("_reload")
+
+    display_options = "SIXL"
+    if not is_reload:
+        display_options += "HR"
+
+    html.set_var('display_options',  display_options)
+    html.set_var('_display_options', display_options)
     html.add_body_css_class('dashlet')
 
     import views # FIXME: HACK, clean this up somehow

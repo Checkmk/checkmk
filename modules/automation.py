@@ -355,26 +355,38 @@ def automation_analyse_service(args):
 def automation_delete_host(args):
     hostname = args[0]
 
-    # the inventory_archive as well as the perfdata is kept
-    # we do not want to loose historic data for accidently deleted hosts
+    # the inventory_archive as well as the performance data is kept
+    # we do not want to loose any historic data for accidently deleted hosts
+
+    # single files
     for path in [
         "%s/%s"              % (precompiled_hostchecks_dir, hostname),
         "%s/%s.py"           % (precompiled_hostchecks_dir, hostname),
         "%s/%s.mk"           % (autochecksdir, hostname),
-        "%s/%s"              % (logwatch_dir, hostname),
         "%s/%s"              % (counters_directory, hostname),
         "%s/%s"              % (tcp_cache_dir, hostname),
         "%s/persisted/%s"    % (var_dir, hostname),
         "%s/piggyback/%s"    % (tmp_dir, hostname),
         "%s/inventory/%s"    % (var_dir, hostname),
         "%s/inventory/%s.gz" % (var_dir, hostname)]:
-        os.system("rm -rf '%s'" % path)
+        if os.path.exists(path):
+            os.unlink(path)
 
-    import glob
-    for path in [ "%s/%s.*"        % (tcp_cache_dir, hostname),
-                  "%s/agents/*/%s" % (var_dir, hostname) ]:     # only remove bakery symlinks
-        for filename in glob.glob(path):
-            os.unlink(filename)
+    # files from snmp devices
+    for filename in os.listdir(tcp_cache_dir):
+        if filename.startswith("%s." % hostname):
+            os.unlink("%s/%s" % (tcp_cache_dir, filename))
+
+    # softlinks for baked agents. obsolete packages are removed upon next bake action
+    for folder in os.listdir("%s/agents" % var_dir):
+        if os.path.exists("%s/%s" % (folder, hostname)):
+            os.unlink("%s/%s" % (folder, hostname))
+
+    # logwatch folders
+    if os.path.exists("%s/%s" % (logwatch_dir, hostname)):
+        import shutil
+        shutil.rmtree("%s/%s" % (logwatch_dir, hostname))
+
 
 def automation_restart(job = "restart", use_rushd = True):
 

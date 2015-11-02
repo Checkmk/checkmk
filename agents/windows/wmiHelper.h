@@ -133,8 +133,12 @@ class Result : public ObjectWrapper
 
 public:
 
+    Result();
     Result(IEnumWbemClassObject *enumerator);
+    Result(const Result &reference);
     ~Result();
+
+    Result &operator=(const Result &reference);
 
     std::vector<std::wstring> names() const;
 

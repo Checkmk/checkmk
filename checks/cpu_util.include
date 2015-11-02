@@ -97,11 +97,28 @@ def check_cpu_util(util, params, this_time = None, cores = None):
     perfdata += extraperf # reference curve for predictive levels
     yield state, infotext, perfdata
 
-    if cores and "core_util_graph" in params:
+    if cores and ("core_util_graph" in params or "core_util_time" in params):
         ctr = 0
         for core, total_perc in cores:
             if "core_util_graph" in params:
                 yield 0, None, [(cpu_util_core_name(core), total_perc)]
+
+            if "core_util_time" in params:
+                threshold, warn_core, crit_core = params["core_util_time"]
+                core_state_name = "cpu.util.core.high.%s" % core
+                if total_perc > threshold:
+                    timestamp = get_item_state(core_state_name, 0)
+                    high_load_duration = (this_time - timestamp)
+                    if timestamp == 0:
+                        set_item_state(core_state_name, this_time)
+                    elif high_load_duration > crit_core:
+                        yield 2, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
+                            (core, high_load_duration / 60, warn_core / 60, crit_core / 60), None
+                    elif high_load_duration > warn_core:
+                        yield 1, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
+                            (core, high_load_duration / 60, warn_core / 60, crit_core / 60), None
+                else:
+                    clear_item_state(core_state_name)
 
 
 # This one can handle user, system and wait. values is a list of:

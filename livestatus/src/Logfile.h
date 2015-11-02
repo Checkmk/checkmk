@@ -34,7 +34,7 @@ using namespace std;
 
 #define MAX_LOGLINE 65536
 
-class LogEntry;
+struct LogEntry;
 class Query;
 class LogCache;
 class World;
@@ -47,14 +47,14 @@ private:
     char      *_path;
     time_t     _since;         // time of first entry
     bool       _watch;         // true only for current logfile
-    ino_t      _inode;         // needed to detect switching
     fpos_t     _read_pos;      // read until this position
     uint32_t   _lineno;        // read until this line
 
     logfile_entries_t  _entries;
     char       _linebuffer[MAX_LOGLINE];
+#ifdef CMC
     World     *_world;         // CMC: world our references point into
-
+#endif
 
 public:
     Logfile(const char *path, bool watch);

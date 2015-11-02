@@ -297,14 +297,22 @@ def check_discovery(hostname, ipaddress=None):
         output += "\n"
 
     except (MKSNMPError, MKAgentError), e:
-        output = "Discovery failed: %s" % e
+        output = "Discovery failed: %s\n" % e
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.
         spec = exit_code_spec(hostname)
         status = spec.get("connection", 1)
 
-    except SystemExit, e:
-        raise e
+    except MKCheckTimeout:
+        if opt_keepalive:
+            raise
+        else:
+            output = "Discovery failed: Timed out\n"
+            spec = exit_code_spec(hostname)
+            status = spec.get("timeout", 2)
+
+    except SystemExit:
+        raise
 
     except Exception, e:
         output = create_crash_dump(hostname, "discovery", None, None, "Check_MK Discovery", [])\
@@ -594,7 +602,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
             try:
                 for item, paramstring in discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
                     discovered_services.append((check_type, item, paramstring))
-            except (KeyboardInterrupt, MKAgentError, MKSNMPError):
+            except (KeyboardInterrupt, MKAgentError, MKSNMPError, MKCheckTimeout):
                 raise
             except Exception:
                 if opt_debug:

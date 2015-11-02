@@ -2361,7 +2361,6 @@ int launch_program(script_container* cont)
     AssignProcessToJobObject(cont->job_object, pi.hProcess);
     AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
 
-    unsigned long exit=0;  // process exit code
     unsigned long bread;   // bytes read
     unsigned long avail;   // bytes available
 
@@ -2381,16 +2380,16 @@ int launch_program(script_container* cont)
             break;
         }
 
-        GetExitCodeProcess(pi.hProcess, &exit);      // while the process is running
+        GetExitCodeProcess(pi.hProcess, &cont->exit_code);      // while the process is running
         while (!buffer_full) {
             if (!with_stderr) {
-                PeekNamedPipe(read_stderr, buf, sizeof(buf), &bread, &avail, NULL);
+                PeekNamedPipe(read_stderr, buf, BUFFER_SIZE, &bread, &avail, NULL);
                 if (avail > 0)
                     // Just read from the pipe, we do not use this data
-                    ReadFile(read_stderr, buf, sizeof(buf) - 1, &bread, NULL);
+                    ReadFile(read_stderr, buf, BUFFER_SIZE - 1, &bread, NULL);
             }
 
-            PeekNamedPipe(read_stdout, buf, sizeof(buf), &bread, &avail, NULL);
+            PeekNamedPipe(read_stdout, buf, BUFFER_SIZE, &bread, &avail, NULL);
 
             if (avail == 0)
                 break;
@@ -2417,12 +2416,13 @@ int launch_program(script_container* cont)
             }
         }
         if (buffer_full) {
+            crash_log("plugin produced more than 2MB output -> dropped");
             // Buffer full -> delete incomplete data
             exit_code = 1;
             break;
         }
 
-        if (exit != STILL_ACTIVE)
+        if (cont->exit_code != STILL_ACTIVE)
             break;
 
         Sleep(10);
@@ -2490,8 +2490,10 @@ void run_script_container(script_container *cont)
 
     // Return if this script is no longer present
     // However, the script container is preserved
-    if (!script_exists(cont))
+    if (!script_exists(cont)) {
+        crash_log("script %s no longer exists", cont->script_path);
         return;
+    }
 
     time_t now = time(0);
     if (now - cont->buffer_time >= cont->max_age) {
@@ -2505,6 +2507,7 @@ void run_script_container(script_container *cont)
         if (cont->worker_thread != INVALID_HANDLE_VALUE)
             CloseHandle(cont->worker_thread);
 
+        crash_log("invoke script %s", cont->script_path);
         cont->worker_thread  = CreateThread(
                 NULL,                 // default security attributes
                 0,                    // use default stack size
@@ -2516,6 +2519,8 @@ void run_script_container(script_container *cont)
         if (cont->execution_mode == SYNC ||
             (cont->execution_mode == ASYNC && g_config->defaultScriptAsyncExecution() == SEQUENTIAL))
             WaitForSingleObject(cont->worker_thread, INFINITE);
+
+        crash_log("finished with status %d (exit code %" PRIudword ")", cont->status, cont->exit_code);
     }
 }
 
@@ -2528,6 +2533,7 @@ void output_external_programs(SOCKET &out, script_type type)
     {
         cont = it_cont->second;
         if (!script_exists(cont)) {
+            crash_log("script %s missing", cont->script_path);
             it_cont++;
             continue;
         }

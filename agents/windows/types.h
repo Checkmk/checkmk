@@ -142,6 +142,7 @@ struct script_container {
     volatile bool          should_terminate;
     HANDLE                 worker_thread;
     HANDLE                 job_object;
+    DWORD                  exit_code;
 };
 
 struct retry_config{

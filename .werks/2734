@@ -1,0 +1,10 @@
+Title: cmctc.temp: fix exception of type UnicodeDecodeError
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p4
+Date: 1446558200
+
+

@@ -207,7 +207,7 @@ def fetch_mails():
             num_messages = len(g_M.list()[1])
             for i in range(num_messages):
                 index = i+1
-                lines = g_M.retr(index, 0)[1]
+                lines = g_M.retr(index)[1]
                 mails[i] = email.message_from_string("".join(lines))
         else:
             retcode, messages = g_M.search(None, 'NOT', 'DELETED')

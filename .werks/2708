@@ -1,0 +1,14 @@
+Title: sap, sap_state: new sap_state service reports connection problems to sap hosts
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446559117
+Class: feature
+
+The new sap_state service will be discovered on the host(s) running the sap agent plugin, one service
+for each configured host.
+This service will report all problems preventing the system from reporting information about the sap
+instance.
+The remaining sap services will now not become "unknown", but keep their last state and turn stale
+after a while.

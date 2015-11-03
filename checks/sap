@@ -41,7 +41,7 @@ def inventory_sap_dialog(info):
     return inv
 
 def check_sap_dialog(item, params, info):
-    # First xtract all infos
+    # First extract all infos
     dialog = {}
     for line in info:
         if line[0] == item and line[3].startswith('SAP CCMS Monitor Templates/Dialog Overview/'):
@@ -51,7 +51,14 @@ def check_sap_dialog(item, params, info):
             dialog[key] = perfval, uom
 
     if not dialog:
-        return (3, 'Unable to find dialog monitoring data in agent output')
+        # this isn't perfect. Sap data is delivered as piggyback output. Potentially mulitple
+        # hosts can each send data for multiple sap instances. The data can also overlap.
+        # This means technically we may not get here and report then incomplete data if one host is
+        # down.
+        # And we would get here if the host isn't down if the item has simply disappeared from
+        # the output.
+        # There is no way inside this check to determine the host(s) that sent the data in info.
+        raise MKCounterWrapped("no output about sap dialogs in agent output")
 
     def perf_clean_key(s):
         return s.replace('(', '_').replace(')', '_').replace(' ', '_').replace('.', '_').rstrip('_')
@@ -124,6 +131,7 @@ def sap_value_path_matches(path, pattern):
 def check_sap_value(item, params, info):
     status = None
     perfdata = []
+
     for line in info:
         if params.get('limit_item_levels'):
             this_path = '/'.join(line[3].split('/')[-params.get('limit_item_levels'):])
@@ -144,7 +152,7 @@ def check_sap_value(item, params, info):
             break
 
     if status is None:
-        return (3, 'Unable to find the required value in agent output')
+        raise MKCounterWrapped("no output about sap value in agent output")
 
     return (status, output, perfdata)
 
@@ -199,7 +207,7 @@ def check_sap_value_groups( item, params, info ):
     backend = []
     count_ok = 0
     count_crit = 0
-    state = 0
+    state = None
     for line in info:
         path = line[3]
         if item in sap_groups_of_value( path, params ):
@@ -214,6 +222,9 @@ def check_sap_value_groups( item, params, info ):
                 frontend.append( path + output + " " + core_state_names[status] )
             else:
                 count_ok += 1
+
+    if state is None:
+        raise MKCounterWrapped("no output about sap value groups in agent output")
 
     return state, "%s OK, %s Crit %s\n%s" % ( count_ok, count_crit, ", ".join(frontend), "\n".join(backend) )
 

@@ -1,0 +1,18 @@
+title: SAP Host State
+agents: linux
+catalog: app/sap
+license: GPL
+distribution: check_mk
+description:
+ This check reports the state of monitored sap hosts. It turns critical if
+ there is any communication error (including failed login).
+ Please note that this check appears on systems configured to monitor
+ sap instances, that is: the system with the mk_sap agent plugin, whereas
+ the other sap checks appear on a host named after the sap instance.
+
+item:
+ The item name is the hostname of the monitored system.
+
+inventory:
+ The check creates one item for each host configured in sap.cfg
+

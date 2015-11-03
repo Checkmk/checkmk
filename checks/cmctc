@@ -55,7 +55,7 @@ def check_cmctc_temp(item, params, info):
            }
         status, current, crit, low, warn = map(int, line[2:7])
         descr = line[7]
-        info_text = "%s at %d°C" % (descr, current)
+        info_text = u"%s at %d°C" % (descr, current)
         if params:
             warn, crit = params
             if current >= crit:

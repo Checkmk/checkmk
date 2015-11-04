@@ -31,6 +31,9 @@
     Event Console:
     * 2719 FIX: Events Check: Links to EC were broken when using regular expressions as application...
 
+    Livestatus:
+    * 2743 FIX: Fixed handling of column types in "GET columns"...
+
     HW/SW-Inventory:
     * 2667 FIX: solaris_mem: fix exception in inventory plugin
     * 2714 FIX: Fixed visibility of folding arrows by making them dark

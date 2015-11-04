@@ -1,0 +1,11 @@
+Title: Fixed handling of column types in "GET columns"
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446637947
+
+Under rare circumstances the core could crash during the processing of a
+columns query.

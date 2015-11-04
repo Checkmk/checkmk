@@ -1,0 +1,13 @@
+Title: cmciii: Some rewrites of the cmciii Temperature and Power Phase Checks
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i4
+Date: 1446653239
+Class: fix
+
+The Temperature part now uses the default Check_MK Temperature features. This means you can set levels with WATO now.
+
+The Power Phase Check didn't work with Rittal MPSM Devices so it was needed to rewrite it. Cause of this, the name of the Item has changed,
+and you have to do a rediscovery.
+

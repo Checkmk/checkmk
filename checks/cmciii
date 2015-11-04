@@ -185,7 +185,8 @@ def parse_units(info):      # Caveat: info ist hier nicht SNMP-info, sondern SNM
 def get_unit_number(units,unit_name):
     namelist = map(list, zip(*units))[1]
     if unit_name in namelist:
-        return str(namelist.index(unit_name)+1)
+        name = str(namelist.index(unit_name)+1)
+        return name 
 
 cmciii_snmp_info = [
                         [ ".1.3.6.1.4.1.2606.7.4.2.2.1", [
@@ -469,10 +470,6 @@ def check_cmciii_temp(item, params, info):
     if not entry:
         return 3, "No such temperature data found"
 
-    descr = entry.get('DescName')
-    status = entry.get('Status')
-    offset = entry.get('Offset')
-
     def parse_temp(val):
         if re.search(" B0 ", val):
             # is encoded string
@@ -481,7 +478,7 @@ def check_cmciii_temp(item, params, info):
         # omit special characters in unit, because they
         # cause problems in rrdtools
         t_unit = re.sub("[^\w]","", t_unit)
-        return val, t_unit
+        return float(val), t_unit
 
     value, t_unit = parse_temp(entry.get('Value'))
     highalarm = parse_temp(entry.get('SetPtHighAlarm'))[0]
@@ -489,18 +486,7 @@ def check_cmciii_temp(item, params, info):
     lowalarm = parse_temp(entry.get('SetPtLowAlarm'))[0]
     lowwarning = parse_temp(entry.get('SetPtLowWarning'))[0]
 
-    if status == "OK":
-        state = 0
-        status = ""
-    else:
-        state = 2
-
-    perfdata = [ ("temp", value+t_unit, 0, 0 ) ]
-
-    infotext =  "%s %s %s - Limits low %s/%s high %s/%s, Offset %s" % \
-                         ( descr, value, status, lowalarm, lowwarning, highwarning, highalarm, offset )
-
-    return (state, infotext, perfdata)
+    return check_temperature(value, params, t_unit, (highwarning, highalarm), (lowwarning, lowalarm))
 
 check_info['cmciii.temp'] = {
     "check_function"      : check_cmciii_temp,
@@ -509,6 +495,8 @@ check_info['cmciii.temp'] = {
     "has_perfdata"        : True,
     "snmp_scan_function"  : cmciii_scan,
     "snmp_info"           : cmciii_snmp_info,
+    "includes"            : [ "temperature.include" ],
+    "group"               : "temperature",
 }
 
 #.
@@ -737,35 +725,37 @@ check_info['cmciii.humidity'] = {
 #   |                    |_|                                               |
 #   '----------------------------------------------------------------------'
 
-def inventory_cmciii_phase(info):
-    phases = {}
+def parse_cmciii_phase(info):
     parsed = parse_cmciii_inputs(info[0])
-    units = parse_units(info[1])
-    for (unit, raw_item_name), entry in parsed.iteritems():
-        unit_type, unit_name = units[int(unit)-1][0:2]
-        if 'Phase' in raw_item_name:
-            item_name = raw_item_name.split(".")[1]
-            phases["%s Phase %s" % (unit_name, item_name[-1])] = {}
-        elif 'Unit.General' in raw_item_name:
-            phases["%s Summary" % unit_name] = {}
-    return phases.items()
+    units  = parse_units(info[1])
+
+    output = {}
+    for name, value in parsed.items():
+        if name[1].find("Phase") != -1:
+            device, phase, value_name  = name[1].split('.')
+            unit_id = int( name[0])
+            unit = units[unit_id-1][1]
+            phase = phase[-1]
+            output.setdefault((unit, device, phase), {})
+            output[(unit, device, phase)][value_name] = value
+    return output
+
+def inventory_cmciii_phase(info):
+    parsed = parse_cmciii_phase(info)
+    for (device, unit, phase), values in parsed.items():
+        yield "%s %s Phase %s" % (device, unit, phase), {}
 
 def check_cmciii_phase(item, params, info):
-    unit_name = item.split(" ")[0]
-    item_name = item.split(" ")[-1]
-    semiparsed = parse_cmciii_inputs(info[0])
-    unit = get_unit_number(parse_units(info[1]), unit_name)
+    device, unit, word, phase = item.split()
+    data = parse_cmciii_phase(info)[(device, unit, phase)]
+
     parsed = {}
     parsed[item] = {}
-    if "Phase" in item:
-        parsed[item]["voltage"] = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Voltage")]["Value"].split()[0]), None
-        parsed[item]["current"] = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Current")]["Value"].split()[0]), None
-        parsed[item]["power"]   = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Power.Active")]["Value"].split()[0]), None
-        parsed[item]["appower"] = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Power.Apparent")]["Value"].split()[0]), None
-        parsed[item]["energy"]  = float(semiparsed[(unit, "Unit.Phase" + item_name + ".Energy.Active")]["Value"].split()[0]), None
-    elif "Summary" in item:
-        parsed[item]["power"]   = float(semiparsed[(unit, "Unit.General.Power")]["Value"].split()[0]), None
-        parsed[item]["energy"]  = float(semiparsed[(unit, "Unit.General.Energy.Active")]["Value"].split()[0]), None
+    parsed[item]["voltage"] = float(data['Voltage']['Value'].split()[0]), None
+    parsed[item]["current"] = float(data['Current']['Value'].split()[0]), None
+    parsed[item]["power"]   = float(data['Power']['Value'].split()[0]), None
+    #parsed[item]["appower"] = float(data['Current']['Value'].split()[0]), None
+    parsed[item]["energy"]  = float(data['Energy']['Value'].split()[0]), None
 
     return check_elphase(item, params, parsed)
 

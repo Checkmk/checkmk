@@ -394,9 +394,13 @@ table.data tr th {
     vertical-align: baseline;
 }
 
+table.data tr div.toggle_actions {
+    position: relative;
+    padding-left: 14px;
+}
+
 table.data tr a.toggle_actions {
-    display: inline-block;
-    float: left;
+    position: absolute;
     top: 0;
     left: 0;
     margin: 0;

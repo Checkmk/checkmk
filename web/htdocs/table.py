@@ -279,11 +279,16 @@ def end():
                             state = '1'
                             help  = _('Display table actions')
                             img   = 'table_actions_off'
+                        html.write("<div class=\"toggle_actions\">")
                         html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
                             help, img, cssclass = 'toggle_actions')
+                        html.write("<span>%s</span>" % header)
+                        html.write("</div>")
                     first_col = False
+                else:
+                    html.write("%s" % header)
 
-                html.write("%s</th>\n" % header)
+                html.write("</th>\n")
             html.write("  </tr>\n")
 
     # If we have no group headers then paint the headers now

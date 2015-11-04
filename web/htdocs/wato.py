@@ -5270,23 +5270,7 @@ def mode_changelog(phase):
             sites = [(name, config.site(name)) for name in config.sitenames() ]
             sort_sites(sites)
 
-            table.begin(_("Site Status"), searchable=False)
-            # html.write("<table class=data>")
-            # html.write("<tr>")
-            # html.write("<th>%s</th>" % _("Actions") +
-            #            "<th>%s</th>" % _("ID") +
-            #            "<th>%s</th>" % _("Alias"))
-            # html.write("<th>%s</th>" % _("Status") +
-            #            "<th>%s</th>" % _("Version") +
-            #            "<th>%s</th>" % _("Core") +
-            #            "<th>%s</th>" % _("Hosts") +
-            #            "<th>%s</th>" % _("Services"))
-            # if sitestatus_do_async_replication:
-            #     html.write("<th>%s</th>" % _("Replication result"))
-            # else:
-            #     html.write("<th colspan=2>%s</th>" % _("Pending changes") +
-            #                "<th>%s</th>" % _("Last result"))
-            # html.write("</tr>")
+            table.begin("site-status", searchable=False)
 
             num_replsites = 0 # for detecting end of bulk replication
             for site_id, site in sites:

@@ -1,0 +1,9 @@
+Title: ovs_bonding: Fixed discovery exception in case of not active bond
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p4
+Date: 1446633826
+Class: fix
+
+

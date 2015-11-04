@@ -31,7 +31,7 @@
 #include <windows.h>
 #include <wbemidl.h>
 #include <vector>
-
+#include <memory>
 
 
 std::string to_utf8(const wchar_t *string);
@@ -80,11 +80,9 @@ class ObjectWrapper {
 
     friend class Helper;
 
-    bool _owner;
-
 protected:
 
-    IWbemClassObject *_current;
+    std::shared_ptr<IWbemClassObject> _current;
 
 public:
 
@@ -129,7 +127,7 @@ template <typename T> T ObjectWrapper::get(const wchar_t *key) const
 
 class Result : public ObjectWrapper
 {
-    IEnumWbemClassObject *_enumerator;
+    std::shared_ptr<IEnumWbemClassObject> _enumerator;
 
 public:
 

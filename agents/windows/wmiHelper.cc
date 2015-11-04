@@ -87,19 +87,23 @@ Variant::~Variant()
 }
 
 
+void releaseInterface(IUnknown *ptr)
+{
+    if (ptr != NULL) {
+        ptr->Release();
+    }
+}
+
+
 ObjectWrapper::ObjectWrapper(IWbemClassObject *object)
-    : _owner(true)
-    , _current(object)
+    : _current(object, releaseInterface)
 {
 }
 
 
 ObjectWrapper::ObjectWrapper(const ObjectWrapper &reference)
-    : _owner(true)
-    , _current(reference._current)
+    : _current(reference._current)
 {
-    // take away ownership from the copied object
-    const_cast<ObjectWrapper&>(reference)._owner = false;
 }
 
 
@@ -130,9 +134,6 @@ int ObjectWrapper::typeId(const wchar_t *key) const
 
 ObjectWrapper::~ObjectWrapper()
 {
-    if ((_current != NULL) && _owner) {
-        _current->Release();
-    }
 }
 
 
@@ -150,7 +151,7 @@ VARIANT ObjectWrapper::getVarByKey(const wchar_t *key) const
 
 Result::Result()
     : ObjectWrapper(NULL)
-    , _enumerator(NULL)
+    , _enumerator(NULL, releaseInterface)
 {
 }
 
@@ -165,7 +166,7 @@ Result::Result(const Result &reference)
 
 Result::Result(IEnumWbemClassObject *enumerator)
     : ObjectWrapper(NULL)
-    , _enumerator(enumerator)
+    , _enumerator(enumerator, releaseInterface)
 {
     next();
 }
@@ -173,7 +174,6 @@ Result::Result(IEnumWbemClassObject *enumerator)
 
 Result::~Result()
 {
-    _enumerator->Release();
 }
 
 
@@ -192,7 +192,7 @@ Result &Result::operator=(const Result &reference)
 
 bool Result::valid() const
 {
-    return _current != NULL;
+    return _current.get() != NULL;
 }
 
 
@@ -249,10 +249,7 @@ bool Result::next()
         return false;
     }
 
-    if (_current != NULL) {
-        _current->Release();
-    }
-    _current = obj;
+    _current.reset(obj, releaseInterface);
     return true;
 }
 
@@ -449,7 +446,7 @@ ObjectWrapper Helper::call(ObjectWrapper &result, LPCWSTR method)
     BSTR methodName = SysAllocString(method);
 
     res = _services->ExecMethod(className, methodName, 0,
-                                NULL, result._current, &outParams, NULL);
+                                NULL, result._current.get(), &outParams, NULL);
 
     SysFreeString(methodName);
 

@@ -27,9 +27,9 @@ SHELL         = /bin/bash
 VERSION       = 1.2.7i4
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
-COPTIONS      = -s -O2 -Wall -Wformat=2 -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
+#COPTIONS      = -s -O2 -Wall -Wformat=2 -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
 # for debug builds
-#  COPTIONS      = -O0 -Wall -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -ggdb -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
+COPTIONS      = -O0 -Wall -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -ggdb -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
 MKDIR         = mkdir -p
 
 ifeq ($(shell uname),Linux)

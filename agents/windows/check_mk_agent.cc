@@ -1642,9 +1642,10 @@ void save_logwatch_offsets(const std::string &logwatch_statefile)
 {
     FILE *file = fopen(logwatch_statefile.c_str(), "w");
     if (!file) {
-        crash_log("Cannot open %s for writing.\n", logwatch_statefile.c_str());
+        crash_log("Cannot open %s for writing: %s (%d).\n", logwatch_statefile.c_str(), strerror(errno), errno);
         // not stopping the agent from crashing. This way the user at least
-        // notices something went wrong
+        // notices something went wrong.
+        // FIXME: unless there aren't any textfiles configured to be monitored
     }
     for (logwatch_textfiles_t::const_iterator it_tf = g_config->logwatchTextfiles().begin();
          it_tf != g_config->logwatchTextfiles().end(); ++it_tf) {
@@ -1654,7 +1655,9 @@ void save_logwatch_offsets(const std::string &logwatch_statefile)
                     tf->path, tf->file_id, tf->file_size, tf->offset);
         }
     }
-    fclose(file);
+    if (file != NULL) {
+        fclose(file);
+    }
 }
 
 void save_eventlog_offsets(const std::string &eventlog_statefile)

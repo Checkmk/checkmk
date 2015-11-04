@@ -25,6 +25,7 @@
 
     Livestatus:
     * 2648 FIX: Fix crash of core in case of case of certain garbled log lines...
+    * 2743 FIX: Fixed handling of column types in "GET columns"...
 
 
 1.2.6p12:

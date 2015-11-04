@@ -5414,24 +5414,6 @@ def mode_changelog(phase):
             if sitestatus_do_async_replication and num_replsites > 0:
                 html.javascript("var num_replsites = %d;\n" % num_replsites)
 
-        elif sitestatus_do_async_replication:
-            # Single site setup
-            if cmc_rush_ahead_activation():
-                html.message(_("All changes have been activated."))
-                changes_activated = True
-            else:
-                # Is rendered on the page after hitting the "activate" button
-                # Renders the html to show the progress and starts the sync via javascript
-                html.write("<table class=data>")
-                html.write("<tr><th class=left>%s</th><th>%s</th></tr>" % (_('Progress'), _('Status')))
-                html.write('<tr class="data odd0"><td class=repprogress><div id="repstate_local"></div></td>')
-                html.write('<td id="repmsg_local"><i>%s</i></td></tr></table>' % _('activating...'))
-
-                srs = load_replication_status().get(None, {})
-                estimated_duration = srs.get("times", {}).get('act', 2.0)
-                html.javascript("wato_do_activation(%d);" %
-                  (int(estimated_duration * 1000.0)))
-
         sitestatus_do_async_replication = None # could survive in global context!
 
         pending = parse_audit_log("pending")

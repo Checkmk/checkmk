@@ -1,0 +1,9 @@
+Title: Hiding "discard changes button" after successful activation of changes
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446641006
+Class: fix
+
+

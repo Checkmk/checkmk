@@ -509,63 +509,6 @@ function update_bulk_moveto(val) {
     fields = null;
 }
 
-//   .----------------------------------------------------------------------.
-//   |              _        _   _            _   _                         |
-//   |             / \   ___| |_(_)_   ____ _| |_(_) ___  _ __              |
-//   |            / _ \ / __| __| \ \ / / _` | __| |/ _ \| '_ \             |
-//   |           / ___ \ (__| |_| |\ V / (_| | |_| | (_) | | | |            |
-//   |          /_/   \_\___|\__|_| \_/ \__,_|\__|_|\___/|_| |_|            |
-//   |                                                                      |
-//   +----------------------------------------------------------------------+
-
-function wato_do_activation(est) {
-    var siteid = 'local';
-
-    // Hide the activate changes button
-    var button = document.getElementById('act_changes_button');
-    if (button) {
-        button.style.display = 'none';
-    }
-    button = document.getElementById('discard_changes_button');
-    if (button) {
-        button.style.display = 'none';
-        button = null;
-    }
-
-    get_url("wato_ajax_activation.py",
-            wato_activation_result, siteid);
-    replication_progress[siteid] = 20; // 10 of 10 10ths
-    setTimeout("replication_step('"+siteid+"',"+est+");", est/10);
-}
-
-function wato_activation_result(siteid, code) {
-    replication_progress[siteid] = 0;
-    var oState = document.getElementById("repstate_" + siteid);
-    var oMsg   = document.getElementById("repmsg_" + siteid);
-    if (code.substr(0, 3) == "OK:") {
-        oState.innerHTML = "<div class='repprogress ok' style='width: 160px;'>OK</div>";
-        oMsg.innerHTML = code.substr(3);
-
-        // Reload page after 1 secs
-        setTimeout(wato_replication_finish, 1000);
-    } else {
-        oState.innerHTML = '';
-        oMsg.innerHTML = code;
-        wato_hide_changes_button();
-    }
-    oState = null;
-    oMsg = null;
-}
-
-function wato_hide_changes_button()
-{
-    var button = document.getElementById('act_changes_button');
-    if (button) {
-        button.style.display = 'none';
-        button = null;
-    }
-}
-
 //   +----------------------------------------------------------------------+
 //   |           ____            _ _           _   _                        |
 //   |          |  _ \ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __             |
@@ -601,31 +544,48 @@ function wato_replication_result(siteid, code) {
     var oDiv = document.getElementById("repstate_" + siteid);
     if (code.substr(0, 3) == "OK:") {
         oDiv.innerHTML = "<div class='repprogress ok' style='width: 160px;'>" +
-              code.substr(3) + "</div>";
+                         code.substr(3) + "</div>";
         num_replsites--;
     }
     else
         oDiv.innerHTML = code;
 
     if (0 == num_replsites) {
-        setTimeout(wato_replication_finish, 1000);
+        setTimeout(finish_replication, 1000);
     }
 }
 
-function wato_replication_finish() {
+function finish_replication()
+{
     // check if we have a sidebar-main frame setup
     if (this.parent && parent && parent.frames[1] == this)
         reload_sidebar();
 
-    var oDiv = document.getElementById("act_changes_button");
-    oDiv.style.display = "none";
-    oDiv = null
+    hide_changes_buttons();
+    hide_pending_changes_container();
+}
 
-    // Hide the pending changes container
+function hide_pending_changes_container()
+{
     var oPending = document.getElementById("pending_changes");
     if (oPending) {
         oPending.style.display = "none";
         oPending = null
+    }
+}
+
+function hide_changes_buttons()
+{
+    var button = document.getElementById('act_changes_button');
+    if (button) {
+        button.style.display = 'none';
+        button = null;
+    }
+
+    button = document.getElementById('discard_changes_button');
+    if (button) {
+        button.style.display = 'none';
+        button = null;
     }
 }
 

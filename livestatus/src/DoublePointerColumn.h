@@ -31,7 +31,7 @@ class DoublePointerColumn : public DoubleColumn
 {
     double *_number;
 public:
-    DoublePointerColumn(string name, string description, double *number)
+    DoublePointerColumn(std::string name, std::string description, double *number)
         : DoubleColumn(name, description, -1), _number(number) {}
     double getValue(void *) { return *_number; }
 };

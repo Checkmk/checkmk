@@ -35,7 +35,9 @@
 struct LogEntry;
 class Query;
 class LogCache;
-class World;
+#ifdef CMC
+struct World;
+#endif
 
 typedef std::map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
 

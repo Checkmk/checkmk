@@ -827,7 +827,7 @@ jolokia_metrics_perm_gen_default_levels = { "perm" : ( 80.0, 100.0 ) }
 def inventory_jolokia_metrics_perm_gen(info):
     parsed = jolokia_metrics_parse(info)
     for instance, values in parsed.items():
-        if "PermGenUsage" in values:
+        if values and "PermGenUsage" in values:
             yield instance, "jolokia_metrics_perm_gen_default_levels"
 
 def check_jolokia_metrics_perm_gen(item, params, info):

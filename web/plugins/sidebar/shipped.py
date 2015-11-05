@@ -1144,8 +1144,14 @@ class BookmarkList(pagetypes.Overridable, pagetypes.Base):
 
     @classmethod
     def load_legacy_bookmarks(self):
+        # Don't load the legacy bookmarks when there is already a my_bookmarks list
         if self.has_instance((config.user_id, "my_bookmarks")):
             return
+
+        # Also don't load them when the user has at least one bookmark list
+        for user_id, name in self.instances_dict().keys():
+            if user_id == config.user_id:
+                return
 
         bookmark_list = {
             "title"         : u"My Bookmarks",

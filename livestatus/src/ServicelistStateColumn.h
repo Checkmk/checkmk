@@ -52,7 +52,7 @@ class ServicelistStateColumn : public IntColumn
     int _logictype;
 
 public:
-    ServicelistStateColumn(string name, string description, int logictype, int offset, int indirect_offset)
+    ServicelistStateColumn(std::string name, std::string description, int logictype, int offset, int indirect_offset)
         : IntColumn(name, description, indirect_offset), _offset(offset), _logictype(logictype) {}
     int32_t getValue(void *data, Query *);
     servicesmember *getMembers(void *data);

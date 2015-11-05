@@ -32,7 +32,7 @@
 
 class Logfile;
 
-typedef map<time_t, Logfile *> _logfiles_t;
+typedef std::map<time_t, Logfile *> _logfiles_t;
 
 class LogCache
 {

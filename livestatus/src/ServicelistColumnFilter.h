@@ -29,7 +29,6 @@
 
 #include "Filter.h"
 #include <string>
-using namespace std;
 
 class ServicelistColumn;
 
@@ -37,8 +36,8 @@ class ServicelistColumnFilter : public Filter
 {
     ServicelistColumn *_servicelist_column;
     int _opid;
-    string _ref_host;
-    string _ref_service;
+    std::string _ref_host;
+    std::string _ref_service;
 
 public:
     ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue);

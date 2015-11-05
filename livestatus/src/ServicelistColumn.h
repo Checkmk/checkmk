@@ -36,7 +36,7 @@ class ServicelistColumn : public Column
     bool _show_host;
     int _info_depth;
 public:
-    ServicelistColumn(string name, string description, int offset, int indirect_offset, bool show_host, int info_depth)
+    ServicelistColumn(std::string name, std::string description, int offset, int indirect_offset, bool show_host, int info_depth)
         : Column(name, description, indirect_offset), _offset(offset), _show_host(show_host), _info_depth(info_depth) {}
     int type() { return COLTYPE_LIST; };
     void output(void *, Query *);

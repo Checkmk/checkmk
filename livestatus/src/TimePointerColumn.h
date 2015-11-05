@@ -30,7 +30,7 @@
 class TimePointerColumn : public IntPointerColumn
 {
 public:
-    TimePointerColumn(string name, string description, int* number)
+    TimePointerColumn(std::string name, std::string description, int* number)
         : IntPointerColumn(name, description, number) {}
     void output(void *data, Query *query);
     int type() { return COLTYPE_TIME; }

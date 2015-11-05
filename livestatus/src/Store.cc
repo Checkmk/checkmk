@@ -48,23 +48,23 @@ Store::Store()
   , _table_downtimes(true)
   , _table_comments(false)
 {
-    _tables.insert(make_pair("columns", &_table_columns));
-    _tables.insert(make_pair("commands", &_table_commands));
-    _tables.insert(make_pair("comments", &_table_comments));
-    _tables.insert(make_pair("contactgroups", &_table_contactgroups));
-    _tables.insert(make_pair("contacts", &_table_contacts));
-    _tables.insert(make_pair("downtimes", &_table_downtimes));
-    _tables.insert(make_pair("hostgroups", &_table_hostgroups));
-    _tables.insert(make_pair("hostsbygroup", &_table_hostsbygroup));
-    _tables.insert(make_pair("hosts", &_table_hosts));
-    _tables.insert(make_pair("log", &_table_log));
-    _tables.insert(make_pair("servicegroups", &_table_servicegroups));
-    _tables.insert(make_pair("servicesbygroup", &_table_servicesbygroup));
-    _tables.insert(make_pair("servicesbyhostgroup", &_table_servicesbyhostgroup));
-    _tables.insert(make_pair("services", &_table_services));
-    _tables.insert(make_pair("statehist", &_table_statehistory));
-    _tables.insert(make_pair("status", &_table_status));
-    _tables.insert(make_pair("timeperiods", &_table_timeperiods));
+    _tables.insert(std::make_pair("columns", &_table_columns));
+    _tables.insert(std::make_pair("commands", &_table_commands));
+    _tables.insert(std::make_pair("comments", &_table_comments));
+    _tables.insert(std::make_pair("contactgroups", &_table_contactgroups));
+    _tables.insert(std::make_pair("contacts", &_table_contacts));
+    _tables.insert(std::make_pair("downtimes", &_table_downtimes));
+    _tables.insert(std::make_pair("hostgroups", &_table_hostgroups));
+    _tables.insert(std::make_pair("hostsbygroup", &_table_hostsbygroup));
+    _tables.insert(std::make_pair("hosts", &_table_hosts));
+    _tables.insert(std::make_pair("log", &_table_log));
+    _tables.insert(std::make_pair("servicegroups", &_table_servicegroups));
+    _tables.insert(std::make_pair("servicesbygroup", &_table_servicesbygroup));
+    _tables.insert(std::make_pair("servicesbyhostgroup", &_table_servicesbyhostgroup));
+    _tables.insert(std::make_pair("services", &_table_services));
+    _tables.insert(std::make_pair("statehist", &_table_statehistory));
+    _tables.insert(std::make_pair("status", &_table_status));
+    _tables.insert(std::make_pair("timeperiods", &_table_timeperiods));
 
     g_table_hosts = &_table_hosts;
     g_table_services = &_table_services;
@@ -99,7 +99,7 @@ Store::~Store()
 }
 
 
-Table *Store::findTable(string name)
+Table *Store::findTable(std::string name)
 {
     _tables_t::iterator it = _tables.find(name);
     if (it == _tables.end())
@@ -129,7 +129,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
                 "Client connection terminated while request still incomplete");
         return false;
     }
-    string l = input->nextLine();
+    std::string l = input->nextLine();
     const char *line = l.c_str();
     if (g_debug_level > 0)
         logger(LG_INFO, "Query: %s", line);

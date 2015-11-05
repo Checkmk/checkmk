@@ -40,8 +40,6 @@
 #include "logger.h"
 #include "TimeperiodsCache.h"
 
-using namespace std;
-
 Store *g_store = 0;
 ClientQueue *g_client_queue = 0;
 TimeperiodsCache *g_timeperiods_cache = 0;

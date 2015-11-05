@@ -32,7 +32,7 @@
 class ListColumn : public Column
 {
 public:
-    ListColumn(string name, string description, int indirect_offset) :
+    ListColumn(std::string name, std::string description, int indirect_offset) :
         Column(name, description, indirect_offset) {}
     int type() { return COLTYPE_LIST; }
     virtual void *getNagiosObject(char *name) = 0;

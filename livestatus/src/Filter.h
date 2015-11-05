@@ -31,13 +31,12 @@
 #include <string>
 #include <stdint.h>
 
-using namespace std;
 class Query;
 class Column;
 
 class Filter
 {
-    string _error_message; // Error in constructor
+    std::string _error_message; // Error in constructor
     unsigned _error_code;
     Column *_column;
 
@@ -50,7 +49,7 @@ public:
     virtual ~Filter() {}
     virtual bool isAndingFilter() { return false; }
     virtual bool isNegatingFilter() { return false; }
-    string errorMessage() { return _error_message; }
+    std::string errorMessage() { return _error_message; }
     unsigned errorCode() { return _error_code; }
     bool hasError() { return _error_message != ""; }
     void setQuery(Query *q) { _query = q; }

@@ -79,7 +79,7 @@ TableHosts::TableHosts(bool by_group)
 }
 
 
-void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
+void TableHosts::addColumns(Table *table, std::string prefix, int indirect_offset)
 {
 
     host hst;

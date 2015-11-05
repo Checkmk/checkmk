@@ -40,14 +40,14 @@ void Table::addColumn(Column *col)
         delete col;
     }
     else {
-        _columns.insert(make_pair(col->name(), col));
+        _columns.insert(std::make_pair(col->name(), col));
     }
 }
 
 
 void Table::addDynamicColumn(DynamicColumn *dyncol)
 {
-    _dynamic_columns.insert(make_pair(dyncol->name(), dyncol));
+    _dynamic_columns.insert(std::make_pair(dyncol->name(), dyncol));
 }
 
 
@@ -102,14 +102,14 @@ Column *Table::column(const char *colname)
 
 
     // First try exact match
-    _columns_t::iterator it = _columns.find(string(colname));
+    _columns_t::iterator it = _columns.find(std::string(colname));
     if (it != _columns.end())
         return it->second;
 
     // Now we try to readd the removed prefix. That way we tackle the
     // problem with the column "service_period". Here the prefix service_
     // is part of the actual name of the column!
-    string with_prefix(prefixname(), prefix_len - 1);
+    std::string with_prefix(prefixname(), prefix_len - 1);
     with_prefix += "_";
     with_prefix += colname;
 
@@ -124,7 +124,7 @@ Column *Table::column(const char *colname)
 Column *Table::dynamicColumn(const char *colname_with_args)
 {
     const char *sep_pos = strchr(colname_with_args, ':');
-    string name(colname_with_args, sep_pos - colname_with_args);
+    std::string name(colname_with_args, sep_pos - colname_with_args);
 
     const char *argstring = sep_pos + 1;
 

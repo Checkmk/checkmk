@@ -42,7 +42,7 @@ TableServicegroups::TableServicegroups()
     addColumns(this, "", -1);
 }
 
-void TableServicegroups::addColumns(Table *table, string prefix, int indirect_offset)
+void TableServicegroups::addColumns(Table *table, std::string prefix, int indirect_offset)
 {
     servicegroup sgr;
     char *ref = (char *)&sgr;

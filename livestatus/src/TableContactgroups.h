@@ -37,7 +37,7 @@ public:
     const char *name() { return "contactgroups"; }
     void *findObject(char *objectspec);
     void answerQuery(Query *query);
-    void addColumns(Table *table, string prefix, int indirect_offset);
+    void addColumns(Table *table, std::string prefix, int indirect_offset);
 };
 
 #endif // TableContactgroups_h

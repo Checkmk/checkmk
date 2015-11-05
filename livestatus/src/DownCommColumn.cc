@@ -40,7 +40,7 @@ void DownCommColumn::output(void *data, Query *query)
         bool first = true;
         bool found_match = false;
 
-        for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
+        for (std::map<std::pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
                 it != table->entriesIteratorEnd();
                 ++it)
         {
@@ -110,7 +110,7 @@ bool DownCommColumn::isEmpty(void *data)
     if (!data) return true;
 
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
-    for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
+    for (std::map<std::pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
             it != table->entriesIteratorEnd();
             ++it)
     {

@@ -65,7 +65,7 @@ class Store
     TableStateHistory  _table_statehistory;
     TableColumns       _table_columns;
 
-    typedef map<string, Table *> _tables_t;
+    typedef std::map<std::string, Table *> _tables_t;
     _tables_t _tables;
 
     pthread_mutex_t    _command_mutex;
@@ -80,7 +80,7 @@ public:
     bool answerRequest(InputBuffer *, OutputBuffer *);
 
 private:
-    Table *findTable(string name);
+    Table *findTable(std::string name);
     void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
     void answerCommandRequest(const char *);
 };

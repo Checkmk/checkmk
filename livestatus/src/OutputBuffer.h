@@ -28,7 +28,6 @@
 #include "config.h"
 
 #include <string>
-using namespace std;
 
 #define INITIAL_OUTPUT_BUFFER_SIZE 1
 
@@ -49,7 +48,7 @@ class OutputBuffer
     unsigned _max_size;
     int _response_header;
     unsigned _response_code;
-    string _error_message;
+    std::string _error_message;
     bool _do_keepalive;
 
 public:

@@ -32,7 +32,7 @@
 class HostContactsColumn : public ContactsColumn
 {
 public:
-    HostContactsColumn(string name, string description, int indirect_offset)
+    HostContactsColumn(std::string name, std::string description, int indirect_offset)
         : ContactsColumn(name, description, indirect_offset) {}
     int type() { return COLTYPE_LIST; }
     bool isNagiosMember(void *data, void *member);

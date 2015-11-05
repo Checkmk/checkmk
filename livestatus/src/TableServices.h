@@ -31,7 +31,6 @@
 #include "Table.h"
 #include "nagios.h"
 
-using namespace std;
 class TableHosts;
 class TableContacts;
 class TableDowntimes;
@@ -50,7 +49,7 @@ public:
     void *findObject(char *objectspec);
     void add(service *svc);
     void answerQuery(Query *);
-    void addColumns(Table *, string prefix, int indirect_offset, bool add_hosts);
+    void addColumns(Table *, std::string prefix, int indirect_offset, bool add_hosts);
 };
 
 

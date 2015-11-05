@@ -37,7 +37,7 @@ Filter *IntColumn::createFilter(int operator_id, char *value)
 }
 
 
-string IntColumn::valueAsString(void *data, Query *query)
+std::string IntColumn::valueAsString(void *data, Query *query)
 {
     char i[16];
     snprintf(i, sizeof(i), "%d", getValue(data, query));

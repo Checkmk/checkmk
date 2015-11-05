@@ -28,7 +28,6 @@
 #include "config.h"
 
 #include <string>
-using namespace std;
 
 #include "Filter.h"
 class IntColumn;
@@ -38,7 +37,7 @@ class IntColumnFilter : public Filter
     IntColumn *_column;
     int _opid;
     bool _negate;
-    string _ref_string;
+    std::string _ref_string;
 
 public:
     IntColumnFilter(IntColumn *column, int opid, char *value);

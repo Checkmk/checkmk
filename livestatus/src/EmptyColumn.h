@@ -32,7 +32,7 @@
 class EmptyColumn : public Column
 {
 public:
-    EmptyColumn(string name, string description) :
+    EmptyColumn(std::string name, std::string description) :
         Column(name, description, -1) {}
     int type() { return COLTYPE_STRING; }
     void output(void *data, Query *);

@@ -40,12 +40,12 @@ class AttributelistColumn : public IntColumn
     int _offset;
     bool _show_list;
 public:
-    AttributelistColumn(string name, string description, int offset, int indirect_offset, bool show_list)
+    AttributelistColumn(std::string name, std::string description, int offset, int indirect_offset, bool show_list)
         : IntColumn(name, description, indirect_offset), _offset(offset), _show_list(show_list) {}
 
     /* API of Column */
     int type() { return _show_list ? COLTYPE_LIST : COLTYPE_INT; }
-    virtual string valueAsString(void *data, Query *);
+    virtual std::string valueAsString(void *data, Query *);
     void output(void *, Query *);
     Filter *createFilter(int opid, char *value);
 

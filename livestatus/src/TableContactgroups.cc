@@ -36,7 +36,7 @@ TableContactgroups::TableContactgroups()
 }
 
 
-void TableContactgroups::addColumns(Table *table, string prefix, int indirect_offset)
+void TableContactgroups::addColumns(Table *table, std::string prefix, int indirect_offset)
 {
     contactgroup cg;
     char *ref = (char *)&cg;

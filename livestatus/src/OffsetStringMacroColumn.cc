@@ -32,14 +32,14 @@
 #endif
 extern char     *macro_user[MAX_USER_MACROS];
 
-string OffsetStringMacroColumn::valueAsString(void *data, Query *)
+std::string OffsetStringMacroColumn::valueAsString(void *data, Query *)
 {
     char *raw = getValue(data);
     host *hst = getHost(data);
     service *svc = getService(data);
 
     // search for macro names, beginning with $
-    string result = "";
+    std::string result = "";
     char *scan = raw;
 
     while (*scan) {
@@ -48,18 +48,18 @@ string OffsetStringMacroColumn::valueAsString(void *data, Query *)
             result += scan;
             break;
         }
-        result += string(scan, dollar - scan);
+        result += std::string(scan, dollar - scan);
         char *otherdollar = strchr(dollar + 1, '$');
         if (!otherdollar) { // unterminated macro, do not expand
             result += scan;
             break;
         }
-        string macroname = string(dollar + 1, otherdollar - dollar - 1);
+        std::string macroname = std::string(dollar + 1, otherdollar - dollar - 1);
         const char *replacement = expandMacro(macroname.c_str(), hst, svc);
         if (replacement)
             result += replacement;
         else
-            result += string(dollar, otherdollar - dollar + 1); // leave macro unexpanded
+            result += std::string(dollar, otherdollar - dollar + 1); // leave macro unexpanded
         scan = otherdollar + 1;
     }
     return result;
@@ -68,7 +68,7 @@ string OffsetStringMacroColumn::valueAsString(void *data, Query *)
 
 void OffsetStringMacroColumn::output(void *data, Query *query)
 {
-    string s = valueAsString(data, query);
+    std::string s = valueAsString(data, query);
     query->outputString(s.c_str());
 }
 

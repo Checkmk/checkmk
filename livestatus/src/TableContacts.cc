@@ -38,7 +38,7 @@ TableContacts::TableContacts()
     addColumns(this, "", -1);
 }
 
-void TableContacts::addColumns(Table *table, string prefix, int indirect_offset)
+void TableContacts::addColumns(Table *table, std::string prefix, int indirect_offset)
 {
     contact ctc;
     char *ref = (char *)&ctc;
@@ -58,7 +58,7 @@ void TableContacts::addColumns(Table *table, string prefix, int indirect_offset)
         char b[32];
         snprintf(b, sizeof(b), "address%d", i+1);
         table->addColumn(new OffsetStringColumn(prefix + b,
-                    (string("The additional field ") + b), (char *)(&ctc.address[i]) - ref, indirect_offset));
+                    (std::string("The additional field ") + b), (char *)(&ctc.address[i]) - ref, indirect_offset));
     }
 
     table->addColumn(new OffsetIntColumn(prefix + "can_submit_commands",

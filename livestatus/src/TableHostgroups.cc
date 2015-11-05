@@ -42,7 +42,7 @@ TableHostgroups::TableHostgroups()
     addColumns(this, "", -1);
 }
 
-void TableHostgroups::addColumns(Table *table, string prefix, int indirect_offset)
+void TableHostgroups::addColumns(Table *table, std::string prefix, int indirect_offset)
 {
     hostgroup hgr;
     char *ref = (char *)&hgr;

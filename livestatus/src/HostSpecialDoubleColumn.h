@@ -35,7 +35,7 @@ class HostSpecialDoubleColumn : public DoubleColumn
     int _type;
 
 public:
-    HostSpecialDoubleColumn(string name, string description, int hsdc_type, int indirect)
+    HostSpecialDoubleColumn(std::string name, std::string description, int hsdc_type, int indirect)
         : DoubleColumn(name, description, indirect) , _type(hsdc_type) {}
     double getValue(void *data);
 };

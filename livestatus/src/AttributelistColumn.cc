@@ -92,12 +92,12 @@ void AttributelistColumn::output(void *data, Query *query)
     }
 }
 
-string AttributelistColumn::valueAsString(void *data, Query *)
+std::string AttributelistColumn::valueAsString(void *data, Query *)
 {
     unsigned long mask = getValue(data);
     char s[16];
     snprintf(s, 16, "%lu", mask);
-    return string(s);
+    return std::string(s);
 }
 
 Filter *AttributelistColumn::createFilter(int opid, char *value)

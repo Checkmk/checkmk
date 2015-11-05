@@ -56,7 +56,7 @@ TableLog::TableLog()
     addColumns(this, "", -1);
 }
 
-void TableLog::addColumns(Table *table, string prefix, int indirect_offset, bool add_host, bool add_services)
+void TableLog::addColumns(Table *table, std::string prefix, int indirect_offset, bool add_host, bool add_services)
 {
     LogEntry *ref = 0;
     table->addColumn(new OffsetTimeColumn(prefix + "time",
@@ -193,6 +193,6 @@ Column *TableLog::column(const char *colname)
     // we access current and not historic data and in order
     // to prevent mixing up historic and current fields with
     // the same name.
-    string with_current = string("current_") + colname;
+    std::string with_current = std::string("current_") + colname;
     return Table::column(with_current.c_str());
 }

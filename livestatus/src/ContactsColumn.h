@@ -33,7 +33,7 @@ class TableContacts;
 class ContactsColumn : public ListColumn
 {
 public:
-    ContactsColumn(string name, string description, int indirect_offset)
+    ContactsColumn(std::string name, std::string description, int indirect_offset)
         : ListColumn(name, description, indirect_offset)  {}
     int type() { return COLTYPE_LIST; }
     void *getNagiosObject(char *name);

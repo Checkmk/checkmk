@@ -31,7 +31,7 @@
 class BlobColumn : public Column
 {
 public:
-    BlobColumn(string name, string description, int indirect_offset) :
+    BlobColumn(std::string name, std::string description, int indirect_offset) :
         Column(name, description, indirect_offset) {}
     virtual char *getBlob(void *data, int *size) = 0;
     void output(void *, Query *);

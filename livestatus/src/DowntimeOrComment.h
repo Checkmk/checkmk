@@ -29,7 +29,6 @@
 
 #include "nagios.h"
 #include <string>
-using namespace std;
 
 /* The structs for downtime and comment are so similar, that
    we handle them with the same logic */

@@ -32,7 +32,7 @@
 class NullColumn : public Column
 {
 public:
-    NullColumn(string name, string description) :
+    NullColumn(std::string name, std::string description) :
         Column(name, description, -1) {}
     int type() { return COLTYPE_NULL; }
     void output(void *data, Query *);

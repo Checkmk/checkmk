@@ -30,11 +30,10 @@
 #include <deque>
 #include <pthread.h>
 
-using namespace std;
 
 class ClientQueue
 {
-    typedef deque<int> _queue_t;
+    typedef std::deque<int> _queue_t;
     _queue_t _queue;
 public:
     ClientQueue();

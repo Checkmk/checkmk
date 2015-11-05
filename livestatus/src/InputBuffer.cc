@@ -220,14 +220,14 @@ void InputBuffer::storeRequestLine(char *line, int length)
     char *end = line + length;
     while (end > line && isspace(*--end)) length--;
     if (length > 0)
-        _requestlines.push_back(string(line, length));
+        _requestlines.push_back(std::string(line, length));
     else
         logger(LG_INFO, "Warning ignoring line containing only whitespace");
 }
 
-string InputBuffer::nextLine()
+std::string InputBuffer::nextLine()
 {
-    string s = _requestlines.front();
+    std::string s = _requestlines.front();
     _requestlines.pop_front();
     return s;
 }

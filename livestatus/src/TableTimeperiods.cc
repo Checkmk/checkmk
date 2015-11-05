@@ -36,7 +36,7 @@ TableTimeperiods::TableTimeperiods()
 }
 
 
-void TableTimeperiods::addColumns(Table *table, string prefix, int indirect_offset)
+void TableTimeperiods::addColumns(Table *table, std::string prefix, int indirect_offset)
 {
     timeperiod tp;
     char *ref = (char *)&tp;

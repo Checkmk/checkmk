@@ -30,7 +30,7 @@
 class MetricsColumn : public Column
 {
 public:
-    MetricsColumn(string name, string description, int indirect_offset)
+    MetricsColumn(std::string name, std::string description, int indirect_offset)
         : Column(name, description, indirect_offset) {}
     int type() { return COLTYPE_LIST; }
     void output(void *, Query *);

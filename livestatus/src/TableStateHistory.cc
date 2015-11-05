@@ -224,12 +224,12 @@ void TableStateHistory::answerQuery(Query *query)
 {
     // Create a partial filter, that contains only such filters that
     // check attributes of current hosts and services
-    typedef deque<Filter *> object_filter_t;
+    typedef std::deque<Filter *> object_filter_t;
     object_filter_t object_filter;
     AndingFilter *orig_filter = query->filter();
 
     if (!g_disable_statehist_filtering) {
-        deque<Filter *>::iterator it = orig_filter->begin();
+        std::deque<Filter *>::iterator it = orig_filter->begin();
         while (it != orig_filter->end()) {
             Filter *filter = *it;
             Column *column = filter->column();
@@ -261,11 +261,11 @@ void TableStateHistory::answerQuery(Query *query)
     _abort_query = false;
 
     // Keep track of the historic state of services/hosts here
-    typedef map<HostServiceKey, HostServiceState*> state_info_t;
+    typedef std::map<HostServiceKey, HostServiceState*> state_info_t;
     state_info_t state_info;
 
     // Store hosts/services that we have filtered out here
-    typedef set<HostServiceKey> object_blacklist_t;
+    typedef std::set<HostServiceKey> object_blacklist_t;
     object_blacklist_t object_blacklist;
 
     _query = query;
@@ -891,7 +891,7 @@ Column *TableStateHistory::column(const char *colname)
     // we access current and not historic data and in order
     // to prevent mixing up historic and current fields with
     // the same name.
-    string with_current = string("current_") + colname;
+    std::string with_current = std::string("current_") + colname;
     return Table::column(with_current.c_str());
 }
 

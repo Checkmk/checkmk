@@ -29,7 +29,6 @@
 
 #include "Filter.h"
 #include <string>
-using namespace std;
 
 class HostlistColumn;
 
@@ -37,7 +36,7 @@ class HostlistColumnFilter : public Filter
 {
     HostlistColumn *_hostlist_column;
     int _opid;
-    string _ref_value;
+    std::string _ref_value;
 
 public:
     HostlistColumnFilter(HostlistColumn *column, int opid, char *refvalue)

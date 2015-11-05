@@ -73,7 +73,7 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
 {
     while (input->moreLines())
     {
-        string line = input->nextLine();
+        std::string line = input->nextLine();
         char *buffer = (char *)line.c_str();
         rstrip(buffer);
         if (g_debug_level > 0)
@@ -579,10 +579,10 @@ void Query::parseSeparatorsLine(char *line)
     //    _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid Separators: need four different integers");
     //    return;
     // }
-    _dataset_separator      = string(&dssep, 1);
-    _field_separator        = string(&fieldsep, 1);
-    _list_separator         = string(&listsep, 1);
-    _host_service_separator = string(&hssep, 1);
+    _dataset_separator      = std::string(&dssep, 1);
+    _field_separator        = std::string(&fieldsep, 1);
+    _list_separator         = std::string(&listsep, 1);
+    _host_service_separator = std::string(&hssep, 1);
 }
 
 void Query::parseOutputFormatLine(char *line)

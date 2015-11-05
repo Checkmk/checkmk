@@ -192,7 +192,7 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
     if ((1 << entry->_logclass) & logclasses) {
         uint64_t key = makeKey(entry->_time, lineno);
         if (_entries.find(key) == _entries.end())
-            _entries.insert(make_pair(key, entry));
+            _entries.insert(std::make_pair(key, entry));
         else { // this should never happen. The lineno must be unique!
             logger(LG_ERR, "Strange: duplicate logfile line %s", _linebuffer);
             delete entry;

@@ -58,7 +58,7 @@ class HostlistStateColumn : public IntColumn
     int _logictype;
 
 public:
-    HostlistStateColumn(string name, string description, int logictype, int offset, int indirect_offset)
+    HostlistStateColumn(std::string name, std::string description, int logictype, int offset, int indirect_offset)
         : IntColumn(name, description, indirect_offset), _offset(offset), _logictype(logictype) {}
     int32_t getValue(void *data, Query *);
     hostsmember *getMembers(void *data);

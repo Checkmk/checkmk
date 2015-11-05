@@ -36,11 +36,11 @@ class CustomVarsFilter : public Filter
     CustomVarsColumn *_column;
     int _opid;
     bool _negate;
-    string _ref_text;
+    std::string _ref_text;
     regex_t *_regex;
     // needed in case of COLTYPE_DICT
-    string _ref_string;
-    string _ref_varname;
+    std::string _ref_string;
+    std::string _ref_varname;
 
 public:
     CustomVarsFilter(CustomVarsColumn *column, int opid, char *value);

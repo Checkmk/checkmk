@@ -28,7 +28,6 @@
 #include "config.h"
 
 #include <string>
-using namespace std;
 
 #include "Filter.h"
 class DoubleColumn;

@@ -109,7 +109,7 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value)
 void PerfdataAggregator::output(Query *q)
 {
     char format[64];
-    string perf_data;
+    std::string perf_data;
     for (_aggr_t::const_iterator it = _aggr.begin();
             it != _aggr.end();
             ++it)

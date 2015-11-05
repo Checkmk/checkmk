@@ -32,7 +32,7 @@
 
 class TableColumns : public Table
 {
-    typedef vector<Table *> _tables_t;
+    typedef std::vector<Table *> _tables_t;
     _tables_t _tables;
 public:
     TableColumns();

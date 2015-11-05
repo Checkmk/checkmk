@@ -29,10 +29,9 @@
 #include <string.h>
 #include <nagios.h>
 #include <vector>
-using namespace std;
 
 struct HostServiceState;
-typedef vector<HostServiceState*> HostServices;
+typedef std::vector<HostServiceState*> HostServices;
 
 typedef void* HostServiceKey;
 

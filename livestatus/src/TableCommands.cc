@@ -40,7 +40,7 @@ TableCommands::TableCommands()
 }
 
 
-void TableCommands::addColumns(Table *table, string prefix, int indirect_offset)
+void TableCommands::addColumns(Table *table, std::string prefix, int indirect_offset)
 {
     command cmd;
     char *ref = (char *)&cmd;

@@ -29,7 +29,6 @@
 
 #include <stdio.h>
 #include <string>
-using namespace std;
 
 #define COLTYPE_INT     0
 #define COLTYPE_DOUBLE  1
@@ -46,18 +45,18 @@ class Table;
 
 class Column
 {
-    string _name;
-    string _description;
+    std::string _name;
+    std::string _description;
 public:
     int _indirect_offset;
     int _extra_offset;
 
 public:
-    Column(string name, string description, int indirect_offset);
+    Column(std::string name, std::string description, int indirect_offset);
     virtual ~Column() {}
     const char *name() const { return _name.c_str(); }
     const char *description() const { return _description.c_str(); }
-    virtual string valueAsString(void *data __attribute__ ((__unused__)), Query *)
+    virtual std::string valueAsString(void *data __attribute__ ((__unused__)), Query *)
         { return "invalid"; }
     virtual int type() = 0;
     virtual void output(void *data, Query *) = 0;

@@ -30,8 +30,6 @@
 #include <stdint.h>
 #include <map>
 
-using namespace std;
-
 #define MAX_LOGLINE 65536
 
 struct LogEntry;
@@ -39,7 +37,7 @@ class Query;
 class LogCache;
 class World;
 
-typedef map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
+typedef std::map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
 
 class Logfile
 {

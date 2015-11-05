@@ -41,13 +41,12 @@
 
 #include <string>
 #include <deque>
-using namespace std;
 
 class InputBuffer
 {
     int _fd;
     int *_termination_flag;
-    typedef deque<string> _requestlines_t;
+    typedef std::deque<std::string> _requestlines_t;
     _requestlines_t _requestlines;
     char _readahead_buffer[IB_BUFFER_SIZE];
     char *_read_pointer;
@@ -60,7 +59,7 @@ public:
     void setFd(int fd);
     int readRequest();
     bool moreLines() { return !_requestlines.empty(); }
-    string nextLine();
+    std::string nextLine();
 
 private:
     void storeRequestLine(char *line, int length);

@@ -28,8 +28,6 @@
 #include "StringColumn.h"
 #include "nagios.h"
 
-using namespace std;
-
 
 class CustomVarsExplicitColumn : public StringColumn
 {
@@ -37,7 +35,7 @@ class CustomVarsExplicitColumn : public StringColumn
     std::string _varname;
 
 public:
-    CustomVarsExplicitColumn(string name, string description, int offset, int indirect_offset, const char *varname)
+    CustomVarsExplicitColumn(std::string name, std::string description, int offset, int indirect_offset, const char *varname)
         : StringColumn(name, description, indirect_offset),  _offset(offset), _varname(varname) {}
     char *getValue(void *data);
 private:

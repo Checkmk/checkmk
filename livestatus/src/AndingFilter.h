@@ -33,7 +33,7 @@
 class AndingFilter : public Filter
 {
 public:
-    typedef deque<Filter *> _subfilters_t;
+    typedef std::deque<Filter *> _subfilters_t;
 
 protected:
     _subfilters_t _subfilters;

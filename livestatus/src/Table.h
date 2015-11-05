@@ -31,7 +31,6 @@
 #include <map>
 #include <string>
 
-using namespace std;
 
 class Column;
 class DynamicColumn;
@@ -40,8 +39,8 @@ class Query;
 class Table
 {
 public:
-    typedef map<string, Column *> _columns_t;
-    typedef map<string, DynamicColumn *> _dynamic_columns_t;
+    typedef std::map<std::string, Column *> _columns_t;
+    typedef std::map<std::string, DynamicColumn *> _dynamic_columns_t;
 
 private:
     _columns_t _columns;

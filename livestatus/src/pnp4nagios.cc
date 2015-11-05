@@ -29,52 +29,49 @@
 
 #include "pnp4nagios.h"
 
-using namespace std;
-
-
 // Note: If the path is not empty, it always ends with '/', see
 // livestatus_parse_arguments.
 extern char* g_pnp_path;
 
 namespace {
 
-string replace_all(const string& str, const string& chars, char replacement) {
-    string result(str);
+std::string replace_all(const std::string& str, const std::string& chars, char replacement) {
+    std::string result(str);
     size_t i = 0;
-    while ((i = result.find_first_of(chars, i)) != string::npos) {
+    while ((i = result.find_first_of(chars, i)) != std::string::npos) {
         result[i++] = replacement;
     }
     return result;
 }
 
 
-string cleanup(const string& name) { return replace_all(name, " /\\:", '_'); }
+std::string cleanup(const std::string& name) { return replace_all(name, " /\\:", '_'); }
 
 }  // namespace
 
 
 int pnpgraph_present(const std::string& host, const std::string& service) {
-    string pnp_path(g_pnp_path);
+    std::string pnp_path(g_pnp_path);
     if (pnp_path.empty()) return -1;
-    string path(pnp_path.append(cleanup(host))
-                    .append("/")
-                    .append(cleanup(service))
-                    .append(".xml"));
+    std::string path(pnp_path.append(cleanup(host))
+                         .append("/")
+                         .append(cleanup(service))
+                         .append(".xml"));
     return access(path.c_str(), R_OK) == 0 ? 1 : 0;
 }
 
 
-string rrd_path(const string& host, const string& service,
-                const string& varname) {
-    string pnp_path(g_pnp_path);
+std::string rrd_path(const std::string& host, const std::string& service,
+                     const std::string& varname) {
+    std::string pnp_path(g_pnp_path);
     if (pnp_path.empty()) return "";
-    string path(pnp_path.append("/")
-                    .append(cleanup(host))
-                    .append("/")
-                    .append(cleanup(service))
-                    .append("_")
-                    .append(cleanup(varname))
-                    .append(".rrd"));
+    std::string path(pnp_path.append("/")
+                         .append(cleanup(host))
+                         .append("/")
+                         .append(cleanup(service))
+                         .append("_")
+                         .append(cleanup(varname))
+                         .append(".rrd"));
     struct stat st;
     return stat(path.c_str(), &st) == 0 ? path : "";
 }

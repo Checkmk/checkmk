@@ -45,7 +45,7 @@
         _ref_service = "";
     }
     else {
-        _ref_host = string(refvalue, sep - refvalue);
+        _ref_host = std::string(refvalue, sep - refvalue);
         _ref_service = sep + 1;
     }
 }

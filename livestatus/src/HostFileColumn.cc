@@ -37,7 +37,7 @@
 #endif
 
 
-HostFileColumn::HostFileColumn(string name, string description, const char *base_dir,
+HostFileColumn::HostFileColumn(std::string name, std::string description, const char *base_dir,
                const char *suffix, int indirect_offset)
     : BlobColumn(name, description, indirect_offset)
     , _base_dir(base_dir)

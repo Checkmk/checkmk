@@ -39,7 +39,7 @@ class DownCommColumn : public ListColumn
     bool _is_service; // and not host
     bool _with_extra_info; // provides date and type
 public:
-    DownCommColumn(string name, string description, int indirect_offset, bool is_downtime, bool is_service, bool with_info, bool with_extra_info)
+    DownCommColumn(std::string name, std::string description, int indirect_offset, bool is_downtime, bool is_service, bool with_info, bool with_extra_info)
         : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _with_info(with_info), _is_service(is_service), _with_extra_info(with_extra_info) {}
     int type() { return COLTYPE_LIST; }
     void output(void *, Query *);

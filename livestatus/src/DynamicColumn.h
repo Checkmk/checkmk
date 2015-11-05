@@ -26,17 +26,16 @@
 #define DynamicColumn_h
 
 #include <string>
-using namespace std;
 
 class Column;
 
 class DynamicColumn
 {
-    string _name;
-    string _description;
+    std::string _name;
+    std::string _description;
     int    _indirect_offset;
 public:
-    DynamicColumn(string name, string description, int indirect_offset) :
+    DynamicColumn(std::string name, std::string description, int indirect_offset) :
         _name(name), _description(description), _indirect_offset(indirect_offset) {}
     virtual ~DynamicColumn() {}
     const char *name() const { return _name.c_str(); }

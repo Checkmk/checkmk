@@ -36,14 +36,13 @@ class TableHosts;
 class TableContacts;
 class TableServices;
 
-using namespace std;
 
 class TableDownComm : public Table
 {
     const char *_name;
 
-    typedef pair<unsigned long, bool> dc_key;
-    typedef map<dc_key, DowntimeOrComment *> _entries_t;
+    typedef std::pair<unsigned long, bool> dc_key;
+    typedef std::map<dc_key, DowntimeOrComment *> _entries_t;
     _entries_t _entries;
 
 public:

@@ -31,8 +31,6 @@
 #include <string>
 #include "nagios.h"
 
-using namespace std;
-
 #define CVT_VARNAMES 0
 #define CVT_VALUES   1
 #define CVT_DICT     2
@@ -43,7 +41,7 @@ class CustomVarsColumn : public Column
     int _what;
 
 public:
-    CustomVarsColumn(string name, string description, int offset, int indirect_offset, int what)
+    CustomVarsColumn(std::string name, std::string description, int offset, int indirect_offset, int what)
         : Column(name, description, indirect_offset),  _offset(offset), _what(what) {}
     int type() { return _what == CVT_DICT ? COLTYPE_DICT : COLTYPE_LIST; }
     void output(void *, Query *);

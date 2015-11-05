@@ -34,7 +34,7 @@ class ServicegroupsColumn : public ListColumn
 {
     int _offset;
 public:
-    ServicegroupsColumn(string name, string description, int offset, int indirect_offset)
+    ServicegroupsColumn(std::string name, std::string description, int offset, int indirect_offset)
         : ListColumn(name, description, indirect_offset), _offset(offset) {}
     int type() { return COLTYPE_LIST; }
     void output(void *, Query *);

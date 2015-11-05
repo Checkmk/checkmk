@@ -1212,7 +1212,8 @@ def get_bookmarks_by_topic():
     topics = {}
     BookmarkList.load()
     for instance in BookmarkList.instances_sorted():
-        if instance.may_see():
+        if (instance.is_mine() and instance.may_see()) or \
+           (not instance.is_mine() and instance.is_public() and instance.may_see()):
             for topic, bookmarks in instance.bookmarks_by_topic():
                 if topic == None:
                     topic = instance.default_bookmark_topic()

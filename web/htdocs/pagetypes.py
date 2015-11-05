@@ -712,7 +712,7 @@ class Overridable:
                     builtin_instances.append(instance)
                 elif instance.is_mine():
                     my_instances.append(instance)
-                else:
+                elif instance.is_public():
                     foreign_instances.append(instance)
 
         for title, instances in [

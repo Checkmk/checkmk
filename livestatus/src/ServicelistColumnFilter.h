@@ -25,12 +25,11 @@
 #ifndef ServicelistColumnFilter_h
 #define ServicelistColumnFilter_h
 
-#include "config.h"
-
-#include "Filter.h"
+#include "config.h"  // IWYU pragma: keep
 #include <string>
-
+#include "Filter.h"
 class ServicelistColumn;
+
 
 class ServicelistColumnFilter : public Filter
 {
@@ -44,6 +43,4 @@ public:
     bool accepts(void *data);
 };
 
-
 #endif // ServicelistColumnFilter_h
-

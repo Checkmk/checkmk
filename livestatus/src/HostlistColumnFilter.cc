@@ -23,10 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostlistColumnFilter.h"
+#include <stdlib.h>
 #include "HostlistColumn.h"
+#include "logger.h"
 #include "nagios.h"
 #include "opids.h"
-#include "logger.h"
+
 
 bool HostlistColumnFilter::accepts(void *data)
 {
@@ -60,4 +62,3 @@ bool HostlistColumnFilter::accepts(void *data)
             return true;
     }
 }
-

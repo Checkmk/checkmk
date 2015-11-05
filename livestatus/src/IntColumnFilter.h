@@ -25,12 +25,13 @@
 #ifndef IntColumnFilter_h
 #define IntColumnFilter_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <sys/types.h>
 #include <string>
-
 #include "Filter.h"
 class IntColumn;
+
 
 class IntColumnFilter : public Filter
 {
@@ -47,6 +48,4 @@ public:
     bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
-
 #endif // IntColumnFilter_h
-

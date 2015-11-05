@@ -25,6 +25,8 @@
 #ifndef CustomVarsExplicitColumn_h
 #define CustomVarsExplicitColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "StringColumn.h"
 #include "nagios.h"
 
@@ -41,6 +43,5 @@ public:
 private:
     customvariablesmember *getCVM(void *data);
 };
-
 
 #endif // CustomVarsExplicitColumn_h

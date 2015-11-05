@@ -25,16 +25,17 @@
 #ifndef ColumnsColumn_h
 #define ColumnsColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "StringColumn.h"
+class TableColumns;
+
 
 #define COLCOL_TABLE 1
 #define COLCOL_NAME  2
 #define COLCOL_DESCR 3
 #define COLCOL_TYPE  4
 
-class TableColumns;
 
 class ColumnsColumn : public StringColumn
 {
@@ -47,6 +48,4 @@ public:
     char *getValue(void *data);
 };
 
-
 #endif // ColumnsColumn_h
-

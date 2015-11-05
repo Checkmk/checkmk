@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceSpecialDoubleColumn.h"
+#include <string.h>
 #include "nagios.h"
-#include "logger.h"
 #include "time.h"
 
 extern int      interval_length;

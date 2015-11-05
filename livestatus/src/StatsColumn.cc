@@ -24,12 +24,16 @@
 
 #include "StatsColumn.h"
 #include "Column.h"
-#include "Filter.h"
 #include "CountAggregator.h"
-#include "IntAggregator.h"
 #include "DoubleAggregator.h"
+#include "Filter.h"
+#include "IntAggregator.h"
 #include "PerfdataAggregator.h"
 #include "strutil.h"
+class DoubleColumn;
+class IntColumn;
+class StringColumn;
+
 
 StatsColumn::~StatsColumn()
 {

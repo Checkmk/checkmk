@@ -25,10 +25,11 @@
 #ifndef Column_h
 #define Column_h
 
-#include "config.h"
-
-#include <stdio.h>
+#include "config.h"  // IWYU pragma: keep
 #include <string>
+class Filter;
+class Query;
+
 
 #define COLTYPE_INT     0
 #define COLTYPE_DOUBLE  1
@@ -39,9 +40,6 @@
 #define COLTYPE_BLOB    6
 #define COLTYPE_NULL    7
 
-class Filter;
-class Query;
-class Table;
 
 class Column
 {
@@ -67,4 +65,3 @@ public:
 };
 
 #endif // Column_h
-

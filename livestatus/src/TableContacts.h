@@ -25,9 +25,11 @@
 #ifndef TableContacts_h
 #define TableContacts_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
-#include "nagios.h"
+class Query;
+
 
 class TableContacts : public Table
 {
@@ -40,4 +42,3 @@ public:
 };
 
 #endif // TableContacts_h
-

@@ -25,9 +25,12 @@
 #ifndef DoubleColumn_h
 #define DoubleColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Filter;
+class Query;
+
 
 class DoubleColumn : public Column
 {
@@ -42,4 +45,3 @@ public:
 };
 
 #endif // DoubleColumn_h
-

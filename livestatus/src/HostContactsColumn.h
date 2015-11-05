@@ -25,9 +25,11 @@
 #ifndef HostContactsColumn_h
 #define HostContactsColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "ContactsColumn.h"
+
 
 class HostContactsColumn : public ContactsColumn
 {
@@ -39,4 +41,3 @@ public:
 };
 
 #endif // HostContactsColumn_h
-

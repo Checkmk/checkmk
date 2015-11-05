@@ -25,13 +25,15 @@
 #ifndef nagios_h
 #define nagios_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
 #ifdef CMC
 #include "../cmc.h"
 #else
+    // IWYU pragma: begin_exports
     #define NSCORE
     #ifdef NAGIOS4
+    #include "nagios4/common.h"
     #include "nagios4/objects.h"
     #include "nagios4/nagios.h"
     #include "nagios4/nebstructs.h"
@@ -39,7 +41,11 @@
     #include "nagios4/broker.h"
     #include "nagios4/nebmodules.h"
     #include "nagios4/nebcallbacks.h"
+    #include "nagios4/macros.h"
+    #include "nagios4/downtime.h"
+    #include "nagios4/logging.h"
     #else
+    #include "nagios/common.h"
     #include "nagios/objects.h"
     #include "nagios/nagios.h"
     #include "nagios/nebstructs.h"
@@ -47,7 +53,10 @@
     #include "nagios/broker.h"
     #include "nagios/nebmodules.h"
     #include "nagios/nebcallbacks.h"
+    #include "nagios/macros.h"
+    #include "nagios/downtime.h"
     #endif // NAGIOS4
+    // IWYU pragma: end_exports
 #endif // CMC
 #endif // nagios_h
 

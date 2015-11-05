@@ -23,9 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "IntColumn.h"
+#include <stdio.h>
 #include "IntColumnFilter.h"
 #include "Query.h"
+
 using std::string;
+
 
 void IntColumn::output(void *data, Query *query)
 {

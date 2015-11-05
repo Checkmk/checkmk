@@ -25,9 +25,11 @@
 #ifndef ListColumn_h
 #define ListColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Filter;
+
 
 class ListColumn : public Column
 {

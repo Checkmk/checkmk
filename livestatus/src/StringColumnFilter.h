@@ -25,14 +25,12 @@
 #ifndef StringColumnFilter_h
 #define StringColumnFilter_h
 
-#include "config.h"
-
-#include <sys/types.h>
+#include "config.h"  // IWYU pragma: keep
 #include <regex.h>
 #include <string>
-
 #include "Filter.h"
 class StringColumn;
+
 
 class StringColumnFilter : public Filter
 {
@@ -49,6 +47,4 @@ public:
     void *indexFilter(const char *column);
 };
 
-
 #endif // StringColumnFilter_h
-

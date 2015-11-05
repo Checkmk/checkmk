@@ -25,6 +25,11 @@
 #ifndef StatsColumn_h
 #define StatsColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+class Aggregator;
+class Column;
+class Filter;
+
 #define STATS_OP_COUNT  0
 #define STATS_OP_SUM    1
 #define STATS_OP_MIN    2
@@ -33,10 +38,6 @@
 #define STATS_OP_STD    5
 #define STATS_OP_SUMINV 6
 #define STATS_OP_AVGINV 7
-
-class Aggregator;
-class Column;
-class Filter;
 
 class StatsColumn
 {
@@ -54,4 +55,3 @@ public:
 };
 
 #endif // StatsColumn_h
-

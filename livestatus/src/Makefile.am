@@ -50,7 +50,7 @@ livestatus_so_SOURCES = \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc mk_inventory.cc \
 	ContactgroupsColumn.cc CustomTimeperiodColumn.cc HostServiceState.cc opids.cc auth.cc
 
-livestatus_so_CXXFLAGS = -I$(top_srcdir)/$(nagios_headers) -fPIC
+livestatus_so_CXXFLAGS = -fPIC
 livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS)
 
 livestatus.o: $(livestatus_so_OBJECTS) $(livestatus_so_DEPENDENCIES)

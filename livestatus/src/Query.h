@@ -25,22 +25,23 @@
 #ifndef Query_h
 #define Query_h
 
-#include "config.h"
-#include "nagios.h"
-
-#include <stdio.h>
-#include <string>
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <time.h>
 #include <map>
-
+#include <string>
+#include <vector>
 #include "AndingFilter.h"
 #include "global_counters.h"
-
-class Table;
-class Column;
-class OutputBuffer;
-class InputBuffer;
-class StatsColumn;
+#include "nagios.h"  // IWYU pragma: keep
 class Aggregator;
+class Column;
+class Filter;
+class InputBuffer;
+class OutputBuffer;
+class StatsColumn;
+class Table;
+
 
 #define OUTPUT_FORMAT_CSV    0
 #define OUTPUT_FORMAT_JSON   1
@@ -166,6 +167,5 @@ private:
     int lookupOperator(const char *opname);
     Column *createDummyColumn(const char *name);
 };
-
 
 #endif // Query_h

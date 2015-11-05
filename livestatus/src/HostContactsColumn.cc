@@ -22,13 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "nagios.h"
 #include "HostContactsColumn.h"
-#include "logger.h"
+#include "nagios.h"
+
 
 bool HostContactsColumn::isNagiosMember(void *hst, void *ctc)
 {
     bool is_member = is_contact_for_host((host *)hst, (contact *)ctc);
     return is_member;
 }
-

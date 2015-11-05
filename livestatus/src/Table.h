@@ -25,16 +25,14 @@
 #ifndef Table_h
 #define Table_h
 
-#include "config.h"
-#include "nagios.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include <map>
 #include <string>
-
-
+#include "nagios.h"  // IWYU pragma: keep
 class Column;
 class DynamicColumn;
 class Query;
+
 
 class Table
 {
@@ -63,6 +61,4 @@ public:
     _columns_t *columns() { return &_columns; }
 };
 
-
 #endif // Table_h
-

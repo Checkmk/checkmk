@@ -25,9 +25,11 @@
 #ifndef EmptyColumn_h
 #define EmptyColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Query;
+
 
 class EmptyColumn : public Column
 {

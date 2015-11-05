@@ -25,10 +25,10 @@
 #ifndef ClientQueue_h
 #define ClientQueue_h
 
-#include "config.h"
-
-#include <deque>
+#include "config.h"  // IWYU pragma: keep
 #include <pthread.h>
+#include <deque>
+#include <memory>
 
 
 class ClientQueue
@@ -46,6 +46,4 @@ public:
     pthread_cond_t _signal;
 };
 
-
 #endif // ClientQueue_h
-

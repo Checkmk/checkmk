@@ -25,7 +25,10 @@
 #ifndef InputBuffer_h
 #define InputBuffer_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <deque>
+#include <string>
+
 
 #define IB_REQUEST_READ               0
 #define IB_DATA_READ                  1
@@ -39,8 +42,6 @@
 
 #define IB_BUFFER_SIZE            65536
 
-#include <string>
-#include <deque>
 
 class InputBuffer
 {
@@ -66,6 +67,4 @@ private:
     int readData();
 };
 
-
 #endif // InputBuffer_h
-

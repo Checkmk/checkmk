@@ -22,29 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <time.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <stddef.h>
-
-#include "nagios.h"
-#include "logger.h"
 #include "TableLog.h"
+#include <stdint.h>
+#include <time.h>
+#include <map>
+#include <utility>
+#include "LogCache.h"
 #include "LogEntry.h"
-#include "OffsetIntColumn.h"
-#include "OffsetTimeColumn.h"
-#include "OffsetStringColumn.h"
-#include "Query.h"
 #include "Logfile.h"
-#include "tables.h"
-#include "TableServices.h"
-#include "TableHosts.h"
+#include "OffsetIntColumn.h"
+#include "OffsetStringColumn.h"
+#include "OffsetTimeColumn.h"
+#include "Query.h"
+#include "Store.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
+#include "TableHosts.h"
+#include "TableServices.h"
 #include "auth.h"
-#include "Store.h"
+#include "tables.h"
+
 using std::string;
+
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 

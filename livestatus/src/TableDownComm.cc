@@ -23,20 +23,22 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableDownComm.h"
+#include "DowntimeOrComment.h"
+#include "OffsetIntColumn.h"
+#include "OffsetStringColumn.h"
+#include "OffsetTimeColumn.h"
+#include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "DowntimeOrComment.h"
-#include "logger.h"
-#include "Query.h"
-#include "OffsetStringColumn.h"
-#include "OffsetIntColumn.h"
-#include "OffsetTimeColumn.h"
 #include "auth.h"
+#include "logger.h"
 #include "tables.h"
+
 using std::make_pair;
 
 // Todo: the dynamic data in this table must be
 // locked with a mutex
+
 
 TableDownComm::TableDownComm(bool is_downtime)
 {
@@ -177,5 +179,3 @@ DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service)
     else
         return 0;
 }
-
-

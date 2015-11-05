@@ -22,15 +22,16 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <string.h>
-
 #include "Table.h"
+#include <string.h>
+#include <utility>
 #include "Column.h"
 #include "DynamicColumn.h"
 #include "Query.h"
-#include "logger.h"
+
 using std::make_pair;
 using std::string;
+
 
 void Table::addColumn(Column *col)
 {
@@ -151,5 +152,3 @@ bool Table::hasColumn(Column *col)
     }
     return false;
 }
-
-

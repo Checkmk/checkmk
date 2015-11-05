@@ -25,10 +25,11 @@
 #ifndef ContactgroupsColumn_h
 #define ContactgroupsColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "ListColumn.h"
-#include "nagios.h"
+class Query;
+
 
 class ContactgroupsColumn : public ListColumn
 {
@@ -42,7 +43,4 @@ public:
     bool isEmpty(void *data);
 };
 
-
-
 #endif // ContactgroupsColumn_h
-

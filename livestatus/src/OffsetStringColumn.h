@@ -25,9 +25,10 @@
 #ifndef OffsetStringColumn_h
 #define OffsetStringColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "StringColumn.h"
+
 
 class OffsetStringColumn : public StringColumn
 {
@@ -39,6 +40,4 @@ public:
     int offset() { return _offset; }
 };
 
-
 #endif // OffsetStringColumn_h
-

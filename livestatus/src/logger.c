@@ -23,12 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "logger.h"
-#include "nagios.h"
+#include <errno.h>
+#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <pthread.h>
+#include "nagios.h"
+
 
 extern char g_logfile_path[];
 pthread_t g_mainthread_id;
@@ -81,4 +83,3 @@ void logger(int priority, const char *loginfo, ...)
         }
     }
 }
-

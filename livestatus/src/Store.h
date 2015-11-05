@@ -25,24 +25,29 @@
 #ifndef Store_h
 #define Store_h
 
-#include "config.h"
-
-#include "TableServices.h"
-#include "TableHosts.h"
-#include "TableHostgroups.h"
-#include "TableServicegroups.h"
-#include "TableContacts.h"
-#include "TableCommands.h"
-#include "TableTimeperiods.h"
-#include "TableContactgroups.h"
-#include "TableDownComm.h"
-#include "TableStatus.h"
-#include "TableLog.h"
-#include "TableStateHistory.h"
-#include "TableColumns.h"
-#include "OutputBuffer.h"
-#include "InputBuffer.h"
+#include "config.h"  // IWYU pragma: keep
+#include <pthread.h>
+#include <map>
+#include <string>
 #include "LogCache.h"
+#include "TableColumns.h"
+#include "TableCommands.h"
+#include "TableContactgroups.h"
+#include "TableContacts.h"
+#include "TableDownComm.h"
+#include "TableHostgroups.h"
+#include "TableHosts.h"
+#include "TableLog.h"
+#include "TableServicegroups.h"
+#include "TableServices.h"
+#include "TableStateHistory.h"
+#include "TableStatus.h"
+#include "TableTimeperiods.h"
+#include "nagios.h"
+class InputBuffer;
+class OutputBuffer;
+class Table;
+
 
 class Store
 {
@@ -85,7 +90,4 @@ private:
     void answerCommandRequest(const char *);
 };
 
-
 #endif // Store_h
-
-

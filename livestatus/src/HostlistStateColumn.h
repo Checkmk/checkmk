@@ -25,11 +25,14 @@
 #ifndef HostlistStateColumn_h
 #define HostlistStateColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
 #include "IntColumn.h"
 #include "ServicelistStateColumn.h"
 #include "nagios.h"
+class Query;
+
 
 #define HLSC_NUM_SVC               SLSC_NUM
 #define HLSC_NUM_SVC_PENDING       SLSC_NUM_PENDING
@@ -64,6 +67,4 @@ public:
     hostsmember *getMembers(void *data);
 };
 
-
 #endif // HostlistStateColumn_h
-

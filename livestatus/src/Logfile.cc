@@ -22,22 +22,24 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "Logfile.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-
-#include "Logfile.h"
-#include "logger.h"
+#include <syslog.h>
+#include <unistd.h>
+#include <utility>
+#include "LogCache.h"
 #include "LogEntry.h"
 #include "Query.h"
-#include "LogCache.h"
+#include "logger.h"
 
 #ifdef CMC
 #include "Core.h"
 extern Core *g_core;
 #endif
+
 using std::make_pair;
 
 extern unsigned long g_max_lines_per_logfile;

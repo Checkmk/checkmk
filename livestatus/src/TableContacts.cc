@@ -22,17 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "nagios.h"
 #include "TableContacts.h"
-#include "Query.h"
-#include "OffsetStringColumn.h"
-#include "OffsetIntColumn.h"
-#include "OffsetTimeperiodColumn.h"
+#include <stdio.h>
 #include "AttributelistColumn.h"
 #include "CustomVarsColumn.h"
+#include "OffsetIntColumn.h"
+#include "OffsetStringColumn.h"
+#include "OffsetTimeperiodColumn.h"
+#include "Query.h"
+#include "nagios.h"
+
 using std::string;
 
 extern contact *contact_list;
+
 
 TableContacts::TableContacts()
 {

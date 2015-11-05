@@ -24,6 +24,7 @@
 
 #include "waittriggers.h"
 
+
 const char *wt_names[WT_NUM_TRIGGERS] =
 {
     "all",
@@ -54,4 +55,3 @@ void trigger(int what)
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[what]);
 }
-

@@ -25,8 +25,11 @@
 #ifndef BlobColumn_h
 #define BlobColumn_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Query;
+
 
 class BlobColumn : public Column
 {
@@ -39,5 +42,3 @@ public:
 };
 
 #endif // BlobColumn_h
-
-

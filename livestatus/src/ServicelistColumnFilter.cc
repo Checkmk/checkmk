@@ -23,11 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServicelistColumnFilter.h"
+#include <stdlib.h>
+#include <strings.h>
 #include "ServicelistColumn.h"
+#include "logger.h"
 #include "nagios.h"
 #include "opids.h"
-#include "logger.h"
+
 using std::string;
+
 
 #define HOSTSERVICE_SEPARATOR '|'
 
@@ -80,4 +84,3 @@ bool ServicelistColumnFilter::accepts(void *data)
             return true;
     }
 }
-

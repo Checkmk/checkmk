@@ -24,8 +24,9 @@
 
 #include "AndingFilter.h"
 #include "OringFilter.h"
-#include "logger.h"
 #include "Query.h"
+#include "logger.h"
+
 
 AndingFilter::~AndingFilter()
 {
@@ -126,4 +127,3 @@ void AndingFilter::combineFilters(int count, int andor)
     }
     addSubfilter(andorfilter);
 }
-

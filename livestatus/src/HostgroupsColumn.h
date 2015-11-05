@@ -25,10 +25,13 @@
 #ifndef HostgroupsColumn_h
 #define HostgroupsColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "ListColumn.h"
 #include "nagios.h"
+class Query;
+
 
 class HostgroupsColumn : public ListColumn
 {
@@ -45,7 +48,4 @@ private:
     objectlist *getData(void *);
 };
 
-
-
 #endif // HostgroupsColumn_h
-

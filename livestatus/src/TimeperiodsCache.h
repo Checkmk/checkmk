@@ -25,8 +25,12 @@
 #ifndef _TimeperiodsCache_h
 #define _TimeperiodsCache_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <pthread.h>
+#include <time.h>
 #include <map>
 #include "nagios.h"
+
 
 class TimeperiodsCache
 {

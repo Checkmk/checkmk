@@ -22,13 +22,11 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <string.h>
-#include <time.h>
-#include <stdlib.h>
-
 #include "LogEntry.h"
+#include <stdlib.h>
+#include <string.h>
 #include "strutil.h"
-#include "logger.h"
+
 
 LogEntry::LogEntry(unsigned lineno, char *line)
 {

@@ -22,20 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <nagios.h>
-
-#include "logger.h"
 #include "HostFileColumn.h"
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "logger.h"
+#include "nagios.h"
 
 #ifdef CMC
 #include "Host.h"
 #endif
+
 using std::string;
+
 
 HostFileColumn::HostFileColumn(string name, string description, const char *base_dir,
                const char *suffix, int indirect_offset)

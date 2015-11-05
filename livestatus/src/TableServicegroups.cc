@@ -22,15 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "nagios.h"
 #include "TableServicegroups.h"
-#include "Query.h"
 #include "OffsetStringColumn.h"
+#include "Query.h"
 #include "ServicelistColumn.h"
 #include "ServicelistStateColumn.h"
+#include "TableServices.h"
 #include "auth.h"
 #include "tables.h"
-#include "TableServices.h"
+
 using std::string;
 
 /* this might be a hack (accessing Nagios' internal structures.

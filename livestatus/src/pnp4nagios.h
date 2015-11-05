@@ -25,7 +25,9 @@
 #ifndef pnp4nagios_h
 #define pnp4nagios_h
 
+#include "config.h"  // IWYU pragma: keep
 #include <string>
+
 
 int pnpgraph_present(const std::string& host,
                      const std::string& service = "_HOST_");

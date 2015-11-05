@@ -24,10 +24,9 @@
 
 #include "HostlistColumn.h"
 #include "HostlistColumnFilter.h"
-#include "nagios.h"
-#include "logger.h"
 #include "Query.h"
 #include "TableHosts.h"
+
 
 extern TableHosts *g_table_hosts;
 
@@ -74,4 +73,3 @@ Filter *HostlistColumn::createFilter(int opid, char *value)
 {
     return new HostlistColumnFilter(this, opid, value);
 }
-

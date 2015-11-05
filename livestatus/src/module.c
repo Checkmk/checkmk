@@ -22,35 +22,31 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <sys/select.h>
-#include <time.h>
+// IWYU pragma: no_include <bits/socket_type.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/un.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include <string.h>
 #include <sys/select.h>
-#include <pthread.h>
-#include <stdarg.h>
-#include <errno.h>
-#include <signal.h>
-#include <fcntl.h>
-
-#include "nagios.h"
-#include "livestatus.h"
-#include "downtime.h"
-#include "store_c.h"
-#include "logger.h"
-#include "config.h"
-#include "global_counters.h"
-#include "strutil.h"
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>  // IWYU pragma: keep
+#include <sys/un.h>
+#include <time.h>
+#include <unistd.h>
 #include "auth.h"
+#include "config.h"
 #include "data_encoding.h"
+#include "global_counters.h"
+#include "livestatus.h"
+#include "logger.h"
+#include "nagios.h"
+#include "store_c.h"
+#include "strutil.h"
 #include "waittriggers.h"
-
 
 #ifndef AF_LOCAL
 #define   AF_LOCAL AF_UNIX

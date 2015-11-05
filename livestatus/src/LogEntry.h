@@ -25,6 +25,11 @@
 #ifndef LogEntry_h
 #define LogEntry_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <time.h>
+#include "nagios.h"
+
+
 #define LOGCLASS_INFO              0 // all messages not in any other class
 #define LOGCLASS_ALERT             1 // alerts: the change service/host state
 #define LOGCLASS_PROGRAM           2 // important programm events (restart, ...)
@@ -36,8 +41,6 @@
                                      // TODO: This LOGCLASS sets different logclasses on match -> fix this
 #define LOGCLASS_INVALID  0x7fffffff // never stored
 #define LOGCLASS_ALL          0xffff
-
-#include "nagios.h"
 
 enum LogEntryType {
     NONE                      = 0,
@@ -105,4 +108,3 @@ private:
 };
 
 #endif // LogEntry_h
-

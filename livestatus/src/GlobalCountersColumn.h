@@ -25,10 +25,12 @@
 #ifndef GlobalCountersColumn_h
 #define GlobalCountersColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
-#include "global_counters.h"
+class Filter;
+class Query;
+
 
 class GlobalCountersColumn : public Column
 {
@@ -43,6 +45,4 @@ public:
     Filter *createFilter(int operator_id __attribute__ ((__unused__)), char *value __attribute__ ((__unused__))) { return 0; }
 };
 
-
 #endif // GlobalCountersColumn_h
-

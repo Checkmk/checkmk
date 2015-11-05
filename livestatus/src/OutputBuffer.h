@@ -25,9 +25,9 @@
 #ifndef OutputBuffer_h
 #define OutputBuffer_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include <string>
+
 
 #define INITIAL_OUTPUT_BUFFER_SIZE 1
 
@@ -39,6 +39,7 @@
 #define RESPONSE_CODE_INCOMPLETE_REQUEST 451
 #define RESPONSE_CODE_INVALID_REQUEST    452
 #define RESPONSE_CODE_UNKNOWN_COLUMN     450
+
 
 class OutputBuffer
 {
@@ -73,6 +74,4 @@ private:
     void writeData(int fd, int *, const char *, int);
 };
 
-
 #endif // OutputBuffer_h
-

@@ -25,7 +25,9 @@
 #ifndef waittriggers_h
 #define waittriggers_h
 
-#include "pthread.h"
+#include "config.h"  // IWYU pragma: keep
+#include <pthread.h>
+
 
 #define WT_NONE 0x7fffffff
 #define WT_ALL           0
@@ -49,11 +51,8 @@ void trigger(int what);
 }
 #endif
 
-
 extern const char *wt_names[];
 extern pthread_cond_t g_wait_cond[];
 extern pthread_mutex_t g_wait_mutex;
 
-
 #endif // waittriggers_h
-

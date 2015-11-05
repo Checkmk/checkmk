@@ -22,18 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <string.h>
-#include <math.h>
-#include <stdlib.h>
-
-#include "strutil.h"
-#include "logger.h"
-#include "Query.h"
 #include "PerfdataAggregator.h"
-#include "StringColumn.h"
-#include "Aggregator.h"
+#include <ctype.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <utility>
+#include "Query.h"
 #include "StatsColumn.h"
+#include "StringColumn.h"
+#include "strutil.h"
+
 using std::string;
+
 
 void PerfdataAggregator::consume(void *data, Query *)
 {

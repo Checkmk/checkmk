@@ -25,11 +25,12 @@
 #ifndef TableServicegroups_h
 #define TableServicegroups_h
 
-#include "config.h"
-
-#include <set>
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
-#include "nagios.h"
+#include "nagios.h"  // IWYU pragma: keep
+class Query;
+
 
 class TableServicegroups : public Table
 {
@@ -43,4 +44,3 @@ public:
 };
 
 #endif // TableServicegroups_h
-

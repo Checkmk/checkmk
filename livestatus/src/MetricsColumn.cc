@@ -25,6 +25,7 @@
 #include "MetricsColumn.h"
 #include "Query.h"
 
+
 void MetricsColumn::output(void *data, Query *query)
 {
     data = shiftPointer(data);

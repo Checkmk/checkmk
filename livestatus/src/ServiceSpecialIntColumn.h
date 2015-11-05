@@ -25,8 +25,12 @@
 #ifndef ServiceSpecialIntColumn_h
 #define ServiceSpecialIntColumn_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
 #include "IntColumn.h"
+class Query;
+
 
 #define SSIC_PNP_GRAPH_PRESENT 1
 
@@ -41,4 +45,3 @@ public:
 };
 
 #endif // ServiceSpecialIntColumn_h
-

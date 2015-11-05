@@ -25,7 +25,7 @@
 #ifndef Aggregator_h
 #define Aggregator_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
 class Query;
 

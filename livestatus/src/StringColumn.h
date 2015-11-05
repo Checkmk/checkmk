@@ -25,9 +25,12 @@
 #ifndef StringColumn_h
 #define StringColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Filter;
+class Query;
+
 
 class StringColumn : public Column
 {
@@ -42,4 +45,3 @@ public:
 };
 
 #endif // StringColumn_h
-

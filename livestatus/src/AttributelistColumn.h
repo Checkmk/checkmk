@@ -25,10 +25,14 @@
 #ifndef AttributelistColumn_h
 #define AttributelistColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
+#include "Column.h"
 #include "IntColumn.h"
-#include "nagios.h"
+class Filter;
+class Query;
+
 
 /* Since this column can be of type COLTYPE_INT, it must
    be a subclass of IntColumn, since StatsColumn assumes
@@ -55,7 +59,4 @@ public:
     unsigned long getValue(void *data);
 };
 
-
-
 #endif // AttributelistColumn_h
-

@@ -25,10 +25,12 @@
 #ifndef OffsetIntColumn_h
 #define OffsetIntColumn_h
 
-#include "config.h"
-
-#include <stdlib.h>
+#include "config.h"  // IWYU pragma: keep
+#include <sys/types.h>
+#include <string>
 #include "IntColumn.h"
+class Query;
+
 
 class OffsetIntColumn : public IntColumn
 {
@@ -41,6 +43,4 @@ protected:
     int offset() { return _offset; }
 };
 
-
 #endif // OffsetIntColumn_h
-

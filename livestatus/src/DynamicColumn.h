@@ -25,9 +25,10 @@
 #ifndef DynamicColumn_h
 #define DynamicColumn_h
 
+#include "config.h"  // IWYU pragma: keep
 #include <string>
-
 class Column;
+
 
 class DynamicColumn
 {
@@ -45,4 +46,3 @@ public:
 };
 
 #endif // DynamicColumn_h
-

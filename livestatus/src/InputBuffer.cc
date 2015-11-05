@@ -22,16 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "InputBuffer.h"
+#include <ctype.h>
+#include <stdint.h>
+#include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
-#include <string.h>
-#include <errno.h>
 #include <unistd.h>
-#include <stdint.h>
-
-#include "InputBuffer.h"
 #include "logger.h"
+
 using std::string;
+
 
 #define READ_TIMEOUT_USEC 200000
 extern int g_query_timeout_msec;
@@ -244,4 +245,3 @@ bool timeout_reached(const struct timeval *start, int timeout_ms)
     elapsed += now.tv_usec - start->tv_usec;
     return elapsed / 1000 >= timeout_ms;
 }
-

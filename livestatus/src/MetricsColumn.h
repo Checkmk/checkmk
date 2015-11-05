@@ -25,7 +25,11 @@
 #ifndef MetricsColumn_h
 #define MetricsColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Query;
+
 
 class MetricsColumn : public Column
 {

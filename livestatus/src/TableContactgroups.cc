@@ -22,14 +22,16 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "nagios.h"
-#include "Query.h"
-#include "OffsetStringColumn.h"
 #include "TableContactgroups.h"
 #include "ContactgroupsMemberColumn.h"
+#include "OffsetStringColumn.h"
+#include "Query.h"
+#include "nagios.h"
+
 using std::string;
 
 extern contactgroup *contactgroup_list;
+
 
 TableContactgroups::TableContactgroups()
 {
@@ -63,4 +65,3 @@ void *TableContactgroups::findObject(char *objectspec)
 {
     return find_contactgroup(objectspec);
 }
-

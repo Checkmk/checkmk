@@ -23,9 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostSpecialIntColumn.h"
+#include "mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
-#include "mk_inventory.h"
+
 
 int32_t HostSpecialIntColumn::getValue(void *data, Query *)
 {

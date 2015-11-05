@@ -25,7 +25,10 @@
 #ifndef store_h
 #define store_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <time.h>
+#include "nagios.h"
+
 
 #ifdef __cplusplus
 extern "C"

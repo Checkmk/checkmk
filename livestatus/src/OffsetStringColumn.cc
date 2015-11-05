@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetStringColumn.h"
-#include "logger.h"
+
 
 char *OffsetStringColumn::getValue(void *data)
 {
@@ -41,4 +41,3 @@ char *OffsetStringColumn::getValue(void *data)
     else
         return (char *)"";
 }
-

@@ -25,12 +25,14 @@
 #ifndef LogCache_h
 #define LogCache_h
 
-#include <map>
+#include "config.h"  // IWYU pragma: keep
+#include <pthread.h>
 #include <time.h>
-#include "config.h"
-#include "Table.h"
-
+#include <map>
+#include "nagios.h"  // IWYU pragma: keep
+class Column;
 class Logfile;
+
 
 typedef std::map<time_t, Logfile *> _logfiles_t;
 

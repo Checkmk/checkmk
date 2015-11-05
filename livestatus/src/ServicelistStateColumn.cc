@@ -23,11 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServicelistStateColumn.h"
-#include "nagios.h"
-#include "TableServices.h"
 #include "Query.h"
+#include "TableServices.h"
+
 
 extern TableServices *g_table_services;
+
 
 // return true if state1 is worse than state2
 bool ServicelistStateColumn::svcStateIsWorse(int32_t state1, int32_t state2)
@@ -96,4 +97,3 @@ int32_t ServicelistStateColumn::getValue(void *data, Query *query)
     servicesmember *mem = getMembers(data);
     return getValue(_logictype, mem, query);
 }
-

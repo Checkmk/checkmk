@@ -22,15 +22,14 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <stdlib.h>
-#include <strings.h>
-#include <string.h>
-
 #include "StringColumnFilter.h"
-#include "StringColumn.h"
-#include "opids.h"
-#include "logger.h"
+#include <stdlib.h>
+#include <string.h>
 #include "OutputBuffer.h"
+#include "StringColumn.h"
+#include "logger.h"
+#include "opids.h"
+
 
 StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *value)
     : _column(column)

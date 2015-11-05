@@ -23,13 +23,13 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetStringMacroColumn.h"
+#include <stdlib.h>
+#include <string.h>
 #include "AndingFilter.h"
 #include "Query.h"
 #include "logger.h"
-#include "nagios.h"
-#ifndef NAGIOS4
-#include "nagios/macros.h"
-#endif
+class Filter;
+
 using std::string;
 
 extern char     *macro_user[MAX_USER_MACROS];

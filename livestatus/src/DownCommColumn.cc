@@ -23,14 +23,19 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DownCommColumn.h"
-#include "DowntimeOrComment.h"
-#include "TableDownComm.h"
-#include "logger.h"
-#include "Query.h"
-#include "tables.h"
 #include <stdint.h>
+#include <stdlib.h>
+#include <map>
+#include <utility>
+#include "DowntimeOrComment.h"
+#include "Query.h"
+#include "TableDownComm.h"
+#include "nagios.h"
+#include "tables.h"
+
 using std::map;
 using std::pair;
+
 
 void DownCommColumn::output(void *data, Query *query)
 {

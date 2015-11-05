@@ -23,8 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableColumns.h"
+#include <map>
+#include <utility>
+#include "Column.h"
 #include "ColumnsColumn.h"
 #include "Query.h"
+
 
 TableColumns::TableColumns()
 {
@@ -92,4 +96,3 @@ const char *TableColumns::tableNameOf(Column *column)
     }
     return ""; // never reached if no bug
 }
-

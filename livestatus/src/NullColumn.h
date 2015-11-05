@@ -25,9 +25,11 @@
 #ifndef NullColumn_h
 #define NullColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Query;
+
 
 class NullColumn : public Column
 {

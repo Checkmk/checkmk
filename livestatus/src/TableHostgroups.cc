@@ -22,16 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "nagios.h"
 #include "TableHostgroups.h"
-#include "Query.h"
-#include "OffsetStringColumn.h"
 #include "HostlistColumn.h"
 #include "HostlistStateColumn.h"
+#include "OffsetStringColumn.h"
+#include "Query.h"
+#include "TableHosts.h"
 #include "auth.h"
 #include "tables.h"
-#include "TableHosts.h"
+
 using std::string;
+
 
 /* this might be a hack (accessing Nagios' internal structures.
    Hi Ethan: please help me here: how should this be code to be

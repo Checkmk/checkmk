@@ -25,12 +25,12 @@
 #ifndef DownCommColumn_h
 #define DownCommColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "ListColumn.h"
-#include "TableContacts.h"
+class Query;
 
-class TableDownComm;
 
 class DownCommColumn : public ListColumn
 {
@@ -48,6 +48,4 @@ public:
     bool isNagiosMember(void *data, void *member);
 };
 
-
 #endif // DownCommColumn_h
-

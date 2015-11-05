@@ -22,13 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
-#include "nagios.h"
-#include <stdint.h>
 #include "OffsetTimeperiodColumn.h"
-#include "logger.h"
 #include "TimeperiodsCache.h"
+#include "nagios.h"
+
 using std::string;
+
 
 extern TimeperiodsCache *g_timeperiods_cache;
 
@@ -59,4 +58,3 @@ int32_t OffsetTimeperiodColumn::getValue(void *data, Query *)
     else
         return 0;
 }
-

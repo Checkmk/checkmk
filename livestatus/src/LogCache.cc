@@ -22,23 +22,18 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "LogCache.h"
 #include <dirent.h>
-#include <fcntl.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
-
-#include "nagios.h"
-#include "logger.h"
-#include "tables.h"
-#include "auth.h"
+#include <utility>
 #include "Logfile.h"
-#include "LogEntry.h"
-#include "LogCache.h"
+#include "logger.h"
 
 #ifdef CMC
 #include "Core.h"
@@ -46,7 +41,9 @@ extern Core *g_core;
 #else
 extern time_t last_log_rotation;
 #endif // CMC
+
 using std::make_pair;
+
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
@@ -301,5 +298,3 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
         debug("Cannot unload more messages. Still %d loaded (max is %d)",
                 num_cached_log_messages, _max_cached_messages);
 }
-
-

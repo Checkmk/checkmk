@@ -25,16 +25,13 @@
 #ifndef DowntimeOrComment_h
 #define DowntimeOrComment_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <time.h>
+#include "nagios.h"  // IWYU pragma: keep
 
-#include "nagios.h"
-#include <string>
 
 /* The structs for downtime and comment are so similar, that
    we handle them with the same logic */
-
-
-
 
 /*
    typedef struct nebstruct_downtime_struct{
@@ -117,6 +114,4 @@ struct Comment : public DowntimeOrComment
     Comment(nebstruct_comment_struct *data);
 };
 
-
 #endif // Downtime_h
-

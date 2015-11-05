@@ -22,11 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <unistd.h>
+#include "mk_inventory.h"
 #include <stdio.h>
 #include <sys/stat.h>
-
-#include "mk_inventory.h"
 
 #ifdef CMC
 #include <Config.h>

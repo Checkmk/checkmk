@@ -22,23 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <strings.h>
-#include <map>
-#include <set>
-
-#include "nagios.h"
 #include "store_c.h"
-#include "Store.h"
-#include "Query.h"
 #include "ClientQueue.h"
 #include "InputBuffer.h"
 #include "OutputBuffer.h"
-#include "logger.h"
+#include "Store.h"
 #include "TimeperiodsCache.h"
+
 
 Store *g_store = 0;
 ClientQueue *g_client_queue = 0;

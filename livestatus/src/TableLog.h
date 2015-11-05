@@ -25,12 +25,15 @@
 #ifndef TableLog_h
 #define TableLog_h
 
-#include <map>
+#include "config.h"  // IWYU pragma: keep
 #include <time.h>
-#include "config.h"
+#include <string>
 #include "Table.h"
-
+#include "nagios.h"  // IWYU pragma: keep
+class Column;
 class Logfile;
+class Query;
+
 
 class TableLog : public Table
 {

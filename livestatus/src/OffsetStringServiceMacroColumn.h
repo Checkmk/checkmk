@@ -25,8 +25,11 @@
 #ifndef OffsetStringServiceMacroColumn_h
 #define OffsetStringServiceMacroColumn_h
 
-#include "nagios.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "OffsetStringMacroColumn.h"
+#include "nagios.h"  // IWYU pragma: keep
+
 
 class OffsetStringServiceMacroColumn : public OffsetStringMacroColumn
 {
@@ -38,4 +41,3 @@ public:
 };
 
 #endif // OffsetStringServiceMacroColumn_h
-

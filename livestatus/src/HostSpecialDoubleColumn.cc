@@ -24,8 +24,8 @@
 
 #include "HostSpecialDoubleColumn.h"
 #include "nagios.h"
-#include "logger.h"
 #include "time.h"
+
 
 extern int      interval_length;
 

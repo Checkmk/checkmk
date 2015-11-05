@@ -25,11 +25,13 @@
 #ifndef IntColumn_h
 #define IntColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
-
+#include <string>
 #include "Column.h"
+class Filter;
+class Query;
+
 
 class IntColumn : public Column
 {
@@ -44,4 +46,3 @@ public:
 };
 
 #endif // IntColumn_h
-

@@ -22,35 +22,40 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "Query.h"
+#include <ctype.h>
 #include <errno.h>
 #include <math.h>
+#include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <sys/time.h>
-
+#include <syslog.h>
+#include <utility>
+#include "Aggregator.h"
+#include "Column.h"
+#include "Filter.h"
+#include "InputBuffer.h"
+#include "NegatingFilter.h"
+#include "NullColumn.h"
+#include "OringFilter.h"
+#include "OutputBuffer.h"
+#include "StatsColumn.h"
+#include "Table.h"
+#include "auth.h"
+#include "data_encoding.h"
 #include "logger.h"
 #include "opids.h"
 #include "strutil.h"
-#include "Table.h"
-#include "Query.h"
-#include "Filter.h"
-#include "Column.h"
-#include "NullColumn.h"
-#include "OutputBuffer.h"
-#include "InputBuffer.h"
-#include "StatsColumn.h"
-#include "Aggregator.h"
-#include "OringFilter.h"
-#include "NegatingFilter.h"
 #include "waittriggers.h"
-#include "data_encoding.h"
-#include "auth.h"
-using std::string;
 
 extern int g_debug_level;
 extern unsigned long g_max_response_size;
 extern int g_data_encoding;
+
+using std::string;
+
 
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
     _output(output),
@@ -1363,5 +1368,3 @@ void Query::doWait()
         }
     } while (!_wait_condition.accepts(_wait_object));
 }
-
-

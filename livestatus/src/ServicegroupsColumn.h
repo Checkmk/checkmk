@@ -25,10 +25,13 @@
 #ifndef ServicegroupsColumn_h
 #define ServicegroupsColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "ListColumn.h"
 #include "nagios.h"
+class Query;
+
 
 class ServicegroupsColumn : public ListColumn
 {
@@ -45,7 +48,4 @@ private:
     objectlist *getData(void *);
 };
 
-
-
 #endif // ServicegroupsColumn_h
-

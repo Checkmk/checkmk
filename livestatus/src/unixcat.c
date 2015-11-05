@@ -22,18 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/un.h>
+// IWYU pragma: no_include <bits/socket_type.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>  // IWYU pragma: keep
+#include <sys/un.h>
 #include <unistd.h>
-#include <signal.h>
 
 #ifndef AF_LOCAL
 #define   AF_LOCAL AF_UNIX

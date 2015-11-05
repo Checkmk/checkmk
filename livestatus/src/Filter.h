@@ -25,14 +25,12 @@
 #ifndef Filter_h
 #define Filter_h
 
-#include "config.h"
-
-#include <vector>
-#include <string>
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
-
-class Query;
+#include <string>
 class Column;
+class Query;
+
 
 class Filter
 {
@@ -62,4 +60,3 @@ public:
 };
 
 #endif // Filter_h
-

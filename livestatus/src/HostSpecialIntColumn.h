@@ -25,13 +25,17 @@
 #ifndef HostSpecialIntColumn_h
 #define HostSpecialIntColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
 #include "IntColumn.h"
+class Query;
+
 
 #define HSIC_REAL_HARD_STATE      0
 #define HSIC_PNP_GRAPH_PRESENT    1
 #define HSIC_MK_INVENTORY_LAST    2
+
 
 class HostSpecialIntColumn : public IntColumn
 {
@@ -44,4 +48,3 @@ public:
 };
 
 #endif // HostSpecialIntColumn_h
-

@@ -22,11 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <math.h>
 #include "DoubleAggregator.h"
-#include "StatsColumn.h"
+#include <math.h>
 #include "DoubleColumn.h"
 #include "Query.h"
+#include "StatsColumn.h"
+
 
 /* SORRY: This file is copy&pasted from IntAggregator.
    I hate copy & paste. But I also dislike complicating
@@ -95,4 +96,3 @@ void DoubleAggregator::output(Query *q)
             break;
     }
 }
-

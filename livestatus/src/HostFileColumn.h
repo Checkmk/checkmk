@@ -25,7 +25,10 @@
 #ifndef HostFileColumn_h
 #define HostFileColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "BlobColumn.h"
+
 
 class HostFileColumn : public BlobColumn
 {

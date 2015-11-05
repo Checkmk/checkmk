@@ -25,7 +25,7 @@
 #ifndef global_counters_h
 #define global_counters_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
 #include <stdint.h>
 

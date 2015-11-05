@@ -25,12 +25,14 @@
 #ifndef HostServiceState_h
 #define HostServiceState_h
 
-#include <time.h>
+#include "config.h"  // IWYU pragma: keep
 #include <string.h>
-#include <nagios.h>
+#include <time.h>
 #include <vector>
-
+#include "nagios.h"  // IWYU pragma: keep
 struct HostServiceState;
+
+
 typedef std::vector<HostServiceState*> HostServices;
 
 typedef void* HostServiceKey;

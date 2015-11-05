@@ -25,15 +25,12 @@
 #ifndef TableServices_h
 #define TableServices_h
 
-#include "config.h"
-
-#include <set>
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
-#include "nagios.h"
+#include "nagios.h"  // IWYU pragma: keep
+class Query;
 
-class TableHosts;
-class TableContacts;
-class TableDowntimes;
 
 class TableServices : public Table
 {
@@ -51,6 +48,5 @@ public:
     void answerQuery(Query *);
     void addColumns(Table *, std::string prefix, int indirect_offset, bool add_hosts);
 };
-
 
 #endif // TableServices_h

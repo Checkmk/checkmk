@@ -25,11 +25,12 @@
 #ifndef CustomVarsFilter_h
 #define CustomVarsFilter_h
 
-#include "config.h"
-
-#include "CustomVarsColumn.h"
-#include "Filter.h"
+#include "config.h"  // IWYU pragma: keep
 #include <regex.h>
+#include <string>
+#include "Filter.h"
+class CustomVarsColumn;
+
 
 class CustomVarsFilter : public Filter
 {
@@ -49,4 +50,3 @@ public:
 };
 
 #endif // CustomVarsFilter_h
-

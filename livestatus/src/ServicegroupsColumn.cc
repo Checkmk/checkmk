@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServicegroupsColumn.h"
-#include "nagios.h"
 #include "Query.h"
+
 
 objectlist *ServicegroupsColumn::getData(void *data)
 {

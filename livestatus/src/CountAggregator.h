@@ -25,10 +25,12 @@
 #ifndef CountAggregator_h
 #define CountAggregator_h
 
+#include "config.h"  // IWYU pragma: keep
 #include "Aggregator.h"
 #include "StatsColumn.h"
-
 class Filter;
+class Query;
+
 
 class CountAggregator : public Aggregator
 {
@@ -40,4 +42,3 @@ public:
 };
 
 #endif // CountAggregator_h
-

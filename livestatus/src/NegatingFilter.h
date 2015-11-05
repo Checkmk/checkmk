@@ -25,7 +25,7 @@
 #ifndef NegatingFilter_h
 #define NegatingFilter_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 #include "Filter.h"
 
 class NegatingFilter : public Filter

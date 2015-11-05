@@ -22,25 +22,34 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <time.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <stddef.h>
+#include "TableStateHistory.h"
 #include <stdarg.h>
-#include <list>
-
-#include "nagios.h"
-#include "logger.h"
-#include "OffsetIntColumn.h"
-#include "OffsetTimeColumn.h"
-#include "OffsetStringColumn.h"
-#include "OffsetDoubleColumn.h"
-#include "Query.h"
-#include "tables.h"
-#include "auth.h"
-#include "Store.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <syslog.h>
+#include <time.h>
+#include <deque>
+#include <set>
+#include <utility>
+#include <vector>
+#include "AndingFilter.h"
+#include "Column.h"
+#include "Filter.h"
+#include "HostServiceState.h"
 #include "LogEntry.h"
+#include "OffsetDoubleColumn.h"
+#include "OffsetIntColumn.h"
+#include "OffsetStringColumn.h"
+#include "OffsetTimeColumn.h"
+#include "OutputBuffer.h"
+#include "Query.h"
+#include "Store.h"
+#include "TableHosts.h"
+#include "TableServices.h"
+#include "auth.h"
+#include "logger.h"
+#include "tables.h"
 
 #ifdef CMC
 #include "Host.h"
@@ -48,8 +57,6 @@
 #include "Timeperiod.h"
 #endif
 
-#include "TableStateHistory.h"
-#include "HostServiceState.h"
 using std::deque;
 using std::make_pair;
 using std::map;
@@ -896,4 +903,3 @@ Column *TableStateHistory::column(const char *colname)
     string with_current = string("current_") + colname;
     return Table::column(with_current.c_str());
 }
-

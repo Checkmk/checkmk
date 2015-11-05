@@ -25,7 +25,9 @@
 #ifndef auth_h
 #define auth_h
 
-#include "nagios.h"
+#include "config.h"  // IWYU pragma: keep
+#include "nagios.h"  // IWYU pragma: keep
+
 
 #define AUTH_LOOSE  0
 #define AUTH_STRICT 1
@@ -46,4 +48,3 @@ extern "C" {
 #endif
 
 #endif // auth_h
-

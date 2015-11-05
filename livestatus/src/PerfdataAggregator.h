@@ -25,11 +25,13 @@
 #ifndef PerfdataAggregator_h
 #define PerfdataAggregator_h
 
+#include "config.h"  // IWYU pragma: keep
 #include <map>
 #include <string>
 #include "Aggregator.h"
+class Query;
+class StringColumn;  // lines 32-32
 
-class StringColumn;
 
 struct perf_aggr {
     double _aggr;

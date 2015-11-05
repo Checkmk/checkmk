@@ -23,22 +23,33 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Store.h"
+#include <string.h>
+#include <sys/time.h>
+#include <time.h>
+#include <utility>
+#include "InputBuffer.h"
+#include "OutputBuffer.h"
 #include "Query.h"
+#include "Table.h"
+#include "global_counters.h"
 #include "logger.h"
 #include "strutil.h"
-#include "OutputBuffer.h"
+#include "tables.h"
 
+// TODO: Remove this hack.
 #ifdef EXTERN
 #undef EXTERN
 #endif
 #define EXTERN
-#include "tables.h"
+#include "tables.h"  // IWYU pragma: keep
 #undef EXTERN
+
 using std::make_pair;
 using std::string;
 
 extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
+
 
 Store::Store()
   : _log_cache(g_max_cached_messages)
@@ -146,7 +157,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
     else if (!strncmp(line, "LOGROTATE", 9)) {
         logger(LG_INFO, "Forcing logfile rotation");
         rotate_log_file(time(0));
-        schedule_new_event(EVENT_LOG_ROTATION,TRUE,get_next_log_rotation_time(),FALSE,0,(void *)get_next_log_rotation_time,TRUE,NULL,NULL,0);
+        schedule_new_event(EVENT_LOG_ROTATION,1,get_next_log_rotation_time(),0,0,(void *)get_next_log_rotation_time,1,NULL,NULL,0);
     }
     else {
         logger(LG_INFO, "Invalid request '%s'", line);

@@ -25,10 +25,13 @@
 #ifndef ServicelistColumn_h
 #define ServicelistColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
 #include "nagios.h"
+class Filter;
+class Query;
+
 
 class ServicelistColumn : public Column
 {
@@ -46,7 +49,4 @@ private:
     int inCustomTimeperiod(service *svc, const char *varname);
 };
 
-
-
 #endif // ServicelistColumn_h
-

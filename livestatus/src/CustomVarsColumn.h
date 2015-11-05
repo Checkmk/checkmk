@@ -25,15 +25,18 @@
 #ifndef CustomVarsColumn_h
 #define CustomVarsColumn_h
 
-#include "config.h"
-
-#include "Column.h"
+#include "config.h"  // IWYU pragma: keep
 #include <string>
+#include "Column.h"
 #include "nagios.h"
+class Filter;
+class Query;
+
 
 #define CVT_VARNAMES 0
 #define CVT_VALUES   1
 #define CVT_DICT     2
+
 
 class CustomVarsColumn : public Column
 {
@@ -52,7 +55,4 @@ private:
     customvariablesmember *getCVM(void *data);
 };
 
-
 #endif // CustomVarsColumn_h
-
-

@@ -23,14 +23,17 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OutputBuffer.h"
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <unistd.h>
-#include <stdarg.h>
-#include <errno.h>
-
-#include "logger.h"
 #include "Query.h"
+#include "logger.h"
+
 
 #define WRITE_TIMEOUT_USEC 100000
 
@@ -162,4 +165,3 @@ void OutputBuffer::setError(unsigned code, const char *format, ...)
         _response_code = code;
     }
 }
-

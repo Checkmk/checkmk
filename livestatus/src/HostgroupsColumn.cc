@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostgroupsColumn.h"
-#include "nagios.h"
 #include "Query.h"
+
 
 objectlist *HostgroupsColumn::getData(void *data)
 {

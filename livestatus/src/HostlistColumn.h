@@ -25,10 +25,13 @@
 #ifndef HostlistColumn_h
 #define HostlistColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
 #include "nagios.h"
+class Filter;
+class Query;
+
 
 class HostlistColumn : public Column
 {
@@ -43,7 +46,4 @@ public:
     hostsmember *getMembers(void *data);
 };
 
-
-
 #endif // HostlistColumn_h
-

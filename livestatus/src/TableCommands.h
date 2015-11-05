@@ -25,11 +25,11 @@
 #ifndef TableCommands_h
 #define TableCommands_h
 
-#include "config.h"
-
-#include <set>
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
-#include "nagios.h"
+class Query;
+
 
 class TableCommands : public Table
 {
@@ -41,4 +41,3 @@ public:
 };
 
 #endif // TableCommands_h
-

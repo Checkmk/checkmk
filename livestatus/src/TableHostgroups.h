@@ -25,11 +25,12 @@
 #ifndef TableHostgroups_h
 #define TableHostgroups_h
 
-#include "config.h"
-
-#include <set>
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
-#include "nagios.h"
+#include "nagios.h"  // IWYU pragma: keep
+class Query;
+
 
 class TableHostgroups : public Table
 {
@@ -43,4 +44,3 @@ public:
 };
 
 #endif // TableHostgroups_h
-

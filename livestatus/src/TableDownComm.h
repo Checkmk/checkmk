@@ -25,16 +25,13 @@
 #ifndef TableDownComm_h
 #define TableDownComm_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include <map>
+#include <utility>
 #include "Table.h"
 #include "nagios.h"
-
+class Query;
 struct DowntimeOrComment;
-class TableHosts;
-class TableContacts;
-class TableServices;
 
 
 class TableDownComm : public Table
@@ -60,6 +57,4 @@ public:
     _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
 };
 
-
 #endif // TableDownComm_h
-

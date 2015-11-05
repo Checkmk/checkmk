@@ -25,10 +25,13 @@
 #ifndef ServicelistStateColumn_h
 #define ServicelistStateColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
 #include "IntColumn.h"
 #include "nagios.h"
+class Query;
+
 
 #define SLSC_NUM_OK             0
 #define SLSC_NUM_WARN           1
@@ -60,6 +63,4 @@ public:
     static bool svcStateIsWorse(int32_t state1, int32_t state2);
 };
 
-
 #endif // ServicelistStateColumn_h
-

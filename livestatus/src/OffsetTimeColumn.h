@@ -25,10 +25,12 @@
 #ifndef OffsetTimeColumn_h
 #define OffsetTimeColumn_h
 
-#include "config.h"
-
-#include <stdlib.h>
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "OffsetIntColumn.h"
+class Filter;
+class Query;
 
 
 /* We are using IntColumn in order to implement a column
@@ -45,6 +47,4 @@ public:
     Filter *createFilter(int operator_id, char *value);
 };
 
-
 #endif // OffsetTimeColumn_h
-

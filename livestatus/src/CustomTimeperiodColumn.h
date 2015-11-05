@@ -25,8 +25,12 @@
 #ifndef CustomTimeperiodColumn_h
 #define CustomTimeperiodColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
 #include "IntColumn.h"
 #include "nagios.h"
+class Query;
 
 
 class CustomTimeperiodColumn : public IntColumn
@@ -41,6 +45,5 @@ public:
 private:
     customvariablesmember *getCVM(void *data);
 };
-
 
 #endif // CustomTimeperiodColumn_h

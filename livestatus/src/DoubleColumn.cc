@@ -23,9 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DoubleColumn.h"
+#include <stdio.h>
 #include "DoubleColumnFilter.h"
 #include "Query.h"
+
 using std::string;
+
 
 void DoubleColumn::output(void *data, Query *query)
 {

@@ -25,12 +25,11 @@
 #ifndef HostlistColumnFilter_h
 #define HostlistColumnFilter_h
 
-#include "config.h"
-
-#include "Filter.h"
+#include "config.h"  // IWYU pragma: keep
 #include <string>
-
+#include "Filter.h"
 class HostlistColumn;
+
 
 class HostlistColumnFilter : public Filter
 {
@@ -44,6 +43,4 @@ public:
     bool accepts(void *data);
 };
 
-
 #endif // HostlistColumnFilter_h
-

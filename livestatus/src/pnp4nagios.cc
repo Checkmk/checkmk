@@ -22,13 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "pnp4nagios.h"
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "pnp4nagios.h"
 using std::string;
+
 
 // Note: If the path is not empty, it always ends with '/', see
 // livestatus_parse_arguments.

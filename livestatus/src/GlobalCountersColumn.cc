@@ -24,6 +24,8 @@
 
 #include "GlobalCountersColumn.h"
 #include "Query.h"
+#include "global_counters.h"
+
 
 void GlobalCountersColumn::output(void *, Query *query)
 {
@@ -32,6 +34,3 @@ void GlobalCountersColumn::output(void *, Query *query)
     else
         query->outputCounter(g_counters[_counter_index]);
 }
-
-
-

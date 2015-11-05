@@ -24,8 +24,8 @@
 
 #include "DynamicColumn.h"
 
+
 Column *DynamicColumn::createColumn(const char *arguments)
 {
     return createColumn(_indirect_offset, arguments);
 }
-

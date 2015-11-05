@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OringFilter.h"
+#include <deque>
+#include "Filter.h"
 
 
 bool OringFilter::accepts(void *data)
@@ -57,4 +59,3 @@ bool OringFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
     *mask &= m;
     return true;
 }
-

@@ -23,16 +23,16 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStatus.h"
-#include "global_counters.h"
+#include <time.h>
 #include "GlobalCountersColumn.h"
-#include "Query.h"
 #include "IntPointerColumn.h"
-#include "TimePointerColumn.h"
-#include "StringPointerColumn.h"
+#include "Query.h"
 #include "StatusSpecialIntColumn.h"
+#include "StringPointerColumn.h"
+#include "TimePointerColumn.h"
+#include "global_counters.h"
 #include "nagios.h"
-#include "logger.h"
-#include "string.h"
+
 
 // Nagios status values
 

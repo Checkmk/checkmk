@@ -25,19 +25,21 @@
 #ifndef Logfile_h
 #define Logfile_h
 
-#include <sys/types.h>
-#include <stdio.h>
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
+#include <stdio.h>
+#include <time.h>
 #include <map>
-
-#define MAX_LOGLINE 65536
-
-struct LogEntry;
-class Query;
 class LogCache;
+class Query;
+struct LogEntry;
+
 #ifdef CMC
 struct World;
 #endif
+
+
+#define MAX_LOGLINE 65536
 
 typedef std::map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
 
@@ -84,6 +86,4 @@ private:
     uint64_t makeKey(time_t, unsigned);
 };
 
-
 #endif // Logfile_h
-

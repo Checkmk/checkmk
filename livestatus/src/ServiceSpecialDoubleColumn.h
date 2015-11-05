@@ -25,8 +25,10 @@
 #ifndef ServiceSpecialDoubleColumn_h
 #define ServiceSpecialDoubleColumn_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "DoubleColumn.h"
+
 
 #define SSDC_STALENESS 1
 
@@ -41,4 +43,3 @@ public:
 };
 
 #endif // ServiceSpecialDoubleColumn_h
-

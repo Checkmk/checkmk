@@ -23,10 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostlistStateColumn.h"
-#include "ServicelistStateColumn.h"
-#include "nagios.h"
-#include "TableServices.h"
 #include "Query.h"
+#include "TableServices.h"
+
 
 extern TableServices *g_table_hosts;
 
@@ -100,4 +99,3 @@ int32_t HostlistStateColumn::getValue(void *data, Query *query)
     }
     return result;
 }
-

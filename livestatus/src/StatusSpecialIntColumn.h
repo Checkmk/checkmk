@@ -26,6 +26,10 @@
 #define StatusSpecialIntColumn_h
 
 #include "IntColumn.h"
+#include <stdint.h>
+#include <string>
+class Query;
+
 
 #define SPIC_MK_INVENTORY_LAST 0
 

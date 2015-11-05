@@ -25,8 +25,11 @@
 #ifndef DoubleAggregator_h
 #define DoubleAggregator_h
 
+#include "config.h"  // IWYU pragma: keep
 #include "Aggregator.h"
 class DoubleColumn;
+class Query;
+
 
 class DoubleAggregator : public Aggregator
 {
@@ -41,4 +44,3 @@ public:
 };
 
 #endif // DoubleAggregator_h
-

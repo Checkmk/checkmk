@@ -23,14 +23,16 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServicelistColumn.h"
-#include "ServicelistColumnFilter.h"
-#include "nagios.h"
+#include <string.h>
 #include "Query.h"
+#include "ServicelistColumnFilter.h"
 #include "TableServices.h"
 #include "TimeperiodsCache.h"
 
+
 extern TimeperiodsCache *g_timeperiods_cache;
 extern TableServices *g_table_services;
+
 
 servicesmember *ServicelistColumn::getMembers(void *data)
 {

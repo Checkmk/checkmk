@@ -25,10 +25,12 @@
 #ifndef AndingFilter_h
 #define AndingFilter_h
 
-#include "config.h"
-
-#include "Filter.h"
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
 #include <deque>
+#include <memory>
+#include "Filter.h"
+
 
 class AndingFilter : public Filter
 {
@@ -54,6 +56,4 @@ public:
     bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
-
 #endif // AndingFilter_h
-

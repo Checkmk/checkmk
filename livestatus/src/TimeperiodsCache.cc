@@ -22,14 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <time.h>
-
 #include "TimeperiodsCache.h"
-#include "nagios.h"
+#include <stdio.h>
+#include <string.h>
+#include <syslog.h>
+#include <time.h>
+#include <utility>
 #include "logger.h"
-#ifdef NAGIOS4
-#include <pthread.h>
-#endif // NAGIOS4
+
+
 using std::make_pair;
 
 extern timeperiod *timeperiod_list;

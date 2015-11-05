@@ -30,6 +30,7 @@
 #ifdef NAGIOS4
 #include <pthread.h>
 #endif // NAGIOS4
+using std::make_pair;
 
 extern timeperiod *timeperiod_list;
 
@@ -60,7 +61,7 @@ void TimeperiodsCache::logCurrentTimeperiods(){
         _cache_t::iterator it = _cache.find(tp);
         if (it == _cache.end()) { // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
-            _cache.insert(std::make_pair(tp, is_in));
+            _cache.insert(make_pair(tp, is_in));
         }
         logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
         tp = tp->next;
@@ -95,7 +96,7 @@ void TimeperiodsCache::update(time_t now)
         _cache_t::iterator it = _cache.find(tp);
         if (it == _cache.end()) { // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
-            _cache.insert(std::make_pair(tp, is_in));
+            _cache.insert(make_pair(tp, is_in));
         }
         else if (it->second != is_in) {
             logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);

@@ -33,6 +33,7 @@
 #include "StringColumn.h"
 #include "Aggregator.h"
 #include "StatsColumn.h"
+using std::string;
 
 void PerfdataAggregator::consume(void *data, Query *)
 {
@@ -72,7 +73,7 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value)
         new_entry._aggr = value;
         new_entry._count = 1;
         new_entry._sumq = value * value;
-        _aggr.insert(make_pair(std::string(varname), new_entry));
+        _aggr.insert(make_pair(string(varname), new_entry));
     }
     else {
         it->second._count ++;
@@ -109,7 +110,7 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value)
 void PerfdataAggregator::output(Query *q)
 {
     char format[64];
-    std::string perf_data;
+    string perf_data;
     for (_aggr_t::const_iterator it = _aggr.begin();
             it != _aggr.end();
             ++it)

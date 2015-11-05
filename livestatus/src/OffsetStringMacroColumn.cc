@@ -30,16 +30,18 @@
 #ifndef NAGIOS4
 #include "nagios/macros.h"
 #endif
+using std::string;
+
 extern char     *macro_user[MAX_USER_MACROS];
 
-std::string OffsetStringMacroColumn::valueAsString(void *data, Query *)
+string OffsetStringMacroColumn::valueAsString(void *data, Query *)
 {
     char *raw = getValue(data);
     host *hst = getHost(data);
     service *svc = getService(data);
 
     // search for macro names, beginning with $
-    std::string result = "";
+    string result = "";
     char *scan = raw;
 
     while (*scan) {
@@ -48,18 +50,18 @@ std::string OffsetStringMacroColumn::valueAsString(void *data, Query *)
             result += scan;
             break;
         }
-        result += std::string(scan, dollar - scan);
+        result += string(scan, dollar - scan);
         char *otherdollar = strchr(dollar + 1, '$');
         if (!otherdollar) { // unterminated macro, do not expand
             result += scan;
             break;
         }
-        std::string macroname = std::string(dollar + 1, otherdollar - dollar - 1);
+        string macroname = string(dollar + 1, otherdollar - dollar - 1);
         const char *replacement = expandMacro(macroname.c_str(), hst, svc);
         if (replacement)
             result += replacement;
         else
-            result += std::string(dollar, otherdollar - dollar + 1); // leave macro unexpanded
+            result += string(dollar, otherdollar - dollar + 1); // leave macro unexpanded
         scan = otherdollar + 1;
     }
     return result;
@@ -68,7 +70,7 @@ std::string OffsetStringMacroColumn::valueAsString(void *data, Query *)
 
 void OffsetStringMacroColumn::output(void *data, Query *query)
 {
-    std::string s = valueAsString(data, query);
+    string s = valueAsString(data, query);
     query->outputString(s.c_str());
 }
 

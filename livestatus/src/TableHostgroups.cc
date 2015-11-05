@@ -31,6 +31,7 @@
 #include "auth.h"
 #include "tables.h"
 #include "TableHosts.h"
+using std::string;
 
 /* this might be a hack (accessing Nagios' internal structures.
    Hi Ethan: please help me here: how should this be code to be
@@ -42,7 +43,7 @@ TableHostgroups::TableHostgroups()
     addColumns(this, "", -1);
 }
 
-void TableHostgroups::addColumns(Table *table, std::string prefix, int indirect_offset)
+void TableHostgroups::addColumns(Table *table, string prefix, int indirect_offset)
 {
     hostgroup hgr;
     char *ref = (char *)&hgr;

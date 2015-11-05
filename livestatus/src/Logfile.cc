@@ -38,6 +38,7 @@
 #include "Core.h"
 extern Core *g_core;
 #endif
+using std::make_pair;
 
 extern unsigned long g_max_lines_per_logfile;
 
@@ -192,7 +193,7 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
     if ((1 << entry->_logclass) & logclasses) {
         uint64_t key = makeKey(entry->_time, lineno);
         if (_entries.find(key) == _entries.end())
-            _entries.insert(std::make_pair(key, entry));
+            _entries.insert(make_pair(key, entry));
         else { // this should never happen. The lineno must be unique!
             logger(LG_ERR, "Strange: duplicate logfile line %s", _linebuffer);
             delete entry;

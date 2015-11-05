@@ -50,6 +50,7 @@
 #include "HostSpecialDoubleColumn.h"
 #include "tables.h"
 #include "auth.h"
+using std::string;
 
 extern host *host_list;
 extern hostgroup *hostgroup_list;
@@ -79,7 +80,7 @@ TableHosts::TableHosts(bool by_group)
 }
 
 
-void TableHosts::addColumns(Table *table, std::string prefix, int indirect_offset)
+void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 {
 
     host hst;

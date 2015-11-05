@@ -24,6 +24,8 @@
 
 #include <stdio.h>
 #include "Livestatus.h"
+using std::string;
+using std::vector;
 
 const char *query = "GET status\nColumns: livestatus_version program_version\nColumnHeaders: on\n";
 #define MAX_LINE_SIZE 8192
@@ -40,7 +42,7 @@ int main(int argc, char **argv)
     live.connectUNIX(socket_path);
     if (live.isConnected()) {
 	live.sendQuery(query);
-	std::vector<std::string> *row;
+	vector<string> *row;
 	while (0 != (row = live.nextRow()))
 	{
 	    printf("Line:\n");

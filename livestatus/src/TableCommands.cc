@@ -29,8 +29,7 @@
 #include "Query.h"
 #include "OffsetStringColumn.h"
 #include "TableCommands.h"
-
-
+using std::string;
 
 extern command *command_list;
 
@@ -40,7 +39,7 @@ TableCommands::TableCommands()
 }
 
 
-void TableCommands::addColumns(Table *table, std::string prefix, int indirect_offset)
+void TableCommands::addColumns(Table *table, string prefix, int indirect_offset)
 {
     command cmd;
     char *ref = (char *)&cmd;

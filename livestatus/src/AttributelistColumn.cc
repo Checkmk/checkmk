@@ -29,6 +29,7 @@
 #include "Query.h"
 #include "strutil.h"
 #include "logger.h"
+using std::string;
 
 struct al_entry {
     const char *name;
@@ -92,12 +93,12 @@ void AttributelistColumn::output(void *data, Query *query)
     }
 }
 
-std::string AttributelistColumn::valueAsString(void *data, Query *)
+string AttributelistColumn::valueAsString(void *data, Query *)
 {
     unsigned long mask = getValue(data);
     char s[16];
     snprintf(s, 16, "%lu", mask);
-    return std::string(s);
+    return string(s);
 }
 
 Filter *AttributelistColumn::createFilter(int opid, char *value)

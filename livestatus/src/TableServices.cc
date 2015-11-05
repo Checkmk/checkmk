@@ -50,6 +50,7 @@
 #include "tables.h"
 #include "auth.h"
 #include "strutil.h"
+using std::string;
 
 extern service *service_list;
 extern servicegroup *servicegroup_list;
@@ -206,7 +207,7 @@ TableServices::TableServices(bool by_group, bool by_hostgroup)
 }
 
 
-void TableServices::addColumns(Table *table, std::string prefix, int indirect_offset, bool add_hosts)
+void TableServices::addColumns(Table *table, string prefix, int indirect_offset, bool add_hosts)
 {
     /* es fehlt noch: double-Spalten, unsigned long spalten, etliche weniger wichtige
        Spalte. Und: die Servicegruppen */

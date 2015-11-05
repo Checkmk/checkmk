@@ -50,11 +50,13 @@
 
 #include "TableStateHistory.h"
 #include "HostServiceState.h"
+using std::deque;
+using std::make_pair;
+using std::map;
+using std::set;
+using std::string;
 
 int g_disable_statehist_filtering = 0;
-
-
-
 extern Store *g_store;
 
 // Debugging logging is hard if debug messages are logged themselves...
@@ -224,12 +226,12 @@ void TableStateHistory::answerQuery(Query *query)
 {
     // Create a partial filter, that contains only such filters that
     // check attributes of current hosts and services
-    typedef std::deque<Filter *> object_filter_t;
+    typedef deque<Filter *> object_filter_t;
     object_filter_t object_filter;
     AndingFilter *orig_filter = query->filter();
 
     if (!g_disable_statehist_filtering) {
-        std::deque<Filter *>::iterator it = orig_filter->begin();
+        deque<Filter *>::iterator it = orig_filter->begin();
         while (it != orig_filter->end()) {
             Filter *filter = *it;
             Column *column = filter->column();
@@ -261,11 +263,11 @@ void TableStateHistory::answerQuery(Query *query)
     _abort_query = false;
 
     // Keep track of the historic state of services/hosts here
-    typedef std::map<HostServiceKey, HostServiceState*> state_info_t;
+    typedef map<HostServiceKey, HostServiceState*> state_info_t;
     state_info_t state_info;
 
     // Store hosts/services that we have filtered out here
-    typedef std::set<HostServiceKey> object_blacklist_t;
+    typedef set<HostServiceKey> object_blacklist_t;
     object_blacklist_t object_blacklist;
 
     _query = query;
@@ -461,7 +463,7 @@ void TableStateHistory::answerQuery(Query *query)
 
 
                 // Store this state object for tracking state transitions
-                state_info.insert(std::make_pair(key, state));
+                state_info.insert(make_pair(key, state));
                 state->_from = _since;
 
                 // Get notification period of host/service
@@ -891,7 +893,7 @@ Column *TableStateHistory::column(const char *colname)
     // we access current and not historic data and in order
     // to prevent mixing up historic and current fields with
     // the same name.
-    std::string with_current = std::string("current_") + colname;
+    string with_current = string("current_") + colname;
     return Table::column(with_current.c_str());
 }
 

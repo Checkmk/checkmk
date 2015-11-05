@@ -29,6 +29,7 @@
 #include "opids.h"
 #include "logger.h"
 #include "OutputBuffer.h"
+using std::string;
 
 CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column, int opid, char *value)
     : _column(column)
@@ -49,7 +50,7 @@ with spaces
         const char *search_space = cstr;
         while (*search_space && !isspace(*search_space))
             search_space ++;
-        _ref_varname = std::string(cstr, search_space - cstr);
+        _ref_varname = string(cstr, search_space - cstr);
         while (*search_space && isspace(*search_space))
             search_space ++;
         _ref_string = search_space;

@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include "pnp4nagios.h"
+using std::string;
 
 // Note: If the path is not empty, it always ends with '/', see
 // livestatus_parse_arguments.
@@ -35,25 +36,25 @@ extern char* g_pnp_path;
 
 namespace {
 
-std::string replace_all(const std::string& str, const std::string& chars, char replacement) {
-    std::string result(str);
+string replace_all(const string& str, const string& chars, char replacement) {
+    string result(str);
     size_t i = 0;
-    while ((i = result.find_first_of(chars, i)) != std::string::npos) {
+    while ((i = result.find_first_of(chars, i)) != string::npos) {
         result[i++] = replacement;
     }
     return result;
 }
 
 
-std::string cleanup(const std::string& name) { return replace_all(name, " /\\:", '_'); }
+string cleanup(const string& name) { return replace_all(name, " /\\:", '_'); }
 
 }  // namespace
 
 
-int pnpgraph_present(const std::string& host, const std::string& service) {
-    std::string pnp_path(g_pnp_path);
+int pnpgraph_present(const string& host, const string& service) {
+    string pnp_path(g_pnp_path);
     if (pnp_path.empty()) return -1;
-    std::string path(pnp_path.append(cleanup(host))
+    string path(pnp_path.append(cleanup(host))
                          .append("/")
                          .append(cleanup(service))
                          .append(".xml"));
@@ -61,11 +62,11 @@ int pnpgraph_present(const std::string& host, const std::string& service) {
 }
 
 
-std::string rrd_path(const std::string& host, const std::string& service,
-                     const std::string& varname) {
-    std::string pnp_path(g_pnp_path);
+string rrd_path(const string& host, const string& service,
+                     const string& varname) {
+    string pnp_path(g_pnp_path);
     if (pnp_path.empty()) return "";
-    std::string path(pnp_path.append("/")
+    string path(pnp_path.append("/")
                          .append(cleanup(host))
                          .append("/")
                          .append(cleanup(service))

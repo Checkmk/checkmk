@@ -24,9 +24,9 @@
 
 #include "Column.h"
 #include "logger.h"
+using std::string;
 
-
-Column::Column(std::string name, std::string description, int indirect_offset)
+Column::Column(string name, string description, int indirect_offset)
   : _name(name)
   , _description(description)
   , _indirect_offset(indirect_offset)

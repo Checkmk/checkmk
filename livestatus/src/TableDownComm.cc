@@ -33,6 +33,7 @@
 #include "OffsetTimeColumn.h"
 #include "auth.h"
 #include "tables.h"
+using std::make_pair;
 
 // Todo: the dynamic data in this table must be
 // locked with a mutex
@@ -126,7 +127,7 @@ void TableDownComm::addDowntime(nebstruct_downtime_data *data)
 
 void TableDownComm::add(DowntimeOrComment *data)
 {
-    dc_key tmp_key = std::make_pair(data->_id, data->_service != 0);
+    dc_key tmp_key = make_pair(data->_id, data->_service != 0);
     _entries_t::iterator it = _entries.find(tmp_key);
 
     // might be update -> delete previous data set
@@ -139,7 +140,7 @@ void TableDownComm::add(DowntimeOrComment *data)
 
 void TableDownComm::remove(DowntimeOrComment *data)
 {
-    dc_key tmp_key = std::make_pair(data->_id, data->_service != 0);
+    dc_key tmp_key = make_pair(data->_id, data->_service != 0);
     _entries_t::iterator it = _entries.find(tmp_key);
     if (it == _entries.end())
         logger(LG_INFO, "Cannot delete non-existing downtime/comment %u", data->_id);
@@ -168,7 +169,7 @@ bool TableDownComm::isAuthorized(contact *ctc, void *data)
 
 DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service)
 {
-    dc_key tmp_key = std::make_pair(id, is_service);
+    dc_key tmp_key = make_pair(id, is_service);
     _entries_t::iterator it = _entries.find(tmp_key);
     if (it != _entries.end()) {
         return it->second;

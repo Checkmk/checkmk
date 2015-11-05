@@ -31,6 +31,7 @@
 
 #include "InputBuffer.h"
 #include "logger.h"
+using std::string;
 
 #define READ_TIMEOUT_USEC 200000
 extern int g_query_timeout_msec;
@@ -220,14 +221,14 @@ void InputBuffer::storeRequestLine(char *line, int length)
     char *end = line + length;
     while (end > line && isspace(*--end)) length--;
     if (length > 0)
-        _requestlines.push_back(std::string(line, length));
+        _requestlines.push_back(string(line, length));
     else
         logger(LG_INFO, "Warning ignoring line containing only whitespace");
 }
 
-std::string InputBuffer::nextLine()
+string InputBuffer::nextLine()
 {
-    std::string s = _requestlines.front();
+    string s = _requestlines.front();
     _requestlines.pop_front();
     return s;
 }

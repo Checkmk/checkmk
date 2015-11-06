@@ -1,0 +1,10 @@
+Title: bluecoat_sensors: fix crash when using Nagios as core (missing include)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p4
+Date: 1446802395
+
+Thanks to Markus Weber!

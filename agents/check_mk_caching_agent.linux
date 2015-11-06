@@ -82,7 +82,8 @@ SEENFILE=$CACHEFILE.seenby.$REMOTE_HOST
 # is not very unlikely since the agent might run a couple
 # of seconds
 (
-  flock --exclusive 200
+  flock --timeout 180 --exclusive 200 || exit 1
+
   if [ ! -e "$CACHEFILE" -o -e "$SEENFILE" ]
   then
       check_mk_agent > $CACHEFILE

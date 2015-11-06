@@ -1,0 +1,18 @@
+Title: Dynamic levels: Enforce config of levels for filesystems larger than 0 bytes
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446804337
+
+When configuring dynamic levels, e.g. for filesystems, if you configure the dynamic levels 
+for example like this:
+
+larger than 100GB: 90% WARN / 95% CRIT
+larger than 1TB: 95% WARN / 98% CRIT
+
+This will result in all filesystems smaller than 100GB in always being OK. This was confusing
+users. The validation of these rules has now been changed to enforce creation of an entry
+for filesystems larger than 0 bytes.

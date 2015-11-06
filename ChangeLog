@@ -28,6 +28,7 @@
     * 2732 FIX: ad_replication: Made check more robust agains garbled agent output
     * 2773 FIX: omd_staomd_status: handle case where site's software installation is broken
     * 2754 FIX: ipmitool: Killing asynchronous ipmitool call after 300 seconds...
+    * 2755 FIX: apc_symmetra: Check is handling missing data more robust now
 
     Multisite:
     * 2670 FIX: Fix problem that no site is configured when user has deleted only site...

@@ -310,6 +310,9 @@ def check_if_common(item, params, info, has_nodeinfo = False):
                 outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
                 ifOutQLen, ifAlias, ifPhysAddress = line
 
+            if has_nodeinfo and node:
+                return 3, "Interface grouping is not supported for clusters."
+
             ifGroup = None
             if type(ifIndex) == tuple:
                 ifGroup, ifIndex = ifIndex
@@ -368,7 +371,12 @@ def check_if_common(item, params, info, has_nodeinfo = False):
         if params.get("include_items"):
             alias_info.append("grouped items")
 
-        group_entry = [
+        if has_nodeinfo:
+            group_entry = [None]
+        else:
+            group_entry = []
+
+        group_entry += [
                     "ifgroup%s" % item,         # ifIndex
                     item,                       # ifDescr
                     params["iftype"],           # ifType

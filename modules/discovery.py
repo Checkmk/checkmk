@@ -673,10 +673,10 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
                         return value
                 result = scan_function(oid_function)
                 if result is not None and type(result) not in [ str, bool ]:
-                    if on_error != "ignore":
+                    if on_error == "warn":
                         warning("   SNMP scan function of %s returns invalid type %s." %
                                 (check_type, type(result)))
-                    if on_error == "raise":
+                    elif on_error == "raise":
                         raise MKGeneralException("SNMP Scan aborted.")
                 elif result:
                     found.append(check_type)
@@ -686,9 +686,9 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
                 # should be raised through this
                 raise
             except:
-                if on_error != "ignore":
+                if on_error == "warn":
                     warning("   Exception in SNMP scan function of %s" % check_type)
-                if on_error == "raise":
+                elif on_error == "raise":
                     raise
                 pass
         else:
@@ -788,9 +788,9 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
             result.append((item, paramstring))
 
     except Exception, e:
-        if on_error != "ignore":
+        if on_error == "warn":
             warning("  Exception in discovery function of check type '%s': %s" % (check_type, e))
-        if on_error == "raise":
+        elif on_error == "raise":
             raise
         return []
 

@@ -1,0 +1,10 @@
+Title: Fix exception when deleting certain types of MIBs
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446823549
+
+

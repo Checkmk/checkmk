@@ -26,6 +26,9 @@
     * 2693 FIX: Restoring backup: fixed crash 'failed to extract tarballs'
     * 2716 FIX: Fixed error reporting on disabled checks page in case of broken man pages
 
+    Notifications:
+    * 2728 FIX: Removed debug notification script (was not executable)...
+
     Event Console:
     * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters
 

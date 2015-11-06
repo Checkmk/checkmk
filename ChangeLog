@@ -26,6 +26,7 @@
     * 2730 FIX: if64: Grouping of interfaces resulted in an exception...
     * 2731 FIX: smart.temp: Handles case of missing temperature values correctly
     * 2732 FIX: ad_replication: Made check more robust agains garbled agent output
+    * 2773 FIX: omd_staomd_status: handle case where site's software installation is broken
 
     Multisite:
     * 2670 FIX: Fix problem that no site is configured when user has deleted only site...

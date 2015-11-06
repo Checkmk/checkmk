@@ -237,7 +237,7 @@ sidebar_snapins["servicegroups"] = {
 
 def render_hosts(mode):
     html.live.set_prepend_site(True)
-    query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100"
+    query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100\n"
     view = "host"
 
     if mode == "summary":

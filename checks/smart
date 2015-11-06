@@ -148,11 +148,13 @@ def inventory_smart_temp(info):
 
 def check_smart_temp(item, params, info):
     disks = parse_smart(info)
-    if item not in disks:
+
+    try:
+        temperature = disks[item]["Temperature_Celsius"]
+    except KeyError:
         return
 
-    disk = disks[item]
-    return check_temperature(disk["Temperature_Celsius"], params)
+    return check_temperature(temperature, params)
 
 check_info["smart.temp"] = {
     'check_function':            check_smart_temp,

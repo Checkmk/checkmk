@@ -55,6 +55,7 @@
     * 2727 FIX: ibm_imm_health: Fixed unhandled exception when SNMP info is missing
     * 2730 FIX: if64: Grouping of interfaces resulted in an exception...
     * 2741 FIX: isc_dhcpd: Fix problem where outdated leases where counted as active
+    * 2731 FIX: smart.temp: Handles case of missing temperature values correctly
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

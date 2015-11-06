@@ -79,6 +79,9 @@
     * 2721 FIX: Fixed user profile sync in distributed environments after profile change
     * 2723 FIX: Hiding "discard changes button" after successful activation of changes
 
+    Notifications:
+    * 2728 FIX: Removed debug notification script (was not executable)...
+
     Event Console:
     * 2733 Visibility of Event Console events more flexible now...
     * 2719 FIX: Events Check: Links to EC were broken when using regular expressions as application...

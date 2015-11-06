@@ -1,0 +1,14 @@
+Title: Removed debug notification script (was not executable)
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446813017
+
+The script was only meant for debug/demonstration purposes. This
+script was not usable from the GUI except one made it executable.
+
+These days you can use the HTML notifications to get a list of
+all notifiction variables, if you need them e.g. for debugging.

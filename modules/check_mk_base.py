@@ -1861,11 +1861,13 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
 
     if opt_verbose:
         if opt_showperfdata:
+            infotext_fmt = "%-56s"
             p = ' (%s)' % (" ".join(perftexts))
         else:
             p = ''
+            infotext_fmt = "%s"
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
-        print "%-20s %s%s%-56s%s%s" % (servicedesc.encode('utf-8'),
+        print ("%-20s %s%s"+infotext_fmt+"%s%s") % (servicedesc.encode('utf-8'),
                                        tty_bold, color, make_utf8(infotext.split('\n')[0]),
                                        tty_normal, make_utf8(p))
 

@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
 # <<<ad_replication>>>
 # showrepl_COLUMNS,Destination DC Site,Destination DC,Naming Context,Source DC Site,Source DC,\
 #Transport Type,Number of Failures,Last Failure Time,Last Success Time,Last Failure Status
@@ -46,8 +44,12 @@ def parse_ad_replication_dates(s):
 
 def parse_ad_replication_info(info):
     lines = []
-    for l in [ ' '.join(line).replace(',CN=', ';CN=').replace(',DC=', ';DC=') for line in info ]:
-        lines.append(l.split(','))
+    for line_parts in info:
+        # Make lines split by , instead of spaces
+        line_txt = ' '.join(line_parts).replace(',CN=', ';CN=').replace(',DC=', ';DC=')
+        line_parts = line_txt.split(',')
+        if len(line_parts) in [ 11, 10 ]:
+            lines.append(line_parts)
     return lines
 
 def inventory_ad_replication(info):
@@ -59,6 +61,8 @@ def inventory_ad_replication(info):
         elif len(line) == 10:
             source_site = line[3]
             source_dc =  line[4]
+        else:
+            break # unhandled data
         entry = ('%s/%s' % (source_site, source_dc), 'ad_replication_default_params')
         if line[0] == 'showrepl_INFO' and entry not in inv:
             inv.append(entry)
@@ -78,6 +82,8 @@ def check_ad_replication(item, params, info):
             (lineType, destSite, naming_context, source_site, source_dc,
              transport, num_failures, time_last_failure, time_last_success,
              statusLastFailure ) = l
+        else:
+            break # unhandled data
 
         if lineType == 'showrepl_INFO' and source_site+'/'+source_dc == item:
             foundLine = True

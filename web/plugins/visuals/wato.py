@@ -84,11 +84,11 @@ class FilterWatoFile(Filter):
     def folder_selection(self, folder, prefix, depth):
         my_path = folder[".path"]
         if depth:
-            title_prefix = "&nbsp;&nbsp;&nbsp;" * depth + "` " + "- " * depth
+            title_prefix = (u"\u00a0" * 6 * depth) + u"\u2514\u2500 "
         else:
             title_prefix = ""
         self.path_to_tree[my_path] = folder["title"]
-        sel = [ (my_path , HTML(title_prefix + html.attrencode(folder["title"]))) ]
+        sel = [ (my_path , title_prefix + folder["title"]) ]
         sel += self.sublist(folder.get(".folders", {}), my_path, depth)
         return sel
 

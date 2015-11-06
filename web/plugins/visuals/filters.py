@@ -824,7 +824,7 @@ class FilterHostTags(Filter):
         groups = [ (e[0], e[1].lstrip("/") ) for e in config.wato_host_tags ]
         operators = [
             ("is", _("=")),
-            ("isnot", HTML(_("&ne;"))),
+            ("isnot", _(u"≠")),
         ]
 
         # replace unicode strings, before writing out as "json"

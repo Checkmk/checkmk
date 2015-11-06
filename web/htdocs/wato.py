@@ -14520,7 +14520,7 @@ def mode_edit_ruleset(phase):
 
 def folder_selection(folder, depth=0):
     if depth:
-        title_prefix = "&nbsp;&nbsp;&nbsp;" * depth + "` " + "- " * depth
+        title_prefix = (u"\u00a0" * 6 * depth) + u"\u2514\u2500 "
     else:
         title_prefix = ""
     sel = [ (folder[".path"], HTML(title_prefix + html.attrencode(folder["title"]))) ]

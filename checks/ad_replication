@@ -48,8 +48,12 @@ def parse_ad_replication_dates(s):
 
 def parse_ad_replication_info(info):
     lines = []
-    for l in [ ' '.join(line).replace(',CN=', ';CN=').replace(',DC=', ';DC=') for line in info ]:
-        lines.append(l.split(','))
+    for line_parts in info:
+        # Make lines split by , instead of spaces
+        line_txt = ' '.join(line_parts).replace(',CN=', ';CN=').replace(',DC=', ';DC=')
+        line_parts = line_txt.split(',')
+        if len(line_parts) in [ 11, 10 ]:
+            lines.append(line_parts)
     return lines
 
 def inventory_ad_replication(info):
@@ -61,6 +65,8 @@ def inventory_ad_replication(info):
         elif len(line) == 10:
             sourceSite = line[3]
             sourceDC =  line[4]
+        else:
+            break # unhandled data
         entry = ('%s/%s' % (sourceSite, sourceDC), 'ad_replication_default_params')
         if line[0] == 'showrepl_INFO' and entry not in inv:
             inv.append(entry)
@@ -81,6 +87,8 @@ def check_ad_replication(item, params, info):
             (lineType, destSite, namingContext, sourceSite, sourceDC,
              transport, numFailures, timeLastFailure, timeLastSuccess,
              statusLastFailure ) = l
+        else:
+            break # unhandled data
 
         if lineType == 'showrepl_INFO' and sourceSite+'/'+sourceDC == item:
             foundLine = True

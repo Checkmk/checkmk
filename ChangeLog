@@ -53,6 +53,7 @@
     * 2725 FIX: Dynamic levels: Enforce config of levels for filesystems larger than 0 bytes...
     * 2726 FIX: veeam_backup_status: Fixed missing agent section error in case of aborted tasks
     * 2727 FIX: ibm_imm_health: Fixed unhandled exception when SNMP info is missing
+    * 2741 FIX: isc_dhcpd: Fix problem where outdated leases where counted as active
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

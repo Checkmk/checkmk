@@ -268,6 +268,7 @@ void verbose(const char *format, ...)
     va_start(ap, format);
     printf("DEBUG: ");
     vprintf(format, ap);
+    va_end(ap);
     printf("\n");
     fflush(stdout);
 }
@@ -3247,15 +3248,16 @@ void crash_log(const char *format, ...)
             ellapsed_sec --;
         }
 
-        va_list ap;
-        va_start(ap, format);
-
         DWORD dwBytesWritten = 0;
         snprintf(buffer, sizeof(buffer), "%ld.%06ld ", ellapsed_sec, ellapsed_usec);
         DWORD dwBytesToWrite = (DWORD)strlen(buffer);
         WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
 
+        va_list ap;
+        va_start(ap, format);
         vsnprintf(buffer, sizeof(buffer), format, ap);
+        va_end(ap);
+
         dwBytesToWrite = (DWORD)strlen(buffer);
         WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
 
@@ -3333,6 +3335,7 @@ void output(SOCKET &out, const char *format, ...)
     va_list ap;
     va_start(ap, format);
     int written_len = vsnprintf(outbuffer + len, sizeof(outbuffer) - len, format, ap);
+    va_end(ap);
     len += written_len;
 
     // We do not send out the data immediately

@@ -22,6 +22,9 @@
     * 2739 FIX: wut_webtherm: support firmware of article number 57620...
     * 2727 FIX: ibm_imm_health: Fixed unhandled exception when SNMP info is missing
 
+    Multisite:
+    * 2729 FIX: Hosts/Hostproblems snapin: Fixed wrong livestatus query when filtering lists
+
     WATO:
     * 2693 FIX: Restoring backup: fixed crash 'failed to extract tarballs'
     * 2716 FIX: Fixed error reporting on disabled checks page in case of broken man pages

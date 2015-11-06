@@ -19,6 +19,7 @@
     * 2736 FIX: fortigate_cpu: fix crash if levels are disabled
     * 2738 FIX: Check_MK Caching agent on Linux: introduce timeout for lock...
     * 2726 FIX: veeam_backup_status: Fixed missing agent section error in case of aborted tasks
+    * 2739 FIX: wut_webtherm: support firmware of article number 57620...
     * 2727 FIX: ibm_imm_health: Fixed unhandled exception when SNMP info is missing
 
     WATO:

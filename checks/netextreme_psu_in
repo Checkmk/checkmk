@@ -35,7 +35,7 @@
 
 # Just an assumption
 factory_settings["netextreme_psu_in_default_levels"] = {
-    "power"   : (110, 120),
+    "power"   : (1100, 1200), # This levels a recomended by the manufactorer
     "voltage" : (2, 1),
 }
 

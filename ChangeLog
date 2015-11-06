@@ -58,6 +58,7 @@
     * 2731 FIX: smart.temp: Handles case of missing temperature values correctly
     * 2753 FIX: ad_replication: Made check more robust agains garbled agent output
     * 2773 FIX: omd_staomd_status: handle case where site's software installation is broken
+    * 2754 FIX: ipmitool: Killing asynchronous ipmitool call after 300 seconds...
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

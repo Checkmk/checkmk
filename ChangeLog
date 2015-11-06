@@ -18,6 +18,7 @@
     * 2735 FIX: esx_vsphere_datastores: fix labelling, help and performance data of provisioned space...
     * 2736 FIX: fortigate_cpu: fix crash if levels are disabled
     * 2738 FIX: Check_MK Caching agent on Linux: introduce timeout for lock...
+    * 2726 FIX: veeam_backup_status: Fixed missing agent section error in case of aborted tasks
 
     WATO:
     * 2693 FIX: Restoring backup: fixed crash 'failed to extract tarballs'

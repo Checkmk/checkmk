@@ -402,7 +402,8 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
 #
 # This function assumes, that each check type is queried
 # only once for each host.
-def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_check_interval=False, use_snmpwalk_cache=True):
+def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
+                      ignore_check_interval=False, use_snmpwalk_cache=True):
     info = get_cached_hostinfo(hostname)
     if info and info.has_key(check_type):
         return info[check_type]
@@ -704,11 +705,10 @@ def read_cache_file(relpath, max_cache_age):
                    (cachefile, cachefile_age(cachefile), max_cache_age))
 
     if simulation_mode and not opt_no_cache:
-        raise MKGeneralException("Simulation mode and no cachefile present.")
+        raise MKAgentError("Simulation mode and no cachefile present.")
 
     if opt_no_tcp:
-        raise MKGeneralException("Host is unreachable, no usable cache file present")
-        #Cache file '%s' missing or too old. TCP disallowed by you." % cachefile)
+        raise MKAgentError("Host is unreachable, no usable cache file present")
 
 
 def write_cache_file(relpath, output):

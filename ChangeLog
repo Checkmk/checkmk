@@ -30,6 +30,7 @@
     WATO:
     * 2693 FIX: Restoring backup: fixed crash 'failed to extract tarballs'
     * 2716 FIX: Fixed error reporting on disabled checks page in case of broken man pages
+    * 2742 FIX: Make selection of folders and host group tag filter use nicer drawing characters
 
     Notifications:
     * 2728 FIX: Removed debug notification script (was not executable)...

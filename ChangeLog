@@ -86,6 +86,7 @@
     * 2721 FIX: Fixed user profile sync in distributed environments after profile change
     * 2723 FIX: Hiding "discard changes button" after successful activation of changes
     * 2742 FIX: Make selection of folders and host group tag filter use nicer drawing characters
+    * 2774 FIX: Fix exception when deleting certain types of MIBs
 
     Notifications:
     * 2728 FIX: Removed debug notification script (was not executable)...

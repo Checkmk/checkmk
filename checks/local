@@ -92,7 +92,7 @@ def inventory_local(info):
         if len(line) >= 4 or len(line) == 3 and line[0] == 'P':
             inventory.append( (line[1], None) )
         else:
-            raise MKGeneralException("Invalid local check output: %s" % " ".join(line))
+            raise MKGeneralException("Invalid line in agent section <<<local>>>: %s" % " ".join(line))
     return inventory
 
 

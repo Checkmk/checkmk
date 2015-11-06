@@ -70,32 +70,31 @@ def check_esx_vsphere_datastores(item, params, info):
     if 'uncommitted' in store:
         uncommitted_mb = store["uncommitted"] / 1024.0 / 1024.0
         used_mb = size_mb - avail_mb
-        overprov_mb = used_mb + uncommitted_mb
+        prov_mb = used_mb + uncommitted_mb
         if size_mb == 0:
-            overprov_percent = 0
+            prov_percent = 0
         else:
-            overprov_percent = (overprov_mb / size_mb) * 100
+            prov_percent = (prov_mb / size_mb) * 100
 
-        overprov_txt = ''
-        overprov_warn_mb = None
-        overprov_crit_mb = None
+        prov_txt = ''
         if 'provisioning_levels' in params:
             warn, crit = params['provisioning_levels']
-            overprov_warn_mb = avail_mb / 100 * warn
-            overprov_crit_mb = avail_mb / 100 * crit
-            if overprov_percent >= crit:
+            levels_text = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+            if prov_percent >= crit:
                 state = max(state, 2)
-                overprov_txt = ' (!!)'
-            elif overprov_percent >= warn:
+                prov_txt = levels_text + '(!!)'
+            elif prov_percent >= warn:
                 state = max(state, 1)
-                overprov_txt = ' (!)'
+                prov_txt = levels_text + '(!)'
 
         infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%%s" % (
-                      uncommitted_mb / 1024, overprov_percent, overprov_txt)
+                      uncommitted_mb / 1024, prov_percent, prov_txt)
         if perfdata:
+            prov_warn_mb = size_mb / 100 * warn
+            prov_crit_mb = size_mb / 100 * crit
             perfdata += [
                 ('uncommitted', str(uncommitted_mb) + 'MB'),
-                ('overprovisioned', str(overprov_mb) + 'MB', overprov_warn_mb, overprov_crit_mb),
+                ('overprovisioned', str(prov_mb) + 'MB', prov_warn_mb, prov_crit_mb),
             ]
 
     if not store["accessible"]:

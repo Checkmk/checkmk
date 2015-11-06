@@ -2218,10 +2218,13 @@ register_check_parameters(
         elements = filesystem_elements + [
             ("provisioning_levels", Tuple(
                 title = _("Provisioning Levels"),
-                help = _("Configure thresholds for overprovisioning of datastores."),
+                help = _("A provisioning of more than 100% is called "
+                         "over provisioning and can be a useful strategy for saving disk space. But you cannot guarantee "
+                         "any longer that every VM can really use all space that it was assigned. Here you can "
+                         "set levels for the maximum provisioning. A warning level of 150% will warn at 50% over provisioning."),
                 elements = [
-                  Percentage(title = _("Warning at overprovisioning of"), maxvalue = None),
-                  Percentage(title = _("Critical at overprovisioning of"), maxvalue = None),
+                  Percentage(title = _("Warning at a provisioning of"), maxvalue = None, default_value = 120.0),
+                  Percentage(title = _("Critical at a provisioning of"), maxvalue = None, default_value = 150.0),
                 ]
             )),
         ],

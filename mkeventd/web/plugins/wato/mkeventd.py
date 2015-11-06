@@ -1935,9 +1935,10 @@ def parse_snmp_mib_header(path):
     # read till first "OBJECT IDENTIFIER" declaration
     head = ''
     for line in file(path):
-        if 'OBJECT IDENTIFIER' in line:
-            break # seems the header is finished
-        head += line
+        if not line.startswith("--"):
+            if 'OBJECT IDENTIFIER' in line:
+                break # seems the header is finished
+            head += line
 
     # now try to extract some relevant information from the header
 

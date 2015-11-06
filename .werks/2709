@@ -1,0 +1,11 @@
+Title: fixed exception when opening the action menu
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p4
+Date: 1446823507
+
+Opening the action menu would cause an exception
+if icons have been customized to show in main table.

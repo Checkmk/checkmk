@@ -25,6 +25,7 @@
     * 2731 FIX: smart.temp: Handles case of missing temperature values correctly
     * 2732 FIX: ad_replication: Made check more robust agains garbled agent output
     * 2754 FIX: ipmitool: Killing asynchronous ipmitool call after 300 seconds...
+    * 2755 FIX: apc_symmetra: Check is handling missing data more robust now
 
     Multisite:
     * 2729 FIX: Hosts/Hostproblems snapin: Fixed wrong livestatus query when filtering lists

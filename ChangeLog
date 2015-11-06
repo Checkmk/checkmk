@@ -25,6 +25,7 @@
     * 2727 FIX: ibm_imm_health: Fixed unhandled exception when SNMP info is missing
     * 2730 FIX: if64: Grouping of interfaces resulted in an exception...
     * 2731 FIX: smart.temp: Handles case of missing temperature values correctly
+    * 2732 FIX: ad_replication: Made check more robust agains garbled agent output
 
     Multisite:
     * 2670 FIX: Fix problem that no site is configured when user has deleted only site...

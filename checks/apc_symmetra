@@ -55,11 +55,13 @@ factory_settings["apc_default_levels"] = {
 }
 
 def inventory_apc(info):
-    if len(info) > 0:
+    if info:
         return [(None, "apc_default_levels")]
 
 
 def check_apc(item, params, info):
+    if not info:
+        return
     battery_status, output_status, battery_capacity, system_temp, battery_replace, \
     num_batt_packs, battery_current, input_voltage, output_voltage, output_current, \
     time_remaining, calib_result, output_load = [ saveint(x) for x in info[0][:13] ]

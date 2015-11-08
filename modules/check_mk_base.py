@@ -1416,6 +1416,14 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         except MKParseFunctionError, e:
             info = e
 
+        # In case of SNMP checks but missing agent response, skip this check.
+        # Special checks which still need to be called even with empty data
+        # may declare this.
+        if info == [] and check_uses_snmp(checkname) \
+           and not check_info[checkname]["handle_empty_info"]:
+            error_sections.add(infotype)
+            continue
+
         if info or info == []:
             num_success += 1
             try:
@@ -1628,6 +1636,7 @@ def convert_check_info():
                 "snmp_scan_function"      :
                     snmp_scan_functions.get(check_type,
                         snmp_scan_functions.get(basename)),
+                "handle_empty_info"       : False,
                 "default_levels_variable" : check_default_levels.get(check_type),
                 "node_info"               : False,
                 "parse_function"          : None,
@@ -1641,6 +1650,7 @@ def convert_check_info():
             info.setdefault("group", None)
             info.setdefault("snmp_info", None)
             info.setdefault("snmp_scan_function", None)
+            info.setdefault("handle_empty_info", False)
             info.setdefault("default_levels_variable", None)
             info.setdefault("node_info", False)
             info.setdefault("extra_sections", [])

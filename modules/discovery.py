@@ -737,6 +737,13 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
     if info == None: # No data for this check type
         return []
 
+    # In case of SNMP checks but missing agent response, skip this check.
+    # Special checks which still need to be called even with empty data
+    # may declare this.
+    if not info and check_uses_snmp(check_type) \
+       and not check_info[check_type]["handle_empty_info"]:
+        return []
+
     # Now do the actual inventory
     try:
         # Check number of arguments of discovery function. Note: This

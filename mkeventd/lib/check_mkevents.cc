@@ -196,8 +196,9 @@ int main(int argc, char** argv)
     string query_message;
     query_message += "GET events\nFilter: event_host ";
     if (strchr(host, '/')) {
-        query_message += "~~ ";
+        query_message += "~~ ^(";
         query_message += prepare_hostname_regex(host);
+        query_message += ")$";
     }
     else {
         query_message += "=~ ";

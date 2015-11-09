@@ -40,6 +40,7 @@
 
     Event Console:
     * 2644 FIX: Fix exception in executing actions or notifications when match groups contain non-ASCII characters
+    * 2757 FIX: Events Check: Fixed check finding too many events (host search was infix search instead of full match)...
 
     Livestatus:
     * 2648 FIX: Fix crash of core in case of case of certain garbled log lines...

@@ -79,6 +79,8 @@ void OutputBuffer::addBuffer(const char *buf, unsigned len)
     _writepos += len;
 }
 
+// TODO: All this code is highly error-prone due to overflow, failed allocations
+// etc. We should just use vector instead.
 void OutputBuffer::needSpace(unsigned len)
 {
     if (_writepos + len > _end)
@@ -88,7 +90,11 @@ void OutputBuffer::needSpace(unsigned len)
         while (_max_size < needed) // double, until enough space
             _max_size *= 2;
 
-        _buffer = (char *)realloc(_buffer, _max_size);
+        char* new_buffer = static_cast<char*>(realloc(_buffer, _max_size));
+        // It's better to crash voluntarily than overwriting random memory later.
+        if (!new_buffer) abort();
+
+        _buffer = new_buffer;
         _writepos = _buffer + s;
         _end = _buffer + _max_size;
     }

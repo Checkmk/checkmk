@@ -50,7 +50,7 @@
 extern "C" {
 #endif
 
-void logger(int priority, const char *loginfo, ...);
+void logger(int priority, const char *loginfo, ...) __attribute__ ((format (printf, 2, 3)));
 void open_logfile();
 void close_logfile();
 

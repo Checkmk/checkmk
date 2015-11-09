@@ -865,7 +865,7 @@ bool Query::timelimitReached()
 bool Query::processDataset(void *data)
 {
     if (_output->size() > g_max_response_size) {
-        logger(LG_INFO, "Maximum response size of %d bytes exceeded!", g_max_response_size);
+        logger(LG_INFO, "Maximum response size of %lu bytes exceeded!", g_max_response_size);
         // _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED, "Maximum response size of %d reached", g_max_response_size);
         // currently we only log an error into the log file and do
         // not abort the query. We handle it like Limit:

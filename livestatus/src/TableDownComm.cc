@@ -145,7 +145,7 @@ void TableDownComm::remove(DowntimeOrComment *data)
     dc_key tmp_key = make_pair(data->_id, data->_service != 0);
     _entries_t::iterator it = _entries.find(tmp_key);
     if (it == _entries.end())
-        logger(LG_INFO, "Cannot delete non-existing downtime/comment %u", data->_id);
+        logger(LG_INFO, "Cannot delete non-existing downtime/comment %lu", data->_id);
     else {
         delete it->second;
         _entries.erase(it);

@@ -25,6 +25,7 @@
 #include "Logfile.h"
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
@@ -157,7 +158,7 @@ void Logfile::loadRange(FILE *file, unsigned missing_types,
     while (fgets(_linebuffer, MAX_LOGLINE, file))
     {
         if (_lineno >= g_max_lines_per_logfile) {
-            logger(LG_ERR, "More than %u lines in %s. Ignoring the rest!", g_max_lines_per_logfile, this->_path);
+            logger(LG_ERR, "More than %lu lines in %s. Ignoring the rest!", g_max_lines_per_logfile, this->_path);
             return;
         }
         _lineno++;
@@ -315,7 +316,8 @@ char *Logfile::readIntoBuffer(int *size)
         return 0;
     }
     else if (r != *size) {
-        logger(LOG_WARNING, "Read only %d out of %d bytes from %s", r, *size, _path);
+        logger(LOG_WARNING, "Read only %" PRIdMAX " out of %d bytes from %s",
+               static_cast<intmax_t>(r), *size, _path);
         free(buffer);
         close(fd);
         return 0;

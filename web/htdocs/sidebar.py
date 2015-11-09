@@ -190,8 +190,8 @@ def sidebar_foot():
                          target="main")
     # editing the profile is not possible on remote sites which are sync targets
     # of a central WATO system
-    if config.wato_enabled and \
-       (config.may("general.edit_profile") or config.may("general.change_password")):
+    #if config.wato_enabled and \
+    if (config.may("general.edit_profile") or config.may("general.change_password")):
         html.icon_button("user_profile.py", _("Edit your personal settings, change your password"),
             "sidebar_settings", target="main")
     if config.may("general.logout") and not config.auth_by_http_header:

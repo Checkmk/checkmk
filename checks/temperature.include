@@ -198,7 +198,7 @@ def check_temperature(reading, params, dev_unit = "c",
         else:
             status = max(status, dev_status)
 
-    perfdata = [ ("temp", temp, warn, crit, warn_lower, crit_lower) ]
+    perfdata = [ ("temp", temp, warn, crit) ]
 
     # Render actual temperature, e.g. "17.8 °F"
     infotext = "%s %s" % (render_temp(temp, output_unit), temp_unitsym[output_unit])

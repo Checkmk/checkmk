@@ -54,12 +54,11 @@ public:
     virtual ~Column() {}
     const char *name() const { return _name.c_str(); }
     const char *description() const { return _description.c_str(); }
-    virtual std::string valueAsString(void *data __attribute__ ((__unused__)), Query *)
-        { return "invalid"; }
+    virtual std::string valueAsString(void *, Query *) { return "invalid"; }
     virtual int type() = 0;
     virtual void output(void *data, Query *) = 0;
     virtual bool mustDelete() { return false; } // true for dynamic Columns to be deleted after Query
-    virtual Filter *createFilter(int opid __attribute__ ((__unused__)), char *value __attribute__ ((__unused__))) { return 0; }
+    virtual Filter *createFilter(int, char *) { return 0; }
     void *shiftPointer(void *data);
     void setExtraOffset(int o) { _extra_offset = o; }
 };

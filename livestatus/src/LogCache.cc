@@ -213,7 +213,7 @@ void LogCache::dumpLogfiles()
    The parameters to this method reflect the current query,
    not the messages that just has been loaded.
  */
-void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((__unused__)), time_t until __attribute__ ((__unused__)), unsigned logclasses)
+void LogCache::handleNewMessage(Logfile *logfile, time_t, time_t, unsigned logclasses)
 {
     if ( static_cast<unsigned long>(++num_cached_log_messages) <= _max_cached_messages  )
         return; // current message count still allowed, everything ok

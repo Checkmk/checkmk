@@ -53,7 +53,7 @@ public:
     virtual const char *name() = 0;
     virtual const char *prefixname() { return name(); }
     virtual bool isAuthorized(contact *, void *) { return true; }
-    virtual void *findObject(char *objectspec __attribute__ ((__unused__))) { return 0; } // objectspec may be modified while parsing
+    virtual void *findObject(char *) { return 0; } // objectspec may be modified while parsing
     void addColumn(Column *);
     bool hasColumn(Column *);
     void addDynamicColumn(DynamicColumn *);

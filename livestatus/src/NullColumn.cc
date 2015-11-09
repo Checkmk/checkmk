@@ -26,7 +26,7 @@
 #include "Query.h"
 
 
-void NullColumn::output(void *data __attribute__ ((__unused__)), Query *query)
+void NullColumn::output(void *, Query *query)
 {
     query->outputNull();
 }

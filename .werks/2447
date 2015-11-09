@@ -1,0 +1,10 @@
+Title: Fixed sorting of performancedata values with units
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p14
+Date: 1447065454
+Class: fix
+
+The sorting of performancedata values like <i>rta=0.087ms;200.000;500.000;0;</i> was broken.
+The sorter did not work when a unit was attached to the value.

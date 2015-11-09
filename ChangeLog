@@ -1,4 +1,7 @@
 1.2.6p14:
+    Multisite:
+    * 2447 FIX: Fixed sorting of performancedata values with units...
+
 
 1.2.6p13:
     Core & Setup:

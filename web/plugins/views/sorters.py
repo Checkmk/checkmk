@@ -182,7 +182,7 @@ declare_1to1_sorter("svc_staleness",              cmp_simple_number)
 declare_1to1_sorter("svc_servicelevel",           cmp_simple_number)
 
 def cmp_perfdata_nth_value(r1, r2, n):
-    return cmp(savefloat(get_perfdata_nth_value(r1, n)), savefloat(get_perfdata_nth_value(r2, n)))
+    return cmp(savefloat(get_perfdata_nth_value(r1, n, True)), savefloat(get_perfdata_nth_value(r2, n, True)))
 
 multisite_sorters['svc_perf_val01'] = {
     "title"   : _("Service performance data - value number %02d" % 1),

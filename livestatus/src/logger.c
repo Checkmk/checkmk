@@ -61,9 +61,8 @@ void logger(int priority, const char *loginfo, ...)
     if (!g_logfile || g_mainthread_id == pthread_self()) {
         char buffer[8192];
         snprintf(buffer, 20, "livestatus: ");
-        vsnprintf(buffer + strlen(buffer),
-        sizeof(buffer) - strlen(buffer), loginfo, ap);
-        va_end(ap);
+        vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer),
+                  loginfo, ap);
         write_to_all_logs(buffer, priority);
     }
     else {
@@ -71,7 +70,8 @@ void logger(int priority, const char *loginfo, ...)
             /* write date/time */
             char timestring[64];
             time_t now_t = time(0);
-            struct tm now; localtime_r(&now_t, &now);
+            struct tm now;
+            localtime_r(&now_t, &now);
             strftime(timestring, 64, "%F %T ", &now);
             fputs(timestring, g_logfile);
 
@@ -79,7 +79,7 @@ void logger(int priority, const char *loginfo, ...)
             vfprintf(g_logfile, loginfo, ap);
             fputc('\n', g_logfile);
             fflush(g_logfile);
-            va_end(ap);
         }
     }
+    va_end(ap);
 }

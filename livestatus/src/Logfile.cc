@@ -170,14 +170,19 @@ void Logfile::loadRange(FILE *file, unsigned missing_types,
 long Logfile::freeMessages(unsigned logclasses)
 {
     long freed = 0;
-    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
+    // We have to be careful here: Erasing an element from an associative
+    // container invalidates the iterator pointing to it. The solution is the
+    // usual post-increment idiom, see Scott Meyers' "Effective STL", item 9
+    // ("Choose carefully among erasing options.").
+    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end();)
     {
         LogEntry *entry = it->second;
-        if ((1 << entry->_logclass) & logclasses)
-        {
-            delete it->second;
-            _entries.erase(it);
+        if ((1 << entry->_logclass) & logclasses) {
+            delete entry;
+            _entries.erase(it++);
             freed ++;
+        } else {
+            ++it;
         }
     }
     _logclasses_read &= ~logclasses;

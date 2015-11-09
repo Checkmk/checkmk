@@ -77,6 +77,7 @@ def check_esx_vsphere_datastores(item, params, info):
             prov_percent = (prov_mb / size_mb) * 100
 
         prov_txt = ''
+        warn, crit = None, None
         if 'provisioning_levels' in params:
             warn, crit = params['provisioning_levels']
             levels_text = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)

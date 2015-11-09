@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "pnp4nagios.h"
-#include <string.h>
+#include <stddef.h>
 #include <sys/stat.h>
 #include <unistd.h>
 

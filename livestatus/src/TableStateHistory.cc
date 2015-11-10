@@ -335,7 +335,6 @@ void TableStateHistory::answerQuery(Query *query)
         _it_entries = _entries->begin();
 
     // From now on use getPreviousLogentry() / getNextLogentry()
-    HostServiceKey key;
     bool only_update = true;
     bool in_nagios_initial_states = false;
 
@@ -374,7 +373,7 @@ void TableStateHistory::answerQuery(Query *query)
             in_nagios_initial_states = false;
         }
 
-        key = 0;
+        HostServiceKey key = 0;
         bool is_service = false;
         switch (entry->_type) {
         case NONE:

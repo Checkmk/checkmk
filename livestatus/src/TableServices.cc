@@ -71,14 +71,13 @@ void TableServices::answerQuery(Query *query)
     if (_by_group) {
         servicegroup *sgroup = servicegroup_list;
         servicebygroup sg;
-        bool show_sgroup;
 
         // When g_group_authorization is set to AUTH_STRICT we need to pre-check
         // if every service of this group is visible to the _auth_user
         bool requires_precheck = query->authUser() && g_group_authorization == AUTH_STRICT;
 
         while (sgroup) {
-            show_sgroup = true;
+            bool show_sgroup = true;
             sg._servicegroup = sgroup;
             servicesmember *mem = sgroup->members;
             if (requires_precheck) {

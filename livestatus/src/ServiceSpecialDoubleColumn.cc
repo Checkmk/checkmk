@@ -47,10 +47,9 @@ double ServiceSpecialDoubleColumn::getValue(void *data)
             bool is_cmk_passive = !strncmp(svc->check_command_ptr->name, "check_mk-", 9);
             if (is_cmk_passive) {
                 host *host = svc->host_ptr;
-                service *tmp_svc;
                 servicesmember *svc_member = host->services;
                 while (svc_member != 0) {
-                    tmp_svc = svc_member->service_ptr;
+                    service *tmp_svc = svc_member->service_ptr;
                     if (!strncmp(tmp_svc->check_command_ptr->name, "check-mk", 9)) {
                         return check_result_age / ((tmp_svc->check_interval == 0 ? 1 : tmp_svc->check_interval) * interval_length);
                     }

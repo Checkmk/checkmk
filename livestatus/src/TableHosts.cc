@@ -375,14 +375,13 @@ void TableHosts::answerQuery(Query *query)
     if (_by_group) {
         hostgroup *hgroup = hostgroup_list;
         hostbygroup hg;
-        bool show_hgroup;
 
         // When g_group_authorization is set to AUTH_STRICT we need to pre-check
         // if every host of this group is visible to the _auth_user
         bool requires_precheck = query->authUser() && g_group_authorization == AUTH_STRICT;
 
         while (hgroup) {
-            show_hgroup = true;
+            bool show_hgroup = true;
             hg._hostgroup = hgroup;
             hostsmember *mem = hgroup->members;
             if (requires_precheck) {

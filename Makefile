@@ -56,8 +56,9 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 	       $$(find agents/plugins -type f)
 
 .PHONY: all check-binaries check check-permissions check-spaces check-version \
-	clean cppcheck dist headers healspaces help iwyu minify-js mk-eventd \
-	mk-livestatus mrproper optimize-images packages setup setversion version
+	clean cppcheck dist doxygen headers healspaces help iwyu minify-js \
+	mk-eventd mk-livestatus mrproper optimize-images packages setup \
+	setversion version
 
 all: dist packages
 
@@ -250,3 +251,7 @@ iwyu:
 
 cppcheck:
 	$(CPPCHECK) --enable=all --template=gcc livestatus
+
+# Note: You need the doxygen and graphviz packages.
+documentation:
+	doxygen doc/Doxyfile

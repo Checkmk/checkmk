@@ -306,9 +306,9 @@ def parse_perf_data(perf_data_string, check_command=None):
         return x in [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ]
 
     # Parse performance data, at least try
-    try:
-        perf_data = []
-        for part in parts:
+    perf_data = []
+    for part in parts:
+        try:
             varname, values = part.split("=", 1)
             varname = varname.replace("\"", "").replace("\'", "")
             value_parts = values.split(";")
@@ -325,10 +325,10 @@ def parse_perf_data(perf_data_string, check_command=None):
             unit_name = value_text[i:]
             value = value_text[:i]
             perf_data.append((varname, value, unit_name, warn, crit, min, max))
-    except:
-        if config.debug:
-            raise
-        perf_data = None
+        except:
+            if config.debug:
+                raise
+            perf_data = None
 
     return perf_data, check_command
 

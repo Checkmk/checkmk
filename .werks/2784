@@ -1,0 +1,10 @@
+Title: Search function of tables: fixed exception when columns contain utf-8 encoded umlauts
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1447150471
+
+This exception did not happen on every umlaut, just on columns with the python datatype <i>str</i>.

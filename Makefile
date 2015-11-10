@@ -250,7 +250,7 @@ iwyu:
 	$(MAKE) -C livestatus CC=$(IWYU) CXX=$(IWYU) -k
 
 cppcheck:
-	$(CPPCHECK) --enable=all --template=gcc livestatus
+	$(CPPCHECK) --enable=all --inline-suppr --template=gcc livestatus
 
 # Note: You need the doxygen and graphviz packages.
 documentation:

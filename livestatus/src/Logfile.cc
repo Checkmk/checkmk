@@ -46,6 +46,11 @@ using std::make_pair;
 extern unsigned long g_max_lines_per_logfile;
 
 
+// TODO: We need the suppression pragma below because _readpos and _linebuffer
+// is not initialized in the constructor. Just replace all this manual fiddling
+// with pointers, offsets, etc. with vector.
+
+// cppcheck-suppress uninitMemberVar
 Logfile::Logfile(const char *path, bool watch)
   : _path(strdup(path))
   , _since(0)

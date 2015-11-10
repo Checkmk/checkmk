@@ -33,6 +33,7 @@ DISTNAME       	= $(NAME)-$(VERSION)
 TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ \
 		  --exclude=.gitignore --exclude=*.swp --exclude=.f12
 IWYU            = include-what-you-use
+CPPCHECK        = cppcheck
 
 # File to pack into livestatus-$(VERSION).tar.gz
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
@@ -55,7 +56,7 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 	       $$(find agents/plugins -type f)
 
 .PHONY: all check-binaries check check-permissions check-spaces check-version \
-	clean dist headers healspaces help iwyu minify-js mk-eventd \
+	clean cppcheck dist headers healspaces help iwyu minify-js mk-eventd \
 	mk-livestatus mrproper optimize-images packages setup setversion version
 
 all: dist packages
@@ -246,3 +247,6 @@ setup:
 iwyu:
 	$(MAKE) -C livestatus clean
 	$(MAKE) -C livestatus CC=$(IWYU) CXX=$(IWYU) -k
+
+cppcheck:
+	$(CPPCHECK) --enable=all --template=gcc livestatus

@@ -141,7 +141,8 @@ check_info['oracle_diva_csm.archive'] = {
 
 
 def inventory_oracle_diva_csm_objects(info):
-    yield None, None
+    if len(info) > 4 and len(info[4]) > 0:
+        yield None, None
 
 
 def check_oracle_diva_csm_objects(item, params, info):
@@ -179,7 +180,8 @@ oracle_diva_csm_tapes_default_levels = (5, 1)       # number of remaining blank 
 
 
 def inventory_oracle_diva_csm_tapes(info):
-    yield None, 'oracle_diva_csm_tapes_default_levels'
+    if len(info) > 5 and len(info[5]) > 0 and len(info[5][0]) > 0:
+        yield None, 'oracle_diva_csm_tapes_default_levels'
 
 
 def check_oracle_diva_csm_tapes(item, params, info):

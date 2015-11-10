@@ -64,6 +64,7 @@
     * 2783 FIX: esx_vsphere_datastores: fixed crash when no provisioning levels were set
     * 2700 FIX: ibm_svc_node: fixed handling with agent output after firmware update
     * 2701 FIX: zfsget: fixed handling in case of zero total size based on buggy 'df -h' command on some solaris systems...
+    * 2702 FIX: oracle_diva_csm: fixed handling of empty sublists
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

@@ -32,7 +32,7 @@ class NegatingFilter : public Filter
 {
     Filter *_filter;
 public:
-    NegatingFilter(Filter *filter) : _filter(filter) {}
+    explicit NegatingFilter(Filter *filter) : _filter(filter) {}
     ~NegatingFilter() { delete _filter; }
     bool isNegatingFilter() { return true; }
     Filter *subfilter() { return _filter; }

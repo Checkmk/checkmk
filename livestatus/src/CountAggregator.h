@@ -36,7 +36,7 @@ class CountAggregator : public Aggregator
 {
     Filter *_filter;
 public:
-    CountAggregator(Filter *f) : Aggregator(STATS_OP_COUNT), _filter(f) {}
+    explicit CountAggregator(Filter *f) : Aggregator(STATS_OP_COUNT), _filter(f) {}
     void consume(void *data, Query *);
     void output(Query *);
 };

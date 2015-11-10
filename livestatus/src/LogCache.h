@@ -44,7 +44,7 @@ class LogCache
     _logfiles_t     _logfiles;
 
 public:
-    LogCache(unsigned long max_cached_messages);
+    explicit LogCache(unsigned long max_cached_messages);
     ~LogCache();
     void setMaxCachedMessages(unsigned long m);
     time_t _last_index_update;

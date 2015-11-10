@@ -43,7 +43,7 @@ class TableDownComm : public Table
     _entries_t _entries;
 
 public:
-    TableDownComm(bool is_downtime);
+    explicit TableDownComm(bool is_downtime);
     const char *name() { return _name; }
     ~TableDownComm();
     DowntimeOrComment *findEntry(unsigned long id, bool is_service);

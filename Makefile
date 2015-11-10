@@ -54,7 +54,9 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 	       agents/special/* \
 	       $$(find agents/plugins -type f)
 
-.PHONY: help install clean
+.PHONY: all check-binaries check check-permissions check-spaces check-version \
+	clean dist headers healspaces help iwyu minify-js mk-eventd \
+	mk-livestatus mrproper optimize-images packages setup setversion version
 
 all: dist packages
 

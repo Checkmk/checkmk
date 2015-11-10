@@ -34,7 +34,7 @@
 # unit:               The definition-dict of a unit like in unit_info
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
-import math, time, colorsys
+import math, time, colorsys, shlex
 import config, defaults, pagetypes, table
 from lib import *
 from valuespec import *
@@ -278,12 +278,14 @@ def mix_colors(a, b):
 # Convert perf_data_string into perf_data, extract check_command
 def parse_perf_data(perf_data_string, check_command=None):
     # Strip away arguments like in "check_http!-H mathias-kettner.de"
+    # FIXME: check_command=None? Fails here!
     check_command = check_command.split("!")[0]
 
     if not perf_data_string:
         return None, check_command
 
-    parts = perf_data_string.split()
+    # Split the perf data string into parts. Preserve quoted strings!
+    parts = shlex.split(perf_data_string)
 
     # Try if check command is appended to performance data
     # in a PNP like style
@@ -300,7 +302,8 @@ def parse_perf_data(perf_data_string, check_command=None):
     try:
         perf_data = []
         for part in parts:
-            varname, values = part.split("=")
+            varname, values = part.split("=", 1)
+            varname = varname.replace("\"", "").replace("\'", "")
             value_parts = values.split(";")
             while len(value_parts) < 5:
                 value_parts.append(None)

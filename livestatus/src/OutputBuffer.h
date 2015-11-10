@@ -52,6 +52,11 @@ class OutputBuffer
     std::string _error_message;
     bool _do_keepalive;
 
+    // We use dynamically allocated memory => disable copy/assignment
+    // TODO: Just use vector instead of all this manual fiddling...
+    OutputBuffer(const OutputBuffer&);
+    OutputBuffer& operator=(const OutputBuffer&);
+
 public:
     OutputBuffer();
     ~OutputBuffer();

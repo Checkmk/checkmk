@@ -25,11 +25,11 @@
 #include "Logfile.h"
 #include <errno.h>
 #include <fcntl.h>
-#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <cinttypes>
 #include <utility>
 #include "LogCache.h"
 #include "LogEntry.h"

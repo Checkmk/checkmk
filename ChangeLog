@@ -1,4 +1,7 @@
 1.2.6p15:
+    Multisite:
+    * 2784 FIX: Search function of tables: fixed exception when columns contain utf-8 encoded umlauts...
+
 
 1.2.6p14:
     Checks & Agents:

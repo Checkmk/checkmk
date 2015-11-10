@@ -275,6 +275,13 @@ def mix_colors(a, b):
 #   |  Parsing of performance data into metrics, evaluation of expressions |
 #   '----------------------------------------------------------------------'
 
+
+def split_perf_data(perf_data_string):
+    # In python < 2.5 shlex.split can not deal with unicode strings. But we always
+    # have unicode strings. So encode and decode again.
+    return map(lambda s: s.decode('utf-8'), shlex.split(perf_data_string.encode('utf-8')))
+
+
 # Convert perf_data_string into perf_data, extract check_command
 def parse_perf_data(perf_data_string, check_command=None):
     # Strip away arguments like in "check_http!-H mathias-kettner.de"
@@ -285,7 +292,7 @@ def parse_perf_data(perf_data_string, check_command=None):
         return None, check_command
 
     # Split the perf data string into parts. Preserve quoted strings!
-    parts = shlex.split(perf_data_string)
+    parts = split_perf_data(perf_data_string)
 
     # Try if check command is appended to performance data
     # in a PNP like style

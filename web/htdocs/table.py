@@ -193,9 +193,6 @@ def end():
                     if state == "header" or fixed:
                         continue # skip filtering of headers or fixed rows
                     for cell_content, css_classes, colspan in row:
-                        if type(cell_content) == str:
-                            cell_content = cell_content.decode("utf-8")
-
                         if fixed or search_term in cell_content.lower():
                             filtered_rows.append((row, css, state, fixed))
                             break # skip other cells when matched

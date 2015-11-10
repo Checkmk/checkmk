@@ -28,14 +28,23 @@
 # Put here the example output from your TCP-Based agent. If the
 # check is SNMP-Based, then remove this section
 
+# newer agent output with more columns
+# 1:N1_164191:10001AA202:500507680100D7CA:online:0:io_grp0:no:2040000051442002:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n1164191::164191:::::
+# 2:N2_164373:10001AA259:500507680100D874:online:0:io_grp0:no:2040000051442149:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n2164373::164373:::::
+# 5:N3_162711:100025E317:500507680100D0A7:online:1:io_grp1:no:2040000085543047:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n3162711::162711:::::
+# 6:N4_164312:100025E315:500507680100D880:online:1:io_grp1:yes:2040000085543045:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n4164312::164312:::::
+
 def inventory_ibm_svc_node(info):
     io_groups = {}
     inventory = []
-    for node_id, node_name, ups_serial, wwnn, node_status, io_group_id, \
-        io_group_name, config_node, ups_unique_id, hardware, iscsi_name, \
-        iscsi_alias, panel_name, enclosure_id, canister_id, \
-        enclosure_serial_number, additional in info:
-            io_groups[io_group_name] = 1
+    for line in info:
+        node_id, node_name, ups_serial, wwnn, node_status, io_group_id,\
+        io_group_name, config_node, ups_unique_id, hardware, iscsi_name,\
+        iscsi_alias, panel_name, enclosure_id, canister_id,\
+        enclosure_serial_number, additional = line[:17]
+        io_groups[io_group_name] = 1
+    for line in info:
+        io_groups[line[5]] = 1
     for io_group_name in io_groups.keys():
         inventory.append( (io_group_name, None) )
     return inventory
@@ -46,17 +55,18 @@ def check_ibm_svc_node(item, _no_params, info):
     online_nodes = 0
     nodes_of_iogroup = 0
 
-    for node_id, node_name, ups_serial, wwnn, node_status, io_group_id, \
-        io_group_name, config_node, ups_unique_id, hardware, iscsi_name, \
-        iscsi_alias, panel_name, enclosure_id, canister_id, \
-        enclosure_serial_number, additional in info:
-            if io_group_name == item:
-                if message != "":
-                    message += ", "
-                message += "Node %s is %s" % (node_name, node_status)
-                nodes_of_iogroup += 1
-                if node_status == "online":
-                    online_nodes += 1
+    for line in info:
+        node_id, node_name, ups_serial, wwnn, node_status, io_group_id,\
+        io_group_name, config_node, ups_unique_id, hardware, iscsi_name,\
+        iscsi_alias, panel_name, enclosure_id, canister_id,\
+        enclosure_serial_number, additional = line[:17]
+        if io_group_name == item:
+            if message != "":
+                message += ", "
+            message += "Node %s is %s" % (node_name, node_status)
+            nodes_of_iogroup += 1
+            if node_status == "online":
+                online_nodes += 1
 
     if nodes_of_iogroup == 0:
         return 3, "IO Group %s not found in agent output" % item

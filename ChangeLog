@@ -3,6 +3,7 @@
     * 2894 FIX: Fixed broken cluster checks when using Nagios core...
 
     Checks & Agents:
+    * 2700 FIX: ibm_svc_node: fixed handling with agent output after firmware update
     * 2875 FIX: citrix_farm.ps1: Add missing end marker of piggy data - fixes problem in subsequent plugins
     * 2883 FIX: default.php template: fixed id_string while creating default template, e.g. for custom checks
     * 2807 FIX: check_mail_loop: POP3 protocol wasn't working at all

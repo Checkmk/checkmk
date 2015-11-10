@@ -34,7 +34,6 @@
 #include "global_counters.h"
 #include "logger.h"
 #include "strutil.h"
-#include "tables.h"
 
 // TODO: Remove this hack.
 #ifdef EXTERN

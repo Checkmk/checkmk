@@ -879,7 +879,7 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state)
 
 bool TableStateHistory::isAuthorized(contact *ctc, void *data)
 {
-    HostServiceState *entry = (HostServiceState *)data;
+    HostServiceState *entry = static_cast<HostServiceState *>(data);
     service *svc = entry->_service;
     host *hst = entry->_host;
 

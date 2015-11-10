@@ -164,7 +164,7 @@ void TableLog::answerQuery(Query *query)
 
 bool TableLog::isAuthorized(contact *ctc, void *data)
 {
-    LogEntry *entry = (LogEntry *)data;
+    LogEntry *entry = static_cast<LogEntry *>(data);
     service *svc = entry->_service;
     host *hst = entry->_host;
 

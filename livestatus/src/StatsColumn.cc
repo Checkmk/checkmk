@@ -26,13 +26,13 @@
 #include "Column.h"
 #include "CountAggregator.h"
 #include "DoubleAggregator.h"
+#include "DoubleColumn.h"
 #include "Filter.h"
 #include "IntAggregator.h"
+#include "IntColumn.h"
 #include "PerfdataAggregator.h"
+#include "StringColumn.h"
 #include "strutil.h"
-class DoubleColumn;
-class IntColumn;
-class StringColumn;
 
 
 StatsColumn::~StatsColumn()
@@ -47,11 +47,11 @@ Aggregator *StatsColumn::createAggregator()
     if (_operation == STATS_OP_COUNT)
         return new CountAggregator(_filter);
     else if (_column->type() == COLTYPE_INT || _column->type() == COLTYPE_TIME)
-        return new IntAggregator((IntColumn *)_column, _operation);
+        return new IntAggregator(static_cast<IntColumn *>(_column), _operation);
     else if (_column->type() == COLTYPE_DOUBLE)
-        return new DoubleAggregator((DoubleColumn *)_column, _operation);
+        return new DoubleAggregator(static_cast<DoubleColumn *>(_column), _operation);
     else if (_column->type() == COLTYPE_STRING and ends_with(_column->name(), "perf_data"))
-        return new PerfdataAggregator((StringColumn *)_column, _operation);
+        return new PerfdataAggregator(static_cast<StringColumn *>(_column), _operation);
     else  // unaggregateble column
         return new CountAggregator(_filter);
 }

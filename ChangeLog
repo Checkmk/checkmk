@@ -62,6 +62,7 @@
     * 2754 FIX: ipmitool: Killing asynchronous ipmitool call after 300 seconds...
     * 2755 FIX: apc_symmetra: Check is handling missing data more robust now
     * 2783 FIX: esx_vsphere_datastores: fixed crash when no provisioning levels were set
+    * 2700 FIX: ibm_svc_node: fixed handling with agent output after firmware update
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

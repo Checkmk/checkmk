@@ -111,7 +111,7 @@ bool LogCache::logCachePreChecks()
 {
     // Do we have any logfiles (should always be the case,
     // but we don't want to crash...
-    if (_logfiles.size() == 0) {
+    if (_logfiles.empty()) {
         logger(LOG_INFO, "Warning: no logfile found, not even %s", log_file);
         return false;
     }

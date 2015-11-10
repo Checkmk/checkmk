@@ -322,7 +322,7 @@ void TableStateHistory::answerQuery(Query *query)
     // Determine initial logentry
     LogEntry* entry;
     _entries = _it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
-    if (_entries->size() > 0 &&_it_logs != newest_log) {
+    if (!_entries->empty() &&_it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--_it_entries != _entries->begin()) {

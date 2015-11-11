@@ -264,7 +264,13 @@ def query_nodes(what, only_first = False, node_attribute = "node-name"):
 
 section_errors = []
 def query(what, return_toplevel_node = False):
-    response = server.invoke(what)
+    # HACK: if "what" endswith get-iter, add max_records = 5000
+    # This approach is way easier than reading the tag, invoke another
+    # command and merge all answers together
+    if what.endswith("get-iter"):
+        response = server.invoke(what, "max-records", 5000)
+    else:
+        response = server.invoke(what)
 
     if response.results_status() == "failed":
         section_errors.append("In class %s: %s" % (what, response.results_reason()))

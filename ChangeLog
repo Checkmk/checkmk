@@ -33,6 +33,7 @@
     * 2755 FIX: apc_symmetra: Check is handling missing data more robust now
     * 2783 FIX: esx_vsphere_datastores: fixed crash when no provisioning levels were set
     * 2761 FIX: check_http: Fixed handling of multiple strings given as "Strings to expect in server response"
+    * 2786 FIX: agent_netapp: now able to monitor more than 20 instances of a given type, e.g. volumes or interfaces...
 
     Multisite:
     * 2670 FIX: Fix problem that no site is configured when user has deleted only site...

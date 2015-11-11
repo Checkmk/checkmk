@@ -5602,3 +5602,14 @@ graph_info.append({
         ( "rta", "line" ),
     ],
 })
+
+graph_info.append({
+    "metrics" : [
+        ( "mem_perm_used", "area" )
+    ],
+    "scalars" : [
+        "mem_perm_used:warn",
+        "mem_perm_used:crit",
+    ],
+    "range" : (0, "mem_perm_used:max")
+})

@@ -1,0 +1,11 @@
+Title: Allowing Emails to contain special characters like umlauts
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i3p4
+Date: 1447230555
+Class: fix
+
+The LDAP synchronization of Check_MK could already synchronize emails addresses
+containing special characters like umlauts. But this was not supported by the
+GUI, notification engine and core. This has been fixed now.

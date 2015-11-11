@@ -12909,6 +12909,8 @@ def mode_edit_user(phase):
     else:
         vs_user_id = FixedValue(userid)
 
+    vs_email = EmailAddressUnicode()
+
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
     locked_attributes = userdb.locked_attributes(user.get('connector'))
@@ -13010,10 +13012,8 @@ def mode_edit_user(phase):
             new_user['serial'] = new_user.get('serial', 0) + 1
 
         # Email address
-        email = html.var("email", '').strip()
-        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*$'
-        if email and not re.match(regex_email, email):
-            raise MKUserError("email", _("'%s' is not a valid email address." % email))
+        email = vs_email.from_html_vars("email")
+        vs_email.validate_value(email, "email")
         new_user["email"] = email
 
         # Pager
@@ -13117,7 +13117,13 @@ def mode_edit_user(phase):
 
     # Email address
     forms.section(_("Email address"))
-    lockable_input('email', '')
+    email = user.get("email", "")
+    if not is_locked("email"):
+        vs_email.render_input("email", email)
+    else:
+        html.write(email)
+        html.hidden_field("email", email)
+
     html.help(_("The email address is optional and is needed "
                 "if the user is a monitoring contact and receives notifications "
                 "via Email."))

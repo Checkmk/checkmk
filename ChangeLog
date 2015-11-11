@@ -89,6 +89,7 @@
 
     WATO:
     * 2442 WATO remove host: improved cleanup of obsolete host files...
+    * 2785 WATO Web-API: i18n of error messages and intitial validation of incoming request...
     * 2666 FIX: Fix search for global configuration variables: ignore case now
     * 2715 FIX: Fixed visibility of BI aggregations in editor
     * 2716 FIX: Fixed error reporting on disabled checks page in case of broken man pages

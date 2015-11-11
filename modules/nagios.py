@@ -848,11 +848,11 @@ def create_nagios_config_contacts(outfile, hostnames):
             if not cgrs:
                 continue
 
-            outfile.write("define contact {\n  contact_name\t\t\t%s\n" % cname)
+            outfile.write("define contact {\n  contact_name\t\t\t%s\n" % make_utf8(cname))
             if "alias" in contact:
                 outfile.write("  alias\t\t\t\t%s\n" % make_utf8(contact["alias"]))
             if "email" in contact:
-                outfile.write("  email\t\t\t\t%s\n" % contact["email"])
+                outfile.write("  email\t\t\t\t%s\n" % make_utf8(contact["email"]))
             if "pager" in contact:
                 outfile.write("  pager\t\t\t\t%s\n" % contact["pager"])
             if enable_rulebased_notifications:

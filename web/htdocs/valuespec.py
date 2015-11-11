@@ -514,6 +514,7 @@ class RegExpUnicode(TextUnicode, RegExp):
         RegExp.validate_value(self, value, varprefix)
         ValueSpec.custom_validate(self, value, varprefix)
 
+
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
         kwargs.setdefault("size", 40)
@@ -531,6 +532,18 @@ class EmailAddress(TextAscii):
             return '<a href="mailto:%s">%s</a>' % (html.attrencode(value), html.attrencode(value))
         else:
             return value
+
+
+class EmailAddressUnicode(TextUnicode, EmailAddress):
+    def __init__(self, **kwargs):
+        TextUnicode.__init__(self, **kwargs)
+        EmailAddress.__init__(self, **kwargs)
+        self._regex = re.compile(r'^[\w._%+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
+
+    def validate_value(self, value, varprefix):
+        TextUnicode.validate_value(self, value, varprefix)
+        EmailAddress.validate_value(self, value, varprefix)
+        ValueSpec.custom_validate(self, value, varprefix)
 
 
 # Network as used in routing configuration, such as

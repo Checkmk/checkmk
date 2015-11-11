@@ -1,0 +1,10 @@
+Title: check_http: Fixed handling of multiple strings given as "Strings to expect in server response"
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1447234428
+
+

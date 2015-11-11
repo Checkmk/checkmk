@@ -66,6 +66,7 @@
     * 2700 FIX: ibm_svc_node: fixed handling with agent output after firmware update
     * 2701 FIX: zfsget: fixed handling in case of zero total size based on buggy 'df -h' command on some solaris systems...
     * 2702 FIX: oracle_diva_csm: fixed handling of empty sublists
+    * 2761 FIX: check_http: Fixed handling of multiple strings given as "Strings to expect in server response"
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

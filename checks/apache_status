@@ -78,7 +78,10 @@ def apache_status_parse(info):
             continue # Skip unexpected lines
         label = (' '.join(line[2:-1])).rstrip(':')
         value = _apache_status_fields[label][1](line[-1])
-        item = '%s:%s' % (address, port)
+        if port == None:
+            item = address
+        else:
+            item = '%s:%s' % (address, port)
 
         if item not in data:
             data[item] = {}

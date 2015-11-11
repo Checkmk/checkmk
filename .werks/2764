@@ -1,0 +1,11 @@
+Title: Fixed broken SNMP checks in case SNMP check interval is configured for clusters
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1447247901
+
+The SNMP check interval caused the agent data of single nodes to be skipped for clusters
+which could lead to CRITICAL clustered services which are based on SNMP checks.

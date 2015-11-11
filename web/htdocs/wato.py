@@ -6064,7 +6064,8 @@ class Attribute:
 # A simple text attribute. It is stored in
 # a Python unicode string
 class TextAttribute(Attribute):
-    def __init__(self, name, title, help = None, default_value="", mandatory=False, allow_empty=True, size=25):
+    def __init__(self, name, title, help = None, default_value="",
+                 mandatory=False, allow_empty=True, size=25):
         Attribute.__init__(self, name, title, help, default_value)
         self._mandatory = mandatory
         self._allow_empty = allow_empty
@@ -6125,8 +6126,10 @@ class FixedTextAttribute(TextAttribute):
 
 # A text attribute that is stored in a Nagios custom macro
 class NagiosTextAttribute(TextAttribute):
-    def __init__(self, name, nag_name, title, help = None, default_value="", mandatory = False, allow_empty=True):
-        TextAttribute.__init__(self, name, title, help, default_value, mandatory, allow_empty)
+    def __init__(self, name, nag_name, title, help=None, default_value="",
+                 mandatory=False, allow_empty=True, size=25):
+        TextAttribute.__init__(self, name, title, help, default_value,
+                               mandatory, allow_empty, size)
         self.nag_name = nag_name
 
     def nagios_name(self):

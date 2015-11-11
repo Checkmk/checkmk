@@ -459,7 +459,7 @@ fi
 # for the resource state
 if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd > /dev/null 2>&1; then
   echo '<<<heartbeat_crm>>>'
-  crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
+  TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
 fi
 if type cl_status > /dev/null 2>&1; then
   echo '<<<heartbeat_rscstatus>>>'

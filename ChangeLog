@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 2761 FIX: check_http: Fixed handling of multiple strings given as "Strings to expect in server response"
+    * 2765 FIX: heartbeat_crm: Fixed issue detecting outdated data with daylight saving time
 
 
 1.2.6p14:

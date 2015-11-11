@@ -32,6 +32,9 @@ LIBDIR	       	= $(PREFIX)/lib/$(NAME)
 DISTNAME       	= $(NAME)-$(VERSION)
 TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ \
 		  --exclude=.gitignore --exclude=*.swp --exclude=.f12
+
+CPPCHECK        = cppcheck
+DOXYGEN         = doxygen
 IWYU            = include-what-you-use
 
 # File to pack into livestatus-$(VERSION).tar.gz
@@ -54,7 +57,10 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 	       agents/special/* \
 	       $$(find agents/plugins -type f)
 
-.PHONY: help install clean
+.PHONY: all check-binaries check check-permissions check-spaces check-version \
+	clean cppcheck dist doxygen headers healspaces help iwyu minify-js \
+	mk-eventd mk-livestatus mrproper optimize-images packages setup \
+	setversion version
 
 all: dist packages
 
@@ -228,7 +234,7 @@ minify-js:
 	fi
 
 clean:
-	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	rm -rf api dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js
@@ -244,3 +250,10 @@ setup:
 iwyu:
 	$(MAKE) -C livestatus clean
 	$(MAKE) -C livestatus CC=$(IWYU) CXX=$(IWYU) -k
+
+cppcheck:
+	$(CPPCHECK) --enable=all --inline-suppr --template=gcc livestatus
+
+# Note: You need the doxygen and graphviz packages.
+documentation:
+	$(DOXYGEN) doc/Doxyfile

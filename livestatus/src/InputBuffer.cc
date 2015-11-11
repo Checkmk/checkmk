@@ -40,8 +40,13 @@ extern int g_idle_timeout_msec;
 
 bool timeout_reached(const struct timeval *, int);
 
+// TODO: We need the suppression pragma below because _readahead_buffer is not
+// initialized in the constructor. Just replace all this manual fiddling with
+// pointers, offsets, etc. with vector.
+
+// cppcheck-suppress uninitMemberVar
 InputBuffer::InputBuffer(int *termination_flag)
-  : _termination_flag(termination_flag)
+    : _fd(-1), _termination_flag(termination_flag)
 {
     _read_pointer = &_readahead_buffer[0];         // points to data not yet processed
     _write_pointer = _read_pointer;                // points to end of data in buffer

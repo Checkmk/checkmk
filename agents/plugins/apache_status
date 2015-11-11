@@ -128,8 +128,10 @@ for server in servers:
         port = server['port']
         page = server.get('page', 'server-status')
 
+    portspec = port and ":%d" % port or ""
+
     try:
-        url = '%s://%s:%s/%s?auto' % (proto, address, port, page)
+        url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
         # Try to fetch the status page for each server
         try:
             request = urllib2.Request(url, headers={"Accept" : "text/plain"})
@@ -138,7 +140,7 @@ for server in servers:
             if 'SSL23_GET_SERVER_HELLO:unknown protocol' in str(e):
                 # HACK: workaround misconfigurations where port 443 is used for
                 # serving non ssl secured http
-                url = 'http://%s:%s/server-status?auto' % (address, port)
+                url = 'http://%s%s/server-status?auto' % (address, portspec)
                 fd = urllib2.urlopen(url)
             else:
                 raise
@@ -151,7 +153,7 @@ for server in servers:
                 break
             print address, port, line
     except urllib2.HTTPError, e:
-        sys.stderr.write('HTTP-Error (%s:%d): %s %s\n' % (address, port, e.code, e))
+        sys.stderr.write('HTTP-Error (%s%s): %s %s\n' % (address, portspec, e.code, e))
 
     except Exception, e:
-        sys.stderr.write('Exception (%s:%d): %s\n' % (address, port, e))
+        sys.stderr.write('Exception (%s%s): %s\n' % (address, portspec, e))

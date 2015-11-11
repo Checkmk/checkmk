@@ -45,7 +45,6 @@ void DownCommColumn::output(void *data, Query *query)
     if (data)
     {
         bool first = true;
-        bool found_match = false;
 
         for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
                 it != table->entriesIteratorEnd();
@@ -55,7 +54,7 @@ void DownCommColumn::output(void *data, Query *query)
             bool is_service       =  it->first.second;
             DowntimeOrComment *dt =  it->second;
 
-            found_match = false;
+            bool found_match = false;
 
             if (!is_service){
                 if (dt->_host->name == ((host*)data)->name)
@@ -81,7 +80,7 @@ void DownCommColumn::output(void *data, Query *query)
                     query->outputString(dt->_comment);
                     if(_with_extra_info && !_is_downtime) {
                         query->outputSublistSeparator();
-                        query->outputInteger(((Comment*)dt)->_entry_type);
+                        query->outputInteger(static_cast<Comment*>(dt)->_entry_type);
                         query->outputSublistSeparator();
                         query->outputTime(dt->_entry_time);
                     }

@@ -36,7 +36,7 @@ class TableHosts : public Table
 {
     bool _by_group;
 public:
-    TableHosts(bool by_group);
+    explicit TableHosts(bool by_group);
     const char *name() { return _by_group ? "hostsbygroup" : "hosts"; }
     const char *prefixname() { return "hosts"; }
     bool isAuthorized(contact *ctc, void *data);

@@ -29,6 +29,8 @@
 #include <string>
 
 
+std::string pnp_cleanup(const std::string& name);
+
 int pnpgraph_present(const std::string& host,
                      const std::string& service = "_HOST_");
 

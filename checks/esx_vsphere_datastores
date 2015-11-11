@@ -77,6 +77,7 @@ def check_esx_vsphere_datastores(item, params, info):
             prov_percent = (prov_mb / size_mb) * 100
 
         prov_txt = ''
+        warn, crit = None, None
         if 'provisioning_levels' in params:
             warn, crit = params['provisioning_levels']
             levels_text = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
@@ -90,8 +91,12 @@ def check_esx_vsphere_datastores(item, params, info):
         infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%%s" % (
                       uncommitted_mb / 1024, prov_percent, prov_txt)
         if perfdata:
-            prov_warn_mb = size_mb / 100 * warn
-            prov_crit_mb = size_mb / 100 * crit
+            if warn:
+                prov_warn_mb = size_mb / 100 * warn
+                prov_crit_mb = size_mb / 100 * crit
+            else:
+                prov_warn_mb = None
+                prov_crit_mb = None
             perfdata += [
                 ('uncommitted', str(uncommitted_mb) + 'MB'),
                 ('overprovisioned', str(prov_mb) + 'MB', prov_warn_mb, prov_crit_mb),

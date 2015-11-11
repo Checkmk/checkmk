@@ -288,9 +288,14 @@ def format_plugin_output(output, row = None):
         output = output[:a] + "running on " + h + output[e+1:]
 
     if config.escape_plugin_output:
-        output = re.sub("http[s]?://[^\"'>\t\s\n,]+",
+        # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
+        # handling for the HTML code produced by check_http when "clickable URL" option is active.
+        output = re.sub("(?:&lt;A HREF=&quot;)?http[s]?://[^\"'>\t\s\n,]+(?: target=&quot;_blank&quot;&gt;)?",
                          lambda p: '<a href="%s"><img class=pluginurl align=absmiddle title="%s" src="images/pluginurl.png"></a>' %
                             (p.group(0).replace('&quot;', ''), p.group(0).replace('&quot;', '')), output)
+
+        if output.endswith(" &lt;/A&gt;"):
+            output = output[:-11]
 
     return output
 

@@ -200,7 +200,7 @@ LogEntry *TableStateHistory::getPreviousLogentry()
         if (_it_logs == g_store->logCache()->logfiles()->begin())
             return 0;
         else {
-            _it_logs--;
+            --_it_logs;
             _entries = _it_logs->second->getEntriesFromQuery(_query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
             _it_entries = _entries->end();
         }
@@ -322,7 +322,7 @@ void TableStateHistory::answerQuery(Query *query)
     // Determine initial logentry
     LogEntry* entry;
     _entries = _it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
-    if (_entries->size() > 0 &&_it_logs != newest_log) {
+    if (!_entries->empty() &&_it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--_it_entries != _entries->begin()) {
@@ -335,7 +335,6 @@ void TableStateHistory::answerQuery(Query *query)
         _it_entries = _entries->begin();
 
     // From now on use getPreviousLogentry() / getNextLogentry()
-    HostServiceKey key;
     bool only_update = true;
     bool in_nagios_initial_states = false;
 
@@ -355,7 +354,7 @@ void TableStateHistory::answerQuery(Query *query)
             while (it_hst != state_info.end()) {
                 it_hst->second->_from  = _since;
                 it_hst->second->_until = _since;
-                it_hst++;
+                ++it_hst;
             }
             only_update = false;
         }
@@ -369,12 +368,12 @@ void TableStateHistory::answerQuery(Query *query)
                 if (hst->_may_no_longer_exist) {
                     hst->_has_vanished = true;
                 }
-                it_hst++;
+                ++it_hst;
             }
             in_nagios_initial_states = false;
         }
 
-        key = 0;
+        HostServiceKey key = 0;
         bool is_service = false;
         switch (entry->_type) {
         case NONE:
@@ -460,7 +459,7 @@ void TableStateHistory::answerQuery(Query *query)
                         if (it_inh->second->_host == state->_host){
                             state->_services.push_back(it_inh->second);
                         }
-                        it_inh++;
+                        ++it_inh;
                     }
                 } else {
                     state_info_t::iterator it_inh = state_info.find(state->_host);
@@ -555,7 +554,7 @@ void TableStateHistory::answerQuery(Query *query)
                     HostServices::iterator it_svc = state->_services.begin();
                     while (it_svc != state->_services.end()) {
                         updateHostServiceState(query, entry, *it_svc, only_update);
-                        it_svc++;
+                        ++it_svc;
                     }
                 }
             }
@@ -581,7 +580,7 @@ void TableStateHistory::answerQuery(Query *query)
             state_info_t::iterator it_hst = state_info.begin();
             while (it_hst != state_info.end()) {
                 updateHostServiceState(query, entry, it_hst->second, only_update);
-                it_hst++;
+                ++it_hst;
             }
             free(buffer);
             break;
@@ -598,7 +597,7 @@ void TableStateHistory::answerQuery(Query *query)
                     it_hst->second->_last_known_time = entry->_time;
                     it_hst->second->_may_no_longer_exist = true;
                 }
-                it_hst++;
+                ++it_hst;
             }
             in_nagios_initial_states = true;
             break;
@@ -633,7 +632,7 @@ void TableStateHistory::answerQuery(Query *query)
             hst->_until = hst->_time;
 
             process(query, hst);
-            it_hst++;
+            ++it_hst;
         }
     }
 
@@ -641,7 +640,7 @@ void TableStateHistory::answerQuery(Query *query)
     it_hst = state_info.begin();
     while (it_hst != state_info.end()) {
         delete it_hst->second;
-        it_hst++;
+        ++it_hst;
     }
     state_info.clear();
     object_blacklist.clear();
@@ -879,7 +878,7 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state)
 
 bool TableStateHistory::isAuthorized(contact *ctc, void *data)
 {
-    HostServiceState *entry = (HostServiceState *)data;
+    HostServiceState *entry = static_cast<HostServiceState *>(data);
     service *svc = entry->_service;
     host *hst = entry->_host;
 

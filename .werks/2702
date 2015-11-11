@@ -1,0 +1,9 @@
+Title: oracle_diva_csm: fixed handling of empty sublists
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447169914
+Class: fix
+
+

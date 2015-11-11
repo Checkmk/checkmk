@@ -6064,7 +6064,8 @@ class Attribute:
 # A simple text attribute. It is stored in
 # a Python unicode string
 class TextAttribute(Attribute):
-    def __init__(self, name, title, help = None, default_value="", mandatory=False, allow_empty=True, size=25):
+    def __init__(self, name, title, help = None, default_value="",
+                 mandatory=False, allow_empty=True, size=25):
         Attribute.__init__(self, name, title, help, default_value)
         self._mandatory = mandatory
         self._allow_empty = allow_empty
@@ -6125,8 +6126,10 @@ class FixedTextAttribute(TextAttribute):
 
 # A text attribute that is stored in a Nagios custom macro
 class NagiosTextAttribute(TextAttribute):
-    def __init__(self, name, nag_name, title, help = None, default_value="", mandatory = False, allow_empty=True):
-        TextAttribute.__init__(self, name, title, help, default_value, mandatory, allow_empty)
+    def __init__(self, name, nag_name, title, help=None, default_value="",
+                 mandatory=False, allow_empty=True, size=25):
+        TextAttribute.__init__(self, name, title, help, default_value,
+                               mandatory, allow_empty, size)
         self.nag_name = nag_name
 
     def nagios_name(self):
@@ -11817,7 +11820,13 @@ class SiteAttribute(Attribute):
 # "need_restart" : True, # True, if remote site needs a restart (cmk -R)
 def load_replication_status():
     try:
-        return eval(file(repstatus_file).read())
+        repstatus = eval(file(repstatus_file).read())
+
+        for site_id, status in repstatus.items():
+            if site_is_local(site_id): # nevery sync to local site
+                status["need_sync"] = False
+
+        return repstatus
     except:
         return {}
 
@@ -11838,6 +11847,10 @@ def update_replication_status(site_id, vars, times = {}):
     else:
         repstatus.setdefault(site_id, {})
         repstatus[site_id].update(vars)
+
+        if site_is_local(site_id): # nevery sync to local site
+            repstatus[site_id]["need_sync"] = False
+
         old_times = repstatus[site_id].setdefault("times", {})
         for what, duration in times.items():
             if what not in old_times:
@@ -12876,6 +12889,8 @@ def mode_edit_user(phase):
     else:
         vs_user_id = FixedValue(userid)
 
+    vs_email = EmailAddressUnicode()
+
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
     locked_attributes = userdb.locked_attributes(user.get('connector'))
@@ -12977,10 +12992,8 @@ def mode_edit_user(phase):
             new_user['serial'] = new_user.get('serial', 0) + 1
 
         # Email address
-        email = html.var("email", '').strip()
-        regex_email = '^[-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*$'
-        if email and not re.match(regex_email, email):
-            raise MKUserError("email", _("'%s' is not a valid email address." % email))
+        email = vs_email.from_html_vars("email")
+        vs_email.validate_value(email, "email")
         new_user["email"] = email
 
         # Pager
@@ -13084,7 +13097,13 @@ def mode_edit_user(phase):
 
     # Email address
     forms.section(_("Email address"))
-    lockable_input('email', '')
+    email = user.get("email", "")
+    if not is_locked("email"):
+        vs_email.render_input("email", email)
+    else:
+        html.write(email)
+        html.hidden_field("email", email)
+
     html.help(_("The email address is optional and is needed "
                 "if the user is a monitoring contact and receives notifications "
                 "via Email."))

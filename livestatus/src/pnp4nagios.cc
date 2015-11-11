@@ -36,6 +36,7 @@ extern char* g_pnp_path;
 
 namespace {
 
+// TODO: Move this to some kind of C++ string utility file.
 string replace_all(const string& str, const string& chars, char replacement) {
     string result(str);
     size_t i = 0;
@@ -44,19 +45,21 @@ string replace_all(const string& str, const string& chars, char replacement) {
     }
     return result;
 }
-
-
-string cleanup(const string& name) { return replace_all(name, " /\\:", '_'); }
-
 }  // namespace
+
+
+string pnp_cleanup(const string& name)
+{
+    return replace_all(name, " /\\:", '_');
+}
 
 
 int pnpgraph_present(const string& host, const string& service) {
     string pnp_path(g_pnp_path);
     if (pnp_path.empty()) return -1;
-    string path(pnp_path.append(cleanup(host))
+    string path(pnp_path.append(pnp_cleanup(host))
                          .append("/")
-                         .append(cleanup(service))
+                         .append(pnp_cleanup(service))
                          .append(".xml"));
     return access(path.c_str(), R_OK) == 0 ? 1 : 0;
 }
@@ -67,11 +70,11 @@ string rrd_path(const string& host, const string& service,
     string pnp_path(g_pnp_path);
     if (pnp_path.empty()) return "";
     string path(pnp_path.append("/")
-                         .append(cleanup(host))
+                         .append(pnp_cleanup(host))
                          .append("/")
-                         .append(cleanup(service))
+                         .append(pnp_cleanup(service))
                          .append("_")
-                         .append(cleanup(varname))
+                         .append(pnp_cleanup(varname))
                          .append(".rrd"));
     struct stat st;
     return stat(path.c_str(), &st) == 0 ? path : "";

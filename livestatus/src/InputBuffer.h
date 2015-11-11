@@ -56,7 +56,7 @@ class InputBuffer
 
     // some buffer
 public:
-    InputBuffer(int *termination_flag);
+    explicit InputBuffer(int *termination_flag);
     void setFd(int fd);
     int readRequest();
     bool moreLines() { return !_requestlines.empty(); }

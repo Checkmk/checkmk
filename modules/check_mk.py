@@ -2201,6 +2201,7 @@ def do_update_dns_cache():
 
     return updated, failed
 
+
 def agent_port_of(hostname):
     ports = host_extra_conf(hostname, agent_ports)
     if len(ports) == 0:

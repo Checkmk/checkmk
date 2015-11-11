@@ -116,7 +116,7 @@ void OutputBuffer::flush(int fd, int *termination_flag)
         }
 
         char header[17];
-        snprintf(header, sizeof(header), "%03d %11d\n", _response_code, s);
+        snprintf(header, sizeof(header), "%03u %11d\n", _response_code, s);
         writeData(fd, termination_flag, header, 16);
         writeData(fd, termination_flag, buffer, s);
     }

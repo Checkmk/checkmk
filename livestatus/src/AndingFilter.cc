@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AndingFilter.h"
-#include <inttypes.h>
+#include <cinttypes>
 #include "OringFilter.h"
 #include "Query.h"
 #include "logger.h"

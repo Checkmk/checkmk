@@ -85,7 +85,7 @@ void store_register_downtime(nebstruct_downtime_data *d)
 
 int store_answer_request(void *ib, void *ob)
 {
-    return g_store->answerRequest((InputBuffer *)ib, (OutputBuffer *)ob);
+    return g_store->answerRequest(static_cast<InputBuffer *>(ib), static_cast<OutputBuffer *>(ob));
 }
 
 void *create_outputbuffer()
@@ -95,12 +95,12 @@ void *create_outputbuffer()
 
 void flush_output_buffer(void *ob, int fd, int *termination_flag)
 {
-    ((OutputBuffer *)ob)->flush(fd, termination_flag);
+    static_cast<OutputBuffer *>(ob)->flush(fd, termination_flag);
 }
 
 void delete_outputbuffer(void *ob)
 {
-    delete (OutputBuffer *)ob;
+    delete static_cast<OutputBuffer *>(ob);
 }
 
 void *create_inputbuffer(int *termination_flag)
@@ -110,12 +110,12 @@ void *create_inputbuffer(int *termination_flag)
 
 void set_inputbuffer_fd(void *ib, int fd)
 {
-    ((InputBuffer *)ib)->setFd(fd);
+    static_cast<InputBuffer *>(ib)->setFd(fd);
 }
 
 void delete_inputbuffer(void *ib)
 {
-    delete (InputBuffer *)ib;
+    delete static_cast<InputBuffer *>(ib);
 }
 
 void update_timeperiods_cache(time_t now)

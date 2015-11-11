@@ -101,7 +101,7 @@ struct Downtime : public DowntimeOrComment
     int           _fixed;
     int           _duration;
     int           _triggered_by;
-    Downtime(nebstruct_downtime_struct *data);
+    explicit Downtime(nebstruct_downtime_struct *data);
 };
 
 struct Comment : public DowntimeOrComment
@@ -111,7 +111,7 @@ struct Comment : public DowntimeOrComment
     int           _source;
     int           _entry_type;
     int           _expires;
-    Comment(nebstruct_comment_struct *data);
+    explicit Comment(nebstruct_comment_struct *data);
 };
 
 #endif // Downtime_h

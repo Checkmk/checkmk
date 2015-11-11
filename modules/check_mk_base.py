@@ -325,7 +325,12 @@ def get_host_info(hostname, ipaddress, checkname):
             # try the other nodes.
             try:
                 ipaddress = lookup_ipaddress(node)
-                new_info = get_realhost_info(node, ipaddress, checkname, cluster_max_cachefile_age)
+                # We must ignore the SNMP check interval when dealing with SNMP
+                # checks on cluster nodes because the cluster is always reading
+                # the cache files of the nodes.
+                new_info = get_realhost_info(node, ipaddress, checkname,
+                                             cluster_max_cachefile_age,
+                                             ignore_check_interval=True)
                 if new_info != None:
                     if add_nodeinfo:
                         new_info = [ [node] + line for line in new_info ]
@@ -393,6 +398,9 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     oid_info = snmp_info.get(check_type.split(".")[0])
     if oid_info:
         cache_path = tcp_cache_dir + "/" + cache_relpath
+
+        # Handle SNMP check interval. The idea: An SNMP check should only be
+        # executed every X seconds. Skip when called too often.
         check_interval = check_interval_of(hostname, check_type)
         if not ignore_check_interval \
            and not opt_dont_submit \

@@ -11820,7 +11820,13 @@ class SiteAttribute(Attribute):
 # "need_restart" : True, # True, if remote site needs a restart (cmk -R)
 def load_replication_status():
     try:
-        return eval(file(repstatus_file).read())
+        repstatus = eval(file(repstatus_file).read())
+
+        for site_id, status in repstatus.items():
+            if site_is_local(site_id): # nevery sync to local site
+                status["need_sync"] = False
+
+        return repstatus
     except:
         return {}
 
@@ -11841,6 +11847,10 @@ def update_replication_status(site_id, vars, times = {}):
     else:
         repstatus.setdefault(site_id, {})
         repstatus[site_id].update(vars)
+
+        if site_is_local(site_id): # nevery sync to local site
+            repstatus[site_id]["need_sync"] = False
+
         old_times = repstatus[site_id].setdefault("times", {})
         for what, duration in times.items():
             if what not in old_times:

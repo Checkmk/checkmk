@@ -1,0 +1,12 @@
+Title: Fixed case where "activate changes" was not commiting the pending changes entries correctly
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1447234005
+
+It could happen that activate changes was not commiting the pending changes entries correctly
+after applying the changes. Right after activation the changes look ok, but when coming back to
+another WATO page, the changes are visible as pending again.

@@ -1,4 +1,7 @@
 1.2.6p15:
+    Checks & Agents:
+    * 2761 FIX: check_http: Fixed handling of multiple strings given as "Strings to expect in server response"
+
 
 1.2.6p14:
     Checks & Agents:

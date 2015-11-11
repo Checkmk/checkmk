@@ -85,8 +85,8 @@ def check_http_arguments(params):
     if "onredirect" in settings:
         args += ' --onredirect=%s' % settings["onredirect"]
 
-    for s in settings.get("expect_response", []):
-        args += ' -e %s' % quote_shell_string(s)
+    if "expect_response" in settings:
+        args += ' -e %s' % quote_shell_string(",".join(settings["expect_response"]))
 
     if "expect_string" in settings:
         args += ' -s %s' % quote_shell_string(settings["expect_string"])

@@ -6574,20 +6574,40 @@ register_check_parameters(
 register_check_parameters(
     subgroup_storage,
     "snapvault",
-    _("NetApp Snapvaults"),
+    _("NetApp Snapvaults / Snapmirror Lag Time"),
     Dictionary(
          elements = [
              ("lag_time",
                Tuple(
-                   title = _("Maximum age of lag-time"),
+                   title = _("Default levels"),
                    elements = [
                        Age(title = _("Warning at")),
                        Age(title = _("Critical at")),
                     ],
                ),
              ),
+             ("policy_lag_time",
+               ListOf(
+                   Tuple(
+                       orientation = "horizontal",
+                       elements = [
+                           TextAscii(title = _("Policy name")),
+                                Tuple(
+                                    title = _("Maximum age"),
+                                    elements = [
+                                        Age(title = _("Warning at")),
+                                        Age(title = _("Critical at")),
+                                     ],
+                                ),
+                       ]
+                   ),
+                   title = _('Policy specific levels (Clustermode only)'),
+                   help = _("Here you can specify levels for different policies which overrule the levels "
+                            "from the <i>Default levels</i> parameter. This setting only works in NetApp Clustermode setups."),
+                   allow_empty = False,
+               )
+            )
          ],
-         optional_keys = False
     ),
     TextAscii(
         title = _("Source Path"),

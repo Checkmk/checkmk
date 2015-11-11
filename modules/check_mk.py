@@ -4880,6 +4880,7 @@ load_checks()
 
 opt_nowiki     = False
 opt_split_rrds = False
+opt_delete_rrds = False
 
 # Do option parsing and execute main function -
 short_options = 'ASHVLCURODMmd:Ic:nhvpXPNBilf'
@@ -4889,7 +4890,7 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "snmptranslate", "bake-agents", "force", "show-snmp-stats",
                  "usewalk", "scan-parents", "procs=", "automation=", "handle-alerts", "notify",
                  "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
-                 "convert-rrds", "compress-history", "split-rrds",
+                 "convert-rrds", "compress-history", "split-rrds", "delete-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                  "man", "nowiki", "config-check", "backup=", "restore=",
                  "check-inventory=", "check-discovery=", "discover-marked-hosts", "paths",
@@ -4970,6 +4971,8 @@ for o,a in opts:
         opt_cmc_relfilename = a
     elif o == "--split-rrds":
         opt_split_rrds = True
+    elif o == "--delete-rrds":
+        opt_delete_rrds = True
     elif o == "--hw-changes":
         opt_inv_hw_changes = int(a)
     elif o == "--sw-changes":

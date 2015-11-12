@@ -45,7 +45,6 @@ def check_dhcp_pools_levels(free, used, pending, size, params):
         infotext = "%s: %d leases (%.1f%%)" % (what, value, value_perc)
         if params.get("%s_leases" % what, ""):
             warn, crit = params["%s_leases" % what]
-            print what, warn, crit
             if type(warn) == float: # here we have levels in percent
                 value = value_perc
                 text_format = "%.1f"

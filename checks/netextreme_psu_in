@@ -24,10 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# .1.3.6.1.4.1.1916.1.1.1.27.1.3.1 4 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputVoltage.1
-# .1.3.6.1.4.1.1916.1.1.1.27.1.3.2 4 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputVoltage.2
-# .1.3.6.1.4.1.1916.1.1.1.27.1.8.1 2 --> EXTREME-SYSTEM-MIB::extremePowerSupplySource.1
-# .1.3.6.1.4.1.1916.1.1.1.27.1.8.2 2 --> EXTREME-SYSTEM-MIB::extremePowerSupplySource.2
 # .1.3.6.1.4.1.1916.1.1.1.27.1.9.1 52550 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsage.1
 # .1.3.6.1.4.1.1916.1.1.1.27.1.9.2 43700 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsage.2
 # .1.3.6.1.4.1.1916.1.1.1.27.1.11.1 -3 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsageUnitMultiplier.1
@@ -35,8 +31,7 @@
 
 # Just an assumption
 factory_settings["netextreme_psu_in_default_levels"] = {
-    "power"   : (1100, 1200), # This levels a recomended by the manufactorer
-    "voltage" : (2, 1),
+    "power"   : (110, 120), # This levels a recomended by the manufactorer
 }
 
 def parse_netextreme_psu_in(info):
@@ -44,7 +39,6 @@ def parse_netextreme_psu_in(info):
     for psu_index, psu_voltage_str, psu_usage_str, psu_factor_str in info:
         parsed["Input %s" % psu_index] = {
             "power"   : float(psu_usage_str) * pow(10, int(psu_factor_str)),
-            "voltage" : float(psu_voltage_str),
         }
     return parsed
 
@@ -57,7 +51,6 @@ check_info['netextreme_psu_in'] = {
     'has_perfdata'              : True,
     'snmp_info'                 : (".1.3.6.1.4.1.1916.1.1.1.27.1", [
                                         OID_END, # Power Supply Index
-                                        "3",     # extremePowerSupplyInputVoltage
                                         "9",     # extremePowerSupplyInputPowerUsage
                                         "11",    # extremePowerSupplyInputPowerUsageUnitMultiplier
                                   ]),

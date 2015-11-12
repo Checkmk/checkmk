@@ -359,6 +359,14 @@ check_info['esx_vsphere_hostsystem.maintenance'] = {
 #   |                                 |_|                                  |
 #   +----------------------------------------------------------------------+
 
+# 5.1
+# fc.20000024ff2e1b4c:21000024ff2e1b4c-fc.500a098088866d7e:500a098188866d7e-naa.60a9800044314f68553f436779684544 active
+# unknown.vmhba0-unknown.2:0-naa.6b8ca3a0facdc9001a2a27f8197dd718 active
+# 5.5
+# fc.20000024ff3708ec:21000024ff3708ec-fc.500a098088866d7e:500a098188866d7e-naa.60a9800044314f68553f436779684544 active
+# fc.500143802425a24d:500143802425a24c-fc.5001438024483280:5001438024483288-naa.5001438024483280 active
+# >= version 6.0
+# vmhba32:C0:T0:L0 active
 
 def esx_vsphere_multipath_convert(info):
     data = esx_vsphere_hostsystem_convert(info)

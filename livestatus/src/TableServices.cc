@@ -185,7 +185,7 @@ void TableServices::answerQuery(Query *query)
 
 bool TableServices::isAuthorized(contact *ctc, void *data)
 {
-    service *svc = (service *)data;
+    service *svc = static_cast<service *>(data);
     return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 

@@ -34,7 +34,7 @@ double HostSpecialDoubleColumn::getValue(void *data)
     data = shiftPointer(data);
     if (!data) return 0;
 
-    host *hst  = (host *)data;
+    host *hst  = static_cast<host *>(data);
 
     switch (_type) {
         case HSDC_STALENESS:

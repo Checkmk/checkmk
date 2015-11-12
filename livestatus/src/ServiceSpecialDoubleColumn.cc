@@ -34,7 +34,7 @@ double ServiceSpecialDoubleColumn::getValue(void *data)
     data = shiftPointer(data);
     if (!data) return 0;
 
-    service *svc = (service *)data;
+    service *svc = static_cast<service *>(data);
     switch (_type) {
         case SSDC_STALENESS:
         {

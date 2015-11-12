@@ -57,11 +57,12 @@ void DownCommColumn::output(void *data, Query *query)
             bool found_match = false;
 
             if (!is_service){
-                if (dt->_host->name == ((host*)data)->name)
+                if (dt->_host->name == static_cast<host*>(data)->name)
                     found_match = true;
             }
             else
-               if ( dt->_service->description == ((service*)data)->description && dt->_service->host_name == ((service*)data)->host_name )
+                if ( dt->_service->description == static_cast<service*>(data)->description &&
+                     dt->_service->host_name == static_cast<service*>(data)->host_name )
                     found_match = true;
 
             if (found_match)
@@ -108,7 +109,7 @@ bool DownCommColumn::isNagiosMember(void *data, void *member)
     int64_t id = (int64_t)member; // Hack. Convert it back.
     DowntimeOrComment *dt = table->findEntry(id, _is_service);
     return dt != 0 &&
-        ( dt->_service == (service *)data || (dt->_service == 0 && dt->_host == (host *)data));
+        ( dt->_service == static_cast<service *>(data) || (dt->_service == 0 && dt->_host == static_cast<host *>(data)));
 }
 
 bool DownCommColumn::isEmpty(void *data)

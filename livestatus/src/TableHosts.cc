@@ -64,8 +64,7 @@ struct hostbygroup {
 
 bool TableHosts::isAuthorized(contact *ctc, void *data)
 {
-    host *hst = (host *)data;
-    return is_authorized_for(ctc, hst, 0);
+    return is_authorized_for(ctc, static_cast<host *>(data), 0);
 }
 
 

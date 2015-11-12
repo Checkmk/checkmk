@@ -28,6 +28,5 @@
 
 bool HostContactsColumn::isNagiosMember(void *hst, void *ctc)
 {
-    bool is_member = is_contact_for_host((host *)hst, (contact *)ctc);
-    return is_member;
+    return is_contact_for_host(static_cast<host *>(hst), static_cast<contact *>(ctc));
 }

@@ -57,11 +57,9 @@ char *HostFileColumn::getBlob(void *data, int *size)
     if (!data) return 0;
 
 #ifdef CMC
-    Host *hst = (Host *)data;
-    const char *host_name = hst->_name;
+    const char *host_name = static_cast<Host *>(data)->_name;
 #else
-    host *hst = (host *)data;
-    const char *host_name = hst->name;
+    const char *host_name = static_cast<host *>(data)->name;
 #endif
 
     char path[4096];

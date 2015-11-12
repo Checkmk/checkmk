@@ -27,8 +27,7 @@
 
 host *OffsetStringHostMacroColumn::getHost(void *data)
 {
-    data = shiftPointer(data);
-    return (host *)data;
+    return static_cast<host *>(shiftPointer(data));
 }
 
 service *OffsetStringHostMacroColumn::getService(void *)

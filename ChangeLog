@@ -1,6 +1,7 @@
 1.2.7i3p5:
     Checks & Agents:
     * 2787 netapp_api_snapvaults: Clustermode supported, netapp_api_disks: fixed invalid total disk space...
+    * 2835 FIX: netextreme_psu_in: fixed wrong voltage usage handling...
 
 
 1.2.7i3p4:

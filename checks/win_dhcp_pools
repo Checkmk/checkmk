@@ -134,7 +134,7 @@ def check_win_dhcp_pools(item, params, info):
         if size == 0:
             yield 3, "DHCP Pool contains no IP addresses / is deactivated"
 
-        for check_result in check_win_dhcp_pools_levels(free, used, pending, size, params):
+        for check_result in check_dhcp_pools_levels(free, used, pending, size, params):
             yield check_result
 
     else:
@@ -147,7 +147,7 @@ check_info["win_dhcp_pools"] = {
     'service_description':     'DHCP Pool %s',
     'has_perfdata':            True,
     'group':                   'win_dhcp_pools',
-    'includes':                ['win_dhcp_pools.include'],
+    'includes':                ['dhcp_pools.include'],
 }
 
 

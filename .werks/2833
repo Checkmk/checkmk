@@ -1,0 +1,10 @@
+Title: isc_dhcpd, win_dhcp_pools: lower levels for used dhcp leases are now configurable
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447328506
+Class: feature
+
+Lower levels for free and used dhcp leases are now configurable. Moreover these levels
+can be configured as percent or absolute values.

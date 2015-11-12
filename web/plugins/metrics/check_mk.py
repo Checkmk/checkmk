@@ -4223,18 +4223,11 @@ perfometer_info.append(("stacked", [
 ]))
 
 # TODO: :max should be the default?
-perfometer_info.append(("stacked", [
-    {
-        "type"      : "linear",
-        "segments"  : [ "free_dhcp_leases" ],
-        "total"     : "free_dhcp_leases:max",
-    },
-    {
-        "type"      : "linear",
-        "segments"  : [ "used_dhcp_leases" ],
-        "total"     : "used_dhcp_leases:max",
-    }
-]))
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "free_dhcp_leases" ],
+    "total"     : "free_dhcp_leases:max",
+})
 
 perfometer_info.append(("stacked", [
     {
@@ -5378,11 +5371,12 @@ graph_info.append({
         ( "free_dhcp_leases",    "stack" ),
         ( "pending_dhcp_leases", "stack" ),
     ],
-    "range" : (0, "free_dhcp_leases:max"),
     "scalars" : [
         "free_dhcp_leases:warn",
         "free_dhcp_leases:crit",
     ],
+    "range" : (0, "free_dhcp_leases:max"),
+    "omit_zero_metrics" : True,
     "optional_metrics" : [
         "pending_dhcp_leases"
     ]

@@ -114,7 +114,7 @@ def check_isc_dhcpd(item, params, parsed):
         if lease_dec >= range_from and lease_dec <= range_to:
             num_used += 1
 
-    for check_result in check_win_dhcp_pools_levels(num_leases - num_used, num_used, None, num_leases, params):
+    for check_result in check_dhcp_pools_levels(num_leases - num_used, num_used, None, num_leases, params):
         yield check_result
 
 
@@ -125,5 +125,5 @@ check_info["isc_dhcpd"] = {
     'service_description':     'DHCP Pool %s',
     'group':                   'win_dhcp_pools',
     'has_perfdata':            True,
-    'includes':                ["win_dhcp_pools.include"],
+    'includes':                ["dhcp_pools.include"],
 }

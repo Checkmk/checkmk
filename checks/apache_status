@@ -77,6 +77,9 @@ def apache_status_parse(info):
         if len(line) != 4 and not (len(line) == 5 and line[2] == 'Total'):
             continue # Skip unexpected lines
         label = (' '.join(line[2:-1])).rstrip(':')
+        if label not in _apache_status_fields:
+            continue
+
         value = _apache_status_fields[label][1](line[-1])
         item = '%s:%s' % (address, port)
 

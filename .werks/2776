@@ -1,0 +1,10 @@
+Title: apache_status: fix crash for Apache versions with yet unhandled status fields
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1447340362
+
+

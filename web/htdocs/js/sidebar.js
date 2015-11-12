@@ -24,7 +24,7 @@
 
 var g_content_loc   = null;
 
-var sidebar_folded = false;
+var g_sidebar_folded = false;
 
 //
 // Sidebar styling and scrolling stuff
@@ -450,12 +450,12 @@ function startDragScroll(event) {
   if (!event)
     event = window.event;
 
-  if (sidebar_folded) {
-      unfoldSidebar();
+  if (g_sidebar_folded) {
+      unfold_sidebar();
       return false;
   }
-  else if (!sidebar_folded && event.clientX < 10) {
-      foldSidebar();
+  else if (!g_sidebar_folded && event.clientX < 10) {
+      fold_sidebar();
       return false;
   }
 
@@ -520,11 +520,12 @@ function dragScroll(event) {
   return false;
 }
 
-function foldSidebar()
+function fold_sidebar()
 {
-    sidebar_folded = true;
+    g_sidebar_folded = true;
     document.getElementById('check_mk_sidebar').style.position = "relative";
     document.getElementById('check_mk_sidebar').style.left = "-265px";
+    document.getElementById('side_footer').style.display = "none";
     if (isWebkit()) {
         var oldcols = parent.document.body.cols.split(",");
         var oldwidth = parseInt(oldcols[0]);
@@ -537,12 +538,13 @@ function foldSidebar()
 }
 
 
-function unfoldSidebar()
+function unfold_sidebar()
 {
     document.getElementById('check_mk_sidebar').style.position = "";
     document.getElementById('check_mk_sidebar').style.left = "0";
+    document.getElementById('side_footer').style.display = "";
     parent.document.body.cols = "280,*";
-    sidebar_folded = false;
+    g_sidebar_folded = false;
     get_url('sidebar_fold.py?fold=');
 }
 

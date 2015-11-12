@@ -229,7 +229,7 @@ def sidebar_foot():
     html.write('</div>')
 
     if load_user_config()["fold"]:
-        html.final_javascript("foldSidebar();")
+        html.final_javascript("fold_sidebar();")
 
 # Standalone sidebar
 def page_side():

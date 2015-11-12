@@ -1,0 +1,9 @@
+Title: CHeck_MK HW/SW Inventory fails because var/check_mk/inventory exists
+Component: inv
+State: open
+Date: 2015-11-12 14:40:55
+Targetversion: future
+Class: bug
+
+Goes away by itself. Reason seems: race condition. Several checks at the same
+time create the directory.

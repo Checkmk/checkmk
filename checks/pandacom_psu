@@ -53,10 +53,11 @@ def parse_pandacom_psu(info):
         "255" : "type not available",
     }
     map_psu_state = {
-        "0" : (3, "not installed"),
-        "1" : (2, "fail"),
-        "2" : (1, "temperature warning"),
-        "3" : (0, "pass"),
+        "0"   : (3, "not installed"),
+        "1"   : (2, "fail"),
+        "2"   : (1, "temperature warning"),
+        "3"   : (0, "pass"),
+        "255" : (3, "not available"),
     }
     parsed = {}
     for psu_nr, type_index, state_index in [
@@ -64,7 +65,7 @@ def parse_pandacom_psu(info):
           ("2",  6,  3),
           ("3", 10, 11),
         ]:
-        if info[state_index][0] != "0":
+        if info[state_index][0] not in [ "0", "255" ]:
             parsed[psu_nr] = {
                 "type"  : map_psu_type[info[type_index][0]],
                 "state" : map_psu_state[info[state_index][0]],

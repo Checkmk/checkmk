@@ -77,6 +77,7 @@
     * 2775 FIX: omd_status: handle case where status information is incomplete due to missing cmk version
     * 2835 FIX: netextreme_psu_in: fixed wrong voltage usage handling...
     * 2776 FIX: apache_status: fix crash for Apache versions with yet unhandled status fields
+    * 2836 FIX: pandacom_psu: fixed handling of not available power supplies
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

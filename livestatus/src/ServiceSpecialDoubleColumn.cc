@@ -24,8 +24,8 @@
 
 #include "ServiceSpecialDoubleColumn.h"
 #include <string.h>
+#include <time.h>
 #include "nagios.h"
-#include "time.h"
 
 extern int      interval_length;
 

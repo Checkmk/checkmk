@@ -80,8 +80,9 @@ def check_omd_status(item, _no_params, info):
     stopped_nodes = 0
 
     for node, services in parsed_site.iteritems():
-        if services["overall"] == "stopped":
+        if "overall" in services and services["overall"] == "stopped":
             stopped_nodes += 1
+
 
     # stopped sites are only CRIT when all are stopped
     if stopped_nodes == number_nodes:
@@ -94,7 +95,10 @@ def check_omd_status(item, _no_params, info):
             node_text = " on %s" % node
         else:
             node_text = ""
-        if services["overall"] == "running":
+        if "overall" not in services:
+            infotext = "defective installation%s" % node_text
+            yield 2, infotext
+        elif services["overall"] == "running":
             infotext = "running%s" % node_text
             # running sites are always OK
             yield 0, infotext

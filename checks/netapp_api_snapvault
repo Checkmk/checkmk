@@ -31,26 +31,39 @@
 # snapvault /vol/ipb_vol0/    status idle state snapvaulted   lag-time 97011  source-system 172.31.12.15
 
 def inventory_netapp_api_snapvault(parsed):
-    for volume in parsed:
-        yield volume, {}
+    for snapvault in parsed:
+        yield snapvault, {}
 
 def check_netapp_api_snapvault(item, params, parsed):
-    volume = parsed.get(item)
-    if not volume:
+    snapvault = parsed.get(item)
+    if not snapvault:
         return
 
     info = []
-    for what in [ "source-system", "status", "state", "destination-system" ]:
-        yield 0, "%s: %s" % (what.title(), volume[what])
+    for what in [ "source-system", "destination-system", "policy", "status", "state" ]:
+        if what in snapvault:
+            yield 0, "%s: %s" % (what.title(), snapvault[what])
 
-    lag_time = int(volume["lag-time"])
+    lag_time = int(snapvault["lag-time"])
     state = 0
     if params:
-        warn, crit = params["lag_time"]
-        if lag_time >= crit:
-            state = 2
-        elif lag_time >= warn:
-            state = 1
+        levels = None
+        snapvault_policy = snapvault.get("policy")
+
+        for name, policy_levels in params.get("policy_lag_time", []):
+            if name == snapvault_policy:
+                levels = policy_levels
+                break
+
+        if not levels and params.get("lag_time"):
+            levels = params["lag_time"]
+
+        if levels:
+            warn, crit = levels
+            if lag_time >= crit:
+                state = 2
+            elif lag_time >= warn:
+                state = 1
 
     yield state, "Lag-Time: %s" % get_age_human_readable(lag_time)
 

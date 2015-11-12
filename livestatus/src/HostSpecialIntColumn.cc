@@ -33,7 +33,7 @@ int32_t HostSpecialIntColumn::getValue(void *data, Query *)
     data = shiftPointer(data);
     if (!data) return 0;
 
-    host *hst = (host *)data;
+    host *hst = static_cast<host *>(data);
     switch (_type) {
         case HSIC_REAL_HARD_STATE:
             if (hst->current_state == 0)

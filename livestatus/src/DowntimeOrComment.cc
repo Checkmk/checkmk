@@ -65,7 +65,7 @@ DowntimeOrComment::~DowntimeOrComment()
 }
 
     Comment::Comment(nebstruct_comment_struct *co)
-    : DowntimeOrComment((nebstruct_downtime_struct *)co, co->comment_id)
+    : DowntimeOrComment(reinterpret_cast<nebstruct_downtime_struct *>(co), co->comment_id)
     , _expire_time(co->expire_time)
     , _persistent(co->persistent)
     , _source(co->source)

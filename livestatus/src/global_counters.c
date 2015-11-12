@@ -24,7 +24,7 @@
 
 #define EXTERN /* */
 #include "global_counters.h"
-#include "time.h"
+#include <time.h>
 
 time_t last_statistics_update = 0;
 #define STATISTICS_INTERVAL    5

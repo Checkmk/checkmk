@@ -73,7 +73,7 @@ def check_netapp_api_disk_summary(_no_item, params, info):
             disk['state'] = "spare"
         else:
             disk['state'] = 'ok'
-        disk['capacity'] = int(disk['used-space'])
+        disk['capacity'] = int(disk['physical-space'])
 
         disks_converted.append(disk)
 

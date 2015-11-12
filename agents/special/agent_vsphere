@@ -250,6 +250,7 @@ telegram_list = {
            '<ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet>'\
            '<ns1:pathSet>config.hardware.numCoresPerSocket</ns1:pathSet>'\
            '<ns1:pathSet>config.hardware.device</ns1:pathSet>'\
+           '<ns1:pathSet>config.template</ns1:pathSet>'\
            '<ns1:pathSet>guest.toolsVersion</ns1:pathSet>'\
            '<ns1:pathSet>guestHeartbeatStatus</ns1:pathSet>'\
            '<ns1:pathSet>name</ns1:pathSet>'\

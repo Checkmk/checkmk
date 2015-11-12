@@ -5818,25 +5818,65 @@ register_check_parameters(
     match_type = "dict",
 )
 
-
 register_check_parameters(
     subgroup_applications,
     "win_dhcp_pools",
     _("DHCP Pools for Windows and Linux"),
-    Tuple(
-          help = _("The count of remaining entries in the DHCP pool represents "
-                   "the number of IP addresses left which can be assigned in the network"),
-          elements = [
-              Percentage(title = _("Warning if less than"), unit = _("% free pool entries")),
-              Percentage(title = _("Critical if less than"), unit = _("% free pool entries")),
-              ]),
+    Transform(
+        Dictionary(
+            elements = [
+                ("free_leases",
+                    Alternative(
+                        title = _("Free leases levels"),
+                        elements = [
+                            Tuple(
+                                title = _("Free leases levels in percent"),
+                                elements = [
+                                    Percentage(title = _("Warning if below"),  default_value = 10.0),
+                                    Percentage(title = _("Critical if below"), default_value = 5.0)
+                                ]
+                            ),
+                            Tuple(
+                                title = _("Absolute free leases levels"),
+                                elements = [
+                                    Integer(title = _("Warning if below"),  unit = _("free leases")),
+                                    Integer(title = _("Critical if below"), unit = _("free leases"))
+                                ]
+                            )
+                        ]
+                    )
+                ),
+                ("used_leases",
+                    Alternative(
+                        title = _("Used leases levels"),
+                        elements = [
+                            Tuple(
+                                title = _("Used leases levels in percent"),
+                                elements = [
+                                    Percentage(title = _("Warning if below")),
+                                    Percentage(title = _("Critical if below"))
+                                ]
+                            ),
+                            Tuple(
+                                title = _("Absolute used leases levels"),
+                                elements = [
+                                    Integer(title = _("Warning if below"),  unit = _("used leases")),
+                                    Integer(title = _("Critical if below"), unit = _("used leases"))
+                                ]
+                            )
+                        ]
+                    )
+                ),
+            ]
+        ),
+        forth = lambda params: type(params) == tuple and {"free_leases" : (float(params[0]), float(params[1]))} or params,
+    ),
     TextAscii(
         title = _("Pool name"),
-        allow_empty = False),
-    match_type = "first",
+        allow_empty = False,
+    ),
+    match_type = "dict",
 )
-
-
 
 register_check_parameters(
     subgroup_os,
@@ -6589,20 +6629,40 @@ register_check_parameters(
 register_check_parameters(
     subgroup_storage,
     "snapvault",
-    _("NetApp Snapvaults"),
+    _("NetApp Snapvaults / Snapmirror Lag Time"),
     Dictionary(
          elements = [
              ("lag_time",
                Tuple(
-                   title = _("Maximum age of lag-time"),
+                   title = _("Default levels"),
                    elements = [
                        Age(title = _("Warning at")),
                        Age(title = _("Critical at")),
                     ],
                ),
              ),
+             ("policy_lag_time",
+               ListOf(
+                   Tuple(
+                       orientation = "horizontal",
+                       elements = [
+                           TextAscii(title = _("Policy name")),
+                                Tuple(
+                                    title = _("Maximum age"),
+                                    elements = [
+                                        Age(title = _("Warning at")),
+                                        Age(title = _("Critical at")),
+                                     ],
+                                ),
+                       ]
+                   ),
+                   title = _('Policy specific levels (Clustermode only)'),
+                   help = _("Here you can specify levels for different policies which overrule the levels "
+                            "from the <i>Default levels</i> parameter. This setting only works in NetApp Clustermode setups."),
+                   allow_empty = False,
+               )
+            )
          ],
-         optional_keys = False
     ),
     TextAscii(
         title = _("Source Path"),

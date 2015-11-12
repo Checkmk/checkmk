@@ -482,8 +482,8 @@ if netapp_mode == "clustermode":
                                                       "disk-raid-info.position",
                                                       "disk-raid-info.used-blocks",
                                                       "disk-raid-info.physical-blocks" ],
-                                    config_scale  = { "disk-raid-info.physical-blocks": 512,
-                                                      "disk-raid-info.used-blocks": 512 },
+                                    config_scale  = { "disk-raid-info.physical-blocks": 4096,
+                                                      "disk-raid-info.used-blocks": 4096 },
                                     config_rename = { "disk-inventory-info.shelf-bay": "bay",
                                                       "disk-inventory-info.serial-number": "serial-number",
                                                       "disk-inventory-info.vendor": "vendor-id",
@@ -548,6 +548,23 @@ if netapp_mode == "clustermode":
             child_dict = create_dict(system_info, custom_key = "system-name", is_counter = False)
             for key, values in child_dict.items():
                 print format_dict(values, prefix = "node %s" % key, as_line = True)
+
+    # Snapmirror / Snapvault lag-time
+    snapmirror_info = query("snapmirror-get-iter")
+    if snapmirror_info:
+        print "<<<netapp_api_snapvault:sep(9)>>>"
+        print format_config(snapmirror_info, "snapvault", "destination-volume",
+                                    config_report = [ "destination-volume-node",
+                                                      "policy",
+                                                      "mirror-state",
+                                                      "source-vserver",
+                                                      "lag-time",
+                                                      "relationship-status" ],
+                                    config_rename = { "destination-volume-node": "destination-system",
+                                                      "mirror-state": "state",
+                                                      "source-vserver": "source-system",
+                                                      "relationship-status": "status" }
+        )
 
     # Environmental sensors
     environment_info = query_nodes("storage-shelf-environment-list-info", only_first = True)

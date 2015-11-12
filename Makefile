@@ -252,7 +252,7 @@ iwyu:
 	$(MAKE) -C livestatus CC=$(IWYU) CXX=$(IWYU) -k
 
 cppcheck:
-	$(CPPCHECK) --enable=all --inline-suppr --template=gcc livestatus
+	$(CPPCHECK) --quiet --enable=all --max-configs=20 --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus
 
 # Note: You need the doxygen and graphviz packages.
 documentation:

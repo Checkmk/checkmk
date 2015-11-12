@@ -1,0 +1,12 @@
+Title: netapp_api_snapvaults: Clustermode supported, netapp_api_disks: fixed invalid total disk space
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447258603
+Class: feature
+
+<i>netapp_api_snapvaults</i>: You can now monitor the Snapmirror Lag Time with NetApp Clustermode.
+
+<i>netapp_api_disks</i>: Total disk space was incorrectly reported by the agent.
+

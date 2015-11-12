@@ -4223,11 +4223,18 @@ perfometer_info.append(("stacked", [
 ]))
 
 # TODO: :max should be the default?
-perfometer_info.append({
-    "type"      : "linear",
-    "segments"  : [ "used_dhcp_leases" ],
-    "total"     : "used_dhcp_leases:max",
-})
+perfometer_info.append(("stacked", [
+    {
+        "type"      : "linear",
+        "segments"  : [ "free_dhcp_leases" ],
+        "total"     : "free_dhcp_leases:max",
+    },
+    {
+        "type"      : "linear",
+        "segments"  : [ "used_dhcp_leases" ],
+        "total"     : "used_dhcp_leases:max",
+    }
+]))
 
 perfometer_info.append(("stacked", [
     {
@@ -5375,21 +5382,24 @@ graph_info.append({
     "scalars" : [
         "free_dhcp_leases:warn",
         "free_dhcp_leases:crit",
+    ],
+    "optional_metrics" : [
+        "pending_dhcp_leases"
     ]
 })
 
-graph_info.append({
-    "title" : _("Used DHCP Leases"),
-    "metrics" : [
-        ( "used_dhcp_leases",    "area" ),
-    ],
-    "range" : (0, "used_dhcp_leases:max"),
-    "scalars" : [
-        "used_dhcp_leases:warn",
-        "used_dhcp_leases:crit",
-        ("used_dhcp_leases:max#000000", _("Total number of leases")),
-    ]
-})
+#graph_info.append({
+#    "title" : _("Used DHCP Leases"),
+#    "metrics" : [
+#        ( "used_dhcp_leases",    "area" ),
+#    ],
+#    "range" : (0, "used_dhcp_leases:max"),
+#    "scalars" : [
+#        "used_dhcp_leases:warn",
+#        "used_dhcp_leases:crit",
+#        ("used_dhcp_leases:max#000000", _("Total number of leases")),
+#    ]
+#})
 
 graph_info.append({
     "title" : _("Handled Requests"),

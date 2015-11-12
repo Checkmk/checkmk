@@ -5,6 +5,7 @@
     Checks & Agents:
     * 2761 FIX: check_http: Fixed handling of multiple strings given as "Strings to expect in server response"
     * 2765 FIX: heartbeat_crm: Fixed issue detecting outdated data with daylight saving time
+    * 2776 FIX: apache_status: fix crash for Apache versions with yet unhandled status fields
 
 
 1.2.6p14:

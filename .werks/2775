@@ -1,0 +1,9 @@
+Title: omd_status: handle case where status information is incomplete due to missing cmk version
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447319883
+Class: fix
+
+

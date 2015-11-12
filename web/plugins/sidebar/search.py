@@ -29,7 +29,7 @@ def render_searchform():
     html.write('<input id="mk_side_search_field" type="text" name="search" autocomplete="off" />\n')
     html.icon_button("#", _("Search"), "quicksearch", onclick="mkSearchButton();")
     html.write('</div>\n<div id=mk_side_clear></div>\n')
-    html.write("<script type='text/javascript' src='js/search.js'></script>\n")
+    html.javascript_file(html.javascript_filename_for_browser("search"))
 
 sidebar_snapins["search"] = {
     "title":       _("Quicksearch"),

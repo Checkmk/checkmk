@@ -278,8 +278,7 @@ def page_handler():
             html.add_user_error(None, e.reason)
 
     # Title
-    html.header(modefunc("title"), stylesheets = wato_styles)
-    html.write("<script type='text/javascript' src='js/wato.js'></script>")
+    html.header(modefunc("title"), javascripts=["wato"], stylesheets=wato_styles)
     html.write("<div class=wato>\n")
 
     try:

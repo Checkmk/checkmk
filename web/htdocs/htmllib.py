@@ -823,27 +823,8 @@ class html:
 
             self.add_custom_style_sheet()
 
-            # Load specified javascript files. We have some special handling here:
-            # a) files which can not be found shal not be loaded
-            # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
-            # c) load the minified javascript when not in debug mode
             for js in [ "checkmk", "graphs" ] + javascripts:
-                filename_for_browser = None
-                if defaults.omd_root:
-                    rel_path = "/share/check_mk/web/htdocs/js"
-                    if self.enable_debug:
-                        min_parts = [ "", "_min" ]
-                    else:
-                        min_parts = [ "_min", "" ]
-
-                    for min_part in min_parts:
-                        path_pattern = defaults.omd_root + "%s" + rel_path + "/" + js + min_part + ".js"
-                        if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
-                            filename_for_browser = '%s%s-%s' % (js, min_part, defaults.check_mk_version)
-                            break
-                else:
-                    filename_for_browser = js
-
+                filename_for_browser = self.javascript_filename_for_browser(js)
                 if filename_for_browser:
                     self.javascript_file(filename_for_browser)
 
@@ -855,6 +836,31 @@ class html:
 
             self.write("</head>\n")
             self.header_sent = True
+
+
+    # Make the browser load specified javascript files. We have some special handling here:
+    # a) files which can not be found shal not be loaded
+    # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
+    # c) load the minified javascript when not in debug mode
+    def javascript_filename_for_browser(self, jsname):
+        if not defaults.omd_root:
+            return jsname
+
+        filename_for_browser = None
+        rel_path = "/share/check_mk/web/htdocs/js"
+        if self.enable_debug:
+            min_parts = [ "", "_min" ]
+        else:
+            min_parts = [ "_min", "" ]
+
+        for min_part in min_parts:
+            path_pattern = defaults.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
+            if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
+                filename_for_browser = '%s%s-%s' % (jsname, min_part, defaults.check_mk_version)
+                break
+
+        return filename_for_browser
+
 
     def html_foot(self):
         self.write("</html>\n")

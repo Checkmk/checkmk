@@ -1,0 +1,12 @@
+Title: check_dns: now able to configure milliseconds as expected response time
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p5
+Date: 1447426874
+
+The response time was already configurable in milliseconds through WATO.
+However, during the command line generation the decimal places got discarded.
+

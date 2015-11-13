@@ -39,7 +39,6 @@ namespace mk {
 class mutex {
 public:
     typedef pthread_mutex_t *native_handle_type;
-
     mutex() : _mutex(PTHREAD_MUTEX_INITIALIZER) {}
     ~mutex() {}
     void lock() { check(pthread_mutex_lock(native_handle())); }
@@ -49,7 +48,6 @@ public:
         if (status != EBUSY) check(status);
         return status == 0;
     }
-
     void unlock() { check(pthread_mutex_unlock(native_handle())); }
     native_handle_type native_handle() { return &_mutex; }
 private:
@@ -65,5 +63,24 @@ private:
 
     pthread_mutex_t _mutex;
 };
-}
+
+struct adopt_lock_t { };
+// constexpr adopt_lock_t adopt_lock { };
+
+template <typename Mutex>
+class lock_guard {
+public:
+    typedef Mutex mutex_type;
+    explicit lock_guard(mutex_type &m) : _mutex(m) { _mutex.lock(); }
+    lock_guard(mutex_type &m, adopt_lock_t) : _mutex(m) {}
+    ~lock_guard() { _mutex.unlock(); }
+private:
+    lock_guard(const lock_guard &);            // = delete
+    lock_guard &operator=(const lock_guard &); // = delete
+
+    mutex_type &_mutex;
+};
+
+} // namespace mk
+
 #endif // Mutex_h

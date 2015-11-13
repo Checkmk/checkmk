@@ -43,6 +43,8 @@
 #include "tables.h"  // IWYU pragma: keep
 #undef EXTERN
 
+using mk::lock_guard;
+using mk::mutex;
 using std::make_pair;
 using std::string;
 
@@ -164,7 +166,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
 
 void Store::answerCommandRequest(const char *command)
 {
-    _command_mutex.lock();
+    lock_guard<mutex> lg(_command_mutex);
 #ifdef NAGIOS4
     process_external_command1((char *)command);
 #else
@@ -172,7 +174,6 @@ void Store::answerCommandRequest(const char *command)
     /* int ret = */
     submit_external_command((char *)command, &buffer_items);
 #endif
-    _command_mutex.unlock();
 }
 
 

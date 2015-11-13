@@ -30,8 +30,9 @@
 #include <utility>
 #include "logger.h"
 
-
 using std::make_pair;
+using mk::lock_guard;
+using mk::mutex;
 
 extern timeperiod *timeperiod_list;
 
@@ -46,7 +47,7 @@ TimeperiodsCache::~TimeperiodsCache()
 }
 
 void TimeperiodsCache::logCurrentTimeperiods(){
-    _cache_lock.lock();
+    lock_guard<mutex> lg(_cache_lock);
     time_t now = time(0);
     // Loop over all timeperiods and compute if we are
     // currently in. Detect the case where no time periods
@@ -65,21 +66,17 @@ void TimeperiodsCache::logCurrentTimeperiods(){
         logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
         tp = tp->next;
     }
-    _cache_lock.unlock();
 }
 
 void TimeperiodsCache::update(time_t now)
 {
-    _cache_lock.lock();
+    lock_guard<mutex> lg(_cache_lock);
 
     // update cache only once a minute. The timeperiod
     // definitions have 1 minute as granularity, so a
     // 1sec resultion is not needed.
     int minutes = now / 60;
-    if (minutes == _cache_time) {
-        _cache_lock.unlock();
-        return;
-    }
+    if (minutes == _cache_time) return;
 
     // Loop over all timeperiods and compute if we are
     // currently in. Detect the case where no time periods
@@ -109,8 +106,6 @@ void TimeperiodsCache::update(time_t now)
         _cache_time = minutes;
     else
         logger(LG_INFO, "Timeperiod cache not updated, there are no timeperiods (yet)");
-
-    _cache_lock.unlock();
 }
 
 bool TimeperiodsCache::inTimeperiod(const char *tpname)
@@ -127,9 +122,9 @@ bool TimeperiodsCache::inTimeperiod(const char *tpname)
 
 bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
 {
-    bool is_in;
-    _cache_lock.lock();
+    lock_guard<mutex> lg(_cache_lock);
     _cache_t::iterator it = _cache.find(tp);
+    bool is_in;
     if (it != _cache.end())
         is_in = it->second;
     else {
@@ -141,7 +136,6 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
         // time_t now = time(0);
         // is_in = 0 == check_time_against_period(now, tp);
     }
-    _cache_lock.unlock();
     return is_in;
 }
 

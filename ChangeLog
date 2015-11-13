@@ -5,6 +5,9 @@
     * 2776 FIX: apache_status: fix crash for Apache versions with yet unhandled status fields
     * 2766 FIX: juniper_fru: Don't discover devices reported as "empty"...
 
+    WATO:
+    * 2767 FIX: Fixed broken user list when non unicode mail addresses are loaded
+
 
 1.2.7i3p4:
     Core & Setup:

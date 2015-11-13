@@ -31,8 +31,9 @@
 # snapvault /vol/ipb_vol0/    status idle state snapvaulted   lag-time 97011  source-system 172.31.12.15
 
 def inventory_netapp_api_snapvault(parsed):
-    for snapvault in parsed:
-        yield snapvault, {}
+    for snapvault, values in parsed.items():
+        if "lag-time" in values:
+            yield snapvault, {}
 
 def check_netapp_api_snapvault(item, params, parsed):
     snapvault = parsed.get(item)
@@ -44,7 +45,11 @@ def check_netapp_api_snapvault(item, params, parsed):
         if what in snapvault:
             yield 0, "%s: %s" % (what.title(), snapvault[what])
 
-    lag_time = int(snapvault["lag-time"])
+    lag_time = snapvault.get("lag-time")
+    if not lag_time:
+        return
+
+    lag_time = int(lag_time)
     state = 0
     if params:
         levels = None

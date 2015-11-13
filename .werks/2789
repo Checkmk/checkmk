@@ -1,0 +1,10 @@
+Title: netapp_api_snapvault: No longer monitors uninitialized volumes
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1447421423
+
+The lag-time information is not available for uninitialized volumes.

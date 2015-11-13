@@ -307,6 +307,10 @@ def load_users(lock = False):
         profile.update(user)
         result[id] = profile
 
+        # Convert non unicode mail addresses
+        if type(profile.get("email")) == str:
+            profile["email"] = profile["email"].decode("utf-8")
+
     # This loop is only neccessary if someone has edited
     # contacts.mk manually. But we want to support that as
     # far as possible.

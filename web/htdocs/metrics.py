@@ -292,7 +292,11 @@ def parse_perf_data(perf_data_string, check_command=None):
         return None, check_command
 
     # Split the perf data string into parts. Preserve quoted strings!
-    parts = split_perf_data(perf_data_string)
+    try:
+        parts = split_perf_data(perf_data_string)
+    except ValueError, e:
+        html.log("Failed to parse perfdata string: %s" % perf_data_string)
+        return None, check_command
 
     # Try if check command is appended to performance data
     # in a PNP like style
@@ -310,7 +314,8 @@ def parse_perf_data(perf_data_string, check_command=None):
     for part in parts:
         try:
             varname, values = part.split("=", 1)
-            varname = varname.replace("\"", "").replace("\'", "")
+            varname = pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
+
             value_parts = values.split(";")
             while len(value_parts) < 5:
                 value_parts.append(None)
@@ -324,6 +329,7 @@ def parse_perf_data(perf_data_string, check_command=None):
                 i += 1
             unit_name = value_text[i:]
             value = value_text[:i]
+
             perf_data.append((varname, value, unit_name, warn, crit, min, max))
         except:
             if config.debug:
@@ -1028,7 +1034,7 @@ def render_graph_pnp(graph_template, translated_metrics):
     # Define one RRD variable for each of the available metrics.
     # Note: We need to use the original name, not the translated one.
     for var_name, metrics in translated_metrics.items():
-        rrd = "$RRDBASE$_" + pnp_cleanup(metrics["orig_name"]) + ".rrd"
+        rrd = "$RRDBASE$_" + metrics["orig_name"] + ".rrd"
         scale = metrics["scale"]
         unit = metrics["unit"]
         render_scale = unit.get("render_scale", 1)

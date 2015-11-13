@@ -7,7 +7,8 @@ description:
  This check retrieves the information about existing address pools from
  <tt>dhcpd.conf</tt> and about existing leases from <tt>dhcpd.leases</tt>.
  If outputs the number of used and free leases in each pool and allows
- to set levels for free leases.
+ to set levels for free and used leases. These levels are configurable
+ as percentage or absolute values.
 
 item:
  The name of the DHCP pool as configured on the DHCP server.

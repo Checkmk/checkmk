@@ -22,28 +22,48 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ClientQueue_h
-#define ClientQueue_h
+#ifndef Mutex_h
+#define Mutex_h
 
-#include "config.h"  // IWYU pragma: keep
+#include "config.h" // IWYU pragma: keep
+#include <errno.h>
 #include <pthread.h>
-#include <deque>
-#include <memory>
-#include "Mutex.h"
+#include <string.h>
+#include <stdexcept>
+#include <string>
 
-class ClientQueue
-{
-    typedef std::deque<int> _queue_t;
-    _queue_t _queue;
+// A more or less drop-in replacement for C++11's <mutex> (partial)
+
+namespace mk {
+
+class mutex {
 public:
-    ClientQueue();
-    ~ClientQueue();
-    void addConnection(int);
-    int popConnection();
-    void wakeupAll();
+    typedef pthread_mutex_t *native_handle_type;
 
-    mk::mutex _lock;
-    pthread_cond_t _signal;
+    mutex() : _mutex(PTHREAD_MUTEX_INITIALIZER) {}
+    ~mutex() {}
+    void lock() { check(pthread_mutex_lock(native_handle())); }
+    bool try_lock()
+    {
+        int status = pthread_mutex_trylock(native_handle());
+        if (status != EBUSY) check(status);
+        return status == 0;
+    }
+
+    void unlock() { check(pthread_mutex_unlock(native_handle())); }
+    native_handle_type native_handle() { return &_mutex; }
+private:
+    mutex(const mutex &);            // = delete
+    mutex &operator=(const mutex &); // = delete
+
+    static void check(int status)
+    {
+        if (status != 0) {
+            throw std::runtime_error(std::string(strerror(status)));
+        }
+    }
+
+    pthread_mutex_t _mutex;
 };
-
-#endif // ClientQueue_h
+}
+#endif // Mutex_h

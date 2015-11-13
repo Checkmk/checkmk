@@ -26,10 +26,10 @@
 #define Store_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <pthread.h>
 #include <map>
 #include <string>
 #include "LogCache.h"
+#include "Mutex.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
 #include "TableContactgroups.h"
@@ -73,7 +73,7 @@ class Store
     typedef std::map<std::string, Table *> _tables_t;
     _tables_t _tables;
 
-    pthread_mutex_t    _command_mutex;
+    mk::mutex _command_mutex;
 
 public:
     Store();

@@ -37,18 +37,16 @@ extern timeperiod *timeperiod_list;
 
 TimeperiodsCache::TimeperiodsCache()
 {
-    pthread_mutex_init(&_cache_lock, 0);
     _cache_time = 0;
 }
 
 
 TimeperiodsCache::~TimeperiodsCache()
 {
-    pthread_mutex_destroy(&_cache_lock);
 }
 
 void TimeperiodsCache::logCurrentTimeperiods(){
-    pthread_mutex_lock(&_cache_lock);
+    _cache_lock.lock();
     time_t now = time(0);
     // Loop over all timeperiods and compute if we are
     // currently in. Detect the case where no time periods
@@ -67,19 +65,19 @@ void TimeperiodsCache::logCurrentTimeperiods(){
         logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
         tp = tp->next;
     }
-    pthread_mutex_unlock(&_cache_lock);
+    _cache_lock.unlock();
 }
 
 void TimeperiodsCache::update(time_t now)
 {
-    pthread_mutex_lock(&_cache_lock);
+    _cache_lock.lock();
 
     // update cache only once a minute. The timeperiod
     // definitions have 1 minute as granularity, so a
     // 1sec resultion is not needed.
     int minutes = now / 60;
     if (minutes == _cache_time) {
-        pthread_mutex_unlock(&_cache_lock);
+        _cache_lock.unlock();
         return;
     }
 
@@ -112,7 +110,7 @@ void TimeperiodsCache::update(time_t now)
     else
         logger(LG_INFO, "Timeperiod cache not updated, there are no timeperiods (yet)");
 
-    pthread_mutex_unlock(&_cache_lock);
+    _cache_lock.unlock();
 }
 
 bool TimeperiodsCache::inTimeperiod(const char *tpname)
@@ -130,7 +128,7 @@ bool TimeperiodsCache::inTimeperiod(const char *tpname)
 bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
 {
     bool is_in;
-    pthread_mutex_lock(&_cache_lock);
+    _cache_lock.lock();
     _cache_t::iterator it = _cache.find(tp);
     if (it != _cache.end())
         is_in = it->second;
@@ -143,7 +141,7 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
         // time_t now = time(0);
         // is_in = 0 == check_time_against_period(now, tp);
     }
-    pthread_mutex_unlock(&_cache_lock);
+    _cache_lock.unlock();
     return is_in;
 }
 

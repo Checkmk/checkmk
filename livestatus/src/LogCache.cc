@@ -78,7 +78,6 @@ LogCache::LogCache(unsigned long max_cached_messages)
     : _max_cached_messages(max_cached_messages)
     , _num_at_last_check(0)
 {
-    pthread_mutex_init(&_lock, 0);
     updateLogfileIndex();
 }
 
@@ -94,17 +93,16 @@ void LogCache::setMaxCachedMessages(unsigned long m)
 LogCache::~LogCache()
 {
     forgetLogfiles();
-    pthread_mutex_destroy(&_lock);
 }
 
 void LogCache::lockLogCache()
 {
-    pthread_mutex_lock(&_lock);
+    _lock.lock();
 }
 
 void LogCache::unlockLogCache()
 {
-    pthread_mutex_unlock(&_lock);
+    _lock.unlock();
 }
 
 bool LogCache::logCachePreChecks()

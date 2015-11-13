@@ -26,9 +26,9 @@
 #define LogCache_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <pthread.h>
 #include <time.h>
 #include <map>
+#include "Mutex.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class Logfile;
@@ -38,7 +38,7 @@ typedef std::map<time_t, Logfile *> _logfiles_t;
 
 class LogCache
 {
-    pthread_mutex_t _lock;
+    mk::mutex       _lock;
     unsigned long   _max_cached_messages;
     unsigned long   _num_at_last_check;
     _logfiles_t     _logfiles;

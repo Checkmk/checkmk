@@ -28,7 +28,6 @@
 
 ClientQueue::ClientQueue()
 {
-    pthread_mutex_init(&_lock, 0);
     pthread_cond_init(&_signal, 0);
 }
 
@@ -40,24 +39,23 @@ ClientQueue::~ClientQueue()
     {
         close(*it);
     }
-    pthread_mutex_destroy(&_lock);
     pthread_cond_destroy(&_signal);
 }
 
 void ClientQueue::addConnection(int fd)
 {
-    pthread_mutex_lock(&_lock);
+    _lock.lock();
     _queue.push_back(fd);
-    pthread_mutex_unlock(&_lock);
+    _lock.unlock();
     pthread_cond_signal(&_signal);
 }
 
 
 int ClientQueue::popConnection()
 {
-    pthread_mutex_lock(&_lock);
+    _lock.lock();
     if (_queue.size() == 0) {
-        pthread_cond_wait(&_signal, &_lock);
+        pthread_cond_wait(&_signal, _lock.native_handle());
     }
 
     int fd = -1;
@@ -65,7 +63,7 @@ int ClientQueue::popConnection()
         fd = _queue.front();
         _queue.pop_front();
     }
-    pthread_mutex_unlock(&_lock);
+    _lock.unlock();
     return fd;
 }
 

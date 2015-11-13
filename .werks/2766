@@ -1,0 +1,11 @@
+Title: juniper_fru: Don't discover devices reported as "empty"
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p5
+Date: 1447410115
+Class: fix
+
+The check was discovering empty device slots as checks and always
+reporting them as being critical. The discovery has been disabled
+for these units.

@@ -292,7 +292,11 @@ def parse_perf_data(perf_data_string, check_command=None):
         return None, check_command
 
     # Split the perf data string into parts. Preserve quoted strings!
-    parts = split_perf_data(perf_data_string)
+    try:
+        parts = split_perf_data(perf_data_string)
+    except ValueError, e:
+        html.log("Failed to parse perfdata string: %s" % perf_data_string)
+        return None, check_command
 
     # Try if check command is appended to performance data
     # in a PNP like style

@@ -115,6 +115,7 @@
     * 2742 FIX: Make selection of folders and host group tag filter use nicer drawing characters
     * 2774 FIX: Fix exception when deleting certain types of MIBs
     * 2760 FIX: Fixed case where "activate changes" was not commiting the pending changes entries correctly...
+    * 2767 FIX: Fixed broken user list when non unicode mail addresses are loaded
 
     Notifications:
     * 2728 FIX: Removed debug notification script (was not executable)...

@@ -19093,6 +19093,8 @@ def mode_download_agents(phase):
 
     elif phase == "buttons":
         global_buttons()
+        if 'agents' in modes:
+            html.context_button(_("Baked Agents"), make_link([("mode", "agents")]), "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
         return
 

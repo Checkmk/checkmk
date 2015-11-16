@@ -95,15 +95,6 @@ LogCache::~LogCache()
     forgetLogfiles();
 }
 
-void LogCache::lockLogCache()
-{
-    _lock.lock();
-}
-
-void LogCache::unlockLogCache()
-{
-    _lock.unlock();
-}
 
 bool LogCache::logCachePreChecks()
 {

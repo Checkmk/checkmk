@@ -30,6 +30,7 @@
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logfile.h"
+#include "Mutex.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -42,6 +43,8 @@
 #include "auth.h"
 #include "tables.h"
 
+using mk::lock_guard;
+using mk::mutex;
 using std::string;
 
 
@@ -110,7 +113,7 @@ TableLog::~TableLog()
 
 void TableLog::answerQuery(Query *query)
 {
-    g_store->logCache()->lockLogCache();
+    lock_guard<mutex> lg(g_store->logCache()->_lock);
     g_store->logCache()->logCachePreChecks();
 
     int since = 0;
@@ -126,10 +129,7 @@ void TableLog::answerQuery(Query *query)
     // We want to load only those log type that are queried.
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
-    if (classmask == 0) {
-        g_store->logCache()->unlockLogCache();
-        return;
-    }
+    if (classmask == 0) return;
 
     /* This code start with the oldest log entries. I'm going
        to change this and start with the newest. That way,
@@ -145,10 +145,7 @@ void TableLog::answerQuery(Query *query)
     // not that of the last.
     while (it != g_store->logCache()->logfiles()->begin() && it->first > until) // while logfiles are too new...
         --it; // go back in history
-    if (it->first > until) { // all logfiles are too new
-        g_store->logCache()->unlockLogCache();
-        return;
-    }
+    if (it->first > until) return; // all logfiles are too new
 
     while (true) {
         Logfile *log = it->second;
@@ -158,7 +155,6 @@ void TableLog::answerQuery(Query *query)
             break; // this was the oldest one
         --it;
     }
-    g_store->logCache()->unlockLogCache();
 }
 
 

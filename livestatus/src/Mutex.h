@@ -39,8 +39,8 @@ namespace mk {
 class mutex {
 public:
     typedef pthread_mutex_t *native_handle_type;
-    mutex() : _mutex(PTHREAD_MUTEX_INITIALIZER) {}
-    ~mutex() {}
+    mutex() { pthread_mutex_init(native_handle(), 0); }
+    ~mutex() { check(pthread_mutex_destroy(native_handle())); }
     void lock() { check(pthread_mutex_lock(native_handle())); }
     bool try_lock()
     {
@@ -51,8 +51,8 @@ public:
     void unlock() { check(pthread_mutex_unlock(native_handle())); }
     native_handle_type native_handle() { return &_mutex; }
 private:
-    mutex(const mutex &);            // = delete
-    mutex &operator=(const mutex &); // = delete
+    mutex(const mutex &);             // = delete
+    mutex &operator=(const mutex &);  // = delete
 
     static void check(int status)
     {
@@ -65,7 +65,7 @@ private:
 };
 
 struct adopt_lock_t { };
-// constexpr adopt_lock_t adopt_lock { };
+const adopt_lock_t adopt_lock = { };  // constexpr
 
 template <typename Mutex>
 class lock_guard {
@@ -75,8 +75,8 @@ public:
     lock_guard(mutex_type &m, adopt_lock_t) : _mutex(m) {}
     ~lock_guard() { _mutex.unlock(); }
 private:
-    lock_guard(const lock_guard &);            // = delete
-    lock_guard &operator=(const lock_guard &); // = delete
+    lock_guard(const lock_guard &);             // = delete
+    lock_guard &operator=(const lock_guard &);  // = delete
 
     mutex_type &_mutex;
 };

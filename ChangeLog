@@ -8,6 +8,9 @@
     * 2776 FIX: apache_status: fix crash for Apache versions with yet unhandled status fields
     * 2790 FIX: check_dns: now able to configure milliseconds as expected response time...
 
+    WATO:
+    * 2791 FIX: Service parameter overview: Fixed problem displaying incorrect rule for classical checks...
+
 
 1.2.6p14:
     Checks & Agents:

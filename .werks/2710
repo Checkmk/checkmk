@@ -1,0 +1,9 @@
+Title: arbor_peakflow_sp, arbor_peakflow_sp.cpu_load, arbor_peakflow_sp.disk_usage, arbor_peakflow_sp.flows, arbor_peakflow_tms, arbor_peakflow_tms.cpu_load, arbor_peakflow_tms.disk_usage, arbor_peakflow_tms.host_fault, arbor_peakflow_tms.updates, arbor_pravail, arbor_pravail.cpu_load, arbor_pravail.disk_usage, arbor_pravail.host_fault: new checks for various arbor devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447667450
+Class: feature
+
+

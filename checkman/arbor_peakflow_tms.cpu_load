@@ -1,0 +1,17 @@
+title: Arbor Peakflow TMS CPU Load
+agents: snmp
+catalog: hw/network/arbor
+license: GPL
+distribution: check_mk
+description:
+ Monitors cpu load of the management core on Arbor Peakflow TMS
+ devices.
+ This check can be configured using the "CPU load (not utilization!)"
+ rule and will turn warn/crit if the configured load limits are
+ exceeded (default at 5/10)
+
+inventory:
+ Exactly one service is discovered.
+
+perfdata:
+ Three float values: cpu load of the last 1, 5 and 15 minutes

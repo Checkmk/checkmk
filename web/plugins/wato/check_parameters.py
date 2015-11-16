@@ -4000,6 +4000,20 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_os,
+    "memory_arbor",
+    _("Memory and Swap usage on Arbor devices"),
+    Dictionary(
+        elements = [
+            ( "levels_ram",  DualMemoryLevels(_("RAM"))),
+            ( "levels_swap", DualMemoryLevels(_("Swap"))),
+        ],
+    ),
+    None,
+    "dict",
+)
+
+register_check_parameters(
    subgroup_networking,
    "mem_cluster",
    _("Memory Usage of Clusters"),

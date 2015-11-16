@@ -1,0 +1,114 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# .1.3.6.1.4.1.9694.1.4.2.1.1.0 796 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg1min.0
+# .1.3.6.1.4.1.9694.1.4.2.1.2.0 742 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg5min.0
+# .1.3.6.1.4.1.9694.1.4.2.1.3.0 742 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg15min.0
+# .1.3.6.1.4.1.9694.1.4.2.1.4.0 0 --> PEAKFLOW-SP-MIB::deviceDiskUsage.0
+# .1.3.6.1.4.1.9694.1.4.2.1.5.0 32864948 --> PEAKFLOW-SP-MIB::devicePhysicalMemory.0
+# .1.3.6.1.4.1.9694.1.4.2.1.6.0 4793660 --> PEAKFLOW-SP-MIB::devicePhysicalMemoryInUse.0
+# .1.3.6.1.4.1.9694.1.4.2.1.7.0 15 --> PEAKFLOW-SP-MIB::devicePhysicalMemoryUsage.0
+# .1.3.6.1.4.1.9694.1.4.2.1.8.0 4892156 --> PEAKFLOW-SP-MIB::deviceSwapSpace.0
+# .1.3.6.1.4.1.9694.1.4.2.1.9.0 0 --> PEAKFLOW-SP-MIB::deviceSwapSpaceInUse.0
+# .1.3.6.1.4.1.9694.1.4.2.1.10.0 0 --> PEAKFLOW-SP-MIB::deviceSwapSpaceUsage.0
+# .1.3.6.1.4.1.9694.1.4.2.1.11.0 0 --> PEAKFLOW-SP-MIB::deviceTotalFlows.0
+# .1.3.6.1.4.1.9694.1.4.2.1.12.0 0 --> PEAKFLOW-SP-MIB::deviceTotalFlowsHC.0
+
+
+def parse_peakflow_sp(info):
+    valid = info[0]
+    res = {
+        'cpu_loads' : valid[:3],
+        'disk'      : valid[3],
+        'memory'    : valid[4:6]
+    }
+    if valid[6]:
+        # this value appears to be optional
+        res['flows'] = valid[6]
+
+    return res
+
+
+check_info["arbor_peakflow_sp"] = {
+    "check_function"          : check_arbor_memory,
+    "inventory_function"      : inventory_arbor_memory,
+    "parse_function"          : parse_peakflow_sp,
+    "service_description"     : "Memory",
+    "has_perfdata"            : True,
+    "group"                   : "memory_arbor",
+    'default_levels_variable' : 'arbor_memory_default_levels',
+    "snmp_info"               : (".1.3.6.1.4.1.9694.1.4.2.1", ["1.0",  # deviceCpuLoadAvg1min
+                                                               "2.0",  # deviceCpuLoadAvg5min
+                                                               "3.0",  # deviceCpuLoadAvg15min
+                                                               "4.0",  # deviceDiskUsage
+                                                               "7.0",  # devicePhysicalMemoryUsage
+                                                               "10.0", # deviceSwapSpaceUsage
+                                                               "12.0", # deviceTotalFlowsHC
+                                                               ]
+                               ),
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Peakflow SP"),
+    "includes"                : ["arbor.include"]
+}
+
+
+check_info["arbor_peakflow_sp.cpu_load"] = {
+    "check_function"        : check_arbor_cpu_load,
+    "inventory_function"    : inventory_arbor_cpu_load,
+    "service_description"   : "CPU load",
+    "has_perfdata"          : True,
+    "group"                 : "cpu_load",
+    "includes"              : ["cpu_load.include"],
+}
+
+
+check_info["arbor_peakflow_sp.disk_usage"] = {
+    "check_function"          : check_arbor_disk_usage,
+    "inventory_function"      : inventory_arbor_disk_usage,
+    "service_description"     : "Disk Usage %s",
+    "has_perfdata"            : True,
+    "group"                   : "filesystem",
+    "default_levels_variable" : "filesystem_default_levels",
+}
+
+
+def inventory_arbor_peakflow_sp_flows(parsed):
+    if "flows" in parsed:
+        return [(None, None)]
+
+
+def check_arbor_peakflow_sp_flows(no_item, params, parsed):
+    flows = int(parsed['flows'])
+    return 0, "%d flows" % flows, [("flows", flows)]
+
+
+check_info["arbor_peakflow_sp.flows"] = {
+    "check_function"      : check_arbor_peakflow_sp_flows,
+    "inventory_function"  : inventory_arbor_peakflow_sp_flows,
+    "service_description" : "Flow Count",
+    "has_perfdata"        : True,
+}
+

@@ -51,8 +51,8 @@ public:
     void unlock() { check(pthread_mutex_unlock(native_handle())); }
     native_handle_type native_handle() { return &_mutex; }
 private:
-    mutex(const mutex &);             // = delete
-    mutex &operator=(const mutex &);  // = delete
+    mutex(const mutex &);            // = delete
+    mutex &operator=(const mutex &); // = delete
 
     static void check(int status)
     {
@@ -87,8 +87,8 @@ public:
     void unlock() { check(pthread_mutex_unlock(native_handle())); }
     native_handle_type native_handle() { return &_mutex; }
 private:
-    recursive_mutex(const recursive_mutex&) = delete;
-    recursive_mutex& operator=(const recursive_mutex&) = delete;
+    recursive_mutex(const recursive_mutex &);            // = delete;
+    recursive_mutex &operator=(const recursive_mutex &); // = delete;
 
     static void check(int status)
     {
@@ -101,8 +101,9 @@ private:
 };
 
 
-struct adopt_lock_t { };
-const adopt_lock_t adopt_lock = { };  // constexpr
+struct adopt_lock_t {
+};
+const adopt_lock_t adopt_lock = {}; // constexpr
 
 template <typename Mutex>
 class lock_guard {
@@ -112,8 +113,8 @@ public:
     lock_guard(mutex_type &m, adopt_lock_t) : _mutex(m) {}
     ~lock_guard() { _mutex.unlock(); }
 private:
-    lock_guard(const lock_guard &);             // = delete
-    lock_guard &operator=(const lock_guard &);  // = delete
+    lock_guard(const lock_guard &);            // = delete
+    lock_guard &operator=(const lock_guard &); // = delete
 
     mutex_type &_mutex;
 };

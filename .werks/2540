@@ -1,0 +1,13 @@
+Title: Process piggy backed data even if host is set to "No Agent"
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1439994260
+
+You need this fix for monitoring a VM just via ESX with no agent in the VM
+itself.  You can set this now to <i>No Agent</i> and the services shipped
+from the ESX host or vCenter via piggy back are anyway correctly added to
+the host. Before this fix the host would just get a PING check.

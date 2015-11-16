@@ -34,6 +34,7 @@ try:
 except ImportError:
     import json
 
+# TODO: Whey not user super() for calling the functions of all classes?
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
@@ -106,6 +107,23 @@ class Base:
                 cols = 50,
             )),
         ])]
+
+
+    # Define page handlers for the neccessary pages. This is being called (indirectly)
+    # in index.py. That way we do not need to hard code page handlers for all types of
+    # PageTypes in plugins/pages. It is simply sufficient to register a PageType and
+    # all page handlers will exist :-)
+    # Do *not* override this. It collects all page handlers of our
+    # page type by calling _page_handlers() for each class
+    @classmethod
+    def page_handlers(self):
+        # Collect all page handlers from subclasses
+        handlers = {}
+        for clazz in inspect.getmro(self)[::-1]:
+            if "_page_handlers" in clazz.__dict__:
+                handlers.update(clazz._page_handlers(self))
+        return handlers
+
 
     # Do *not* override this. It collects all editable parameters of our
     # page type by calling parameters() for each class
@@ -197,6 +215,10 @@ class Base:
     def instance(self, key):
         return self.__instances[key]
 
+    @classmethod
+    def has_instance(self, key):
+        return key in self.__instances
+
     # Return a dict of all instances of this type
     @classmethod
     def instances_dict(self):
@@ -269,7 +291,7 @@ class PageRenderer:
     def page_url(self):
         return html.makeuri_contextless([(self.ident_attr(), self.name())], filename = "%s.py" % self.type_name())
 
-    # Parameters special for pgge renderers. These can be added to the sidebar,
+    # Parameters special for page renderers. These can be added to the sidebar,
     # so we need a topic and a checkbox for the visibility
     @classmethod
     def parameters(self, clazz):
@@ -286,17 +308,12 @@ class PageRenderer:
         ])]
 
 
-    # Define page handlers for the neccessary pages like listing all pages, editing
-    # one and so on. This is being called (indirectly) in index.py. That way we do
-    # not need to hard code page handlers for all types of PageTypes in plugins/pages.
-    # It is simply sufficient to register a PageType and all page handlers will exist :-)
     @classmethod
-    def page_handlers(self):
+    def _page_handlers(self, clazz):
         return {
-            "%ss" % self.type_name()     : lambda: self.page_list(),
-            "edit_%s" % self.type_name() : lambda: self.page_edit(),
-            self.type_name()             : lambda: self.page_show(),
+            clazz.type_name(): lambda: clazz.page_show(),
         }
+
 
     # Most important: page for showing the page ;-)
     @classmethod
@@ -336,6 +353,15 @@ class Overridable:
             ])]
         else:
             return []
+
+
+    @classmethod
+    def _page_handlers(self, clazz):
+        return {
+            "%ss" % clazz.type_name()     : lambda: clazz.page_list(),
+            "edit_%s" % clazz.type_name() : lambda: clazz.page_edit(),
+        }
+
 
     def page_header(self):
         header = self.phrase("title") + " - " + self.title()
@@ -540,6 +566,9 @@ class Overridable:
             if page.is_mine() and page.name() == name:
                 return page
 
+    @classmethod
+    def builtin_pages(self):
+        return {}
 
     # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
     # mergt diese mit den übergebenen eingebauten
@@ -571,6 +600,11 @@ class Overridable:
 
             except SyntaxError, e:
                 raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, path, e))
+
+        # FIXME: Better switch to "new style classes" and use super() and then override load()
+        # in the subclass. Brings more flexibility.
+        if hasattr(self, "_load"):
+            self._load()
 
         # Declare permissions - one for each of the pages, if it is public
         config.declare_permission_section(self.type_name(), self.phrase("title_plural"), do_sort = True)
@@ -678,7 +712,7 @@ class Overridable:
                     builtin_instances.append(instance)
                 elif instance.is_mine():
                     my_instances.append(instance)
-                else:
+                elif instance.is_public():
                     foreign_instances.append(instance)
 
         for title, instances in [
@@ -722,7 +756,7 @@ class Overridable:
                 # Title
                 table.cell(_('Title'))
                 title = _u(instance.title())
-                if not instance.is_hidden():
+                if isinstance(self, PageRenderer) and not instance.is_hidden():
                     html.write("<a href=\"%s.py?%s=%s\">%s</a>" %
                         (self.type_name(), self.ident_attr(), instance.name(), html.attrencode(instance.title())))
                 else:
@@ -782,6 +816,8 @@ class Overridable:
             if mode == "edit":
                 title = self.phrase("edit")
                 page = self.find_my_page(page_name)
+                if page == None:
+                    raise MKUserError(None, _("The requested %s does not exist") % self.phrase("title"))
                 self.remove_instance((config.user_id, page_name)) # will be added later again
             else: # clone
                 title = self.phrase("clone")
@@ -822,9 +858,14 @@ class Overridable:
             self.save_user_instances()
             html.immediate_browser_redirect(1, back_url)
             html.message(_('Your changes haven been saved.'))
-            # Reload sidebar. TODO: This code logically belongs to PageRenderer. How
+            # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
             # can we simply move it there?
-            if new_page_dict.get("hidden") == False or new_page_dict.get("hidden") != page_dict.get("hidden"):
+            # TODO: This is not true for all cases. e.g. the BookmarkList is not
+            # of type PageRenderer but has a dedicated sidebar snapin. Maybe
+            # the best option would be to make a dedicated method to decide whether
+            # or not to reload the sidebar.
+            if new_page_dict.get("hidden") in [ None, False ] \
+               or new_page_dict.get("hidden") != page_dict.get("hidden"):
                 html.reload_sidebar()
 
         else:

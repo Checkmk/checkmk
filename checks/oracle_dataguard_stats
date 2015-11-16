@@ -85,7 +85,7 @@ def check_oracle_dataguard_stats(item, params, info):
                 infotext += ' %s %s' % (parameter,  get_age_human_readable(seconds))
 
                 if params.get(params_value):
-                    infotext +=' levels at ('
+                    infotext +=' (warn/crit at '
 
                     if parameter == 'apply lag' and params.get('apply_lag_min'):
 

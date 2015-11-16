@@ -37,7 +37,7 @@ import bi
 multisite_datasources["bi_aggregations"] = {
     "title"       : _("BI Aggregations"),
     "table"       : bi.table,
-    "infos"       : [ "aggr" ],
+    "infos"       : [ "aggr", "aggr_group", ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }
@@ -45,7 +45,7 @@ multisite_datasources["bi_aggregations"] = {
 multisite_datasources["bi_host_aggregations"] = {
     "title"       : _("BI Aggregations affected by one host"),
     "table"       : bi.host_table,
-    "infos"       : [ "host", "aggr" ],
+    "infos"       : [ "aggr", "host", "aggr_group" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }
@@ -55,7 +55,7 @@ multisite_datasources["bi_host_aggregations"] = {
 multisite_datasources["bi_hostname_aggregations"] = {
     "title"       : _("BI Hostname Aggregations"),
     "table"       : bi.hostname_table,
-    "infos"       : [ "host", "aggr" ],
+    "infos"       : [ "aggr", "host", "aggr_group" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }
@@ -64,7 +64,7 @@ multisite_datasources["bi_hostname_aggregations"] = {
 multisite_datasources["bi_hostnamebygroup_aggregations"] = {
     "title"       : _("BI Aggregations for Hosts by Hostgroups"),
     "table"       : bi.hostname_by_group_table,
-    "infos"       : [ "host", "aggr", "hostgroup" ],
+    "infos"       : [ "aggr", "host", "hostgroup", "aggr_group" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
 }
@@ -85,12 +85,12 @@ def paint_bi_icons(row):
     html.icon_button(single_url, _("Show only this aggregation"), "showbi")
     avail_url = single_url + "&mode=availability"
     html.icon_button(avail_url, _("Analyse availability of this aggregation"), "availability")
-    if row["aggr_effective_state"]["in_downtime"]:
-	html.icon(_("This aggregation is currently in a scheduled downtime."), "downtime")
+    if row["aggr_effective_state"]["in_downtime"] != 0:
+        html.icon(_("A service or host in this aggregation is in downtime."), "derived_downtime")
     if row["aggr_effective_state"]["acknowledged"]:
-	html.icon(_("The critical problems that make this aggregation non-OK have been acknowledged."), "ack")
+        html.icon(_("The critical problems that make this aggregation non-OK have been acknowledged."), "ack")
     if not row["aggr_effective_state"]["in_service_period"]:
-	html.icon(_("This aggregation is currently out of its service period."), "outof_serviceperiod")
+        html.icon(_("This aggregation is currently out of its service period."), "outof_serviceperiod")
     code = html.drain()
     html.unplug()
     return "buttons", code

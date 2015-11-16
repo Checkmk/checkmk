@@ -25,18 +25,22 @@
 #ifndef OffsetStringMacroColumn_h
 #define OffsetStringMacroColumn_h
 
-#include "nagios.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "OffsetStringColumn.h"
+#include "nagios.h"
+class Filter;
+class Query;
+
 
 class OffsetStringMacroColumn : public OffsetStringColumn
 {
-    int _offset;
 public:
-    OffsetStringMacroColumn(string name, string description, int offset, int indirect_offset = -1) :
+    OffsetStringMacroColumn(std::string name, std::string description, int offset, int indirect_offset = -1) :
         OffsetStringColumn(name, description, offset, indirect_offset) {}
     // reimplement several functions from StringColumn
 
-    string valueAsString(void *data, Query *);
+    std::string valueAsString(void *data, Query *);
     void output(void *data, Query *);
     Filter *createFilter(int opid, char *value);
 
@@ -49,4 +53,3 @@ private:
 };
 
 #endif // OffsetStringMacroColumn_h
-

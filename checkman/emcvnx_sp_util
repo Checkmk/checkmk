@@ -1,0 +1,20 @@
+title: EMC VNX Storage: Storage Processor Utilization
+agents: emc
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the storage processor utilization of
+ a EMC VNX storage system.
+
+ The upper default levels are set to (50%, 60%).
+ These levels are configurable.
+
+item:
+ None.
+
+perfdata:
+ The storage processor utilization in percent.
+
+inventory:
+ One service is created.

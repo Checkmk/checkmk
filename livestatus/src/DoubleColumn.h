@@ -25,21 +25,23 @@
 #ifndef DoubleColumn_h
 #define DoubleColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Filter;
+class Query;
+
 
 class DoubleColumn : public Column
 {
 public:
-    DoubleColumn(string name, string description, int indirect_offset)
+    DoubleColumn(std::string name, std::string description, int indirect_offset)
         : Column(name, description, indirect_offset) {}
     virtual double getValue(void *data) = 0;
     void output(void *, Query *);
     int type() { return COLTYPE_DOUBLE; }
-    string valueAsString(void *data, Query *);
+    std::string valueAsString(void *data, Query *);
     Filter *createFilter(int operator_id, char *value);
 };
 
 #endif // DoubleColumn_h
-

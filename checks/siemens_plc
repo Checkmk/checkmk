@@ -147,13 +147,12 @@ def check_siemens_plc_duration(item, params, info):
             perfdata = [(line[1], seconds)]
 
             key = 'siemens_plc.duration.%s' % item
-            if key in g_counters and g_counters[key] > seconds:
-                old_seconds = g_counters[key]
-                g_counters[key] = seconds
+            old_seconds = get_item_state(key, None)
+            if old_seconds is not None and old_seconds > seconds:
                 return 2, 'Reduced from %s to %s' % (get_age_human_readable(old_seconds),
                                                      get_age_human_readable(seconds)), perfdata
-            else:
-                g_counters[key] = seconds
+
+            set_item_state(key, seconds)
 
             state = 0
             warn, crit = params.get('duration', (None, None))
@@ -196,12 +195,10 @@ def check_siemens_plc_counter(item, params, info):
             perfdata = [(line[1], value)]
 
             key = 'siemens_plc.counter.%s' % item
-            if key in g_counters and g_counters[key] > value:
-                old_value = g_counters[key]
-                g_counters[key] = value
+            old_value = get_item_state(key, None)
+            if old_value is not None and old_value > value:
                 return 2, 'Reduced from %s to %s' % (old_value, value), perfdata
-            else:
-                g_counters[key] = value
+            set_item_state(key, value)
 
             state = 0
             warn, crit = params.get('levels', (None, None))
@@ -247,5 +244,42 @@ check_info['siemens_plc.info'] = {
     "inventory_function"      : inventory_siemens_plc_info,
     "check_function"          : check_siemens_plc_info,
     "service_description"     : "Info %s",
+    "has_perfdata"            : False,
+}
+
+#.
+#   .--CPU-State-----------------------------------------------------------.
+#   |             ____ ____  _   _      ____  _        _                   |
+#   |            / ___|  _ \| | | |    / ___|| |_ __ _| |_ ___             |
+#   |           | |   | |_) | | | |____\___ \| __/ _` | __/ _ \            |
+#   |           | |___|  __/| |_| |_____|__) | || (_| | ||  __/            |
+#   |            \____|_|    \___/     |____/ \__\__,_|\__\___|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_siemens_plc_cpu_state(info):
+    return [ (None, None) ]
+
+
+def check_siemens_plc_cpu_state(_no_item, _no_params, info):
+    try:
+        state = info[0][0]
+    except IndexError:
+        return
+
+    if state == "S7CpuStatusRun":
+        return 0, "CPU is running"
+    elif state == "S7CpuStatusStop":
+        return 2, "CPU is stopped"
+    else:
+        return 3, "CPU is in unknown state"
+
+
+check_info['siemens_plc_cpu_state'] = {
+    "inventory_function"      : inventory_siemens_plc_cpu_state,
+    "check_function"          : check_siemens_plc_cpu_state,
+    "service_description"     : "CPU state",
     "has_perfdata"            : False,
 }

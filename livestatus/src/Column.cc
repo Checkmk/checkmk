@@ -23,7 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Column.h"
-#include "logger.h"
+
+using std::string;
 
 
 Column::Column(string name, string description, int indirect_offset)
@@ -54,4 +55,3 @@ void *Column::shiftPointer(void *data)
 
     return data;
 }
-

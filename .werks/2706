@@ -1,0 +1,10 @@
+Title: winperf_if: fixed rare crashes of windows_if.ps1 plugin
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445872738
+Class: fix
+
+On some systems (for unknown reasons) the windows_if.ps1 plugin produced broken field separators in
+its output causing crashes in the check.

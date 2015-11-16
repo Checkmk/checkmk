@@ -35,10 +35,10 @@ def check_systemtime(item, params, info):
         return (3, "no information sent by agent")
 
     systemtime = int(info[0][0])
-    ourtime = time.time()
+    ourtime = int(time.time())
     offset = systemtime - ourtime
     warn, crit = params
-    infotext = "Offset is %+.1f sec (levels at %d/%d sec)" % (offset, warn, crit)
+    infotext = "Offset is %d sec (warn/crit at %d/%d sec)" % (offset, warn, crit)
     perfdata = [ ("offset", offset, warn, crit, 0) ]
 
     if abs(offset) >= crit:

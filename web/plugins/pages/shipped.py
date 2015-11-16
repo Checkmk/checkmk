@@ -44,6 +44,7 @@ import webapi
 import visuals
 import crash_reporting
 import metrics
+import werks
 
 # map URLs to page rendering functions
 
@@ -80,10 +81,8 @@ pagehandlers.update({
    "ajax_search"              : sidebar.ajax_search,
    "search_open"              : sidebar.search_open,
    "switch_master_state"      : sidebar.ajax_switch_masterstate,
-   "add_bookmark"             : sidebar.ajax_add_bookmark,
-   "del_bookmark"             : sidebar.ajax_del_bookmark,
+   "add_bookmark"             : lambda: sidebar.ajax_add_bookmark(),
    "tree_openclose"           : weblib.ajax_tree_openclose,
-   "edit_bookmark"            : sidebar.page_edit_bookmark,
    "nagios_action"            : actions.ajax_action,
 
    "dashboard"                : dashboard.page_dashboard,
@@ -113,5 +112,8 @@ pagehandlers.update({
    "crashed_check"            : lambda: crash_reporting.page_crashed("check"),
    "gui_crash"                : lambda: crash_reporting.page_crashed("gui"),
    "download_crash_report"    : crash_reporting.page_download_crash_report,
+
+   "version"                  : werks.page_version,
+   "werk"                     : werks.page_werk,
 })
 

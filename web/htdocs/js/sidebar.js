@@ -24,7 +24,7 @@
 
 var g_content_loc   = null;
 
-var sidebar_folded = false;
+var g_sidebar_folded = false;
 
 //
 // Sidebar styling and scrolling stuff
@@ -390,7 +390,7 @@ function update_content_location() {
 }
 
 function debug(s) {
-  window.parent.frames[1].document.write(s+'<br />');
+    window.parent.frames[1].document.write(s+'<br />');
 }
 
 
@@ -399,30 +399,30 @@ function debug(s) {
 // to be treated here.
 var g_just_resizing = 0;
 function setSidebarHeight() {
-  var oHeader  = document.getElementById('side_header');
-  var oContent = document.getElementById('side_content');
-  var oFooter  = document.getElementById('side_footer');
-  var height   = pageHeight();
+    var oHeader  = document.getElementById('side_header');
+    var oContent = document.getElementById('side_content');
+    var oFooter  = document.getElementById('side_footer');
+    var height   = pageHeight();
 
-  // Resize sidebar frame on Chrome (and other webkit browsers)
-  if (isWebkit()) {
-      var oldcols = parent.document.body.cols.split(",");
-      var oldwidth = parseInt(oldcols[0]);
-      var width = oHeader.clientWidth;
-      var target_width = oldwidth * 280.0 / width;
-      var newcols = target_width.toString() + ",*";
-      parent.document.body.cols = newcols;
-  }
+    // Resize sidebar frame on Chrome (and other webkit browsers)
+    if (isWebkit()) {
+        var oldcols = parent.document.body.cols.split(",");
+        var oldwidth = parseInt(oldcols[0]);
+        var width = oHeader.clientWidth;
+        var target_width = parseInt(oldwidth * 280.0 / width);
+        var newcols = target_width.toString() + ",*";
+        parent.document.body.cols = newcols;
+    }
 
-  // Don't handle zero heights
-  if (height == 0)
-    return;
+    // Don't handle zero heights
+    if (height == 0)
+      return;
 
-  oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight + 4) + 'px';
+    oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight + 4) + 'px';
 
-  oFooter = null;
-  oContent = null;
-  oHeader = null;
+    oFooter = null;
+    oContent = null;
+    oHeader = null;
 }
 
 var scrolling = true;
@@ -450,12 +450,12 @@ function startDragScroll(event) {
   if (!event)
     event = window.event;
 
-  if (sidebar_folded) {
-      unfoldSidebar();
+  if (g_sidebar_folded) {
+      unfold_sidebar();
       return false;
   }
-  else if (!sidebar_folded && event.clientX < 10) {
-      foldSidebar();
+  else if (!g_sidebar_folded && event.clientX < 10) {
+      fold_sidebar();
       return false;
   }
 
@@ -520,11 +520,12 @@ function dragScroll(event) {
   return false;
 }
 
-function foldSidebar()
+function fold_sidebar()
 {
-    sidebar_folded = true;
+    g_sidebar_folded = true;
     document.getElementById('check_mk_sidebar').style.position = "relative";
     document.getElementById('check_mk_sidebar').style.left = "-265px";
+    document.getElementById('side_footer').style.display = "none";
     if (isWebkit()) {
         var oldcols = parent.document.body.cols.split(",");
         var oldwidth = parseInt(oldcols[0]);
@@ -537,12 +538,13 @@ function foldSidebar()
 }
 
 
-function unfoldSidebar()
+function unfold_sidebar()
 {
     document.getElementById('check_mk_sidebar').style.position = "";
     document.getElementById('check_mk_sidebar').style.left = "0";
+    document.getElementById('side_footer').style.display = "";
     parent.document.body.cols = "280,*";
-    sidebar_folded = false;
+    g_sidebar_folded = false;
     get_url('sidebar_fold.py?fold=');
 }
 
@@ -657,13 +659,13 @@ function toggle_sidebar_snapin(oH2, url) {
         oContent.style.display = "block";
         oFoot.style.display = "block";
         oHead.className = "head open";
-        oImgMini.src = "images/button_minisnapin_lo.png";
+        oImgMini.src = "images/button_minisnapin.png";
     }
     else {
         oContent.style.display = "none";
         oFoot.style.display = "none";
         oHead.className = "head closed";
-        oImgMini.src = "images/button_maxisnapin_lo.png";
+        oImgMini.src = "images/button_maxisnapin.png";
     }
     /* make this persistent -> save */
     get_url(url + (closed ? "open" : "closed"));
@@ -752,13 +754,6 @@ function sidebar_scheduler() {
         g_seconds_to_update = sidebar_update_interval;
 
     setTimeout(function(){sidebar_scheduler();}, 1000);
-}
-
-function addBookmark() {
-    href = parent.frames[1].location;
-    title = parent.frames[1].document.title;
-    get_url("add_bookmark.py?title=" + encodeURIComponent(title)
-            + "&href=" + encodeURIComponent(href), updateContents, "snapin_bookmarks");
 }
 
 /************************************************

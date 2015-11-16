@@ -24,10 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: name the next new subcheck "esx_vsphere_vm" and introduce a parse function
 def esx_vsphere_vm_convert(info):
     data = {}
     for line in info:
+        # Do not monitor VM templates
+        if line[0] == "config.template" and line[1] == "true":
+            return {}
         data[line[0]] = line[1:]
+
     return data
 
 #   .--Memory--------------------------------------------------------------.
@@ -41,7 +46,7 @@ def esx_vsphere_vm_convert(info):
 
 
 def inventory_esx_vsphere_vm_mem(info):
-    data = esx_vsphere_vm_convert(info).keys()
+    data = esx_vsphere_vm_convert(info)
     if 'summary.quickStats.guestMemoryUsage' in data:
         return [(None, {})]
 
@@ -102,7 +107,7 @@ check_info['esx_vsphere_vm.mem_usage'] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_esx_vsphere_vm_name(info):
-    data = esx_vsphere_vm_convert(info).keys()
+    data = esx_vsphere_vm_convert(info)
     if 'name' in data:
         return [(None, None)]
 
@@ -135,7 +140,6 @@ def inventory_esx_vsphere_vm_running_on(info):
     data = esx_vsphere_vm_convert(info)
     if 'runtime.host' in data:
         return [(None, None)]
-    return []
 
 def check_esx_vsphere_vm_running_on(no_item, no_params, info):
     data = esx_vsphere_vm_convert(info)
@@ -170,7 +174,6 @@ def inventory_esx_vsphere_vm_datastores(info):
     # Right now we only handle one datastore per vm
     if 'config.datastoreUrl' in data:
         return [(None, None)]
-    return []
 
 def check_esx_vsphere_vm_datastores(no_item, no_params, info):
     data = esx_vsphere_vm_convert(info)
@@ -364,9 +367,10 @@ check_info['esx_vsphere_vm.cpu'] = {
 # <<<esx_vsphere_vm>>>
 # snapshot.rootSnapshotList 1 1363596734 poweredOff 20130318_105600_snapshot_LinuxI|2 1413977827 poweredOn LinuxI Testsnapshot
 
-
 def inventory_esx_vsphere_vm_snapshots(info):
-    return [(None, {})]
+    data = esx_vsphere_vm_convert(info)
+    if data:
+        return [(None, {})]
 
 def check_esx_vsphere_vm_snapshots(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
@@ -405,7 +409,6 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
             yield 0, "Last Snapshot: %s %s" % (last_snapshot[3],
                                                time.strftime("%D %H:%M",time.localtime(last_snapshot[1]))),\
                                                perfdata
-
 
 
 check_info['esx_vsphere_vm.snapshots'] = {

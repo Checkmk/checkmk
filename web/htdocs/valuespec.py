@@ -71,7 +71,7 @@ class ValueSpec:
 
     # Create a canonical, minimal, default value that
     # matches the datatype of the value specification and
-    # fullfills also data validation.
+    # fulfills also data validation.
     def canonical_value(self):
         return None
 
@@ -514,6 +514,7 @@ class RegExpUnicode(TextUnicode, RegExp):
         RegExp.validate_value(self, value, varprefix)
         ValueSpec.custom_validate(self, value, varprefix)
 
+
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
         kwargs.setdefault("size", 40)
@@ -531,6 +532,18 @@ class EmailAddress(TextAscii):
             return '<a href="mailto:%s">%s</a>' % (html.attrencode(value), html.attrencode(value))
         else:
             return value
+
+
+class EmailAddressUnicode(TextUnicode, EmailAddress):
+    def __init__(self, **kwargs):
+        TextUnicode.__init__(self, **kwargs)
+        EmailAddress.__init__(self, **kwargs)
+        self._regex = re.compile(r'^[\w._%+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
+
+    def validate_value(self, value, varprefix):
+        TextUnicode.validate_value(self, value, varprefix)
+        EmailAddress.validate_value(self, value, varprefix)
+        ValueSpec.custom_validate(self, value, varprefix)
 
 
 # Network as used in routing configuration, such as
@@ -612,7 +625,7 @@ class AbsoluteDirname(TextAscii):
 class HTTPUrl(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
-        self._target= kwargs.get("target")
+        self._target = kwargs.get("target")
 
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
@@ -801,8 +814,8 @@ class ListOfStrings(ValueSpec):
 
     def validate_datatype(self, value, vp):
         if type(value) != list:
-            raise MKUserError(varprefix, _("Expected data type is "
-            "list, but your type is %s." % type_name(value)))
+            raise MKUserError(vp, _("Expected data type is list, but your type is %s." %
+                                                                        type_name(value)))
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, vp + "_%d" % nr)
 
@@ -837,15 +850,16 @@ class ListOfIntegers(ListOfStrings):
 class ListOf(ValueSpec):
     def __init__(self, valuespec, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._valuespec = valuespec
-        self._magic = kwargs.get("magic", "@!@")
-        self._rowlabel = kwargs.get("row_label")
-        self._add_label = kwargs.get("add_label", _("Add new element"))
-        self._del_label = kwargs.get("del_label", _("Delete this entry"))
-        self._movable = kwargs.get("movable", True)
-        self._totext = kwargs.get("totext")
-        self._allow_empty = kwargs.get("allow_empty", True)
-        self._empty_text  = kwargs.get("empty_text")
+        self._valuespec     = valuespec
+        self._magic         = kwargs.get("magic", "@!@")
+        self._rowlabel      = kwargs.get("row_label")
+        self._add_label     = kwargs.get("add_label", _("Add new element"))
+        self._del_label     = kwargs.get("del_label", _("Delete this entry"))
+        self._movable       = kwargs.get("movable", True)
+        self._totext        = kwargs.get("totext") # pattern with option %d
+        self._text_if_empty = kwargs.get("text_if_empty", _("No entries"))
+        self._allow_empty   = kwargs.get("allow_empty", True)
+        self._empty_text    = kwargs.get("empty_text") # complain text if empty
         if not self._empty_text:
             self._empty_text = _("Please specify at least one entry")
 
@@ -930,8 +944,10 @@ class ListOf(ValueSpec):
             "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic));
         html.javascript("valuespec_listof_fixarrows(document.getElementById('%s_table').childNodes[0]);" % varprefix)
 
+
     def canonical_value(self):
         return []
+
 
     def value_to_text(self, value):
         if self._totext:
@@ -939,11 +955,14 @@ class ListOf(ValueSpec):
                 return self._totext % len(value)
             else:
                 return self._totext
+        elif not value:
+            return self._text_if_empty
         else:
             s = '<table>'
             for v in value:
                 s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
             return s + '</table>'
+
 
     def get_indexes(self, varprefix):
         count = int(html.var(varprefix + "_count"))
@@ -1117,10 +1136,14 @@ class Float(Integer):
             _("The text <b><tt>%s</tt></b> is not a valid floating point number." % html.var(varprefix)))
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != float and not \
-            (type(value) not in [ int, long ] and self._allow_int):
-            raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float%s") %
-                 (value, type_name(value), self._allow_int and _(" or int") or ""))
+        if type(value) == float:
+            return
+
+        if type(value) in [ int, long ] and self._allow_int:
+            return
+
+        raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float%s") %
+             (value, type_name(value), self._allow_int and _(" or int") or ""))
 
 
 class Percentage(Float):
@@ -2619,7 +2642,7 @@ class Tuple(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
         self._show_titles = kwargs.get("show_titles", True)
-        self._orientation = kwargs.get("orientation", "vertical")
+        self._orientation = kwargs.get("orientation", "vertical") # also: horizontal, float
         self._separator = kwargs.get("separator", " ") # in case of float
         self._title_br = kwargs.get("title_br", True)
 
@@ -2952,7 +2975,7 @@ class Dictionary(ValueSpec):
                 try:
                     vs.validate_datatype(value[param], vp)
                 except MKUserError, e:
-                    raise MKUserError(e.varname, _("%s: %s") % (vs.title(), e.message))
+                    raise MKUserError(e.varname, _("%s: %s") % (vs.title(), e))
             elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
@@ -3128,6 +3151,12 @@ class Transform(ValueSpec):
             return self._title
         else:
             return self._valuespec.title()
+
+    def help(self):
+        if self._help:
+            return self._help
+        else:
+            return self._valuespec.help()
 
     def render_input(self, varprefix, value):
         self._valuespec.render_input(varprefix, self.forth(value))
@@ -3324,11 +3353,13 @@ class IconSelector(ValueSpec):
             content = self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img')
         else:
             content = _('Select an Icon')
-        html.popup_trigger(content, varprefix+'_icon_selector', 'icon_selector',
-            params=html.urlencode_vars([('value',       value),
-                                        ('varprefix',   varprefix),
-                                        ('allow_empty', self._allow_empty and '1' or '0'),
-                                        ('back',        html.makeuri([]))]))
+        html.popup_trigger(content, varprefix + '_icon_selector', 'icon_selector',
+                           url_vars = [
+                                ('value',       value),
+                                ('varprefix',   varprefix),
+                                ('allow_empty', self._allow_empty and '1' or '0'),
+                                ('back',        html.makeuri([])),
+                            ])
 
     def render_popup_input(self, varprefix, value):
         html.write('<div class="icons">')

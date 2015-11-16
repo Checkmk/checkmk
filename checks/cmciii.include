@@ -32,7 +32,13 @@ def cmciii_get_unit_number(units,unit_name):
 def extract_cmciii_lcp_temps(liste):
     miste = []
     for l in liste:
-        miste.append(float(l.split(" ")[0]))
+        try:
+            miste.append(float(l.split(" ")[0]))
+        except ValueError:
+            # Dirty hack fix for a dirty check. Ignore all values that can not be
+            # converted to floats
+            # sh: introduced by lm. But why?
+            pass
     return miste
 
 def translate_cmciii_lcp_status(status):

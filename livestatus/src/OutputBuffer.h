@@ -25,10 +25,9 @@
 #ifndef OutputBuffer_h
 #define OutputBuffer_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include <string>
-using namespace std;
+
 
 #define INITIAL_OUTPUT_BUFFER_SIZE 1
 
@@ -41,6 +40,7 @@ using namespace std;
 #define RESPONSE_CODE_INVALID_REQUEST    452
 #define RESPONSE_CODE_UNKNOWN_COLUMN     450
 
+
 class OutputBuffer
 {
     char *_buffer;
@@ -49,8 +49,13 @@ class OutputBuffer
     unsigned _max_size;
     int _response_header;
     unsigned _response_code;
-    string _error_message;
+    std::string _error_message;
     bool _do_keepalive;
+
+    // We use dynamically allocated memory => disable copy/assignment
+    // TODO: Just use vector instead of all this manual fiddling...
+    OutputBuffer(const OutputBuffer&);
+    OutputBuffer& operator=(const OutputBuffer&);
 
 public:
     OutputBuffer();
@@ -74,6 +79,4 @@ private:
     void writeData(int fd, int *, const char *, int);
 };
 
-
 #endif // OutputBuffer_h
-

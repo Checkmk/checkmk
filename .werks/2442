@@ -1,0 +1,19 @@
+Title: WATO remove host: improved cleanup of obsolete host files
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446380193
+
+Deleting a host in WATO will now also remove the following files
+<ul>
+<li>Persisted data</li>
+<li>Piggyback data</li>
+<li>Inventory data</li>
+<li>Agent Bakery symlinks</li>
+</ul>
+
+To prevent the loss of historic files, any performance data and the
+archived inventory data is not deleted.

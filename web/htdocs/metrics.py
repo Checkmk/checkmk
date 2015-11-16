@@ -34,7 +34,7 @@
 # unit:               The definition-dict of a unit like in unit_info
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
-import math, time, colorsys
+import math, time, colorsys, shlex
 import config, defaults, pagetypes, table
 from lib import *
 from valuespec import *
@@ -231,7 +231,10 @@ def hsv_to_hexrgb(hsv):
 
 # "#ff0080" -> (1.0, 0.0, 0.5)
 def parse_color(color):
-    return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
+    try:
+        return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
+    except Exception, e:
+        raise MKGeneralException(_("Invalid color specification '%s'") % color)
 
 
 def render_color(color_rgb):
@@ -272,15 +275,28 @@ def mix_colors(a, b):
 #   |  Parsing of performance data into metrics, evaluation of expressions |
 #   '----------------------------------------------------------------------'
 
+
+def split_perf_data(perf_data_string):
+    # In python < 2.5 shlex.split can not deal with unicode strings. But we always
+    # have unicode strings. So encode and decode again.
+    return map(lambda s: s.decode('utf-8'), shlex.split(perf_data_string.encode('utf-8')))
+
+
 # Convert perf_data_string into perf_data, extract check_command
 def parse_perf_data(perf_data_string, check_command=None):
     # Strip away arguments like in "check_http!-H mathias-kettner.de"
+    # FIXME: check_command=None? Fails here!
     check_command = check_command.split("!")[0]
 
     if not perf_data_string:
         return None, check_command
 
-    parts = perf_data_string.split()
+    # Split the perf data string into parts. Preserve quoted strings!
+    try:
+        parts = split_perf_data(perf_data_string)
+    except ValueError, e:
+        html.log("Failed to parse perfdata string: %s" % perf_data_string)
+        return None, check_command
 
     # Try if check command is appended to performance data
     # in a PNP like style
@@ -294,25 +310,31 @@ def parse_perf_data(perf_data_string, check_command=None):
         return x in [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ]
 
     # Parse performance data, at least try
-    try:
-        perf_data = []
-        for part in parts:
-            varname, values = part.split("=")
+    perf_data = []
+    for part in parts:
+        try:
+            varname, values = part.split("=", 1)
+            varname = pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
+
             value_parts = values.split(";")
             while len(value_parts) < 5:
                 value_parts.append(None)
-            value, warn, crit, min, max = value_parts[0:5]
+            value_text, warn, crit, min, max = value_parts[0:5]
+            if value_text == "":
+                continue # ignore useless empty variable
+
             # separate value from unit
             i = 0
-            while i < len(value) and (isdigit(value[i]) or value[i] in ['.', ',', '-']):
+            while i < len(value_text) and (isdigit(value_text[i]) or value_text[i] in ['.', ',', '-']):
                 i += 1
-            unit_name = value[i:]
-            value = value[:i]
+            unit_name = value_text[i:]
+            value = value_text[:i]
+
             perf_data.append((varname, value, unit_name, warn, crit, min, max))
-    except:
-        if config.debug:
-            raise
-        perf_data = None
+        except:
+            if config.debug:
+                raise
+            perf_data = None
 
     return perf_data, check_command
 
@@ -330,6 +352,7 @@ def translate_metrics(perf_data, check_command):
     color_index = 0
     for nr, entry in enumerate(perf_data):
         varname = entry[0]
+        value_text = entry[1]
 
         translation_entry = {} # Default: no translation neccessary
 
@@ -362,9 +385,8 @@ def translate_metrics(perf_data, check_command):
         # Optional scaling
         scale = translation_entry.get("scale", 1.0)
 
-
         new_entry = {
-            "value"      : float_or_int(entry[1]) * scale,
+            "value"      : float_or_int(value_text) * scale,
             "orig_name"  : varname,
             "scale"      : scale, # needed for graph definitions
             "scalar"     : {},
@@ -972,25 +994,30 @@ def get_graph_range(graph_template, translated_metrics):
 # Called with exactly one variable: the template ID. Example:
 # "check_mk-kernel.util:guest,steal,system,user,wait".
 def page_pnp_template():
-    template_id = html.var("id")
+    try:
+        template_id = html.var("id")
 
-    check_command, perf_var_string = template_id.split(":", 1)
-    perf_var_names = perf_var_string.split(",")
+        check_command, perf_var_string = template_id.split(":", 1)
+        perf_var_names = perf_var_string.split(",")
 
-    # Fake performance values in order to be able to find possible graphs
-    perf_data = [ ( varname, 1, "", 1, 1, 1, 1 ) for varname in perf_var_names ]
-    translated_metrics = translate_metrics(perf_data, check_command)
-    if not translated_metrics:
-        return # check not supported
+        # Fake performance values in order to be able to find possible graphs
+        perf_data = [ ( varname, 1, "", 1, 1, 1, 1 ) for varname in perf_var_names ]
+        translated_metrics = translate_metrics(perf_data, check_command)
+        if not translated_metrics:
+            return # check not supported
 
-    # Collect output in string. In case of an exception to not output
-    # any definitions
-    output = ""
-    for graph_template in get_graph_templates(translated_metrics):
-        graph_code = render_graph_pnp(graph_template, translated_metrics)
-        output += graph_code
+        # Collect output in string. In case of an exception to not output
+        # any definitions
+        output = ""
+        for graph_template in get_graph_templates(translated_metrics):
+            graph_code = render_graph_pnp(graph_template, translated_metrics)
+            output += graph_code
 
-    html.write(output)
+        html.write(output)
+
+    except Exception, e:
+        import traceback
+        html.write("An error occured:\n%s\n" % traceback.format_exc())
 
 
 # TODO: some_value.max not yet working
@@ -1007,7 +1034,7 @@ def render_graph_pnp(graph_template, translated_metrics):
     # Define one RRD variable for each of the available metrics.
     # Note: We need to use the original name, not the translated one.
     for var_name, metrics in translated_metrics.items():
-        rrd = "$RRDBASE$_" + pnp_cleanup(metrics["orig_name"]) + ".rrd"
+        rrd = "$RRDBASE$_" + metrics["orig_name"] + ".rrd"
         scale = metrics["scale"]
         unit = metrics["unit"]
         render_scale = unit.get("render_scale", 1)
@@ -1121,7 +1148,7 @@ def render_graph_pnp(graph_template, translated_metrics):
         # TODO: Die Breite des Titels intelligent berechnen. Bei legend = "mirrored" muss man die
         # Vefügbare Breite ermitteln und aufteilen auf alle Titel
         right_pad = " " * (max_title_length - len(title))
-        commands += "%s:%s%s%s:\"%s%s\"%s " % (draw_type, metric_name, upside_down_suffix, color, title, right_pad, draw_stack)
+        commands += "%s:%s%s%s:\"%s%s\"%s " % (draw_type, metric_name, upside_down_suffix, color, title.replace(":", "\\:"), right_pad, draw_stack)
         if line_type == "area":
             commands += "LINE:%s%s%s " % (metric_name, upside_down_suffix, render_color(darken_color(parse_color(color), 0.2)))
 
@@ -1199,61 +1226,118 @@ def browser_supports_canvas():
         return True
 
 
+def get_graph_data_from_livestatus(site, host_name, service):
+    if service == "_HOST_":
+        query = "GET hosts\n" \
+                "Filter: host_name = %s\n" \
+                "Columns: perf_data metrics check_command\n" % host_name
+
+    else:
+        query = "GET services\n" \
+                "Filter: host_name = %s\n" \
+                "Filter: service_description = %s\n" \
+                "Columns: perf_data metrics check_command\n" % (host_name, service)
+
+    if site:
+        html.live.set_only_sites([site])
+    html.live.set_prepend_site(True)
+    data = html.live.query_row(query)
+    html.live.set_prepend_site(False)
+
+    if site:
+        html.live.set_only_sites(None)
+
+    if service == "_HOST_":
+        return {
+            'site'                  : data[0],
+            'host_name'             : host_name,
+            'host_perf_data'        : data[1],
+            'host_metrics'          : data[2],
+            'host_check_command'    : data[3],
+        }
+    else:
+        return {
+            'site'                  : data[0],
+            'host_name'             : host_name,
+            'service_description'   : service,
+            'service_perf_data'     : data[1],
+            'service_metrics'       : data[2],
+            'service_check_command' : data[3],
+        }
+
+
+def get_graph_template_by_source(graph_templates, source):
+    graph_template = None
+    for source_nr, template in enumerate(graph_templates):
+        if source == source_nr + 1:
+            graph_template = template
+            break
+    return graph_template
+
+
 def page_show_graph():
     site = html.var('site')
     host_name = html.var('host_name')
     service = html.var('service')
+    source = html.var("source") and int(html.var("source")) or None
+
+    what = html.var("what", "hover")
+
+    if what == "dashlet":
+        # minus margin
+        # width: left legend and right margin (- 49 - 5)
+        # height: title height
+        size = (int(((float(html.var("width")) - 49 - 5)/html_size_per_ex)),
+                int((float(html.var("height")) - 23)/html_size_per_ex))
+        font_size       = 11
+        show_legend     = True
+        graph_id_prefix = "dashlet_" + html.var("id")
+    else:
+        size            = (30, 10)
+        font_size       = 8
+        show_legend     = False
+        graph_id_prefix = "hover"
 
     if new_style_graphs_possible():
         # FIXME HACK TODO We don't have the current perfata and check command
         # here, but we only need it till metrics.render_svc_time_graph() does
         # not need these information anymore.
-        if service == "_HOST_":
-            query = "GET hosts\n" \
-                    "Filter: host_name = %s\n" \
-                    "Columns: perf_data metrics check_command\n" % host_name
-
-        else:
-            query = "GET services\n" \
-                    "Filter: host_name = %s\n" \
-                    "Filter: service_description = %s\n" \
-                    "Columns: perf_data metrics check_command\n" % (host_name, service)
-
-        html.live.set_only_sites([site])
         try:
-            data = html.live.query_row(query)
+            row = get_graph_data_from_livestatus(site, host_name, service)
         except livestatus.MKLivestatusNotFoundError:
             html.write('<div class="error">%s</div>' %
                 _('Failed to fetch data for graph. Maybe the site is not reachable?'))
             return
-        html.live.set_only_sites(None)
-
-        if service == "_HOST_":
-            row = {
-                'site'                  : site,
-                'host_name'             : host_name,
-                'host_perf_data'        : data[0],
-                'host_metrics'          : data[1],
-                'host_check_command'    : data[2],
-            }
-        else:
-            row = {
-                'site'                  : site,
-                'host_name'             : host_name,
-                'service_description'   : service,
-                'service_perf_data'     : data[0],
-                'service_metrics'       : data[1],
-                'service_check_command' : data[2],
-            }
 
         # now try to render the graph with our graphing. If it is not possible,
         # add JS code to let browser fetch the PNP graph
         try:
-            # Currently always displaying 24h graph
+            # FIXME: Currently always displaying 8h graph
             end_time = time.time()
             start_time = end_time - 8 * 3600
 
-            htmlcode = render_time_graph(row, start_time, end_time, size=(30, 10), font_size=8, show_legend=False, graph_id_prefix="hover")
+            if source == None:
+                # Render all graphs (e.g. for the hover menu)
+                htmlcode = render_time_graph(row, start_time, end_time, size=(30, 10),
+                                             font_size=8, show_legend=False, show_controls=False,
+                                             resizable=False, graph_id_prefix=graph_id_prefix)
+            else:
+                # render specific graph (e.g. for the dashlet)
+                perf_data_string, check_command, graph_templates = find_possible_graphs(row)
+                graph_template = get_graph_template_by_source(graph_templates, source)
+
+                if graph_template:
+                    # FIXME: The dashlet size can not be used as graph area size directly when
+                    # show_legend=True. The legend needs to be substracted from the size to make
+                    # the graph fit the dashlet area. Currently fixing this by disabling the
+                    # legend which makes it work for the moment. But for the future we need to
+                    # make the legend available for dashlets.
+                    htmlcode = render_graph_html(row["site"], host_name, service, perf_data_string,
+                                                 check_command, graph_template,
+                                                 start_time, end_time, size=size,
+                                                 show_controls=False, show_legend=False,
+                                                 resizable=False, graph_id_prefix=graph_id_prefix)
+
             if htmlcode:
                 html.write(htmlcode)
                 return
@@ -1263,14 +1347,20 @@ def page_show_graph():
             pass
 
     # Fallback to PNP graph rendering
-    host = pnp_cleanup(host_name)
-    svc = pnp_cleanup(service)
-    site = html.site_status[site]["site"]
-    if html.mobile:
-        url = site["url_prefix"] + ("pnp4nagios/index.php?kohana_uri=/mobile/popup/%s/%s" % \
-            (html.urlencode(host), html.urlencode(svc)))
+
+    pnp_host   = pnp_cleanup(host_name)
+    pnp_svc    = pnp_cleanup(service)
+    url_prefix = html.site_status[site]["site"]["url_prefix"]
+
+    if what == "hover":
+        if html.mobile:
+            url = url_prefix + ("pnp4nagios/index.php?kohana_uri=/mobile/popup/%s/%s" % \
+                (html.urlencode(pnp_host), html.urlencode(pnp_svc)))
+        else:
+            url = url_prefix + ("pnp4nagios/index.php/popup?host=%s&srv=%s" % \
+                (html.urlencode(pnp_host), html.urlencode(pnp_svc)))
     else:
-        url = site["url_prefix"] + ("pnp4nagios/index.php/popup?host=%s&srv=%s" % \
-            (html.urlencode(host), html.urlencode(svc)))
+        url = url_prefix + "pnp4nagios/index.php/image?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \
+            (html.urlencode(pnp_host), html.urlencode(pnp_svc), source, html.var("timerange"))
 
     html.write(url)

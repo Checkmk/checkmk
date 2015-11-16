@@ -1,0 +1,27 @@
+title: Sophos Email Appliance: Module States
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the states of the following modules
+ of the Sophos Email Appliance which supports the SOPHOS-MIB:
+ - the memory consumption,
+ - memory,
+ - RAID,
+ - CPU,
+ - left, right and summary power supply,
+ - left, right and summary fan,
+ - system temperature
+ - system voltage usage
+
+ The device sends the states by itself and will be handled as follows:
+ - OK -> OK
+ - warn -> WARN
+ - error -> CRIT
+
+item:
+ The module name.
+
+inventory:
+ One service per module is created.

@@ -25,12 +25,12 @@
 #ifndef DownCommColumn_h
 #define DownCommColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "ListColumn.h"
-#include "TableContacts.h"
+class Query;
 
-class TableDownComm;
 
 class DownCommColumn : public ListColumn
 {
@@ -39,8 +39,8 @@ class DownCommColumn : public ListColumn
     bool _is_service; // and not host
     bool _with_extra_info; // provides date and type
 public:
-    DownCommColumn(string name, string description, int indirect_offset, bool is_downtime, bool is_service, bool with_info, bool with_extra_info)
-        : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _is_service(is_service), _with_info(with_info), _with_extra_info(with_extra_info) {}
+    DownCommColumn(std::string name, std::string description, int indirect_offset, bool is_downtime, bool is_service, bool with_info, bool with_extra_info)
+        : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _with_info(with_info), _is_service(is_service), _with_extra_info(with_extra_info) {}
     int type() { return COLTYPE_LIST; }
     void output(void *, Query *);
     void *getNagiosObject(char *name);
@@ -48,6 +48,4 @@ public:
     bool isNagiosMember(void *data, void *member);
 };
 
-
 #endif // DownCommColumn_h
-

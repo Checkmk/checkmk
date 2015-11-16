@@ -42,7 +42,7 @@ def check_fortigate_sessions(item, params, info):
 	icon = "(!!)"
 
     perf = [("session", current, warn, crit)]
-    return state, "%d Session%s (levels at %d/%d)" % (current, icon, warn, crit), perf
+    return state, "%d Session%s (warn/crit at %d/%d)" % (current, icon, warn, crit), perf
 
 check_info["fortigate_sessions"] = {
     "inventory_function"    : inventory_fortigate_sessions,

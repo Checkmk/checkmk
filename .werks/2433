@@ -1,0 +1,19 @@
+Title: interface checks: now able to configure the infotext shown in the check output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443877893
+Class: feature
+
+You can now configure with the WATO rule <i>Network interfaces and switch ports</i> the
+infotext between the [] brackets. The following options are available.
+
+<ul>
+<li>Show alias</li>
+<li>Show description</li>
+<li>Show alias and description</li>
+<li>Show alias if set, else description</li>
+<li>Show description if set, else alias</li>
+<li>Hide infotext</li>
+</ul>

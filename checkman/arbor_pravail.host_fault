@@ -1,0 +1,11 @@
+title: Arbor Pravail host fault
+agents: snmp
+catalog: hw/network/arbor
+license: GPL
+distribution: check_mk
+description:
+ Reports host fault as reported by the device and turns crit if
+ there are any.
+
+inventory:
+ Exactly one service is created.

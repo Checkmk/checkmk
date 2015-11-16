@@ -1,0 +1,13 @@
+Title: netextreme_psu_in: fixed wrong voltage usage handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1447335434
+
+This value is not the current voltage usage,
+but rather the PSU type defined in EXTREME-SYSTEM-MIB:
+v110 (1), v220 (2), v48DC (3), unknown(4)
+Thus we do not monitor this value any more.

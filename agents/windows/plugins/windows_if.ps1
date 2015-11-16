@@ -1,3 +1,4 @@
+# Windows Teaming Interfaces
 # runs on windows 2003 or newer
 if ([Environment]::OSVersion.Version.Major -ge "5"){
 	Write-Host "<<<winperf_if:sep(9)>>>"
@@ -60,13 +61,13 @@ if ([Environment]::OSVersion.Version.Major -ge "5"){
 	foreach ($net in Get-WmiObject Win32_NetworkAdapter)
 	{
 		if ($net.netconnectionid){
-			Write-Host -NoNewline $env:COMPUTERNAME`t
-			Write-Host -NoNewline $net.macaddress`t
-			Write-Host -NoNewline $net.name`t
-			Write-Host -NoNewline $net.netconnectionid`t
-			Write-Host -NoNewline $net.netconnectionstatus`t
-			Write-Host -NoNewline $net.speed`t
-			Write-Host $net.GUID
+			Write-Host      $env:COMPUTERNAME "`t"`
+					$net.macaddress "`t"`
+					$net.name "`t"`
+					$net.netconnectionid "`t"`
+					$net.netconnectionstatus "`t"`
+					$net.speed "`t"`
+					$net.GUID
 		}
 	}
 }

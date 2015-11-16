@@ -1,0 +1,9 @@
+Title: ups_modulys_battery.temp: fixed missing manpage
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441270258
+Class: fix
+
+

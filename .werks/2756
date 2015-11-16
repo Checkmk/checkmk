@@ -1,0 +1,20 @@
+Title: SNMP: Generalized error handling of emtpy info for SNMP checks
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446828681
+Class: fix
+
+This change changes the way empty data for SNMP checks is handled.
+In previous version each SNMP check had to deal with the fact that
+the SNMP agent could respond with an empty response (info = []).
+
+This situation can better be handled in the Check_MK SNMP engine
+which catches this issue now before calling the discovery/check
+function of the check. The error is then reported as missing info
+like for the Check_MK Agent based checks.
+
+There might be some special SNMP checks which need to treat this
+case of empty data on its own. These checks now need to declare
+the attribute <tt>handle_empty_info</tt> in the <tt>check_info</tt>.

@@ -279,20 +279,42 @@ def show_crash_report(info):
 
 
 def show_crashed_check_details(info):
+    def format_bool(val):
+        return {
+            True  : _("Yes"),
+            False : _("No"),
+            None  : _("Unknown"),
+        }[val]
+
     details = info["details"]
     html.write("<h2>%s</h2>" % _("Details"))
     html.write("<table class=\"data\">")
+
     html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Host"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["host"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Check Type"))
+
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Is Cluster Host"))
+    html.write("<td>%s</td></tr>" % format_bool(details.get("is_cluster")))
+
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Check Type"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["check_type"]))
+
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Manual Check"))
+    html.write("<td><pre>%s</pre></td></tr>" % format_bool(details.get("manual_check")))
+
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Uses SNMP"))
-    html.write("<td><pre>%s</pre></td></tr>" % (details.get("uses_snmp", False) and _("Yes") or _("No")))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Check Item"))
+    html.write("<td><pre>%s</pre></td></tr>" % format_bool(details.get("uses_snmp")))
+
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Inline-SNMP"))
+    html.write("<td><pre>%s</pre></td></tr>" % format_bool(details.get("inline_snmp")))
+
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Check Item"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["item"]))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Description"))
+
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Description"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["description"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Parameters"))
+
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Parameters"))
     html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_params(details["params"])))
 
     html.write("</table>")

@@ -1,0 +1,10 @@
+Title: winperf_if: added option to warn if an interface is using dhcp
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445871802
+Class: feature
+
+if the new plugin mk_dhcp_enabled.bat is installed, the interface will
+go into warn state if it received its ip via dhcp.

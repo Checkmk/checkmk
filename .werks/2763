@@ -1,0 +1,11 @@
+Title: apache_status: Can now be configured to use the protocols default port
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447243247
+Class: feature
+
+When specifiying None as port number, no port number is used to contact
+the web server. The resulting service will also only contain the host name
+without the tailing :[port].

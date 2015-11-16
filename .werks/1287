@@ -1,0 +1,11 @@
+Title: akcp_temperature: Fixed interpretation of device levels
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1440601502
+
+This fix handle devices who seamed to have to low levels like 3.5 or 2.5
+

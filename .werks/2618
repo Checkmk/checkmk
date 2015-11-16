@@ -1,0 +1,9 @@
+Title: Fixed "move folder" popup being positioned out of screen on the right
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443622653
+Class: fix
+
+

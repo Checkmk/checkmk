@@ -1,0 +1,17 @@
+title: HP MSA 2040: Controller IO
+agents: hp_msa
+catalog: hw/storagehw/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the IO of the controllers a HP MSA 2040 storage system.
+ To make it work you have to configure the hp_msa datasource program via WATO.
+
+ The levels are configurable.
+ No default levels are set.
+
+item:
+ The controller identifier.
+
+inventory:
+ One service per controller is created.

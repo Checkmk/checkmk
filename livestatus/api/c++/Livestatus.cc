@@ -28,6 +28,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "Livestatus.h"
+using std::string;
+using std::vector;
 
 #define SEPARATORS "Separators: 10 1 2 3\n"
 
@@ -71,7 +73,7 @@ void Livestatus::sendQuery(const char *query)
 }
 
 
-std::vector<std::string> *Livestatus::nextRow()
+vector<string> *Livestatus::nextRow()
 {
     char line[65536];
     if (0 != fgets(line, sizeof(line), _file)) {
@@ -81,13 +83,13 @@ std::vector<std::string> *Livestatus::nextRow()
 	    *(end-1) = 0;
 	    --end;
 	}
-	std::vector<std::string> *row = new std::vector<std::string>;
+	vector<string> *row = new vector<string>;
 	char *scan = line;
 	while (scan < end) {
 	    char *zero = scan;
 	    while (zero < end && *zero != '\001') zero++;
 	    *zero = 0;
-	    row->push_back(std::string(scan));
+	    row->push_back(string(scan));
 	    scan = zero + 1;
 	}
 	return row;

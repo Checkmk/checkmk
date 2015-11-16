@@ -74,11 +74,17 @@ def apache_status_parse(info):
     data = {}
     for line in info:
         address, port = line[:2]
-        if len(line) != 4:
+        if len(line) != 4 and not (len(line) == 5 and line[2] == 'Total'):
             continue # Skip unexpected lines
         label = (' '.join(line[2:-1])).rstrip(':')
+        if label not in _apache_status_fields:
+            continue
+
         value = _apache_status_fields[label][1](line[-1])
-        item = '%s:%s' % (address, port)
+        if port == "None":
+            item = address
+        else:
+            item = '%s:%s' % (address, port)
 
         if item not in data:
             data[item] = {}
@@ -115,6 +121,18 @@ def check_apache_status(item, params, info):
     if item not in all_data:
         return (3, 'Unable to find instance in agent output')
     data_dict = all_data[item]
+
+    this_time = int(time.time())
+
+    if "Total Accesses" in data_dict:
+        data_dict["ReqPerSec"] = get_rate("apache_status_%s_accesses" % item, this_time,
+                                          data_dict["Total Accesses"])
+        del(data_dict["Total Accesses"])
+    if "Total kBytes" in data_dict:
+        data_dict["BytesPerSec"] = get_rate("apache_status_%s_bytes" % item, this_time,
+                                            data_dict["Total kBytes"] * 1024)
+        del(data_dict["Total kBytes"])
+
     data = data_dict.items()
 
     worst_state = 0

@@ -38,7 +38,7 @@ loaded_with_language = False
 #   | Declare general permissions for Multisite                            |
 #   '----------------------------------------------------------------------'
 
-def load():
+def load_plugins():
     global loaded_with_language
     if loaded_with_language == current_language:
         return
@@ -140,6 +140,14 @@ def load():
          _("Ignore hard query limit"),
          _("Allows to ignore the hard query limit imposed upon the number of datasets returned by a query"),
          [ "admin" ])
+
+    config.declare_permission("general.acknowledge_werks",
+         _("Acknowledge Incompatible Werks"),
+         _("In the change log of the Check_MK software version the administrator can manage change log entries "
+           "(Werks) that requrire user interaction. These <i>incompatible Werks</i> can be acknowledged only "
+           "if the user has this permission."),
+         [ "admin" ])
+
 
     loaded_with_language = current_language
 

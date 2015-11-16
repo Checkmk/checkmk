@@ -797,6 +797,31 @@ register_check_parameters(
 
 
 #.
+#   .--Storage-------------------------------------------------------------.
+#   |                 ____  _                                              |
+#   |                / ___|| |_ ___  _ __ __ _  __ _  ___                  |
+#   |                \___ \| __/ _ \| '__/ _` |/ _` |/ _ \                 |
+#   |                 ___) | || (_) | | | (_| | (_| |  __/                 |
+#   |                |____/ \__\___/|_|  \__,_|\__, |\___|                 |
+#   |                                          |___/                       |
+#   '----------------------------------------------------------------------'
+
+register_check_parameters(
+    subgroup_storage,
+    "blank_tapes",
+    _("Remaining blank tabes in DIVA CSM Devices"),
+    Tuple(
+        elements = [
+            Integer(title = _("Warning below"), default_value = 5),
+            Integer(title = _("Critical below"), default_value = 1),
+        ],
+    ),
+    None,
+    match_type = "first",
+)
+
+
+#.
 #   .--Unsorted--(Don't create new stuff here!)----------------------------.
 #   |              _   _                      _           _                |
 #   |             | | | |_ __  ___  ___  _ __| |_ ___  __| |               |
@@ -922,7 +947,11 @@ register_rule(group + '/' + subgroup_inventory,
         ( "portstates",
           ListChoice(title = _("Network interface port states to discover"),
               help = _("When doing discovery on switches or other devices with network interfaces "
-                       "then only ports found in one of the configured port states will be added to the monitoring."),
+                       "then only ports found in one of the configured port states will be added to the monitoring. "
+                       "Note: the state <i>admin down</i> is in fact not an <tt>ifOperStatus</tt> but represents the "
+                       "<tt>ifAdminStatus</tt> of <tt>down</tt> - a port administratively switched off. If you check this option "
+                       "then an alternate version of the check is being used that fetches the <tt>ifAdminState</tt> in addition. "
+                       "This will add about 5% of additional SNMP traffic."),
               choices = dict_choices(interface_oper_states),
               toggle_all = True,
               default_value = ['1'],
@@ -1135,6 +1164,22 @@ process_level_elements = [
             ),
         ],
    )),
+   ('process_info', DropdownChoice(
+       title = _("Enable per-process details in long-output"),
+       label = _("Enable per-process details"),
+       help  = _("If active, the long output of this service will contain a list of "
+                   "all the matching processes and their details (i.e. pid, cpu usage, memory usage. "
+                   "Please note that HTML output will only work if \"Escape HTML codes in plugin output\" is "
+                   "disabled in global settings. This might expose you to Cross-Site-Scripting (everyone "
+                   "with write-access to checks could get scripts executed on the monitoring site in the context "
+                   "of the user of the monitoring site) so please do this if you understand the consequences."),
+       choices = [
+           (None, _("Disable")),
+           ("text", _("Text output")),
+           ("html", _("HTML output"))
+       ],
+       default_value = "disable",
+   )),
 ]
 
 # In version 1.2.4 the check parameters for the resulting ps check
@@ -1245,7 +1290,7 @@ register_rule(group + '/' + subgroup_inventory,
                               "State and Count of Processes</a> instead. "
                               "A change there will immediately be active, while a change in this rule "
                               "requires a re-discovery of the services."),
-                    elements = process_level_elements,
+                     elements = process_level_elements,
                 )),
             ],
             required_keys = [ "descr" ],
@@ -2437,7 +2482,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_networking,
     "tcp_conn_stats",
-    _("TCP connection stats (LINUX / UNIX)"),
+    _("TCP connection statistics"),
     Dictionary(
         elements = [
             ( "ESTABLISHED",
@@ -2546,12 +2591,33 @@ register_check_parameters(
                   ]
               )
             ),
+            ( "LISTEN",
+              Tuple(
+                  title = _("LISTEN"),
+                  help = _("represents waiting for a connection request from any remote TCP and port"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
             ( "BOUND",
               Tuple(
                   title = _("BOUND"),
                   help = _("the socket has been created and an address assigned "
                            "to with bind(). The TCP stack is not active yet. "
                            "This state is only reported on Solaris."),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("connections")),
+                      Integer(title = _("Critical at"), label = _("connections"))
+                  ]
+              )
+            ),
+            ( "IDLE",
+              Tuple(
+                  title = _("IDLE"),
+                  help = _("a TCP session that is active but that has no data being "
+                           "transmitted by either device for a prolonged period of time"),
                   elements = [
                       Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))
@@ -2714,8 +2780,14 @@ def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
         )
     ]
 
+    def validate_dynamic_levels(value, varprefix):
+        if not [ v for v in value if v[0] == 0 ]:
+            raise MKUserError(varprefix, _("You need to specify levels for "
+                                           "%ss larger than 0 bytes." % name))
+
     return Alternative(
         title = _("Levels for %s %s") % (name, title),
+        style = "dropdown",
         show_alternative_title = True,
         default_value = default_value,
         elements = vs_subgroup + [
@@ -2730,6 +2802,8 @@ def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
                     ]
                 ),
                 title = _('Dynamic levels'),
+                allow_empty = False,
+                validate = validate_dynamic_levels,
             )],
         )
 
@@ -2971,6 +3045,21 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_os,
+    "sp_util",
+    _("Storage Processor Utilization"),
+    Tuple(
+        title = _("Specify levels in percentage of storage processor usage"),
+        elements = [
+            Percentage(title = _("Warning at"), default_value = 50.0),
+            Percentage(title = _("Critical at"), default_value = 60.0),
+        ]
+    ),
+    None,
+    "first",
+)
+
+register_check_parameters(
     subgroup_storage,
     "esx_vsphere_datastores",
     _("ESX Datastores (used space and growth)"),
@@ -2978,10 +3067,13 @@ register_check_parameters(
         elements = filesystem_elements + [
             ("provisioning_levels", Tuple(
                 title = _("Provisioning Levels"),
-                help = _("Configure thresholds for overprovisioning of datastores."),
+                help = _("A provisioning of more than 100% is called "
+                         "over provisioning and can be a useful strategy for saving disk space. But you cannot guarantee "
+                         "any longer that every VM can really use all space that it was assigned. Here you can "
+                         "set levels for the maximum provisioning. A warning level of 150% will warn at 50% over provisioning."),
                 elements = [
-                  Percentage(title = _("Warning at overprovisioning of"), maxvalue = None),
-                  Percentage(title = _("Critical at overprovisioning of"), maxvalue = None),
+                  Percentage(title = _("Warning at a provisioning of"), maxvalue = None, default_value = 120.0),
+                  Percentage(title = _("Critical at a provisioning of"), maxvalue = None, default_value = 150.0),
                 ]
             )),
         ],
@@ -3103,17 +3195,31 @@ register_check_parameters(
     # keys where each was configured with an Alternative valuespec
     Transform(Dictionary(
         elements = [
-            ( "errors",
-              Tuple(
+             ( "errors",
+               Alternative(
                   title = _("Levels for error rates"),
                   help = _("These levels make the check go warning or critical whenever the "
-                           "<b>percentual error rate</b> of the monitored interface reaches "
-                           "the given bounds. The error rate is computed by dividing number of "
+                           "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
+                           "the given bounds. The percentual error rate is computed by dividing number of "
                            "errors by the total number of packets (successful plus errors)."),
                   elements = [
-                      Percentage(title = _("Warning at"), label = _("errors"), default_value = 0.01, display_format = '%.3f' ),
-                      Percentage(title = _("Critical at"), label = _("errors"), default_value = 0.1, display_format = '%.3f' )
-                  ])),
+                      Tuple(
+                          title = _("Percentual levels for error rates"),
+                          elements = [
+                              Percentage(title = _("Warning at"), unit = _("percent errors"), default_value = 0.01, display_format = '%.3f' ),
+                              Percentage(title = _("Critical at"), unit = _("percent errors"), default_value = 0.1, display_format = '%.3f' )
+                          ]
+                      ),
+                      Tuple(
+                          title = _("Absolute levels for error rates"),
+                          elements = [
+                              Integer(title = _("Warning at"), unit= _("errors") ),
+                              Integer(title = _("Critical at"), unit = _("errors") )
+                          ]
+                      )
+                    ]
+                )
+             ),
              ( "speed",
                OptionalDropdownChoice(
                    title = _("Operating speed"),
@@ -3140,9 +3246,11 @@ register_check_parameters(
                         title = _("Allowed states:"),
                         choices = dict_choices(interface_oper_states)),
                     title = _("Operational State"),
-                    help = _("Activating the monitoring of the operational state (opstate), "
-                             "the check will get warning or critical of the current state "
-                             "of the interface does not match the expected state or states."),
+                    help = _("If you activate the monitoring of the operational state (<tt>ifOperStatus</tt>) "
+                             "the check will get warning or critical if the current state "
+                             "of the interface does not match one of the expected states. Note: the status 9 (<i>admin down</i>) "
+                             "is only visible if you activate this status during switch port inventory or if you manually "
+                             "use the check plugin <tt>if64adm</tt> instead of <tt>if64</tt>."),
                     label = _("Ignore the operational state"),
                     none_label = _("ignore"),
                     negate = True)
@@ -3194,6 +3302,22 @@ register_check_parameters(
                        ( "bit",  _("Bits") ),
                        ( "byte", _("Bytes") ),],
                )),
+              ( "infotext_format",
+                   DropdownChoice(
+                        title = _("Change infotext in check output"),
+                        help = _("This setting allows you to modify the information text which is displayed between "
+                                 "the two brackets in the check output. Please note that this setting does not work for "
+                                 "grouped interfaces, since the additional information of grouped interfaces is different"),
+                        choices = [
+                            ("alias",                 _("Show alias")),
+                            ("description",           _("Show description")),
+                            ("alias_and_description", _("Show alias and description")),
+                            ("alias_or_description",  _("Show alias if set, else description")),
+                            ("desription_or_alias",   _("Show description if set, else alias")),
+                            ("hide",                  _("Hide infotext")),
+                        ]
+                   )
+              ),
               ( "traffic",
                 ListOf(CascadingDropdown(
                         title = _("Direction"),
@@ -3242,6 +3366,71 @@ register_check_parameters(
         allow_empty = False),
     "dict",
 )
+
+register_check_parameters(
+    subgroup_networking,
+    "fcp",
+    _("Fibrechannel Interfaces"),
+    Dictionary(
+        elements = [
+            ( "speed",
+              OptionalDropdownChoice(
+                  title = _("Operating speed"),
+                  help = _("If you use this parameter then the check goes warning if the "
+                           "interface is not operating at the expected speed (e.g. it "
+                           "is working with 8Gbit/s instead of 16Gbit/s."),
+                 choices = [
+                    ( None,       _("ignore speed") ),
+                    ( 4000000000,   "4 Gbit/s" ),
+                    ( 8000000000,   "8 Gbit/s" ),
+                    ( 16000000000,  "16 Gbit/s" ) ],
+                 otherlabel = _("specify manually ->"),
+                 explicit = \
+                     Integer(title = _("Other speed in bits per second"),
+                             label = _("Bits per second")))
+            ),
+            ( "traffic",
+              ListOf(CascadingDropdown(
+                      title = _("Direction"),
+                      orientation = "horizontal",
+                      choices = [
+                          ('both', _("In / Out"), vs_interface_traffic()),
+                          ('in',   _("In"),       vs_interface_traffic()),
+                          ('out',  _("Out"),      vs_interface_traffic()),
+                      ]
+                  ),
+                  title = _("Used bandwidth (minimum or maximum traffic)"),
+                  help = _("Setting levels on the used bandwidth is optional. If you do set "
+                           "levels you might also consider using averaging."),
+              )
+            ),
+            ( "read_latency",
+              Levels(
+                  title = _("Read latency"),
+                  unit = _("ms"),
+                  default_value = None,
+                  default_levels = (50.0, 100.0))),
+            ( "write_latency",
+              Levels(
+                  title = _("Write latency"),
+                  unit = _("ms"),
+                  default_value = None,
+                  default_levels = (50.0, 100.0))),
+            ( "latency",
+              Levels(
+                  title = _("Overall latency"),
+                  unit = _("ms"),
+                  default_value = None,
+                  default_levels = (50.0, 100.0))),
+        ]
+    ),
+    TextAscii(
+        title = _("Port specification"),
+        allow_empty = False),
+    "dict",
+)
+
+
 register_check_parameters(
     subgroup_networking,
     "signal_quality",
@@ -3351,6 +3540,27 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "mem_pages",
+    _("Memory Pages Statistics"),
+    Dictionary(
+        elements = [
+            ("pages_per_second",
+                Tuple(
+                   title = _("Pages per second"),
+                   elements = [
+                      Integer(title = _("Warning at"), unit = _("pages/s") ),
+                      Integer(title = _("Critical at"), unit = _("pages/s") ),
+                   ]
+                ),
+            )
+        ]
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_os,
     "statgrab_mem",
     _("Statgrab Memory Usage"),
     Alternative(
@@ -3417,6 +3627,25 @@ register_check_parameters(
     ),
     None,
     "first"
+)
+
+# TODO: Remove situations where a rule is used once with and once without items
+register_check_parameters(
+    subgroup_os,
+    "juniper_mem_modules",
+    _("Juniper Modules Memory Usage"),
+    Tuple(
+        title = _("Specify levels in percentage of total memory usage"),
+        elements = [
+            Percentage(title = _("Warning at a usage of"), unit =_("% of RAM"), default_value = 80.0, maxvalue = 100.0 ),
+            Percentage(title = _("Critical at a usage of"), unit =_("% of RAM"), default_value = 90.0, maxvalue = 100.0 )
+        ]
+    ),
+    TextAscii(
+        title = _("Module Name"),
+        help = _("The identificator of the module."),
+    ),
+    "first",
 )
 
 register_check_parameters(
@@ -3590,6 +3819,10 @@ register_check_parameters(
             ( "levels_committed",   UpperMemoryLevels(_("Committed memory"),    (100.0, 150.0), _("RAM + Swap"))),
             ( "levels_commitlimit", LowerMemoryLevels(_("Commit Limit"),        ( 20.0,  10.0), _("RAM + Swap"))),
             ( "levels_vmalloc",     LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
+            ( "handle_hw_corrupted_error", MonitoringState(
+                title = _("Handle Hardware Corrupted Error"),
+                default_value = 2,
+            )),
         ],
     ),
     None,
@@ -3763,6 +3996,20 @@ register_check_parameters(
         title = _("Module name"),
         allow_empty = False
     ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_os,
+    "memory_arbor",
+    _("Memory and Swap usage on Arbor devices"),
+    Dictionary(
+        elements = [
+            ( "levels_ram",  DualMemoryLevels(_("RAM"))),
+            ( "levels_swap", DualMemoryLevels(_("Swap"))),
+        ],
+    ),
+    None,
     "dict",
 )
 
@@ -4254,6 +4501,32 @@ register_check_parameters(
                   default_value = 15,
                   label = _("Compute average over last "),
             )),
+            ( "core_util_time",
+                Tuple(
+                    title = _("Alert on high utilization over an extended time period on a single "
+                              "core (windows only)"),
+                    elements = [
+                        Percentage(title = _("High utilization at "), default_value = 100.0),
+                        Age(title = _("Warning after "), default_value = 5 * 60),
+                        Age(title = _("Critical after "), default_value = 15 * 60),
+                    ],
+                    help = _("A single thread fully utilizing a single core (potentially due to a bug) "
+                            "may go unnoticed when only monitoring the total utilization of the CPU. "
+                            "With this configuration, check_mk will alert if a single core is "
+                            "exceeding a utilization threshold over an extended period of time.")
+                )
+            ),
+            ( "core_util_graph",
+                Checkbox(
+                    title = _("Graphs for individual cores (windows only)"),
+                    label = _("Enable performance graph for utilization of individual cores"),
+                    help  = _("This adds another graph to the performance CPU utilization "
+                            "details page, showing utilization of individual cores. "
+                            "Please note that this graph may be impractical on "
+                            "device with very many cores. "
+                            "This is currently only supported on windows.")
+                ),
+            ),
         ]
     ),
     None,
@@ -4293,6 +4566,30 @@ register_check_parameters(
                                 "for data coming from or going to disk. If you have a significant disk wait "
                                 "the the bottleneck of your server is IO. Please note that depending on the "
                                 "applications being run this might or might not be totally normal.")),
+                ),
+                ( "core_util_time",
+                  Tuple(
+                      title = _("Alert on high utilization over an extended time period on a single core"),
+                      elements = [
+                          Percentage(title = _("High utilization at "), default_value = 100.0),
+                          Age(title = _("Warning after "), default_value = 5 * 60),
+                          Age(title = _("Critical after "), default_value = 15 * 60),
+                      ],
+                      help = _("A single thread fully utilizing a single core (potentially due to a bug) "
+                               "may go unnoticed when only monitoring the total utilization of the CPU. "
+                               "With this configuration, check_mk will alert if a single core is "
+                               "exceeding a utilization threshold over an extended period of time.")
+                    )
+                ),
+                ( "core_util_graph",
+                  Checkbox(
+                      title = _("Graphs for individual cores"),
+                      label = _("Enable performance graph for utilization of individual cores"),
+                      help  = _("This adds another graph to the performance CPU utilization "
+                                "details page, showing utilization of individual cores. "
+                                "Please note that this graph may be impractical on "
+                                "device with very many cores.")
+                  ),
                 ),
             ]
         ),
@@ -5535,25 +5832,65 @@ register_check_parameters(
     match_type = "dict",
 )
 
-
 register_check_parameters(
     subgroup_applications,
     "win_dhcp_pools",
     _("DHCP Pools for Windows and Linux"),
-    Tuple(
-          help = _("The count of remaining entries in the DHCP pool represents "
-                   "the number of IP addresses left which can be assigned in the network"),
-          elements = [
-              Percentage(title = _("Warning if less than"), unit = _("% free pool entries")),
-              Percentage(title = _("Critical if less than"), unit = _("% free pool entries")),
-              ]),
+    Transform(
+        Dictionary(
+            elements = [
+                ("free_leases",
+                    Alternative(
+                        title = _("Free leases levels"),
+                        elements = [
+                            Tuple(
+                                title = _("Free leases levels in percent"),
+                                elements = [
+                                    Percentage(title = _("Warning if below"),  default_value = 10.0),
+                                    Percentage(title = _("Critical if below"), default_value = 5.0)
+                                ]
+                            ),
+                            Tuple(
+                                title = _("Absolute free leases levels"),
+                                elements = [
+                                    Integer(title = _("Warning if below"),  unit = _("free leases")),
+                                    Integer(title = _("Critical if below"), unit = _("free leases"))
+                                ]
+                            )
+                        ]
+                    )
+                ),
+                ("used_leases",
+                    Alternative(
+                        title = _("Used leases levels"),
+                        elements = [
+                            Tuple(
+                                title = _("Used leases levels in percent"),
+                                elements = [
+                                    Percentage(title = _("Warning if below")),
+                                    Percentage(title = _("Critical if below"))
+                                ]
+                            ),
+                            Tuple(
+                                title = _("Absolute used leases levels"),
+                                elements = [
+                                    Integer(title = _("Warning if below"),  unit = _("used leases")),
+                                    Integer(title = _("Critical if below"), unit = _("used leases"))
+                                ]
+                            )
+                        ]
+                    )
+                ),
+            ]
+        ),
+        forth = lambda params: type(params) == tuple and {"free_leases" : (float(params[0]), float(params[1]))} or params,
+    ),
     TextAscii(
         title = _("Pool name"),
-        allow_empty = False),
-    match_type = "first",
+        allow_empty = False,
+    ),
+    match_type = "dict",
 )
-
-
 
 register_check_parameters(
     subgroup_os,
@@ -6305,8 +6642,53 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "snapvault",
+    _("NetApp Snapvaults / Snapmirror Lag Time"),
+    Dictionary(
+         elements = [
+             ("lag_time",
+               Tuple(
+                   title = _("Default levels"),
+                   elements = [
+                       Age(title = _("Warning at")),
+                       Age(title = _("Critical at")),
+                    ],
+               ),
+             ),
+             ("policy_lag_time",
+               ListOf(
+                   Tuple(
+                       orientation = "horizontal",
+                       elements = [
+                           TextAscii(title = _("Policy name")),
+                                Tuple(
+                                    title = _("Maximum age"),
+                                    elements = [
+                                        Age(title = _("Warning at")),
+                                        Age(title = _("Critical at")),
+                                     ],
+                                ),
+                       ]
+                   ),
+                   title = _('Policy specific levels (Clustermode only)'),
+                   help = _("Here you can specify levels for different policies which overrule the levels "
+                            "from the <i>Default levels</i> parameter. This setting only works in NetApp Clustermode setups."),
+                   allow_empty = False,
+               )
+            )
+         ],
+    ),
+    TextAscii(
+        title = _("Source Path"),
+        allow_empty = False
+    ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_storage,
     "netapp_disks",
-    _("Filer Disk Levels (netapp, ibm svc)"),
+    _("Filer Disk Levels (NetApp, IBM SVC)"),
     Transform(
         Dictionary(
             elements = [
@@ -6949,6 +7331,16 @@ phase_elements = [
               Integer(title = _("critical at"), unit = u"A", default_value = 10),
           ],
     )),
+    ( "frequency",
+      Tuple(
+          title = _("Frequency"),
+          elements = [
+              Integer(title = _("warning if below"), unit = u"Hz", default_value = 45),
+              Integer(title = _("critical if below"), unit = u"Hz", default_value = 40),
+              Integer(title = _("warning if above"), unit = u"Hz", default_value = 55),
+              Integer(title = _("critical if above"), unit = u"Hz", default_value = 60),
+          ],
+    ))
 ]
 
 register_check_parameters(
@@ -7008,7 +7400,7 @@ register_check_parameters(
             ),
             ( "upper",
             Tuple(
-                help = _("Upper levels for the Fan speed of a hardware device"),
+                help = _("Upper levels for the fan speed of a hardware device"),
                 title = _("Upper levels"),
                 elements = [
                     Integer(title = _("warning at"), unit = u"rpm", default_value = 8000),
@@ -7022,6 +7414,36 @@ register_check_parameters(
         title = _("Fan Name"),
         help = _("The identificator of the fan.")),
     match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "hw_fans_perc",
+    _("Fan speed of hardware devices (in percent)"),
+    Dictionary(
+        elements = [
+            ( "levels",
+              Tuple(
+                  title = _("Upper fan speed levels"),
+                  elements = [
+                      Percentage(title = _("warning if at")),
+                      Percentage(title = _("critical if at")),
+                  ]
+            )),
+            ( "levels_lower",
+              Tuple(
+                  title = _("Lower fan speed levels"),
+                  elements = [
+                      Percentage(title = _("warning if below")),
+                      Percentage(title = _("critical if below")),
+                  ]
+            )),
+        ]
+    ),
+    TextAscii(
+        title = _("Fan Name"),
+        help = _("The identifier of the fan.")),
+    "dict",
 )
 
 register_check_parameters(
@@ -8986,6 +9408,69 @@ register_check_parameters(
     TextAscii(
         title = _("Chassis"),
         help = _("The identifier of the chassis.")),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "hp_msa_psu_voltage",
+    _("HP MSA Power Supply Voltage Levels"),
+    Dictionary(
+        help = _("Here you can configure the 3.3V and 12V voltage levels for each power supply."),
+        elements = [
+            ( "levels_33v_lower",
+            Tuple(
+                title = _("3.3 Volt Output Lower Levels"),
+                elements = [
+                    Float(title = _("warning if below or equal"),  unit = "V", default_value = 3.25),
+                    Float(title = _("critical if below or equal"), unit = "V", default_value = 3.20),
+                ]
+            )),
+            ( "levels_33v_upper",
+            Tuple(
+                title = _("3.3 Volt Output Upper Levels"),
+                elements = [
+                    Float(title = _("warning if above or equal"),  unit = "V", default_value = 3.4),
+                    Float(title = _("critical if above or equal"), unit = "V", default_value = 3.45),
+                ]
+            )),
+            ( "levels_5v_lower",
+            Tuple(
+                title = _("3.3 Volt Output Lower Levels"),
+                elements = [
+                    Float(title = _("warning if below or equal"),  unit = "V", default_value = 3.25),
+                    Float(title = _("critical if below or equal"), unit = "V", default_value = 3.20),
+                ]
+            )),
+            ( "levels_5v_upper",
+            Tuple(
+                title = _("3.3 Volt Output Upper Levels"),
+                elements = [
+                    Float(title = _("warning if above or equal"),  unit = "V", default_value = 3.4),
+                    Float(title = _("critical if above or equal"), unit = "V", default_value = 3.45),
+                ]
+            )),
+            ( "levels_12v_lower",
+            Tuple(
+                title = _("12 Volt Output Lower Levels"),
+                elements = [
+                    Float(title = _("warning if below or equal"),  unit = "V", default_value = 11.9),
+                    Float(title = _("critical if below or equal"), unit = "V", default_value = 11.8),
+                ]
+            )),
+            ( "levels_12v_upper",
+            Tuple(
+                title = _("12 Volt Output Upper Levels"),
+                elements = [
+                    Float(title = _("warning if above or equal"),  unit = "V", default_value = 12.1),
+                    Float(title = _("critical if above or equal"), unit = "V", default_value = 12.2),
+                ]
+            ))
+        ]
+    ),
+    TextAscii(
+        title = _("Power Supply name"),
+        help = _("The identifier of the power supply.")),
     "dict"
 )
 

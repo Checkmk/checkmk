@@ -1,0 +1,10 @@
+Title: mcdata_fcport: fix computation of in and out traffic
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445793604
+Class: fix
+
+The computation of the traffic (in/out octets per seconds) was wrong after
+a bug fix that tried to correct the computation by the factor of 4.

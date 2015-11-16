@@ -1,0 +1,11 @@
+Title: Custom Icons/Actions: URLs target frames can now be configured
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440506631
+Class: feature
+
+In previous versions the URLs were always opened within the current frameset
+instead of the current content frame page. Now you can configure the URLs to
+be opened in new frames/tabs or instead of the frameset.

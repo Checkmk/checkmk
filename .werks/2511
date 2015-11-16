@@ -1,0 +1,10 @@
+Title: siemens_plc: Special agent can now be configured to fetch other memory areas than DB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440504698
+Class: feature
+
+The Siemens PLC special agent was only able to fetch data from the "Datenbaustein" memory areas.
+Now it can also fetch data from Input, Output, Merker, Timer and Counter memory areas.

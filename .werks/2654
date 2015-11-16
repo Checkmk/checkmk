@@ -1,0 +1,18 @@
+Title: logwatch: fixed high memory and cpu usage caused by too many unacknowledged messages
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444120268
+Class: fix
+
+Due to a change in werk 2414, the local copy of the monitored logfile continued to grow and was
+parsed in every check cycle. With growing file size this could cause extreme cpu and memory load.
+This fix is twofold:
+a) The check now stops appending to the file once the filesize limit is reached. This was the behaviour
+pre-2414 anyway
+b) The configurable reclassification patterns are now only applied to old loglines once after each
+change to the patterns.
+
+Please note that this doesn't automatically truncate the copy of the logfile if it already exceeds the
+size limit.

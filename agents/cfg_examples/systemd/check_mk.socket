@@ -1,0 +1,10 @@
+# systemd socket definition file
+[Unit]
+Description=Check_MK Agent Socket
+
+[Socket]
+ListenStream=6556
+Accept=true
+
+[Install]
+WantedBy=sockets.target

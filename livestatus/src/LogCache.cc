@@ -22,23 +22,18 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "LogCache.h"
 #include <dirent.h>
-#include <fcntl.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
-
-#include "nagios.h"
-#include "logger.h"
-#include "tables.h"
-#include "auth.h"
+#include <utility>
 #include "Logfile.h"
-#include "LogEntry.h"
-#include "LogCache.h"
+#include "logger.h"
 
 #ifdef CMC
 #include "Core.h"
@@ -47,6 +42,7 @@ extern Core *g_core;
 extern time_t last_log_rotation;
 #endif // CMC
 
+using std::make_pair;
 
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
@@ -82,7 +78,6 @@ LogCache::LogCache(unsigned long max_cached_messages)
     : _max_cached_messages(max_cached_messages)
     , _num_at_last_check(0)
 {
-    pthread_mutex_init(&_lock, 0);
     updateLogfileIndex();
 }
 
@@ -98,24 +93,14 @@ void LogCache::setMaxCachedMessages(unsigned long m)
 LogCache::~LogCache()
 {
     forgetLogfiles();
-    pthread_mutex_destroy(&_lock);
 }
 
-void LogCache::lockLogCache()
-{
-    pthread_mutex_lock(&_lock);
-}
-
-void LogCache::unlockLogCache()
-{
-    pthread_mutex_unlock(&_lock);
-}
 
 bool LogCache::logCachePreChecks()
 {
     // Do we have any logfiles (should always be the case,
     // but we don't want to crash...
-    if (_logfiles.size() == 0) {
+    if (_logfiles.empty()) {
         logger(LOG_INFO, "Warning: no logfile found, not even %s", log_file);
         return false;
     }
@@ -217,9 +202,9 @@ void LogCache::dumpLogfiles()
    The parameters to this method reflect the current query,
    not the messages that just has been loaded.
  */
-void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((__unused__)), time_t until __attribute__ ((__unused__)), unsigned logclasses)
+void LogCache::handleNewMessage(Logfile *logfile, time_t, time_t, unsigned logclasses)
 {
-    if ( ++num_cached_log_messages <= _max_cached_messages  )
+    if ( static_cast<unsigned long>(++num_cached_log_messages) <= _max_cached_messages  )
         return; // current message count still allowed, everything ok
 
     /* Memory checking an freeing consumes CPU ressources. We save
@@ -228,7 +213,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
        memory can be freed. We do this by suppressing the check when
        the number of messages loaded into memory has not grown
        by at least CHECK_MEM_CYCLE messages */
-    if (num_cached_log_messages < _num_at_last_check + CHECK_MEM_CYCLE)
+    if (static_cast<unsigned long>(num_cached_log_messages) < _num_at_last_check + CHECK_MEM_CYCLE)
         return; // Do not check this time
 
     // [1] Begin by deleting old logfiles
@@ -244,7 +229,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
         if (log->numEntries() > 0) {
             num_cached_log_messages -= log->numEntries();
             log->flush(); // drop all messages of that file
-            if (num_cached_log_messages <= _max_cached_messages) {
+            if (static_cast<unsigned long>(num_cached_log_messages) <= _max_cached_messages) {
                 // remember the number of log messages in cache when
                 // the last memory-release was done. No further
                 // release-check shall be done until that number changes.
@@ -269,7 +254,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
                 debug("Freeing classes 0x%02x of file %s", ~logclasses, log->path());
             long freed = log->freeMessages(~logclasses); // flush only messages not needed for current query
             num_cached_log_messages -= freed;
-            if (num_cached_log_messages <= _max_cached_messages) {
+            if (static_cast<unsigned long>(num_cached_log_messages) <= _max_cached_messages) {
                 _num_at_last_check = num_cached_log_messages;
                 return;
             }
@@ -287,7 +272,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
             debug("Flush newer log, msgs %d", log->numEntries());
             num_cached_log_messages -= log->numEntries();
             log->flush();
-            if (num_cached_log_messages <= _max_cached_messages) {
+            if (static_cast<unsigned long>(num_cached_log_messages) <= _max_cached_messages) {
                 _num_at_last_check = num_cached_log_messages;
                 return;
             }
@@ -302,5 +287,3 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
         debug("Cannot unload more messages. Still %d loaded (max is %d)",
                 num_cached_log_messages, _max_cached_messages);
 }
-
-

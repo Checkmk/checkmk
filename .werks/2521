@@ -1,0 +1,13 @@
+Title: juniper_trpz_aps_sessions: new check shows the radio data and sessions per online access point
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440484761
+Class: feature
+
+This check monitors the status of online access points of a junioer wla device.
+Furthermore it shows the IO, errors, resets, retries, sessions and noise floor
+per radio of the access points.
+
+This check is cluster-aware

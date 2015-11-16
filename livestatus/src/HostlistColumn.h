@@ -25,17 +25,20 @@
 #ifndef HostlistColumn_h
 #define HostlistColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
 #include "nagios.h"
+class Filter;
+class Query;
+
 
 class HostlistColumn : public Column
 {
     int  _offset;
     bool _show_state;
 public:
-    HostlistColumn(string name, string description, int offset, int indirect_offset, bool show_state)
+    HostlistColumn(std::string name, std::string description, int offset, int indirect_offset, bool show_state)
         : Column(name, description, indirect_offset), _offset(offset), _show_state(show_state) {}
     int type() { return COLTYPE_LIST; }
     void output(void *, Query *);
@@ -43,7 +46,4 @@ public:
     hostsmember *getMembers(void *data);
 };
 
-
-
 #endif // HostlistColumn_h
-

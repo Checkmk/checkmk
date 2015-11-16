@@ -42,7 +42,16 @@ import sys
 # to python module names like "random"
 sys.path.pop(0)
 
-import socket, os, time, re, signal, math, tempfile, traceback
+import socket
+import os
+import fnmatch
+import time
+import re
+import signal
+import math
+import tempfile
+import traceback
+import subprocess
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -55,13 +64,6 @@ import socket, os, time, re, signal, math, tempfile, traceback
 # - remove all remaining print commands and use sys.stdout.write instead
 #   or define a new output function
 # - Also create a function bail_out() for printing and error and exiting
-
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
 
 #.
 #   .--Globals-------------------------------------------------------------.
@@ -162,7 +164,7 @@ def warning(reason):
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_cache_info           = {} # Information about agent caching
 g_agent_already_contacted    = {} # do we have agent data from this host?
-g_counters                   = {} # storing counters of one host
+g_item_state                 = {} # storing counters of one host
 g_hostname                   = "unknown" # Host currently being checked
 g_aggregated_service_results = {}   # store results for later submission
 g_inactive_timerperiods      = None # Cache for current state of timeperiods
@@ -285,6 +287,10 @@ def apply_parse_function(info, section_name):
         parse_function = check_info[section_name]["parse_function"]
         if parse_function:
             try:
+                # Prepare unique context for get_rate() and get_average()
+                global g_check_type, g_checked_item
+                g_check_type = section_name
+                g_checked_item = None
                 return parse_function(info)
             except Exception, e:
                 if opt_debug:
@@ -342,10 +348,13 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
             # If an error with the agent occurs, we still can (and must)
             # try the other nodes.
             try:
-                ipaddress = lookup_ipaddress(node)
+                # We must ignore the SNMP check interval when dealing with SNMP
+                # checks on cluster nodes because the cluster is always reading
+                # the cache files of the nodes.
+                ipaddress = lookup_ip_address(node)
                 new_info = get_realhost_info(node, ipaddress, checkname,
                                max_cachefile_age == None and cluster_max_cachefile_age or max_cache_age,
-                               ignore_check_interval)
+                               ignore_check_interval=True)
                 if new_info != None:
                     if add_nodeinfo:
                         new_info = [ [node] + line for line in new_info ]
@@ -398,7 +407,8 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
 #
 # This function assumes, that each check type is queried
 # only once for each host.
-def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_check_interval = False):
+def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
+                      ignore_check_interval=False, use_snmpwalk_cache=True):
     info = get_cached_hostinfo(hostname)
     if info and info.has_key(check_type):
         return info[check_type]
@@ -418,6 +428,9 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
 
     if oid_info:
         cache_path = tcp_cache_dir + "/" + cache_relpath
+
+        # Handle SNMP check interval. The idea: An SNMP check should only be
+        # executed every X seconds. Skip when called too often.
         check_interval = check_interval_of(hostname, check_type)
         if not ignore_check_interval \
            and not opt_dont_submit \
@@ -446,12 +459,12 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
         # a separate snmp table. The overall result is then the list
         # of these results.
         if type(oid_info) == list:
-            table = [ get_snmp_table(hostname, ipaddress, check_type, entry) for entry in oid_info ]
+            table = [ get_snmp_table(hostname, ipaddress, check_type, entry, use_snmpwalk_cache) for entry in oid_info ]
             # if at least one query fails, we discard the hole table
             if None in table:
                 table = None
         else:
-            table = get_snmp_table(hostname, ipaddress, check_type, oid_info)
+            table = get_snmp_table(hostname, ipaddress, check_type, oid_info, use_snmpwalk_cache)
         store_cached_checkinfo(hostname, check_type, table)
         # only write cache file in non interactive mode. Otherwise it would
         # prevent the regular checking from getting status updates during
@@ -478,7 +491,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     piggy_output = get_piggyback_info(hostname) + get_piggyback_info(ipaddress)
 
     output = ""
-    agent_failed = False
+    agent_failed_exc = None
     if is_tcp_host(hostname):
         try:
             output = get_agent_info(hostname, ipaddress, max_cache_age)
@@ -486,7 +499,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
             raise
 
         except Exception, e:
-            agent_failed = True
+            agent_failed_exc = e
             # Remove piggybacked information from the host (in the
             # role of the pig here). Why? We definitely haven't
             # reached that host so its data from the last time is
@@ -494,6 +507,8 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
             remove_piggyback_info_from(hostname)
 
             if not piggy_output:
+                raise
+            elif opt_debug:
                 raise
 
     output += piggy_output
@@ -519,8 +534,8 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     # If the agent has failed and the information we seek is
     # not contained in the piggy data, raise an exception
     if check_type not in info:
-        if agent_failed:
-            raise MKAgentError("Cannot get information from agent, processing only piggyback data.")
+        if agent_failed_exc:
+            raise MKAgentError("Cannot get information from agent (%s), processing only piggyback data." % agent_failed_exc)
         else:
             return []
 
@@ -698,11 +713,10 @@ def read_cache_file(relpath, max_cache_age):
                    (cachefile, cachefile_age(cachefile), max_cache_age))
 
     if simulation_mode and not opt_no_cache:
-        raise MKGeneralException("Simulation mode and no cachefile present.")
+        raise MKAgentError("Simulation mode and no cachefile present.")
 
     if opt_no_tcp:
-        raise MKGeneralException("Host is unreachable, no usable cache file present")
-        #Cache file '%s' missing or too old. TCP disallowed by you." % cachefile)
+        raise MKAgentError("Host is unreachable, no usable cache file present")
 
 
 def write_cache_file(relpath, output):
@@ -755,9 +769,7 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
 def get_agent_info_program(commandline):
     exepath = commandline.split()[0] # for error message, hide options!
 
-    import subprocess
-    if opt_verbose:
-        sys.stderr.write("Calling external program %s\n" % commandline)
+    vverbose("Calling external program %s\n" % commandline)
     try:
         p = subprocess.Popen(commandline, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         stdout, stderr = p.communicate()
@@ -781,7 +793,8 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
         port = agent_port_of(hostname)
 
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s = socket.socket(is_ipv6_primary(hostname) and socket.AF_INET6 or socket.AF_INET,
+                          socket.SOCK_STREAM)
         try:
             s.settimeout(tcp_connect_timeout)
         except:
@@ -945,7 +958,7 @@ def cachefile_age(filename):
         return -1
 
 #.
-#   .--Counters------------------------------------------------------------.
+#   .--Item state and counters---------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|___  _   _ _ __ | |_ ___ _ __ ___                |
 #   |              | |   / _ \| | | | '_ \| __/ _ \ '__/ __|               |
@@ -953,76 +966,75 @@ def cachefile_age(filename):
 #   |               \____\___/ \__,_|_| |_|\__\___|_|  |___/               |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  Computation of rates from counters, used by checks.                 |
+#   |  These functions allow checks to keep a memory until the next time   |
+#   |  the check is being executed. The most frequent use case is compu-   |
+#   |  tation of rates from two succeeding counter values. This is done    |
+#   |  via the helper function get_rate(). Averaging is another example    |
+#   |  and done by get_average().                                          |
+#   |                                                                      |
+#   |  While a host is being checked this memory is kept in g_item_state.  |
+#   |  That is a dictionary. The keys are unique to one check type and     |
+#   |  item. The value is free form.                                       |
+#   |                                                                      |
+#   |  Note: The item state is kept in tmpfs and not reboot-persistant.    |
+#   |  Do not store long-time things here. Also do not store complex       |
+#   |  structures like log files or stuff.
 #   '----------------------------------------------------------------------'
 
-def reset_wrapped_counters():
-    global g_last_counter_wrap
-    g_last_counter_wrap = None
 
-def last_counter_wrap():
-    return g_last_counter_wrap
-
-# Variable                 time_t    value
-# netctr.eth.tx_collisions 112354335 818
-def load_counters(hostname):
-    global g_counters
+def load_item_state(hostname):
+    global g_item_state
     filename = counters_directory + "/" + hostname
     try:
-        g_counters = eval(file(filename).read())
+        g_item_state = eval(file(filename).read())
     except:
         # Try old syntax
         try:
             lines = file(filename).readlines()
             for line in lines:
                 line = line.split()
-                g_counters[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
+                g_item_state[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
         except:
-            g_counters = {}
+            g_item_state = {}
 
-def save_counters(hostname):
+
+def save_item_state(hostname):
     if not opt_dont_submit and not i_am_root(): # never writer counters as root
-        global g_counters
         filename = counters_directory + "/" + hostname
         try:
             if not os.path.exists(counters_directory):
                 os.makedirs(counters_directory)
-            file(filename, "w").write("%r\n" % g_counters)
+            file(filename, "w").write("%r\n" % g_item_state)
         except Exception, e:
-            raise MKGeneralException("User %s cannot write to %s: %s" % (username(), filename, e))
-
-# determine the name of the current user. This involves
-# a lookup of /etc/passwd. Because this function is needed
-# only in general error cases, the pwd module is imported
-# here - not globally
-def username():
-    import pwd
-    return pwd.getpwuid(os.getuid())[0]
+            import pwd
+            username = pwd.getpwuid(os.getuid())[0]
+            raise MKGeneralException("User %s cannot write to %s: %s" % (username, filename, e))
 
 
-# Deletes counters from g_counters matching the given pattern and are older_than x seconds
-def clear_counters(pattern, older_than):
-    global g_counters
-    counters_to_delete = []
-    now = time.time()
-
-    for name, (timestamp, value) in g_counters.items():
-        if name.startswith(pattern):
-            if now > timestamp + older_than:
-                counters_to_delete.append(name)
-
-    for name in counters_to_delete:
-        del g_counters[name]
+# Store arbitrary values until the next execution of a check
+def set_item_state(user_key, state):
+    g_item_state[unique_item_state_key(user_key)] = state
 
 
-# Idea (1): We could keep global variables for the name of the checktype and item
-# during a check and that way "countername" would need to be unique only
-# within one checked item. So e.g. you could use "bcast" as name and not "if.%s.bcast" % item
+def get_item_state(user_key, default=None):
+    return g_item_state.get(unique_item_state_key(user_key), default)
+
+
+def clear_item_state(user_key):
+    key = unique_item_state_key(user_key)
+    if key in g_item_state:
+        del g_item_state[key]
+
+
+def unique_item_state_key(user_key):
+    return (g_check_type, g_checked_item, user_key)
+
+
 # Idea (2): Check_MK should fetch a time stamp for each info. This should also be
 # available as a global variable, so that this_time would be an optional argument.
-def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP, is_rate=False):
+def get_rate(user_key, this_time, this_val, allow_negative=False, onwrap=SKIP, is_rate=False):
     try:
-        timedif, rate = get_counter(countername, this_time, this_val, allow_negative, is_rate)
+        timedif, rate = get_counter(user_key, this_time, this_val, allow_negative, is_rate)
         return rate
     except MKCounterWrapped, e:
         if onwrap is RAISE:
@@ -1035,31 +1047,27 @@ def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP
             return onwrap
 
 
-# Legacy. Do not use this function in checks directly any more!
+# Helper for get_rate(). Note: this function has been part of the official check API
+# for a long time. So we cannot change its call syntax or remove it for the while.
 def get_counter(countername, this_time, this_val, allow_negative=False, is_rate=False):
-    global g_counters
+    old_state = get_item_state(countername, None)
+    set_item_state(countername, (this_time, this_val))
 
     # First time we see this counter? Do not return
     # any data!
-    if not countername in g_counters:
-        g_counters[countername] = (this_time, this_val)
+    if old_state is None:
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
         raise MKCounterWrapped('Counter initialization')
 
-    last_time, last_val = g_counters.get(countername)
+    last_time, last_val = old_state
     timedif = this_time - last_time
     if timedif <= 0: # do not update counter
-        # Reset counter to a (hopefully) reasonable value
-        g_counters[countername] = (this_time, this_val)
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
         raise MKCounterWrapped('No time difference')
-
-    # update counter for next time
-    g_counters[countername] = (this_time, this_val)
 
     if not is_rate:
         valuedif = this_val - last_val
@@ -1080,22 +1088,67 @@ def get_counter(countername, this_time, this_val, allow_negative=False, is_rate=
     return timedif, per_sec
 
 
+def reset_wrapped_counters():
+    global g_last_counter_wrap
+    g_last_counter_wrap = None
+
+
+def last_counter_wrap():
+    return g_last_counter_wrap
+
+
+
+# Makes sure, that no counter with a give prefix is kept longer
+# than min_keep_seconds * 2. Counter is kept at least min_keep_seconds.
+def clear_counters(counter_name_prefix, min_keep_seconds):
+    global g_item_state
+
+    cleared_key = "last.cleared." + counter_name_prefix
+    if cleared_key in g_item_state:
+        last_cleared, none = g_item_state[cleared_key]
+        if last_cleared + min_keep_seconds > time.time():
+            return # recent enough
+    g_item_state[cleared_key] = (time.time(), None)
+
+    counters_to_delete = []
+    remove_if_min_keep_seconds = time.time() - min_keep_seconds
+
+    for name, state in g_item_state.iteritems():
+        if type(name) == tuple:
+            counter_name = name[0] # never needed, since only called by ps currently
+        else:
+            counter_name = name
+
+        if type(state) == tuple:
+            timestamp, value = state
+        else:
+            continue # unable to cleanup values without timestamp info, skip
+
+        if counter_name.startswith(counter_name_prefix):
+            if timestamp < remove_if_min_keep_seconds:
+                counters_to_delete.append(name)
+
+    for name in counters_to_delete:
+        del g_item_state[name]
+
+
 # Compute average by gliding exponential algorithm
-# itemname: unique id for storing this average until the next check
-# this_time: timestamp of new value
-# backlog: averaging horizon in minutes
-# initialize_zero: assume average of 0.0 when now previous average is stored
+# itemname        : unique ID for storing this average until the next check
+# this_time       : timestamp of new value
+# backlog         : averaging horizon in minutes
+# initialize_zero : assume average of 0.0 when now previous average is stored
 def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero = True):
+    old_state = get_item_state(itemname, None)
 
     # first call: take current value as average or assume 0.0
-    if not itemname in g_counters:
+    if old_state is None:
         if initialize_zero:
             this_val = 0
-        g_counters[itemname] = (this_time, this_val)
+        set_item_state(itemname, (this_time, this_val))
         return this_val # avoid time diff of 0.0 -> avoid division by zero
 
     # Get previous value and time difference
-    last_time, last_val = g_counters.get(itemname)
+    last_time, last_val = old_state
     timedif = this_time - last_time
 
     # Gracefully handle time-anomaly of target systems. We lose
@@ -1118,8 +1171,9 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 
     new_val = last_val * weight + this_val * (1 - weight)
 
-    g_counters[itemname] = (this_time, new_val)
+    set_item_state(itemname, (this_time, new_val))
     return new_val
+
 
 
 
@@ -1149,10 +1203,10 @@ def do_check(hostname, ipaddress, only_check_types = None):
     exit_spec = exit_code_spec(hostname)
 
     try:
-        load_counters(hostname)
+        load_item_state(hostname)
         agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress, only_check_types)
         num_errors = len(error_sections)
-        save_counters(hostname)
+        save_item_state(hostname)
         if problems:
             output = "%s, " % problems
             status = exit_spec.get("connection", 2)
@@ -1313,18 +1367,21 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     g_hostname = hostname
     num_success = 0
     error_sections = set([])
-    check_table = get_sorted_check_table(hostname, remove_duplicates=True, world=opt_keepalive and "active" or "config")
+    check_table = get_precompiled_check_table(hostname, remove_duplicates=True, world=opt_keepalive and "active" or "config")
     problems = []
 
     parsed_infos = {} # temporary cache for section infos, maybe parsed
 
-    for checkname, item, params, description, aggrinfo in check_table:
+    for checkname, item, params, description, aggrname in check_table:
         if only_check_types != None and checkname not in only_check_types:
             continue
 
-        # Make service description globally available
-        global g_service_description
+        # Make a bit of context information globally available, so that functions
+        # called by checks now this context
+        global g_service_description, g_check_type, g_checked_item
         g_service_description = description
+        g_check_type = checkname
+        g_checked_item = item
 
         # Skip checks that are not in their check period
         period = check_period_of(hostname, description)
@@ -1336,13 +1393,6 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         elif period and opt_debug:
             sys.stderr.write("Service %s: timeperiod %s is currently active.\n" %
                     (description, period))
-
-        # In case of a precompiled check table aggrinfo is the aggrated
-        # service name. In the non-precompiled version there are the dependencies
-        if type(aggrinfo) == str:
-            aggrname = aggrinfo
-        else:
-            aggrname = aggregated_service_name(hostname, description)
 
         infotype = checkname.split('.')[0]
         try:
@@ -1371,6 +1421,14 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
         except MKParseFunctionError, e:
             info = e
+
+        # In case of SNMP checks but missing agent response, skip this check.
+        # Special checks which still need to be called even with empty data
+        # may declare this.
+        if info == [] and check_uses_snmp(checkname) \
+           and not check_info[checkname]["handle_empty_info"]:
+            error_sections.add(infotype)
+            continue
 
         if info or info == []:
             num_success += 1
@@ -1401,7 +1459,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                 dont_submit = True
 
             except Exception, e:
-                result = 3, create_crash_dump(hostname, checkname, item, params, description, info)
+                result = 3, create_crash_dump(hostname, checkname, item, params, description, info), []
                 if opt_debug:
                     raise
 
@@ -1475,6 +1533,13 @@ def prepare_crash_dump_directory(crash_dir):
             pass
 
 
+def is_manual_check(hostname, check_type, item):
+    manual_checks = get_check_table(hostname, remove_duplicates=True,
+                                    world=opt_keepalive and "active" or "config",
+                                    skip_autochecks=True)
+    return (check_type, item) in manual_checks
+
+
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
@@ -1489,11 +1554,14 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
         "details"    : {
             "check_output"  : text,
             "host"          : hostname,
+            "is_cluster"    : is_cluster(hostname),
             "description"   : description,
             "check_type"    : check_type,
             "item"          : item,
             "params"        : params,
             "uses_snmp"     : check_uses_snmp(check_type),
+            "inline_snmp"   : has_inline_snmp and use_inline_snmp,
+            "manual_check"  : is_manual_check(hostname, check_type, item),
         },
     }
 
@@ -1549,6 +1617,8 @@ def pack_crash_dump(crash_dir):
 def check_unimplemented(checkname, params, info):
     return (3, 'UNKNOWN - Check not implemented')
 
+# FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
+# use the legacy variables which are not set by newer checks.
 def convert_check_info():
     for check_type, info in check_info.items():
         basename = check_type.split(".")[0]
@@ -1572,6 +1642,7 @@ def convert_check_info():
                 "snmp_scan_function"      :
                     snmp_scan_functions.get(check_type,
                         snmp_scan_functions.get(basename)),
+                "handle_empty_info"       : False,
                 "default_levels_variable" : check_default_levels.get(check_type),
                 "node_info"               : False,
                 "parse_function"          : None,
@@ -1585,6 +1656,7 @@ def convert_check_info():
             info.setdefault("group", None)
             info.setdefault("snmp_info", None)
             info.setdefault("snmp_scan_function", None)
+            info.setdefault("handle_empty_info", False)
             info.setdefault("default_levels_variable", None)
             info.setdefault("node_info", False)
             info.setdefault("extra_sections", [])
@@ -1619,7 +1691,7 @@ def convert_check_info():
 
 def sanitize_check_result(result, is_snmp):
     if type(result) == tuple:
-        return sanitize_check_result_encoding(result)
+        return sanitize_tuple_check_result(result)
 
     elif result == None:
         return item_not_found(is_snmp)
@@ -1639,7 +1711,11 @@ def sanitize_yield_check_result(result, is_snmp):
 
     # Simple check with no separate subchecks (yield wouldn't have been neccessary here!)
     if len(subresults) == 1:
-        return sanitize_check_result_encoding(subresults[0])
+        state, infotext, perfdata = sanitize_tuple_check_result(subresults[0], allow_missing_infotext=True)
+        if infotext == None:
+            return state, u"", perfdata
+        else:
+            return state, infotext, perfdata
 
     # Several sub results issued with multiple yields. Make that worst sub check
     # decide the total state, join the texts and performance data. Subresults with
@@ -1650,14 +1726,12 @@ def sanitize_yield_check_result(result, is_snmp):
         status = 0
 
         for subresult in subresults:
-            st, text, perf = sanitize_check_result_encoding(subresult)
+            st, text, perf = sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
 
+            # FIXME/TODO: Why is the state only aggregated when having text != None?
             if text != None:
                 infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
-                if st == 2 or status == 2:
-                    status = 2
-                else:
-                    status = max(status, st)
+                status = worst_monitoring_state(st, status)
 
             if perf != None:
                 perfdata += subresult[2]
@@ -1667,22 +1741,31 @@ def sanitize_yield_check_result(result, is_snmp):
 
 def item_not_found(is_snmp):
     if is_snmp:
-        return 3, "Item not found in SNMP data"
+        return 3, "Item not found in SNMP data", []
     else:
-        return 3, "Item not found in agent output"
+        return 3, "Item not found in agent output", []
 
 
-def sanitize_check_result_encoding(result):
+def sanitize_tuple_check_result(result, allow_missing_infotext=False):
     if len(result) >= 3:
         state, infotext, perfdata = result[:3]
     else:
         state, infotext = result
         perfdata = None
 
-    if type(infotext) == str:
-        infotext = infotext.decode('utf-8')
+    infotext = sanitize_check_result_infotext(infotext, allow_missing_infotext)
 
     return state, infotext, perfdata
+
+
+def sanitize_check_result_infotext(infotext, allow_missing_infotext):
+    if infotext == None and not allow_missing_infotext:
+        raise MKGeneralException("Invalid infotext from check: \"None\"")
+
+    if type(infotext) == str:
+        return infotext.decode('utf-8')
+    else:
+        return infotext
 
 
 def open_checkresult_file():
@@ -1747,11 +1830,9 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
     if not result:
         result = 3, "Check plugin did not return any result"
 
-    if len(result) >= 3:
-        state, infotext, perfdata = result[:3]
-    else:
-        state, infotext = result
-        perfdata = None
+    if len(result) != 3:
+        raise MKGeneralException("Invalid check result: %s" % (result, ))
+    state, infotext, perfdata = result
 
     if not (
         infotext.startswith("OK -") or
@@ -1769,7 +1850,7 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
         store_aggregated_service_result(host, servicedesc, sa, state, infotext)
 
     # performance data - if any - is stored in the third part of the result
-    perftexts = [];
+    perftexts = []
     perftext = ""
 
     if perfdata:
@@ -1796,12 +1877,15 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
 
     if opt_verbose:
         if opt_showperfdata:
+            infotext_fmt = "%-56s"
             p = ' (%s)' % (" ".join(perftexts))
         else:
             p = ''
+            infotext_fmt = "%s"
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
-        print "%-20s %s%s%-56s%s%s" % (servicedesc.encode('utf-8'),
-                                       tty_bold, color, make_utf8(infotext.split('\n')[0]), tty_normal, p)
+        print ("%-20s %s%s"+infotext_fmt+"%s%s") % (servicedesc.encode('utf-8'),
+                                       tty_bold, color, make_utf8(infotext.split('\n')[0]),
+                                       tty_normal, make_utf8(p))
 
 
 def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):
@@ -1907,6 +1991,14 @@ def regex(pattern):
             raise MKGeneralException("Invalid regular expression '%s': %s" % (pattern, e))
         g_compiled_regexes[pattern] = reg
     return reg
+
+
+def worst_monitoring_state(status_a, status_b):
+    if status_a == 2 or status_b == 2:
+        return 2
+    else:
+        return max(status_a, status_b)
+
 
 
 #.
@@ -2038,6 +2130,18 @@ def savefloat(f):
     except:
         return 0.0
 
+# Convert a string to an integer. This is done by consideren the string to by a
+# little endian byte string.  Such strings are sometimes used by SNMP to encode
+# 64 bit counters without needed COUNTER64 (which is not available in SNMP v1)
+def binstring_to_int(binstring):
+    value = 0
+    mult = 1
+    for byte in binstring[::-1]:
+        value += mult * ord(byte)
+        mult *= 256
+    return value
+
+
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to GB/MB/KB
 # The unit parameter simply changes the returned string, but does not interfere
@@ -2117,6 +2221,14 @@ def get_age_human_readable(secs):
         return "%d days %d hours" % (days, hours)
     return "%d days" % days
 
+
+def get_relative_date_human_readable(timestamp):
+    now = time.time()
+    if timestamp > now:
+        return "in " + get_age_human_readable(timestamp - now)
+    else:
+        return get_age_human_readable(now - timestamp) + " ago"
+
 # Format perc (0 <= perc <= 100 + x) so that precision
 # digits are being displayed. This avoids a "0.00%" for
 # very small numbers
@@ -2178,6 +2290,20 @@ def check_timeperiod(timeperiod):
                 return False
 
     return timeperiod not in g_inactive_timerperiods
+
+# retrive the service level that applies to the calling check.
+def get_effective_service_level():
+    service_levels = service_extra_conf(g_hostname, g_service_description,
+                                        service_service_levels)
+
+    if service_levels:
+        return service_levels[0]
+    else:
+        service_levels = host_extra_conf(g_hostname, host_service_levels)
+        if service_levels:
+            return service_levels[0]
+    return 0
+
 
 #.
 #   .--Aggregation---------------------------------------------------------.

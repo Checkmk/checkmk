@@ -1,0 +1,9 @@
+Title: win_printers: Not longer discover offline printers
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440062250
+Class: fix
+
+

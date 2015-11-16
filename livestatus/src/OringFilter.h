@@ -25,9 +25,10 @@
 #ifndef OringFilter_h
 #define OringFilter_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
 #include "AndingFilter.h"
+
 
 class OringFilter : public AndingFilter
 {
@@ -36,6 +37,4 @@ public:
     bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
-
 #endif // OringFilter_h
-

@@ -1,0 +1,13 @@
+Title: esx_vsphere_datastores: fix labelling, help and performance data of provisioned space
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446800972
+
+In the check output and the WATO texts for its configuration the words <i>provisioning</i>
+and <i>over provisioning</i> where mixed up. This has been fixed. Also in the output
+performance data the levels for WARN and CRIT have been corrected. Thanks to Marten
+Vanraes.

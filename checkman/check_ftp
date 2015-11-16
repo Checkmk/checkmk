@@ -1,0 +1,15 @@
+title: FTP Server
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This performs an active check of an FTP server. It does this by connecting
+ to the server using the FTP control socket, looking for the welcome message
+ and justing sending {QUIT}.
+
+ It can check response times against given thresholds. In fact internally it
+ uses the generic TCP connection check.
+
+perfdata:
+ The response time

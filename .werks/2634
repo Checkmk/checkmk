@@ -1,0 +1,10 @@
+Title: artec_documents, artec_temp: new checks for ARTEC Mail Archive Appliance
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443085698
+Class: feature
+
+These checks monitor the number of documents and the
+temperature of the ARTEC Mail Archive Appliance.

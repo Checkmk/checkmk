@@ -55,8 +55,8 @@ fc_port_phystates = {
                 4: ('active', 0),
                 5: ('loopback', 1),
                 6: ('txfault', 1),
-                7: ('noMedia', 1),
-                8: ('linkDown',2),
+                7: ('no media', 1),
+                8: ('link down',2),
 }
 
 # taken from connUnitPortType
@@ -86,14 +86,15 @@ def fc_port_getitem(num_ports, index, portname):
         itemname += portname.strip()
     return itemname
 
+
 def fc_parse_counter(value):
     # The counters are sent via SNMP as OCTETSTR, which is converted to
     # a byte string by Check_MKs SNMP code. The counters seem to be
     # 64 bit big endian values, which are converted to integers here
     if len(value) == len("00 00 00 0C 8F 70 DD 74"):
         value = "".join(map(chr, [ eval("0x" + v) for v in value.split() ]))
-    import struct
-    return int(struct.unpack('>Q', value)[0])
+    return binstring_to_int(value)
+
 
 def inventory_fc_port(info):
     if not info:

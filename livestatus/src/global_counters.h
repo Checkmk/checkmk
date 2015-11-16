@@ -25,9 +25,13 @@
 #ifndef global_counters_h
 #define global_counters_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef EXTERN
 # define EXTERN extern
@@ -54,5 +58,8 @@ EXTERN double g_counter_rate[NUM_COUNTERS];
 
 void do_statistics();
 
-#endif // global_counters_h
+#ifdef __cplusplus
+}
+#endif
 
+#endif /* global_counters_h */

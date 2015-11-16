@@ -52,10 +52,8 @@ Boston, MA 02110-1301 USA.
 
 .wato table.data th {
     border-radius: 0px;
-    background-color: #508aa1;
     background-color: #73a1b4;
 }
-
 
 
 .wato th.left {
@@ -1066,56 +1064,29 @@ table.multisite_conn_method td input {
 
 /* BI Editor */
 
-.wato .biruletree div {
-    float: none;
-    display: inline-block;
-    vertical-align: top;
-}
-
-.wato .biruletree .birule {
-    background-color: #ccc;
-    border: 1px solid #666;
-    box-shadow: 0.5px 0.5px 2px #000;
+table.data td.bi_rule_tree b.treeangle {
     color: black;
-    width: 150px;
-    border-radius: 4px;
-    padding-left: 4px;
-    height: 20px;
-    margin-bottom: 3px;
-    padding-top: 2px;
-    margin-top: 5px;
+    font-weight: normal;
 }
 
-.wato .biruletree .birule img {
-    position: relative;
-    top: -1px;
+table.data td.bi_rule_tree ul.treeangle {
+    margin: 1px 6px;
 }
 
-
-.wato .biruletree .birule:hover {
-    background-color: #eee;
+table.data td.bi_rule_tree ul.treeangle li {
+    margin: 0px 0px 0px 1px;
+    padding-left: 5px;
+    list-style: inside disc;
+    display: list-item;
 }
 
-.wato .biruletree .birule a {
-    color: black;
-    text-decoration: none;
-    display: block;
+table.data td.bi_rule_tree > li {
+    margin: 0px 0px 0px 1px;
+    padding-left: 5px;
+    list-style: inside none;
+    display: list-item;
 }
 
-.wato .biruletree .arrow {
-    border-style: none none solid solid;
-    border-color: #134;
-    border-width: 2px;
-    margin-left: 40px;
-    margin-right: 3px;
-    width: 50px;
-    height: 16px;
-    border-radius: 0px 10px;
-}
-
-.wato .biruletree .node {
-    margin-top: 0px;
-}
 
 /*-Host Diag-----------------------------------------------------------.
 |              _   _           _     ____  _                           |
@@ -1274,21 +1245,3 @@ table.nform.rulesettings td.legend div.title {
     width: 200px;
 }
 
-.wato table.data.manpage th {
-    text-align: left;
-    padding: 4px 5px;
-}
-.wato table.data.manpage td {
-    padding: 4px 5px;
-}
-
-.wato table.data.manpage > tbody > tr:nth-child(even) > th {
-    background-color: #7fadc0;
-}
-
-.wato table.data.manpage > tbody > tr:nth-child(odd) > td {
-    background-color: #ddd;
-}
-.wato table.data.manpage > tbody > tr:nth-child(even) > td {
-    background-color: #eee;
-}

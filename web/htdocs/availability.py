@@ -111,8 +111,21 @@ statistics_headers = {
 # 2. show in single or double height box
 # 3. use this in reporting
 # 4. the valuespec
+def get_avoption_entries(what):
+    if what == "bi":
+        grouping_choices = [
+          ( None,             _("Do not group") ),
+          ( "host",           _("By Aggregation Group") ),
+        ]
+    else:
+        grouping_choices = [
+          ( None,             _("Do not group") ),
+          ( "host",           _("By Host")       ),
+          ( "host_groups",    _("By Host group") ),
+          ( "service_groups", _("By Service group") ),
+        ]
 
-avoption_entries = [
+    return [
   # Time range selection
   ( "rangespec",
     "double",
@@ -357,12 +370,7 @@ avoption_entries = [
     True,
     DropdownChoice(
         title = _("Grouping"),
-        choices = [
-          ( None,             _("Do not group") ),
-          ( "host",           _("By Host")       ),
-          ( "host_groups",    _("By Host group") ),
-          ( "service_groups", _("By Service group") ),
-        ],
+        choices = grouping_choices,
         default_value = None,
     )
   ),
@@ -461,37 +469,40 @@ avoption_entries = [
 
 def get_default_avoptions():
     return {
-        "range"          : (time.time() - 86400, time.time()),
-        "rangespec"      : "d0",
-        "labelling"      : [],
-        "downtimes"      : {
+        "range"               : (time.time() - 86400, time.time()),
+        "rangespec"           : "d0",
+        "labelling"           : [],
+        "av_levels"           : None,
+        "av_filter_outages"   : { "warn" : 0.0, "crit" : 0.0, "non-ok" : 0.0 },
+        "outage_statistics"   : ([],[]),
+        "av_mode"             : False,
+        "service_period"      : "honor",
+        "notification_period" : "ignore",
+        "grouping"            : None,
+        "dateformat"          : "yyyy-mm-dd hh:mm:ss",
+        "timeformat"          : "percentage_2",
+        "short_intervals"     : 0,
+        "dont_merge"          : False,
+        "summary"             : "sum",
+        "show_timeline"       : False,
+        "timelimit"           : 30,
+
+        "downtimes" : {
             "include" : "honor",
             "exclude_ok" : False,
         },
-        "consider"       : {
-            "flapping"            : True,
-            "host_down"           : True,
-            "unmonitored"         : True,
+
+        "consider" : {
+            "flapping"    : True,
+            "host_down"   : True,
+            "unmonitored" : True,
         },
+
         "state_grouping" : {
-            "warn"      : "warn",
-            "unknown"   : "unknown",
-            "host_down" : "host_down",
+            "warn"        : "warn",
+            "unknown"     : "unknown",
+            "host_down"   : "host_down",
         },
-        "av_levels"         : None,
-        "av_filter_outages" : { "warn" : 0.0, "crit" : 0.0, "non-ok" : 0.0 },
-        "outage_statistics" : ([],[]),
-        "av_mode"           : False,
-        "service_period"      : "honor",
-        "notification_period" : "ignore",
-        "grouping"          : None,
-        "dateformat"     : "yyyy-mm-dd hh:mm:ss",
-        "timeformat"     : "percentage_2",
-        "short_intervals"   : 0,
-        "dont_merge"        : False,
-        "summary"           : "sum",
-        "show_timeline"     : False,
-        "timelimit"         : 30,
     }
 
 #.
@@ -617,7 +628,7 @@ def compute_availability(what, av_rawdata, avoptions):
             considered_duration = 0
             for span in service_entry:
                 # Information about host/service groups are in the actual entries
-                if grouping and grouping != "host":
+                if grouping and grouping != "host" and what != "bi":
                     group_ids.update(span[grouping]) # List of host/service groups
 
                 display_name = span.get("service_display_name", service)
@@ -1012,7 +1023,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                     if aggr == "cnt":
                         count = summary_counts.get(sid, 0)
                         if show_summary == "average":
-                            count = float(count) / len(group_availability)
+                            count = float(count) / len(availability_table)
                             text = "%.2f" % count
                         else:
                             text = str(count)
@@ -1355,7 +1366,7 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
             "host_name"              : aggr_group,
             "service_description"    : tree['title'],
             "in_notification_period" : 1,
-            "in_service_period"      : True,
+            "in_service_period"      : tree_state[0]['in_service_period'],
             "in_downtime"            : tree_state[0]['in_downtime'],
             "in_host_downtime"       : 0,
             "host_down"              : 0,

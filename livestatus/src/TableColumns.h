@@ -25,14 +25,16 @@
 #ifndef TableColumns_h
 #define TableColumns_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include <vector>
 #include "Table.h"
+class Column;
+class Query;
+
 
 class TableColumns : public Table
 {
-    typedef vector<Table *> _tables_t;
+    typedef std::vector<Table *> _tables_t;
     _tables_t _tables;
 public:
     TableColumns();
@@ -43,6 +45,4 @@ public:
     const char *tableNameOf(Column *column);
 };
 
-
 #endif // TableColumns_h
-

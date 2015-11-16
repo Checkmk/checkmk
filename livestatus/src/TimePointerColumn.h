@@ -25,17 +25,22 @@
 #ifndef TimePointerColumn_h
 #define TimePointerColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "IntPointerColumn.h"
+class Filter;
+class Query;
+
 
 class TimePointerColumn : public IntPointerColumn
 {
 public:
-    TimePointerColumn(string name, string description, int* number)
+    TimePointerColumn(std::string name, std::string description, int* number)
         : IntPointerColumn(name, description, number) {}
     void output(void *data, Query *query);
     int type() { return COLTYPE_TIME; }
     Filter *createFilter(int operator_id, char *value);
 };
-
 
 #endif // TimePointerColumn_h

@@ -26,6 +26,10 @@
 #define StatusSpecialIntColumn_h
 
 #include "IntColumn.h"
+#include <stdint.h>
+#include <string>
+class Query;
+
 
 #define SPIC_MK_INVENTORY_LAST 0
 
@@ -33,7 +37,7 @@ class StatusSpecialIntColumn : public IntColumn
 {
     int _type;
 public:
-    StatusSpecialIntColumn(string name, string description, int type)
+    StatusSpecialIntColumn(std::string name, std::string description, int type)
       : IntColumn(name, description, -1), _type(type) {}
     int32_t getValue(void *, Query *);
 };

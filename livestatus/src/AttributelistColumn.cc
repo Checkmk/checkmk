@@ -22,13 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <string.h>
-
 #include "AttributelistColumn.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "AttributelistFilter.h"
 #include "Query.h"
-#include "strutil.h"
 #include "logger.h"
+#include "nagios.h"
+#include "strutil.h"
+class Filter;
+
+using std::string;
+
 
 struct al_entry {
     const char *name;
@@ -124,4 +131,3 @@ Filter *AttributelistColumn::createFilter(int opid, char *value)
     }
     return new AttributelistFilter(this, opid, ref);
 }
-

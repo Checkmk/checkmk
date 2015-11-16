@@ -1,0 +1,10 @@
+Title: kernel.util, winperf_processor.util: now support an optional graph showing utilization of individual cores
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442406838
+Class: feature
+
+The CPU utilization checks for unix and windows can now be configured through
+wato rules to produce an additional graph which shows one line per cpu core.

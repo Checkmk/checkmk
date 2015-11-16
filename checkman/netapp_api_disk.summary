@@ -1,0 +1,18 @@
+title: NetApp Filers: Disk summary
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ This check counts the number of disks which are owned by a NetApp Filer.
+ Disks are considered as owned when they are not in {raid-state partner}.
+
+ Additionally the check monitors the number of broken and spare disks.
+ You can define {WARN}/{CRIT} levels for the ratio of {broken / (broken + spare)} disks.
+
+perfdata:
+ The total raw capacity and the number of total, spare and broken disks.
+
+inventory:
+ Configures one check on each filer running in 7Mode or one check if
+ the filer is running in Cluster-Mode.

@@ -22,17 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/un.h>
+// IWYU pragma: no_include <bits/socket_type.h>
 #include <errno.h>
+#include <inttypes.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>  // IWYU pragma: keep
+#include <sys/un.h>
 #include <unistd.h>
-#include <signal.h>
 
 #ifndef AF_LOCAL
 #define   AF_LOCAL AF_UNIX
@@ -60,7 +65,7 @@ struct thread_info
 };
 
 
-int read_with_timeout(int from, char *buffer, int size, int us)
+ssize_t read_with_timeout(int from, char *buffer, int size, int us)
 {
     fd_set fds;
     FD_ZERO(&fds);
@@ -106,11 +111,12 @@ void *copy_thread(void *info)
         }
         char *write_pos = buffer;
         while (r) {
-            int w = write(to, write_pos, r);
+            ssize_t w = write(to, write_pos, r);
             if (w > 0)
                 r -= w;
             else if (w == 0 && r > 0) {
-                fprintf(stderr, "Error: Cannot write %d bytes to %d: %s\n", w, to, strerror(errno));
+                fprintf(stderr, "Error: Cannot write %" PRIdMAX " bytes to %d: %s\n",
+                        (intmax_t)w, to, strerror(errno));
                 break;
             }
         }
@@ -164,4 +170,3 @@ int main(int argc, char **argv)
     close(sock);
     return 0;
 }
-

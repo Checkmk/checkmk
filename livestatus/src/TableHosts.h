@@ -25,26 +25,24 @@
 #ifndef TableHosts_h
 #define TableHosts_h
 
-#include <set>
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
-#include "nagios.h"
+#include "nagios.h"  // IWYU pragma: keep
+class Query;
 
-class TableContacts;
-class TableDownComm;
 
 class TableHosts : public Table
 {
     bool _by_group;
 public:
-    TableHosts(bool by_group);
+    explicit TableHosts(bool by_group);
     const char *name() { return _by_group ? "hostsbygroup" : "hosts"; }
     const char *prefixname() { return "hosts"; }
     bool isAuthorized(contact *ctc, void *data);
     void *findObject(char *objectspec);
-    void addColumns(Table *, string prefix, int indirect_offset);
+    void addColumns(Table *, std::string prefix, int indirect_offset);
     void answerQuery(Query *query);
 };
 
 #endif // TableHosts_h
-

@@ -25,13 +25,10 @@
 #ifndef DoubleColumnFilter_h
 #define DoubleColumnFilter_h
 
-#include "config.h"
-
-#include <string>
-using namespace std;
-
+#include "config.h"  // IWYU pragma: keep
 #include "Filter.h"
 class DoubleColumn;
+
 
 class DoubleColumnFilter : public Filter
 {
@@ -45,6 +42,4 @@ public:
     bool accepts(void *data);
 };
 
-
 #endif // DoubleColumnFilter_h
-

@@ -1,0 +1,11 @@
+Title: network interface groups are broken
+Component: checks
+State: open
+Date: 2015-10-28 15:32:21
+Targetversion: 1.2.6
+Class: bug
+
+Seems that the interface grouping feature is not working since the
+interface check has been made cluster aware.
+
+An exception "ValueError: need more than 19 values to unpack" is raised for interface group checks.

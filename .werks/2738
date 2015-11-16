@@ -1,0 +1,11 @@
+Title: Check_MK Caching agent on Linux: introduce timeout for lock
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446804323
+
+This avoids out of memory in situtations where the agent is hanging forever. Thanks
+to Andreas Pflug.

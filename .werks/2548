@@ -1,0 +1,18 @@
+Title: Fixed exceptions in different places in case of user errors
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1440767834
+
+In different places, e.g. during login errors it could happen that
+exceptions like this occur:
+
+AttributeError: MKUserError instance has no attribute 'message'
+
+It seems that this occurance depends on the used Python version.
+
+Internal note: Never use e.message to get the text of an exception.
+Better directly put the exception into a string format: "%s" % e

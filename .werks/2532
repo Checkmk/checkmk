@@ -1,0 +1,9 @@
+Title: Fixed undefined variable exception in prediction in rare cases
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441005224
+Class: fix
+
+In some rare cases missing or broken prediction files could cause an exception

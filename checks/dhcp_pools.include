@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# new params format
+# params = {
+#    'free_leases' : (warn, crit),
+#    'used_leases' : (warn, crit),
+# }
+
+
+def check_dhcp_pools_levels(free, used, pending, size, params):
+    if type(params) == tuple:
+        # In case of win_dhcp_pools old params are percent but of type
+        # integer, thus we have to change them into floats
+        params = {"free_leases" : (float(params[0]), float(params[1]))}
+
+    for what, value in [("free", free), ("used", used)]:
+        state = 0
+        value_abs = value
+        value_perc = float(value) / size * 100.0
+        infotext = "%s: %d leases (%.1f%%)" % (what, value, value_perc)
+        if params.get("%s_leases" % what, ""):
+            warn, crit = params["%s_leases" % what]
+            if type(warn) == float: # here we have levels in percent
+                value = value_perc
+                text_format = "%.1f"
+                unit = "%%"
+                warn_abs = int(size * (warn / 100.0))
+                crit_abs = int(size * (crit / 100.0))
+            else: # otherwise we use absolute values as integers
+                text_format = "%d"
+                unit = " %s pool entries" % what
+                warn_abs = warn
+                crit_abs = crit
+
+            if value <= crit:
+                state = 2
+            elif value <= warn:
+                state = 1
+
+            if state:
+                infotext_format = " (warn/crit below " + text_format + "/" + text_format + unit + ")"
+                infotext += infotext_format % (warn, crit)
+
+        else:
+            warn_abs = None
+            crit_abs = None
+
+        yield state, infotext, [("%s_dhcp_leases" % what, value_abs, warn_abs, crit_abs, 0, size)]
+
+    if pending != None:
+        yield 0, "%d leases pending" % pending, [("pending_dhcp_leases", pending, None, None, 0, size)]

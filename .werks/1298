@@ -1,0 +1,11 @@
+Title: Fixed broken WebAPI
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446198542
+
+The WebAPI was broken due to a Typo. It was not possible to edit or add hosts.
+

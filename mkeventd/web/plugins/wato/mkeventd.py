@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import mkeventd, defaults
+import zipfile
+import cStringIO
 
 mkeventd_enabled = config.mkeventd_enabled
 
@@ -314,12 +316,15 @@ vs_mkeventd_rule = Dictionary(
         ( "contact_groups",
           ListOf(
               GroupSelection("contact"),
-              title = _("Fallback Contact Groups"),
+              title = _("Contact Groups"),
               help = _("When displaying events in the Check_MK GUI, you can make a user see only events "
                        "for hosts he is a contact for. When you expect this rule to receive events from "
                        "hosts that are <i>not</i> known to the monitoring, you can specify contact groups "
-                       "for visibility here. Note: If you activate this option and do not specify "
-                       "any group, then users with restricted permissions can never see these events."),
+                       "for visibility here. Notes: 1. If you activate this option and do not specify "
+                       "any group, then users with restricted permissions can never see these events."
+                       "2. If both the host is found in the monitoring <b>and</b> contact groups are "
+                       "specified in the rule then usually the host's contact groups have precedence. But you "
+                       "can change that via a global setting in the section <i>User Interface</i>."),
               movable = False,
           )
         ),
@@ -638,9 +643,12 @@ vs_mkeventd_rule = Dictionary(
         ),
         ( "match_ok",
           RegExpUnicode(
-            title = _("Text to cancel event"),
-            help = _("If a matching message appears with this text, then an event created "
-                     "by this rule will automatically be cancelled (if host, application and match groups match). "),
+            title = _("Text to cancel event(s)"),
+            help = _("If a matching message appears with this text, then events created "
+                     "by this rule will automatically be cancelled if host, application and match groups match. "
+                     "If this expression has fewer match groups than \"Text to match\", "
+                     "it will cancel all events where the specified groups match the same number "
+                     "of groups in the initial text, starting from the left."),
             size = 64,
           )
         ),
@@ -1868,7 +1876,6 @@ def mode_mkeventd_mibs(phase):
                 try:
                     msg = upload_mib(filename, mimetype, content)
                     return None, msg
-                    log_mkeventd("uploaded-mib", _("Uploaded MIB %s: %s") % (filename, msg))
                 except Exception, e:
                     if config.debug:
                         raise
@@ -1878,7 +1885,11 @@ def mode_mkeventd_mibs(phase):
         return
 
     html.write("<h3>" + _("Upload MIB file") + "</h3>")
-    html.write(_("Allowed are single MIB files - usually with the extension <tt>.mib</tt> or <tt>.txt</tt>.<br><br>"))
+    html.write(_("Use this form to upload MIB files for translating incoming SNMP traps. "
+                 "You can upload single MIB files with the extension <tt>.mib</tt> or "
+                 "<tt>.txt</tt>, but you can also upload multiple MIB files at once by "
+                 "packing them into a <tt>.zip</tt> file. Only files in the root directory "
+                 "of the zip file will be processed.<br><br>"))
 
     html.begin_form("upload_form", method = "POST")
     forms.header(_("Upload MIB file"))
@@ -1927,9 +1938,10 @@ def parse_snmp_mib_header(path):
     # read till first "OBJECT IDENTIFIER" declaration
     head = ''
     for line in file(path):
-        if 'OBJECT IDENTIFIER' in line:
-            break # seems the header is finished
-        head += line
+        if not line.startswith("--"):
+            if 'OBJECT IDENTIFIER' in line:
+                break # seems the header is finished
+            head += line
 
     # now try to extract some relevant information from the header
 
@@ -1986,17 +1998,20 @@ def validate_and_compile_mib(mibname, content):
     compiler.addSearchers(StubSearcher(*baseMibs))
 
     try:
-        results = compiler.compile(mibname, ignoreErrors=True)
+        if not content.strip():
+            raise Exception(_("The file is empty"))
+
+        results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)
 
         errors = []
-        for name, state in sorted(results.items()):
-            if mibname == name and state == 'failed':
-                raise Exception(_('Failed to compile your module.'))
+        for name, state_obj in sorted(results.items()):
+            if mibname == name and state_obj == 'failed':
+                raise Exception(_('Failed to compile your module: %s') % state_obj.error)
 
-            if state == 'missing':
+            if state_obj == 'missing':
                 errors.append(_('%s - Dependency missing') % name)
-            elif state == 'failed':
-                errors.append(_('%s - Failed to compile') % name)
+            elif state_obj == 'failed':
+                errors.append(_('%s - Failed to compile (%s)') % (name, state_obj.error))
 
         msg = _("MIB file %s uploaded.") % mibname
         if errors:
@@ -2011,15 +2026,59 @@ def validate_and_compile_mib(mibname, content):
 
 
 def upload_mib(filename, mimetype, content):
+    validate_mib_file_name(filename)
+
+    if is_zipfile(cStringIO.StringIO(content)):
+        msg = process_uploaded_zip_file(filename, content)
+    else:
+        if mimetype == "application/tar" or filename.lower().endswith(".gz") or filename.lower().endswith(".tgz"):
+            raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
+
+        msg = process_uploaded_mib_file(filename, content)
+
+    return msg
+
+
+def process_uploaded_zip_file(filename, content):
+    zip_obj = zipfile.ZipFile(cStringIO.StringIO(content))
+    messages = []
+    for entry in zip_obj.infolist():
+        success, fail = 0, 0
+        try:
+            mib_file_name = entry.filename
+            if mib_file_name[-1] == "/":
+                continue # silently skip directories
+
+            validate_mib_file_name(mib_file_name)
+
+            mib_obj = zip_obj.open(mib_file_name)
+            messages.append(process_uploaded_mib_file(mib_file_name, mib_obj.read()))
+            success += 1
+        except Exception, e:
+            messages.append(_("Skipped %s: %s") % (html.attrencode(mib_file_name), e))
+            fail += 1
+
+    return "<br>\n".join(messages) + \
+           "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
+
+
+# Used zipfile.is_zipfile(cStringIO.StringIO(content)) before, but this only
+# possible with python 2.7. zipfile is only supporting checking of files by
+# their path.
+def is_zipfile(fo):
+    try:
+        zipfile.ZipFile(fo)
+        return True
+    except zipfile.BadZipfile:
+        return False
+
+
+def validate_mib_file_name(filename):
     if filename.startswith(".") or "/" in filename:
         raise Exception(_("Invalid filename"))
 
-    if mimetype == "application/zip" or filename.lower().endswith(".zip"):
-        raise Exception(_("Sorry, uploading ZIP files is not yet implemented."))
 
-    if mimetype == "application/tar" or filename.lower().endswith(".gz") or filename.lower().endswith(".tgz"):
-        raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
-
+def process_uploaded_mib_file(filename, content):
     if '.' in filename:
         mibname = filename.split('.')[0]
     else:
@@ -2027,6 +2086,7 @@ def upload_mib(filename, mimetype, content):
 
     msg = validate_and_compile_mib(mibname.upper(), content)
     file(mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
+    log_mkeventd("uploaded-mib", _("MIB %s: %s") % (filename, msg))
     return msg
 
 
@@ -2456,13 +2516,30 @@ if mkeventd_enabled:
 
     register_configvar(group,
         "translate_snmptraps",
-        Checkbox(title = _("Translate SNMP traps"),
-                 label = _("Use the available SNMP MIBs to translate contents of the SNMP traps"),
-                 help = _("When this option is enabled all available SNMP MIB files will be used "
-                          "to translate the incoming SNMP traps. Information which can not be "
-                          "translated, e.g. because a MIB is missing, are written untouched to "
-                          "the event message."),
-                 default_value = False),
+        Transform(
+            CascadingDropdown(
+                choices = [
+                    (False, _("Do not translate SNMP traps")),
+                    (True,  _("Translate SNMP traps using the available MIBs"),
+                        Dictionary(
+                            elements = [
+                                ("add_description", FixedValue(True,
+                                    title = _("Add OID descriptions"),
+                                    totext = _("Append descriptions of OIDs to message texts"),
+                                )),
+                            ],
+                        ),
+                    ),
+                ],
+            ),
+            title = _("Translate SNMP traps"),
+            label = _("Use the available SNMP MIBs to translate contents of the SNMP traps"),
+            help = _("When this option is enabled all available SNMP MIB files will be used "
+                     "to translate the incoming SNMP traps. Information which can not be "
+                     "translated, e.g. because a MIB is missing, are written untouched to "
+                     "the event message."),
+            forth = lambda v: v == True and (v, {}) or v,
+        ),
         domain = "mkeventd",
     )
 
@@ -2493,6 +2570,21 @@ if mkeventd_enabled:
                           "which nicely indents everything. While this is a bit slower for large "
                           "rulesets it makes debugging and manual editing simpler."),
                 default_value = False),
+        domain = "multisite",
+    )
+
+    register_configvar(_("User Interface"),
+        "mkeventd_contact_group_handling",
+        DropdownChoice(
+            title = _("Precedence of contact groups of events"),
+            choices = [
+                ( "host", _("Host's contact groups have precedence") ),
+                ( "rule", _("Contact groups in rule have precedence") ),
+            ],
+            help = _("Here you can specify whether which contact groups shall have "
+                     "precedence when both the host of an event can be found in the "
+                     "monitoring and the event rule has defined contact groups for the event."),
+        ),
         domain = "multisite",
     )
 
@@ -2835,5 +2927,5 @@ register_hook("pre-activate-changes", mkeventd_update_notifiation_configuration)
 
 # Only register the reload hook when mkeventd is enabled
 if mkeventd_enabled:
-    register_hook("activate-changes", lambda hosts: mkeventd_reload())
+    register_hook("activate-changes", lambda hosts: config.mkeventd_enabled and mkeventd_reload())
 

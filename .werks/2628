@@ -1,0 +1,13 @@
+Title: check_bi_aggr service now also goes into downtime if the monitored BI aggregation is in downtime
+Level: 1
+Component: bi
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442910035
+Class: feature
+
+the service is assigned a "real" downtime even if the downtime of the bi is derived from the
+aggregated services.
+The downtime is also removed automatically when the bi leaves its own downtime.
+Assignment and removal of the downtime happens only when the check is run so there will be a delay
+between bi going into downtime and the service following.

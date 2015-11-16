@@ -34,6 +34,12 @@
 # TUX2|tux2|PRIMARY|READ WRITE|1|1419771465|317|ONLINE|NO|YES|8149107|NOT ACTIVE|489
 # TUX2|tux2|PRIMARY|READ WRITE|2|1419771465|317|ONLINE|NO|YES|8149107|NOT ACTIVE|489
 
+# Databases seem to also report lines with some data missing:
+# PV|PV|PRIMARY|READ WRITE|397|1433251398|7297|ONLINE|NO|YES|10740614283
+# PV|PV|PRIMARY|READ WRITE|398|1433251398|7297|ONLINE|NO|YES|10740614283
+# PV|PV|PRIMARY|READ WRITE|399|||ONLINE|||0
+# PV|PV|PRIMARY|READ WRITE|400|||ONLINE|||0
+# PV|PV|PRIMARY|READ WRITE|401|||ONLINE|||0
 
 def inventory_oracle_recovery_status(info):
     return [ ( line[0], {} ) for line in info ]
@@ -76,7 +82,7 @@ def check_oracle_recovery_status(item, params, info):
             if datafilestatus == 'ONLINE':
                 if backup_state == 'FILE MISSING':
                     filemissingcount += 1
-                else:
+                elif checkpoint_age:
                     checkpoint_age = int(checkpoint_age)
 
                     if oldest_checkpoint_age is None:
@@ -131,7 +137,7 @@ def check_oracle_recovery_status(item, params, info):
                     infotext += '(!)'
                     state = max(1, state)
 
-            infotext += ' (levels at %s/%s )' % (get_age_human_readable(warn), get_age_human_readable(crit))
+            infotext += ' (warn/crit at %s/%s )' % (get_age_human_readable(warn), get_age_human_readable(crit))
 
         if offlinecount > 0:
             infotext += " %i datafiles offline(!!)" \
@@ -150,7 +156,7 @@ def check_oracle_recovery_status(item, params, info):
             if params.get("backup_age"):
 
                 warn, crit = params["backup_age"]
-                infotext += " levels at (%s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
                 perfdata.append(['backup_age', oldest_backup_age, warn, crit])
 
                 if oldest_backup_age >= crit:

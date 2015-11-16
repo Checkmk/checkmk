@@ -1,0 +1,8 @@
+Title: "Fake check results" on hosts doesn't work
+Component: multisite
+State: open
+Date: 2015-08-31 16:26:06
+Targetversion: 1.2.7
+Class: bug
+
+The "Fake check results" feature on hosts allows to set the status of the host to "up", "down" or "unreachable" but this has no effect, the host status stays as it was.

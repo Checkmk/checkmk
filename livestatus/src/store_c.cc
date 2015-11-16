@@ -22,25 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <strings.h>
-#include <map>
-#include <set>
-
-#include "nagios.h"
 #include "store_c.h"
-#include "Store.h"
-#include "Query.h"
 #include "ClientQueue.h"
 #include "InputBuffer.h"
 #include "OutputBuffer.h"
-#include "logger.h"
+#include "Store.h"
 #include "TimeperiodsCache.h"
 
-using namespace std;
 
 Store *g_store = 0;
 ClientQueue *g_client_queue = 0;
@@ -48,7 +36,7 @@ TimeperiodsCache *g_timeperiods_cache = 0;
 
 void store_init()
 {
-	g_store = new Store();
+        g_store = new Store();
     g_client_queue = new ClientQueue();
     g_timeperiods_cache = new TimeperiodsCache();
 }
@@ -97,7 +85,7 @@ void store_register_downtime(nebstruct_downtime_data *d)
 
 int store_answer_request(void *ib, void *ob)
 {
-    return g_store->answerRequest((InputBuffer *)ib, (OutputBuffer *)ob);
+    return g_store->answerRequest(static_cast<InputBuffer *>(ib), static_cast<OutputBuffer *>(ob));
 }
 
 void *create_outputbuffer()
@@ -107,12 +95,12 @@ void *create_outputbuffer()
 
 void flush_output_buffer(void *ob, int fd, int *termination_flag)
 {
-    ((OutputBuffer *)ob)->flush(fd, termination_flag);
+    static_cast<OutputBuffer *>(ob)->flush(fd, termination_flag);
 }
 
 void delete_outputbuffer(void *ob)
 {
-    delete (OutputBuffer *)ob;
+    delete static_cast<OutputBuffer *>(ob);
 }
 
 void *create_inputbuffer(int *termination_flag)
@@ -122,12 +110,12 @@ void *create_inputbuffer(int *termination_flag)
 
 void set_inputbuffer_fd(void *ib, int fd)
 {
-    ((InputBuffer *)ib)->setFd(fd);
+    static_cast<InputBuffer *>(ib)->setFd(fd);
 }
 
 void delete_inputbuffer(void *ib)
 {
-    delete (InputBuffer *)ib;
+    delete static_cast<InputBuffer *>(ib);
 }
 
 void update_timeperiods_cache(time_t now)
@@ -136,7 +124,5 @@ void update_timeperiods_cache(time_t now)
 }
 
 void log_timeperiods_cache(){
-	g_timeperiods_cache->logCurrentTimeperiods();
+        g_timeperiods_cache->logCurrentTimeperiods();
 }
-
-

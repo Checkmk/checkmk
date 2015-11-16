@@ -25,23 +25,23 @@
 #ifndef Query_h
 #define Query_h
 
-#include "config.h"
-#include "nagios.h"
-
-#include <stdio.h>
-#include <string>
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <time.h>
 #include <map>
-using namespace std;
-
+#include <string>
+#include <vector>
 #include "AndingFilter.h"
 #include "global_counters.h"
-
-class Table;
-class Column;
-class OutputBuffer;
-class InputBuffer;
-class StatsColumn;
+#include "nagios.h"  // IWYU pragma: keep
 class Aggregator;
+class Column;
+class Filter;
+class InputBuffer;
+class OutputBuffer;
+class StatsColumn;
+class Table;
+
 
 #define OUTPUT_FORMAT_CSV    0
 #define OUTPUT_FORMAT_JSON   1
@@ -66,10 +66,10 @@ class Query
     unsigned      _wait_timeout;
     unsigned      _wait_trigger;
     void         *_wait_object;
-    string        _field_separator;
-    string        _dataset_separator;
-    string        _list_separator;
-    string        _host_service_separator;
+    std::string   _field_separator;
+    std::string   _dataset_separator;
+    std::string   _list_separator;
+    std::string   _host_service_separator;
     bool          _show_column_headers;
     bool          _need_ds_separator;
     int           _output_format;
@@ -80,17 +80,17 @@ class Query
     int           _timezone_offset;
 
     // normal queries
-    typedef vector<Column *> _columns_t;
+    typedef std::vector<Column *> _columns_t;
     _columns_t _columns;
     _columns_t _dummy_columns; // dynamically allocated. Must delete them.
 
     // stats queries
-    typedef vector<StatsColumn *> _stats_columns_t;
+    typedef std::vector<StatsColumn *> _stats_columns_t;
     _stats_columns_t _stats_columns; // must also delete
     Aggregator **_stats_aggregators;
 
-    typedef vector<string> _stats_group_spec_t;
-    typedef map<_stats_group_spec_t, Aggregator **> _stats_groups_t;
+    typedef std::vector<std::string> _stats_group_spec_t;
+    typedef std::map<_stats_group_spec_t, Aggregator **> _stats_groups_t;
     _stats_groups_t _stats_groups;
 
 public:
@@ -167,6 +167,5 @@ private:
     int lookupOperator(const char *opname);
     Column *createDummyColumn(const char *name);
 };
-
 
 #endif // Query_h

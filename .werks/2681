@@ -1,0 +1,11 @@
+Title: LDAP: Added support for synchronizing with multiple LDAPs
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1435826874
+Class: feature
+
+It is now possible to configure Check_MK to synchronize with multiple
+LDAP directories at the same time. Users and groups can be fetched
+from different independent LDAP servers.

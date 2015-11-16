@@ -1,0 +1,10 @@
+Title: Logwatch: Fixed exception when deleting a specific logfile on multiple hosts
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1439556957
+
+

@@ -48,14 +48,19 @@
 # 18:online::member:sas_hdd:558.4GB:16:V7BRZ_mdisk19:2:1:6::
 # 19:online::member:sas_hdd:558.4GB:16:V7BRZ_mdisk19:1:1:5::
 
+# newer versions report an additional column
+# 0:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:4:1:24:::inactive
+# 1:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:3:1:23:::inactive
+
 def inventory_ibm_svc_disks(info):
     return [ (None, {}) ]
 
 def check_ibm_svc_disks(_no_item, params, info):
     disks = []
-    for did, status, error_sequence_number, use, tech_type,\
+    for line in info:
+        did, status, error_sequence_number, use, tech_type,\
         capacity, mdisk_id, mdisk_name, member_id, enclosure_id,\
-        slot_id, node_id, node_name in info:
+        slot_id, node_id, node_name = line[:13]
         disk = {}
         disk['identifier'] = "Enclosure: %s, Slot: %s, Type: %s" % ( enclosure_id, slot_id, tech_type )
         if capacity.endswith('GB'):

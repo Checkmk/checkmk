@@ -1,0 +1,18 @@
+title: Meinberg LANTIME devices: Fans (NG MIB)
+agents: snmp
+catalog: hw/time/meinberg
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the fans of Meinberg LANTIME clocks supporting the
+ new MBG-LANTIME-NG-MIB.
+
+ The check handles the state of all fans present. It analyzes the
+ reported state and error flag of the fans. Fans which are not operating
+ or having an error flag set, are reported as being {CRITICAL}.
+
+inventory:
+ One service per fan is created.
+
+item:
+ The index number of the fan.

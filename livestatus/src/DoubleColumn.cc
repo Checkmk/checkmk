@@ -23,8 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DoubleColumn.h"
+#include <stdio.h>
 #include "DoubleColumnFilter.h"
 #include "Query.h"
+
+using std::string;
+
 
 void DoubleColumn::output(void *data, Query *query)
 {
@@ -36,7 +40,7 @@ Filter *DoubleColumn::createFilter(int operator_id, char *value)
     return new DoubleColumnFilter(this, operator_id, value);
 }
 
-string DoubleColumn::valueAsString(void *data, Query *query)
+string DoubleColumn::valueAsString(void *data, Query *)
 {
     char buf[64];
     snprintf(buf, sizeof(buf), "%.10e", getValue(data));

@@ -44,7 +44,6 @@ check_info["bvip_fans"] = {
     "snmp_scan_function"    : bvip_scan_function,
     "snmp_info"             : (".1.3.6.1.4.1.3967.1.1.8.1", [OID_END, 1 ]),
     "includes"              : [ 'bvip.include', 'fan.include' ],
-    "has_perfdata"          : True,
-    "group"                 : "fan",
+    "group"                 : "hw_fans",
 }
 

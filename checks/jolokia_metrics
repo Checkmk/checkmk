@@ -24,8 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# Example output from agent:
+# <<<jolokia_metrics>>>
+# 8080 NonHeapMemoryUsage 101078952
+# 8080 NonHeapMemoryMax 184549376
+# 8080 HeapMemoryUsage 2362781664
+# 8080 HeapMemoryMax 9544663040
+# 8080 ThreadCount 78
+# 8080 DeamonThreadCount 72
+# 8080 PeakThreadCount 191
+# 8080 TotalStartedThreadCount 941
+# 8080 Uptime 572011375
+# 8080,java.lang:name=PS_MarkSweep,type=GarbageCollector CollectionCount 0
+
 # MB warn, crit
-#jolokia_metrics_mem_default_levels = (2000, 3000) #
+# jolokia_metrics_mem_default_levels = (2000, 3000)
 
 # Number of threads warn, crit
 jolokia_metrics_threads_default_levels  = (80, 100)
@@ -53,7 +67,12 @@ jolokia_metrics_tp_default_levels = {
 
 def jolokia_metrics_parse(info):
     parsed = {}
-    for inst, var, value in info:
+    for line in info:
+        if line[1] == "ERROR":
+            parsed[line[0]] = None # error
+            continue
+
+        inst, var, value = line
         app, servlet, gc, tp = None, None, None, None
         if ',' in inst:
             parts = inst.split(',')
@@ -98,12 +117,17 @@ def jolokia_metrics_parse(info):
             parsed[inst]['tp'][tp][var] = value
         else:
             parsed[inst][var] = value
+
     return parsed
+
 
 
 # This bisects the app server and its values
 def jolokia_metrics_app(info, (inst, app)):
     parsed = jolokia_metrics_parse(info)
+    if parsed.get(inst, "") == None:
+        raise MKCounterWrapped("No information from Jolokia agent")
+
     if not inst in parsed \
        or not app in parsed[inst].get('apps', {}):
         return None
@@ -118,6 +142,9 @@ def jolokia_metrics_serv(info, (inst, app, serv)):
 
 def jolokia_metrics_gc(info, (inst, typ, gc)):
     parsed = jolokia_metrics_parse(info)
+    if parsed.get(inst, "") == None:
+        raise MKCounterWrapped("No information from Jolokia agent")
+
     if not inst in parsed \
        or not gc in parsed[inst].get('gc', {}):
         return None
@@ -125,6 +152,9 @@ def jolokia_metrics_gc(info, (inst, typ, gc)):
 
 def jolokia_metrics_tp(info, (inst, typ, tp)):
     parsed = jolokia_metrics_parse(info)
+    if parsed.get(inst, "") == None:
+        raise MKCounterWrapped("No information from Jolokia agent")
+
     if not inst in parsed \
        or not tp in parsed[inst].get('tp', {}):
         return None
@@ -132,6 +162,7 @@ def jolokia_metrics_tp(info, (inst, typ, tp)):
 
 def inventory_jolokia_metrics(info, what):
     parsed = jolokia_metrics_parse(info)
+
     levels = None
 
     if what == 'mem':
@@ -140,7 +171,14 @@ def inventory_jolokia_metrics(info, what):
         levels = 'jolokia_metrics_threads_default_levels'
 
     for instance, data in parsed.items():
+        if data == None:
+            continue # No connection to agent currently
+
         if what == 'uptime' and "Uptime" not in data:
+            continue
+        if what == 'mem' and ("HeapMemoryUsage" not in data or "NonHeapMemoryUsage" not in data
+                              or "HeapMemoryMax" not in data or "NonHeapMemoryMax" not in data):
+            # don't add memory check if we don't have the necessary data
             continue
         yield instance, levels
 
@@ -176,6 +214,9 @@ def inventory_jolokia_metrics_apps(info, what):
     # higher than the rest.
     if what == 'bea_app_sess':
         for inst, vals in parsed.iteritems():
+            if vals == None:
+                continue # no data from agent
+
             for app, appstate in vals.get('apps', {}).items():
                 if 'servlets' in appstate:
                     for nk in needed_key:
@@ -185,6 +226,9 @@ def inventory_jolokia_metrics_apps(info, what):
                                 continue
     # This does the same for tomcat
     for inst, vals in parsed.iteritems():
+        if vals == None:
+            continue # no data from agent
+
         for app, appstate in vals.get('apps', {}).items():
             for nk in needed_key:
                 if nk in appstate:
@@ -201,6 +245,8 @@ def inventory_jolokia_metrics_serv(info, what):
         levels = 'jolokia_metrics_serv_req_default_levels'
         needed_key = "Requests"
     for inst, vals in parsed.iteritems():
+        if vals == None:
+            continue # no data from agent
         for app, val in vals.get('apps', {}).iteritems():
             for serv, servinfo in val.get('servlets', {}).items():
                 if needed_key in servinfo:
@@ -214,6 +260,8 @@ def inventory_jolokia_metrics_gc(info, what):
     if what == 'gc':
         needed_key = ["CollectionCount", "CollectionTime"]
     for inst, vals in parsed.iteritems():
+        if vals == None:
+            continue # no data from agent
         for gc, val in vals.get('gc', {}).iteritems():
             inv.append(("%s GC %s" % (inst ,gc) , levels))
     return inv
@@ -225,6 +273,8 @@ def inventory_jolokia_metrics_tp(info, what):
     if what == 'tp':
         needed_key = ["currentThreadsBusy", "currentThreadCount", "maxThreads"]
     for inst, vals in parsed.iteritems():
+        if vals == None:
+            continue # no data from agent
         for tp, val in vals.get('tp', {}).iteritems():
             inv.append(("%s ThreadPool %s" % (inst ,tp) , levels))
     return inv
@@ -236,14 +286,20 @@ def inventory_jolokia_metrics_tp(info, what):
     if what == 'tp':
         needed_key = ["currentThreadsBusy", "currentThreadCount", "maxThreads"]
     for inst, vals in parsed.iteritems():
+        if vals == None:
+            continue # no data from agent
         for tp, val in vals.get('tp', {}).iteritems():
             inv.append(("%s ThreadPool %s" % (inst ,tp) , levels))
     return inv
 
 def check_jolokia_metrics_mem(item, params, info):
     parsed = jolokia_metrics_parse(info)
+
+    if parsed.get(item, "") == None:
+        raise MKCounterWrapped("No information from Jolokia agent")
+
     if item not in parsed:
-        return (3, "data not found in agent output")
+        return
 
     # convert old parameter version ( warn, crit )
     # represented levels of total heap
@@ -259,6 +315,11 @@ def check_jolokia_metrics_mem(item, params, info):
 
     d = parsed[item]
     mb = 1024 * 1024.0
+
+    if "HeapMemoryUsage" not in d or "NonHeapMemoryUsage" not in d\
+        or "HeapMemoryMax" not in d or "NonHeapMemoryMax" not in d:
+            return 3, "data in agent output incomplete"
+
     heap = saveint(d["HeapMemoryUsage"]) / mb
     heapmax = saveint(d.get("HeapMemoryMax",-1)) / mb
     nonheap = saveint(d["NonHeapMemoryUsage"]) / mb
@@ -332,6 +393,8 @@ def check_jolokia_metrics_mem(item, params, info):
 def check_jolokia_metrics_threads(item, params, info):
     warn, crit = params
     parsed = jolokia_metrics_parse(info)
+    if parsed.get(item, "") == None:
+        raise MKCounterWrapped("No information from Jolokia agent")
     if item not in parsed:
         return (3, "data not found in agent output")
     d = parsed[item]
@@ -371,6 +434,8 @@ def check_jolokia_metrics_threads(item, params, info):
 
 def check_jolokia_metrics_uptime(item, params, info):
     parsed = jolokia_metrics_parse(info)
+    if parsed.get(item, "") == None:
+        raise MKCounterWrapped("No information from Jolokia agent")
     if item in parsed:
         uptime = int(parsed[item]['Uptime']) / 1000
         return check_uptime_seconds(params, uptime)
@@ -762,11 +827,13 @@ jolokia_metrics_perm_gen_default_levels = { "perm" : ( 80.0, 100.0 ) }
 def inventory_jolokia_metrics_perm_gen(info):
     parsed = jolokia_metrics_parse(info)
     for instance, values in parsed.items():
-        if "PermGenUsage" in values:
+        if values and "PermGenUsage" in values:
             yield instance, "jolokia_metrics_perm_gen_default_levels"
 
 def check_jolokia_metrics_perm_gen(item, params, info):
     parsed = jolokia_metrics_parse(info)
+    if parsed.get(item, "") == None:
+        raise MKCounterWrapped("No information from Jolokia agent")
     values = parsed.get(item)
     if values:
         warn, crit = params['perm']
@@ -782,7 +849,7 @@ def check_jolokia_metrics_perm_gen(item, params, info):
         elif usage_perc >= warn:
             state = 1
         if state != 0:
-            levels = "(Warn/Crit at %2.f %%/ %.2f %%)" % ( warn, crit )
+            levels = "(warn/crit at %2.f/%.2f %%)" % ( warn, crit )
         else:
             levels = ""
         return state, "Usage: %.2f %% (%s of %s used) %s" % \

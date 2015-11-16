@@ -1,0 +1,13 @@
+Title: knuerr_rms_temp: switch to new generic temperature logic, allow e.g. lower levels
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i4
+Date: 1444989479
+Class: feature
+
+This check now uses the generic mechanism for all temperature checks
+and thus allows things like lower levels or display in Fahreheit (in in
+future also trend monitoring).  The service description has changed from
+<tt>Temperature</tt> to <tt>Temperature Ambient</tt> (in order to comply
+with the guidelines). You need to redo service discovery for this check.

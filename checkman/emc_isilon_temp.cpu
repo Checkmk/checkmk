@@ -1,0 +1,13 @@
+title: EMC Isilon: Temperature of CPUs
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Checks the temperature of the CPUs in EMC Isilon storage devices.
+
+item:
+ {CPU 0}, {CPU 1}, ...
+
+inventory:
+ Creates one service per CPU

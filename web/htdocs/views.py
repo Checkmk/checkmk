@@ -28,13 +28,6 @@ import config, defaults, livestatus, time, os, re, pprint, time
 import weblib, traceback, forms, valuespec, inventory, visuals
 from lib import *
 
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
-
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
@@ -101,6 +94,9 @@ def permitted_views():
         load_views()
         return available_views
 
+def all_views():
+    return multisite_views
+
 # Convert views that are saved in the pre 1.2.6-style
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
 def transform_old_views():
@@ -139,6 +135,8 @@ def transform_old_views():
                     view['single_infos'] = ['service']
                 elif 'aggr_name' in hide_filters:
                     view['single_infos'] = ['aggr']
+                elif 'aggr_group' in hide_filters:
+                    view['single_infos'] = ['aggr_group']
                 elif 'log_contact_name' in hide_filters:
                     view['single_infos'] = ['contact']
                 elif 'event_host' in hide_filters:
@@ -329,8 +327,8 @@ def page_create_view(next_url = None):
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form('create_view')
     html.hidden_field('mode', 'create')
@@ -914,9 +912,6 @@ def prepare_display_options():
 def show_view(view, show_heading = False, show_buttons = True,
               show_footer = True, render_function = None, only_count=False,
               all_filters_active=False, limit=None):
-    if html.var("mode") == "availability" and html.has_var("av_aggr_name") and html.var("timeline"):
-        bi.page_timeline()
-        return
 
     display_options = prepare_display_options()
 
@@ -1009,15 +1004,18 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Sorting - use view sorters and URL supplied sorters
     if not only_count:
         sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
-        sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list ]
+        sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list
+                        if s[0] in multisite_sorters ]
     else:
         sorters = []
 
     # Prepare grouping information
-    group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
+    group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"]
+                        if e[0] in multisite_painters ]
 
     # Prepare columns to paint
-    painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"] if e[0] in multisite_painters ]
+    painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"]
+                    if e[0] in multisite_painters ]
 
     # Now compute the list of all columns we need to query via Livestatus.
     # Those are: (1) columns used by the sorters in use, (2) columns use by
@@ -1218,8 +1216,8 @@ def render_view(view, rows, datasource, group_painters, painters,
                 backurl = html.makeuri([], delvars=['filled_in', 'actions'])
                 has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
             except MKUserError, e:
-                html.show_error(e.message)
-                html.add_user_error(e.varname, e.message)
+                html.show_error(e)
+                html.add_user_error(e.varname, e)
                 if 'C' in display_options:
                     show_command_form(True, datasource)
 
@@ -1439,12 +1437,13 @@ def view_optiondial(view, option, choices, help):
 def view_optiondial_off(option):
     html.write('<div class="optiondial off %s"></div>' % option)
 
+# FIXME: Consolidate toggle rendering functions
 def toggler(id, icon, help, onclick, value, hidden = False):
     html.begin_context_buttons() # just to be sure
     hide = hidden and ' style="display:none"' or ''
     html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" '
-       'onclick="%s"%s></div>' % (
-        id, help, icon, value and "down" or "up", onclick, hide))
+       'onclick="%s"%s><img src="images/icon_%s.png"></div>' % (
+        id, help, icon, value and "down" or "up", onclick, hide, icon))
 
 
 # Will be called when the user presses the upper button, in order
@@ -1466,11 +1465,14 @@ def ajax_set_viewoption():
     vo[view_name][option] = value
     config.save_user_file("viewoptions", vo)
 
+# FIXME: Consolidate toggle rendering functions
 def togglebutton_off(id, icon, hidden = False):
     html.begin_context_buttons()
     hide = hidden and ' style="display:none"' or ''
-    html.write('<div id="%s_off" class="togglebutton off %s"%s></div>' % (id, icon, hide))
+    html.write('<div id="%s_off" class="togglebutton off %s"%s>'
+               '<img src="images/icon_%s.png"></div>' % (id, icon, hide, icon))
 
+# FIXME: Consolidate toggle rendering functions
 def togglebutton(id, isopen, icon, help, hidden = False):
     html.begin_context_buttons()
     if isopen:
@@ -1479,7 +1481,8 @@ def togglebutton(id, isopen, icon, help, hidden = False):
         cssclass = "up"
     hide = hidden and ' style="display:none"' or ''
     html.write('<div id="%s_on" class="togglebutton %s %s" title="%s" '
-               'onclick="view_toggle_form(this, \'%s\');"%s></div>' % (id, icon, cssclass, help, id, hide))
+               'onclick="view_toggle_form(this, \'%s\');"%s>'
+               '<img src="images/icon_%s.png"></div>' % (id, icon, cssclass, help, id, hide, icon))
 
 def show_context_links(thisview, show_filters, display_options,
                        painter_options, enable_commands, enable_checkboxes, show_checkboxes,
@@ -1960,19 +1963,19 @@ def do_actions(view, what, action_rows, backurl):
     for nr, row in enumerate(action_rows):
         core_commands, title, executor = core_command(what, row, nr, len(action_rows))
         for command_entry in core_commands:
-            if (row["site"], command_entry) not in already_executed:
+            site = row.get("site") # site is missing for BI rows (aggregations can spawn several sites)
+            if (site, command_entry) not in already_executed:
                 # Some command functions return the information about the site per-command (e.g. for BI)
                 if type(command_entry) == tuple:
                     site, command = command_entry
                 else:
                     command = command_entry
-                    site = row["site"]
 
                 if type(command) == unicode:
                     command = command.encode("utf-8")
 
                 executor(command, site)
-                already_executed.add((row["site"], command_entry))
+                already_executed.add((site, command_entry))
                 count += 1
 
     message = None
@@ -2542,19 +2545,40 @@ def ajax_popup_action_menu():
     for icon in icons:
         html.write('<li>\n')
         if len(icon) == 4:
-            icon_name, title, url = icon[1:]
-            if url:
+            icon_name, title, url_spec = icon[1:]
+            if url_spec:
+                url, target_frame = sanitize_action_url(url_spec)
+
                 url = replace_action_url_macros(url, what, row)
+
                 onclick = ''
                 if url.startswith('onclick:'):
                     onclick = ' onclick="%s"' % url[8:]
                     url = 'javascript:void(0)'
-                html.write('<a href="%s"%s>' % (url, onclick))
+
+                target = ""
+                if target_frame and target_frame != "_self":
+                    target = " target=\"%s\"" % target_frame
+
+                html.write('<a href="%s"%s%s>' % (url, target, onclick))
+
             html.icon('', icon_name)
-            html.write(title)
-            if url:
+
+            if title:
+                html.write(title)
+            else:
+                html.write(_("No title"))
+
+            if url_spec:
                 html.write('</a>')
         else:
             html.write(icon[1])
         html.write('</li>\n')
     html.write('</ul>\n')
+
+
+def sanitize_action_url(url_spec):
+    if type(url_spec) == tuple:
+        return url_spec
+    else:
+        return (url_spec, None)

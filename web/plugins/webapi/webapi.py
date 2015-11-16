@@ -24,7 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def validate_api_request(request, valid_keys):
+    for key in request.keys():
+        if key not in valid_keys:
+            raise MKUserError(None, _("Invalid key: %s") % key)
+
 def action_add_host(request):
+    validate_api_request(request, ["hostname", "folder", "attributes"])
+
     if html.var("create_folders"):
         create_folders = bool(int(html.var("create_folders")))
     else:
@@ -35,9 +42,9 @@ def action_add_host(request):
     attributes = request.get("attributes", {})
 
     if not hostname:
-        raise MKUserError(None, "Hostname is missing")
+        raise MKUserError(None, _("Hostname is missing"))
     if not folder:
-        raise MKUserError(None, "Foldername is missing")
+        raise MKUserError(None, _("Foldername is missing"))
 
     return g_api.add_hosts([{"hostname":   hostname,
                              "folder":     folder,
@@ -52,12 +59,14 @@ api_actions["add_host"] = {
 ###############
 
 def action_edit_host(request):
+    validate_api_request(request, ["hostname", "unset_attributes", "attributes"])
+
     hostname         = request.get("hostname")
     attributes       = request.get("attributes", {})
     unset_attributes = request.get("unset_attributes", [])
 
     if not hostname:
-        raise MKUserError(None, "Hostname is missing")
+        raise MKUserError(None, _("Hostname is missing"))
 
     return g_api.edit_hosts([{"hostname":         hostname,
                               "attributes":       attributes,
@@ -71,6 +80,8 @@ api_actions["edit_host"] = {
 ###############
 
 def action_get_host(request):
+    validate_api_request(request, ["hostname"])
+
     if html.var("effective_attributes"):
         effective_attributes = bool(int(html.var("effective_attributes")))
     else:
@@ -79,7 +90,7 @@ def action_get_host(request):
     hostname = request.get("hostname")
 
     if not hostname:
-        raise MKUserError(None, "Hostname is missing")
+        raise MKUserError(None, _("Hostname is missing"))
 
     return g_api.get_host(hostname, effective_attr = effective_attributes)
 
@@ -91,10 +102,12 @@ api_actions["get_host"] = {
 ###############
 
 def action_delete_host(request):
+    validate_api_request(request, ["hostname"])
+
     hostname = request.get("hostname")
 
     if not hostname:
-        raise MKUserError(None, "Hostname is missing")
+        raise MKUserError(None, _("Hostname is missing"))
 
     return g_api.delete_hosts([hostname])
 
@@ -106,12 +119,14 @@ api_actions["delete_host"] = {
 ###############
 
 def action_discover_services(request):
+    validate_api_request(request, ["hostname"])
+
     mode = html.var("mode") and html.var("mode") or "new"
 
     hostname = request.get("hostname")
 
     if not hostname:
-        raise MKUserError(None, "Hostname is missing")
+        raise MKUserError(None, _("Hostname is missing"))
 
     return g_api.discover_services(hostname, mode = mode)
 
@@ -123,6 +138,8 @@ api_actions["discover_services"] = {
 ###############
 
 def action_activate_changes(request):
+    validate_api_request(request, ["sites"])
+
     mode = html.var("mode") and html.var("mode") or "dirty"
     if html.var("allow_foreign_changes"):
         allow_foreign_changes = bool(int(html.var("allow_foreign_changes")))

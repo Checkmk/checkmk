@@ -1,0 +1,24 @@
+Title: Discovery check can now automatically add missing services and also activate changes
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442225403
+Class: feature
+
+You can now have the <i>Check_MK Discovery</i> check automatically repair
+things by adding missing services or even removing vanished services. This is
+activated by using the new rule set <i>Periodic Discovery Check</i> instead
+of the previous (now deprecated) global option <i>Enable regular service
+discovery checks</i>. In the new rule set you can activate and configure
+this feature on a per-host base.
+
+Also the discovery check can now warn about vanished services. The default
+is that vanished services will not set the state to WARN, however, and just
+display them. So unless you change the configuration the behaviour of the
+discovery check has not changed.
+
+<b>Note</b>: Automatically removing vanished services can be dangerous as
+broken things like missing file systems or even switch ports that went down
+will be removed from the monitoring! Only use in special situations where
+this is no problem.

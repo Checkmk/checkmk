@@ -23,8 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetTimeColumn.h"
-#include "TimeColumnFilter.h"
 #include "Query.h"
+#include "TimeColumnFilter.h"
+
 
 void OffsetTimeColumn::output(void *data, Query *query)
 {

@@ -190,24 +190,61 @@ register_rule(group,
     match = 'first')
 
 register_rule(group,
-    "special_agents:netapp",
+    "special_agents:hp_msa",
     Dictionary(
-            title = _("Username and password for the NetApp Filer."),
-            elements = [
-                ( "username",
-                  TextAscii(
-                      title = _("Username"),
-                      allow_empty = False,
-                  )
-                ),
-                ( "password",
-                  Password(
-                      title = _("Password"),
-                      allow_empty = False,
-                  )
-                ),
-            ],
-            optional_keys = False
+        elements = [
+            ( "username",
+              TextAscii(
+                  title = _("Username"),
+                  allow_empty = False,
+              )
+            ),
+            ( "password",
+              TextAscii(
+                  title = _("Password"),
+                  allow_empty = False,
+              )
+            )
+        ],
+        optional_keys = False
+    ),
+    title = _("Check HP MSA via Web Interface"),
+    help = _("This rule selects the Agent HP MSA instead of the normal Check_MK Agent "
+             "which collects the data through the HP MSA web interface"),
+    match = 'first')
+
+register_rule(group,
+    "special_agents:netapp",
+    Transform(
+        Dictionary(
+                title = _("Username and password for the NetApp Filer."),
+                elements = [
+                    ( "username",
+                      TextAscii(
+                          title = _("Username"),
+                          allow_empty = False,
+                      )
+                    ),
+                    ( "password",
+                      Password(
+                          title = _("Password"),
+                          allow_empty = False,
+                      )
+                    ),
+                    ( "skip_elements",
+                        ListChoice(
+                           choices = [
+                                ("ctr_volumes",  _("Do not query volume performance counters")),
+                           ],
+                        title = _("Performance improvements"),
+                        help = _("Here you can configure whether the performance counters should get queried. "
+                                 "This can save quite a lot of CPU load on larger systems."),
+                        ),
+                    )
+                ],
+                optional_keys = False
+        ),
+        forth = lambda x: dict([("skip_elements", [])] + x.items())
     ),
     title = _("Check NetApp via WebAPI"),
     help  = _("This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
@@ -280,6 +317,7 @@ register_rule(group,
                          ( "hwstatus",       _("Hardware Status") ),
                          ( "raidgroups",     _("RAID Groups") ),
                          ( "agent",          _("Model and Revsion") ),
+                         ( "sp_util",        _("Storage Processor Utilization") ),
                      ],
                      default_value = [ "disks", "hba", "hwstatus", ],
                      allow_empty = False,
@@ -504,9 +542,27 @@ def validate_siemens_plc_values(value, varprefix):
         valuetypes[valuetype].append(ident)
 
 _siemens_plc_value = [
-    Integer(
-        title = "<nobr>%s</nobr>" % _("DB Number"),
-        minvalue = 1,
+    Transform(
+        CascadingDropdown(
+            title = _("Area"),
+            choices = [
+                ("db", _("Datenbaustein"),
+                    Integer(
+                        title = "<nobr>%s</nobr>" % _("DB Number"),
+                        minvalue = 1,
+                    )
+                ),
+                ("input",   _("Input")),
+                ("output",  _("Output")),
+                ("merker",  _("Merker")),
+                ("timer",   _("Timer")),
+                ("counter", _("Counter")),
+            ],
+            orientation = "horizontal",
+            sorted = True,
+        ),
+        # Transform old Integer() value spec to new cascading dropdown value
+        forth = lambda x: type(x) == int and ("db", x) or x,
     ),
     Float(
         title = _("Address"),

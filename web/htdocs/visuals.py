@@ -104,10 +104,11 @@ def save(what, visuals, user_id = None):
     for (owner_id, name), visual in visuals.items():
         if user_id == owner_id:
             uservisuals[name] = visual
-    config.save_user_file('user_' + what, uservisuals, user = user_id)
+    config.save_user_file('user_' + what, uservisuals, user = user_id, unlock=True)
 
-
-def load(what, builtin_visuals, skip_func = None):
+# FIXME: Currently all user visual files of this type are locked. We could optimize
+# this not to lock all files but only lock the files the user is about to modify.
+def load(what, builtin_visuals, skip_func = None, lock=False):
     visuals = {}
 
     # first load builtins. Set username to ''
@@ -140,6 +141,9 @@ def load(what, builtin_visuals, skip_func = None):
 
             if not os.path.exists(path):
                 continue
+
+            if lock:
+                aquire_lock(path)
 
             user_visuals = eval(file(path).read())
             for name, visual in user_visuals.items():
@@ -277,6 +281,7 @@ def page_list(what, title, visuals, custom_columns = [],
             html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what, other_what[:-1])
     # TODO: We hack in those visuals that already have been moved to pagetypes here
     html.context_button(_("Graph collections"), "graph_collections.py", "graph_collection")
+    html.context_button(_("Bookmarks lists"), "bookmark_lists.py", "bookmark_list")
 
     html.end_context_buttons()
 
@@ -303,8 +308,8 @@ def page_list(what, title, visuals, custom_columns = [],
                 html.footer()
                 return
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     keys_sorted = visuals.keys()
     keys_sorted.sort(cmp = lambda a,b: -cmp(a[0],b[0]) or cmp(a[1], b[1]))
@@ -441,8 +446,8 @@ def page_create_visual(what, info_keys, next_url = None):
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form('create_visual')
     html.hidden_field('mode', 'create')
@@ -738,8 +743,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form("visual", method = "POST")
     html.hidden_field("back", back_url)
@@ -1392,8 +1397,8 @@ def ajax_popup_add():
 
 
 def ajax_add_visual():
-    visual_type = html.var('visual_type') # dashboards / views / ...
-    visual_type = visual_types[visual_type]
+    visual_type_name = html.var('visual_type') # dashboards / views / ...
+    visual_type = visual_types[visual_type_name]
     module_name = visual_type["module_name"]
     visual_module = __import__(module_name)
     handler = visual_module.__dict__[visual_type["add_visual_handler"]]
@@ -1403,12 +1408,8 @@ def ajax_add_visual():
     # type of the visual to add (e.g. view)
     element_type = html.var("type")
 
-    # Context and params are | separated lists of : separated triples
-    # of name, datatype and value. Datatype is int or string
     extra_data = []
     for what in [ 'context', 'params' ]:
-        value = html.var(what)
-        if value:
-            extra_data.append(json.loads(value))
+        extra_data.append(json.loads(html.var(what)))
 
     handler(visual_name, element_type, *extra_data)

@@ -1,0 +1,10 @@
+Title: fixed crash in aix lvm check after volume disappears
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441284997
+
+after removing/renaming a lvm in aix the check would crash until rediscovery

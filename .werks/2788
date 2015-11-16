@@ -1,0 +1,9 @@
+Title: ESX Monitoring, esx_vsphere_vm subchecks: VM templates are now excluded
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447323663
+Class: feature
+
+Virtual machine templates are no longer detected during the service discovery.

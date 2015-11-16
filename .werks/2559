@@ -1,0 +1,10 @@
+Title: job: Trying to read job result files as non root when agent is not executed as root
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441285840
+
+

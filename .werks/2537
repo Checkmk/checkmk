@@ -1,0 +1,14 @@
+Title: BI Editor: restructured, now show tree structure of aggregations, show unused rules
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439560748
+Class: feature
+
+The WATO module for BI aggregations has undergone a slight rework. Aggregations and Rules are
+now show on separate pages. In the table of aggregations you now can unfold the tree of rules
+(which is not the same as the final tree of items).
+
+A new page shows all rules that are not called by any other aggregation or rule. This helps
+to cleanup your configuration.

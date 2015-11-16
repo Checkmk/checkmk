@@ -85,6 +85,7 @@ def if_statename(st):
         '6': 'not present',
         '7': 'lower layer down',
         '8': 'degraded',
+        '9': 'admin down',
     }
     return names.get(st, st)
 
@@ -419,6 +420,9 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             else:
                 ifOperStatusName = if_statename(ifOperStatus)
 
+            if has_nodeinfo and node:
+                return 3, "Interface grouping is not supported for clusters."
+
             ifGroup = None
             if type(ifIndex) == tuple:
                 ifGroup, ifIndex = ifIndex
@@ -486,7 +490,12 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
         if params.get("include_items"):
             alias_info.append("grouped items")
 
-        group_entry = [
+        if has_nodeinfo:
+            group_entry = [None]
+        else:
+            group_entry = []
+
+        group_entry += [
                     "ifgroup%s" % item,         # ifIndex
                     item,                       # ifDescr
                     params["iftype"],           # ifType
@@ -575,20 +584,41 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 # The detailed group info is added later on
                 infotext = group_name + " Status "
             else:
-                # Display port number or alias in infotext if that is not part
-                # of the service description anyway
-                if item.lstrip("0") == ifIndex \
-                    and (item == ifAlias or ifAlias == '') \
-                    and (item == ifDescr or ifDescr == ''): # description trivial
-                    infotext = ""
-                elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '': # non-unique Alias
-                    infotext = "[%s/%s]" % (ifAlias, ifDescr)
-                elif item != ifAlias and ifAlias != '': # alias useful
-                    infotext = "[%s] " % ifAlias
-                elif item != ifDescr and ifDescr != '': # description useful
-                    infotext = "[%s] " % ifDescr
+                if "infotext_format" in params:
+                    bracket_info = ""
+                    if   params["infotext_format"] == "alias":
+                        bracket_info = ifAlias
+                    elif params["infotext_format"] == "description":
+                        bracket_info = ifDescr
+                    elif params["infotext_format"] == "alias_and_description":
+                        bracket_info = []
+                        ifAlias and bracket_info.append(ifAlias)
+                        ifDescr and bracket_info.append(ifDescr)
+                        bracket_info = ", ".join(bracket_info)
+                    elif params["infotext_format"] == "alias_or_description":
+                        bracket_info = ifAlias and ifAlias or ifDescr
+                    elif params["infotext_format"] == "desription_or_alias":
+                        bracket_info = ifDescr and ifDescr or ifAlias
+
+                    if bracket_info:
+                        infotext = "[%s]" % bracket_info
+                    else:
+                        infotext = ""
                 else:
-                    infotext = "[%s] " % ifIndex
+                    # Display port number or alias in infotext if that is not part
+                    # of the service description anyway
+                    if item.lstrip("0") == ifIndex \
+                        and (item == ifAlias or ifAlias == '') \
+                        and (item == ifDescr or ifDescr == ''): # description trivial
+                        infotext = ""
+                    elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '': # non-unique Alias
+                        infotext = "[%s/%s]" % (ifAlias, ifDescr)
+                    elif item != ifAlias and ifAlias != '': # alias useful
+                        infotext = "[%s] " % ifAlias
+                    elif item != ifDescr and ifDescr != '': # description useful
+                        infotext = "[%s] " % ifDescr
+                    else:
+                        infotext = "[%s] " % ifIndex
 
                 if node != None:
                     infotext = "%son %s: " % ( infotext, node )
@@ -752,16 +782,23 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                     pacrate = urate + nurate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
                         errperc = 100.0 * errorrate / pacrate
-
                         if errperc > 0:
                             infotext += ", %s-errors: %.2f%%" % (what, errperc)
+                            if type(err_crit) == float: # percentual levels
+                                if errperc >= err_crit:
+                                    state = 2
+                                    infotext += "(!!) >= %s%%" % str(err_crit)
+                                elif errperc >= err_warn:
+                                    state = max(state, 1)
+                                    infotext += "(!) >= %s%%" % str(err_warn)
+                            elif type(err_crit) == int: # absolute levels
+                                if errorrate >= err_crit:
+                                    state = 2
+                                    infotext += ", %s-error packets: %d (!!) >= %s" % (what, errorrate, err_crit)
+                                elif errorrate >= err_warn:
+                                    state = max(state, 1)
+                                    infotext += ", %s-errors packets: %d (!!) >= %s" % (what, errorrate, err_warn)
 
-                        if err_crit != None and errperc >= err_crit:
-                            state = 2
-                            infotext += "(!!) >= " + str(err_crit)
-                        elif err_warn != None and errperc >= err_warn:
-                            state = max(state, 1)
-                            infotext += "(!) >= " + str(err_warn)
 
                     # check rate of non-unicast packets
                     if nucast_crit or nucast_warn:

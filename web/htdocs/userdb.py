@@ -116,19 +116,27 @@ def get_connection(connection_id):
     return dict(get_connections()).get(connection_id)
 
 
-# Returns a list of locked attributes
+# Returns a list of connection specific locked attributes
 def locked_attributes(connection_id):
-    return get_connection(cleanup_connection_id(connection_id)).locked_attributes()
+    return get_attributes(connection_id, "locked_attributes")
 
 
-# Returns a list of multisite attributes
+# Returns a list of connection specific multisite attributes
 def multisite_attributes(connection_id):
-    return get_connection(cleanup_connection_id(connection_id)).multisite_attributes()
+    return get_attributes(connection_id, "multisite_attributes")
 
 
-# Returns a list of non contact attributes
+# Returns a list of connection specific non contact attributes
 def non_contact_attributes(connection_id):
-    return get_connection(cleanup_connection_id(connection_id)).non_contact_attributes()
+    return get_attributes(connection_id, "non_contact_attributes")
+
+
+def get_attributes(connection_id, what):
+    connection = get_connection(connection_id)
+    if connection:
+        return getattr(connection, what)()
+    else:
+        return []
 
 
 def new_user_template(connection_id):
@@ -298,6 +306,10 @@ def load_users(lock = False):
         profile = contacts.get(id, {})
         profile.update(user)
         result[id] = profile
+
+        # Convert non unicode mail addresses
+        if type(profile.get("email")) == str:
+            profile["email"] = profile["email"].decode("utf-8")
 
     # This loop is only neccessary if someone has edited
     # contacts.mk manually. But we want to support that as

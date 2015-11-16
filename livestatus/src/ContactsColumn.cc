@@ -23,13 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactsColumn.h"
-#include "nagios.h"
-#include "TableContacts.h"
-#include "logger.h"
 #include "Query.h"
-#include "tables.h"
+#include "nagios.h"
+
 
 extern contact *contact_list;
+
 
 void *ContactsColumn::getNagiosObject(char *name)
 {
@@ -70,4 +69,3 @@ bool ContactsColumn::isEmpty(void *svc)
     }
     return true;
 }
-

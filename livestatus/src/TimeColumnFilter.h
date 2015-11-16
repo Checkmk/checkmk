@@ -25,7 +25,11 @@
 #ifndef TimeColumnFilter_h
 #define TimeColumnFilter_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
 #include "IntColumnFilter.h"
+class IntColumn;
+
 
 class TimeColumnFilter : public IntColumnFilter
 {
@@ -36,4 +40,3 @@ public:
 };
 
 #endif // TimeColumnFilter_h
-

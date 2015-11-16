@@ -23,7 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DowntimeOrComment.h"
-#include "logger.h"
+#include <stdlib.h>
+#include <string.h>
+
 
 DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
         unsigned long id)
@@ -63,7 +65,7 @@ DowntimeOrComment::~DowntimeOrComment()
 }
 
     Comment::Comment(nebstruct_comment_struct *co)
-    : DowntimeOrComment((nebstruct_downtime_struct *)co, co->comment_id)
+    : DowntimeOrComment(reinterpret_cast<nebstruct_downtime_struct *>(co), co->comment_id)
     , _expire_time(co->expire_time)
     , _persistent(co->persistent)
     , _source(co->source)

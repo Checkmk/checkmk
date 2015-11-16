@@ -25,7 +25,7 @@
 #ifndef Aggregator_h
 #define Aggregator_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
 class Query;
 
@@ -35,7 +35,8 @@ protected:
     int      _operation;
     uint32_t _count;
 public:
-    Aggregator(int o) : _operation(o), _count(0) {}
+    explicit Aggregator(int o) : _operation(o), _count(0) {}
+    virtual ~Aggregator() {}
     virtual void consume(void *data, Query *) = 0;
     virtual void output(Query *) = 0;
 };

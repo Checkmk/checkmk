@@ -46,16 +46,16 @@ from valuespec import *
 #   '----------------------------------------------------------------------'
 
 # Get availability options without rendering the valuespecs
-def get_availability_options_from_url():
+def get_availability_options_from_url(what):
     html.plug()
-    avoptions = render_availability_options()
+    avoptions = render_availability_options(what)
     html.drain()
     html.unplug()
     return avoptions
 
 
-def render_availability_options():
-    if html.var("_reset") and html.check_transaction():
+def render_availability_options(what):
+    if html.var("_reset"):
         config.save_user_file("avoptions", {})
         for varname in html.vars.keys():
             if varname.startswith("avo_"):
@@ -71,16 +71,17 @@ def render_availability_options():
     is_open = False
     html.begin_form("avoptions")
     html.hidden_field("avoptions", "set")
+    avoption_entries = availability.get_avoption_entries(what)
     if html.var("avoptions") == "set":
-        for name, height, show_in_reporting, vs in availability.avoption_entries:
+        for name, height, show_in_reporting, vs in avoption_entries:
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
             except MKUserError, e:
-                html.add_user_error(e.varname, e.message)
+                html.add_user_error(e.varname, e)
                 is_open = True
 
     range_vs = None
-    for name, height, show_in_reporting, vs in availability.avoption_entries:
+    for name, height, show_in_reporting, vs in avoption_entries:
         if name == 'rangespec':
             range_vs = vs
 
@@ -88,33 +89,19 @@ def render_availability_options():
         range, range_title = range_vs.compute_range(avoptions["rangespec"])
         avoptions["range"] = range, range_title
     except MKUserError, e:
-        html.add_user_error(e.varname, e.message)
+        html.add_user_error(e.varname, e)
 
     if html.has_user_errors():
         html.show_user_errors()
 
-    html.write('<div class="view_form" id="avoptions" %s>'
-            % (not is_open and 'style="display: none"' or '') )
-    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
-
-    for name, height, show_in_reporting, vs in availability.avoption_entries:
-        html.write('<div class="floatfilter %s %s">' % (height, name))
-        html.write('<div class=legend>%s</div>' % vs.title())
-        html.write('<div class=content>')
-        vs.render_input("avo_" + name, avoptions.get(name))
-        html.write("</div>")
-        html.write("</div>")
-
-    html.write("</td></tr>")
-
-    html.write("<tr><td>")
-    html.button("apply", _("Apply"), "submit")
-    html.button("_reset", _("Reset to defaults"), "submit")
-    html.write("</td></tr></table>")
-    html.write("</div>")
+    begin_floating_options("avoptions", is_open)
+    for name, height, show_in_reporting, vs in avoption_entries:
+        render_floating_option(name, height, "avo_", vs, avoptions.get(name))
+    end_floating_options(reset_url = html.makeuri([("_reset", "1")], remove_prefix="avo_"))
 
     html.hidden_fields()
     html.end_form()
+
 
     if html.form_submitted():
         config.save_user_file("avoptions", avoptions)
@@ -157,9 +144,6 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
     if handle_edit_annotations():
         return
 
-    avoptions = get_availability_options_from_url()
-    time_range, range_title = avoptions["range"]
-
     # We make reports about hosts, services or BI aggregates
     if "service" in datasource["infos"]:
         what = "service"
@@ -167,6 +151,9 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
         what = "bi"
     else:
         what = "host"
+
+    avoptions = get_availability_options_from_url(what)
+    time_range, range_title = avoptions["range"]
 
     # We have two display modes:
     # - Show availability table (stats) "table"
@@ -244,7 +231,7 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
 
     # Render the avoptions again to get the HTML code, because the HTML vars have changed
     # above (anno_ and editanno_ has been removed, which must not be part of the form
-    avoptions = render_availability_options()
+    avoptions = render_availability_options(what)
 
     if not html.has_user_errors():
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
@@ -469,7 +456,7 @@ def render_timeline_bar(timeline_layout, style):
 def render_bi_availability(title, aggr_rows):
     av_mode = html.var("av_mode", "availability")
 
-    avoptions = get_availability_options_from_url()
+    avoptions = get_availability_options_from_url("bi")
     time_range, range_title = avoptions["range"]
 
     if av_mode == "timeline":
@@ -494,13 +481,13 @@ def render_bi_availability(title, aggr_rows):
         elif len(aggr_rows) == 1:
             aggr_name = aggr_rows[0]["aggr_name"]
             aggr_group = aggr_rows[0]["aggr_group"]
-            timeline_url = html.makeuri([("timeline", "1"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
+            timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
             html.context_button(_("Timeline"), timeline_url, "timeline")
         html.end_context_buttons()
 
-        avoptions = render_availability_options()
+        avoptions = render_availability_options("bi")
 
-
+    timewarpcode = ""
     if not html.has_user_errors():
         spans = []
         for aggr_row in aggr_rows:
@@ -557,8 +544,6 @@ def render_bi_availability(title, aggr_rows):
                                '<table class="data table timewarp"><tr class="data odd0"><td class="%s">' % tdclass + \
                                htmlcode + \
                                '</td></tr></table>'
-            else:
-                timewarpcode = ""
 
         av_rawdata = availability.spans_by_object(spans)
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)

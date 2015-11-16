@@ -28,13 +28,6 @@ from lib import *
 from wato import API
 import config
 
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
-
 try:
     import simplejson as json
 except ImportError:

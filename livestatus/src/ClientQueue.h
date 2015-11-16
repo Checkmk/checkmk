@@ -25,16 +25,15 @@
 #ifndef ClientQueue_h
 #define ClientQueue_h
 
-#include "config.h"
-
-#include <deque>
+#include "config.h"  // IWYU pragma: keep
 #include <pthread.h>
-
-using namespace std;
+#include <deque>
+#include <memory>
+#include "Mutex.h"
 
 class ClientQueue
 {
-    typedef deque<int> _queue_t;
+    typedef std::deque<int> _queue_t;
     _queue_t _queue;
 public:
     ClientQueue();
@@ -43,10 +42,8 @@ public:
     int popConnection();
     void wakeupAll();
 
-    pthread_mutex_t _lock;
+    mk::mutex _lock;
     pthread_cond_t _signal;
 };
 
-
 #endif // ClientQueue_h
-

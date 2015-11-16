@@ -25,7 +25,8 @@
 #ifndef opids_h
 #define opids_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+
 
 #define OP_INVALID       0
 #define OP_EQUAL         1 // =
@@ -42,4 +43,3 @@ extern const char *op_names_plus_8[];
 // Example >= is represented as -6 (- OP_LESS)
 
 #endif // opids_h
-

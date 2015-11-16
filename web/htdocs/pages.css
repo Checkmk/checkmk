@@ -172,11 +172,10 @@ body.main table.footer td.middle { text-align: center; }
 body.main table.footer td.right  { text-align: right; }
 body.main table.footer a { color: #246; }
 
-body.main table.footer img.statusicon {
+body.main table.footer img.statusicon,
+body.main table.footer a.statusicon img {
     width: 16px;
-    top: 16px;
-    position: relative;
-    top: -3px;
+    height: 16px;
 }
 
 div#foot_refresh, div#foot_refresh_time {
@@ -395,9 +394,13 @@ table.data tr th {
     vertical-align: baseline;
 }
 
+table.data tr div.toggle_actions {
+    position: relative;
+    padding-left: 14px;
+}
+
 table.data tr a.toggle_actions {
-    display: inline-block;
-    float: left;
+    position: absolute;
     top: 0;
     left: 0;
     margin: 0;
@@ -449,10 +452,37 @@ img.iconbutton {
     height: 20px;
     padding: 0px 2px;
 }
-/* Don't know why this style is/was here. Destroys ListOf()... */
-/* img.iconbutton.trans {
-    width: 100px;
-}*/
+
+img.iconbutton:hover {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+/* Table with captions on the left side. Used e.g. for man pages and werks */
+
+table.data.headerleft th {
+    text-align: left;
+    padding: 4px 5px;
+}
+table.data.headerleft td {
+    padding: 4px 5px;
+}
+
+table.data.headerleft > tbody > tr:nth-child(odd) > th {
+    background-color: #73a1b4;
+}
+
+table.data.headerleft > tbody > tr:nth-child(even) > th {
+    background-color: #7fadc0;
+}
+
+table.data.headerleft > tbody > tr:nth-child(odd) > td {
+    background-color: #ddd;
+}
+table.data.headerleft > tbody > tr:nth-child(even) > td {
+    background-color: #eee;
+}
+
 
 /*-------------------------------------------------------------------------.
 |                    _____                                                 |
@@ -816,12 +846,38 @@ div.togglebutton.checkbox.down {
     left: -2px;
 }
 
-div.togglebutton.checkbox         { background-image: url("images/button_checkbox_lo.png"); }
-div.togglebutton.checkbox:hover   { background-image: url("images/button_checkbox_hi.png"); }
-div.togglebutton.checkbox.down       { background-image: url("images/button_checkbox_down_lo.png"); }
-div.togglebutton.checkbox.down:hover { background-image: url("images/button_checkbox_down_hi.png"); }
-div.togglebutton.checkbox.off      { background-image: url("images/button_checkbox_off.png"); }
+div.togglebutton img {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    left: 5px;
+}
 
+div.togglebutton.down img {
+    top: 1px;
+    left: 7px;
+}
+
+div.togglebutton.checkbox.down img {
+    top: 1px;
+    left: 5px;
+}
+
+div.togglebutton.checkbox img {
+    left: 4px;
+}
+
+div.togglebutton         { background-image: url("images/togglebutton_lo.png"); }
+div.togglebutton:hover   { background-image: url("images/togglebutton_hi.png"); }
+div.togglebutton.down       { background-image: url("images/togglebutton_down_lo.png"); }
+div.togglebutton.down:hover { background-image: url("images/togglebutton_down_hi.png"); }
+div.togglebutton.off      { opacity: 0.5; filter: alpha(opacity=50); }
+
+div.togglebutton.checkbox         { background-image: url("images/togglebutton_check_lo.png"); }
+div.togglebutton.checkbox:hover   { background-image: url("images/togglebutton_check_hi.png"); }
+div.togglebutton.checkbox.down       { background-image: url("images/togglebutton_check_down_lo.png"); }
+div.togglebutton.checkbox.down:hover { background-image: url("images/togglebutton_check_down_hi.png"); }
+div.togglebutton.checkbox.off      { opacity: 0.5; filter: alpha(opacity=50); }
 
 /*-------------------------------------------------------------------------.
 |                         _   _      _                                     |
@@ -837,22 +893,20 @@ div.togglebutton.checkbox.off      { background-image: url("images/button_checkb
 a#helpbutton {
     width: 19px;
     height: 19px;
-    margin: 0px 5px;
+    margin: 0 5px;
     position: relative;
-    top: 2px;
-    left: 3px;
+    top: -8px;
+    left: -2px;
 }
-a#helpbutton.active:hover {
-    background-image: url("images/helpbutton_active_hi.png");
-}
-a#helpbutton.passive:hover {
-    background-image: url("images/helpbutton_passive_hi.png");
-}
-a#helpbutton.active {
-    background-image: url("images/helpbutton_active.png");
-}
+
 a#helpbutton.passive {
-    background-image: url("images/helpbutton_passive.png");
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    filter: gray;
+    -webkit-filter: grayscale(1);
 }
 
 div.help {
@@ -1134,4 +1188,8 @@ tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
     border: none;
     box-shadow: none;
     margin: 0;
+}
+
+div.popup_trigger img.iconbutton {
+    padding: 0;
 }

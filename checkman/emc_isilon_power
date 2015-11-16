@@ -1,0 +1,15 @@
+title: EMC Isilon: Power Supply sensors
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Checks power supply in EMC Isilon storage devices.
+ There are various sensors for the outputs of the PSU but those are filtered out
+ at the moment. This checks only monitors input voltage.
+
+item:
+ Power Supply 1 Input, Power Supply 2 Input, ...
+
+inventory:
+ Creates one service per power supply

@@ -1,0 +1,8 @@
+title: BI Aggregations
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ Connects to the local or a remote Check_MK monitoring server to gather the state of a Check_MK
+ BI to aggregation and reports the state of this aggregation as result.

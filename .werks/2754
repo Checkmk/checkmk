@@ -1,0 +1,12 @@
+Title: ipmitool: Killing asynchronous ipmitool call after 300 seconds
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446824182
+
+The ipmitool command can take a long time to return on some systems.
+But the agent needs to ensure that not too many ipmitool processes
+are open at the same time.

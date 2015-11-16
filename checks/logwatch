@@ -280,7 +280,6 @@ def logwatch_group_precompile(hostname, item, _unused):
     return logwatch_precompile(hostname, item, None), host_extra_conf(hostname, logwatch_groups)
 
 def logwatch_groups_of_logfile(filename, params=False):
-    import fnmatch
     groups = []
     if not params:
         params = host_extra_conf(g_hostname, logwatch_groups)
@@ -339,6 +338,16 @@ check_info['logwatch.groups'] = {
 precompile_params['logwatch.groups'] = logwatch_group_precompile
 #.
 
+
+# truncate a file near the specified offset while keeping lines intact
+def truncate_by_line(filename, offset):
+    f = open(filename, 'r+')
+    f.seek(offset)
+    f.readline()  # ensures we don't cut inside a line
+    f.truncate()
+    f.close()
+
+
 def check_logwatch_generic(item, params, loglines, found, groups=False):
     # Create directories, if neccessary
     try:
@@ -371,25 +380,8 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
 
     # Logfile (=item) section not found and no local file found. This usually
     # means, that the corresponding logfile also vanished on the target host.
-    if found == False and not os.path.exists(logfile):
+    if not found and not os.path.exists(logfile):
         return (3, "log not present anymore")
-
-    # Write out new log lines (no reclassify here. It is done later in general for all logs)
-    if len(loglines) > 0:
-        worst = -1
-        for line in loglines:
-            worst = logwatch_level_worst(worst, logwatch_parse_line(line)[0])
-
-        # Ignore log lines which result in an "I" -> "Ignore" state
-        if worst > -1:
-            try:
-                logarch = file(logfile, "a+")
-                logarch.write(time.strftime("<<<%Y-%m-%d %H:%M:%S " + logwatch_state(worst) + ">>>\n"))
-                logarch.write(("\n".join(loglines)).encode("utf-8") + "\n")
-                logarch.close()
-            except Exception, e:
-                raise MKGeneralException("User %s cannot create logfile: %s" % \
-                                         (username(), e))
 
     # Get the patterns (either compile or reuse the precompiled ones)
     # Check_MK creates an empty string if the precompile function has
@@ -405,113 +397,173 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     else:
         patterns = logwatch_precompile(g_hostname, item, None)
 
-    def reclassify_line(counts, patterns, text, level):
-        if patterns:
-            newlevel = logwatch_reclassify(counts, patterns, text)
-            if newlevel != None:
-                level = newlevel
-        return level
 
-    # Read current log messages, reclassify all messages and write out the
-    # whole file again if at least one line has been reclassified
-    worst = 0
-    last_worst_line = ''
-    reclassified_lines = []
-    reclassified = False
-    counts = {} # for counting number of matches of a certain pattern
     state_counts = {} # for counting number of blocks with a certain state
-    block_header = None
-    block_worst = -1
-    block_lines = []
-    block_last_worst_line = ''
 
-    def finish_block(header, block_worst, block_lines):
-        start = ' '.join(header.split(' ')[0:2])
-        return [ start + ' %s>>>' % logwatch_state(block_worst) ] + block_lines
+    class LogwatchBlock(object):
+        def __init__(self, header):
+            self.worst  = -1
+            self.header = header
+            self.lines  = []
+            self.last_worst_line = ''
+            self.counts = {} # for counting number of matches of a certain pattern
 
-    if os.path.exists(logfile):
-        for line in file(logfile):
+        def __reclassify_line(self, patterns, text, level):
+            if patterns:
+                newlevel = logwatch_reclassify(self.counts, patterns, text)
+                if newlevel != None:
+                    level = newlevel
+            return level
+
+        def finalize(self):
+            start = " ".join(self.header.split(' ')[0:2])
+            return [ start + " %s>>>\n" % logwatch_state(self.worst) ] + self.lines
+
+        def add_line(self, line, skip_reclassification):
+            old_level, text = logwatch_parse_line(line)
+
+            if skip_reclassification:
+                level = old_level
+            else:
+                level = self.__reclassify_line(patterns, text, old_level)
+
+            self.worst = logwatch_level_worst(self.worst, level)
+
+            # Save the last worst line of this block
+            if logwatch_level_worst(0, level) == self.worst:
+                self.last_worst_line = text
+
+            # Count the number of lines by state
+            if level != '.':
+                state_counts[level] = state_counts.get(level, 0) + 1
+
+            if not skip_reclassification and level != "I":
+                self.lines.append(level + " " + text + "\n")
+
+    def collect_block(block):
+        if block and block.worst > -1:
+            collect_block.output_lines += block.finalize()
+
+            if block.worst >= collect_block.worst:
+                collect_block.worst = block.worst
+                collect_block.last_worst_line = block.last_worst_line
+
+    collect_block.worst = 0
+    collect_block.last_worst_line = ''
+    collect_block.output_lines = []
+
+    current_block = None
+
+    log_exists = os.path.exists(logfile)
+    try:
+        if log_exists:
+            logwatch_file = open(logfile, 'r+')
+        else:
+            logwatch_file = open(logfile, 'w')
+    except Exception, e:
+        raise MKGeneralException("User %s cannot open file for writing: %s" % (username(), e))
+
+    pattern_hash = hash(tuple(patterns))
+
+    net_lines = 0
+
+    # parse cached log lines
+    if log_exists:
+        # new format contains hash of patterns on the first line so we only reclassify if they
+        # changed
+        initline = logwatch_file.readline().rstrip('\n')
+        if initline.startswith('[[[') and initline.endswith(']]]'):
+            old_pattern_hash = int(initline[3:-3])
+            skip_reclassification = old_pattern_hash == pattern_hash
+        else:
+            logwatch_file.seek(0)
+            skip_reclassification = False
+
+        logfile_size = os.path.getsize(logfile)
+        if skip_reclassification and logfile_size > logwatch_max_filesize:
+            # early out: without reclassification the file wont shrink and if it is already at
+            # the maximum size, all input is dropped anyway
+            if logfile_size > logwatch_max_filesize * 2:
+                # if the file is far too large, truncate it
+                truncate_by_line(logfile, logwatch_max_filesize)
+            return (2, "unacknowledged messages have exceeded max size, "
+                    "new messages are dropped (limit %d Bytes)" % logwatch_max_filesize)
+
+        for line in logwatch_file:
             line = line.rstrip('\n')
             # Skip empty lines
             if not line:
                 continue
-            if line.startswith('<<<') and line.endswith('>>>'):
-                if block_header:
-                    # The section is finished here. Add it to the list of reclassified lines if the
-                    # state of the block is not "I" -> "ignore"
-                    if block_worst > -1:
-                        reclassified_lines += finish_block(block_header, block_worst, block_lines)
-
-                        if block_worst >= worst:
-                            worst = block_worst
-                            last_worst_line = block_last_worst_line
-
-                    block_lines = []
-                    block_worst = -1
-                block_header = line
-                counts = {}
-            else:
-                old_level, text = logwatch_parse_line(line)
-                level = reclassify_line(counts, patterns, text, old_level)
-
-                if old_level != level or level == "I":
-                    reclassified = True
-
-                old_block_worst = block_worst
-                block_worst = logwatch_level_worst(block_worst, level)
-
-                # Save the last worst line of this block
-                if old_block_worst != block_worst or level == block_worst:
-                    block_last_worst_line = text
-
-                # Count the number of lines by state
-                if level != '.':
-                    try:
-                        state_counts[level] += 1
-                    except KeyError:
-                        state_counts[level] = 1
-
-                if level == "I":
-                    continue
-
-                block_lines.append(level + ' ' + text)
+            elif line.startswith('<<<') and line.endswith('>>>'):
+                # The section is finished here. Add it to the list of reclassified lines if the
+                # state of the block is not "I" -> "ignore"
+                collect_block(current_block)
+                current_block = LogwatchBlock(line)
+            elif current_block is not None:
+                current_block.add_line(line, skip_reclassification)
+                net_lines += 1
 
         # The last section is finished here. Add it to the list of reclassified lines if the
         # state of the block is not "I" -> "ignore"
-        if block_header and block_worst > -1:
-            reclassified_lines += finish_block(block_header, block_worst, block_lines)
+        collect_block(current_block)
 
-            if block_worst >= worst:
-                worst = block_worst
-                last_worst_line = block_last_worst_line
+        if skip_reclassification:
+            output_size = logwatch_file.tell()
+            # when skipping reclassification, output lines contains only headers anyway
+            collect_block.output_lines = []
+        else:
+            output_size = sum([len(line) for line in collect_block.output_lines])
+    else:
+        output_size = 0
+        skip_reclassification = False
 
+    header = time.strftime("<<<%Y-%m-%d %H:%M:%S UNKNOWN>>>\n")
+    output_size += len(header)
 
-        # Only rewrite the lines if at least one line has been reclassified
-        if reclassified:
-            if reclassified_lines:
-                file(logfile, 'w').write('\n'.join(reclassified_lines) + '\n')
-            else:
-                os.unlink(logfile)
+    # process new input lines - but only when there is some room left in the file
+    if output_size < logwatch_max_filesize:
+        current_block = LogwatchBlock(header)
+        for line in loglines:
+            current_block.add_line(line.encode("utf-8"), False)
+            net_lines += 1
+            output_size += len(line)
+            if output_size >= logwatch_max_filesize:
+                break
+        collect_block(current_block)
+
+    # when reclassifying, rewrite the whole file, outherwise append
+    if not skip_reclassification and collect_block.output_lines:
+        logwatch_file.seek(0)
+        logwatch_file.truncate()
+        logwatch_file.write("[[[%d]]]\n" % pattern_hash)
+
+    if collect_block.output_lines:
+        logwatch_file.writelines(collect_block.output_lines)
+    # correct output size
+    logwatch_file.close()
+    if net_lines == 0:
+        os.unlink(logfile)
 
     # if logfile has reached maximum size, abort with critical state
     if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
-        return (2, "unacknowledged messages have exceeded max size (%d Bytes)" % logwatch_max_filesize)
+        return (2, "unacknowledged messages have exceeded max size, "
+                   "new messages are lost (limit %d Bytes)" % logwatch_max_filesize)
 
     #
     # Render output
     #
 
-    if len(reclassified_lines) == 0:
+    if collect_block.worst <= 0:
         return (0, "no error messages")
     else:
         count_txt = []
         for level, num in state_counts.iteritems():
             count_txt.append('%d %s' % (num, logwatch_level_name(level)))
         if logwatch_service_output == 'default':
-            return (worst, "%s messages (Last worst: \"%s\")" %
-                                           (', '.join(count_txt), last_worst_line))
+            return (collect_block.worst, "%s messages (Last worst: \"%s\")" %
+                                           (', '.join(count_txt), collect_block.last_worst_line))
         else:
-            return (worst, "%s messages" % ', '.join(count_txt))
+            return (collect_block.worst, "%s messages" % ', '.join(count_txt))
 
 #.
 #   .--Event Console Forwarding--------------------------------------------.
@@ -678,7 +730,8 @@ def check_logwatch_ec(item, params, info):
                         continue
 
             msg = '<%d>' % (facility + logwatch_to_prio(rclfd_level or line[0]),)
-            msg += '@%s %s %s: %s' % (cur_time, g_hostname, logfile, line[2:])
+            msg += '@%s;%d;; %s %s: "%s"' % (cur_time, params.get("service_level", 0), g_hostname, logfile, line[2:])
+
             messages.append(msg)
             forwarded_logfiles.add(logfile)
 
@@ -747,6 +800,8 @@ def check_logwatch_ec(item, params, info):
 def logwatch_ec_precompile(hostname, item, params):
     params = params.copy()
 
+    params["service_level"] = get_effective_service_level()
+
     # HACK: opt_keepalive is used to detect cmc
     if (opt_keepalive or not params.get("logwatch_reclassify")):
         params.update({"logwatch_patterns": []})
@@ -793,6 +848,7 @@ def logwatch_ec_precompile(hostname, item, params):
     return params
 
 precompile_params['logwatch.ec'] = logwatch_ec_precompile
+precompile_params['logwatch.ec_single'] = logwatch_ec_precompile
 
 check_info['logwatch.ec'] = {
     'check_function':      check_logwatch_ec,

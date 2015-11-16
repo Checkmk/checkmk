@@ -33,7 +33,8 @@ def brocade_mlx_power_combine_item(id, descr):
 def inventory_brocade_mlx_power(info):
     inventory = []
     for power_id, power_descr, power_state in info:
-        inventory.append( (brocade_mlx_power_combine_item(power_id, power_descr), None) )
+        if power_state != "1":
+            inventory.append( (brocade_mlx_power_combine_item(power_id, power_descr), None) )
     return inventory
 
 def check_brocade_mlx_power(item, _no_params, info):

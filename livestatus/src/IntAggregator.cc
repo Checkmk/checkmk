@@ -22,11 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <math.h>
 #include "IntAggregator.h"
-#include "StatsColumn.h"
+#include <math.h>
 #include "IntColumn.h"
 #include "Query.h"
+#include "StatsColumn.h"
+
 
 void IntAggregator::consume(void *data, Query *query)
 {
@@ -108,4 +109,3 @@ void IntAggregator::output(Query *q)
    return ((sumq - sum*sum/n)/(n-1)) ** 0.5
 
  */
-

@@ -26,6 +26,15 @@
 
 # Example output from agent:
 
+# <<<lnx_if>>>
+# [start_iplink]
+# 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
+#     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+# 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
+#     link/ether 00:27:13:b4:a9:ec brd ff:ff:ff:ff:ff:ff
+# 3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DORMANT group default qlen 1000
+#     link/ether 00:21:6a:10:8e:b8 brd ff:ff:ff:ff:ff:ff
+# [end_iplink]
 # <<<lnx_if:sep(58)>>>
 #    lo:   4520   54  0  0  0  0  0  0    4520  54    0   0   0   0   0   0
 #  eth0:      0    0  0  0  0  0  0  0    1710   5    0   0   0   0   0   0
@@ -44,6 +53,7 @@
 #         Auto-negotiation: on
 #         Link detected: yes
 
+
 check_includes['lnx_if'] = [ "if.include" ]
 
 linux_nic_check = "lnx_if"
@@ -52,21 +62,54 @@ def if_lnx_convert_to_if64(info):
     nic_info = {}
     current_nic = None
     index = 0
-    for line in info:
-        # Be careful! On clustered hosts we have more than one perf-counters section
-        # and ethtool section. This needs to be handled. Sadly we have no section
-        # headers. Try to detect it by data format.
-        if line[0].startswith('['):
-            current_nic = line[0][1:-1]
-            index += 1
-            nic_info[current_nic]['index'] = index
-        elif len(line) == 2 and len(line[1].split()) >= 16:
-            # This looks like a perf-counter line
-            nic = line[0]
-            nic_info[nic] = { "counters": map(int, line[1].split()) }
-        else:
-            # ethtool data line
-            nic_info[current_nic][line[0].strip()] = ":".join(line[1:]).strip()
+    lines = iter(info)
+    try:
+        iplink_stats = {}
+        while True:
+            line = lines.next()
+
+            # This extra info from 'ip link' is used as fallback in case ethtool is missing
+            if line[0].startswith("[start_iplink]"):
+                iplink_stats = {}
+                while True:
+                    line = lines.next()
+                    if line[0].startswith("[end_iplink]"):
+                        line = lines.next()
+                        break
+                    # Each interface in this block is represented by two lines
+                    status_info = line
+                    link_info   = lines.next() # currently unused
+                    try:
+                        nic_name = status_info[1][:-1]
+                        iplink_stats.setdefault(nic_name, { "extra_info": status_info[2][1:-1].split(",") })
+                        iplink_stats[nic_name].update(dict(zip(status_info[3::2], status_info[4::2])))
+                    except: # In case of parse errors we simply ignore these lines
+                        pass
+
+            # Be careful! On clustered hosts we have more than one perf-counters section
+            # and ethtool section. This needs to be handled. Sadly we have no section
+            # headers. Try to detect it by data format.
+            if line[0].startswith('['):
+                current_nic = line[0][1:-1]
+                index += 1
+                nic_info[current_nic]['index'] = index
+                # The iplink_stats are only used within the perf-counters
+                # The (optional) ethtool section invalidates this info, otherwise it would
+                # be incorrectly reused in a followup section of another cluster node
+                # When the ethtool section is missing the data is also reset by the next [start_iplink]
+                iplink_stats = {}
+            elif len(line) == 2 and len(line[1].split()) >= 16:
+                # This looks like a perf-counter line
+                nic = line[0]
+                nic_info[nic] = { "counters": map(int, line[1].split()) }
+                if nic in iplink_stats:
+                    nic_info[nic]['iplink_stats'] = iplink_stats[nic]
+            else:
+                # ethtool data line
+                nic_info[current_nic][line[0].strip()] = ":".join(line[1:]).strip()
+
+    except StopIteration:
+        pass
 
     # if index is 0 we either have found no nics or no information
     # from ethtool is present. In the latter case we continue and
@@ -130,10 +173,19 @@ def if_lnx_convert_to_if64(info):
             # No information from ethtool. We consider interfaces up
             # if they have been used at least some time since the
             # system boot.
-            if ifInOctets > 0:
-                ifOperStatus = 1 # assume up
+            iplink_stats = attr.get("iplink_stats")
+            if iplink_stats:
+                if "UP" in iplink_stats.get("extra_info", []) or iplink_stats.get("state") == "UP":
+                    ifOperStatus = 1
+                elif iplink_stats.get("state") == "DOWN":
+                    ifOperStatus = 2
+                else:
+                    ifOperStatus = 4
             else:
-                ifOperStatus = 4 # unknown (NIC has never been used)
+                if ifInOctets > 0:
+                    ifOperStatus = 1 # assume up
+                else:
+                    ifOperStatus = 4 # unknown (NIC has never been used)
 
         if attr.get("Address"):
             ifPhysAddress = "".join([chr(int(x, 16)) for x in attr.get("Address", "").split(":")])

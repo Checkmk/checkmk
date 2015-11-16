@@ -1,0 +1,18 @@
+Title: SNMP trap translation can now be configured to put trap description into event text
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441866846
+Class: feature
+
+The trap translation was only translating keys, values and units of OIDs provided with a trap.
+You can now configure the Event Console to append the description of the OIDs (if available
+via the MIB) to the event texts.
+
+To make this work you may need to re-upload your MIB files you want to have a translation for.
+
+This translation option can be enabled using the global settings of the Event Console. Please
+note that if you have existing rules to machting SNMP traps and you change this option, the
+texts of incoming events will change. So you might have to adapt your events text matching
+patterns.

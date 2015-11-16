@@ -25,15 +25,17 @@
 #ifndef ContactsColumn_h
 #define ContactsColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "ListColumn.h"
-class TableContacts;
+class Query;
+
 
 class ContactsColumn : public ListColumn
 {
 public:
-    ContactsColumn(string name, string description, int indirect_offset)
+    ContactsColumn(std::string name, std::string description, int indirect_offset)
         : ListColumn(name, description, indirect_offset)  {}
     int type() { return COLTYPE_LIST; }
     void *getNagiosObject(char *name);

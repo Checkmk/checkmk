@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_slave(info):
     def parse_line(l):
         if ':' in l[0]:
@@ -39,7 +40,9 @@ def parse_mysql_slave(info):
                     val = False
                 elif val == 'None':
                     val = None
-            return val
+            return line[0][:-1], val
+        else:
+            return None, None
 
     parsed = {}
     instance = False
@@ -47,19 +50,21 @@ def parse_mysql_slave(info):
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
-            parsed[instance] = []
+            if instance == "":
+                instance = "mysql"
+            parsed[instance] = {}
         elif instance:
-            value = parse_line(line)
-            if value:
-                parsed[instance][line[0][:-1]] = value
+            key, value = parse_line(line)
+            if key:
+                parsed[instance][key] = value
 
     # Support for old Plugin version
     if not instance:
         parsed['mysql'] = {}
         for line in info:
-            value = parse_line(line)
-            if value:
-                parsed['mysql'][line[0][:-1]] = value
+            key, value = parse_line(line)
+            if key:
+                parsed['mysql'][key] = value
 
     return parsed
 

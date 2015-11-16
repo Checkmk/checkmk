@@ -1,6 +1,6 @@
 Title: ibm_svc_host / other license checks: now able to configure limits
 Level: 1
-Component: wato
+Component: checks
 Compatible: compat
 Version: 1.2.7i1
 Date: 1423639361

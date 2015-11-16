@@ -25,18 +25,19 @@
 #ifndef ServiceContactsColumn_h
 #define ServiceContactsColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "ContactsColumn.h"
+
 
 class ServiceContactsColumn : public ContactsColumn
 {
 public:
-    ServiceContactsColumn(string name, string description, int indirect_offset)
+    ServiceContactsColumn(std::string name, std::string description, int indirect_offset)
         : ContactsColumn(name, description, indirect_offset) {}
     int type() { return COLTYPE_LIST; }
     bool isNagiosMember(void *data, void *member);
 };
 
 #endif // ServiceContactsColumn_h
-

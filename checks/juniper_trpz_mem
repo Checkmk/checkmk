@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 check_info["juniper_trpz_mem"] = {
-    'check_function':        check_juniper_mem,
-    'inventory_function':    inventory_juniper_mem,
+    'check_function':        check_juniper_mem_generic,
+    'inventory_function':    inventory_juniper_mem_generic,
     'service_description':   'Memory used',
     'has_perfdata':          True,
     "group":                 "juniper_mem",

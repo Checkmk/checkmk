@@ -25,11 +25,11 @@
 #ifndef AttributelistFilter_h
 #define AttributelistFilter_h
 
-#include "config.h"
-#include "Filter.h"
+#include "config.h"  // IWYU pragma: keep
 #include <stdlib.h>
-
+#include "Filter.h"
 class AttributelistColumn;
+
 
 class AttributelistFilter : public Filter
 {
@@ -43,6 +43,5 @@ public:
         _column(column), _opid(abs(opid)), _negate(opid < 0), _ref(ref) {}
     bool accepts(void *data);
 };
-
 
 #endif // AttributelistFilter_h

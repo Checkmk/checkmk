@@ -1,0 +1,10 @@
+Title: oracle_recovery_status: Fixed exception when files have no checkpoints
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441274480
+
+

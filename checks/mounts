@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_mounts(info):
     inventory = []
     devices = []
@@ -36,6 +37,14 @@ def inventory_mounts(info):
     return inventory
 
 def check_mounts(item, targetopts, info):
+
+    # Ignore options that are allowed to change
+    def should_ignore_option(option):
+        for ignored_option in [ "commit=", "localalloc=", "subvol=", "subvolid=" ]:
+            if option.startswith(ignored_option):
+                return True
+        return False
+
     for dev, mp, fstype, options, dump, fsck in info:
         if item == mp:
             opts = options.split(",")
@@ -43,14 +52,12 @@ def check_mounts(item, targetopts, info):
 
             exceeding = []
             for o in opts:
-                if o not in targetopts and not o.startswith("commit=") \
-                                       and not o.startswith("localalloc="):
+                if o not in targetopts and not should_ignore_option(o):
                     exceeding.append(o)
 
             missing = []
             for o in targetopts:
-                if o not in opts and not o.startswith("commit=") \
-                                 and not o.startswith("localalloc="):
+                if o not in opts and not should_ignore_option(o):
                     missing.append(o)
 
             if not missing and not exceeding:

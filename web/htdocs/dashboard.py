@@ -29,13 +29,6 @@ from valuespec import *
 from lib import *
 import wato
 
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
-
 loaded_with_language = False
 builtin_dashboards = {}
 dashlet_types = {}
@@ -87,10 +80,10 @@ def load_plugins():
     # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('dashboards'))
 
-def load_dashboards():
+def load_dashboards(lock=False):
     global dashboards, available_dashboards
     transform_builtin_dashboards()
-    dashboards = visuals.load('dashboards', builtin_dashboards)
+    dashboards = visuals.load('dashboards', builtin_dashboards, lock=lock)
     transform_dashboards(dashboards)
     available_dashboards = visuals.available('dashboards', dashboards)
 
@@ -180,7 +173,7 @@ def transform_builtin_dashboards():
                 view_name = dashlet['view'].split('&')[0]
 
                 # Copy the view definition into the dashlet
-                load_view_into_dashlet(dashlet, nr, view_name)
+                load_view_into_dashlet(dashlet, nr, view_name, load_from_all_views=True)
                 del dashlet['view']
 
             else:
@@ -206,21 +199,44 @@ def transform_builtin_dashboards():
         dashboard.setdefault('description', dashboard.get('title', ''))
     builtin_dashboards_transformed = True
 
-def load_view_into_dashlet(dashlet, nr, view_name, add_context=None):
+def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_all_views=False):
     import views
     views.load_views()
-    views = views.permitted_views()
-    if view_name in views:
-        view = copy.deepcopy(views[view_name])
-        dashlet.update(view)
-        if add_context:
-            dashlet['context'].update(add_context)
 
-        # Overwrite the views default title with the context specific title
-        dashlet['title'] = visuals.visual_title('view', view)
-        dashlet['title_url'] = html.makeuri_contextless(
-                [('view_name', view_name)] + visuals.get_singlecontext_vars(view).items(),
-                filename='view.py')
+    permitted_views = views.permitted_views()
+
+    # it is random which user is first accessing
+    # an apache python process, initializing the dashboard loading and conversion of
+    # old dashboards. In case of the conversion we really try hard to make the conversion
+    # work in all cases. So we need all views instead of the views of the user.
+    if load_from_all_views and view_name not in permitted_views:
+        # This is not really 100% correct according to the logic of visuals.available(),
+        # but we do this for the rare edge case during legacy dashboard conversion, so
+        # this should be sufficient
+        view = None
+        for (u, n), this_view in views.all_views().items():
+            # take the first view with a matching name
+            if view_name == n:
+                view = this_view
+                break
+
+        if not view:
+            raise MKGeneralException(_("Failed to convert a builtin dashboard which is referencing "
+                                       "the view \"%s\". You will have to migrate it to the new "
+                                       "dashboard format on your own to work properly." % view_name))
+    else:
+        view = permitted_views[view_name]
+
+    view = copy.deepcopy(view) # Clone the view
+    dashlet.update(view)
+    if add_context:
+        dashlet['context'].update(add_context)
+
+    # Overwrite the views default title with the context specific title
+    dashlet['title'] = visuals.visual_title('view', view)
+    dashlet['title_url'] = html.makeuri_contextless(
+            [('view_name', view_name)] + visuals.get_singlecontext_vars(view).items(),
+            filename='view.py')
 
     dashlet['type']       = 'view'
     dashlet['name']       = 'dashlet_%d' % nr
@@ -539,20 +555,22 @@ dashboard_scheduler(1);
 
     html.body_end() # omit regular footer with status icons, etc.
 
-def render_dashlet_content(nr, the_dashlet, stash_html_vars = False):
+def render_dashlet_content(nr, the_dashlet, stash_html_vars=True):
     if stash_html_vars:
         html.stash_vars()
         html.del_all_vars()
-    visuals.add_context_to_uri_vars(the_dashlet)
 
-    dashlet_type = dashlet_types[the_dashlet['type']]
-    if 'iframe_render' in dashlet_type:
-        dashlet_type['iframe_render'](nr, the_dashlet)
-    else:
-        dashlet_type['render'](nr, the_dashlet)
+    try:
+        visuals.add_context_to_uri_vars(the_dashlet)
 
-    if stash_html_vars:
-        html.unstash_vars()
+        dashlet_type = dashlet_types[the_dashlet['type']]
+        if 'iframe_render' in dashlet_type:
+            dashlet_type['iframe_render'](nr, the_dashlet)
+        else:
+            dashlet_type['render'](nr, the_dashlet)
+    finally:
+        if stash_html_vars:
+            html.unstash_vars()
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
@@ -679,7 +697,6 @@ def ajax_dashlet():
 
     if the_dashlet['type'] not in dashlet_types:
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
-
     render_dashlet_content(ident, the_dashlet, stash_html_vars=False)
 
 #.
@@ -695,7 +712,7 @@ def ajax_dashlet():
 #   '----------------------------------------------------------------------'
 
 def page_edit_dashboards():
-    load_dashboards()
+    load_dashboards(lock=html.is_transaction())
     visuals.page_list('dashboards', _("Edit Dashboards"), dashboards)
 
 #.
@@ -729,7 +746,7 @@ def page_create_dashboard():
 global vs_dashboard
 
 def page_edit_dashboard():
-    load_dashboards()
+    load_dashboards(lock=html.is_transaction())
 
     # This is not defined here in the function in order to be l10n'able
     global vs_dashboard
@@ -826,7 +843,7 @@ def choose_view(name):
             view_name = vs_view.from_html_vars('view')
             vs_view.validate_value(view_name, 'view')
 
-            load_dashboards()
+            load_dashboards(lock=True)
             dashboard = available_dashboards[name]
 
             # Add the dashlet!
@@ -841,8 +858,8 @@ def choose_view(name):
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form('choose_view')
     forms.header(_('Select View'))
@@ -878,7 +895,7 @@ def page_edit_dashlet():
     if ident == None and not ty:
         raise MKGeneralException(_('The ID of the dashlet is missing.'))
 
-    load_dashboards()
+    load_dashboards(lock=html.is_transaction())
 
     if board not in available_dashboards:
         raise MKGeneralException(_('The requested dashboard does not exist.'))
@@ -1020,8 +1037,8 @@ def page_edit_dashlet():
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
+            html.write("<div class=error>%s</div>\n" % e)
+            html.add_user_error(e.varname, e)
 
     html.begin_form("dashlet", method="POST")
     vs_general.render_input("general", dashlet)
@@ -1054,7 +1071,7 @@ def page_delete_dashlet():
     except ValueError:
         raise MKGeneralException(_('Invalid dashlet id'))
 
-    load_dashboards()
+    load_dashboards(lock=True)
 
     if board not in available_dashboards:
         raise MKGeneralException(_('The requested dashboard does not exist.'))
@@ -1084,7 +1101,7 @@ def page_delete_dashlet():
 
             html.message(_('The dashlet has been deleted.'))
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % html.attrencode(e.message))
+            html.write("<div class=error>%s</div>\n" % html.attrencode(e))
             return
 
     html.immediate_browser_redirect(1, back_url)
@@ -1113,7 +1130,7 @@ def check_ajax_update():
 
     ident = int(html.var('id'))
 
-    load_dashboards()
+    load_dashboards(lock=True)
 
     if board not in available_dashboards:
         raise MKGeneralException(_('The requested dashboard does not exist.'))
@@ -1175,7 +1192,7 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
 	# Exceptions do not work here.
 	return
 
-    load_dashboards()
+    load_dashboards(lock=True)
 
     if dashboard_name not in available_dashboards:
 	return
@@ -1190,13 +1207,18 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
         dashlet.update(params)
 
     # When a view shal be added to the dashboard, load the view and put it into the dashlet
+    # FIXME: Mave this to the dashlet plugins
     if dashlet_type == 'view':
         # save the original context and override the context provided by the view
         context = dashlet['context']
         load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name, add_context=context)
+    elif dashlet_type == "pnpgraph":
+        # The "add to visual" popup does not provide a timerang information,
+        # but this is not an optional value. Set it to 25h initially.
+        dashlet.setdefault("timerange", "1")
 
     add_dashlet(dashlet, dashboard)
 
     # Directly go to the dashboard in edit mode. We send the URL as an answer
     # to the AJAX request
-    html.write('dashboard.py?name=' + dashboard_name + '&edit=1')
+    html.write('OK dashboard.py?name=' + dashboard_name + '&edit=1')

@@ -23,8 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringColumn.h"
-#include "StringColumnFilter.h"
 #include "Query.h"
+#include "StringColumnFilter.h"
+
 
 void StringColumn::output(void *data, Query *query)
 {
@@ -38,5 +39,3 @@ Filter *StringColumn::createFilter(int operator_id, char *value)
 {
     return new StringColumnFilter(this, operator_id, value);
 }
-
-

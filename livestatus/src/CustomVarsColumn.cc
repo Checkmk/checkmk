@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsColumn.h"
-#include "nagios.h"
-#include "logger.h"
+#include <string.h>
 #include "CustomVarsFilter.h"
 #include "Query.h"
+
 
 void CustomVarsColumn::output(void *data, Query *query)
 {

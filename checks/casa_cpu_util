@@ -56,7 +56,7 @@ def check_casa_cpu_util(item, params, info):
         warn, crit = None, None
         if "levels" in params:
             warn, crit = params["levels"]
-            levels_text = "(levels at %s%%/%s%%)" % (warn, crit)
+            levels_text = "(warn/crit at %s%%/%s%%)" % (warn, crit)
             if value > crit:
                 state = 2
             elif value > warn:

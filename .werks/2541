@@ -1,0 +1,11 @@
+Title: Round last state change of network interfaces to one day, avoid history spam
+Level: 2
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1440152923
+
+This avoid massive changes in inventory every time the inventory is being run - thus
+avoiding spamming the inventory history.

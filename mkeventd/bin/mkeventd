@@ -6,7 +6,7 @@ import socket, os, time, sys, getopt, signal, thread, pprint, re, \
 from pwd import getpwnam
 from grp import getgrnam
 
-VERSION="1.2.7i3"
+VERSION="1.2.7i4"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -858,7 +858,7 @@ def parse_history_file(path, headers, filters, greptexts, limit):
             break
 
         try:
-            parts = line.rstrip('\n').split('\t')
+            parts = line.decode('utf-8').rstrip('\n').split('\t')
             convert_history_line(parts)
             values = [line_no] + parts
             if g_status_server.filter_row(headers, filters, values):
@@ -1212,32 +1212,27 @@ class EventServer:
     def snmptrap_translate_varbinds(self, var_bind_list):
         var_binds = []
         for oid, value in var_bind_list:
-            mib_var = MibVariable(oid).resolveWithMib(self._mib_resolver)
+            try:
+                mib_var = ObjectType(ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
+                node             = mib_var[0].getMibNode()
+                translated_oid   = mib_var[0].prettyPrint().replace("\"", "")
+                translated_value = mib_var[1].prettyPrint()
 
-            if not mib_var.isFullyResolved():
-                log('MIB for %s is not loaded' % oid.prettyPrint())
-                var_binds.append((str(oid), value)) # add untranslated
-            else:
-                # MIB node object (like OBJECT-TYPE or other SMI MACROs)
-                node = mib_var.getMibNode()
+                if hasattr(node, "getUnits"):
+                    translated_value += ' ' + node.getUnits()
 
-                mod, sym, indices = mib_var.getMibSymbol()
-                # Only care about the first indice reported. Why should we care about multiple?
-                # Do we have such cases here?
-                if not indices:
-                    translated_oid = '%s::%s' % (mod, sym)
-                else:
-                    translated_oid = '%s::%s.%s' % (mod, sym, indices[0].prettyPrint())
+                if hasattr(node, "getDescription") \
+                   and type(g_config["translate_snmptraps"]) == tuple \
+                   and "add_description" in g_config["translate_snmptraps"][1]:
+                    translated_value += "(%s)" % node.getDescription()
 
-                # This MACRO supports SYNTAX clause?
-                if hasattr(node, 'getSyntax'):
-                    # Cast value to MIB SYNTAX type (TEXTUAL-CONVENTION)
-                    value = node.getSyntax().clone(value)
-                    units = node.getUnits()
+                var_binds.append((translated_oid, translated_value))
 
-                    var_binds.append((translated_oid, value.prettyPrint() + ' ' + units))
-                else:
-                    var_binds.append((translated_oid, value))
+            except SmiError, e:
+                # Failed to translate? add untranslated
+                log('Failed to translate OID %s: %s' % (oid.prettyPrint(), e))
+                var_binds.append((str(oid), str(value))) # add untranslated
+
         return var_binds
 
     def process_snmptrap(self, (whole_msg, (ipaddress, port))):
@@ -1265,7 +1260,7 @@ class EventServer:
             else:
                 break # Skip unhandled version
 
-            if g_config['translate_snmptraps']:
+            if snmptrap_translation_enabled():
                 trap = self.snmptrap_translate_varbinds(proto.apiPDU.getVarBinds(pdu))
             else:
                 trap = self.snmptrap_convert_var_binds(proto.apiPDU.getVarBinds(pdu))
@@ -2639,7 +2634,7 @@ class StatusServer:
     def handle_command_reload(self):
         with lock_configuration:
             load_configuration()
-            if opt_snmptrap and g_config['translate_snmptraps']:
+            if opt_snmptrap and snmptrap_translation_enabled():
                 g_event_server.load_mibs()
             g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
         g_status_server.reload_configuration()
@@ -3353,11 +3348,17 @@ def substitute_event_tags(text, event):
         varname = key[6:]
         substs.append((varname, event.get(varname, defaultvalue)))
 
+    def to_string(v):
+        if type(v) in [ str, unicode ]:
+            return v
+        else:
+            return str(v)
+
     for key, value in substs:
         if type(value) == tuple:
-            value = " ".join(map(str,value))
-        elif type(value) not in [ str, unicode ]:
-            value = str(value)
+            value = " ".join(map(to_string, value))
+        else:
+            value = to_string(value)
 
         text = text.replace('$%s$' % key.upper(), value)
     return text
@@ -3596,6 +3597,7 @@ def load_slave_status():
 #   +----------------------------------------------------------------------+
 #   |  Loading of the configuration files                                  |
 #   '----------------------------------------------------------------------'
+
 def load_configuration():
     global g_config, g_last_config_reload
     g_config = {
@@ -3651,6 +3653,10 @@ def load_configuration():
         g_config["action"][action["id"]] = action
 
     g_last_config_reload = time.time()
+
+
+def snmptrap_translation_enabled():
+    return g_config["translate_snmptraps"] != False
 
 
 #.
@@ -3833,9 +3839,10 @@ try:
         from pyasn1.codec.ber import decoder as pyasn_decoder
         import pysnmp.proto.proxy.rfc2576
         # Needed for trap translation
-        from pysnmp.entity.rfc3413.oneliner.mibvar import MibVariable
         from pysnmp.smi.builder import MibBuilder, DirMibSource
         from pysnmp.smi.view import MibViewController
+        from pysnmp.smi.rfc1902 import ObjectType, ObjectIdentity
+        from pysnmp.smi.error import SmiError
 
     if not g_pipe_path:
         bail_out("Please specify the path to the pipe (using -P).")
@@ -3883,7 +3890,7 @@ try:
     g_event_status.load_status()
     g_status_server = StatusServer()
     g_event_server  = EventServer()
-    if opt_snmptrap and g_config['translate_snmptraps']:
+    if opt_snmptrap and snmptrap_translation_enabled():
         g_event_server.load_mibs()
     g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 

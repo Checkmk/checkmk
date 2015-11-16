@@ -24,11 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_emc_isilon_diskstatus(info):
-    inventory = []
     for disk_id, name, disk_status, serial in info:
-        inventory.append( (disk_id, None) )
-    return inventory
+        yield disk_id, None
+
 
 def check_emc_isilon_diskstatus(item, _no_params, info):
     for disk_id, name, disk_status, serial in info:
@@ -39,7 +39,7 @@ def check_emc_isilon_diskstatus(item, _no_params, info):
             else:
                 status = 2
             return status, message
-    return 3, "Disk %s not found" % item
+
 
 check_info["emc_isilon_diskstatus"] = {
     "check_function"        : check_emc_isilon_diskstatus,

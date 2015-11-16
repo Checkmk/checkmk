@@ -22,25 +22,35 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <time.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <stddef.h>
+#include "TableStateHistory.h"
 #include <stdarg.h>
-#include <list>
-
-#include "nagios.h"
-#include "logger.h"
-#include "OffsetIntColumn.h"
-#include "OffsetTimeColumn.h"
-#include "OffsetStringColumn.h"
-#include "OffsetDoubleColumn.h"
-#include "Query.h"
-#include "tables.h"
-#include "auth.h"
-#include "Store.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <syslog.h>
+#include <time.h>
+#include <deque>
+#include <set>
+#include <utility>
+#include <vector>
+#include "AndingFilter.h"
+#include "Column.h"
+#include "Filter.h"
+#include "HostServiceState.h"
 #include "LogEntry.h"
+#include "Mutex.h"
+#include "OffsetDoubleColumn.h"
+#include "OffsetIntColumn.h"
+#include "OffsetStringColumn.h"
+#include "OffsetTimeColumn.h"
+#include "OutputBuffer.h"
+#include "Query.h"
+#include "Store.h"
+#include "TableHosts.h"
+#include "TableServices.h"
+#include "auth.h"
+#include "logger.h"
+#include "tables.h"
 
 #ifdef CMC
 #include "Host.h"
@@ -48,13 +58,15 @@
 #include "Timeperiod.h"
 #endif
 
-#include "TableStateHistory.h"
-#include "HostServiceState.h"
+using mk::lock_guard;
+using mk::mutex;
+using std::deque;
+using std::make_pair;
+using std::map;
+using std::set;
+using std::string;
 
 int g_disable_statehist_filtering = 0;
-
-
-
 extern Store *g_store;
 
 // Debugging logging is hard if debug messages are logged themselves...
@@ -186,35 +198,38 @@ void TableStateHistory::addColumns(Table *table)
 
 LogEntry *TableStateHistory::getPreviousLogentry()
 {
-    if (_it_entries == _entries->begin()) {
+    while (_it_entries == _entries->begin()) {
         // open previous logfile
         if (_it_logs == g_store->logCache()->logfiles()->begin())
             return 0;
         else {
-            _it_logs--;
+            --_it_logs;
             _entries = _it_logs->second->getEntriesFromQuery(_query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
             _it_entries = _entries->end();
         }
     }
+
     return (--_it_entries)->second;
 }
 
 LogEntry *TableStateHistory::getNextLogentry()
 {
-    if (++_it_entries == _entries->end()) {
-        if (++_it_logs == g_store->logCache()->logfiles()->end()) {
-            // No further logfiles available
-            // prevent errors on subsequent getNextLogentry()
-            --_it_entries;
-            --_it_logs;
+    if (_it_entries != _entries->end())
+        ++_it_entries;
+
+    while (_it_entries == _entries->end()) {
+        _logfiles_t::iterator _it_logs_cpy = _it_logs;
+        if (++_it_logs_cpy == g_store->logCache()->logfiles()->end()) {
             return 0;
         }
         else {
+            ++_it_logs;
             _entries = _it_logs->second->getEntriesFromQuery(_query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
             _it_entries = _entries->begin();
         }
     }
     return _it_entries->second;
+
 }
 
 void TableStateHistory::answerQuery(Query *query)
@@ -251,7 +266,7 @@ void TableStateHistory::answerQuery(Query *query)
     }
 
 
-    g_store->logCache()->lockLogCache();
+    lock_guard<mutex> lg(g_store->logCache()->_lock);
     g_store->logCache()->logCachePreChecks();
 
     // This flag might be set to true by the return value of processDataset(...)
@@ -277,14 +292,12 @@ void TableStateHistory::answerQuery(Query *query)
     _query->findIntLimits("time", &_since, &_until);
     if (_since == 0) {
         query->setError(RESPONSE_CODE_INVALID_REQUEST, "Start of timeframe required. e.g. Filter: time > 1234567890");
-        g_store->logCache()->unlockLogCache();
         return;
     }
 
     _query_timeframe = _until - _since - 1;
     if (_query_timeframe == 0) {
         query->setError(RESPONSE_CODE_INVALID_REQUEST, "Query timeframe is 0 seconds");
-        g_store->logCache()->unlockLogCache();
         return;
     }
 
@@ -302,14 +315,14 @@ void TableStateHistory::answerQuery(Query *query)
     if (_it_logs->first > _until) {
         // All logfiles are too new, invalid timeframe
         // -> No data available. Return empty result.
-        g_store->logCache()->unlockLogCache();
         return;
     }
+
 
     // Determine initial logentry
     LogEntry* entry;
     _entries = _it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
-    if (_it_logs != newest_log) {
+    if (!_entries->empty() &&_it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--_it_entries != _entries->begin()) {
@@ -321,9 +334,7 @@ void TableStateHistory::answerQuery(Query *query)
     } else
         _it_entries = _entries->begin();
 
-
     // From now on use getPreviousLogentry() / getNextLogentry()
-    HostServiceKey key;
     bool only_update = true;
     bool in_nagios_initial_states = false;
 
@@ -343,7 +354,7 @@ void TableStateHistory::answerQuery(Query *query)
             while (it_hst != state_info.end()) {
                 it_hst->second->_from  = _since;
                 it_hst->second->_until = _since;
-                it_hst++;
+                ++it_hst;
             }
             only_update = false;
         }
@@ -357,14 +368,21 @@ void TableStateHistory::answerQuery(Query *query)
                 if (hst->_may_no_longer_exist) {
                     hst->_has_vanished = true;
                 }
-                it_hst++;
+                ++it_hst;
             }
             in_nagios_initial_states = false;
         }
 
-        key = 0;
+        HostServiceKey key = 0;
         bool is_service = false;
         switch (entry->_type) {
+        case NONE:
+        case CORE_STARTING:
+        case CORE_STOPPING:
+        case LOG_VERSION:
+        case ACKNOWLEDGE_ALERT_HOST:
+        case ACKNOWLEDGE_ALERT_SERVICE:
+            break;
         case ALERT_SERVICE:
         case STATE_SERVICE:
         case STATE_SERVICE_INITIAL:
@@ -372,6 +390,7 @@ void TableStateHistory::answerQuery(Query *query)
         case FLAPPING_SERVICE:
             key = entry->_service;
             is_service = true;
+            // fall-through
         case ALERT_HOST:
         case STATE_HOST:
         case STATE_HOST_INITIAL:
@@ -440,7 +459,7 @@ void TableStateHistory::answerQuery(Query *query)
                         if (it_inh->second->_host == state->_host){
                             state->_services.push_back(it_inh->second);
                         }
-                        it_inh++;
+                        ++it_inh;
                     }
                 } else {
                     state_info_t::iterator it_inh = state_info.find(state->_host);
@@ -450,7 +469,7 @@ void TableStateHistory::answerQuery(Query *query)
 
 
                 // Store this state object for tracking state transitions
-                state_info.insert(std::make_pair(key, state));
+                state_info.insert(make_pair(key, state));
                 state->_from = _since;
 
                 // Get notification period of host/service
@@ -535,7 +554,7 @@ void TableStateHistory::answerQuery(Query *query)
                     HostServices::iterator it_svc = state->_services.begin();
                     while (it_svc != state->_services.end()) {
                         updateHostServiceState(query, entry, *it_svc, only_update);
-                        it_svc++;
+                        ++it_svc;
                     }
                 }
             }
@@ -561,7 +580,7 @@ void TableStateHistory::answerQuery(Query *query)
             state_info_t::iterator it_hst = state_info.begin();
             while (it_hst != state_info.end()) {
                 updateHostServiceState(query, entry, it_hst->second, only_update);
-                it_hst++;
+                ++it_hst;
             }
             free(buffer);
             break;
@@ -578,7 +597,7 @@ void TableStateHistory::answerQuery(Query *query)
                     it_hst->second->_last_known_time = entry->_time;
                     it_hst->second->_may_no_longer_exist = true;
                 }
-                it_hst++;
+                ++it_hst;
             }
             in_nagios_initial_states = true;
             break;
@@ -613,7 +632,7 @@ void TableStateHistory::answerQuery(Query *query)
             hst->_until = hst->_time;
 
             process(query, hst);
-            it_hst++;
+            ++it_hst;
         }
     }
 
@@ -621,20 +640,18 @@ void TableStateHistory::answerQuery(Query *query)
     it_hst = state_info.begin();
     while (it_hst != state_info.end()) {
         delete it_hst->second;
-        it_hst++;
+        ++it_hst;
     }
     state_info.clear();
     object_blacklist.clear();
-
-    g_store->logCache()->unlockLogCache();
 }
 
-bool TableStateHistory::objectFilteredOut(Query *query, void *entry)
+bool TableStateHistory::objectFilteredOut(Query *, void *)
 {
     return false;
 }
 
-inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){
+int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){
     int state_changed = 1;
 
     // Revive host / service if it was unmonitored
@@ -686,6 +703,14 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
 
     switch (entry->_type)
     {
+    case NONE:
+    case CORE_STARTING:
+    case CORE_STOPPING:
+    case LOG_VERSION:
+    case LOG_INITIAL_STATES:
+    case ACKNOWLEDGE_ALERT_HOST:
+    case ACKNOWLEDGE_ALERT_SERVICE:
+        break;
     case STATE_HOST:
     case STATE_HOST_INITIAL:
     case ALERT_HOST:
@@ -700,7 +725,7 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
             } else
                 state_changed = 0;
         }
-        else if (hs_state->_host_down != entry->_state > 0)
+        else if (hs_state->_host_down != (entry->_state > 0))
         {
             if (!only_update)
                 process(query, hs_state);
@@ -811,7 +836,7 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
 }
 
 
-inline void TableStateHistory::process(Query *query, HostServiceState *hs_state)
+void TableStateHistory::process(Query *query, HostServiceState *hs_state)
 {
     hs_state->_duration = hs_state->_until - hs_state->_from;
     hs_state->_duration_part = (double)hs_state->_duration / (double)_query_timeframe;
@@ -851,7 +876,7 @@ inline void TableStateHistory::process(Query *query, HostServiceState *hs_state)
 
 bool TableStateHistory::isAuthorized(contact *ctc, void *data)
 {
-    HostServiceState *entry = (HostServiceState *)data;
+    HostServiceState *entry = static_cast<HostServiceState *>(data);
     service *svc = entry->_service;
     host *hst = entry->_host;
 
@@ -875,4 +900,3 @@ Column *TableStateHistory::column(const char *colname)
     string with_current = string("current_") + colname;
     return Table::column(with_current.c_str());
 }
-

@@ -47,13 +47,12 @@
 
 import time, os, pwd, urllib, random, re, __builtin__
 
-from lib import *
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
 try:
-    set()
-except NameError:
-    from sets import Set as set
+    import simplejson as json
+except ImportError:
+    import json
+
+from lib import *
 
 # Only parse variable adhering to the following regular expressions
 varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
@@ -63,6 +62,7 @@ class InvalidUserInput(Exception):
     def __init__(self, varname, text):
         self.varname = varname
         self.text = text
+
 
 # This is a simple class which wraps a string provided by the caller
 # to make html.attrencode() know that this string should not be
@@ -108,8 +108,7 @@ class html:
         self.enable_debug = False
         self.screenshotmode = False
         self.help_visible = False
-        self.treestates = {}
-        self.treestates_for_id = None
+        self.treestates = None
         self.caches = {}
         self.new_transids = []
         self.ignore_transids = False
@@ -252,7 +251,12 @@ class html:
         else:
             return self.has_var("filled_in")
 
-    def add_user_error(self, varname, message):
+    def add_user_error(self, varname, msg_or_exc):
+        if isinstance(msg_or_exc, Exception):
+            message = "%s" % msg_or_exc
+        else:
+            message = msg_or_exc
+
         if type(varname) == list:
             for v in varname:
                 self.add_user_error(v, message)
@@ -382,20 +386,24 @@ class html:
         else:
             return "images/icons/%s.png" % icon_name
 
-    def icon(self, help, icon):
-       self.write(self.render_icon(icon, help))
+    def icon(self, help, icon, **kwargs):
+       self.write(self.render_icon(icon, help, **kwargs))
 
-    def render_icon(self, icon_name, help="", middle=True, id=None):
+    def render_icon(self, icon_name, help="", middle=True, id=None, cssclass=None):
         align = middle and ' align=absmiddle' or ''
         title = help and ' title="%s"' % self.attrencode(help) or ""
         id = id and ' id="%s"' % id or ''
+        cssclass = cssclass and (" " + cssclass) or ""
 
-        return '<img src="%s" class=icon%s%s%s />' % (self.detect_icon_path(icon_name), align, title, id)
+        return '<img src="%s" class="icon%s"%s%s%s />' % \
+            (self.detect_icon_path(icon_name), cssclass, align, title, id)
 
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')
 
-    def icon_button(self, url, help, icon, id="", onclick="", style="", target="", cssclass=""):
+
+    def render_icon_button(self, url, help, icon, id="", onclick="",
+                           style="", target="", cssclass="", ty="button"):
         if id:
             id = "id='%s' " % id
 
@@ -412,19 +420,19 @@ class html:
         if cssclass:
             cssclass = 'class="%s" ' % cssclass
 
-        self.write('<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">'
-                   '<img align=absmiddle class=iconbutton title="%s" '
-                   'src="images/button_%s_lo.png" '
-                   'onmouseover=\"hilite_icon(this, 1)\" '
-                   'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon))
+        if ty == "icon":
+            icon = self.detect_icon_path(icon)
+        else:
+            icon = "images/button_" + icon + ".png"
 
-    def render_icon_button(self, *args, **kwargs):
-        self.plug()
-        self.icon_button(*args, **kwargs)
-        code = self.drain()
-        self.unplug()
-        return code
+        return '<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">' \
+                   '<img align=absmiddle class=iconbutton title="%s" ' \
+                   'src="%s"></a>' % (id, onclick, style, target, cssclass,
+                             url, self.attrencode(help), icon)
+
+
+    def icon_button(self, *args, **kwargs):
+        self.write(self.render_icon_button(*args, **kwargs))
 
 
     def empty_icon_button(self):
@@ -471,7 +479,9 @@ class html:
             self.begin_context_buttons()
 
         if icon:
-            title = '<img src="%s">%s' % (self.attrencode(self.detect_icon_path(icon)), self.attrencode(title))
+            title = '<img src="%s">%s' % \
+                        (self.attrencode(self.detect_icon_path(icon)),
+                         self.attrencode(title))
 
         if id:
             idtext = " id='%s'" % self.attrencode(id)
@@ -578,23 +588,9 @@ class html:
         self.form_vars.append(varname)
 
     def sorted_select(self, varname, choices, deflt="", onchange=None, attrs = {}):
-        def sort_function(a, b):
-            aStr = bStr = ''
-
-            if isinstance(a[1], HTML):
-                aStr = a[1].value
-            else:
-                aStr = a[1]
-            if isinstance(b[1], HTML):
-                bStr = b[1].value
-            else:
-                bStr = b[1]
-
-            return cmp(aStr.lower(), bStr.lower())
-
         # Sort according to display texts, not keys
         sorted = choices[:]
-        sorted.sort(sort_function)
+        sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
         self.select(varname, sorted, deflt, onchange, attrs)
 
     # Choices is a list pairs of (key, title). They keys of the choices
@@ -605,14 +601,15 @@ class html:
         attrs.setdefault('size', 1)
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
 
-        self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" % (onchange_code, varname, varname, attributes))
+        self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" %
+                             (onchange_code, varname, varname, attributes))
         for value, text in choices:
             if value == None:
                 value = ""
-            sel = value == current and " SELECTED" or ""
-            self.write('<option value="%s"%s>%s</option>\n' %
+            sel = value == current and " selected" or ""
+            self.write("<option value=\"%s\"%s>%s</option>\n" %
                 (self.attrencode(value), sel, self.attrencode(text)))
-        self.write('</select>\n')
+        self.write("</select>\n")
         if varname:
             self.form_vars.append(varname)
 
@@ -826,23 +823,10 @@ class html:
 
             self.add_custom_style_sheet()
 
-            # Load specified javascript files. We have some special handling here:
-            # a) files which can not be found shal not be loaded
-            # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
-            # c) load the minified javascript when not in debug mode
             for js in [ "checkmk", "graphs" ] + javascripts:
-                if defaults.omd_root:
-                    base_dir = defaults.omd_root + "/share/check_mk/web/htdocs/js"
-                    if not self.enable_debug and os.path.exists(base_dir + "/" + js + "_min.js"):
-                        fname = '%s_min-%s' % (js, defaults.check_mk_version)
-                    elif os.path.exists(base_dir + "/" + js + ".js"):
-                        fname = '%s-%s' % (js, defaults.check_mk_version)
-                    else:
-                        continue
-                else:
-                    fname = '%s' % js
-
-                self.javascript_file(fname)
+                filename_for_browser = self.javascript_filename_for_browser(js)
+                if filename_for_browser:
+                    self.javascript_file(filename_for_browser)
 
             if self.browser_reload != 0:
                 if self.browser_redirect != '':
@@ -852,6 +836,31 @@ class html:
 
             self.write("</head>\n")
             self.header_sent = True
+
+
+    # Make the browser load specified javascript files. We have some special handling here:
+    # a) files which can not be found shal not be loaded
+    # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
+    # c) load the minified javascript when not in debug mode
+    def javascript_filename_for_browser(self, jsname):
+        if not defaults.omd_root:
+            return jsname
+
+        filename_for_browser = None
+        rel_path = "/share/check_mk/web/htdocs/js"
+        if self.enable_debug:
+            min_parts = [ "", "_min" ]
+        else:
+            min_parts = [ "_min", "" ]
+
+        for min_part in min_parts:
+            path_pattern = defaults.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
+            if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
+                filename_for_browser = '%s%s-%s' % (jsname, min_part, defaults.check_mk_version)
+                break
+
+        return filename_for_browser
+
 
     def html_foot(self):
         self.write("</html>\n")
@@ -901,8 +910,9 @@ class html:
 
     def top_heading_right(self):
         cssclass = self.help_visible and "active" or "passive"
-        self.write('<a id=helpbutton class=%s href="#" onclick="help_toggle();" style="display: none"></a>' %
-            cssclass)
+        self.icon_button(None, _("Toggle context help texts"), "help", id="helpbutton",
+                         onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
+
         self.write("%s</td></tr></table>" %
                    _("<a href=\"http://mathias-kettner.de\"><img src=\"images/logo_mk_small.png\"/></a>"))
         self.write("<hr class=header>\n")
@@ -946,7 +956,7 @@ class html:
 
     def body_end(self):
         if self.have_help:
-            self.javascript("help_enable();")
+            self.javascript("enable_help();")
         if self.keybindings_enabled and self.keybindings:
             self.javascript("var keybindings = %r;\n"
                             "document.body.onkeydown = keybindings_keydown;\n"
@@ -970,30 +980,33 @@ class html:
         else:
             self.status_icons[img] = tooltip
 
-    def render_popup_trigger(self, content, ident, what, data=None, params=None):
+    def render_popup_trigger(self, content, ident, what, data=None, url_vars=None):
         src = '<div class="popup_trigger">\n'
         onclick = 'toggle_popup(event, this, \'%s\', \'%s\', %s, %s)' % \
-                    (ident, what, data or 'null', params and "'"+params+"'" or 'null')
+                    (ident, what,
+                     data and self.attrencode(json.dumps(data)) or 'null',
+                     url_vars and "'"+self.urlencode_vars(url_vars)+"'" or 'null')
         src += '<a class="popup_trigger" href="javascript:void(0)" onclick="%s">\n' % onclick
         src += content
         src += '</a>\n'
         src += '</div>\n'
         return src
 
-    def popup_trigger(self, content, ident, what, data=None, params=None):
-        self.write(self.render_popup_trigger(content, ident, what, data, params))
+    def popup_trigger(self, content, ident, what, data=None, url_vars=None):
+        self.write(self.render_popup_trigger(content, ident, what, data, url_vars))
 
     def write_status_icons(self):
-        self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
-             (self.makeuri([]), _("URL to this frame")))
-        self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
-             ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar")))
+        self.icon_button(self.makeuri([]), _("URL to this frame"),
+                         "frameurl", target="_top", cssclass="statusicon")
+        self.icon_button("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
+                         _("URL to this page including sidebar"),
+                         "pageurl", target="_top", cssclass="statusicon")
 
         # TODO: Move this away from here. Make a context button. The view should handle this
         if self.myfile == "view" and self.var('mode') != 'availability':
-            self.write('<a target="_top" href="%s">' \
-                 '<img class=statusicon src="images/status_download_csv.png" title="%s"></a>\n' % \
-                 (self.makeuri([("output_format", "csv_export")]), _("Export as CSV")))
+            self.icon_button(self.makeuri([("output_format", "csv_export")]),
+                             _("Export as CSV"),
+                             "download_csv", target="_top", cssclass="statusicon")
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
@@ -1007,18 +1020,15 @@ class html:
                 encoded_vars[k] = v
 
             self.popup_trigger(
-                '<img class=statusicon src="images/icon_menu.png" title="%s">\n' % _("Add this view to..."),
-                'add_visual', 'add_visual', data='[\'%s\', %s, {\'name\': \'%s\'}]' %
-                                                    (mode_name, self.attrencode(repr(encoded_vars)),
-                                                     self.attrencode(self.var('view_name'))))
+                self.render_icon("menu", _("Add this view to..."), cssclass="statusicon iconbutton"),
+                'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}])
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:
                 tooltip, url = tooltip
-                self.write('<a target="_top" href="%s"><img class=statusicon src="images/status_%s.png" title="%s"></a>\n' % \
-                     (url, img, tooltip))
+                self.icon_button(url, tooltip, img)
             else:
-                self.write('<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip))
+                self.icon(tooltip, img, cssclass="statusicon")
 
         if self.times:
             self.measure_time('body')
@@ -1093,6 +1103,8 @@ class html:
         self.write('<table %s class=debug_vars>' % hover)
         self.write("<tr><th colspan=2>"+_("POST / GET Variables")+"</th></tr>")
         for name, value in sorted(vars.items()):
+            if name in [ "_password", "password" ]:
+                value = "***"
             if not prefix or name.startswith(prefix):
                 self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
                     (self.attrencode(name), self.attrencode(value)))
@@ -1349,7 +1361,7 @@ class html:
     # for messages where we still want to have formating options.
     def permissive_attrencode(self, obj):
         msg = self.attrencode(obj)
-        msg = re.sub(r'&lt;(/?)(b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
+        msg = re.sub(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
         # Also repair link definitions
         return re.sub(r'&lt;a href=&quot;(.*)&quot;&gt;', r'<a href="\1">', msg)
 
@@ -1455,7 +1467,9 @@ class html:
             ht = ht[0:x] + ht[y+9:]
         return ht
 
-    def begin_foldable_container(self, treename, id, isopen, title, indent=True, first=False, icon=None, fetch_url=None):
+    def begin_foldable_container(self, treename, id, isopen, title, indent=True,
+                                 first=False, icon=None, fetch_url=None, title_url=None,
+                                 tree_img="tree"):
         self.folding_indent = indent
 
         if self.user:
@@ -1472,23 +1486,27 @@ class html:
             if icon:
                 self.write('<img class="treeangle title" src="images/icon_%s.png">' % icon)
             else:
-                self.write('<img align=absbottom class="treeangle nform" src="images/tree_%s.png">' % (
-                        isopen and "90" or "00"))
+                self.write('<img align=absbottom class="treeangle nform" src="images/%s_%s.png">' %
+                                                (tree_img, isopen and "90" or "00"))
             self.write('%s</td></tr>' % title)
         else:
             if not icon:
                 self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
-                           'src="images/tree_%s.png" %s>' %
-                        (treename, id, img_num, onclick))
+                           'src="images/%s_%s.png" %s>' %
+                        (treename, id, tree_img, img_num, onclick))
             if title.startswith('<'): # custom HTML code
                 self.write(title)
                 if indent != "form":
                     self.write("<br>")
             else:
-                self.write('<b class="treeangle title" class=treeangle %s>' % onclick)
+                self.write('<b class="treeangle title" class=treeangle %s>' % (not title_url and onclick or ""))
                 if icon:
                     self.write('<img class="treeangle title" src="images/icon_%s.png">' % icon)
-                self.write('%s</b><br>' % title)
+                if title_url:
+                    self.write('<a href="%s">%s</a>' % (title_url, title))
+                else:
+                    self.write(title)
+                self.write('</b><br>')
 
             indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
             if indent == "form":
@@ -1563,15 +1581,6 @@ class html:
 
     def uploaded_file(self, varname, default = None):
         return self.uploads.get(varname, default)
-
-    def magic_move(self, helptext, ajax_url):
-        self.write('<img align=absmiddle class=iconbutton '
-                    'src="images/button_magic_move_lo.png" '
-                    'title="%s" '
-                    'onmouseover="hilite_icon(this, 1)" '
-                    'onmouseout="hilite_icon(this, 0)" '
-                    'onclick="start_magic_move(\'%s\')" >' % (
-                        (helptext, ajax_url)))
 
     #
     # Per request caching

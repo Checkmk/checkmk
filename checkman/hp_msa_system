@@ -1,0 +1,12 @@
+title: HP MSA 2040: System Health Status
+agents: linux
+catalog: hw/storagehw/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the system name and health status of a HP MSA 2040 storage system.
+ If the health status is "OK" then the service will be OK.
+ Otherwise the service state change to WARN or CRIT and reports a health reason.
+
+inventory:
+ One service is created.

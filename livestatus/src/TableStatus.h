@@ -25,10 +25,10 @@
 #ifndef TableStatus_h
 #define TableStatus_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include "Table.h"
 class Query;
+
 
 class TableStatus : public Table
 {
@@ -38,6 +38,4 @@ public:
     void answerQuery(Query *query);
 };
 
-
 #endif // TableStatus_h
-

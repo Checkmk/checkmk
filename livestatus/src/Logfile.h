@@ -25,21 +25,23 @@
 #ifndef Logfile_h
 #define Logfile_h
 
-#include <sys/types.h>
-#include <stdio.h>
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
+#include <stdio.h>
+#include <time.h>
 #include <map>
+class LogCache;
+class Query;
+struct LogEntry;
 
-using namespace std;
+#ifdef CMC
+struct World;
+#endif
+
 
 #define MAX_LOGLINE 65536
 
-class LogEntry;
-class Query;
-class LogCache;
-class World;
-
-typedef map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
+typedef std::map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
 
 class Logfile
 {
@@ -47,14 +49,14 @@ private:
     char      *_path;
     time_t     _since;         // time of first entry
     bool       _watch;         // true only for current logfile
-    ino_t      _inode;         // needed to detect switching
     fpos_t     _read_pos;      // read until this position
     uint32_t   _lineno;        // read until this line
 
     logfile_entries_t  _entries;
     char       _linebuffer[MAX_LOGLINE];
+#ifdef CMC
     World     *_world;         // CMC: world our references point into
-
+#endif
 
 public:
     Logfile(const char *path, bool watch);
@@ -84,6 +86,4 @@ private:
     uint64_t makeKey(time_t, unsigned);
 };
 
-
 #endif // Logfile_h
-

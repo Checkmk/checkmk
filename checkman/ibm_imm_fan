@@ -8,8 +8,8 @@ description:
  Integrated Management Module (IMM). It uses snmp and the IBM IMM MIB to
  gather the fan data.
 
- The check uses hardcoded lower warning and critical levels of (28%,25%)
- to calculate the state of the service.
+ The lower default levels are set to 28%/25%.
+ Upper and lower levels are configurable.
 
 inventory:
  The service discovery will find one service per fan

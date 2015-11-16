@@ -29,7 +29,7 @@ def render_searchform():
     html.write('<input id="mk_side_search_field" type="text" name="search" autocomplete="off" />\n')
     html.icon_button("#", _("Search"), "quicksearch", onclick="mkSearchButton();")
     html.write('</div>\n<div id=mk_side_clear></div>\n')
-    html.write("<script type='text/javascript' src='js/search.js'></script>\n")
+    html.javascript_file(html.javascript_filename_for_browser("search"))
 
 sidebar_snapins["search"] = {
     "title":       _("Quicksearch"),
@@ -56,6 +56,19 @@ sidebar_snapins["search"] = {
     float: left;
     position: relative;
     z-index:100;
+}
+
+#mk_side_search img.iconbutton {
+    opacity: 1;
+    filter: alpha(opacity=100); /* For IE8 and earlier */
+}
+
+#mk_side_search img.iconbutton:hover {
+    filter: grayscale(20%);
+    -webkit-filter: grayscale(20%);
+    -moz-filter: grayscale(20%);
+    -ms-filter: grayscale(20%);
+    -o-filter: grayscale(20%);
 }
 
 #mk_side_search input {
@@ -92,6 +105,10 @@ sidebar_snapins["search"] = {
 
 #mk_search_results a:hover, #mk_search_results a.active {
     background-color: #BFBFBF;
+}
+
+#mk_search_results div.error {
+    padding: 2px;
 }
 
 """

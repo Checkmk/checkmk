@@ -1,9 +1,9 @@
 Title: mk_inventory.ps1 workaround für BOM führt bei manchen Kunden zu Problemen
 Component: inv
-State: open
+Class: bug
+State: done
 Date: 2015-03-17 11:25:20
 Targetversion: 1.2.6
-Class: bug
 
 die zweite Zeile in mk_inventory.ps1
 verursacht bei uns das Problem:
@@ -38,3 +38,9 @@ verursacht bei uns das Problem:
 
   > parameters or error in implementation of check logwatch.ec. Please
   > enable "Log exceptions in check plugins" for further information.
+
+MK 2015-08-19: Think we can drop the work-around now because the agent
+removes the BOM itself. Needs to be done and tested, though.
+
+2015-10-27 09:36:51: changed state open -> done
+It was fixed with werk #2315. Now all should work as expected.

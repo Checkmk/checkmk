@@ -1,0 +1,11 @@
+Title: Fix influance of service period to the availability of BI aggregates
+Level: 2
+Component: bi
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441185337
+
+When computing the availability the influence of the service period of BI
+aggregates was simply ignored. This has been fixed.

@@ -1,4 +1,4 @@
-Title: Allow cancelling actions to be omitted of the cancelled event is not (yet) open
+Title: Allow cancelling actions to be omitted if the cancelled event is not (yet) open
 Level: 1
 Component: ec
 Compatible: compat

@@ -30,11 +30,11 @@ def check_fan(rpm, params):
 
     warn, crit = params["lower"]
     warn_upper, crit_upper = params.get("upper", (None, None))
-    message = "Speed at %d rpm" % rpm
-    levelstext = " (warn/crit below %s/%s rpm)" % (warn, crit)
+    message = "Speed at %d RPM" % rpm
+    levelstext = " (warn/crit below %s/%s RPM)" % (warn, crit)
     if warn_upper and crit_upper:
         levelstext = levelstext[:-1] + \
-            " and at or above %s/%s rpm)" % (warn_upper, crit_upper)
+            " and at or above %s/%s RPM)" % (warn_upper, crit_upper)
 
     # Note that None < int
     if rpm < crit or crit_upper != None and rpm >= crit_upper:

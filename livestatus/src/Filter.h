@@ -25,19 +25,16 @@
 #ifndef Filter_h
 #define Filter_h
 
-#include "config.h"
-
-#include <vector>
-#include <string>
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
-
-using namespace std;
-class Query;
+#include <string>
 class Column;
+class Query;
+
 
 class Filter
 {
-    string _error_message; // Error in constructor
+    std::string _error_message; // Error in constructor
     unsigned _error_code;
     Column *_column;
 
@@ -46,21 +43,20 @@ protected:
     void setError(unsigned code, const char *format, ...);
 
 public:
-    Filter() : _query(0), _column(0) {}
+    Filter() : _error_code(0), _column(0), _query(0) {}
     virtual ~Filter() {}
     virtual bool isAndingFilter() { return false; }
     virtual bool isNegatingFilter() { return false; }
-    string errorMessage() { return _error_message; }
+    std::string errorMessage() { return _error_message; }
     unsigned errorCode() { return _error_code; }
     bool hasError() { return _error_message != ""; }
     void setQuery(Query *q) { _query = q; }
     void setColumn(Column *c) { _column = c; }
     Column *column() { return _column; }
     virtual bool accepts(void *data) = 0;
-    virtual void *indexFilter(const char *columnname __attribute__ ((__unused__))) { return 0; }
-    virtual void findIntLimits(const char *columnname __attribute__ ((__unused__)), int *lower __attribute__ ((__unused__)), int *upper __attribute__ ((__unused__))) {}
-    virtual bool optimizeBitmask(const char *columnname __attribute__ ((__unused__)), uint32_t *mask __attribute__ ((__unused__))) { return false; }
+    virtual void *indexFilter(const char *) { return 0; }
+    virtual void findIntLimits(const char *, int *, int *) {}
+    virtual bool optimizeBitmask(const char *, uint32_t *) { return false; }
 };
 
 #endif // Filter_h
-

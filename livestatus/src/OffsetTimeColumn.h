@@ -25,10 +25,12 @@
 #ifndef OffsetTimeColumn_h
 #define OffsetTimeColumn_h
 
-#include "config.h"
-
-#include <stdlib.h>
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "OffsetIntColumn.h"
+class Filter;
+class Query;
 
 
 /* We are using IntColumn in order to implement a column
@@ -38,13 +40,11 @@
 class OffsetTimeColumn : public OffsetIntColumn
 {
 public:
-    OffsetTimeColumn(string name, string description, int offset, int indirect_offset = -1)
+    OffsetTimeColumn(std::string name, std::string description, int offset, int indirect_offset = -1)
         : OffsetIntColumn(name, description, offset, indirect_offset) {}
     int type() { return COLTYPE_TIME; }
     void output(void *data, Query *query);
     Filter *createFilter(int operator_id, char *value);
 };
 
-
 #endif // OffsetTimeColumn_h
-

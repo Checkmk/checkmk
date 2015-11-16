@@ -53,7 +53,7 @@ def check_netscaler_cpu(item, params, info):
             elif cpu_usage >= warn:
                 state = 1
             if state > 0:
-                infotext += " (levels at %d/%d)" % (warn,crit)
+                infotext += " (warn/crit at %d/%d)" % (warn, crit)
 
             return state, infotext, perfdata
 

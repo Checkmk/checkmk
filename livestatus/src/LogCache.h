@@ -25,24 +25,27 @@
 #ifndef LogCache_h
 #define LogCache_h
 
-#include <map>
+#include "config.h"  // IWYU pragma: keep
 #include <time.h>
-#include "config.h"
-#include "Table.h"
-
+#include <map>
+#include "Mutex.h"
+#include "nagios.h"  // IWYU pragma: keep
+class Column;
 class Logfile;
 
-typedef map<time_t, Logfile *> _logfiles_t;
+
+typedef std::map<time_t, Logfile *> _logfiles_t;
 
 class LogCache
 {
-    pthread_mutex_t _lock;
     unsigned long   _max_cached_messages;
     unsigned long   _num_at_last_check;
     _logfiles_t     _logfiles;
 
 public:
-    LogCache(unsigned long max_cached_messages);
+    mk::mutex       _lock;
+
+    explicit LogCache(unsigned long max_cached_messages);
     ~LogCache();
     void setMaxCachedMessages(unsigned long m);
     time_t _last_index_update;
@@ -57,8 +60,6 @@ public:
     void updateLogfileIndex();
 
     bool logCachePreChecks();
-    void lockLogCache();
-    void unlockLogCache();
 
 private:
     void scanLogfile(char *path, bool watch);

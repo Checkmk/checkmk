@@ -25,16 +25,17 @@
 #ifndef ContactgroupsColumn_h
 #define ContactgroupsColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "ListColumn.h"
-#include "nagios.h"
+class Query;
+
 
 class ContactgroupsColumn : public ListColumn
 {
     int _offset;
 public:
-    ContactgroupsColumn(string name, string description, int offset, int indirect_offset)
+    ContactgroupsColumn(std::string name, std::string description, int offset, int indirect_offset)
         : ListColumn(name, description, indirect_offset), _offset(offset) {}
     void output(void *, Query *);
     void *getNagiosObject(char *name); // return pointer to contact group
@@ -42,7 +43,4 @@ public:
     bool isEmpty(void *data);
 };
 
-
-
 #endif // ContactgroupsColumn_h
-

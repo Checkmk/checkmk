@@ -22,13 +22,11 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <string.h>
-#include <time.h>
-#include <stdlib.h>
-
 #include "LogEntry.h"
+#include <stdlib.h>
+#include <string.h>
 #include "strutil.h"
-#include "logger.h"
+
 
 LogEntry::LogEntry(unsigned lineno, char *line)
 {
@@ -92,7 +90,7 @@ LogEntry::~LogEntry()
 
 
 
-inline bool LogEntry::handleStatusEntry()
+bool LogEntry::handleStatusEntry()
 {
 //// TODO: check if its worth of implementing
 //// Most lines are status entries anyway...
@@ -276,7 +274,7 @@ inline bool LogEntry::handleStatusEntry()
 // HOST NOTIFICATION: omdadmin;localhost;check-mk-notify;DOWNTIMESTOPPED (UP);mk
 // HOST NOTIFICATION: omdadmin;localhost;CUSTOM (UP);check-mk-notify;OK - 127.0.0.1: rta 0.055ms, lost 0%;omdadmin;TEST
 // HOST NOTIFICATION: omdadmin;localhost;DOWN;check-mk-notify;Manually set to Down by omdadmin
-inline bool LogEntry::handleNotificationEntry()
+bool LogEntry::handleNotificationEntry()
 {
     if (!strncmp(_text, "HOST NOTIFICATION: ", 19)
         || !strncmp(_text, "SERVICE NOTIFICATION: ", 22))
@@ -321,7 +319,7 @@ inline bool LogEntry::handleNotificationEntry()
     return false;
 }
 
-inline bool LogEntry::handlePassiveCheckEntry()
+bool LogEntry::handlePassiveCheckEntry()
 {
     if (!strncmp(_text, "PASSIVE SERVICE CHECK: ", 23)
         || !strncmp(_text, "PASSIVE HOST CHECK: ", 20))
@@ -343,7 +341,7 @@ inline bool LogEntry::handlePassiveCheckEntry()
     return false;
 }
 
-inline bool LogEntry::handleExternalCommandEntry()
+bool LogEntry::handleExternalCommandEntry()
 {
     if (!strncmp(_text, "EXTERNAL COMMAND:", 17))
     {
@@ -359,7 +357,7 @@ inline bool LogEntry::handleExternalCommandEntry()
     return false;
 }
 
-inline bool LogEntry::handleTextEntry()
+bool LogEntry::handleTextEntry()
 {
     if (!strncmp(_text, "LOG VERSION: 2.0", 16))
     {
@@ -377,7 +375,7 @@ inline bool LogEntry::handleTextEntry()
     return false;
 }
 
-inline bool LogEntry::handleProgrammEntry()
+bool LogEntry::handleProgrammEntry()
 {
     if (strstr(_text, "starting...") ||
         strstr(_text, "active mode..."))
@@ -403,8 +401,11 @@ inline bool LogEntry::handleProgrammEntry()
 }
 
 
-inline int LogEntry::serviceStateToInt(char *s)
+int LogEntry::serviceStateToInt(char *s)
 {
+    if (!s)
+        return 3; // can happen at garbled log line
+
     char *last = s + strlen(s) - 1;
     if (*last == ')')
         last--;
@@ -421,8 +422,11 @@ inline int LogEntry::serviceStateToInt(char *s)
 }
 
 
-inline int LogEntry::hostStateToInt(char *s)
+int LogEntry::hostStateToInt(char *s)
 {
+    if (!s)
+        return 2; // can happen at garbled log line
+
     char *last = s + strlen(s) - 1;
     if (*last == ')') // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN)
         last--;

@@ -1,0 +1,19 @@
+title: HP MSA 2040: Disk Health
+agents: hp_msa
+catalog: hw/storagehw/hp
+license: GPL
+distribution: check_mk
+description:
+ This check reports the health states of the disks
+ of a HP MSA 2040 storage system. To make it work you have to configure
+ the hp_msa datasource program the via WATO.
+
+ If the state of a disk is "OK" then the service state is OK.
+ Otherwise the service shows the health status and reason of the disk
+ and changes to WARN or CRIT.
+
+item:
+ The disk name.
+
+inventory:
+ One service per disk is created.

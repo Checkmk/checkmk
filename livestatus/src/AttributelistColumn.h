@@ -25,10 +25,14 @@
 #ifndef AttributelistColumn_h
 #define AttributelistColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
+#include "Column.h"
 #include "IntColumn.h"
-#include "nagios.h"
+class Filter;
+class Query;
+
 
 /* Since this column can be of type COLTYPE_INT, it must
    be a subclass of IntColumn, since StatsColumn assumes
@@ -40,12 +44,12 @@ class AttributelistColumn : public IntColumn
     int _offset;
     bool _show_list;
 public:
-    AttributelistColumn(string name, string description, int offset, int indirect_offset, bool show_list)
+    AttributelistColumn(std::string name, std::string description, int offset, int indirect_offset, bool show_list)
         : IntColumn(name, description, indirect_offset), _offset(offset), _show_list(show_list) {}
 
     /* API of Column */
     int type() { return _show_list ? COLTYPE_LIST : COLTYPE_INT; }
-    virtual string valueAsString(void *data, Query *);
+    virtual std::string valueAsString(void *data, Query *);
     void output(void *, Query *);
     Filter *createFilter(int opid, char *value);
 
@@ -55,7 +59,4 @@ public:
     unsigned long getValue(void *data);
 };
 
-
-
 #endif // AttributelistColumn_h
-

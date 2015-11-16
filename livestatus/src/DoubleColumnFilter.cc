@@ -22,11 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <stdlib.h>
 #include "DoubleColumnFilter.h"
+#include <stdlib.h>
 #include "DoubleColumn.h"
 #include "logger.h"
 #include "opids.h"
+
 
 DoubleColumnFilter::DoubleColumnFilter(DoubleColumn *column, int opid, char *value)
     : _column(column)
@@ -53,4 +54,3 @@ bool DoubleColumnFilter::accepts(void *data)
     }
     return pass != _negate;
 }
-

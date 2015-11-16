@@ -1,0 +1,10 @@
+Title: windows agent can now optionally output the full command line in the ps section
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444143220
+Class: feature
+
+This feature requires wmi which is also a configuration switch. As a side-effect, the windows agent
+now includes a native c++ wmi wrapper which may be useful in the future.

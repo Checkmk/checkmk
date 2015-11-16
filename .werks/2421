@@ -1,0 +1,11 @@
+Title: winperf_phydisk: now able to monitor the average read/write duration for each disk
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440580405
+Class: feature
+
+Note: This updated winperf_phydisk check requires an update of the windows agent too.
+Otherwise, you won't see any additional information.
+

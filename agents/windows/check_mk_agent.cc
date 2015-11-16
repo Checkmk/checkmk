@@ -45,13 +45,16 @@
 // the ps section. Only available in winxp upwards
 #define _WIN32_WINNT 0x0501
 
+
 #include <stdio.h>
 #include <stdint.h>
 #include <winsock2.h>
+#include <ws2ipdef.h>
 #include <windows.h>
 #include <winbase.h>
 #include <winreg.h>    // performance counters from registry
 #include <tlhelp32.h>  // list of processes
+#include <shellapi.h>
 #include <stdarg.h>
 #include <time.h>
 #include <locale.h>
@@ -59,12 +62,22 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/types.h>
+#include <stdarg.h>
 #include <ctype.h>     // isspace()
 #include <sys/stat.h>  // stat()
 #include <sys/time.h>  // gettimeofday()
 #include <map>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include "stringutil.h"
+#include "Environment.h"
+#include "Configuration.h"
+#include "ListenSocket.h"
+#include "types.h"
+#include "wmiHelper.h"
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 //  .----------------------------------------------------------------------.
 //  |       ____            _                 _   _                        |
@@ -79,25 +92,8 @@
 
 const char *check_mk_version = CHECK_MK_VERSION;
 
-#define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
-
-#define SECTION_CHECK_MK     0x00000001
-#define SECTION_UPTIME       0x00000002
-#define SECTION_DF           0x00000004
-#define SECTION_PS           0x00000008
-#define SECTION_MEM          0x00000010
-#define SECTION_SERVICES     0x00000020
-#define SECTION_WINPERF      0x00000040
-#define SECTION_LOGWATCH     0x00000080
-#define SECTION_SYSTEMTIME   0x00000100
-#define SECTION_PLUGINS      0x00000200
-#define SECTION_LOCAL        0x00000400
-#define SECTION_SPOOL        0x00000800
-#define SECTION_MRPE         0x00001000
-#define SECTION_FILEINFO     0x00002000
-#define SECTION_LOGFILES     0x00004000
 
 // Limits for static global arrays
 #define MAX_EVENTLOGS                 128
@@ -123,125 +119,22 @@ const char *check_mk_version = CHECK_MK_VERSION;
 #endif
 #endif
 
+
+#ifdef _LP64
+#define PRIdword  "d"
+#define PRIudword "u"
+#else
+#define PRIdword  "ld"
+#define PRIudword "lu"
+#endif
+
+
 using namespace std;
 
-// Needed for only_from
-struct ipspec {
-    uint32_t address;
-    uint32_t netmask;
-    int      bits;
-};
-
-// Configuration for section [winperf]
-struct winperf_counter {
-    int   id;
-    char *name;
-};
-
-// Configuration entries from [logwatch] for individual logfiles
-struct eventlog_config_entry {
-    char name[256];
-    int level;
-    int hide_context;
-};
-
-// How single scripts are executed
-enum script_execution_mode {
-    SYNC, // inline
-    ASYNC // delayed
-};
-
-// How delayed scripts are executed
-enum script_async_execution {
-    PARALLEL,
-    SEQUENTIAL
-};
-
-
-// States for plugin and local scripts
-enum script_status {
-    SCRIPT_IDLE,
-    SCRIPT_FINISHED,
-    SCRIPT_COLLECT,
-    SCRIPT_ERROR,
-    SCRIPT_TIMEOUT,
-    SCRIPT_NONE,
-};
-
-enum script_type {
-    PLUGIN,
-    LOCAL,
-    MRPE
-};
-
-// Used by mrpe and local/plugins scripts
-struct runas_include{
-    char        path[256];
-    char        user[256];
-    script_type type;
-};
-
-struct script_container {
-    char                  *path;        // full path with interpreter, cscript, etc.
-    char                  *script_path; // path of script
-    int                    max_age;
-    int                    timeout;
-    int                    max_retries;
-    int                    retry_count;
-    time_t                 buffer_time;
-    char                  *buffer;
-    char                  *buffer_work;
-    char                  *run_as_user;
-    script_type            type;
-    script_execution_mode  execution_mode;
-    script_status          status;
-    script_status          last_problem;
-    volatile bool          should_terminate;
-    HANDLE                 worker_thread;
-    HANDLE                 job_object;
-};
-
-struct retry_config{
-    char         *pattern;
-    int           retries;
-};
-typedef vector<retry_config*> retry_count_configs_t;
-retry_count_configs_t retry_configs_local, retry_configs_plugin;
-
-struct timeout_config {
-    char         *pattern;
-    int           timeout;
-};
-typedef vector<timeout_config*> timeout_configs_t;
-timeout_configs_t timeout_configs_local, timeout_configs_plugin;
-
-struct cache_config {
-    char         *pattern;
-    int           max_age;
-};
-typedef vector<cache_config*> cache_configs_t;
-cache_configs_t cache_configs_local, cache_configs_plugin;
-
-struct execution_mode_config {
-    char                  *pattern;
-    script_execution_mode  mode;
-};
-typedef vector<execution_mode_config*> execution_mode_configs_t;
-execution_mode_configs_t execution_mode_configs_local, execution_mode_configs_plugin;
 
 typedef map<string, script_container*> script_containers_t;
 script_containers_t script_containers;
 
-typedef vector<runas_include*> script_include_t;
-script_include_t g_script_includes;
-
-// Command definitions for MRPE
-struct mrpe_entry {
-    char run_as_user[256];
-    char command_line[256];
-    char plugin_name[64];
-    char service_description[256];
-};
 
 
 struct process_entry {
@@ -253,19 +146,20 @@ struct process_entry {
 typedef map<unsigned long long, process_entry> process_entry_t;
 
 // Forward declarations of functions
-void listen_tcp_loop();
-void output(SOCKET &out, const char *format, ...);
+void listen_tcp_loop(const Environment &env);
 char *ipv4_to_text(uint32_t ip);
-void output_data(SOCKET &out);
+void output_data(SOCKET &out, const Environment &env);
 double file_time(const FILETIME *filetime);
-void open_crash_log();
+void open_crash_log(const std::string &log_directory);
 void close_crash_log();
-void crash_log(const char *format, ...);
 void lowercase(char* value);
-char* next_word(char** line);
-int get_perf_counter_id(const char* counter_name);
 void collect_script_data(script_execution_mode mode);
-void find_scripts();
+void find_scripts(const Environment &env);
+void RunImmediate(const char *mode, int argc, char **argv);
+
+void output(SOCKET &out, const char *format, ...) __attribute__ ((format (gnu_printf, 2, 3)));
+void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
+void verbose(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -278,19 +172,13 @@ void find_scripts();
 //  | Global variables                                                     |
 //  '----------------------------------------------------------------------'
 
-script_execution_mode  g_default_script_execution_mode  = SYNC;
-script_async_execution g_default_script_async_execution = SEQUENTIAL;
 
 bool verbose_mode               = false;
-bool g_crash_debug              = false;
 bool do_tcp                     = false;
 bool with_stderr                = false;
 bool force_tcp_output           = false; // if true, send socket data immediately
 bool do_file                    = false;
 static FILE* fileout;
-
-char g_hostname[256];
-int  g_port                     = CHECK_MK_AGENT_PORT;
 
 OSVERSIONINFO osv;
 
@@ -316,11 +204,7 @@ HANDLE        g_workers_job_object;
 // Mutex for crash.log
 HANDLE crashlogMutex = CreateMutex(NULL, FALSE, NULL);
 
-// Sections enabled (configurable in check_mk.ini)
-unsigned long enabled_sections = 0xffffffff;
-
 // Variables for section <<<logwatch>>>
-bool logwatch_send_initial_entries = false;
 bool logwatch_suppress_info        = true;
 
 // dynamic buffer for event log entries. Grows with the
@@ -328,72 +212,25 @@ bool logwatch_suppress_info        = true;
 char *eventlog_buffer    = 0;
 int eventlog_buffer_size = 0;
 
-// Our memory of what event logs we know and up to
-// which record entry we have seen its messages so
-// far. We do not want to make use of C++ features
-// here so sorry for the mess...
-unsigned num_eventlogs = 0;
-DWORD    known_record_numbers[MAX_EVENTLOGS];
-char    *eventlog_names[MAX_EVENTLOGS];
-bool     newly_found[MAX_EVENTLOGS];
+Configuration *g_config;
 
-struct eventlog_hint_t {
-    char  *name;
-    DWORD record_no;
-};
-typedef vector<eventlog_hint_t*> eventlog_hints_t;
-eventlog_hints_t g_eventlog_hints;
-
-// Directories
-char g_agent_directory[256];
-char g_current_directory[256];
-char g_plugins_dir[256];
-char g_local_dir[256];
-
-char g_state_dir[256];
-char g_config_dir[256];
-char g_temp_dir[256];
-char g_log_dir[256];
-char g_spool_dir[256];
-
-char g_config_file[256];
 char g_crash_log[256];
 char g_connection_log[256];
 char g_success_log[256];
-char g_logwatch_statefile[256];
-char g_eventlog_statefile[256];
 
-// Configuration of eventlog monitoring (see config parser)
-int num_eventlog_configs = 0;
-eventlog_config_entry eventlog_config[MAX_EVENTLOGS];
-
-// Configuration of only_from
-typedef vector<ipspec*> only_from_t;
-only_from_t g_only_from;
-
-// Configuration of winperf counters
-typedef vector<winperf_counter*> winperf_counters_t;
-winperf_counters_t g_winperf_counters;
-
-// Configuration of mrpe entries
-typedef vector<mrpe_entry*> mrpe_entries_t;
-typedef vector<runas_include*> mrpe_include_t;
-mrpe_entries_t g_mrpe_entries;
 mrpe_entries_t g_included_mrpe_entries;
-mrpe_include_t g_mrpe_includes;
 
-// Configuration of execution suffixed
-typedef vector<char *> execute_suffixes_t;
-execute_suffixes_t g_execute_suffixes;
-
-// Configuration of file patterns for fileinfo
-typedef vector<char*> fileinfo_paths_t;
-fileinfo_paths_t g_fileinfo_paths;
+eventlog_hints_t g_eventlog_hints;
+eventlog_state_t g_eventlog_state;
 
 // Pointer to open crash log file, if crash_debug = on
 HANDLE g_connectionlog_file;
 struct timeval g_crashlog_start;
 bool   g_found_crash = false;
+
+wmi::Helper *g_wmi_helper = NULL;
+
+
 
 
 //  .----------------------------------------------------------------------.
@@ -421,6 +258,7 @@ void debug(char *text)
 #define debug(C)
 #endif
 
+
 void verbose(const char *format, ...)
 {
     if (!verbose_mode)
@@ -430,46 +268,9 @@ void verbose(const char *format, ...)
     va_start(ap, format);
     printf("DEBUG: ");
     vprintf(format, ap);
+    va_end(ap);
     printf("\n");
     fflush(stdout);
-}
-
-
-char *llu_to_string(unsigned long long value)
-{
-    static char buffer[64];
-
-    if (value == 0) {
-        strcpy(buffer, "0");
-        return buffer;
-    }
-
-    buffer[63] = 0;
-
-    char *write = buffer + 63;
-    while (value > 0) {
-        if (write <= buffer) {
-            strcpy(buffer, "(invalid)");
-            return buffer;
-        }
-        char digit = (value % 10) + '0';
-        *--write = digit;
-        value = value / 10;
-    }
-    return write;
-}
-
-unsigned long long string_to_llu(char *s)
-{
-    unsigned long long value = 0;
-    unsigned long long mult = 1;
-    char *e = s + strlen(s);
-    while (e > s) {
-        --e;
-        value += mult * (*e - '0');
-        mult *= 10;
-    }
-    return value;
 }
 
 
@@ -504,29 +305,6 @@ double file_time(const FILETIME *filetime)
     return double(uli.QuadPart / (double)WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
 }
 
-char *lstrip(char *s)
-{
-    while (isspace(*s))
-        s++;
-    return s;
-}
-
-
-void rstrip(char *s)
-{
-    char *end = s + strlen(s); // point one beyond last character
-    while (end > s && isspace(*(end - 1))) {
-        end--;
-    }
-    *end = 0;
-}
-
-char *strip(char *s)
-{
-    rstrip(s);
-    return lstrip(s);
-}
-
 void char_replace(char what, char into, char *in)
 {
     while (*in) {
@@ -548,6 +326,20 @@ void debug_script_container( script_container* container )
     crash_log("buffer_work: \n<<<<\n%s\n>>>>", container->buffer_work);
 }
 
+
+template <typename FuncT> FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName) {
+    HMODULE mod = LoadLibraryW(dllName);
+    if (mod != NULL) {
+        FARPROC proc = GetProcAddress(mod, funcName);
+        if (proc != NULL) {
+            return (FuncT)proc;
+        }
+    }
+    return NULL;
+}
+
+#define DYNAMIC_FUNC(func, dllName) func ## _type func ## _dyn = dynamic_func<func ## _type>(dllName, #func)
+// GetProcessHandleCount_type GetProcessHandleCount_dyn = dynamic_func<GetProcessHandleCount_type>(L"kernel32.dll", "GetProcessHandleCount");
 
 //  .----------------------------------------------------------------------.
 //  |  ______              _                 _   _               ______    |
@@ -578,12 +370,12 @@ void section_uptime(SOCKET &out)
 {
     crash_log("<<<uptime>>>");
     output(out, "<<<uptime>>>\n");
-    static LARGE_INTEGER Frequency,Ticks;
-    QueryPerformanceFrequency (&Frequency);
-    QueryPerformanceCounter (&Ticks);
+    static LARGE_INTEGER Frequency, Ticks;
+    QueryPerformanceFrequency(&Frequency);
+    QueryPerformanceCounter(&Ticks);
     Ticks.QuadPart = Ticks.QuadPart - Frequency.QuadPart;
     unsigned int uptime = (double)Ticks.QuadPart / Frequency.QuadPart;
-    output(out, "%s\n", llu_to_string(uptime));
+    output(out, "%u\n", uptime);
 }
 
 
@@ -621,9 +413,9 @@ void df_output_filesystem(SOCKET &out, char *volid)
             strncpy(volume, volid, sizeof(volume));
 
         output(out, "%s %s ", volume, fsname);
-        output(out, "%s ", llu_to_string(total.QuadPart / KiloByte));
-        output(out, "%s ", llu_to_string((total.QuadPart - free_avail.QuadPart) / KiloByte));
-        output(out, "%s ", llu_to_string(free_avail.QuadPart / KiloByte));
+        output(out, "%" PRIu64 " ", total.QuadPart / KiloByte);
+        output(out, "%" PRIu64 " ", (total.QuadPart - free_avail.QuadPart) / KiloByte);
+        output(out, "%" PRIu64 " ", free_avail.QuadPart / KiloByte);
         output(out, "%3.0f%% ", perc_used);
         output(out, "%s\n", volid);
     }
@@ -697,13 +489,13 @@ void section_df(SOCKET &out)
 
 // Determine the start type of a service. Unbelievable how much
 // code is needed for that...
-const char *service_start_type(SC_HANDLE scm, LPCTSTR service_name)
+const char *service_start_type(SC_HANDLE scm, LPCWSTR service_name)
 {
     // Query the start type of the service
     const char *start_type = "invalid1";
     SC_HANDLE schService;
     LPQUERY_SERVICE_CONFIG lpsc;
-    schService = OpenService(scm, service_name, SERVICE_QUERY_CONFIG);
+    schService = OpenServiceW(scm, service_name, SERVICE_QUERY_CONFIG);
     if (schService) {
         start_type = "invalid2";
         DWORD dwBytesNeeded, cbBufSize;
@@ -742,16 +534,16 @@ void section_services(SOCKET &out)
         DWORD bytes_needed = 0;
         DWORD num_services = 0;
         // first determine number of bytes needed
-        EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+        EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
                 NULL, 0, &bytes_needed, &num_services, 0, 0);
         if (GetLastError() == ERROR_MORE_DATA && bytes_needed > 0) {
             BYTE *buffer = (BYTE *)malloc(bytes_needed);
             if (buffer) {
-                if (EnumServicesStatusEx(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
+                if (EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
                             buffer, bytes_needed,
                             &bytes_needed, &num_services, 0, 0))
                 {
-                    ENUM_SERVICE_STATUS_PROCESS *service = (ENUM_SERVICE_STATUS_PROCESS *)buffer;
+                    ENUM_SERVICE_STATUS_PROCESSW *service = (ENUM_SERVICE_STATUS_PROCESSW*)buffer;
                     for (unsigned i=0; i<num_services; i++) {
                         DWORD state = service->ServiceStatusProcess.dwCurrentState;
                         const char *state_name = "unknown";
@@ -776,9 +568,9 @@ void section_services(SOCKET &out)
                                 *w = '_';
                         }
 
-                        output(out, "%s %s/%s %s\n",
+                        output(out, "%ls %s/%s %s\n",
                                 service->lpServiceName, state_name, start_type,
-                                service->lpDisplayName);
+                                to_utf8(service->lpDisplayName).c_str());
                         service ++;
                     }
                 }
@@ -830,8 +622,8 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
 void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const char *countername)
 {
     crash_log("<<<winperf_%s>>>", countername);
-    output(out, "<<<winperf_%s>>>\n", countername);
-    output(out, "%.2f %u\n", current_time(), counter_base_number);
+    static LARGE_INTEGER Frequency;
+    QueryPerformanceFrequency (&Frequency);
 
     // registry entry is ascii representation of counter index
     char counter_index_name[8];
@@ -865,12 +657,16 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
             return;
         }
     }
-    crash_log(" - read performance data, buffer size %d", size);
+    crash_log(" - read performance data, buffer size %" PRIudword, size);
 
     PERF_DATA_BLOCK *dataBlockPtr = (PERF_DATA_BLOCK *)data;
 
     // Determine first object in list of objects
     PERF_OBJECT_TYPE *objectPtr = FirstObject(dataBlockPtr);
+
+    // awkward way to ensure we really really only create the section header if there
+    // are performance counters
+    bool first_counter = true;
 
     // Now walk through the list of objects. The bad news is:
     // even if we expect only one object, windows might send
@@ -899,6 +695,12 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
             int num_instances = objectPtr->NumInstances;
             if (num_instances >= 0)
             {
+                if (first_counter) {
+                    output(out, "<<<winperf_%s>>>\n", countername);
+                    output(out, "%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
+                    first_counter = false;
+                }
+
                 output(out, "%d instances:", num_instances);
                 char name[512];
                 PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
@@ -915,6 +717,12 @@ void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const 
                     instancePtr = NextInstance(instancePtr);
                 }
                 output(out, "\n");
+            }
+
+            if (first_counter && (objectPtr->NumCounters > 0)) {
+                output(out, "<<<winperf_%s>>>\n", countername);
+                output(out, "%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
+                first_counter = false;
             }
 
             // Now walk through the counter list a second time and output all counters
@@ -968,7 +776,7 @@ void outputCounter(SOCKET &out, BYTE *datablock, int counter_base_number,
     }
 
     // Output index of counter object and counter, and timestamp
-    output(out, "%d", counterPtr->CounterNameTitleIndex - counter_base_number);
+    output(out, "%d", static_cast<int>(counterPtr->CounterNameTitleIndex) - counter_base_number);
 
     // If this is a multi-instance-counter, loop over the instances
     int num_instances = objectPtr->NumInstances;
@@ -1004,10 +812,10 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
     BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
 
     if (counterPtr->CounterType & PERF_SIZE_DWORD)
-        output(out, " %llu", (ULONGLONG)(*(DWORD*)pData));
+        output(out, " %lu", *(DWORD*)pData);
 
     else if (counterPtr->CounterType & PERF_SIZE_LARGE)
-        output(out, " %llu", *(UNALIGNED ULONGLONG*)pData);
+        output(out, " %" PRIu64, *(UNALIGNED ULONGLONG*)pData);
 
     // handle other data generically. This is wrong in some situation.
     // Once upon a time in future we might implement a conversion as
@@ -1019,7 +827,7 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
     else if (size == 8) {
         DWORD *data_at = (DWORD *)pData;
         DWORDLONG value = (DWORDLONG)*data_at + ((DWORDLONG)*(data_at + 1) << 32);
-        output(out, " %s", llu_to_string(value));
+        output(out, " %" PRIu64, value);
     }
     else
         output(out, " unknown");
@@ -1032,9 +840,10 @@ void section_winperf(SOCKET &out)
     dump_performance_counters(out, 510, "if");
 
     // also output additionally configured counters
-    for (winperf_counters_t::iterator it_wp = g_winperf_counters.begin();
-            it_wp != g_winperf_counters.end(); it_wp++)
+    for (winperf_counters_t::const_iterator it_wp = g_config->winperfCounters().begin();
+            it_wp != g_config->winperfCounters().end(); ++it_wp) {
         dump_performance_counters(out, (*it_wp)->id, (*it_wp)->name);
+    }
 }
 
 
@@ -1180,7 +989,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
     EVENTLOGRECORD *event = (EVENTLOGRECORD *)buffer;
     while (bytesread > 0)
     {
-        crash_log("     - record %d: process_eventlog_entries bytesread %d, event->Length %d", *record_number, bytesread, event->Length);
+        crash_log("     - record %lu: process_eventlog_entries bytesread %lu, event->Length %lu", *record_number, bytesread, event->Length);
         *record_number = event->RecordNumber;
 
         char type_char;
@@ -1263,7 +1072,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
                 memset(dllpath, 0, sizeof(dllpath));
                 if (ERROR_SUCCESS == RegQueryValueEx(key, "EventMessageFile", NULL, NULL, dllpath, &size))
                 {
-                    crash_log("     - record %d: DLLs to load: %s", *record_number, dllpath);
+                    crash_log("     - record %lu: DLLs to load: %s", *record_number, dllpath);
                     // Answer may contain more than one DLL. They are separated
                     // by semicola. Not knowing which one is the correct one, I have to try
                     // all...
@@ -1279,19 +1088,19 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
                 RegCloseKey(key);
             }
             else {
-                crash_log("     - record %d: no DLLs listed in registry", *record_number);
+                crash_log("     - record %lu: no DLLs listed in registry", *record_number);
             }
 
             // No text conversion succeeded. Output without text anyway
             if (!success) {
-                crash_log("     - record %d: translation failed", *record_number);
+                crash_log("     - record %lu: translation failed", *record_number);
                 output_eventlog_entry(out, NULL, event, type_char, logname, source_name, strings);
             }
 
         } // type_char != '.'
 
         bytesread -= event->Length;
-        crash_log("     - record %d: event_processed, bytesread %d, event->Length %d", *record_number, bytesread, event->Length);
+        crash_log("     - record %lu: event_processed, bytesread %lu, event->Length %lu", *record_number, bytesread, event->Length);
         event = (EVENTLOGRECORD *) ((LPBYTE) event + event->Length);
     }
 }
@@ -1325,7 +1134,7 @@ void output_eventlog(SOCKET &out, const char *logname,
         for (int cycle = 0; cycle < 2; cycle++)
         {
             *record_number = old_record_number;
-            verbose("Starting from entry number %u", old_record_number);
+            verbose("Starting from entry number %lu", old_record_number);
             while (true) {
                 DWORD flags;
                 if (*record_number == 0) {
@@ -1342,7 +1151,7 @@ void output_eventlog(SOCKET &out, const char *logname,
                     flags = EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ;
                 }
                 else {
-                    verbose("Previous record number was %d. Doing seek read.", *record_number);
+                    verbose("Previous record number was %lu. Doing seek read.", *record_number);
                     flags = EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ;
                 }
 
@@ -1354,7 +1163,7 @@ void output_eventlog(SOCKET &out, const char *logname,
                             &bytesread,
                             &bytesneeded))
                 {
-                    crash_log("   . got entries starting at %d (%d bytes)", *record_number + 1, bytesread);
+                    crash_log("   . got entries starting at %lu (%lu bytes)", *record_number + 1, bytesread);
 
 
                     process_eventlog_entries(out, logname, eventlog_buffer,
@@ -1364,22 +1173,22 @@ void output_eventlog(SOCKET &out, const char *logname,
                     DWORD error = GetLastError();
                     if (error == ERROR_INSUFFICIENT_BUFFER) {
                         grow_eventlog_buffer(bytesneeded);
-                        crash_log("   . needed to grow buffer to %d bytes", bytesneeded);
+                        crash_log("   . needed to grow buffer to %lu bytes", bytesneeded);
                     }
                     // found current end of log
                     else if (error == ERROR_HANDLE_EOF) {
-                        verbose("End of logfile reached at entry %u. Worst state is %d",
+                        verbose("End of logfile reached at entry %lu. Worst state is %d",
                                 *record_number, worst_state);
                         break;
                     }
                     // invalid parameter can also mean end of log
                     else if (error == ERROR_INVALID_PARAMETER) {
-                        verbose("Invalid parameter at entry %u (could mean end of logfile). Worst state is %d",
+                        verbose("Invalid parameter at entry %lu (could mean end of logfile). Worst state is %d",
                                 *record_number, worst_state);
                         break;
                     }
                     else {
-                        output(out, "ERROR: Cannot read eventlog '%s': error %u\n", logname, error);
+                        output(out, "ERROR: Cannot read eventlog '%s': error %lu\n", logname, error);
                         break;
                     }
                 }
@@ -1399,37 +1208,32 @@ void output_eventlog(SOCKET &out, const char *logname,
 // might already be known and will not be stored twice.
 void register_eventlog(char *logname)
 {
-    if (num_eventlogs >= MAX_EVENTLOGS)
-        return; // veeery unlikely
-
     // check if we already know this one...
-    for (unsigned i=0; i < num_eventlogs; i++) {
-        if (!strcmp(logname, eventlog_names[i])) {
-            newly_found[i] = true; // remember its still here
+    for (eventlog_state_t::iterator iter  = g_eventlog_state.begin();
+                                    iter != g_eventlog_state.end(); ++iter) {
+        if (iter->name.compare(logname) == 0) {
+            iter->newly_discovered = true;
             return;
         }
     }
 
     // yet unknown. register it.
-    known_record_numbers[num_eventlogs] = 0;
-    eventlog_names[num_eventlogs] = strdup(logname);
-    newly_found[num_eventlogs] = true;
-    num_eventlogs ++;
+    g_eventlog_state.push_back(eventlog_file_state(logname));
 }
 
 void unregister_all_eventlogs()
 {
-    for (unsigned i=0; i < num_eventlogs; i++)
-        free(eventlog_names[i]);
-    num_eventlogs = 0;
+    g_eventlog_state.clear();
 }
 
 /* Look into the registry in order to find out, which
    event logs are available. */
 bool find_eventlogs(SOCKET &out)
 {
-    for (unsigned i=0; i<num_eventlogs; i++)
-        newly_found[i] = 0;
+    for (eventlog_state_t::iterator iter  = g_eventlog_state.begin();
+                                    iter != g_eventlog_state.end(); ++iter) {
+        iter->newly_discovered = false;
+    }
 
     char regpath[128];
     snprintf(regpath, sizeof(regpath),
@@ -1452,7 +1256,7 @@ bool find_eventlogs(SOCKET &out)
             else if (r != ERROR_MORE_DATA)
             {
                 if (r != ERROR_NO_MORE_ITEMS) {
-                    output(out, "ERROR: Cannot enumerate over event logs: error code %d\n", r);
+                    output(out, "ERROR: Cannot enumerate over event logs: error code %lu\n", r);
                     success = false;
                 }
                 break;
@@ -1463,7 +1267,7 @@ bool find_eventlogs(SOCKET &out)
     }
     else {
         success = false;
-        output(out, "ERROR: Cannot open registry key %s for enumeration: error code %d\n",
+        output(out, "ERROR: Cannot open registry key %s for enumeration: error code %lu\n",
                 regpath, GetLastError());
     }
     return success;
@@ -1482,8 +1286,8 @@ bool find_eventlogs(SOCKET &out)
 bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
 {
     // Get process token
-    HANDLE hProcessToken = NULL;
-    if (!OpenProcessToken(hProcess_i, TOKEN_READ, &hProcessToken) || !hProcessToken)
+    WinHandle hProcessToken;
+    if (!OpenProcessToken(hProcess_i, TOKEN_READ, hProcessToken.ptr()) || !hProcessToken)
         return false;
 
     // First get size needed, TokenUser indicates we want user information from given token
@@ -1520,7 +1324,6 @@ bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
                     WideCharToMultiByte(CP_UTF8, 0, (WCHAR*) &szUser, -1, info, sizeof(info), NULL, NULL);
                     csOwner_o += info;
 
-                    CloseHandle( hProcessToken );
                     delete [] pUserToken;
                     return true;
                 }
@@ -1528,7 +1331,6 @@ bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
             delete [] pUserToken;
         }
     }
-    CloseHandle( hProcessToken );
     return false;
 }
 
@@ -1635,26 +1437,95 @@ process_entry_t get_process_perfdata()
     return process_info;
 }
 
+
+void section_ps_wmi(SOCKET &out)
+{
+    crash_log("<<<ps>>>");
+
+    wmi::Result result;
+    try {
+        result = g_wmi_helper->query(L"SELECT * FROM Win32_Process");
+        bool more = result.valid();
+       if (!more) {
+            return;
+        }
+        output(out, "<<<ps:sep(9)>>>\n");
+
+        while (more) {
+            int processId = result.get<int>(L"ProcessId");
+
+            HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+            string user = "SYSTEM";
+            ExtractProcessOwner(process, user);
+            std::wstring process_name;
+
+            if (g_config->psFullCommandLine() && result.contains(L"ExecutablePath")) {
+                process_name = result.get<std::wstring>(L"ExecutablePath");
+            } else {
+                process_name = result.get<std::wstring>(L"Caption");
+            }
+
+            if (g_config->psFullCommandLine() && result.contains(L"CommandLine")) {
+                int argc;
+                LPWSTR *argv = CommandLineToArgvW(result.get<std::wstring>(L"CommandLine").c_str(), &argc);
+                for (int i = 1; i < argc; ++i) {
+                    process_name += std::wstring(L" ") + argv[i];
+                }
+                LocalFree(argv);
+            }
+
+            output(out, "(%s,%" PRIu64 ",%" PRIu64 ",%d,%d,%d,%ls,%ls,%u,%d)\t%ls\n",
+                    user.c_str(),
+                    string_to_llu(result.get<string>(L"VirtualSize").c_str()) / 1024,
+                    string_to_llu(result.get<string>(L"WorkingSetSize").c_str()) / 1024,
+                    0,
+                    processId,
+                    result.get<int>(L"PagefileUsage") / 1024,
+                    result.get<wstring>(L"UserModeTime").c_str(),
+                    result.get<wstring>(L"KernelModeTime").c_str(),
+                    result.get<int>(L"HandleCount"),
+                    result.get<int>(L"ThreadCount"),
+                    process_name.c_str());
+            more = result.next();
+        }
+    } catch (const wmi::ComException &e) {
+        // the most likely cause is that the wmi query fails, i.e. because the service is
+        // currently offline.
+        crash_log("Exception: %s", e.what());
+    } catch (const wmi::ComTypeException &e) {
+        crash_log("Exception: %s", e.what());
+        std::wstring types;
+        std::vector<std::wstring> names;
+        for (std::vector<std::wstring>::const_iterator iter = names.begin(); iter != names.end(); ++iter) {
+            types += *iter + L"=" + std::to_wstring(result.typeId(iter->c_str())) + L", ";
+        }
+        crash_log("Data types are different than expected, please report this and include "
+                  "the following: %ls", types.c_str());
+        abort();
+    }
+}
+
+
 void section_ps(SOCKET &out)
 {
     crash_log("<<<ps>>>");
     output(out, "<<<ps:sep(9)>>>\n");
-    HANDLE hProcessSnap;
     PROCESSENTRY32 pe32;
 
     process_entry_t process_perfdata = get_process_perfdata();
 
-    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    WinHandle hProcessSnap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (hProcessSnap != INVALID_HANDLE_VALUE)
     {
         pe32.dwSize = sizeof(PROCESSENTRY32);
+
         if (Process32First(hProcessSnap, &pe32))
         {
             do
             {
                 string user = "unknown";
                 DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
-                HANDLE hProcess = OpenProcess(dwAccess, FALSE, pe32.th32ProcessID);
+                WinHandle hProcess(OpenProcess(dwAccess, FALSE, pe32.th32ProcessID));
 
                 if (NULL == hProcess)
                     continue;
@@ -1670,11 +1541,14 @@ void section_ps(SOCKET &out)
                        usermodetime.HighPart   = userTime.dwHighDateTime;
                 }
 
-                // GetProcessHandleCount is only available winxp upwards
-                // Win2k reports 0 handles
                 DWORD processHandleCount = 0;
-                if (osv.dwMajorVersion > 5 || (osv.dwMajorVersion == 5 && osv.dwMinorVersion > 0))
-                    GetProcessHandleCount(hProcess, &processHandleCount);
+
+                // GetProcessHandleCount is only available winxp upwards
+                typedef BOOL WINAPI (*GetProcessHandleCount_type)(HANDLE, PDWORD);
+                DYNAMIC_FUNC(GetProcessHandleCount, L"kernel32.dll");
+                if (GetProcessHandleCount_dyn != NULL) {
+                    GetProcessHandleCount_dyn(hProcess, &processHandleCount);
+                }
 
                 // Process owner
                 ExtractProcessOwner(hProcess, user);
@@ -1691,23 +1565,27 @@ void section_ps(SOCKET &out)
                 }
 
                 //// Note: CPU utilization is determined out of usermodetime and kernelmodetime
-                output(out, "(%s,%llu,%llu,%d,%d,%llu,%lld,%lld,%d,%d)\t%s\n", user.c_str(), virtual_size / 1024, working_set_size / 1024, 0,
-                                                                  pe32.th32ProcessID, pagefile_usage / 1024, usermodetime.QuadPart, kernelmodetime.QuadPart,
-                                                                  processHandleCount, pe32.cntThreads, pe32.szExeFile);
-
-                CloseHandle(hProcess);
+                output(out, "(%s,%" PRIu64 ",%" PRIu64 ",%d,%lu,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%lu,%lu)\t%s\n",
+                        user.c_str(),
+                        virtual_size / 1024,
+                        working_set_size / 1024,
+                        0, pe32.th32ProcessID,
+                        pagefile_usage / 1024,
+                        usermodetime.QuadPart,
+                        kernelmodetime.QuadPart,
+                        processHandleCount, pe32.cntThreads, pe32.szExeFile);
             } while (Process32Next(hProcessSnap, &pe32));
         }
-        CloseHandle(hProcessSnap);
         process_perfdata.clear();
 
         // The process snapshot doesn't show the system idle process (used to determine the number of cpu cores)
         // We simply fake this entry..
         SYSTEM_INFO sysinfo;
         GetSystemInfo(&sysinfo);
-        output(out, "(SYSTEM,0,0,0,0,0,0,0,0,%d)\tSystem Idle Process\n", sysinfo.dwNumberOfProcessors);
+        output(out, "(SYSTEM,0,0,0,0,0,0,0,0,%lu)\tSystem Idle Process\n", sysinfo.dwNumberOfProcessors);
     }
 }
+
 
 
 // .-----------------------------------------------------------------------.
@@ -1721,142 +1599,6 @@ void section_ps(SOCKET &out)
 // | Functions related to the evaluation of logwatch textfiles             |
 // '-----------------------------------------------------------------------'
 
-// Stores the condition pattern together with its state
-// Pattern definition within the config file:
-//      C = *critpatternglobdescription*
-struct condition_pattern {
-    char  state;
-    char *glob_pattern;
-};
-typedef vector<condition_pattern*> condition_patterns_t;
-
-// Single element of a globline:
-// C:/tmp/Testfile*.log
-struct glob_token {
-    char *pattern;
-    bool  nocontext;
-    bool  found_match;
-};
-typedef vector<glob_token*> glob_tokens_t;
-
-// Container for all globlines read from the config
-// The following is considered a globline
-// textfile = C:\Logfile1.txt C:\tmp\Logfile*.txt
-struct globline_container {
-    glob_tokens_t        *tokens;
-    condition_patterns_t *patterns;
-};
-
-enum file_encoding {
-    UNDEF,
-    DEFAULT,
-    UNICODE,
-};
-
-// A textfile instance containing information about various file
-// parameters and the pointer to the matching pattern_container
-struct logwatch_textfile {
-    char                 *path;
-    unsigned long long    file_id;   // used to detect if a file has been replaced
-    unsigned long long    file_size; // size of the file
-    unsigned long long    offset;    // current fseek offset in the file
-    bool                  missing;   // file no longer exists
-    bool                  nocontext; // do not report ignored lines
-    file_encoding         encoding;
-    condition_patterns_t *patterns;  // glob patterns applying for this file
-};
-
-typedef vector<globline_container*> logwatch_globlines_t;
-logwatch_globlines_t g_logwatch_globlines;
-
-typedef vector<logwatch_textfile*>  logwatch_textfiles_t;
-logwatch_textfiles_t g_logwatch_textfiles;
-logwatch_textfiles_t g_logwatch_hints; // result of loaded state
-
-globline_container *g_current_globline_container = NULL;
-
-void save_logwatch_offsets()
-{
-    FILE *file = fopen(g_logwatch_statefile, "w");
-    for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
-         it_tf != g_logwatch_textfiles.end(); it_tf++) {
-        logwatch_textfile *tf = *it_tf;
-        if (!tf->missing) {
-            // llu_to_string is not reentrant, so do this in three steps
-            fprintf(file, "%s|%s", tf->path, llu_to_string(tf->file_id));
-            fprintf(file, "|%s", llu_to_string(tf->file_size));
-            fprintf(file, "|%s\r\n", llu_to_string(tf->offset));
-        }
-    }
-    fclose(file);
-}
-
-void parse_logwatch_state_line(char *line)
-{
-    /* Example: line = "M://log1.log|98374598374|0|16"; */
-    rstrip(line);
-    char *p = line;
-    while (*p && *p != '|') p++;
-    *p = 0;
-    char *path = line;
-    p++;
-
-    char *token = strtok(p, "|");
-    if (!token) return; // Ignore invalid lines
-    unsigned long long file_id = string_to_llu(token);
-
-    token = strtok(NULL, "|");
-    if (!token) return;
-    unsigned long long file_size = string_to_llu(token);
-
-    token = strtok(NULL, "|");
-    if (!token) return;
-    unsigned long long offset = string_to_llu(token);
-
-    logwatch_textfile *tf = new logwatch_textfile();
-    tf->path = strdup(path);
-    tf->file_id = file_id;
-    tf->file_size = file_size;
-    tf->offset = offset;
-    tf->missing = false;
-    tf->patterns = 0;
-    g_logwatch_hints.push_back(tf);
-}
-
-void load_logwatch_offsets()
-{
-    static bool offsets_loaded = false;
-    if (!offsets_loaded) {
-        FILE *file = fopen(g_logwatch_statefile, "r");
-        if (file) {
-            char line[256];
-            while (NULL != fgets(line, sizeof(line), file)) {
-                parse_logwatch_state_line(line);
-            }
-            fclose(file);
-        }
-        offsets_loaded = true;
-    }
-}
-
-void save_eventlog_offsets()
-{
-    FILE *file = fopen(g_eventlog_statefile, "w");
-    for (unsigned i=0; i < num_eventlogs; i++) {
-        int level = 1;
-        for (int j=0; j<num_eventlog_configs; j++) {
-            const char *cname = eventlog_config[j].name;
-            if (!strcmp(cname, "*") || !strcasecmp(cname, eventlog_names[i]))
-            {
-                level = eventlog_config[j].level;
-                break;
-            }
-        }
-        if (level != -1)
-            fprintf(file, "%s|%lu\n", eventlog_names[i], known_record_numbers[i]);
-    }
-    fclose(file);
-}
 
 void parse_eventlog_state_line(char *line)
 {
@@ -1879,11 +1621,12 @@ void parse_eventlog_state_line(char *line)
     g_eventlog_hints.push_back(elh);
 }
 
-void load_eventlog_offsets()
+
+void load_eventlog_offsets(const std::string &statefile)
 {
     static bool records_loaded = false;
     if (!records_loaded) {
-        FILE *file = fopen(g_eventlog_statefile, "r");
+        FILE *file = fopen(statefile.c_str(), "r");
         if (file) {
             char line[256];
             while (NULL != fgets(line, sizeof(line), file)) {
@@ -1893,6 +1636,49 @@ void load_eventlog_offsets()
         }
         records_loaded = true;
     }
+}
+
+
+void save_logwatch_offsets(const std::string &logwatch_statefile)
+{
+    FILE *file = fopen(logwatch_statefile.c_str(), "w");
+    if (!file) {
+        crash_log("Cannot open %s for writing: %s (%d).\n", logwatch_statefile.c_str(), strerror(errno), errno);
+        // not stopping the agent from crashing. This way the user at least
+        // notices something went wrong.
+        // FIXME: unless there aren't any textfiles configured to be monitored
+    }
+    for (logwatch_textfiles_t::const_iterator it_tf = g_config->logwatchTextfiles().begin();
+         it_tf != g_config->logwatchTextfiles().end(); ++it_tf) {
+        logwatch_textfile *tf = *it_tf;
+        if (!tf->missing) {
+            fprintf(file, "%s|%" PRIu64 "|%" PRIu64 "|%" PRIu64 "\r\n",
+                    tf->path, tf->file_id, tf->file_size, tf->offset);
+        }
+    }
+    if (file != NULL) {
+        fclose(file);
+    }
+}
+
+void save_eventlog_offsets(const std::string &eventlog_statefile)
+{
+    FILE *file = fopen(eventlog_statefile.c_str(), "w");
+    for (eventlog_state_t::iterator state_iter  = g_eventlog_state.begin();
+                                    state_iter != g_eventlog_state.end(); ++state_iter) {
+        int level = 1;
+        for (eventlog_config_t::iterator conf_iter = g_config->eventlogConfig().begin();
+                conf_iter != g_config->eventlogConfig().end();
+                ++conf_iter) {
+            if ((conf_iter->name == "*") || ci_equal(conf_iter->name, state_iter->name)) {
+                level = conf_iter->level;
+                break;
+            }
+        }
+        if (level != -1)
+            fprintf(file, "%s|%lu\n", state_iter->name.c_str(), state_iter->num_known_records);
+    }
+    fclose(file);
 }
 
 void update_script_statistics()
@@ -1928,235 +1714,16 @@ void update_script_statistics()
     }
 }
 
-// Add a new state pattern to the current pattern container
-void add_condition_pattern(char state, char *value)
-{
-    if (g_current_globline_container == NULL) {
-        fprintf(stderr, "You need to set a textfile, before specifying a condition pattern\n");
-        return;
-    }
-
-    condition_pattern *new_pattern = new condition_pattern();
-    new_pattern->state = state;
-    new_pattern->glob_pattern = strdup(value);
-    g_current_globline_container->patterns->push_back(new_pattern);
-}
-
-
-logwatch_textfile* get_logwatch_textfile(const char *filename)
-{
-    for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
-         it_tf != g_logwatch_textfiles.end(); it_tf++) {
-        if (strcmp(filename, (*it_tf)->path) == 0)
-            return *it_tf;
-    }
-    return 0;
-}
-
-// Add a new textfile and to the global textfile list
-// and determine some initial values
-bool add_new_logwatch_textfile(const char *full_filename, glob_token* token, condition_patterns_t *patterns)
-{
-    logwatch_textfile *new_textfile = new logwatch_textfile();
-
-    HANDLE hFile = CreateFile(full_filename,// file to open
-            GENERIC_READ,          // open for reading
-            FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
-            NULL,                  // default security
-            OPEN_EXISTING,         // existing file only
-            FILE_ATTRIBUTE_NORMAL, // normal file
-            NULL);                 // no attr. template
-
-    BY_HANDLE_FILE_INFORMATION fileinfo;
-    GetFileInformationByHandle(hFile, &fileinfo);
-    CloseHandle(hFile);
-
-    new_textfile->path      = strdup(full_filename);
-    new_textfile->missing   = false;
-    new_textfile->patterns  = patterns;
-    new_textfile->nocontext = token->nocontext;
-
-    // Hier aus den gespeicherten Hints was holen....
-    bool found_hint = false;
-    for (logwatch_textfiles_t::iterator it_lh = g_logwatch_hints.begin();
-         it_lh != g_logwatch_hints.end(); it_lh++) {
-        logwatch_textfile *hint = *it_lh;
-        if (!strcmp(hint->path, full_filename)) {
-            new_textfile->file_size = hint->file_size;
-            new_textfile->file_id = hint->file_id;
-            new_textfile->offset = hint->offset;
-            found_hint = true;
-            break;
-        }
-    }
-
-    if (!found_hint) {
-        new_textfile->file_size    = (unsigned long long)fileinfo.nFileSizeLow +
-            (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
-        new_textfile->file_id      = (unsigned long long)fileinfo.nFileIndexLow +
-            (((unsigned long long)fileinfo.nFileIndexHigh) << 32);
-        new_textfile->offset       = new_textfile->file_size;
-    }
-
-    g_logwatch_textfiles.push_back(new_textfile);
-    return true;
-}
-
-
-// Check if the given full_filename already exists. If so, do some basic file integrity checks
-// Otherwise create a new textfile instance
-void update_or_create_logwatch_textfile(const char *full_filename, glob_token* token, condition_patterns_t *patterns)
-{
-    logwatch_textfile *textfile;
-    if ((textfile = get_logwatch_textfile(full_filename)) != NULL)
-    {
-        HANDLE hFile = CreateFile(textfile->path,// file to open
-                GENERIC_READ,          // open for reading
-                FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
-                NULL,                  // default security
-                OPEN_EXISTING,         // existing file only
-                FILE_ATTRIBUTE_NORMAL, // normal file
-                NULL);                 // no attr. template
-
-        BY_HANDLE_FILE_INFORMATION fileinfo;
-        // Do some basic checks to ensure its still the same file
-        // try to fill the structure with info regarding the file
-        if (hFile != INVALID_HANDLE_VALUE)
-        {
-            if (GetFileInformationByHandle(hFile, &fileinfo))
-            {
-                unsigned long long file_id = (unsigned long long)fileinfo.nFileIndexLow +
-                    (((unsigned long long)fileinfo.nFileIndexHigh) << 32);
-                textfile->file_size        = (unsigned long long)fileinfo.nFileSizeLow +
-                    (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
-
-                if (file_id != textfile->file_id) {                // file has been changed
-                    verbose("File %s: id has changed from %s",
-                            full_filename, llu_to_string(textfile->file_id));
-                    verbose(" to %s\n", llu_to_string(file_id));
-                    textfile->offset = 0;
-                    textfile->file_id = file_id;
-                }
-                else if (textfile->file_size < textfile->offset) { // file has been truncated
-                    verbose("File %s: file has been truncated\n", full_filename);
-                    textfile->offset = 0;
-                }
-
-                textfile->missing = false;
-            }
-            CloseHandle(hFile);
-        }
-        else {
-            verbose("Cant open file with CreateFile %s\n", full_filename);
-        }
-    }
-    else
-        add_new_logwatch_textfile(full_filename, token, patterns); // Add new file
-}
-
-// Process a single expression (token) of a globline and try to find matching files
-void process_glob_expression(glob_token *glob_token, condition_patterns_t *patterns)
-{
-    WIN32_FIND_DATA data;
-    char full_filename[512];
-    glob_token->found_match = false;
-    HANDLE h = FindFirstFileEx(glob_token->pattern, FindExInfoStandard, &data, FindExSearchNameMatch, NULL, 0);
-    if (h != INVALID_HANDLE_VALUE) {
-        glob_token->found_match = true;
-        const char *basename = "";
-        char *end = strrchr(glob_token->pattern, '\\');
-        if (end) {
-            *end = 0;
-            basename = glob_token->pattern;
-        }
-        snprintf(full_filename,sizeof(full_filename), "%s\\%s", basename, data.cFileName);
-        update_or_create_logwatch_textfile(full_filename, glob_token, patterns);
-
-        while (FindNextFile(h, &data)){
-            snprintf(full_filename,sizeof(full_filename), "%s\\%s", basename, data.cFileName);
-            update_or_create_logwatch_textfile(full_filename, glob_token, patterns);
-        }
-
-        if (end)
-            *end = '\\'; // repair string
-        FindClose(h);
-    }
-}
-
-// Add a new globline from the config file:
-// C:/Testfile | D:/var/log/data.log D:/tmp/art*.log
-// This globline is split into tokens which are processed by process_glob_expression
-void add_globline(char *value)
-{
-    // Each globline receives its own pattern container
-    // In case new files matching the glob pattern are we
-    // we already have all state,regex patterns available
-    globline_container *new_globline = new globline_container();
-    new_globline->patterns           = new condition_patterns_t();
-    new_globline->tokens             = new glob_tokens_t();
-
-    g_logwatch_globlines.push_back(new_globline);
-    g_current_globline_container = new_globline;
-
-    // Split globline into tokens
-    if (value != 0) {
-        char *copy = strdup(value);
-        char *token = strtok(copy, "|");
-        while (token) {
-            token = lstrip(token);
-            glob_token *new_token = new glob_token();
-
-            if (!strncmp(token, "nocontext", 9))
-            {
-                new_token->nocontext = true;
-                token += 9;
-                token = lstrip(token);
-            }
-            else
-                new_token->nocontext = false;
-
-            new_token->pattern = strdup(token);
-            new_globline->tokens->push_back(new_token);
-            process_glob_expression(new_token, new_globline->patterns);
-            token = strtok(NULL, "|");
-        }
-        free(copy);
-    }
-}
-
-
-// Revalidate the existance of logfiles and check if the files attribute (id / size) indicate a change
-void revalidate_logwatch_textfiles()
-{
-    // First of all invalidate all textfiles
-    for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
-            it_tf != g_logwatch_textfiles.end(); it_tf++) {
-        (*it_tf)->missing = true;
-    }
-
-    for (logwatch_globlines_t::iterator it_line = g_logwatch_globlines.begin();
-         it_line != g_logwatch_globlines.end(); it_line++) {
-        for (glob_tokens_t::iterator it_token = (*it_line)->tokens->begin();
-             it_token != (*it_line)->tokens->end(); it_token++) {
-            process_glob_expression(*it_token, (*it_line)->patterns);
-        }
-    }
-
-}
-
-
-bool globmatch(const char *pattern, char *astring);
-
 
 // Remove missing files from list
 void cleanup_logwatch_textfiles()
 {
-    for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
-         it_tf != g_logwatch_textfiles.end();) {
+    for (logwatch_textfiles_t::iterator it_tf = g_config->logwatchTextfiles().begin();
+         it_tf != g_config->logwatchTextfiles().end();) {
         if ((*it_tf)->missing) {
             // remove this file from the list
             free((*it_tf)->path);
-            it_tf = g_logwatch_textfiles.erase(it_tf);
+            it_tf = g_config->logwatchTextfiles().erase(it_tf);
         }
         else
             it_tf++;
@@ -2167,31 +1734,29 @@ void cleanup_logwatch_textfiles()
 void cleanup_logwatch()
 {
     // cleanup textfiles
-    for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
-         it_tf != g_logwatch_textfiles.end(); it_tf++)
+    for (logwatch_textfiles_t::iterator it_tf = g_config->logwatchTextfiles().begin();
+         it_tf != g_config->logwatchTextfiles().end(); it_tf++)
         (*it_tf)->missing = true;
     cleanup_logwatch_textfiles();
 
     // cleanup globlines and textpatterns
-    for (logwatch_globlines_t::iterator it_globline = g_logwatch_globlines.begin();
-         it_globline != g_logwatch_globlines.end(); it_globline++) {
+    for (logwatch_globlines_t::iterator it_globline = g_config->logwatchGloblines().begin();
+         it_globline != g_config->logwatchGloblines().end(); it_globline++) {
         globline_container *cont = *it_globline;
 
-        for (glob_tokens_t::iterator it_token = cont->tokens->begin();
-             it_token != cont->tokens->end(); it_token++) {
+        for (glob_tokens_t::iterator it_token = cont->tokens.begin();
+             it_token != cont->tokens.end(); it_token++) {
             free((*it_token)->pattern);
             delete (*it_token);
         }
-        cont->tokens->clear();
-        delete cont->tokens;
+        cont->tokens.clear();
 
-        for (condition_patterns_t::iterator it_patt = cont->patterns->begin();
-             it_patt != cont->patterns->end(); it_patt++) {
+        for (condition_patterns_t::iterator it_patt = cont->patterns.begin();
+             it_patt != cont->patterns.end(); it_patt++) {
             free((*it_patt)->glob_pattern);
             delete (*it_patt);
         }
-        cont->patterns->clear();
-        delete cont->patterns;
+        cont->patterns.clear();
         delete cont;
     }
 }
@@ -2357,27 +1922,27 @@ process_textfile_response process_textfile(FILE *file, logwatch_textfile* textfi
 
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
-void section_logfiles(SOCKET &out)
+void section_logfiles(SOCKET &out, const Environment &env)
 {
     crash_log("<<<logwatch>>>");
     output(out, "<<<logwatch>>>\n");
 
-    revalidate_logwatch_textfiles();
+    g_config->revalidateLogwatchTextfiles();
 
     logwatch_textfile *textfile;
 
     // Missing glob patterns
-    for (logwatch_globlines_t::iterator it_globline = g_logwatch_globlines.begin();
-         it_globline != g_logwatch_globlines.end(); it_globline++) {
+    for (logwatch_globlines_t::iterator it_globline = g_config->logwatchGloblines().begin();
+         it_globline != g_config->logwatchGloblines().end(); ++it_globline) {
         globline_container *cont = *it_globline;
-        for (glob_tokens_t::iterator it_token = cont->tokens->begin();
-             it_token != cont->tokens->end(); it_token++) {
+        for (glob_tokens_t::iterator it_token = cont->tokens.begin();
+             it_token != cont->tokens.end(); it_token++) {
             if (!((*it_token)->found_match))
                 output(out, "[[[%s:missing]]]\n", (*it_token)->pattern);
         }
     }
-    for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
-         it_tf != g_logwatch_textfiles.end(); it_tf++) {
+    for (logwatch_textfiles_t::iterator it_tf = g_config->logwatchTextfiles().begin();
+         it_tf != g_config->logwatchTextfiles().end(); ++it_tf) {
         textfile = *it_tf;
         if (textfile->missing){
             output(out, "[[[%s:missing]]]\n", textfile->path);
@@ -2440,13 +2005,13 @@ void section_logfiles(SOCKET &out)
     }
 
     cleanup_logwatch_textfiles();
-    save_logwatch_offsets();
+    save_logwatch_offsets(env.logwatchStatefile());
 }
 
 
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
-void section_eventlog(SOCKET &out)
+void section_eventlog(SOCKET &out, const Environment &env)
 {
     crash_log("<<<logwatch>>>");
 
@@ -2463,58 +2028,55 @@ void section_eventlog(SOCKET &out)
         // Special handling on startup (first_run)
         // The last processed record number of each eventlog is stored in the file eventstate.txt
         // If there is no entry for the given eventlog we start at the end
-        if (first_run && !logwatch_send_initial_entries) {
-            for (unsigned i=0; i < num_eventlogs; i++) {
-                char *logname      = eventlog_names[i];
+        if (first_run && !g_config->logwatchSendInitialEntries()) {
+            for (eventlog_state_t::iterator it_st  = g_eventlog_state.begin();
+                                            it_st != g_eventlog_state.end(); ++it_st) {
                 bool found_hint = false;
                 for (eventlog_hints_t::iterator it_el  = g_eventlog_hints.begin();
                                                 it_el != g_eventlog_hints.end(); it_el++) {
                     eventlog_hint_t *hint = *it_el;
-                    if (!strcmp(hint->name, logname)) {
-                        known_record_numbers[i] = hint->record_no;
+                    if (it_st->name.compare(hint->name) == 0) {
+                        it_st->num_known_records = hint->record_no;
                         found_hint = true;
                         break;
                     }
                 }
-                if (!found_hint)
-                {
-                    HANDLE hEventlog = OpenEventLog(NULL, logname);
-                    if (hEventlog)
-                    {
+                if (!found_hint) {
+                    HANDLE hEventlog = OpenEventLog(NULL, it_st->name.c_str());
+                    if (hEventlog) {
                         DWORD no_records;
                         DWORD oldest_record;
                         GetNumberOfEventLogRecords(hEventlog, &no_records);
                         GetOldestEventLogRecord(hEventlog, &oldest_record);
                         if (no_records > 0)
-                           known_record_numbers[i] = oldest_record + no_records - 1;
+                            it_st->num_known_records = oldest_record + no_records - 1;
                     }
                 }
             }
         }
 
-        for (unsigned i=0; i < num_eventlogs; i++) {
-            if (!newly_found[i]) // not here any more!
-                output(out, "[[[%s:missing]]]\n", eventlog_names[i]);
+        for (eventlog_state_t::iterator it_st  = g_eventlog_state.begin();
+                                        it_st != g_eventlog_state.end(); ++it_st) {
+            if (!it_st->newly_discovered) // not here any more!
+                output(out, "[[[%s:missing]]]\n", it_st->name.c_str());
             else {
                 // Get the configuration of that log file (which messages to send)
                 int level = 1;
                 int hide_context = 0;
-                for (int j=0; j<num_eventlog_configs; j++) {
-                    const char *cname = eventlog_config[j].name;
-                    if (!strcmp(cname, "*") ||
-                            !strcasecmp(cname, eventlog_names[i]))
-                    {
-                        level = eventlog_config[j].level;
-                        hide_context = eventlog_config[j].hide_context;
+                for (eventlog_config_t::iterator conf_iter  = g_config->eventlogConfig().begin();
+                                                 conf_iter != g_config->eventlogConfig().end(); ++conf_iter) {
+                    if ((conf_iter->name == "*") || ci_equal(conf_iter->name, it_st->name)) {
+                        level = conf_iter->level;
+                        hide_context = conf_iter->hide_context;
                         break;
                     }
                 }
                 if (level != -1) {
-                    output_eventlog(out, eventlog_names[i], &known_record_numbers[i], level, hide_context);
+                    output_eventlog(out, it_st->name.c_str(), &it_st->num_known_records, level, hide_context);
                 }
             }
         }
-        save_eventlog_offsets();
+        save_eventlog_offsets(env.eventlogStatefile());
     }
     first_run = false;
 }
@@ -2546,14 +2108,14 @@ void section_mem(SOCKET &out)
     statex.dwLength = sizeof (statex);
     GlobalMemoryStatusEx (&statex);
 
-    output(out, "MemTotal:     %s kB\n", llu_to_string(statex.ullTotalPhys     / 1024));
-    output(out, "MemFree:      %s kB\n", llu_to_string(statex.ullAvailPhys     / 1024));
-    output(out, "SwapTotal:    %s kB\n", llu_to_string((statex.ullTotalPageFile - statex.ullTotalPhys) / 1024));
-    output(out, "SwapFree:     %s kB\n", llu_to_string((statex.ullAvailPageFile - statex.ullAvailPhys) / 1024));
-    output(out, "PageTotal:    %s kB\n", llu_to_string(statex.ullTotalPageFile / 1024));
-    output(out, "PageFree:     %s kB\n", llu_to_string(statex.ullAvailPageFile / 1024));
-    output(out, "VirtualTotal: %s kB\n", llu_to_string(statex.ullTotalVirtual / 1024));
-    output(out, "VirtualFree:  %s kB\n", llu_to_string(statex.ullAvailVirtual / 1024));
+    output(out, "MemTotal:     %" PRIu64 " kB\n", statex.ullTotalPhys     / 1024);
+    output(out, "MemFree:      %" PRIu64 " kB\n", statex.ullAvailPhys     / 1024);
+    output(out, "SwapTotal:    %" PRIu64 " kB\n", (statex.ullTotalPageFile - statex.ullTotalPhys) / 1024);
+    output(out, "SwapFree:     %" PRIu64 " kB\n", (statex.ullAvailPageFile - statex.ullAvailPhys) / 1024);
+    output(out, "PageTotal:    %" PRIu64 " kB\n", statex.ullTotalPageFile / 1024);
+    output(out, "PageFree:     %" PRIu64 " kB\n", statex.ullAvailPageFile / 1024);
+    output(out, "VirtualTotal: %" PRIu64 " kB\n", statex.ullTotalVirtual / 1024);
+    output(out, "VirtualFree:  %" PRIu64 " kB\n", statex.ullAvailVirtual / 1024);
 }
 
 // .-----------------------------------------------------------------------.
@@ -2573,8 +2135,8 @@ void section_fileinfo(SOCKET &out)
     crash_log("<<<fileinfo>>>");
     output(out, "<<<fileinfo:sep(124)>>>\n");
     output(out, "%.0f\n", current_time());
-    for (fileinfo_paths_t::iterator it_path = g_fileinfo_paths.begin();
-            it_path != g_fileinfo_paths.end(); it_path++) {
+    for (fileinfo_paths_t::iterator it_path = g_config->fileinfoPaths().begin();
+            it_path != g_config->fileinfoPaths().end(); it_path++) {
         output_fileinfos(out, *it_path);
     }
 }
@@ -2601,11 +2163,11 @@ void output_fileinfos(SOCKET &out, const char *path)
         FindClose(h);
 
         if (!found_file)
-            output(out, "%s|missing|%d\n", path, current_time());
+            output(out, "%s|missing|%f\n", path, current_time());
     }
     else {
         DWORD e = GetLastError();
-        output(out, "%s|missing|%d\n", path, e);
+        output(out, "%s|missing|%lu\n", path, e);
     }
 }
 
@@ -2616,23 +2178,12 @@ bool output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data)
         + (((unsigned long long)data->nFileSizeHigh) << 32);
 
     if (0 == (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-        output(out, "%s\\%s|%llu|%.0f\n", basename,
+        output(out, "%s\\%s|%" PRIu64 "|%.0f\n", basename,
                 data->cFileName, size, file_time(&data->ftLastWriteTime));
         return true;
     }
     return false;
 }
-
-
-bool handle_fileinfo_config_variable(char *var, char *value)
-{
-    if (!strcmp(var, "path")) {
-        g_fileinfo_paths.push_back(strdup(value));
-        return true;
-    }
-    return false;
-}
-
 
 
 // .-Scripts---------------------------------------------------------------.
@@ -2646,82 +2197,10 @@ bool handle_fileinfo_config_variable(char *var, char *value)
 // | Config functions for local and plugins scripts                        |
 // '-----------------------------------------------------------------------'
 
-bool handle_script_config_variable(char *var, char *value, script_type type)
-{
-    if (!strncmp(var, "timeout ", 8)) {
-        char *script_pattern  = lstrip(var + 8);
-        timeout_config *entry = new timeout_config();
-        entry->pattern        = strdup(script_pattern);
-        entry->timeout        = atoi(value);
-        if (type == PLUGIN)
-            timeout_configs_plugin.push_back(entry);
-        else
-            timeout_configs_local.push_back(entry);
-    }
-    else if (!strncmp(var, "cache_age ", 10)) {
-        char *plugin_pattern = lstrip(var + 10);
-        cache_config* entry  = new cache_config();
-        entry->pattern       = strdup(plugin_pattern);
-        entry->max_age       = atoi(value);
-        if (type == PLUGIN)
-            cache_configs_plugin.push_back(entry);
-        else
-            cache_configs_local.push_back(entry);
-    }
-    else if (!strncmp(var, "retry_count ", 12)) {
-        char *plugin_pattern = lstrip(var + 12);
-        retry_config *entry  = new retry_config();
-        entry->pattern       = strdup(plugin_pattern);
-        entry->retries       = atoi(value);
-        if (type == PLUGIN)
-            retry_configs_plugin.push_back(entry);
-        else
-            retry_configs_local.push_back(entry);
-    }
-    else if (!strncmp(var, "execution ", 10)) {
-        char *plugin_pattern = lstrip(var + 10);
-        execution_mode_config *entry  = new execution_mode_config();
-        entry->pattern       = strdup(plugin_pattern);
-        entry->mode          = !strncmp(value, "async", 5) ? ASYNC : SYNC;
-        if (type == PLUGIN)
-            execution_mode_configs_plugin.push_back(entry);
-        else
-            execution_mode_configs_local.push_back(entry);
-    }
-    else if (!strncmp(var, "include", 7)) {
-        char *user = NULL;
-        if (strlen(var) > 7)
-            user = lstrip(var + 7);
-
-        runas_include* tmp = new runas_include();
-        memset(tmp, 0, sizeof(*tmp));
-
-        if (user)
-            snprintf(tmp->user, sizeof(tmp->user), user);
-
-        tmp->type = type;
-        snprintf(tmp->path, sizeof(tmp->path), value);
-        g_script_includes.push_back(tmp);
-        return true;
-    }
-    return true;
-}
-
-bool handle_plugin_config_variable(char *var, char *value)
-{
-    return handle_script_config_variable(var, value, PLUGIN);
-}
-
-bool handle_local_config_variable(char *var, char *value)
-{
-    return handle_script_config_variable(var, value, LOCAL);
-}
-
 int get_script_timeout(char *name, script_type type)
 {
-    timeout_configs_t* configs = type == PLUGIN ? &timeout_configs_plugin : &timeout_configs_local;
-    for (timeout_configs_t::iterator it = configs->begin();
-            it != configs->end(); it++)
+    timeout_configs_t &configs = g_config->timeoutConfigs(type);
+    for (timeout_configs_t::iterator it = configs.begin(); it != configs.end(); ++it)
         if (globmatch((*it)->pattern, name))
             return (*it)->timeout;
     return type == PLUGIN ? DEFAULT_PLUGIN_TIMEOUT : DEFAULT_LOCAL_TIMEOUT;
@@ -2729,9 +2208,8 @@ int get_script_timeout(char *name, script_type type)
 
 int get_script_cache_age(char *name, script_type type)
 {
-    cache_configs_t* configs = type == PLUGIN ? &cache_configs_plugin : &cache_configs_local;
-    for (cache_configs_t::iterator it = configs->begin();
-            it != configs->end(); it++)
+    cache_configs_t &configs = g_config->cacheConfigs(type);
+    for (cache_configs_t::iterator it = configs.begin(); it != configs.end(); ++it)
         if (globmatch((*it)->pattern, name))
             return (*it)->max_age;
     return 0;
@@ -2739,9 +2217,8 @@ int get_script_cache_age(char *name, script_type type)
 
 int get_script_max_retries(char *name, script_type type)
 {
-    retry_count_configs_t* configs = type == PLUGIN ? &retry_configs_plugin : &retry_configs_local;
-    for (retry_count_configs_t::iterator it = configs->begin();
-            it != configs->end(); it++)
+    retry_count_configs_t &configs = g_config->retryConfigs(type);
+    for (retry_count_configs_t::iterator it = configs.begin(); it != configs.end(); ++it)
         if (globmatch((*it)->pattern, name))
             return (*it)->retries;
     return 0;
@@ -2749,12 +2226,11 @@ int get_script_max_retries(char *name, script_type type)
 
 script_execution_mode get_script_execution_mode(char *name, script_type type)
 {
-    execution_mode_configs_t* configs = type == PLUGIN ? &execution_mode_configs_plugin : &execution_mode_configs_local;
-    for (execution_mode_configs_t::iterator it = configs->begin();
-            it != configs->end(); it++)
+    execution_mode_configs_t &configs = g_config->executionModeConfigs(type);
+    for (execution_mode_configs_t::iterator it = configs.begin(); it != configs.end(); ++it)
         if (globmatch((*it)->pattern, name))
             return (*it)->mode;
-    return g_default_script_execution_mode;
+    return g_config->defaultScriptExecutionMode();
 }
 
 //   .----------------------------------------------------------------------.
@@ -2783,7 +2259,16 @@ char *add_interpreter(char *path, char *newpath)
         //   1.) The powershell interpreter needs to be in PATH
         //   2.) The execution policy needs to allow the script execution
         //       -> Get-ExecutionPolicy / Set-ExecutionPolicy
-        snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", path);
+        //
+        // actually, microsoft always installs the powershell interpreter to the same
+        // directory (independent of the version) so even if it's not in the path,
+        // we have a good chance with this fallback.
+        char dummy;
+        ::SearchPathA(NULL, "powershell.exe", NULL, 1, &dummy, NULL);
+        const char *interpreter = ::GetLastError() != ERROR_FILE_NOT_FOUND
+            ? "powershell.exe"
+            : "C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell.exe";
+        snprintf(newpath, 256, "%s -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", interpreter, path);
         return newpath;
     }
     else if (!strcmp(path + strlen(path) - 3, ".pl")) {
@@ -2808,13 +2293,13 @@ bool banned_exec_name(char *name)
         return false;
 
     char *extension = name + strlen(name) - 4;
-    if (g_execute_suffixes.size()) {
+    if (g_config->executeSuffixes().size()) {
         if (extension[0] != '.')
             return true;
         extension ++;
-        for (execute_suffixes_t::iterator it_ex = g_execute_suffixes.begin();
-                it_ex!= g_execute_suffixes.end(); it_ex++)
-            if (!strcasecmp(extension, *it_ex))
+        for (execute_suffixes_t::const_iterator it_ex = g_config->executeSuffixes().begin();
+                it_ex != g_config->executeSuffixes().end(); ++it_ex)
+            if (!strcasecmp(extension, it_ex->c_str()))
                 return false;
         return true;
     }
@@ -2837,15 +2322,14 @@ int launch_program(script_container* cont)
 {
     int exit_code  = 0;
     int out_offset = 0;
-    char buf[16635];           // i/o buffer
 
     STARTUPINFO si;
     SECURITY_ATTRIBUTES sa;
     SECURITY_DESCRIPTOR sd;   // security information for pipes
 
     PROCESS_INFORMATION pi;
-    HANDLE script_stdout,read_stdout;  // pipe handles
-    HANDLE script_stderr,read_stderr;
+    WinHandle script_stdout, read_stdout;  // pipe handles
+    WinHandle script_stderr,read_stderr;
 
     // initialize security descriptor (Windows NT)
     if (IsWinNT())
@@ -2860,10 +2344,10 @@ int launch_program(script_container* cont)
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.bInheritHandle = true;                       // allow inheritable handles
 
-    if (!CreatePipe(&read_stdout,&script_stdout,&sa,0)) // create stdout pipe
+    if (!CreatePipe(read_stdout.ptr(),script_stdout.ptr(),&sa,0)) // create stdout pipe
         return 1;
 
-    if (!CreatePipe(&read_stderr,&script_stderr,&sa,0)) // create stderr pipe
+    if (!CreatePipe(read_stderr.ptr(),script_stderr.ptr(),&sa,0)) // create stderr pipe
         return 1;
 
     //set startupinfo for the spawned process
@@ -2879,13 +2363,8 @@ int launch_program(script_container* cont)
 
     // spawn the child process
     if (!CreateProcess(NULL,cont->path,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,
-                NULL,NULL,&si,&pi))
-    {
-        CloseHandle(script_stdout);
-        CloseHandle(read_stdout);
-
-        CloseHandle(script_stderr);
-        CloseHandle(read_stderr);
+                NULL,NULL,&si,&pi)) {
+        crash_log("failed to spawn process %s: %s", cont->path, get_win_error_as_string().c_str());
         return 1;
     }
 
@@ -2895,11 +2374,12 @@ int launch_program(script_container* cont)
     AssignProcessToJobObject(cont->job_object, pi.hProcess);
     AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
 
-    unsigned long exit=0;  // process exit code
     unsigned long bread;   // bytes read
     unsigned long avail;   // bytes available
 
-    memset(buf, 0, sizeof(buf));
+    static const size_t BUFFER_SIZE = 16635;
+    char buf[BUFFER_SIZE];           // i/o buffer
+    memset(buf, 0, BUFFER_SIZE);
     time_t process_start = time(0);
     bool buffer_full = false;
 
@@ -2913,16 +2393,16 @@ int launch_program(script_container* cont)
             break;
         }
 
-        GetExitCodeProcess(pi.hProcess, &exit);      // while the process is running
+        GetExitCodeProcess(pi.hProcess, &cont->exit_code);      // while the process is running
         while (!buffer_full) {
             if (!with_stderr) {
-                PeekNamedPipe(read_stderr, buf, sizeof(buf), &bread, &avail, NULL);
+                PeekNamedPipe(read_stderr, buf, BUFFER_SIZE, &bread, &avail, NULL);
                 if (avail > 0)
                     // Just read from the pipe, we do not use this data
-                    ReadFile(read_stderr, buf, sizeof(buf) - 1, &bread, NULL);
+                    ReadFile(read_stderr, buf, BUFFER_SIZE - 1, &bread, NULL);
             }
 
-            PeekNamedPipe(read_stdout, buf, sizeof(buf), &bread, &avail, NULL);
+            PeekNamedPipe(read_stdout, buf, BUFFER_SIZE, &bread, &avail, NULL);
 
             if (avail == 0)
                 break;
@@ -2943,33 +2423,29 @@ int launch_program(script_container* cont)
                 break;
 
             if (bread > 0) {
-                memset(buf, 0, sizeof(buf));
-                ReadFile(read_stdout, buf, sizeof(buf) - 1, &bread, NULL);
-                out_offset += snprintf(cont->buffer_work + out_offset, current_heap_size - out_offset, buf);
+                ReadFile(read_stdout, cont->buffer_work + out_offset,
+                         std::min<size_t>(BUFFER_SIZE - 1, current_heap_size - out_offset), &bread, NULL);
+                out_offset += bread;
             }
         }
         if (buffer_full) {
+            crash_log("plugin produced more than 2MB output -> dropped");
             // Buffer full -> delete incomplete data
             exit_code = 1;
             break;
         }
 
-        if (exit != STILL_ACTIVE)
+        if (cont->exit_code != STILL_ACTIVE)
             break;
 
         Sleep(10);
     }
-
     TerminateJobObject(cont->job_object, exit_code);
 
     // cleanup the mess
     CloseHandle(cont->job_object);
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
-    CloseHandle(script_stdout);
-    CloseHandle(read_stdout);
-    CloseHandle(script_stderr);
-    CloseHandle(read_stderr);
 
     return exit_code;
 }
@@ -3021,14 +2497,16 @@ bool script_exists(script_container *cont)
 
 void run_script_container(script_container *cont)
 {
-    if ( (cont->type == PLUGIN && !(enabled_sections & SECTION_PLUGINS)) ||
-         (cont->type == LOCAL  && !(enabled_sections & SECTION_LOCAL)) )
+    if ( (cont->type == PLUGIN && !(g_config->sectionEnabled(SECTION_PLUGINS))) ||
+         (cont->type == LOCAL  && !(g_config->sectionEnabled(SECTION_LOCAL))) )
         return;
 
     // Return if this script is no longer present
     // However, the script container is preserved
-    if (!script_exists(cont))
+    if (!script_exists(cont)) {
+        crash_log("script %s no longer exists", cont->script_path);
         return;
+    }
 
     time_t now = time(0);
     if (now - cont->buffer_time >= cont->max_age) {
@@ -3042,6 +2520,7 @@ void run_script_container(script_container *cont)
         if (cont->worker_thread != INVALID_HANDLE_VALUE)
             CloseHandle(cont->worker_thread);
 
+        crash_log("invoke script %s", cont->script_path);
         cont->worker_thread  = CreateThread(
                 NULL,                 // default security attributes
                 0,                    // use default stack size
@@ -3051,8 +2530,10 @@ void run_script_container(script_container *cont)
                 NULL);                // returns the thread identifier
 
         if (cont->execution_mode == SYNC ||
-            (cont->execution_mode == ASYNC && g_default_script_async_execution == SEQUENTIAL))
+            (cont->execution_mode == ASYNC && g_config->defaultScriptAsyncExecution() == SEQUENTIAL))
             WaitForSingleObject(cont->worker_thread, INFINITE);
+
+        crash_log("finished with status %d (exit code %" PRIudword ")", cont->status, cont->exit_code);
     }
 }
 
@@ -3065,6 +2546,7 @@ void output_external_programs(SOCKET &out, script_type type)
     {
         cont = it_cont->second;
         if (!script_exists(cont)) {
+            crash_log("script %s missing", cont->script_path);
             it_cont++;
             continue;
         }
@@ -3096,10 +2578,10 @@ void output_external_programs(SOCKET &out, script_type type)
                     cont->buffer_work[2] = '\n';
                 }
 
-                if (cont->max_age == 0)
+                if (cont->max_age == 0) {
                     cont->buffer      = cont->buffer_work;
-                else
-                {
+                }
+                else {
                     // Determine chache_info text
                     char cache_info[32];
                     snprintf(cache_info, sizeof(cache_info), ":cached(%d,%d)", (int)cont->buffer_time, cont->max_age);
@@ -3128,7 +2610,7 @@ void output_external_programs(SOCKET &out, script_type type)
                             snprintf(cache_buffer + cache_buffer_offset, write_bytes, "%s", line);
                             cache_buffer_offset += write_bytes - 1;
 
-                            snprintf(cache_buffer + cache_buffer_offset, cache_len, cache_info);
+                            snprintf(cache_buffer + cache_buffer_offset, cache_len, "%s", cache_info);
                             cache_buffer_offset += cache_len - 1;
 
                             write_bytes = 3 + cr_offset + 1 + 1; // >>> + \r + \n + \0
@@ -3157,7 +2639,7 @@ void output_external_programs(SOCKET &out, script_type type)
                 cont->buffer = NULL;
             }
             if (cont->buffer)
-                output(out, cont->buffer);
+                output(out, "%s", cont->buffer);
         }
         it_cont++;
     }
@@ -3181,8 +2663,8 @@ void update_mrpe_includes()
     FILE *file;
     char  line[512];
     int   lineno = 0;
-    for (mrpe_include_t::iterator it_include = g_mrpe_includes.begin();
-         it_include != g_mrpe_includes.end(); it_include++)
+    for (mrpe_include_t::iterator it_include = g_config->mrpeIncludes().begin();
+         it_include != g_config->mrpeIncludes().end(); it_include++)
     {
         char* path = (*it_include)->path;
         file = fopen(path, "r");
@@ -3244,10 +2726,8 @@ void update_mrpe_includes()
                     p = strrchr(plugin_name, '\\');
                 if (p)
                     plugin_name = p + 1;
-                strncpy(tmp_entry->plugin_name, plugin_name,
-                        sizeof(tmp_entry->plugin_name));
-
-                snprintf(tmp_entry->run_as_user, sizeof(tmp_entry->run_as_user), (*it_include)->user);
+                strncpy(tmp_entry->plugin_name, plugin_name, sizeof(tmp_entry->plugin_name));
+                strncpy(tmp_entry->run_as_user, (*it_include)->user, sizeof(tmp_entry->run_as_user));
                 g_included_mrpe_entries.push_back(tmp_entry);
             }
         }
@@ -3264,7 +2744,7 @@ void section_mrpe(SOCKET &out)
 
     mrpe_entries_t all_mrpe_entries;
     all_mrpe_entries.insert(all_mrpe_entries.end(),
-                            g_mrpe_entries.begin(), g_mrpe_entries.end());
+                            g_config->mrpeEntries().begin(), g_config->mrpeEntries().end());
     all_mrpe_entries.insert(all_mrpe_entries.end(),
                             g_included_mrpe_entries.begin(), g_included_mrpe_entries.end());
 
@@ -3353,7 +2833,7 @@ void section_plugins(SOCKET &out)
 // |                     |____/| .__/ \___/ \___/|_|                       |
 // |                           |_|                                         |
 // '-----------------------------------------------------------------------'
-void section_spool(SOCKET &out)
+void section_spool(SOCKET &out, const Environment &env)
 {
     crash_log("<<<spool>>>");
     // Look for files in the spool directory and append these files to
@@ -3361,7 +2841,7 @@ void section_spool(SOCKET &out)
     // of digits. If this is the case then it is interpreted as a time
     // in seconds: the maximum allowed age of the file. Outdated files
     // are simply being ignored.
-    DIR  *dir = opendir(g_spool_dir);
+    DIR  *dir = opendir(env.spoolDirectory().c_str());
     if (dir) {
         WIN32_FIND_DATA filedata;
         char path[512];
@@ -3374,7 +2854,7 @@ void section_spool(SOCKET &out)
             if (name[0] == '.')
                 continue;
 
-            snprintf(path, sizeof(path), "%s\\%s", g_spool_dir, name);
+            snprintf(path, sizeof(path), "%s\\%s", env.spoolDirectory().c_str(), name);
             int max_age = -1;
             if (isdigit(*name))
                 max_age = atoi(name);
@@ -3426,10 +2906,11 @@ void section_spool(SOCKET &out)
 //  | The section <<<check_mk>>>                                           |
 //  '----------------------------------------------------------------------'
 
-void section_check_mk(SOCKET &out)
+void section_check_mk(SOCKET &out, const Environment &env)
 {
     crash_log("<<<check_mk>>>");
     output(out, "<<<check_mk>>>\n");
+
     output(out, "Version: %s\n", check_mk_version);
     output(out, "BuildDate: %s\n", __DATE__);
 #ifdef ENVIRONMENT32
@@ -3438,40 +2919,50 @@ void section_check_mk(SOCKET &out)
     output(out, "Architecture: 64bit\n");
 #endif
     output(out, "AgentOS: windows\n");
-    output(out, "Hostname: %s\n",         g_hostname);
-    output(out, "WorkingDirectory: %s\n", g_current_directory);
-    output(out, "ConfigFile: %s\n",       g_config_file);
-    output(out, "AgentDirectory: %s\n",   g_agent_directory);
-    output(out, "PluginsDirectory: %s\n", g_plugins_dir);
-    output(out, "StateDirectory: %s\n",   g_state_dir);
-    output(out, "ConfigDirectory: %s\n",  g_config_dir);
-    output(out, "TempDirectory: %s\n",    g_temp_dir);
-    output(out, "LogDirectory: %s\n",     g_log_dir);
-    output(out, "SpoolDirectory: %s\n",   g_spool_dir);
-    output(out, "LocalDirectory: %s\n",   g_local_dir);
+    output(out, "Hostname: %s\n",         env.hostname().c_str());
+    output(out, "WorkingDirectory: %s\n", env.currentDirectory().c_str());
+    output(out, "ConfigFile: %s\n",       g_config->configFileName(false).c_str());
+    output(out, "LocalConfigFile: %s\n",  g_config->configFileName(true).c_str());
+    output(out, "AgentDirectory: %s\n",   env.agentDirectory().c_str());
+    output(out, "PluginsDirectory: %s\n", env.pluginsDirectory().c_str());
+    output(out, "StateDirectory: %s\n",   env.stateDirectory().c_str());
+    output(out, "ConfigDirectory: %s\n",  env.configDirectory().c_str());
+    output(out, "TempDirectory: %s\n",    env.tempDirectory().c_str());
+    output(out, "LogDirectory: %s\n",     env.logDirectory().c_str());
+    output(out, "SpoolDirectory: %s\n",   env.spoolDirectory().c_str());
+    output(out, "LocalDirectory: %s\n",   env.localDirectory().c_str());
     output(out, "ScriptStatistics: Plugin C:%d E:%d T:%d "
             "Local C:%d E:%d T:%d\n",
             g_script_stat.pl_count, g_script_stat.pl_errors, g_script_stat.pl_timeouts,
             g_script_stat.lo_count, g_script_stat.lo_errors, g_script_stat.lo_timeouts);
-    if (g_crash_debug) {
+    if (g_config->crashDebug()) {
         output(out, "ConnectionLog: %s\n", g_connection_log);
         output(out, "CrashLog: %s\n",      g_crash_log);
         output(out, "SuccessLog: %s\n",    g_success_log);
     }
 
     output(out, "OnlyFrom:");
-    if (g_only_from.size() == 0)
+    if (g_config->onlyFrom().size() == 0)
         output(out, " 0.0.0.0/0\n");
     else {
-        for ( only_from_t::iterator it_from = g_only_from.begin();
-                it_from != g_only_from.end(); it_from++ ) {
+        for ( only_from_t::const_iterator it_from = g_config->onlyFrom().begin();
+                it_from != g_config->onlyFrom().end(); ++it_from ) {
             ipspec *is = *it_from;
-            output(out, " %d.%d.%d.%d/%d",
-                    is->address & 0xff,
-                    is->address >> 8 & 0xff,
-                    is->address >> 16 & 0xff,
-                    is->address >> 24 & 0xff,
-                    is->bits);
+            if (is->ipv6) {
+                output(out, " %x:%x:%x:%x:%x:%x:%x:%x/%d",
+                        is->ip.v6.address[0], is->ip.v6.address[1],
+                        is->ip.v6.address[2], is->ip.v6.address[3],
+                        is->ip.v6.address[4], is->ip.v6.address[5],
+                        is->ip.v6.address[6], is->ip.v6.address[7],
+                        is->bits);
+            } else {
+                output(out, " %d.%d.%d.%d/%d",
+                        is->ip.v4.address & 0xff,
+                        is->ip.v4.address >> 8 & 0xff,
+                        is->ip.v4.address >> 16 & 0xff,
+                        is->ip.v4.address >> 24 & 0xff,
+                        is->bits);
+            }
         }
         output(out, "\n");
     }
@@ -3528,13 +3019,14 @@ void WINAPI ServiceControlHandler( DWORD controlCode )
     SetServiceStatus( serviceStatusHandle, &serviceStatus );
 }
 
+
 void WINAPI ServiceMain(DWORD, TCHAR* [] )
 {
     // initialise service status
-    serviceStatus.dwServiceType      	    = SERVICE_WIN32_OWN_PROCESS;
-    serviceStatus.dwCurrentState     	    = SERVICE_STOPPED;
-    serviceStatus.dwControlsAccepted 	    = 0;
-    serviceStatus.dwWin32ExitCode    	    = NO_ERROR;
+    serviceStatus.dwServiceType             = SERVICE_WIN32_OWN_PROCESS;
+    serviceStatus.dwCurrentState            = SERVICE_STOPPED;
+    serviceStatus.dwControlsAccepted        = 0;
+    serviceStatus.dwWin32ExitCode           = NO_ERROR;
     serviceStatus.dwServiceSpecificExitCode = NO_ERROR;
     serviceStatus.dwCheckPoint              = 0;
     serviceStatus.dwWaitHint                = 0;
@@ -3554,8 +3046,7 @@ void WINAPI ServiceMain(DWORD, TCHAR* [] )
         serviceStatus.dwCurrentState = SERVICE_RUNNING;
         SetServiceStatus( serviceStatusHandle, &serviceStatus );
 
-        do_tcp = true;
-        listen_tcp_loop();
+        RunImmediate("service", 0, NULL);
 
         // service is now stopped
         serviceStatus.dwControlsAccepted &= ~(SERVICE_ACCEPT_STOP |
@@ -3661,26 +3152,6 @@ void do_remove()
     UninstallService();
 }
 
-// DEBUGGING
-std::string get_last_error_as_string()
-{
-    //Get the error message, if any.
-    DWORD errorMessageID = ::GetLastError();
-    if(errorMessageID == 0)
-        return "No error message has been recorded";
-
-    LPSTR messageBuffer = NULL;
-    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-
-    std::string message(messageBuffer, size);
-
-    //Free the buffer.
-    LocalFree(messageBuffer);
-
-    return message;
-}
-
 
 // .-----------------------------------------------------------------------.
 // |       ____               _       ____       _                         |
@@ -3691,15 +3162,15 @@ std::string get_last_error_as_string()
 // |                                                         |___/         |
 // '-----------------------------------------------------------------------'
 
-void open_crash_log()
+void open_crash_log(const std::string &log_directory)
 {
     struct stat buf;
 
-    if (g_crash_debug) {
+    if (g_config->crashDebug()) {
         WaitForSingleObject(crashlogMutex, INFINITE);
-        snprintf(g_crash_log, sizeof(g_crash_log), "%s\\crash.log", g_log_dir);
-        snprintf(g_connection_log, sizeof(g_connection_log), "%s\\connection.log", g_log_dir);
-        snprintf(g_success_log, sizeof(g_success_log), "%s\\success.log", g_log_dir);
+        snprintf(g_crash_log, sizeof(g_crash_log), "%s\\crash.log", log_directory.c_str());
+        snprintf(g_connection_log, sizeof(g_connection_log), "%s\\connection.log", log_directory.c_str());
+        snprintf(g_success_log, sizeof(g_success_log), "%s\\success.log", log_directory.c_str());
 
         // rename left over log if exists (means crash found)
         if (0 == stat(g_connection_log, &buf)) {
@@ -3708,13 +3179,13 @@ void open_crash_log()
             char rotate_path_to[256];
             for (int i=9; i>=1; i--) {
                 snprintf(rotate_path_to, sizeof(rotate_path_to),
-                        "%s\\crash-%d.log", g_log_dir, i);
+                        "%s\\crash-%d.log", log_directory.c_str(), i);
                 if (i>1)
                     snprintf(rotate_path_from, sizeof(rotate_path_from),
-                            "%s\\crash-%d.log", g_log_dir, i-1);
+                            "%s\\crash-%d.log", log_directory.c_str(), i-1);
                 else
                     snprintf(rotate_path_from, sizeof(rotate_path_from),
-                            "%s\\crash.log", g_log_dir);
+                            "%s\\crash.log", log_directory.c_str());
                 unlink(rotate_path_to);
                 rename(rotate_path_from, rotate_path_to);
             }
@@ -3742,7 +3213,7 @@ void open_crash_log()
 
 void close_crash_log()
 {
-    if (g_crash_debug) {
+    if (g_config->crashDebug()) {
         WaitForSingleObject(crashlogMutex, INFINITE);
         crash_log("Closing crash log (no crash this time)");
 
@@ -3777,15 +3248,16 @@ void crash_log(const char *format, ...)
             ellapsed_sec --;
         }
 
-        va_list ap;
-        va_start(ap, format);
-
         DWORD dwBytesWritten = 0;
         snprintf(buffer, sizeof(buffer), "%ld.%06ld ", ellapsed_sec, ellapsed_usec);
         DWORD dwBytesToWrite = (DWORD)strlen(buffer);
         WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
 
+        va_list ap;
+        va_start(ap, format);
         vsnprintf(buffer, sizeof(buffer), format, ap);
+        va_end(ap);
+
         dwBytesToWrite = (DWORD)strlen(buffer);
         WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
 
@@ -3805,582 +3277,13 @@ void output_crash_log(SOCKET &out)
         FILE *f = fopen(g_crash_log, "r");
         char line[1024];
         while (0 != fgets(line, sizeof(line), f)) {
-            output(out, "W ");
-            output(out, line);
+            output(out, "W %s", line);
         }
         ReleaseMutex(crashlogMutex);
         fclose(f);
         g_found_crash = false;
     }
 }
-
-
-
-//  .----------------------------------------------------------------------.
-//  |    ____             __ _                       _   _                 |
-//  |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
-//  |  | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \     |
-//  |  | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |    |
-//  |   \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|    |
-//  |                          |___/                                       |
-//  '----------------------------------------------------------------------'
-
-int parse_boolean(char *value)
-{
-    if (!strcmp(value, "yes"))
-        return 1;
-    else if (!strcmp(value, "no"))
-        return 0;
-    else
-        fprintf(stderr, "Invalid boolean value. Only yes and no are allowed.\r\n");
-    return -1;
-}
-
-void lowercase(char *s)
-{
-    while (*s) {
-        *s = tolower(*s);
-        s++;
-    }
-}
-// Do a simple pattern matching with the jokers * and ?.
-// This is case insensitive (windows-like).
-bool globmatch(const char *pattern, char *astring)
-{
-    const char *p = pattern;
-    char *s = astring;
-    while (*s) {
-        if (!*p)
-            return false; // pattern too short
-
-        // normal character-wise match
-        if (tolower(*p) == tolower(*s) || *p == '?') {
-            p++;
-            s++;
-        }
-
-        // non-matching charactetr
-        else if (*p != '*')
-            return false;
-
-        else { // check *
-            // If there is more than one asterisk in the pattern,
-            // we need to try out several variants. We do this
-            // by backtracking (smart, eh?)
-            int maxlength = strlen(s);
-            // replace * by a sequence of ?, at most the rest length of s
-            char *subpattern = (char *)malloc(strlen(p) + maxlength + 1);
-            bool match = false;
-            for (int i=0; i<=maxlength; i++) {
-                for (int x=0; x<i; x++)
-                    subpattern[x] = '?';
-                strcpy(subpattern + i, p + 1); // omit leading '*'
-                if (globmatch(subpattern, s)) {
-                    match = true;
-                    break;
-                }
-            }
-            free(subpattern);
-            return match;
-        }
-    }
-
-    // string has ended, pattern not. Pattern must only
-    // contain * now if it wants to match
-    while (*p == '*') p++;
-    return *p == 0;
-}
-
-
-
-void add_only_from(char *value)
-{
-    unsigned a, b, c, d;
-    int bits = 32;
-
-    if (strchr(value, '/')) {
-        if (5 != sscanf(value, "%u.%u.%u.%u/%d", &a, &b, &c, &d, &bits)) {
-            fprintf(stderr, "Invalid value %s for only_hosts\n", value);
-            exit(1);
-        }
-    }
-    else {
-        if (4 != sscanf(value, "%u.%u.%u.%u", &a, &b, &c, &d)) {
-            fprintf(stderr, "Invalid value %s for only_hosts\n", value);
-            exit(1);
-        }
-    }
-
-    uint32_t ip = a + b * 0x100 + c * 0x10000 + d * 0x1000000;
-    uint32_t mask_swapped = 0;
-    for (int bit = 0; bit < bits; bit ++)
-        mask_swapped |= 0x80000000 >> bit;
-    uint32_t mask;
-    unsigned char *s = (unsigned char *)&mask_swapped;
-    unsigned char *t = (unsigned char *)&mask;
-    t[3] = s[0];
-    t[2] = s[1];
-    t[1] = s[2];
-    t[0] = s[3];
-
-
-    if ((ip & mask) != ip) {
-        fprintf(stderr, "Invalid only_hosts entry: host part not 0: %s/%u",
-                ipv4_to_text(ip), bits);
-        exit(1);
-    }
-
-    ipspec *tmp_ipspec = new ipspec();
-    tmp_ipspec->address = ip;
-    tmp_ipspec->netmask = mask;
-    tmp_ipspec->bits    = bits;
-    g_only_from.push_back(tmp_ipspec);
-}
-
-char *next_word(char **line)
-{
-    if (*line == 0) // allow subsequent calls without checking
-        return 0;
-
-    char *end = *line + strlen(*line);
-    char *value = *line;
-    while (value < end) {
-        value = lstrip(value);
-        char *s = value;
-        while (*s && !isspace(*s))
-            s++;
-        *s = 0;
-        *line = s + 1;
-        rstrip(value);
-        if (strlen(value) > 0)
-            return value;
-        else
-            return 0;
-    }
-    return 0;
-}
-
-
-void parse_only_from(char *value)
-{
-    char *word;
-    while (0 != (word = next_word(&value)))
-        add_only_from(word);
-}
-
-void parse_execute(char *value)
-{
-    // clean array if this options has been parsed already
-    for (execute_suffixes_t::iterator it_ex = g_execute_suffixes.begin();
-            it_ex!= g_execute_suffixes.end(); it_ex++)
-        free(*it_ex);
-    g_execute_suffixes.clear();
-
-    char *suffix;
-    while (0 != (suffix = next_word(&value)))
-        g_execute_suffixes.push_back(strdup(suffix));
-}
-
-
-bool parse_crash_debug(char *value)
-{
-    int s = parse_boolean(value);
-    if (s == -1)
-        return false;
-    g_crash_debug = s;
-    return true;
-}
-
-
-bool handle_global_config_variable(char *var, char *value)
-{
-    if (!strcmp(var, "only_from")) {
-        parse_only_from(value);
-        return true;
-    }
-    else if (!strcmp(var, "port")) {
-        g_port = atoi(value);
-        return true;
-    }
-    else if (!strcmp(var, "execute")) {
-        parse_execute(value);
-        return true;
-    }
-    else if (!strcmp(var, "async_script_execution")) {
-        if (!strcmp(value, "parallel"))
-            g_default_script_async_execution = PARALLEL;
-        else if (!strcmp(value, "sequential"))
-            g_default_script_async_execution = SEQUENTIAL;
-        return true;
-    }
-    // Do not longer use this!
-    else if (!strcmp(var, "caching_method")) {
-        if (!strcmp(value, "async")) {
-            g_default_script_async_execution = PARALLEL;
-            g_default_script_execution_mode  = ASYNC;
-        }
-        else if (!strcmp(value, "sync")) {
-            g_default_script_async_execution = SEQUENTIAL;
-            g_default_script_execution_mode  = ASYNC;
-        }
-        else if (!strcmp(value, "off")) {
-            g_default_script_async_execution = SEQUENTIAL;
-            g_default_script_execution_mode  = SYNC;
-        }
-        return true;
-    }
-    else if (!strcmp(var, "crash_debug")) {
-        return parse_crash_debug(value);
-    }
-    else if (!strcmp(var, "sections")) {
-        enabled_sections = 0;
-        char *word;
-        while ((word = next_word(&value))) {
-            if (!strcmp(word, "check_mk"))
-                enabled_sections |= SECTION_CHECK_MK;
-            else if (!strcmp(word, "uptime"))
-                enabled_sections |= SECTION_UPTIME;
-            else if (!strcmp(word, "df"))
-                enabled_sections |= SECTION_DF;
-            else if (!strcmp(word, "ps"))
-                enabled_sections |= SECTION_PS;
-            else if (!strcmp(word, "mem"))
-                enabled_sections |= SECTION_MEM;
-            else if (!strcmp(word, "services"))
-                enabled_sections |= SECTION_SERVICES;
-            else if (!strcmp(word, "winperf"))
-                enabled_sections |= SECTION_WINPERF;
-            else if (!strcmp(word, "logwatch"))
-                enabled_sections |= SECTION_LOGWATCH;
-            else if (!strcmp(word, "logfiles"))
-                enabled_sections |= SECTION_LOGFILES;
-            else if (!strcmp(word, "systemtime"))
-                enabled_sections |= SECTION_SYSTEMTIME;
-            else if (!strcmp(word, "plugins"))
-                enabled_sections |= SECTION_PLUGINS;
-            else if (!strcmp(word, "local"))
-                enabled_sections |= SECTION_LOCAL;
-            else if (!strcmp(word, "spool"))
-                enabled_sections |= SECTION_SPOOL;
-            else if (!strcmp(word, "mrpe"))
-                enabled_sections |= SECTION_MRPE;
-            else if (!strcmp(word, "fileinfo"))
-                enabled_sections |= SECTION_FILEINFO;
-            else {
-                fprintf(stderr, "Invalid section '%s'.\r\n", word);
-                return false;
-            }
-        }
-        return true;
-    }
-
-    return false;
-}
-
-bool handle_winperf_config_variable(char *var, char *value)
-{
-    if (!strcmp(var, "counters")) {
-        char *colon = strrchr(value, ':');
-        if (!colon) {
-            fprintf(stderr, "Invalid counter '%s' in section [winperf]: need number(or text) and colon, e.g. 238:processor.\n", value);
-            exit(1);
-        }
-        *colon = 0;
-        winperf_counter *tmp_counter = new winperf_counter();
-        tmp_counter->name = strdup(colon + 1);
-
-        bool is_digit = true;
-        for (unsigned int i = 0; i < strlen(value); i++)
-            if (!isdigit(value[i])) {
-                is_digit = false;
-                int id = get_perf_counter_id(value);
-                if (id == -1) {
-                    fprintf(stderr, "No matching performance counter id found for %s.\n", value);
-                    return false;
-                }
-                tmp_counter->id = id;
-                break;
-            }
-
-        if(is_digit)
-            tmp_counter->id = atoi(value);
-        g_winperf_counters.push_back(tmp_counter);
-        return true;
-    }
-    return false;
-}
-
-bool handle_logfiles_config_variable(char *var, char *value)
-{
-    load_logwatch_offsets();
-    if (!strcmp(var, "textfile")) {
-        if (value != 0)
-            add_globline(value);
-        return true;
-    }
-    else if (!strcmp(var, "warn")) {
-        if (value != 0)
-            add_condition_pattern('W', value);
-        return true;
-    }
-    else if (!strcmp(var, "crit")) {
-        if (value != 0)
-            add_condition_pattern('C', value);
-        return true;
-    }
-    else if (!strcmp(var, "ignore")) {
-        if (value != 0)
-            add_condition_pattern('I', value);
-        return true;
-    }
-    else if (!strcmp(var, "ok")) {
-        if (value != 0)
-            add_condition_pattern('O', value);
-        return true;
-    }
-    return false;
-}
-
-bool handle_logwatch_config_variable(char *var, char *value)
-{
-    load_eventlog_offsets();
-    if (!strncmp(var, "logfile ", 8)) {
-        int level;
-        char *logfilename = lstrip(var + 8);
-        lowercase(logfilename);
-
-        // value might have the option nocontext
-        int hide_context = 0;
-        char *s = value;
-        while (*s && *s != ' ')
-            s++;
-        if (*s == ' ') {
-            if (!strcmp(s+1, "nocontext"))
-                hide_context = 1;
-        }
-        *s = 0;
-
-        if (!strcmp(value, "off"))
-            level = -1;
-        else if (!strcmp(value, "all"))
-            level = 0;
-        else if (!strcmp(value, "warn"))
-            level = 1;
-        else if (!strcmp(value, "crit"))
-            level = 2;
-        else {
-            fprintf(stderr, "Invalid log level '%s'.\r\n"
-                    "Allowed are off, all, warn and crit.\r\n", value);
-            return false;
-        }
-
-        if (num_eventlog_configs < MAX_EVENTLOGS) {
-            eventlog_config[num_eventlog_configs].level = level;
-            eventlog_config[num_eventlog_configs].hide_context = hide_context;
-            strncpy(eventlog_config[num_eventlog_configs].name, logfilename, 256);
-            num_eventlog_configs++;
-        }
-
-        return true;
-    }
-    else if (!strcmp(var, "sendall")) {
-        int s = parse_boolean(value);
-        if (s == -1)
-            return false;
-        logwatch_send_initial_entries = s;
-        return true;
-    }
-    return false;
-}
-
-bool check_host_restriction(char *patterns)
-{
-    char *word;
-    while ((word = next_word(&patterns))) {
-        if (globmatch(word, g_hostname)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool handle_mrpe_config_variable(char *var, char *value)
-{
-    if (!strcmp(var, "check")) {
-        // First word: service description
-        // Rest: command line
-        char *service_description = next_word(&value);
-        char *command_line = value;
-        if (!command_line || !command_line[0]) {
-            fprintf(stderr, "Invalid command specification for mrpe:\r\n"
-                    "Format: SERVICEDESC COMMANDLINE\r\n");
-            return false;
-        }
-
-        mrpe_entry* tmp_entry = new mrpe_entry();
-        memset(tmp_entry, 0, sizeof(mrpe_entry));
-
-        strncpy(tmp_entry->command_line, command_line,
-                sizeof(tmp_entry->command_line));
-        strncpy(tmp_entry->service_description, service_description,
-                sizeof(tmp_entry->service_description));
-
-        // compute plugin name, drop directory part
-        char *plugin_name = next_word(&value);
-        char *p = strrchr(plugin_name, '/');
-        if (!p)
-            p = strrchr(plugin_name, '\\');
-        if (p)
-            plugin_name = p + 1;
-        strncpy(tmp_entry->plugin_name, plugin_name,
-                sizeof(tmp_entry->plugin_name));
-        g_mrpe_entries.push_back(tmp_entry);
-        return true;
-    }
-    else if (!strncmp(var, "include", 7)) {
-        char *user = NULL;
-        if (strlen(var) > 7)
-            user = lstrip(var + 7);
-
-        runas_include* tmp = new runas_include();
-        memset(tmp, 0, sizeof(*tmp));
-
-        if (user)
-            snprintf(tmp->user, sizeof(tmp->user), user);
-        snprintf(tmp->path, sizeof(tmp->path), value);
-        g_mrpe_includes.push_back(tmp);
-        return true;
-    }
-    return false;
-}
-
-
-/* Example configuration file:
-
-   [global]
-# Process this logfile only on the following hosts
-only_on = zhamzr12
-
-# Restrict access to certain IP addresses
-only_from = 127.0.0.1 192.168.56.0/24
-
-# Enable crash debugging
-crash_debug = on
-
-
-[winperf]
-# Select counters to extract. The following counters
-# are needed by checks shipped with check_mk.
-counters = 10332:msx_queues
-
-[logwatch]
-# Select which messages are to be sent in which
-# event log
-logfile system      = off
-logfile application = info
-logfile *           = off
-
-[mrpe]
-check = DISK_C: mrpe/check_disk -w C:
-check = MEM mrpe/check_mem -w 10 -c 20
- */
-
-void read_config_file()
-{
-    snprintf(g_config_file, sizeof(g_config_file), "%s\\check_mk.ini", g_agent_directory);
-    FILE *file = fopen(g_config_file, "r");
-    if (!file) {
-        g_config_file[0] = 0;
-        return;
-    }
-
-    char line[512];
-    int lineno = 0;
-    bool (*variable_handler)(char *var, char *value) = 0;
-    bool is_active = true; // false in sections with host restrictions
-
-    while (!feof(file)) {
-        if (!fgets(line, sizeof(line), file)){
-            fclose(file);
-            return;
-        }
-        lineno ++;
-        char *l = strip(line);
-        if (l[0] == 0 || l[0] == '#' || l[0] == ';')
-            continue; // skip empty lines and comments
-        int len = strlen(l);
-        if (l[0] == '[' && l[len-1] == ']') {
-            // found section header
-            l[len-1] = 0;
-            char *section = l + 1;
-            if (!strcmp(section, "global"))
-                variable_handler = handle_global_config_variable;
-            else if (!strcmp(section, "winperf"))
-                variable_handler = handle_winperf_config_variable;
-            else if (!strcmp(section, "logwatch"))
-                variable_handler = handle_logwatch_config_variable;
-            else if (!strcmp(section, "logfiles"))
-                variable_handler = handle_logfiles_config_variable;
-            else if (!strcmp(section, "mrpe"))
-                variable_handler = handle_mrpe_config_variable;
-            else if (!strcmp(section, "fileinfo"))
-                variable_handler = handle_fileinfo_config_variable;
-            else if (!strcmp(section, "plugins"))
-                variable_handler = handle_plugin_config_variable;
-            else if (!strcmp(section, "local"))
-                variable_handler = handle_local_config_variable;
-            else {
-                fprintf(stderr, "Invalid section [%s] in %s in line %d.\r\n",
-                        section, g_config_file, lineno);
-                exit(1);
-            }
-            // forget host-restrictions if new section begins
-            is_active = true;
-        }
-        else if (!variable_handler) {
-            fprintf(stderr, "Line %d is outside of any section.\r\n", lineno);
-            exit(1);
-        }
-        else {
-            // split up line at = sign
-            char *s = l;
-            while (*s && *s != '=')
-                s++;
-            if (*s != '=') {
-                fprintf(stderr, "Invalid line %d in %s.\r\n",
-                        lineno, g_config_file);
-                exit(1);
-            }
-            *s = 0;
-            char *value = s + 1;
-            char *variable = l;
-            rstrip(variable);
-            lowercase(variable);
-            value = strip(value);
-
-            // handle host restriction
-            if (!strcmp(variable, "host"))
-                is_active = check_host_restriction(value);
-
-            // skip all other variables for non-relevant hosts
-            else if (!is_active)
-                continue;
-
-            // Useful for debugging host restrictions
-            else if (!strcmp(variable, "print"))
-                fprintf(stderr, "%s\r\n", value);
-
-
-            else if (!variable_handler(variable, value)) {
-                fprintf(stderr, "Invalid entry in %s line %d.\r\n", g_config_file, lineno);
-                exit(1);
-            }
-        }
-    }
-    fclose(file);
-}
-
-
 
 
 
@@ -4402,45 +3305,6 @@ void wsa_startup()
         fprintf(stderr, "Cannot initialize winsock.\n");
         exit(1);
     }
-    if (0 != (gethostname(g_hostname, sizeof(g_hostname)))) {
-        strcpy(g_hostname, "");
-    }
-
-}
-
-char *ipv4_to_text(uint32_t ip)
-{
-    static char text[32];
-    snprintf(text, 32, "%u.%u.%u.%u",
-            ip & 255,
-            ip >> 8 & 255,
-            ip >> 16 & 255,
-            ip >> 24);
-    return text;
-}
-
-bool check_only_from(uint32_t ip)
-{
-    if (g_only_from.size() == 0)
-        return true; // no restriction set
-
-    for (only_from_t::iterator it_from = g_only_from.begin();
-            it_from != g_only_from.end(); it_from++) {
-        uint32_t signibits = ip & (*it_from)->netmask;
-        if (signibits == (*it_from)->address)
-            return true;
-    }
-    return false;
-}
-
-
-SOCKET RemoveSocketInheritance(SOCKET oldsocket)
-{
-    HANDLE newhandle;
-    DuplicateHandle(GetCurrentProcess(), (HANDLE)oldsocket,
-            GetCurrentProcess(), &newhandle, 0, FALSE,
-            DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS);
-    return (SOCKET)newhandle;
 }
 
 void stop_threads()
@@ -4464,115 +3328,6 @@ void stop_threads()
     TerminateJobObject(g_workers_job_object, 0);
 }
 
-void listen_tcp_loop()
-{
-    // We need to create a socket which listen for incoming connections
-    // but we do not want that it is inherited to child processes (local/plugins)
-    // Therefore we open the socket - this one is inherited by default
-    // Now we duplicate this handle and explicitly say that inheritance is forbidden
-    // and use the duplicate from now on
-    SOCKET tmp_s = socket(AF_INET, SOCK_STREAM, 0);
-    SOCKET s = RemoveSocketInheritance(tmp_s);
-
-    SOCKADDR_IN addr;
-    memset(&addr, 0, sizeof(SOCKADDR_IN));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(g_port);
-    addr.sin_addr.s_addr = ADDR_ANY;
-
-    int optval = 1;
-    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval));
-
-    if (SOCKET_ERROR == bind(s, (SOCKADDR *)&addr, sizeof(SOCKADDR_IN))) {
-        fprintf(stderr, "Cannot bind socket to port %d\n", g_port);
-        exit(1);
-    }
-
-    if (SOCKET_ERROR == listen(s, 5)) {
-        fprintf(stderr, "Cannot listen to socket\n");
-        exit(1);
-    }
-
-    // Job object for worker jobs. All worker are within this object
-    // and receive a terminate when the agent ends
-    g_workers_job_object = CreateJobObject(NULL, "workers_job");
-
-    // Run all ASYNC scripts on startup, so that their data is available on
-    // the first query of a client. Obviously, this slows down the agent startup...
-    // This procedure is mandatory, since we want to prevent missing agent sections
-    find_scripts();
-    collect_script_data(ASYNC);
-    DWORD dwExitCode = 0;
-    while (true)
-    {
-        if (GetExitCodeThread(g_collection_thread, &dwExitCode))
-        {
-            if (dwExitCode != STILL_ACTIVE)
-                break;
-            Sleep(200);
-        }
-        else
-            break;
-    }
-
-    SOCKET connection;
-    // Loop for ever.
-    debug("Starting main loop.");
-    while (!g_should_terminate)
-    {
-        // Das Dreckswindows kann nicht vernuenftig gleichzeitig auf
-        // ein Socket und auf ein Event warten. Weil ich nicht extra
-        // deswegen mit Threads arbeiten will, verwende ich einfach
-        // select() mit einem Timeout und polle should_terminate.
-
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(s, &fds);
-        struct timeval timeout;
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 500000;
-
-        SOCKADDR_IN remote_addr;
-        int addr_len = sizeof(SOCKADDR_IN);
-
-        if (1 == select(1, &fds, NULL, NULL, &timeout))
-        {
-            connection = accept(s, (SOCKADDR *)&remote_addr, &addr_len);
-            connection = RemoveSocketInheritance(connection);
-            if (connection != INVALID_SOCKET) {
-                uint32_t ip = 0;
-                char     ip_hr[256];
-                if (remote_addr.sin_family == AF_INET) {
-                    ip = remote_addr.sin_addr.s_addr;
-                    snprintf(ip_hr, sizeof(ip_hr), "%u.%u.%u.%u",
-                             ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
-                }
-                else
-                    snprintf(ip_hr, sizeof(ip_hr), "None");
-                if (check_only_from(ip)) {
-                    open_crash_log();
-                    crash_log("Accepted client connection from %s.", ip_hr);
-
-                    SetEnvironmentVariable("REMOTE_HOST", ip_hr);
-                    output_data(connection);
-                    close_crash_log();
-                }
-                closesocket(connection);
-            }
-        }
-        else if (!g_should_terminate) {
-            Sleep(1); // should never happen
-        }
-    }
-
-    stop_threads();
-
-    closesocket(s);
-    WSACleanup();
-
-}
-
-
 void output(SOCKET &out, const char *format, ...)
 {
     static char outbuffer[HEAP_BUFFER_MAX]; // won't get any bigger...
@@ -4580,6 +3335,7 @@ void output(SOCKET &out, const char *format, ...)
     va_list ap;
     va_start(ap, format);
     int written_len = vsnprintf(outbuffer + len, sizeof(outbuffer) - len, format, ap);
+    va_end(ap);
     len += written_len;
 
     // We do not send out the data immediately
@@ -4590,7 +3346,7 @@ void output(SOCKET &out, const char *format, ...)
 
     if (do_tcp) {
         while (write_to_socket && !g_should_terminate) {
-            int result = send(out, outbuffer, len, 0);
+            ssize_t result = send(out, outbuffer, len, 0);
             if (result == SOCKET_ERROR) {
                 debug("send() failed");
                 int error = WSAGetLastError();
@@ -4652,31 +3408,30 @@ void usage()
             "check_mk_agent adhoc           -- open TCP port %d and answer request until killed\n"
             "check_mk_agent test            -- test output of plugin, do not open TCP port\n"
             "check_mk_agent file FILENAME   -- write output of plugin into file, do not open TCP port\n"
-            "check_mk_agent debug           -- similar to test, but with lots of debug output\n",
-            check_mk_version, g_port);
+            "check_mk_agent debug           -- similar to test, but with lots of debug output\n"
+            "check_mk_agent showconfig      -- shows the effective configuration used (currently incomplete)\n",
+            check_mk_version, g_config->port());
     exit(1);
 }
 
 
-void do_debug()
+void do_debug(const Environment &env)
 {
     verbose_mode = true;
     do_tcp = false;
-    // logwatch_send_initial_entries = true;
-    // logwatch_suppress_info = false;
     SOCKET dummy;
-    output_data(dummy);
+    output_data(dummy, env);
 }
 
 
-void do_test(bool output_stderr)
+void do_test(bool output_stderr, const Environment &env)
 {
     do_tcp  = false;
     with_stderr = output_stderr;
     SOCKET dummy;
-    open_crash_log();
+    open_crash_log(env.logDirectory());
     crash_log("Started in test mode.");
-    output_data(dummy);
+    output_data(dummy, env);
     close_crash_log();
 }
 
@@ -4708,7 +3463,7 @@ DWORD WINAPI DataCollectionThread( LPVOID lpParam )
     return 0;
 }
 
-void determine_available_scripts(char *dirname, script_type type, char* run_as_user)
+void determine_available_scripts(const char *dirname, script_type type, char* run_as_user)
 {
     DIR  *dir     = opendir(dirname);
     if (dir) {
@@ -4793,81 +3548,134 @@ void collect_script_data(script_execution_mode mode)
     }
 }
 
-void do_adhoc()
+void do_adhoc(const Environment &env)
 {
     do_tcp = true;
-    printf("Listening for TCP connections on port %d\n", g_port);
-    printf("Close window or press Ctrl-C to exit\n");
-    fflush(stdout);
 
     g_should_terminate = false;
 
-    listen_tcp_loop(); // runs for ever or until Ctrl-C
+    ListenSocket sock(g_config->port(), g_config->onlyFrom(), g_config->supportIPV6());
+
+    printf("Listening for TCP connections (%s) on port %d\n",
+            sock.supportsIPV6() ? sock.supportsIPV4() ? "IPv4 and IPv6"
+                                : "IPv6 only"
+                                : "IPv4 only",
+            g_config->port());
+    printf("Close window or press Ctrl-C to exit\n");
+    fflush(stdout);
+
+    // Job object for worker jobs. All worker are within this object
+    // and receive a terminate when the agent ends
+    g_workers_job_object = CreateJobObject(NULL, "workers_job");
+
+    // Run all ASYNC scripts on startup, so that their data is available on
+    // the first query of a client. Obviously, this slows down the agent startup...
+    // This procedure is mandatory, since we want to prevent missing agent sections
+    find_scripts(env);
+    collect_script_data(ASYNC);
+    DWORD dwExitCode = 0;
+    while (true)
+    {
+        if (GetExitCodeThread(g_collection_thread, &dwExitCode))
+        {
+            if (dwExitCode != STILL_ACTIVE)
+                break;
+            Sleep(200);
+        }
+        else
+            break;
+    }
+
+    // Das Dreckswindows kann nicht vernuenftig gleichzeitig auf
+    // ein Socket und auf ein Event warten. Weil ich nicht extra
+    // deswegen mit Threads arbeiten will, verwende ich einfach
+    // select() mit einem Timeout und polle should_terminate.
+    while (!g_should_terminate) {
+        SOCKET connection = sock.acceptConnection();
+        if ((void*)connection != NULL) {
+            open_crash_log(env.logDirectory());
+            std::string ip_hr = sock.readableIP(connection);
+            crash_log("Accepted client connection from %s.", ip_hr.c_str());
+
+            SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
+            output_data(connection, env);
+            close_crash_log();
+            closesocket(connection);
+        }
+    }
+
+    stop_threads();
+    WSACleanup();
 }
 
-void find_scripts()
+void find_scripts(const Environment &env)
 {
     // Check if there are new scripts available
     // Scripts in default paths
-    determine_available_scripts(g_plugins_dir, PLUGIN, NULL);
-    determine_available_scripts(g_local_dir,   LOCAL,  NULL);
+    determine_available_scripts(env.pluginsDirectory().c_str(), PLUGIN, NULL);
+    determine_available_scripts(env.localDirectory().c_str(),   LOCAL,  NULL);
     // Scripts included with user permissions
-    for (script_include_t::iterator it_include = g_script_includes.begin();
-         it_include != g_script_includes.end(); it_include++)
+    for (script_include_t::iterator it_include = g_config->scriptIncludes().begin();
+         it_include != g_config->scriptIncludes().end(); ++it_include)
         determine_available_scripts((*it_include)->path, (*it_include)->type, (*it_include)->user);
 }
 
-void output_data(SOCKET &out)
+void output_data(SOCKET &out, const Environment &env)
 {
     // make sure, output of numbers is not localized
     setlocale(LC_ALL, "C");
 
-    if (g_crash_debug)
+    if (g_config->crashDebug())
         output_crash_log(out);
 
     update_script_statistics();
 
-    find_scripts();
+    find_scripts(env);
 
-    if (enabled_sections & SECTION_CHECK_MK)
-        section_check_mk(out);
-    if (enabled_sections & SECTION_UPTIME)
+    if (g_config->sectionEnabled(SECTION_CHECK_MK))
+        section_check_mk(out, env);
+    if (g_config->sectionEnabled(SECTION_UPTIME))
         section_uptime(out);
-    if (enabled_sections & SECTION_DF)
+    if (g_config->sectionEnabled(SECTION_DF))
         section_df(out);
-    if (enabled_sections & SECTION_PS)
-        section_ps(out);
-    if (enabled_sections & SECTION_MEM)
+    if (g_config->sectionEnabled(SECTION_PS)) {
+        if (g_config->psUseWMI()) {
+            section_ps_wmi(out);
+        } else {
+            section_ps(out);
+        }
+    }
+    if (g_config->sectionEnabled(SECTION_MEM))
         section_mem(out);
-    if (enabled_sections & SECTION_FILEINFO)
+    if (g_config->sectionEnabled(SECTION_FILEINFO))
         section_fileinfo(out);
-    if (enabled_sections & SECTION_SERVICES)
+    if (g_config->sectionEnabled(SECTION_SERVICES))
         section_services(out);
-    if (enabled_sections & SECTION_WINPERF)
+    if (g_config->sectionEnabled(SECTION_WINPERF))
         section_winperf(out);
-    if (enabled_sections & SECTION_LOGWATCH)
-        section_eventlog(out);
-    if (enabled_sections & SECTION_LOGFILES)
-        section_logfiles(out);
+    if (g_config->sectionEnabled(SECTION_LOGWATCH))
+        section_eventlog(out, env);
+    if (g_config->sectionEnabled(SECTION_LOGFILES))
+        section_logfiles(out, env);
 
     // Start data collection of SYNC scripts
     collect_script_data(SYNC);
 
-    if (enabled_sections & SECTION_PLUGINS)
+    if (g_config->sectionEnabled(SECTION_PLUGINS))
         section_plugins(out);
-    if (enabled_sections & SECTION_LOCAL)
+    if (g_config->sectionEnabled(SECTION_LOCAL))
         section_local(out);
-    if (enabled_sections & SECTION_SPOOL)
-        section_spool(out);
-    if (enabled_sections & SECTION_MRPE)
+    if (g_config->sectionEnabled(SECTION_SPOOL))
+        section_spool(out, env);
+    if (g_config->sectionEnabled(SECTION_MRPE))
         section_mrpe(out);
-    if (enabled_sections & SECTION_SYSTEMTIME)
+    if (g_config->sectionEnabled(SECTION_SYSTEMTIME))
         section_systemtime(out);
 
     // Send remaining data in out buffer
     if (do_tcp) {
         force_tcp_output = true;
-        output(out, "");
+        output(out, "%s", "");
         force_tcp_output = false;
     }
 
@@ -4878,23 +3686,22 @@ void output_data(SOCKET &out)
 
 void cleanup()
 {
+    delete g_wmi_helper;
+
     if (eventlog_buffer_size > 0)
         delete [] eventlog_buffer;
 
     unregister_all_eventlogs(); // frees a few bytes
 
-    for (execute_suffixes_t::iterator it_ex = g_execute_suffixes.begin();
-            it_ex != g_execute_suffixes.end(); it_ex++)
-        free(*it_ex);
-    g_execute_suffixes.clear();
+    if (g_config != NULL) {
+        for (fileinfo_paths_t::iterator it_path = g_config->fileinfoPaths().begin();
+                it_path != g_config->fileinfoPaths().end(); it_path++) {
+            free(*it_path);
+        }
+        g_config->fileinfoPaths().clear();
 
-    for (fileinfo_paths_t::iterator it_path = g_fileinfo_paths.begin();
-            it_path != g_fileinfo_paths.end(); it_path++) {
-        free(*it_path);
+        cleanup_logwatch();
     }
-    g_fileinfo_paths.clear();
-
-    cleanup_logwatch();
 }
 
 void show_version()
@@ -4902,142 +3709,152 @@ void show_version()
     printf("Check_MK_Agent version %s\n", check_mk_version);
 }
 
-void get_agent_dir(char *buffer, int size, bool use_cwd)
+
+const char *state_long_name(char state_id) {
+    switch (state_id) {
+        case 'O': return "ok";
+        case 'W': return "warning";
+        case 'C': return "crit";
+        case 'I': return "ignore";
+        default: return "invalid";
+    }
+}
+
+const char *level_name(int level_id) {
+    switch (level_id) {
+        case -1: return "off";
+        case  0: return "all";
+        case  1: return "warn";
+        case  2: return "crit";
+        default: return "invalid";
+    }
+}
+
+void show_config()
 {
-    buffer[0] = 0;
-
-    HKEY key;
-    DWORD ret = -1;
-
-    if (!use_cwd)
-        ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
-
-    if (ret == ERROR_SUCCESS)
-    {
-        DWORD dsize = size;
-        if (ERROR_SUCCESS == RegQueryValueEx(key, "ImagePath", NULL, NULL, (BYTE *)buffer, &dsize))
-        {
-            char *end = buffer + strlen(buffer);
-            // search backwards for backslash
-            while (end > buffer && *end != '\\')
-                end--;
-            *end = 0; // replace \ with string end => get directory of executable
-
-            // Handle case where name is quoted with double quotes.
-            // This is reported to happen on some 64 Bit systems when spaces
-            // are in the directory name.
-            if (*buffer == '"') {
-                memmove(buffer, buffer + 1, strlen(buffer));
-            }
+    printf("[global]\n");
+    printf("port = %d\n", g_config->port());
+    printf("crash_debug = %s\n", g_config->crashDebug() ? "yes" : "no");
+    if (!g_config->executeSuffixes().empty()) {
+        printf("execute = ");
+        for (execute_suffixes_t::iterator iter = g_config->executeSuffixes().begin();
+                iter != g_config->executeSuffixes().end(); ++iter) {
+            printf("%s", iter->c_str());
         }
-        RegCloseKey(key);
-    }
-    else {
-        // If the agent is not installed as service, simply
-        // assume the current directory to be the agent
-        // directory (for test and adhoc mode)
-        strncpy(buffer, g_current_directory, size);
-        if (buffer[strlen(buffer)-1] == '\\') // Remove trailing backslash
-            buffer[strlen(buffer)-1] = 0;
+        printf("\n");
     }
 
-}
-
-void determine_directories(bool use_cwd)
-{
-    // Determine directories once and forever
-    getcwd(g_current_directory, sizeof(g_current_directory));
-    get_agent_dir(g_agent_directory, sizeof(g_agent_directory), use_cwd);
-
-    snprintf(g_plugins_dir, sizeof(g_plugins_dir), "%s\\plugins", g_agent_directory);
-    snprintf(g_config_dir,  sizeof(g_config_dir),  "%s\\config",  g_agent_directory);
-    snprintf(g_local_dir,   sizeof(g_local_dir),   "%s\\local",   g_agent_directory);
-    snprintf(g_spool_dir,   sizeof(g_spool_dir),   "%s\\spool",   g_agent_directory);
-    snprintf(g_state_dir,   sizeof(g_state_dir),   "%s\\state",   g_agent_directory);
-    snprintf(g_temp_dir,    sizeof(g_temp_dir),    "%s\\temp",    g_agent_directory);
-    snprintf(g_log_dir,     sizeof(g_log_dir),     "%s\\log",     g_agent_directory);
-
-    snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt",   g_state_dir);
-    snprintf(g_eventlog_statefile, sizeof(g_eventlog_statefile), "%s\\eventstate.txt", g_state_dir);
-
-    // Set these directories as environment variables. Some scripts might use them...
-    SetEnvironmentVariable("MK_PLUGINSDIR", g_plugins_dir);
-    SetEnvironmentVariable("MK_CONFDIR",    g_config_dir);
-    SetEnvironmentVariable("MK_LOCALDIR",   g_local_dir);
-    SetEnvironmentVariable("MK_SPOOLDIR",   g_spool_dir);
-    SetEnvironmentVariable("MK_STATEDIR",   g_state_dir);
-    SetEnvironmentVariable("MK_TEMPDIR",    g_temp_dir);
-    SetEnvironmentVariable("MK_LOGDIR",     g_log_dir);
-}
-
-int get_counter_id_from_lang(const char *language, const char *counter_name)
-{
-    HKEY hKey;
-    LONG result;
-    TCHAR szValueName[300000];
-    DWORD dwcbData = sizeof(szValueName);
-    char regkey[512];
-    snprintf(regkey, sizeof(regkey), "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\%s", language);
-    result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regkey, REG_MULTI_SZ, KEY_READ, &hKey);
-    RegQueryValueEx(
-        hKey,
-        "Counter",
-        NULL,
-        NULL,
-        (LPBYTE) szValueName,
-        &dwcbData
-    );
-    RegCloseKey (hKey);
-
-    if (result != ERROR_SUCCESS) {
-        return -1;
+    printf("\n[logwatch]\n");
+    printf("send_all = %s\n", g_config->logwatchSendInitialEntries() ? "yes" : "no");
+    for (eventlog_config_t::iterator iter = g_config->eventlogConfig().begin();
+            iter != g_config->eventlogConfig().end(); ++iter) {
+        printf("logfile %s = %s%s\n",
+                    iter->name.c_str(),
+                    iter->hide_context ? "nocontext " : "",
+                    level_name(iter->level));
     }
 
-    int   length      = 0;
-    int   last_ctr_id = 0;
-    bool  is_name     = false;
-    DWORD offset      = 0;
 
-    TCHAR* ptr_perf = szValueName;
-    for(;;) {
-        if (offset > dwcbData)
-            break;
-
-        length = strlen(ptr_perf);
-        if (length == 0)
-            break;
-
-        if (is_name && !strcmp(counter_name, ptr_perf))
-            return last_ctr_id;
-        else
-            last_ctr_id = atoi(ptr_perf);
-
-        offset   = offset + length + 1;
-        ptr_perf = szValueName + offset;
-        is_name = !is_name;
+    printf("\n[local]\n");
+    for (timeout_configs_t::iterator iter = g_config->timeoutConfigs(LOCAL).begin();
+            iter != g_config->timeoutConfigs(LOCAL).end(); ++iter) {
+        printf("timeout %s = %d\n", (*iter)->pattern, (*iter)->timeout);
+    }
+    for (cache_configs_t::iterator iter = g_config->cacheConfigs(LOCAL).begin();
+            iter != g_config->cacheConfigs(LOCAL).end(); ++iter) {
+        printf("cache_age %s = %d\n", (*iter)->pattern, (*iter)->max_age);
+    }
+    for (retry_count_configs_t::iterator iter = g_config->retryConfigs(LOCAL).begin();
+            iter != g_config->retryConfigs(LOCAL).end(); ++iter) {
+        printf("retry_count %s = %d\n", (*iter)->pattern, (*iter)->retries);
+    }
+    for (execution_mode_configs_t::iterator iter = g_config->executionModeConfigs(LOCAL).begin();
+            iter != g_config->executionModeConfigs(LOCAL).end(); ++iter) {
+        printf("execution %s = %s\n", (*iter)->pattern, (*iter)->mode == SYNC ? "SYNC" : "ASYNC");
+    }
+    for (script_include_t::iterator iter = g_config->scriptIncludes().begin();
+            iter != g_config->scriptIncludes().end(); ++iter) {
+        if ((*iter)->type == LOCAL) {
+            printf("include %s = %s\n", (*iter)->user, (*iter)->path);
+        }
     }
 
-    return -1;
+    printf("\n[plugin]\n");
+    for (timeout_configs_t::iterator iter = g_config->timeoutConfigs(PLUGIN).begin();
+            iter != g_config->timeoutConfigs(PLUGIN).end(); ++iter) {
+        printf("timeout %s = %d\n", (*iter)->pattern, (*iter)->timeout);
+    }
+    for (cache_configs_t::iterator iter = g_config->cacheConfigs(PLUGIN).begin();
+            iter != g_config->cacheConfigs(PLUGIN).end(); ++iter) {
+        printf("cache_age %s = %d\n", (*iter)->pattern, (*iter)->max_age);
+    }
+    for (retry_count_configs_t::iterator iter = g_config->retryConfigs(PLUGIN).begin();
+            iter != g_config->retryConfigs(PLUGIN).end(); ++iter) {
+        printf("retry_count %s = %d\n", (*iter)->pattern, (*iter)->retries);
+    }
+    for (execution_mode_configs_t::iterator iter = g_config->executionModeConfigs(PLUGIN).begin();
+            iter != g_config->executionModeConfigs(PLUGIN).end(); ++iter) {
+        printf("execution %s = %s\n", (*iter)->pattern, (*iter)->mode == SYNC ? "SYNC" : "ASYNC");
+    }
+    for (script_include_t::iterator iter = g_config->scriptIncludes().begin();
+            iter != g_config->scriptIncludes().end(); ++iter) {
+        if ((*iter)->type == LOCAL) {
+            printf("include %s = %s\n", (*iter)->user, (*iter)->path);
+        }
+    }
+
+    printf("\n[logfiles]\n");
+    for (logwatch_globlines_t::iterator iter = g_config->logwatchGloblines().begin();
+            iter != g_config->logwatchGloblines().end(); ++iter) {
+        printf("textfile = ");
+        bool first = true;
+        for (glob_tokens_t::iterator it_token = (*iter)->tokens.begin();
+             it_token != (*iter)->tokens.end(); ++it_token) {
+            if (!first) {
+                printf(" | ");
+            } else {
+                first = false;
+            }
+            printf("%s", (*it_token)->pattern != NULL ? (*it_token)->pattern : "null");
+        }
+        printf("\n");
+        for (condition_patterns_t::iterator it_pattern = (*iter)->patterns.begin();
+                it_pattern != (*iter)->patterns.end(); ++it_pattern) {
+            printf("%s = %s\n", state_long_name((*it_pattern)->state), (*it_pattern)->glob_pattern);
+        }
+        printf("\n");
+    }
+
+    printf("\n[winperf]\n");
+    for (winperf_counters_t::iterator iter = g_config->winperfCounters().begin();
+            iter != g_config->winperfCounters().end(); ++iter) {
+        printf("counters = %d:%s\n", (*iter)->id, (*iter)->name);
+    }
+
+    printf("\n[fileinfo]\n");
+    for (fileinfo_paths_t::iterator iter = g_config->fileinfoPaths().begin();
+            iter != g_config->fileinfoPaths().end(); ++iter) {
+        printf("path = %s\n", (*iter));
+    }
+
+    printf("\n[mrpe]\n");
+    for (mrpe_entries_t::iterator iter = g_config->mrpeEntries().begin();
+            iter != g_config->mrpeEntries().end(); ++iter) {
+        printf("check = %s %s\n", (*iter)->service_description, (*iter)->command_line);
+    }
+
+    for (mrpe_include_t::iterator iter = g_config->mrpeIncludes().begin();
+            iter != g_config->mrpeIncludes().end(); ++iter) {
+        printf("include = %s %s\n", (*iter)->user, (*iter)->path);
+    }
+
+    printf("\n[ps]\n");
+    printf("use_wmi = %s\n", g_config->psUseWMI() ? "yes" : "no");
+    printf("full_path = %s\n", g_config->psFullCommandLine() ? "yes" : "no");
 }
 
-int get_perf_counter_id(const char *counter_name)
-{
-    int counter_id;
-    // Try to find it in current language
-    if ((counter_id = get_counter_id_from_lang("CurrentLanguage", counter_name)) != -1)
-        return counter_id;
 
-    // Try to find it in english
-    if ((counter_id = get_counter_id_from_lang("009", counter_name)) != -1)
-        return counter_id;
-
-    return -1;
-}
-
-void do_unpack_plugins(char *plugin_filename) {
-    snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt", g_agent_directory);
-
+void do_unpack_plugins(const char *plugin_filename, const Environment &env) {
     FILE *file = fopen(plugin_filename, "rb");
     if (!file) {
         printf("Unable to open Check_MK-Agent package %s\n", plugin_filename);
@@ -5046,7 +3863,7 @@ void do_unpack_plugins(char *plugin_filename) {
 
 
     char uninstall_file_path[512];
-    snprintf(uninstall_file_path, 512, "%s\\uninstall_plugins.bat", g_agent_directory);
+    snprintf(uninstall_file_path, 512, "%s\\uninstall_plugins.bat", env.agentDirectory().c_str());
     FILE *uninstall_file = fopen(uninstall_file_path, "w");
     fprintf(uninstall_file, "REM * If you want to uninstall the plugins which were installed during the\n"
                             "REM * last 'check_mk_agent.exe unpack' command, just execute this script\n\n");
@@ -5119,21 +3936,21 @@ void do_unpack_plugins(char *plugin_filename) {
 
         if (dirname != NULL) {
             char new_dir[1024];
-            snprintf(new_dir, sizeof(new_dir), "%s\\%s", g_agent_directory, dirname);
+            snprintf(new_dir, sizeof(new_dir), "%s\\%s", env.agentDirectory().c_str(), dirname);
             CreateDirectory(new_dir, NULL);
-            fprintf(uninstall_file, "del \"%s\\%s\\%s\"\n", g_agent_directory, dirname, filename);
+            fprintf(uninstall_file, "del \"%s\\%s\\%s\"\n", env.agentDirectory().c_str(), dirname, filename);
         }
         else
-            fprintf(uninstall_file, "del \"%s\\%s\"\n", g_agent_directory, filename);
+            fprintf(uninstall_file, "del \"%s\\%s\"\n", env.agentDirectory().c_str(), filename);
 
         // TODO: remove custom dirs on uninstall
 
         // Write plugin
         char plugin_path[512];
         if (dirname != NULL)
-            snprintf(plugin_path, sizeof(plugin_path), "%s\\%s\\%s", g_agent_directory, dirname, filename);
+            snprintf(plugin_path, sizeof(plugin_path), "%s\\%s\\%s", env.agentDirectory().c_str(), dirname, filename);
         else
-            snprintf(plugin_path, sizeof(plugin_path), "%s\\%s", g_agent_directory, filename);
+            snprintf(plugin_path, sizeof(plugin_path), "%s\\%s", env.agentDirectory().c_str(), filename);
 
         FILE *plugin_file = fopen(plugin_path, "wb");
         fwrite(content, 1, content_length, plugin_file);
@@ -5143,7 +3960,7 @@ void do_unpack_plugins(char *plugin_filename) {
         free(content);
     }
 
-    fprintf(uninstall_file, "del \"%s\\uninstall_plugins.bat\"\n", g_agent_directory);
+    fprintf(uninstall_file, "del \"%s\\uninstall_plugins.bat\"\n", env.agentDirectory().c_str());
     fclose(uninstall_file);
     fclose(file);
 
@@ -5155,6 +3972,66 @@ void do_unpack_plugins(char *plugin_filename) {
 
 }
 
+
+void load_state(const Environment &env) {
+    load_eventlog_offsets(env.eventlogStatefile());
+}
+
+
+void RunImmediate(const char *mode, int argc, char **argv)
+{
+    // base directory structure on current working directory or registered dir (from registry)?
+    bool use_cwd = !strcmp(mode, "adhoc") || !strcmp(mode, "test");
+    Environment env(use_cwd);
+
+    g_config = new Configuration(env);
+
+    if (g_config->useWMI()) {
+        try {
+            g_wmi_helper = new wmi::Helper();
+        } catch (const std::runtime_error &ex) {
+            fprintf(stderr, "Failed to initialize wmi: %s", ex.what());
+            exit(1);
+        }
+    }
+
+    load_state(env);
+
+    if (!strcmp(mode, "test"))
+        do_test(true, env);
+    else if (!strcmp(mode, "file")) {
+        if (argc < 1) {
+            fprintf(stderr, "Please specify the name of an output file.\n");
+            exit(1);
+        }
+        fileout = fopen(argv[0], "w");
+        if (!fileout) {
+            fprintf(stderr, "Cannot open %s for writing.\n", argv[2]);
+            exit(1);
+        }
+        do_file = true;
+        do_test(false, env);
+        fclose(fileout);
+    }
+    else if (!strcmp(mode, "adhoc") || !strcmp(mode, "service"))
+        do_adhoc(env);
+    else if (!strcmp(mode, "install"))
+        do_install();
+    else if (!strcmp(mode, "remove"))
+        do_remove();
+    else if (!strcmp(mode, "unpack"))
+        do_unpack_plugins(argv[0], env);
+    else if (!strcmp(mode, "debug"))
+        do_debug(env);
+    else if (!strcmp(mode, "version"))
+        show_version();
+    else if (!strcmp(mode, "showconfig"))
+        show_config();
+    else
+        usage();
+}
+
+
 int main(int argc, char **argv)
 {
     wsa_startup();
@@ -5163,12 +4040,6 @@ int main(int argc, char **argv)
     osv.dwOSVersionInfoSize = sizeof(osv);
     GetVersionEx(&osv);
 
-    if (argc > 1 && (!strcmp(argv[1], "adhoc") || !strcmp(argv[1], "test")))
-        determine_directories(true /* use working dir */);
-    else
-        determine_directories(false /* use registered dir */);
-    read_config_file();
-
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);
 
     if ((argc > 2) && (strcmp(argv[1], "file") && strcmp(argv[1], "unpack")))
@@ -5176,37 +4047,9 @@ int main(int argc, char **argv)
 
     if (argc <= 1)
         RunService();
-    else if (!strcmp(argv[1], "test"))
-        do_test(true);
-    else if (!strcmp(argv[1], "file")) {
-        if (argc < 3) {
-            fprintf(stderr, "Please specify the name of an output file.\n");
-            exit(1);
-        }
-        fileout = fopen(argv[2], "w");
-        if (!fileout) {
-            fprintf(stderr, "Cannot open %s for writing.\n", argv[2]);
-            exit(1);
-        }
-        do_file = true;
-        do_test(false);
-        fclose(fileout);
+    else {
+        RunImmediate(argv[1], argc - 2, argv + 2);
     }
-    else if (!strcmp(argv[1], "adhoc"))
-        do_adhoc();
-    else if (!strcmp(argv[1], "install"))
-        do_install();
-    else if (!strcmp(argv[1], "remove"))
-        do_remove();
-    else if (!strcmp(argv[1], "unpack"))
-        do_unpack_plugins(argv[2]);
-    else if (!strcmp(argv[1], "debug"))
-        do_debug();
-    else if (!strcmp(argv[1], "version"))
-        show_version();
-    else
-        usage();
-
     cleanup();
 }
 

@@ -185,7 +185,7 @@ def end():
 
         if table["searchable"]:
             # Search is always lower case -> case insensitive
-            search_term = html.var('_%s_search' % table_id, table_opts.get('search', '')).lower()
+            search_term = html.var_utf8('_%s_search' % table_id, table_opts.get('search', '')).lower()
             if search_term:
                 html.set_var('_%s_search' % table_id, search_term)
                 table_opts['search'] = search_term # persist
@@ -270,6 +270,7 @@ def end():
 
                 # Add the table action link
                 if first_col:
+                    first_col = False
                     if actions_enabled:
                         if actions_visible:
                             state = '0'
@@ -279,11 +280,17 @@ def end():
                             state = '1'
                             help  = _('Display table actions')
                             img   = 'table_actions_off'
+                        html.write("<div class=\"toggle_actions\">")
                         html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
                             help, img, cssclass = 'toggle_actions')
-                    first_col = False
+                        html.write("<span>%s</span>" % header)
+                        html.write("</div>")
+                    else:
+                        html.write(header)
+                else:
+                    html.write(header)
 
-                html.write("%s</th>\n" % header)
+                html.write("</th>\n")
             html.write("  </tr>\n")
 
     # If we have no group headers then paint the headers now

@@ -1,0 +1,173 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<hp_msa_psu>>>
+# power-supplies 1 durable-id psu_1.1
+# power-supplies 1 enclosure-id 1
+# power-supplies 1 serial-number 7CE451T700
+# power-supplies 1 description FRU,Pwr Sply,595W,AC,2U,LC,HP
+# power-supplies 1 name PSU 1, Left
+# power-supplies 1 revision D1
+# power-supplies 1 model 592267-002
+# power-supplies 1 vendor 0x
+# power-supplies 1 location Enclosure 1 - Left
+# power-supplies 1 position Left
+# power-supplies 1 position-numeric 0
+# power-supplies 1 part-number 592267-002
+# power-supplies 1 dash-level
+# power-supplies 1 fru-shortname AC Power Supply
+# power-supplies 1 mfg-date 2014-10-29 16:57:47
+# power-supplies 1 mfg-date-numeric 1414601867
+# power-supplies 1 mfg-location Zhongshan,Guangdong,CN
+# power-supplies 1 mfg-vendor-id 0x
+# power-supplies 1 configuration-serialnumber 7CE451T700
+# power-supplies 1 dc12v 1195
+# power-supplies 1 dc5v 508
+# power-supplies 1 dc33v 336
+# power-supplies 1 dc12i 548
+# power-supplies 1 dc5i 489
+# power-supplies 1 dctemp 34
+# power-supplies 1 health OK
+# power-supplies 1 health-numeric 0
+# power-supplies 1 health-reason
+# power-supplies 1 health-recommendation
+# power-supplies 1 status Up
+# power-supplies 1 status-numeric 0
+
+#   .--health--------------------------------------------------------------.
+#   |                    _                _ _   _                          |
+#   |                   | |__   ___  __ _| | |_| |__                       |
+#   |                   | '_ \ / _ \/ _` | | __| '_ \                      |
+#   |                   | | | |  __/ (_| | | |_| | | |                     |
+#   |                   |_| |_|\___|\__,_|_|\__|_| |_|                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                            main check                                |
+#   '----------------------------------------------------------------------'
+
+check_info['hp_msa_psu'] = {
+    'parse_function'            : parse_hp_msa,
+    'inventory_function'        : inventory_hp_msa_health,
+    'check_function'            : check_hp_msa_health,
+    'service_description'       : 'Power Supply Health %s',
+    'includes'                  : [ "hp_msa.include" ],
+}
+
+#.
+#   .--voltage-------------------------------------------------------------.
+#   |                             _ _                                      |
+#   |                 __   _____ | | |_ __ _  __ _  ___                    |
+#   |                 \ \ / / _ \| | __/ _` |/ _` |/ _ \                   |
+#   |                  \ V / (_) | | || (_| | (_| |  __/                   |
+#   |                   \_/ \___/|_|\__\__,_|\__, |\___|                   |
+#   |                                        |___/                         |
+#   '----------------------------------------------------------------------'
+
+# Just an assumption
+factory_settings["hp_msa_psu_default_levels"] = {
+    "levels_33v_lower" : (3.25, 3.20),
+    "levels_33v_upper" : (3.4,  3.45),
+    "levels_5v_lower"  : (4.9,  4.8),
+    "levels_5v_upper"  : (5.1,  5.2),
+    "levels_12v_lower" : (11.9, 11.8),
+    "levels_12v_upper" : (12.1, 12.2),
+}
+
+
+def inventory_hp_msa_psu(parsed):
+    return [ (key, {}) for key in parsed]
+
+
+def check_hp_msa_psu(item, params, parsed):
+    infotexts = []
+    state = 0
+    if item in parsed:
+        for psu_type, psu_type_readable, levels_type in [
+            ("dc12v", "12 V",  "levels_12v_"),
+            ("dc5v",  "5 V",   "levels_5v_"),
+            ("dc33v", "3.3 V", "levels_33v_")
+        ]:
+            psu_voltage = float(parsed[item][psu_type]) / 100
+            yield state, "%s: %.2f V" % (psu_type_readable, psu_voltage)
+
+            warn_lower, crit_lower = params[levels_type + "lower"]
+            if psu_voltage < crit_lower:
+                yield 2, "too low (warn/crit below %.2f V/%.2f V)" % (warn_lower, crit_lower)
+            elif psu_voltage < warn_lower:
+                yield 1, "too low (warn/crit below %.2f V/%.2f V)" % (warn_lower, crit_lower)
+
+            warn, crit = params[levels_type + "upper"]
+            if psu_voltage >= crit:
+                yield 2, "too high (warn/crit at %.2f V/%.2f V)" % (warn, crit)
+            elif psu_voltage >= warn:
+                yield 1, "too high (warn/crit at %.2f V/%.2f V)" % (warn, crit)
+
+
+check_info['hp_msa_psu.sensor'] = {
+    'inventory_function'        : inventory_hp_msa_psu,
+    'check_function'            : check_hp_msa_psu,
+    'service_description'       : 'Power Supply Voltage %s',
+    'default_levels_variable'   : "hp_msa_psu_default_levels",
+    'group'                     : 'hp_msa_psu_voltage',
+    'includes'                  : [ "hp_msa.include" ],
+}
+
+
+#.
+#   .--temperature---------------------------------------------------------.
+#   |      _                                      _                        |
+#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+
+
+factory_settings["hp_msa_psu_temp_default_levels"] = {
+    "levels"        : (40, 45), # Just assumed
+}
+
+
+def inventory_hp_msa_psu_temp(parsed):
+    for key in parsed.keys():
+        yield key, {}
+
+
+def check_hp_msa_psu_temp(item, params, parsed):
+    if item in parsed:
+        return check_temperature(float(parsed[item]["dctemp"]), params)
+
+
+check_info['hp_msa_psu.temp'] = {
+    'inventory_function'        : inventory_hp_msa_psu_temp,
+    'check_function'            : check_hp_msa_psu_temp,
+    'service_description'       : 'Temperature Power Supply %s',
+    'has_perfdata'              : True,
+    'group'                     : 'temperature',
+    'default_levels_variable'   : 'hp_msa_psu_temp_default_levels',
+    'includes'                  : [ "temperature.include", "hp_msa.include" ],
+}

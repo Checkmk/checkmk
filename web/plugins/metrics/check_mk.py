@@ -182,6 +182,18 @@ unit_info["bar"] = {
     "render"    : lambda v: physical_precision(v, 6, _("bar")),
 }
 
+unit_info["pa"] = {
+    "title"     : _("Pascal"),
+    "symbol"    : _("Pa"),
+    "render"    : lambda v: physical_precision(v, 3, _("Pa")),
+}
+
+unit_info["l/s"] = {
+    "title"     : _("Liter per second"),
+    "symbol"    : _("l/s"),
+    "render"    : lambda v: physical_precision(v, 3, _("l/s")),
+}
+
 #.
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
@@ -224,6 +236,41 @@ unit_info["bar"] = {
 # Example:
 # "color" : "23/a" (basic color yellow)
 # "color" : "23/b" (nuance of color yellow)
+#
+# As an alternative you can call indexed_color with a color index and the maximum
+# number of colors you will need to generate a color. This function tries to return
+# high contrast colors for "close" indices, so the colors of idx 1 and idx 2 may
+# have stronger contrast than the colors at idx 3 and idx 10.
+
+# retrieve an indexed color.
+# param idx: the color index
+# param total: the total number of colors needed in one graph.
+COLOR_WHEEL_SIZE = 48
+def indexed_color(idx, total):
+    if idx < COLOR_WHEEL_SIZE:
+        # use colors from the color wheel if possible
+        base_col = (idx % 4) + 1
+        tone = ((idx / 4) % 6) + 1
+        if idx % 8 < 4:
+            shade = "a"
+        else:
+            shade = "b"
+        return "%d%d/%s" % (base_col, tone, shade)
+    else:
+        # generate distinct rgb values. these may be ugly ; also, they
+        # may overlap with the colors from the wheel
+        idx        = idx - COLOR_WHEEL_SIZE
+        base_color = idx % 7  # red, green, blue, red+green, red+blue,
+                              # green+blue, red+green+blue
+        delta      = 255 / ((total - COLOR_WHEEL_SIZE) / 7)
+        offset     = 255 - (delta * ((idx / 7) + 1))
+
+        red   = int(base_color in [0, 3, 4, 6])
+        green = int(base_color in [1, 3, 5, 6])
+        blue  = int(base_color in [2, 4, 5, 6])
+        return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
+
+
 
 metric_info["rta"] = {
     "title" : _("Round trip average"),
@@ -410,6 +457,12 @@ metric_info["mem_used"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_used_percent"] = {
+    "color": "#80ff40",
+    "title" : _("RAM used"),
+    "unit" : "%",
+}
+
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
     "title" : _("Perm used"),
@@ -434,6 +487,12 @@ metric_info["swap_used"] = {
     "unit" : "bytes",
 }
 
+metric_info["swap_used_percent"] = {
+    "color": "#408f20",
+    "title" : _("Swap used"),
+    "unit" : "%",
+}
+
 metric_info["swap_cached"] = {
     "title" : _("Swap cached"),
     "color": "#5bebc9",
@@ -444,6 +503,12 @@ metric_info["caches"] = {
     "title" : _("Memory used by caches"),
     "unit"  : "bytes",
     "color" : "51/a",
+}
+
+metric_info["mem_pages_rate"] = {
+    "title" : _("Memory Pages"),
+    "unit" : "1/s",
+    "color": "34/a",
 }
 
 metric_info["mem_lnx_cached"] = {
@@ -620,6 +685,13 @@ metric_info["mem_lnx_vmalloc_chunk"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_lnx_hardware_corrupted"] = {
+    "title" : _("Hardware corrupted memory"),
+    "color": "13/a",
+    "unit" : "bytes",
+}
+
+
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
     "unit"  : "",
@@ -711,7 +783,7 @@ metric_info["threads_idle"] = {
 }
 
 metric_info["threads_rate"] = {
-    "title" : _("Threads per second"),
+    "title" : _("Thread creations per second"),
     "unit"  : "1/s",
     "color" : "44/a",
 }
@@ -730,7 +802,7 @@ metric_info["threads_max"] = {
 }
 
 metric_info["threads_total"] = {
-    "title" : _("Number of threads since starting JVM"),
+    "title" : _("Number of threads"),
     "unit"  : "count",
     "color" : "41/a",
 }
@@ -743,14 +815,17 @@ metric_info["threads_busy"] = {
 
 metric_info["vol_context_switches"] = {
     "title" : _("Voluntary context switches"),
-    "help"  : _("A voluntary context switch occurs when a thread blocks because it requires a resource that is unavailable"),
+    "help"  : _("A voluntary context switch occurs when a thread blocks "
+                "because it requires a resource that is unavailable"),
     "unit"  : "count",
     "color" : "36/a",
 }
 
 metric_info["invol_context_switches"] = {
     "title" : _("Involuntary context switches"),
-    "help"  : _("An involuntary context switch takes place when a thread executes for the duration of its time slice or when the system identifies a higher-priority thread to run"),
+    "help"  : _("An involuntary context switch takes place when a thread "
+                "executes for the duration of its time slice or when the "
+                "system identifies a higher-priority thread to run"),
     "unit"  : "count",
     "color" : "45/b",
 }
@@ -831,6 +906,18 @@ metric_info["smoke_perc"] = {
     "title" : _("Smoke"),
     "unit"  : "%",
     "color" : "#60f088",
+}
+
+metric_info["airflow"] = {
+    "title" : _("Air flow"),
+    "unit"  : "l/s",
+    "color" : "#ff6234",
+}
+
+metric_info["fluidflow"] = {
+    "title" : _("Fluid flow"),
+    "unit"  : "l/s",
+    "color" : "#ff6234",
 }
 
 metric_info["deviation_calibration_point"] = {
@@ -956,6 +1043,19 @@ metric_info["util15"] = {
     "color" : "#9a52bf",
 }
 
+MAX_CORES = 128
+
+for i in range(MAX_CORES):
+    # generate different colors for each core.
+    # unfortunately there are only 24 colors on our
+    # color wheel, times two for two shades each, we
+    # can only draw 48 differently colored graphs
+    metric_info["cpu_core_util_%d" % i] = {
+        "title" : _("Utilization Core %d") % (i + 1),
+        "unit"  : "%",
+        "color" : indexed_color(i, MAX_CORES),
+    }
+
 metric_info["time_offset"] = {
     "title" : _("Time offset"),
     "unit"  : "s",
@@ -963,7 +1063,7 @@ metric_info["time_offset"] = {
 }
 
 metric_info["jitter"] = {
-    "title" : _("Time dispersion"),
+    "title" : _("Time dispersion (jitter)"),
     "unit"  : "s",
     "color" : "43/b",
 }
@@ -1031,19 +1131,19 @@ metric_info["current"] = {
 metric_info["voltage"] = {
     "title" : _("Electrical voltage"),
     "unit"  : "v",
-    "color" : "#ffc060",
+    "color" : "14/a",
 }
 
 metric_info["power"] = {
     "title" : _("Electrical power"),
     "unit"  : "w",
-    "color" : "#8848c0",
+    "color" : "22/a",
 }
 
 metric_info["appower"] = {
     "title" : _("Electrical apparent power"),
     "unit"  : "va",
-    "color" : "#aa68d80",
+    "color" : "22/b",
 }
 
 metric_info["energy"] = {
@@ -1404,6 +1504,12 @@ metric_info["if_in_pkts"] = {
     "color" : "#00e060",
 }
 
+metric_info["if_out_pkts"] = {
+    "title" : _("Output Packets"),
+    "unit"  : "1/s",
+    "color" : "#0080e0",
+}
+
 metric_info["if_out_octets"] = {
     "title" : _("Output Octets"),
     "unit"  : "bytes/s",
@@ -1675,6 +1781,12 @@ metric_info["rmon_packets_1518"] = {
     "color" : "44/a",
 }
 
+metric_info["tcp_listen"] = {
+    "title" : _("State %s") % "LISTEN",
+    "unit"  : "count",
+    "color" : "44/a",
+}
+
 metric_info["tcp_established"] = {
     "title" : _("State %s") % "ESTABLISHED",
     "unit"  : "count",
@@ -1739,6 +1851,12 @@ metric_info["tcp_bound"] = {
     "title" : _("State %s") % "BOUND",
     "unit"  : "count",
     "color" : "#4060a0",
+}
+
+metric_info["tcp_idle"] = {
+    "title" : _("State %s") % "IDLE",
+    "unit"  : "count",
+    "color" : "41/a",
 }
 
 metric_info["fw_connections_active"] = {
@@ -1915,6 +2033,18 @@ metric_info["mail_queue_active_length"] = {
     "color" : "#ff6000",
 }
 
+metric_info["messages_inbound"] = {
+    "title" : _("Inbound messages"),
+    "unit"  : "1/s",
+    "color" : "31/a",
+}
+
+metric_info["messages_outbound"] = {
+    "title" : _("Outbound messages"),
+    "unit"  : "1/s",
+    "color" : "36/a",
+}
+
 metric_info["pages_total"] = {
     "title" : _("Total printed pages"),
     "unit"  : "count",
@@ -2002,6 +2132,12 @@ metric_info["supply_toner_other"] = {
 metric_info["pressure"] = {
     "title" : _("Pressure"),
     "unit"  : "bar",
+    "color" : "#ff6234",
+}
+
+metric_info["pressure_pa"] = {
+    "title" : _("Pressure"),
+    "unit"  : "pa",
     "color" : "#ff6234",
 }
 
@@ -2126,7 +2262,7 @@ metric_info["gc_reclaimed_redundant_memory_areas"] = {
 }
 
 # TODO: ? GCs/sec? oder Avg time? Oder was?
-metric_info["gc_reclaimed_redundant_memory_areas_time"] = {
+metric_info["gc_reclaimed_redundant_memory_areas_rate"] = {
     "title" : _("Reclaiming redundant memory areas"),
     "unit"  : "1/s",
     "color" : "32/a",
@@ -2145,7 +2281,7 @@ metric_info["net_data_sent"] = {
 }
 
 for ty, unit in [ ("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s") ]:
-    metric_info[ty+"_cmk_views"] = {
+    metric_info[ty + "_cmk_views"] = {
         "title" : _("Check_MK: Views"),
         "unit"  : unit,
         "color" : "#ff8080",
@@ -2364,8 +2500,8 @@ metric_info["http_bandwidth"] = {
 
 # netapp api volumes
 
-for volume_info in [ "NFS", "CIFS", "SAN", "FCP", "ISCSI" ]:
-    for what, unit in [ ("data", "bytes"), ("latency", "s") ]:
+for volume_info in [ "NFS", "NFSv4", "NFSv4_1", "CIFS", "SAN", "FCP", "ISCSI" ]:
+    for what, unit in [ ("data", "bytes"), ("latency", "s"), ("ios", "1/s") ]:
 
         volume = volume_info.lower()
 
@@ -2468,8 +2604,29 @@ metric_info["error_rate"] = {
 metric_info["citrix_load"] = {
     "title" : _("Citrix Load"),
     "unit"  : "%",
-    "color" : "34/c",
+    "color" : "34/a",
 }
+
+metric_info["storage_processor_util"] = {
+    "title" : _("Storage Processor Utilization"),
+    "unit"  : "%",
+    "color" : "34/a",
+}
+
+metric_info["storage_used"] = {
+    "title" : _("Storage space used"),
+    "unit"  : "bytes",
+    "color" : "36/a",
+}
+
+metric_info["managed_object_count"] = {
+    "title" : _("Managed Objects"),
+    "unit"  : "count",
+    "color" : "45/a"
+}
+
+
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -2484,8 +2641,17 @@ metric_info["citrix_load"] = {
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
 
-check_metrics["check-mk-ping"] = {
-    "rta" : { "scale" : m }
+check_metrics["check_mk_active-icmp"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
+
+check_metrics["check-mk-host-ping-cluster"] = {
+    "~.*rta"   : { "name" : "rta",   "scale": m },
+    "~.*pl"    : { "name" : "pl",    "scale": m },
+    "~.*rtmax" : { "name" : "rtmax", "scale": m },
+    "~.*rtmin" : { "name" : "rtmin", "scale": m },
 }
 
 check_metrics["check_mk_active-mail_loop"] = {
@@ -2493,7 +2659,7 @@ check_metrics["check_mk_active-mail_loop"] = {
 }
 
 check_metrics["check_mk_active-http"] = {
-    "time" : { "name": "responese_time" },
+    "time" : { "name": "response_time" },
     "size" : { "name": "http_bandwidth" },
 }
 
@@ -2532,7 +2698,7 @@ check_metrics["check-mk-host-tcp"] = {
 
 check_metrics["check_mk-jolokia_metrics.gc"] = {
     "CollectionCount" : { "name" : "gc_reclaimed_redundant_memory_areas" },
-    "CollectionTime"  : { "name" : "gc_reclaimed_redundant_memory_areas_time", "scale" : 1/60 },
+    "CollectionTime"  : { "name" : "gc_reclaimed_redundant_memory_areas_rate", "scale" : 1 / 60.0 },
 }
 
 check_metrics["check_mk-rmon_stats"] = {
@@ -2697,6 +2863,23 @@ check_metrics["check_mk-mem.linux"] = {
     "vmalloc_total"    : { "name" : "mem_lnx_vmalloc_total", },
     "vmalloc_used"     : { "name" : "mem_lnx_vmalloc_used", },
     "vmalloc_chunk"    : { "name" : "mem_lnx_vmalloc_chunk", },
+    "hardware_corrupted" : { "name" : "mem_lnx_hardware_corrupted", },
+
+    # Several computed values should not be graphed because they
+    # are already contained in the other graphs.
+    "sreclaimable"     : { "auto_graph" : False },
+    "pending"          : { "auto_graph" : False },
+    "sunreclaim"       : { "auto_graph" : False },
+    "anon_huge_pages"  : { "auto_graph" : False },
+    "anon_pages"       : { "auto_graph" : False },
+    "caches"           : { "auto_graph" : False },
+    "mapped"           : { "auto_graph" : False },
+    "active"           : { "auto_graph" : False },
+    "inactive"         : { "auto_graph" : False },
+    "swap_free"        : { "auto_graph" : False },
+    "total_used"       : { "auto_graph" : False },
+    "unevictable"      : { "auto_graph" : False },
+    "mem_free"         : { "auto_graph" : False },
 }
 
 check_metrics["check_mk-mem.vmalloc"] = {
@@ -2704,10 +2887,11 @@ check_metrics["check_mk-mem.vmalloc"] = {
     "chunk" : { "name" : "mem_lnx_vmalloc_chunk" }
 }
 
-check_metrics["check_mk-tcp_conn_stats"] = {
+tcp_conn_stats_translation = {
     "SYN_SENT"    : { "name": "tcp_syn_sent" },
     "SYN_RECV"    : { "name": "tcp_syn_recv" },
     "ESTABLISHED" : { "name": "tcp_established" },
+    "LISTEN"      : { "name": "tcp_listen" },
     "TIME_WAIT"   : { "name": "tcp_time_wait" },
     "LAST_ACK"    : { "name": "tcp_last_ack" },
     "CLOSE_WAIT"  : { "name": "tcp_close_wait" },
@@ -2716,7 +2900,10 @@ check_metrics["check_mk-tcp_conn_stats"] = {
     "FIN_WAIT1"   : { "name": "tcp_fin_wait1" },
     "FIN_WAIT2"   : { "name": "tcp_fin_wait2" },
     "BOUND"       : { "name": "tcp_bound" },
+    "IDLE"        : { "name": "tcp_idle" },
 }
+check_metrics["check_mk-tcp_conn_stats"] = tcp_conn_stats_translation
+check_metrics["check_mk-datapower_tcp"] = tcp_conn_stats_translation
 
 check_metrics["check_mk_active-disk_smb"] = {
     "~.*" : { "name" : "fs_used" }
@@ -2750,6 +2937,8 @@ check_metrics["check_mk-fast_lta_silent_cubes.capacity"]        = df_translation
 check_metrics["check_mk-fast_lta_volumes"]                      = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = df_translation
 check_metrics["check_mk-netapp_api_volume"]                     = df_translation
+check_metrics["check_mk-emc_isilon_quota"]                      = df_translation
+check_metrics["check_mk-emc_isilon_ifs"]                        = df_translation
 
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
 if_translation = {
@@ -2771,6 +2960,7 @@ check_metrics["check_mk-fritz"]                     = if_translation
 check_metrics["check_mk-fritz.wan_if"]              = if_translation
 check_metrics["check_mk-hitachi_hnas_fc_if"]        = if_translation
 check_metrics["check_mk-if64"]                      = if_translation
+check_metrics["check_mk-if64adm"]                   = if_translation
 check_metrics["check_mk-hpux_if"]                   = if_translation
 check_metrics["check_mk-if64_tplink"]               = if_translation
 check_metrics["check_mk-if_lancom"]                 = if_translation
@@ -2846,11 +3036,6 @@ check_metrics["check_mk-emcvnx_disks"] = {
 check_metrics["check_mk-diskstat"] = {
     "read" : { "name" : "disk_read_throughput" },
     "write": { "name" : "disk_write_throughput" }
-}
-
-check_metrics["check_mk-netapp_api_protocol"] = {
-    "read_ops" : { "name" : "disk_read_ios" },
-    "write_ops": { "name" : "disk_write_ios" }
 }
 
 check_metrics["check_mk-ibm_svc_systemstats.iops"] = {
@@ -3275,6 +3460,11 @@ check_metrics["check_mk-ps.perf"] = ps_translation
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
+perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "mem_used_percent" ],
+    "total"    : 100.0,
+})
 
 perfometer_info.append({
     "type"     : "linear",
@@ -3352,6 +3542,13 @@ perfometer_info.append({
     "type"       : "logarithmic",
     "metric"     : "pressure",
     "half_value" : 0.5,
+    "exponent"   : 2,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "pressure_pa",
+    "half_value" : 10,
     "exponent"   : 2,
 })
 
@@ -3839,6 +4036,13 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "energy",
+    "half_value" : 10000,
+    "exponent"   : 3,
+})
+
+perfometer_info.append({
     "type"      : "linear",
     "segments"  : [ "voltage_percent" ],
     "total"     : 100.0,
@@ -3995,6 +4199,20 @@ perfometer_info.append({
     "total"     : 10,
 })
 
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "airflow",
+    "half_value" : 300,
+    "exponent"   : 2,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "fluidflow",
+    "half_value" : 0.2,
+    "exponent"   : 5,
+})
+
 perfometer_info.append(("stacked", [
     {
         "type"          : "logarithmic",
@@ -4013,8 +4231,8 @@ perfometer_info.append(("stacked", [
 # TODO: :max should be the default?
 perfometer_info.append({
     "type"      : "linear",
-    "segments"  : [ "used_dhcp_leases" ],
-    "total"     : "used_dhcp_leases:max",
+    "segments"  : [ "free_dhcp_leases" ],
+    "total"     : "free_dhcp_leases:max",
 })
 
 perfometer_info.append(("stacked", [
@@ -4042,7 +4260,7 @@ perfometer_info.append(("stacked", [
     {
         "type"          : "logarithmic",
         "metric"        : "security_updates",
-        "hal_value"     : 10,
+        "half_value"    : 10,
         "exponent"      : 2,
     }
 ]))
@@ -4081,6 +4299,13 @@ perfometer_info.append({
     "metric"        : "mail_queue_deferred_length",
     "half_value"    : 10000,
     "exponent"      : 5
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "messages_inbound,messages_outbound,+",
+    "half_value"    : 100,
+    "exponent"      : 5,
 })
 
 perfometer_info.append({
@@ -4144,6 +4369,20 @@ perfometer_info.append({
     "half_value" : 100,
     "exponent"   : 2,
 })
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "mem_pages_rate",
+    "half_value" : 5000,
+    "exponent"   : 2,
+})
+
+perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "storage_processor_util" ],
+    "total"    : 100.0,
+})
+
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -4221,7 +4460,7 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title"   : _("Battery currencies"),
+    "title"   : _("Battery currents"),
     "metrics" : [
         ( "battery_current", "area" ),
         ( "current", "stack" ),
@@ -4306,6 +4545,13 @@ graph_info.append({
         ( "time_offset", "area" ),
         ( "jitter", "line" )
     ],
+    "scalars" : [
+        ( "time_offset:crit",     _("Upper critical level")),
+        ( "time_offset:warn",     _("Upper warning level")),
+        ( "0,time_offset:warn,-", _("Lower warning level")),
+        ( "0,time_offset:crit,-", _("Lower critical level")),
+    ],
+    "range" : ( "0,time_offset:crit,-", "time_offset:crit" ),
 })
 
 graph_info.append({
@@ -4321,6 +4567,7 @@ graph_info.append({
         ( "zfs_metadata_limit", "line" ),
     ],
 })
+
 
 graph_info.append({
     "title"     : _("Cache hit ratio"),
@@ -4346,7 +4593,7 @@ graph_info.append({
         ( "children_user_time",   "stack" ),
         ( "system_time",          "stack" ),
         ( "children_system_time", "stack" ),
-        ( "user_time,children_user_time,system_time,children_system_time,+,+,+#888", "line", _("Total") ),
+        ( "user_time,children_user_time,system_time,children_system_time,+,+,+#888888", "line", _("Total") ),
     ],
 })
 
@@ -4369,6 +4616,17 @@ graph_info.append({
     "scalars" : [
         "tapes_free:warn",
         "tapes_free:crit",
+    ]
+})
+
+graph_info.append({
+    "title"   : _("Storage Processor utilization"),
+    "metrics" : [
+        ( "storage_processor_util", "area" ),
+    ],
+    "scalars" : [
+        "storage_processor_util:warn",
+        "storage_processor_util:crit",
     ]
 })
 
@@ -4436,6 +4694,19 @@ graph_info.append({
         "util1:crit",
     ],
     "range" : (0, 100),
+})
+
+graph_info.append({
+    "title"  : _( "Per Core utilization" ),
+    "metrics" : [
+        ( "cpu_core_util_%d" % num, "line" )
+        for num in range(MAX_CORES)
+    ],
+    "range" : (0, 100),
+    "optional_metrics" : [
+        "cpu_core_util_%d" % num
+        for num in range(2, MAX_CORES)
+    ]
 })
 
 graph_info.append({
@@ -4852,6 +5123,18 @@ graph_info.append({
         ("swap_used",  "stack"),
         ("mem_total",  "line"),
     ],
+    "conflicting_metrics" : [ "swap_total" ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ("mem_used_percent",  "area"),
+    ],
+    "scalars" : [
+        "mem_used_percent:warn",
+        "mem_used_percent:crit",
+    ],
+    "range" : (0, 100),
 })
 
 # Linux memory graphs. They are a lot...
@@ -5009,6 +5292,7 @@ graph_info.append({
 graph_info.append({
     "title" : _("TCP Connection States"),
     "metrics" : [
+       ( "tcp_listen",      "stack"),
        ( "tcp_syn_sent",    "stack"),
        ( "tcp_syn_recv",    "stack"),
        ( "tcp_established", "stack"),
@@ -5020,6 +5304,7 @@ graph_info.append({
        ( "tcp_fin_wait1",   "stack"),
        ( "tcp_fin_wait2",   "stack"),
        ( "tcp_bound",       "stack"),
+       ( "tcp_idle",        "stack"),
     ],
     "omit_zero_metrics" : True,
 })
@@ -5092,25 +5377,29 @@ graph_info.append({
         ( "free_dhcp_leases",    "stack" ),
         ( "pending_dhcp_leases", "stack" ),
     ],
-    "range" : (0, "free_dhcp_leases:max"),
     "scalars" : [
         "free_dhcp_leases:warn",
         "free_dhcp_leases:crit",
+    ],
+    "range" : (0, "free_dhcp_leases:max"),
+    "omit_zero_metrics" : True,
+    "optional_metrics" : [
+        "pending_dhcp_leases"
     ]
 })
 
-graph_info.append({
-    "title" : _("Used DHCP Leases"),
-    "metrics" : [
-        ( "used_dhcp_leases",    "area" ),
-    ],
-    "range" : (0, "used_dhcp_leases:max"),
-    "scalars" : [
-        "used_dhcp_leases:warn",
-        "used_dhcp_leases:crit",
-        ("used_dhcp_leases:max#000000", _("Total number of leases")),
-    ]
-})
+#graph_info.append({
+#    "title" : _("Used DHCP Leases"),
+#    "metrics" : [
+#        ( "used_dhcp_leases",    "area" ),
+#    ],
+#    "range" : (0, "used_dhcp_leases:max"),
+#    "scalars" : [
+#        "used_dhcp_leases:warn",
+#        "used_dhcp_leases:crit",
+#        ("used_dhcp_leases:max#000000", _("Total number of leases")),
+#    ]
+#})
 
 graph_info.append({
     "title" : _("Handled Requests"),
@@ -5177,6 +5466,14 @@ graph_info.append({
     "metrics" : [
         ( "mail_queue_deferred_length",   "stack" ),
         ( "mail_queue_active_length",     "stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Inbound and Outbound Messages"),
+    "metrics" : [
+        ( "messages_outbound", "stack" ),
+        ( "messages_inbound",  "stack" ),
     ],
 })
 
@@ -5258,85 +5555,30 @@ graph_info.append({
     ]
 })
 
-graph_info.append({
-    "title" : _("NFS traffic"),
-    "metrics" : [
-        ("nfs_read_data", "-area"),
-        ("nfs_write_data", "area"),
-    ],
-})
+for what, text in [ ("nfs",     "NFS"),
+                    ("cifs",    "CIFS"),
+                    ("san",     "SAN"),
+                    ("fcp",     "FCP"),
+                    ("iscsi",   "iSCSI"),
+                    ("nfsv4",   "NFSv4"),
+                    ("nfsv4_1", "NFSv4.1"),
+                  ]:
+    graph_info.append({
+        "title" : _("%s traffic") % text,
+        "metrics" : [
+            ("%s_read_data" % what, "-area"),
+            ("%s_write_data" % what, "area"),
+        ],
+    })
 
-graph_info.append({
-    "title" : _("NFS latency"),
-    "metrics" : [
-        ("nfs_read_latency", "-area"),
-        ("nfs_write_latency", "area"),
-    ],
-})
+    graph_info.append({
+        "title" : _("%s latency") % text,
+        "metrics" : [
+            ("%s_read_latency" % what, "-area"),
+            ("%s_write_latency" % what, "area"),
+        ],
+    })
 
-graph_info.append({
-    "title" : _("CIFS traffic"),
-    "metrics" : [
-        ("cifs_read_data", "-area"),
-        ("cifs_write_data", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("CIFS latency"),
-    "metrics" : [
-        ("cifs_read_latency", "-area"),
-        ("cifs_write_latency", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("SAN traffic"),
-    "metrics" : [
-        ("san_read_data", "-area"),
-        ("san_write_data", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("SAN latency"),
-    "metrics" : [
-        ("san_read_latency", "-area"),
-        ("san_write_latency", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("FCP traffic"),
-    "metrics" : [
-        ("fcp_read_data", "-area"),
-        ("fcp_write_data", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("FCP latency"),
-    "metrics" : [
-        ("fcp_read_latency", "-area"),
-        ("fcp_write_latency", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("ISCSI traffic"),
-    "metrics" : [
-        ("icsci_read_data", "-area"),
-        ("icsci_write_data", "area"),
-    ],
-})
-
-graph_info.append({
-    "title" : _("ICSCI latency"),
-    "metrics" : [
-        ("icsci_read_latency", "-area"),
-        ("icsci_write_latency", "area"),
-    ],
-})
 
 graph_info.append({
     "title" : _("Harddrive health statistic"),
@@ -5369,4 +5611,15 @@ graph_info.append({
         ( "rtmin", "area" ),
         ( "rta", "line" ),
     ],
+})
+
+graph_info.append({
+    "metrics" : [
+        ( "mem_perm_used", "area" )
+    ],
+    "scalars" : [
+        "mem_perm_used:warn",
+        "mem_perm_used:crit",
+    ],
+    "range" : (0, "mem_perm_used:max")
 })

@@ -1,0 +1,12 @@
+Title: mysql mysql_capacity mysql_ping mysql_slave: Fixed broken service discovery when instance id is empty
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1440682635
+
+The mysql checks support monitoring multiple instances per host since some versions. There was a bug when
+only a single instance is running on a host where an empty instance id is reported by the agent. The checks
+were discoverying wrong service names and resulting in exceptions during checking.

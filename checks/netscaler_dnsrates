@@ -56,7 +56,7 @@ def check_netscaler_dnsrates(_no_item, params, info):
         elif rate >= warn:
             state = 1
         if state > 0:
-            infotext += " (levels are %.1f/%.1f /sec)" % (warn, crit)
+            infotext += " (warn/crit at %.1f/%.1f /sec)" % (warn, crit)
 
         yield state, infotext, perfdata
 

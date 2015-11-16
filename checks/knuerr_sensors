@@ -26,7 +26,8 @@
 
 def inventory_knuerr_sensors(info):
     for sensor, state in info:
-        yield sensor, None
+        if sensor:
+            yield sensor, None
 
 def check_knuerr_sensors(item, _no_params, info):
     for sensor, state in info:

@@ -1,4 +1,5 @@
 #!/usr/bin/ksh
+# Logfile monitoring for AIX via errpt
 # Beware: This Plugin clears the errors after each run,
 # but it creates an detailed backup in /var/log/errpt_TIMESTAMP.log
 

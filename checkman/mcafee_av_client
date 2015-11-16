@@ -1,6 +1,6 @@
 title: McAfee Anti-Virus Signature Date
 agents: windows
-catalog: app/kaspersky
+catalog: app/mcafee
 license: GPL
 distribution: check_mk
 description:
@@ -16,10 +16,6 @@ inventory:
  One check is created for each windows host.
 
 [parameters]
- parameters(dict): A dictionary with the following keys:
+parameters(dict): A dictionary with the following key:
 
- { 'signature_age' } : A tuple of warn and crit.
-
-[configuration]
- mcafee_av_client_default_levels(dict):
- Default levels, preset to { 'levels' : ( 86400, 7*86400) }
+ { 'signature_age' } : A tuple of warn and crit, default values are (86400, 7*86400)

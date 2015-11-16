@@ -1,0 +1,48 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# <<<netapp_api_disk:sep(9)>>>
+# disk 4E455441:50502020:56442D39:3030304D:422D465A:2D353230:38383633:32303037:00000000:00000000  used-space 9458679808   serial-number 88632007  raid-type pending vendor-id ..
+
+def inv_netapp_api_disk(info):
+    node = inv_tree("hardware.storage.disks:")
+    for line in info:
+        disk = {}
+        line_dict = dict(map(lambda x: x.split(" ", 1), line))
+
+        for what, inv_name in [ ("serial-number", "serial"), ("vendor-id", "vendor") ]:
+            if line_dict.get(what):
+                disk[inv_name] = line_dict[what]
+        if line_dict.get("bay") not in [None, "?"]:
+            disk["bay"] = line_dict["bay"]
+
+        node.append(disk)
+
+
+inv_info['netapp_api_disk'] = {
+   "inv_function"           : inv_netapp_api_disk,
+}

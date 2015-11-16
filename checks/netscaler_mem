@@ -49,7 +49,7 @@ def check_netscaler_mem(_no_item, params, info):
     elif used_mem >= warn:
         state = 1
     if state > 0:
-        infotext += " (levels at %.1f%%/%.1f%%)" % (warn_perc, crit_perc)
+        infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn_perc, crit_perc)
 
     return state, infotext, perfdata
 

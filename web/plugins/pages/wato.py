@@ -38,4 +38,5 @@ pagehandlers.update({
     "wato_ajax_diag_host"     : wato.ajax_diag_host,
     "wato_ajax_profile_repl"  : wato.ajax_profile_repl,
     "wato_ajax_execute_check" : wato.ajax_execute_check,
+    "download_agent_output"   : wato.page_download_agent_output,
 })

@@ -24,6 +24,8 @@
 
 #include "CustomTimeperiodColumn.h"
 #include "TimeperiodsCache.h"
+class Query;
+
 
 extern TimeperiodsCache *g_timeperiods_cache;
 
@@ -47,4 +49,3 @@ customvariablesmember *CustomTimeperiodColumn::getCVM(void *data)
     if (!data) return 0;
     return *(customvariablesmember **)((char *)data + _offset);
 }
-

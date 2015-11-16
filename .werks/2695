@@ -1,0 +1,9 @@
+Title: hp_msa_disk, hp_msa_volume: these checks now report more information about disks and volumes of a HP MSA 2040 Storage System
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1444980637
+Class: feature
+
+

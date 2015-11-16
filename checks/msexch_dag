@@ -231,12 +231,12 @@ def check_msexch_dag_copyqueue(item, params, info):
                 infotxt = "Queue length is %d" % int(val)
                 if int(val) >= crit:
                     state = 2
-                    infotxt += ", levels at %d/%d" % (warn, crit)
                 elif int(val) >= warn:
                     state = 1
-                    infotxt += ", levels at %d/%d" % (warn, crit)
                 else:
                     state = 0
+                if state > 0:
+                    infotext += " (warn/crit at %d/%d)" % (warn, crit)
                 perfdata = [ ("length", int(val), warn, crit, 0) ]
                 return state, infotxt, perfdata
 

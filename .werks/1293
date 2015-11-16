@@ -1,0 +1,10 @@
+Title: dmidecode: Sanitized CPU Vendor field for some Intel CPUs
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443080002
+Class: fix
+
+There is not longer a mix of CPU vendor information in the cases when the  vendor id was Intel(R) Corporation.
+

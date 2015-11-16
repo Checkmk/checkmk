@@ -25,17 +25,19 @@
 #ifndef OffsetStringServiceMacroColumn_h
 #define OffsetStringServiceMacroColumn_h
 
-#include "nagios.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "OffsetStringMacroColumn.h"
+#include "nagios.h"  // IWYU pragma: keep
+
 
 class OffsetStringServiceMacroColumn : public OffsetStringMacroColumn
 {
 public:
-    OffsetStringServiceMacroColumn(string name, string description, int offset, int indirect_offset = -1) :
+    OffsetStringServiceMacroColumn(std::string name, std::string description, int offset, int indirect_offset = -1) :
         OffsetStringMacroColumn(name, description, offset, indirect_offset) {}
     host *getHost(void *data);
     service *getService(void *data);
 };
 
 #endif // OffsetStringServiceMacroColumn_h
-

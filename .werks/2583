@@ -1,0 +1,9 @@
+Title: datapower_tcp: new check which monitors the number of TCP connections in the various possible states
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441204774
+Class: feature
+
+

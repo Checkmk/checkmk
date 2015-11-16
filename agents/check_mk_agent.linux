@@ -1,4 +1,5 @@
 #!/bin/bash
+# Check_MK Agent for Linux
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -125,7 +126,7 @@ function run_cached () {
 export -f run_cached
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.7i3
+echo Version: 1.2.7i4
 echo AgentOS: linux
 echo Hostname: $HOSTNAME
 echo AgentDirectory: $MK_CONFDIR
@@ -234,6 +235,14 @@ cat /proc/uptime
 
 
 # New variant: Information about speed and state in one section
+if type ip > /dev/null
+then
+    echo '<<<lnx_if>>>'
+    echo "[start_iplink]"
+        ip link
+    echo "[end_iplink]"
+fi
+
 echo '<<<lnx_if:sep(58)>>>'
 sed 1,2d /proc/net/dev
 if type ethtool > /dev/null
@@ -297,7 +306,7 @@ cat /proc/vmstat /proc/stat
 # Hardware sensors via IPMI (need ipmitool)
 if type ipmitool > /dev/null
 then
-    run_cached -s ipmi 300 "ipmitool sensor list | grep -v 'command failed' | sed -e 's/ *| */|/g' -e 's/ /_/g' -e 's/_*"'$'"//' -e 's/|/ /g' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
+    run_cached -s ipmi 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | sed -e 's/ *| */|/g' -e 's/ /_/g' -e 's/_*"'$'"//' -e 's/|/ /g' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
 fi
 
 
@@ -312,7 +321,7 @@ then
     else
         IPMI_FORMAT=""
     fi
-    # At least with ipmi-sensoirs 0.7.16 this group is Power_Unit instead of "Power Unit"
+    # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
     run_cached -s ipmi_sensors 300 "for class in Temperature Power_Unit Fan
     do
         ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
@@ -439,7 +448,7 @@ fi
 
 # Status of CUPS printer queues
 if type lpstat > /dev/null 2>&1; then
-    if pgrep -x cups > /dev/null 2>&1; then
+    if pgrep -f "\bcupsd" > /dev/null 2>&1; then
         # first define a function to check cups
         function cups_queues () {
             CPRINTCONF=/etc/cups/printers.conf
@@ -478,7 +487,7 @@ fi
 # for the resource state
 if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd > /dev/null 2>&1; then
   echo '<<<heartbeat_crm>>>'
-  crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
+  TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
 fi
 if type cl_status > /dev/null 2>&1; then
   echo '<<<heartbeat_rscstatus>>>'
@@ -498,18 +507,19 @@ if type cl_status > /dev/null 2>&1; then
 fi
 
 # Postfix mailqueue monitoring
-#
-# we determine the number of mails and their size in several postfix mail queues
+# Determine the number of mails and their size in several postfix mail queues
 if type postconf >/dev/null ; then
-    echo '<<<postfix_mailq>>>'
-    postfix_queue_dir=$(postconf -h queue_directory)
+    postfix_queue_dir=$(postconf -h queue_directory 2>/dev/null)
 
-    for queue in deferred active
-    do
-        count=$(find $postfix_queue_dir/$queue -type f | wc -l)
-        size=$(du -s $postfix_queue_dir/$queue | awk '{print $1 }')
-        echo "QUEUE_${queue} $size $count"
-    done
+    if [ -n "$postfix_queue_dir" ]; then
+        echo '<<<postfix_mailq>>>'
+        for queue in deferred active
+        do
+            count=$(find $postfix_queue_dir/$queue -type f | wc -l)
+            size=$(du -s $postfix_queue_dir/$queue | awk '{print $1 }')
+            echo "QUEUE_${queue} $size $count"
+        done
+    fi
 elif [ -x /usr/sbin/ssmtp ] ; then
     echo '<<<postfix_mailq>>>'
     mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
@@ -520,6 +530,15 @@ if type qmail-qstat >/dev/null
 then
    echo "<<<qmail_stats>>>"
    qmail-qstat
+fi
+
+# Nullmailer queue monitoring
+if type nullmailer-send >/dev/null && [ -d /var/spool/nullmailer/queue ]
+then
+    echo '<<<nullmailer_mailq>>>'
+    COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
+    SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
+    echo "$SIZE $COUNT"
 fi
 
 # Check status of OMD sites and Check_MK Notification spooler
@@ -548,9 +567,6 @@ then
     done
 fi
 
-# Status of Check_MK Notification Spooler
-
-
 
 # Welcome the ZFS check on Linux
 # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
@@ -558,6 +574,20 @@ fi
 if type zpool >/dev/null; then
    echo "<<<zpool_status>>>"
    zpool status -x
+fi
+
+
+# Veritas Cluster Server
+# Software is always installed in /opt/VRTSvcs.
+# Secure mode must be off to allow root to execute commands
+if [ -x /opt/VRTSvcs/bin/haclus ]
+then
+    echo "<<<veritas_vcs>>>"
+    vcshost=$(hostname | cut -d. -f1)
+    haclus -display -localclus | grep -e ClusterName -e ClusState
+    hasys -display -attribute SysState
+    hagrp -display -sys $vcshost -attribute State -localclus
+    hares -display -sys $vcshost -attribute State -localclus
 fi
 
 
@@ -599,7 +629,11 @@ if pushd $MK_VARDIR/job >/dev/null; then
     for username in *
     do
         if [ -d "$username" ] && cd "$username" ; then
-            su "$username" -c "head -n -0 -v *"
+            if [ $EUID -eq 0 ]; then
+                su "$username" -c "head -n -0 -v *"
+            else
+                head -n -0 -v *
+            fi
             cd ..
         fi
     done

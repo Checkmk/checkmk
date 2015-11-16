@@ -99,19 +99,58 @@ def inv_solaris_prtdiag(info):
         elif line[0].startswith("SerialNumber:"):
             node = inv_tree("hardware.system.")
             node["serial"] = line[0].split(':')[1]
-        elif line[0].startswith("System Configuration:"):
-        # 'System Configuration:  Oracle Corporation  sun4v SPARC T4-1'
-        # 'System Configuration:  Sun Microsystems  sun4u SPARC Enterprise M4000 Server'
-            node = inv_tree("hardware.system.")
-            system_info = "%s" %(line[0].split(':')[1])
-            system_info_list = system_info.split()
-            node["vendor"] = "%s" %(system_info.split(system_info_list[2])[0])
-            node["product"] = "%s" %(system_info.split(system_info_list[2])[1])
 
-            if system_info_list[-1].startswith('T'):
-                node["family"] = "T-series"
-            elif system_info_list[-2].startswith('M'):
-                node["family"] = "M-series"
+        elif line[0].startswith("System Configuration:"):
+            # 'System Configuration:  Oracle Corporation  sun4v SPARC T4-1'
+            # 'System Configuration:  Sun Microsystems  sun4u SPARC Enterprise M4000 Server'
+            # 'System Configuration: Supermicro H8DG6/H8DGi'
+            # 'System Configuration: Oracle Corporation SUN FIRE X4170 M2 SERVER'
+            # 'System Configuration: Sun Microsystems     Sun Fire X4540'
+            # 'System Configuration: VMware, Inc. VMware Virtual Platform'
+            # 'System Configuration: HP ProLiant DL380 G5'
+            # 'System Configuration: SUN MICROSYSTEMS SUN FIRE X4270 SERVER'
+            # 'System Configuration: Sun Microsystems SUN FIRE X4450'
+            node = inv_tree("hardware.system.")
+            system_info = line[0].split(":", 1)[1].strip().replace("SERVER", "").replace("Server", "")
+
+            if "sun microsystems" in system_info.lower():
+                vendor = "Sun Microsystems"
+                index  = 2
+            elif "oracle corporation" in system_info.lower():
+                vendor = "Oracle Corporation"
+                index  = 2
+            elif "supermicro" in system_info.lower():
+                vendor = "Supermicro"
+                index  = 1
+            elif "vmware, inc." in system_info.lower():
+                vendor = "VMWare, Inc."
+                index  = 2
+            elif "hp" in system_info.lower():
+                vendor = "HP"
+                index  = 1
+            else:
+                vendor = system_info.split(" ")[0]
+                index  = 1
+
+            system_info    = " ".join(system_info.split(" ")[index:]).strip()
+            node["vendor"] = vendor
+
+            if "sun fire" in system_info.lower():
+                index = 3
+            elif "sun4u" in system_info.lower() or \
+                 "proliant" in system_info.lower():
+                index = 2
+            elif "vmware" in system_info.lower():
+                index = 3
+            else:
+                index = 1
+
+            node["product"] = " ".join(system_info.split(" ")[:index])
+            family          = " ".join(system_info.split(" ")[index:])
+
+            if family:
+                node["family"] = "%s-series" % family[0].upper()
+
 
 inv_info['solaris_prtdiag'] = {
    "inv_function"           : inv_solaris_prtdiag,

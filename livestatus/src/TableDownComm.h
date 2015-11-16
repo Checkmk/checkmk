@@ -25,29 +25,25 @@
 #ifndef TableDownComm_h
 #define TableDownComm_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include <map>
+#include <utility>
 #include "Table.h"
 #include "nagios.h"
+class Query;
+struct DowntimeOrComment;
 
-class DowntimeOrComment;
-class TableHosts;
-class TableContacts;
-class TableServices;
-
-using namespace std;
 
 class TableDownComm : public Table
 {
     const char *_name;
 
-    typedef pair<unsigned long, bool> dc_key;
-    typedef map<dc_key, DowntimeOrComment *> _entries_t;
+    typedef std::pair<unsigned long, bool> dc_key;
+    typedef std::map<dc_key, DowntimeOrComment *> _entries_t;
     _entries_t _entries;
 
 public:
-    TableDownComm(bool is_downtime);
+    explicit TableDownComm(bool is_downtime);
     const char *name() { return _name; }
     ~TableDownComm();
     DowntimeOrComment *findEntry(unsigned long id, bool is_service);
@@ -61,6 +57,4 @@ public:
     _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
 };
 
-
 #endif // TableDownComm_h
-

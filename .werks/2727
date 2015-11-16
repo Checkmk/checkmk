@@ -1,0 +1,10 @@
+Title: ibm_imm_health: Fixed unhandled exception when SNMP info is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446812404
+
+

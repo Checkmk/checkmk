@@ -1,0 +1,20 @@
+title: Pandacom SpeedCarrier Chassis 5u: 10 GM Module Temperature
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature of the 10 GM modules
+ of a Pandacom SpeedCarrier Chassis 5u.
+
+ Upper default levels are 35, 40 celsius. Device warning and
+ critical levels are 45, 60 celsius. The default levels are
+ prefered. This behaviour is configurable.
+
+ Upper and lower levels are configurable.
+
+item:
+ The module number.
+
+inventory:
+ One service per module is created.

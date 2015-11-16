@@ -1,0 +1,11 @@
+Title: ps check configurable to list state of individual processes in long output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442575269
+Class: feature
+
+The configuration parameter is called "Enable per-process details in long-output" and it can be set
+to either text or HTML output. HTML output works only if html escaping has been disabled in global
+settings which may be a potential security problem.

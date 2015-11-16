@@ -1,0 +1,14 @@
+title: DIVA Content Storage Management: Library Status
+agents: snmp
+catalog: hw/storagehw/oraclehw
+license: GPL
+distribution: check_mk
+description:
+  This check tests the status of DIVA CSM Libraries.
+
+  It is in status {OK} when the device is in status ONLINE,
+  {CRIT} when the device is OFFLINE and {WARN} in device status
+  UNKNOWN.
+
+inventory:
+  One item is generated per library reported by the device.

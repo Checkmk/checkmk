@@ -22,13 +22,18 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <ctype.h>
-#include <string.h>
-
 #include "CustomVarsFilter.h"
-#include "opids.h"
-#include "logger.h"
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include "Column.h"
+#include "CustomVarsColumn.h"
 #include "OutputBuffer.h"
+#include "logger.h"
+#include "opids.h"
+
+using std::string;
+
 
 CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column, int opid, char *value)
     : _column(column)
@@ -49,7 +54,7 @@ with spaces
         const char *search_space = cstr;
         while (*search_space && !isspace(*search_space))
             search_space ++;
-        _ref_varname = std::string(cstr, search_space - cstr);
+        _ref_varname = string(cstr, search_space - cstr);
         while (*search_space && isspace(*search_space))
             search_space ++;
         _ref_string = search_space;
@@ -122,6 +127,3 @@ bool CustomVarsFilter::accepts(void *data)
         }
     }
 }
-
-
-

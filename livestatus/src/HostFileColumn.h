@@ -25,14 +25,17 @@
 #ifndef HostFileColumn_h
 #define HostFileColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "BlobColumn.h"
+
 
 class HostFileColumn : public BlobColumn
 {
-    string _base_dir;
-    string _suffix;
+    std::string _base_dir;
+    std::string _suffix;
 public:
-    HostFileColumn(string name, string description, const char *base_dir,
+    HostFileColumn(std::string name, std::string description, const char *base_dir,
                    const char *suffice, int indirect_offset);
 
     // returns a buffer to be freed afterwards!!

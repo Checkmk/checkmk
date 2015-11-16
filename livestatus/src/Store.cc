@@ -23,20 +23,34 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Store.h"
+#include <string.h>
+#include <sys/time.h>
+#include <time.h>
+#include <utility>
+#include "InputBuffer.h"
+#include "OutputBuffer.h"
 #include "Query.h"
+#include "Table.h"
+#include "global_counters.h"
 #include "logger.h"
 #include "strutil.h"
-#include "OutputBuffer.h"
 
+// TODO: Remove this hack.
 #ifdef EXTERN
 #undef EXTERN
 #endif
 #define EXTERN
-#include "tables.h"
+#include "tables.h"  // IWYU pragma: keep
 #undef EXTERN
+
+using mk::lock_guard;
+using mk::mutex;
+using std::make_pair;
+using std::string;
 
 extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
+
 
 Store::Store()
   : _log_cache(g_max_cached_messages)
@@ -91,6 +105,11 @@ Store::Store()
     }
 }
 
+Store::~Store()
+{
+}
+
+
 Table *Store::findTable(string name)
 {
     _tables_t::iterator it = _tables.find(name);
@@ -134,9 +153,9 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
         output->setDoKeepalive(true);
     }
     else if (!strncmp(line, "LOGROTATE", 9)) {
-    	logger(LG_INFO, "Forcing logfile rotation");
+        logger(LG_INFO, "Forcing logfile rotation");
         rotate_log_file(time(0));
-        schedule_new_event(EVENT_LOG_ROTATION,TRUE,get_next_log_rotation_time(),FALSE,0,(void *)get_next_log_rotation_time,TRUE,NULL,NULL,0);
+        schedule_new_event(EVENT_LOG_ROTATION,1,get_next_log_rotation_time(),0,0,(void *)get_next_log_rotation_time,1,NULL,NULL,0);
     }
     else {
         logger(LG_INFO, "Invalid request '%s'", line);
@@ -147,6 +166,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
 
 void Store::answerCommandRequest(const char *command)
 {
+    lock_guard<mutex> lg(_command_mutex);
 #ifdef NAGIOS4
     process_external_command1((char *)command);
 #else
@@ -185,5 +205,3 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
             logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
     }
 }
-
-

@@ -24,6 +24,7 @@
 
 #include "auth.h"
 
+
 int is_authorized_for(contact *ctc, host *hst, service *svc) {
     if (ctc == UNKNOWN_AUTH_USER)
         return false;
@@ -46,4 +47,3 @@ int is_authorized_for(contact *ctc, host *hst, service *svc) {
             || is_escalated_contact_for_host(hst, ctc);
     }
 }
-

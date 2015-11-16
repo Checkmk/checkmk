@@ -31,7 +31,7 @@ pkglib_LIBRARIES = livestatus.so
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
 	ContactsColumn.cc CustomVarsColumn.cc CustomVarsFilter.cc DoubleColumn.cc \
-	DoubleColumnFilter.cc DowntimeOrComment.cc DownCommColumn.cc EmptyColumn.cc NullColumn.cc \
+	DoubleColumnFilter.cc DowntimeOrComment.cc DownCommColumn.cc DynamicColumn.cc EmptyColumn.cc NullColumn.cc \
 	Filter.cc GlobalCountersColumn.cc HostContactsColumn.cc HostgroupsColumn.cc \
 	HostlistColumn.cc HostlistColumnFilter.cc HostlistStateColumn.cc MetricsColumn.cc \
 	HostSpecialIntColumn.cc ServiceSpecialIntColumn.cc InputBuffer.cc IntColumn.cc IntColumnFilter.cc \
@@ -50,8 +50,8 @@ livestatus_so_SOURCES = \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc mk_inventory.cc \
 	ContactgroupsColumn.cc CustomTimeperiodColumn.cc HostServiceState.cc opids.cc auth.cc
 
-livestatus_so_CXXFLAGS = -I$(top_srcdir)/$(nagios_headers) -fPIC
-livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS)
+livestatus_so_CXXFLAGS = -std=gnu++0x -fPIC
+livestatus_so_CFLAGS   = -fPIC
 
 livestatus.o: $(livestatus_so_OBJECTS) $(livestatus_so_DEPENDENCIES)
 	-rm -f plugin.so

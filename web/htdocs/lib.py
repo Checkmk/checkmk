@@ -24,9 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, grp, pprint, os, errno, gettext, marshal, re, fcntl, __builtin__, time
+import math, grp, pprint, os, errno, marshal, re, fcntl, time
 
-# Workarround when the file is included outsite multisite
+# Workaround when the file is included from outside of Multisite
 try:
     import defaults
 except:
@@ -240,75 +240,6 @@ def load_web_plugins(forwhat, globalvars):
                         code = marshal.loads(code_bytes)
                         exec code in globalvars
 
-def get_language_dirs():
-    dirs = [ defaults.locale_dir ]
-    if defaults.omd_root:
-        dirs.append(defaults.omd_root + "/local/share/check_mk/locale")
-    return dirs
-
-def get_language_alias(lang):
-    alias = lang
-    for lang_dir in get_language_dirs():
-        try:
-            alias = file('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
-        except (OSError, IOError):
-            pass
-    return alias
-
-def get_languages():
-    # Add the hard coded english language to the language list
-    # It must be choosable even if the administrator changed the default
-    # language to a custom value
-    languages = set([ (None, _('English')) ])
-
-    for lang_dir in get_language_dirs():
-        try:
-            languages.update([ (val, get_language_alias(val))
-                for val in os.listdir(lang_dir) if not '.' in val ])
-        except OSError:
-            # Catch "OSError: [Errno 2] No such file or
-            # directory:" when directory not exists
-            pass
-
-    return list(languages)
-
-def load_language(lang):
-    # Make current language globally known to all of our modules
-    __builtin__.current_language = lang
-
-    if lang:
-        locale_base = defaults.locale_dir
-
-        # OMD users can put their localization into a local path into the site
-        if defaults.omd_root:
-            local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
-            po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
-            # Use file in OMD local strucuture when existing
-            if os.path.exists(local_locale_path + po_path):
-                locale_base = local_locale_path
-
-        try:
-            i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')
-            i18n.install(unicode = True)
-        except IOError, e:
-            # Fallback to non localized multisite
-            # I'd prefer to fallback to multisite default language but can not import config module here
-            __builtin__.current_language = None
-    else:
-        # Replace the _() function to disable i18n again
-        __builtin__._ = lambda x: x
-
-# Localization of user supplied texts
-def _u(text):
-    import config
-    ldict = config.user_localizations.get(text)
-    if ldict:
-        return ldict.get(current_language, text)
-    else:
-        return text
-
-__builtin__._u = _u
-
 def pnp_cleanup(s):
     return s \
         .replace(' ', '_') \
@@ -357,9 +288,14 @@ def format_plugin_output(output, row = None):
         output = output[:a] + "running on " + h + output[e+1:]
 
     if config.escape_plugin_output:
-        output = re.sub("http[s]?://[^\"'>\t\s\n,]+",
+        # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
+        # handling for the HTML code produced by check_http when "clickable URL" option is active.
+        output = re.sub("(?:&lt;A HREF=&quot;)?http[s]?://[^\"'>\t\s\n,]+(?: target=&quot;_blank&quot;&gt;)?",
                          lambda p: '<a href="%s"><img class=pluginurl align=absmiddle title="%s" src="images/pluginurl.png"></a>' %
                             (p.group(0).replace('&quot;', ''), p.group(0).replace('&quot;', '')), output)
+
+        if output.endswith(" &lt;/A&gt;"):
+            output = output[:-11]
 
     return output
 
@@ -511,6 +447,13 @@ def cmp_service_name_equiv(r):
         return -2
     else:
         return 0
+
+def cmp_version(a, b):
+    if a == None or b == None:
+        return cmp(a, b)
+    aa = map(tryint, a.split("."))
+    bb = map(tryint, b.split("."))
+    return cmp(aa, bb)
 
 
 def frexpb(x, base):
@@ -751,27 +694,16 @@ def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
 
     return "%%s%%.%df %%s%%s" % digits % (prefix, b, symbol, unit)
 
-
-
-__builtin__.default_user_localizations = {
-     u'Agent type':                          { "de": u"Art des Agenten", },
-     u'Business critical':                   { "de": u"Geschäftskritisch", },
-     u'Check_MK Agent (Server)':             { "de": u"Check_MK Agent (Server)", },
-     u'Criticality':                         { "de": u"Kritikalität", },
-     u'DMZ (low latency, secure access)':    { "de": u"DMZ (geringe Latenz, hohe Sicherheit", },
-     u'Do not monitor this host':            { "de": u"Diesen Host nicht überwachen", },
-     u'Dual: Check_MK Agent + SNMP':         { "de": u"Dual: Check_MK Agent + SNMP", },
-     u'Legacy SNMP device (using V1)':       { "de": u"Alte SNMP-Geräte (mit Version 1)", },
-     u'Local network (low latency)':         { "de": u"Lokales Netzwerk (geringe Latenz)", },
-     u'Networking Segment':                  { "de": u"Netzwerksegment", },
-     u'No Agent':                            { "de": u"Kein Agent", },
-     u'Productive system':                   { "de": u"Produktivsystem", },
-     u'Test system':                         { "de": u"Testsystem", },
-     u'WAN (high latency)':                  { "de": u"WAN (hohe Latenz)", },
-     u'monitor via Check_MK Agent':          { "de": u"Überwachung via Check_MK Agent", },
-     u'monitor via SNMP':                    { "de": u"Überwachung via SNMP", },
-     u'SNMP (Networking device, Appliance)': { "de": u"SNMP (Netzwerkgerät, Appliance)", },
-}
+def file_size_human_readable(file_size):
+    if file_size < 10000:
+        return str(file_size)
+    as_string = str(file_size)
+    result = ""
+    while len(as_string) > 3:
+        result = "." + as_string[-3:] + result
+        as_string = as_string[:-3]
+    result = as_string + result
+    return result
 
 try:
     import ast
@@ -846,7 +778,8 @@ interface_oper_states = {
     5: _("dormant"),
     6: _("not present"),
     7: _("lower layer down"),
-    8: _("degraded"),
+    8: _("degraded"),    # artificial, not official
+    9: _("admin down"),  # artificial, not official
 }
 
 interface_port_types = {
@@ -1089,3 +1022,48 @@ def dict_choices(types):
         in sorted(types.items()) ]
 
 interface_port_type_choices = dict_choices(interface_port_types)
+
+
+#.
+#   .--Floating Options----------------------------------------------------.
+#   |                _____ _             _   _                             |
+#   |               |  ___| | ___   __ _| |_(_)_ __   __ _                 |
+#   |               | |_  | |/ _ \ / _` | __| | '_ \ / _` |                |
+#   |               |  _| | | (_) | (_| | |_| | | | | (_| |                |
+#   |               |_|   |_|\___/ \__,_|\__|_|_| |_|\__, |                |
+#   |                                                |___/                 |
+#   |                   ___        _   _                                   |
+#   |                  / _ \ _ __ | |_(_) ___  _ __  ___                   |
+#   |                 | | | | '_ \| __| |/ _ \| '_ \/ __|                  |
+#   |                 | |_| | |_) | |_| | (_) | | | \__ \                  |
+#   |                  \___/| .__/ \__|_|\___/|_| |_|___/                  |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+#   |  Rendering of filter boxes like (used by availability options and    |
+#   |  Werks).
+#   '----------------------------------------------------------------------'
+
+def begin_floating_options(div_id, is_open):
+    html.write('<div class="view_form" id="%s" %s>'
+            % (div_id, not is_open and 'style="display: none"' or '') )
+    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
+
+def end_floating_options(reset_url=None):
+    html.write("</td></tr>")
+    html.write("<tr><td>")
+    html.button("apply", _("Apply"), "submit")
+    if reset_url:
+        html.buttonlink(reset_url, _("Reset to defaults"))
+
+    html.write("</td></tr></table>")
+    html.write("</div>")
+
+def render_floating_option(name, height, varprefix, valuespec, value):
+    html.write('<div class="floatfilter %s %s">' % (height, name))
+    html.write('<div class=legend>%s</div>' % valuespec.title())
+    html.write('<div class=content>')
+    valuespec.render_input(varprefix + name, value)
+    html.write("</div>")
+    html.write("</div>")
+
+

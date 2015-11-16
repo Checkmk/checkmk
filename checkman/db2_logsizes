@@ -1,0 +1,22 @@
+title: DB2 Logfile Usage
+agents: aix, linux
+catalog: app/db2
+license: GPL
+distribution: check_mk
+description:
+ This check monitors amount of free logfile space.
+ You can configure limits for absolute and percentage free space.
+
+ This check needs the mk_db2 plugin installed in the agent.
+
+item:
+ The DB2 instance name followed by a : and the database name, e.g. db2ilog1:REST1
+
+inventory:
+ One separate check for each database will be created.
+
+perfdata:
+ Four values: The first value is the used space of the logfile. Then the size
+ of logfile itself (in case it is growing). Finally the growth and the trend.
+ For more information regarding trend and growth you can have a look at the df manpage.
+

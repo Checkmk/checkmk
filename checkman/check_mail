@@ -1,0 +1,11 @@
+title: POP3/IMAP connection and optional mail forwarding
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ Logs in into an IMAP or POP3 mailbox to monitor whether or not the login is possible.
+ An extended, optional, feature is, that the check can fetch all (or just some) mails
+ from the mailbox and forward them as events to the Event Console.
+
+ This check can be configured using WATO.

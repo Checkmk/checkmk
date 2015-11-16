@@ -25,14 +25,16 @@
 #ifndef NullColumn_h
 #define NullColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Query;
+
 
 class NullColumn : public Column
 {
 public:
-    NullColumn(string name, string description) :
+    NullColumn(std::string name, std::string description) :
         Column(name, description, -1) {}
     int type() { return COLTYPE_NULL; }
     void output(void *data, Query *);

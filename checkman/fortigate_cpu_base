@@ -1,0 +1,17 @@
+title: FortiGate firewalls: CPU utilization
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the cpu levels for fortigate firewalls
+ which support the FORTINET-FORTIGATE-MIB.
+
+ Upper default levels are 80.0, 90.0 percent. These levels
+ are configurable.
+
+inventory:
+ One service will be created
+
+perfdata:
+ The CPU utilization.

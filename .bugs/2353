@@ -1,0 +1,13 @@
+Title: Error messages from discovery output of check parameters
+Component: wato
+State: open
+Date: 2015-09-11 21:21:42
+Targetversion: 1.2.7
+Class: bug
+
+If you perform a discovery and display the check parameters of the checks,
+there will be displayed several messages with invalid check parameters.
+This or similar messages will be showed:
+85 is int but float is required
+
+Noticed on APC devices.

@@ -25,20 +25,20 @@
 #ifndef IntColumnFilter_h
 #define IntColumnFilter_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <sys/types.h>
 #include <string>
-using namespace std;
-
 #include "Filter.h"
 class IntColumn;
+
 
 class IntColumnFilter : public Filter
 {
     IntColumn *_column;
     int _opid;
     bool _negate;
-    string _ref_string;
+    std::string _ref_string;
 
 public:
     IntColumnFilter(IntColumn *column, int opid, char *value);
@@ -48,6 +48,4 @@ public:
     bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
-
 #endif // IntColumnFilter_h
-

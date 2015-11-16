@@ -1,0 +1,16 @@
+title: EMC Isilon: Used and available quotas
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Checks the configured quotas in EMC Isilon storage devices. The logic of
+ the check is identical with filesystem checking. The hard thresholds of
+ the quota is treated as the size. If this is missing, then the soft- or
+ advisory thresholds are being used instead.
+
+item:
+ The path of the quota
+
+inventory:
+ Creates one service per quota

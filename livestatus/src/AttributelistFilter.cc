@@ -24,8 +24,8 @@
 
 #include "AttributelistFilter.h"
 #include "AttributelistColumn.h"
-#include "opids.h"
 #include "logger.h"
+#include "opids.h"
 
 
 /* The following operators are defined:
@@ -69,4 +69,3 @@ bool AttributelistFilter::accepts(void *data)
     }
     return pass != _negate;
 }
-

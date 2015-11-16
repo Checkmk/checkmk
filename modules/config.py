@@ -76,6 +76,8 @@ inventory_max_cachefile_age        = 120  # seconds
 inventory_check_autotrigger        = True # Automatically trigger inv-check after automation-inventory
 always_cleanup_autochecks          = None # For compatiblity with old configuration
 
+periodic_discovery                 = []
+
 # Nagios templates and other settings concerning generation
 # of Nagios configuration files. No need to change these values.
 # Better adopt the content of the templates
@@ -114,6 +116,7 @@ snmp_without_sys_descr               = []
 snmpv3_contexts                      = []
 usewalk_hosts                        = []
 dyndns_hosts                         = [] # use host name as ip address for these hosts
+primary_address_family               = []
 ignored_checktypes                   = [] # exclude from inventory
 ignored_services                     = [] # exclude from inventory
 ignored_checks                       = [] # exclude from inventory
@@ -145,7 +148,8 @@ summary_service_groups               = [] # service groups for aggregated servic
 summary_service_contactgroups        = [] # service contact groups for aggregated services
 summary_host_notification_periods    = []
 summary_service_notification_periods = []
-ipaddresses                          = {} # mapping from hostname to ipaddress
+ipaddresses                          = {} # mapping from hostname to IPv4 address
+ipv6addresses                        = {} # mapping from hostname to IPv6 address
 only_hosts                           = None
 distributed_wato_site                = None # used by distributed WATO
 extra_host_conf                      = {}

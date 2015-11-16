@@ -25,11 +25,11 @@
 #ifndef TableCommands_h
 #define TableCommands_h
 
-#include "config.h"
-
-#include <set>
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
-#include "nagios.h"
+class Query;
+
 
 class TableCommands : public Table
 {
@@ -37,8 +37,7 @@ public:
     TableCommands();
     const char *name() { return "commands"; }
     void answerQuery(Query *query);
-    void addColumns(Table *table, string prefix, int indirect_offset);
+    void addColumns(Table *table, std::string prefix, int indirect_offset);
 };
 
 #endif // TableCommands_h
-

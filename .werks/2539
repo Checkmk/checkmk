@@ -1,0 +1,10 @@
+Title: Fix impossibility of removing a status host from an existing site configuration
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1439993222
+
+

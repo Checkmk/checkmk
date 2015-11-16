@@ -1,0 +1,16 @@
+title: NetApp Cluster-Mode: State of fibrechannel interfaces
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the operational status, link speed, read/write traffic,
+ read/write operations, read/write latency and the overall latency of
+ a NetApp filer running in Cluster-Mode.
+
+item:
+ The interface description
+
+inventory:
+ The inventory creates one service for each fibrechannel interface
+

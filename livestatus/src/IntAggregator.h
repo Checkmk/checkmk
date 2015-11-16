@@ -25,8 +25,12 @@
 #ifndef IntAggregator_h
 #define IntAggregator_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
 #include "Aggregator.h"
 class IntColumn;
+class Query;
+
 
 class IntAggregator : public Aggregator
 {
@@ -41,4 +45,3 @@ public:
 };
 
 #endif // IntAggregator_h
-

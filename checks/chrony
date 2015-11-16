@@ -80,7 +80,7 @@ def check_chrony(_no_item, params, info):
     elif abs(offset) >= warn:
         status = 1
     if status:
-        infotext += " (levels at %.4f/%.4f ms)" % (warn, crit)
+        infotext += " (warn/crit at %.4f/%.4f ms)" % (warn, crit)
     yield status, infotext, [ ("offset", offset, warn, crit, 0, None) ]
 
     # Show additional information

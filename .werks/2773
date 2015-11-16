@@ -1,0 +1,9 @@
+Title: omd_staomd_status: handle case where site's software installation is broken
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446822361
+Class: fix
+
+

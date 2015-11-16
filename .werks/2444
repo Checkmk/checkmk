@@ -1,0 +1,16 @@
+Title: lnx_if: now able to detect interfaces which "break" during runtime
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446390568
+Class: feature
+
+Previously the check <i>lnx_if</i> used the output of the <i>ethtool</i> command to determine if
+an interface is up or down. There was a fallback in case <i>ethtool</i> was not available,
+or did not report valid data at all (happens on broken interfaces).
+However, these fallback could not detect interfaces which break during runtime.
+
+The linux agent now reports additional information collected with the <i>ip link</i> command.
+In case the ethtool information is missing the <i>lnx_if</i> check will now use the
+data from <i>ip link</i> instead.

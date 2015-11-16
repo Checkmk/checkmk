@@ -22,19 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <string.h>
-#include <math.h>
-#include <stdlib.h>
-
-#include "strutil.h"
-#include "logger.h"
-#include "Query.h"
 #include "PerfdataAggregator.h"
-#include "StringColumn.h"
-#include "Aggregator.h"
+#include <ctype.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <utility>
+#include "Query.h"
 #include "StatsColumn.h"
+#include "StringColumn.h"
+#include "strutil.h"
 
-void PerfdataAggregator::consume(void *data, Query *query)
+using std::string;
+
+
+void PerfdataAggregator::consume(void *data, Query *)
 {
     char *perf_data = strdup(_column->getValue(data));
     char *scan = perf_data;
@@ -72,7 +75,7 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value)
         new_entry._aggr = value;
         new_entry._count = 1;
         new_entry._sumq = value * value;
-        _aggr.insert(make_pair(std::string(varname), new_entry));
+        _aggr.insert(make_pair(string(varname), new_entry));
     }
     else {
         it->second._count ++;

@@ -1,0 +1,10 @@
+Title: windows agent: is now downward compatible to win2k
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439907013
+Class: feature
+
+
+

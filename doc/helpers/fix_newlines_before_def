@@ -23,7 +23,7 @@ def main():
 
         except Exception, e:
             sys.stdout.write("ERROR: %s\n" % e)
-            if opt_debug: 
+            if opt_debug:
                 raise
 
 

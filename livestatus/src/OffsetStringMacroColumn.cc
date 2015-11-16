@@ -23,13 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetStringMacroColumn.h"
+#include <stdlib.h>
+#include <string.h>
 #include "AndingFilter.h"
 #include "Query.h"
 #include "logger.h"
-#include "nagios.h"
-#ifndef NAGIOS4
-#include "nagios/macros.h"
-#endif
+class Filter;
+
+using std::string;
+
 extern char     *macro_user[MAX_USER_MACROS];
 
 string OffsetStringMacroColumn::valueAsString(void *data, Query *)
@@ -72,7 +74,7 @@ void OffsetStringMacroColumn::output(void *data, Query *query)
     query->outputString(s.c_str());
 }
 
-Filter *OffsetStringMacroColumn::createFilter(int opid __attribute__ ((__unused__)), char *value __attribute__ ((__unused__)))
+Filter *OffsetStringMacroColumn::createFilter(int, char *)
 {
     logger(LG_INFO, "Sorry. No filtering on macro columns implemented yet");
     return new AndingFilter(); // always true

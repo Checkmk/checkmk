@@ -1,6 +1,6 @@
 Title: ibm_svc_mdisk / disk checks: now able to configure the return state for state and mode of disk
 Level: 1
-Component: wato
+Component: checks
 Compatible: compat
 Version: 1.2.7i1
 Date: 1424430703

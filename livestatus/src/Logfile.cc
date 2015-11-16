@@ -22,32 +22,43 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "Logfile.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-
-#include "Logfile.h"
-#include "logger.h"
+#include <syslog.h>
+#include <unistd.h>
+#include <cinttypes>
+#include <utility>
+#include "LogCache.h"
 #include "LogEntry.h"
 #include "Query.h"
-#include "LogCache.h"
+#include "logger.h"
 
 #ifdef CMC
 #include "Core.h"
 extern Core *g_core;
 #endif
 
+using std::make_pair;
+
 extern unsigned long g_max_lines_per_logfile;
 
 
+// TODO: We need the suppression pragma below because _readpos and _linebuffer
+// is not initialized in the constructor. Just replace all this manual fiddling
+// with pointers, offsets, etc. with vector.
+
+// cppcheck-suppress uninitMemberVar
 Logfile::Logfile(const char *path, bool watch)
   : _path(strdup(path))
   , _since(0)
   , _watch(watch)
-  , _inode(0)
   , _lineno(0)
+#ifdef CMC
+  , _world(0)
+#endif
   , _logclasses_read(0)
 {
     int fd = open(path, O_RDONLY);
@@ -152,7 +163,7 @@ void Logfile::loadRange(FILE *file, unsigned missing_types,
     while (fgets(_linebuffer, MAX_LOGLINE, file))
     {
         if (_lineno >= g_max_lines_per_logfile) {
-            logger(LG_ERR, "More than %u lines in %s. Ignoring the rest!", g_max_lines_per_logfile, this->_path);
+            logger(LG_ERR, "More than %lu lines in %s. Ignoring the rest!", g_max_lines_per_logfile, this->_path);
             return;
         }
         _lineno++;
@@ -165,21 +176,26 @@ void Logfile::loadRange(FILE *file, unsigned missing_types,
 long Logfile::freeMessages(unsigned logclasses)
 {
     long freed = 0;
-    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
+    // We have to be careful here: Erasing an element from an associative
+    // container invalidates the iterator pointing to it. The solution is the
+    // usual post-increment idiom, see Scott Meyers' "Effective STL", item 9
+    // ("Choose carefully among erasing options.").
+    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end();)
     {
         LogEntry *entry = it->second;
-        if ((1 << entry->_logclass) & logclasses)
-        {
-            delete it->second;
-            _entries.erase(it);
+        if ((1 << entry->_logclass) & logclasses) {
+            delete entry;
+            _entries.erase(it++);
             freed ++;
+        } else {
+            ++it;
         }
     }
     _logclasses_read &= ~logclasses;
     return freed;
 }
 
-inline bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
+bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 {
     LogEntry *entry = new LogEntry(lineno, _linebuffer);
     // ignored invalid lines
@@ -204,7 +220,7 @@ inline bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
     }
 }
 
-logfile_entries_t* Logfile::getEntriesFromQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
+logfile_entries_t* Logfile::getEntriesFromQuery(Query *, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
     updateReferences(); // Make sure existing references to objects point to correct world
     load(logcache, since, until, logclasses); // make sure all messages are present
@@ -297,7 +313,7 @@ char *Logfile::readIntoBuffer(int *size)
         return 0;
     }
 
-    int r = read(fd, buffer + 1, *size);
+    ssize_t r = read(fd, buffer + 1, *size);
     if (r < 0) {
         logger(LOG_WARNING, "Cannot read %d bytes from %s: %s", *size, _path, strerror(errno));
         free(buffer);
@@ -305,7 +321,8 @@ char *Logfile::readIntoBuffer(int *size)
         return 0;
     }
     else if (r != *size) {
-        logger(LOG_WARNING, "Read only %d out of %d bytes from %s", r, *size, _path);
+        logger(LOG_WARNING, "Read only %" PRIdMAX " out of %d bytes from %s",
+               static_cast<intmax_t>(r), *size, _path);
         free(buffer);
         close(fd);
         return 0;

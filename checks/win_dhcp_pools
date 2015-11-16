@@ -58,6 +58,15 @@
 #                 No. of free Addresses = 23.
 #                 No. of pending offers = 0.
 
+#   .--Pools---------------------------------------------------------------.
+#   |                       ____             _                             |
+#   |                      |  _ \ ___   ___ | |___                         |
+#   |                      | |_) / _ \ / _ \| / __|                        |
+#   |                      |  __/ (_) | (_) | \__ \                        |
+#   |                      |_|   \___/ \___/|_|___/                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 win_dhcp_pools_default_levels = (10, 5)
 win_dhcp_pools_inventorize_empty = False
 discovery_win_dhcp_pools = []
@@ -123,27 +132,14 @@ def check_win_dhcp_pools(item, params, info):
 
         # Catch unused pools
         if size == 0:
-            return (3, "DHCP Pool contains no IP addresses / is deactivated")
+            yield 3, "DHCP Pool contains no IP addresses / is deactivated"
 
-        warn_perc, crit_perc = params
-        warn_abs = size * (warn_perc / 100.0)
-        crit_abs = size * (crit_perc / 100.0)
+        for check_result in check_dhcp_pools_levels(free, used, pending, size, params):
+            yield check_result
 
-        if free < crit_abs:
-            status = 2
-        elif free < warn_abs:
-            status = 1
-
-        perfdata = [ ('free',    free,    warn_abs, crit_abs, 0, size),
-                     ('used',    used,    None,     None,     0, size),
-                     ('pending', pending, None,     None,     0, size) ]
-
-        infotext = 'Addresses Free: %d, Used: %d, Pending: %d' % (free, used, pending)
-        if status:
-            infotext += " (levels at %d/%d)" % (warn_abs, crit_abs)
-        return status, infotext, perfdata
     else:
-        return (3, 'Pool information not found')
+        yield 3, 'Pool information not found'
+
 
 check_info["win_dhcp_pools"] = {
     'check_function':          check_win_dhcp_pools,
@@ -151,8 +147,19 @@ check_info["win_dhcp_pools"] = {
     'service_description':     'DHCP Pool %s',
     'has_perfdata':            True,
     'group':                   'win_dhcp_pools',
+    'includes':                ['dhcp_pools.include'],
 }
 
+
+#.
+#   .--Pool stats----------------------------------------------------------.
+#   |              ____             _       _        _                     |
+#   |             |  _ \ ___   ___ | |  ___| |_ __ _| |_ ___               |
+#   |             | |_) / _ \ / _ \| | / __| __/ _` | __/ __|              |
+#   |             |  __/ (_) | (_) | | \__ \ || (_| | |_\__ \              |
+#   |             |_|   \___/ \___/|_| |___/\__\__,_|\__|___/              |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 def inventory_win_dhcp_pools_stats(info):
     return [ (None, None) for line in info if line[0] != '' ]

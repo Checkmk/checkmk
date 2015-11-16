@@ -1,34 +1,70 @@
-#!/bin/bash
-# Plugin for checking a DHCP daemon running on Linux.
-# If you conf or leases file is not at one of the places
-# we look for then please add that path to the list
-# and give us feedback at feedback@check-mk.org
+#!/usr/bin/python
 
-for path in /etc/dhcpd.conf /etc/dhcp/dhcpd.conf ; do
-    if [ -e $path ] ; then
-        CONF_FILE=$path
-        break
-    fi
-done
+import os, sys, time
 
-for path in /var/lib/dhcp/db/dhcpd.leases /var/lib/dhcp/dhcpd.leases; do
-    if [ -e $path ] ; then
-        LEASES_FILE=$path
+conf_file = None
+for path in [ '/etc/dhcpd.conf', '/etc/dhcp/dhcpd.conf' ]:
+    if os.path.exists(path):
+        conf_file = path
         break
-    fi
-done
+
+leases_file = None
+for path in [ '/var/lib/dhcp/db/dhcpd.leases', '/var/lib/dhcp/dhcpd.leases' ]:
+    if os.path.exists(path):
+        leases_file = path
+        break
 
 # If no configuration and leases are found, we assume that
 # no dhcpd is running.
-if [ -z "$CONF_FILE" -o -z "$LEASES_FILE" ] ; then exit ; fi
+if not conf_file or not leases_file:
+    sys.exit(0)
 
-echo '<<<isc_dhcpd>>>'
-echo "[general]"
-echo "PID: $(pidof dhcpd)"
-echo "[pools]"
-sed -nr -e 's/;//g' -e '/^[[:space:]]*range */s///p' < $CONF_FILE
-echo "[leases]"
-sed -nr -e 's/;//g' \
-        -e '/^lease */s/.* ([0-9.]+) .*/\1/p' \
-        -e '/^ *binding state */s///p' < $LEASES_FILE |
-    sed 'N;s/\n/ /' | sed -n '/ active/s///p' | sort -u
+pidof_dhcpd = os.popen("pidof dhcpd").read().strip()
+sys.stdout.write('<<<isc_dhcpd>>>\n[general]\nPID: %s\n' % pidof_dhcpd)
+
+sys.stdout.write('[pools]\n')
+for line in file(conf_file):
+    line = line.strip().rstrip(";").rstrip()
+    if line.startswith("range"):
+        sys.stdout.write(line[5:].strip() + "\n")
+
+# lease 10.1.1.81 {
+#   starts 3 2015/09/09 11:42:20;
+#   ends 3 2015/09/09 19:42:20;
+#   tstp 3 2015/09/09 19:42:20;
+#   cltt 3 2015/09/09 11:42:20;
+#   binding state free;
+#   hardware ethernet a4:5e:60:de:1f:c3;
+#   uid "\001\244^`\336\037\303";
+#   set ddns-txt = "318c69bae8aeae6f8c723e96de933c7149";
+#   set ddns-fwd-name = "Sebastians-MBP.dhcp.mathias-kettner.de";
+# }
+
+sys.stdout.write('[leases]\n')
+now = time.time()
+ip_address = None
+binding_state = None
+seen_addresses = set()
+for line in file(leases_file):
+    parts = line.strip().rstrip(";").split()
+    if not parts:
+        continue
+
+    if parts[0] == "lease":
+        ip_address = parts[1]
+    elif parts[0] == "ends":
+        ends_date_string = parts[2] + " " + parts[3]
+        ends_date = time.mktime(time.strptime(ends_date_string, "%Y/%m/%d %H:%M:%S"))
+        if ends_date < now:
+            ip_address = None # skip this address, this lease is outdated
+
+    elif parts[0] == "binding" and parts[1] == "state":
+        binding_state = parts[2]
+
+    elif parts[0] == "}":
+        if ip_address and binding_state == "active" and ip_address not in seen_addresses:
+            sys.stdout.write("%s\n" % ip_address)
+            seen_addresses.add(ip_address)
+        ip_address = None
+        binding_state = None
+

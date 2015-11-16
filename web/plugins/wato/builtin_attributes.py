@@ -34,7 +34,7 @@ declare_host_attribute(NagiosTextAttribute("alias", "alias", _("Alias"),
                        show_in_table = True,
                        show_in_folder = False)
 
-declare_host_attribute(TextAttribute("ipaddress", _("IP address"),
+declare_host_attribute(TextAttribute("ipaddress", _("IPv4 Address"),
                        _("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                          "or DNS by your monitoring server, you can specify an explicit IP "
                          "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
@@ -50,7 +50,27 @@ declare_host_attribute(TextAttribute("ipaddress", _("IP address"),
                          ),
                          allow_empty = False),
                          show_in_table = True,
-                         show_in_folder = False)
+                         show_in_folder = False,
+                         depends_on_tags = ["ip-v4"])
+
+declare_host_attribute(TextAttribute("ipv6address", _("IPv6 Address"),
+                       _("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
+                         "or DNS by your monitoring server, you can specify an explicit IPv6 "
+                         "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
+                         "1. If you leave this attribute empty, hostname resolution will be done when "
+                         "you activate the configuration. "
+                         "Check_MKs builtin DNS cache is activated per default in the global "
+                         "configuration to speed up the activation process. The cache is normally "
+                         "updated daily with a cron job. You can manually update the cache with the "
+                         "command <tt>cmk -v --update-dns-cache</tt>.<br>"
+                         "2. If you enter a DNS name here, the DNS resolution will be carried out "
+                         "each time the host is checked. Check_MKs DNS cache will NOT be queried. "
+                         "Use this only for hosts with dynamic IP addresses."
+                         ),
+                         allow_empty = False),
+                         show_in_table = True,
+                         show_in_folder = False,
+                         depends_on_tags = ["ip-v6"])
 
 declare_host_attribute(TextAttribute("snmp_community", _("SNMP Community"),
                        _("Using this option you can configure the community which should be used when "

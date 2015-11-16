@@ -23,17 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetStringHostMacroColumn.h"
-#include "nagios.h"
+
 
 host *OffsetStringHostMacroColumn::getHost(void *data)
 {
-    data = shiftPointer(data);
-    return (host *)data;
+    return static_cast<host *>(shiftPointer(data));
 }
 
-service *OffsetStringHostMacroColumn::getService(void *data __attribute__ ((__unused__)))
+service *OffsetStringHostMacroColumn::getService(void *)
 {
     return 0;
 }
-
-

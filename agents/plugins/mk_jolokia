@@ -134,16 +134,18 @@ def query_instance(inst):
 
     sys.stdout.write('<<<jolokia_info>>>\n')
     if server_info:
-       d = dict(server_info)
-       version = d.get(('info', 'version'), "unknown")
-       product = d.get(('info', 'product'), "unknown")
-       if inst.has_key("product"):
-           product = inst["product"]
-       agentversion = d.get(('agent',), "unknown")
-       sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
+        d = dict(server_info)
+        version = d.get(('info', 'version'), "unknown")
+        product = d.get(('info', 'product'), "unknown")
+        if inst.has_key("product"):
+            product = inst["product"]
+        agentversion = d.get(('agent',), "unknown")
+        sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
     else:
-       sys.stdout.write("%s ERROR\n" % (inst["instance"],))
-       return
+        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
+        sys.stdout.write('<<<jolokia_metrics>>>\n')
+        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
+        return
 
     sys.stdout.write('<<<jolokia_metrics>>>\n')
     # Fetch the general information first

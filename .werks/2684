@@ -1,0 +1,11 @@
+Title: Added icons for downloading agent data / walks of hosts
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445496999
+Class: feature
+
+Created two new icons which can be used to download the agent
+output of a host (equals to cmk -d [hostname]) and one for
+downloading the SNMP walk of a host (equals to cmk --snmpwalk [hostname]).

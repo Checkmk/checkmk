@@ -1,0 +1,11 @@
+Title: Active checks check_mail, check_mail_loop: did not work with POP3 protocol
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446560378
+
+Any mail checks through the POP3 protocol lead to an exception.
+This has been fixed.

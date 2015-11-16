@@ -105,7 +105,7 @@ def check_oracle_instance(item, params, info):
                 warn = int(warn)
                 crit = int(crit)
 
-                infotext += ' (levels at %s/%s)' % (get_age_human_readable(warn), get_age_human_readable(crit))
+                infotext += ' (warn/crit at %s/%s)' % (get_age_human_readable(warn), get_age_human_readable(crit))
                 if up_seconds <= crit:
                     state = 2
                     infotext += '(!!) not long enough up'

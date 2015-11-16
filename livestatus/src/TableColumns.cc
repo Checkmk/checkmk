@@ -23,8 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableColumns.h"
+#include <map>
+#include <utility>
+#include "Column.h"
 #include "ColumnsColumn.h"
 #include "Query.h"
+
 
 TableColumns::TableColumns()
 {
@@ -62,7 +66,7 @@ void TableColumns::answerQuery(Query *query)
 
 const char *TableColumns::getValue(Column *column, int colcol)
 {
-    static const char *typenames[6] = { "int", "float", "string", "list", "time", "dict" };
+    static const char *typenames[8] = { "int", "float", "string", "list", "time", "dict", "blob", "null" };
 
     switch (colcol)
     {
@@ -92,4 +96,3 @@ const char *TableColumns::tableNameOf(Column *column)
     }
     return ""; // never reached if no bug
 }
-

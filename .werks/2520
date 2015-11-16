@@ -1,0 +1,10 @@
+Title: genua_vpn: new check which monitors the VPN state of a genuscreen VPN appliance
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440415836
+Class: feature
+
+This check monitors the VPN state of a genuscreen VPN appliance which supports
+patchlevel 5.1

@@ -331,7 +331,7 @@ register_rule(group,
            Dictionary(
                title = _("Optional parameters"),
                elements = [
-                   ("name", 
+                   ("name",
                         TextUnicode(
                             title = _("Alternative Service description"),
                             help = _("The service description will be this name instead <i>DNS Servername</i>"),
@@ -688,6 +688,18 @@ def transform_check_http_cert_days(cert_days):
         cert_days = (cert_days, 0)
     return cert_days
 
+ip_address_family_element = ("address_family",
+        DropdownChoice(
+            title = _("IP Address Family"),
+            choices = [
+                (None,   _("Primary Address Family") ),
+                ('ipv4', _("Enforce IPv4") ),
+                ('ipv6', _("Enforce IPv6") ),
+            ],
+            default_value = None
+        ),
+    )
+
 register_rule(group,
     "active_checks:http",
     Tuple(
@@ -750,6 +762,7 @@ register_rule(group,
                                     default_value = 80
                                 )
                             ),
+                            ip_address_family_element,
                             ( "ssl",
                                 FixedValue(
                                     value = True,
@@ -991,6 +1004,7 @@ register_rule(group,
                                     default_value = 443,
                                 ),
                             ),
+                            ip_address_family_element,
                             ( "sni",
                                 FixedValue(
                                     value = True,
@@ -1515,6 +1529,15 @@ register_rule(group,
                             ( "ok", _("Force to be OK") ),
                             ( "warn", _("Force to be WARN, if aggregate is not OK") ),
                           ]
+                    )),
+                    ("track_downtimes",
+                     Checkbox(
+                        title = _("Track downtimes"),
+                        label = _("Automatically track downtimes of aggregation"),
+                        help = _("If this is active, the check will automatically go into downtime "
+                                "whenever the aggregation does. This downtime is also cleaned up "
+                                "automatically when the aggregation leaves downtime. "
+                                "Downtimes you set manually for this check are unaffected."),
                     )),
                 ]
             ),

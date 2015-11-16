@@ -25,12 +25,15 @@
 #ifndef TableLog_h
 #define TableLog_h
 
-#include <map>
+#include "config.h"  // IWYU pragma: keep
 #include <time.h>
-#include "config.h"
+#include <string>
 #include "Table.h"
-
+#include "nagios.h"  // IWYU pragma: keep
+class Column;
 class Logfile;
+class Query;
+
 
 class TableLog : public Table
 {
@@ -42,7 +45,7 @@ public:
     const char *prefixname() { return "logs"; }
     bool isAuthorized(contact *ctc, void *data);
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
-    void addColumns(Table *, string prefix, int indirect_offset, bool add_host = true, bool add_service = true);
+    void addColumns(Table *, std::string prefix, int indirect_offset, bool add_host = true, bool add_service = true);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
 

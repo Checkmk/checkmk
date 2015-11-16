@@ -1,0 +1,9 @@
+Title: include file for elecritcal phases handles warn/crit levels correct
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1441271732
+Class: fix
+
+

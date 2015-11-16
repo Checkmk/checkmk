@@ -1,0 +1,17 @@
+Title: Fix crashing Nagios core in rare case when excessive commands are being executed
+Level: 2
+Component: livestatus
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441283031
+
+The crash was due to the fact that the internal Nagios API for executing commands
+is not thread safe. The CMC was not affected. This fixes the problems:
+
+http://tracker.nagios.org/view.php?id=656
+
+http://lists.mathias-kettner.de/pipermail/checkmk-en/2015-February/014497.html
+
+Thanks to Ryan C. Underwood for the patch!

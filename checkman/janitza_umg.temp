@@ -1,0 +1,19 @@
+title: Janitza Power Analyzer: Temperature
+agents: snmp
+catalog: hw/power/janitza
+license: GPL
+distribution: check_mk
+description:
+ Monitors temperature on Janitza Power Analyzers. This currently supports the
+ devices UMG 604 and UMG 96 though others from the same line may be very
+ similar.
+
+item:
+ consecutive numbers.
+
+perfdata:
+ One value: temperature.
+
+inventory:
+ Creates up to two items - one per temperature sensor.
+

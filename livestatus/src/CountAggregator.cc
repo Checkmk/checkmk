@@ -23,8 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CountAggregator.h"
-#include "Query.h"
 #include "Filter.h"
+#include "Query.h"
+
 
 void CountAggregator::consume(void *data, Query *)
 {

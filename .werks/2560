@@ -1,0 +1,20 @@
+Title: Fixed rare exception when using bulk host move
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441287879
+
+When using bulk move of hosts in WATO, this exception could oocur:
+
+Traceback (most recent call last):
+  File "/omd/sites/xxx/share/check_mk/web/htdocs/index.py", line 261, in handler
+    handler()
+  File "/omd/sites/xxx/share/check_mk/web/htdocs/wato.py", line 240, in page_handler
+    result = modefunc("action")
+  File "/omd/sites/xxx/share/check_mk/web/htdocs/wato.py", line 948, in mode_folder
+    target_folder = g_folders[target_folder_name]
+KeyError: None
+

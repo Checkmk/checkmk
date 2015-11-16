@@ -28,19 +28,17 @@ def parse_db2_dbs(info):
     current_instance = None
     lines = iter(info)
     dbs = {}
-    timestamp = None
+    global_timestamp = None
     try:
         while True:
             line = lines.next()
-            if line[0].startswith("TIMESTAMP"):
-                timestamp = int(line[1])
+            if line[0].startswith("TIMESTAMP") and not current_instance:
+                global_timestamp = int(line[1])
                 continue
+
             if line[0].startswith("[[["):
                 current_instance = line[0][3:-3]
-		if timestamp:
-                    dbs[current_instance] = [["TIMESTAMP", timestamp]]
-		else:
-                    dbs[current_instance] = []
+                dbs[current_instance] = []
             elif current_instance:
                 dbs[current_instance].append(line)
     except:
@@ -49,5 +47,5 @@ def parse_db2_dbs(info):
     # By returning a tuple, we trick Check_MK
     # Even if no information is available, an empty tuple is something
     # Check_MK won't report any missing agent sections for this type of checks
-    return timestamp, dbs
+    return global_timestamp, dbs
 

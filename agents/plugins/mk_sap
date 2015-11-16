@@ -468,11 +468,16 @@ try:
     for entry in cfg:
         try:
             check(entry)
+            sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tOK\n' % entry['ashost'])
         except sapnwrfc.RFCCommunicationError, e:
             sys.stderr.write('ERROR: Unable to connect (%s)\n' % e)
+            sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tUnable to connect (%s)\n' %\
+                             (entry['ashost'], e))
             processed_all = False
         except Exception, e:
             sys.stderr.write('ERROR: Unhandled exception (%s)\n' % e)
+            sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tUnhandled exception (%s)\n' %\
+                             (entry['ashost'], e))
             processed_all = False
 
     # Now check whether or not an old logfile needs to be removed. This can only

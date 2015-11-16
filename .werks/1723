@@ -1,4 +1,4 @@
-Title: New check API function get_average() as more intelligent replacement for get_counter()
+Title: New check API function get_rate() as more intelligent replacement for get_counter()
 Level: 2
 Component: core
 Compatible: compat

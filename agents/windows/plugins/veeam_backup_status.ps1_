@@ -1,3 +1,4 @@
+# VEEAM Backups
 # This powershell script needs to be run with the 64bit powershell
 # and thus from a 64bit check_mk agent
 # If a 64 bit check_mk agent is available it just needs to be renamed with
@@ -59,10 +60,22 @@ foreach ($myJob in $myBackupJobs)
 
 	$myJobsText = "$myJobsText" + "$myJobName" + "`t" + "$myJobType" + "`t" + "$myJobLastState" + "`t" + "$myJobLastResult" + "`t" + "$myJobCreationTime" + "`t" + "$myJobEndTime" + "`n"
 
+	# For Non Backup Jobs (Replicas) we bail out
+	# because we are interested in the status of the original backup but
+	# for replicas the overall job state is all we need. 
+        if ($myJob.IsBackup -eq $false) { continue }
+
 	# Each backup job has a number of tasks which were executed (VMs which were processed)
 	# Get all Tasks of the  L A S T  backup session
-	# Caution: Each backup job MAY have run SEVERAL times for retries
-	$myJobLastSessionTasks = $myJobLastSession | Get-VBRTaskSession  -ErrorAction SilentlyContinue
+	# Caution: Each backup job MAY have run SEVERAL times for retries,
+	# thats why we need all sessions related to the last one if its a retry
+	$sessions = @($myJobLastSession)
+	if ($myJobLastSession.IsRetryMode)
+	{
+	$sessions = $myJobLastSession.GetOriginalAndRetrySessions($TRUE)
+	}
+
+	$myJobLastSessionTasks = $sessions | Get-VBRTaskSession  -ErrorAction SilentlyContinue
 
 	# Iterate through all tasks in the last backup job
 	$myTask = ""

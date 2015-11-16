@@ -1,0 +1,11 @@
+Title: Allow service regular expression filter to be negated
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443019197
+Class: feature
+
+This is now like the filter for the hosts. This allows you to create
+a view excludes some services by their name. Multiple names can be
+joined by vertical bars, e.g. <tt>LOG|Filesystem /tmp</tt>.

@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.2.7i3
+VERSION        	= 1.2.7i4
 NAME           	= check_mk
 PREFIX         	= /usr
 BINDIR         	= $(PREFIX)/bin
@@ -32,6 +32,10 @@ LIBDIR	       	= $(PREFIX)/lib/$(NAME)
 DISTNAME       	= $(NAME)-$(VERSION)
 TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ \
 		  --exclude=.gitignore --exclude=*.swp --exclude=.f12
+
+CPPCHECK        = cppcheck
+DOXYGEN         = doxygen
+IWYU            = include-what-you-use
 
 # File to pack into livestatus-$(VERSION).tar.gz
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
@@ -48,11 +52,15 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 	       $$(find pnp-templates -type f -name "*.php") \
                mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py \
 	       mkeventd/src/*.c mkeventd/checks/* check_mk_templates.cfg \
-	       agents/check_mk_*agent* agents/*.c agents/cfg_examples/* \
-	       agents/special/* $$(find agents/plugins -type f)
+	       agents/check_mk_*agent* agents/*.c \
+	       $$(find agents/cfg_examples -type f) \
+	       agents/special/* \
+	       $$(find agents/plugins -type f)
 
-
-.PHONY: help install clean
+.PHONY: all check-binaries check check-permissions check-spaces check-version \
+	clean cppcheck dist doxygen headers healspaces help iwyu minify-js \
+	mk-eventd mk-livestatus mrproper optimize-images packages setup \
+	setversion version
 
 all: dist packages
 
@@ -81,6 +89,7 @@ dist: mk-livestatus mk-eventd
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
 	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
+	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks $$(cd .werks ; ls [0-9]*)
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
 	tar czf $(DISTNAME)/inventory.tar.gz $(TAROPTS) -C inventory $$(cd inventory ; ls)
@@ -163,6 +172,8 @@ version:
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.04" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.10" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 14.04" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.04" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.10" \
           -o "$$(head -c 20 /etc/issue)" = "Debian GNU/Linux 6.0" ] \
           || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
@@ -223,7 +234,7 @@ minify-js:
 	fi
 
 clean:
-	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	rm -rf api dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js
@@ -234,3 +245,15 @@ mrproper:
 
 setup:
 	sudo apt-get install figlet pngcrush slimit
+
+# Not really perfect rules, but better than nothing
+iwyu:
+	$(MAKE) -C livestatus clean
+	$(MAKE) -C livestatus CC=$(IWYU) CXX=$(IWYU) -k
+
+cppcheck:
+	$(CPPCHECK) --quiet --enable=all --max-configs=20 --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus
+
+# Note: You need the doxygen and graphviz packages.
+documentation:
+	$(DOXYGEN) doc/Doxyfile

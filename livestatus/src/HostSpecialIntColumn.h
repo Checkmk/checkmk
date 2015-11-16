@@ -25,23 +25,26 @@
 #ifndef HostSpecialIntColumn_h
 #define HostSpecialIntColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
 #include "IntColumn.h"
+class Query;
+
 
 #define HSIC_REAL_HARD_STATE      0
 #define HSIC_PNP_GRAPH_PRESENT    1
 #define HSIC_MK_INVENTORY_LAST    2
+
 
 class HostSpecialIntColumn : public IntColumn
 {
     int _type;
 
 public:
-    HostSpecialIntColumn(string name, string description, int hsic_type, int indirect)
+    HostSpecialIntColumn(std::string name, std::string description, int hsic_type, int indirect)
         : IntColumn(name, description, indirect) , _type(hsic_type) {}
     int32_t getValue(void *data, Query *);
 };
 
 #endif // HostSpecialIntColumn_h
-

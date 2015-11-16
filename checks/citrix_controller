@@ -197,6 +197,7 @@ def check_citrix_controller_licensing(_no_item, _no_params, info):
             "Licensing Grace State: ",
             {
                 "NotActive"                 : 0,
+                "Active"                    : 2,
                 "InOutOfBoxGracePeriod"     : 1,
                 "InSupplementalGracePeriod" : 1,
                 "InEmergencyGracePeriod"    : 2,

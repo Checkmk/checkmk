@@ -36,34 +36,38 @@ def check_ups_capacity(item, params, info):
         warn, crit = (0, 0)
         cap_warn, cap_crit =  (95, 90)
 
-    time_on_bat, minutes_left, percent_fuel = map(int, info[0])
+    time_on_bat, minutes_left, percent_fuel = info[0]
 
     # Check time left on battery
-    levelsinfo = ""
-    if minutes_left <= crit:
-        state = 2
-        levelsinfo = " (crit at %d min)" % cap_crit
-    elif minutes_left < warn:
-        state = 1
-        levelsinfo = " (warn at %d min)" % cap_warn
-    else:
-        state = 0
-    yield state, "%d min left on battery" % minutes_left + levelsinfo, [ ('capacity', minutes_left, warn, crit) ]
+    if minutes_left:
+        minutes_left = int(minutes_left)
+        levelsinfo = ""
+        if minutes_left <= crit:
+            state = 2
+            levelsinfo = " (crit at %d min)" % cap_crit
+        elif minutes_left < warn:
+            state = 1
+            levelsinfo = " (warn at %d min)" % cap_warn
+        else:
+            state = 0
+        yield state, "%d min left on battery" % minutes_left + levelsinfo, [ ('capacity', minutes_left, warn, crit) ]
 
     # Check percentual capacity
-    levelsinfo = ""
-    if percent_fuel <= cap_crit:
-        state = 2
-        levelsinfo = " (crit at %d%%)" % cap_crit
-    elif percent_fuel < cap_warn:
-        state = 1
-        levelsinfo = " (warn at %d%%)" % cap_warn
-    else:
-        state = 0
-    yield state, "capacity: %d%%" % percent_fuel + levelsinfo, [ ('percent', percent_fuel, cap_warn, cap_crit) ]
+    if percent_fuel:
+        percent_fuel = int(percent_fuel)
+        levelsinfo = ""
+        if percent_fuel <= cap_crit:
+            state = 2
+            levelsinfo = " (crit at %d%%)" % cap_crit
+        elif percent_fuel < cap_warn:
+            state = 1
+            levelsinfo = " (warn at %d%%)" % cap_warn
+        else:
+            state = 0
+        yield state, "capacity: %d%%" % percent_fuel + levelsinfo, [ ('percent', percent_fuel, cap_warn, cap_crit) ]
 
     # Output time on battery
-    if time_on_bat > 0:
-        yield 0, "On battery for %d min" % time_on_bat
+    if time_on_bat and int(time_on_bat) > 0:
+        yield 0, "On battery for %d min" % int(time_on_bat)
 
 

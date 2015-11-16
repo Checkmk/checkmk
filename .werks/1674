@@ -1,6 +1,6 @@
-Title: ibm_svc_license / other license checks: now able to configure limits
+Title: ibm_svc_license, other license checks: now able to configure limits
 Level: 1
-Component: wato
+Component: checks
 Compatible: incomp
 Version: 1.2.7i1
 Date: 1422280492
@@ -9,7 +9,7 @@ Class: feature
 The check ibm_svc_license now has configurable license limits via WATO.
 
 Additionally, the limits for all license check got a small change,
-thats why this werk is marked as <tt>incompatible</tt>.
+thats why this werk is marked as incompatible.
 
 
 Old limits:

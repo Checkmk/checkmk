@@ -1,0 +1,7 @@
+# This file is read by the WATO page "Unpackaged Agents". It assigns
+# titles to the various files in this directory or hides them.
+
+waitmax.c                      (hide)
+waitmax                        waitmax - if /usr/bin/timeout is missing
+check-mk-agent.spec            (hide)
+Makefile                       (hide)

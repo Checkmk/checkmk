@@ -25,14 +25,16 @@
 #ifndef ListColumn_h
 #define ListColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Filter;
+
 
 class ListColumn : public Column
 {
 public:
-    ListColumn(string name, string description, int indirect_offset) :
+    ListColumn(std::string name, std::string description, int indirect_offset) :
         Column(name, description, indirect_offset) {}
     int type() { return COLTYPE_LIST; }
     virtual void *getNagiosObject(char *name) = 0;

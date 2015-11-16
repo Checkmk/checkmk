@@ -25,8 +25,10 @@
 #ifndef ServiceSpecialDoubleColumn_h
 #define ServiceSpecialDoubleColumn_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "DoubleColumn.h"
+
 
 #define HSDC_STALENESS 1
 
@@ -35,10 +37,9 @@ class HostSpecialDoubleColumn : public DoubleColumn
     int _type;
 
 public:
-    HostSpecialDoubleColumn(string name, string description, int hsdc_type, int indirect)
+    HostSpecialDoubleColumn(std::string name, std::string description, int hsdc_type, int indirect)
         : DoubleColumn(name, description, indirect) , _type(hsdc_type) {}
     double getValue(void *data);
 };
 
 #endif // ServiceSpecialDoubleColumn_h
-

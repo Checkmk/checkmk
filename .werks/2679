@@ -1,0 +1,10 @@
+Title: hp_proliant_power: Not discoverying when host is reporting "absent" state
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444806472
+Class: fix
+
+When the host is reporting a state of "absent" for power metering, this check
+is useless, so not discovering the service when this state is reported.

@@ -1,0 +1,29 @@
+title: NetApp Filers: 7Mode Global CPU Utilization
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ Checks the global CPU utilization (in percent) of NetApp filers running in 7Mode.
+
+ Returns {WARN}/{CRIT} if the current utilization is above the given levels.
+
+examples:
+ # set default levels to 90 and 99 percent:
+ netapp_api_cpu_default_levels = (90.0, 99.0)
+
+perfdata:
+ The CPU utilization in percent.
+
+inventory:
+ Creates one check.
+
+[parameters]
+warn(float): Return {WARN} if the CPU utilization is higher or equal this value.
+
+crit(float): Return {CRIT} if the CPU utilization is higher or equal this value.
+
+[configuration]
+netapp_api_cpu_default_levels(float, float):  The default levels to be used for
+ inventorized checks for {warn} and {crit}. They are preset to {(90.0, 95.0)}.
+

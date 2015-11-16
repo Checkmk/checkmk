@@ -1,0 +1,10 @@
+Title: windows agent: fixed inventory running every time when ipv6 was activated
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445347125
+Class: fix
+
+due to the colons in ipv6 adresses, the state file used to signal when inventory was last executed
+couldn't be saved. This has been fixed both in the ps1 and vbs variant of the script.

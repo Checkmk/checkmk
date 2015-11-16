@@ -34,7 +34,7 @@ BuildRoot: %{_topdir}/buildroot
 AutoReq:   off
 AutoProv:  off
 BuildArch: noarch
-Obsoletes: check_mk-agent
+Obsoletes: check_mk-agent check_mk_agent
 
 %description
 The Check_MK Agent uses xinetd to provide information about the system
@@ -51,11 +51,11 @@ rm -rf $R
 # install agent
 # xinitd
 mkdir -p $R/etc/xinetd.d
-install -m 644 xinetd.conf $R/etc/xinetd.d/check_mk
+install -m 644 cfg_examples/xinetd.conf $R/etc/xinetd.d/check_mk
 # Systemd
 mkdir -p $R/etc/systemd/system
-install -m 644 systemd/check_mk\@.service $R/etc/systemd/system
-install -m 644 systemd/check_mk.socket $R/etc/systemd/system
+install -m 644 cfg_examples/systemd/check_mk\@.service $R/etc/systemd/system
+install -m 644 cfg_examples/systemd/check_mk.socket $R/etc/systemd/system
 mkdir -p $R/etc/check_mk
 mkdir -p $R/usr/bin
 install -m 755 check_mk_agent.linux $R/usr/bin/check_mk_agent

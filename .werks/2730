@@ -1,0 +1,15 @@
+Title: if64: Grouping of interfaces resulted in an exception
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446816126
+
+The grouping of interfaces which are checked with the if64 check
+was broken. This has been fixed now.
+
+Grouping of interfaces across cluster nodes is undefined behaviour.
+Added an error message to inform the users in case they configured
+grouping for clustered interfaces.

@@ -1,0 +1,21 @@
+title: HP MSA 2040: Power Supply Voltage
+agents: hp_msa
+catalog: hw/storagehw/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the voltage of the power supplies of a HP MSA 2040 storage system.
+ To make it work you have to configure the hp_msa datasource program via WATO.
+
+ One power supplies has three subtypes:
+ 12 voltage power supply, 5 voltage power supply and 3.3 voltage power supply.
+
+ The levels are configurable.
+ The lower default levels (in Volt) are (11.9, 11.8), (4.9, 4.8), (3.25, 3.20).
+ The upper default levels (in Volt) are (12.1, 12.2), (5.1, 5.2), (3.4, 3.45).
+
+item:
+ The power supply identifier.
+
+inventory:
+ One service per power supply is created.

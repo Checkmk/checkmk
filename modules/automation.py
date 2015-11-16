@@ -45,7 +45,7 @@ def do_automation(cmd, args):
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
-            read_config_files()
+            read_config_files(validate_hosts=False)
             if cmd == "try-inventory":
                 result = automation_try_discovery(args)
             elif cmd == "inventory":
@@ -68,8 +68,8 @@ def do_automation(cmd, args):
                 result = automation_diag_host(args)
             elif cmd == "delete-host":
                 result = automation_delete_host(args)
-            elif cmd == "rename-host":
-                result = automation_rename_host(args)
+            elif cmd == "rename-hosts":
+                result = automation_rename_hosts()
             elif cmd == "create-snapshot":
                 result = automation_create_snapshot(args)
 	    elif cmd == "notification-replay":
@@ -80,6 +80,8 @@ def do_automation(cmd, args):
                 result = automation_update_dns_cache()
             elif cmd == "bake-agents":
                 result = automation_bake_agents()
+            elif cmd == "get-agent-output":
+                result = automation_get_agent_output(args)
             else:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
@@ -147,66 +149,12 @@ def automation_discovery(args):
     failed_hosts = {}
 
     for hostname in hostnames:
-        counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, total
-
-        if hostname not in all_hosts_untagged:
-            failed_hosts[hostname] = None # means offline
-            continue # unmonitored host
-
-        try:
-            # in "refresh" mode we first need to remove all previously discovered
-            # checks of the host, so that get_host_services() does show us the
-            # new discovered check parameters.
-            if how == "refresh":
-                counts[hostname][1] += remove_autochecks_of(hostname) # this is cluster-aware!
-
-            # Compute current state of new and existing checks
-            services = get_host_services(hostname, use_caches=use_caches,
-                                         do_snmp_scan=do_snmp_scan, on_error=on_error)
-
-            # Create new list of checks
-            new_items = {}
-            for (check_type, item), (check_source, paramstring) in services.items():
-                if check_source in ("custom", "legacy", "active", "manual"):
-                    continue # this is not an autocheck or ignored and currently not checked
-                    # Note discovered checks that are shadowed by manual checks will vanish
-                    # that way.
-
-                if check_source in ("new"):
-                    if how in ("new", "fixall", "refresh"):
-                        counts[hostname][0] += 1 # added
-                        counts[hostname][3] += 1 # total
-                        new_items[(check_type, item)] = paramstring
-
-                elif check_source in ("old", "ignored"):
-                    # keep currently existing valid services in any case
-                    new_items[(check_type, item)] = paramstring
-                    counts[hostname][2] += 1 # kept
-                    counts[hostname][3] += 1 # total
-
-                elif check_source in ("obsolete", "vanished"):
-                    # keep item, if we are currently only looking for new services
-                    # otherwise fix it: remove ignored and non-longer existing services
-                    if how not in ("fixall", "remove"):
-                        new_items[(check_type, item)] = paramstring
-                        counts[hostname][2] += 1 # kept
-                        counts[hostname][3] += 1 # total
-                    else:
-                        counts[hostname][1] += 1 # removed
-
-                # Silently keep clustered services
-                elif check_source.startswith("clustered_"):
-                    new_items[(check_type, item)] = paramstring
-
-                else:
-                    raise MKGeneralException("Unknown check source '%s'" % check_source)
-
-            set_autochecks_of(hostname, new_items)
-
-        except Exception, e:
-	    if opt_debug:
-                raise
-            failed_hosts[hostname] = str(e)
+        result, error = discover_on_host(how, hostname, do_snmp_scan, use_caches, on_error)
+        counts[hostname] = result
+        if error is not None:
+            failed_hosts[hostname] = error
+        else:
+            trigger_discovery_check(hostname)
 
     return counts, failed_hosts
 
@@ -251,51 +199,13 @@ def automation_set_autochecks(args):
     hostname = args[0]
     new_items = eval(sys.stdin.read())
     set_autochecks_of(hostname, new_items)
-
-def set_autochecks_of(hostname, new_items):
-    # A Cluster does not have an autochecks file
-    # All of its services are located in the nodes instead
-    # So we cycle through all nodes remove all clustered service
-    # and add the ones we've got from stdin
-    if is_cluster(hostname):
-        for node in nodes_of(hostname):
-            new_autochecks = []
-            existing = parse_autochecks_file(node)
-            for check_type, item, paramstring in existing:
-                descr = service_description(check_type, item)
-                if hostname != host_of_clustered_service(node, descr):
-                    new_autochecks.append((check_type, item, paramstring))
-            for (check_type, item), paramstring in new_items.items():
-                new_autochecks.append((check_type, item, paramstring))
-            # write new autochecks file for that host
-            automation_write_autochecks_file(node, new_autochecks)
-    else:
-        existing = parse_autochecks_file(hostname)
-        # write new autochecks file, but take paramstrings from existing ones
-        # for those checks which are kept
-        new_autochecks = []
-        for ct, item, paramstring in existing:
-            if (ct, item) in new_items:
-                new_autochecks.append((ct, item, paramstring))
-                del new_items[(ct, item)]
-
-        for (ct, item), paramstring in new_items.items():
-            new_autochecks.append((ct, item, paramstring))
-
-        # write new autochecks file for that host
-        automation_write_autochecks_file(hostname, new_autochecks)
+    trigger_discovery_check(hostname)
 
 
-def automation_write_autochecks_file(hostname, table):
-    if not os.path.exists(autochecksdir):
-        os.makedirs(autochecksdir)
-    path = "%s/%s.mk" % (autochecksdir, hostname)
-    f = file(path, "w")
-    f.write("[\n")
-    for check_type, item, paramstring in table:
-        f.write("  (%r, %r, %s),\n" % (check_type, item, paramstring))
-    f.write("]\n")
-    if inventory_check_autotrigger and inventory_check_interval:
+# if required, schedule an inventory check
+def trigger_discovery_check(hostname):
+    if (inventory_check_autotrigger and inventory_check_interval) and\
+            (not is_cluster(hostname) or nodes_of(hostname)):
         schedule_inventory_check(hostname)
 
 
@@ -444,15 +354,39 @@ def automation_analyse_service(args):
 
 def automation_delete_host(args):
     hostname = args[0]
+
+    # the inventory_archive as well as the performance data is kept
+    # we do not want to loose any historic data for accidently deleted hosts
+
+    # single files
     for path in [
-        "%s/%s"    % (precompiled_hostchecks_dir, hostname),
-        "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
-        "%s/%s.mk" % (autochecksdir, hostname),
-        "%s/%s"    % (logwatch_dir, hostname),
-        "%s/%s"    % (counters_directory, hostname),
-        "%s/%s"    % (tcp_cache_dir, hostname),
-        "%s/%s.*"  % (tcp_cache_dir, hostname)]:
-        os.system("rm -rf '%s'" % path)
+        "%s/%s"              % (precompiled_hostchecks_dir, hostname),
+        "%s/%s.py"           % (precompiled_hostchecks_dir, hostname),
+        "%s/%s.mk"           % (autochecksdir, hostname),
+        "%s/%s"              % (counters_directory, hostname),
+        "%s/%s"              % (tcp_cache_dir, hostname),
+        "%s/persisted/%s"    % (var_dir, hostname),
+        "%s/piggyback/%s"    % (tmp_dir, hostname),
+        "%s/inventory/%s"    % (var_dir, hostname),
+        "%s/inventory/%s.gz" % (var_dir, hostname)]:
+        if os.path.exists(path):
+            os.unlink(path)
+
+    # files from snmp devices
+    for filename in os.listdir(tcp_cache_dir):
+        if filename.startswith("%s." % hostname):
+            os.unlink("%s/%s" % (tcp_cache_dir, filename))
+
+    # softlinks for baked agents. obsolete packages are removed upon next bake action
+    for folder in os.listdir("%s/agents" % var_dir):
+        if os.path.exists("%s/%s" % (folder, hostname)):
+            os.unlink("%s/%s" % (folder, hostname))
+
+    # logwatch folders
+    if os.path.exists("%s/%s" % (logwatch_dir, hostname)):
+        import shutil
+        shutil.rmtree("%s/%s" % (logwatch_dir, hostname))
+
 
 def automation_restart(job = "restart", use_rushd = True):
 
@@ -499,10 +433,17 @@ def automation_restart(job = "restart", use_rushd = True):
 
         try:
             if monitoring_core == "nagios":
+                load_module("nagios")
                 create_nagios_config(file(objects_file, "w"))
-                configuration_warnings = None # not supported
+                configuration_warnings = [] # not supported
             else:
                 configuration_warnings = do_create_cmc_config(opt_cmc_relfilename, use_rushd = use_rushd)
+
+            duplicates = duplicate_hosts()
+            if duplicates:
+                configuration_warnings.append(
+                      "The following host names have duplicates: %s. "
+                      "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
 
             if "do_bake_agents" in globals() and bake_agents_on_restart:
                 do_bake_agents()
@@ -590,16 +531,21 @@ def automation_get_check_information():
 
     checks = {}
     for check_type, check in check_info.items():
-        manfile = manuals.get(check_type)
-        if manfile:
-            title = file(manfile).readline().strip().split(":", 1)[1].strip()
-        else:
-            title = check_type
-        checks[check_type] = { "title" : title }
-        if check["group"]:
-            checks[check_type]["group"] = check["group"]
-        checks[check_type]["service_description"] = check.get("service_description","%s")
-        checks[check_type]["snmp"] = check_uses_snmp(check_type)
+        try:
+            manfile = manuals.get(check_type)
+            if manfile:
+                title = file(manfile).readline().strip().split(":", 1)[1].strip()
+            else:
+                title = check_type
+            checks[check_type] = { "title" : title }
+            if check["group"]:
+                checks[check_type]["group"] = check["group"]
+            checks[check_type]["service_description"] = check.get("service_description","%s")
+            checks[check_type]["snmp"] = check_uses_snmp(check_type)
+        except Exception, e:
+            if opt_debug:
+                raise
+            raise MKAutomationError("Failed to parse man page '%s': %s" % (check_type, e))
     return checks
 
 
@@ -660,13 +606,16 @@ def automation_diag_host(args):
 
     if not ipaddress:
         try:
-            ipaddress = lookup_ipaddress(hostname)
+            ipaddress = lookup_ip_address(hostname)
         except:
             raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
+    ipv6_primary = is_ipv6_primary(hostname)
+
     try:
         if test == 'ping':
-            p = subprocess.Popen('ping -A -i 0.2 -c 2 -W 5 %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
+            base_cmd = ipv6_primary and "ping6" or "ping"
+            p = subprocess.Popen('%s -A -i 0.2 -c 2 -W 5 %s 2>&1' % (base_cmd, ipaddress), shell = True, stdout = subprocess.PIPE)
             response = p.stdout.read()
             return (p.wait(), response)
 
@@ -684,7 +633,8 @@ def automation_diag_host(args):
             if not traceroute_prog:
                 return 1, "Cannot find binary <tt>traceroute</tt>."
             else:
-                p = subprocess.Popen('traceroute -n %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
+                family_flag = ipv6_primary and "-6" or "-4"
+                p = subprocess.Popen('traceroute %s -n %s 2>&1' % (family_flag, ipaddress), shell = True, stdout = subprocess.PIPE)
                 response = p.stdout.read()
                 return (p.wait(), response)
 
@@ -716,7 +666,8 @@ def automation_diag_host(args):
             else:
                 return 1, "SNMP command not implemented"
 
-            data = get_snmp_table(hostname, ipaddress, None, ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']))
+            data = get_snmp_table(hostname, ipaddress, None,
+                                  ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']), use_snmpwalk_cache=True)
             if data:
                 return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(data[0])
             else:
@@ -730,20 +681,56 @@ def automation_diag_host(args):
             raise
         return 1, str(e)
 
-# WATO calls this automation when a host has been renamed. We need to change
-# several file and directory names.
-# HIRN: Hier auch das neue Format berücksichtigen! Andererseits sollte
-# eigentlich auch nix Schlimmes passieren, wenn der Hostname *nicht* in
-# der Datei steht.
-def automation_rename_host(args):
-    oldname = args[0]
-    newname = args[1]
+# WATO calls this automation when hosts have been renamed. We need to change
+# several file and directory names. This function has no argument but reads
+# Python pair-list from stdin:
+# [("old1", "new1"), ("old2", "new2")])
+def automation_rename_hosts():
+    renamings = eval(sys.stdin.read())
+
     actions = []
 
-    # Autochecks: simply read and write out the file again. We do
-    # not store a host name here anymore - but old versions did.
-    # by rewriting we get rid of the host name.
+    # At this place WATO already has changed it's configuration. All further
+    # data might be changed by the still running core. So we need to stop
+    # it now.
+    core_was_running = core_is_running()
+    if core_was_running:
+        do_core_action("stop", quiet=True)
 
+    for oldname, newname in renamings:
+        # Autochecks: simply read and write out the file again. We do
+        # not store a host name here anymore - but old versions did.
+        # by rewriting we get rid of the host name.
+        actions += rename_host_autochecks(oldname, newname)
+        actions += rename_host_files(oldname, newname)
+
+    # Start monitoring again. In case of CMC we need to ignore
+    # any configuration created by the CMC Rushahead daemon
+    if core_was_running:
+        global ignore_ip_lookup_failures
+        ignore_ip_lookup_failures = True # force config generation to succeed. The core *must* start.
+        automation_restart("start", use_rushd = False)
+        if monitoring_core == "cmc":
+            try:
+                os.remove(var_dir + "/core/config.rush")
+                os.remove(var_dir + "/core/config.rush.id")
+            except:
+                pass
+
+        for hostname in failed_ip_lookups:
+            actions.append("dnsfail-" + hostname)
+
+    # Convert actions into a dictionary { "what" : count }
+    action_counts = {}
+    for action in actions:
+        action_counts.setdefault(action, 0)
+        action_counts[action] += 1
+
+    return action_counts
+
+
+def rename_host_autochecks(oldname, newname):
+    actions = []
     acpath = autochecksdir + "/" + oldname + ".mk"
     if os.path.exists(acpath):
         old_autochecks = parse_autochecks_file(oldname)
@@ -755,13 +742,11 @@ def automation_rename_host(args):
         out.close()
         os.remove(acpath) # Remove old file
         actions.append("autochecks")
+    return actions
 
-    # At this place WATO already has changed it's configuration. All further
-    # data might be changed by the still running core. So we need to stop
-    # it now.
-    core_was_running = core_is_running()
-    if core_was_running:
-        do_core_action("stop", quiet=True)
+
+def rename_host_files(oldname, newname):
+    actions = []
 
     # Rename temporary files of the host
     for d in [ "cache", "counters" ]:
@@ -786,27 +771,28 @@ def automation_rename_host(args):
     if rename_host_file(snmpwalks_dir, oldname, newname):
         actions.append("snmpwalk")
 
+    # HW/SW-Inventory
+    if rename_host_file(var_dir + "/inventory", oldname, newname):
+        rename_host_file(var_dir + "/inventory", oldname + ".gz", newname + ".gz")
+        actions.append("inv")
+
+    if rename_host_dir(var_dir + "/inventory_archive", oldname, newname):
+        actions.append("invarch")
+
+    # Baked agents
+    agents_dir = var_dir + "/agents/"
+    have_renamed_agent = False
+    for opsys in os.listdir(agents_dir):
+        if rename_host_file(agents_dir + opsys, oldname, newname):
+            have_renamed_agent = True
+    if have_renamed_agent:
+        actions.append("agent")
+
     # OMD-Stuff. Note: The question really is whether this should be
     # included in Check_MK. The point is - however - that all these
     # actions need to take place while the core is stopped.
     if omd_root:
         actions += omd_rename_host(oldname, newname)
-
-    # Start monitoring again. In case of CMC we need to ignore
-    # any configuration created by the CMC Rushahead daemon
-    if core_was_running:
-        global ignore_ip_lookup_failures
-        ignore_ip_lookup_failures = True # force config generation to succeed. The core *must* start.
-        automation_restart("start", use_rushd = False)
-        if monitoring_core == "cmc":
-            try:
-                os.remove(var_dir + "/core/config.rush")
-                os.remove(var_dir + "/core/config.rush.id")
-            except:
-                pass
-
-        if failed_ip_lookups:
-            actions.append("ipfail")
 
     return actions
 
@@ -1202,16 +1188,14 @@ def load_resource_file(macros):
         if opt_debug:
             raise
 
+
 # Simulate replacing some of the more important macros of hosts. We
 # cannot use dynamic macros, of course. Note: this will not work
 # without OMD, since we do not know the value of $USER1$ and $USER2$
 # here. We could read the Nagios resource.cfg file, but we do not
 # know for sure the place of that either.
 def replace_core_macros(hostname, commandline):
-    macros  = {
-        "$HOSTNAME$"    : hostname,
-        "$HOSTADDRESS$" : lookup_ipaddress(hostname),
-    }
+    macros = get_basic_host_macros_from_attributes(hostname, get_host_attributes(hostname))
     load_resource_file(macros)
     for varname, value in macros.items():
         commandline = commandline.replace(varname, value)
@@ -1248,3 +1232,25 @@ def automation_bake_agents():
     if "do_bake_agents" in globals():
         return do_bake_agents()
 
+
+def automation_get_agent_output(args):
+    hostname, ty = args
+
+    success    = True
+    output     = ""
+    agent_data = ""
+
+    try:
+        if ty == "agent":
+            agent_data = get_plain_hostinfo(hostname)
+        else:
+            path = snmpwalks_dir + "/" + hostname
+            do_snmpwalk_on(hostname, snmpwalks_dir + "/" + hostname)
+            agent_data = file(snmpwalks_dir + "/" + hostname).read()
+    except Exception, e:
+        success = False
+        output = "Failed to fetch data from %s: %s\n" % (hostname, e)
+        if opt_debug:
+            raise
+
+    return success, output, agent_data

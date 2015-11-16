@@ -71,7 +71,7 @@ modules += [
       ( "pattern_editor", _("Logfile Pattern Analyzer"), "analyze", "pattern_editor",
         _("Analyze logfile pattern rules and validate logfile patterns against custom text.")),
 
-      ( "bi_rules", _("BI - Business Intelligence"), "aggr", "bi_rules",
+      ( "bi_aggregations", _("BI - Business Intelligence"), "aggr", "bi_rules",
       _("Configuration of Check_MK's Business Intelligence component.")),
 
       ( "sites",  _("Distributed Monitoring"), "sites", "sites",
@@ -83,3 +83,11 @@ modules += [
       ( "icons", _("Custom Icons"), "icons", "icons",
         _("Upload your own icons that can be used in views or custom actions")),
 ]
+
+# Register the builtin agent download page on the top level of WATO only when the agent bakery
+# does not exist (e.g. when using CRE)
+if "agents" not in modes:
+    modules.append(
+        ("download_agents", _("Monitoring Agents"), "download_agents", "download_agents",
+         _("Downloads the Check_MK monitoring agents"))
+    )

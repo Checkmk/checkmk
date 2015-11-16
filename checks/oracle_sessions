@@ -39,7 +39,7 @@ def check_oracle_sessions(item, params, info):
 
             warn, crit = params
             sessions = int(line[1])
-            infotext = "%d active sessions (levels at %d/%d)" % (sessions, warn, crit)
+            infotext = "%d active sessions (warn/crit at %d/%d)" % (sessions, warn, crit)
             perfdata = [("sessions", sessions, warn, crit)]
             if sessions >= crit:
                 return (2, infotext, perfdata)

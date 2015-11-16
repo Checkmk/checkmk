@@ -288,17 +288,20 @@ def paint_icons(what, row):
     output = ''
     for icon in toplevel_icons:
         if len(icon) == 4:
-            icon_name, title, url = icon[1:]
-            if url:
+            icon_name, title, url_spec = icon[1:]
+            if url_spec:
+                url, target_frame = sanitize_action_url(url_spec)
                 url = replace_action_url_macros(url, what, row)
+
                 onclick = ''
                 if url.startswith('onclick:'):
-                    onclick = ' onclick="%s"' % url[8:]
+                    onclick = url[8:]
                     url = 'javascript:void(0)'
-                output += '<a href="%s"%s>' % (url, onclick)
-            output += html.render_icon(icon_name, title)
-            if url:
-                output += '</a>'
+
+                output += html.render_icon_button(url, title, icon_name,
+                                onclick=onclick, target=target_frame, ty="icon")
+            else:
+                output += html.render_icon(icon_name, title)
         else:
             output += icon[1]
 
@@ -510,7 +513,7 @@ multisite_painters["svc_long_plugin_output"] = {
     "title"   : _("Long output of check plugin (multiline)"),
     "short"   : _("Status detail"),
     "columns" : ["service_long_plugin_output"],
-    "paint"   : lambda row: paint_stalified(row, row["service_long_plugin_output"].replace('\\n', '<br>').replace('\n', '<br>')),
+    "paint"   : lambda row: paint_stalified(row, format_plugin_output(row["service_long_plugin_output"], row).replace('\\n', '<br>').replace('\n', '<br>')),
 }
 multisite_painters["svc_perf_data"] = {
     "title" : _("Service performance data"),
@@ -1336,10 +1339,78 @@ multisite_painters["alias"] = {
 }
 
 multisite_painters["host_address"] = {
-    "title"   : _("Host IP address"),
+    "title"   : _("Host address (Primary)"),
     "short"   : _("IP address"),
     "columns" : ["host_address"],
     "paint"   : lambda row: ("", row["host_address"]),
+}
+
+multisite_painters["host_ipv4_address"] = {
+    "title"   : _("Host address (IPv4)"),
+    "short"   : _("IPv4 address"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : lambda row: paint_custom_var('host', 'ADDRESS_4', row),
+}
+
+multisite_painters["host_ipv6_address"] = {
+    "title"   : _("Host address (IPv6)"),
+    "short"   : _("IPv6 address"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : lambda row: paint_custom_var('host', 'ADDRESS_6', row),
+}
+
+
+def paint_host_addresses(row):
+    custom_vars = dict(zip(row["host_custom_variable_names"],
+                           row["host_custom_variable_values"]))
+
+    if custom_vars.get("ADDRESS_FAMILY", "4") == "4":
+        primary   = custom_vars.get("ADDRESS_4", "")
+        secondary = custom_vars.get("ADDRESS_6", "")
+    else:
+        primary   = custom_vars.get("ADDRESS_6", "")
+        secondary = custom_vars.get("ADDRESS_4", "")
+
+    if secondary:
+        secondary = " (%s)" % secondary
+    return "", primary + secondary
+
+
+multisite_painters["host_addresses"] = {
+    "title"   : _("Host addresses"),
+    "short"   : _("IP addresses"),
+    "columns" : [ "host_address", "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : paint_host_addresses,
+}
+
+multisite_painters["host_address_family"] = {
+    "title"   : _("Host address family (Primary)"),
+    "short"   : _("Address family"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : lambda row: paint_custom_var('host', 'ADDRESS_FAMILY', row),
+}
+
+
+def paint_host_address_families(row):
+    custom_vars = dict(zip(row["host_custom_variable_names"],
+                           row["host_custom_variable_values"]))
+
+    primary = custom_vars.get("ADDRESS_FAMILY", "4")
+
+    families = [primary]
+    if primary == "6" and custom_vars.get("ADDRESS_4"):
+        families.append("4")
+    elif primary == "4" and custom_vars.get("ADDRESS_6"):
+        families.append("6")
+
+    return "", ", ".join(families)
+
+
+multisite_painters["host_address_families"] = {
+    "title"   : _("Host address families"),
+    "short"   : _("Address families"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : paint_host_address_families,
 }
 
 def paint_svc_count(id, count):
@@ -1536,7 +1607,8 @@ multisite_painters["host_custom_vars"] = {
     "title"   : _("Host custom variables"),
     "columns" : [ "host_custom_variables" ],
     "groupby" : lambda row: tuple(row["host_custom_variables"].items()),
-    "paint"   : lambda row: paint_custom_vars('host', row, [ 'FILENAME', 'TAGS']),
+    "paint"   : lambda row: paint_custom_vars('host', row, [ 'FILENAME', 'TAGS', 'ADDRESS_4', 'ADDRESS_6',
+                                                             'ADDRESS_FAMILY', 'NODEIPS', 'NODEIPS_4', 'NODEIPS_6' ]),
 }
 
 

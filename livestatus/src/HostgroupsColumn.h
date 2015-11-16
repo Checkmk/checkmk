@@ -25,16 +25,19 @@
 #ifndef HostgroupsColumn_h
 #define HostgroupsColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "ListColumn.h"
 #include "nagios.h"
+class Query;
+
 
 class HostgroupsColumn : public ListColumn
 {
     int _offset;
 public:
-    HostgroupsColumn(string name, string description, int offset, int indirect_offset)
+    HostgroupsColumn(std::string name, std::string description, int offset, int indirect_offset)
         : ListColumn(name, description, indirect_offset), _offset(offset) {}
     int type() { return COLTYPE_LIST; }
     void output(void *, Query *);
@@ -45,7 +48,4 @@ private:
     objectlist *getData(void *);
 };
 
-
-
 #endif // HostgroupsColumn_h
-

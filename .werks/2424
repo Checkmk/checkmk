@@ -1,0 +1,12 @@
+Title: esx_vsphere_counters: improved handling when data is missing
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1440602655
+Class: feature
+
+A few times per day, the ESX system reports invalid counter values.
+This is an ESX issue and can't be fixed. The esx_vsphere_counter checks were unable
+to work with this invalid/missing data. This has been fixed.
+

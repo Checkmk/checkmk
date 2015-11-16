@@ -23,11 +23,19 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DownCommColumn.h"
+#include <stdint.h>
+#include <stdlib.h>
+#include <map>
+#include <utility>
 #include "DowntimeOrComment.h"
-#include "TableDownComm.h"
-#include "logger.h"
 #include "Query.h"
+#include "TableDownComm.h"
+#include "nagios.h"
 #include "tables.h"
+
+using std::map;
+using std::pair;
+
 
 void DownCommColumn::output(void *data, Query *query)
 {
@@ -37,7 +45,6 @@ void DownCommColumn::output(void *data, Query *query)
     if (data)
     {
         bool first = true;
-        bool found_match = false;
 
         for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
                 it != table->entriesIteratorEnd();
@@ -47,14 +54,15 @@ void DownCommColumn::output(void *data, Query *query)
             bool is_service       =  it->first.second;
             DowntimeOrComment *dt =  it->second;
 
-            found_match = false;
+            bool found_match = false;
 
             if (!is_service){
-                if (dt->_host->name == ((host*)data)->name)
+                if (dt->_host->name == static_cast<host*>(data)->name)
                     found_match = true;
             }
             else
-               if ( dt->_service->description == ((service*)data)->description && dt->_service->host_name == ((service*)data)->host_name )
+                if ( dt->_service->description == static_cast<service*>(data)->description &&
+                     dt->_service->host_name == static_cast<service*>(data)->host_name )
                     found_match = true;
 
             if (found_match)
@@ -73,7 +81,7 @@ void DownCommColumn::output(void *data, Query *query)
                     query->outputString(dt->_comment);
                     if(_with_extra_info && !_is_downtime) {
                         query->outputSublistSeparator();
-                        query->outputInteger(((Comment*)dt)->_entry_type);
+                        query->outputInteger(static_cast<Comment*>(dt)->_entry_type);
                         query->outputSublistSeparator();
                         query->outputTime(dt->_entry_time);
                     }
@@ -89,8 +97,8 @@ void DownCommColumn::output(void *data, Query *query)
 
 void *DownCommColumn::getNagiosObject(char *name)
 {
-    unsigned int id = strtoul(name, 0, 10);
-    return (void *)id; // Hack. Convert number into pointer.
+    unsigned long id = strtoul(name, 0, 10);
+    return reinterpret_cast<void *>(static_cast<uintptr_t>(id)); // Hack. Convert number into pointer.
 }
 
 bool DownCommColumn::isNagiosMember(void *data, void *member)
@@ -101,7 +109,7 @@ bool DownCommColumn::isNagiosMember(void *data, void *member)
     int64_t id = (int64_t)member; // Hack. Convert it back.
     DowntimeOrComment *dt = table->findEntry(id, _is_service);
     return dt != 0 &&
-        ( dt->_service == (service *)data || (dt->_service == 0 && dt->_host == (host *)data));
+        ( dt->_service == static_cast<service *>(data) || (dt->_service == 0 && dt->_host == static_cast<host *>(data)));
 }
 
 bool DownCommColumn::isEmpty(void *data)

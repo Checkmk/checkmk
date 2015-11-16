@@ -1,0 +1,20 @@
+title: Raritan EMX Devices External Sensors: Temperature
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors temperature sensors connected to a Raritan EMX device.
+ No configuration is needed, the devices send their states by themselves.
+
+ Upper and lower levels are configurable.
+
+item:
+ Sensor number, sensor name
+
+perfdata:
+ Temperature
+
+inventory:
+ One service per sensor is created.
+

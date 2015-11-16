@@ -32,9 +32,9 @@ class FixedIntColumn : public IntColumn
 {
     int32_t _value;
 public:
-    FixedIntColumn(string name, string description, int value) :
+    FixedIntColumn(std::string name, std::string description, int value) :
         IntColumn(name, description, -1), _value(value) {}
-    int32_t getValue(void *data, Query *) { return _value; }
+    int32_t getValue(void *, Query *) { return _value; }
 };
 
 #endif // FixedIntColumn_h

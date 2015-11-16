@@ -24,6 +24,7 @@
 
 #include "CustomVarsExplicitColumn.h"
 
+
 char *CustomVarsExplicitColumn::getValue(void *data)
 {
     customvariablesmember *cvm = getCVM(data);

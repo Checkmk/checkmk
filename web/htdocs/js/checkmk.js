@@ -90,14 +90,6 @@ function change_class(o, a, b) {
     add_class(o, b);
 }
 
-function hilite_icon(oImg, onoff) {
-    src = oImg.src;
-    if (onoff == 0)
-        oImg.src = oImg.src.replace("hi.png", "lo.png");
-    else
-        oImg.src = oImg.src.replace("lo.png", "hi.png");
-}
-
 function pageHeight() {
   var h;
 
@@ -199,6 +191,10 @@ function rad(g) {
     return (g * 360 / 100 * Math.PI) / 180;
 }
 
+// Returns timestamp in seconds incl. subseconds as decimal
+function time() {
+    return (new Date()).getTime() / 1000;
+}
 
 // simple implementation of function default arguments when
 // using objects as function parameters. Example:
@@ -412,6 +408,7 @@ function call_ajax(url, args)
 {
     args = merge_args({
         add_ajax_id      : true,
+        plain_error      : false,
         response_handler : null,
         error_handler    : null,
         handler_data     : null,
@@ -429,6 +426,11 @@ function call_ajax(url, args)
     if (args.add_ajax_id) {
         url += url.indexOf('\?') !== -1 ? "&" : "?";
         url += "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
+    }
+
+    if (args.plain_error) {
+        url += url.indexOf('\?') !== -1 ? "&" : "?";
+        url += "_plain_error=1";
     }
 
     try {
@@ -1066,7 +1068,7 @@ function do_reload(url)
         // Enforce specific display_options to get only the content data.
         // All options in "opts" will be forced. Existing upper-case options will be switched.
         var display_options = getUrlParam('display_options');
-        // Removed 'w' to reflect original rengering mechanism during reload
+        // Removed 'w' to reflect original rendering mechanism during reload
         // For example show the "Your query produced more than 1000 results." message
         // in views even during reload.
         var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r', 'u' ];
@@ -1089,7 +1091,11 @@ function do_reload(url)
         if(real_display_options !== '')
             params['display_options'] = real_display_options;
 
-        params['_do_actions'] = getUrlParam('_do_actions')
+        params['_do_actions'] = getUrlParam('_do_actions');
+
+        // For dashlet reloads add a parameter to mark this request as reload
+        if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
+            params["_reload"] = "1";
 
         call_ajax(makeuri(params), {
             response_handler : handle_content_reload,
@@ -2068,24 +2074,28 @@ function vs_listofmultiple_init(varprefix) {
 //#   |                                                                    |
 //#   '--------------------------------------------------------------------'
 
-function help_enable() {
-    var aHelp = document.getElementById('helpbutton');
-    aHelp.style.display = "inline-block";
+function enable_help()
+{
+    var help = document.getElementById('helpbutton');
+    help.style.display = "inline-block";
 }
 
-function help_toggle() {
-    var aHelp = document.getElementById('helpbutton');
-    if (aHelp.className == "active") {
-        aHelp.className = "passive";
-        help_switch(false);
-    }
-    else {
-        aHelp.className = "active";
-        help_switch(true);
+function toggle_help()
+{
+    var help = document.getElementById('helpbutton');
+    if (has_class(help, "active")) {
+        remove_class(help, "active");
+        add_class(help, "passive");
+        switch_help(false);
+    } else {
+        add_class(help, "active");
+        remove_class(help, "passive");
+        switch_help(true);
     }
 }
 
-function help_switch(how) {
+function switch_help(how)
+{
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName('help');
     for (var i=0; i<helpdivs.length; i++) {
@@ -2151,18 +2161,41 @@ function view_toggle_form(oButton, idForm) {
     add_class(oButton, down);
 }
 
-function init_optiondial(id) {
+function wheel_event_name()
+{
+    if ("onwheel" in window)
+        return "wheel";
+    else if (weAreFirefox)
+        return "DOMMouseScroll";
+    else
+        return "mousewheel";
+}
+
+function wheel_event_delta(event)
+{
+    return event.deltaY ? event.deltaY
+                        : event.detail ? event.detail * (-120)
+                                       : event.wheelDelta;
+}
+
+function init_optiondial(id)
+{
     var container = document.getElementById(id);
     make_unselectable(container);
-
-    var eventname = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel"
-    add_event_handler(eventname, optiondial_wheel, container);
+    add_event_handler(wheel_event_name(), optiondial_wheel, container);
 }
 
 var g_dial_direction = 1;
+var g_last_optiondial = null;
 function optiondial_wheel(event) {
     event = event || window.event;
-    var delta = event.detail ? event.detail * (-120) : event.wheelDelta;
+    var delta = wheel_event_delta(event);
+
+    // allow updates every 100ms
+    if (g_last_optiondial > time() - 0.1) {
+        return prevent_default_events(event);
+    }
+    g_last_optiondial = time();
 
     var container = getTarget(event);
     if (event.nodeType == 3) // defeat Safari bug
@@ -2409,9 +2442,9 @@ function handle_popup_close(event) {
     close_popup();
 }
 
-function toggle_popup(event, trigger_obj, ident, what, data, params)
+function toggle_popup(event, trigger_obj, ident, what, data, url_vars)
 {
-    var params = typeof(params) === "undefined" ? '' : '?'+params;
+    var url_vars = typeof(url_vars) === "undefined" ? '' : '?'+url_vars;
 
     if(!event)
         event = window.event;
@@ -2447,7 +2480,7 @@ function toggle_popup(event, trigger_obj, ident, what, data, params)
     //if (ident in popup_contents)
     //    menu.innerHTML = popup_contents[ident];
     //else
-    get_url('ajax_popup_'+what+'.py'+params, handle_render_popup_contents, [ident, event]);
+    get_url('ajax_popup_'+what+'.py'+url_vars, handle_render_popup_contents, [ident, event]);
 }
 
 function handle_render_popup_contents(data, response_text)
@@ -2488,22 +2521,34 @@ function add_to_visual(visual_type, visual_name)
 {
     close_popup();
 
-    response = get_url_sync('ajax_add_visual.py?visual_type=' + visual_type
-                                  + '&visual_name=' + visual_name
-                                  + '&type=' + popup_data[0]
-                                  + '&context=' + encodeURIComponent(JSON.stringify(popup_data[1]))
-                                  + '&params=' + encodeURIComponent(JSON.stringify(popup_data[2])));
+    var AJAX = call_ajax('ajax_add_visual.py?visual_type=' + visual_type
+                         + '&visual_name=' + visual_name
+                         + '&type=' + popup_data[0]
+                         + '&context=' + encodeURIComponent(JSON.stringify(popup_data[1]))
+                         + '&params=' + encodeURIComponent(JSON.stringify(popup_data[2])), {
+        sync: true,
+        plain_error : true
+    })
+    var response = AJAX.responseText;
     popup_data = null;
 
     // After adding a dashlet, go to the choosen dashboard
-    if (response)
-        window.location.href = response;
+    if (response.substr(0, 2) == "OK") {
+        window.location.href = response.substr(3);
+    } else {
+        alert("Failed to add element: "+response);
+    }
 }
 
+// FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime
 function pagetype_add_to_container(page_type, page_name)
 {
-    var element_type = popup_data[0]; // e.g. 'graph'
-    var create_info  = popup_data[1]; // complex JSON struct describing the thing
+    var element_type = popup_data[0]; // e.g. 'pnpgraph'
+    // complex JSON struct describing the thing
+    var create_info  = {
+        "context"    : popup_data[1],
+        "parameters" : popup_data[2]
+    };
     var create_info_json = JSON.stringify(create_info);
 
     close_popup();

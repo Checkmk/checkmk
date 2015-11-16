@@ -31,15 +31,14 @@ Sub outPut(strOut)
     objStdout.WriteLine strOut
 End Sub
 
-timestamp = state_dir & "\mk_inventory." & remote_host
+timestamp = state_dir & "\mk_inventory." & Replace(remote_host, ":", "_")
 
 ' does timestamp exist?
 If (fso.FileExists(timestamp)) Then
     Set objTimestamp = fso.GetFile(timestamp)
     fileDate = objTimestamp.DateLastModified
-    earlier = Now - delay
-    ' exit if timestamp to young
-    If filedate > earlier Then
+    ' exit if timestamp is too young
+    If DateAdd("s", delay, filedate) >= Now Then
         WScript.Quit
     End If
 End If

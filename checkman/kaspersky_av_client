@@ -1,6 +1,6 @@
 title: Kaspersky Anti-Virus: Signature and Fullscan
 agents: windows
-catalog: app/
+catalog: app/kaspersky
 license: GPL
 distribution: check_mk
 description:
@@ -17,15 +17,9 @@ inventory:
  One checks is created for each windows host.
 
 [parameters]
- parameters(dict): A dictionary with the following keys:
+parameters(dict): A dictionary with the following keys:
 
- { 'signature_age' } : A tuple of warn and crit,
- { 'fullscan_age' }  : A tuple of warn and crit.
+ { 'signature_age' } : A tuple of warn and crit, default values are (86400, 7*86400)
 
-[configuration]
- kaspersky_av_client_default_levels(dict):
- Default levels, preset to {
- 'signature_age' : ( 86400, 7*86400),
- 'fullscan_age'  : ( 86400, 7*86400)
- }
+ { 'fullscan_age' }  : A tuple of warn and crit, default values are (86400, 7*86400)
 

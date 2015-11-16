@@ -25,11 +25,12 @@
 #ifndef TableHostgroups_h
 #define TableHostgroups_h
 
-#include "config.h"
-
-#include <set>
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
-#include "nagios.h"
+#include "nagios.h"  // IWYU pragma: keep
+class Query;
+
 
 class TableHostgroups : public Table
 {
@@ -38,9 +39,8 @@ public:
     const char *name() { return "hostgroups"; }
     void *findObject(char *objectspec);
     bool isAuthorized(contact *, void *);
-    void addColumns(Table *, string prefix, int indirect_offset);
+    void addColumns(Table *, std::string prefix, int indirect_offset);
     void answerQuery(Query *query);
 };
 
 #endif // TableHostgroups_h
-

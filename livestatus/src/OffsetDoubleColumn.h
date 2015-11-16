@@ -25,16 +25,16 @@
 #ifndef OffsetDoubleColumn_h
 #define OffsetDoubleColumn_h
 
-#include "config.h"
-
-#include <stdlib.h>
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "DoubleColumn.h"
+
 
 class OffsetDoubleColumn : public DoubleColumn
 {
     int _offset;
 public:
-    OffsetDoubleColumn(string name, string description,
+    OffsetDoubleColumn(std::string name, std::string description,
                        int offset, int indirect_offset = -1)
         : DoubleColumn(name, description, indirect_offset), _offset(offset) {}
     double getValue(void *data);
@@ -42,6 +42,4 @@ protected:
     int offset() { return _offset; }
 };
 
-
 #endif // OffsetDoubleColumn_h
-

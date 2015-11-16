@@ -25,17 +25,13 @@
 #ifndef DowntimeOrComment_h
 #define DowntimeOrComment_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <time.h>
+#include "nagios.h"  // IWYU pragma: keep
 
-#include "nagios.h"
-#include <string>
-using namespace std;
 
 /* The structs for downtime and comment are so similar, that
    we handle them with the same logic */
-
-
-
 
 /*
    typedef struct nebstruct_downtime_struct{
@@ -105,7 +101,7 @@ struct Downtime : public DowntimeOrComment
     int           _fixed;
     int           _duration;
     int           _triggered_by;
-    Downtime(nebstruct_downtime_struct *data);
+    explicit Downtime(nebstruct_downtime_struct *data);
 };
 
 struct Comment : public DowntimeOrComment
@@ -115,9 +111,7 @@ struct Comment : public DowntimeOrComment
     int           _source;
     int           _entry_type;
     int           _expires;
-    Comment(nebstruct_comment_struct *data);
+    explicit Comment(nebstruct_comment_struct *data);
 };
 
-
 #endif // Downtime_h
-

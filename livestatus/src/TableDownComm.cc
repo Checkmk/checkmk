@@ -23,19 +23,22 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableDownComm.h"
+#include "DowntimeOrComment.h"
+#include "OffsetIntColumn.h"
+#include "OffsetStringColumn.h"
+#include "OffsetTimeColumn.h"
+#include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "DowntimeOrComment.h"
-#include "logger.h"
-#include "Query.h"
-#include "OffsetStringColumn.h"
-#include "OffsetIntColumn.h"
-#include "OffsetTimeColumn.h"
 #include "auth.h"
+#include "logger.h"
 #include "tables.h"
+
+using std::make_pair;
 
 // Todo: the dynamic data in this table must be
 // locked with a mutex
+
 
 TableDownComm::TableDownComm(bool is_downtime)
 {
@@ -104,7 +107,6 @@ TableDownComm::~TableDownComm()
 }
 
 void TableDownComm::addComment(nebstruct_comment_data *data) {
-    unsigned long id = data->comment_id;
     if (data->type == NEBTYPE_COMMENT_ADD || data->type == NEBTYPE_COMMENT_LOAD) {
         add(new Comment(data));
     }
@@ -116,7 +118,6 @@ void TableDownComm::addComment(nebstruct_comment_data *data) {
 
 void TableDownComm::addDowntime(nebstruct_downtime_data *data)
 {
-    unsigned long id = data->downtime_id;
     if (data->type == NEBTYPE_DOWNTIME_ADD || data->type == NEBTYPE_DOWNTIME_LOAD) {
         add(new Downtime(data));
     }
@@ -144,7 +145,7 @@ void TableDownComm::remove(DowntimeOrComment *data)
     dc_key tmp_key = make_pair(data->_id, data->_service != 0);
     _entries_t::iterator it = _entries.find(tmp_key);
     if (it == _entries.end())
-        logger(LG_INFO, "Cannot delete non-existing downtime/comment %u", data->_id);
+        logger(LG_INFO, "Cannot delete non-existing downtime/comment %lu", data->_id);
     else {
         delete it->second;
         _entries.erase(it);
@@ -164,7 +165,7 @@ void TableDownComm::answerQuery(Query *query)
 
 bool TableDownComm::isAuthorized(contact *ctc, void *data)
 {
-    DowntimeOrComment *dtc = (DowntimeOrComment *)data;
+    DowntimeOrComment *dtc = static_cast<DowntimeOrComment *>(data);
     return is_authorized_for(ctc, dtc->_host, dtc->_service);
 }
 
@@ -178,5 +179,3 @@ DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service)
     else
         return 0;
 }
-
-

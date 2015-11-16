@@ -22,15 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "InputBuffer.h"
+#include <ctype.h>
+#include <stdint.h>
+#include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
-#include <string.h>
-#include <errno.h>
 #include <unistd.h>
-#include <stdint.h>
-
-#include "InputBuffer.h"
 #include "logger.h"
+
+using std::string;
+
 
 #define READ_TIMEOUT_USEC 200000
 extern int g_query_timeout_msec;
@@ -38,8 +40,13 @@ extern int g_idle_timeout_msec;
 
 bool timeout_reached(const struct timeval *, int);
 
+// TODO: We need the suppression pragma below because _readahead_buffer is not
+// initialized in the constructor. Just replace all this manual fiddling with
+// pointers, offsets, etc. with vector.
+
+// cppcheck-suppress uninitMemberVar
 InputBuffer::InputBuffer(int *termination_flag)
-  : _termination_flag(termination_flag)
+    : _fd(-1), _termination_flag(termination_flag)
 {
     _read_pointer = &_readahead_buffer[0];         // points to data not yet processed
     _write_pointer = _read_pointer;                // points to end of data in buffer
@@ -243,4 +250,3 @@ bool timeout_reached(const struct timeval *start, int timeout_ms)
     elapsed += now.tv_usec - start->tv_usec;
     return elapsed / 1000 >= timeout_ms;
 }
-

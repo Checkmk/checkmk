@@ -1,0 +1,12 @@
+Title: It is now possible to upload multiple zipped MIB files at once
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439539012
+Class: feature
+
+If you have to upload a lot of MIB files to the Event Console, you
+can now pack them in a zip archive and upload the zip archive. The
+files need to be located in the root directory of the zip file.
+Files in subdirectories will not be processed.

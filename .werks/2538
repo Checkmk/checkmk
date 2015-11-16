@@ -1,0 +1,10 @@
+Title: Fix exception in PNP graph template where metric name contains colon (e.g. omd_apache)
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1439818166
+
+This problem only appeared with Nagios/Icinga as core.

@@ -1,0 +1,11 @@
+Title: cpu.loads: Fix exception in displaying parameters for CPU load check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441267525
+
+This also might have affected other checks. Integer values had not been accepted
+here but created as default parameters.

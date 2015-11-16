@@ -1,0 +1,15 @@
+title: NetApp Filer: Snapvault/Snapmirror lag-time
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ The check monitors the lag-time of snapvault volumes.
+ You can configure levels at which age the check should report {WARN} and {CRIT}.
+ Per default the check is {OK}.
+
+inventory:
+ One check is created for each snapvault volume.
+
+item:
+ The volume name, e.g. /vol/ipb_datas/

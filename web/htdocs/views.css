@@ -165,31 +165,6 @@ table.filtertime td {
     vertical-align: middle;
 }
 
-
-div.togglebutton.filters         { background-image: url("images/button_filters_lo.png"); }
-div.togglebutton.filters:hover   { background-image: url("images/button_filters_hi.png"); }
-div.togglebutton.filters.down       { background-image: url("images/button_filters_down_lo.png"); }
-div.togglebutton.filters.down:hover { background-image: url("images/button_filters_down_hi.png"); }
-div.togglebutton.filters.off      { background-image: url("images/button_filters_off.png"); }
-
-div.togglebutton.filters_set         { background-image: url("images/button_filters_set_lo.png"); }
-div.togglebutton.filters_set:hover   { background-image: url("images/button_filters_set_hi.png"); }
-div.togglebutton.filters_set.down       { background-image: url("images/button_filters_set_down_lo.png"); }
-div.togglebutton.filters_set.down:hover { background-image: url("images/button_filters_set_down_hi.png"); }
-div.togglebutton.filters_set.off      { background-image: url("images/button_filters_set_off.png"); }
-
-div.togglebutton.painteroptions         { background-image: url("images/button_painteroptions_lo.png"); }
-div.togglebutton.painteroptions:hover   { background-image: url("images/button_painteroptions_hi.png"); }
-div.togglebutton.painteroptions.down       { background-image: url("images/button_painteroptions_down_lo.png"); }
-div.togglebutton.painteroptions.down:hover { background-image: url("images/button_painteroptions_down_hi.png"); }
-div.togglebutton.painteroptions.off      { background-image: url("images/button_painteroptions_off.png"); }
-
-div.togglebutton.commands         { background-image: url("images/button_commands_lo.png"); }
-div.togglebutton.commands:hover   { background-image: url("images/button_commands_hi.png"); }
-div.togglebutton.commands.down       { background-image: url("images/button_commands_down_lo.png"); }
-div.togglebutton.commands.down:hover { background-image: url("images/button_commands_down_hi.png"); }
-div.togglebutton.commands.off      { background-image: url("images/button_commands_off.png"); }
-
 div.optiondial {
     cursor: pointer;
     height: 20px;
@@ -227,11 +202,9 @@ div.optiondial.refresh {
 }
 
 div.optiondial.num_columns { background-image: url("images/dial_num_columns.png"); }
-/* div.optiondial.num_columns:hover { background-image: url("images/dial_num_columns_hi.png"); }  */
 div.optiondial.num_columns.off { background-image: url("images/dial_num_columns_off.png"); }
 
 div.optiondial.refresh { background-image: url("images/dial_refresh.png"); }
-/* div.optiondial.refresh:hover { background-image: url("images/dial_refresh_hi.png"); }  */
 div.optiondial.refresh.off { background-image: url("images/dial_refresh_off.png"); }
 
 div.view_form {
@@ -304,7 +277,6 @@ table.tiled td {
 }
 .tile.sstate0, .tile.hhstate0 {
     border-color: #0f0;
-    /* background-color: #afa; */
 }
 .tile.sstate1 {
     border-color: #ff0;
@@ -552,8 +524,6 @@ table.data.availability tr.summary td {
 }
 
 table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
-    /* background-image: url("images/bg_flapping.png");
-    background-repeat: repeat; */
     background-color: #f0f;
 }
 
@@ -829,4 +799,3 @@ td.if_state.if_not_available {
     color: black;
     background-color: #cccccc;
 }
-

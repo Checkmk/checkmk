@@ -1,0 +1,15 @@
+title: Event Console status for a host or application
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ Checks the Event Console for open events for a host - either for any events for
+ for those with certain application names. This check can be used for having the
+ event status visible in the normal monitoring views. Note: only events of those
+ hosts that are part of the monitoring can be checked that way.
+
+ The service goes OK if all open events have OK state or if there are no open
+ events. Otherwise the state will take the worst state of all open events. Optionally
+ acknowledged events can be ignored.
+

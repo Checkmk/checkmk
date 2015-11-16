@@ -25,23 +25,24 @@
 #ifndef IntColumn_h
 #define IntColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
-
+#include <string>
 #include "Column.h"
+class Filter;
+class Query;
+
 
 class IntColumn : public Column
 {
 public:
-    IntColumn(string name, string description, int indirect_offset)
+    IntColumn(std::string name, std::string description, int indirect_offset)
         : Column(name, description, indirect_offset) {}
     virtual int32_t getValue(void *data, Query *) = 0;
     void output(void *, Query *);
     int type() { return COLTYPE_INT; }
-    string valueAsString(void *data, Query *);
+    std::string valueAsString(void *data, Query *);
     Filter *createFilter(int operator_id, char *value);
 };
 
 #endif // IntColumn_h
-

@@ -23,9 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AndingFilter.h"
+#include <cinttypes>
 #include "OringFilter.h"
-#include "logger.h"
 #include "Query.h"
+#include "logger.h"
+
 
 AndingFilter::~AndingFilter()
 {
@@ -110,8 +112,8 @@ bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
 void AndingFilter::combineFilters(int count, int andor)
 {
     if (count > (int)_subfilters.size()) {
-        logger(LG_INFO, "Cannot combine %d filters with '%s': only %d are on stack",
-                count, andor == ANDOR_AND ? "AND" : "OR", _subfilters.size());
+        logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX " are on stack",
+               count, andor == ANDOR_AND ? "AND" : "OR", static_cast<uintmax_t>(_subfilters.size()));
         return;
     }
 
@@ -126,4 +128,3 @@ void AndingFilter::combineFilters(int count, int andor)
     }
     addSubfilter(andorfilter);
 }
-

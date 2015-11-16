@@ -1,0 +1,10 @@
+Title: Remove bogus ;0 in comment of problem acknowledgements
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441281880
+
+This is when using Nagios/Icinga as core.

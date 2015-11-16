@@ -25,7 +25,6 @@
 #include "Filter.h"
 #include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
 
 
 void Filter::setError(unsigned code, const char *format, ...)

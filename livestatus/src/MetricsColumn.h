@@ -25,12 +25,16 @@
 #ifndef MetricsColumn_h
 #define MetricsColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Query;
+
 
 class MetricsColumn : public Column
 {
 public:
-    MetricsColumn(string name, string description, int indirect_offset)
+    MetricsColumn(std::string name, std::string description, int indirect_offset)
         : Column(name, description, indirect_offset) {}
     int type() { return COLTYPE_LIST; }
     void output(void *, Query *);

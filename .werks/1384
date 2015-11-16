@@ -1,6 +1,6 @@
 Title: oracle_jobs: new WATO rules, changed service name to SID.OWNER.NAME
 Level: 2
-Component: check
+Component: checks
 Compatible: incomp
 Version: 1.2.5i6
 Date: 1410149976

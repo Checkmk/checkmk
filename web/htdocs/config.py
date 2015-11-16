@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os, pprint, glob
+import i18n
 from lib import *
 
 # In case we start standalone and outside a Check_MK enviroment,
@@ -34,14 +35,6 @@ try:
     import defaults
 except:
     import defaults_standalone as defaults
-
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-# FIXME: We should officially drop Python 2.3 support
-try:
-    set()
-except NameError:
-    from sets import Set as set
 
 # FIXME: Make clear whether or not user related values should be part
 # of the "config" module. Maybe move to dedicated module (userdb?). Then
@@ -140,7 +133,7 @@ def include(filename):
 # Load multisite.mk and all files in multisite.d/. This will happen
 # for *each* HTTP request.
 def load_config():
-    global modification_timestamps
+    global modification_timestamps, sites
     modification_timestamps = []
 
     # Set default values for all user-changable configuration settings
@@ -161,6 +154,12 @@ def load_config():
     filelist.sort()
     for p in filelist:
         include(p)
+
+    # Prevent problem when user has deleted all sites from his configuration
+    # and sites is {}. We assume a default single site configuration in
+    # that case.
+    if not sites:
+        sites = default_single_site_configuration()
 
 
 def reporting_available():
@@ -299,7 +298,7 @@ def roles_of_user(user):
             roles[br] = {}
 
     if user in multisite_users:
-        return multisite_users[user]["roles"]
+        return existing_role_ids(multisite_users[user]["roles"])
     elif user in admin_users:
         return [ "admin" ]
     elif user in guest_users:
@@ -309,11 +308,19 @@ def roles_of_user(user):
     elif os.path.exists(config_dir + "/" + user + "/automation.secret"):
         return [ "guest" ] # unknown user with automation account
     elif 'roles' in default_user_profile:
-        return default_user_profile['roles']
+        return existing_role_ids(default_user_profile['roles'])
     elif default_user_role:
-        return [ default_user_role ]
+        return existing_role_ids([ default_user_role ])
     else:
         return []
+
+
+def existing_role_ids(role_ids):
+    return [
+        role_id for role_id in role_ids
+        if role_id in roles
+    ]
+
 
 def alias_of_user(user):
     if user in multisite_users:
@@ -432,7 +439,8 @@ def save_user_file(name, content, unlock=False, user=None):
     make_nagios_directory(dirname)
     path = dirname + "/" + name + ".mk"
     try:
-        write_settings_file(path, content)
+        write_settings_file(path+".new", content)
+        os.rename(path+".new", path)
 
         if unlock:
             release_lock(path)

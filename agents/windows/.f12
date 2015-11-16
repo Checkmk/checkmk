@@ -1,5 +1,5 @@
-SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
+SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
-make
-sudo rsync -varx *.exe /omd/sites/$SITE/share/check_mk/agents/windows/
+make || true
+sudo rsync -varx -v CONTENTS *.exe /omd/sites/$SITE/share/check_mk/agents/windows/

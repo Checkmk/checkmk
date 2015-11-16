@@ -463,7 +463,7 @@ register_configvar(group,
                         title = _("Translations"),
                         elements = [
                             ( l or "en", TextUnicode(title = a, size = 32) )
-                              for (l,a) in get_languages()
+                              for (l,a) in i18n.get_languages()
                         ],
                         columns = 2,
                     ),
@@ -472,7 +472,7 @@ register_configvar(group,
             title = _("Custom localizations"),
             movable = False,
             totext = _("%d translations"),
-            default_value = sorted(default_user_localizations.items()),
+            default_value = sorted(config.user_localizations.items()),
         ),
         forth = lambda d: sorted(d.items()),
         back = lambda l: dict(l),
@@ -494,16 +494,32 @@ register_configvar(group,
                                 allow_empty = False
                             )),
                             ('title', TextUnicode(title = _('Title'))),
-                            ('url', TextAscii(
-                                title = _('Action URL'),
-                                help = _('This URL is opened when clicking on the action / icon. You '
-                                         'can use some macros within the URL which are dynamically '
-                                         'replaced for each object. These are:<br>'
-                                         '<ul><li>$HOSTNAME$: Contains the name of the host</li>'
-                                         '<li>$SERVICEDESC$: Contains the service description '
-                                         '(in case this is a service)</li>'
-                                         '<li>$HOSTADDRESS$: Contains the network address of the host</li></ul>'),
-                                size = 80,
+                            ('url', Transform(
+                                Tuple(
+                                    title = _('Action'),
+                                    elements = [
+                                        TextAscii(
+                                            title = _('URL'),
+                                            help = _('This URL is opened when clicking on the action / icon. You '
+                                                     'can use some macros within the URL which are dynamically '
+                                                     'replaced for each object. These are:<br>'
+                                                     '<ul><li>$HOSTNAME$: Contains the name of the host</li>'
+                                                     '<li>$SERVICEDESC$: Contains the service description '
+                                                     '(in case this is a service)</li>'
+                                                     '<li>$HOSTADDRESS$: Contains the network address of the host</li></ul>'),
+                                            size = 80,
+                                        ),
+                                        DropdownChoice(
+                                            title = _("Open in"),
+                                            choices = [
+                                                ("_blank",  _("Load in a new window / tab")),
+                                                ("_self",   _("Load in current content area (keep sidebar)")),
+                                                ("_top",    _("Load as new page (hide sidebar)")),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                                forth = lambda x: type(x) != tuple and (x, "_self") or x,
                             )),
                             ('toplevel', FixedValue(True,
                                 title = _('Show in column'),
@@ -1084,10 +1100,13 @@ register_configvar(group,
                 unit = _("minutes"),
                 min_value = 1,
                 default_value = 720),
-        title = _("Enable regular service discovery checks"),
+        title = _("Enable regular service discovery checks (deprecated)"),
         help = _("If enabled, Check_MK will create one additional service per host "
                  "that does a regular check, if the service discovery would find new services "
-                 "currently un-monitored.")),
+                 "currently un-monitored. <b>Note:</b> This option is deprecated and has been "
+                 "replaced by the rule set <i>Periodic Service Discovery</i>, which allows "
+                 "a per-host configuration and additional features such as automatic rediscovery. "
+                 "Rule in that rule set will override the global settings done here.")),
     need_restart = True)
 
 register_configvar(group,
@@ -1620,6 +1639,131 @@ register_rule(group,
              "to the cluster.<br><br>Please make sure that you re-inventorize the "
              "cluster and the physical nodes after changing this ruleset."),
     itemtype = "service")
+
+
+register_rule(group,
+    "periodic_discovery",
+    Alternative(
+        title = _("Periodic service discovery"),
+        style = "dropdown",
+        default_value = {
+            "check_interval"          : 2 * 60,
+            "severity_unmonitored"    : 1,
+            "severity_vanished"       : 0,
+            "inventory_check_do_scan" : True,
+        },
+        elements = [
+            FixedValue(
+                None,
+                title = _("Do not perform periodic service discovery check"),
+                totext = _("no discovery check"),
+            ),
+            Dictionary(
+                title = _("Perform periodic service discovery check"),
+                help = _("If enabled, Check_MK will create one additional service per host "
+                        "that does a periodic check, if the service discovery would find new services "
+                        "that are currently not monitored."),
+                elements = [
+                    ( "check_interval",
+                        Transform(
+                            Age(
+                                minvalue=1,
+                                display = [ "days", "hours", "minutes" ]
+                            ),
+                            forth = lambda v: int(v * 60),
+                            back = lambda v: float(v) / 60.0,
+                            title = _("Perform service discovery every"),
+                        ),
+                    ),
+                    ( "severity_unmonitored",
+                      DropdownChoice(
+                         title = _("Severity of unmonitored services"),
+                         help = _("Please select which alarm state the service discovery check services "
+                                  "shall assume in case that un-monitored services are found."),
+                         choices = [
+                             (0, _("OK - do not alert, just display")),
+                             (1, _("Warning") ),
+                             (2, _("Critical") ),
+                             (3, _("Unknown") ),
+                         ],
+                    )),
+                    ( "severity_vanished",
+                      DropdownChoice(
+                         title = _("Severity of vanished services"),
+                         help = _("Please select which alarm state the service discovery check services "
+                                  "shall assume in case that non-existing services are being monitored."),
+                         choices = [
+                             (0, _("OK - do not alert, just display")),
+                             (1, _("Warning") ),
+                             (2, _("Critical") ),
+                             (3, _("Unknown") ),
+                         ],
+                    )),
+                    ( "inventory_check_do_scan",
+                      DropdownChoice(
+                         title = _("Service discovery check for SNMP devices"),
+                         choices = [
+                             ( True, _("Perform full SNMP scan always, detect new check types") ),
+                             ( False, _("Just rely on existing check files, detect new items only") )
+                         ]
+                    )),
+                    ( "inventory_rediscovery",
+                      Dictionary(
+                         title = _("Automatically update service configuration"),
+                         help = _("If active the check will not only notify about un-monitored services, "
+                                  "it will also automatically add/remove them as neccessary."),
+                         elements = [
+                             ( "mode",
+                               DropdownChoice(
+                                    title = _("Mode"),
+                                    choices = [
+                                        (0, _("Add unmonitored services")),
+                                        (1, _("Remove vanished services")),
+                                        (2, _("Add unmonitored & remove vanished services")),
+                                        (3, _("Refresh all services (tabula rasa)"))
+                                    ],
+                                    orientation = "vertical",
+                                    default_value = 0,
+                             )),
+                             ( "group_time",
+                                Age(
+                                    title = _("Group discovery and activation for up to"),
+                                    help = _("A delay can be configured here so that multiple "
+                                             "discoveries can be activated in one go. This avoids frequent core "
+                                             "restarts in situations with frequent services changes."),
+                                    default_value = 15 * 60,
+                                    display = [ "hours", "minutes" ]
+                             )),
+                             ( "excluded_time",
+                               TimeofdayRanges(
+                                   title = _("Never discovery or activate changes in the following time ranges"),
+                                   help = _("This avoids automatic changes during these times so "
+                                            "that the automatic system doesn't interfere with "
+                                            "user activity."),
+                                   count = 3,
+                             )),
+                             ("activation",
+                              DropdownChoice(
+                                  title = _("Automatic activation"),
+                                  choices = [
+                                      ( True,  _("Automatically activate changes") ),
+                                      ( False, _("Do not activate changes") ),
+                                  ],
+                                  default_value = True,
+                                  help = _("Here you can have the changes activated whenever services "
+                                           "have been added or removed."),
+                              )),
+                         ],
+                         optional_keys = None,
+                     )),
+                ],
+                optional_keys = ["inventory_rediscovery"],
+            )
+        ]
+    )
+)
+
+
 group = "monconf/" + _("Various")
 
 register_rule(group,
@@ -1722,6 +1866,7 @@ register_rulegroup("agent", _("Access to Agents"),
    _("Settings concerning the connection to the Check_MK and SNMP agents"))
 
 group = "agent/" + _("General Settings")
+
 register_rule(group,
     "dyndns_hosts",
     title = _("Hosts with dynamic DNS lookup during monitoring"),
@@ -1730,6 +1875,20 @@ register_rule(group,
              "activate the changes. In some rare cases DNS lookups must be done each time "
              "a host is connected to, e.g. when the IP address of the host is dynamic "
              "and can change."))
+
+register_rule(group,
+    "primary_address_family",
+    DropdownChoice(
+        choices = [
+            ("ipv4", _("IPv4")),
+            ("ipv6", _("IPv6")),
+        ],
+        title = _("Primary IP address family of dual-stack hosts"),
+        help = _("When you configure dual-stack host (IPv4 + IPv6) monitoring in Check_MK, "
+                 "normally IPv4 is used as primary address family to communicate with this "
+                 "host. The other family, IPv6, is just being pinged. You can use this rule "
+                 "to invert this behaviour to use IPv6 as primary address family.")))
+
 group = "agent/" + _("SNMP")
 
 _snmpv3_auth_elements = [

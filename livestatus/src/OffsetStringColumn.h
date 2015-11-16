@@ -25,20 +25,19 @@
 #ifndef OffsetStringColumn_h
 #define OffsetStringColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "StringColumn.h"
+
 
 class OffsetStringColumn : public StringColumn
 {
     int _offset;
 public:
-    OffsetStringColumn(string name, string description, int offset, int indirect_offset = -1)
+    OffsetStringColumn(std::string name, std::string description, int offset, int indirect_offset = -1)
         : StringColumn(name, description, indirect_offset), _offset(offset) {}
     char *getValue(void *data);
     int offset() { return _offset; }
 };
 
-
 #endif // OffsetStringColumn_h
-

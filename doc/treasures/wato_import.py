@@ -83,3 +83,7 @@ for folder in folders:
         ziel.write(ips)
         ziel.write('})\n\n')
     ziel.close()
+
+    wato = open(pathlokal + folder + '/.wato','w')
+    wato.write("{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" % ( len(folders[folder]), folder) )
+    wato.close()

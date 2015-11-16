@@ -25,9 +25,11 @@
 #ifndef TableContacts_h
 #define TableContacts_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
-#include "nagios.h"
+class Query;
+
 
 class TableContacts : public Table
 {
@@ -35,9 +37,8 @@ public:
     TableContacts();
     const char *name() { return "contacts"; }
     void *findObject(char *objectspec);
-    void addColumns(Table *, string prefix, int indirect_offset);
+    void addColumns(Table *, std::string prefix, int indirect_offset);
     void answerQuery(Query *query);
 };
 
 #endif // TableContacts_h
-

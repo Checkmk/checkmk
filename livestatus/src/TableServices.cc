@@ -22,34 +22,35 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "nagios.h"
 #include "TableServices.h"
-#include "Query.h"
-#include "logger.h"
-#include "OffsetStringColumn.h"
-#include "OffsetIntColumn.h"
-#include "OffsetTimeColumn.h"
-#include "OffsetDoubleColumn.h"
-#include "OffsetTimeperiodColumn.h"
-#include "FixedIntColumn.h"
-#include "CustomTimeperiodColumn.h"
-#include "CustomVarsExplicitColumn.h"
-#include "OffsetStringServiceMacroColumn.h"
-#include "ServiceSpecialIntColumn.h"
-#include "ServiceSpecialDoubleColumn.h"
+#include <string.h>
 #include "AttributelistColumn.h"
+#include "ContactgroupsColumn.h"
+#include "CustomTimeperiodColumn.h"
+#include "CustomVarsColumn.h"
+#include "CustomVarsExplicitColumn.h"
+#include "DownCommColumn.h"
+#include "FixedIntColumn.h"
+#include "MetricsColumn.h"
+#include "OffsetDoubleColumn.h"
+#include "OffsetIntColumn.h"
+#include "OffsetStringColumn.h"
+#include "OffsetStringServiceMacroColumn.h"
+#include "OffsetTimeColumn.h"
+#include "OffsetTimeperiodColumn.h"
+#include "Query.h"
+#include "ServiceContactsColumn.h"
+#include "ServiceSpecialDoubleColumn.h"
+#include "ServiceSpecialIntColumn.h"
+#include "ServicegroupsColumn.h"
+#include "TableHostgroups.h"
 #include "TableHosts.h"
 #include "TableServicegroups.h"
-#include "TableHostgroups.h"
-#include "ServiceContactsColumn.h"
-#include "DownCommColumn.h"
-#include "CustomVarsColumn.h"
-#include "ServicegroupsColumn.h"
-#include "ContactgroupsColumn.h"
-#include "MetricsColumn.h"
-#include "tables.h"
 #include "auth.h"
 #include "strutil.h"
+#include "tables.h"
+
+using std::string;
 
 extern service *service_list;
 extern servicegroup *servicegroup_list;
@@ -70,14 +71,13 @@ void TableServices::answerQuery(Query *query)
     if (_by_group) {
         servicegroup *sgroup = servicegroup_list;
         servicebygroup sg;
-        bool show_sgroup;
 
         // When g_group_authorization is set to AUTH_STRICT we need to pre-check
         // if every service of this group is visible to the _auth_user
         bool requires_precheck = query->authUser() && g_group_authorization == AUTH_STRICT;
 
         while (sgroup) {
-            show_sgroup = true;
+            bool show_sgroup = true;
             sg._servicegroup = sgroup;
             servicesmember *mem = sgroup->members;
             if (requires_precheck) {
@@ -185,7 +185,7 @@ void TableServices::answerQuery(Query *query)
 
 bool TableServices::isAuthorized(contact *ctc, void *data)
 {
-    service *svc = (service *)data;
+    service *svc = static_cast<service *>(data);
     return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 

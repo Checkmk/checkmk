@@ -23,8 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TimePointerColumn.h"
-#include "TimeColumnFilter.h"
 #include "Query.h"
+#include "TimeColumnFilter.h"
+
 
 void TimePointerColumn::output(void *data, Query *query)
 {

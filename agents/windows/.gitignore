@@ -1,6 +1,12 @@
 check_mk.ini
 logstate.txt
 spool
+obj
+obj64
 success.log
 *.res
 *.rc
+tests
+state
+log
+.ycm_extra_conf.py

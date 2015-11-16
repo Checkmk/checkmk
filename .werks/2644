@@ -1,0 +1,10 @@
+Title: Fix exception in executing actions or notifications when match groups contain non-ASCII characters
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1443183271
+
+

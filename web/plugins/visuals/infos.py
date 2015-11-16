@@ -122,3 +122,12 @@ infos['aggr'] = {
     ],
 }
 
+infos['aggr_group'] = {
+    'title'       : _('BI Aggregation Group'),
+    'title_plural': _('BI Aggregation Groups'),
+    'single_spec' : [
+        ('aggr_group', TextAscii(
+            title = _('Aggregation group'),
+        )),
+    ],
+}

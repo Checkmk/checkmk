@@ -1,0 +1,24 @@
+Title: Tracking of incompatible Werks
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443102230
+Class: feature
+
+This new feature helps you updating your configuration after an update to
+a newer Check_MK version. Check_MK now keeps track about all <i>Incompatible
+Werks</i>. Such a Werk denotes a software change that <i>might</i> require your
+knowledge or interaction.  In many cases it is just a service rediscovery of
+some affected hosts that needs to be done. In other cases manual adaptation
+of your configuration is neccessary.
+
+Check_MK now shows you all such Werks in the new version page (click on the
+Check_MK version number at the top of the sidebar for going there). If you
+have admin permissions then you can actively acknowledge incompatible werks
+that you already have checked until you are <i>clean</i>. After each software
+update you now will see at one glance if some new incompatible Werk has happened
+since your last update.
+
+Note: In order to keep things easy the tracking does not include any Werk
+that appeared in a version before the start of the 1.2.7 version branch.

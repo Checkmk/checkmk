@@ -1,0 +1,11 @@
+Title: netextreme_fan, netextreme_psu, netextreme_psu_in, netextreme_psu_out, netextreme_temp: new checks for Extreme Networks Switches
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1442393267
+Class: feature
+
+These checks monitor the fan state and speed in RPM, the system temperature in Celsius and system power in Watt,
+the power in Watt and voltage in Volt of input power supplies and the current in Ampere and voltage in Volt
+of output power supplies of a Extreme Networks Switch which supports the EXTREME-MIB.

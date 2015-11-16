@@ -62,6 +62,8 @@ def parse_ovs_bonding(info):
     parsed = {}
     for bond, status in bonds.items():
         all_down = True
+        if not status['active']:
+            continue
         for st in status["interfaces"].values():
             if st["status"] == "up":
                 all_down = False

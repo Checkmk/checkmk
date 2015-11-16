@@ -1,0 +1,55 @@
+Title: Added native support for monitoring via IPv6
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444649416
+Class: feature
+
+Check_MK is now providing native support for monitoring IPv6 and even dual-stack hosts.
+
+This has been implemented in a clean and straight forward way. For each host you can
+choose which address family shal be used for communication with this host. By default
+Check_MK is still using only IPv4, but now you can change it to IPv6 for monitoring
+IPv6 only hosts. In WATO this is done by configuring the host attribute <i>IP Address Family</i>.
+
+You can even configure one host to be monitored via IPv4 and IPv6 at the same time. In
+this situation you need to decide which of the both address families is the primary one.
+The primary address family is the one which is used for regular monitoring tasks
+(communication with the agent or SNMP). The secondary address family is only being
+pinged by default. For the secondary address family a dedicated PING service named
+(PING v4 or PING v6) is added to the dual-stack hosts.
+By default the primary address family is IPv4 for all dual-stack hosts. In WATO this
+can be changed by configuring the rule set <i>Primary IP address family of dual-stack hosts</i>.
+
+In some cases you want to perform active checks to check the avilability of a service,
+e.g. HTTP, using both IPv4 and IPv6. For this case you can add two active checks to
+the dual-stack host, one having IPv6 enabled and one without having it enabled for
+using IPv4. But each active check needs to support IPv6 on its own. For the moment
+the only check working vith IPv6 is <tt>check_http</tt>.
+
+This is the default and recommended way for monitoring dual-stack hosts. You use one
+address family for monitoring the whole system and the other one is just being pinged.
+
+Note: If you use the Check_MK Enterprise Edition together with the Micro Core,
+the Smart PING mechanism is not used for IPv6 hosts at the moment. This mechanism has
+a slightly slower performance, but if you don't have too many IPv6 hosts, this should
+be OK for the beginning.
+
+If you use the xinetd for serving the Check_MK agent output, you need to configure
+xinetd to create an IPv6 socket. By default it only creates an IPv4 socket. If you
+use the Agent Bakery, the baked agents configure xinetd to use the primary IP address
+family of the hosts.
+
+The basic implementation for IPv6 monitoring has been done. But there are several
+components in the Check_MK environment left which need to be extended to be fully
+compatible with IPv6. Some of them are:
+
+LI: Parent scanning (check_mk --scan-parents)
+LI: WATO - Most active checks
+LI: Event Console
+LI: Notification Forwarding
+LI: Livestatus Proxy
+LI: Several active checks
+LI: Most special agents
+LI: The Check_MK Appliance

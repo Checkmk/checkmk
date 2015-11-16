@@ -1,0 +1,9 @@
+# This file is read by the WATO page "Unpackaged Agents". It assigns
+# titles to the various files in this directory or hides them.
+
+check_mk_agent               Check_MK Agent for z/OS
+check_mk_agent_wrapper       Wrapper for starting the agent
+README.convert               (hide)
+uptime                       Binary for outputting the uptime
+waitmax                      Binary for running plugins with time limit
+waitmax.c                    (hide)

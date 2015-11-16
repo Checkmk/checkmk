@@ -25,8 +25,12 @@
 #ifndef ServiceSpecialIntColumn_h
 #define ServiceSpecialIntColumn_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
 #include "IntColumn.h"
+class Query;
+
 
 #define SSIC_PNP_GRAPH_PRESENT 1
 
@@ -35,10 +39,9 @@ class ServiceSpecialIntColumn : public IntColumn
     int _type;
 
 public:
-    ServiceSpecialIntColumn(string name, string description, int ssic_type, int indirect)
+    ServiceSpecialIntColumn(std::string name, std::string description, int ssic_type, int indirect)
         : IntColumn(name, description, indirect) , _type(ssic_type) {}
     int32_t getValue(void *data, Query *);
 };
 
 #endif // ServiceSpecialIntColumn_h
-

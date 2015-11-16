@@ -25,21 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 
-cpuload_default_levels = (5, 10)
+cpuload_default_levels = (5.0, 10.0)
+
 
 def inventory_ucd_cpu_load(info):
     if len(info) == 3:
         return [(None, "cpuload_default_levels")]
 
+
 def check_ucd_cpu_load(item, params, info):
     # Note: Some dump devices send 12,540000 instead of 12.540000
     return check_cpu_load_generic(params, [ float(l[0].replace(",", ".")) for l in info ])
 
-
-# We are not sure how to safely detect the UCD SNMP Daemon. We know that
-# it is mainly used on Linux, but not only. But fetching and OID outside
-# of the info area for scanning is not a good idea. It will slow down
-# scans for *all* hosts.
 
 check_info["ucd_cpu_load"] = {
     'check_function':          check_ucd_cpu_load,
@@ -47,10 +44,7 @@ check_info["ucd_cpu_load"] = {
     'service_description':     'CPU load',
     'has_perfdata':            True,
     'snmp_info':               ('.1.3.6.1.4.1.2021.10.1', [6]),
-    'snmp_scan_function':      \
-     lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-                 "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0") or \
-                 "HP Onboard Administrator" in oid(".1.3.6.1.2.1.1.1.0"),
+    'snmp_scan_function':      ucd_scan_function,
     'group':                   'cpu_load',
-    "includes":                ["cpu_load.include"],
+    "includes":                ["cpu_load.include", "ucd.include"],
 }

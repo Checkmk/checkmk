@@ -70,7 +70,6 @@ def fileinfo_process_date(pattern,reftime):
     return pattern
 
 def fileinfo_groups_of_file(check_filename,reftime):
-    import fnmatch
     groups = []
     for line in host_extra_conf(g_hostname, fileinfo_groups):
         for group_name, pattern in line:
@@ -135,8 +134,11 @@ def fileinfo_groups_precompile(hostname, item, params):
                 if type(pattern) == str: # support old format
                     pattern = (pattern, '')
                 patterns.append(pattern)
-    params['precompiled_patterns'] = patterns
-    return params
+
+    precomped = params.copy()
+    precomped['precompiled_patterns'] = patterns
+    return precomped
+
 
 def check_fileinfo_groups(item, params, info):
     if not info:
@@ -144,15 +146,7 @@ def check_fileinfo_groups(item, params, info):
 
     outof_range_txt = fileinfo_check_timeranges(params)
 
-    import fnmatch
     reftime = int(info[0][0])
-
-    # Get the grouping patterns (either compile or reuse the precompiled ones)
-    # Check_MK creates an empty string if the precompile function has
-    # not been exectued yet. The precompile function creates an empty
-    # list when no rules/patterns are defined.
-    if 'precompiled_patterns' not in params:
-        params = fileinfo_groups_precompile(g_hostname, item, params)
 
     count_all = 0
     age_oldest = None
@@ -212,7 +206,6 @@ def check_fileinfo_groups(item, params, info):
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 def fileinfo_check_function(check_definition, params, outof_range_txt):
-    import operator
     state = 0
     infos = []
     perfdata = []
@@ -220,7 +213,10 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
         infos.append("%s is %s" % (what, verbfunc(val)))
         if type(val) in [long, int]: # because strings go into infos but not into perfdata
             warn, crit = "", ""
-            for how, comp, cfunc in [ ("min", "<", operator.lt), ("max", ">", operator.gt) ]:
+            for how, comp, cfunc in [
+                ("min", "<", lambda a, b: a < b),
+                ("max", ">", lambda a, b: a > b),
+            ]:
                 p = params.get(how + what)
                 if p:
                     warn, crit = p

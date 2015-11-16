@@ -47,14 +47,8 @@ inv_info = {}   # Inventory plugins
 inv_export = {} # Inventory export hooks
 
 # Read all inventory plugins right now
-filelist = glob.glob(inventory_dir + "/*")
-filelist.sort()
-
-# read local checks *after* shipped ones!
-if local_inventory_dir:
-    local_files = glob.glob(local_inventory_dir + "/*")
-    local_files.sort()
-    filelist += local_files
+filelist = plugin_pathnames_in_directory(inventory_dir) \
+         + plugin_pathnames_in_directory(local_inventory_dir)
 
 
 # read include files always first, but still in the sorted
@@ -177,6 +171,7 @@ def do_inv(hostnames):
                 raise
             verbose("Failed: %s\n" % e)
             errors.append("Failed to inventorize %s: %s" % (hostname, e))
+        cleanup_globals()
 
     if errors:
         raise MKGeneralException("\n".join(errors))
@@ -234,7 +229,7 @@ def count_nodes(tree):
 
 def do_inv_for(hostname):
     try:
-        ipaddress = lookup_ipaddress(hostname)
+        ipaddress = lookup_ip_address(hostname)
     except:
         raise MKGeneralException("Cannot resolve hostname '%s'." % hostname)
 

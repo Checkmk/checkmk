@@ -25,24 +25,29 @@
 #ifndef Store_h
 #define Store_h
 
-#include "config.h"
-
-#include "TableServices.h"
-#include "TableHosts.h"
-#include "TableHostgroups.h"
-#include "TableServicegroups.h"
-#include "TableContacts.h"
-#include "TableCommands.h"
-#include "TableTimeperiods.h"
-#include "TableContactgroups.h"
-#include "TableDownComm.h"
-#include "TableStatus.h"
-#include "TableLog.h"
-#include "TableStateHistory.h"
-#include "TableColumns.h"
-#include "OutputBuffer.h"
-#include "InputBuffer.h"
+#include "config.h"  // IWYU pragma: keep
+#include <map>
+#include <string>
 #include "LogCache.h"
+#include "Mutex.h"
+#include "TableColumns.h"
+#include "TableCommands.h"
+#include "TableContactgroups.h"
+#include "TableContacts.h"
+#include "TableDownComm.h"
+#include "TableHostgroups.h"
+#include "TableHosts.h"
+#include "TableLog.h"
+#include "TableServicegroups.h"
+#include "TableServices.h"
+#include "TableStateHistory.h"
+#include "TableStatus.h"
+#include "TableTimeperiods.h"
+#include "nagios.h"
+class InputBuffer;
+class OutputBuffer;
+class Table;
+
 
 class Store
 {
@@ -65,11 +70,14 @@ class Store
     TableStateHistory  _table_statehistory;
     TableColumns       _table_columns;
 
-    typedef map<string, Table *> _tables_t;
+    typedef std::map<std::string, Table *> _tables_t;
     _tables_t _tables;
+
+    mk::mutex _command_mutex;
 
 public:
     Store();
+    ~Store();
     LogCache* logCache() { return &_log_cache; };
     void registerHostgroup(hostgroup *);
     void registerComment(nebstruct_comment_data *);
@@ -77,12 +85,9 @@ public:
     bool answerRequest(InputBuffer *, OutputBuffer *);
 
 private:
-    Table *findTable(string name);
+    Table *findTable(std::string name);
     void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
     void answerCommandRequest(const char *);
 };
 
-
 #endif // Store_h
-
-

@@ -25,11 +25,14 @@
 #ifndef HostlistStateColumn_h
 #define HostlistStateColumn_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
+#include <stdint.h>
+#include <string>
 #include "IntColumn.h"
 #include "ServicelistStateColumn.h"
 #include "nagios.h"
+class Query;
+
 
 #define HLSC_NUM_SVC               SLSC_NUM
 #define HLSC_NUM_SVC_PENDING       SLSC_NUM_PENDING
@@ -58,12 +61,10 @@ class HostlistStateColumn : public IntColumn
     int _logictype;
 
 public:
-    HostlistStateColumn(string name, string description, int logictype, int offset, int indirect_offset)
+    HostlistStateColumn(std::string name, std::string description, int logictype, int offset, int indirect_offset)
         : IntColumn(name, description, indirect_offset), _offset(offset), _logictype(logictype) {}
     int32_t getValue(void *data, Query *);
     hostsmember *getMembers(void *data);
 };
 
-
 #endif // HostlistStateColumn_h
-

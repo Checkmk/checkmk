@@ -1,0 +1,10 @@
+Title: symantec_av_updates: fix crash due to missing datetime module, also handle DD.MM.YYYY date format
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1441271945
+
+

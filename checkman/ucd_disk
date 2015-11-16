@@ -1,0 +1,21 @@
+title: Disk space of mounted disks on systems using UCD SNMP Daemon
+agents: snmp
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the available and used space of the mounted disks
+ via SNMP on systems running the UCD SNMP daemon.
+ This daemon is mostly found on Linux systems and used by some hardware
+ appliances (such as Riverbed Steelhead).
+
+ Upper default levels are set to 80, 90 %. These levels are configurable.
+
+item:
+ The mount point of the disk.
+
+perfdata:
+ Disk size and used space.
+
+inventory:
+ One service per mount point is created.

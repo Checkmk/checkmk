@@ -25,10 +25,10 @@
 #ifndef ListColumnFilter_h
 #define ListColumnFilter_h
 
-#include "config.h"
-
+#include "config.h"  // IWYU pragma: keep
 #include "Filter.h"
 class ListColumn;
+
 
 class ListColumnFilter : public Filter
 {
@@ -43,6 +43,4 @@ public:
     void *indexFilter(const char *columnname);
 };
 
-
 #endif // ListColumnFilter_h
-

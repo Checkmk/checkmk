@@ -22,19 +22,19 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <nagios.h>
-
-#include "logger.h"
 #include "HostFileColumn.h"
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "logger.h"
+#include "nagios.h"
 
 #ifdef CMC
 #include "Host.h"
 #endif
+
+using std::string;
 
 
 HostFileColumn::HostFileColumn(string name, string description, const char *base_dir,
@@ -57,11 +57,9 @@ char *HostFileColumn::getBlob(void *data, int *size)
     if (!data) return 0;
 
 #ifdef CMC
-    Host *hst = (Host *)data;
-    const char *host_name = hst->_name;
+    const char *host_name = static_cast<Host *>(data)->_name;
 #else
-    host *hst = (host *)data;
-    const char *host_name = hst->name;
+    const char *host_name = static_cast<host *>(data)->name;
 #endif
 
     char path[4096];
@@ -86,7 +84,7 @@ char *HostFileColumn::getBlob(void *data, int *size)
         return 0;
     }
 
-    int read_bytes = read(fd, buffer, *size);
+    ssize_t read_bytes = read(fd, buffer, *size);
     close(fd);
     if (read_bytes != *size) {
         logger(LG_WARN, "Cannot read %d from %s", *size, path);

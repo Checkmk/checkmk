@@ -1,0 +1,12 @@
+Title: Fixed agent timeouts not resulting in a crash report anympore
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446449712
+
+When an agents takes too long to respond, this results in a timeout
+exception which was handled as "crash". This has been changed to output
+a proper error message.

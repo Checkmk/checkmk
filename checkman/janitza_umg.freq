@@ -1,0 +1,19 @@
+title: Janitza Power Analyzer: Frequency
+agents: snmp
+catalog: hw/power/janitza
+license: GPL
+distribution: check_mk
+description:
+ Monitors frequency as measured by Janitza Power Analyzers. This currently
+ supports the devices UMG 604 and UMG 96 though others from the same line may be
+ very similar.
+
+item:
+ consecutive numbers.
+
+perfdata:
+ One value: in_freq
+
+inventory:
+ Creates exactly one item.
+

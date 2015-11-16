@@ -1,0 +1,14 @@
+Title: Fixed duplicate Event Console reload in distributed setups
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444657254
+Class: fix
+
+When activating WATO changes, Check_MK was trying to reload Event 
+Consoles running on remote sites twice which lead to errors like this:
+
+Error: Internal automation error: Cannot
+connect to event daemon via /omd/sites/AAA/tmp/run/mkeventd/status:
+[Errno 104] Connection reset by peer

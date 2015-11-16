@@ -25,21 +25,17 @@
 #ifndef StringColumnFilter_h
 #define StringColumnFilter_h
 
-#include "config.h"
-
-#include <sys/types.h>
+#include "config.h"  // IWYU pragma: keep
 #include <regex.h>
 #include <string>
-
-using namespace std;
-
 #include "Filter.h"
 class StringColumn;
+
 
 class StringColumnFilter : public Filter
 {
     StringColumn *_column;
-    string _ref_string;
+    std::string _ref_string;
     int _opid;
     bool _negate;
     regex_t *_regex;
@@ -51,6 +47,4 @@ public:
     void *indexFilter(const char *column);
 };
 
-
 #endif // StringColumnFilter_h
-

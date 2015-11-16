@@ -25,23 +25,21 @@
 # Boston, MA 02110-1301 USA.
 
 import views, time, defaults, dashboard
+import pagetypes, table
+from valuespec import *
 from lib import *
 
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
 
-# --------------------------------------------------------------
-#       _    _                 _
-#      / \  | |__   ___  _   _| |_
-#     / _ \ | '_ \ / _ \| | | | __|
-#    / ___ \| |_) | (_) | |_| | |_
-#   /_/   \_\_.__/ \___/ \__,_|\__|
-#
-# --------------------------------------------------------------
+#.
+#   .--About---------------------------------------------------------------.
+#   |                       _    _                 _                       |
+#   |                      / \  | |__   ___  _   _| |_                     |
+#   |                     / _ \ | '_ \ / _ \| | | | __|                    |
+#   |                    / ___ \| |_) | (_) | |_| | |_                     |
+#   |                   /_/   \_\_.__/ \___/ \__,_|\__|                    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def render_about():
     html.write(_("Version: ") + defaults.check_mk_version)
     html.write("<ul>")
@@ -53,19 +51,21 @@ def render_about():
 
 sidebar_snapins["about"] = {
     "title" : _("About Check_MK"),
-    "description" : _("Version information and Links to Documentation, Homepage and Download of Check_MK"),
+    "description" : _("Version information and Links to Documentation, "
+                      "Homepage and Download of Check_MK"),
     "render" : render_about,
     "allowed" : [ "admin", "user", "guest" ],
 }
 
-# --------------------------------------------------------------
-#   __     ___
-#   \ \   / (_) _____      _____
-#    \ \ / /| |/ _ \ \ /\ / / __|
-#     \ V / | |  __/\ V  V /\__ \
-#      \_/  |_|\___| \_/\_/ |___/
-#
-# --------------------------------------------------------------
+#.
+#   .--Views---------------------------------------------------------------.
+#   |                    __     ___                                        |
+#   |                    \ \   / (_) _____      _____                      |
+#   |                     \ \ / /| |/ _ \ \ /\ / / __|                     |
+#   |                      \ V / | |  __/\ V  V /\__ \                     |
+#   |                       \_/  |_|\___| \_/\_/ |___/                     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 def visuals_by_topic(permitted_visuals,
         default_order = [ _("Overview"), _("Hosts"), _("Host Groups"), _("Services"), _("Service Groups"),
@@ -142,8 +142,6 @@ sidebar_snapins["views"] = {
 #   |       | |_| | (_| \__ \ | | | |_) | (_) | (_| | | | (_| \__ \        |
 #   |       |____/ \__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|___/        |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 def render_dashboards():
@@ -191,20 +189,16 @@ sidebar_snapins["dashboards"] = {
     "allowed"     : [ "user", "admin", "guest" ],
 }
 
-# --------------------------------------------------------------
-#    ____                  _                     __
-#   / ___|  ___ _ ____   _(_) ___ ___           / /
-#   \___ \ / _ \ '__\ \ / / |/ __/ _ \_____    / /
-#    ___) |  __/ |   \ V /| | (_|  __/_____|  / /
-#   |____/ \___|_|    \_/ |_|\___\___|       /_/
-#
-#   _   _           _
-#  | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___
-#  | |_| |/ _ \/ __| __/ _` | '__/ _ \| | | | '_ \/ __|
-#  |  _  | (_) \__ \ || (_| | | | (_) | |_| | |_) \__ \
-#  |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
-#                      |___/                |_|
-# --------------------------------------------------------------
+#.
+#   .--Groups--------------------------------------------------------------.
+#   |                    ____                                              |
+#   |                   / ___|_ __ ___  _   _ _ __  ___                    |
+#   |                  | |  _| '__/ _ \| | | | '_ \/ __|                   |
+#   |                  | |_| | | | (_) | |_| | |_) \__ \                   |
+#   |                   \____|_|  \___/ \__,_| .__/|___/                   |
+#   |                                        |_|                           |
+#   '----------------------------------------------------------------------'
+
 def render_groups(what):
     data = html.live.query("GET %sgroups\nColumns: name alias\n" % what)
     name_to_alias = dict(data)
@@ -217,31 +211,33 @@ def render_groups(what):
     html.write('</ul>')
 
 sidebar_snapins["hostgroups"] = {
-    "title" : _("Hostgroups"),
+    "title" : _("Host Groups"),
     "description" : _("Directs links to all host groups"),
     "render" : lambda: render_groups("host"),
     "restart":     True,
     "allowed" : [ "user", "admin", "guest" ]
 }
 sidebar_snapins["servicegroups"] = {
-    "title" : _("Servicegroups"),
+    "title" : _("Service Groups"),
     "description" : _("Direct links to all service groups"),
     "render" : lambda: render_groups("service"),
     "restart":     True,
     "allowed" : [ "user", "admin", "guest" ]
 }
 
-# --------------------------------------------------------------
-#    _   _           _
-#   | | | | ___  ___| |_ ___
-#   | |_| |/ _ \/ __| __/ __|
-#   |  _  | (_) \__ \ |_\__ \
-#   |_| |_|\___/|___/\__|___/
-#
-# --------------------------------------------------------------
+#.
+#   .--Hosts---------------------------------------------------------------.
+#   |                       _   _           _                              |
+#   |                      | | | | ___  ___| |_ ___                        |
+#   |                      | |_| |/ _ \/ __| __/ __|                       |
+#   |                      |  _  | (_) \__ \ |_\__ \                       |
+#   |                      |_| |_|\___/|___/\__|___/                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def render_hosts(mode):
     html.live.set_prepend_site(True)
-    query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100"
+    query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100\n"
     view = "host"
 
     if mode == "summary":
@@ -310,8 +306,9 @@ snapin_allhosts_styles = """
 """
 
 sidebar_snapins["hosts"] = {
-    "title" : _("All hosts"),
-    "description" : _("A summary state of each host with a link to the view showing its services"),
+    "title" : _("All Hosts"),
+    "description" : _("A summary state of each host with a link to the view "
+                      "showing its services"),
     "render" : lambda: render_hosts("hosts"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : True,
@@ -319,8 +316,9 @@ sidebar_snapins["hosts"] = {
 }
 
 sidebar_snapins["summary_hosts"] = {
-    "title" : _("Summary hosts"),
-    "description" : _("A summary state of all summary hosts (summary hosts hold aggregated service states and are a feature of Check_MK)"),
+    "title" : _("Summary Hosts"),
+    "description" : _("A summary state of all summary hosts (summary hosts hold "
+                      "aggregated service states and are a feature of Check_MK)"),
     "render" : lambda: render_hosts("summary"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : True,
@@ -328,22 +326,25 @@ sidebar_snapins["summary_hosts"] = {
 }
 
 sidebar_snapins["problem_hosts"] = {
-    "title" : _("Problem hosts"),
-    "description" : _("A summary state of all hosts that have a problem, with links to problems of those hosts"),
+    "title" : _("Problem Hosts"),
+    "description" : _("A summary state of all hosts that have a problem, with "
+                      "links to problems of those hosts"),
     "render" : lambda: render_hosts("problems"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : True,
     "styles" : snapin_allhosts_styles,
 }
 
-# --------------------------------------------------------------
-#  _   _           _     __  __       _        _
-# | | | | ___  ___| |_  |  \/  | __ _| |_ _ __(_)_  __
-# | |_| |/ _ \/ __| __| | |\/| |/ _` | __| '__| \ \/ /
-# |  _  | (_) \__ \ |_  | |  | | (_| | |_| |  | |>  <
-# |_| |_|\___/|___/\__| |_|  |_|\__,_|\__|_|  |_/_/\_\
-#
-# --------------------------------------------------------------
+#.
+#   .--Host Matrix---------------------------------------------------------.
+#   |         _   _           _     __  __       _        _                |
+#   |        | | | | ___  ___| |_  |  \/  | __ _| |_ _ __(_)_  __          |
+#   |        | |_| |/ _ \/ __| __| | |\/| |/ _` | __| '__| \ \/ /          |
+#   |        |  _  | (_) \__ \ |_  | |  | | (_| | |_| |  | |>  <           |
+#   |        |_| |_|\___/|___/\__| |_|  |_|\__,_|\__|_|  |_/_/\_\          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def render_hostmatrix():
     html.live.set_prepend_site(True)
     query = "GET hosts\n" \
@@ -426,15 +427,16 @@ table.hostmatrix td { border: 1px solid #123a4a; padding: 0; border-spacing: 0; 
 
 }
 
+#.
+#   .--Site Status---------------------------------------------------------.
+#   |           ____  _ _         ____  _        _                         |
+#   |          / ___|(_) |_ ___  / ___|| |_ __ _| |_ _   _ ___             |
+#   |          \___ \| | __/ _ \ \___ \| __/ _` | __| | | / __|            |
+#   |           ___) | | ||  __/  ___) | || (_| | |_| |_| \__ \            |
+#   |          |____/|_|\__\___| |____/ \__\__,_|\__|\__,_|___/            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
-# --------------------------------------------------------------
-#    ____  _ _            _        _
-#   / ___|(_) |_ ___  ___| |_ __ _| |_ _   _ ___
-#   \___ \| | __/ _ \/ __| __/ _` | __| | | / __|
-#    ___) | | ||  __/\__ \ || (_| | |_| |_| \__ \
-#   |____/|_|\__\___||___/\__\__,_|\__|\__,_|___/
-#
-# --------------------------------------------------------------
 def render_sitestatus():
     if config.is_multisite():
         html.write("<table cellspacing=0 class=sitestate>")
@@ -476,8 +478,9 @@ def render_sitestatus():
 
 
 sidebar_snapins["sitestatus"] = {
-  "title" : _("Site status"),
-  "description" : _("Connection state of each site and button for enabling and disabling the site connection"),
+  "title" : _("Site Status"),
+  "description" : _("Connection state of each site and button for enabling "
+                    "and disabling the site connection"),
   "render" : render_sitestatus,
   "allowed" : [ "user", "admin" ],
   "refresh" : True,
@@ -513,15 +516,16 @@ table.sitestate td.state {
 """ % snapin_width
 }
 
+#.
+#   .--Tactical Overv.-----------------------------------------------------.
+#   |    _____          _   _           _    ___                           |
+#   |   |_   _|_ _  ___| |_(_) ___ __ _| |  / _ \__   _____ _ ____   __    |
+#   |     | |/ _` |/ __| __| |/ __/ _` | | | | | \ \ / / _ \ '__\ \ / /    |
+#   |     | | (_| | (__| |_| | (_| (_| | | | |_| |\ V /  __/ |   \ V /     |
+#   |     |_|\__,_|\___|\__|_|\___\__,_|_|  \___/  \_/ \___|_|    \_(_)    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
-# --------------------------------------------------------------
-#    _____          _   _           _                             _
-#   |_   _|_ _  ___| |_(_) ___ __ _| |   _____   _____ _ ____   _(_) _____      __
-#     | |/ _` |/ __| __| |/ __/ _` | |  / _ \ \ / / _ \ '__\ \ / / |/ _ \ \ /\ / /
-#     | | (_| | (__| |_| | (_| (_| | | | (_) \ V /  __/ |   \ V /| |  __/\ V  V /
-#     |_|\__,_|\___|\__|_|\___\__,_|_|  \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/
-#
-# --------------------------------------------------------------
 def render_tactical_overview():
     host_query = \
         "GET hosts\n" \
@@ -621,16 +625,17 @@ table.tacticaloverview td.prob {
 table.tacticaloverview a { display: block; margin-right: 2px; }
 """ % snapin_width
 }
-# table.tacticaloverview td.prob { font-weight: bold; }
 
-# --------------------------------------------------------------
-#    ____            __
-#   |  _ \ ___ _ __ / _| ___  _ __ _ __ ___   __ _ _ __   ___ ___
-#   | |_) / _ \ '__| |_ / _ \| '__| '_ ` _ \ / _` | '_ \ / __/ _ \
-#   |  __/  __/ |  |  _| (_) | |  | | | | | | (_| | | | | (_|  __/
-#   |_|   \___|_|  |_|  \___/|_|  |_| |_| |_|\__,_|_| |_|\___\___|
-#
-# --------------------------------------------------------------
+#.
+#   .--Performance---------------------------------------------------------.
+#   |    ____            __                                                |
+#   |   |  _ \ ___ _ __ / _| ___  _ __ _ __ ___   __ _ _ __   ___ ___      |
+#   |   | |_) / _ \ '__| |_ / _ \| '__| '_ ` _ \ / _` | '_ \ / __/ _ \     |
+#   |   |  __/  __/ |  |  _| (_) | |  | | | | | | (_| | | | | (_|  __/     |
+#   |   |_|   \___|_|  |_|  \___/|_|  |_| |_| |_|\__,_|_| |_|\___\___|     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def render_performance():
     def write_line(left, right):
         html.write("<tr><td class=left>%s</td>"
@@ -662,7 +667,7 @@ def render_performance():
     html.write("</table>\n")
 
 sidebar_snapins["performance"] = {
-    "title" : _("Server performance"),
+    "title" : _("Server Performance"),
     "description" : _("Live monitor of the overall performance of all monitoring servers"),
     "refresh" : True,
     "render" : render_performance,
@@ -693,7 +698,7 @@ table.performance td.right {
 }
 
 #.
-#   .----------------------------------------------------------------------.
+#   .--Speedometer---------------------------------------------------------.
 #   |    ____                      _                      _                |
 #   |   / ___| _ __   ___  ___  __| | ___  _ __ ___   ___| |_ ___ _ __     |
 #   |   \___ \| '_ \ / _ \/ _ \/ _` |/ _ \| '_ ` _ \ / _ \ __/ _ \ '__|    |
@@ -701,6 +706,7 @@ table.performance td.right {
 #   |   |____/| .__/ \___|\___|\__,_|\___/|_| |_| |_|\___|\__\___|_|       |
 #   |         |_|                                                          |
 #   '----------------------------------------------------------------------'
+
 def render_speedometer():
     html.write("<div class=speedometer>");
     html.write('<img id=speedometerbg src="images/speedometer.png">')
@@ -826,24 +832,22 @@ canvas#speedometer {
 }
 """}
 
-
-
-
 #.
-# --------------------------------------------------------------
-#    ____                           _   _
-#   / ___|  ___ _ ____   _____ _ __| |_(_)_ __ ___   ___
-#   \___ \ / _ \ '__\ \ / / _ \ '__| __| | '_ ` _ \ / _ \
-#    ___) |  __/ |   \ V /  __/ |  | |_| | | | | | |  __/
-#   |____/ \___|_|    \_/ \___|_|   \__|_|_| |_| |_|\___|
-#
-# --------------------------------------------------------------
+#   .--Server Time---------------------------------------------------------.
+#   |       ____                             _____ _                       |
+#   |      / ___|  ___ _ ____   _____ _ __  |_   _(_)_ __ ___   ___        |
+#   |      \___ \ / _ \ '__\ \ / / _ \ '__|   | | | | '_ ` _ \ / _ \       |
+#   |       ___) |  __/ |   \ V /  __/ |      | | | | | | | | |  __/       |
+#   |      |____/ \___|_|    \_/ \___|_|      |_| |_|_| |_| |_|\___|       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def render_current_time():
     import time
     html.write("<div class=time>%s</div>" % time.strftime("%H:%M"))
 
 sidebar_snapins["time"] = {
-    "title" : _("Server time"),
+    "title" : _("Server Time"),
     "description" : _("A large clock showing the current time of the web server"),
     "refresh" : True,
     "render" : render_current_time,
@@ -863,15 +867,16 @@ div.time {
 """  % (snapin_width - 2)
 }
 
+#.
+#   .--Nagios--------------------------------------------------------------.
+#   |                    _   _             _                               |
+#   |                   | \ | | __ _  __ _(_) ___  ___                     |
+#   |                   |  \| |/ _` |/ _` | |/ _ \/ __|                    |
+#   |                   | |\  | (_| | (_| | | (_) \__ \                    |
+#   |                   |_| \_|\__,_|\__, |_|\___/|___/                    |
+#   |                                |___/                                 |
+#   '----------------------------------------------------------------------'
 
-# --------------------------------------------------------------
-#    _   _             _
-#   | \ | | __ _  __ _(_) ___  ___
-#   |  \| |/ _` |/ _` | |/ _ \/ __|
-#   | |\  | (_| | (_| | | (_) \__ \
-#   |_| \_|\__,_|\__, |_|\___/|___/
-#                |___/
-# --------------------------------------------------------------
 def render_nagios():
     html.write('<ul>')
     bulletlink("Home", "http://www.nagios.org")
@@ -926,19 +931,23 @@ def render_nagios():
 
 sidebar_snapins["nagios_legacy"] = {
     "title" : _("Old Nagios GUI"),
-    "description" : _("The classical sidebar of Nagios 3.2.0 with links to your local Nagios instance (no multi site support)"),
+    "description" : _("The classical sidebar of Nagios 3.2.0 with links to "
+                      "your local Nagios instance (no multi site support)"),
     "render" : render_nagios,
     "allowed" : [ "user", "admin", "guest", ],
 }
 
-# ----------------------------------------------------------------
-#   __  __           _                           _             _
-#  |  \/  | __ _ ___| |_ ___ _ __ ___ ___  _ __ | |_ _ __ ___ | |
-#  | |\/| |/ _` / __| __/ _ \ '__/ __/ _ \| '_ \| __| '__/ _ \| |
-#  | |  | | (_| \__ \ ||  __/ | | (_| (_) | | | | |_| | | (_) | |
-#  |_|  |_|\__,_|___/\__\___|_|  \___\___/|_| |_|\__|_|  \___/|_|
-#
-# ----------------------------------------------------------------
+
+#.
+#   .--Master Control------------------------------------------------------.
+#   |  __  __           _               ____            _             _    |
+#   | |  \/  | __ _ ___| |_ ___ _ __   / ___|___  _ __ | |_ _ __ ___ | |   |
+#   | | |\/| |/ _` / __| __/ _ \ '__| | |   / _ \| '_ \| __| '__/ _ \| |   |
+#   | | |  | | (_| \__ \ ||  __/ |    | |__| (_) | | | | |_| | | (_) | |   |
+#   | |_|  |_|\__,_|___/\__\___|_|     \____\___/|_| |_|\__|_|  \___/|_|   |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def render_master_control():
     items = [
         ( "enable_notifications",     _("Notifications" )),
@@ -981,8 +990,9 @@ def render_master_control():
             html.end_foldable_container()
 
 sidebar_snapins["master_control"] = {
-    "title" : _("Master control"),
-    "description" : _("Buttons for switching globally states such as enabling checks and notifications"),
+    "title" : _("Master Control"),
+    "description" : _("Buttons for switching globally states such as enabling "
+                      "checks and notifications"),
     "render" : render_master_control,
     "allowed" : [ "admin", ],
     "styles" : """
@@ -1015,41 +1025,288 @@ div.snapin table.master_control td img.iconbutton {
 """
 }
 
-# ---------------------------------------------------------
-#   ____              _                         _
-#  | __ )  ___   ___ | | ___ __ ___   __ _ _ __| | _____
-#  |  _ \ / _ \ / _ \| |/ / '_ ` _ \ / _` | '__| |/ / __|
-#  | |_) | (_) | (_) |   <| | | | | | (_| | |  |   <\__ \
-#  |____/ \___/ \___/|_|\_\_| |_| |_|\__,_|_|  |_|\_\___/
-#
-# ---------------------------------------------------------
-def load_bookmarks():
+#.
+#   .--Bookmark List-------------------------------------------------------.
+#   | ____              _                         _      _     _     _     |
+#   || __ )  ___   ___ | | ___ __ ___   __ _ _ __| | __ | |   (_)___| |_   |
+#   ||  _ \ / _ \ / _ \| |/ / '_ ` _ \ / _` | '__| |/ / | |   | / __| __|  |
+#   || |_) | (_) | (_) |   <| | | | | | (_| | |  |   <  | |___| \__ \ |_   |
+#   ||____/ \___/ \___/|_|\_\_| |_| |_|\__,_|_|  |_|\_\ |_____|_|___/\__|  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Shareable lists of bookmarks                                         |
+#   '----------------------------------------------------------------------'
+
+class BookmarkList(pagetypes.Overridable, pagetypes.Base):
+    def __init__(self, d):
+        pagetypes.Base.__init__(self, d)
+
+
+    @classmethod
+    def type_name(self):
+        return "bookmark_list"
+
+
+    @classmethod
+    def phrase(self, what):
+        return {
+            "title"          : _("Bookmark List"),
+            "title_plural"   : _("Bookmark Lists"),
+            "add_to"         : _("Add to Bookmark List"),
+            "clone"          : _("Clone Bookmark List"),
+            "create"         : _("Create Bookmark List"),
+            "edit"           : _("Edit Bookmark List"),
+        }.get(what, pagetypes.Base.phrase(what))
+
+
+    @classmethod
+    def parameters(self, clazz):
+        vs_topic = TextUnicode(
+            title = _("Topic") + "<sup>*</sup>",
+            size = 50,
+            allow_empty = False,
+        )
+
+        def bookmark_config_to_vs(v):
+            if v:
+                return (v["title"], v["url"], v["icon"], v["topic"])
+            else:
+                return v
+
+        def bookmark_vs_to_config(v):
+            return {
+                "title" : v[0],
+                "url"   : v[1],
+                "icon"  : v[2],
+                "topic" : v[3],
+            }
+
+        return [(_("Bookmarks"), [
+            # sort-index, key, valuespec
+            (2.5, "default_topic", TextUnicode(
+                title = _("Default Topic") + "<sup>*</sup>",
+                size = 50,
+                allow_empty = False,
+            )),
+            (3.0, "bookmarks", ListOf(
+                # For the editor we want a compact dialog. The tuple horizontal editin mechanism
+                # is exactly the thing we want. But we want to store the data as dict. This is a
+                # nasty hack to use the transform by default. Better would be to make Dict render
+                # the same way the tuple is rendered.
+                Transform(
+                    Tuple(
+                        elements = [
+                            (TextUnicode(
+                                title = _("Title") + "<sup>*</sup>",
+                                size = 30,
+                                allow_empty = False,
+                            )),
+                            (TextUnicode(
+                                title = _("URL"),
+                                size = 50,
+                                allow_empty = False,
+                            )),
+                            (IconSelector(
+                                title = _("Icon"),
+                            )),
+                            (Alternative(
+                                elements = [
+                                    FixedValue(None,
+                                        title = _("Use default topic"),
+                                        totext = _("(default topic)"),
+                                    ),
+                                    TextUnicode(
+                                        title = _("Individual topic"),
+                                        size = 30,
+                                        allow_empty = False,
+                                    ),
+                                ],
+                                title = _("Topic") + "<sup>*</sup>",
+                                style = "dropdown",
+                            )),
+                        ],
+                        orientation = "horizontal",
+                        title = _("Bookmarks"),
+                    ),
+                    forth = bookmark_config_to_vs,
+                    back = bookmark_vs_to_config,
+                ),
+            )),
+        ])]
+
+
+    # FIXME: Better switch to "new style classes" and use super() and then override load()
+    # in the subclass. Brings more flexibility.
+    @classmethod
+    def _load(self):
+        self.load_legacy_bookmarks()
+
+
+    @classmethod
+    def load_legacy_bookmarks(self):
+        # Don't load the legacy bookmarks when there is already a my_bookmarks list
+        if self.has_instance((config.user_id, "my_bookmarks")):
+            return
+
+        # Also don't load them when the user has at least one bookmark list
+        for user_id, name in self.instances_dict().keys():
+            if user_id == config.user_id:
+                return
+
+        bookmark_list = {
+            "title"         : u"My Bookmarks",
+            "public"        : False,
+            "owner"         : config.user_id,
+            "name"          : "my_bookmarks",
+            "description"   : u"Your personal bookmarks",
+            "default_topic" : u"My Bookmarks",
+            "bookmarks"     : [],
+        }
+
+        for title, url in load_legacy_bookmarks():
+            bookmark_list["bookmarks"].append(self.new_bookmark(title, url))
+
+        self.add_instance((config.user_id, "my_bookmarks"), self(bookmark_list))
+
+    @classmethod
+    def new_bookmark(self, title, url):
+        return {
+           "title" : title,
+           "url"   : url,
+           "icon"  : None,
+           "topic" : None,
+        }
+
+
+    def default_bookmark_topic(self):
+        return self._["default_topic"]
+
+
+    def bookmarks_by_topic(self):
+        topics = {}
+        for bookmark in self._["bookmarks"]:
+            topic = topics.setdefault(bookmark["topic"], [])
+            topic.append(bookmark)
+        return sorted(topics.items())
+
+    def add_bookmark(self, title, url):
+        self._["bookmarks"].append(BookmarkList.new_bookmark(title, url))
+
+
+pagetypes.declare(BookmarkList)
+
+
+def load_legacy_bookmarks():
     path = config.user_confdir + "/bookmarks.mk"
     try:
         return eval(file(path).read())
     except:
         return []
 
-def save_bookmarks(bookmarks):
+
+def save_legacy_bookmarks(bookmarks):
     config.save_user_file("bookmarks", bookmarks)
 
-def render_bookmarks():
-    bookmarks = load_bookmarks()
-    n = 0
-    for title, href in bookmarks:
-        html.write("<div class=bookmark id=\"bookmark_%d\">" % n)
-        iconbutton("delete", "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks', css_class = 'bookmark')
-        iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main", css_class = 'bookmark')
-        html.write(link(title, href))
-        html.write("</div>")
-        n += 1
 
-    html.write("<div class=footnotelink><a href=\"#\" onclick=\"addBookmark()\">%s</a></div>\n" % _('Add Bookmark'))
+def get_bookmarks_by_topic():
+    topics = {}
+    BookmarkList.load()
+    for instance in BookmarkList.instances_sorted():
+        if (instance.is_mine() and instance.may_see()) or \
+           (not instance.is_mine() and instance.is_public() and instance.may_see()):
+            for topic, bookmarks in instance.bookmarks_by_topic():
+                if topic == None:
+                    topic = instance.default_bookmark_topic()
+                bookmark_list = topics.setdefault(topic, [])
+                bookmark_list += bookmarks
+    return sorted(topics.items())
+
+
+def render_bookmarks():
+    html.javascript("""
+function add_bookmark() {
+    url = parent.frames[1].location;
+    title = parent.frames[1].document.title;
+    get_url("add_bookmark.py?title=" + encodeURIComponent(title)
+            + "&url=" + encodeURIComponent(url), updateContents, "snapin_bookmarks");
+}""")
+
+    for topic, bookmarks in get_bookmarks_by_topic():
+        html.begin_foldable_container("bookmarks", topic, False, topic)
+
+        for bookmark in bookmarks:
+            icon = bookmark["icon"]
+            if not icon:
+                icon = "kdict"
+
+            # FIXME: Use standard rendering functions
+            linktext = '<img class=iconlink src="images/icons/%s.png">%s' % \
+                 (html.attrencode(icon), html.attrencode(bookmark["title"]))
+            html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
+                    (html.attrencode(bookmark["url"]), linktext))
+
+        html.end_foldable_container()
+
+    begin_footnote_links()
+    html.write(link(_("Add Bookmark"), "javascript:void(0)", onclick="add_bookmark()"))
+    html.write(link(_("EDIT"), "bookmark_lists.py"))
+    end_footnote_links()
+
+
+def try_shorten_url(url):
+    referer = html.req.headers_in.get("Referer")
+    if referer:
+        ref_p = urlparse.urlsplit(referer)
+        url_p = urlparse.urlsplit(url)
+
+        # If http/https or user, pw, host, port differ, don't try to shorten
+        # the URL to be linked. Simply use the full URI
+        if ref_p.scheme == url_p.scheme and ref_p.netloc == url_p.netloc:
+            # We try to remove http://hostname/some/path/check_mk from the
+            # URI. That keeps the configuration files (bookmarks) portable.
+            # Problem here: We have not access to our own URL, only to the
+            # path part. The trick: we use the Referrer-field from our
+            # request. That points to the sidebar.
+            referer = ref_p.path
+            url     = url_p.path
+            if url_p.query:
+                url += '?' + url_p.query
+            removed = 0
+            while '/' in referer and referer.split('/')[0] == url.split('/')[0]:
+                referer = referer.split('/', 1)[1]
+                url = url.split('/', 1)[1]
+                removed += 1
+
+            if removed == 1:
+                # removed only the first "/". This should be an absolute path.
+                url = '/' + url
+            elif '/' in referer:
+                # there is at least one other directory layer in the path, make
+                # the link relative to the sidebar.py's topdir. e.g. for pnp
+                # links in OMD setups
+                url = '../' + url
+    return url
+
+
+def add_bookmark(title, url):
+    BookmarkList.load()
+    bookmarks = BookmarkList.instance((config.user_id, "my_bookmarks"))
+    bookmarks.add_bookmark(title, try_shorten_url(url))
+    bookmarks.save_user_instances()
+
+
+def ajax_add_bookmark():
+    title = html.var("title")
+    url   = html.var("url")
+    if title and url:
+        add_bookmark(title, url)
+    render_bookmarks()
 
 
 sidebar_snapins["bookmarks"] = {
     "title" : _("Bookmarks"),
-    "description" : _("A simple and yet practical snapin allowing to create bookmarks to views and other content in the main frame"),
+    "description" : _("A simple and yet practical snapin allowing to create "
+                      "bookmarks to views and other content in the main frame"),
     "render" : render_bookmarks,
     "allowed": [ "user", "admin", "guest" ],
     "styles" : """
@@ -1066,15 +1323,15 @@ div.bookmark {
 }
 
 
-
-# ------------------------------------------------------------
-#   ____          _                    _     _       _
-#  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____
-# | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|
-# | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \
-#  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
-#
-# ------------------------------------------------------------
+#.
+#   .--Custom Links--------------------------------------------------------.
+#   |      ____          _                    _     _       _              |
+#   |     / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____       |
+#   |    | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|      |
+#   |    | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \      |
+#   |     \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 def render_custom_links():
     links = config.custom_links.get(config.user_baserole_id)
@@ -1112,7 +1369,9 @@ def render_custom_links():
 
 sidebar_snapins["custom_links"] = {
     "title" : _("Custom Links"),
-    "description" : _("This snapin contains custom links which can be configured via the configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"),
+    "description" : _("This snapin contains custom links which can be "
+                      "configured via the configuration variable "
+                      "<tt>custom_links</tt> in <tt>multisite.mk</tt>"),
     "render" : render_custom_links,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
@@ -1126,6 +1385,15 @@ sidebar_snapins["custom_links"] = {
 }
 
 
+#.
+#   .--Dokuwiki------------------------------------------------------------.
+#   |              ____        _                   _ _    _                |
+#   |             |  _ \  ___ | | ___   ___      _(_) | _(_)               |
+#   |             | | | |/ _ \| |/ / | | \ \ /\ / / | |/ / |               |
+#   |             | |_| | (_) |   <| |_| |\ V  V /| |   <| |               |
+#   |             |____/ \___/|_|\_\\__,_| \_/\_/ |_|_|\_\_|               |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 #Example Sidebar:
 #Heading1:
@@ -1265,6 +1533,7 @@ if defaults.omd_root:
         """
     }
 
+#.
 #   .--Virt. Host Tree-----------------------------------------------------.
 #   |  __     ___      _       _   _           _     _____                 |
 #   |  \ \   / (_)_ __| |_    | | | | ___  ___| |_  |_   _| __ ___  ___    |
@@ -1347,7 +1616,7 @@ def compute_tag_tree(taglist):
         # - a tag group id, or
         # - "topic:" plus the name of a tag topic. That topic should only contain
         #   checkbox tags, or:
-        # - "folder:3", where 3 is the folder level (starting at 1) 
+        # - "folder:3", where 3 is the folder level (starting at 1)
         # The problem with the "topic" entries is, that a host may appear several
         # times!
 
@@ -1492,15 +1761,9 @@ def render_tag_tree_level(taggroups, path, cwd, title, tree):
     if path != cwd and is_tag_subdir(path, cwd):
         bullet = tag_tree_bullet(tag_tree_worst_state(tree), path, False)
         if tag_tree_has_svc_problems(tree):
-            # We cannot use html.plug() here, since this is not (yet)
-            # reentrant and it is used by the sidebar snapin updater.
-            # So we need to duplicate the code of icon_button here:
-            bullet += ('<a target="main" onfocus="if (this.blur) this.blur();" href="%s">'
-                       '<img align=absmiddle class=iconbutton title="%s" src="images/button_svc_problems_lo.png" '
-                       'onmouseover="hilite_icon(this, 1)" onmouseout="hilite_icon(this, 0)"></a>' % (
-                        tag_tree_url(taggroups, path, "svcproblems"),
-                       _("Show the service problems contained in this branch")))
-
+            bullet += html.render_icon_button(tag_tree_url(taggroups, path, "svcproblems"),
+                                        _("Show the service problems contained in this branch"),
+                                        "svc_problems")
 
         if path:
             html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False, bullet + title)
@@ -1579,8 +1842,9 @@ def render_tag_tree():
 
 sidebar_snapins["tag_tree"] = {
     "title" : _("Virtual Host Tree"),
-    "description" : _("This snapin shows tree views of your hosts based on their tag classifications. You "
-                      "can configure which tags to use in your global settings of Multisite."),
+    "description" : _("This snapin shows tree views of your hosts based on their tag "
+                      "classifications. You can configure which tags to use in your "
+                      "global settings of Multisite."),
     "render" : render_tag_tree,
     "refresh" : True,
     "allowed" : [ "admin", "user", "guest" ],

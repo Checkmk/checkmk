@@ -23,14 +23,17 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OutputBuffer.h"
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <unistd.h>
-#include <stdarg.h>
-#include <errno.h>
-
-#include "logger.h"
 #include "Query.h"
+#include "logger.h"
+
 
 #define WRITE_TIMEOUT_USEC 100000
 
@@ -76,6 +79,8 @@ void OutputBuffer::addBuffer(const char *buf, unsigned len)
     _writepos += len;
 }
 
+// TODO: All this code is highly error-prone due to overflow, failed allocations
+// etc. We should just use vector instead.
 void OutputBuffer::needSpace(unsigned len)
 {
     if (_writepos + len > _end)
@@ -85,7 +90,11 @@ void OutputBuffer::needSpace(unsigned len)
         while (_max_size < needed) // double, until enough space
             _max_size *= 2;
 
-        _buffer = (char *)realloc(_buffer, _max_size);
+        char* new_buffer = static_cast<char*>(realloc(_buffer, _max_size));
+        // It's better to crash voluntarily than overwriting random memory later.
+        if (!new_buffer) abort();
+
+        _buffer = new_buffer;
         _writepos = _buffer + s;
         _end = _buffer + _max_size;
     }
@@ -107,7 +116,7 @@ void OutputBuffer::flush(int fd, int *termination_flag)
         }
 
         char header[17];
-        snprintf(header, sizeof(header), "%03d %11d\n", _response_code, s);
+        snprintf(header, sizeof(header), "%03u %11d\n", _response_code, s);
         writeData(fd, termination_flag, header, 16);
         writeData(fd, termination_flag, buffer, s);
     }
@@ -162,4 +171,3 @@ void OutputBuffer::setError(unsigned code, const char *format, ...)
         _response_code = code;
     }
 }
-

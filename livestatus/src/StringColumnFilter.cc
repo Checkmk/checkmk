@@ -22,15 +22,14 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <stdlib.h>
-#include <strings.h>
-#include <string.h>
-
 #include "StringColumnFilter.h"
-#include "StringColumn.h"
-#include "opids.h"
-#include "logger.h"
+#include <stdlib.h>
+#include <string.h>
 #include "OutputBuffer.h"
+#include "StringColumn.h"
+#include "logger.h"
+#include "opids.h"
+
 
 StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *value)
     : _column(column)
@@ -67,7 +66,10 @@ StringColumnFilter::~StringColumnFilter()
 bool StringColumnFilter::accepts(void *data)
 {
     bool pass = true;
-    char *act_string = _column->getValue(data);
+    const char *act_string = _column->getValue(data);
+    if (!act_string)
+        act_string = ""; // e.g. current_service_perf_data in host entry in log table
+
     switch (_opid) {
         case OP_EQUAL:
             pass = _ref_string == act_string; break;

@@ -63,6 +63,7 @@ def load_plugins():
             snapin["allowed"])
 
 # Helper functions to be used by snapins
+# FIXME: Clean this up and merge with htmllib
 def link(text, url, target="main", onclick = None):
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
@@ -111,7 +112,9 @@ def iconbutton(what, url, target="side", handler="", name="", css_class = ""):
         href = "%scheck_mk/%s" % (defaults.url_prefix, url)
         tg = "target=%s" % target
     css_class = css_class and " " + css_class or ""
-    html.write("<a href=\"%s\" %s %s><img class=\"iconbutton%s\" onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%scheck_mk/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, css_class, defaults.url_prefix, what))
+    html.write("<a href=\"%s\" %s %s><img class=\"iconbutton%s\" "
+               "align=absmiddle src=\"%scheck_mk/images/button_%s.png\"></a>\n " %
+                  (href, onclick, tg, css_class, defaults.url_prefix, what))
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%snagios/cgi-bin/%s\">%s</a></li>" % \
@@ -148,17 +151,35 @@ def load_user_config():
 
     return user_config
 
+
 def save_user_config(user_config):
     if config.may("general.configure_sidebar"):
         config.save_user_file("sidebar", user_config)
+
+
+def get_check_mk_edition_title():
+    if not defaults.omd_root:
+        return "Raw"
+    version_link = os.readlink("%s/version" % defaults.omd_root)
+    if version_link.endswith(".cee.demo"):
+        return "Enterprise (Demo)"
+    elif "cee" in version_link:
+        return "Enterprise"
+    else:
+        return "Raw"
+
 
 def sidebar_head():
     html.write('<div id="side_header">')
     html.write('<div id="side_fold"></div>')
     html.write('<a title="%s" target="main" href="%s">'
-               '<div id="side_version">%s</div>'
+               '<img id="side_bg" src="images/sidebar_top.png">'
+               '<div id="side_version"><a href="version.py" target="main">%s<br>%s</a></div>'
                '</a>'
-               '</div>\n' % (_("Go to main overview"), html.attrencode(config.user.get("start_url") or config.start_url), defaults.check_mk_version))
+               '</div>\n' % (_("Go to main overview"),
+                             html.attrencode(config.user.get("start_url") or config.start_url),
+                             get_check_mk_edition_title(),
+                             defaults.check_mk_version))
 
 def render_messages():
     for msg in notify.get_gui_messages():
@@ -208,7 +229,7 @@ def sidebar_foot():
     html.write('</div>')
 
     if load_user_config()["fold"]:
-        html.final_javascript("foldSidebar();")
+        html.final_javascript("fold_sidebar();")
 
 # Standalone sidebar
 def page_side():
@@ -226,6 +247,7 @@ def page_side():
                'onunload="storeScrollPos()">\n' % interval)
     html.write('<div id="check_mk_sidebar">\n')
 
+    # FIXME: Move this to the code where views are needed (snapins?)
     views.load_views()
     sidebar_head()
     user_config = load_user_config()
@@ -560,104 +582,6 @@ def ajax_switch_masterstate():
     else:
         html.write(_("Command %s/%d not found") % (html.attrencode(column), state))
 
-def ajax_del_bookmark():
-    try:
-        num = int(html.var("num"))
-    except ValueError:
-        raise MKGeneralException(_("Invalid bookmark id."))
-    bookmarks = load_bookmarks()
-    try:
-        del bookmarks[num]
-    except IndexError:
-        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % html.attrencode(num))
-    save_bookmarks(bookmarks)
-    render_bookmarks()
-
-def ajax_add_bookmark():
-    title = html.var("title")
-    href = html.var("href")
-    if title and href:
-        bookmarks = load_bookmarks()
-        referer = html.req.headers_in.get("Referer")
-
-        if referer:
-            ref_p = urlparse.urlsplit(referer)
-            url_p = urlparse.urlsplit(href)
-
-            # If http/https or user, pw, host, port differ, don't try to shorten
-            # the URL to be linked. Simply use the full URI
-            if ref_p.scheme == url_p.scheme and ref_p.netloc == url_p.netloc:
-                # We try to remove http://hostname/some/path/check_mk from the
-                # URI. That keeps the configuration files (bookmarks) portable.
-                # Problem here: We have not access to our own URL, only to the
-                # path part. The trick: we use the Referrer-field from our
-                # request. That points to the sidebar.
-                referer = ref_p.path
-                href    = url_p.path
-                if url_p.query:
-                    href += '?' + url_p.query
-                removed = 0
-                while '/' in referer and referer.split('/')[0] == href.split('/')[0]:
-                    referer = referer.split('/', 1)[1]
-                    href = href.split('/', 1)[1]
-                    removed += 1
-
-                if removed == 1:
-                    # removed only the first "/". This should be an absolute path.
-                    href = '/' + href
-                elif '/' in referer:
-                    # there is at least one other directory layer in the path, make
-                    # the link relative to the sidebar.py's topdir. e.g. for pnp
-                    # links in OMD setups
-                    href = '../' + href
-
-        bookmarks.append((title, href))
-        save_bookmarks(bookmarks)
-    render_bookmarks()
-
-
-def page_edit_bookmark():
-    html.header(_("Edit Bookmark"))
-    try:
-        n = int(html.var("num"))
-    except ValueError:
-        raise MKGeneralException(_("Invalid bookmark id."))
-    bookmarks = load_bookmarks()
-    if n >= len(bookmarks):
-        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % html.attrencode(n))
-
-    if html.var("save") and html.check_transaction():
-        title = html.var("title")
-        url = html.var("url")
-        bookmarks[n] = (title, url)
-        save_bookmarks(bookmarks)
-        html.reload_sidebar()
-
-    html.begin_form("edit_bookmark")
-    if html.var("save"):
-        title = html.var("title")
-        url = html.var("url")
-        bookmarks[n] = (title, url)
-        save_bookmarks(bookmarks)
-        html.reload_sidebar()
-    else:
-        title, url = bookmarks[n]
-        html.set_var("title", title)
-        html.set_var("url", url)
-
-    html.write("<table class=edit_bookmarks>")
-    html.write("<tr><td>%s</td><td>" % _('Title:'))
-    html.text_input("title", size = 50)
-    html.write("</td></tr><tr><td>%s:</td><td>" % _('URL'))
-    html.text_input("url", size = 50)
-    html.write("</td></tr><tr><td></td><td>")
-    html.button("save", _("Save"))
-    html.write("</td></tr></table>\n")
-    html.hidden_field("num", str(n))
-    html.end_form()
-
-    html.footer()
-
 def ajax_tag_tree():
     newconf = int(html.var("conf"))
     tree_conf = config.load_user_file("virtual_host_tree", {"tree": 0, "cwd": {}})
@@ -716,7 +640,7 @@ def to_regex(s):
         re.compile(s)
     except re.error:
         raise MKGeneralException(_('You search statement is not valid. You need to provide a regular '
-            'expression (regex). For example you need to e use <tt>\\\\</tt> instead of <tt>\\</tt> '
+            'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
             'if you like to search for a single backslash.'))
     return s
 
@@ -995,17 +919,19 @@ def ajax_search():
     if not q:
         return
 
-    data, used_filters = process_search(q)
-    if not data:
-        return
-
     try:
+        data, used_filters = process_search(q)
+        if not data:
+            return
+
         render_search_results(used_filters, data)
+    except MKException, e:
+        html.show_error(e)
     except Exception, e:
-        html.write("error")
+        if config.debug:
+            raise
         import traceback
-        html.write(traceback.format_exc())
-        html.write(repr(e))
+        html.show_error(traceback.format_exc())
 
 
 def search_open():

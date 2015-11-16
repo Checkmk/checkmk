@@ -52,7 +52,6 @@ def check_cmctc_temp(item, params, info):
                 dev_status=cmctc_translate_status(status),
                 dev_status_name="Unit: %s" % cmctc_translate_status_text(status))
 
-    return (3, "Sensor %s not found in SNMP data" % item)
 
 check_info['cmctc.temp'] = {
     "check_function"      : check_cmctc_temp,

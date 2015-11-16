@@ -330,7 +330,12 @@ if (has_canvas_support()) {
 #   | Renders a single performance graph                                   |
 #   '----------------------------------------------------------------------'
 
-def make_pnp_url(dashlet, what):
+
+def dashlet_graph(nr, dashlet):
+    html.write('<div id="dashlet_graph_%d"></div>' % (nr))
+
+
+def dashlet_graph_reload_js(nr, dashlet):
     host = dashlet['context'].get('host')
     if not host:
         raise MKUserError('host', _('Missing needed host parameter.'))
@@ -349,25 +354,19 @@ def make_pnp_url(dashlet, what):
         site = html.live.query_column(query)[0]
         html.live.set_prepend_site(False)
 
-    if not site:
-        base_url = defaults.url_prefix
-    else:
-        base_url = html.site_status[site]["site"]["url_prefix"]
+    # New graphs which have been added via "add to visual" option don't have a timerange
+    # configured. So we assume the default timerange here by default.
+    timerange = dashlet.get('timerange', '1')
 
-    base_url += "pnp4nagios/index.php/"
-    var_part = "?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \
-            (pnp_cleanup(dashlet['context']['host']), pnp_cleanup(service),
-             dashlet['source'], dashlet['timerange'])
-    return base_url + what + var_part
+    return 'dashboard_render_graph(%d, \'%s\', \'%s\', \'%s\', \'%s\', \'%s\')' % \
+            (nr, site, host, service, dashlet["source"], timerange)
 
-def dashlet_pnpgraph(nr, dashlet):
-    html.write('<a href="%s" id="dashlet_graph_%d"></a>' % (make_pnp_url(dashlet, 'graph'), nr))
 
 dashlet_types["pnpgraph"] = {
     "title"        : _("Performance Graph"),
     "sort_index"   : 20,
     "description"  : _("Displays a performance graph of a host or service."),
-    "render"       : dashlet_pnpgraph,
+    "render"       : dashlet_graph,
     "refresh"      : 60,
     "size"         : (60, 21),
     "allowed"      : config.builtin_role_ids,
@@ -386,6 +385,7 @@ dashlet_types["pnpgraph"] = {
         ("source", Integer(
             title = _('Source (n\'th Graph)'),
             default_value = 0,
+            minvalue = 1,
         )),
     ],
     "styles": """
@@ -394,14 +394,56 @@ dashlet_types["pnpgraph"] = {
     color: #000;
     text-align: center;
 }
+.dashlet.pnpgraph .graph {
+    border: none;
+    box-shadow: none;
+}
+.dashlet.pnpgraph .container {
+    background-color: #f8f4f0;
+}
 """,
-    "on_resize"    : lambda nr, dashlet: 'dashboard_render_pnpgraph(%d, \'%s\');' %
-                                                 (nr, make_pnp_url(dashlet, 'image')),
+    "on_resize"    : dashlet_graph_reload_js,
     # execute this js handler instead of refreshing the dashlet by calling "render" again
-    "on_refresh"   : lambda nr, dashlet: 'dashboard_render_pnpgraph(%d, \'%s\');' %
-                                                 (nr, make_pnp_url(dashlet, 'image')),
+    "on_refresh"   : dashlet_graph_reload_js,
     "script": """
 var dashlet_offsets = {};
+function dashboard_render_graph(nr, site, host_name, service, source, timerange)
+{
+    // Get the target size for the graph from the inner dashlet container
+    var inner = document.getElementById('dashlet_inner_' + nr);
+    var c_w = inner.clientWidth;
+    var c_h = inner.clientHeight;
+
+    call_ajax("show_graph.py?site="+encodeURIComponent(site)
+                          +"&host_name="+encodeURIComponent(host_name)
+                          +"&service="+encodeURIComponent(service)
+                          +"&source="+encodeURIComponent(source)
+                          +"&timerange="+encodeURIComponent(timerange)
+                          +"&width="+c_w
+                          +"&height="+c_h
+                          +"&id="+nr
+                          +"&what=dashlet", {
+        response_handler : handle_dashboard_render_graph_response,
+        handler_data     : nr,
+    });
+}
+
+function handle_dashboard_render_graph_response(handler_data, response_body)
+{
+    var nr = handler_data;
+
+    // Fallback to PNP graph handling
+    if (response_body.indexOf('pnp4nagios') !== -1) {
+        var img_url = response_body;
+        dashboard_render_pnpgraph(nr, img_url);
+        return;
+    }
+
+    var container = document.getElementById('dashlet_graph_' + nr);
+    container.innerHTML = response_body;
+    executeJSbyObject(container);
+}
+
 function dashboard_render_pnpgraph(nr, img_url)
 {
     // Get the target size for the graph from the inner dashlet container
@@ -548,8 +590,14 @@ def dashlet_view(nr, dashlet):
     import bi # FIXME: Cleanup?
     bi.reset_cache_status() # needed for status icon
 
-    html.set_var('display_options', 'HRSIXL')
-    html.set_var('_display_options', 'HRSIXL')
+    is_reload = html.has_var("_reload")
+
+    display_options = "SIXL"
+    if not is_reload:
+        display_options += "HR"
+
+    html.set_var('display_options',  display_options)
+    html.set_var('_display_options', display_options)
     html.add_body_css_class('dashlet')
 
     import views # FIXME: HACK, clean this up somehow

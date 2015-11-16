@@ -1,0 +1,8 @@
+Title: PDF Export, Host down is red instead of blue in the timeline table
+Component: multisite
+State: open
+Date: 2015-10-29 09:18:23
+Targetversion: 1.2.7
+Class: bug
+
+Everywere the color for host down is a dark blue. Only in the PDF file, it's a red

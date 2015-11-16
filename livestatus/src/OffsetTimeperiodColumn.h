@@ -26,20 +26,18 @@
 #ifndef OffsetTimeperiodColumn_h
 #define OffsetTimeperiodColumn_h
 
-#include "config.h"
-
-#include <stdlib.h>
-#include <map>
-#include "nagios.h"
+#include "config.h"  // IWYU pragma: keep
+#include <sys/types.h>
+#include <string>
 #include "OffsetIntColumn.h"
+class Query;
+
 
 class OffsetTimeperiodColumn : public OffsetIntColumn
 {
 public:
-    OffsetTimeperiodColumn(string, string, int, int indirect_offset = -1);
+    OffsetTimeperiodColumn(std::string, std::string, int, int indirect_offset = -1);
     int32_t getValue(void *data, Query *);
 };
 
-
 #endif // OffsetTimeperiodColumn_h
-

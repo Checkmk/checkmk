@@ -22,34 +22,48 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "Query.h"
+#include <ctype.h>
 #include <errno.h>
 #include <math.h>
+#include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <sys/time.h>
-
+#include <syslog.h>
+#include <utility>
+#include "Aggregator.h"
+#include "Column.h"
+#include "Filter.h"
+#include "InputBuffer.h"
+#include "Mutex.h"
+#include "NegatingFilter.h"
+#include "NullColumn.h"
+#include "OringFilter.h"
+#include "OutputBuffer.h"
+#include "StatsColumn.h"
+#include "Table.h"
+#include "auth.h"
+#include "data_encoding.h"
 #include "logger.h"
 #include "opids.h"
 #include "strutil.h"
-#include "Table.h"
-#include "Query.h"
-#include "Filter.h"
-#include "Column.h"
-#include "NullColumn.h"
-#include "OutputBuffer.h"
-#include "InputBuffer.h"
-#include "StatsColumn.h"
-#include "Aggregator.h"
-#include "OringFilter.h"
-#include "NegatingFilter.h"
 #include "waittriggers.h"
-#include "data_encoding.h"
-#include "auth.h"
 
 extern int g_debug_level;
 extern unsigned long g_max_response_size;
 extern int g_data_encoding;
+
+using mk::lock_guard;
+using mk::mutex;
+using std::string;
+
+namespace {
+
+mutex g_wait_mutex;
+
+};
 
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
     _output(output),
@@ -859,7 +873,7 @@ bool Query::timelimitReached()
 bool Query::processDataset(void *data)
 {
     if (_output->size() > g_max_response_size) {
-        logger(LG_INFO, "Maximum response size of %d bytes exceeded!", g_max_response_size);
+        logger(LG_INFO, "Maximum response size of %lu bytes exceeded!", g_max_response_size);
         // _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED, "Maximum response size of %d reached", g_max_response_size);
         // currently we only log an error into the log file and do
         // not abort the query. We handle it like Limit:
@@ -977,7 +991,7 @@ void Query::finish()
             delete _stats_aggregators[i];
         }
         outputDatasetEnd();
-        delete _stats_aggregators;
+        delete[] _stats_aggregators;
     }
 
     // normal query
@@ -1344,17 +1358,14 @@ void Query::doWait()
         if (_wait_timeout == 0) {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Waiting unlimited until condition becomes true");
-            pthread_mutex_lock(&g_wait_mutex);
-            pthread_cond_wait(&g_wait_cond[_wait_trigger], &g_wait_mutex);
-            pthread_mutex_unlock(&g_wait_mutex);
+            lock_guard<mutex> lg(g_wait_mutex);
+            pthread_cond_wait(&g_wait_cond[_wait_trigger], g_wait_mutex.native_handle());
         }
         else {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Waiting %d ms or until condition becomes true", _wait_timeout);
-            pthread_mutex_lock(&g_wait_mutex);
-            int ret = pthread_cond_timedwait(&g_wait_cond[_wait_trigger], &g_wait_mutex, &timeout);
-            pthread_mutex_unlock(&g_wait_mutex);
-            if (ret == ETIMEDOUT) {
+            lock_guard<mutex> lg(g_wait_mutex);
+            if (pthread_cond_timedwait(&g_wait_cond[_wait_trigger], g_wait_mutex.native_handle(), &timeout) == ETIMEDOUT) {
                 if (g_debug_level >= 2)
                     logger(LG_INFO, "WaitTimeout after %d ms", _wait_timeout);
                 return; // timeout occurred. do not wait any longer
@@ -1362,5 +1373,3 @@ void Query::doWait()
         }
     } while (!_wait_condition.accepts(_wait_object));
 }
-
-

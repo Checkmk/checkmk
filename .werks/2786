@@ -1,0 +1,10 @@
+Title: agent_netapp: now able to monitor more than 20 instances of a given type, e.g. volumes or interfaces
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447247271
+Class: fix
+
+The netapp agent was unable to output more than 20 instances.
+This value was used as default when elements got queried with the help of an iterator.

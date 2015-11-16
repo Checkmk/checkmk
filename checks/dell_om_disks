@@ -76,17 +76,20 @@ def check_dell_om_disks(item, _no_params, info):
          40 : 'Clear',
     }
 
-    for name, dstate, pid, eid, cid, tid, sizeMB, btype, sstate, mt  in info:
+    for name, dstate, pid, eid, cid, tid, sizeMB, btype, sstate, smart, mt  in info:
         ditem = "%s:%s:%s" % ( eid, cid, tid )
         if ditem == item:
             state = 0
             dstate = saveint(dstate)
             btype = saveint(btype)
             sstate = saveint(sstate)
+            smart = saveint(smart)
             mt = saveint(mt)
             size = saveint(sizeMB)*1024*1024
             msg = ["%s (%s, %s)" % ( name, pid, get_bytes_human_readable(size) ) ]
             label = ""
+            if smart == 2:
+                dstate = 34
             if dstate in [ 40, 35, 34, 26, 7, 4]:
                 state = 1
                 label = "(!)"
@@ -96,7 +99,7 @@ def check_dell_om_disks(item, _no_params, info):
 
             # handle hot spares as OK
             if sstate in [ 3, 4 ] and dstate == 1:
-	        state = 0
+                state = 0
                 label = ""
 
             msg.append("state %s%s" % ( pdisk_state.get(dstate, 'ukn (%s)' % dstate ), label))
@@ -128,7 +131,7 @@ check_info["dell_om_disks"] = {
                                             21, # arrayDiskBusType
                                             22, # arrayDiskSpareState
                                             #24, #arrayDiskComponentStatus
-                                            #31, #arrayDiskSmartAlertIndication
+                                            31, #arrayDiskSmartAlertIndication
                                             35, # arrayDiskMediaType
                               ]),
     "includes"              : [ "dell_om.include" ],

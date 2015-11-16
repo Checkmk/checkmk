@@ -24,50 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-raritan_pdu_plugs_default = '"on"' # only to be downwards compatible and can be removed later.
+raritan_pdu_plugs_default = '"on"' # only to be downwards compatible and can be removed any decade now.
+
 
 def inventory_raritan_pdu_plugs(info):
     inventory = []
-    for line in info:
-        if saveint(line[0]) != 0:
-            inventory.append((line[0], int(line[2])) )
+    for outlet_label, outlet_name, outlet_state in info:
+        inventory.append((outlet_label, int(outlet_state)) )
     return inventory
+
 
 def check_raritan_pdu_plugs(item, params, info):
     required_state = params
-    states = {
-        -1 :  "unavailable",
-         0 :  "open",
-         1 :  "closed",
-         2 :  "belowLowerCritical",
-         3 :  "belowLowerWarning",
-         4 :  "normal",
-         5 :  "aboveUpperWarning",
-         6 :  "aboveUpperCritical",
-         7 :  "on",
-         8 :  "off",
-         9 :  "detected",
-         10:  "notDetected",
-         11:  "alarmed",
-    }
-    state = 3
-    message = "Sensor not found"
 
-    for line in info:
-        if line[0] == item:
-            outletLabel = line[0] # Outlet-Label (Index) (PDU identifier of the outlet)
-            outletName = line[1] # OutletName (vergebene Bezeichnung für den Ausgang)
-            outletState = int(line[2]) # The Outlet state at present (sh. outlet_state_info)
-            state = 0
+    for outlet_label, outlet_name, outlet_state in info:
+        if outlet_label == item:
+            state, state_info = raritan_map_state[outlet_state]
+
             if type(required_state) == int:
-                if outletState != required_state:
+                if int(outlet_state) != required_state:
                     state = 2
-            elif states[outletState] != required_state:
+            elif state_info != required_state:
                 state = 2
 
-            message = outletName + "Status is: " + states[outletState]
+            if outlet_name != "":
+                outlet_name += ", "
 
-    return (state, message)
+            return state, "%sStatus: %s" % (outlet_name, state_info)
+
 
 check_info['raritan_pdu_plugs'] = {
   "inventory_function"  : inventory_raritan_pdu_plugs,
@@ -75,11 +59,12 @@ check_info['raritan_pdu_plugs'] = {
   "service_description" : "Plug %s",
   "group"               : "plugs",
   "has_perfdata"        : False,
-  "snmp_info"           : (".1.3.6.1.4.1.13742.6", [
-             "3.5.3.1.2", # Outlet-Label (Index) (PDU identifier of the outlet)
-             "3.5.3.1.3", # OutletName (eigene vergebene Bezeichnung für den Ausgang)
-             "4.1.2.1.3", # Outlet state at present (sh.o. outlet_state_info im check)
-                        ]),
+  "snmp_info"           : ( ".1.3.6.1.4.1.13742.6", [
+                                "3.5.3.1.2", # Outlet-Label (Index) (PDU identifier of the outlet)
+                                "3.5.3.1.3", # OutletName (eigene vergebene Bezeichnung für den Ausgang)
+                                "4.1.2.1.3", # Outlet state at present (sh.o. outlet_state_info im check)
+                          ]),
   "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13742.6") and \
-                                      oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX2-2")
+                                      oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX2-2"),
+  "includes"            : [ "raritan.include" ],
 }

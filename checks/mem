@@ -228,7 +228,7 @@ def check_mem_levels(title, used, total, levels, of_what=None, of_value=None, sh
 
             if state:
                 perc_shown = True
-                infotext += levels_text + "levels at %.1f%%/%.1f%%)" % (warn, crit)
+                infotext += levels_text + "warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
 
         else:
             if how == "abs_used":
@@ -244,7 +244,7 @@ def check_mem_levels(title, used, total, levels, of_what=None, of_value=None, sh
                     state = 1
 
             if state:
-                infotext += " (levels at %s/%s)" % (get_bytes_human_readable(warn), get_bytes_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn), get_bytes_human_readable(crit))
 
     if not perc_shown and show_percentage:
         infotext += " (%.1f%%)" % (100.0 * float(used) / of_value)
@@ -335,7 +335,7 @@ def check_mem_linux(_no_item, params, info):
     # HardwareCorrupted
     hwc = meminfo.get("HardwareCorrupted")
     if hwc:
-        yield 2, "Hardware defect of %s" % get_bytes_human_readable(hwc)
+        yield params.get("handle_hw_corrupted_error", 2), "Hardware defect of %s" % get_bytes_human_readable(hwc)
 
     # Now send performance data. We simply output *all* fields of meminfo
     # except for a few really useless values

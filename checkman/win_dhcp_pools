@@ -11,8 +11,9 @@ description:
 
  Each DHCP pool will result in one service on the DHCP server.
 
- The check will raise WARNING/CRITICAL states when the thresholds of free
- addresses are reached. The thresholds need to be given as percentage values.
+ The check will raise WARNING/CRITICAL states when the thresholds of free or
+ used addresses are reached. The thresholds need to be given as percentage
+ or absolute values.
 
 item:
  The name of the DHCP pool as configured on the DHCP server.

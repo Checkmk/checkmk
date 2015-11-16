@@ -37,10 +37,28 @@
 # Data NTFS 976506816 528665344 447841472  55% D:\
 # PS3 PlayStation(R)3 File System 0 0 0   0% P:\
 
+# An example with btrfs (SLES 12). Here the same device is mounted
+# several times at different mount point. But must only be monitored
+# once. We use the device instead of the mount point in this case.
+# <<<df>>>
+# /dev/sda1      btrfs       20970496 4169036  16539348      21% /
+# devtmpfs       devtmpfs      497396       0    497396       0% /dev
+# tmpfs          tmpfs         506312       0    506312       0% /dev/shm
+# tmpfs          tmpfs         506312    6980    499332       2% /run
+# tmpfs          tmpfs         506312       0    506312       0% /sys/fs/cgroup
+# /dev/sda1      btrfs       20970496 4169036  16539348      21% /.snapshots
+# /dev/sda1      btrfs       20970496 4169036  16539348      21% /var/tmp
+# /dev/sda1      btrfs       20970496 4169036  16539348      21% /var/spool
+# /dev/sda1      btrfs       20970496 4169036  16539348      21% /var/opt
+# /dev/sda1      btrfs       20970496 4169036  16539348      21% /var/log
+
+
 def df_parse_info(info):
     df_blocks = []
     df_inodes = []
+    btrfs_devices = set() # We might generalize that later
     lines = iter(info)
+
     try:
         is_inode = False
         while True:
@@ -55,7 +73,13 @@ def df_parse_info(info):
                 # Handle known cases, where the file system contains spaces
                 if line[2] == "File" and line[3] == "System":
                     line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
-                df_blocks.append(line)
+                if line[1] == "btrfs":
+                    device = line[0]
+                    if device not in btrfs_devices:
+                        btrfs_devices.add(device)
+                        df_blocks.append(line[:6] + [ "btrfs " + line[0] ]) # replace mount point with device
+                else:
+                    df_blocks.append(line)
             else:
                 df_inodes.append(line)
     except StopIteration:
@@ -103,8 +127,6 @@ def check_df(item, params, info):
             reserved_mb = size_mb - avail_mb - used_mb # reserved for root
             fslist_blocks.append((mountpoint, size_mb, avail_mb, reserved_mb))
             if df_inodes:
-                # FIXME: if the normal and the inodes section has not the same format
-                # this will crash!
                 fslist_inodes.append((mountpoint, int(df_inodes[idx][2]), int(df_inodes[idx][4])))
     return df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes)
 

@@ -25,19 +25,17 @@
 #ifndef HostlistColumnFilter_h
 #define HostlistColumnFilter_h
 
-#include "config.h"
-
-#include "Filter.h"
+#include "config.h"  // IWYU pragma: keep
 #include <string>
-using namespace std;
-
+#include "Filter.h"
 class HostlistColumn;
+
 
 class HostlistColumnFilter : public Filter
 {
     HostlistColumn *_hostlist_column;
     int _opid;
-    string _ref_value;
+    std::string _ref_value;
 
 public:
     HostlistColumnFilter(HostlistColumn *column, int opid, char *refvalue)
@@ -45,6 +43,4 @@ public:
     bool accepts(void *data);
 };
 
-
 #endif // HostlistColumnFilter_h
-

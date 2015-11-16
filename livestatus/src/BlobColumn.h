@@ -25,13 +25,16 @@
 #ifndef BlobColumn_h
 #define BlobColumn_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Query;
+
 
 class BlobColumn : public Column
 {
 public:
-    BlobColumn(string name, string description, int indirect_offset) :
+    BlobColumn(std::string name, std::string description, int indirect_offset) :
         Column(name, description, indirect_offset) {}
     virtual char *getBlob(void *data, int *size) = 0;
     void output(void *, Query *);
@@ -39,5 +42,3 @@ public:
 };
 
 #endif // BlobColumn_h
-
-

@@ -16,6 +16,9 @@ description:
  We propose to not installing the plugin in that case and save a few
  CPU ressources.
 
+ The plugin "mk_dhcp_enabled.bat" can be used to get a WARN if the ip
+ address of the interface was assigned by dhcp.
+
  The interface index (in SNMP known as {ifIndex}) is simulated by
  creating an artificial running index after sorting the names of
  the interfaces alphabetically.

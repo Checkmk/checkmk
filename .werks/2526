@@ -1,0 +1,9 @@
+Title: Fixed crash in filesystem checks in case mountpoint contains non-ascii characters
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439558918
+Class: fix
+
+

@@ -1,0 +1,10 @@
+Title: Drop action menu icon for services without an entry in this
+Component: multisite
+State: open
+Date: 2015-09-22 09:53:11
+Targetversion: future
+Class: bug
+
+In certain circumstances the dropdown menu for a host or service can be
+completely empty (e.g. when using cmcdump). Drop this menu completely in
+that case.

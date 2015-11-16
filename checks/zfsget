@@ -110,12 +110,23 @@ def parse_zfsget(info):
                 device, fs_type, kbytes, used, avail, percent, mountpoint = line
             if mountpoint.startswith("/"):
                 entry = {}
-                total = int(kbytes) / 1024.0
                 entry["name"] = device
-                entry["total"] = total
-                entry["used"] = int(used) / 1024.0
-                entry["available"] = total - entry["used"]
                 entry["mountpoint"] = mountpoint
+                # With some versions of solaris systems such as
+                # solaris 10 10/08 s10s_u6wos_07b SPARC and solaris 10 10/09 s10x_u8wos_08a X86
+                # there migth be a bug in the 'df -h' command which we use for filesystem infos.
+                # Then the received data from the agent looks like "/ 0 12445007 19012273 5% /".
+                # In this case we compute the total size as the sum of used and available.
+                total = int(kbytes)
+                used  = int(used)
+                avail = int(avail)
+                if used and avail and not total:
+                    total = used + avail
+                else:
+                    avail = total - used
+                entry["total"]        = total / 1024.0
+                entry["used"]         = used / 1024.0
+                entry["available"]    = avail / 1024.0
                 df_parsed[mountpoint] = entry
 
     # Now remove duplicate entries for the root filesystem, such

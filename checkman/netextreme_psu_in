@@ -1,0 +1,21 @@
+title: Extreme Networks Switch: Input Power Supply
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the input voltage and input power of the power supplies
+ of a Extreme Networks Switch which supports the EXTREME-MIB.
+
+ Upper power default levels are 110, 120 Watt and
+ lower voltage default levels are 2, 1 V.
+ These levels are configurable.
+
+item:
+ The input power supply number.
+
+perfdata:
+ The input power in Watt and input voltage in Volt.
+
+inventory:
+ One service per power supply is created.

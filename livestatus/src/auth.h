@@ -25,13 +25,15 @@
 #ifndef auth_h
 #define auth_h
 
-#include "nagios.h"
+#include "config.h"  // IWYU pragma: keep
+#include "nagios.h"  // IWYU pragma: keep
+
 
 #define AUTH_LOOSE  0
 #define AUTH_STRICT 1
 
 // Dummy pointer for unknown user (not no user)
-#define UNKNOWN_AUTH_USER ((contact *)0xdeadbeaf)
+#define UNKNOWN_AUTH_USER reinterpret_cast<contact *>(0xdeadbeaf)
 
 
 extern int g_service_authorization;
@@ -46,4 +48,3 @@ extern "C" {
 #endif
 
 #endif // auth_h
-

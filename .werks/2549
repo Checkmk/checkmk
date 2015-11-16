@@ -1,0 +1,16 @@
+Title: Silently ignore not existing painters and sorters in views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1440768969
+
+In previous versions Check_MK raised exceptions when a view is using sorters
+or painters that do not exist anymore. This could easily happen for the painters
+and sorters created dynamically for each tag group. 
+
+Check_MK is now silently skipping these sorters and painters to prevent the 
+exception and make use of such views possible again. You can then remove
+those sorters / painters using the view editor.

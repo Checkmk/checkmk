@@ -1,4 +1,4 @@
-Title: New Checks fjdarye500_cadaps fjdarye500_cmods fjdarye500_cmods_flash fjdarye500_cmods_mem fjdarye500_conencs fjdarye500_cpsus fjdarye500_devencs fjdarye500_disks fjdarye500_expanders fjdarye500_inletthmls fjdarye500_sum fjdarye500_syscaps fjdarye500_thmls: Fujitsu Eternus DX500 S3
+Title: fjdarye500_cadaps fjdarye500_cmods fjdarye500_cmods_flash fjdarye500_cmods_mem fjdarye500_conencs fjdarye500_cpsus fjdarye500_devencs fjdarye500_disks fjdarye500_expanders fjdarye500_inletthmls fjdarye500_sum fjdarye500_syscaps fjdarye500_thmls: New checks for Fujitsu Eternus DX500 S3
 Level: 1
 Component: checks
 Compatible: compat

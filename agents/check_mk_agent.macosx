@@ -1,4 +1,5 @@
 #!/bin/sh
+# Check_MK Agent for Mac OS/X
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -43,7 +44,7 @@ fi
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.7i3
+echo Version: 1.2.7i4
 echo AgentOS: macosx
 
 osver="$(uname -r)"

@@ -1,0 +1,11 @@
+Title: fixed windows agent using the wrong working directory
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1444985304
+
+The windows agent in the recent releases, when started as a service fell back to using the current
+working directory when started as a service. For a service this is c:/windows/system32

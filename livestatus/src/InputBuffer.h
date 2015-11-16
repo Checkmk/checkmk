@@ -25,7 +25,10 @@
 #ifndef InputBuffer_h
 #define InputBuffer_h
 
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
+#include <deque>
+#include <string>
+
 
 #define IB_REQUEST_READ               0
 #define IB_DATA_READ                  1
@@ -39,15 +42,12 @@
 
 #define IB_BUFFER_SIZE            65536
 
-#include <string>
-#include <deque>
-using namespace std;
 
 class InputBuffer
 {
     int _fd;
     int *_termination_flag;
-    typedef deque<string> _requestlines_t;
+    typedef std::deque<std::string> _requestlines_t;
     _requestlines_t _requestlines;
     char _readahead_buffer[IB_BUFFER_SIZE];
     char *_read_pointer;
@@ -56,17 +56,15 @@ class InputBuffer
 
     // some buffer
 public:
-    InputBuffer(int *termination_flag);
+    explicit InputBuffer(int *termination_flag);
     void setFd(int fd);
     int readRequest();
     bool moreLines() { return !_requestlines.empty(); }
-    string nextLine();
+    std::string nextLine();
 
 private:
     void storeRequestLine(char *line, int length);
     int readData();
 };
 
-
 #endif // InputBuffer_h
-

@@ -1,0 +1,18 @@
+title: Extreme Networks Switch: Fan State and Speed
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the fan state and speed of a Extreme Networks Switch
+ which supports the EXTREME-MIB.
+
+ The fan state can be 'on' or 'off'.
+ Upper and lower default levels are 8000, 8400 and 2000, 1000 measured in RPM
+ and are configurable.
+
+item:
+ The fan number.
+
+inventory:
+ One service per fan is created.

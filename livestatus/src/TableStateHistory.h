@@ -25,19 +25,22 @@
 #ifndef TableStateHistory_h
 #define TableStateHistory_h
 
-#include <map>
+#include "config.h"  // IWYU pragma: keep
 #include <time.h>
-#include "config.h"
-#include "string.h"
-#include "logger.h"
-#include "nagios.h"
-#include "Logfile.h"
+#include <map>
+#include <string>
 #include "LogCache.h"
-#include "Query.h"
+#include "Logfile.h"
+#include "Table.h"
+#include "nagios.h"  // IWYU pragma: keep
+class Column;
+class Query;
+struct HostServiceState;
+struct LogEntry;
+
 
 #define CLASSMASK_STATEHIST 0xC6
 
-class HostServiceState;
 
 class TableStateHistory : public Table
 {
@@ -47,7 +50,7 @@ class TableStateHistory : public Table
     int      _until;
 
     // Notification periods information, name: active(1)/inactive(0)
-    typedef map<string, int> _notification_periods_t;
+    typedef std::map<std::string, int> _notification_periods_t;
     _notification_periods_t  _notification_periods;
 
     // Helper functions to traverse through logfiles
@@ -76,6 +79,5 @@ private:
     void      process(Query *query, HostServiceState *hs_state);
     bool      objectFilteredOut(Query *, void *entry);
 };
-
 
 #endif // TableStateHistory_h

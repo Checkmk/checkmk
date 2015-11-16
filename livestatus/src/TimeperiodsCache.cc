@@ -22,31 +22,32 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <time.h>
-
 #include "TimeperiodsCache.h"
-#include "nagios.h"
+#include <stdio.h>
+#include <string.h>
+#include <syslog.h>
+#include <time.h>
+#include <utility>
 #include "logger.h"
-#ifdef NAGIOS4
-#include <pthread.h>
-#endif // NAGIOS4
+
+using std::make_pair;
+using mk::lock_guard;
+using mk::mutex;
 
 extern timeperiod *timeperiod_list;
 
 TimeperiodsCache::TimeperiodsCache()
 {
-    pthread_mutex_init(&_cache_lock, 0);
     _cache_time = 0;
 }
 
 
 TimeperiodsCache::~TimeperiodsCache()
 {
-    pthread_mutex_destroy(&_cache_lock);
 }
 
 void TimeperiodsCache::logCurrentTimeperiods(){
-    pthread_mutex_lock(&_cache_lock);
+    lock_guard<mutex> lg(_cache_lock);
     time_t now = time(0);
     // Loop over all timeperiods and compute if we are
     // currently in. Detect the case where no time periods
@@ -60,26 +61,22 @@ void TimeperiodsCache::logCurrentTimeperiods(){
         _cache_t::iterator it = _cache.find(tp);
         if (it == _cache.end()) { // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
-            _cache.insert(std::make_pair(tp, is_in));
+            _cache.insert(make_pair(tp, is_in));
         }
         logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
         tp = tp->next;
     }
-    pthread_mutex_unlock(&_cache_lock);
 }
 
 void TimeperiodsCache::update(time_t now)
 {
-    pthread_mutex_lock(&_cache_lock);
+    lock_guard<mutex> lg(_cache_lock);
 
     // update cache only once a minute. The timeperiod
     // definitions have 1 minute as granularity, so a
     // 1sec resultion is not needed.
     int minutes = now / 60;
-    if (minutes == _cache_time) {
-        pthread_mutex_unlock(&_cache_lock);
-        return;
-    }
+    if (minutes == _cache_time) return;
 
     // Loop over all timeperiods and compute if we are
     // currently in. Detect the case where no time periods
@@ -95,7 +92,7 @@ void TimeperiodsCache::update(time_t now)
         _cache_t::iterator it = _cache.find(tp);
         if (it == _cache.end()) { // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
-            _cache.insert(std::make_pair(tp, is_in));
+            _cache.insert(make_pair(tp, is_in));
         }
         else if (it->second != is_in) {
             logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
@@ -109,8 +106,6 @@ void TimeperiodsCache::update(time_t now)
         _cache_time = minutes;
     else
         logger(LG_INFO, "Timeperiod cache not updated, there are no timeperiods (yet)");
-
-    pthread_mutex_unlock(&_cache_lock);
 }
 
 bool TimeperiodsCache::inTimeperiod(const char *tpname)
@@ -127,9 +122,9 @@ bool TimeperiodsCache::inTimeperiod(const char *tpname)
 
 bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
 {
-    bool is_in;
-    pthread_mutex_lock(&_cache_lock);
+    lock_guard<mutex> lg(_cache_lock);
     _cache_t::iterator it = _cache.find(tp);
+    bool is_in;
     if (it != _cache.end())
         is_in = it->second;
     else {
@@ -141,7 +136,6 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
         // time_t now = time(0);
         // is_in = 0 == check_time_against_period(now, tp);
     }
-    pthread_mutex_unlock(&_cache_lock);
     return is_in;
 }
 

@@ -1,0 +1,19 @@
+Title: Microsoft Azure special agent (treasures)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3
+Date: 1439992949
+Class: feature
+To use the Azure Monitoring in OMD based installation:
+
+ - Copy the azuremonitor folder to ~/local/lib/python
+ - install the azure python api (pip install azure)
+ - Copy agent_azure to ~/local/share/check_mk/agents/special/
+ - Copy the azure publishsettings file to ~/var/check_mk (you get this file from azure)
+ - Copy the checks to ~/local/share/check_mk/checks/
+ - Create a datasource program: ~/local/share/check_mk/agents/special/agent_azure ~/var/check_mk/azure.publishsettings
+  - Beware, collecting the data may take long time so set another check_interval for your host
+
+All information will be "piggybacked"
+

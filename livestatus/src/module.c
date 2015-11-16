@@ -22,35 +22,32 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <sys/select.h>
-#include <time.h>
+// IWYU pragma: no_include <bits/socket_type.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/un.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include <string.h>
 #include <sys/select.h>
-#include <pthread.h>
-#include <stdarg.h>
-#include <errno.h>
-#include <signal.h>
-#include <fcntl.h>
-
-#include "nagios.h"
-#include "livestatus.h"
-#include "downtime.h"
-#include "store_c.h"
-#include "logger.h"
-#include "config.h"
-#include "global_counters.h"
-#include "strutil.h"
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>  // IWYU pragma: keep
+#include <sys/un.h>
+#include <time.h>
+#include <unistd.h>
 #include "auth.h"
+#include "config.h"
 #include "data_encoding.h"
+#include "global_counters.h"
+#include "livestatus.h"
+#include "logger.h"
+#include "nagios.h"
+#include "store_c.h"
+#include "strutil.h"
 #include "waittriggers.h"
-
 
 #ifndef AF_LOCAL
 #define   AF_LOCAL AF_UNIX
@@ -207,7 +204,7 @@ void *main_thread(void *data __attribute__ ((__unused__)))
             int cc = accept(g_unix_socket, NULL, NULL);
             if (cc > g_max_fd_ever)
                 g_max_fd_ever = cc;
-            if (0 < fcntl(cc, F_SETFD, FD_CLOEXEC))
+            if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0)
                 logger(LG_INFO, "Cannot set FD_CLOEXEC on client socket: %s", strerror(errno));
             queue_add_connection(cc); // closes fd
             g_num_queued_connections++;
@@ -262,7 +259,7 @@ void start_threads()
         if (g_debug_level > 0)
             logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
 
-        unsigned t;
+        int t;
         g_clientthread_id = (pthread_t *)malloc(sizeof(pthread_t) * g_num_clientthreads);
         pthread_attr_t attr;
         pthread_attr_init(&attr);
@@ -291,13 +288,13 @@ void terminate_threads()
         pthread_join(g_mainthread_id, NULL);
         logger(LG_INFO, "Waiting for client threads to terminate...");
         queue_wakeup_all();
-        unsigned t;
+        int t;
         for (t=0; t < g_num_clientthreads; t++) {
             if (0 != pthread_join(g_clientthread_id[t], NULL))
-                logger(LG_INFO, "Warning: could not join thread %p", g_clientthread_id[t]);
+                logger(LG_INFO, "Warning: could not join thread no. %d", t);
         }
         if (g_debug_level > 0)
-            logger(LG_INFO, "Main thread + %u client threads have finished", g_num_clientthreads);
+            logger(LG_INFO, "Main thread + %d client threads have finished", g_num_clientthreads);
         g_thread_running = 0;
         g_should_terminate = false;
     }
@@ -327,7 +324,7 @@ int open_unix_socket()
     }
 
     // Imortant: close on exec -> check plugins must not inherit it!
-    if (0 < fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC))
+    if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) < 0)
         logger(LG_INFO, "Cannot set FD_CLOEXEC on socket: %s", strerror(errno));
 
     // Bind it to its address. This creates the file with the name g_socket_path

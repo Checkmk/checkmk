@@ -22,34 +22,35 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "nagios.h"
-#include "logger.h"
 #include "TableHosts.h"
-#include "TableHostgroups.h"
-#include "Query.h"
-#include "OffsetStringColumn.h"
-#include "OffsetIntColumn.h"
-#include "OffsetTimeColumn.h"
-#include "OffsetDoubleColumn.h"
-#include "OffsetTimeperiodColumn.h"
-#include "CustomTimeperiodColumn.h"
-#include "OffsetStringHostMacroColumn.h"
+#include <string.h>
 #include "AttributelistColumn.h"
-#include "HostContactsColumn.h"
-#include "DownCommColumn.h"
+#include "ContactgroupsColumn.h"
+#include "CustomTimeperiodColumn.h"
 #include "CustomVarsColumn.h"
 #include "CustomVarsExplicitColumn.h"
-#include "HostlistColumn.h"
+#include "DownCommColumn.h"
+#include "HostContactsColumn.h"
 #include "HostFileColumn.h"
+#include "HostSpecialDoubleColumn.h"
+#include "HostSpecialIntColumn.h"
+#include "HostgroupsColumn.h"
+#include "HostlistColumn.h"
+#include "MetricsColumn.h"
+#include "OffsetDoubleColumn.h"
+#include "OffsetIntColumn.h"
+#include "OffsetStringColumn.h"
+#include "OffsetStringHostMacroColumn.h"
+#include "OffsetTimeColumn.h"
+#include "OffsetTimeperiodColumn.h"
+#include "Query.h"
 #include "ServicelistColumn.h"
 #include "ServicelistStateColumn.h"
-#include "HostgroupsColumn.h"
-#include "MetricsColumn.h"
-#include "ContactgroupsColumn.h"
-#include "HostSpecialIntColumn.h"
-#include "HostSpecialDoubleColumn.h"
-#include "tables.h"
+#include "TableHostgroups.h"
 #include "auth.h"
+#include "tables.h"
+
+using std::string;
 
 extern host *host_list;
 extern hostgroup *hostgroup_list;
@@ -63,8 +64,7 @@ struct hostbygroup {
 
 bool TableHosts::isAuthorized(contact *ctc, void *data)
 {
-    host *hst = (host *)data;
-    return is_authorized_for(ctc, hst, 0);
+    return is_authorized_for(ctc, static_cast<host *>(data), 0);
 }
 
 
@@ -374,14 +374,13 @@ void TableHosts::answerQuery(Query *query)
     if (_by_group) {
         hostgroup *hgroup = hostgroup_list;
         hostbygroup hg;
-        bool show_hgroup;
 
         // When g_group_authorization is set to AUTH_STRICT we need to pre-check
         // if every host of this group is visible to the _auth_user
         bool requires_precheck = query->authUser() && g_group_authorization == AUTH_STRICT;
 
         while (hgroup) {
-            show_hgroup = true;
+            bool show_hgroup = true;
             hg._hostgroup = hgroup;
             hostsmember *mem = hgroup->members;
             if (requires_precheck) {

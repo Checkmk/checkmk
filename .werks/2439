@@ -1,0 +1,10 @@
+Title: solaris_prtdiag: Can now handle Oracle Corporation SUN FIRE X4170 M2 SERVER
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1445956783
+
+The inventory plugin was unable to handle systems of this type <i>Oracle Corporation SUN FIRE X4170 M2 SERVER</i>.

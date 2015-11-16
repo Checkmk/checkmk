@@ -64,6 +64,43 @@ private:
     pthread_mutex_t _mutex;
 };
 
+
+class recursive_mutex {
+public:
+    typedef pthread_mutex_t *native_handle_type;
+    recursive_mutex()
+    {
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+        pthread_mutex_init(native_handle(), &attr);
+        pthread_mutexattr_destroy(&attr);
+    }
+    ~recursive_mutex() { check(pthread_mutex_destroy(native_handle())); }
+    void lock() { check(pthread_mutex_lock(native_handle())); }
+    bool try_lock()
+    {
+        int status = pthread_mutex_trylock(native_handle());
+        if (status != EBUSY) check(status);
+        return status == 0;
+    }
+    void unlock() { check(pthread_mutex_unlock(native_handle())); }
+    native_handle_type native_handle() { return &_mutex; }
+private:
+    recursive_mutex(const recursive_mutex&) = delete;
+    recursive_mutex& operator=(const recursive_mutex&) = delete;
+
+    static void check(int status)
+    {
+        if (status != 0) {
+            throw std::runtime_error(std::string(strerror(status)));
+        }
+    }
+
+    pthread_mutex_t _mutex;
+};
+
+
 struct adopt_lock_t { };
 const adopt_lock_t adopt_lock = { };  // constexpr
 

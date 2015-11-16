@@ -321,17 +321,19 @@ def automation_analyse_service(args):
             raise
 
     # 3. Classical checks
-    custchecks = host_extra_conf(hostname, custom_checks)
-    for nr, entry in enumerate(custchecks):
-        desc = entry["service_description"]
-        if desc == servicedesc:
-            result = {
-                "origin"       : "classic",
-                "rule_nr"      : nr,
-            }
-            if "command_line" in entry: # Only active checks have a command line
-                result["command_line"] = entry["command_line"]
-            return result
+    for nr, entry in enumerate(custom_checks):
+        rule, tags, hosts = entry
+        matching_hosts = all_matching_hosts(tags, hosts, with_foreign_hosts = True)
+        if hostname in matching_hosts:
+            desc = rule["service_description"]
+            if desc == servicedesc:
+                result = {
+                    "origin"       : "classic",
+                    "rule_nr"      : nr,
+                }
+                if "command_line" in rule: # Only active checks have a command line
+                    result["command_line"] = rule["command_line"]
+                return result
 
     # 4. Active checks
     for acttype, rules in active_checks.items():

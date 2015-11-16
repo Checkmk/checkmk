@@ -9,6 +9,7 @@
 
     WATO:
     * 2767 FIX: Fixed broken user list when non unicode mail addresses are loaded
+    * 2791 FIX: Service parameter overview: Fixed problem displaying incorrect rule for classical checks...
 
 
 1.2.7i3p4:

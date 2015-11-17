@@ -11,6 +11,9 @@
     WATO:
     * 2791 FIX: Service parameter overview: Fixed problem displaying incorrect rule for classical checks...
 
+    Event Console:
+    * 2795 FIX: mkeventd: send email action did not work if message text contains umlauts...
+
 
 1.2.6p14:
     Checks & Agents:

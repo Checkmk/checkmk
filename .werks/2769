@@ -1,0 +1,9 @@
+Title: Verifying that the Check_MK GUI is not used with Apache threaded MPM (e.g. worker)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447776771
+Class: feature
+
+

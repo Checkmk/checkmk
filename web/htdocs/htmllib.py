@@ -115,6 +115,8 @@ class html:
         self.current_transid = None
         self.page_context = {}
         self.body_classes = ['main']
+        self._default_javascripts = [ "checkmk", "graphs" ]
+        self._default_stylesheets = [ "check_mk", "graphs" ]
 
         # Time measurement
         self.times            = {}
@@ -809,7 +811,7 @@ class html:
                 self.write('<base target="%s">\n' % self.attrencode(self.link_target))
 
             # Load all specified style sheets and all user style sheets in htdocs/css
-            for css in [ "check_mk", "graphs" ] + stylesheets + [ 'ie' ]:
+            for css in self._default_stylesheets + stylesheets + [ 'ie' ]:
                 if defaults.omd_root:
                     rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
                     if os.path.exists(defaults.omd_root + rel_path) or \
@@ -828,7 +830,7 @@ class html:
 
             self.add_custom_style_sheet()
 
-            for js in [ "checkmk", "graphs" ] + javascripts:
+            for js in self._default_javascripts + javascripts:
                 filename_for_browser = self.javascript_filename_for_browser(js)
                 if filename_for_browser:
                     self.javascript_file(filename_for_browser)

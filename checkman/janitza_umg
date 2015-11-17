@@ -5,8 +5,8 @@ license: GPL
 distribution: check_mk
 description:
  Monitors voltage, current, power, apparent power and energy on Janitza Power
- Analyzers. This currently supports the devices UMG 604 and UMG 96 though others
- from the same line may be very similar.
+ Analyzers. This currently supports the devices UMG 604, UMG 508 and UMG 96
+ though others from the same line may be very similar.
 
 item:
  The identifier of the phase ({"Phase 1"}, {"Phase 2"}, {"Phase 3"}).

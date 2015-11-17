@@ -13,6 +13,9 @@
     * 2791 FIX: Service parameter overview: Fixed problem displaying incorrect rule for classical checks...
     * 2793 FIX: Parameter Overview: Prevent python unicode warnings for services with umlauts...
 
+    Event Console:
+    * 2795 FIX: mkeventd: send email action did not work if message text contains umlauts...
+
 
 1.2.7i3p4:
     Core & Setup:

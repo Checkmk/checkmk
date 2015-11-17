@@ -3251,7 +3251,7 @@ def do_event_action(action, event, user=""):
         if action_type == 'email':
             to = substitute_event_tags(settings["to"], event)
             subject = substitute_event_tags(settings["subject"], event)
-            body = substitute_event_tags(settings["body"], event)
+            body = to_utf8(substitute_event_tags(settings["body"], event))
             send_email(to, subject, body)
             log_event_history(event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':

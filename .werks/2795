@@ -1,0 +1,11 @@
+Title: mkeventd: send email action did not work if message text contains umlauts
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p5
+Date: 1447772581
+
+This werk fixes an encoding exception within the event console.
+Message texts like <i>"This wüll break"</i> will no longer cause trouble.

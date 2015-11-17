@@ -1151,6 +1151,7 @@ def automation_get_bulks(args):
 
 def automation_active_check(args):
     hostname, plugin, item = args
+    item = item.decode("utf-8")
     actchecks = []
     needed_commands = []
 

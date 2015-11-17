@@ -914,7 +914,8 @@ class html:
                          onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
 
         self.write("%s</td></tr></table>" %
-                   _("<a href=\"http://mathias-kettner.de\"><img src=\"images/logo_mk_small.png\"/></a>"))
+                   _("<a class=head_logo href=\"http://mathias-kettner.de\">"
+                     "<img src=\"images/logo_cmk_small.png\"/></a>"))
         self.write("<hr class=header>\n")
         if self.enable_debug:
             self.dump_get_vars()

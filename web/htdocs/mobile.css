@@ -216,7 +216,9 @@ body.mobile table.dataset tr.data td.state {
     margin-top: 1em;
 }
 img.logomk {
-    width: 20%;
+    width: 25px;
+    height: 25px;
+    margin-bottom: 10px;
 }
 
 

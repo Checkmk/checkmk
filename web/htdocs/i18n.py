@@ -113,13 +113,13 @@ def unlocalize():
     __builtin__.current_language = None
 
 
-def localize(lang):
+def localize(lang, **kwargs):
     if lang:
         # FIXME: Clean this up. Make the other code access the current language through a
         # function of this module.
         __builtin__.current_language = lang
 
-        translation = translations.get(lang, init_language(lang))
+        translation = translations.get(lang, init_language(lang, **kwargs))
         if translation:
             translation.install(unicode = True)
         else:

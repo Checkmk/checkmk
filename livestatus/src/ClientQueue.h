@@ -29,7 +29,7 @@
 #include <pthread.h>
 #include <deque>
 #include <memory>
-
+#include "Mutex.h"
 
 class ClientQueue
 {
@@ -42,7 +42,7 @@ public:
     int popConnection();
     void wakeupAll();
 
-    pthread_mutex_t _lock;
+    mk::mutex _lock;
     pthread_cond_t _signal;
 };
 

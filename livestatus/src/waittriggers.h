@@ -53,6 +53,5 @@ void trigger(int what);
 
 extern const char *wt_names[];
 extern pthread_cond_t g_wait_cond[];
-extern pthread_mutex_t g_wait_mutex;
 
 #endif // waittriggers_h

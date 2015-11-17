@@ -25,10 +25,11 @@
 #include "ClientQueue.h"
 #include <unistd.h>
 
+using mk::lock_guard;
+using mk::mutex;
 
 ClientQueue::ClientQueue()
 {
-    pthread_mutex_init(&_lock, 0);
     pthread_cond_init(&_signal, 0);
 }
 
@@ -40,24 +41,24 @@ ClientQueue::~ClientQueue()
     {
         close(*it);
     }
-    pthread_mutex_destroy(&_lock);
     pthread_cond_destroy(&_signal);
 }
 
 void ClientQueue::addConnection(int fd)
 {
-    pthread_mutex_lock(&_lock);
-    _queue.push_back(fd);
-    pthread_mutex_unlock(&_lock);
+    {
+        lock_guard<mutex> lg(_lock);
+        _queue.push_back(fd);
+    }
     pthread_cond_signal(&_signal);
 }
 
 
 int ClientQueue::popConnection()
 {
-    pthread_mutex_lock(&_lock);
+    lock_guard<mutex> lg(_lock);
     if (_queue.size() == 0) {
-        pthread_cond_wait(&_signal, &_lock);
+        pthread_cond_wait(&_signal, _lock.native_handle());
     }
 
     int fd = -1;
@@ -65,7 +66,6 @@ int ClientQueue::popConnection()
         fd = _queue.front();
         _queue.pop_front();
     }
-    pthread_mutex_unlock(&_lock);
     return fd;
 }
 

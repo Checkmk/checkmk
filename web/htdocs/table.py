@@ -270,6 +270,7 @@ def end():
 
                 # Add the table action link
                 if first_col:
+                    first_col = False
                     if actions_enabled:
                         if actions_visible:
                             state = '0'
@@ -284,9 +285,10 @@ def end():
                             help, img, cssclass = 'toggle_actions')
                         html.write("<span>%s</span>" % header)
                         html.write("</div>")
-                    first_col = False
+                    else:
+                        html.write(header)
                 else:
-                    html.write("%s" % header)
+                    html.write(header)
 
                 html.write("</th>\n")
             html.write("  </tr>\n")

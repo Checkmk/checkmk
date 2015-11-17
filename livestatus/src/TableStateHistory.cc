@@ -38,6 +38,7 @@
 #include "Filter.h"
 #include "HostServiceState.h"
 #include "LogEntry.h"
+#include "Mutex.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
@@ -57,6 +58,8 @@
 #include "Timeperiod.h"
 #endif
 
+using mk::lock_guard;
+using mk::mutex;
 using std::deque;
 using std::make_pair;
 using std::map;
@@ -263,7 +266,7 @@ void TableStateHistory::answerQuery(Query *query)
     }
 
 
-    g_store->logCache()->lockLogCache();
+    lock_guard<mutex> lg(g_store->logCache()->_lock);
     g_store->logCache()->logCachePreChecks();
 
     // This flag might be set to true by the return value of processDataset(...)
@@ -289,14 +292,12 @@ void TableStateHistory::answerQuery(Query *query)
     _query->findIntLimits("time", &_since, &_until);
     if (_since == 0) {
         query->setError(RESPONSE_CODE_INVALID_REQUEST, "Start of timeframe required. e.g. Filter: time > 1234567890");
-        g_store->logCache()->unlockLogCache();
         return;
     }
 
     _query_timeframe = _until - _since - 1;
     if (_query_timeframe == 0) {
         query->setError(RESPONSE_CODE_INVALID_REQUEST, "Query timeframe is 0 seconds");
-        g_store->logCache()->unlockLogCache();
         return;
     }
 
@@ -314,7 +315,6 @@ void TableStateHistory::answerQuery(Query *query)
     if (_it_logs->first > _until) {
         // All logfiles are too new, invalid timeframe
         // -> No data available. Return empty result.
-        g_store->logCache()->unlockLogCache();
         return;
     }
 
@@ -644,8 +644,6 @@ void TableStateHistory::answerQuery(Query *query)
     }
     state_info.clear();
     object_blacklist.clear();
-
-    g_store->logCache()->unlockLogCache();
 }
 
 bool TableStateHistory::objectFilteredOut(Query *, void *)

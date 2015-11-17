@@ -487,6 +487,12 @@ metric_info["swap_used"] = {
     "unit" : "bytes",
 }
 
+metric_info["swap_used_percent"] = {
+    "color": "#408f20",
+    "title" : _("Swap used"),
+    "unit" : "%",
+}
+
 metric_info["swap_cached"] = {
     "title" : _("Swap cached"),
     "color": "#5bebc9",

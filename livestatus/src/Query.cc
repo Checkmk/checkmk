@@ -37,6 +37,7 @@
 #include "Column.h"
 #include "Filter.h"
 #include "InputBuffer.h"
+#include "Mutex.h"
 #include "NegatingFilter.h"
 #include "NullColumn.h"
 #include "OringFilter.h"
@@ -54,8 +55,15 @@ extern int g_debug_level;
 extern unsigned long g_max_response_size;
 extern int g_data_encoding;
 
+using mk::lock_guard;
+using mk::mutex;
 using std::string;
 
+namespace {
+
+mutex g_wait_mutex;
+
+};
 
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
     _output(output),
@@ -1350,17 +1358,14 @@ void Query::doWait()
         if (_wait_timeout == 0) {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Waiting unlimited until condition becomes true");
-            pthread_mutex_lock(&g_wait_mutex);
-            pthread_cond_wait(&g_wait_cond[_wait_trigger], &g_wait_mutex);
-            pthread_mutex_unlock(&g_wait_mutex);
+            lock_guard<mutex> lg(g_wait_mutex);
+            pthread_cond_wait(&g_wait_cond[_wait_trigger], g_wait_mutex.native_handle());
         }
         else {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Waiting %d ms or until condition becomes true", _wait_timeout);
-            pthread_mutex_lock(&g_wait_mutex);
-            int ret = pthread_cond_timedwait(&g_wait_cond[_wait_trigger], &g_wait_mutex, &timeout);
-            pthread_mutex_unlock(&g_wait_mutex);
-            if (ret == ETIMEDOUT) {
+            lock_guard<mutex> lg(g_wait_mutex);
+            if (pthread_cond_timedwait(&g_wait_cond[_wait_trigger], g_wait_mutex.native_handle(), &timeout) == ETIMEDOUT) {
                 if (g_debug_level >= 2)
                     logger(LG_INFO, "WaitTimeout after %d ms", _wait_timeout);
                 return; // timeout occurred. do not wait any longer

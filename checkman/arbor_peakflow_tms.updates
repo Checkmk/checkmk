@@ -1,0 +1,15 @@
+title: Arbor Peakflow TMS Updates
+agents: snmp
+catalog: hw/network/arbor
+license: GPL
+distribution: check_mk
+description:
+ Reports time of last change for configuration of mitigation and
+ general device settings.
+ This check is always OK and no configuration is supported.
+
+inventory:
+ Discovers two services, one for each type of configuration supported.
+
+item:
+ The item names are "Device" and "Mitigation"

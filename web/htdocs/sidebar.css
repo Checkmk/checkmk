@@ -113,6 +113,18 @@ body.side.screenshotmode {
     text-decoration: underline;
 }
 
+#side_version span.unack_werks {
+    z-index: 15;
+    cursor: pointer;
+    background-color: #f00;
+    color: #fff;
+    padding: 2px;
+    border-radius: 10px;
+    position: absolute;
+    right: -12px;
+    top: 5px;
+}
+
 /* Scrolling part with snapins */
 #side_content {
     z-index: 5;

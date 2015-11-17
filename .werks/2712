@@ -1,0 +1,9 @@
+Title: winperf_processor: this check no longer requires multiple check cycles before counters are initialized
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447770063
+Class: fix
+
+

@@ -1,0 +1,10 @@
+Title: Added new WATO permission to deactivate the function rename of hosts
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447767011
+Class: feature
+
+Whit this new role permission it's no possible to control who can or not can rename hosts.
+

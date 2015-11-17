@@ -1,0 +1,10 @@
+Title: janitza_umg: added support for umg508
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447751629
+Class: feature
+
+The umg508 uses the identical mib to umg604 so no functional changes were necessary.
+In the same process the device identification was improved.

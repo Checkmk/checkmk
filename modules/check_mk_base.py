@@ -944,7 +944,7 @@ def parse_info(lines, hostname):
 
 def decode_incoming_string(s, encoding="utf-8"):
     try:
-        return s.decode('utf-8')
+        return s.decode(encoding)
     except:
         return s.decode(fallback_agent_output_encoding)
 

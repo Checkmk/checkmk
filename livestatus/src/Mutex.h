@@ -223,7 +223,7 @@ public:
     }
 
     bool owns_lock() const { return _owns_lock; }
-    explicit operator bool() const { return owns_lock(); }
+    operator bool() const { return owns_lock(); } // explicit
     mutex_type *mutex() const { return _mutex; }
 private:
     unique_lock(const unique_lock &);            // = delete;

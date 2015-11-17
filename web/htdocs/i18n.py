@@ -78,8 +78,8 @@ def get_languages():
     return list(languages)
 
 
-def init_language(lang):
-    locale_base = defaults.locale_dir
+def get_cmk_locale_path(lang):
+    locale_path = defaults.locale_dir
 
     # OMD users can put their localization into a local path into the site
     if defaults.omd_root:
@@ -87,10 +87,17 @@ def init_language(lang):
         po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
         # Use file in OMD local strucuture when existing
         if os.path.exists(local_locale_path + po_path):
-            locale_base = local_locale_path
+            locale_path = local_locale_path
+
+    return locale_path
+
+
+def init_language(lang, domain="multisite", locale_path=None):
+    if locale_path == None:
+        locale_path = get_cmk_locale_path(lang)
 
     try:
-        translation = gettext.translation('multisite', locale_base,
+        translation = gettext.translation(domain, locale_path,
                                           languages = [ lang ], codeset = 'UTF-8')
     except IOError, e:
         translation = None

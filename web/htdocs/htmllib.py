@@ -786,16 +786,21 @@ class html:
             self.write("</x>")
         self.form_vars.append(varname)
 
+
+    def default_html_headers(self):
+        self.write('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n')
+        self.write('<meta http-equiv="X-UA-Compatible" content="IE=edge" />\n')
+        self.write('<link rel="shortcut icon" href="images/favicon.ico" type="image/ico">\n')
+
+
     def html_head(self, title, javascripts = [], stylesheets = ["pages"], force=False):
         if not self.header_sent or force:
-            self.write(
-                u'''<!DOCTYPE HTML>
-<html><head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n''')
+            self.write('<!DOCTYPE HTML>\n'
+                       '<html><head>\n')
+            self.default_html_headers()
             self.write('<title>')
             self.write(self.attrencode(title))
             self.write('</title>\n')
-            self.write('<meta http-equiv="X-UA-Compatible" content="IE=edge" />')
 
             # If the variable _link_target is set, then all links in this page
             # should be targetted to the HTML frame named by _link_target. This

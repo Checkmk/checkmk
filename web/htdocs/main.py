@@ -44,12 +44,10 @@ def page_index():
     else:
         heading = config.page_heading
 
-    html.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
-<html>
-<head>
- <title>%s</title>
- <meta http-equiv="X-UA-Compatible" content="IE=edge" />
- <link rel="shortcut icon" href="images/favicon.ico" type="image/ico">
+    html.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">\n'
+               '<html><head>\n')
+    html.default_html_headers()
+    html.write("""<title>%s</title>
 </head>
 <frameset cols="280,*" frameborder="0" framespacing="0" border="0">
     <frame src="side.py" name="side" noresize scrolling="no">

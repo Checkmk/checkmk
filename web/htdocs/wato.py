@@ -875,7 +875,8 @@ def mode_folder(phase):
         if config.may("wato.services"):
             html.context_button(_("Bulk Discovery"), make_link([("mode", "bulkinventory"), ("all", "1")]),
                         "inventory")
-        html.context_button(_("Bulk Renaming"), make_link([("mode", "bulk_rename_host")]), "rename_host")
+        if config.may("wato.rename_hosts"):
+            html.context_button(_("Bulk Renaming"), make_link([("mode", "bulk_rename_host")]), "rename_host")
         if not g_folder.get(".lock_hosts") and config.may("wato.parentscan") and auth_write:
             html.context_button(_("Parent scan"), make_link([("mode", "parentscan"), ("all", "1")]),
                         "parentscan")
@@ -2063,7 +2064,7 @@ def mode_edithost(phase, new, cluster):
             if config.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
                   make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
-            if not g_folder.get(".lock_hosts"):
+            if config.may("wato.rename_hosts") and not g_folder.get(".lock_hosts"):
                 html.context_button(_("Rename %s") % (cluster and _("Cluster") or _("Host")),
                   make_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
             if not cluster:
@@ -2280,6 +2281,10 @@ def check_edit_host_permissions(folder, host, hostname):
 #   '----------------------------------------------------------------------'
 
 def mode_bulk_rename_host(phase):
+
+    if not config.may("wato.rename_hosts"):
+        raise MKGeneralException(_("You don't have the right to rename hosts"))
+
     if phase == "title":
         return _("Bulk renaming of hosts")
 
@@ -2512,6 +2517,9 @@ def mode_rename_host(phase):
 
     if hostname not in g_folder[".hosts"]:
         raise MKGeneralException(_("You called this page with an invalid host name."))
+
+    if not config.may("wato.rename_hosts"):
+        raise MKGeneralException(_("You don't have the right to rename hosts"))
 
     check_host_permissions(hostname)
 
@@ -20499,6 +20507,12 @@ def load_plugins():
          _("Move existing hosts to other folders. Please also add the permission "
            "<i>Modify existing hosts</i>."),
          [ "admin", "user" ])
+
+    config.declare_permission("wato.rename_hosts",
+         _("Rename existing hosts"),
+         _("Rename existing hosts. Please also add the permission "
+           "<i>Modify existing hosts</i>."),
+         [ "admin" ])
 
     config.declare_permission("wato.manage_hosts",
          _("Add & remove hosts"),

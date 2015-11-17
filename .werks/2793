@@ -1,0 +1,12 @@
+Title: Parameter Overview: Prevent python unicode warnings for services with umlauts
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p5
+Date: 1447753328
+
+The parameter overview page for a service failed when there were umlauts
+in the service description. This bug was introduced a few months ago during
+some internal code restructuring concerning unicode strings.

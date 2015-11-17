@@ -1486,6 +1486,10 @@ def service_description(check_type, item):
         else:
             descr_format = check_info[check_type]["service_description"]
 
+
+    if type(descr_format) == str:
+        descr_format = descr_format.decode("utf-8")
+
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a description, but the item
     # can by empty in some cases. Nagios silently drops leading

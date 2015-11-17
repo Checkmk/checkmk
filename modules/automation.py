@@ -238,7 +238,7 @@ def schedule_inventory_check(hostname):
 def automation_analyse_service(args):
     global g_hostname
     hostname = args[0]
-    servicedesc = args[1]
+    servicedesc = args[1].decode("utf-8")
     g_hostname = hostname # To be sure for all subfunctions
 
     # We just consider types of checks that are managed via WATO.

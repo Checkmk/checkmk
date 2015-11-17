@@ -29,12 +29,20 @@
 #include <errno.h>
 #include <pthread.h>
 #include <string.h>
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 
 // A more or less drop-in replacement for C++11's <mutex> (partial)
 
 namespace mk {
+
+// Alas, system_error is a C++11 feature, so we throw its superclass.
+inline void throw_system_error(int err)
+{
+    throw std::runtime_error(std::string(strerror(err)));
+}
+
 
 class mutex {
 public:
@@ -56,9 +64,7 @@ private:
 
     static void check(int status)
     {
-        if (status != 0) {
-            throw std::runtime_error(std::string(strerror(status)));
-        }
+        if (status != 0) throw_system_error(status);
     }
 
     pthread_mutex_t _mutex;
@@ -92,18 +98,25 @@ private:
 
     static void check(int status)
     {
-        if (status != 0) {
-            throw std::runtime_error(std::string(strerror(status)));
-        }
+        if (status != 0) throw_system_error(status);
     }
 
     pthread_mutex_t _mutex;
 };
 
 
+struct defer_lock_t {
+};
+const defer_lock_t defer_lock = {}; // constexpr
+
+struct try_to_lock_t {
+};
+const try_to_lock_t try_to_lock = {}; // constexpr
+
 struct adopt_lock_t {
 };
 const adopt_lock_t adopt_lock = {}; // constexpr
+
 
 template <typename Mutex>
 class lock_guard {
@@ -118,6 +131,122 @@ private:
 
     mutex_type &_mutex;
 };
+
+
+template <typename Mutex>
+class unique_lock {
+public:
+    typedef Mutex mutex_type;
+
+    unique_lock() : _mutex(0), _owns_lock(false) {}
+    explicit unique_lock(mutex_type &m)
+        : _mutex(addressOf(m)), _owns_lock(false)
+    {
+        lock();
+        _owns_lock = true;
+    }
+
+    unique_lock(mutex_type &m, defer_lock_t)
+        : _mutex(addressOf(m)), _owns_lock(false)
+    {
+    }
+
+    unique_lock(mutex_type &m, try_to_lock_t)
+        : _mutex(addressOf(m)), _owns_lock(_mutex->try_lock())
+    {
+    }
+
+    unique_lock(mutex_type &m, adopt_lock_t)
+        : _mutex(addressOf(m)), _owns_lock(true)
+    {
+    }
+
+    // template<typename Clock, typename Duration>
+    // unique_lock(mutex_type& m, const chrono::time_point<Clock, Duration>&
+    // atime)
+
+    // template<typename Rep, typename Period>
+    // unique_lock(mutex_type& m, const chrono::duration<_Rep, _Period>&
+    // __rtime)
+
+    ~unique_lock()
+    {
+        if (_owns_lock) unlock();
+    }
+
+    // unique_lock(unique_lock&& other)
+    // unique_lock& operator=(unique_lock&& other)
+
+    void lock()
+    {
+        if (!_mutex) throw_system_error(EPERM);
+        if (_owns_lock) throw_system_error(EDEADLK);
+        _mutex->lock();
+        _owns_lock = true;
+    }
+
+    bool try_lock()
+    {
+        if (!_mutex) throw_system_error(EPERM);
+        if (_owns_lock) throw_system_error(EDEADLK);
+        _owns_lock = _mutex->try_lock();
+        return _owns_lock;
+    }
+
+    // template<typename Clock, typename Duration>
+    // bool try_lock_until(const chrono::time_point<Clock, Duration>& atime)
+
+    // template<typename Rep, typename Period>
+    // bool try_lock_for(const chrono::duration<Rep, Period>& rtime)
+
+    void unlock()
+    {
+        if (!_owns_lock) throw_system_error(EPERM);
+        if (_mutex) {
+            _mutex->unlock();
+            _owns_lock = false;
+        }
+    }
+
+    void swap(unique_lock &other)
+    {
+        std::swap(_mutex, other._mutex);
+        std::swap(_owns_lock, other._owns_lock);
+    }
+
+    mutex_type *release()
+    {
+        mutex_type *ret = _mutex;
+        _mutex = 0;
+        _owns_lock = false;
+        return ret;
+    }
+
+    bool owns_lock() const { return _owns_lock; }
+    explicit operator bool() const { return owns_lock(); }
+    mutex_type *mutex() const { return _mutex; }
+private:
+    unique_lock(const unique_lock &);            // = delete;
+    unique_lock &operator=(const unique_lock &); // = delete;
+
+    mutex_type *_mutex;
+    bool _owns_lock;
+
+    // basically std::addressof from C++11's <memory>
+    template <typename T>
+    inline T *addressOf(T &x)
+    {
+        return reinterpret_cast<T *>(
+            &const_cast<char &>(reinterpret_cast<const volatile char &>(x)));
+    }
+};
+
+
+template <typename Mutex>
+void swap(unique_lock<Mutex> &x, unique_lock<Mutex> &y)
+{
+    x.swap(y);
+}
 
 } // namespace mk
 

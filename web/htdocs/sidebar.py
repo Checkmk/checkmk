@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, views, pprint, os, copy, userdb, pagetypes
-import notify, urlparse
+import notify, werks, urlparse
 from lib import *
 
 # Constants to be used in snapins
@@ -172,14 +172,20 @@ def get_check_mk_edition_title():
 def sidebar_head():
     html.write('<div id="side_header">')
     html.write('<div id="side_fold"></div>')
-    html.write('<a title="%s" target="main" href="%s">'
-               '<img id="side_bg" src="images/sidebar_top.png">'
-               '<div id="side_version"><a href="version.py" target="main">%s<br>%s</a></div>'
-               '</a>'
-               '</div>\n' % (_("Go to main overview"),
-                             html.attrencode(config.user.get("start_url") or config.start_url),
-                             get_check_mk_edition_title(),
-                             defaults.check_mk_version))
+    html.write('<a title="%s" target="main" href="%s">' %
+          (_("Go to main overview"), html.attrencode(config.user.get("start_url") or config.start_url)))
+    html.write('<img id="side_bg" src="images/sidebar_top.png">')
+    html.write('<div id="side_version">'
+               '<a href="version.py" target="main" title=\"%s\">%s<br>%s' %
+        (_("Open release notes"), get_check_mk_edition_title(), defaults.check_mk_version))
+    if werks.may_acknowledge():
+        num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
+        if num_unacknowledged_werks:
+            html.write("<span title=\"%s\" class=\"unack_werks\">%d</span>" %
+                (_("%d unacknowledged incompatible werks") % num_unacknowledged_werks, num_unacknowledged_werks))
+    html.write('</a></div>')
+    html.write('</a></div>\n')
+
 
 def render_messages():
     for msg in notify.get_gui_messages():

@@ -154,7 +154,7 @@ def page_login():
     mobile_html_head(title)
     jqm_page_header(title, id="login")
     html.write('<div id="loginhead">%s</div>' %
-      _("Welcome to Check_MK Multisite Mobile. Please Login."))
+      _("Welcome to Check_MK Mobile."))
 
     html.begin_form("login", method = 'POST', add_transid = False)
     # Keep information about original target URL
@@ -170,8 +170,9 @@ def page_login():
     html.set_focus("_username")
     html.end_form()
     html.write('<div id="loginfoot">')
-    html.write('<img class="logomk" src="images/logo_mk.png">')
-    html.write('<div class="copyright">%s</div>' % _("Copyright Mathias Kettner 2012"))
+    html.write('<img class="logomk" src="images/logo_cmk_small.png">')
+    html.write('<div class="copyright">%s</div>' %
+      _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
     html.write('</div>')
     jqm_page_footer()
     mobile_html_foot()

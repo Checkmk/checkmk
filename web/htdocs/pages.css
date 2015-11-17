@@ -128,8 +128,20 @@ body.main table.header td.right {
 
 
 body.main table.header td.right img {
-    position: relative;
-    top: 5px;
+    width: 19px;
+    height: 19px;
+    vertical-align: bottom;
+}
+
+body.main table.header td.right a.head_logo img {
+    width: 23px;
+    height: 23px;
+    margin: 0 0 1px 5px;
+}
+
+body.main table.header td.right a.head_logo img:hover {
+    opacity: 0.5;
+    filter: alpha(opacity=50);
 }
 
 body.main hr.header {
@@ -510,13 +522,9 @@ input[type=text], input[type=password] {
 }
 select {
     height: 24px;
-    /* border-style: solid none;
-    border-width: 2px;
-    border-color: red; */
     box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
     vertical-align: middle;
     padding-top: 4px;
-    /* padding: 1px 3px; */
 
 }
 
@@ -890,13 +898,8 @@ div.togglebutton.checkbox.off      { opacity: 0.5; filter: alpha(opacity=50); }
 |                                                                          |
 '-------------------------------------------------------------------------*/
 
-a#helpbutton {
-    width: 19px;
-    height: 19px;
-    margin: 0 5px;
-    position: relative;
-    top: -8px;
-    left: -2px;
+body.main table.header td.right a#helpbutton img {
+    margin: 1px 5px;
 }
 
 a#helpbutton.passive {

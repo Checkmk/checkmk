@@ -3062,16 +3062,20 @@ def mode_object_parameters(phase):
                 output_analysed_ruleset(all_rulesets, rulespec, hostname, None, serviceinfo["parameters"])
 
             elif origin == "classic":
-                rule = all_rulesets["custom_checks"][serviceinfo["rule_nr"]]
+                rule_nr  = serviceinfo["rule_nr"]
+                rule     = all_rulesets["custom_checks"][rule_nr]
+
                 # Find relative rule number in folder
                 old_folder = None
-                rel_nr = -1
-                for r in all_rulesets["custom_checks"]:
+                rel_nr     = -1
+                for nr, r in enumerate(all_rulesets["custom_checks"]):
                     if old_folder != r[0]:
+                        old_folder = r[0]
                         rel_nr = -1
                     rel_nr += 1
-                    if r is rule:
+                    if nr == rule_nr:
                         break
+
                 url = make_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', hostname)])
                 forms.section('<a href="%s">%s</a>' % (url, _("Command Line")))
                 url = make_link([
@@ -19101,6 +19105,8 @@ def mode_download_agents(phase):
 
     elif phase == "buttons":
         global_buttons()
+        if 'agents' in modes:
+            html.context_button(_("Baked Agents"), make_link([("mode", "agents")]), "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
         return
 

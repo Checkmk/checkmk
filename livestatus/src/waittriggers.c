@@ -48,8 +48,6 @@ pthread_cond_t g_wait_cond[] = {
     PTHREAD_COND_INITIALIZER,
 };
 
-pthread_mutex_t g_wait_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 void trigger(int what)
 {
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);

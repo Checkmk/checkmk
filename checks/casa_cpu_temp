@@ -79,7 +79,7 @@ check_info["casa_cpu_temp"] = {
     "check_function"        : check_casa_cpu_temp,
     "inventory_function"    : inventory_casa_cpu_temp,
     "parse_function"        : parse_casa_info_temp,
-    "service_description"   : "CPU Temperature %s",
+    "service_description"   : "Temperature CPU %s",
     "group"                 : "temperature",
     "has_perfdata"          : True,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20858.2."),

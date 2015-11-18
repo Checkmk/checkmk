@@ -380,20 +380,25 @@ def load_checks():
 
     # Now convert check_info to new format.
     convert_check_info()
-    verify_checkgroups()
+    verify_checkgroup_members()
 
 
-# This function validates the checks which are members of checkgroups to have either
-# all or none an item. Mixed checkgroups lead to strange exceptions when processing
-# the check parameters. So it is much better to catch these errors in a central place
-# with a clear error message.
-def verify_checkgroups():
+def checks_by_checkgroup():
     groups = {}
     for check_type, check in check_info.items():
         group_name = check["group"]
         if group_name:
             groups.setdefault(group_name, [])
             groups[group_name].append((check_type, check))
+    return groups
+
+
+# This function validates the checks which are members of checkgroups to have either
+# all or none an item. Mixed checkgroups lead to strange exceptions when processing
+# the check parameters. So it is much better to catch these errors in a central place
+# with a clear error message.
+def verify_checkgroup_members():
+    groups = checks_by_checkgroup()
 
     for group_name, checks in groups.items():
         with_item, without_item = [], []
@@ -4840,6 +4845,7 @@ def compute_check_parameters(host, checktype, item, params):
                 params = entry
     return params
 
+
 def get_checkgroup_parameters(host, checktype, item):
     checkgroup = check_info[checktype]["group"]
     if not checkgroup:
@@ -4852,6 +4858,22 @@ def get_checkgroup_parameters(host, checktype, item):
         return host_extra_conf(host, rules)
     else: # checks with an item need service-specific rules
         return service_extra_conf(host, item, rules)
+
+
+# Verify that the user has no deprecated check groups configured.
+def verify_non_deprecated_checkgroups():
+    groups = checks_by_checkgroup()
+
+    for checkgroup, rules in checkgroup_parameters.items():
+        if checkgroup not in groups:
+            raise MKGeneralException(
+                "Found configured rules of deprecated check group \"%s\". These rules are not used "
+                "by any check. Maybe this check group has been renamed during an update, "
+                "in this case you will have to migrate your configuration to the new ruleset manually. "
+                "Please check out the release notes of the involved versions. "
+                "You may use the page \"Deprecated rules\" in WATO to view your rules and move them to "
+                "the new rulesets." % checkgroup)
+
 
 
 def output_profile():

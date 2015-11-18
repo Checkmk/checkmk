@@ -1,0 +1,11 @@
+Title: Check_MK is now warning the user about deprecated but configured checkgroup parameters
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447836914
+Class: fix
+
+These messages help during migration from 1.2.6 to 1.2.8 when the check groups of checks
+have been changed. The message is a hint for the user to check the deprecated rulesets
+and migrate the rules to the new ones.

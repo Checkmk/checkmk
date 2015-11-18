@@ -79,6 +79,8 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     if summary_service_notification_periods != []:
         raise MKGeneralException("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
 
+    verify_non_deprecated_checkgroups()
+
     # Map service_period to _SERVICE_PERIOD. This field das not exist in Nagios/Icinga.
     # The CMC has this field natively.
     if "service_period" in extra_host_conf:

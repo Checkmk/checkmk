@@ -434,18 +434,7 @@ def automation_restart(job = "restart", use_rushd = True):
             backup_path = None
 
         try:
-            if monitoring_core == "nagios":
-                load_module("nagios")
-                create_nagios_config(file(objects_file, "w"))
-                configuration_warnings = [] # not supported
-            else:
-                configuration_warnings = do_create_cmc_config(opt_cmc_relfilename, use_rushd = use_rushd)
-
-            duplicates = duplicate_hosts()
-            if duplicates:
-                configuration_warnings.append(
-                      "The following host names have duplicates: %s. "
-                      "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
+            configuration_warnings = create_core_config(use_rushd=use_rushd)
 
             if "do_bake_agents" in globals() and bake_agents_on_restart:
                 do_bake_agents()
@@ -719,7 +708,7 @@ def automation_rename_hosts():
             except:
                 pass
 
-        for hostname in failed_ip_lookups:
+        for hostname in g_failed_ip_lookups:
             actions.append("dnsfail-" + hostname)
 
     # Convert actions into a dictionary { "what" : count }

@@ -238,6 +238,24 @@ NEGATE         = '@negate'       # negation in boolean lists
 # Renaming of service descriptions while keeping backward compatibility with
 # existing installations.
 # Synchronize with htdocs/wato.py and plugins/wato/check_mk_configuration.py!
+
+# Cleanup! .. some day
+def get_old_cmciii_temp_description(item):
+    if "Temperature" in item:
+        return True, item # old item format, no conversion
+
+    parts = item.split(" ")
+    if parts[0] == "Ambient":
+        return False, "%s Temperature" % parts[1]
+
+    elif len(parts) == 2:
+        return False, "%s %s.Temperature" % (parts[1], parts[0])
+
+    else:
+        if parts[1] == "LCP":
+            parts[1] = "Liquid_Cooling_Package"
+        return False, "%s %s.%s-Temperature" % (parts[1], parts[0], parts[2])
+
 old_service_descriptions = {
     "df"                               : "fs_%s",
     "df_netapp"                        : "fs_%s",
@@ -260,7 +278,7 @@ old_service_descriptions = {
     "ibm_svc_systemstats.cache"        : "IBM SVC Cache Total",
 
     "casa_cpu_temp"                    : "Temperature %s",
-    "cmciii.temp"                      : "%s",
+    "cmciii.temp"                      : get_old_cmciii_temp_description,
     "cmciii_lcp_airin"                 : "LCP Fanunit Air IN",
     "cmciii_lcp_airout"                : "LCP Fanunit Air OUT",
     "cmciii_lcp_water"                 : "LCP Fanunit Water %s",

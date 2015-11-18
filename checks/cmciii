@@ -554,7 +554,8 @@ def check_cmciii_temp(item, params, unit_items):
     for (unit, item_name), candidate_entry in entries.iteritems():
         unit_type, unit_name = units[int(unit) - 1][0:2]
         if item_name.endswith("Temperature") and "Value" in candidate_entry.keys():
-            if format_cmciii_temp_name(unit_name, item_name) == item:
+            if format_cmciii_temp_name(unit_name, item_name) == item \
+               or unit_name + " " + item_name == item: # compatibility to "old discovered" services
                 entry = candidate_entry
                 break
     if entry:

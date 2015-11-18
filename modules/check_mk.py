@@ -242,7 +242,7 @@ NEGATE         = '@negate'       # negation in boolean lists
 # Cleanup! .. some day
 def get_old_cmciii_temp_description(item):
     if "Temperature" in item:
-        return True, item # old item format, no conversion
+        return False, item # old item format, no conversion
 
     parts = item.split(" ")
     if parts[0] == "Ambient":

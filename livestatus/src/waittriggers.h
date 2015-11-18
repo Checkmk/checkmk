@@ -25,33 +25,38 @@
 #ifndef waittriggers_h
 #define waittriggers_h
 
-#include "config.h"  // IWYU pragma: keep
-#include <pthread.h>
-
-
-#define WT_NONE 0x7fffffff
-#define WT_ALL           0
-#define WT_CHECK         1
-#define WT_STATE         2
-#define WT_LOG           3
-#define WT_DOWNTIME      4
-#define WT_COMMENT       5
-#define WT_COMMAND       6
-#define WT_PROGRAM       7
-#define WT_NUM_TRIGGERS  8
-
-#define WT_ALLNAMES "all, check, state, log, downtime, comment, command and program"
+#include "config.h" // IWYU pragma: keep
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
-void trigger(int what);
+
+struct timespec;
+
+// This is basically a C++ class for triggers done the "C way" via an opaque
+// struct, explicit passing of 'this' and using a prefix for names.
+
+struct trigger;
+
+struct trigger *trigger_all();
+struct trigger *trigger_check();
+struct trigger *trigger_state();
+struct trigger *trigger_log();
+struct trigger *trigger_downtime();
+struct trigger *trigger_comment();
+struct trigger *trigger_command();
+struct trigger *trigger_program();
+
+struct trigger *trigger_find(const char *name);
+const char *trigger_all_names();
+
+void trigger_notify_all(struct trigger *which);
+
+void trigger_wait(struct trigger *which);
+int trigger_wait_until(struct trigger *which, const struct timespec *abstime);
+
 #ifdef __cplusplus
 }
 #endif
-
-extern const char *wt_names[];
-extern pthread_cond_t g_wait_cond[];
 
 #endif // waittriggers_h

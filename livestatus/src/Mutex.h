@@ -53,16 +53,16 @@ inline void check_status(int status)
 class mutex {
 public:
     typedef pthread_mutex_t *native_handle_type;
-    mutex() { check_status(pthread_mutex_init(native_handle(), 0)); }
-    ~mutex() { check_status(pthread_mutex_destroy(native_handle())); }
-    void lock() { check_status(pthread_mutex_lock(native_handle())); }
+    mutex() { check_status(pthread_mutex_init(&_mutex, 0)); }
+    ~mutex() { check_status(pthread_mutex_destroy(&_mutex)); }
+    void lock() { check_status(pthread_mutex_lock(&_mutex)); }
     bool try_lock()
     {
-        int status = pthread_mutex_trylock(native_handle());
+        int status = pthread_mutex_trylock(&_mutex);
         if (status != EBUSY) check_status(status);
         return status == 0;
     }
-    void unlock() { check_status(pthread_mutex_unlock(native_handle())); }
+    void unlock() { check_status(pthread_mutex_unlock(&_mutex)); }
     native_handle_type native_handle() { return &_mutex; }
 private:
     mutex(const mutex &);            // = delete
@@ -80,18 +80,18 @@ public:
         pthread_mutexattr_t attr;
         check_status(pthread_mutexattr_init(&attr));
         check_status(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE));
-        check_status(pthread_mutex_init(native_handle(), &attr));
+        check_status(pthread_mutex_init(&_mutex, &attr));
         check_status(pthread_mutexattr_destroy(&attr));
     }
-    ~recursive_mutex() { check_status(pthread_mutex_destroy(native_handle())); }
-    void lock() { check_status(pthread_mutex_lock(native_handle())); }
+    ~recursive_mutex() { check_status(pthread_mutex_destroy(&_mutex)); }
+    void lock() { check_status(pthread_mutex_lock(&_mutex)); }
     bool try_lock()
     {
-        int status = pthread_mutex_trylock(native_handle());
+        int status = pthread_mutex_trylock(&_mutex);
         if (status != EBUSY) check_status(status);
         return status == 0;
     }
-    void unlock() { check_status(pthread_mutex_unlock(native_handle())); }
+    void unlock() { check_status(pthread_mutex_unlock(&_mutex)); }
     native_handle_type native_handle() { return &_mutex; }
 private:
     recursive_mutex(const recursive_mutex &);            // = delete;

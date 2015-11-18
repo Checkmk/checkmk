@@ -64,7 +64,7 @@ class Query
     contact      *_auth_user;
     AndingFilter  _wait_condition;
     unsigned      _wait_timeout;
-    unsigned      _wait_trigger;
+    struct trigger *_wait_trigger;
     void         *_wait_object;
     std::string   _field_separator;
     std::string   _dataset_separator;

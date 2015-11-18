@@ -47,7 +47,7 @@ livestatus_so_SOURCES = \
 	ContactgroupsMemberColumn.cc OffsetStringMacroColumn.cc OffsetStringServiceMacroColumn.cc \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \
 	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc BlobColumn.cc HostFileColumn.cc \
-	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc mk_inventory.cc \
+	global_counters.c  module.c  logger.c waittriggers.cc TimeperiodsCache.cc pnp4nagios.cc mk_inventory.cc \
 	ContactgroupsColumn.cc CustomTimeperiodColumn.cc HostServiceState.cc opids.cc auth.cc
 
 livestatus_so_CXXFLAGS = -std=gnu++0x -fPIC

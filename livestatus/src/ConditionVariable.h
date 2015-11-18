@@ -27,7 +27,8 @@
 
 #include "config.h" // IWYU pragma: keep
 #include <pthread.h>
-#include <Mutex.h>
+#include <time.h>
+#include "Mutex.h"
 
 // A more or less drop-in replacement for C++11's <condition_variable> (partial)
 
@@ -72,6 +73,15 @@ public:
     // bool wait_until(unique_lock<mutex>& ul,
     //                 const chrono::time_point<Clock, Duration>& atime,
     //                 Predicate p);
+
+    // Note: This is *not* in the standard, the chrono stuff above is!
+    cv_status wait_until(unique_lock<mutex> &ul, const struct timespec *atime)
+    {
+        int status =
+            pthread_cond_timedwait(&_cond, ul.mutex()->native_handle(), atime);
+        if (status != ETIMEDOUT) check_status(status);
+        return (status == ETIMEDOUT) ? timeout : no_timeout;
+    }
 
     native_handle_type native_handle() { return &_cond; }
 private:

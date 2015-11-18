@@ -160,7 +160,6 @@ check_info["wut_webtherm.humidity"] = {
     "includes"                  : [ "humidity.include" ],
     "group"                     : "humidity",
 }
-<<<<<<< HEAD
 
 #.
 

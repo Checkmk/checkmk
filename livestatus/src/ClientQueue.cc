@@ -24,52 +24,43 @@
 
 #include "ClientQueue.h"
 #include <unistd.h>
+#include <algorithm>
 
 using mk::lock_guard;
 using mk::mutex;
+using mk::unique_lock;
+using std::for_each;
 
 ClientQueue::ClientQueue()
 {
-    pthread_cond_init(&_signal, 0);
 }
 
 ClientQueue::~ClientQueue()
 {
-    for (_queue_t::iterator it = _queue.begin();
-            it != _queue.end();
-            ++it)
-    {
-        close(*it);
-    }
-    pthread_cond_destroy(&_signal);
+    for_each(_queue.begin(), _queue.end(), close);
 }
 
 void ClientQueue::addConnection(int fd)
 {
     {
-        lock_guard<mutex> lg(_lock);
+        lock_guard<mutex> lg(_mutex);
         _queue.push_back(fd);
     }
-    pthread_cond_signal(&_signal);
+    _cond.notify_one();
 }
 
 
 int ClientQueue::popConnection()
 {
-    lock_guard<mutex> lg(_lock);
-    if (_queue.size() == 0) {
-        pthread_cond_wait(&_signal, _lock.native_handle());
-    }
-
-    int fd = -1;
-    if (_queue.size() > 0) {
-        fd = _queue.front();
-        _queue.pop_front();
-    }
+    unique_lock<mutex> ul(_mutex);
+    while (_queue.empty()) _cond.wait(ul);
+    int fd = _queue.front();
+    _queue.pop_front();
     return fd;
 }
 
+// Note: What we *really* want here is the functionality of notify_all_at_thread_exit.
 void ClientQueue::wakeupAll()
 {
-    pthread_cond_broadcast(&_signal);
+    _cond.notify_all();
 }

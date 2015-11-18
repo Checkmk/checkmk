@@ -274,7 +274,7 @@ def automation_analyse_service(args):
 
             if hosttags_match_taglist(tags_of_host(hostname), taglist) and \
                in_extraconf_hostlist(hostlist, hostname):
-               descr = service_description(checktype, item)
+               descr = service_description(hostname, checktype, item)
                if descr == servicedesc:
                    return {
                        "origin"       : "static",
@@ -299,7 +299,7 @@ def automation_analyse_service(args):
 
             if (ct, item) not in check_table:
                 continue # this is a removed duplicate or clustered service
-            descr = service_description(ct, item)
+            descr = service_description(hn, ct, item)
             if hn == hostname and descr == servicedesc:
                 dlv = check_info[ct].get("default_levels_variable")
                 if dlv:

@@ -133,7 +133,7 @@ def check_apc(item, params, info):
     yield state, infotxt, [("capacity", battery_capacity, None, crit_capacity, 0, 100)]
 
     # 5. Check System temperature
-    infotxt = "sys. temp. %d °C" % system_temp
+    infotxt = u"sys. temp. %d °C" % system_temp
     if system_temp >= crit_sys_temp:
         state = 2
     else:

@@ -1,0 +1,11 @@
+Title: Errors in Check_MK configuration do not prevent the core from being restarted anymore
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447840452
+Class: feature
+
+This has been implemented for the CMC configuration generating mechanism some time ago.
+See werk #8294 for details. This has also been implemented for installations which use
+Nagios as monitoring core.

@@ -73,7 +73,7 @@ def inventory_cmciii_lcp_water(parsed):
 
 def check_cmciii_lcp_water(item, params, parsed):
     # This sensor is handled by cmciii.temp
-    return 3, "This check is obsolete, please re-inventorize this host"
+    return 3, "This check is obsolete, please re-discover this host"
 
 
 check_info['cmciii_lcp_water'] = {

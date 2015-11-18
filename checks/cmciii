@@ -839,10 +839,10 @@ check_info['cmciii.humidity'] = {
 #   '----------------------------------------------------------------------'
 
 def reparse_cmciii_phase(parsed):
-    parsed, units = parse_cmciii(parsed)
+    inputs, units = parsed
 
     output = {}
-    for name, value in parsed.items():
+    for name, value in inputs.items():
         if name[1].find("Phase") != -1:
             device, phase, value_name  = name[1].split('.')
             unit_id = int( name[0])

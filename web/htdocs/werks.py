@@ -235,6 +235,11 @@ def unacknowledged_incompatible_werks():
         if werk["compatible"] == "incomp_unack"])
 
 
+def num_unacknowledged_incompatible_werks():
+    load_werks()
+    return len(unacknowledged_incompatible_werks())
+
+
 werk_table_option_entries = [
     ( "classes",
       "double",
@@ -567,4 +572,3 @@ def insert_manpage_links(text):
 
 def werks_sorted_by_date(werks):
     return sorted(werks, cmp = lambda a, b: -cmp(a["date"], b["date"]))
-

@@ -68,16 +68,16 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     hostcheck_commands_to_define = []
 
     if host_notification_periods != []:
-        raise MKGeneralException("host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead.")
+        configuration_warning("host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead.")
 
     if summary_host_notification_periods != []:
-        raise MKGeneralException("summary_host_notification_periods is not longer supported. Please use extra_summary_host_conf['notification_period'] instead.")
+        configuration_warning("summary_host_notification_periods is not longer supported. Please use extra_summary_host_conf['notification_period'] instead.")
 
     if service_notification_periods != []:
-        raise MKGeneralException("service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead.")
+        configuration_warning("service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead.")
 
     if summary_service_notification_periods != []:
-        raise MKGeneralException("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
+        configuration_warning("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
 
     # Map service_period to _SERVICE_PERIOD. This field das not exist in Nagios/Icinga.
     # The CMC has this field natively.
@@ -120,28 +120,10 @@ def create_nagios_config_host(outfile, hostname):
 def create_nagios_hostdefs(outfile, hostname, attrs):
     is_clust = is_cluster(hostname)
 
-    # Determine IP address. For cluster hosts this is optional.
-    # A cluster might have or not have a service ip address.
-    if not is_clust and attrs["address"] in [ "0.0.0.0", "::" ]:
-        if ignore_ip_lookup_failures:
-            failed_ip_lookups.append(hostname)
-        else:
-            if is_ipv6_primary(hostname):
-                varname = "ip6addresses"
-            else:
-                varname = "ipaddresses"
-            raise MKGeneralException("Cannot determine ip address of %s. Please add to %s." %
-                                                                           (hostname, varname))
     ip = attrs["address"]
 
     if is_clust:
-        verify_cluster_address_family(hostname)
-
-        nodes = nodes_of(hostname)
-        for node in nodes:
-            if node not in all_active_realhosts():
-                raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, hostname))
-
+        nodes = get_cluster_nodes_for_config(hostname)
         attrs.update(get_cluster_attributes(hostname, nodes))
 
     #   _
@@ -310,11 +292,12 @@ define servicedependency {
         # Make sure, the service description is unique on this host
         if description in used_descriptions:
             cn, it = used_descriptions[description]
-            raise MKGeneralException(
+            configuration_warning(
                     "ERROR: Duplicate service description '%s' for host '%s'!\n"
                     " - 1st occurrance: checktype = %s, item = %r\n"
                     " - 2nd occurrance: checktype = %s, item = %r\n" %
                     (description, hostname, cn, it, checkname, item))
+            continue
 
         else:
             used_descriptions[description] = ( checkname, item )
@@ -451,11 +434,12 @@ define service {
 
         if description in used_descriptions:
             cn, it = used_descriptions[description]
-            raise MKGeneralException(
+            configuration_warning(
                     "ERROR: Duplicate service description (legacy check) '%s' for host '%s'!\n"
                     " - 1st occurrance: checktype = %s, item = %r\n"
                     " - 2nd occurrance: checktype = legacy(%s), item = None\n" %
                     (description, hostname, cn, it, command))
+            continue
 
         else:
             used_descriptions[description] = ( "legacy(" + command + ")", description )
@@ -513,11 +497,12 @@ define service {
                 if cn == "active(%s)" % acttype:
                     continue
 
-                raise MKGeneralException(
+                configuration_warning(
                         "ERROR: Duplicate service description (active check) '%s' for host '%s'!\n"
                         " - 1st occurrance: checktype = %s, item = %r\n"
                         " - 2nd occurrance: checktype = active(%s), item = None\n" %
                         (description, hostname, cn, it, acttype))
+                continue
 
             else:
                 used_descriptions[description] = ( "active(" + acttype + ")", description )
@@ -578,11 +563,12 @@ define service {
                 # second one.
                 if cn == "custom(%s)" % command_name:
                     continue
-                raise MKGeneralException(
+                configuration_warning(
                         "ERROR: Duplicate service description (custom check) '%s' for host '%s'!\n"
                         " - 1st occurrance: checktype = %s, item = %r\n"
                         " - 2nd occurrance: checktype = custom(%s), item = %r\n" %
                         (description, hostname, cn, it, command_name, description))
+                continue
             else:
                 used_descriptions[description] = ( "custom(%s)" % command_name, description )
 

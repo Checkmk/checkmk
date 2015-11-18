@@ -115,6 +115,8 @@ class html:
         self.current_transid = None
         self.page_context = {}
         self.body_classes = ['main']
+        self._default_javascripts = [ "checkmk", "graphs" ]
+        self._default_stylesheets = [ "check_mk", "graphs" ]
 
         # Time measurement
         self.times            = {}
@@ -786,16 +788,21 @@ class html:
             self.write("</x>")
         self.form_vars.append(varname)
 
+
+    def default_html_headers(self):
+        self.write('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n')
+        self.write('<meta http-equiv="X-UA-Compatible" content="IE=edge" />\n')
+        self.write('<link rel="shortcut icon" href="images/favicon.ico" type="image/ico">\n')
+
+
     def html_head(self, title, javascripts = [], stylesheets = ["pages"], force=False):
         if not self.header_sent or force:
-            self.write(
-                u'''<!DOCTYPE HTML>
-<html><head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n''')
+            self.write('<!DOCTYPE HTML>\n'
+                       '<html><head>\n')
+            self.default_html_headers()
             self.write('<title>')
             self.write(self.attrencode(title))
             self.write('</title>\n')
-            self.write('<meta http-equiv="X-UA-Compatible" content="IE=edge" />')
 
             # If the variable _link_target is set, then all links in this page
             # should be targetted to the HTML frame named by _link_target. This
@@ -804,7 +811,7 @@ class html:
                 self.write('<base target="%s">\n' % self.attrencode(self.link_target))
 
             # Load all specified style sheets and all user style sheets in htdocs/css
-            for css in [ "check_mk", "graphs" ] + stylesheets + [ 'ie' ]:
+            for css in self._default_stylesheets + stylesheets + [ 'ie' ]:
                 if defaults.omd_root:
                     rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
                     if os.path.exists(defaults.omd_root + rel_path) or \
@@ -823,7 +830,7 @@ class html:
 
             self.add_custom_style_sheet()
 
-            for js in [ "checkmk", "graphs" ] + javascripts:
+            for js in self._default_javascripts + javascripts:
                 filename_for_browser = self.javascript_filename_for_browser(js)
                 if filename_for_browser:
                     self.javascript_file(filename_for_browser)
@@ -914,7 +921,8 @@ class html:
                          onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
 
         self.write("%s</td></tr></table>" %
-                   _("<a href=\"http://mathias-kettner.de\"><img src=\"images/logo_mk_small.png\"/></a>"))
+                   _("<a class=head_logo href=\"http://mathias-kettner.de\">"
+                     "<img src=\"images/logo_cmk_small.png\"/></a>"))
         self.write("<hr class=header>\n")
         if self.enable_debug:
             self.dump_get_vars()

@@ -60,7 +60,7 @@ def check_casa_cpu_temp(item, params, parsed):
             warn, crit = None, None
             if params:
                 warn, crit = params
-                levels_text = "(warn/crit at %d/%d°C)" % params
+                levels_text = u"(warn/crit at %d/%d°C)" % params
                 if value > crit:
                     state = 2
                     error_text = "(!!)"
@@ -68,11 +68,10 @@ def check_casa_cpu_temp(item, params, parsed):
                     state = 1
                     error_text = "(!)"
             perfdata.append( ("temp", value, warn, crit, 0, 100) )
-            infotext = "Temperature is %.1f °C %s%s" % (value, error_text, levels_text)
+            infotext = u"Temperature is %.1f °C %s%s" % (value, error_text, levels_text)
+            return (state, infotext, perfdata)
         else:
             return (2, "Sensor failure!", [])
-    else:
-        return (3, "%s not found in snmp output" % item, perfdata)
 
 
 check_info["casa_cpu_temp"] = {

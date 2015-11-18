@@ -44,28 +44,29 @@ inline void throw_system_error(int err)
 }
 
 
+inline void check_status(int status)
+{
+    if (status != 0) throw_system_error(status);
+}
+
+
 class mutex {
 public:
     typedef pthread_mutex_t *native_handle_type;
-    mutex() { pthread_mutex_init(native_handle(), 0); }
-    ~mutex() { check(pthread_mutex_destroy(native_handle())); }
-    void lock() { check(pthread_mutex_lock(native_handle())); }
+    mutex() { check_status(pthread_mutex_init(native_handle(), 0)); }
+    ~mutex() { check_status(pthread_mutex_destroy(native_handle())); }
+    void lock() { check_status(pthread_mutex_lock(native_handle())); }
     bool try_lock()
     {
         int status = pthread_mutex_trylock(native_handle());
-        if (status != EBUSY) check(status);
+        if (status != EBUSY) check_status(status);
         return status == 0;
     }
-    void unlock() { check(pthread_mutex_unlock(native_handle())); }
+    void unlock() { check_status(pthread_mutex_unlock(native_handle())); }
     native_handle_type native_handle() { return &_mutex; }
 private:
     mutex(const mutex &);            // = delete
     mutex &operator=(const mutex &); // = delete
-
-    static void check(int status)
-    {
-        if (status != 0) throw_system_error(status);
-    }
 
     pthread_mutex_t _mutex;
 };
@@ -77,29 +78,24 @@ public:
     recursive_mutex()
     {
         pthread_mutexattr_t attr;
-        pthread_mutexattr_init(&attr);
-        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-        pthread_mutex_init(native_handle(), &attr);
-        pthread_mutexattr_destroy(&attr);
+        check_status(pthread_mutexattr_init(&attr));
+        check_status(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE));
+        check_status(pthread_mutex_init(native_handle(), &attr));
+        check_status(pthread_mutexattr_destroy(&attr));
     }
-    ~recursive_mutex() { check(pthread_mutex_destroy(native_handle())); }
-    void lock() { check(pthread_mutex_lock(native_handle())); }
+    ~recursive_mutex() { check_status(pthread_mutex_destroy(native_handle())); }
+    void lock() { check_status(pthread_mutex_lock(native_handle())); }
     bool try_lock()
     {
         int status = pthread_mutex_trylock(native_handle());
-        if (status != EBUSY) check(status);
+        if (status != EBUSY) check_status(status);
         return status == 0;
     }
-    void unlock() { check(pthread_mutex_unlock(native_handle())); }
+    void unlock() { check_status(pthread_mutex_unlock(native_handle())); }
     native_handle_type native_handle() { return &_mutex; }
 private:
     recursive_mutex(const recursive_mutex &);            // = delete;
     recursive_mutex &operator=(const recursive_mutex &); // = delete;
-
-    static void check(int status)
-    {
-        if (status != 0) throw_system_error(status);
-    }
 
     pthread_mutex_t _mutex;
 };
@@ -162,12 +158,12 @@ public:
     }
 
     // template<typename Clock, typename Duration>
-    // unique_lock(mutex_type& m, const chrono::time_point<Clock, Duration>&
-    // atime)
+    // unique_lock(mutex_type& m,
+    //             const chrono::time_point<Clock, Duration>& atime);
 
     // template<typename Rep, typename Period>
-    // unique_lock(mutex_type& m, const chrono::duration<_Rep, _Period>&
-    // __rtime)
+    // unique_lock(mutex_type& m,
+    //             const chrono::duration<Rep, Period>& rtime);
 
     ~unique_lock()
     {

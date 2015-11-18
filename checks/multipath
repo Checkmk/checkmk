@@ -281,9 +281,6 @@ def inventory_multipath(parsed):
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
 def check_multipath(item, target_numpaths, parsed):
-    if target_numpaths == None:
-        target_numpaths = 2 # default case: we need two paths
-
     # Keys in parsed are the UUIDs. First assume that we are
     # looking for a UUID. Then fall back to aliases
     if item in parsed:
@@ -313,14 +310,19 @@ def check_multipath(item, target_numpaths, parsed):
     if numbroken > 0:
         return (2, "%sbroken paths: %s" % (aliasinfo, ",".join(broken)))
 
+    if target_numpaths == None:
+        target_numpaths = 2 # default case: we need two paths
+    elif type(target_numpaths) == float:
+        target_numpaths = (target_numpaths / 100) * numpaths
+
     info = "%spaths expected: %d, paths active: %d" % (aliasinfo, target_numpaths, numpaths)
 
     if numpaths < target_numpaths:
-        return (2, info)
+        return 2, info
     elif numpaths > target_numpaths:
-        return (1, info)
+        return 1, info
     else:
-        return (0, info)
+        return 0, info
 
 check_info["multipath"] = {
     'check_function':          check_multipath,

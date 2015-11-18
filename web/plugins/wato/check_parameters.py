@@ -6458,10 +6458,17 @@ register_check_parameters(
      subgroup_storage,
     "multipath",
     _("Linux and Solaris Multipath Count"),
-    Integer(
+    Alternative(
         help = _("This rules sets the expected number of active paths for a multipath LUN "
                  "on Linux and Solaris hosts"),
-        title = _("Expected number of active paths")),
+        title = _("Expected number of active paths"),
+        elements = [
+            Integer(
+                title = _("Expected number of active paths")),
+            Percentage(
+                title = _("Expected percentage of active paths")),
+        ]
+    ),
     TextAscii(
         title = _("Name of the MP LUN"),
         help = _("For Linux multipathing this is either the UUID (e.g. "

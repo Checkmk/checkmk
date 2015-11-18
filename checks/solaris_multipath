@@ -52,7 +52,10 @@ def check_solaris_multipath(item, params, info):
                 state = 1
                 infotext += ", expected paths unknown, please redo service discovery"
             else:
-                expected = int(params) # should be int, just for legacy reasons
+                if type(params) == float:
+                    expected = (params / 100) * total
+                else:
+                    expected = int(params) # should be int, just for legacy reasons
                 if operational > expected:
                     state = 1
                 elif expected == operational:

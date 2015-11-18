@@ -2292,11 +2292,14 @@ bool banned_exec_name(char *name)
     if (strlen(name) < 5)
         return false;
 
-    char *extension = name + strlen(name) - 4;
+    const char *extension = strrchr(name, '.');
+    if (extension == NULL) {
+        // ban files without extension
+        return true;
+    }
+
     if (g_config->executeSuffixes().size()) {
-        if (extension[0] != '.')
-            return true;
-        extension ++;
+        ++extension;
         for (execute_suffixes_t::const_iterator it_ex = g_config->executeSuffixes().begin();
                 it_ex != g_config->executeSuffixes().end(); ++it_ex)
             if (!strcasecmp(extension, it_ex->c_str()))

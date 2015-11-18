@@ -7133,7 +7133,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7148,7 +7149,8 @@ register_check_parameters(
             Integer(title = _("critical at"), unit = u"°C", default_value = 40),
         ]),
     None,
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7232,7 +7234,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7247,7 +7250,8 @@ register_check_parameters(
             Integer(title = _("critical at"), unit = u"°C", default_value = 40),
         ]),
     None,
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7263,7 +7267,8 @@ register_check_parameters(
     TextAscii(
         title = _("Hard disk device"),
         help = _("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7555,7 +7560,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identificator of the thermal sensor.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7602,7 +7608,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
-    "dict"
+    "dict",
+    deprecated=True,
 )
 ntp_params = \
     Tuple(

@@ -14792,7 +14792,9 @@ def mode_ruleeditor(phase):
             html.context_button(only_host,
                 make_link([("mode", "edithost"), ("host", only_host)]), "host")
 
-        html.context_button(_("Ineffective rules"), make_link([("mode", "ineffective_rules")]), "usedrulesets")
+        html.context_button(_("Ineffective rules"), make_link([("mode", "ineffective_rules")]), "rulesets_ineffective")
+        html.context_button(_("Deprecated Rulesets"),
+                 make_link([("mode", "rulesets"), ("group", "deprecated")]), "rulesets_deprecated")
         return
 
     elif phase == "action":
@@ -14955,6 +14957,8 @@ def mode_rulesets(phase, group=None):
     if not group:
         group = html.var("group") # obligatory
 
+    show_deprecated = html.var("deprecated") == "1"
+
     search = html.var_utf8("search")
     if search != None:
         search = search.strip().lower()
@@ -14967,6 +14971,13 @@ def mode_rulesets(phase, group=None):
         title = _("Manual Checks")
         help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
         only_used = False
+    elif group == "deprecated":
+        title = _("Deprecated Rulesets")
+        help = _("Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
+                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
+                 "refer to the release notes or context help of the rulesets for details.")
+        only_used = False
+        show_deprecated = True
     elif search != None:
         title = _("Rules matching") + ": " + html.attrencode(search)
         help = _("All rules that contain '%s' in their name") % html.attrencode(search)
@@ -14989,12 +15000,18 @@ def mode_rulesets(phase, group=None):
             home_button()
             if group != "static":
                 html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
+            else:
+                html.context_button(_("Deprecated Rulesets"),
+                    make_link([("mode", "rulesets"), ("group", "static"), ("host", only_host), ("deprecated", "1")]), "rulesets_deprecated")
             html.context_button(only_host,
                  make_link([("mode", "edithost"), ("host", only_host)]), "host")
         else:
             global_buttons()
             if group != "static":
                 html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
+            else:
+                html.context_button(_("Deprecated Rulesets"),
+                    make_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), make_link([("mode", "folder")]), "folder")
         return
@@ -15027,7 +15044,10 @@ def mode_rulesets(phase, group=None):
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used or search != None or gn == group or (group and gn.startswith(group + "/")) ]
+                   if only_used \
+                       or group == "deprecated" \
+                       or search != None \
+                       or gn == group or (group and gn.startswith(group + "/")) ]
 
     # In case of search we need to sort the groups since main chapters would
     # appear more than once otherwise.
@@ -15066,6 +15086,8 @@ def mode_rulesets(phase, group=None):
             if group != 'static' and groupname.startswith("static/"):
                 continue
             elif group == 'static' and not groupname.startswith("static/"):
+                continue
+            elif show_deprecated != rulespec["deprecated"]:
                 continue
 
             # Handle case where a host is specified
@@ -16335,7 +16357,8 @@ FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is enter
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
-                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT):
+                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT,
+                  deprecated = False):
     if not itemname and itemtype == "service":
         itemname = _("Service")
 
@@ -16353,6 +16376,7 @@ def register_rule(group, varname, valuespec = None, title = None,
         "help"            : help or valuespec.help(),
         "optional"        : optional, # rule may be None (like only_hosts)
         "factory_default" : factory_default,
+        "deprecated"      : deprecated,
     }
 
     # Register group
@@ -16376,7 +16400,8 @@ def register_rule(group, varname, valuespec = None, title = None,
 # modular here, but we cannot put this function into the plugins file because
 # the order is not defined there.
 def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
-                               match_type, has_inventory=True, register_static_check=True):
+                               match_type, has_inventory=True, register_static_check=True,
+                               deprecated=False):
 
     if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
         raise MKGeneralException("Check parameter definition for %s has type Dictionary, but match_type %s" %
@@ -16406,7 +16431,8 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
             itemname = itemname,
             itemhelp = itemhelp,
             itemenum = itemenum,
-            match = match_type)
+            match = match_type,
+            deprecated = deprecated)
 
     if register_static_check:
         # Register rule for static checks
@@ -16442,7 +16468,8 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
                 elements = elements,
             ),
             itemspec = itemspec,
-            match = "all")
+            match = "all",
+            deprecated = deprecated)
 
 # Registers notification parameters for a certain notification script,
 # e.g. "mail" or "sms". This will create:

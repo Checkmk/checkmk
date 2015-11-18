@@ -547,6 +547,8 @@ def parse_cmciii_temp(val):
 
 
 def check_cmciii_temp(item, params, unit_items):
+    if params == None:
+        params = {} # compatibility to "old discovered" services
     entries, units = unit_items
     entry = None
     unit_name = None

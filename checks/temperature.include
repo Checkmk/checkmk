@@ -26,12 +26,18 @@
 
 
 def fahrenheit_to_celsius(tempf, relative=False):
+    if tempf is None:
+        return None
+
     if relative:
         return float(tempf) * (5.0 / 9.0)
     else:
         return (float(tempf) - 32) * (5.0 / 9.0)
 
 def celsius_to_fahrenheit(tempc, relative=False):
+    if tempc is None:
+        return None
+
     if relative:
         return float(tempc) * (9.0 / 5.0)
     else:
@@ -56,6 +62,8 @@ def to_celsius(reading, unit, relative=False):
     elif unit == "k":
         if relative:
             return reading
+        elif reading is None:
+            return None
         else:
             return reading - 273.15
     else:
@@ -80,40 +88,12 @@ temp_unitsym = {
 }
 
 
-def check_temperature_determine_levels(params, dev_levels, dev_levels_lower, dev_unit):
+def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, usr_crit_lower,
+                                       dev_warn, dev_crit, dev_warn_lower, dev_crit_lower,
+                                       dev_unit):
     # min that deals correctly with None
     def minn(a, b):
         return min(a, b) or a or b
-
-    # Prepare levels, dealing with user defined and device's own levels
-    usr_levels = params.get("levels")
-    usr_levels_lower = params.get("levels_lower")
-
-    # Set all user levels to None. None means do not impose a level
-    usr_warn       = None
-    usr_crit       = None
-    usr_warn_lower = None
-    usr_crit_lower = None
-
-    if usr_levels:
-        usr_warn, usr_crit = usr_levels
-    if usr_levels_lower:
-        usr_warn_lower, usr_crit_lower = usr_levels_lower
-
-    # Same for device levels
-    dev_warn       = None
-    dev_crit       = None
-    dev_warn_lower = None
-    dev_crit_lower = None
-
-    if dev_levels:
-        dev_warn, dev_crit = to_celsius(dev_levels, dev_unit)
-    if dev_levels_lower:
-        dev_warn_lower, dev_crit_lower = to_celsius(dev_levels_lower, dev_unit)
-
-    # Decide which of user's and device's levels should be used according to the setting
-    # "device_levels_handling". Result is four variables: {warn,crit}{,_lower}
-    dlh = params.get("device_levels_handling", "usrdefault")
 
     # Ignore device's own levels
     if dlh == "usr":
@@ -140,24 +120,24 @@ def check_temperature_determine_levels(params, dev_levels, dev_levels_lower, dev
 
     # Use user's levels if present, otherwise the device's
     elif dlh == "usrdefault":
-        if usr_levels:
-            warn, crit = usr_levels
+        if usr_warn and usr_crit:
+            warn, crit = usr_warn, usr_crit
         else:
             warn, crit = dev_warn, dev_crit
-        if usr_levels_lower:
-            warn_lower, crit_lower = usr_levels_lower
+        if usr_warn_lower and usr_crit_lower:
+            warn_lower, crit_lower = usr_warn_lower, usr_crit_lower
         else:
             warn_lower, crit_lower = dev_warn_lower, dev_crit_lower
 
     # Use device's levels if present, otherwise yours
     elif dlh == "devdefault":
-        if dev_levels:
-            warn, crit = dev_levels
+        if dev_warn and dev_crit:
+            warn, crit = dev_warn, dev_crit
         else:
             warn, crit = usr_warn, usr_crit
 
-        if dev_levels_lower:
-            warn_lower, crit_lower = dev_levels_lower
+        if dev_warn_lower and dev_crit_lower:
+            warn_lower, crit_lower = dev_warn_lower, dev_crit_lower
         else:
             warn_lower, crit_lower = usr_warn_lower, usr_crit_lower
 
@@ -293,10 +273,28 @@ def check_temperature(reading, params, unique_name, dev_unit = "c",
     output_unit = params.get("output_unit", "c")
     temp = to_celsius(reading, input_unit)
 
-    warn, crit, warn_lower, crit_lower =\
-        check_temperature_determine_levels(params, dev_levels, dev_levels_lower, dev_unit)
+    # Prepare levels, dealing with user defined and device's own levels
+    usr_levels = params.get("levels")
+    usr_levels_lower = params.get("levels_lower")
 
+    # Set all user levels to None. None means do not impose a level
+    usr_warn, usr_crit             = usr_levels or (None, None)
+    usr_warn_lower, usr_crit_lower = usr_levels_lower or (None, None)
+
+    # Same for device levels
+    dev_warn, dev_crit             = to_celsius(dev_levels or (None, None), dev_unit)
+    dev_warn_lower, dev_crit_lower = to_celsius(dev_levels_lower or (None, None), dev_unit)
+
+    # Decide which of user's and device's levels should be used according to the setting
+    # "device_levels_handling". Result is four variables: {warn,crit}{,_lower}
     dlh = params.get("device_levels_handling", "usrdefault")
+
+    warn, crit, warn_lower, crit_lower =\
+        check_temperature_determine_levels(dlh, usr_warn, usr_crit,
+                                           usr_warn_lower, usr_warn_lower,
+                                           dev_warn, dev_crit,
+                                           dev_warn_lower, dev_crit_lower, dev_unit)
+
     if dlh == "usr" or (dlh == "userdefault" and usr_levels):
         # ignore device status if user-levels are used
         dev_status = None

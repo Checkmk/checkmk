@@ -1,0 +1,12 @@
+Title: Service parameter overview: Fixed problem displaying incorrect rule for classical checks
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1447684168
+
+The parameter overview did display incorrect links for the <i>"Command Line"</i> information,
+which is shown for classical checks. The command line call at the end of the table, however, was correct...
+This been fixed.

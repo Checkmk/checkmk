@@ -875,7 +875,8 @@ def mode_folder(phase):
         if config.may("wato.services"):
             html.context_button(_("Bulk Discovery"), make_link([("mode", "bulkinventory"), ("all", "1")]),
                         "inventory")
-        html.context_button(_("Bulk Renaming"), make_link([("mode", "bulk_rename_host")]), "rename_host")
+        if config.may("wato.rename_hosts"):
+            html.context_button(_("Bulk Renaming"), make_link([("mode", "bulk_rename_host")]), "rename_host")
         if not g_folder.get(".lock_hosts") and config.may("wato.parentscan") and auth_write:
             html.context_button(_("Parent scan"), make_link([("mode", "parentscan"), ("all", "1")]),
                         "parentscan")
@@ -2063,7 +2064,7 @@ def mode_edithost(phase, new, cluster):
             if config.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
                   make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
-            if not g_folder.get(".lock_hosts"):
+            if config.may("wato.rename_hosts") and not g_folder.get(".lock_hosts"):
                 html.context_button(_("Rename %s") % (cluster and _("Cluster") or _("Host")),
                   make_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
             if not cluster:
@@ -2280,6 +2281,10 @@ def check_edit_host_permissions(folder, host, hostname):
 #   '----------------------------------------------------------------------'
 
 def mode_bulk_rename_host(phase):
+
+    if not config.may("wato.rename_hosts"):
+        raise MKGeneralException(_("You don't have the right to rename hosts"))
+
     if phase == "title":
         return _("Bulk renaming of hosts")
 
@@ -2512,6 +2517,9 @@ def mode_rename_host(phase):
 
     if hostname not in g_folder[".hosts"]:
         raise MKGeneralException(_("You called this page with an invalid host name."))
+
+    if not config.may("wato.rename_hosts"):
+        raise MKGeneralException(_("You don't have the right to rename hosts"))
 
     check_host_permissions(hostname)
 
@@ -3054,16 +3062,20 @@ def mode_object_parameters(phase):
                 output_analysed_ruleset(all_rulesets, rulespec, hostname, None, serviceinfo["parameters"])
 
             elif origin == "classic":
-                rule = all_rulesets["custom_checks"][serviceinfo["rule_nr"]]
+                rule_nr  = serviceinfo["rule_nr"]
+                rule     = all_rulesets["custom_checks"][rule_nr]
+
                 # Find relative rule number in folder
                 old_folder = None
-                rel_nr = -1
-                for r in all_rulesets["custom_checks"]:
+                rel_nr     = -1
+                for nr, r in enumerate(all_rulesets["custom_checks"]):
                     if old_folder != r[0]:
+                        old_folder = r[0]
                         rel_nr = -1
                     rel_nr += 1
-                    if r is rule:
+                    if nr == rule_nr:
                         break
+
                 url = make_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', hostname)])
                 forms.section('<a href="%s">%s</a>' % (url, _("Command Line")))
                 url = make_link([
@@ -14780,7 +14792,9 @@ def mode_ruleeditor(phase):
             html.context_button(only_host,
                 make_link([("mode", "edithost"), ("host", only_host)]), "host")
 
-        html.context_button(_("Ineffective rules"), make_link([("mode", "ineffective_rules")]), "usedrulesets")
+        html.context_button(_("Ineffective rules"), make_link([("mode", "ineffective_rules")]), "rulesets_ineffective")
+        html.context_button(_("Deprecated Rulesets"),
+                 make_link([("mode", "rulesets"), ("group", "deprecated")]), "rulesets_deprecated")
         return
 
     elif phase == "action":
@@ -14943,6 +14957,8 @@ def mode_rulesets(phase, group=None):
     if not group:
         group = html.var("group") # obligatory
 
+    show_deprecated = html.var("deprecated") == "1"
+
     search = html.var_utf8("search")
     if search != None:
         search = search.strip().lower()
@@ -14955,6 +14971,13 @@ def mode_rulesets(phase, group=None):
         title = _("Manual Checks")
         help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
         only_used = False
+    elif group == "deprecated":
+        title = _("Deprecated Rulesets")
+        help = _("Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
+                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
+                 "refer to the release notes or context help of the rulesets for details.")
+        only_used = False
+        show_deprecated = True
     elif search != None:
         title = _("Rules matching") + ": " + html.attrencode(search)
         help = _("All rules that contain '%s' in their name") % html.attrencode(search)
@@ -14977,12 +15000,18 @@ def mode_rulesets(phase, group=None):
             home_button()
             if group != "static":
                 html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
+            else:
+                html.context_button(_("Deprecated Rulesets"),
+                    make_link([("mode", "rulesets"), ("group", "static"), ("host", only_host), ("deprecated", "1")]), "rulesets_deprecated")
             html.context_button(only_host,
                  make_link([("mode", "edithost"), ("host", only_host)]), "host")
         else:
             global_buttons()
             if group != "static":
                 html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
+            else:
+                html.context_button(_("Deprecated Rulesets"),
+                    make_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), make_link([("mode", "folder")]), "folder")
         return
@@ -15015,7 +15044,10 @@ def mode_rulesets(phase, group=None):
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used or search != None or gn == group or (group and gn.startswith(group + "/")) ]
+                   if only_used \
+                       or group == "deprecated" \
+                       or search != None \
+                       or gn == group or (group and gn.startswith(group + "/")) ]
 
     # In case of search we need to sort the groups since main chapters would
     # appear more than once otherwise.
@@ -15054,6 +15086,8 @@ def mode_rulesets(phase, group=None):
             if group != 'static' and groupname.startswith("static/"):
                 continue
             elif group == 'static' and not groupname.startswith("static/"):
+                continue
+            elif show_deprecated != rulespec["deprecated"]:
                 continue
 
             # Handle case where a host is specified
@@ -16323,7 +16357,8 @@ FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is enter
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
-                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT):
+                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT,
+                  deprecated = False):
     if not itemname and itemtype == "service":
         itemname = _("Service")
 
@@ -16341,6 +16376,7 @@ def register_rule(group, varname, valuespec = None, title = None,
         "help"            : help or valuespec.help(),
         "optional"        : optional, # rule may be None (like only_hosts)
         "factory_default" : factory_default,
+        "deprecated"      : deprecated,
     }
 
     # Register group
@@ -16364,7 +16400,8 @@ def register_rule(group, varname, valuespec = None, title = None,
 # modular here, but we cannot put this function into the plugins file because
 # the order is not defined there.
 def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
-                               match_type, has_inventory=True, register_static_check=True):
+                               match_type, has_inventory=True, register_static_check=True,
+                               deprecated=False):
 
     if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
         raise MKGeneralException("Check parameter definition for %s has type Dictionary, but match_type %s" %
@@ -16394,7 +16431,8 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
             itemname = itemname,
             itemhelp = itemhelp,
             itemenum = itemenum,
-            match = match_type)
+            match = match_type,
+            deprecated = deprecated)
 
     if register_static_check:
         # Register rule for static checks
@@ -16430,7 +16468,8 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
                 elements = elements,
             ),
             itemspec = itemspec,
-            match = "all")
+            match = "all",
+            deprecated = deprecated)
 
 # Registers notification parameters for a certain notification script,
 # e.g. "mail" or "sms". This will create:
@@ -20501,6 +20540,12 @@ def load_plugins():
          _("Move existing hosts to other folders. Please also add the permission "
            "<i>Modify existing hosts</i>."),
          [ "admin", "user" ])
+
+    config.declare_permission("wato.rename_hosts",
+         _("Rename existing hosts"),
+         _("Rename existing hosts. Please also add the permission "
+           "<i>Modify existing hosts</i>."),
+         [ "admin" ])
 
     config.declare_permission("wato.manage_hosts",
          _("Add & remove hosts"),

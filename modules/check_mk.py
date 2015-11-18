@@ -380,20 +380,25 @@ def load_checks():
 
     # Now convert check_info to new format.
     convert_check_info()
-    verify_checkgroups()
+    verify_checkgroup_members()
 
 
-# This function validates the checks which are members of checkgroups to have either
-# all or none an item. Mixed checkgroups lead to strange exceptions when processing
-# the check parameters. So it is much better to catch these errors in a central place
-# with a clear error message.
-def verify_checkgroups():
+def checks_by_checkgroup():
     groups = {}
     for check_type, check in check_info.items():
         group_name = check["group"]
         if group_name:
             groups.setdefault(group_name, [])
             groups[group_name].append((check_type, check))
+    return groups
+
+
+# This function validates the checks which are members of checkgroups to have either
+# all or none an item. Mixed checkgroups lead to strange exceptions when processing
+# the check parameters. So it is much better to catch these errors in a central place
+# with a clear error message.
+def verify_checkgroup_members():
+    groups = checks_by_checkgroup()
 
     for group_name, checks in groups.items():
         with_item, without_item = [], []
@@ -1370,129 +1375,6 @@ def restore_original_agent_caching_usage():
         inventory_max_cachefile_age = orig_inventory_max_cachefile_age
 
 
-def get_basic_host_macros_from_attributes(hostname, attrs):
-    macros = {
-        "$HOSTNAME$"    : hostname,
-        "$HOSTADDRESS$" : attrs['address'],
-        "$HOSTALIAS$"   : attrs['alias'],
-    }
-
-    # Add custom macros
-    for macro_name, value in attrs.items():
-        if macro_name[0] == '_':
-            macros["$HOST" + macro_name + "$"] = value
-            # Be compatible to nagios making $_HOST<VARNAME>$ out of the config _<VARNAME> configs
-            macros["$_HOST" + macro_name[1:] + "$"] = value
-
-    return macros
-
-
-def get_host_attributes(hostname):
-    attrs = extra_host_attributes(hostname)
-
-    if "alias" not in attrs:
-        attrs["alias"] = alias_of(hostname, hostname)
-
-    # Now lookup configured IP addresses
-    if is_ipv4_host(hostname):
-        attrs["_ADDRESS_4"] = ip_address_of(hostname, 4)
-    else:
-        attrs["_ADDRESS_4"] = ""
-
-    if is_ipv6_host(hostname):
-        attrs["_ADDRESS_6"] = ip_address_of(hostname, 6)
-    else:
-        attrs["_ADDRESS_6"] = ""
-
-    ipv6_primary = is_ipv6_primary(hostname)
-    if ipv6_primary:
-        attrs["address"]        = attrs["_ADDRESS_6"]
-        attrs["_ADDRESS_FAMILY"] = "6"
-    else:
-        attrs["address"]        = attrs["_ADDRESS_4"]
-        attrs["_ADDRESS_FAMILY"] = "4"
-
-    return attrs
-
-
-def get_cluster_attributes(hostname, nodes):
-    attrs = {}
-    node_ips_4 = []
-    if is_ipv4_host(hostname):
-        node_ips_4 = [ ip_address_of(h, 4) for h in nodes ]
-
-    node_ips_6 = []
-    if is_ipv6_host(hostname):
-        node_ips_6 = [ ip_address_of(h, 6) for h in nodes ]
-
-    if is_ipv6_primary(hostname):
-        node_ips = node_ips_6
-    else:
-        node_ips = node_ips_4
-
-    for suffix, val in [ ("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6) ]:
-        attrs["_NODEIPS%s" % suffix] = " ".join(val)
-
-    return attrs
-
-
-def verify_cluster_address_family(hostname):
-    cluster_host_family = is_ipv6_primary(hostname) and "IPv6" or "IPv4"
-
-    address_families = [
-        "%s: %s" % (hostname, cluster_host_family),
-    ]
-
-    address_family = cluster_host_family
-    mixed = False
-    for nodename in nodes_of(hostname):
-        family = is_ipv6_primary(nodename) and "IPv6" or "IPv4"
-        address_families.append("%s: %s" % (nodename, family))
-        if address_family == None:
-            address_family = family
-        elif address_family != family:
-            mixed = True
-
-    if mixed:
-        raise MKGeneralException("Cluster '%s' has different primary address families: %s" %
-                                                         (hostname, ", ".join(address_families)))
-
-def ip_address_of(hostname, family=None):
-    try:
-        return lookup_ip_address(hostname, family)
-    except Exception, e:
-        if is_cluster(hostname):
-            return ""
-        else:
-            failed_ip_lookups.append(hostname)
-            addr = fallback_ip_for(hostname, family)
-            if not ignore_ip_lookup_failures:
-                configuration_warning("Cannot lookup IP address of '%s': %s, using "
-                                      "address %s instead" % (hostname, e, addr))
-            return addr
-
-
-def fallback_ip_for(hostname, family=None):
-    if family == None:
-        family = is_ipv6_primary(hostname) and 6 or 4
-
-    if family == 4:
-        return "0.0.0.0"
-    else:
-        return "::"
-
-
-def extra_host_attributes(hostname):
-    attrs = {}
-    for key, conflist in extra_host_conf.items():
-        values = host_extra_conf(hostname, conflist)
-        if values:
-            if key[0] == "_":
-                key = key.upper()
-            attrs[key] = values[0]
-    return attrs
-
-
 #.
 #   .--SNMP----------------------------------------------------------------.
 #   |                      ____  _   _ __  __ ____                         |
@@ -2070,7 +1952,7 @@ def get_datasource_program(hostname, ipaddress):
 
 # Variables needed during the renaming of hosts (see automation.py)
 ignore_ip_lookup_failures = False
-failed_ip_lookups = []
+g_failed_ip_lookups = []
 g_dns_cache = {}
 g_global_caches.append('g_dns_cache')
 
@@ -2248,6 +2130,9 @@ def service_description(check_type, item):
            descr_format = old_service_descriptions[check_type]
         else:
             descr_format = check_info[check_type]["service_description"]
+
+    if type(descr_format) == str:
+        descr_format = descr_format.decode("utf-8")
 
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a description, but the item
@@ -3142,6 +3027,207 @@ def do_flush(hosts):
 
         sys.stdout.write(tty_normal + "\n")
 
+
+#.
+#   .--Core Config---------------------------------------------------------.
+#   |          ____                  ____             __ _                 |
+#   |         / ___|___  _ __ ___   / ___|___  _ __  / _(_) __ _           |
+#   |        | |   / _ \| '__/ _ \ | |   / _ \| '_ \| |_| |/ _` |          |
+#   |        | |__| (_) | | |  __/ | |__| (_) | | | |  _| | (_| |          |
+#   |         \____\___/|_|  \___|  \____\___/|_| |_|_| |_|\__, |          |
+#   |                                                      |___/           |
+#   +----------------------------------------------------------------------+
+#   | Code for managing the core configuration creation.                   |
+#   '----------------------------------------------------------------------'
+
+g_configuration_warnings = []
+
+def configuration_warning(text):
+    g_configuration_warnings.append(text)
+    sys.stdout.write("\n%sWARNING:%s %s\n" % (tty_bold + tty_yellow, tty_normal, text))
+
+
+def create_core_config(use_rushd):
+    global g_configuration_warnings
+    g_configuration_warnings = []
+
+    verify_non_duplicate_hosts()
+    verify_non_deprecated_checkgroups()
+
+    if monitoring_core == "cmc":
+        warnings = do_create_cmc_config(opt_cmc_relfilename, use_rushd=use_rushd)
+    else:
+        load_module("nagios")
+        out = file(nagios_objects_file, "w")
+        warnings = create_nagios_config(out)
+
+    num_warnings = len(g_configuration_warnings)
+    if num_warnings > 10:
+        g_configuration_warnings = g_configuration_warnings[:10] + \
+                                  [ "%d further warnings have been omitted" % (num_warnings - 10) ]
+
+    return g_configuration_warnings
+
+
+# Verify that the user has no deprecated check groups configured.
+def verify_non_deprecated_checkgroups():
+    groups = checks_by_checkgroup()
+
+    for checkgroup, rules in checkgroup_parameters.items():
+        if checkgroup not in groups:
+            configuration_warning(
+                "Found configured rules of deprecated check group \"%s\". These rules are not used "
+                "by any check. Maybe this check group has been renamed during an update, "
+                "in this case you will have to migrate your configuration to the new ruleset manually. "
+                "Please check out the release notes of the involved versions. "
+                "You may use the page \"Deprecated rules\" in WATO to view your rules and move them to "
+                "the new rulesets." % checkgroup)
+
+
+def verify_non_duplicate_hosts():
+    duplicates = duplicate_hosts()
+    if duplicates:
+        configuration_warning(
+              "The following host names have duplicates: %s. "
+              "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
+
+
+def verify_cluster_address_family(hostname):
+    cluster_host_family = is_ipv6_primary(hostname) and "IPv6" or "IPv4"
+
+    address_families = [
+        "%s: %s" % (hostname, cluster_host_family),
+    ]
+
+    address_family = cluster_host_family
+    mixed = False
+    for nodename in nodes_of(hostname):
+        family = is_ipv6_primary(nodename) and "IPv6" or "IPv4"
+        address_families.append("%s: %s" % (nodename, family))
+        if address_family == None:
+            address_family = family
+        elif address_family != family:
+            mixed = True
+
+    if mixed:
+        configuration_warning("Cluster '%s' has different primary address families: %s" %
+                                                         (hostname, ", ".join(address_families)))
+
+
+def get_cluster_nodes_for_config(hostname):
+    verify_cluster_address_family(hostname)
+
+    nodes = nodes_of(hostname)[:]
+    for node in nodes:
+        if node not in all_active_realhosts():
+            configuration_warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
+                                                                                      (node, hostname))
+            nodes.remove(node)
+    return nodes
+
+
+def get_basic_host_macros_from_attributes(hostname, attrs):
+    macros = {
+        "$HOSTNAME$"    : hostname,
+        "$HOSTADDRESS$" : attrs['address'],
+        "$HOSTALIAS$"   : attrs['alias'],
+    }
+
+    # Add custom macros
+    for macro_name, value in attrs.items():
+        if macro_name[0] == '_':
+            macros["$HOST" + macro_name + "$"] = value
+            # Be compatible to nagios making $_HOST<VARNAME>$ out of the config _<VARNAME> configs
+            macros["$_HOST" + macro_name[1:] + "$"] = value
+
+    return macros
+
+
+def get_host_attributes(hostname):
+    attrs = extra_host_attributes(hostname)
+
+    if "alias" not in attrs:
+        attrs["alias"] = alias_of(hostname, hostname)
+
+    # Now lookup configured IP addresses
+    if is_ipv4_host(hostname):
+        attrs["_ADDRESS_4"] = ip_address_of(hostname, 4)
+    else:
+        attrs["_ADDRESS_4"] = ""
+
+    if is_ipv6_host(hostname):
+        attrs["_ADDRESS_6"] = ip_address_of(hostname, 6)
+    else:
+        attrs["_ADDRESS_6"] = ""
+
+    ipv6_primary = is_ipv6_primary(hostname)
+    if ipv6_primary:
+        attrs["address"]        = attrs["_ADDRESS_6"]
+        attrs["_ADDRESS_FAMILY"] = "6"
+    else:
+        attrs["address"]        = attrs["_ADDRESS_4"]
+        attrs["_ADDRESS_FAMILY"] = "4"
+
+    return attrs
+
+
+def extra_host_attributes(hostname):
+    attrs = {}
+    for key, conflist in extra_host_conf.items():
+        values = host_extra_conf(hostname, conflist)
+        if values:
+            if key[0] == "_":
+                key = key.upper()
+            attrs[key] = values[0]
+    return attrs
+
+
+def get_cluster_attributes(hostname, nodes):
+    attrs = {}
+    node_ips_4 = []
+    if is_ipv4_host(hostname):
+        node_ips_4 = [ ip_address_of(h, 4) for h in nodes ]
+
+    node_ips_6 = []
+    if is_ipv6_host(hostname):
+        node_ips_6 = [ ip_address_of(h, 6) for h in nodes ]
+
+    if is_ipv6_primary(hostname):
+        node_ips = node_ips_6
+    else:
+        node_ips = node_ips_4
+
+    for suffix, val in [ ("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6) ]:
+        attrs["_NODEIPS%s" % suffix] = " ".join(val)
+
+    return attrs
+
+
+def ip_address_of(hostname, family=None):
+    try:
+        return lookup_ip_address(hostname, family)
+    except Exception, e:
+        if is_cluster(hostname):
+            return ""
+        else:
+            g_failed_ip_lookups.append(hostname)
+            addr = fallback_ip_for(hostname, family)
+            if not ignore_ip_lookup_failures:
+                configuration_warning("Cannot lookup IP address of '%s': %s, using "
+                                      "address %s instead" % (hostname, e, addr))
+            return addr
+
+
+def fallback_ip_for(hostname, family=None):
+    if family == None:
+        family = is_ipv6_primary(hostname) and 6 or 4
+
+    if family == 4:
+        return "0.0.0.0"
+    else:
+        return "::"
+
+
 #.
 #   .--Main Functions------------------------------------------------------.
 #   | __  __       _         _____                 _   _                   |
@@ -3790,12 +3876,7 @@ NOTES:
 def do_create_config(with_agents=True):
     sys.stdout.write("Generating configuration for core (type %s)..." % monitoring_core)
     sys.stdout.flush()
-    if monitoring_core == "cmc":
-        do_create_cmc_config(opt_cmc_relfilename, False) # do not use rushed ahead config
-    else:
-        load_module("nagios")
-        out = file(nagios_objects_file, "w")
-        create_nagios_config(out)
+    create_core_config(use_rushd=False)
     sys.stdout.write(tty_ok + "\n")
 
     if bake_agents_on_restart and with_agents and 'do_bake_agents' in globals():
@@ -3815,6 +3896,7 @@ def do_precompile_hostchecks():
     sys.stdout.flush()
     precompile_hostchecks()
     sys.stdout.write(tty_ok + "\n")
+
 
 def do_pack_config():
     sys.stdout.write("Packing config...")
@@ -4836,6 +4918,7 @@ def compute_check_parameters(host, checktype, item, params):
                     entry = copy.deepcopy(entry)
                 params = entry
     return params
+
 
 def get_checkgroup_parameters(host, checktype, item):
     checkgroup = check_info[checktype]["group"]

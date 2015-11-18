@@ -25,6 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 
+#   .--only_from-----------------------------------------------------------.
+#   |                       _            __                                |
+#   |            ___  _ __ | |_   _     / _|_ __ ___  _ __ ___             |
+#   |           / _ \| '_ \| | | | |   | |_| '__/ _ \| '_ ` _ \            |
+#   |          | (_) | | | | | |_| |   |  _| | | (_) | | | | | |           |
+#   |           \___/|_| |_|_|\__, |___|_| |_|  \___/|_| |_| |_|           |
+#   |                         |___/_____|                                  |
+#   '----------------------------------------------------------------------'
 
 # Target value for agent's IP access configuration. Only if this
 # is not None, the inventory will create services
@@ -96,4 +104,81 @@ check_info["check_mk.only_from"] = {
     'check_function':          check_only_from,
     'inventory_function':      inventory_only_from,
     'service_description':     'Check_MK Agent Access',
+}
+
+
+#.
+#   .--agent_update--------------------------------------------------------.
+#   |                           _                      _       _           |
+#   |     __ _  __ _  ___ _ __ | |_    _   _ _ __   __| | __ _| |_ ___     |
+#   |    / _` |/ _` |/ _ \ '_ \| __|  | | | | '_ \ / _` |/ _` | __/ _ \    |
+#   |   | (_| | (_| |  __/ | | | |_   | |_| | |_) | (_| | (_| | ||  __/    |
+#   |    \__,_|\__, |\___|_| |_|\__|___\__,_| .__/ \__,_|\__,_|\__\___|    |
+#   |          |___/              |_____|   |_|                            |
+#   '----------------------------------------------------------------------'
+
+# Example output from agent:
+# <<<check_mk>>>
+# AgentUpdate: last_check 1447777834.22 last_update 1447776761.52 aghash e33d0cebcf7404d9 error None
+
+
+def inventory_cmk_agent_update(info):
+    for line in info:
+        if line[0] == "AgentUpdate:":
+            return [ (None, {}) ]
+
+def check_cmk_agent_update(_no_item, _no_params, info):
+    def output_age(text):
+        if text == "None":
+            return "never"
+        else:
+            return "%s ago" % (get_age_human_readable(time.time() - float(text)))
+
+    for line in info:
+        if line[0] == "AgentUpdate:":
+            parsed = {}
+            parts = line[1:]
+            while parts:
+                key = parts[0]
+                if key == "error":
+                    value = " ".join(parts[1:])
+                    parts = []
+                else:
+                    value = parts[1]
+                    parts = parts[2:]
+                parsed[key] = value
+
+            now = time.time()
+
+            try:
+                last_check = float(parsed["last_check"])
+                age = now - last_check
+                warn, crit = (3600 * 24, 2 * 3600 * 24)
+                if age > crit:
+                    state = 2
+                elif age > warn:
+                    state = 1
+                else:
+                    state = 0
+                if state:
+                    levels_text = " (warn/crit at %s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
+                else:
+                    levels_text = ""
+                yield state, "last update check: " + output_age(parsed["last_check"]) + levels_text
+            except:
+                yield 1, "no successful connect to server yet"
+
+            yield 0, "last agent update: %s" % output_age(parsed["last_update"])
+            if parsed["aghash"] != "None":
+                yield 0, "agent configuration: %s" % parsed["aghash"]
+            if parsed["error"] != "None":
+                yield 2, "error: %s" % parsed["error"]
+            else:
+                yield 0, "no errors"
+
+
+check_info["check_mk.agent_update"] = {
+    'check_function'      : check_cmk_agent_update,
+    'inventory_function'  : inventory_cmk_agent_update,
+    'service_description' : 'Check_MK Agent'
 }

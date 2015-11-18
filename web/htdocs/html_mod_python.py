@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import Cookie, util, apache
-from lib import make_utf8
+from lib import make_utf8, MKGeneralException
 import htmllib
 import os, time, config, weblib, re
 import defaults
@@ -66,10 +66,20 @@ class html_mod_python(htmllib.html):
         self.set_output_format(self.var("output_format", "html"))
 
 
+    def verify_not_using_threaded_mpm(self):
+        if apache.mpm_query(apache.AP_MPMQ_IS_THREADED) != 0:
+            raise MKGeneralException(
+                _("You are trying to Check_MK together with a threaded Apache multiprocessing module (MPM). "
+                  "Check_MK is only working with the prefork module. Please change the MPM module to make "
+                  "Check_MK work."))
+
+
     # Initializes the operation mode of the html() object. This is called
     # after the ChecK_MK GUI configuration has been loaded, so it is safe
     # to rely on the config.
     def init_modes(self):
+        self.verify_not_using_threaded_mpm()
+
         self.init_screenshot_mode()
         self.init_debug_mode()
         self.set_buffering(config.buffered_http_stream)

@@ -187,12 +187,12 @@ def make_utf8(x):
 # because of loss of entropy. So we hope /dev/urandom is enough.
 # Furthermore we filter out non-printable characters. The byte
 # 0x00 for example does not make it through HTTP and the URL.
-def get_random_string(size):
+def get_random_string(size, from_ascii=48, to_ascii=90):
     secret = ""
     urandom = file("/dev/urandom")
     while len(secret) < size:
         c = urandom.read(1)
-        if ord(c) >= 48 and ord(c) <= 90:
+        if ord(c) >= from_ascii and ord(c) <= to_ascii:
             secret += c
     return secret
 
@@ -438,6 +438,8 @@ def num_split(s):
 
 def cmp_service_name_equiv(r):
     if r == "Check_MK":
+        return -6
+    elif r == "Check_MK Agent":
         return -5
     elif r == "Check_MK Discovery":
         return -4

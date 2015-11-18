@@ -1,0 +1,10 @@
+Title: apc_symetra_ext_temp: now supports temperatures measured in fahrenheit
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p5
+Date: 1447854523
+
+

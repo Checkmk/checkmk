@@ -696,7 +696,7 @@ def check_cmciii_can_current(item, params, parsed):
     unit = cmciii_get_unit_number(units, unit_name)
     entry = unit_items.get((unit, item_name))
     if not entry:
-        return 3, "No such temperature data found"
+        return
 
     descr = entry.get('DescName')
     status = entry.get('Status')
@@ -800,7 +800,7 @@ def check_cmciii_humidity(item, params, parsed):
     unit = cmciii_get_unit_number(units, unit_name)
     entry = unit_items.get((unit, item_name))
     if not entry:
-        return 3, "No such temperature data found"
+        return
 
     descr = entry.get('DescName')
     status = entry.get('Status')

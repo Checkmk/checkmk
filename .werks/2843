@@ -1,0 +1,17 @@
+Title: Hanging notification scripts could prevent all other notifications
+Level: 2
+Component: notifications
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447938942
+Class: fix
+
+Notification scripts are assumed to finish within short time like a couple
+of seconds. If a notification script takes longer or is hanging for ever,
+it prevent Check_MK from sending out other notifications. So one hanging
+notification could prevent all others.
+
+This has been fixed by introducing a global notification plugin timeout.
+All notification plugins which take more than 60 seconds will be killed
+so that other notifications can be done again. If you need a different
+timeout, you can configure it using the global setting "Notification plugin timeout".

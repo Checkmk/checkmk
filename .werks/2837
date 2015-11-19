@@ -1,0 +1,9 @@
+Title: hitachi_hnas_temp: fixed ascii decode error, handles degree celsius now correct
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p5
+Date: 1447923593
+Class: fix
+
+

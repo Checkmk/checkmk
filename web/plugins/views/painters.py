@@ -333,21 +333,21 @@ def iconpainter_columns(what, toplevel):
     return cols
 
 multisite_painters["service_icons"] = {
-    "title":   _("Service icons"),
-    "short":   _("Icons"),
+    "title"     : _("Service icons"),
+    "short"     : _("Icons"),
     "printable" : False, # does not contain printable text
-    "columns": iconpainter_columns("service", toplevel=True),
-    "groupby" : lambda row: "", # Do not account for in grouping
-    "paint":    lambda row: paint_icons("service", row)
+    "columns"   : lambda: iconpainter_columns("service", toplevel=True),
+    "groupby"   : lambda row: "", # Do not account for in grouping
+    "paint"     : lambda row: paint_icons("service", row)
 }
 
 multisite_painters["host_icons"] = {
-    "title":   _("Host icons"),
-    "short":   _("Icons"),
+    "title"     : _("Host icons"),
+    "short"     : _("Icons"),
     "printable" : False, # does not contain printable text
-    "columns": iconpainter_columns("host", toplevel=True),
-    "groupby" : lambda row: "", # Do not account for in grouping
-    "paint":    lambda row: paint_icons("host", row)
+    "columns"   : lambda: iconpainter_columns("host", toplevel=True),
+    "groupby"   : lambda row: "", # Do not account for in grouping
+    "paint"     : lambda row: paint_icons("host", row)
 }
 
 # -----------------------------------------------------------------------

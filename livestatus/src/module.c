@@ -61,13 +61,6 @@
 # define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path) + strlen ((ptr)->sun_path))
 #endif
 
-void TRIGGER(int what)
-{
-    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
-    pthread_cond_broadcast(&g_wait_cond[what]);
-}
-
-
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 #ifndef NAGIOS4
 extern int event_broker_options;
@@ -389,7 +382,7 @@ int broker_check(int event_type, void *data)
             g_counters[COUNTER_HOST_CHECKS]++;
         }
     }
-    TRIGGER(WT_CHECK);
+    trigger_notify_all(trigger_check());
     return result;
 }
 
@@ -399,7 +392,7 @@ int broker_comment(int event_type __attribute__ ((__unused__)), void *data)
     nebstruct_comment_data *co = (nebstruct_comment_data *)data;
     store_register_comment(co);
     g_counters[COUNTER_NEB_CALLBACKS]++;
-    TRIGGER(WT_COMMENT);
+    trigger_notify_all(trigger_comment());
     return 0;
 }
 
@@ -408,7 +401,7 @@ int broker_downtime(int event_type __attribute__ ((__unused__)), void *data)
     nebstruct_downtime_data *dt = (nebstruct_downtime_data *)data;
     store_register_downtime(dt);
     g_counters[COUNTER_NEB_CALLBACKS]++;
-    TRIGGER(WT_DOWNTIME);
+    trigger_notify_all(trigger_downtime());
     return 0;
 }
 
@@ -417,7 +410,7 @@ int broker_log(int event_type __attribute__ ((__unused__)), void *data __attribu
 
     g_counters[COUNTER_NEB_CALLBACKS]++;
     g_counters[COUNTER_LOG_MESSAGES]++;
-    TRIGGER(WT_LOG);
+    trigger_notify_all(trigger_log());
     return 0;
 }
 
@@ -427,21 +420,21 @@ int broker_command(int event_type __attribute__ ((__unused__)), void *data)
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START)
         g_counters[COUNTER_COMMANDS]++;
     g_counters[COUNTER_NEB_CALLBACKS]++;
-    TRIGGER(WT_COMMAND);
+    trigger_notify_all(trigger_command());
     return 0;
 }
 
 int broker_state(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
-    TRIGGER(WT_STATE);
+    trigger_notify_all(trigger_state());
     return 0;
 }
 
 int broker_program(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
-    TRIGGER(WT_PROGRAM);
+    trigger_notify_all(trigger_program());
     return 0;
 }
 

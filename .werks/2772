@@ -1,0 +1,11 @@
+Title: Fixed possible exception in icon column when showing some actions in the column
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447924751
+Class: fix
+
+When e.g. moving the reschedule action icon from the dropdown menu to the column top
+level, this could result in an exception when the webserver is not being restarted
+after this config change. This has now been fixed to work as expected.

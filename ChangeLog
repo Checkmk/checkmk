@@ -9,6 +9,9 @@
     * 2794 FIX: The encoding parameter set in the agent sections was not working...
     * 2796 FIX: apc_symetra_ext_temp: now supports temperatures measured in fahrenheit
 
+    Multisite:
+    * 2772 FIX: Fixed possible exception in icon column when showing some actions in the column...
+
     WATO:
     * 2767 FIX: Fixed broken user list when non unicode mail addresses are loaded
     * 2791 FIX: Service parameter overview: Fixed problem displaying incorrect rule for classical checks...

@@ -815,21 +815,26 @@ def get_needed_columns(view, painters):
     for entry in painters:
         painter = entry[0]
         linkview_name = entry[1]
-        columns += painter["columns"]
+
+        columns += get_painter_columns(painter)
+
         if linkview_name:
             linkview = views.get(linkview_name)
             if linkview:
                 for filt in [ visuals.get_filter(fn) for fn in visuals.get_single_info_keys(linkview) ]:
                     columns += filt.link_columns
 
-                # The site attribute is no column. Filter it out here
-                #if 'site' in columns:
-                #    columns.remove('site')
-
         if len(entry) > 2 and entry[2]:
             tt = entry[2]
-            columns += multisite_painters[tt]["columns"]
+            columns += get_painter_columns(multisite_painters[tt])
     return columns
+
+
+def get_painter_columns(painter):
+    if type(lambda: None) == type(painter["columns"]):
+        return painter["columns"]()
+    else:
+        return painter["columns"]
 
 
 # Display options are flags that control which elements of a
@@ -2345,7 +2350,7 @@ def group_value(row, group_painters):
             else:
                 group.append(groupvalfunc(row))
         else:
-            for c in p[0]["columns"]:
+            for c in get_painter_columns(p[0]):
                 group.append(row[c])
     return tuple(group)
 

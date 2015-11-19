@@ -11,6 +11,9 @@ description:
  state CRIT when the VServer is in the state {DOWN}. It is in the state WARN in
  all other cases.
 
+ For loadbalancing entities is also shows the health state. The check goes WARN if
+ the health is below 100 percent and CRIT when the health drops to zero.
+
 inventory:
  One service per VServer will be created.
 

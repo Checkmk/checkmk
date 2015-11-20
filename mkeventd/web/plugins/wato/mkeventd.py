@@ -1706,44 +1706,6 @@ def mode_mkeventd_status(phase):
         html.hidden_fields()
         html.end_form()
 
-def mode_mkeventd_edit_configvar(phasee):
-    if phase == 'title':
-        return _('Event Console Configuration')
-
-    elif phase == 'buttons':
-        home_button()
-        mkeventd_rules_button()
-        mkeventd_changes_button()
-        mkeventd_status_button()
-        return
-
-    vs = [ (v[1], v[2]) for v in g_configvar_groups[_("Event Console")] ]
-    pending_func = g_configvar_domains['mkeventd']['pending']
-    current_settings = load_configuration_settings()
-
-    if phase == 'action':
-        if not html.check_transaction():
-            return
-
-        for (varname, valuespec) in vs:
-            valuespec = dict(vs)[varname]
-            new_value = valuespec.from_html_vars(varname)
-            valuespec.validate_value(new_value, varname)
-            if current_settings.get(varname) != new_value:
-                msg = _("Changed configuration of %s to %s.") \
-                          % (varname, valuespec.value_to_text(new_value))
-                pending_func(msg)
-            current_settings[varname] = new_value
-
-        save_configuration_settings(current_settings)
-        config.load_config() # make new configuration active
-        return
-
-    html.begin_form('mkeventd_config', method = "POST", action = 'wato.py?mode=mkeventd_config')
-
-    html.button("_save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
 
 def mode_mkeventd_config(phase):
     if phase == 'title':

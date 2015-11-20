@@ -87,6 +87,16 @@ register_configvar(group,
     need_restart = True)
 
 register_configvar(group,
+    "notification_plugin_timeout",
+    Age(
+        title = _("Notification plugin timeout"),
+        help = _("After the configured time notification plugins are being interrupted."),
+        default_value = 60,
+        minvalue = 1,
+    ),
+    domain = "check_mk")
+
+register_configvar(group,
     "notification_logging",
     Transform(
         DropdownChoice(

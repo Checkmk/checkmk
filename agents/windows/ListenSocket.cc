@@ -31,7 +31,7 @@
 
 
 #ifdef DEBUG
-extern void debug(char *text);
+extern void debug(char *text) __attribute__ ((format (gnu_printf, 1, 2)));
 #else
 #define debug(C)
 #endif

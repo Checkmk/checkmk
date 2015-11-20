@@ -30,7 +30,7 @@
 #include <cassert>
 
 
-extern void verbose(const char *format, ...);
+extern void verbose(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
 
 
 static const int CHECK_MK_AGENT_PORT = 6556;

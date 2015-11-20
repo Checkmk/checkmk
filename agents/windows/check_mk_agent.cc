@@ -563,9 +563,9 @@ void section_services(SOCKET &out)
                         // in some cases it does. We replace them with _ in order
                         // the keep it in one space-separated column. Since we own
                         // the buffer, we can simply change the name inplace.
-                        for (char *w=(char *)(service->lpServiceName); *w; w++) {
-                            if (*w == ' ')
-                                *w = '_';
+                        for (LPWSTR w=service->lpServiceName; *w; ++w) {
+                            if (*w == L' ')
+                                *w = L'_';
                         }
 
                         output(out, "%ls %s/%s %s\n",

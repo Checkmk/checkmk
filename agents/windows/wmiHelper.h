@@ -43,6 +43,7 @@ namespace wmi {
 struct ComException : public std::runtime_error {
     ComException(const std::string &message, HRESULT result);
 private:
+    std::string resolveError(HRESULT result);
     IErrorInfo *getErrorInfo();
     std::string toStringHex(HRESULT res);
 };
@@ -70,6 +71,7 @@ private:
 
 
 template <> int Variant::get();
+template <> bool Variant::get();
 template <> ULONG Variant::get();
 template <> ULONGLONG Variant::get();
 template <> std::string Variant::get();
@@ -107,7 +109,6 @@ private:
 
     // not implemented
     ObjectWrapper &operator=(const ObjectWrapper &reference);
-
 
     VARIANT getVarByKey(const wchar_t *key) const;
 
@@ -172,9 +173,6 @@ public:
     ObjectWrapper call(ObjectWrapper &result, LPCWSTR method);
 
 private:
-
-    void initCOM();
-    void deinitCOM();
 
     // get a locator that is used to look up WMI namespaces
     IWbemLocator *getWBEMLocator();

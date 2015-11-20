@@ -10,6 +10,7 @@
 
 
 using std::string;
+using std::wstring;
 
 
 char *lstrip(char *s)
@@ -154,6 +155,13 @@ int parse_boolean(char *value)
 }
 
 
+string to_utf8(const char *input)
+{
+    // this isn't right, the input is most likely in locat 8-bit encoding
+    return std::string(input);
+}
+
+
 string to_utf8(const wchar_t *input)
 {
     string result;
@@ -167,6 +175,29 @@ string to_utf8(const wchar_t *input)
 
     // real conversion
     WideCharToMultiByte(CP_UTF8, 0, input, -1, &result[0], required_size, NULL, NULL);
+
+    // strip away the zero termination. This is necessary, otherwise the stored string length
+    // in the string is wrong
+    result.resize(required_size - 1);
+
+    return result;
+}
+
+
+
+wstring to_utf16(const char *input)
+{
+    wstring result;
+    // preflight: how many bytes to we need?
+    int required_size = MultiByteToWideChar(CP_UTF8, 0, input, -1, NULL, 0);
+    if (required_size == 0) {
+        // conversion failure. What to do?
+        return wstring();
+    }
+    result.resize(required_size);
+
+    // real conversion
+    MultiByteToWideChar(CP_UTF8, 0, input, -1, &result[0], required_size);
 
     // strip away the zero termination. This is necessary, otherwise the stored string length
     // in the string is wrong

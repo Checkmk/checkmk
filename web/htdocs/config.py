@@ -41,7 +41,6 @@ except:
 # move all user related stuff there. e.g. html.user should also be moved
 # there.
 
-#.
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
 #   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |

@@ -36,21 +36,22 @@ using namespace wmi;
 using namespace std;
 
 
-#ifdef UNICODE
-ComException::ComException(const string &message, HRESULT result)
-    : runtime_error(message + ": " + to_utf8(_com_error(result, getErrorInfo()).ErrorMessage())
-            + " (" + toStringHex(result) + ")")
+std::string ComException::resolveError(HRESULT result)
 {
+    switch (static_cast<ULONG>(result)) {
+        case WBEM_E_INVALID_NAMESPACE:  return "Invalid Namespace";
+        case WBEM_E_ACCESS_DENIED:      return "Access Denied";
+        case WBEM_E_INVALID_CLASS:      return "Invalid Class";
+        case WBEM_E_INVALID_QUERY:      return "Invalid Query";
+        default:  return to_utf8(_com_error(result, getErrorInfo()).ErrorMessage());
+    }
 }
 
-#else
+
 ComException::ComException(const string &message, HRESULT result)
-    : runtime_error(message + ": " + _com_error(result, getErrorInfo()).ErrorMessage()
-            + " (" + toStringHex(result) + ")")
+    : runtime_error(message + ": " + resolveError(result)  + " (" + toStringHex(result) + ")")
 {
 }
-
-#endif
 
 
 ComTypeException::ComTypeException(const string &message)
@@ -268,6 +269,15 @@ template <> int Variant::get()
 }
 
 
+template <> bool Variant::get()
+{
+    switch (_value.vt) {
+        case VT_BOOL: return _value.boolVal;
+        default: throw ComTypeException(string("wrong value type requested: ") + to_string(_value.vt));
+    }
+}
+
+
 template <> ULONG Variant::get()
 {
     switch (_value.vt) {
@@ -300,17 +310,70 @@ template <> string Variant::get()
 template <> wstring Variant::get()
 {
     switch (_value.vt) {
-        case VT_BSTR: return wstring(_value.bstrVal);
-        default: throw ComTypeException(string("wrong value type requested: ") + to_string(_value.vt));
+        case VT_BSTR:
+            return wstring(_value.bstrVal);
+        case VT_I1:
+        case VT_I2:
+        case VT_I4:
+        case VT_UI1:
+        case VT_UI2:
+        case VT_UI4:
+            return std::to_wstring(get<int>());
+        case VT_UI8:
+            return std::to_wstring(get<ULONGLONG>());
+        case VT_BOOL:
+            return std::to_wstring(get<bool>());
+        case VT_NULL:
+            return L"<null>";
+        default:
+            throw ComTypeException(string("wrong value type requested: ") + to_string(_value.vt));
     }
 }
+
+
+class COMManager {
+public:
+    static void init() {
+        // this is apparently thread safe in C++11 and in gcc even before that
+        // see §6.4 in C++11 standard or §6.7 in C++14
+        static COMManager s_Instance;
+    }
+
+    ~COMManager() {
+        CoUninitialize();
+    }
+private:
+    COMManager() {
+        HRESULT res = CoInitializeEx(0, COINIT_MULTITHREADED);
+        if (FAILED(res)) {
+            throw ComException("Failed to initialize COM", res);
+        }
+
+        res = CoInitializeSecurity(
+                NULL,                        // security descriptor
+                -1,                          // authentication
+                NULL,                        // authentication services
+                NULL,                        // reserved
+                RPC_C_AUTHN_LEVEL_DEFAULT,   // authentication level
+                RPC_C_IMP_LEVEL_IMPERSONATE, // impersonation level
+                NULL,                        // authentication info
+                EOAC_NONE,                   // additional capabilities
+                NULL                         // reserved
+                );
+        if (FAILED(res)) {
+            throw ComException("Failed to initialize COM security", res);
+        }
+    }
+private:
+};
 
 
 Helper::Helper(LPCWSTR path)
     : _locator(NULL)
     , _path(path)
 {
-    initCOM();
+    COMManager::init();
+
     _locator = getWBEMLocator();
     _services = connectServer(_locator);
 }
@@ -324,37 +387,6 @@ Helper::~Helper()
     if (_services != NULL) {
         _services->Release();
     }
-    deinitCOM();
-}
-
-
-void Helper::initCOM()
-{
-    HRESULT res = CoInitializeEx(0, COINIT_MULTITHREADED);
-    if (FAILED(res)) {
-        throw ComException("Failed to initialize COM", res);
-    }
-
-    res = CoInitializeSecurity(
-            NULL,                        // security descriptor
-            -1,                          // authentication
-            NULL,                        // authentication services
-            NULL,                        // reserved
-            RPC_C_AUTHN_LEVEL_DEFAULT,   // authentication level
-            RPC_C_IMP_LEVEL_IMPERSONATE, // impersonation level
-            NULL,                        // authentication info
-            EOAC_NONE,                   // additional capabilities
-            NULL                         // reserved
-            );
-    if (FAILED(res)) {
-        throw ComException("Failed to initialize COM security", res);
-    }
-}
-
-
-void Helper::deinitCOM()
-{
-    CoUninitialize();
 }
 
 

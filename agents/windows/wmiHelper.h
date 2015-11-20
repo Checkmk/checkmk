@@ -110,7 +110,6 @@ private:
     // not implemented
     ObjectWrapper &operator=(const ObjectWrapper &reference);
 
-
     VARIANT getVarByKey(const wchar_t *key) const;
 
 };

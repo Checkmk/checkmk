@@ -309,6 +309,13 @@ template <> string Variant::get()
 
 template <> wstring Variant::get()
 {
+    if (_value.vt & VT_ARRAY) {
+        return L"<array>";
+    }
+    if (_value.vt & VT_VECTOR) {
+        return L"<vector>";
+    }
+
     switch (_value.vt) {
         case VT_BSTR:
             return wstring(_value.bstrVal);
@@ -324,7 +331,7 @@ template <> wstring Variant::get()
         case VT_BOOL:
             return std::to_wstring(get<bool>());
         case VT_NULL:
-            return L"<null>";
+            return L"";
         default:
             throw ComTypeException(string("wrong value type requested: ") + to_string(_value.vt));
     }

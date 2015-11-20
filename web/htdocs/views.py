@@ -1770,7 +1770,7 @@ def allowed_for_datasource(collection, datasourcename):
 
     allowed = {}
     for name, item in collection.items():
-        columns = item["columns"]
+        columns = get_painter_columns(item)
         infos_needed = set([ c.split("_", 1)[0] for c in columns if c != "site" and c not in add_columns])
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = item

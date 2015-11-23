@@ -723,17 +723,22 @@ then
     done
 fi
 
+function is_valid_plugin () {
+    [[ -f "$1" && -x "$1" && ! "$1" =~ \.dpkg-(new|old|temp)$ ]] && true || false
+}
+
+
 # Local checks
 echo '<<<local>>>'
 if cd $LOCALDIR ; then
     for skript in $(ls) ; do
-        if [ -f "$skript" -a -x "$skript" ] ; then
+        if is_valid_plugin "$skript" ; then
             ./$skript
         fi
     done
     # Call some plugins only every X'th second
     for skript in [1-9]*/* ; do
-        if [ -x "$skript" ] ; then
+        if is_valid_plugin "$skript" ; then
             run_cached local_${skript//\//\\} ${skript%/*} "$skript"
         fi
     done
@@ -742,13 +747,13 @@ fi
 # Plugins
 if cd $PLUGINSDIR ; then
     for skript in $(ls) ; do
-        if [ -f "$skript" -a -x "$skript" ] ; then
+        if is_valid_plugin "$skript" ; then
             ./$skript
         fi
     done
     # Call some plugins only every Xth second
     for skript in [1-9]*/* ; do
-        if [ -x "$skript" ] ; then
+        if is_valid_plugin "$skript" ; then
             run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
         fi
     done

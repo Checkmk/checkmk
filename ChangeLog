@@ -96,6 +96,7 @@
     * 2844 FIX: heartbeat_crm: Fixed problem processing the state of clone set resources
     * 2798 FIX: netapp_api_cpu: fixed incorrect scaling of CPU data in NetApp Clustermode...
     * 2799 FIX: check_mail_loop: "Use TLS over SMTP" option did not work
+    * 2777 FIX: check_mk_agent.linux: avoid execution of .deb temporary files as plugins
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

@@ -164,17 +164,19 @@ def check_cmk_agent_update(_no_item, _no_params, info):
                     levels_text = " (warn/crit at %s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
                 else:
                     levels_text = ""
-                yield state, "last update check: " + output_age(parsed["last_check"]) + levels_text
+                yield state, "previous update check: " + output_age(parsed["last_check"]) + levels_text
             except:
                 yield 1, "no successful connect to server yet"
 
             yield 0, "last agent update: %s" % output_age(parsed["last_update"])
             if parsed["aghash"] != "None":
-                yield 0, "agent configuration: %s" % parsed["aghash"]
+                yield 0, "agent configuration: %s" % parsed["aghash"][:8]
             if parsed["error"] != "None":
                 yield 2, "error: %s" % parsed["error"]
             else:
                 yield 0, "no errors"
+
+            return
 
 
 check_info["check_mk.agent_update"] = {

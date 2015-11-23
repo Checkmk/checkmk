@@ -8,6 +8,7 @@
     * 2776 FIX: apache_status: fix crash for Apache versions with yet unhandled status fields
     * 2790 FIX: check_dns: now able to configure milliseconds as expected response time...
     * 2844 FIX: heartbeat_crm: Fixed problem processing the state of clone set resources
+    * 2799 FIX: check_mail_loop: "Use TLS over SMTP" option did not work
 
     WATO:
     * 2791 FIX: Service parameter overview: Fixed problem displaying incorrect rule for classical checks...

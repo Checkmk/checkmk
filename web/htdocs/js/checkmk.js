@@ -1105,6 +1105,9 @@ function do_reload(url)
         if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
             params["_reload"] = "1";
 
+        if (g_selection_enabled)
+            params["selection"] = g_selection;
+
         call_ajax(makeuri(params), {
             response_handler : handle_content_reload,
             error_handler    : handle_content_reload_error,

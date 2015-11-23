@@ -2203,6 +2203,13 @@ def get_nic_speed_human_readable(speed):
     return speed
 
 
+def get_timestamp_human_readable(timestamp):
+    if timestamp:
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
+    else:
+        return "never"
+
+
 # Format time difference seconds into approximated
 # human readable value
 def get_age_human_readable(secs):

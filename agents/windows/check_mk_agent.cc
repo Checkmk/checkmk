@@ -1005,6 +1005,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
                 break;
             case EVENTLOG_INFORMATION_TYPE:
             case EVENTLOG_AUDIT_SUCCESS:
+            case EVENTLOG_SUCCESS:
                 type_char = level == 0 ? 'O' : '.';
                 this_state = 0;
                 break;

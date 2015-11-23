@@ -33,7 +33,7 @@ def check_mail_loop_arguments(params):
         args += ' --smtp-server=$HOSTADDRESS$'
 
     if 'smtp_tls' in params:
-        args == ' --smtp-tls'
+        args += ' --smtp-tls'
 
     if 'smtp_port' in params:
         args += ' --smtp-port=%d' % params['smtp_port']

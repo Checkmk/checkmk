@@ -237,7 +237,7 @@ class html:
         self.write('<form id="form_%s" name="%s" class="%s" action="%s" method="%s"%s%s>\n' %
                    (enc_name, enc_name, enc_name, self.attrencode(action), self.attrencode(method),
                     enctype, onsubmit))
-        self.hidden_field("filled_in", name)
+        self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
             self.hidden_field("_transid", str(self.get_transid()))
         self.hidden_fields(self.global_vars)
@@ -342,11 +342,13 @@ class html:
     def button(self, *args):
         self.image_button(*args)
 
+
     def raw_button(self, varname, title, cssclass=""):
         self.write("<input onfocus=\"if (this.blur) this.blur();\" "
                    "type=\"submit\" name=\"%s\" id=\"%s\" value=\"%s\" "
                    "class=\"%s\" />\n" % \
-                   ( varname, varname, title, cssclass))
+                   (varname, varname, title, cssclass))
+        self.add_form_var(varname)
 
 
     def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):

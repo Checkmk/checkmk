@@ -67,6 +67,24 @@ bool ci_equal(const std::string &lhs, const std::string &rhs);
 // This is case insensitive (windows-like).
 bool globmatch(const char *pattern, const char *astring);
 
+template <typename T>
+std::basic_string<T> join(const std::vector<std::basic_string<T>> &input, const T *sep)
+{
+    std::basic_ostringstream<T> stream;
+    bool first = true;
+
+    for (const std::basic_string<T> &val : input) {
+        if (!first) {
+            stream << sep;
+        } else {
+            first = false;
+        }
+        stream << val;
+    }
+    return stream.str();
+}
+
+
 #ifdef _WIN32
 std::string get_win_error_as_string(DWORD error_id = ::GetLastError());
 #endif

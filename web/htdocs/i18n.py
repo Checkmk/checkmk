@@ -123,9 +123,7 @@ def localize(lang, **kwargs):
         if translation:
             translation.install(unicode = True)
         else:
-            # Fallback to non localized multisite
-            # I'd prefer to fallback to multisite default language but can not import config module here
-            __builtin__.current_language = None
+            unlocalize() # Fallback to non localized multisite
     else:
         unlocalize()
 

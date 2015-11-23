@@ -25,6 +25,7 @@
 
 #include "Configuration.h"
 #include "stringutil.h"
+#include "PerfCounter.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
@@ -180,71 +181,6 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
 }
 
 
-// retrieve the next line from a multi-sz registry key
-const TCHAR *get_next_multi_sz(const std::vector<TCHAR> &data, size_t &offset)
-{
-    const TCHAR *next = &data[offset];
-    size_t len = strlen(next);
-    if ((len == 0) || (offset + len > data.size())) {
-        // the second condition would only happen with an invalid registry value but that's not
-        // unheard of
-        return NULL;
-    } else {
-        offset += len + 1;
-        return next;
-    }
-}
-
-
-int Configuration::getCounterIdFromLang(const char *language, const char *counter_name)
-{
-    char regkey[512];
-    snprintf(regkey, sizeof(regkey), "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\%s", language);
-    HKEY hKey;
-    LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regkey, REG_MULTI_SZ, KEY_READ, &hKey);
-
-    // preflight
-    std::vector<TCHAR> szValueName;
-    DWORD dwcbData = 0;
-    RegQueryValueEx(hKey, "Counter", NULL, NULL, (LPBYTE)&szValueName[0], &dwcbData);
-    szValueName.resize(dwcbData);
-    // actual read op
-    RegQueryValueEx(hKey, "Counter", NULL, NULL, (LPBYTE) &szValueName[0], &dwcbData);
-    RegCloseKey (hKey);
-
-    if (result != ERROR_SUCCESS) {
-        return -1;
-    }
-
-    size_t offset = 0;
-    for(;;) {
-        const TCHAR *id = get_next_multi_sz(szValueName, offset);
-        const TCHAR *name = get_next_multi_sz(szValueName, offset);
-        if ((id == NULL) || (name == NULL)) {
-            break;
-        }
-        if (strcmp(name, counter_name) == 0) {
-            return strtol(id, NULL, 10);
-        }
-    }
-
-    return -1;
-}
-
-int Configuration::getPerfCounterId(const char *counter_name)
-{
-    int counter_id;
-    // Try to find it in current language
-    if ((counter_id = getCounterIdFromLang("CurrentLanguage", counter_name)) != -1)
-        return counter_id;
-
-    // Try to find it in english
-    if ((counter_id = getCounterIdFromLang("009", counter_name)) != -1)
-        return counter_id;
-
-    return -1;
-}
-
 bool Configuration::handleWinperfConfigVariable(char *var, char *value)
 {
     if (!strcmp(var, "counters")) {
@@ -262,7 +198,7 @@ bool Configuration::handleWinperfConfigVariable(char *var, char *value)
         for (unsigned int i = 0; i < strlen(value); i++)
             if (!isdigit(value[i])) {
                 is_digit = false;
-                int id = getPerfCounterId(value);
+                int id = PerfCounterObject::resolve_counter_name(value);
                 if (id == -1) {
                     fprintf(stderr, "No matching performance counter id found for %s.\n", value);
                     return false;

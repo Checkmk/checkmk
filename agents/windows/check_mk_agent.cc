@@ -28,9 +28,6 @@
 // Registry:
 // http://msdn.microsoft.com/en-us/library/ms724897.aspx
 
-// Performance-Counters:
-// http://msdn.microsoft.com/en-us/library/aa373178(VS.85).aspx
-
 // Eventlogs:
 // http://msdn.microsoft.com/en-us/library/aa363672(VS.85).aspx
 // http://msdn.microsoft.com/en-us/library/bb427356(VS.85).aspx
@@ -74,6 +71,7 @@
 #include "Environment.h"
 #include "Configuration.h"
 #include "ListenSocket.h"
+#include "PerfCounter.h"
 #include "types.h"
 #include "wmiHelper.h"
 #define __STDC_FORMAT_MACROS
@@ -117,15 +115,6 @@ const char *check_mk_version = CHECK_MK_VERSION;
 #else
 #define ENVIRONMENT32
 #endif
-#endif
-
-
-#ifdef _LP64
-#define PRIdword  "d"
-#define PRIudword "u"
-#else
-#define PRIdword  "ld"
-#define PRIudword "lu"
 #endif
 
 
@@ -591,247 +580,41 @@ void section_services(SOCKET &out)
 //  |                            |_|              |_____|                  |
 //  '----------------------------------------------------------------------'
 
-// Hilfsfunktionen zum Navigieren in den Performance-Counter Binaerdaten
-PERF_OBJECT_TYPE *FirstObject(PERF_DATA_BLOCK *dataBlock) {
-    return (PERF_OBJECT_TYPE *) ((BYTE *)dataBlock + dataBlock->HeaderLength);
-}
-PERF_OBJECT_TYPE *NextObject(PERF_OBJECT_TYPE *act) {
-    return (PERF_OBJECT_TYPE *) ((BYTE *)act + act->TotalByteLength);
-}
-PERF_COUNTER_DEFINITION *FirstCounter(PERF_OBJECT_TYPE *perfObject) {
-    return (PERF_COUNTER_DEFINITION *) ((BYTE *) perfObject + perfObject->HeaderLength);
-}
-PERF_COUNTER_DEFINITION *NextCounter(PERF_COUNTER_DEFINITION *perfCounter) {
-    return (PERF_COUNTER_DEFINITION *) ((BYTE *) perfCounter + perfCounter->ByteLength);
-}
-PERF_COUNTER_BLOCK *GetCounterBlock(PERF_INSTANCE_DEFINITION *pInstance) {
-    return (PERF_COUNTER_BLOCK *) ((BYTE *)pInstance + pInstance->ByteLength);
-}
-PERF_INSTANCE_DEFINITION *FirstInstance (PERF_OBJECT_TYPE *pObject) {
-    return (PERF_INSTANCE_DEFINITION *)  ((BYTE *) pObject + pObject->DefinitionLength);
-}
-PERF_INSTANCE_DEFINITION *NextInstance (PERF_INSTANCE_DEFINITION *pInstance) {
-    return (PERF_INSTANCE_DEFINITION *) ((BYTE *)pInstance + pInstance->ByteLength + GetCounterBlock(pInstance)->ByteLength);
-}
-
-void outputCounter(SOCKET &out, BYTE *datablock, int counter,
-        PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr);
-void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_COUNTER_BLOCK *counterBlockPtr);
-
 
 void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const char *countername)
 {
     crash_log("<<<winperf_%s>>>", countername);
-    static LARGE_INTEGER Frequency;
-    QueryPerformanceFrequency (&Frequency);
 
-    // registry entry is ascii representation of counter index
-    char counter_index_name[8];
-    snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter_base_number);
+    PerfCounterObject counterObject(counter_base_number);
 
-    // allocate block to store counter data block
-    DWORD size = DEFAULT_BUFFER_SIZE;
-    BYTE *data = new BYTE[DEFAULT_BUFFER_SIZE];
-    DWORD type;
-    DWORD ret;
+    if (!counterObject.isEmpty()) {
+        LARGE_INTEGER Frequency;
+        QueryPerformanceFrequency (&Frequency);
+        output(out, "<<<winperf_%s>>>\n", countername);
+        output(out, "%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
 
-    // Holt zu einem bestimmten Counter den kompletten Binärblock aus der
-    // Registry. Da man vorher nicht weiß, wie groß der Puffer sein muss,
-    // kann man nur mit irgendeiner Größe anfangen und dann diesen immer
-    // wieder größer machen, wenn er noch zu klein ist. >:-P
-    while ((ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, counter_index_name,
-                    0, &type, data, &size)) != ERROR_SUCCESS)
-    {
-        if (ret == ERROR_MORE_DATA) // WIN32 API sucks...
-        {
-            // Der Puffer war zu klein. Toll. Also den Puffer größer machen
-            // und das ganze nochmal probieren.
-            size += DEFAULT_BUFFER_SIZE;
-            verbose("Buffer for RegQueryValueEx too small. Resizing...");
-            delete [] data;
-            data = new BYTE [size];
+        std::vector<PERF_INSTANCE_DEFINITION*> instances = counterObject.instances();
+        // output instances - if any
+        if (instances.size() > 0) {
+            output(out, "%d instances:", static_cast<int>(instances.size()));
+            for (std::wstring name : counterObject.instanceNames()) {
+                std::replace(name.begin(), name.end(), L' ', L'_');
+                output(out, " %s", to_utf8(name.c_str()).c_str());
+            }
+            output(out, "\n");
         }
-        else {
-            // Es ist ein anderer Fehler aufgetreten. Abbrechen.
-            delete [] data;
-            return;
+
+        // output counters
+        for (const PerfCounter &counter : counterObject.counters()) {
+            output(out, "%d", static_cast<int>(counter.titleIndex()) - static_cast<int>(counter_base_number));
+            for (ULONGLONG value : counter.values(instances)) {
+                output(out, " %" PRIu64, value);
+            }
+            output(out, " %s\n", counter.typeName().c_str());
         }
     }
-    crash_log(" - read performance data, buffer size %" PRIudword, size);
-
-    PERF_DATA_BLOCK *dataBlockPtr = (PERF_DATA_BLOCK *)data;
-
-    // Determine first object in list of objects
-    PERF_OBJECT_TYPE *objectPtr = FirstObject(dataBlockPtr);
-
-    // awkward way to ensure we really really only create the section header if there
-    // are performance counters
-    bool first_counter = true;
-
-    // Now walk through the list of objects. The bad news is:
-    // even if we expect only one object, windows might send
-    // us more than one object. We need to scan a list of objects
-    // in order to find the one we have asked for. >:-P
-    for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++)
-    {
-        // Have we found the object we seek?
-        if (objectPtr->ObjectNameTitleIndex == counter_base_number)
-        {
-            // Yes. Great. Now: each object consist of a lot of counters.
-            // We walk through the list of counters in this object:
-
-            // get pointer to first counter
-            PERF_COUNTER_DEFINITION *counterPtr = FirstCounter(objectPtr);
-
-            // Now we make a first quick walk through all counters, only in order
-            // to find the beginning of the data block (which comes after the
-            // counter definitions)
-            PERF_COUNTER_DEFINITION *last_counter = FirstCounter(objectPtr);
-            for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++)
-                last_counter = NextCounter(last_counter);
-            BYTE *datablock = (BYTE *)last_counter;
-
-            // In case of multi-instance objects, output a list of all instance names
-            int num_instances = objectPtr->NumInstances;
-            if (num_instances >= 0)
-            {
-                if (first_counter) {
-                    output(out, "<<<winperf_%s>>>\n", countername);
-                    output(out, "%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
-                    first_counter = false;
-                }
-
-                output(out, "%d instances:", num_instances);
-                char name[512];
-                PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
-                for(int b=0 ; b<objectPtr->NumInstances ; b++)
-                {
-                    WCHAR *name_start = (WCHAR *)((char *)(instancePtr) + instancePtr->NameOffset);
-                    memcpy(name, name_start, instancePtr->NameLength);
-                    WideCharToMultiByte(CP_UTF8, 0, name_start, instancePtr->NameLength, name, sizeof(name), NULL, NULL);
-                    // replace spaces with '_'
-                    for (char *s = name; *s; s++)
-                        if (*s == ' ') *s = '_';
-
-                    output(out, " %s", name);
-                    instancePtr = NextInstance(instancePtr);
-                }
-                output(out, "\n");
-            }
-
-            if (first_counter && (objectPtr->NumCounters > 0)) {
-                output(out, "<<<winperf_%s>>>\n", countername);
-                output(out, "%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
-                first_counter = false;
-            }
-
-            // Now walk through the counter list a second time and output all counters
-            for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++)
-            {
-                outputCounter(out, datablock, counter_base_number, objectPtr, counterPtr);
-                counterPtr = NextCounter(counterPtr);
-            }
-        }
-        // naechstes Objekt in der Liste
-        objectPtr = NextObject(objectPtr);
-    }
-    delete [] data;
 }
 
-
-void outputCounter(SOCKET &out, BYTE *datablock, int counter_base_number,
-        PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr)
-{
-
-    // determine the type of the counter (for verbose output)
-    const char *countertypename = 0;
-    switch (counterPtr->CounterType) {
-        case PERF_COUNTER_COUNTER:                countertypename = "counter"; break;
-        case PERF_COUNTER_TIMER:                  countertypename = "timer"; break;
-        case PERF_COUNTER_QUEUELEN_TYPE:          countertypename = "queuelen_type"; break;
-        case PERF_COUNTER_BULK_COUNT:             countertypename = "bulk_count"; break;
-        case PERF_COUNTER_TEXT:                   countertypename = "text"; break;
-        case PERF_COUNTER_RAWCOUNT:               countertypename = "rawcount"; break;
-        case PERF_COUNTER_LARGE_RAWCOUNT:         countertypename = "large_rawcount"; break;
-        case PERF_COUNTER_RAWCOUNT_HEX:           countertypename = "rawcount_hex"; break;
-        case PERF_COUNTER_LARGE_RAWCOUNT_HEX:     countertypename = "large_rawcount_HEX"; break;
-        case PERF_SAMPLE_FRACTION:                countertypename = "sample_fraction"; break;
-        case PERF_SAMPLE_COUNTER:                 countertypename = "sample_counter"; break;
-        case PERF_COUNTER_NODATA:                 countertypename = "nodata"; break;
-        case PERF_COUNTER_TIMER_INV:              countertypename = "timer_inv"; break;
-        case PERF_SAMPLE_BASE:                    countertypename = "sample_base"; break;
-        case PERF_AVERAGE_TIMER:                  countertypename = "average_timer"; break;
-        case PERF_AVERAGE_BASE:                   countertypename = "average_base"; break;
-        case PERF_AVERAGE_BULK:                   countertypename = "average_bulk"; break;
-        case PERF_100NSEC_TIMER:                  countertypename = "100nsec_timer"; break;
-        case PERF_100NSEC_TIMER_INV:              countertypename = "100nsec_timer_inv"; break;
-        case PERF_COUNTER_MULTI_TIMER:            countertypename = "multi_timer"; break;
-        case PERF_COUNTER_MULTI_TIMER_INV:        countertypename = "multi_timer_inV"; break;
-        case PERF_COUNTER_MULTI_BASE:             countertypename = "multi_base"; break;
-        case PERF_100NSEC_MULTI_TIMER:            countertypename = "100nsec_multi_timer"; break;
-        case PERF_100NSEC_MULTI_TIMER_INV:        countertypename = "100nsec_multi_timer_inV"; break;
-        case PERF_RAW_FRACTION:                   countertypename = "raw_fraction"; break;
-        case PERF_RAW_BASE:                       countertypename = "raw_base"; break;
-        case PERF_ELAPSED_TIME:                   countertypename = "elapsed_time"; break;
-    }
-
-    // Output index of counter object and counter, and timestamp
-    output(out, "%d", static_cast<int>(counterPtr->CounterNameTitleIndex) - counter_base_number);
-
-    // If this is a multi-instance-counter, loop over the instances
-    int num_instances = objectPtr->NumInstances;
-    if (num_instances >= 0)
-    {
-        // get pointer to first instance
-        PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
-
-        for (int b=0 ; b<objectPtr->NumInstances ; b++)
-        {
-            // PERF_COUNTER_BLOCK dieser Instanz ermitteln.
-            PERF_COUNTER_BLOCK *counterBlockPtr = GetCounterBlock(instancePtr);
-            outputCounterValue(out, counterPtr, counterBlockPtr);
-            instancePtr = NextInstance(instancePtr);
-        }
-
-    }
-    else { // instanceless counter
-        PERF_COUNTER_BLOCK *counterBlockPtr = (PERF_COUNTER_BLOCK *) datablock;
-        outputCounterValue(out, counterPtr, counterBlockPtr);
-    }
-    if (countertypename)
-        output(out, " %s\n", countertypename);
-    else
-        output(out, " type(%lx)\n", counterPtr->CounterType);
-}
-
-
-void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_COUNTER_BLOCK *counterBlockPtr)
-{
-    unsigned offset = counterPtr->CounterOffset;
-    int size = counterPtr->CounterSize;
-    BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
-
-    if (counterPtr->CounterType & PERF_SIZE_DWORD)
-        output(out, " %lu", *(DWORD*)pData);
-
-    else if (counterPtr->CounterType & PERF_SIZE_LARGE)
-        output(out, " %" PRIu64, *(UNALIGNED ULONGLONG*)pData);
-
-    // handle other data generically. This is wrong in some situation.
-    // Once upon a time in future we might implement a conversion as
-    // described in http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
-    else if (size == 4) {
-        DWORD value = *((DWORD *)pData);
-        output(out, " %lu", value);
-    }
-    else if (size == 8) {
-        DWORD *data_at = (DWORD *)pData;
-        DWORDLONG value = (DWORDLONG)*data_at + ((DWORDLONG)*(data_at + 1) << 32);
-        output(out, " %" PRIu64, value);
-    }
-    else
-        output(out, " unknown");
-}
 
 void section_winperf(SOCKET &out)
 {
@@ -1005,6 +788,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
                 break;
             case EVENTLOG_INFORMATION_TYPE:
             case EVENTLOG_AUDIT_SUCCESS:
+            case EVENTLOG_SUCCESS:
                 type_char = level == 0 ? 'O' : '.';
                 this_state = 0;
                 break;
@@ -1336,104 +1120,35 @@ bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
 
 process_entry_t get_process_perfdata()
 {
-    unsigned int counter_base_number = 230; // process base number
+    map<ULONGLONG, process_entry> process_info;
 
-    map< ULONGLONG, process_entry > process_info;
-    // registry entry is ascii representation of counter index
-    char counter_index_name[8];
-    snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter_base_number);
+    PerfCounterObject counterObject(230);  // process base number
 
-    // allocate block to store counter data block
-    DWORD size = DEFAULT_BUFFER_SIZE;
-    BYTE *data = new BYTE[DEFAULT_BUFFER_SIZE];
-    DWORD type;
-    DWORD ret;
+    if (!counterObject.isEmpty()) {
+        LARGE_INTEGER Frequency;
+        QueryPerformanceFrequency (&Frequency);
 
-    // Holt zu einem bestimmten Counter den kompletten Binärblock aus der
-    // Registry. Da man vorher nicht weiß, wie groß der Puffer sein muss,
-    // kann man nur mit irgendeiner Größe anfangen und dann diesen immer
-    // wieder größer machen, wenn er noch zu klein ist. >:-P
-    while ((ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, counter_index_name,
-                    0, &type, data, &size)) != ERROR_SUCCESS)
-    {
-        if (ret == ERROR_MORE_DATA) // WIN32 API sucks...
-        {
-            // Der Puffer war zu klein. Toll. Also den Puffer größer machen
-            // und das ganze nochmal probieren.
-            size += DEFAULT_BUFFER_SIZE;
-            delete [] data;
-            data = new BYTE [size];
-        }
-        else {
-            // Es ist ein anderer Fehler aufgetreten. Abbrechen.
-            delete [] data;
-            return process_info;
-        }
-    }
+        std::vector<PERF_INSTANCE_DEFINITION*> instances = counterObject.instances();
 
-    PERF_DATA_BLOCK *dataBlockPtr = (PERF_DATA_BLOCK *)data;
+        std::vector<process_entry> entries(instances.size()); // one instance = one process
 
-    // Determine first object in list of objects
-    PERF_OBJECT_TYPE *objectPtr = FirstObject(dataBlockPtr);
-
-    // Now walk through the list of objects. The bad news is:
-    // even if we expect only one object, windows might send
-    // us more than one object. We need to scan a list of objects
-    // in order to find the one we have asked for. >:-P
-    for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++)
-    {
-        // Have we found the object we seek?
-        if (objectPtr->ObjectNameTitleIndex == counter_base_number)
-        {
-            char name[512];
-            PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
-            for(int b=0 ; b<objectPtr->NumInstances ; b++)
-            {
-                // get pointer to first counter
-                PERF_COUNTER_DEFINITION *counterPtr = FirstCounter(objectPtr);
-
-                WCHAR *name_start = (WCHAR *)((char *)(instancePtr) + instancePtr->NameOffset);
-                memcpy(name, name_start, instancePtr->NameLength);
-                WideCharToMultiByte(CP_UTF8, 0, name_start, instancePtr->NameLength, name, sizeof(name), NULL, NULL);
-                // replace spaces with '_'
-                for (char *s = name; *s; s++)
-                    if (*s == ' ') *s = '_';
-
-                // get PERF_COUNTER_BLOCK of this instance
-                PERF_COUNTER_BLOCK *counterBlockPtr = GetCounterBlock(instancePtr);
-
-                process_entry entry;
-                memset(&entry, 0, sizeof(entry));
-                for (unsigned int bc=0 ; bc < objectPtr->NumCounters ; bc++) {
-                    unsigned offset = counterPtr->CounterOffset;
-                    BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
-                    switch(offset){
-                        case 40:
-                             entry.virtual_size     = (ULONGLONG)(*(DWORD*)pData);
-                             break;
-                        case 56:
-                             entry.working_set_size = (ULONGLONG)(*(DWORD*)pData);
-                             break;
-                        case 64:
-                             entry.pagefile_usage   = (ULONGLONG)(*(DWORD*)pData);
-                             break;
-                        case 104:
-                             entry.process_id       = (ULONGLONG)(*(DWORD*)pData);
-                             break;
-                        default:
-                             break;
-                    }
-                    counterPtr = NextCounter(counterPtr);
+        // output counters
+        for (const PerfCounter &counter : counterObject.counters()) {
+            std::vector<ULONGLONG> values = counter.values(instances);
+            for (std::size_t i = 0; i < values.size(); ++i) {
+                switch (counter.offset()) {
+                    case 40:  entries.at(i).virtual_size = values[i];
+                              break;
+                    case 56:  entries.at(i).working_set_size = values[i];
+                              break;
+                    case 64:  entries.at(i).pagefile_usage = values[i];
+                              break;
+                    case 104: entries.at(i).process_id = values[i];
+                              break;
                 }
-                process_info[entry.process_id] = entry;
-                instancePtr = NextInstance(instancePtr);
             }
-
         }
-        // next object in list
-        objectPtr = NextObject(objectPtr);
     }
-    delete [] data;
     return process_info;
 }
 
@@ -4055,4 +3770,5 @@ int main(int argc, char **argv)
     }
     cleanup();
 }
+
 

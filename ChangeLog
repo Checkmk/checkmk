@@ -95,6 +95,7 @@
     * 2837 FIX: hitachi_hnas_temp: fixed ascii decode error, handles degree celsius now correct
     * 2844 FIX: heartbeat_crm: Fixed problem processing the state of clone set resources
     * 2798 FIX: netapp_api_cpu: fixed incorrect scaling of CPU data in NetApp Clustermode...
+    * 2799 FIX: check_mail_loop: "Use TLS over SMTP" option did not work
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

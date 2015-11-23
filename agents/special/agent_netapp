@@ -467,7 +467,7 @@ if netapp_mode == "clustermode":
         print "<<<netapp_api_cpu:sep(9)>>>"
         print format_config(node_info, "cpu-info", "system-name", config_report = ["number-of-processors"],
                                                                   config_rename = {"number-of-processors": "num_processors"})
-        print format_config(system_info, "cpu-info", "node", config_scale = {"cpu-busytime": 10000},
+        print format_config(system_info, "cpu-info", "node", config_scale = {"cpu-busytime": 1000000},
                                                              config_report = ["cpu-busytime", "nvram-battery-status"],
                                                              config_rename = {"cpu-busytime": "cpu_busy"})
 

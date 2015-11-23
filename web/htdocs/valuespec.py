@@ -1537,6 +1537,8 @@ class ListChoice(ValueSpec):
                   lambda id, val: val)
         self._toggle_all = kwargs.get("toggle_all", False)
         self._render_orientation = kwargs.get("render_orientation", "horizontal") # other: vertical
+        self._no_elements_text = kwargs.get("no_elements_text",
+                _("There are no elements defined for this selection"))
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
@@ -1556,6 +1558,10 @@ class ListChoice(ValueSpec):
 
     def render_input(self, varprefix, value):
         self.load_elements()
+        if not self._elements:
+            html.write(self._no_elements_text)
+            return
+
         if self._toggle_all:
             html.write("<a href=\"javascript:vs_list_choice_toggle_all('%s')\">%s</a>" %
                         (varprefix, _("Check / Uncheck all")))

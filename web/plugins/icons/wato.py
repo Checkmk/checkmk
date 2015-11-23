@@ -56,11 +56,12 @@ def paint_wato(what, row, tags, custom_vars):
         return
 
     wato_folder = wato_folder_from_filename(row["host_filename"])
-    if wato_folder:
+    if wato_folder != None:
         if what == "host":
             return wato_link(wato_folder, row["site"], row["host_name"], "edithost")
         elif row["service_description"] in [ "Check_MK inventory", "Check_MK Discovery" ]:
             return wato_link(wato_folder, row["site"], row["host_name"], "inventory")
+
 
 multisite_icons_and_actions['wato'] = {
     'host_columns' : [ "filename" ],

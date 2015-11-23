@@ -8056,7 +8056,7 @@ def mode_edit_ldap_connection(phase):
     html.write('</td><td style="padding-left:10px;">')
 
     html.write('<h2>' + _('Diagnostics') + '</h2>')
-    if not html.var('_test'):
+    if not html.var('_test') or not connection_id:
         html.message(HTML('<p>%s</p><p>%s</p>' %
                     (_('You can verify the single parts of your ldap configuration using this '
                        'dialog. Simply make your configuration in the form on the left side and '

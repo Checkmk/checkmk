@@ -1,0 +1,10 @@
+Title: LDAP: Fixed exception in connection test on complain issue during connection creation
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1448269716
+
+

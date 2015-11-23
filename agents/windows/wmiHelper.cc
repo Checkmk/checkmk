@@ -458,6 +458,10 @@ void Helper::setProxyBlanket(IWbemServices *services)
 Result Helper::query(LPCWSTR query)
 {
     IEnumWbemClassObject *enumerator = NULL;
+    // WBEM_FLAG_RETURN_IMMEDIATELY makes the call semi-synchronous which means we can
+    // return to caller immediately, iterating the result may break until data is available.
+    // WBEM_FLAG_FORWARD_ONLY allows wmi to free the memory of results already iterated,
+    // thus reducing memory usage
     HRESULT res = _services->ExecQuery(_bstr_t(L"WQL"), _bstr_t(query),
                                        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
                                        NULL, &enumerator);

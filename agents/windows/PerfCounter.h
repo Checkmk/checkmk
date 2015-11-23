@@ -71,6 +71,10 @@ class PerfCounterObject {
 
 public:
 
+    typedef std::vector<std::pair<int, std::string>> CounterList;
+
+public:
+
     PerfCounterObject(unsigned counter_base_number);
 
     bool isEmpty() const;
@@ -78,6 +82,9 @@ public:
     std::vector<PERF_INSTANCE_DEFINITION*> instances() const;
     std::vector<std::wstring> instanceNames() const;
     std::vector<PerfCounter> counters() const;
+
+    static CounterList counter_list(const char *language);
+    static int resolve_counter_name(const char *name, const char *language = NULL);
 
 private:
 

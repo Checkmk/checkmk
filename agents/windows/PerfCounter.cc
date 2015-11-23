@@ -1,6 +1,7 @@
 #include "PerfCounter.h"
 #include "stringutil.h"
 #include <windows.h>
+#include <tchar.h>
 #include <vector>
 #include <cstdio>
 #include <stdexcept>
@@ -169,7 +170,6 @@ PerfCounterObject::PerfCounterObject(unsigned int counter_base_number)
             // the size of performance counter blocks is varible and may change concurrently,
             // so there is no way to ensure the buffer is large enough before the call, we
             // can only increase the buffer size until the call succeeds
-            verbose("Buffer for RegQueryValueEx too small. Resizing...");
             buffer_size = _buffer.size() * 2;
             _buffer.resize(buffer_size);
         } else {
@@ -186,8 +186,11 @@ PerfCounterObject::PerfCounterObject(unsigned int counter_base_number)
     _buffer.resize(buffer_size);
 
     _object = findObject(counter_base_number);
+    if (_object == NULL) {
+        throw std::runtime_error("counter id not found");
+    }
 
-    if (_object->NumInstances == 0) {
+    if (_object->NumInstances <= 0) {
         // set the datablock pointer, but only on an instanceless
         // counter, otherwise it is meaningless
         PERF_COUNTER_DEFINITION *counter = FirstCounter(_object);
@@ -261,4 +264,103 @@ std::vector<PerfCounter> PerfCounterObject::counters() const
     }
     return result;
 }
+
+
+// retrieve the next line from a multi-sz registry key
+const TCHAR *get_next_multi_sz(const std::vector<TCHAR> &data, size_t &offset)
+{
+    const TCHAR *next = &data[offset];
+    size_t len = strlen(next);
+    if ((len == 0) || (offset + len > data.size())) {
+        // the second condition would only happen with an invalid registry value but that's not
+        // unheard of
+        return NULL;
+    } else {
+        offset += len + 1;
+        return next;
+    }
+}
+
+
+PerfCounterObject::CounterList PerfCounterObject::counter_list(const char *language)
+{
+    CounterList output;
+
+    HKEY hKey;
+    LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+            (std::string("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\") + language).c_str(),
+            REG_MULTI_SZ, KEY_READ, &hKey);
+
+    // preflight
+    std::vector<char> szValueName;
+    DWORD dwcbData = 0;
+    RegQueryValueExA(hKey, "Counter", NULL, NULL, (LPBYTE)&szValueName[0], &dwcbData);
+    szValueName.resize(dwcbData);
+    // actual read op
+    RegQueryValueExA(hKey, "Counter", NULL, NULL, (LPBYTE) &szValueName[0], &dwcbData);
+    RegCloseKey(hKey);
+
+    if (result == ERROR_SUCCESS) {
+        size_t offset = 0;
+        for(;;) {
+            const char *id = get_next_multi_sz(szValueName, offset);
+            const char *name = get_next_multi_sz(szValueName, offset);
+            if ((id == NULL) || (name == NULL)) {
+                break;
+            }
+
+            output.push_back(std::make_pair<int, std::string>(strtol(id, NULL, 10), name));
+        }
+    }
+
+    return output;
+
+}
+
+
+int PerfCounterObject::resolve_counter_name(const char *counter_name, const char *language)
+{
+    if (language == NULL) {
+        // "autodetect", which means we try local language and english
+        int result = resolve_counter_name(counter_name, "CurrentLanguage");
+        if (result == -1) {
+            result = resolve_counter_name(counter_name, "009");
+        }
+        return result;
+    }
+    else {
+        HKEY hKey;
+        LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                (std::string("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\") + language).c_str(),
+                REG_MULTI_SZ, KEY_READ, &hKey);
+
+        // preflight
+        std::vector<TCHAR> szValueName;
+        DWORD dwcbData = 0;
+        RegQueryValueEx(hKey, "Counter", NULL, NULL, (LPBYTE)&szValueName[0], &dwcbData);
+        szValueName.resize(dwcbData);
+        // actual read op
+        RegQueryValueEx(hKey, "Counter", NULL, NULL, (LPBYTE) &szValueName[0], &dwcbData);
+        RegCloseKey (hKey);
+
+        if (result != ERROR_SUCCESS) {
+            return -1;
+        }
+
+        size_t offset = 0;
+        for(;;) {
+            const TCHAR *id = get_next_multi_sz(szValueName, offset);
+            const TCHAR *name = get_next_multi_sz(szValueName, offset);
+            if ((id == NULL) || (name == NULL)) {
+                break;
+            }
+            if (_tcscmp(name, counter_name) == 0) {
+                return _tcstol(id, NULL, 10);
+            }
+        }
+
+        return -1;
+    }
+}
+
 

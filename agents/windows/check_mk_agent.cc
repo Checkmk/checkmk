@@ -118,15 +118,6 @@ const char *check_mk_version = CHECK_MK_VERSION;
 #endif
 
 
-#ifdef _LP64
-#define PRIdword  "d"
-#define PRIudword "u"
-#else
-#define PRIdword  "ld"
-#define PRIudword "lu"
-#endif
-
-
 using namespace std;
 
 

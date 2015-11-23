@@ -425,8 +425,19 @@ class Overridable:
         else:
             return config.may('general.delete_foreign_%s' % self.type_name())
 
+
+    def may_edit(self):
+        if self.is_builtin():
+            return False
+        elif self.is_mine():
+            return True
+        else:
+            return config.may('general.edit_foreign_%s' % self.type_name())
+
+
     def edit_url(self):
-        return "edit_%s.py?load_name=%s" % (self.type_name(), self.name())
+        owner = not self.is_mine() and ("&owner=%s" % self.owner()) or ""
+        return "edit_%s.py?load_name=%s%s" % (self.type_name(), self.name(), owner)
 
     def clone_url(self):
         backurl = html.urlencode(html.makeuri([]))
@@ -475,6 +486,11 @@ class Overridable:
         config.declare_permission("general.force_" + self.type_name(),
              _("Modify builtin %s") % self.phrase("title_plural"),
              _("Make own published %s override builtin %s for all users.") % (self.phrase("title_plural"), self.phrase("title_plural")),
+             [ "admin" ])
+
+        config.declare_permission("general.edit_foreign_" + self.type_name(),
+             _("Edit foreign %s") % self.phrase("title_plural"),
+             _("Allows to edit %s created by other users.") % self.phrase("title_plural"),
              [ "admin" ])
 
         config.declare_permission("general.delete_foreign_" + self.type_name(),
@@ -565,6 +581,13 @@ class Overridable:
         for page in self.instances():
             if page.is_mine() and page.name() == name:
                 return page
+
+    @classmethod
+    def find_foreign_page(self, owner, name):
+        try:
+            return self.instance((owner, name))
+        except KeyError:
+            return None
 
     @classmethod
     def builtin_pages(self):
@@ -712,7 +735,8 @@ class Overridable:
                     builtin_instances.append(instance)
                 elif instance.is_mine():
                     my_instances.append(instance)
-                elif instance.is_public():
+                elif instance.is_public() \
+                     or instance.may_delete() or instance.may_edit():
                     foreign_instances.append(instance)
 
         for title, instances in [
@@ -732,6 +756,10 @@ class Overridable:
                 # Actions
                 table.cell(_('Actions'), css = 'buttons visuals')
 
+                # Edit
+                if instance.may_edit():
+                    html.icon_button(instance.edit_url(), _("Edit"), "edit")
+
                 # Clone / Customize
                 buttontext = _("Create a customized copy of this")
                 html.icon_button(instance.clone_url(), buttontext, "new_" + self.type_name())
@@ -739,12 +767,6 @@ class Overridable:
                 # Delete
                 if instance.may_delete():
                     html.icon_button(instance.delete_url(), _("Delete!"), "delete")
-
-                # Edit
-                # TODO: Reihenfolge der Aktionen. Ist nicht delete immer nach edit? Sollte
-                # nicht clone und edit am gleichen Platz sein?
-                if instance.is_mine():
-                    html.icon_button(instance.edit_url(), _("Edit"), "edit")
 
                 ### # Custom buttons - visual specific
                 ### if render_custom_buttons:
@@ -815,13 +837,21 @@ class Overridable:
             page_name = html.var("load_name")
             if mode == "edit":
                 title = self.phrase("edit")
-                page = self.find_my_page(page_name)
+
+                owner_user_id = html.var("owner", config.user_id)
+                if owner_user_id == config.user_id:
+                    page = self.find_my_page(page_name)
+                else:
+                    page = self.find_foreign_page(owner_user_id, page_name)
+
                 if page == None:
                     raise MKUserError(None, _("The requested %s does not exist") % self.phrase("title"))
-                self.remove_instance((config.user_id, page_name)) # will be added later again
+
+                # TODO FIXME: Looks like a hack
+                self.remove_instance((owner_user_id, page_name)) # will be added later again
             else: # clone
                 title = self.phrase("clone")
-                load_user = html.var("load_user")
+                load_user = html.var("load_user") # FIXME: Change varname to "owner"
                 page = self.instance((load_user, page_name))
             page_dict = page.internal_representation()
 
@@ -840,12 +870,18 @@ class Overridable:
         )
 
         def validate(page_dict):
-            if self.find_my_page(page_dict["name"]):
+            owner_user_id = html.var("owner", config.user_id)
+            if owner_user_id == config.user_id:
+                page = self.find_my_page(page_name)
+            else:
+                page = self.find_foreign_page(owner_user_id, page_name)
+            if page:
                 raise MKUserError("_p_name", _("You already have an with the ID <b>%s</b>") % page_dict["name"])
 
         new_page_dict = forms.edit_valuespec(vs, page_dict, validate=validate)
         if new_page_dict != None:
-            new_page_dict["owner"] = config.user_id
+            owner = html.var("owner", config.user_id)
+            new_page_dict["owner"] = owner
             new_page = self(new_page_dict)
 
             if mode in ("edit", "clone"):
@@ -855,7 +891,7 @@ class Overridable:
                         new_page_dict[key] = page_dict[key]
 
             self.add_page(new_page)
-            self.save_user_instances()
+            self.save_user_instances(owner)
             html.immediate_browser_redirect(1, back_url)
             html.message(_('Your changes haven been saved.'))
             # Reload sidebar.TODO: This code logically belongs to PageRenderer. How

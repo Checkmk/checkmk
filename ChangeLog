@@ -10,6 +10,7 @@
     * 2796 FIX: apc_symetra_ext_temp: now supports temperatures measured in fahrenheit
     * 2837 FIX: hitachi_hnas_temp: fixed ascii decode error, handles degree celsius now correct
     * 2844 FIX: heartbeat_crm: Fixed problem processing the state of clone set resources
+    * 2798 FIX: netapp_api_cpu: fixed incorrect scaling of CPU data in NetApp Clustermode...
 
     Multisite:
     * 2772 FIX: Fixed possible exception in icon column when showing some actions in the column...

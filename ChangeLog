@@ -120,6 +120,7 @@
     * 2758 FIX: Fixed processing of metrics containing varnames with quotes and/or spaces
     * 2762 FIX: Fixed formating of check_http when using "clickable URL" option
     * 2772 FIX: Fixed possible exception in icon column when showing some actions in the column...
+    * 2846 FIX: View refresh could reset checkboxes on views where "always show checkboxes" is enabled
 
     WATO:
     * 2442 WATO remove host: improved cleanup of obsolete host files...

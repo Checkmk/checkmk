@@ -1521,12 +1521,12 @@ def show_context_links(thisview, show_filters, display_options,
                      hidden = not enable_commands)
         togglebutton_off("commands", "commands", hidden = enable_commands)
 
-        selection_enabled = enable_commands and enable_checkboxes
+        selection_enabled = (enable_commands and enable_checkboxes) or thisview.get("force_checkboxes")
         if not thisview.get("force_checkboxes"):
             toggler("checkbox", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"),
                     "location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
                     show_checkboxes, hidden = True) # not selection_enabled)
-        togglebutton_off("checkbox", "checkbox", hidden = selection_enabled)
+        togglebutton_off("checkbox", "checkbox", hidden = not thisview.get("force_checkboxes"))
         html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
 
     if 'O' in display_options:

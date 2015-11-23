@@ -1,0 +1,10 @@
+Title: View refresh could reset checkboxes on views where "always show checkboxes" is enabled
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1448294124
+
+

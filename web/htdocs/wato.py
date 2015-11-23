@@ -16308,18 +16308,19 @@ def load_rulesets(folder):
 # Load all rules of all folders into a dictionary that
 # has the rules' varnames as keys and a list of (folder, rule)
 # as values.
-def load_rulesets_recursively(folder, all_rulesets):
+def load_rulesets_recursively(folder, all_rulesets, only_varname=None):
     for subfolder in folder[".folders"].values():
-        load_rulesets_recursively(subfolder, all_rulesets)
+        load_rulesets_recursively(subfolder, all_rulesets, only_varname)
 
     rs = load_rulesets(folder)
     for varname, rules in rs.items():
-        all_rulesets.setdefault(varname, [])
-        all_rulesets[varname] += [ (folder, rule) for rule in rules ]
+        if only_varname == None or varname == only_varname:
+            all_rulesets.setdefault(varname, [])
+            all_rulesets[varname] += [ (folder, rule) for rule in rules ]
 
-def load_all_rulesets():
+def load_all_rulesets(only_varname=None):
     all_rulesets = {}
-    load_rulesets_recursively(g_root_folder, all_rulesets)
+    load_rulesets_recursively(g_root_folder, all_rulesets, only_varname)
     return all_rulesets
 
 

@@ -465,6 +465,12 @@ img.iconbutton {
     padding: 0px 2px;
 }
 
+
+.wato a.checkbox img.iconbutton {
+    width: 60px;
+    height: 16px;
+}
+
 img.iconbutton:hover {
     opacity: 0.5;
     filter: alpha(opacity=50); /* For IE8 and earlier */

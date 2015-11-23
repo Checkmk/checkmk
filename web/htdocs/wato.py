@@ -14997,6 +14997,8 @@ def mode_rulesets(phase, group=None):
                 html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), make_link([("mode", "folder")]), "folder")
+            if group == "agents":
+                html.context_button(_("Agent Bakery"), make_link([("mode", "agents")]), "agents")
         return
 
     elif phase == "action":

@@ -35,6 +35,15 @@
 #include <stdint.h>
 
 
+#ifdef _LP64
+#define PRIdword  "d"
+#define PRIudword "u"
+#else
+#define PRIdword  "ld"
+#define PRIudword "lu"
+#endif
+
+
 static const unsigned int SECTION_CHECK_MK     = 0x00000001;
 static const unsigned int SECTION_UPTIME       = 0x00000002;
 static const unsigned int SECTION_DF           = 0x00000004;

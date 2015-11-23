@@ -45,25 +45,6 @@ void print_namespace(const std::wstring &path, int depth = 0)
 }
 
 
-template <typename T>
-std::basic_string<T> join(const std::vector<std::basic_string<T>> &input,
-        const T *sep) {
-    std::basic_ostringstream<T> stream;
-    bool first = true;
-
-
-    for (const std::basic_string<T> &val : input) {
-        if (!first) {
-            stream << sep;
-        } else {
-            first = false;
-        }
-        stream << val;
-    }
-    return stream.str();
-}
-
-
 void print_table(const std::string &ns, const std::string &pattern) {
     wmi::Helper helper(to_utf16(ns.c_str()).c_str());
 
@@ -81,7 +62,7 @@ void print_table(const std::string &ns, const std::string &pattern) {
                 bool first = true;
                 bool sub_more = sub_result.valid();
                 if (!sub_more) {
-                    printf("Invalid result\n");
+                    printf("Invalid or empty result\n");
                 }
                 while (sub_more) {
                     if (first) {

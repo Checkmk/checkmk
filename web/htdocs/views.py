@@ -2058,8 +2058,14 @@ def execute_hooks(hook):
             else:
                 pass
 
-def paint(p, row, tdattrs=""):
+def paint(p, row, tdattrs="", is_last_painter=False):
     tdclass, content = prepare_paint(p, row)
+
+    if is_last_painter:
+        if tdclass == None:
+            tdclass = "last_col"
+        else:
+            tdclass += " last_col"
 
     if tdclass:
         html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
@@ -2288,7 +2294,7 @@ def sort_url(view, painter, join_index):
 
     return ','.join(p)
 
-def paint_header(view, p):
+def paint_header(view, p, is_last_column_header=False):
     # The variable p is a tuple with the following components:
     # p[0] --> painter object, from multisite_painters[]
     # p[1] --> view name to link to or None (not needed here)
@@ -2309,7 +2315,7 @@ def paint_header(view, p):
     # Important for links:
     # - Add the display options (Keeping the same display options as current)
     # - Link to _self (Always link to the current frame)
-    thclass = ''
+    classes = []
     onclick = ''
     title = ''
     if 'L' in html.display_options \
@@ -2321,9 +2327,14 @@ def paint_header(view, p):
         if hasattr(html, 'title_display_options'):
             params.append(('display_options', html.title_display_options))
 
-        thclass = ' class="sort %s"' % get_primary_sorter_order(view, painter)
+        classes += [ "sort", get_primary_sorter_order(view, painter) ]
         onclick = ' onclick="location.href=\'%s\'"' % html.makeuri(params, 'sort')
         title   = ' title="%s"' % (_('Sort by %s') % t)
+
+    if is_last_column_header:
+        classes.append("last_col")
+
+    thclass = classes and (" class=\"%s\"" % " ".join(classes)) or ""
 
     html.write("<th%s%s%s>%s</th>" % (thclass, onclick, title, t))
 

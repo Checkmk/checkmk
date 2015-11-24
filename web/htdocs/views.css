@@ -231,6 +231,12 @@ td.groupheader {
     padding: 0;
 }
 
+table.data tr.data > td.gap,
+table.data tr > td.last_col,
+table.data tr > th.last_col {
+    border-right: 0;
+}
+
 td.gap, table.data .checkbox_hover.gap {
     background-image: url("images/contentframe_background.jpg");
     background-attachment: fixed;

@@ -37,7 +37,8 @@
 #include "logger.h"
 
 #ifdef CMC
-#include "Core.h"
+#include "cmc.h"
+struct Core;
 extern Core *g_core;
 #endif
 

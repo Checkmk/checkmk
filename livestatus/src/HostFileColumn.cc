@@ -28,10 +28,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "logger.h"
-#include "nagios.h"
 
 #ifdef CMC
 #include "Host.h"
+#else
+#include "nagios.h"
 #endif
 
 using std::string;

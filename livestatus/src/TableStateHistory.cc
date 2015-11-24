@@ -48,7 +48,6 @@
 #include "Store.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "auth.h"
 #include "logger.h"
 #include "tables.h"
 
@@ -56,6 +55,8 @@
 #include "Host.h"
 #include "Service.h"
 #include "Timeperiod.h"
+#else
+#include "auth.h"
 #endif
 
 using mk::lock_guard;

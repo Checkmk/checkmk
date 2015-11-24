@@ -40,8 +40,11 @@
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "auth.h"
 #include "tables.h"
+
+#ifndef CMC
+#include "auth.h"
+#endif
 
 using mk::lock_guard;
 using mk::mutex;

@@ -49,21 +49,32 @@ static void out(const char *buf)
     }
 }
 
+static void exit_with(const char *message, int err, int status)
+{
+    out(message);
+    if (err != 0) {
+        out(": ");
+        out(strerror(errno));
+    }
+    out("\n");
+    exit(status);
+}
+
 static void version()
 {
-    out(
+    exit_with(
         "waitmax version 1.1\n"
         "Copyright Mathias Kettner 2008\n"
         "This is free software; see the source for copying conditions.  "
         "There is NO\n"
         "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR "
-        "PURPOSE.\n");
-    exit(0);
+        "PURPOSE.",
+        0, 0);
 }
 
-static void usage()
+static void usage(int status)
 {
-    out(
+    exit_with(
         "Usage: waitmax [-s SIGNUM] MAXTIME PROGRAM [ARGS...]\n"
         "\n"
         "Execute PROGRAM as a subprocess. If PROGRAM does not exit before "
@@ -72,8 +83,8 @@ static void usage()
         "\n"
         "   -s, --signal SIGNUM   kill with SIGNUM on timeout\n"
         "   -h, --help            this help\n"
-        "   -V, --version         show version an exit\n\n");
-    exit(1);
+        "   -V, --version         show version an exit\n",
+        0, status);
 }
 
 static void signalhandler(int signum __attribute__((__unused__)))
@@ -94,37 +105,30 @@ int main(int argc, char **argv)
     while (0 <=
            (ret = getopt_long(argc, argv, "Vhs:", long_options, &indexptr))) {
         switch (ret) {
-            case 'V': version();
+            case 'V': version(); break;
 
-            case 'h': usage();
+            case 'h': usage(0); break;
 
             case 's':
-                g_signum = strtoul(optarg, 0, 10);
-                if (g_signum < 1 || g_signum > 32) {
-                    out("Signalnumber must be between 1 and 32.\n");
-                    exit(1);
-                }
+                g_signum = atoi(optarg);
+                if (g_signum < 1 || g_signum > 32)
+                    exit_with("Signalnumber must be between 1 and 32.", 0, 1);
                 break;
 
-            default: usage(); exit(1);
+            default: usage(1); break;
         }
     }
 
-    if (optind + 1 >= argc) usage();
+    if (optind + 1 >= argc) usage(1);
 
     int maxtime = atoi(argv[optind]);
-    if (maxtime <= 0) usage();
+    if (maxtime <= 0) usage(1);
 
     g_pid = fork();
     if (g_pid == 0) {
         signal(SIGALRM, signalhandler);
         execvp(argv[optind + 1], argv + optind + 1);
-        out("Cannot execute ");
-        out(argv[optind + 1]);
-        out(": ");
-        out(strerror(errno));
-        out("\n");
-        exit(253);
+        exit_with(argv[optind + 1], errno, 253);
     }
 
     signal(SIGALRM, signalhandler);
@@ -132,16 +136,10 @@ int main(int argc, char **argv)
 
     int status;
     while (waitpid(g_pid, &status, 0) == -1) {
-        if (errno != EINTR) {
-            out("Strange: waitpid() fails: ");
-            out(strerror(errno));
-            out("\n");
-            exit(1);
-        }
+        if (errno != EINTR) exit_with("waitpid() failed", errno, 1);
     }
 
     if (WIFEXITED(status)) return WEXITSTATUS(status);
     if (WIFSIGNALED(status)) return g_timeout ? 255 : 128 + WTERMSIG(status);
-    out("Strange: program did neither exit nor was signalled.\n");
-    return 254;
+    exit_with("Program did neither exit nor was signalled.", 0, 254);
 }

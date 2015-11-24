@@ -31,6 +31,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+static int g_pid;
+static int g_timeout = 0;
+static int g_signum = 15;
+
 static void out(const char *buf)
 {
     size_t bytes_to_write = strlen(buf);
@@ -44,15 +48,6 @@ static void out(const char *buf)
         bytes_to_write -= written;
     }
 }
-
-static int g_pid;
-static int g_timeout = 0;
-static int g_signum = 15;
-
-static struct option long_options[] = {{"version", no_argument, 0, 'V'},
-                                       {"help", no_argument, 0, 'h'},
-                                       {"signal", required_argument, 0, 's'},
-                                       {0, 0, 0, 0}};
 
 static void version()
 {
@@ -85,6 +80,11 @@ static void signalhandler(int signum __attribute__((__unused__)))
 {
     if (kill(g_pid, g_signum) == 0) g_timeout = 1;
 }
+
+static struct option long_options[] = {{"version", no_argument, 0, 'V'},
+                                       {"help", no_argument, 0, 'h'},
+                                       {"signal", required_argument, 0, 's'},
+                                       {0, 0, 0, 0}};
 
 int main(int argc, char **argv)
 {

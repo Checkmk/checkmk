@@ -92,6 +92,15 @@ static void signalhandler(int signum __attribute__((__unused__)))
     if (kill(g_pid, g_signum) == 0) g_timeout = 1;
 }
 
+static void unblock_signal(int signum)
+{
+    sigset_t signals_to_unblock;
+    sigemptyset(&signals_to_unblock);
+    sigaddset(&signals_to_unblock, signum);
+    if (sigprocmask(SIG_UNBLOCK, &signals_to_unblock, NULL) == -1)
+        exit_with("sigprocmask failed", errno, 1);
+}
+
 static struct option long_options[] = {{"version", no_argument, 0, 'V'},
                                        {"help", no_argument, 0, 'h'},
                                        {"signal", required_argument, 0, 's'},
@@ -124,12 +133,16 @@ int main(int argc, char **argv)
     if (maxtime <= 0) usage(1);
 
     g_pid = fork();
+    if (g_pid == -1) exit_with("fork() failed", errno, 1);
+
     if (g_pid == 0) {
         signal(SIGALRM, signalhandler);
         execvp(argv[optind + 1], argv + optind + 1);
         exit_with(argv[optind + 1], errno, 253);
     }
 
+    /* Make sure SIGALRM is not blocked (e.g. by parent). */
+    unblock_signal(SIGALRM);
     signal(SIGALRM, signalhandler);
     alarm(maxtime);
 

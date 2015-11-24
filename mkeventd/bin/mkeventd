@@ -847,7 +847,7 @@ def parse_history_file(path, headers, filters, greptexts, limit):
     # Revert lines from the log file to have the newer lines processed first
     cmd = 'tac "%s"' % path
     if greptexts:
-        cmd += " | grep -i -e %s" % quote_shell_string(".*".join(greptexts))
+        cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)
 
     for line in grep.stdout:

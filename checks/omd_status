@@ -73,9 +73,12 @@ def parse_omd_status(info):
     return parsed
 
 
-def check_omd_status(item, _no_params, info):
+def check_omd_status(item, _no_params, parsed):
 
-    parsed_site = info[item]
+    if item not in parsed:
+        return
+
+    parsed_site = parsed[item]
     number_nodes = len(parsed_site)
     stopped_nodes = 0
 

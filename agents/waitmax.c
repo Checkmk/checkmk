@@ -87,9 +87,36 @@ static void usage(int status)
         0, status);
 }
 
-static void signalhandler(int signum __attribute__((__unused__)))
+static void kill_group(pid_t pid, int signum)
 {
-    if (kill(g_pid, g_signum) == 0) g_timeout = 1;
+    /* The child might have become a process group leader itself, so send the
+       signal directly to it. */
+    kill(pid, signum);
+
+    /* Guard against harakiri... */
+    signal(signum, SIG_IGN);
+
+    /* Send the signal to all processes in our fresh process group. */
+    kill(0, signum);
+}
+
+static void signalhandler(int signum)
+{
+    if (signum == SIGALRM) {
+        /* The child took too long, so remember that we timed out and send the
+           configured signal instead of SIGALRM. */
+        g_timeout = 1;
+        signum = g_signum;
+    }
+
+    /* Are we the child process or has the child not been execvp'd yet? */
+    if (g_pid == 0) exit(signum + 128);
+
+    /* Send the configure signal to our process group. */
+    kill_group(g_pid, signum);
+
+    /* Make sure the children actually react on the signal. */
+    if (signum != SIGKILL && signum != SIGCONT) kill_group(g_pid, SIGCONT);
 }
 
 static void setup_signal_handlers()
@@ -110,8 +137,8 @@ static void setup_signal_handlers()
     sigaction(SIGTTIN, &sa, NULL);
     sigaction(SIGTTOU, &sa, NULL);
 
-    /* We do not want the parent's CHLD handling. */
-    sa.sa_handler = SIG_IGN;
+    /* Make sure that waitpid won't fail. */
+    sa.sa_handler = SIG_DFL;
     sigaction(SIGCHLD, &sa, NULL);
 }
 
@@ -154,6 +181,13 @@ int main(int argc, char **argv)
 
     int maxtime = atoi(argv[optind]);
     if (maxtime <= 0) usage(1);
+
+    /* Create a new process group with ourselves as the process group
+       leader. This way we can send a signal to all subprocesses later (unless
+       some non-direct descendant creates its own process group). Doing this in
+       the parent process already simplifies things, because we don't have to
+       worry about foreground/background groups then. */
+    setpgid(0, 0);
 
     /* Setting up signal handlers before forking avoids race conditions with the
        child. */

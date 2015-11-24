@@ -31,9 +31,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static int g_pid;
+static pid_t g_pid = 0;
 static int g_timeout = 0;
-static int g_signum = 15;
+static int g_signum = SIGTERM;
 
 static void out(const char *buf)
 {
@@ -99,11 +99,10 @@ static struct option long_options[] = {{"version", no_argument, 0, 'V'},
 
 int main(int argc, char **argv)
 {
-    int indexptr = 0;
+    /* Note: setenv calls malloc, and 'diet' warns about that. */
+    if (getenv("POSIXLY_CORRECT") == NULL) putenv("POSIXLY_CORRECT=true");
     int ret;
-    setenv("POSIXLY_CORRECT", "true", 0);
-    while (0 <=
-           (ret = getopt_long(argc, argv, "Vhs:", long_options, &indexptr))) {
+    while ((ret = getopt_long(argc, argv, "Vhs:", long_options, NULL)) != -1) {
         switch (ret) {
             case 'V': version(); break;
 

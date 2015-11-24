@@ -1,0 +1,12 @@
+Title: mk_mysql: fixed some issues with incorrect assembled command line
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p5
+Date: 1448362357
+
+This plugin tries to detect the correct command line out of the command line for the mysqld.exe.
+There were some instances where this mechanism failed.
+

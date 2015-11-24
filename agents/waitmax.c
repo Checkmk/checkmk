@@ -92,6 +92,29 @@ static void signalhandler(int signum __attribute__((__unused__)))
     if (kill(g_pid, g_signum) == 0) g_timeout = 1;
 }
 
+static void setup_signal_handlers()
+{
+    struct sigaction sa;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_handler = signalhandler;
+    sa.sa_flags = SA_RESTART; /* just to be sure... */
+    sigaction(g_signum, &sa, NULL);
+    sigaction(SIGALRM, &sa, NULL);
+    sigaction(SIGHUP, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGQUIT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+
+    /* Guard against a background child doing I/O on the tty. */
+    sa.sa_handler = SIG_IGN;
+    sigaction(SIGTTIN, &sa, NULL);
+    sigaction(SIGTTOU, &sa, NULL);
+
+    /* We do not want the parent's CHLD handling. */
+    sa.sa_handler = SIG_IGN;
+    sigaction(SIGCHLD, &sa, NULL);
+}
+
 static void unblock_signal(int signum)
 {
     sigset_t signals_to_unblock;
@@ -132,18 +155,26 @@ int main(int argc, char **argv)
     int maxtime = atoi(argv[optind]);
     if (maxtime <= 0) usage(1);
 
+    /* Setting up signal handlers before forking avoids race conditions with the
+       child. */
+    setup_signal_handlers();
+
     g_pid = fork();
     if (g_pid == -1) exit_with("fork() failed", errno, 1);
 
     if (g_pid == 0) {
-        signal(SIGALRM, signalhandler);
+        /* Restore tty behavior in the child. */
+        struct sigaction sa;
+        sa.sa_handler = SIG_DFL;
+        sigaction(SIGTTIN, &sa, NULL);
+        sigaction(SIGTTOU, &sa, NULL);
+
         execvp(argv[optind + 1], argv + optind + 1);
         exit_with(argv[optind + 1], errno, 253);
     }
 
     /* Make sure SIGALRM is not blocked (e.g. by parent). */
     unblock_signal(SIGALRM);
-    signal(SIGALRM, signalhandler);
     alarm(maxtime);
 
     int status;

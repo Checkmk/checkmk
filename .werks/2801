@@ -1,0 +1,12 @@
+Title: snmp text encoding: now able to decode cp437 encoded snmp strings
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1448365635
+Class: feature
+
+Furthermore the explicit decoding with the <i>decode_snmp_string</i> function in
+the checks <i>if</i>, <i>hr_fs</i> and <i>printer_supply</i> has been removed.
+
+Decoding of strings is now done before the data hits the check.

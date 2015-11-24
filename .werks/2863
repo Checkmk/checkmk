@@ -1,0 +1,10 @@
+Title: wagner_titanus_topsens: added support for more devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1448353301
+Class: feature
+
+The supported devices are both topsens-es, but different variants. The main difference seems to be
+that one has a LSN (Local Security Network) interface and one doesn't.

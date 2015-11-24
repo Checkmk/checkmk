@@ -199,6 +199,8 @@ int main(int argc, char **argv)
     if (g_pid == 0) {
         /* Restore tty behavior in the child. */
         struct sigaction sa;
+        sigemptyset(&sa.sa_mask);
+        sa.sa_flags = SA_RESTART; /* just to be sure... */
         sa.sa_handler = SIG_DFL;
         sigaction(SIGTTIN, &sa, NULL);
         sigaction(SIGTTOU, &sa, NULL);

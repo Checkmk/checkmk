@@ -31,7 +31,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void out(const char *buf)
+static void out(const char *buf)
 {
     size_t bytes_to_write = strlen(buf);
     while (bytes_to_write > 0) {
@@ -45,16 +45,16 @@ void out(const char *buf)
     }
 }
 
-int g_pid;
-int g_timeout = 0;
-int g_signum = 15;
+static int g_pid;
+static int g_timeout = 0;
+static int g_signum = 15;
 
-struct option long_options[] = {{"version", no_argument, 0, 'V'},
-                                {"help", no_argument, 0, 'h'},
-                                {"signal", required_argument, 0, 's'},
-                                {0, 0, 0, 0}};
+static struct option long_options[] = {{"version", no_argument, 0, 'V'},
+                                       {"help", no_argument, 0, 'h'},
+                                       {"signal", required_argument, 0, 's'},
+                                       {0, 0, 0, 0}};
 
-void version()
+static void version()
 {
     out(
         "waitmax version 1.1\n"
@@ -66,7 +66,7 @@ void version()
     exit(0);
 }
 
-void usage()
+static void usage()
 {
     out(
         "Usage: waitmax [-s SIGNUM] MAXTIME PROGRAM [ARGS...]\n"
@@ -81,7 +81,7 @@ void usage()
     exit(1);
 }
 
-void signalhandler(int signum __attribute__((__unused__)))
+static void signalhandler(int signum __attribute__((__unused__)))
 {
     if (kill(g_pid, g_signum) == 0) g_timeout = 1;
 }

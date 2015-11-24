@@ -31,7 +31,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void out(const char *buf)
+static pid_t g_pid = 0;
+static int g_timeout = 0;
+static int g_signum = SIGTERM;
+
+static void out(const char *buf)
 {
     size_t bytes_to_write = strlen(buf);
     while (bytes_to_write > 0) {
@@ -45,30 +49,32 @@ void out(const char *buf)
     }
 }
 
-int g_pid;
-int g_timeout = 0;
-int g_signum = 15;
-
-struct option long_options[] = {{"version", no_argument, 0, 'V'},
-                                {"help", no_argument, 0, 'h'},
-                                {"signal", required_argument, 0, 's'},
-                                {0, 0, 0, 0}};
-
-void version()
+static void exit_with(const char *message, int err, int status)
 {
-    out(
+    out(message);
+    if (err != 0) {
+        out(": ");
+        out(strerror(errno));
+    }
+    out("\n");
+    exit(status);
+}
+
+static void version()
+{
+    exit_with(
         "waitmax version 1.1\n"
         "Copyright Mathias Kettner 2008\n"
         "This is free software; see the source for copying conditions.  "
         "There is NO\n"
         "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR "
-        "PURPOSE.\n");
-    exit(0);
+        "PURPOSE.",
+        0, 0);
 }
 
-void usage()
+static void usage(int status)
 {
-    out(
+    exit_with(
         "Usage: waitmax [-s SIGNUM] MAXTIME PROGRAM [ARGS...]\n"
         "\n"
         "Execute PROGRAM as a subprocess. If PROGRAM does not exit before "
@@ -77,71 +83,143 @@ void usage()
         "\n"
         "   -s, --signal SIGNUM   kill with SIGNUM on timeout\n"
         "   -h, --help            this help\n"
-        "   -V, --version         show version an exit\n\n");
-    exit(1);
+        "   -V, --version         show version an exit\n",
+        0, status);
 }
 
-void signalhandler(int signum __attribute__((__unused__)))
+static void kill_group(pid_t pid, int signum)
 {
-    if (kill(g_pid, g_signum) == 0) g_timeout = 1;
+    /* The child might have become a process group leader itself, so send the
+       signal directly to it. */
+    kill(pid, signum);
+
+    /* Guard against harakiri... */
+    signal(signum, SIG_IGN);
+
+    /* Send the signal to all processes in our fresh process group. */
+    kill(0, signum);
 }
+
+static void signalhandler(int signum)
+{
+    if (signum == SIGALRM) {
+        /* The child took too long, so remember that we timed out and send the
+           configured signal instead of SIGALRM. */
+        g_timeout = 1;
+        signum = g_signum;
+    }
+
+    /* Are we the child process or has the child not been execvp'd yet? */
+    if (g_pid == 0) exit(signum + 128);
+
+    /* Send the configure signal to our process group. */
+    kill_group(g_pid, signum);
+
+    /* Make sure the children actually react on the signal. */
+    if (signum != SIGKILL && signum != SIGCONT) kill_group(g_pid, SIGCONT);
+}
+
+static void setup_signal_handlers()
+{
+    struct sigaction sa;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_handler = signalhandler;
+    sa.sa_flags = SA_RESTART; /* just to be sure... */
+    sigaction(g_signum, &sa, NULL);
+    sigaction(SIGALRM, &sa, NULL);
+    sigaction(SIGHUP, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGQUIT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+
+    /* Guard against a background child doing I/O on the tty. */
+    sa.sa_handler = SIG_IGN;
+    sigaction(SIGTTIN, &sa, NULL);
+    sigaction(SIGTTOU, &sa, NULL);
+
+    /* Make sure that waitpid won't fail. */
+    sa.sa_handler = SIG_DFL;
+    sigaction(SIGCHLD, &sa, NULL);
+}
+
+static void unblock_signal(int signum)
+{
+    sigset_t signals_to_unblock;
+    sigemptyset(&signals_to_unblock);
+    sigaddset(&signals_to_unblock, signum);
+    if (sigprocmask(SIG_UNBLOCK, &signals_to_unblock, NULL) == -1)
+        exit_with("sigprocmask failed", errno, 1);
+}
+
+static struct option long_options[] = {{"version", no_argument, 0, 'V'},
+                                       {"help", no_argument, 0, 'h'},
+                                       {"signal", required_argument, 0, 's'},
+                                       {0, 0, 0, 0}};
 
 int main(int argc, char **argv)
 {
-    int indexptr = 0;
+    /* Note: setenv calls malloc, and 'diet' warns about that. */
+    if (getenv("POSIXLY_CORRECT") == NULL) putenv("POSIXLY_CORRECT=true");
     int ret;
-    setenv("POSIXLY_CORRECT", "true", 0);
-    while (0 <=
-           (ret = getopt_long(argc, argv, "Vhs:", long_options, &indexptr))) {
+    while ((ret = getopt_long(argc, argv, "Vhs:", long_options, NULL)) != -1) {
         switch (ret) {
-            case 'V': version();
+            case 'V': version(); break;
 
-            case 'h': usage();
+            case 'h': usage(0); break;
 
             case 's':
-                g_signum = strtoul(optarg, 0, 10);
-                if (g_signum < 1 || g_signum > 32) {
-                    out("Signalnumber must be between 1 and 32.\n");
-                    exit(1);
-                }
+                g_signum = atoi(optarg);
+                if (g_signum < 1 || g_signum > 32)
+                    exit_with("Signalnumber must be between 1 and 32.", 0, 1);
                 break;
 
-            default: usage(); exit(1);
+            default: usage(1); break;
         }
     }
 
-    if (optind + 1 >= argc) usage();
+    if (optind + 1 >= argc) usage(1);
 
     int maxtime = atoi(argv[optind]);
-    if (maxtime <= 0) usage();
+    if (maxtime <= 0) usage(1);
+
+    /* Create a new process group with ourselves as the process group
+       leader. This way we can send a signal to all subprocesses later (unless
+       some non-direct descendant creates its own process group). Doing this in
+       the parent process already simplifies things, because we don't have to
+       worry about foreground/background groups then. */
+    setpgid(0, 0);
+
+    /* Setting up signal handlers before forking avoids race conditions with the
+       child. */
+    setup_signal_handlers();
 
     g_pid = fork();
+    if (g_pid == -1) exit_with("fork() failed", errno, 1);
+
     if (g_pid == 0) {
-        signal(SIGALRM, signalhandler);
+        /* Restore tty behavior in the child. */
+        struct sigaction sa;
+        sigemptyset(&sa.sa_mask);
+        sa.sa_flags = SA_RESTART; /* just to be sure... */
+        sa.sa_handler = SIG_DFL;
+        sigaction(SIGTTIN, &sa, NULL);
+        sigaction(SIGTTOU, &sa, NULL);
+
         execvp(argv[optind + 1], argv + optind + 1);
-        out("Cannot execute ");
-        out(argv[optind + 1]);
-        out(": ");
-        out(strerror(errno));
-        out("\n");
-        exit(253);
+        exit_with(argv[optind + 1], errno, 253);
     }
 
-    signal(SIGALRM, signalhandler);
+    /* Make sure SIGALRM is not blocked (e.g. by parent). */
+    unblock_signal(SIGALRM);
     alarm(maxtime);
 
     int status;
     while (waitpid(g_pid, &status, 0) == -1) {
-        if (errno != EINTR) {
-            out("Strange: waitpid() fails: ");
-            out(strerror(errno));
-            out("\n");
-            exit(1);
-        }
+        if (errno != EINTR) exit_with("waitpid() failed", errno, 1);
     }
 
     if (WIFEXITED(status)) return WEXITSTATUS(status);
     if (WIFSIGNALED(status)) return g_timeout ? 255 : 128 + WTERMSIG(status);
-    out("Strange: program did neither exit nor was signalled.\n");
-    return 254;
+    exit_with("Program did neither exit nor was signalled.", 0, 254);
+    return 0; /* Make GCC happy. */
 }

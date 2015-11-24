@@ -28,7 +28,9 @@
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
 #include "nagios.h"
-
+#ifdef CMC
+struct command;
+#endif
 
 #define LOGCLASS_INFO              0 // all messages not in any other class
 #define LOGCLASS_ALERT             1 // alerts: the change service/host state

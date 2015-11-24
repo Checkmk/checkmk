@@ -22,45 +22,52 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-SHELL           = /bin/bash
-VERSION        	= 1.2.7i4
-NAME           	= check_mk
-PREFIX         	= /usr
-BINDIR         	= $(PREFIX)/bin
-CONFDIR	       	= /etc/$(NAME)
-LIBDIR	       	= $(PREFIX)/lib/$(NAME)
-DISTNAME       	= $(NAME)-$(VERSION)
-TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ \
-		  --exclude=.gitignore --exclude=*.swp --exclude=.f12
+SHELL              := /bin/bash
+VERSION            := 1.2.7i4
+NAME               := check_mk
+PREFIX             := /usr
+BINDIR             := $(PREFIX)/bin
+CONFDIR            := /etc/$(NAME)
+LIBDIR             := $(PREFIX)/lib/$(NAME)
+DISTNAME           := $(NAME)-$(VERSION)
+TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
+                      --exclude=.gitignore --exclude=*.swp --exclude=.f12
 
-CPPCHECK        = cppcheck
-DOXYGEN         = doxygen
-IWYU            = include-what-you-use
+CLANG_FORMAT       := clang-format-3.7
+CPPCHECK           := cppcheck
+DOXYGEN            := doxygen
+IWYU               := include-what-you-use
 
 # File to pack into livestatus-$(VERSION).tar.gz
-LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
-		     configure.ac ltmain.sh Makefile.am Makefile.in missing \
-		     nagios/README nagios/*.h nagios4/README nagios4/*.h \
-		     src/*.{h,c,cc} src/Makefile.{in,am} \
-		     depcomp install-sh api/python/{*.py,README} api/perl/*
+LIVESTATUS_SOURCES := configure aclocal.m4 config.guess config.h.in config.sub \
+                      configure.ac ltmain.sh Makefile.am Makefile.in missing \
+                      nagios/README nagios/*.h nagios4/README nagios4/*.h \
+                      src/*.{h,c,cc} src/Makefile.{in,am} \
+                      depcomp install-sh api/python/{*.py,README} api/perl/*
 
 # Files that are checked for trailing spaces
-HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
-               $$(find -name Makefile) livestatus/src/*{cc,c,h} agents/windows/*.cc \
-	       web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
-               doc/helpers/* scripts/setup.sh scripts/autodetect.py \
-	       $$(find pnp-templates -type f -name "*.php") \
-               mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py \
-	       mkeventd/src/*.c mkeventd/checks/* check_mk_templates.cfg \
-	       agents/check_mk_*agent* agents/*.c \
-	       $$(find agents/cfg_examples -type f) \
-	       agents/special/* \
-	       $$(find agents/plugins -type f)
+HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* \
+                      $$(find -name Makefile) livestatus/src/*{cc,c,h} agents/windows/*.cc \
+                      web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
+                      doc/helpers/* scripts/setup.sh scripts/autodetect.py \
+                      $$(find pnp-templates -type f -name "*.php") \
+                      mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py \
+                      mkeventd/src/*.c mkeventd/checks/* check_mk_templates.cfg \
+                      agents/check_mk_*agent* agents/*.c \
+                      $$(find agents/cfg_examples -type f) \
+                      agents/special/* \
+                      $$(find agents/plugins -type f)
+
+FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
+                      $(wildcard $(addprefix agents/windows/,*.cc *.c *.h)) \
+                      $(wildcard $(addprefix livestatus/api/c++/,*.cc *.c *.h)) \
+                      $(wildcard $(addprefix livestatus/src/,*.cc *.c *.h)) \
+                      $(wildcard $(addprefix mkeventd/src/,*.cc *.c *.h))
 
 .PHONY: all check-binaries check check-permissions check-spaces check-version \
-	clean cppcheck dist doxygen headers healspaces help iwyu minify-js \
-	mk-eventd mk-livestatus mrproper optimize-images packages setup \
-	setversion version
+        clean cppcheck dist documentation format headers healspaces help iwyu \
+        minify-js mk-eventd mk-livestatus mrproper optimize-images packages \
+        setup setversion version
 
 all: dist packages
 
@@ -253,6 +260,12 @@ iwyu:
 
 cppcheck:
 	$(CPPCHECK) --quiet --enable=all --max-configs=20 --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus
+
+# TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
+# src/configure.ac, but this needs at least automake-1.13, which in turn is only
+# available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
+format:
+	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT)
 
 # Note: You need the doxygen and graphviz packages.
 documentation:

@@ -1979,6 +1979,7 @@ register_rule(group,
         choices = [
            ("utf-8", _("UTF-8") ),
            ("latin1" ,_("latin1")),
+           ("cp437" ,_("cp437")),
            ]
         )),
 

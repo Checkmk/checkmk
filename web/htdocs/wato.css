@@ -55,6 +55,16 @@ Boston, MA 02110-1301 USA.
     background-color: #73a1b4;
 }
 
+/* Tables renderes in forms. */
+.wato table.nform table.data {
+    box-shadow: 1px 1px 2px #444;
+}
+
+.wato table.nform table.data th {
+    background-color: #527280;
+}
+
+
 
 .wato th.left {
     border-left-style: none;

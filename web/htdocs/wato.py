@@ -9252,8 +9252,7 @@ def vs_notification_rule(userid = None):
         validate = validate_notification_rule,
     )
 
-
-def generic_rule_match_conditions():
+def simple_host_rule_match_conditions():
     return [
         ( "match_folder",
           FolderChoice(
@@ -9289,6 +9288,11 @@ def generic_rule_match_conditions():
               orientation = "horizontal",
           )
         ),
+    ]
+
+
+def generic_rule_match_conditions():
+    simple_host_rule_match_conditions() + [
         ( "match_servicegroups",
           GroupChoice("service",
               title = _("Match Service Groups"),

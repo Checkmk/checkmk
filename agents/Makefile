@@ -40,8 +40,8 @@ usage:
 
 waitmax: waitmax.c
 	@if type diet >/dev/null ; then \
-	    echo "Compiling with diet (please ignore diet-warnings)..." ; \
-	    diet gcc -s -o waitmax waitmax.c ; \
+	    echo "Compiling with diet..." ; \
+	    diet gcc -s -Wall -Wextra -O3 -o waitmax waitmax.c ; \
 	else \
 	    echo "WARNING: your binary is not portable. Please compile " ; \
 	    echo "with dietlibc on 32-Bit to get portable statically " ; \

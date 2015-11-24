@@ -219,4 +219,5 @@ int main(int argc, char **argv)
     if (WIFEXITED(status)) return WEXITSTATUS(status);
     if (WIFSIGNALED(status)) return g_timeout ? 255 : 128 + WTERMSIG(status);
     exit_with("Program did neither exit nor was signalled.", 0, 254);
+    return 0; /* Make GCC happy. */
 }

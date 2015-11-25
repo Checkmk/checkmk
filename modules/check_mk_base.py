@@ -1642,6 +1642,7 @@ def convert_check_info():
                     snmp_scan_functions.get(check_type,
                         snmp_scan_functions.get(basename)),
                 "handle_empty_info"       : False,
+                "handle_real_time_checks" : False,
                 "default_levels_variable" : check_default_levels.get(check_type),
                 "node_info"               : False,
                 "parse_function"          : None,
@@ -1656,6 +1657,7 @@ def convert_check_info():
             info.setdefault("snmp_info", None)
             info.setdefault("snmp_scan_function", None)
             info.setdefault("handle_empty_info", False)
+            info.setdefault("handle_real_time_checks", False)
             info.setdefault("default_levels_variable", None)
             info.setdefault("node_info", False)
             info.setdefault("extra_sections", [])

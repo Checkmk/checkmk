@@ -1120,7 +1120,7 @@ bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
 
 process_entry_t get_process_perfdata()
 {
-    map<ULONGLONG, process_entry> process_info;
+    process_entry_t process_info;
 
     PerfCounterObject counterObject(230);  // process base number
 
@@ -1132,7 +1132,7 @@ process_entry_t get_process_perfdata()
 
         std::vector<process_entry> entries(instances.size()); // one instance = one process
 
-        // output counters
+        // gather counters
         for (const PerfCounter &counter : counterObject.counters()) {
             std::vector<ULONGLONG> values = counter.values(instances);
             for (std::size_t i = 0; i < values.size(); ++i) {
@@ -1147,6 +1147,10 @@ process_entry_t get_process_perfdata()
                               break;
                 }
             }
+        }
+
+        for (const process_entry &entry : entries) {
+            process_info[entry.process_id] = entry;
         }
     }
     return process_info;

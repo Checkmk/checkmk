@@ -1486,6 +1486,12 @@ metric_info["sync_latency"] = {
     "color" : "#ffb080",
 }
 
+metric_info["mail_latency"] = {
+    "title" : _("Mail latency"),
+    "unit"  : "s",
+    "color" : "#ffb080",
+}
+
 metric_info["printer_queue"] = {
     "title" : _("Printer queue length"),
     "unit"  : "count",
@@ -3592,6 +3598,13 @@ perfometer_info.append({
 perfometer_info.append({
     "type"          : "logarithmic",
     "metric"        : "sync_latency",
+    "half_value"    : 5,
+    "exponent"      : 2,
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "mail_latency",
     "half_value"    : 5,
     "exponent"      : 2,
 })

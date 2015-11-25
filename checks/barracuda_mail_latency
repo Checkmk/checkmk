@@ -49,7 +49,7 @@ def check_barracuda_mail_latency(_no_item, params, info):
                     (get_age_human_readable(warn),
                      get_age_human_readable(crit))
 
-    return state, infotext
+    return state, infotext, [ ( "mail_latency", avg_mail_latency, warn, crit) ]
 
 
 check_info['barracuda_mail_latency'] = {

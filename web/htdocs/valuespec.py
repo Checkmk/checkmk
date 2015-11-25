@@ -2518,7 +2518,7 @@ class Alternative(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
-        self._match = kwargs.get("match") # custom match function
+        self._match = kwargs.get("match") # custom match function, returns index in elements
         self._style = kwargs.get("style", "radio") # alternative: "dropdown"
         self._show_alternative_title = kwargs.get("show_alternative_title")
 

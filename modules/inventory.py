@@ -197,8 +197,8 @@ def do_inv_check(hostname):
         do_inv([hostname])
         num_entries = count_nodes(g_inv_tree)
         if not num_entries:
-            sys.stdout.write("WARN - Found no data\n")
-            sys.exit(1)
+            sys.stdout.write("OK - Found no data\n")
+            sys.exit(0)
         else:
             sys.stdout.write("OK - found %d entries\n" % num_entries)
             sys.exit(0)

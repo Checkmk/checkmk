@@ -16,6 +16,9 @@
     Event Console:
     * 2795 FIX: mkeventd: send email action did not work if message text contains umlauts...
 
+    HW/SW-Inventory:
+    * 1307 FIX: HW/SW Inventory: Found no data now triggers an OK State...
+
 
 1.2.6p14:
     Checks & Agents:

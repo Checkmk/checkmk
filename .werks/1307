@@ -1,0 +1,10 @@
+Title: HW/SW Inventory: Found no data now triggers an OK State
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.6p15
+Date: 1448461614
+Class: fix
+
+In order to simplify the configuration, the HW/SW Inventory check not longer shows a Warning in case of no Data.
+Now it's not longer necessary to decide which devices shall get the check and wich not.

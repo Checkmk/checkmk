@@ -1,0 +1,21 @@
+title: Barracuda SPAM Firewall: Active and Deferred Mail Queue Length
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the active and deferred mail queue length of a Barracuda SPAM Firewall.
+ Moreover this check reports the incoming and daily sent mails.
+
+ Upper levels of the active and deferred queue are configurable. Default levels of
+ active queue are set to 80, 100 and default levels of the deferred queue are also
+ set to 80, 100.
+
+item:
+ No item.
+
+perfdata:
+ Active and deferred queue length.
+
+inventory:
+ One service is created.

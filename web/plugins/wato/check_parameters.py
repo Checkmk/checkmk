@@ -6405,6 +6405,21 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "mail_latency",
+    _("Mail Latency"),
+    Tuple(
+        title = _("Upper levels for Mail Latency"),
+        elements = [
+            Age(title = _("Warning at"),  default_value = 40),
+            Age(title = _("Critical at"), default_value = 60),
+        ]),
+    None,
+    "first"
+)
+
+
+register_check_parameters(
     subgroup_storage,
     "zpool_status",
     _("ZFS storage pool status"),

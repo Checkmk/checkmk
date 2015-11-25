@@ -24,6 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# <<<citrix_state>>>
+# Catalog XenApp - Standard - RZ5
+# Controller rx2345.extern.foobar
+# DesktopGroupName XenApp - Standard
+# FaultState None
+# HostingServer rz1tgn03.extern.foobar
+# MaintenanceMode False
+# PowerState On
+# RegistrationState Registered
+# VMToolsState Running
+# AgentVersion 7.6.0.5026
+
+def parse_citrix_state(info):
+    parsed = {
+        "instance"    : {},
+    }
+    for line in info:
+        if line[0] == "Controller":
+            parsed["controller"] = " ".join(line[1:])
+        elif line[0] == "HostingServer":
+            parsed["hosting_server"] = " ".join(line[1:])
+        elif line[0] in [
+                "FaultState", "MaintenanceMode", "PowerState",
+                "RegistrationState", "VMToolsState" ]:
+            parsed["instance"][line[0]] = line[1]
+
+    return parsed
+
 
 #   .--Controller----------------------------------------------------------.
 #   |             ____            _             _ _                        |
@@ -34,16 +62,14 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_citrix_state_controller(info):
-    for line in info:
-        if line[0] == "Controller":
-            return [ (None, None) ]
+
+def inventory_citrix_state_controller(parsed):
+    if "controller" in parsed:
+        return [ (None, None) ]
 
 
-def check_citrix_state_controller(_no_item, _no_params, info):
-    for line in info:
-        if line[0] == "Controller":
-            return 0, line[1]
+def check_citrix_state_controller(_no_item, _no_params, parsed):
+    return 0, parsed["controller"]
 
 
 check_info["citrix_state.controller"] = {
@@ -62,16 +88,14 @@ check_info["citrix_state.controller"] = {
 #   |                             |___/                                    |
 #   '----------------------------------------------------------------------'
 
-def inventory_citrix_state_hosting_server(info):
-    for line in info:
-        if line[0] == "HostingServer":
-            return [ (None, None) ]
+
+def inventory_citrix_state_hosting_server(parsed):
+    if "hosting_server" in parsed:
+        return [ (None, None) ]
 
 
-def check_citrix_state_hosting_server(_no_item, _no_params, info):
-    for line in info:
-        if line[0] == "HostingServer":
-            yield 0, line[1]
+def check_citrix_state_hosting_server(_no_item, _no_params, parsed):
+    return 0, parsed["hosting_server"]
 
 
 check_info["citrix_state.hosting_server"] = {
@@ -90,52 +114,57 @@ check_info["citrix_state.hosting_server"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_citrix_state(info):
-    if info:
+
+def inventory_citrix_state(parsed):
+    if parsed["instance"]:
         return [ (None, {}) ]
 
 
-def check_citrix_state(_no_item, params, info):
-
-    statedict = { "maintenancemode"     : { "False" : 0,
-                                            "True"  : 1,
-                                        },
-                  "powerstate"          : { "Unmanaged"     : 1,
-                                            "Unknown"       : 1,
-                                            "Unavailable"   : 2,
-                                            "Off"           : 2,
-                                            "On"            : 0,
-                                            "Suspended"     : 2,
-                                            "TurningOn"     : 1,
-                                            "TurningOff"    : 1,
-                                        },
-                  "vmtoolsstate"        : { "NotPresent"    : 2,
-                                            "Unknown"       : 3,
-                                            "NotStarted"    : 1,
-                                            "Running"       : 0,
-                                        },
-                  "registrationstate"   : { "Unregistered"  : 2,
-                                            "Initializing"  : 1,
-                                            "Registered"    : 0,
-                                            "AgentError"    : 2,
-                                        },
-                  "faultstate"          : { "None"          : 0,
-                                            "FailedToStart" : 2,
-                                            "StuckOnBoot"   : 2,
-                                            "Unregistered"  : 2,
-                                            "MaxCapacity"   : 1,
-                                        },
+def check_citrix_state(_no_item, params, parsed):
+    map_states = {
+        "maintenancemode" : {
+            "False" : 0,
+            "True"  : 1,
+        },
+        "powerstate" : {
+            "Unmanaged"     : 1,
+            "Unknown"       : 1,
+            "Unavailable"   : 2,
+            "Off"           : 2,
+            "On"            : 0,
+            "Suspended"     : 2,
+            "TurningOn"     : 1,
+            "TurningOff"    : 1,
+        },
+        "vmtoolsstate" : {
+            "NotPresent"    : 2,
+            "Unknown"       : 3,
+            "NotStarted"    : 1,
+            "Running"       : 0,
+        },
+        "registrationstate" : {
+            "Unregistered"  : 2,
+            "Initializing"  : 1,
+            "Registered"    : 0,
+            "AgentError"    : 2,
+        },
+        "faultstate" : {
+            "None"          : 0,
+            "FailedToStart" : 2,
+            "StuckOnBoot"   : 2,
+            "Unregistered"  : 2,
+            "MaxCapacity"   : 1,
+        },
     }
-
-    statedict.update(params)
-
-    for line in info:
-        for what in statedict:
-            if line[0].lower() == what:
-                yield statedict[what][line[1]], line[0] + ": " + line[1]
+    map_states.update(params)
+    for state_type, state in parsed["instance"].items():
+        state_key = state_type.lower()
+        if state_key in map_states:
+            yield map_states[state_key][state], "%s: %s" % (state_type, state)
 
 
 check_info["citrix_state"] = {
+    "parse_function"            : parse_citrix_state,
     "inventory_function"        : inventory_citrix_state,
     "check_function"            : check_citrix_state,
     "service_description"       : "Citrix Instance State",

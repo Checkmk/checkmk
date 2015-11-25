@@ -182,8 +182,8 @@ def do_inv_check(hostname):
         inv_tree, old_timestamp = do_inv_for(hostname)
         num_entries = count_nodes(g_inv_tree)
         if not num_entries:
-            sys.stdout.write("WARN - Found no data\n")
-            sys.exit(1)
+            sys.stdout.write("OK - Found no data\n")
+            sys.exit(0)
 
         infotext = "found %d entries" % num_entries
         state = 0

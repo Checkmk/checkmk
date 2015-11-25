@@ -2625,7 +2625,23 @@ metric_info["managed_object_count"] = {
     "color" : "45/a"
 }
 
+metric_info["active_vpn_tunnels"] = {
+    "title" : _("Active VPN Tunnels"),
+    "unit"  : "count",
+    "color" : "43/a"
+}
 
+metric_info["active_vpn_users"] = {
+    "title" : _("Active VPN Users"),
+    "unit"  : "count",
+    "color" : "23/a"
+}
+
+metric_info["active_vpn_websessions"] = {
+    "title" : _("Active VPN Web Sessions"),
+    "unit"  : "count",
+    "color" : "33/a"
+}
 
 
 #.
@@ -4383,6 +4399,12 @@ perfometer_info.append({
     "total"    : 100.0,
 })
 
+perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "active_vpn_tunnels" ],
+    "total"    : "active_vpn_tunnels:max"
+})
+
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -5623,3 +5645,4 @@ graph_info.append({
     ],
     "range" : (0, "mem_perm_used:max")
 })
+

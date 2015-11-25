@@ -1,0 +1,9 @@
+Title: raritan_px_sensors, raritan_px_sensors.binary, raritan_px_sensors.humidity: monitors the temperature, contact and humidity of Raritan PX Devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1448451753
+Class: feature
+
+

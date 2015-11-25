@@ -100,6 +100,7 @@
     * 2799 FIX: check_mail_loop: "Use TLS over SMTP" option did not work
     * 2777 FIX: check_mk_agent.linux: avoid execution of .deb temporary files as plugins
     * 2800 FIX: mk_mysql: fixed some issues with incorrect assembled command line...
+    * 2744 FIX: waitmax now kills the whole process group and is a bit more robust.
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

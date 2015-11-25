@@ -165,11 +165,9 @@ function run_real_time_checks()
         for SECTION in $RTC_SECTIONS; do
             # Be aware of maximum packet size. Maybe we need to check the size of the section
             # output and do some kind of nicer error handling
-            #
-            # Example for encryption:
-            # export RTC_SECRET=xxx ; echo xxx | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt > x
-            # export RTC_SECRET=xxx ; cat x | openssl enc -aes-256-cbc -d -pass env:RTC_SECRET -nosalt
-            section_$SECTION >/dev/udp/$REMOTE/$RTC_PORT
+            (date +%s ;
+             export RTC_SECRET=$RTC_SECRET ;
+             section_$SECTION | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt) >/dev/udp/$REMOTE/$RTC_PORT
         done
 
         sleep 1
@@ -706,8 +704,14 @@ fi
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.
-if [ -e $MK_CONFDIR/real_time_checks.cfg -a -n $REMOTE ]; then
-    run_real_time_checks &
+if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
+    if [ -z $REMOTE ]; then
+        echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
+    elif ! type openssl >/dev/null; then
+        echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
+    else
+        run_real_time_checks &
+    fi
 fi
 
 # MK's Remote Plugin Executor

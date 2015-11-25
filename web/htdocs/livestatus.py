@@ -386,7 +386,7 @@ class SingleSiteConnection(BaseConnection, Helpers):
     def set_auth_user(self, domain, user):
         if user:
             self.auth_users[domain] = user
-        else:
+        elif domain in self.auth_users:
             del self.auth_users[domain]
 
     # Switch future request to new authorization domain

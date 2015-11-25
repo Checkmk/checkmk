@@ -6465,8 +6465,14 @@ register_check_parameters(
         elements = [
             Integer(
                 title = _("Expected number of active paths")),
-            Percentage(
-                title = _("Expected percentage of active paths")),
+            Tuple(
+                title = _("Expected percentage of active paths"),
+                elements = [
+                    Percentage(
+                        title = _("Warning if less then")),
+                    Percentage(
+                        title = _("Critical if less then")),
+                    ]),
         ]
     ),
     TextAscii(

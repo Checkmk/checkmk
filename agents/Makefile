@@ -56,7 +56,7 @@ setversion:
 	if [ -d ../.git ]; then \
 	    git rm -f *.rpm *.deb || true ; \
 	fi
-	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
+	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms ; \
 	for agent in check_mk_agent.*; do \
 	    if [ "$$agent" != windows -a "$$agent" != plugins -a "$$agent" != hpux ] ; then \

@@ -3,6 +3,7 @@
     * 2894 FIX: Fixed broken cluster checks when using Nagios core...
 
     Checks & Agents:
+    * 2802 esx_vsphere_hostsystem.multipath: now supports ESX 6.0 multipath names
     * 2829 filesystem checks: introduced default levels for inodes used (10%/5% free)...
     * 2700 FIX: ibm_svc_node: fixed handling with agent output after firmware update
     * 2875 FIX: citrix_farm.ps1: Add missing end marker of piggy data - fixes problem in subsequent plugins

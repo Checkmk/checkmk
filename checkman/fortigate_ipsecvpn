@@ -1,0 +1,19 @@
+title: FortiGate firewalls: Status of IPSec VPN Tunnels
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of available IPSec VPN Tunnels
+inventory:
+ One service will be created
+
+[parameters]
+warning (int): number of tunnels in state "down" for warning level
+crit (int): number of tunnels in state "down" for critical level
+
+[configuration]
+fortigate_ipsecvpn_default_levels = (int, int): The default levels for down tunnels.
+
+perfdata:
+ current number of active tunnels

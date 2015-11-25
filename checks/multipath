@@ -312,8 +312,18 @@ def check_multipath(item, target_numpaths, parsed):
 
     if target_numpaths == None:
         target_numpaths = 2 # default case: we need two paths
-    elif type(target_numpaths) == float:
-        target_numpaths = (target_numpaths / 100) * numpaths
+    elif type(target_numpaths) == tuple:
+        warn, crit = target_numpaths
+        warn_num  = (warn / 100.0) * numpaths
+        crit_num = (crit / 100.0) * numpaths
+        levels = " (Warning/ Critical at %d/ %d)" % (warn_num, crit_num)
+        info = "%spaths active: %d" % (aliasinfo, numpaths)
+        if numpaths <= crit_num:
+            return 2, info + levels
+        elif numpaths <= warn_num:
+            return 1, info + levels
+        else:
+            return 0, info
 
     info = "%spaths expected: %d, paths active: %d" % (aliasinfo, target_numpaths, numpaths)
 

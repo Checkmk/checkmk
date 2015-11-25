@@ -9,7 +9,7 @@ inventory:
  One service will be created
 
 [parameters]
-warning (int): Minimum seesion count for warning level
+warning (int): Minimum session count for warning level
 crit (int): Minimum session count for critical level
 
 [configuration]

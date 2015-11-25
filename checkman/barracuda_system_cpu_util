@@ -1,0 +1,18 @@
+title: Barracuda SPAM Firewall: System CPU Utilization
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the system cpu utilization of a Barracuda SPAM Firewall.
+
+ Upper levels are configurable. Default levels are set to 80, 90 percent.
+
+item:
+ No item.
+
+perfdata:
+ CPU utilization
+
+inventory:
+ One service is created.

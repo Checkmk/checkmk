@@ -1,0 +1,107 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# .1.3.6.1.4.1.13742.4.1.2.2.1.1.1 1 --> PDU-MIB::outletIndex.1
+# .1.3.6.1.4.1.13742.4.1.2.2.1.1.3 3 --> PDU-MIB::outletIndex.3
+# .1.3.6.1.4.1.13742.4.1.2.2.1.1.4 4 --> PDU-MIB::outletIndex.4
+# .1.3.6.1.4.1.13742.4.1.2.2.1.2.1 Outlet 1 --> PDU-MIB::outletLabel.1
+# .1.3.6.1.4.1.13742.4.1.2.2.1.2.3 Outlet 3 --> PDU-MIB::outletLabel.3
+# .1.3.6.1.4.1.13742.4.1.2.2.1.2.4 Outlet 4 --> PDU-MIB::outletLabel.4
+# .1.3.6.1.4.1.13742.4.1.2.2.1.3.1 1 --> PDU-MIB::outletOperationalState.1
+# .1.3.6.1.4.1.13742.4.1.2.2.1.3.3 1 --> PDU-MIB::outletOperationalState.3
+# .1.3.6.1.4.1.13742.4.1.2.2.1.3.4 0 --> PDU-MIB::outletOperationalState.4
+# .1.3.6.1.4.1.13742.4.1.2.2.1.4.1 0 --> PDU-MIB::outletCurrent.1
+# .1.3.6.1.4.1.13742.4.1.2.2.1.4.3 6854 --> PDU-MIB::outletCurrent.3
+# .1.3.6.1.4.1.13742.4.1.2.2.1.4.4 0 --> PDU-MIB::outletCurrent.4
+# .1.3.6.1.4.1.13742.4.1.2.2.1.6.1 222000 --> PDU-MIB::outletVoltage.1
+# .1.3.6.1.4.1.13742.4.1.2.2.1.6.3 222000 --> PDU-MIB::outletVoltage.3
+# .1.3.6.1.4.1.13742.4.1.2.2.1.6.4 222000 --> PDU-MIB::outletVoltage.4
+# .1.3.6.1.4.1.13742.4.1.2.2.1.7.1 0 --> PDU-MIB::outletActivePower.1
+# .1.3.6.1.4.1.13742.4.1.2.2.1.7.3 1475 --> PDU-MIB::outletActivePower.3
+# .1.3.6.1.4.1.13742.4.1.2.2.1.7.4 0 --> PDU-MIB::outletActivePower.4
+# .1.3.6.1.4.1.13742.4.1.2.2.1.8.1 0 --> PDU-MIB::outletApparentPower.1
+# .1.3.6.1.4.1.13742.4.1.2.2.1.8.3 1542 --> PDU-MIB::outletApparentPower.3
+# .1.3.6.1.4.1.13742.4.1.2.2.1.8.4 0 --> PDU-MIB::outletApparentPower.4
+# .1.3.6.1.4.1.13742.4.1.2.2.1.31.1 0 --> PDU-MIB::outletWattHours.1
+# .1.3.6.1.4.1.13742.4.1.2.2.1.31.3 0 --> PDU-MIB::outletWattHours.3
+# .1.3.6.1.4.1.13742.4.1.2.2.1.31.4 0 --> PDU-MIB::outletWattHours.4
+
+
+def parse_raritan_px_outlets(info):
+    map_state = {
+        "-1" : (2, "error"),
+        "0"  : (2, "off"),
+        "1"  : (0, "on"),
+        "2"  : (0, "cycling"),
+    }
+    parsed = {}
+    for index, state, current_str, voltage_str, \
+        power_str, appower_str, energy_str in info:
+        parsed[index] = {
+            "state"   : map_state.get(state, (3, "unknown")),
+            "current" : float(current_str) / 1000,
+            "voltage" : float(voltage_str) / 1000,
+            "power"   : float(power_str),
+            "appower" : float(appower_str),
+            "energy"  : float(energy_str),
+        }
+
+    return parsed
+
+
+def inventory_raritan_px_outlets(parsed):
+    return [ (index, {}) for index, values in parsed.items() \
+              if values["state"][1] == "on" ]
+
+
+def check_raritan_px_outlets(item, params, parsed):
+    if item in parsed:
+        state, state_readable = parsed[item]["state"]
+        yield state, "Operational status: %s" % state_readable
+        for result in check_elphase(item, params, parsed):
+            yield result
+
+
+check_info['raritan_px_outlets'] = {
+    'parse_function'            : parse_raritan_px_outlets,
+    'inventory_function'        : inventory_raritan_px_outlets,
+    'check_function'            : check_raritan_px_outlets,
+    'service_description'       : 'Outlet %s',
+    'has_perfdata'              : True,
+    'snmp_info'                 : (".1.3.6.1.4.1.13742.4.1.2.2.1", [
+                                        "1",    # outletIndex
+                                        "3",    # outletOperationalState
+                                        "4",    # outletCurrent
+                                        "6",    # outletVoltage
+                                        "7",    # outletActivePower
+                                        "8",    # outletApparentPower
+                                        "31",   # outletWattHours
+                                  ]),
+    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.4",
+    'includes'                  : [ "elphase.include" ],
+    'group'                     : "el_inphase",
+}
+

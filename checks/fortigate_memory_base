@@ -24,33 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-fortigate_memory_base_default_levels = (70, 80)
+
+fortigate_memory_base_default_levels = (70, 80)  # taken from fortigate_memory
+
 
 def inventory_fortigate_memory_base(info):
     if info:
         return [(None, "fortigate_memory_base_default_levels")]
 
+
 def check_fortigate_memory_base(item, params, info):
     if type(params) == dict:
+        # accept values from "memory" wato rule
         params = params["levels"]
 
     warn, crit = map(abs, params)
 
     percent = int(info[0][0])
-    state = 0
-    icon = ''
-    if percent >= warn:
-        state = 1
-        icon = "(!)"
+
     if percent >= crit:
         state = 2
-        icon = "(!!)"
+    elif percent >= warn:
+        state = 1
+    else:
+        state = 0
 
-    capacity = int(info[0][1]) * 1024
+    capacity = int(info[0][1]) * 1024  # value from device is in kb, we need bytes
     used = (percent * capacity) / 100
 
     perf = [("mem_used", used, (warn * capacity) / 100, (crit * capacity) / 100, 0, capacity)]
-    return state, "%d%%%s (warn/crit at %d%%/%d%%)" % (percent, icon, warn, crit), perf
+    return state, "%d%% (warn/crit at %d%%/%d%%)" % (percent, warn, crit), perf
+
 
 check_info["fortigate_memory_base"] = {
     "check_function"      : check_fortigate_memory_base,

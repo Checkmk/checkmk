@@ -89,7 +89,7 @@ def try_detect_servers():
         if address == '0.0.0.0':
             address = '127.0.0.1'
         elif address == '::':
-            address = '::1'
+            address = '[::1]'
 
         # Switch protocol if port is SSL port. In case you use SSL on another
         # port you would have to change/extend the ssl_port list

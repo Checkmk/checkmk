@@ -1,0 +1,11 @@
+Title: fortigate_memory_base: added check for fortigate firewall memory usage
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1448523674
+Class: feature
+
+The fortigate_memory check uses data provided by a more "generic" fortinet mib, this one uses the
+fortigate mib. Apparently a device provides only one of the two mibs so there shouldn't be a
+collision.

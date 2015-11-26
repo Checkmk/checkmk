@@ -276,6 +276,34 @@ def login(u):
     # load current on/off-switching states of sites
     read_site_config()
 
+# Login a user that has all permissions. This is needed for making
+# Livestatus queries from unauthentiated page handlers
+def login_super_user():
+    global user_id
+    user_id = None
+
+    global user_role_ids
+    user_role_ids = []
+
+    global user_baserole_ids
+    user_baserole_ids = [ "admin" ]
+
+    global user_baserole_id
+    user_baserole_id = "admin"
+
+    # Prepare user object
+    global user, user_alias
+    user = { "roles" : "admin" }
+    user_alias = "Superuser for unauthenticated pages"
+
+    # Prepare cache of already computed permissions
+    global user_permissions
+    user_permissions = {}
+
+    # All sites are enabled
+    global user_siteconf
+    user_siteconf = {}
+
 def set_user_confdir(user_id):
     global user_confdir
     user_confdir = config_dir + "/" + user_id.encode("utf-8")

@@ -1,0 +1,20 @@
+title: EMC VNX Storage: Write Cache State
+agents: emc
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the write cache state of storage processors of an
+ EMC VNX storage system.
+
+ The information is retrieved by the special agent agent_emcvnx which uses
+ EMC's command line tool naviseccli.
+
+ The state is OK, if the write cache state of a storage processor is enabled,
+ otherwise it will be CRIT.
+
+item:
+ The storage processor identifier.
+
+inventory:
+ One service per storage processor is created.

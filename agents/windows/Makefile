@@ -124,6 +124,7 @@ check_mk_agent-64.exe.versioned:
 
 
 %.exe: %.unversioned.exe %.exe.versioned
+	true
 
 # -----------------------------------------------------------------------------
 # NSIS installer will be removed and replaced by multiarch MSI installer
@@ -156,7 +157,7 @@ nowin.exe: nowin.cc
 	$(CXX) -o $@ $<
 
 clean:
-	rm -f *.o *~ svn-*.tmp *.rc *.res obj/*.o obj64/*.o
+	rm -f *.o *.exe *~ svn-*.tmp *.rc *.res obj/*.o obj64/*.o
 	make -C msibuild clean
 
 mrproper: clean

@@ -147,22 +147,21 @@ def check_cmk_agent_update(_no_item, _no_params, info):
             now = time.time()
 
             if parsed["error"] != "None":
-                yield 2, "error: %s" % parsed["error"]
+                yield 1, "error: %s" % parsed["error"]
             else:
                 yield 0, "no errors"
 
             try:
                 last_check = float(parsed["last_check"])
                 age = now - last_check
-                warn, crit = (3600 * 24, 2 * 3600 * 24)
-                if age > crit:
-                    state = 2
-                elif age > warn:
+                # Currently there is no crit level
+                warn = 2 * 3600 * 24
+                if age > warn:
                     state = 1
                 else:
                     state = 0
                 if state:
-                    levels_text = " (warn/crit at %s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
+                    levels_text = " (warn at %s)" % (get_age_human_readable(warn))
                 else:
                     levels_text = ""
                 yield state, "last update check: " + get_timestamp_human_readable(parsed["last_check"]) + levels_text

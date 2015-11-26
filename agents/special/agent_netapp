@@ -79,7 +79,7 @@ OPTIONS:
 user   = None
 secret = None
 
-opt_timeout     = 60
+opt_timeout     = 120
 opt_debug       = False
 opt_dump_xml    = False
 opt_no_counters = []
@@ -519,12 +519,14 @@ if netapp_mode == "clustermode":
                                                       "volume-state-attributes.state",
                                                       "volume-id-attributes.name",
                                                       "volume-id-attributes.node",
+                                                      "volume-id-attributes.msid",
                                                       "volume-inode-attributes.files-total",
                                                       "volume-inode-attributes.files-used" ],
                                     config_rename = { "volume-space-attributes.size-available": "size-available",
                                                       "volume-space-attributes.size-total"    : "size-total",
                                                       "volume-state-attributes.state"         : "state",
                                                       "volume-id-attributes.name"             : "name",
+                                                      "volume-id-attributes.msid"             : "msid",
                                                       "volume-id-attributes.node"             : "node",
                                                       "volume-inode-attributes.files-total"   : "files-total",
                                                       "volume-inode-attributes.files-used"    : "files-used" },

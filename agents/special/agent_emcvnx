@@ -109,6 +109,7 @@ naviseccli_options = {
     "raidgroups"  : {"cmd_option" : "getall -rg",      "active" : False, "sep" : None},
 #   "agent-info"  : {"cmd_option" : "-sp",             "active" : False, "sep" : None},
     "sp_util"     : {"cmd_option" : "getcontrol -cbt", "active" : False, "sep" : 58},
+    "writecache"  : {"cmd_option" : "getcache -wst",   "active" : False, "sep" : None},
 }
 
 for o,a in opts:

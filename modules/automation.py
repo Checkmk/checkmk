@@ -782,6 +782,11 @@ def rename_host_files(oldname, newname):
     if have_renamed_agent:
         actions.append("agent")
 
+    # Agent deployment
+    deployment_dir = var_dir + "/agent_deployment/"
+    if rename_host_file(deployment_dir, oldname, newname):
+        actions.append("agent_deployment")
+
     # OMD-Stuff. Note: The question really is whether this should be
     # included in Check_MK. The point is - however - that all these
     # actions need to take place while the core is stopped.

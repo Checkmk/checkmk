@@ -135,6 +135,7 @@
     * 2762 FIX: Fixed formating of check_http when using "clickable URL" option
     * 2772 FIX: Fixed possible exception in icon column when showing some actions in the column...
     * 2846 FIX: View refresh could reset checkboxes on views where "always show checkboxes" is enabled
+    * 2778 FIX: Fixed correct scaling of sidebar on newer versions of Chrome browser
 
     WATO:
     * 2442 WATO remove host: improved cleanup of obsolete host files...

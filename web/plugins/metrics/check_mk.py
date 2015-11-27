@@ -465,7 +465,7 @@ metric_info["mem_used_percent"] = {
 
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
-    "title" : _("Perm used"),
+    "title" : _("Permanent Generation Memory"),
     "unit" : "bytes",
 }
 
@@ -5659,4 +5659,3 @@ graph_info.append({
     ],
     "range" : (0, "mem_perm_used:max")
 })
-

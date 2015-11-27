@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-backup_domains = {}
-
 # Temporary variable which stores settings during the backup process
 backup_perfdata_enabled = True
 def performancedata_restore(pre_restore = True):

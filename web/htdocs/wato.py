@@ -20418,7 +20418,7 @@ def load_plugins():
     g_rulespec_groups = []
 
     # Directories and files to synchronize during replication
-    global replication_paths, backup_paths
+    global replication_paths, backup_paths, backup_domains
     replication_paths = [
         ( "dir",  "check_mk",   root_dir ),
         ( "dir",  "multisite",  multisite_dir ),
@@ -20439,6 +20439,7 @@ def load_plugins():
         # this?
         # ( "dir", "autochecks", defaults.autochecksdir ),
     ]
+    backup_domains = {}
 
     register_builtin_host_tags()
 

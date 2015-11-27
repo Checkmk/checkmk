@@ -5655,6 +5655,7 @@ graph_info.append({
     "scalars" : [
         "mem_perm_used:warn",
         "mem_perm_used:crit",
+        ("mem_perm_used:max#000000", _("Max Perm used")),
     ],
     "range" : (0, "mem_perm_used:max")
 })

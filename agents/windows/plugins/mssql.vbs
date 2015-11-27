@@ -272,7 +272,6 @@ For Each instId In instIds.Keys
     ' which have at least one backup 
     Dim lastBackupDate
     addOutput( "<<<mssql_backup>>>" )
-    addOutput( "Blocked _Sessions" )
     For Each dbName in dbNames.Keys
         RS.open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date " & _
                 "FROM msdb.dbo.backupset " & _

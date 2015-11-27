@@ -1,0 +1,9 @@
+Title: mssql_backup: Fixed broken check caused by debug output in agent output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p5
+Date: 1448611029
+Class: fix
+
+

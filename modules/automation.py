@@ -362,15 +362,17 @@ def automation_delete_host(args):
 
     # single files
     for path in [
-        "%s/%s"              % (precompiled_hostchecks_dir, hostname),
-        "%s/%s.py"           % (precompiled_hostchecks_dir, hostname),
-        "%s/%s.mk"           % (autochecksdir, hostname),
-        "%s/%s"              % (counters_directory, hostname),
-        "%s/%s"              % (tcp_cache_dir, hostname),
-        "%s/persisted/%s"    % (var_dir, hostname),
-        "%s/piggyback/%s"    % (tmp_dir, hostname),
-        "%s/inventory/%s"    % (var_dir, hostname),
-        "%s/inventory/%s.gz" % (var_dir, hostname)]:
+        "%s/%s"                  % (precompiled_hostchecks_dir, hostname),
+        "%s/%s.py"               % (precompiled_hostchecks_dir, hostname),
+        "%s/%s.mk"               % (autochecksdir, hostname),
+        "%s/%s"                  % (counters_directory, hostname),
+        "%s/%s"                  % (tcp_cache_dir, hostname),
+        "%s/persisted/%s"        % (var_dir, hostname),
+        "%s/piggyback/%s"        % (tmp_dir, hostname),
+        "%s/inventory/%s"        % (var_dir, hostname),
+        "%s/inventory/%s.gz"     % (var_dir, hostname),
+        "%s/agent_deployment/%s" % (var_dir, hostname),
+        ]:
         if os.path.exists(path):
             os.unlink(path)
 
@@ -383,6 +385,7 @@ def automation_delete_host(args):
     for folder in os.listdir("%s/agents" % var_dir):
         if os.path.exists("%s/%s" % (folder, hostname)):
             os.unlink("%s/%s" % (folder, hostname))
+
 
     # logwatch folders
     if os.path.exists("%s/%s" % (logwatch_dir, hostname)):

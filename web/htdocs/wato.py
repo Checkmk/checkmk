@@ -1724,7 +1724,8 @@ def move_folder(what_folder, target_folder):
         raise MKUserError(None, _("Cannot move folder: Target folder is locked."))
 
     new_dir = folder_dir(target_folder)
-    if os.path.exists(new_dir):
+    new_folder_dir = new_dir + "/" + what_folder[".name"]
+    if os.path.exists(new_folder_dir):
         raise MKUserError(None, _("Cannot move folder: A folder with this name already exists in the target folder."))
 
     old_parent = what_folder[".parent"]

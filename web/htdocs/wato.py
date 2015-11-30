@@ -340,6 +340,8 @@ def ensure_mode_permissions(modeperms):
 
 
 def set_current_folder(folder = None):
+    # CLEANUP: Das hier ist überflüssig, sobald nur noch die Klasse Folder
+    # verwendet wird.
     global g_folder
 
     if folder:
@@ -467,6 +469,7 @@ def folder_config_exists(dir):
 # return the folder object. The case the .wato file is missing
 # it will be assume to contain default values.
 def load_folder(dir, name="", path="", parent=None, childs = True):
+    # CLEANUP: Replace by Folder class
     fn = dir + "/.wato"
     try:
         folder = eval(file(fn).read())
@@ -525,6 +528,7 @@ def load_folder(dir, name="", path="", parent=None, childs = True):
 # so that subsequent code has access to the correct folder
 # meta data (such as .siteid)
 def reload_folder(folder):
+    # CLEANUP: Replace by Folder class
     have_hosts = ".hosts" in folder
     new_folder = load_folder(folder_dir(folder), folder[".name"], folder[".path"], folder.get(".parent"))
     if have_hosts: # hosts were loaded in old folder -> do this again
@@ -533,6 +537,7 @@ def reload_folder(folder):
 
 # Load the information about all folders - except the hosts
 def load_all_folders():
+    # CLEANUP: Replace by Folder class
     if not os.path.exists(root_dir):
         make_nagios_directories(root_dir)
 
@@ -543,6 +548,7 @@ def load_all_folders():
 
 # Load all hosts from all configuration files.
 def load_all_hosts(base_folder = None):
+    # CLEANUP: Replace by Folder class
     if base_folder == None:
         base_folder = g_root_folder
     hosts = {}
@@ -551,106 +557,8 @@ def load_all_hosts(base_folder = None):
     hosts.update(load_hosts(base_folder))
     return hosts
 
-def load_hosts(folder = None, force = False):
-    if folder == None:
-        folder = g_folder
-    if ".hosts" not in folder or force:
-        folder[".hosts"] = load_hosts_file(folder)
-    folder["num_hosts"] = len(folder[".hosts"])
-    return folder[".hosts"]
-
-def reload_hosts(folder = None):
-    load_hosts(folder, force = True)
-
-
-def load_hosts_file(folder):
-    hosts = {}
-
-    filename = root_dir + folder[".path"] + "/hosts.mk"
-    if os.path.exists(filename):
-        variables = {
-            "FOLDER_PATH"               : "",
-            "ALL_HOSTS"                 : ALL_HOSTS,
-            "all_hosts"                 : [],
-            "clusters"                  : {},
-            "ipaddresses"               : {},
-            "ipv6addresses"             : {},
-            "explicit_snmp_communities" : {},
-            "extra_host_conf"           : { "alias" : [] },
-            "extra_service_conf"        : { "_WATO" : [] },
-            "host_attributes"           : {},
-            "host_contactgroups"        : [],
-            "_lock"                     : False,
-        }
-        execfile(filename, variables, variables)
-        nodes_of = {}
-        # Add entries in clusters{} to all_hosts
-        for cluster_with_tags, nodes in variables["clusters"].items():
-            variables["all_hosts"].append(cluster_with_tags)
-            nodes_of[cluster_with_tags.split('|')[0]] = nodes
-
-        folder[".lock_hosts"] = variables["_lock"]
-
-        for h in variables["all_hosts"]:
-
-            parts = h.split('|')
-            hostname = parts[0]
-
-            # Get generic attributes of that host
-            host = variables["host_attributes"].get(hostname)
-            if host == None: # Legacy file: reconstruct values
-                host = {}
-                # Some of the attributes are handled with special care. We do not
-                # want them to be redundant in the configuration file. We
-                # want to stay compatible with check_mk.
-                aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"])
-                if len(aliases) > 0:
-                    alias = aliases[0]
-                else:
-                    alias = None
-                host["alias"]           = alias
-
-                host["ipaddress"]       = variables["ipaddresses"].get(hostname)
-                host["ipv6address"]     = variables["ipv6addresses"].get(hostname)
-                host["snmp_community"]  = variables["explicit_snmp_communities"].get(hostname)
-
-                # Retrieve setting for each individual host tag
-                tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
-                for attr, topic in host_attributes:
-                    if isinstance(attr, HostTagAttribute):
-                        tagvalue = attr.get_tag_value(tags)
-                        host[attr.name()] = tagvalue
-
-            # Add cluster nodes if this is a cluster
-            if hostname in nodes_of:
-                host[".nodes"] = nodes_of[hostname]
-
-            # access to "raw" tags, needed for rule engine, remove implicit tags
-            host[".tags"] = [ p for p in parts[1:] if p not in [ "wato", "//" ] ]
-
-            # access to name of host, if key is not present
-            host[".name"] = hostname
-
-            # access to the folder object
-            host['.folder'] = folder
-
-            # Compute site attribute, because it is needed at various
-            # places.
-            if is_distributed():
-                if "site" in host:
-                    host[".siteid"] = host["site"]
-                else:
-                    host[".siteid"] = folder[".siteid"]
-            else:
-                host[".siteid"] = None
-
-            hosts[hostname] = host
-
-
-    # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
-    return hosts
-
 def save_hosts(folder = None):
+    # CLEANUP: Replace by Folder class
     if folder == None:
         folder = g_folder
 
@@ -805,6 +713,7 @@ def save_hosts(folder = None):
 
 
 def delete_configuration_file(folder, thefile):
+    # CLEANUP: Replace by Folder class??
     path = folder_dir(folder, thefile)
     if os.path.exists(path):
         os.remove(path) # remove the actual configuration file
@@ -1047,16 +956,16 @@ def prepare_folder_info():
     set_current_folder()          # set g_folder from HTML variable
 
 
-def folder_title_path(path, withlinks = False):
-    folder = g_folders.get(path)
-    titles = []
-    while (folder):
-        title = folder["title"]
-        if withlinks:
-            title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder[".path"], title)
-        titles.append(title)
-        folder = folder.get(".parent")
-    return titles[::-1]
+### def folder_title_path(path, withlinks = False):
+###     folder = g_folders.get(path)
+###     titles = []
+###     while (folder):
+###         title = folder["title"]
+###         if withlinks:
+###             title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder[".path"], title)
+###         titles.append(title)
+###         folder = folder.get(".parent")
+###     return titles[::-1]
 
 
 def check_host_permissions(hostname, exception=True, folder=None):
@@ -1595,7 +1504,7 @@ def move_to_folder_combo(what, thing = None, top = False, multiple = False):
                     # avoid naming conflict!
                     or thing[".name"] in afolder[".folders"])):
                 os_path = afolder[".path"]
-                title_path = folder_title_path(os_path)
+                title_path = Folder.folder(os_path).title_path()
                 if len(title_path) > 1:
                     del title_path[0] # remove name of main folder
                 msg = " / ".join(title_path)
@@ -17068,9 +16977,9 @@ def page_user_profile(change_pw=False):
 def page_download_agent_output():
     config.need_permission("wato.download_agent_output")
 
-    hostname = html.var("host")
-    if not hostname:
-        raise MKGeneralException(_("The hostname is missing."))
+    host_name = html.var("host")
+    if not host_name:
+        raise MKGeneralException(_("The host is missing."))
 
     ty = html.var("type")
     if ty not in [ "walk", "agent" ]:
@@ -17078,19 +16987,19 @@ def page_download_agent_output():
 
     prepare_folder_info()
 
-    check_host_permissions(hostname)
+    # TODO: Use method in host object
+    check_host_permissions(host_name)
 
-    if hostname not in g_folder[".hosts"]:
-        raise MKGeneralException(_("Invalid hostname."))
+    host = Folder.current_folder().host(host_name)
+    if not host:
+        raise MKGeneralException(_("Invalid host."))
 
-    host = g_folder[".hosts"][hostname]
-
-    success, output, agent_data = check_mk_automation(host[".siteid"], "get-agent-output",
-                                                      [hostname, ty])
+    success, output, agent_data = check_mk_automation(host.site_id(), "get-agent-output",
+                                                      [host_name, ty])
 
     if success:
         html.set_content_type("text/plain; charset=UTF-8")
-        html.set_http_header("Content-Disposition", "Attachment; filename=" + hostname)
+        html.set_http_header("Content-Disposition", "Attachment; filename=" + host_name)
         html.write(agent_data)
     else:
         html.header(_("Failed to fetch agent data"), stylesheets=["status", "pages"])
@@ -19243,27 +19152,6 @@ def get_folder_tree():
     num_hosts_in(g_root_folder) # sets ".total_hosts"
     return g_root_folder
 
-# Find a folder by its path. Raise an exception if it does
-# not exist.
-def get_folder(path):
-    prepare_folder_info()
-
-    folder = g_folders.get(path)
-    if folder:
-        load_hosts(folder)
-        return folder
-    else:
-        raise MKGeneralException("No WATO folder %s." % path)
-
-# Return the title of a folder - which is given as a string path
-def get_folder_title(path):
-    load_all_folders() # TODO: use in-memory-cache
-    folder = g_folders.get(path)
-    if folder:
-        return folder["title"]
-    else:
-        return path
-
 # Return a list with all the titles of the paths'
 # components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
 def get_folder_title_path(path, with_links=False):
@@ -19275,7 +19163,7 @@ def get_folder_title_path(path, with_links=False):
         cache = {}
         html.set_cache(cache_name, cache)
     if path not in cache:
-        cache[path] = folder_title_path(path, with_links)
+        cache[path] = Folder.folder(path).title_path(with_links)
     return cache[path]
 
 def sort_by_title(folders):
@@ -20046,14 +19934,6 @@ def folder_is_parent_of(folder, child):
     else:
         return False
 
-# This is a dummy implementation which works without tags
-# and implements only a special case of Check_MK's real logic.
-def host_extra_conf(hostname, conflist):
-    for value, hostlist in conflist:
-        if hostname in hostlist:
-            return [value]
-    return []
-
 # Create link keeping the context to the current folder / file
 def make_link(vars):
     vars = vars + [ ("folder", g_folder[".path"]) ]
@@ -20702,6 +20582,7 @@ class Folder:
         wato_folders = html.set_cache("wato_folders", {})
         Folder("", "").add_to_dictionary(wato_folders)
 
+
     def __init__(self, name, folder_path, parent_folder=None):
         self._name = name
         self._folder_path = folder_path
@@ -20709,6 +20590,120 @@ class Folder:
         self._subfolders = {}
         self.load()
         self.load_subfolders()
+        self._hosts = None
+
+
+    def hosts(self):
+        self.load_hosts_on_demand()
+        return self._hosts
+
+
+    def host(self, host_name):
+        self.load_hosts_on_demand()
+        return self._hosts.get(host_name)
+
+
+    def load_hosts_on_demand(self):
+        if self._hosts == None:
+            self.load_hosts()
+
+
+    def load_hosts(self):
+        self._hosts = {}
+        if not os.path.exists(self.hosts_file_path()):
+            return
+
+        variables = self.load_hosts_file(self.hosts_file_path())
+        self._locked_hosts = variables["_lock"]
+
+        # Add entries in clusters{} to all_hosts, prepare cluster to node mapping
+        nodes_of = {}
+        for cluster_with_tags, nodes in variables["clusters"].items():
+            variables["all_hosts"].append(cluster_with_tags)
+            nodes_of[cluster_with_tags.split('|')[0]] = nodes
+
+        # Build list of individual hosts
+        for host_name_with_tags in variables["all_hosts"]:
+            parts = host_name_with_tags.split('|')
+            host_name = parts[0]
+            host_tags = self.cleanup_host_tags(parts[1:])
+            host = self.create_host_from_variables(host_name, host_tags, nodes_of, variables)
+            self._hosts[host_name] = host
+
+
+
+    def load_hosts_file(self, path):
+        variables = {
+            "FOLDER_PATH"               : "",
+            "ALL_HOSTS"                 : ALL_HOSTS,
+            "all_hosts"                 : [],
+            "clusters"                  : {},
+            "ipaddresses"               : {},
+            "ipv6addresses"             : {},
+            "explicit_snmp_communities" : {},
+            "extra_host_conf"           : { "alias" : [] },
+            "extra_service_conf"        : { "_WATO" : [] },
+            "host_attributes"           : {},
+            "host_contactgroups"        : [],
+            "_lock"                     : False,
+        }
+        execfile(path, variables, variables)
+        return variables
+
+
+    def cleanup_host_tags(self, tags):
+        return [ tag for tag in tags if
+                 tag not in [ "wato", "//" ]
+                     and not (tag.startswith("/") and tags.endswith(".mk")) ]
+
+
+    def create_host_from_variables(self, host_name, host_tags, nodes_of, variables):
+        cluster_nodes  = nodes_of.get(host_name)
+        alias          = self.get_alias_from_extra_conf(host_name, variables)
+        attributes     = variables["host_attributes"].get(host_name)
+        attributes.update(self.get_attributes_from_tags(host_tags))
+        for attribute_key, config_dict in [
+            ( "ipaddress",      "ipaddresses" ),
+            ( "ipv6address",    "ipv6addresses" ),
+            ( "snmp_community", "explicit_snmp_communities" ),
+        ]:
+            attributes[attribute_key] = variables[config_dict].get(host_name)
+
+        return Host(self, host_name, host_tags, cluster_nodes, attributes, alias)
+
+
+    def get_attributes_from_tags(self, host_tags):
+        # Retrieve setting for each individual host tag. This is needed for
+        # reading in hosts.mk files where host_attributes is missing. Can
+        # we drop this one day?
+        attributes = {}
+        for attr, topic in host_attributes:
+            if isinstance(attr, HostTagAttribute):
+                tagvalue = attr.get_tag_value(host_tags)
+                attributes[attr.name()] = tagvalue
+        return attributes
+
+
+    def get_alias_from_extra_conf(self, host_name, variables):
+        aliases = self.host_extra_conf(host_name, variables["extra_host_conf"]["alias"])
+        if len(aliases) > 0:
+            return aliases[0]
+        else:
+            return
+
+
+    # This is a dummy implementation which works without tags
+    # and implements only a special case of Check_MK's real logic.
+    def host_extra_conf(self, host_name, conflist):
+        for value, hostlist in conflist:
+            if host_name in hostlist:
+                return [value]
+        return []
+
+
+    def reload_hosts(self):
+        self._hosts = None
+        return self.load_hosts()
 
 
     def __repr__(self):
@@ -20771,11 +20766,11 @@ class Folder:
         return folders[::-1]
 
 
-    def siteid(self):
-        if "site" in self_.attributes:
+    def site_id(self):
+        if "site" in self._attributes:
             return self._attributes["site"]
         elif self._parent_folder:
-            return self._parent_folder.siteid()
+            return self._parent_folder.site_id()
         else:
             return config.default_site()
 
@@ -20786,6 +20781,10 @@ class Folder:
 
     def wato_info_path(self):
         return self.directory_path() + "/.wato"
+
+
+    def hosts_file_path(self):
+        return self.directory_path() + "/hosts.mk"
 
 
     def load_wato_info(self):
@@ -20799,6 +20798,16 @@ class Folder:
         dictionary[self._folder_path] = self
         for subfolder in self._subfolders.values():
             subfolder.add_to_dictionary(dictionary)
+
+
+    def title_path(self, withlinks = False):
+        titles = []
+        for folder in self.parent_folder_chain() + [ self ]:
+            title = folder.title()
+            if withlinks:
+                title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder.folder_path(), title)
+            titles.append(title)
+        return titles
 
 
     def render_breadcrump(self, link_to_last, keepvarnames):
@@ -20855,4 +20864,157 @@ class Folder:
             breadcrump_element_end('end')
 
         html.write("</ul></div>\n")
+
+
+class Host:
+    def __init__(self, folder, host_name, host_tags, cluster_nodes, attributes, alias):
+        self._folder = folder
+        self._name = host_name
+        self._tags = host_tags
+        self._cluster_nodes = cluster_nodes
+        self._attributes = attributes
+        self._alias = alias
+
+    def site_id(self):
+        return self._attributes.get("site") or self._folder.site_id()
+
+
+
+# CRAP SECTION
+# THIS CRAP CAN BE REMOVED AS SOON AS THE NEW CLASSES Folder AND Host ARE OPERATIVE
+
+# FUNCTIONS that are not used in the file but maybe by plugins
+# check those out and replace with new class stuff
+
+# Return the title of a folder - which is given as a string path
+def get_folder_title(path):
+    load_all_folders() # TODO: use in-memory-cache
+    folder = g_folders.get(path)
+    if folder:
+        return folder["title"]
+    else:
+        return path
+
+# Find a folder by its path. Raise an exception if it does
+# not exist.
+def get_folder(path):
+    prepare_folder_info()
+
+    folder = g_folders.get(path)
+    if folder:
+        load_hosts(folder)
+        return folder
+    else:
+        raise MKGeneralException("No WATO folder %s." % path)
+
+
+def load_hosts(folder = None, force = False):
+    # CLEANUP: Replace by Folder class
+    if folder == None:
+        folder = g_folder
+    if ".hosts" not in folder or force:
+        folder[".hosts"] = load_hosts_file(folder)
+    folder["num_hosts"] = len(folder[".hosts"])
+    return folder[".hosts"]
+
+def reload_hosts(folder = None):
+    # CLEANUP: Replace by Folder class
+    load_hosts(folder, force = True)
+
+
+def load_hosts_file(folder):
+    # CLEANUP: Replace by Folder class
+    hosts = {}
+
+    filename = root_dir + folder[".path"] + "/hosts.mk"
+    if os.path.exists(filename):
+        variables = {
+            "FOLDER_PATH"               : "",
+            "ALL_HOSTS"                 : ALL_HOSTS,
+            "all_hosts"                 : [],
+            "clusters"                  : {},
+            "ipaddresses"               : {},
+            "ipv6addresses"             : {},
+            "explicit_snmp_communities" : {},
+            "extra_host_conf"           : { "alias" : [] },
+            "extra_service_conf"        : { "_WATO" : [] },
+            "host_attributes"           : {},
+            "host_contactgroups"        : [],
+            "_lock"                     : False,
+        }
+        execfile(filename, variables, variables)
+        nodes_of = {}
+        # Add entries in clusters{} to all_hosts
+        for cluster_with_tags, nodes in variables["clusters"].items():
+            variables["all_hosts"].append(cluster_with_tags)
+            nodes_of[cluster_with_tags.split('|')[0]] = nodes
+
+        folder[".lock_hosts"] = variables["_lock"]
+
+        for h in variables["all_hosts"]:
+
+            parts = h.split('|')
+            hostname = parts[0]
+
+            # Get generic attributes of that host
+            host = variables["host_attributes"].get(hostname)
+            if host == None: # Legacy file: reconstruct values
+                host = {}
+                # Some of the attributes are handled with special care. We do not
+                # want them to be redundant in the configuration file. We
+                # want to stay compatible with check_mk.
+                aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"])
+                if len(aliases) > 0:
+                    alias = aliases[0]
+                else:
+                    alias = None
+                host["alias"]           = alias
+
+                host["ipaddress"]       = variables["ipaddresses"].get(hostname)
+                host["ipv6address"]     = variables["ipv6addresses"].get(hostname)
+                host["snmp_community"]  = variables["explicit_snmp_communities"].get(hostname)
+
+                # Retrieve setting for each individual host tag
+                tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
+                for attr, topic in host_attributes:
+                    if isinstance(attr, HostTagAttribute):
+                        tagvalue = attr.get_tag_value(tags)
+                        host[attr.name()] = tagvalue
+
+            # Add cluster nodes if this is a cluster
+            if hostname in nodes_of:
+                host[".nodes"] = nodes_of[hostname]
+
+            # access to "raw" tags, needed for rule engine, remove implicit tags
+            host[".tags"] = [ p for p in parts[1:] if p not in [ "wato", "//" ] ]
+
+            # access to name of host, if key is not present
+            host[".name"] = hostname
+
+            # access to the folder object
+            host['.folder'] = folder
+
+            # Compute site attribute, because it is needed at various
+            # places.
+            if is_distributed():
+                if "site" in host:
+                    host[".siteid"] = host["site"]
+                else:
+                    host[".siteid"] = folder[".siteid"]
+            else:
+                host[".siteid"] = None
+
+            hosts[hostname] = host
+
+
+    # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
+    return hosts
+
+# This is a dummy implementation which works without tags
+# and implements only a special case of Check_MK's real logic.
+def host_extra_conf(hostname, conflist):
+    for value, hostlist in conflist:
+        if hostname in hostlist:
+            return [value]
+    return []
 

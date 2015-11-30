@@ -8,11 +8,13 @@ check_mk \- command line utility for managing Check_MK
 
 .SH DESCRIPTION
 \fBcheck_mk\fR (or its alias \fBcmk\fR) is a command line utility for managing
-certain aspect of the Check_MK Monitoring System. It can be used for diagnosis,
-for automating things in scripts and for doing some tasks more efficient than
-using the web based WATO.
+some aspects of the Check_MK Monitoring System. It can be used for diagnosis,
+for automating things in scripts and for doing some tasks more efficiently than
+with the web based WATO.
 
-.SH GLOBAL OPTIONS
+.SH GENERIC OPTIONS
+
+The following options work in all modes and all situations.
 
 .TP
 .B -v
@@ -27,21 +29,29 @@ options is used.
 
 .TP
 .B --debug
-Disables the intern exception handling in Check_MK and let all Python exceptions
-through. That way you can exactly see at which location of the code where the actual problem is.
-This help finding problems in self written check plugins.
+Disables the intern exception handling in Check_MK and let all Python
+exceptions through. That way you can see the exact location in the code
+where the actual problem is. This helps finding problems in self written
+check plugins.
+
 
 .SH SERVICE DISCOVERY
 .B cmk [--checks=CHECK_TYPE1,CHECK_TYPE2,...] -I|-II [HOSTS...]
 
-These modes do service discovery. Check_MK will analyse the agent output of the specified
-hosts (or all hosts if none are specified) and automatically create monitored services
-where it does make sense. While \fB-I\fR only creates new services keeps all the existing ones
-\fB-II\fR will first removes all services before staring the discovery.
+The options \fB-I\fR and \fB-II\fR do service discovery. Check_MK will analyse
+the agent output of the specified hosts (or all hosts if none are specified)
+and automatically create monitored services where it does make sense. While
+\fB-I\fR only creates new services and keeps the existing ones untouched, \fB-II\fR
+first removes all existing services before staring the discovery.
 
-The option \fB--checks=\fR restricts the option to a list of check types (e.g. \fB--checks=Bdf,diskstat\fR).
-When combined with the mode \fB-II\fR only checks of the specified types will be removed
-and rediscovered.
+The option \fB--checks=\fR restricts the option to a list of check types
+(e.g. \fB--checks=Bdf,diskstat\fR).  When combined with the mode \fB-II\fR
+only checks of the specified types are be removed and rediscovered.
+
+When no hosts are specified then Check_MK will do a discovery for \fBall\fR hosts
+that are defined in your configuration. In order to speed this operation up
+no actual data is being fetched from the hosts but cached agent data will
+be used. When you specify host names then fresh data is fetched from these.
 
 .SH AD HOC CHECKING
 .B cmk [-n] [-p] [--checks=CHECK_TYPE1,CHECK_TYPE2,...] -v HOST

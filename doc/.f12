@@ -1,4 +1,7 @@
 #!/bin/bash
+# man -l check_mk.1 >/dev/tty </dev/tty
+# exit
+
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 echo "TARGET: /omd/sites/$SITE/share/check_mk/checks"

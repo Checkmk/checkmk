@@ -205,6 +205,7 @@ def page_handler():
         # to restore a snapshot even with a broken config ignore exceptions
         # in this function when running in "snapshot" mode
         prepare_folder_info()
+        # TODO: Das hier geschieht dann on-demand
     except:
         if current_mode == 'snapshot':
             pass
@@ -20081,78 +20082,15 @@ def wato_html_head(title):
         html.header(title, stylesheets = wato_styles)
         html.write("<div class=wato>\n")
 
-def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mode"]):
-    if the_folder == 0:
-        the_folder = g_folder
 
-    keepvars = [ (name, html.var(name)) for name in keepvarnames ]
-
-    def render_component(folder):
-        return '<a href="%s">%s</a>' % (
-               html.makeuri_contextless([
-                  ("folder", folder[".path"])] + keepvars), folder["title"])
-
-    def bc_el_start(end = '', z_index = 0):
-        html.write('<li style="z-index:%d;"><div class="left %s"></div>' % (z_index, end))
-
-    def bc_el_end(end = ''):
-        html.write('<div class="right %s"></div></li>' % end)
-
-    folders = []
-    folder = the_folder.get(".parent")
-    while folder:
-        folders.append(folder)
-        folder = folder.get(".parent")
-    subfolders = the_folder[".folders"]
-
-    parts = []
-    for folder in folders[::-1]:
-        parts.append(render_component(folder))
-
-    # The current folder (with link or without link)
-    if link_to_last:
-        parts.append(render_component(the_folder))
+def render_folder_path(folder = 0, link_to_last = False, keepvarnames = ["mode"]):
+    # CLEANUP: As soon as the folder is a new style object, drop this function
+    if folder == 0:
+        folder = Folder.current_folder()
     else:
-        parts.append(the_folder["title"])
+        folder = Folder.folder(folder[".path"])
 
-
-    # Render the folder path
-    html.write("<div class=folderpath><ul>\n")
-    num = 0
-    for part in parts:
-        if num == 0:
-            bc_el_start('end', z_index = 100 + num)
-        else:
-            bc_el_start(z_index = 100 + num)
-        html.write('<div class=content>%s</div>\n' % part)
-
-        bc_el_end(num == len(parts)-1
-                  and not (
-                    len(subfolders) > 0 and not link_to_last)
-                  and "end" or "")
-        num += 1
-
-    # Render the current folder when having subfolders
-    if len(subfolders) > 0 and not link_to_last:
-        bc_el_start(z_index = 100 + num)
-        html.write("<div class=content><form method=GET name=folderpath>")
-        options = [ (sf[".path"], sf["title"]) for sf in subfolders.values() ]
-        html.sorted_select(
-            "folder", [ ("", "") ] + options,
-            onchange = "folderpath.submit();",
-            attrs = {
-                "class"   : "folderpath",
-                # This does not work: it prevents the selection from
-                # being unfolded
-                # "onfhocus" : "if (this.blur) this.blur();",
-            }
-        )
-        for var in keepvarnames:
-            html.hidden_field(var, html.var(var))
-        html.write("</form></div>")
-        bc_el_end('end')
-
-    html.write("</ul></div>\n")
+    folder.render_breadcrump(link_to_last, keepvarnames)
 
 
 def may_see_hosts():
@@ -20696,3 +20634,224 @@ def register_builtin_host_tags():
         ('ip-v4', u'IPv4'),
         ('ip-v6', u'IPv6')
     ]
+
+
+#.
+#   .--Hosts & Folders-----------------------------------------------------.
+#   | _   _           _          ___     _____     _     _                 |
+#   || | | | ___  ___| |_ ___   ( _ )   |  ___|__ | | __| | ___ _ __ ___   |
+#   || |_| |/ _ \/ __| __/ __|  / _ \/\ | |_ / _ \| |/ _` |/ _ \ '__/ __|  |
+#   ||  _  | (_) \__ \ |_\__ \ | (_>  < |  _| (_) | | (_| |  __/ |  \__ \  |
+#   ||_| |_|\___/|___/\__|___/  \___/\/ |_|  \___/|_|\__,_|\___|_|  |___/  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  New Implementation of handling of hosts and folders                 |
+#   |  This new implementation is currently additional to the existing one |
+#   |  but will replace step by step all direct handling with the folder   |
+#   |  and host dictionaries.                                              |
+#   '----------------------------------------------------------------------'
+
+# Names:
+# folder_path: Path of the folders directory relative to etc/check_mk/conf.d/wato
+#              The root folder is "". No trailing / is allowed here.
+# wato_info:   The dictionary that is saved in the folder's .wato file
+
+
+class Folder:
+    @staticmethod
+    def folder(folder_path):
+        if not html.is_cached("wato_folders"):
+            Folder.load_all_folders()
+
+        wato_folders = html.get_cached("wato_folders")
+        if folder_path in wato_folders:
+            return wato_folders[folder_path]
+        else:
+            raise
+            raise MKGeneralException("No WATO folder %s." % folder_path)
+
+
+    @staticmethod
+    def root_folder(folder_path):
+        return Folder.folder("")
+
+
+    # Find folder that is specified by the current URL. This is either by a folder
+    # path in the variable "folder" or by a host name in the variable "host". In the
+    # latter case we need to load all hosts in all folders and actively search the host.
+    @staticmethod
+    def current_folder():
+        if not html.is_cached("wato_current_folder"):
+            if html.has_var("folder"):
+                folder = Folder.folder(html.var("folder"))
+            else:
+                host_name = html.var("host")
+                if host_name: # find host with full scan. Expensive operation
+                    folder = Folder.find_folder_containing_host(host_name)
+                else:
+                    folder = Folder.root_folder()
+            html.set_cache("wato_current_folder", folder)
+            return folder
+        else:
+            return html.get_cached("wato_current_folder")
+
+
+    @staticmethod
+    def load_all_folders():
+        wato_folders = html.set_cache("wato_folders", {})
+        Folder("", "").add_to_dictionary(wato_folders)
+
+    def __init__(self, name, folder_path, parent_folder=None):
+        self._name = name
+        self._folder_path = folder_path
+        self._parent_folder = parent_folder
+        self._subfolders = {}
+        self.load()
+        self.load_subfolders()
+
+
+    def __repr__(self):
+        return "Folder(%r, %r)" % (self._folder_path, self._title)
+
+
+    def load(self):
+        wato_info               = self.load_wato_info()
+        self._title             = wato_info["title"]
+        self._attributes        = wato_info.get("attributes", {})
+        self._num_hosts         = wato_info.get("num_hosts", None)
+        self._locked            = wato_info.get("lock", False)
+        self._locked_subfolders = wato_info.get("lock_subfolders", False)
+        self._locked_hosts      = False
+
+
+    def load_subfolders(self):
+        dir_path = root_dir + self._folder_path
+        for entry in os.listdir(dir_path):
+            subfolder_dir = dir_path + "/" + entry
+            if os.path.isdir(subfolder_dir):
+                if self._folder_path:
+                    subfolder_path = self._folder_path + "/" + entry
+                else:
+                    subfolder_path = entry
+                self._subfolders[entry] = Folder(entry, subfolder_path, self)
+
+
+    def path(self):
+        return self._folder_path
+
+
+    def title(self):
+        return self._title
+
+
+    def parent_folder(self):
+        return self._parent_folder
+
+
+    def subfolders(self):
+        return self._subfolders
+
+
+    def has_subfolders(self):
+        return len(self._subfolders) > 0
+
+
+    def subfolder_choices(self):
+        return [ (subfolder.path(), subfolder.title())
+                 for subfolder in self.subfolders().values() ]
+
+
+    def parent_folder_chain(self):
+        folders = []
+        folder = self.parent_folder()
+        while folder:
+            folders.append(folder)
+            folder = folder.parent_folder()
+        return folders[::-1]
+
+
+    def siteid(self):
+        if "site" in self_.attributes:
+            return self._attributes["site"]
+        elif self._parent_folder:
+            return self._parent_folder.siteid()
+        else:
+            return config.default_site()
+
+
+    def directory_path(self):
+        return (root_dir + self._folder_path).rstrip("/")
+
+
+    def wato_info_path(self):
+        return self.directory_path() + "/.wato"
+
+
+    def load_wato_info(self):
+        if os.path.exists(self.wato_info_path()):
+            return eval(file(self.wato_info_path()).read())
+        else:
+            return {}
+
+
+    def add_to_dictionary(self, dictionary):
+        dictionary[self._folder_path] = self
+        for subfolder in self._subfolders.values():
+            subfolder.add_to_dictionary(dictionary)
+
+
+    def render_breadcrump(self, link_to_last, keepvarnames):
+        keepvars = [ (name, html.var(name)) for name in keepvarnames ]
+
+        def render_component(folder):
+            return '<a href="%s">%s</a>' % (html.makeuri_contextless([("folder", folder.path())] + keepvars), folder.title())
+
+        def breadcrump_element_start(end = '', z_index = 0):
+            html.write('<li style="z-index:%d;"><div class="left %s"></div>' % (z_index, end))
+
+        def breadcrump_element_end(end = ''):
+            html.write('<div class="right %s"></div></li>' % end)
+
+
+        parts = []
+        for folder in self.parent_folder_chain():
+            parts.append(render_component(folder))
+
+        # The current folder (with link or without link)
+        if link_to_last:
+            parts.append(render_component(self))
+        else:
+            parts.append(self.title())
+
+
+        # Render the folder path
+        html.write("<div class=folderpath><ul>\n")
+        num = 0
+        for part in parts:
+            if num == 0:
+                breadcrump_element_start('end', z_index = 100 + num)
+            else:
+                breadcrump_element_start(z_index = 100 + num)
+            html.write('<div class=content>%s</div>\n' % part)
+
+            breadcrump_element_end(num == len(parts)-1
+                      and not (self.has_subfolders() and not link_to_last)
+                      and "end" or "")
+            num += 1
+
+        # Render the current folder when having subfolders
+        if self.has_subfolders() and not link_to_last:
+            breadcrump_element_start(z_index = 100 + num)
+            html.write("<div class=content><form method=GET name=folderpath>")
+            html.sorted_select(
+                "folder", [ ("", "") ] + self.subfolder_choices(),
+                onchange = "folderpath.submit();",
+                attrs = { "class": "folderpath", }
+            )
+            for var in keepvarnames:
+                html.hidden_field(var, html.var(var))
+            html.write("</form></div>")
+            breadcrump_element_end('end')
+
+        html.write("</ul></div>\n")
+

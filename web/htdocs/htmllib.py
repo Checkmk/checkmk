@@ -1597,6 +1597,13 @@ class html:
     #
     def set_cache(self, name, value):
         self.caches[name] = value
+        return value
+
+    def set_cache_default(self, name, value):
+        if self.is_cached(name):
+            return self.get_cached(name)
+        else:
+            return self.set_cache(name, value)
 
     def is_cached(self, name):
         return name in self.caches

@@ -4967,7 +4967,7 @@ def cleanup_globals():
 
 
 # Diagnostic function for detecting global variables that have
-# changed during checking. This is slow and canno be used
+# changed during checking. This is slow and cannot be used
 # in production mode.
 def copy_globals():
     import copy

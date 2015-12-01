@@ -9294,7 +9294,7 @@ def simple_host_rule_match_conditions():
 
 
 def generic_rule_match_conditions():
-    simple_host_rule_match_conditions() + [
+    return simple_host_rule_match_conditions() + [
         ( "match_servicegroups",
           GroupChoice("service",
               title = _("Match Service Groups"),
@@ -20697,3 +20697,4 @@ def register_builtin_host_tags():
         ('ip-v4', u'IPv4'),
         ('ip-v6', u'IPv6')
     ]
+

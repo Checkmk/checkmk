@@ -1049,6 +1049,9 @@ class html:
                 self.write("<div>%s: %.1fms</div>" % (name, duration * 1000))
             self.write('</div>')
 
+    def show_info(self, msg):
+        self.message(msg, 'message')
+
     def show_error(self, msg):
         self.message(msg, 'error')
 

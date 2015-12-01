@@ -762,6 +762,7 @@ def get_folder_aliaspath(folder, show_main = True):
 def mode_folder(phase):
     global g_folder
 
+
     auth_message = check_folder_permissions(g_folder, "read", False)
     auth_read = auth_message == True
     auth_write = check_folder_permissions(g_folder, "write", False) == True
@@ -900,33 +901,17 @@ def mode_folder(phase):
             return "bulkcleanup"
 
     else:
-        render_folder_path()
+        folder = Folder.current_folder()
+        folder.show_breadcrump()
 
         if not auth_read:
             html.message(HTML('<img class=authicon src="images/icon_autherr.png"> %s' % html.attrencode(auth_message)))
 
-        lock_messages = []
-        if g_folder.get(".lock_hosts"):
-            if g_folder[".lock_hosts"] == True:
-                lock_messages.append(_("Hosts attributes locked (You cannot create, edit or delete hosts in this folder)"))
-            else:
-                lock_messages.append(g_folder[".lock_hosts"])
-        if g_folder.get(".lock"):
-            if g_folder[".lock"] == True:
-                lock_messages.append(_("Folder attributes locked (You cannot edit the attributes of this folder)"))
-            else:
-                lock_messages.append(g_folder[".lock"])
-        if g_folder.get(".lock_subfolders"):
-            if g_folder[".lock_subfolders"] == True:
-                lock_messages.append(_("Folder is locked (You cannot create or remove folders in this folder)"))
-            else:
-                lock_messages.append(g_folder[".lock_subfolders"])
+        folder.show_locking_information()
 
-        if len(lock_messages) > 0:
-            lock_message = ", ".join(lock_messages)
-            html.write("<div class=info>" + lock_message + "</div>")
+        show_subfolders_of(folder)
+        have_something = folder.has_subfolders()
 
-        have_something = show_subfolders(g_folder)
         # Show hosts only if we have permission to this folder
 
         if True == check_folder_permissions(g_folder, "read", False):
@@ -947,6 +932,127 @@ def mode_folder(phase):
                   _("Folders group your hosts, can inherit attributes and can have permissions."))
                 ])
             render_main_menu(menu_items)
+
+
+def show_subfolders_of(folder):
+    if folder.has_subfolders():
+        html.write('<div class=folders>')
+        for subfolder in folder.subfolders_sorted_by_title():
+            show_subfolder(subfolder)
+        html.write("</div><div class=folder_foot></div>")
+
+
+def show_subfolder(subfolder):
+    html.write('<div class="floatfolder%s" id="folder_%s"' % (
+               subfolder.may("read") and " unlocked" or " locked", subfolder.name()))
+    html.write(' onclick="wato_open_folder(event, \'%s\');">' % subfolder.url())
+
+    show_subfolder_hoverarea(subfolder)
+    show_subfolder_infos(subfolder)
+    show_subfolder_title(subfolder)
+
+    html.write("</div>") # floatfolder
+
+
+def show_subfolder_hoverarea(subfolder):
+    # Only make folder openable when permitted to edit
+    if subfolder.may("read"):
+        html.write(
+            '<div class=hoverarea onmouseover="wato_toggle_folder(event, this, true);" '
+            'onmouseout="wato_toggle_folder(event, this, false)">'
+        )
+        show_subfolder_buttons(subfolder)
+        html.write('</div>') # hoverarea
+
+    else:
+        html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \
+                   (html.strip_tags(subfolder.reason_why_user_may_not("read"))))
+        html.write('<div class=hoverarea></div>')
+
+
+def show_subfolder_title(subfolder):
+    title = subfolder.title()
+    if not config.wato_hide_filenames:
+        title += ' (%s)' % subfolder.name()
+
+    html.write('<div class=title title="%s">' % title)
+    if subfolder.may("read"):
+        html.write('<a href="%s">' % subfolder.url())
+        html.write(subfolder.title())
+        html.write("</a>")
+    else:
+        html.write(subfolder.title())
+    html.write('</div>')
+
+
+def show_subfolder_buttons(subfolder):
+    show_subfolder_edit_button(subfolder)
+
+    if not subfolder.locked_subfolders() and not subfolder.locked():
+        if subfolder.may("write") and config.may("wato.manage_folders"):
+            show_subfolder_move_button(subfolder)
+            show_subfolder_delete_button(subfolder)
+
+
+def show_subfolder_edit_button(subfolder):
+    html.icon_button(
+        subfolder.edit_url(subfolder.parent()),
+        _("Edit the properties of this folder"),
+        "edit",
+        id = 'edit_' + subfolder.name(),
+        cssclass = 'edit',
+        style = 'display:none',
+    )
+
+
+def show_subfolder_move_button(subfolder):
+    html.icon_button(
+        '', # url is replaced by onclick code
+        _("Move this subfolder to another place"),
+        "move",
+        id = 'move_' + subfolder.name(),
+        cssclass = 'move',
+        style = 'display:none',
+        onclick = 'wato_toggle_move_folder(event, this);'
+    )
+    html.write('<div id="move_dialog_%s" class="popup move_dialog" style="display:none">' % subfolder.name())
+    html.write('<span>%s</span>' % _('Move this folder to:'))
+    move_to_folder_combo("folder", subfolder, False, multiple = True)
+    html.write('</div>')
+
+
+def show_subfolder_delete_button(subfolder):
+    html.icon_button(
+        make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
+        _("Delete this folder"),
+        "delete",
+        id = 'delete_' + subfolder.name(),
+        cssclass = 'delete',
+        style = 'display:none',
+    )
+
+
+def show_subfolder_infos(subfolder):
+    html.write('<div class=infos>')
+    groups = userdb.load_group_information().get("contact", {})
+    permitted_groups, folder_contact_groups = subfolder.groups()
+    for num, pg in enumerate(permitted_groups):
+        cgalias = groups.get(pg, {'alias': pg})['alias']
+        html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
+        html.write(' %s<br>' % cgalias)
+        if num > 1 and len(perm_groups) > 4:
+            html.write(_('<i>%d more contact groups</i><br>') % (len(perm_groups) - num - 1))
+            break
+
+    num_hosts = subfolder.num_hosts_recursive()
+    if num_hosts == 1:
+        html.write(_("1 Host"))
+    elif num_hosts > 0:
+        html.write("%d %s" % (num_hosts, _("Hosts")))
+    else:
+        html.write("<i>%s</i>" % _("(no hosts)"))
+    html.write('</div>') # class=infos
+
 
 def prepare_folder_info():
     load_all_folders()            # load information about all folders
@@ -995,81 +1101,7 @@ def check_host_permissions(hostname, exception=True, folder=None):
         raise MKAuthException(reason)
     return reason
 
-def get_folder_permissions_of_users(users):
-    folders = {}
 
-    def get_flat_folders(folder):
-        folders[folder['.path']] = folder
-        for child in folder.get('.folders', {}).itervalues():
-            get_flat_folders(child)
-
-    get_flat_folders(get_folder_tree())
-
-    permissions = {}
-
-    users = userdb.load_users()
-    for username in users.iterkeys():
-        perms = {}
-        for folder_path, folder in folders.iteritems():
-            readable = check_folder_permissions(folder, 'read', False, username, users) == True
-            writable = check_folder_permissions(folder, 'write', False, username, users) == True
-
-            if readable or writable:
-                perms[folder_path] = {}
-                if readable:
-                    perms[folder_path]['read'] = True
-                if writable:
-                    perms[folder_path]['write'] = True
-
-        if perms:
-            permissions[username] = perms
-    return permissions
-
-def check_folder_permissions(folder, how, exception=True, user = None, users = None):
-    if not user:
-        if config.may("wato.all_folders"):
-            return True
-        if how == "read" and config.may("wato.see_all_folders"):
-            return True
-    else:
-        if config.user_may(user, "wato.all_folders"):
-            return True
-        if how == "read" and config.user_may(user, "wato.see_all_folders"):
-            return True
-
-    # Get contact groups of that folder
-    perm_groups, cgs = collect_folder_groups(folder)
-
-    if not user:
-        user = config.user_id
-
-    # Get contact groups of user
-    if users == None:
-        users = userdb.load_users()
-    if user not in users:
-        user_cgs = []
-    else:
-        user_cgs = users[user].get("contactgroups", [])
-
-    for c in user_cgs:
-        if c in perm_groups:
-            return True
-
-    reason = _("Sorry, you have no permissions to the folder <b>%s</b>. ") % folder["title"]
-    if not perm_groups:
-        reason += _("The folder is not permitted for any contact group.")
-    else:
-        reason += _("The folder's permitted contact groups are <b>%s</b>. ") % ", ".join(perm_groups)
-        if user_cgs:
-            reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_cgs)
-        else:
-            reason += _("But you are not a member of any contact group.")
-    reason += _("You may enter the folder as you might have permission on a subfolders, though.")
-
-    if exception:
-        raise MKAuthException(reason)
-    else:
-        return reason
 
 # Make sure that the user is in all of cgs contact groups.
 # This is needed when the user assigns contact groups to
@@ -1102,6 +1134,7 @@ def get_folder_cgconf_from_attributes(attributes):
 # 1. The folders permitted groups (for WATO permissions)
 # 2. The folders contact groups (for hosts)
 def collect_folder_groups(folder, host=None):
+    # CLEANUP: replace this by Folder::groups
     perm_groups = set([])
     host_groups = set([])
     effective_folder_attributes = effective_attributes(host, folder)
@@ -1140,115 +1173,6 @@ def collect_host_groups(host, folder):
     return collect_folder_groups(folder, host)
 
 
-def show_subfolders(folder):
-    if len(folder[".folders"]) == 0:
-        return False
-
-    html.write('<div class=folders>')
-
-    for entry in sort_by_title(folder[".folders"].values()):
-        enter_url  = make_link_to([("mode", "folder")], entry)
-        edit_url   = make_link_to([("mode", "editfolder"), ("backfolder", g_folder[".path"])], entry)
-        delete_url = make_action_link([("mode", "folder"), ("_delete_folder", entry[".name"])])
-
-        # Am I authorized at least for read access?
-        auth_message = check_folder_permissions(entry, "read", False)
-        auth_read = auth_message == True
-        auth_write = check_folder_permissions(entry, "write", False) == True
-
-        html.write('<div class="floatfolder%s" id="folder_%s"' % (
-            auth_read and " unlocked" or " locked", entry['.name']))
-        html.write(' onclick="wato_open_folder(event, \'%s\');"' % enter_url)
-        html.write('>')
-
-        # Only make folder openable when permitted to edit
-        if not auth_read:
-            html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \
-                       (html.strip_tags(auth_message)))
-
-        if True: # auth_read:
-            if not auth_read:
-                html.write('<div class=hoverarea>')
-
-            else:
-                html.write(
-                    '<div class=hoverarea onmouseover="wato_toggle_folder(event, this, true);" '
-                    'onmouseout="wato_toggle_folder(event, this, false)">'
-                )
-
-                html.icon_button(
-                    edit_url,
-                    _("Edit the properties of this folder"),
-                    "edit",
-                    id = 'edit_' + entry['.name'],
-                    cssclass = 'edit',
-                    style = 'display:none',
-                )
-
-            if not folder.get(".lock_subfolders") and not entry.get(".lock"):
-                if config.may("wato.manage_folders") and auth_write:
-                    html.icon_button(
-                        '', # url is replaced by onclick code
-                        _("Move this folder to another place"),
-                        "move",
-                        id = 'move_' + entry['.name'],
-                        cssclass = 'move',
-                        style = 'display:none',
-                        onclick = 'wato_toggle_move_folder(event, this);'
-                    )
-                    html.write('<div id="move_dialog_%s" class="popup move_dialog" style="display:none">' % entry['.name'])
-                    html.write('<span>%s</span>' % _('Move this folder to:'))
-                    move_to_folder_combo("folder", entry, False, multiple = True)
-                    html.write('</div>')
-
-                if auth_write and config.may("wato.manage_folders"):
-                    html.icon_button(
-                        delete_url,
-                        _("Delete this folder"),
-                        "delete",
-                        id = 'delete_' + entry['.name'],
-                        cssclass = 'delete',
-                        style = 'display:none',
-                    )
-            html.write('</div>')
-
-        html.write('<div class=infos>')
-        groups = userdb.load_group_information().get("contact", {})
-        perm_groups, contact_groups = collect_folder_groups(entry)
-        for num, pg in enumerate(perm_groups):
-            cgalias = groups.get(pg, {'alias': pg})['alias']
-            html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
-            html.write(' %s<br>' % cgalias)
-            if num > 1 and len(perm_groups) > 4:
-                html.write(_('<i>%d more contact groups</i><br>') % (len(perm_groups) - num - 1))
-                break
-
-
-        num_hosts = num_hosts_in(entry, recurse=True)
-        if num_hosts == 1:
-            html.write(_("1 Host"))
-        elif num_hosts > 0:
-            html.write("%d %s" % (num_hosts, _("Hosts")))
-        else:
-            html.write("<i>%s</i>" % _("(no hosts)"))
-        html.write('</div>')
-
-        title = entry['title']
-        # Internal foldername
-        if not config.wato_hide_filenames:
-            title += ' (%s)' % entry['.name']
-
-        html.write('<div class=title title="%s">' % title)
-        if auth_read:
-            html.write('<a href="%s">' % enter_url)
-        html.write(entry['title'])
-        if auth_read:
-            html.write("</a>")
-        html.write('</div>')
-        html.write('</div>')
-
-    html.write("</div><div class=folder_foot></div>")
-    return True
 
 def show_hosts(folder):
     load_hosts(folder)
@@ -1478,46 +1402,41 @@ def show_hosts(folder):
         )
     return True
 
-move_to_folder_combo_cache_id = None
 # In case of what == "host", thing is either None or the name of the host
 # In case of what == "folder", thing is the folder dict
 def move_to_folder_combo(what, thing = None, top = False, multiple = False):
-    global move_to_folder_combo_cache, move_to_folder_combo_cache_id
-    if move_to_folder_combo_cache_id != id(html):
-        move_to_folder_combo_cache = {}
-        move_to_folder_combo_cache_id = id(html)
-
-    select_attrs = {}
-    if multiple:
-        select_attrs = {'multiple': '10'}
+    # CLEANUP: Move this to new class Folder
+    folder_combo_cache = html.set_cache_default("wato_moveto_folder_combo", {})
 
     # In case of a folder move combo, thing is the folder object
     # we want to move
-    if what == "folder" or id(g_folder) not in move_to_folder_combo_cache:
+    if what == "folder" or id(Folder.current_folder()) not in folder_combo_cache:
         selections = [("@", _("(select folder)"))]
-        for path, afolder in g_folders.items():
-            # TODO: Check permisssions
-            if afolder != g_folder and \
+        for folder_path, folder in Folder.all_folders().items():
+            # TODO: Check permissions
+            if not folder.is_current_folder() and \
                  (what != "folder" or not (
                     # no move to itselfs or child folders of "thing"
-                    folder_is_parent_of(thing, afolder)
+                    thing.is_transitive_parent_of(folder)
                     # avoid naming conflict!
-                    or thing[".name"] in afolder[".folders"])):
-                os_path = afolder[".path"]
-                title_path = Folder.folder(os_path).title_path()
-                if len(title_path) > 1:
-                    del title_path[0] # remove name of main folder
-                msg = " / ".join(title_path)
-                # msg = afolder["title"]
-                if os_path and not config.wato_hide_filenames:
-                    msg += " (%s)" % os_path
-                selections.append((os_path, msg))
+                    or thing.name() in folder.subfolders())):
+
+                msg = "/".join(folder.title_path_without_root())
+                if folder_path and not config.wato_hide_filenames:
+                    msg += " (%s)" % folder_path
+                selections.append((folder_path, msg))
+
         selections.sort(cmp=lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        move_to_folder_combo_cache[g_folder['.path']] = selections
+        folder_combo_cache[Folder.current_folder().path()] = selections
     else:
-        selections = move_to_folder_combo_cache[g_folder['.path']]
+        selections = folder_combo_cache[Folder.current_folder().path()]
+
 
     if len(selections) > 1:
+        select_attrs = {}
+        if multiple:
+            select_attrs = {'multiple': '10'}
+
         if thing == None:
             html.button("_bulk_move", _("Move:"))
             field_name = 'bulk_moveto'
@@ -1534,9 +1453,8 @@ def move_to_folder_combo(what, thing = None, top = False, multiple = False):
             html.select("_host_move_%s" % thing, selections, "@",
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri, attrs = select_attrs);
         else: # what == "folder"
-            # html.hidden_field("what_folder", thing)
-            uri = html.makeactionuri([("what_folder", thing[".path"])])
-            html.select("_folder_move_%s" % thing[".path"], selections, "@",
+            uri = html.makeactionuri([("what_folder", thing.path())])
+            html.select("_folder_move_%s" % thing.path(), selections, "@",
                 "location.href='%s' + '&_move_folder_to=' + this.value;" % uri, attrs = select_attrs);
 
 
@@ -15248,7 +15166,7 @@ def mode_edit_ruleset(phase):
                 alias_path = get_folder_aliaspath(folder, show_main = False)
                 last_folder = folder
 
-                if g_folder != g_root_folder and not folder_is_parent_of(folder, g_folder):
+                if g_folder != g_root_folder and not folder_is_transitive_parent_of(folder, g_folder):
                     skip_this_folder = True
                     continue
 
@@ -19926,24 +19844,11 @@ def num_hosts_in(folder, recurse=True):
     folder[".total_hosts"] = num # store for later usage
     return num
 
-def folder_is_parent_of(folder, child):
-    if folder == child:
-        return True
-    elif ".parent" in child:
-        return folder_is_parent_of(folder, child[".parent"])
-    else:
-        return False
-
 # Create link keeping the context to the current folder / file
 def make_link(vars):
     vars = vars + [ ("folder", g_folder[".path"]) ]
     if html.var("debug") == "1":
         vars.append(("debug", "1"))
-    return html.makeuri_contextless(vars)
-
-# Small helper for creating a link with a context to a given folder
-def make_link_to(vars, folder):
-    vars = vars + [ ("folder", folder[".path"]) ]
     return html.makeuri_contextless(vars)
 
 def make_action_link(vars):
@@ -19966,12 +19871,13 @@ def wato_html_head(title):
 
 def render_folder_path(folder = 0, link_to_last = False, keepvarnames = ["mode"]):
     # CLEANUP: As soon as the folder is a new style object, drop this function
+    # TODO: Replace this by Folder::show_breadcrump()
     if folder == 0:
         folder = Folder.current_folder()
     else:
         folder = Folder.folder(folder[".path"])
 
-    folder.render_breadcrump(link_to_last, keepvarnames)
+    folder.show_breadcrump(link_to_last, keepvarnames)
 
 
 def may_see_hosts():
@@ -20539,22 +20445,35 @@ def register_builtin_host_tags():
 
 
 class Folder:
+    # TODO: Private Methoden von öffentlichen trennen
+
+
+    @staticmethod
+    def load_all_folders():
+        wato_folders = html.set_cache("wato_folders", {})
+        Folder("", "").add_to_dictionary(wato_folders)
+
+
+    @staticmethod
+    def all_folders():
+        if not html.is_cached("wato_folders"):
+            wato_folders = html.set_cache("wato_folders", {})
+            Folder("", "").add_to_dictionary(wato_folders)
+        return html.get_cached("wato_folders")
+
+
     @staticmethod
     def folder(folder_path):
-        if not html.is_cached("wato_folders"):
-            Folder.load_all_folders()
-
-        wato_folders = html.get_cached("wato_folders")
-        if folder_path in wato_folders:
-            return wato_folders[folder_path]
+        if folder_path in Folder.all_folders():
+            return Folder.all_folders()[folder_path]
         else:
-            raise
             raise MKGeneralException("No WATO folder %s." % folder_path)
 
 
     @staticmethod
     def root_folder(folder_path):
         return Folder.folder("")
+
 
 
     # Find folder that is specified by the current URL. This is either by a folder
@@ -20577,10 +20496,8 @@ class Folder:
             return html.get_cached("wato_current_folder")
 
 
-    @staticmethod
-    def load_all_folders():
-        wato_folders = html.set_cache("wato_folders", {})
-        Folder("", "").add_to_dictionary(wato_folders)
+    def __repr__(self):
+        return "Folder(%r, %r)" % (self._folder_path, self._title)
 
 
     def __init__(self, name, folder_path, parent_folder=None):
@@ -20603,12 +20520,26 @@ class Folder:
         return self._hosts.get(host_name)
 
 
+    def num_hosts(self):
+        # Do *not* load hosts here! This method must kept cheap
+        return self._num_hosts
+
+
+    def num_hosts_recursive(self):
+        num = self.num_hosts()
+        for subfolder in self.subfolders().values():
+            num += subfolder.num_hosts_recursive()
+        return num
+
+
     def load_hosts_on_demand(self):
         if self._hosts == None:
             self.load_hosts()
 
 
     def load_hosts(self):
+        self._locked_hosts = False
+
         self._hosts = {}
         if not os.path.exists(self.hosts_file_path()):
             return
@@ -20630,6 +20561,10 @@ class Folder:
             host = self.create_host_from_variables(host_name, host_tags, nodes_of, variables)
             self._hosts[host_name] = host
 
+
+    def reload_hosts(self):
+        self._hosts = None
+        return self.load_hosts()
 
 
     def load_hosts_file(self, path):
@@ -20701,15 +20636,6 @@ class Folder:
         return []
 
 
-    def reload_hosts(self):
-        self._hosts = None
-        return self.load_hosts()
-
-
-    def __repr__(self):
-        return "Folder(%r, %r)" % (self._folder_path, self._title)
-
-
     def load(self):
         wato_info               = self.load_wato_info()
         self._title             = wato_info["title"]
@@ -20717,7 +20643,6 @@ class Folder:
         self._num_hosts         = wato_info.get("num_hosts", None)
         self._locked            = wato_info.get("lock", False)
         self._locked_subfolders = wato_info.get("lock_subfolders", False)
-        self._locked_hosts      = False
 
 
     def load_subfolders(self):
@@ -20732,6 +20657,10 @@ class Folder:
                 self._subfolders[entry] = Folder(entry, subfolder_path, self)
 
 
+    def name(self):
+        return self._name
+
+
     def path(self):
         return self._folder_path
 
@@ -20740,8 +20669,20 @@ class Folder:
         return self._title
 
 
-    def parent_folder(self):
+    def attributes(self):
+        return self._attributes
+
+
+    def parent(self):
         return self._parent_folder
+
+
+    def has_parent(self):
+        return self._parent_folder != None
+
+
+    def is_root(self):
+        return not self.has_parent()
 
 
     def subfolders(self):
@@ -20757,13 +20698,38 @@ class Folder:
                  for subfolder in self.subfolders().values() ]
 
 
+    def subfolders_sorted_by_title(self):
+        return sorted(self.subfolders().values(), cmp=lambda a,b: cmp(a.title(), b.title()))
+
+
     def parent_folder_chain(self):
         folders = []
-        folder = self.parent_folder()
+        folder = self.parent()
         while folder:
             folders.append(folder)
-            folder = folder.parent_folder()
+            folder = folder.parent()
         return folders[::-1]
+
+
+    def directory_path(self):
+        return (root_dir + self._folder_path).rstrip("/")
+
+
+    def is_current_folder(self):
+        return self == Folder.current_folder()
+
+
+    def is_parent_of(self, maybe_child):
+        return maybe_child.parent() == self
+
+
+    def is_transitive_parent_of(self, maybe_child):
+        if self == maybe_child:
+            return True
+        elif maybe_child.has_parent():
+            return self.is_transitive_parent_of(maybe_child.parent())
+        else:
+            return False
 
 
     def site_id(self):
@@ -20773,10 +20739,6 @@ class Folder:
             return self._parent_folder.site_id()
         else:
             return config.default_site()
-
-
-    def directory_path(self):
-        return (root_dir + self._folder_path).rstrip("/")
 
 
     def wato_info_path(self):
@@ -20805,12 +20767,181 @@ class Folder:
         for folder in self.parent_folder_chain() + [ self ]:
             title = folder.title()
             if withlinks:
-                title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder.folder_path(), title)
+                title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder.path(), title)
             titles.append(title)
         return titles
 
 
-    def render_breadcrump(self, link_to_last, keepvarnames):
+    def title_path_without_root(self):
+        if self.is_root():
+            return [ self.title() ]
+        else:
+            return self.title_path()[1:]
+
+
+    def groups(self):
+        return self.groups_for_host(None)
+
+
+    def effective_attributes(self):
+        effective = {}
+        for folder in self.parent_folder_chain():
+            effective.update(folder.attributes())
+        effective.update(self.attributes())
+
+        # now add default values of attributes for all missing values
+        for host_attribute, topic in host_attributes:
+            attrname = host_attribute.name()
+            if attrname not in effective:
+                effective.setdefault(attrname, host_attribute.default_value())
+
+        return effective
+
+
+    def groups(self):
+        permitted_groups = set([])
+        host_contact_groups = set([])
+        effective_folder_attributes = self.effective_attributes()
+        cgconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
+
+        # First set explicit groups
+        permitted_groups.update(cgconf["groups"])
+        if cgconf["use"]:
+            host_contact_groups.update(cgconf["groups"])
+
+        parent = self.parent()
+        while parent:
+            effective_folder_attributes = parent.effective_attributes()
+            parconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
+            parent_permitted_groups, parent_host_contact_groups = parent.groups()
+
+            if parconf["recurse_perms"]: # Parent gives us its permissions
+                permitted_groups.update(parent_permitted_groups)
+
+            if parconf["recurse_use"]:   # Parent give us its contact groups
+                host_contact_groups.update(parent_host_contact_groups)
+
+            parent = parent.parent()
+
+        return permitted_groups, host_contact_groups
+
+
+
+    def may(self, how): # how is "read" or "write"
+        return self.user_may(config.user_id, how)
+
+
+    def reason_why_may_not(self, how):
+        return self.reason_why_user_may_not(conifg.user_id, how)
+
+
+    def need_permission(self, how):
+        self.user_needs_permission(config.user_id, how)
+
+
+    def user_may(self, user_id, how):
+        try:
+            self.user_needs_permission(user_id, how)
+            return True
+        except MKAuthException, e:
+            return False
+
+
+    def reason_why_user_may_not(self, user_id, how):
+        try:
+            self.user_needs_permission(user_id, how)
+            return False
+        except MKAuthException, e:
+            return "%s" % e
+
+
+    def user_needs_permission(self, user_id, how):
+        if config.user_may(user_id, "wato.all_folders"):
+            return
+        if how == "read" and config.user_may(user_id, "wato.see_all_folders"):
+            return
+
+        permitted_groups, folder_contactgroups = folder.groups()
+        user_contactgroups = userdb.contactgroups_of_user(user_id)
+
+        for c in user_contactgroups:
+            if c in permitted_groups:
+                return
+
+        reason = _("Sorry, you have no permissions to the folder <b>%s</b>. ") % self.title()
+        if not permitted_groups:
+            reason += _("The folder is not permitted for any contact group.")
+        else:
+            reason += _("The folder's permitted contact groups are <b>%s</b>. ") % ", ".join(permitted_groups)
+            if user_contactgroups:
+                reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_contactgroups)
+            else:
+                reason += _("But you are not a member of any contact group.")
+        reason += _("You may enter the folder as you might have permission on a subfolders, though.")
+        raise MKAuthException(reason)
+
+
+
+    def url(self):
+        return html.makeuri_contextless([("mode", "folder"), ("folder", self.path())])
+
+
+    def edit_url(self, backfolder):
+        return html.makeuri_contextless([
+            ("mode", "editfolder"),
+            ("folder", self.path()),
+            ("backfolder", backfolder.path()),
+        ])
+
+
+    def locked(self):
+        return self._locked
+
+
+    def locked_subfolders(self):
+        return self._locked_subfolders
+
+
+    def locked_hosts(self):
+        self.load_hosts_on_demand()
+        return self._locked_hosts
+
+
+    def show_locking_information(self):
+        self.load_hosts_on_demand()
+        lock_messages = []
+
+        # Locked hosts
+        if self._locked_hosts == True:
+            lock_messages.append(_("Hosts attributes are locked "
+                                    "(You cannot create, edit or delete hosts in this folder)"))
+        elif self._locked_hosts:
+            lock_messages.append(self._locked_hosts)
+
+        # Locked folder attributes
+        if self._locked == True:
+            lock_messages.append(_("Folder attributes are locked "
+                                   "(You cannot edit the attributes of this folder)"))
+        elif self._locked:
+            lock_messages.append(self._locked)
+
+        # Also subfolders are locked
+        if self._locked_subfolders:
+            lock_messages.append(_("Subfolders are locked "
+                                   "(You cannot create or remove folders in this folder)"))
+        elif self._locked_subfolders:
+            lock_messages.append(self._locked_subfolders)
+
+        if lock_messages:
+            if len(lock_messages) == 1:
+                lock_message = lock_messages[0]
+            else:
+                li_elements = "".join([  "<li>%s</li>" % m for m in lock_messages ])
+                lock_message = "<ul>" + li_elements + "</ul>"
+            html.show_info(lock_message)
+
+
+    def show_breadcrump(self, link_to_last=False, keepvarnames=["mode"]):
         keepvars = [ (name, html.var(name)) for name in keepvarnames ]
 
         def render_component(folder):
@@ -21017,4 +21148,97 @@ def host_extra_conf(hostname, conflist):
         if hostname in hostlist:
             return [value]
     return []
+
+# Small helper for creating a link with a context to a given folder
+def make_link_to(vars, folder):
+    vars = vars + [ ("folder", folder[".path"]) ]
+    return html.makeuri_contextless(vars)
+
+def check_folder_permissions(folder, how, exception=True, user = None, users = None):
+    # CLEANUP: This is obsoleted by Folder::check_permissions()
+    if not user:
+        if config.may("wato.all_folders"):
+            return True
+        if how == "read" and config.may("wato.see_all_folders"):
+            return True
+    else:
+        if config.user_may(user, "wato.all_folders"):
+            return True
+        if how == "read" and config.user_may(user, "wato.see_all_folders"):
+            return True
+
+    # Get contact groups of that folder
+    perm_groups, cgs = collect_folder_groups(folder)
+
+    if not user:
+        user = config.user_id
+
+    # Get contact groups of user
+    if users == None:
+        users = userdb.load_users()
+    if user not in users:
+        user_cgs = []
+    else:
+        user_cgs = users[user].get("contactgroups", [])
+
+    for c in user_cgs:
+        if c in perm_groups:
+            return True
+
+    reason = _("Sorry, you have no permissions to the folder <b>%s</b>. ") % folder["title"]
+    if not perm_groups:
+        reason += _("The folder is not permitted for any contact group.")
+    else:
+        reason += _("The folder's permitted contact groups are <b>%s</b>. ") % ", ".join(perm_groups)
+        if user_cgs:
+            reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_cgs)
+        else:
+            reason += _("But you are not a member of any contact group.")
+    reason += _("You may enter the folder as you might have permission on a subfolders, though.")
+
+    if exception:
+        raise MKAuthException(reason)
+    else:
+        return reason
+
+# CLEANUP: Convert to new Folder class. This is being used by the auth_hook.py
+def get_folder_permissions_of_users(users):
+    folders = {}
+
+    def get_flat_folders(folder):
+        folders[folder['.path']] = folder
+        for child in folder.get('.folders', {}).itervalues():
+            get_flat_folders(child)
+
+    get_flat_folders(get_folder_tree())
+
+    permissions = {}
+
+    users = userdb.load_users()
+    for username in users.iterkeys():
+        perms = {}
+        for folder_path, folder in folders.iteritems():
+            readable = check_folder_permissions(folder, 'read', False, username, users) == True
+            writable = check_folder_permissions(folder, 'write', False, username, users) == True
+
+            if readable or writable:
+                perms[folder_path] = {}
+                if readable:
+                    perms[folder_path]['read'] = True
+                if writable:
+                    perms[folder_path]['write'] = True
+
+        if perms:
+            permissions[username] = perms
+    return permissions
+
+
+def folder_is_transitive_parent_of(folder, child):
+    if folder == child:
+        return True
+    elif ".parent" in child:
+        return folder_is_transitive_parent_of(folder, child[".parent"])
+    else:
+        return False
+
 

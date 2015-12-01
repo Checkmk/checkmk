@@ -572,6 +572,15 @@ def save_users(profiles):
     # Call the users_saved hook
     hooks.call("users-saved", profiles)
 
+
+def contactgroups_of_user(user_id):
+    users = userdb.load_users()
+    if user_id not in users:
+        return []
+    else:
+        return users[user_id].get("contactgroups", [])
+
+
 #.
 #   .-Roles----------------------------------------------------------------.
 #   |                       ____       _                                   |

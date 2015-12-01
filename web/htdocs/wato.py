@@ -760,35 +760,35 @@ def get_folder_aliaspath(folder, show_main = True):
 #   '----------------------------------------------------------------------'
 
 def mode_folder(phase):
-    global g_folder
+    folder = Folder.current()
+    global g_folder # CLEANUP
 
-
-    auth_message = check_folder_permissions(g_folder, "read", False)
-    auth_read = auth_message == True
-    auth_write = check_folder_permissions(g_folder, "write", False) == True
+    # auth_message = check_folder_permissions(g_folder, "read", False)
+    # auth_read = auth_message == True
+    # auth_write = check_folder_permissions(g_folder, "write", False) == True
 
     if phase == "title":
-        return g_folder["title"]
+        return folder.title()
 
     elif phase == "buttons":
         global_buttons()
         if config.may("wato.rulesets") or config.may("wato.seeall"):
             html.context_button(_("Rulesets"),        make_link([("mode", "ruleeditor")]), "rulesets")
             html.context_button(_("Manual Checks"),   make_link([("mode", "static_checks")]), "static_checks")
-        if auth_read:
-            html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
-        if not g_folder.get(".lock_subfolders") and config.may("wato.manage_folders") and auth_write:
+        if folder.may("read"):
+            html.context_button(_("Folder Properties"), folder.url([("mode", "editfolder")]), "edit")
+        if not folder.locked_subfolders() and config.may("wato.manage_folders") and folder.may("write"):
             html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
-        if not g_folder.get(".lock_hosts") and config.may("wato.manage_hosts") and auth_write:
+        if not folder.locked_hosts() and config.may("wato.manage_hosts") and folder.may("write"):
             html.context_button(_("New host"),    make_link([("mode", "newhost")]), "new")
             html.context_button(_("New cluster"), make_link([("mode", "newcluster")]), "new_cluster")
-            html.context_button(_("Bulk Import"), make_link_to([("mode", "bulk_import")], g_folder), "bulk_import")
+            html.context_button(_("Bulk Import"), folder.url([("mode", "bulk_import")]), "bulk_import")
         if config.may("wato.services"):
             html.context_button(_("Bulk Discovery"), make_link([("mode", "bulkinventory"), ("all", "1")]),
                         "inventory")
         if config.may("wato.rename_hosts"):
             html.context_button(_("Bulk Renaming"), make_link([("mode", "bulk_rename_host")]), "rename_host")
-        if not g_folder.get(".lock_hosts") and config.may("wato.parentscan") and auth_write:
+        if not folder.locked_hosts() and config.may("wato.parentscan") and folder.may("write"):
             html.context_button(_("Parent scan"), make_link([("mode", "parentscan"), ("all", "1")]),
                         "parentscan")
         search_button()
@@ -901,37 +901,35 @@ def mode_folder(phase):
             return "bulkcleanup"
 
     else:
-        folder = Folder.current_folder()
         folder.show_breadcrump()
 
-        if not auth_read:
-            html.message(HTML('<img class=authicon src="images/icon_autherr.png"> %s' % html.attrencode(auth_message)))
+        if not folder.may("read"):
+            html.message(HTML('<img class=authicon src="images/icon_autherr.png"> %s' % html.attrencode(folder.reason_why_user_may_not("read"))))
 
         folder.show_locking_information()
-
         show_subfolders_of(folder)
-        have_something = folder.has_subfolders()
+        if folder.may("read"):
+            show_hosts(folder)
 
-        # Show hosts only if we have permission to this folder
+        if not folder.has_hosts() and not folder.has_subfolders() and folder.may("write"):
+            show_empty_folder_menu(folder)
 
-        if True == check_folder_permissions(g_folder, "read", False):
-            have_something = show_hosts(g_folder) or have_something
 
-        if not have_something and auth_write:
-            menu_items = []
-            if not g_folder.get(".lock_hosts"):
-                menu_items.extend([
-                ("newhost", _("Create new host"), "new", "hosts",
-                  _("Add a new host to the monitoring (agent must be installed)")),
-                ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
-                  _("Use Check_MK clusters if an item can move from one host "
-                    "to another at runtime"))])
-            if not g_folder.get(".lock_subfolders"):
-                menu_items.extend([
-                ("newfolder", _("Create new folder"), "newfolder", "hosts",
-                  _("Folders group your hosts, can inherit attributes and can have permissions."))
-                ])
-            render_main_menu(menu_items)
+def show_empty_folder_menu(folder):
+    menu_items = []
+    if not folder.locked_hosts():
+        menu_items.extend([
+        ("newhost", _("Create new host"), "new", "hosts",
+          _("Add a new host to the monitoring (agent must be installed)")),
+        ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
+          _("Use Check_MK clusters if an item can move from one host "
+            "to another at runtime"))])
+    if not folder.locked_subfolders():
+        menu_items.extend([
+        ("newfolder", _("Create new folder"), "newfolder", "hosts",
+          _("Folders group your hosts, can inherit attributes and can have permissions."))
+        ])
+    render_main_menu(menu_items)
 
 
 def show_subfolders_of(folder):
@@ -1074,34 +1072,6 @@ def prepare_folder_info():
 ###     return titles[::-1]
 
 
-def check_host_permissions(hostname, exception=True, folder=None):
-    if folder == None:
-        folder = g_folder
-
-    if config.may("wato.all_folders"):
-        return True
-    host = folder[".hosts"][hostname]
-    perm_groups, contact_groups = collect_host_groups(host, folder)
-
-    # Get contact groups of user
-    users = userdb.load_users()
-    if config.user_id not in users:
-        user_cgs = []
-    else:
-        user_cgs = users[config.user_id].get("contactgroups",[])
-
-    for c in user_cgs:
-        if c in perm_groups:
-            return True
-
-    reason = _("Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
-               "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
-               (hostname, ", ".join(perm_groups), ", ".join(user_cgs))
-    if exception:
-        raise MKAuthException(reason)
-    return reason
-
-
 
 # Make sure that the user is in all of cgs contact groups.
 # This is needed when the user assigns contact groups to
@@ -1173,16 +1143,13 @@ def collect_host_groups(host, folder):
     return collect_folder_groups(folder, host)
 
 
-
 def show_hosts(folder):
-    load_hosts(folder)
-    if len(folder[".hosts"]) == 0:
-        return False
+    if not folder.has_hosts():
+        return
 
     show_checkboxes = html.var('show_checkboxes', '0') == '1'
 
-    html.write("<h3>" + _("Hosts") + "</h3>")
-    hostnames = folder[".hosts"].keys()
+    hostnames = folder.hosts().keys()
     hostnames.sort(cmp = lambda a, b: cmp(num_split(a), num_split(b)))
     search_text = html.var("search")
 
@@ -1212,7 +1179,7 @@ def show_hosts(folder):
         table.cell(css="bulkactions", colspan=colspan-3)
         html.write(' ' + _("Selected hosts:\n"))
 
-        if not g_folder.get(".lock_hosts"):
+        if not folder.locked_hosts():
             if config.may("wato.manage_hosts"):
                 html.button("_bulk_delete", _("Delete"))
             if config.may("wato.edit_hosts"):
@@ -1220,7 +1187,7 @@ def show_hosts(folder):
                 html.button("_bulk_cleanup", _("Cleanup"))
         if config.may("wato.services"):
             html.button("_bulk_inventory", _("Discovery"))
-        if not g_folder.get(".lock_hosts"):
+        if not folder.locked_hosts():
             if config.may("wato.parentscan"):
                 html.button("_parentscan", _("Parentscan"))
             if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
@@ -1230,7 +1197,7 @@ def show_hosts(folder):
 
     # Show table of hosts in this folder
     html.begin_form("hosts", method = "POST")
-    table.begin("hosts", searchable=False)
+    table.begin("hosts", title=_("Hosts"), searchable=False)
 
     # Remember if that host has a target folder (i.e. was imported with
     # a folder information but not yet moved to that folder). If at least
@@ -1241,8 +1208,8 @@ def show_hosts(folder):
         if search_text and (search_text.lower() not in hostname.lower()):
             continue
 
-        host = g_folder[".hosts"][hostname]
-        effective = effective_attributes(host, g_folder)
+        host = folder.host(hostname)
+        effective = host.effective_attributes()
 
         if effective.get("imported_folder"):
             at_least_one_imported = True
@@ -1250,12 +1217,13 @@ def show_hosts(folder):
         if num == 11:
             more_than_ten_items = True
 
+
     # Compute colspan for bulk actions
     colspan = 6
     for attr, topic in host_attributes:
         if attr.show_in_table():
             colspan += 1
-    if not g_folder.get(".lock_hosts") and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+    if not folder.locked_hosts() and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
         colspan += 1
     if show_checkboxes:
         colspan += 1
@@ -1272,26 +1240,21 @@ def show_hosts(folder):
         display_name = contact_group_names.get(c, {'alias': c})['alias']
         return '<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (c, display_name)
 
-    host_errors = validate_all_hosts(hostnames)
+    host_errors = folder.host_validation_errors()
     rendered_hosts = []
+
     # Now loop again over all hosts and display them
     for hostname in hostnames:
         if search_text and (search_text.lower() not in hostname.lower()):
             continue
 
+        host = folder.host(hostname)
         rendered_hosts.append(hostname)
-        host = g_folder[".hosts"][hostname]
-        effective = effective_attributes(host, g_folder)
+        effective = host.effective_attributes()
 
         table.row()
 
         # Column with actions (buttons)
-        edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
-        params_url   = make_link([("mode", "object_parameters"), ("host", hostname)])
-        services_url = make_link([("mode", "inventory"), ("host", hostname)])
-        clone_url    = make_link([("mode", host.get(".nodes") and "newcluster" or "newhost"),
-                                 ("clone", hostname)])
-        delete_url   = make_action_link([("mode", "folder"), ("_delete_host", hostname)])
 
         if show_checkboxes:
             table.cell("<input type=button class=checkgroup name=_toggle_group"
@@ -1305,65 +1268,50 @@ def show_hosts(folder):
             html.write("<input type=checkbox %s name=\"_c_%s\" value=%d />" % (css_class, hostname, colspan))
 
         table.cell(_("Actions"), css="buttons", sortable=False)
-        html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
-        if config.may("wato.rulesets"):
-            html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
-        if check_host_permissions(hostname, False) == True:
-            if config.may("wato.services"):
-                msg = _("Edit the services of this host, do a service discovery")
-            else:
-                msg = _("Display the services of this host")
-            image =  "services"
-            if host.get("inventory_failed"):
-                image = "inventory_failed"
-                msg += ". " + _("The service discovery of this host failed during a previous bulk service discovery.")
-            html.icon_button(services_url, msg, image)
-        if not g_folder.get(".lock_hosts") and config.may("wato.manage_hosts"):
-            if config.may("wato.clone_hosts"):
-                html.icon_button(clone_url, _("Create a clone of this host"), "insert")
-            html.icon_button(delete_url, _("Delete this host"), "delete")
+        show_host_actions(host)
 
         # Hostname with link to details page (edit host)
         table.cell(_("Hostname"))
-        errors = host_errors.get(hostname,[]) + validate_host(host, g_folder)
+        errors = host_errors.get(hostname,[]) + host.validation_errors()
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
             html.icon(msg, "validation_error")
             html.write("&nbsp;")
 
-        html.write('<a href="%s">%s</a>\n' % (edit_url, hostname))
+        html.write('<a href="%s">%s</a>\n' % (host.edit_url(), hostname))
 
-        if ".nodes" in host:
+        if host.is_cluster():
             html.write("&nbsp;")
-            html.icon(_("This host is a cluster of %s") % ", ".join(host[".nodes"]), "cluster")
+            html.icon(_("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
 
         # Show attributes
         for attr, topic in host_attributes:
             if attr.show_in_table():
                 attrname = attr.name()
-                if attrname in host:
-                    tdclass, tdcontent = attr.paint(host.get(attrname), hostname)
+                if attrname in host.attributes():
+                    tdclass, tdcontent = attr.paint(host.attributes()[attrname], hostname)
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"
                 table.cell(attr.title(), tdcontent, css=tdclass)
 
         # Am I authorized?
-        auth = check_host_permissions(hostname, False)
-        if auth == True:
+        reason = host.reason_why_may_not("read")
+        if not reason:
             icon = "authok"
             title = _("You have permission to this host.")
         else:
             icon = "autherr"
-            title = html.strip_tags(auth)
+            title = html.strip_tags(reason)
 
         table.cell(_('Auth'), '<img class=icon src="images/icon_%s.png" title="%s">' % (icon, title), sortable=False)
 
+
         # Permissions and Contact groups - through complete recursion and inhertance
-        perm_groups, contact_groups = collect_host_groups(host, folder)
-        table.cell(_("Permissions"), ", ".join(map(render_contact_group, perm_groups)))
-        table.cell(_("Contact Groups"), ", ".join(map(render_contact_group, contact_groups)))
+        permitted_groups, host_contact_groups = host.groups()
+        table.cell(_("Permissions"), ", ".join(map(render_contact_group, permitted_groups)))
+        table.cell(_("Contact Groups"), ", ".join(map(render_contact_group, host_contact_groups)))
 
         if not config.wato_hide_hosttags:
             # Raw tags
@@ -1371,14 +1319,15 @@ def show_hosts(folder):
             # Optimize wraps:
             # 1. add <nobr> round the single tags to prevent wrap within tags
             # 2. add "zero width space" (&#8203;)
-            tag_title = "|".join([ '%s' % t for t in host[".tags"] ])
+            tag_title = "|".join([ '%s' % t for t in host.tags() ])
             table.cell(_("Tags"), help=tag_title, css="tag-ellipsis")
-            html.write("<b style='color: #888;'>|</b>&#8203;".join([ '<nobr>%s</nobr>' % t for t in host[".tags"] ]))
+            html.write("<b style='color: #888;'>|</b>&#8203;".join([ '<nobr>%s</nobr>' % t for t in host.tags() ]))
 
         # Move to
-        if not g_folder.get(".lock_hosts") and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+        if not folder.locked_hosts() and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
             table.cell(_("Move To"), css="right", sortable=False)
-            move_to_folder_combo("host", hostname)
+            move_to_folder_combo("host", host)
+
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
         bulk_actions(at_least_one_imported, False, not search_shown, colspan, show_checkboxes)
@@ -1398,19 +1347,39 @@ def show_hosts(folder):
             'g_page_id = "wato-folder-%s";\n'
             'g_selection = "%s";\n'
             'g_selected_rows = %r;\n'
-            'init_rowselect();' % ('/' + g_folder['.path'], weblib.selection_id(), selected)
+            'init_rowselect();' % ('/' + folder.path(), weblib.selection_id(), selected)
         )
-    return True
+
+
+def show_host_actions(host):
+    html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
+    if config.may("wato.rulesets"):
+        html.icon_button(host.params_url(), _("View the rule based parameters of this host"), "rulesets")
+    if check_host_permissions(host.name(), False) == True:
+        if config.may("wato.services"):
+            msg = _("Edit the services of this host, do a service discovery")
+        else:
+            msg = _("Display the services of this host")
+        image =  "services"
+        if host.discovery_failed():
+            image = "inventory_failed"
+            msg += ". " + _("The service discovery of this host failed during a previous bulk service discovery.")
+        html.icon_button(host.services_url(), msg, image)
+    if not host.is_locked() and config.may("wato.manage_hosts"):
+        if config.may("wato.clone_hosts"):
+            html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
+        delete_url  = make_action_link([("mode", "folder"), ("_delete_host", host.name())])
+        html.icon_button(delete_url, _("Delete this host"), "delete")
 
 # In case of what == "host", thing is either None or the name of the host
 # In case of what == "folder", thing is the folder dict
 def move_to_folder_combo(what, thing = None, top = False, multiple = False):
-    # CLEANUP: Move this to new class Folder
+    # CLEANUP: Move this to new class Folder. Split function into smaller pieces
     folder_combo_cache = html.set_cache_default("wato_moveto_folder_combo", {})
 
     # In case of a folder move combo, thing is the folder object
     # we want to move
-    if what == "folder" or id(Folder.current_folder()) not in folder_combo_cache:
+    if what == "folder" or id(Folder.current()) not in folder_combo_cache:
         selections = [("@", _("(select folder)"))]
         for folder_path, folder in Folder.all_folders().items():
             # TODO: Check permissions
@@ -1427,13 +1396,14 @@ def move_to_folder_combo(what, thing = None, top = False, multiple = False):
                 selections.append((folder_path, msg))
 
         selections.sort(cmp=lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        folder_combo_cache[Folder.current_folder().path()] = selections
+        folder_combo_cache[Folder.current().path()] = selections
     else:
-        selections = folder_combo_cache[Folder.current_folder().path()]
+        selections = folder_combo_cache[Folder.current().path()]
 
 
     if len(selections) > 1:
         select_attrs = {}
+        # CLEANUP: What the hack is this?
         if multiple:
             select_attrs = {'multiple': '10'}
 
@@ -1448,8 +1418,8 @@ def move_to_folder_combo(what, thing = None, top = False, multiple = False):
                         onchange = "update_bulk_moveto(this.value)",
                         attrs = {'class': 'bulk_moveto'})
         elif what == "host":
-            html.hidden_field("host", thing)
-            uri = html.makeactionuri([("host", thing)])
+            html.hidden_field("host", thing.name())
+            uri = html.makeactionuri([("host", thing.name())])
             html.select("_host_move_%s" % thing, selections, "@",
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri, attrs = select_attrs);
         else: # what == "folder"
@@ -16908,7 +16878,7 @@ def page_download_agent_output():
     # TODO: Use method in host object
     check_host_permissions(host_name)
 
-    host = Folder.current_folder().host(host_name)
+    host = Folder.current().host(host_name)
     if not host:
         raise MKGeneralException(_("Invalid host."))
 
@@ -19662,22 +19632,6 @@ def call_hook_roles_saved(roles):
 def call_hook_sites_saved(sites):
     hooks.call("sites-saved", sites)
 
-# This hook is called in order to determine if a host has a 'valid'
-# configuration. It used for displaying warning symbols in the
-# host list and in the host detail view.
-def validate_host(host, folder):
-    if hooks.registered('validate-host'):
-        errors = []
-        eff = effective_attributes(host, folder)
-        for hk in hooks.get('validate-host'):
-            try:
-                hk(eff)
-            except MKUserError, e:
-                errors.append("%s" % e)
-        return errors
-    else:
-        return []
-
 # This hook is called in order to determine the errors of the given
 # hostnames. These informations are used for displaying warning
 # symbols in the host list and the host detail view
@@ -19873,7 +19827,7 @@ def render_folder_path(folder = 0, link_to_last = False, keepvarnames = ["mode"]
     # CLEANUP: As soon as the folder is a new style object, drop this function
     # TODO: Replace this by Folder::show_breadcrump()
     if folder == 0:
-        folder = Folder.current_folder()
+        folder = Folder.current()
     else:
         folder = Folder.folder(folder[".path"])
 
@@ -20444,7 +20398,44 @@ def register_builtin_host_tags():
 # wato_info:   The dictionary that is saved in the folder's .wato file
 
 
-class Folder:
+# Base class containing a couple of generic permission checking functions, used
+# for Host and Folder
+class WithPermissions(object):
+    def __init__(self):
+        object.__init__(self)
+
+
+    def may(self, how): # how is "read" or "write"
+        return self.user_may(config.user_id, how)
+
+
+    def reason_why_may_not(self, how):
+        return self.reason_why_user_may_not(config.user_id, how)
+
+
+    def need_permission(self, how):
+        self.user_needs_permission(config.user_id, how)
+
+
+    def user_may(self, user_id, how):
+        try:
+            self.user_needs_permission(user_id, how)
+            return True
+        except MKAuthException, e:
+            return False
+
+
+    def reason_why_user_may_not(self, user_id, how):
+        try:
+            self.user_needs_permission(user_id, how)
+            return False
+        except MKAuthException, e:
+            return "%s" % e
+
+
+
+
+class Folder(WithPermissions):
     # TODO: Private Methoden von öffentlichen trennen
 
 
@@ -20480,7 +20471,7 @@ class Folder:
     # path in the variable "folder" or by a host name in the variable "host". In the
     # latter case we need to load all hosts in all folders and actively search the host.
     @staticmethod
-    def current_folder():
+    def current():
         if not html.is_cached("wato_current_folder"):
             if html.has_var("folder"):
                 folder = Folder.folder(html.var("folder"))
@@ -20501,6 +20492,7 @@ class Folder:
 
 
     def __init__(self, name, folder_path, parent_folder=None):
+        WithPermissions.__init__(self)
         self._name = name
         self._folder_path = folder_path
         self._parent_folder = parent_folder
@@ -20513,6 +20505,10 @@ class Folder:
     def hosts(self):
         self.load_hosts_on_demand()
         return self._hosts
+
+
+    def host_names(self):
+        return self.hosts().keys()
 
 
     def host(self, host_name):
@@ -20562,6 +20558,7 @@ class Folder:
             self._hosts[host_name] = host
 
 
+
     def reload_hosts(self):
         self._hosts = None
         return self.load_hosts()
@@ -20586,10 +20583,11 @@ class Folder:
         return variables
 
 
+    # Remove dynamic tags like "wato" and the folder path.
     def cleanup_host_tags(self, tags):
         return [ tag for tag in tags if
                  tag not in [ "wato", "//" ]
-                     and not (tag.startswith("/") and tags.endswith(".mk")) ]
+                     and not tag.startswith("/wato/") ]
 
 
     def create_host_from_variables(self, host_name, host_tags, nodes_of, variables):
@@ -20693,6 +20691,10 @@ class Folder:
         return len(self._subfolders) > 0
 
 
+    def has_hosts(self):
+        return len(self.hosts()) != 0
+
+
     def subfolder_choices(self):
         return [ (subfolder.path(), subfolder.title())
                  for subfolder in self.subfolders().values() ]
@@ -20716,7 +20718,7 @@ class Folder:
 
 
     def is_current_folder(self):
-        return self == Folder.current_folder()
+        return self == Folder.current()
 
 
     def is_parent_of(self, maybe_child):
@@ -20798,10 +20800,16 @@ class Folder:
         return effective
 
 
-    def groups(self):
+    def groups(self, host=None):
+        # CLEANUP: this method is also used for determining host permission
+        # in behalv of Host::groups(). Not nice but was done for avoiding
+        # code duplication
         permitted_groups = set([])
         host_contact_groups = set([])
-        effective_folder_attributes = self.effective_attributes()
+        if host:
+            effective_folder_attributes = host.effective_attributes()
+        else:
+            effective_folder_attributes = self.effective_attributes()
         cgconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
 
         # First set explicit groups
@@ -20809,7 +20817,11 @@ class Folder:
         if cgconf["use"]:
             host_contact_groups.update(cgconf["groups"])
 
-        parent = self.parent()
+        if host:
+            parent = self
+        else:
+            parent = self.parent()
+
         while parent:
             effective_folder_attributes = parent.effective_attributes()
             parconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
@@ -20826,33 +20838,8 @@ class Folder:
         return permitted_groups, host_contact_groups
 
 
-
-    def may(self, how): # how is "read" or "write"
-        return self.user_may(config.user_id, how)
-
-
-    def reason_why_may_not(self, how):
-        return self.reason_why_user_may_not(conifg.user_id, how)
-
-
-    def need_permission(self, how):
-        self.user_needs_permission(config.user_id, how)
-
-
-    def user_may(self, user_id, how):
-        try:
-            self.user_needs_permission(user_id, how)
-            return True
-        except MKAuthException, e:
-            return False
-
-
-    def reason_why_user_may_not(self, user_id, how):
-        try:
-            self.user_needs_permission(user_id, how)
-            return False
-        except MKAuthException, e:
-            return "%s" % e
+    def host_validation_errors(self):
+        return validate_all_hosts(self.host_names())
 
 
     def user_needs_permission(self, user_id, how):
@@ -20861,7 +20848,7 @@ class Folder:
         if how == "read" and config.user_may(user_id, "wato.see_all_folders"):
             return
 
-        permitted_groups, folder_contactgroups = folder.groups()
+        permitted_groups, folder_contactgroups = self.groups()
         user_contactgroups = userdb.contactgroups_of_user(user_id)
 
         for c in user_contactgroups:
@@ -20882,8 +20869,8 @@ class Folder:
 
 
 
-    def url(self):
-        return html.makeuri_contextless([("mode", "folder"), ("folder", self.path())])
+    def url(self, add_vars = []):
+        return html.makeuri_contextless([("mode", "folder"), ("folder", self.path())] + add_vars)
 
 
     def edit_url(self, backfolder):
@@ -20997,8 +20984,9 @@ class Folder:
         html.write("</ul></div>\n")
 
 
-class Host:
+class Host(WithPermissions):
     def __init__(self, folder, host_name, host_tags, cluster_nodes, attributes, alias):
+        WithPermissions.__init__(self)
         self._folder = folder
         self._name = host_name
         self._tags = host_tags
@@ -21006,16 +20994,140 @@ class Host:
         self._attributes = attributes
         self._alias = alias
 
+
+    def __repr__(self):
+        return "Host(%r)" % (self._name)
+
+
+    def discovery_failed(self):
+        return self.attributes().get("inventory_failed")
+
+
+    def name(self):
+        return self._name
+
+
+    def folder(self):
+        return self._folder
+
+
+    def tags(self):
+        return self._tags
+
+
+    def is_locked(self):
+        return self.folder().locked_hosts()
+
+
+    def is_cluster(self):
+        return self._cluster_nodes != None
+
+
+    def cluster_nodes(self):
+        return self._cluster_nodes
+
+
     def site_id(self):
-        return self._attributes.get("site") or self._folder.site_id()
+        return self._attributes.get("site") or self.folder().site_id()
+
+
+    def attributes(self):
+        return self._attributes
+
+
+    def effective_attributes(self):
+        effective = self.folder().effective_attributes()
+        effective.update(self.attributes())
+        return effective
+
+
+    def validation_errors(self):
+        if hooks.registered('validate-host'):
+            errors = []
+            eff = self.effective_attributes()
+            for hk in hooks.get('validate-host'):
+                try:
+                    hk(eff)
+                except MKUserError, e:
+                    errors.append("%s" % e)
+            return errors
+        else:
+            return []
+
+
+    def groups(self):
+        return self.folder().groups(self)
+
+
+    def user_needs_permission(self, user_id, how):
+        if config.may("wato.all_folders"):
+            return True
+
+        permitted_groups, host_contact_groups = self.groups()
+        user_contactgroups = userdb.contactgroups_of_user(user_id)
+
+        for c in user_contactgroups:
+            if c in permitted_groups:
+                return
+
+        reason = _("Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
+                   "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
+                   (hostname, ", ".join(permitted_groups), ", ".join(user_contactgroups))
+        raise MKAuthException(reason)
 
 
 
-# CRAP SECTION
-# THIS CRAP CAN BE REMOVED AS SOON AS THE NEW CLASSES Folder AND Host ARE OPERATIVE
+    def edit_url(self):
+        return html.makeuri_contextless([
+            ("mode", "edithost"),
+            ("folder", self.folder().path()),
+            ("host", self.name()),
+        ])
 
-# FUNCTIONS that are not used in the file but maybe by plugins
-# check those out and replace with new class stuff
+
+    def params_url(self):
+        return html.makeuri_contextless([
+            ("mode", "object_parameters"),
+            ("folder", self.folder().path()),
+            ("host", self.name()),
+        ])
+
+
+    def services_url(self):
+        return html.makeuri_contextless([
+            ("mode", "inventory"),
+            ("folder", self.folder().path()),
+            ("host", self.name()),
+        ])
+
+
+    def clone_url(self):
+        return html.makeuri_contextless([
+            ("mode", self.is_cluster() and "newcluster" or "newhost"),
+            ("folder", self.folder().path()),
+            ("clone", self.name()),
+        ])
+
+
+
+
+#.
+#   .--CRAP--Remove this ASAP----------------------------------------------.
+#   |                      ____ ____      _    ____                        |
+#   |                     / ___|  _ \    / \  |  _ \                       |
+#   |                    | |   | |_) |  / _ \ | |_) |                      |
+#   |                    | |___|  _ <  / ___ \|  __/                       |
+#   |                     \____|_| \_\/_/   \_\_|                          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | CRAP SECTION                                                         |
+#   |                                                                      |
+#   | THIS CRAP CAN BE REMOVED AS SOON AS THE NEW CLASSES Folder AND Host  |
+#   | ARE OPERATIVE                                                        |
+#   |                                                                      |
+#   | FUNCTIONS that are not used in the file but maybe by plugins         |
+#   | check those out and replace with new class stuff                     |
+#   '----------------------------------------------------------------------'
 
 # Return the title of a folder - which is given as a string path
 def get_folder_title(path):
@@ -21241,4 +21353,51 @@ def folder_is_transitive_parent_of(folder, child):
     else:
         return False
 
+
+def check_host_permissions(hostname, exception=True, folder=None):
+    # CLEANUP: Get rid of this. This is no coded in Host::user_needs_permission()
+    if folder == None:
+        folder = g_folder
+
+    if config.may("wato.all_folders"):
+        return True
+    host = folder[".hosts"][hostname]
+    perm_groups, contact_groups = collect_host_groups(host, folder)
+
+    # Get contact groups of user
+    users = userdb.load_users()
+    if config.user_id not in users:
+        user_cgs = []
+    else:
+        user_cgs = users[config.user_id].get("contactgroups",[])
+
+    for c in user_cgs:
+        if c in perm_groups:
+            return True
+
+    reason = _("Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
+               "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
+               (hostname, ", ".join(perm_groups), ", ".join(user_cgs))
+    if exception:
+        raise MKAuthException(reason)
+    return reason
+
+
+# This hook is called in order to determine if a host has a 'valid'
+# configuration. It used for displaying warning symbols in the
+# host list and in the host detail view.
+def validate_host(host_name, folder):
+    # CLEANUP: This is replaced by Host::validation_errors(). Find all occurrances,
+    # migrate them, then remove this function
+    if hooks.registered('validate-host'):
+        errors = []
+        eff = effective_attributes(host_name, folder)
+        for hk in hooks.get('validate-host'):
+            try:
+                hk(eff)
+            except MKUserError, e:
+                errors.append("%s" % e)
+        return errors
+    else:
+        return []
 

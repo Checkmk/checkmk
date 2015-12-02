@@ -1,0 +1,10 @@
+Title: check_mk_agent.linux: Not longer list prl_fs filesystems
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449064627
+Class: fix
+
+The Agent now ignores Filesystems from Paralles Desktop.
+

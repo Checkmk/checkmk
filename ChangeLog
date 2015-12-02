@@ -114,6 +114,7 @@
     * 2800 FIX: mk_mysql: fixed some issues with incorrect assembled command line...
     * 2744 FIX: waitmax now kills the whole process group and is a bit more robust.
     * 2842 FIX: jolokia_metrics.perm_gen: fixed wrong calculation of perf variables warn and crit
+    * 1308 FIX: check_mk_agent.linux: Not longer list prl_fs filesystems...
     * 2782 FIX: cups_queues: fix crash in case user name contains spaces
     * 2849 FIX: winperf_processor.util: Fixed crash in case no CPU infos are sent
     * 2850 FIX: juniper_cpu: Better error handling of empty data reported by device

@@ -94,6 +94,8 @@ def check_ibm_svc_mdiskgrp(item, params, info):
             yield status, message, perfdata
 
             # Compute provisioning
+            if not capacity:
+                return # provisioning does not make sense when capacity is 0
             provisioning = 100.0 * virtual_capacity / capacity
             if "provisioning_levels" in params:
                 warn, crit = params["provisioning_levels"]

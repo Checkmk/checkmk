@@ -25,6 +25,7 @@
     * 2850 FIX: juniper_cpu: Better error handling of empty data reported by device
     * 2873 FIX: megaraid_pdisks: handle case "Copyback" correctly...
     * 2854 FIX: winperf_if: Assuming interfaces without status to be up
+    * 2855 FIX: ibm_svc_mdiskgrp: Fixed crash when capacity of pool is 0
 
     Multisite:
     * 2772 FIX: Fixed possible exception in icon column when showing some actions in the column...

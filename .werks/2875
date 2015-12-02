@@ -1,0 +1,10 @@
+Title: citrix_farm.ps1: Add missing end marker of piggy data - fixes problem in subsequent plugins
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p5
+Date: 1449066069
+
+

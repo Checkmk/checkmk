@@ -1,0 +1,10 @@
+Title: Avoid redeclaration errors in graphs when using pnp basket
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449056407
+Class: fix
+
+The pnp basket might include the same template files multiple times.
+This caused redeclaration exceptions in a number of check templates, e.g. default, mem-linux.

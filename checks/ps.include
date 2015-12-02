@@ -147,7 +147,7 @@ def instantiate_regex_pattern_once(pattern, match):
 def escape_regex_chars(match):
     r = ""
     for c in match:
-        if c in r"[]\().?{}|*^$":
+        if c in r"[]\().?{}|*^$+":
             r += "\\"
         r += c
     return r

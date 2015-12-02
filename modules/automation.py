@@ -244,6 +244,11 @@ def set_autochecks_of(hostname, new_items):
                 new_autochecks.append((check_type, item, paramstring))
             # write new autochecks file for that host
             automation_write_autochecks_file(node, new_autochecks)
+
+        # Check whether or not the cluster host autocheck files are still
+        # existant. Remove them. The autochecks are only stored in the nodes
+        # autochecks files these days.
+        remove_autochecks_file(hostname)
     else:
         existing = parse_autochecks_file(hostname)
         # write new autochecks file, but take paramstrings from existing ones
@@ -261,6 +266,7 @@ def set_autochecks_of(hostname, new_items):
         automation_write_autochecks_file(hostname, new_autochecks)
 
 
+# FIXME TODO: Consolidate with discovery.py save_autochecks_file()
 def automation_write_autochecks_file(hostname, table):
     if not os.path.exists(autochecksdir):
         os.makedirs(autochecksdir)

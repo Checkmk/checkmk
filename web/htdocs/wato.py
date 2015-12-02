@@ -53,38 +53,6 @@
 # by WATO but not by Check_MK itself.
 
 # [2] Global variables
-# Yes. Global variables are bad. But we use them anyway. Please go away
-# if you do not like this. Global variables - if properly used - can make
-# implementation a lot easier and clearer. Of course we could pack everything
-# into a class and use class variables. But what's the difference?
-#
-# g_folders -> A dictionary of all folders, the key are there paths,
-#              the values are dictionaries. Keys beginning
-#              with a period are not persisted. Important keys are:
-#
-#   ".folders"        -> List of subfolders. This key is present even for leaf folders.
-#   ".parent"         -> parent folder (not name, but Python reference!). Missing for the root folder
-#   ".name"           -> OS name of the folder
-#   ".path"           -> absolute path of folder
-#   ".hosts"          -> Hosts in that folder. This key is present even if there are no hosts.
-#                        If the hosts in the folder have not been loaded yet, then the key
-#                        is missing.
-#   "title"           -> Title/alias of that folder
-#   "attributes"      -> Attributes to be inherited to subfolders and hosts
-#   "num_hosts"       -> number of hosts in this folder (this is identical to
-#                        to len() of the entry ".hosts" but is persisted for
-#                        performance issues.
-#   ".total_hosts"    -> recursive number of hosts, computed on demand by
-#                        num_hosts_in()
-#   ".siteid"         -> This attribute is mandatory for host objects and optional for folder
-#                        objects. In case of hosts and single WATO setup it is always None.
-#
-#
-# g_folder -> The folder object representing the folder the user is
-#             currently operating in.
-#
-# g_root_folder -> The folder object representing the root folder
-#
 # At the beginning of each page, those three global variables are
 # set. All folders are loaded, but only their meta-data, not the
 # actual Check_MK files (hosts.mk). WATO is designed for managing
@@ -113,7 +81,9 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, cStringIO, math, fcntl, pickle, random, glob
+       shutil, tarfile, cStringIO, math, fcntl, pickle, random, glob, \
+       base64
+
 import i18n
 import config, table, multitar, userdb, hooks, weblib, login
 from hashlib import sha256
@@ -150,9 +120,6 @@ SYNCRESTART  = 3
 AFFECTED     = 4
 LOCALRESTART = 5
 
-g_folder = None
-g_root_folder = None
-g_folders = {}
 g_html_head_open = False
 
 #.
@@ -339,32 +306,6 @@ def ensure_mode_permissions(modeperms):
         config.need_permission(pname)
 
 
-def set_current_folder(folder = None):
-    # CLEANUP: Das hier ist überflüssig, sobald nur noch die Klasse Folder
-    # verwendet wird.
-    global g_folder
-
-    if folder:
-        g_folder = folder
-    else:
-        if html.has_var("folder"):
-            path = html.var("folder")
-            g_folder = g_folders.get(path)
-        else:
-            host = html.var("host")
-            if host: # find host with full scan. Expensive operation
-                g_folder = find_host(host)
-                if not g_folder:
-                    raise MKGeneralException(_("The host <b>%s</b> is not managed by WATO.") % host)
-            else: # fall back to root folder
-                g_folder = g_root_folder
-
-        if not g_folder:
-            raise MKGeneralException(_('You called this page with a non-existing folder! '
-                                     'Go back to the <a href="wato.py">main index</a>.'))
-    html.set_var("folder", g_folder['.path']) # in case of implizit folder selection
-    load_hosts(g_folder)          # load information about hosts
-
 g_need_sidebar_reload = None
 def need_sidebar_reload():
     global g_need_sidebar_reload
@@ -461,257 +402,6 @@ def save_folder_and_hosts(folder):
     if not folder.get(".lock_hosts"):
         save_hosts(folder)
 
-def folder_config_exists(dir):
-    return os.path.exists(dir + "/.wato")
-
-# Load the meta-data of a folder (it's .wato file), register
-# it in g_folders, load recursively all subfolders and then
-# return the folder object. The case the .wato file is missing
-# it will be assume to contain default values.
-def load_folder(dir, name="", path="", parent=None, childs = True):
-    # CLEANUP: Replace by Folder class
-    fn = dir + "/.wato"
-    try:
-        folder = eval(file(fn).read())
-    except:
-        # .wato missing or invalid
-        folder = {
-            "title"      : name and name or _("Main directory"),
-            "num_hosts"  : 0,
-        }
-
-    folder[".name"]        = name
-    folder[".path"]        = path
-    folder[".folders"]     = {}
-    folder[".lock"]        = folder.get("lock", False)
-    folder[".lock_subfolders"] = folder.get("lock_subfolders", False)
-    folder[".lock_hosts"]  = False
-    if parent:
-        # Update reference to parent folder
-        folder[".parent"] = parent
-
-        # Update reference in parent folder
-        parent[".folders"][name] = folder
-
-    if "attributes" not in folder: # Make sure, attributes are always present
-        folder["attributes"] = {}
-
-    # Add information about the effective site of this folder
-    if is_distributed():
-        if "site" in folder["attributes"]:
-            folder[".siteid"] = folder["attributes"]["site"]
-        elif parent:
-            folder[".siteid"] = parent[".siteid"]
-        else:
-            folder[".siteid"] = config.default_site()
-
-    # Now look subdirectories
-    if childs and os.path.exists(dir):
-        for entry in os.listdir(dir):
-            if entry[0] == '.': # entries '.' and '..'
-                continue
-
-            p = dir + "/" + entry
-
-            if os.path.isdir(p):
-                if path == "":
-                    subpath = entry
-                else:
-                    subpath = path + "/" + entry
-                f = load_folder(p, entry, subpath, folder)
-                folder[".folders"][entry] = f
-
-    g_folders[path] = folder
-    return folder
-
-# Reload a folder. This is called after the folder is modified,
-# so that subsequent code has access to the correct folder
-# meta data (such as .siteid)
-def reload_folder(folder):
-    # CLEANUP: Replace by Folder class
-    have_hosts = ".hosts" in folder
-    new_folder = load_folder(folder_dir(folder), folder[".name"], folder[".path"], folder.get(".parent"))
-    if have_hosts: # hosts were loaded in old folder -> do this again
-        load_hosts(new_folder)
-    return new_folder
-
-# Load the information about all folders - except the hosts
-def load_all_folders():
-    # CLEANUP: Replace by Folder class
-    if not os.path.exists(root_dir):
-        make_nagios_directories(root_dir)
-
-    global g_root_folder, g_folders
-    g_folders = {}
-    g_root_folder = load_folder(root_dir)
-
-
-# Load all hosts from all configuration files.
-def load_all_hosts(base_folder = None):
-    # CLEANUP: Replace by Folder class
-    if base_folder == None:
-        base_folder = g_root_folder
-    hosts = {}
-    for f in base_folder[".folders"].values():
-        hosts.update(load_all_hosts(f))
-    hosts.update(load_hosts(base_folder))
-    return hosts
-
-def save_hosts(folder = None):
-    # CLEANUP: Replace by Folder class
-    if folder == None:
-        folder = g_folder
-
-    if folder.get(".lock_hosts"):
-        raise MKAuthException(_("Sorry, you cannot edit hosts in this folder. They are locked."))
-
-    folder_path = folder[".path"]
-    dirname = root_dir + folder_path
-    filename = dirname + "/hosts.mk"
-
-    if not os.path.isdir(dirname):
-        make_nagios_directories(dirname)
-
-    out = create_user_file(filename, 'w')
-    out.write("# Written by WATO\n# encoding: utf-8\n\n")
-
-    hosts = folder.get(".hosts", [])
-    if len(hosts) == 0:
-        if os.path.exists(filename):
-            os.remove(filename)
-        return
-
-    all_hosts = [] # list of [Python string for all_hosts]
-    clusters = [] # tuple list of (Python string, nodes)
-    ipv4_addresses = {}
-    ipv6_addresses = {}
-    explicit_snmp_communities = {}
-    hostnames = hosts.keys()
-    hostnames.sort()
-    custom_macros = {} # collect value for attributes that are to be present in Nagios
-    cleaned_hosts = {}
-    for hostname in hostnames:
-        nodes = hosts[hostname].get(".nodes")
-        # Remove temporary entries from the dictionary
-        cleaned_hosts[hostname] = dict([(k, v) for (k, v) in hosts[hostname].iteritems() if not k.startswith('.') ])
-
-        host = cleaned_hosts[hostname]
-        effective = effective_attributes(host, folder)
-        ipv4_address   = effective.get("ipaddress")
-        ipv6_address   = effective.get("ipv6address")
-        snmp_community = effective.get("snmp_community")
-
-        # Compute tags from settings of each individual tag. We've got
-        # the current value for each individual tag. Also other attributes
-        # can set tags (e.g. the SiteAttribute)
-        tags = set([])
-        for attr, topic in host_attributes:
-            value = effective.get(attr.name())
-            tags.update(attr.get_tag_list(value))
-
-        # Slave sites preserve any SiteAttribute tag
-        if not is_distributed() and "site" in effective:
-            tags.update(SiteAttribute().get_tag_list(effective["site"]))
-
-        tagstext = "|".join(list(tags))
-        if tagstext:
-            tagstext += "|"
-        hostentry = '"%s|%swato|/" + FOLDER_PATH + "/"' % (hostname, tagstext)
-
-        if nodes:
-            clusters.append((hostentry, nodes))
-        else:
-            all_hosts.append(hostentry)
-
-        if ipv4_address:
-            ipv4_addresses[hostname] = ipv4_address
-        if ipv6_address:
-            ipv6_addresses[hostname] = ipv6_address
-        if snmp_community:
-            explicit_snmp_communities[hostname] = snmp_community
-
-        # Create contact group rule entries for hosts with explicitely set values
-        # Note: since the type if this entry is a list, not a single contact group, all other list
-        # entries coming after this one will be ignored. That way the host-entries have
-        # precedence over the folder entries.
-
-        if "contactgroups" in host:
-            cgconfig = convert_cgroups_from_tuple(host["contactgroups"])
-            cgs = cgconfig["groups"]
-            use = cgconfig["use"]
-            if use and cgs:
-                out.write("\nhost_contactgroups += [\n")
-                for cg in cgs:
-                    out.write('    ( %r, [%r] ),\n' % (cg, hostname))
-                out.write(']\n\n')
-
-        for attr, topic in host_attributes:
-            attrname = attr.name()
-            if attrname in effective:
-                nag_varname = attr.nagios_name()
-                if nag_varname:
-                    value = effective.get(attrname)
-                    nagstring = attr.to_nagios(value)
-                    if nagstring != None:
-                        if nag_varname not in custom_macros:
-                            custom_macros[nag_varname] = {}
-                        custom_macros[nag_varname][hostname] = nagstring
-
-    if len(all_hosts) > 0:
-        out.write("all_hosts += [\n")
-        for entry in all_hosts:
-            out.write('  %s,\n' % entry)
-        out.write("]\n")
-
-    if len(clusters) > 0:
-        out.write("\nclusters.update({")
-        for entry, nodes in clusters:
-            out.write('\n  %s : %s,\n' % (entry, repr(nodes)))
-        out.write("})\n")
-
-    if len(ipv4_addresses) > 0:
-        out.write("\n# Explicit IPv4 addresses\n")
-        out.write("ipaddresses.update(")
-        out.write(pprint.pformat(ipv4_addresses))
-        out.write(")\n")
-
-    if len(ipv6_addresses) > 0:
-        out.write("\n# Explicit IPv6 addresses\n")
-        out.write("ipv6addresses.update(")
-        out.write(pprint.pformat(ipv6_addresses))
-        out.write(")\n")
-
-    if len(explicit_snmp_communities) > 0:
-        out.write("\n# Explicit SNMP communities\n")
-        out.write("explicit_snmp_communities.update(")
-        out.write(pprint.pformat(explicit_snmp_communities))
-        out.write(")")
-    out.write("\n")
-
-    for nag_varname, entries in custom_macros.items():
-        macrolist = []
-        for hostname, nagstring in entries.items():
-            macrolist.append((nagstring, [hostname]))
-        if len(macrolist) > 0:
-            out.write("\n# Settings for %s\n" % nag_varname)
-            out.write("extra_host_conf.setdefault(%r, []).extend(\n" % nag_varname)
-            out.write("  %s)\n" % pprint.pformat(macrolist))
-
-    # If the contact groups of the host are set to be used for the monitoring,
-    # we create an according rule for the folder and an according rule for
-    # each host that has an explicit setting for that attribute.
-    perm_groups, contact_groups = collect_folder_groups(folder)
-    if contact_groups:
-        out.write("\nhost_contactgroups.append(\n"
-                  "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % list(contact_groups))
-
-
-    # Write information about all host attributes into special variable - even
-    # values stored for check_mk as well.
-    out.write("\n# Host attributes (needed for WATO)\n")
-    out.write("host_attributes.update(\n%s)\n" % pprint.pformat(cleaned_hosts))
-
-
 def delete_configuration_file(folder, thefile):
     # CLEANUP: Replace by Folder class??
     path = folder_dir(folder, thefile)
@@ -763,10 +453,6 @@ def mode_folder(phase):
     folder = Folder.current()
     global g_folder # CLEANUP
 
-    # auth_message = check_folder_permissions(g_folder, "read", False)
-    # auth_read = auth_message == True
-    # auth_write = check_folder_permissions(g_folder, "write", False) == True
-
     if phase == "title":
         return folder.title()
 
@@ -804,12 +490,12 @@ def mode_folder(phase):
 
         if html.var("_delete_folder"):
             if html.transaction_valid():
-                delname = html.var("_delete_folder")
-                del_folder = g_folder[".folders"][delname]
                 config.need_permission("wato.manage_folders")
-                if True != check_folder_permissions(g_folder, "write", False):
-                    raise MKAuthException(_("Sorry. In order to delete a folder you need write permissions to its "
-                                            "parent folder."))
+                if not folder.may("write"):
+                    raise MKAuthException(_("Sorry. In order to delete a folder you need write "
+                                            "permissions to its parent folder."))
+                delname = html.var("_delete_folder")
+                del_folder = folder.subfolder(delname)
                 return delete_folder_after_confirm(del_folder)
             return
 
@@ -1536,33 +1222,24 @@ def move_folder(what_folder, target_folder):
     what_folder[".parent"] = target_folder
     shutil.move(old_dir, new_dir)
 
-def delete_folder(folder):
-    parent_folder = folder[".parent"]
 
-    mark_affected_sites_dirty(parent_folder)
-    del parent_folder[".folders"][folder[".name"]]
-    folder_path = folder_dir(folder)
-    shutil.rmtree(folder_path)
-    log_pending(AFFECTED, folder, "delete-folder",
-            _("Deleted empty folder %s")% folder_path)
-    call_hook_folder_deleted(folder)
-
-def delete_folder_after_confirm(del_folder):
-    msg = _("Do you really want to delete the folder %s?") % del_folder["title"]
+def delete_folder_after_confirm(folder):
+    msg = _("Do you really want to delete the folder %s?") % folder.title()
     if not config.wato_hide_filenames:
-        msg += _(" Its directory is <tt>%s</tt>.") % folder_dir(del_folder)
-    num_hosts = num_hosts_in(del_folder)
+        msg += _(" Its directory is <tt>%s</tt>.") % folder.filesystem_path()
+    num_hosts = folder.num_hosts_recursive()
     if num_hosts:
         msg += _(" The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
     c = wato_confirm(_("Confirm folder deletion"), msg)
 
     if c:
-        delete_folder(del_folder)
+        folder.delete()
         return "folder"
     elif c == False: # not yet confirmed
         return ""
     else:
         return None # browser reload
+
 
 # Create list of all hosts that are select with checkboxes in the current file.
 # This is needed for bulk operations.
@@ -11698,25 +11375,6 @@ def global_replication_state():
     else:
         return "clean"
 
-def find_host_sites(site_ids, folder, hostname):
-    if hostname in folder[".hosts"]:
-        host = folder[".hosts"][hostname]
-        if "site" in host and host["site"]:
-            site_ids.add(host["site"])
-        elif folder[".siteid"]:
-            site_ids.add(folder[".siteid"])
-
-# Scan recursively for references to sites
-# in folders and hosts
-def find_folder_sites(site_ids, folder, include_folder = False):
-    if include_folder and folder[".siteid"]:
-        site_ids.add(folder[".siteid"])
-    load_hosts(folder)
-    for hostname in folder[".hosts"]:
-        find_host_sites(site_ids, folder, hostname)
-    for subfolder in folder[".folders"].values():
-        find_folder_sites(site_ids, subfolder, include_folder)
-
 # This method is called when:
 # a) moving a host from one folder to another (2 times)
 # b) deleting a host
@@ -11732,6 +11390,9 @@ def find_folder_sites(site_ids, folder, include_folder = False):
 # at all. It's just there to be inherited to the hosts. What counts is
 # only the attributes of the hosts.
 def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True):
+    # CLEANUP: This is replaced by 
+    # Folder::mark_affected_sites_dirty()
+    # Host::mark_affected_sites_dirty()
     if is_distributed():
         site_ids = set([])
         if hostname:
@@ -19687,8 +19348,6 @@ def may_edit_ruleset(varname):
         return config.may("wato.rulesets")
 
 
-import base64
-
 def mk_eval(s):
     try:
         if literal_eval and not config.wato_legacy_eval:
@@ -20558,7 +20217,6 @@ class Folder(WithPermissions):
             self._hosts[host_name] = host
 
 
-
     def reload_hosts(self):
         self._hosts = None
         return self.load_hosts()
@@ -20661,6 +20319,10 @@ class Folder(WithPermissions):
 
     def path(self):
         return self._folder_path
+
+
+    def filesystem_path(self):
+        return root_dir + self._folder_path
 
 
     def title(self):
@@ -20984,6 +20646,29 @@ class Folder(WithPermissions):
         html.write("</ul></div>\n")
 
 
+    # Actions on the persisted folder data
+    def mark_affected_sites_dirty(self, sync=True, restart=True):
+        for site_id in self.affected_site_ids():
+            changes = {}
+            if sync and not site_is_local(site_id):
+                changes["need_sync"] = True
+            if restart:
+                changes["need_restart"] = True
+            update_replication_status(site_id, changes)
+
+
+    def delete(self):
+        parent_folder = folder[".parent"]
+
+        self.mark_affected_sites_dirty()
+        self.parent().remove_subfolder(self.name())
+        shutil.rmtree(self.filesystem_path())
+        
+        log_pending(AFFECTED, self.path(), "delete-folder", _("Deleted folder %s") % self.path())
+        call_hook_folder_deleted(folder)
+
+
+
 class Host(WithPermissions):
     def __init__(self, folder, host_name, host_tags, cluster_nodes, attributes, alias):
         WithPermissions.__init__(self)
@@ -21029,6 +20714,13 @@ class Host(WithPermissions):
 
     def site_id(self):
         return self._attributes.get("site") or self.folder().site_id()
+
+
+    # Find sites of hosts contained in this folder and subfolders
+    def host_site_ids(self):
+
+        
+
 
 
     def attributes(self):
@@ -21400,4 +21092,338 @@ def validate_host(host_name, folder):
         return errors
     else:
         return []
+
+
+# Yes. Global variables are bad. But we use them anyway. Please go away
+# if you do not like this. Global variables - if properly used - can make
+# implementation a lot easier and clearer. Of course we could pack everything
+# into a class and use class variables. But what's the difference?
+#
+# g_folders -> A dictionary of all folders, the key are there paths,
+#              the values are dictionaries. Keys beginning
+#              with a period are not persisted. Important keys are:
+#
+#   ".folders"        -> List of subfolders. This key is present even for leaf folders.
+#   ".parent"         -> parent folder (not name, but Python reference!). Missing for the root folder
+#   ".name"           -> OS name of the folder
+#   ".path"           -> absolute path of folder
+#   ".hosts"          -> Hosts in that folder. This key is present even if there are no hosts.
+#                        If the hosts in the folder have not been loaded yet, then the key
+#                        is missing.
+#   "title"           -> Title/alias of that folder
+#   "attributes"      -> Attributes to be inherited to subfolders and hosts
+#   "num_hosts"       -> number of hosts in this folder (this is identical to
+#                        to len() of the entry ".hosts" but is persisted for
+#                        performance issues.
+#   ".total_hosts"    -> recursive number of hosts, computed on demand by
+#                        num_hosts_in()
+#   ".siteid"         -> This attribute is mandatory for host objects and optional for folder
+#                        objects. In case of hosts and single WATO setup it is always None.
+#
+#
+# g_folder -> The folder object representing the folder the user is
+#             currently operating in.
+#
+# g_root_folder -> The folder object representing the root folder
+#
+g_folder = None
+g_root_folder = None
+g_folders = {}
+
+def set_current_folder(folder = None):
+    # CLEANUP: Das hier ist überflüssig, sobald nur noch die Klasse Folder
+    # verwendet wird.
+    global g_folder
+
+    if folder:
+        g_folder = folder
+    else:
+        if html.has_var("folder"):
+            path = html.var("folder")
+            g_folder = g_folders.get(path)
+        else:
+            host = html.var("host")
+            if host: # find host with full scan. Expensive operation
+                g_folder = find_host(host)
+                if not g_folder:
+                    raise MKGeneralException(_("The host <b>%s</b> is not managed by WATO.") % host)
+            else: # fall back to root folder
+                g_folder = g_root_folder
+
+        if not g_folder:
+            raise MKGeneralException(_('You called this page with a non-existing folder! '
+                                     'Go back to the <a href="wato.py">main index</a>.'))
+    html.set_var("folder", g_folder['.path']) # in case of implizit folder selection
+    load_hosts(g_folder)          # load information about hosts
+
+# Load the meta-data of a folder (it's .wato file), register
+# it in g_folders, load recursively all subfolders and then
+# return the folder object. The case the .wato file is missing
+# it will be assume to contain default values.
+def load_folder(dir, name="", path="", parent=None, childs = True):
+    # CLEANUP: Replace by Folder class
+    fn = dir + "/.wato"
+    try:
+        folder = eval(file(fn).read())
+    except:
+        # .wato missing or invalid
+        folder = {
+            "title"      : name and name or _("Main directory"),
+            "num_hosts"  : 0,
+        }
+
+    folder[".name"]        = name
+    folder[".path"]        = path
+    folder[".folders"]     = {}
+    folder[".lock"]        = folder.get("lock", False)
+    folder[".lock_subfolders"] = folder.get("lock_subfolders", False)
+    folder[".lock_hosts"]  = False
+    if parent:
+        # Update reference to parent folder
+        folder[".parent"] = parent
+
+        # Update reference in parent folder
+        parent[".folders"][name] = folder
+
+    if "attributes" not in folder: # Make sure, attributes are always present
+        folder["attributes"] = {}
+
+    # Add information about the effective site of this folder
+    if is_distributed():
+        if "site" in folder["attributes"]:
+            folder[".siteid"] = folder["attributes"]["site"]
+        elif parent:
+            folder[".siteid"] = parent[".siteid"]
+        else:
+            folder[".siteid"] = config.default_site()
+
+    # Now look subdirectories
+    if childs and os.path.exists(dir):
+        for entry in os.listdir(dir):
+            if entry[0] == '.': # entries '.' and '..'
+                continue
+
+            p = dir + "/" + entry
+
+            if os.path.isdir(p):
+                if path == "":
+                    subpath = entry
+                else:
+                    subpath = path + "/" + entry
+                f = load_folder(p, entry, subpath, folder)
+                folder[".folders"][entry] = f
+
+    g_folders[path] = folder
+    return folder
+
+def folder_config_exists(dir):
+    return os.path.exists(dir + "/.wato")
+
+
+# Reload a folder. This is called after the folder is modified,
+# so that subsequent code has access to the correct folder
+# meta data (such as .siteid)
+def reload_folder(folder):
+    # CLEANUP: Replace by Folder class
+    have_hosts = ".hosts" in folder
+    new_folder = load_folder(folder_dir(folder), folder[".name"], folder[".path"], folder.get(".parent"))
+    if have_hosts: # hosts were loaded in old folder -> do this again
+        load_hosts(new_folder)
+    return new_folder
+
+# Load the information about all folders - except the hosts
+def load_all_folders():
+    # CLEANUP: Replace by Folder class
+    if not os.path.exists(root_dir):
+        make_nagios_directories(root_dir)
+
+    global g_root_folder, g_folders
+    g_folders = {}
+    g_root_folder = load_folder(root_dir)
+
+
+# Load all hosts from all configuration files.
+def load_all_hosts(base_folder = None):
+    # CLEANUP: Replace by Folder class
+    if base_folder == None:
+        base_folder = g_root_folder
+    hosts = {}
+    for f in base_folder[".folders"].values():
+        hosts.update(load_all_hosts(f))
+    hosts.update(load_hosts(base_folder))
+    return hosts
+
+def save_hosts(folder = None):
+    # CLEANUP: Replace by Folder class
+    if folder == None:
+        folder = g_folder
+
+    if folder.get(".lock_hosts"):
+        raise MKAuthException(_("Sorry, you cannot edit hosts in this folder. They are locked."))
+
+    folder_path = folder[".path"]
+    dirname = root_dir + folder_path
+    filename = dirname + "/hosts.mk"
+
+    if not os.path.isdir(dirname):
+        make_nagios_directories(dirname)
+
+    out = create_user_file(filename, 'w')
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+
+    hosts = folder.get(".hosts", [])
+    if len(hosts) == 0:
+        if os.path.exists(filename):
+            os.remove(filename)
+        return
+
+    all_hosts = [] # list of [Python string for all_hosts]
+    clusters = [] # tuple list of (Python string, nodes)
+    ipv4_addresses = {}
+    ipv6_addresses = {}
+    explicit_snmp_communities = {}
+    hostnames = hosts.keys()
+    hostnames.sort()
+    custom_macros = {} # collect value for attributes that are to be present in Nagios
+    cleaned_hosts = {}
+    for hostname in hostnames:
+        nodes = hosts[hostname].get(".nodes")
+        # Remove temporary entries from the dictionary
+        cleaned_hosts[hostname] = dict([(k, v) for (k, v) in hosts[hostname].iteritems() if not k.startswith('.') ])
+
+        host = cleaned_hosts[hostname]
+        effective = effective_attributes(host, folder)
+        ipv4_address   = effective.get("ipaddress")
+        ipv6_address   = effective.get("ipv6address")
+        snmp_community = effective.get("snmp_community")
+
+        # Compute tags from settings of each individual tag. We've got
+        # the current value for each individual tag. Also other attributes
+        # can set tags (e.g. the SiteAttribute)
+        tags = set([])
+        for attr, topic in host_attributes:
+            value = effective.get(attr.name())
+            tags.update(attr.get_tag_list(value))
+
+        # Slave sites preserve any SiteAttribute tag
+        if not is_distributed() and "site" in effective:
+            tags.update(SiteAttribute().get_tag_list(effective["site"]))
+
+        tagstext = "|".join(list(tags))
+        if tagstext:
+            tagstext += "|"
+        hostentry = '"%s|%swato|/" + FOLDER_PATH + "/"' % (hostname, tagstext)
+
+        if nodes:
+            clusters.append((hostentry, nodes))
+        else:
+            all_hosts.append(hostentry)
+
+        if ipv4_address:
+            ipv4_addresses[hostname] = ipv4_address
+        if ipv6_address:
+            ipv6_addresses[hostname] = ipv6_address
+        if snmp_community:
+            explicit_snmp_communities[hostname] = snmp_community
+
+        # Create contact group rule entries for hosts with explicitely set values
+        # Note: since the type if this entry is a list, not a single contact group, all other list
+        # entries coming after this one will be ignored. That way the host-entries have
+        # precedence over the folder entries.
+
+        if "contactgroups" in host:
+            cgconfig = convert_cgroups_from_tuple(host["contactgroups"])
+            cgs = cgconfig["groups"]
+            use = cgconfig["use"]
+            if use and cgs:
+                out.write("\nhost_contactgroups += [\n")
+                for cg in cgs:
+                    out.write('    ( %r, [%r] ),\n' % (cg, hostname))
+                out.write(']\n\n')
+
+        for attr, topic in host_attributes:
+            attrname = attr.name()
+            if attrname in effective:
+                nag_varname = attr.nagios_name()
+                if nag_varname:
+                    value = effective.get(attrname)
+                    nagstring = attr.to_nagios(value)
+                    if nagstring != None:
+                        if nag_varname not in custom_macros:
+                            custom_macros[nag_varname] = {}
+                        custom_macros[nag_varname][hostname] = nagstring
+
+    if len(all_hosts) > 0:
+        out.write("all_hosts += [\n")
+        for entry in all_hosts:
+            out.write('  %s,\n' % entry)
+        out.write("]\n")
+
+    if len(clusters) > 0:
+        out.write("\nclusters.update({")
+        for entry, nodes in clusters:
+            out.write('\n  %s : %s,\n' % (entry, repr(nodes)))
+        out.write("})\n")
+
+    if len(ipv4_addresses) > 0:
+        out.write("\n# Explicit IPv4 addresses\n")
+        out.write("ipaddresses.update(")
+        out.write(pprint.pformat(ipv4_addresses))
+        out.write(")\n")
+
+    if len(ipv6_addresses) > 0:
+        out.write("\n# Explicit IPv6 addresses\n")
+        out.write("ipv6addresses.update(")
+        out.write(pprint.pformat(ipv6_addresses))
+        out.write(")\n")
+
+    if len(explicit_snmp_communities) > 0:
+        out.write("\n# Explicit SNMP communities\n")
+        out.write("explicit_snmp_communities.update(")
+        out.write(pprint.pformat(explicit_snmp_communities))
+        out.write(")")
+    out.write("\n")
+
+    for nag_varname, entries in custom_macros.items():
+        macrolist = []
+        for hostname, nagstring in entries.items():
+            macrolist.append((nagstring, [hostname]))
+        if len(macrolist) > 0:
+            out.write("\n# Settings for %s\n" % nag_varname)
+            out.write("extra_host_conf.setdefault(%r, []).extend(\n" % nag_varname)
+            out.write("  %s)\n" % pprint.pformat(macrolist))
+
+    # If the contact groups of the host are set to be used for the monitoring,
+    # we create an according rule for the folder and an according rule for
+    # each host that has an explicit setting for that attribute.
+    perm_groups, contact_groups = collect_folder_groups(folder)
+    if contact_groups:
+        out.write("\nhost_contactgroups.append(\n"
+                  "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % list(contact_groups))
+
+
+    # Write information about all host attributes into special variable - even
+    # values stored for check_mk as well.
+    out.write("\n# Host attributes (needed for WATO)\n")
+    out.write("host_attributes.update(\n%s)\n" % pprint.pformat(cleaned_hosts))
+
+
+def find_host_sites(site_ids, folder, hostname):
+    if hostname in folder[".hosts"]:
+        host = folder[".hosts"][hostname]
+        if "site" in host and host["site"]:
+            site_ids.add(host["site"])
+        elif folder[".siteid"]:
+            site_ids.add(folder[".siteid"])
+
+# Scan recursively for references to sites
+# in folders and hosts
+def find_folder_sites(site_ids, folder, include_folder = False):
+    if include_folder and folder[".siteid"]:
+        site_ids.add(folder[".siteid"])
+    load_hosts(folder)
+    for hostname in folder[".hosts"]:
+        find_host_sites(site_ids, folder, hostname)
+    for subfolder in folder[".folders"].values():
+        find_folder_sites(site_ids, subfolder, include_folder)
 

@@ -109,6 +109,7 @@ megaraid_pdisks_states = {
     'Unconfigured(good)' : 0,
     'Failed'             : 2,
     'Unconfigured(bad)'  : 1,
+    'Copyback'           : 1,
 }
 
 def check_megaraid_pdisks(item, _no_params, info):

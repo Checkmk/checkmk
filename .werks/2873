@@ -1,0 +1,11 @@
+Title: megaraid_pdisks: handle case "Copyback" correctly
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p15
+Date: 1449053442
+Class: fix
+
+This state seems to happen while a spare disk has taken over and
+is filled with data in order to recreate redundancy. Thanks to
+Mark Cooney.

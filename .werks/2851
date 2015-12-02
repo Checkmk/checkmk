@@ -1,0 +1,9 @@
+Title: printer_pages: Fixed exception in case of empty data from device
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p15
+Date: 1449053445
+Class: fix
+
+

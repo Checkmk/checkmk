@@ -27,6 +27,7 @@
     * 2854 FIX: winperf_if: Assuming interfaces without status to be up
     * 2855 FIX: ibm_svc_mdiskgrp: Fixed crash when capacity of pool is 0
     * 2856 FIX: winperf_phydisk: Not discovering on clusters where disk perfcounters are missing...
+    * 2857 FIX: fritz.conn: Handling missing connection state infos as UNKNOWN
 
     Multisite:
     * 2772 FIX: Fixed possible exception in icon column when showing some actions in the column...

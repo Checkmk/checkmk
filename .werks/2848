@@ -1,0 +1,20 @@
+Title: Fixed cleanup of old autocheck files of cluster hosts
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1449047196
+
+The autocheck entries of clustered services were stored in
+[cluster].mk autocheck files in past versions. Current versions
+are now storing the autochecks in the node specific files.
+
+The old [cluster].mk files were not cleaned up during discovery
+leading into duplicate autochecks entries. As these files were
+never updated again, they could result in unwanted services on
+the cluster hosts. This could be fixed manually by removing the
+[cluster].mk autocheck files via command line.
+
+The current version is now cleaning up the files during discovery.

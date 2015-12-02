@@ -2020,7 +2020,7 @@ register_rule(group,
         elements = [
             ( "timeout",
               Float(
-                  title = _("Timeout between retries"),
+                  title = _("Response timeout for a single query"),
                   help = _("After a request is sent to the remote SNMP agent we will wait up to this "
                            "number of seconds until assuming the answer get lost and retrying."),
                   default_value = 1,

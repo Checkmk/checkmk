@@ -243,9 +243,9 @@ def login(u):
 
     # Get best base roles and use as "the" role of the user
     global user_baserole_id
-    if "admin" in user_role_ids:
+    if "admin" in user_baserole_ids:
         user_baserole_id = "admin"
-    elif "user" in user_role_ids:
+    elif "user" in user_baserole_ids:
         user_baserole_id = "user"
     else:
         user_baserole_id = "guest"

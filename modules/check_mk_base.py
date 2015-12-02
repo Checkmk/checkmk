@@ -1199,7 +1199,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     expected_version = agent_target_version(hostname)
 
-    # Exit state in various situations is confiugrable since 1.2.3i1
+    # Exit state in various situations is configurable since 1.2.3i1
     exit_spec = exit_code_spec(hostname)
 
     try:

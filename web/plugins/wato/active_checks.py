@@ -763,13 +763,19 @@ register_rule(group,
                                 )
                             ),
                             ip_address_family_element,
-                            ( "ssl",
-                                FixedValue(
-                                    value = True,
-                                    totext = _("use SSL/HTTPS"),
-                                    title = _("Use SSL/HTTPS for the connection.")
-                                )
-                            ),
+                            ("ssl", Transform(
+                                DropdownChoice(
+                                    title = _("Use SSL/HTTPS for the connection"),
+                                    choices = [
+                                        ("auto",  _("Use SSL with auto negotiation")),
+                                        ("1",     _("Use SSL, enforce TLSv1")),
+                                        ("2",     _("Use SSL, enforce SSLv2")),
+                                        ("3",     _("Use SSL, enforce SSLv3")),
+                                    ],
+                                    default_value = "auto",
+                                ),
+                                forth = lambda x: x == True and "auto" or x,
+                            )),
                             ( "sni",
                                 FixedValue(
                                     value = True,

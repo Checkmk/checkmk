@@ -1,0 +1,10 @@
+Title: Fix moving of folders
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1448893037
+Class: fix
+
+This fixes the error message <i>Cannot move folder: A folder with this name
+already exists in the target folder.</i>

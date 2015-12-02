@@ -33,36 +33,38 @@ foreach ($NAME as $i => $n) {
     $mem_defines[$n] = "DEF:$n=$RRDFILE[$i]:$DS[$i]:MAX ";
 }
 
-function mem_area($varname, $color, $title, $stacked)
-{
-    return mem_curve("AREA", $varname, $color, $title, $stacked);
-}
-
-function mem_line($varname, $color, $title, $stacked)
-{
-    return mem_curve("LINE1", $varname, $color, $title, $stacked);
-}
-
-function mem_curve($how, $varname, $color, $title, $stacked)
-{
-    global $mem_defines;
-    $tit = sprintf("%-30s", $title);
-    if (isset($mem_defines[$varname])) {
-        $x = $mem_defines[$varname] . "$how:$varname#$color:\"$tit\"";
-        if ($stacked)
-            $x .= ":STACK";
-        $x .= " ";
-        $x .= "CDEF:${varname}_gb=$varname,1073741824,/ ";
-        $x .= "GPRINT:${varname}_gb:LAST:\"%6.1lf GB last\" ";
-        $x .= "GPRINT:${varname}_gb:AVERAGE:\"%6.1lf GB avg\" ";
-        $x .= "GPRINT:${varname}_gb:MAX:\"%6.1lf GB max\\n\" ";
-        return $x;
+# avoid redeclaration errors if this file is include multiple times (e.g. by basket)
+if (!function_exists('mem_area')) {
+    function mem_area($varname, $color, $title, $stacked)
+    {
+        return mem_curve("AREA", $varname, $color, $title, $stacked);
     }
-    else {
-        return "";
+
+    function mem_line($varname, $color, $title, $stacked)
+    {
+        return mem_curve("LINE1", $varname, $color, $title, $stacked);
+    }
+
+    function mem_curve($how, $varname, $color, $title, $stacked)
+    {
+        global $mem_defines;
+        $tit = sprintf("%-30s", $title);
+        if (isset($mem_defines[$varname])) {
+            $x = $mem_defines[$varname] . "$how:$varname#$color:\"$tit\"";
+            if ($stacked)
+                $x .= ":STACK";
+            $x .= " ";
+            $x .= "CDEF:${varname}_gb=$varname,1073741824,/ ";
+            $x .= "GPRINT:${varname}_gb:LAST:\"%6.1lf GB last\" ";
+            $x .= "GPRINT:${varname}_gb:AVERAGE:\"%6.1lf GB avg\" ";
+            $x .= "GPRINT:${varname}_gb:MAX:\"%6.1lf GB max\\n\" ";
+            return $x;
+        }
+        else {
+            return "";
+        }
     }
 }
-
 
 # 1. Overview
 $opt[] = $defopt . "--title \"RAM + Swap overview\"";

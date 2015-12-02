@@ -1727,7 +1727,8 @@ def move_folder(what_folder, target_folder):
         raise MKUserError(None, _("Cannot move folder: Target folder is locked."))
 
     new_dir = folder_dir(target_folder)
-    if os.path.exists(new_dir):
+    new_folder_dir = new_dir + "/" + what_folder[".name"]
+    if os.path.exists(new_folder_dir):
         raise MKUserError(None, _("Cannot move folder: A folder with this name already exists in the target folder."))
 
     old_parent = what_folder[".parent"]
@@ -9293,7 +9294,7 @@ def simple_host_rule_match_conditions():
 
 
 def generic_rule_match_conditions():
-    simple_host_rule_match_conditions() + [
+    return simple_host_rule_match_conditions() + [
         ( "match_servicegroups",
           GroupChoice("service",
               title = _("Match Service Groups"),
@@ -20696,3 +20697,4 @@ def register_builtin_host_tags():
         ('ip-v4', u'IPv4'),
         ('ip-v6', u'IPv6')
     ]
+

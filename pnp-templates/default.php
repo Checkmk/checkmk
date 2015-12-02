@@ -2,12 +2,15 @@
 
 # Fetch dynamic PNP template from Check_MK's new metrics system
 
-function get_apache_port() {
-    $path = getenv("OMD_ROOT") . "/etc/omd/site.conf";
-    foreach (file($path) as $line) {
-        if (strpos($line, "CONFIG_APACHE_TCP_PORT") === 0) {
-            list($key, $val) = explode("=", $line);
-            return trim($val, "'\n\r");
+# avoid redeclaration errors if this file is include multiple times (e.g. by basket)
+if (!function_exists('get_apache_port')) {
+    function get_apache_port() {
+        $path = getenv("OMD_ROOT") . "/etc/omd/site.conf";
+        foreach (file($path) as $line) {
+            if (strpos($line, "CONFIG_APACHE_TCP_PORT") === 0) {
+                list($key, $val) = explode("=", $line);
+                return trim($val, "'\n\r");
+            }
         }
     }
 }

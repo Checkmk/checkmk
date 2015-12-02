@@ -35,14 +35,13 @@ def inventory_winperf_util(info):
         try:
             if line[0] == '-232':
                 return [(None, "winperf_cpu_default_levels")]
-        except:
+        except IndexError:
             pass
 
 
 # params: levels for warn / crit in percentage
 def check_winperf_util(_no_item, params, info):
     if not info:
-        yield 3, "Got no information from agent"
         return
 
     this_time = int(float(info[0][0]))
@@ -51,9 +50,17 @@ def check_winperf_util(_no_item, params, info):
                   "-96": "user",
                   "-94": "privileged"}
 
+    winperf_lines = []
+    for line in info[1:]:
+        if line[0] in what_map:
+            winperf_lines.append(line)
+
+    if not winperf_lines:
+        return
+
     wrapped = False
 
-    for line in info[1:]:
+    for line in winperf_lines:
         if line[0] in what_map:
             what = what_map[line[0]]
             # Windows sends one counter for each CPU plus one counter that

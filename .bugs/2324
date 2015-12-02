@@ -1,0 +1,42 @@
+Title: Generalize file io handling and catch various issues in a general way
+Component: core
+State: open
+Date: 2015-12-02 16:18:27
+Targetversion: 1.2.7
+Class: bug
+
+Some general errors like:
+
+- No write permissions
+- Disk full
+- Disk read-only
+
+e.g.
+
+I hereby send you a report of a crash in the Check_MK Web GUI:
+
+Check_MK Version: 1.2.6p1 
+Page: wato.py
+
+GET/POST-Variables: 
+ _action=toggle 
+ _transid=1442590858/4266942189 
+ _varname=enable_rulebased_notifications 
+ folder= 
+ mode=globalvars
+
+Traceback (most recent call last): 
+  File "/usr/share/check_mk/web/htdocs/index.py", line 250, in handler 
+    handler() 
+  File "/usr/share/check_mk/web/htdocs/wato.py", line 235, in page_handler 
+    result = modefunc("action") 
+  File "/usr/share/check_mk/web/htdocs/wato.py", line 7451, in mode_globalvars 
+    save_configuration_settings(current_settings) 
+  File "/usr/share/check_mk/web/htdocs/wato.py", line 7761, in save_configuration_settings
+    save_configuration_vars(per_domain.get(domain, {}), dir + "global.mk") 
+  File "/usr/share/check_mk/web/htdocs/wato.py", line 7765, in save_configuration_vars 
+    out.write("# Written by WATO\n# encoding: utf-8\n\n") 
+IOError: [Errno 28] No space left on device
+
+could be handled in a better way.
+We should abstract file io and handle these errors in a general way.

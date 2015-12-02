@@ -1,0 +1,11 @@
+Title: ewon: Added support for monitoring Wagner OxyReduct devices with their data exposed through an ewon router
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449071132
+Class: feature
+
+The Wagner OxyReduct device (or chamber) can't be monitored directly but via the eWON 2005CD router
+their measurements can be exposed via snmp. This check monitors the OxyReduct through this channel
+and lays the groundwork for monitoring further devices exposed through the same router.

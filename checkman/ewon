@@ -1,0 +1,26 @@
+title: relayed data via eWON industrial VPN router
+agents: snmp
+catalog: os/networking
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the data relayed by the eWON router. This means that
+ while this is an ewon check, the monitored device may be completely
+ different.
+ Each device type that can be connected has to be supported individually
+ and currently the only supported device is the Wagner OxyReduct fire
+ prevention system.
+ Since the router doesn't allow for auto-discovery of the proxied device
+ type, this has to be selected manually via wato.
+
+ OxyReduct:
+ This device provides 409 measures, many of which are 16-bit bitmasks so
+ there. Most of these measures are handled in some way by this check but
+ reported only if they imply a problem.
+ In particular there are limits on the O2 percentage in the air of several
+ rooms and count of various warning or incident messages.
+
+item:
+ One item is discovered for the state of the router. Depending on the
+ connected device, further items are discovered.
+

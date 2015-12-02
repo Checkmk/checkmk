@@ -41,12 +41,6 @@ item:
 perfdata:
  One value: The time since the last successfull backup.
 
-[parameters]
-parameters (dict):
-
- "age": (int, int) - Maximum time in seconds for warn and crit
- for the last RMAN Backup.
-
 inventory:
  One separate check for each DB_INCR, DB_FULL, ARCHIVELOG and
  CONTROLFILE for each database.
@@ -54,3 +48,10 @@ inventory:
  checkgroup_parameters['oracle_rman'] = [
   ( {'backup_age': (10800, 21600)}
    , [], ALL_HOSTS, ALL_SERVICES ),
+
+[parameters]
+parameters (dict):
+
+ "backup_age": (int, int) - Maximum time in seconds for warn and crit
+ for the last RMAN Backup.
+

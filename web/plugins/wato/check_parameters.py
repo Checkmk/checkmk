@@ -118,6 +118,25 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'first'
 )
 
+
+register_rule(group + '/' + subgroup_inventory,
+    varname = "ewon_discovery_rules",
+    title = _("EWON Discovery"),
+    help = _("The ewon vpn routers can rely data from a secondary device via snmp. "
+            "It doesn't however allow discovery of the device type relayed this way. "
+            "To allow interpretation of the data you need to pick the device manually."),
+    valuespec = DropdownChoice(
+        title = _("Device Type"),
+        label = _("Select device type"),
+        choices = [
+            (None, _("None selected")),
+            ("oxyreduct", _("Wagner OxyReduct")),
+        ],
+        default_value = None,
+    ),
+)
+
+
 #.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |
@@ -4870,6 +4889,30 @@ register_check_parameters(
                     title = _("State in case of non space error count is greater then 0: "),
                 ),
             ),
+         ]
+    ),
+    TextAscii(
+        title = _("Database SID"),
+        size = 12,
+        allow_empty = False),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "oracle_rman",
+    _("Oracle RMAN Backups"),
+    Dictionary(
+         elements = [
+             ("levels",
+                 Tuple(
+                     title = _("Maximum Age for RMAN backups"),
+                     elements = [
+                          Age(title = _("warning if older than"),  default_value = 1800),
+                          Age(title = _("critical if older than"), default_value = 3600),
+                     ]
+                 )
+             )
          ]
     ),
     TextAscii(

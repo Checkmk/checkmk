@@ -1284,7 +1284,7 @@ class EventServer:
             text = text.decode("latin-1")
         event = {
             'time'        : time.time(),
-            'host'        : host.replace('\n', ''),
+            'host'        : host,
             'ipaddress'   : ipaddress,
             'priority'    : 5,  # notice
             'facility'    : 31, # not used by syslog -> we use this for all traps

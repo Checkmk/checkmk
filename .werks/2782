@@ -1,0 +1,9 @@
+Title: cups_queues: fix crash in case user name contains spaces
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p15
+Date: 1449050089
+Class: fix
+
+

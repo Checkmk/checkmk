@@ -118,6 +118,8 @@
     * 2849 FIX: winperf_processor.util: Fixed crash in case no CPU infos are sent
     * 2850 FIX: juniper_cpu: Better error handling of empty data reported by device
     * 2873 FIX: megaraid_pdisks: handle case "Copyback" correctly...
+    * 2852 FIX: check_http: SSL can now be configured to use specific SSL version
+    * 2853 FIX: cisco_asa_failover: Added support for CISCO PIX security devices
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...
@@ -145,6 +147,7 @@
     * 2846 FIX: View refresh could reset checkboxes on views where "always show checkboxes" is enabled
     * 2778 FIX: Fixed correct scaling of sidebar on newer versions of Chrome browser
     * 2781 FIX: Fix role handling of "Custom Links" snapin in case of adapted roles...
+    * 2804 FIX: Avoid redeclaration errors in graphs when using pnp basket...
 
     WATO:
     * 2442 WATO remove host: improved cleanup of obsolete host files...

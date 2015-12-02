@@ -4881,6 +4881,30 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "oracle_rman",
+    _("Oracle RMAN Backups"),
+    Dictionary(
+         elements = [
+             ("levels",
+                 Tuple(
+                     title = _("Maximum Age for RMAN backups"),
+                     elements = [
+                          Age(title = _("warning if older than"),  default_value = 1800),
+                          Age(title = _("critical if older than"), default_value = 3600),
+                     ]
+                 )
+             )
+         ]
+    ),
+    TextAscii(
+        title = _("Database SID"),
+        size = 12,
+        allow_empty = False),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "oracle_recovery_status",
     _("Oracle Recovery Status"),
     Dictionary(

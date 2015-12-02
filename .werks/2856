@@ -1,0 +1,12 @@
+Title: winperf_phydisk: Not discovering on clusters where disk perfcounters are missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1449064692
+
+This fixes a crash like this:
+
+UnboundLocalError: local variable 'disk_read_bytes' referenced before assignment

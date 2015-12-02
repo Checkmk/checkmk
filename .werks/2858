@@ -1,0 +1,15 @@
+Title: hp_proliant_da_phydrv: Adding disk controller to check items
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i4
+Date: 1449067943
+Class: fix
+
+Older checks were not taking the controller number into account which
+was resulting in missing service checks for some disks. We have now
+added the controller id to the check item to fix this issue.
+
+You will have to rediscover the affected hosts and eventually update
+related rules like disabled services or similar since the service
+description is now changed, for example from "HW Phydrv 0" to "HW Phydrv 0/0".

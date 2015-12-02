@@ -1,6 +1,7 @@
 1.2.6p15:
     Core & Setup:
     * 2764 FIX: Fixed broken SNMP checks in case SNMP check interval is configured for clusters...
+    * 2848 FIX: Fixed cleanup of old autocheck files of cluster hosts...
 
     Checks & Agents:
     * 2761 FIX: check_http: Fixed handling of multiple strings given as "Strings to expect in server response"

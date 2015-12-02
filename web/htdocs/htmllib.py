@@ -1305,6 +1305,7 @@ class html:
             if self.mobile:
                 self.write('<center>')
             self.write("<div class=really>%s" % self.permissive_attrencode(msg))
+            # FIXME: When this confirms another form, use the form name from self.vars()
             self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")

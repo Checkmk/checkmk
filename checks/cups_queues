@@ -24,26 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
 # Example output from agent:
-#<<<cups_queues>>>
-#printer lpr1 disabled since Wed Jun 16 14:21:14 2010 -
-#    reason unknown
-#printer lpr2 now printing lpr2-3.  enabled since Tue Jun 29 09:22:04 2010
-#    Wiederherstellbar: Der Netzwerk-Host „lpr2“ ist beschäftigt, erneuter Versuch in 30 Sekunden …
-#printer spr1 is idle.  enabled since Thu Mar 11 14:28:23 2010
-#printer spr2 is idle.  enabled since Thu Mar 11 14:28:23 2010
-#printer spr3 is idle.  enabled since Thu Mar 11 14:28:23 2010
-#printer spr4 is idle.  enabled since Thu Mar 11 14:28:23 2010
-#printer spr5 is idle.  enabled since Thu Mar 11 14:28:23 2010
-#printer spr6 disabled since Mon Jun 21 10:29:39 2010 -
-#    /usr/lib/cups/backend/lpd failed
-#printer spr7 is idle.  enabled since Thu Mar 11 14:28:23 2010
-#printer spr8 is idle.  enabled since Thu Mar 11 14:28:23 2010
-#---
-#lpr2-2                  root              1024   Tue Jun 29 09:02:35 2010
-#lpr2-3                  root              1024   Tue Jun 29 09:05:54 2010
+# <<<cups_queues>>>
+# printer lpr1 disabled since Wed Jun 16 14:21:14 2010 -
+#     reason unknown
+# printer lpr2 now printing lpr2-3.  enabled since Tue Jun 29 09:22:04 2010
+#     Wiederherstellbar: Der Netzwerk-Host „lpr2“ ist beschäftigt, erneuter Versuch in 30 Sekunden …
+# printer spr1 is idle.  enabled since Thu Mar 11 14:28:23 2010
+# printer spr2 is idle.  enabled since Thu Mar 11 14:28:23 2010
+# printer spr3 is idle.  enabled since Thu Mar 11 14:28:23 2010
+# printer spr4 is idle.  enabled since Thu Mar 11 14:28:23 2010
+# printer spr5 is idle.  enabled since Thu Mar 11 14:28:23 2010
+# printer spr6 disabled since Mon Jun 21 10:29:39 2010 -
+#     /usr/lib/cups/backend/lpd failed
+# printer spr7 is idle.  enabled since Thu Mar 11 14:28:23 2010
+# printer spr8 is idle.  enabled since Thu Mar 11 14:28:23 2010
+# ---
+# lpr2-2                  root              1024   Tue Jun 29 09:02:35 2010
+# lpr2-3                  root              1024   Tue Jun 29 09:05:54 2010
+# zam19-113565 Sebastian Hirschdobler 3561472 Fri Jul 31 12:58:01 2015
 
 # Default thresholds
 # ("<Warning max entries>", "<Critical num entries>", "<Warning entry age in seconds>", "<Critical entry age>")
@@ -60,6 +59,7 @@ def check_cups_queues(item, params, info):
     now     = time.time()
     oldest  = now
     for num, line in enumerate(info):
+        # Parse printer status
         if line[0] == 'printer' and line[1] == item:
             statusoutput = ' '.join(line[2:])
             status = ' '.join(line[2:4])
@@ -77,17 +77,27 @@ def check_cups_queues(item, params, info):
             else:
                 state = 3
                 output = "Undefined status output in \"lpr -p\""
+
+        # Parse job
         elif line[0].startswith(item+'-'):
             # This is a queue item count the number of items and check the max age
             numJobs += 1
             # Try to parse different time formats
-            timestring = ' '.join(line[3:])
+
+            # Handle case where user names contain spaces
+            # zam19-113565 Sebastian Hirschdobler 3561472 Fri Jul 31 12:58:01 2015
+            time_parts = line[3:]
+            while saveint(time_parts[0]) > 35:
+                time_parts = time_parts[1:]
+
+            timestring = ' '.join(time_parts)
             try:
                 # Tue Jun 29 09:05:54 2010
                 parsed = time.strptime(timestring, '%a %b %d %H:%M:%S %Y')
             except:
                 # Thu 29 Aug 2013 12:41:42 AM CEST
                 parsed = time.strptime(timestring, '%a %d %b %Y %H:%M:%S %p %Z')
+
             dt = time.mktime(parsed)
             if dt < oldest:
                 oldest = dt

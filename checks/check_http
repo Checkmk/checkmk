@@ -54,8 +54,11 @@ def check_http_arguments(params):
     else:
         address = "$_HOSTADDRESS_4$"
 
-    if settings.get("ssl"):
+    ssl = settings.get("ssl")
+    if ssl in [ True, "auto" ]:
         args += ' --ssl'
+    elif ssl:
+        args += ' --ssl=%s' % quote_shell_string(ssl)
 
     if "cert_host" in settings:
         omit_ip = True

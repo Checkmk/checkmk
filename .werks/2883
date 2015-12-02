@@ -1,0 +1,9 @@
+Title: default.php template: fixed id_string while creating default template, e.g. for custom checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449070264
+Class: fix
+
+

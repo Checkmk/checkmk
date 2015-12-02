@@ -52,9 +52,11 @@ def do_discovery(hostnames, check_types, only_new):
     # cannot be discovered but the user is allowed to specify
     # them and we do discovery on the nodes instead.
     nodes = []
+    cluster_hosts = []
     for h in hostnames:
         nodes = nodes_of(h)
         if nodes:
+            cluster_hosts.append(h)
             hostnames += nodes
 
     # Then remove clusters and make list unique
@@ -78,6 +80,11 @@ def do_discovery(hostnames, check_types, only_new):
 
         cleanup_globals()
 
+    # Check whether or not the cluster host autocheck files are still
+    # existant. Remove them. The autochecks are only stored in the nodes
+    # autochecks files these days.
+    for hostname in cluster_hosts:
+        remove_autochecks_file(hostname)
 
 def do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
     # Usually we disable SNMP scan if cmk -I is used without a list of
@@ -1203,6 +1210,15 @@ def has_autochecks(hostname):
     return os.path.exists(autochecksdir + "/" + hostname + ".mk")
 
 
+def remove_autochecks_file(hostname):
+    filepath = autochecksdir + "/" + hostname + ".mk"
+    try:
+        os.remove(filepath)
+    except OSError:
+        pass
+
+
+# FIXME TODO: Consolidate with automation.py automation_write_autochecks_file()
 def save_autochecks_file(hostname, items):
     if not os.path.exists(autochecksdir):
         os.makedirs(autochecksdir)
@@ -1231,6 +1247,11 @@ def set_autochecks_of(hostname, new_items):
                 new_autochecks.append((check_type, item, paramstring))
             # write new autochecks file for that host
             save_autochecks_file(node, new_autochecks)
+
+        # Check whether or not the cluster host autocheck files are still
+        # existant. Remove them. The autochecks are only stored in the nodes
+        # autochecks files these days.
+        remove_autochecks_file(hostname)
     else:
         existing = parse_autochecks_file(hostname)
         # write new autochecks file, but take paramstrings from existing ones
@@ -1254,25 +1275,22 @@ def remove_autochecks_of(hostname):
     nodes = nodes_of(hostname)
     if nodes:
         for node in nodes:
-            old_items = parse_autochecks_file(node)
-            new_items = []
-            for check_type, item, paramstring in old_items:
-                descr = service_description(check_type, item)
-                if hostname != host_of_clustered_service(node, descr):
-                    new_items.append((check_type, item, paramstring))
-                else:
-                    removed += 1
-            save_autochecks_file(node, new_items)
+            removed += remove_autochecks_of_host(node)
     else:
-        old_items = parse_autochecks_file(hostname)
-        new_items = []
-        for check_type, item, paramstring in old_items:
-            descr = service_description(check_type, item)
-            if hostname != host_of_clustered_service(hostname, descr):
-                new_items.append((check_type, item, paramstring))
-            else:
-                removed += 1
-        save_autochecks_file(hostname, new_items)
+        removed += remove_autochecks_of_host(hostname)
 
     return removed
 
+
+def remove_autochecks_of_host(hostname):
+    old_items = parse_autochecks_file(hostname)
+    removed = 0
+    new_items = []
+    for check_type, item, paramstring in old_items:
+        descr = service_description(check_type, item)
+        if hostname != host_of_clustered_service(hostname, descr):
+            new_items.append((check_type, item, paramstring))
+        else:
+            removed += 1
+    save_autochecks_file(hostname, new_items)
+    return removed

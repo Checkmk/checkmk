@@ -1,0 +1,9 @@
+Title: mk_logwatch: Avoid parsing lines that are currently being written by application
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449068658
+Class: fix
+
+Thanks to Václav Chlumský.

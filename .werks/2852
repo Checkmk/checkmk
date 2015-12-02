@@ -1,0 +1,9 @@
+Title: check_http: SSL can now be configured to use specific SSL version
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449056927
+Class: fix
+
+

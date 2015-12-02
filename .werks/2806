@@ -1,0 +1,9 @@
+Title: oracle_rman: introduced missing WATO, allows configuration of backup age
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449070107
+Class: fix
+
+

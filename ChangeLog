@@ -22,6 +22,7 @@
     * 2847 FIX: mssql_backup: Fixed broken check caused by debug output in agent output
     * 2782 FIX: cups_queues: fix crash in case user name contains spaces
     * 2849 FIX: winperf_processor.util: Fixed crash in case no CPU infos are sent
+    * 2850 FIX: juniper_cpu: Better error handling of empty data reported by device
 
     Multisite:
     * 2772 FIX: Fixed possible exception in icon column when showing some actions in the column...

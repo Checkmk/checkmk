@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 2875 FIX: citrix_farm.ps1: Add missing end marker of piggy data - fixes problem in subsequent plugins
+    * 2883 FIX: default.php template: fixed id_string while creating default template, e.g. for custom checks
     * 2807 FIX: check_mail_loop: POP3 protocol wasn't working at all
     * 2808 FIX: db2_connections: added missing connections performance data
     * 2861 FIX: hivemanager_devices: Fixed configuration of states to treat as WARN

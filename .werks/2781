@@ -1,0 +1,12 @@
+Title: Fix role handling of "Custom Links" snapin in case of adapted roles
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6p15
+Date: 1449048678
+Class: fix
+
+If you have defined you own roles then a user had not correctly been mapped
+to <tt>user</tt>, <tt>guest</tt> or <tt>admin</tt> when selecting the right
+portions of the custom links in the snapin. This has been fixed. Thanks to
+Molchanov Alexander.

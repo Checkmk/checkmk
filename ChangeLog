@@ -10,6 +10,9 @@
     * 2844 FIX: heartbeat_crm: Fixed problem processing the state of clone set resources
     * 2799 FIX: check_mail_loop: "Use TLS over SMTP" option did not work
 
+    Multisite:
+    * 2781 FIX: Fix role handling of "Custom Links" snapin in case of adapted roles...
+
     WATO:
     * 2791 FIX: Service parameter overview: Fixed problem displaying incorrect rule for classical checks...
     * 2779 FIX: Fix moving of folders...

@@ -24,6 +24,7 @@
     Multisite:
     * 2772 FIX: Fixed possible exception in icon column when showing some actions in the column...
     * 2846 FIX: View refresh could reset checkboxes on views where "always show checkboxes" is enabled
+    * 2781 FIX: Fix role handling of "Custom Links" snapin in case of adapted roles...
 
     WATO:
     * 2767 FIX: Fixed broken user list when non unicode mail addresses are loaded

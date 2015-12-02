@@ -32,7 +32,11 @@ def inventory_juniper_cpu(info):
 def check_juniper_cpu(item, params, info):
     for line in info:
         if line[0] == item:
-            util1, util5, util15 = map(int, line[1:])
+            try:
+                util1, util5, util15 = map(int, line[1:])
+            except ValueError:
+                return 3, "CPU information not provided by device"
+
             warn, crit = params
             label1, label5, label15 = "", "", ""
             state = 0

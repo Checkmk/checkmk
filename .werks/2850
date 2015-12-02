@@ -1,0 +1,9 @@
+Title: juniper_cpu: Better error handling of empty data reported by device
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6p15
+Date: 1449051972
+Class: fix
+
+

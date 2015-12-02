@@ -11,6 +11,7 @@
     * 2844 FIX: heartbeat_crm: Fixed problem processing the state of clone set resources
     * 2799 FIX: check_mail_loop: "Use TLS over SMTP" option did not work
     * 2782 FIX: cups_queues: fix crash in case user name contains spaces
+    * 2850 FIX: juniper_cpu: Better error handling of empty data reported by device
 
     Multisite:
     * 2781 FIX: Fix role handling of "Custom Links" snapin in case of adapted roles...

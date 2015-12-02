@@ -996,8 +996,8 @@ register_rule(group,
                             ),
                             ( "cert_host",
                                 TextAscii(
-                                    title = _("Check Cerficate of different IP / DNS Name"),
-                                    help = _("For each SSL cerficate on a host, a different IP address is needed. "
+                                    title = _("Check Certificate of different IP / DNS Name"),
+                                    help = _("For each SSL certificate on a host, a different IP address is needed. "
                                              "Here, you can specify the address if it differs from the  "
                                              "address from the host primary address."),
                                 ),

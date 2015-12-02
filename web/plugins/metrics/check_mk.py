@@ -2649,6 +2649,12 @@ metric_info["active_vpn_websessions"] = {
     "color" : "33/a"
 }
 
+metric_info["o2_percentage"] = {
+    "title" : _("Current O2 percentage"),
+    "unit"  : "%",
+    "color" : "42/a"
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.

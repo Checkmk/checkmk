@@ -118,6 +118,25 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'first'
 )
 
+
+register_rule(group + '/' + subgroup_inventory,
+    varname = "ewon_discovery_rules",
+    title = _("EWON Discovery"),
+    help = _("The ewon vpn routers can rely data from a secondary device via snmp. "
+            "It doesn't however allow discovery of the device type relayed this way. "
+            "To allow interpretation of the data you need to pick the device manually."),
+    valuespec = DropdownChoice(
+        title = _("Device Type"),
+        label = _("Select device type"),
+        choices = [
+            (None, _("None selected")),
+            ("oxyreduct", _("Wagner OxyReduct")),
+        ],
+        default_value = None,
+    ),
+)
+
+
 #.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |

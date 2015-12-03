@@ -77,7 +77,6 @@ private:
     LogEntry* getPreviousLogentry();
     LogEntry* getNextLogentry();
     void      process(Query *query, HostServiceState *hs_state);
-    bool      objectFilteredOut(Query *, void *entry);
 };
 
 #endif // TableStateHistory_h

@@ -23,8 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStateHistory.h"
-#include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
@@ -69,44 +67,6 @@ using std::string;
 
 int g_disable_statehist_filtering = 0;
 extern Store *g_store;
-
-// Debugging logging is hard if debug messages are logged themselves...
-void debug_statehist(const char *loginfo, ...)
-{
-    FILE *x = fopen("/tmp/livestatus_state.log", "a+");
-    va_list ap;
-    va_start(ap, loginfo);
-    vfprintf(x, loginfo, ap);
-    fputc('\n', x);
-    va_end(ap);
-    fclose(x);
-}
-
-
-// Debug output of HostServiceState struct
-void log_hst(HostServiceState *state)
-{
-    debug_statehist("\n++++++++++++++\nSTATE INFO");
-    if (state->_host_name)
-        debug_statehist("host name %s", state->_host_name);
-    if (state->_service_description)
-        debug_statehist("svc description %s", state->_service_description);
-
-    debug_statehist("time  %d", state->_time);
-    debug_statehist("state %d", state->_state);
-    if (state->_log_output)
-        debug_statehist("check_output %s", state->_log_output);
-    if (state->_debug_info)
-        debug_statehist("debug_info %s", state->_debug_info);
-    if (state->_notification_period)
-        debug_statehist("notification period %s", state->_notification_period);
-    if (state->_service_period)
-        debug_statehist("service period %s", state->_service_period);
-    debug_statehist("from  %d", state->_from);
-    debug_statehist("until %d", state->_until);
-    debug_statehist("duration %d", state->_duration);
-}
-
 
 #ifndef CMC
 const char *getCustomVariable(customvariablesmember *cvm, const char *name)
@@ -645,11 +605,6 @@ void TableStateHistory::answerQuery(Query *query)
     }
     state_info.clear();
     object_blacklist.clear();
-}
-
-bool TableStateHistory::objectFilteredOut(Query *, void *)
-{
-    return false;
 }
 
 int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){

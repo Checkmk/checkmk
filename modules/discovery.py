@@ -978,9 +978,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             # Sorry. The whole caching stuff is the most horrible hack in
             # whole Check_MK. Nobody dares to clean it up, YET. But that
             # day is getting nearer...
-            global opt_use_cachefile
-            old_opt_use_cachefile = opt_use_cachefile
-            opt_use_cachefile = True
+            set_use_cachefile()
             opt_dont_submit = True # hack for get_realhost_info, avoid skipping because of check interval
 
             if check_type not in check_info:
@@ -1013,7 +1011,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 else:
                     tcp_error = output
 
-            opt_use_cachefile = old_opt_use_cachefile
+            restore_use_cachefile()
 
             global g_check_type, g_checked_item
             g_check_type = check_type

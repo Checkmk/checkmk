@@ -120,7 +120,6 @@ public:
     void outputUnicodeEscape(unsigned value);
     void outputString(const char *, int size=-1);
     void outputBlob(const char *buffer, int size);
-    void outputHostService(const char *, const char *);
     void outputBeginList();
     void outputListSeparator();
     void outputEndList();

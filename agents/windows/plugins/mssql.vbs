@@ -40,7 +40,7 @@ Set FSO = CreateObject("Scripting.FileSystemObject")
 Set SHO = CreateObject("WScript.Shell")
 
 hostname = SHO.ExpandEnvironmentStrings("%COMPUTERNAME%")
-cfg_dir = "C:\check_mk_agent" 'SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
+cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 
 output = ""
 Sub addOutput(text)

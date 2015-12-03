@@ -177,6 +177,13 @@ def ps_parse_process_entries(parsed):
     return parsed
 
 
+# Produces a list of lists where each sub list is built as follows:
+# [
+#     [None, (u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
+# ]
+# First element:  The node the data comes from in a cluster or None
+# Second element: The process info tuple (see ps.include: check_ps_common() for details on the elements)
+# Third element:  The process command line
 def parse_ps(info):
     cpu_cores, parsed = ps_merge_wmic_info(info)
 

@@ -89,51 +89,64 @@ def inventory_local(info):
     inventory = []
     # Lines with P do not need to supply a text
     for line in info:
-        if len(line) >= 4 or len(line) == 3 and line[0] == 'P':
-            inventory.append( (line[1], None) )
+        if len(line) >= 5 or len(line) == 4 and line[1] == 'P':
+            inventory.append( (line[2], None) )
         else:
             raise MKGeneralException("Invalid line in agent section <<<local>>>: %s" % " ".join(line))
     return inventory
 
 
 def check_local(item, params, info):
+    node_results = {}
     for line in info:
+        # Are we a cluster?
+        if line[0]:
+            node = line[0]
+        else:
+            node = item
         # Ignore invalid lines, tolerate bugs in local checks
         # of unexperienced users
-        if len(line) >= 2 and line[1] == item:
-            if not (len(line) >= 4 or (len(line) == 3 and line[0] == 'P')):
-                return 3, "Incomplete line in local check output: %s" % " ".join(line)
+        if len(line) >= 3 and line[2] == item:
+            node_results.setdefault(node, check_local_line(line))
 
-            statechar = line[0]
-            perftxt = line[2]
-            output = " ".join(line[3:])
-            perfdata = []
-            if perftxt != "-":
-                # new: allow multiple perfdata by using | as separator
-                for entry in perftxt.split('|'):
-                    try:
-                        varname, valuetxt = entry.split('=')
-                        values = valuetxt.split(';')
-                        perfdata.append(tuple( [varname] + values ))
-                    except ValueError:
-                        return 3, "Invalid performance data %s in local check output %s" % \
-                                  (perftxt, " ".join(line))
-            if statechar == 'P':
-                state, texts = local_compute_state(perfdata)
-                if output:
-                    texts = [output] + texts
-                output = ", ".join(texts)
-            else:
-                try:
-                    state = int(statechar)
-                except:
-                    return 3, "Invalid state %s in local check output %s: must be P, 0, 1, 2 or 3" % \
-                             (statechar, " ".join(line))
+    return check_best_node_state(node_results, params)
 
-                if state not in range(0, 4):
-                    output += ", local check has sent invalid state %d" % state
-                    state = 3
-            return (state, output, perfdata)
+
+def check_local_line(line):
+    if not (len(line) >= 5 or (len(line) == 4 and line[1] == 'P')):
+        return 3, "Incomplete line in local check output: %s" % " ".join(line), []
+
+    statechar = line[1]
+    perftxt = line[3]
+    output = " ".join(line[4:])
+    perfdata = []
+    if perftxt != "-":
+        # new: allow multiple perfdata by using | as separator
+        for entry in perftxt.split('|'):
+            try:
+                varname, valuetxt = entry.split('=')
+                values = valuetxt.split(';')
+                perfdata.append(tuple( [varname] + values ))
+            except ValueError:
+                return 3, "Invalid performance data %s in local check output %s" % \
+                          " ".join(line[1:]), []
+    if statechar == 'P':
+        state, texts = local_compute_state(perfdata)
+        if output:
+            texts = [output] + texts
+        output = ", ".join(texts)
+    else:
+        try:
+            state = int(statechar)
+        except:
+            return 3, "Invalid state %s in local check output %s: must be P, 0, 1, 2 or 3" % \
+                     (statechar, " ".join(line)), []
+
+        if state not in range(0, 4):
+            output += ", local check has sent invalid state %d" % state
+            state = 3
+
+    return state, output, perfdata
 
 
 check_info["local"] = {
@@ -141,4 +154,7 @@ check_info["local"] = {
     'inventory_function':      inventory_local,
     'service_description':     '%s',
     'has_perfdata':            True,
+    'node_info':               True,
+    'group':                   "local_best_node_state",
+    'includes':                [ "best_node_states.include" ]
 }

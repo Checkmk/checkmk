@@ -341,8 +341,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
         info = []
         at_least_one_without_exception = False
         exception_texts = []
-        global opt_use_cachefile
-        opt_use_cachefile = True
+        set_use_cachefile()
         is_snmp_error = False
         for node in nodes:
             # If an error with the agent occurs, we still can (and must)

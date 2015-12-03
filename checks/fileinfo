@@ -40,31 +40,18 @@
 # "maxsize" : ( 8000,  9000 ),  in bytes
 # "minage"  : ( 600,  1200 ),  in seconds
 # "maxage"  : ( 6000, 12000 ), in seconds
-
-
-#   .--inventory-----------------------------------------------------------.
-#   |             _                      _                                 |
-#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
-#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
-#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
-#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
-#   |                                                  |___/               |
-#   '----------------------------------------------------------------------'
-
-
 fileinfo_groups = []
-
 
 def inventory_fileinfo(info, case):
     inventory = []
     added_groups = []
+    if info:
+        reftime = int(info[0][0])
     for line in info:
-        if len(line) == 2:
-            reftime = int(line[1])
-        elif len(line) >= 4:
-            groups = fileinfo_groups_of_file(line[1], reftime)
-            if case == 'single' and not groups and line[2] != 'missing':
-                inventory.append((line[1], {}));
+        if len(line) >= 3:
+            groups = fileinfo_groups_of_file(line[0], reftime)
+            if case == 'single' and not groups and line[1] != 'missing':
+                inventory.append((line[0], {}));
 
             if case == 'group' and groups:
                 for group in groups:
@@ -73,21 +60,7 @@ def inventory_fileinfo(info, case):
                         inventory.append((group, {}))
     return inventory
 
-
-#.
-#   .--helper--------------------------------------------------------------.
-#   |                    _          _                                      |
-#   |                   | |__   ___| |_ __   ___ _ __                      |
-#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
-#   |                   | | | |  __/ | |_) |  __/ |                        |
-#   |                   |_| |_|\___|_| .__/ \___|_|                        |
-#   |                                |_|                                   |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def fileinfo_process_date(pattern, reftime):
+def fileinfo_process_date(pattern,reftime):
     disect = re.match('(/.*/)\$DATE:((?:%\w.?){1,})\$(.*)',pattern)
     if disect:
         prefix = disect.group(1)
@@ -96,8 +69,7 @@ def fileinfo_process_date(pattern, reftime):
         pattern = prefix+datepattern+postfix
     return pattern
 
-
-def fileinfo_groups_of_file(check_filename, reftime):
+def fileinfo_groups_of_file(check_filename,reftime):
     groups = []
     for line in host_extra_conf(g_hostname, fileinfo_groups):
         for group_name, pattern in line:
@@ -110,7 +82,6 @@ def fileinfo_groups_of_file(check_filename, reftime):
                 groups.append(group_name)
     return groups
 
-
 def fileinfo_check_timeranges(params):
     ranges = params.get("timeofday")
     if ranges == None:
@@ -122,13 +93,36 @@ def fileinfo_check_timeranges(params):
             return None
     return " (out of relevant time of day)"
 
-
 def fileinfo_in_timerange(now, range_from, range_to):
     minutes_from = range_from[0] * 60 + range_from[1]
     minutes_to = range_to[0] * 60 + range_to[1]
     minutes_now = now.tm_hour * 60 + now.tm_min
     return minutes_now >= minutes_from and minutes_now < minutes_to
 
+
+def check_fileinfo(item, params, info):
+    if len(info) == 0:
+        return (3, "no information sent by agent")
+
+    outof_range_txt = fileinfo_check_timeranges(params)
+    in_timerange = outof_range_txt == None
+    reftime = int(info[0][0])
+    check_definition = False
+    for line in info[1:]:
+        if item == line[0]:
+            if line[1] == "missing":
+                return in_timerange and 3 or 0, "File not found" + (outof_range_txt or "")
+            state = 0
+            size = int(line[1])
+            age = reftime - int(line[2])
+
+            check_definition = [
+                ("size", size, get_filesize_human_readable),
+                ("age",  age,  get_age_human_readable) ]
+
+    if check_definition == False:
+        return in_timerange and 3 or 0, "File not found" + (outof_range_txt or "")
+    return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of patterns and makes them available for the check
@@ -146,139 +140,70 @@ def fileinfo_groups_precompile(hostname, item, params):
     return precomped
 
 
-#.
-#   .--checks--------------------------------------------------------------.
-#   |                         _               _                            |
-#   |                     ___| |__   ___  ___| | _____                     |
-#   |                    / __| '_ \ / _ \/ __| |/ / __|                    |
-#   |                   | (__| | | |  __/ (__|   <\__ \                    |
-#   |                    \___|_| |_|\___|\___|_|\_\___/                    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def check_fileinfo(item, params, info):
-    if len(info) == 0:
-        return 3, "no information sent by agent"
-
-    node_results = {}
-    for line in info:
-        if len(line) == 2:
-            outof_range_txt = fileinfo_check_timeranges(params)
-            in_timerange = outof_range_txt == None
-            check_definition = False
-            if line[0]:
-                node = line[0]
-            else:
-                node = item
-            reftime = int(line[1])
-            node_results.setdefault(node, None)
-        elif item == line[1]:
-            if line[2] == "missing":
-                node_results[node] = in_timerange and 3 or 0, "File not found" + (outof_range_txt or ""), []
-            else:
-                state = 0
-                size = int(line[2])
-                age = reftime - int(line[3])
-
-                check_definition = [
-                    ("size", size, get_filesize_human_readable),
-                    ("age",  age,  get_age_human_readable) ]
-
-                node_results[node] = fileinfo_check_function(check_definition, params, outof_range_txt)
-
-    return check_best_node_state(node_results, params.get("best_node_state", False))
-
-
-# TODO in cluster case you have to define
-# filegroup patterns for the nodes AND the cluster
 def check_fileinfo_groups(item, params, info):
     if not info:
         return 3, "No information sent by agent"
 
-    nodes = {}
+    outof_range_txt = fileinfo_check_timeranges(params)
+
+    reftime = int(info[0][0])
+
+    count_all = 0
+    age_oldest = None
+    age_newest = 0
+    size_all = 0
+    size_smallest = None
+    size_largest  = 0
+    date_inclusion = ""
     # Start counting values on all files
-    for line in info:
-        if len(line) == 2:
-            outof_range_txt = fileinfo_check_timeranges(params)
-            count_all = 0
-            age_oldest = None
-            age_newest = 0
-            size_all = 0
-            size_smallest = None
-            size_largest  = 0
-            date_inclusion = ""
-            # Are we a cluster?
-            if line[0]:
-                node = line[0]
-            else:
-                node = item
-            reftime = int(line[1])
-            nodes.setdefault(node, {})
-        else:
-            for pattern in params['precompiled_patterns']:
-                inclusion, exclusion = pattern
-                inclusion_tmp = fileinfo_process_date(inclusion, reftime)
-                if inclusion != inclusion_tmp:
-                    inclusion = inclusion_tmp
-                    date_inclusion = inclusion_tmp
-                # endswith("No such file...") is needed to
-                # support the solaris perl based version of fileinfo
-                if not line[1].endswith("No such file or directory") \
-                            and fnmatch.fnmatch(line[1], inclusion) and str(line[2]) not in ['missing',''] \
-                            and not fnmatch.fnmatch(line[1], exclusion):
-                    size = int(line[2])
-                    size_all += size
-                    if size_smallest == None:
-                        size_smallest = size
-                    else:
-                        size_smallest = min(size_smallest, size)
-                    size_largest = max(size_largest, size)
+    for line in info[1:]:
+        for pattern in params['precompiled_patterns']:
+            inclusion, exclusion = pattern
+            inclusion_tmp = fileinfo_process_date(inclusion,reftime)
+            if inclusion != inclusion_tmp:
+                inclusion = inclusion_tmp
+                date_inclusion = inclusion_tmp
+            # endswith("No such file...") is needed to
+            # support the solaris perl based version of fileinfo
+            if not line[0].endswith("No such file or directory") \
+                        and fnmatch.fnmatch(line[0], inclusion) and str(line[1]) not in ['missing',''] \
+                        and not fnmatch.fnmatch(line[0], exclusion):
+                size = int(line[1])
+                size_all += size
+                if size_smallest == None:
+                    size_smallest = size
+                else:
+                    size_smallest = min(size_smallest, size)
+                size_largest = max(size_largest, size)
 
-                    age = reftime - int(line[3])
-                    if age_oldest == None: # very first match
-                        age_oldest = age
-                        age_newest = age
-                    else:
-                        age_oldest = max(age_oldest, age)
-                        age_newest = min(age_newest, age)
-                    count_all += 1
+                age = reftime - int(line[2])
+                if age_oldest == None: # very first match
+                    age_oldest = age
+                    age_newest = age
+                else:
+                    age_oldest = max(age_oldest, age)
+                    age_newest = min(age_newest, age)
+                count_all += 1
 
-                    if age_oldest == None:
-                        age_oldest = 0
-
-                nodes[node]["age_oldest"]     = age_oldest
-                nodes[node]["age_newest"]     = age_newest
-                nodes[node]["count_all"]      = count_all
-                nodes[node]["size_all"]       = size_all
-                nodes[node]["size_smallest"]  = size_smallest
-                nodes[node]["size_largest"]   = size_largest
-                nodes[node]["date_inclusion"] = date_inclusion
+    if age_oldest == None:
+        age_oldest = 0
 
     # Start Checking
-    node_results = {}
-    for node, values in nodes.items():
-        size_smallest  = values["size_smallest"]
-        size_largest   = values["size_largest"]
-        date_inclusion = values["date_inclusion"]
-        check_definition = [
-            ("age_oldest",    values["age_oldest"], get_age_human_readable),
-            ("age_newest",    values["age_newest"], get_age_human_readable),
-            ("count",         values["count_all"],  saveint),
-            ("size",          values["size_all"],   get_filesize_human_readable),
-        ]
+    check_definition = [
+        ("age_oldest",    age_oldest,    get_age_human_readable),
+        ("age_newest",    age_newest,    get_age_human_readable),
+        ("count",         count_all,     saveint),
+        ("size",          size_all,      get_filesize_human_readable),
+    ]
 
-        if size_smallest is not None:
-            check_definition.append(("size_smallest", size_smallest, get_filesize_human_readable))
-        if size_largest != 0:
-            check_definition.append(("size_largest",  size_largest,  get_filesize_human_readable))
-        if date_inclusion:
-            check_definition.append(("date pattern",  date_inclusion, str ))
+    if size_smallest is not None:
+        check_definition.append(("size_smallest", size_smallest, get_filesize_human_readable))
+    if size_largest != 0:
+        check_definition.append(("size_largest",  size_largest,  get_filesize_human_readable))
+    if date_inclusion:
+        check_definition.append(("date pattern",  date_inclusion, str ))
 
-        node_results[node] = fileinfo_check_function(check_definition, params, outof_range_txt)
-
-    return check_best_node_state(node_results, params.get("best_node_state", False))
-
+    return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 def fileinfo_check_function(check_definition, params, outof_range_txt):
     state = 0
@@ -309,25 +234,12 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
     return (state, infotext, perfdata)
 
 
-#.
-#   .--check info----------------------------------------------------------.
-#   |                 _               _      _        __                   |
-#   |             ___| |__   ___  ___| | __ (_)_ __  / _| ___              |
-#   |            / __| '_ \ / _ \/ __| |/ / | | '_ \| |_ / _ \             |
-#   |           | (__| | | |  __/ (__|   <  | | | | |  _| (_) |            |
-#   |            \___|_| |_|\___|\___|_|\_\ |_|_| |_|_|  \___/             |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
 check_info["fileinfo"] = {
     "check_function"          : check_fileinfo,
     "inventory_function"      : lambda info: inventory_fileinfo(info, 'single'),
     "service_description"     : "File %s",
     "has_perfdata"            : True,
-    "node_info"               : True,
     "group"                   : "fileinfo",
-    'includes':                [ "best_node_states.include" ]
 }
 
 
@@ -336,7 +248,6 @@ check_info['fileinfo.groups'] = {
     "inventory_function"      : lambda info: inventory_fileinfo(info, 'group'),
     "service_description"     : "File group %s",
     "has_perfdata"            : True,
-    "node_info"               : True,
     "group"                   : "fileinfo-groups",
 }
 

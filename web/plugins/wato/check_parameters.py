@@ -1804,11 +1804,6 @@ register_check_parameters(
                     help = _("Outside these ranges the check will always be OK"),
                     count = 3,
             )),
-            ("best_node_state",
-                Checkbox(
-                    title = _("Best of all Node States"),
-                )
-            ),
         ]
     ),
     TextAscii(
@@ -3007,24 +3002,6 @@ filesystem_elements = [
           label = _("Enable generation of performance data from trends"))),
 
 ]
-
-register_check_parameters(
-    subgroup_applications,
-    "local_best_node_state",
-    _("Best of all Nodes States for the Local Check"),
-    Checkbox(
-        title = _("Best of all Node States"),
-        label = _("Enable"),
-        help = _("In cluster case if you enable this rule the best state of all nodes "
-                 "will be reported. If more than one best state exist then the check "
-                 "reports the first best case and the related performance data if available."
-        ),
-    ),
-    TextAscii(
-        title = _("Node name"),
-    ),
-    "first"
-)
 
 register_check_parameters(
     subgroup_storage,

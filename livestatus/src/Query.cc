@@ -1096,22 +1096,6 @@ void Query::outputUnicodeEscape(unsigned value)
     _output->addBuffer(buf, 6);
 }
 
-void Query::outputHostService(const char *host_name, const char *service_description)
-{
-    if (_output_format == OUTPUT_FORMAT_CSV) {
-        outputString(host_name);
-        _output->addBuffer(_host_service_separator.c_str(), _host_service_separator.size());
-        outputString(service_description);
-    }
-    else {
-        _output->addChar('[');
-        outputString(host_name);
-        _output->addChar(',');
-        outputString(service_description);
-        _output->addChar(']');
-    }
-}
-
 void Query::outputBlob(const char *buffer, int size)
 {
     if (_output_format != OUTPUT_FORMAT_CSV)

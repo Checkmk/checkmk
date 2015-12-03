@@ -1,0 +1,16 @@
+Title: multipath: Fixed name handling of multipaths
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i4
+Date: 1449145724
+Class: fix
+
+Old Versions of Check_MK added in some cases a whitespace at the end of the path name.
+This has been fixed a while ago, but lead to the problem that the multipath check not longer
+detected this paths. Now the check can handle again the old names. This means you can make an update
+without to get an error, but you should do a rediscovery betimes to clean the thinks in the background (autochecks) up.
+
+Please note that the Check_MK Discovery Service will detect the multipath devices again and it looks like they have the same name,
+so do not wonder. It's cause of the autochecks.
+

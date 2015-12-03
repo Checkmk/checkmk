@@ -1276,38 +1276,38 @@ def get_hostnames_from_checkboxes(filterfunc = None):
 #   '----------------------------------------------------------------------'
 
 def mode_editfolder(phase, new):
-    global g_folder
+    g_folder = "HALLO" # TEST global g_folder
 
     if new:
         page_title = _("Create new folder")
         name, title = None, None
-        mode = "new"
     else:
         page_title = _("Folder Properties")
-        name  = g_folder[".name"]
-        title = g_folder["title"]
-        mode = "edit"
+        name  = Folder.current().name()
+        title = Folder.current().title()
+
 
     if phase == "title":
         return page_title
 
+
     elif phase == "buttons":
-        linkvars = [("mode", "folder")]
         if html.has_var("backfolder"):
-            link = make_link_to(linkvars, g_folders[html.var("backfolder")])
+            back_folder = Folder.folder(html.var("backfolder"))
         else:
-            link = make_link(linkvars)
-        html.context_button(_("Back"), link, "back")
+            back_folder = Folder.current()
+        html.context_button(_("Back"), back_folder.url(), "back")
+
 
     elif phase == "action":
         if new:
-            if g_folder.get(".lock_subfolders"):
-                raise MKUserError("title", _("Folder is locked. You cannot create or remove a folders "
+            if Folder.current().locked_subfolders():
+                raise MKUserError("title", _("This folder has locked subfolders. You cannot create or remove a folder "
                                              "in this folder."))
             config.need_permission("wato.manage_folders")
         else:
-            if g_folder.get(".lock"):
-                raise MKUserError("title", _("Folder attributes locked. You cannot change the attributes of this folder."))
+            if Folder.current().locked():
+                raise MKUserError("title", _("This folder is locked. You cannot change the attributes of this folder."))
             config.need_permission("wato.edit_folders")
 
         if not html.check_transaction():
@@ -1317,7 +1317,7 @@ def mode_editfolder(phase, new):
         title = html.var_utf8("title")
         if not title:
             raise MKUserError("title", _("Please supply a title."))
-        title_changed = not new and title != g_folder.get('title', '')
+        title_changed = not new and title != Folder.current().title()
 
         # OS filename
         if new:
@@ -1329,15 +1329,14 @@ def mode_editfolder(phase, new):
 
         # Attributes
         attributes = collect_attributes()
-        attributes_changed = not new and attributes != g_folder.get("attributes", {})
+        attributes_changed = not new and attributes != Folder.current().attributes()
 
         if new:
-            check_folder_permissions(g_folder, "write")
+            Folder.current().need_permission("write")
             check_user_contactgroups(attributes.get("contactgroups", (False, [])))
-            create_wato_folder(g_folder, name, title, attributes)
+            Folder.current().create_subfolder(name, title, attributes)
 
         else:
-            # TODO: migrate this block into own function edit_wato_folder(..)
             cgs_changed = get_folder_cgconf_from_attributes(attributes) != \
                           get_folder_cgconf_from_attributes(g_folder["attributes"])
             other_changed = attributes != g_folder["attributes"] and not cgs_changed
@@ -1381,17 +1380,11 @@ def mode_editfolder(phase, new):
 
 
     else:
-        render_folder_path()
-        check_folder_permissions(g_folder, "read")
+        Folder.current().show_breadcrump()
+        Folder.current().need_permission("read")
 
-        lock_message = ""
-        if g_folder.get(".lock"):
-            if g_folder[".lock"] == True:
-                lock_message = _("Folder attributes locked (You cannot edit the attributes of this folder)")
-            else:
-                lock_message = g_folder[".lock"]
-        if len(lock_message) > 0:
-            html.write("<div class=info>" + lock_message + "</div>")
+        if not new and Folder.current().locked():
+            Folder.current().show_locking_information()
 
         html.begin_form("edithost", method = "POST")
 
@@ -1402,7 +1395,7 @@ def mode_editfolder(phase, new):
         html.set_focus("title")
 
         # folder name (omit this for root folder)
-        if not (not new and g_folder == g_root_folder):
+        if new or not Folder.current().is_root():
             if not config.wato_hide_filenames:
                 forms.section(_("Internal directory name"))
                 if new:
@@ -1413,44 +1406,44 @@ def mode_editfolder(phase, new):
                     "other folders will be created. You cannot change this later."))
 
         # Attributes inherited to hosts
-        if have_folder_attributes():
-            if new:
-                attributes = {}
-                parent = g_folder
-                myself = None
-            else:
-                attributes = g_folder.get("attributes", {})
-                parent = g_folder.get(".parent")
-                myself = g_folder
+        if new:
+            attributes = {}
+            parent = Folder.current()
+            myself = None
+        else:
+            attributes = Folder.current().attributes()
+            parent = Folder.current().parent()
+            myself = Folder.current()
 
-            configure_attributes(new, {"folder": attributes}, "folder", parent, myself)
+        configure_attributes(new, {"folder": attributes}, "folder", parent, myself)
 
         forms.end()
-        if new or not g_folder.get(".lock"):
+        if new or not Folder.current().locked():
             html.button("save", _("Save &amp; Finish"), "submit")
         html.hidden_fields()
         html.end_form()
 
 
 def check_wato_foldername(htmlvarname, name, just_name = False):
-    if not just_name and name in g_folder:
+    if not just_name and name in Folder.current().has_subfolder(name):
         raise MKUserError(htmlvarname, _("A folder with that name already exists."))
 
     if not name:
         raise MKUserError(htmlvarname, _("Please specify a name."))
+        
     if not re.match("^[-a-z0-9A-Z_]*$", name):
         raise MKUserError(htmlvarname, _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
 def create_wato_foldername(title, in_folder = None):
     if in_folder == None:
-        in_folder = g_folder
+        in_folder = Folder.current()
 
     basename = convert_title_to_filename(title)
     c = 1
     name = basename
     while True:
-        if name not in in_folder[".folders"]:
+        if not in_folder.has_subfolder(name):
             break
         c += 1
         name = "%s-%d" % (basename, c)
@@ -6011,12 +6004,6 @@ def collect_attributes(do_validate = True):
         host[attrname] = attr.from_html_vars()
     return host
 
-def have_folder_attributes():
-    for attr, topic in host_attributes:
-        if attr.show_in_folder():
-            return True
-    return False
-
 # Show HTML form for editing attributes.
 #
 # new: Boolean flag if this is a creation step or editing
@@ -6124,18 +6111,18 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             if for_what == "host":
                 url = make_link_to([("mode", "editfolder")], g_folder)
 
-            container = parent
+            container = parent # container is of type Folder
             while container:
-                if attrname in container.get("attributes", {}):
-                    url = make_link_to([("mode", "editfolder")], container)
-                    inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container["title"])
-                    inherited_value = container["attributes"][attrname]
+                if attrname in container.attributes():
+                    url = container.edit_url()
+                    inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container.title())
+                    inherited_value = container.attributes()[attrname]
                     has_inherited = True
                     if topic == _("Host tags"):
                         inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
                     break
 
-                container = container.get(".parent")
+                container = container.parent()
                 what = "folder"
 
             if not container: # We are the root folder - we inherit the default values
@@ -18763,38 +18750,6 @@ def create_wato_folders(path):
             check_folder_permissions(current_folder, "write")
             current_folder = create_wato_folder(current_folder, path_tokens[i], path_tokens[i])
 
-# Creates and returns an empty wato folder with the given title
-# Write permissions are NOT checked!
-def create_wato_folder(parent, name, title, attributes={}):
-    if parent and parent[".path"]:
-        newpath = parent[".path"] + "/" + name
-    else:
-        newpath = name
-
-    new_folder = {
-        ".name"      : name,
-        ".path"      : newpath,
-        "title"      : title or name,
-        "attributes" : attributes,
-        ".folders"   : {},
-        ".hosts"     : {},
-        "num_hosts"  : 0,
-        ".lock"      : False,
-        ".parent"    : parent,
-    }
-
-    save_folder(new_folder)
-    new_folder = reload_folder(new_folder)
-
-    call_hook_folder_created(new_folder)
-
-    # Note: sites are not marked as dirty.
-    # The creation of a folder without hosts has not effect on the
-    # monitoring.
-    log_pending(AFFECTED, new_folder, "new-folder", _("Created new folder %s") % title)
-
-    return new_folder
-
 
 # new_hosts: {"hostA": {attr}, "hostB": {attr}}
 def add_hosts_to_folder(folder, new_hosts):
@@ -20026,6 +19981,10 @@ def register_builtin_host_tags():
 #              The root folder is "". No trailing / is allowed here.
 # wato_info:   The dictionary that is saved in the folder's .wato file
 
+# Terms:
+# create, delete   mean actual filesystem operations
+# add, remove      mean just modifications in the data structures
+
 
 # Base class containing a couple of generic permission checking functions, used
 # for Host and Folder
@@ -20098,7 +20057,6 @@ class Folder(WithPermissions):
         return Folder.folder("")
 
 
-
     # Find folder that is specified by the current URL. This is either by a folder
     # path in the variable "folder" or by a host name in the variable "host". In the
     # latter case we need to load all hosts in all folders and actively search the host.
@@ -20124,15 +20082,36 @@ class Folder(WithPermissions):
     # '-----------------------------------------------------------------------'
 
 
-    def __init__(self, name, folder_path, parent_folder=None):
+    def __init__(self, name, folder_path=None, parent_folder=None, title=None, attributes=None):
         WithPermissions.__init__(self)
         self._name = name
-        self._folder_path = folder_path
         self._parent_folder = parent_folder
         self._subfolders = {}
+        if folder_path != None:
+            self.init_by_loading_existing_directory(folder_path)
+        else:
+            self.init_by_creating_new(title, attributes)
+
+
+    def init_by_loading_existing_directory(self, folder_path):
+        self._folder_path = folder_path
         self.load()
         self.load_subfolders()
         self._hosts = None
+
+
+    def init_by_creating_new(self, title, attributes):
+        if self._parent_folder.is_root():
+            self._folder_path = self._name
+        else:
+            self._folder_path = self._parent_folder.path() + "/" + self._name
+        self._hosts = {}
+        self._num_hosts = 0
+        self._title = title
+        self._attributes = attributes
+        self._locked = False
+        self._locked_subfolders = False
+
 
     def __repr__(self):
         return "Folder(%r, %r)" % (self._folder_path, self._title)
@@ -20252,6 +20231,30 @@ class Folder(WithPermissions):
         self._locked_subfolders = wato_info.get("lock_subfolders", False)
 
 
+    def load_wato_info(self):
+        if os.path.exists(self.wato_info_path()):
+            return eval(file(self.wato_info_path()).read())
+        else:
+            return {}
+
+
+    def save(self):
+        wato_info = {
+            "title"           : self._title,
+            "attributes"      : self._attributes,
+            "num_hosts"       : self._num_hosts,
+            "lock"            : self._locked,
+            "lock_subfolders" : self._locked_subfolders,
+        }
+        if not os.path.exists(self.filesystem_path()):
+            make_nagios_directories(self.filesystem_path())
+        self.save_wato_info(wato_info)
+
+
+    def save_wato_info(self, wato_info):
+        file(self.wato_info_path(), "w").write("%r\n" % wato_info)
+
+
     def fallback_title(self):
         if self.is_root():
             return _("Main directory")
@@ -20277,13 +20280,6 @@ class Folder(WithPermissions):
 
     def hosts_file_path(self):
         return self.directory_path() + "/hosts.mk"
-
-
-    def load_wato_info(self):
-        if os.path.exists(self.wato_info_path()):
-            return eval(file(self.wato_info_path()).read())
-        else:
-            return {}
 
 
     def add_to_dictionary(self, dictionary):
@@ -20386,6 +20382,10 @@ class Folder(WithPermissions):
 
     def subfolder(self, name):
         return self._subfolders[name]
+
+
+    def has_subfolder(self, name):
+        return name in self._subfolders
 
 
     def has_subfolders(self):
@@ -20552,6 +20552,27 @@ class Folder(WithPermissions):
     # | ACTIONS & MODIFICATIONS                                               |
     # '-----------------------------------------------------------------------'
 
+    def create_subfolder(self, name, title, attributes):
+        new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
+        new_subfolder.save()
+        self._subfolders[name] = new_subfolder
+        call_hook_folder_created(new_subfolder)
+        log_pending(AFFECTED, new_subfolder.path(), "new-folder", _("Created new folder %s") % title)
+
+
+    def delete(self):
+        self.mark_hosts_dirty()
+        shutil.rmtree(self.filesystem_path())
+        log_pending(AFFECTED, self.path(), "delete-folder", 
+                    _("Deleted folder %s") % self.title_path())
+        self.parent().remove_subfolder(self.name())
+        call_hook_folder_deleted(self)
+
+
+    def remove_subfolder(self, name):
+        del self._subfolders[name]
+
+
     def add_host_sites_to_set(self, site_ids):
         for host in self.hosts().values():
             site_ids.add(host.site_id())
@@ -20574,19 +20595,6 @@ class Folder(WithPermissions):
             if restart:
                 changes["need_restart"] = True
             update_replication_status(site_id, changes)
-
-
-    def delete(self):
-        self.mark_hosts_dirty()
-        shutil.rmtree(self.filesystem_path())
-        log_pending(AFFECTED, self.path(), "delete-folder", 
-                    _("Deleted folder %s") % self.title_path())
-        self.parent().remove_subfolder(self.name())
-        call_hook_folder_deleted(self)
-
-
-    def remove_subfolder(self, name):
-        del self._subfolders[name]
 
 
     # .-----------------------------------------------------------------------.
@@ -21465,4 +21473,37 @@ def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True
             if restart:
                 changes["need_restart"] = True
             update_replication_status(site_id, changes)
+
+# Creates and returns an empty wato folder with the given title
+# Write permissions are NOT checked!
+def create_wato_folder(parent, name, title, attributes={}):
+    # CLEANUP: Replaced by Folder.create_subfolder()
+    if parent and parent[".path"]:
+        newpath = parent[".path"] + "/" + name
+    else:
+        newpath = name
+
+    new_folder = {
+        ".name"      : name,
+        ".path"      : newpath,
+        "title"      : title or name,
+        "attributes" : attributes,
+        ".folders"   : {},
+        ".hosts"     : {},
+        "num_hosts"  : 0,
+        ".lock"      : False,
+        ".parent"    : parent,
+    }
+
+    save_folder(new_folder)
+    new_folder = reload_folder(new_folder)
+
+    call_hook_folder_created(new_folder)
+
+    # Note: sites are not marked as dirty.
+    # The creation of a folder without hosts has not effect on the
+    # monitoring.
+    log_pending(AFFECTED, new_folder, "new-folder", _("Created new folder %s") % title)
+
+    return new_folder
 

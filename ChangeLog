@@ -134,6 +134,7 @@
     * 2806 FIX: oracle_rman: introduced missing WATO, allows configuration of backup age
     * 2883 FIX: default.php template: fixed id_string while creating default template, e.g. for custom checks
     * 2859 FIX: Check_MK Discovery/Inventory and HW/SW Inventory services are now always using caches (if available)...
+    * 2860 FIX: mssql.vbs: Now really used the configuration file from the agent config directory
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

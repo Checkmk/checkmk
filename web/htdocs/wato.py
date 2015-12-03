@@ -11375,38 +11375,6 @@ def global_replication_state():
     else:
         return "clean"
 
-# This method is called when:
-# a) moving a host from one folder to another (2 times)
-# b) deleting a host
-# c) deleting a folder
-# d) changing a folder's attributes (2 times)
-# e) changing the attributes of a host (2 times)
-# f) saving check configuration of a single host
-# g) doing bulk inventory for a host
-# h) doing bulk edit on a host (2 times)
-# i) doing bulk cleanup on a host (2 time)
-# It scans for the sites affected by the hosts in a folder and its subfolders.
-# Please note: The "site" attribute of the folder itself is not relevant
-# at all. It's just there to be inherited to the hosts. What counts is
-# only the attributes of the hosts.
-def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True):
-    # CLEANUP: This is replaced by 
-    # Folder::mark_affected_sites_dirty()
-    # Host::mark_affected_sites_dirty()
-    if is_distributed():
-        site_ids = set([])
-        if hostname:
-            find_host_sites(site_ids, folder, hostname)
-        else:
-            find_folder_sites(site_ids, folder)
-        for site_id in site_ids:
-            changes = {}
-            if sync and not site_is_local(site_id):
-                changes["need_sync"] = True
-            if restart:
-                changes["need_restart"] = True
-            update_replication_status(site_id, changes)
-
 
 def remove_sync_snapshot(siteid):
     path = sync_snapshot_file(siteid)
@@ -19246,9 +19214,11 @@ def call_hook_hosts_changed(folder):
         hooks.call("all-hosts-changed", hosts)
 
 def call_hook_folder_created(folder):
+    # CLEANUP: Gucken, welche Hooks es gibt und anpassen auf das neue Objekt
     hooks.call("folder-created", folder)
 
 def call_hook_folder_deleted(folder):
+    # CLEANUP: Gucken, welche Hooks es gibt und anpassen auf das neue Objekt
     hooks.call("folder-deleted", folder)
 
 # This hook is executed before distributing changes to the remote
@@ -20097,6 +20067,9 @@ class WithPermissions(object):
 class Folder(WithPermissions):
     # TODO: Private Methoden von öffentlichen trennen
 
+    # .-----------------------------------------------------------------------.
+    # | STATIC METHODS                                                        |
+    # '-----------------------------------------------------------------------'
 
     @staticmethod
     def load_all_folders():
@@ -20146,8 +20119,9 @@ class Folder(WithPermissions):
             return html.get_cached("wato_current_folder")
 
 
-    def __repr__(self):
-        return "Folder(%r, %r)" % (self._folder_path, self._title)
+    # .-----------------------------------------------------------------------.
+    # | CONSTRUCTION, LOADING & SAVING                                        |
+    # '-----------------------------------------------------------------------'
 
 
     def __init__(self, name, folder_path, parent_folder=None):
@@ -20160,31 +20134,8 @@ class Folder(WithPermissions):
         self.load_subfolders()
         self._hosts = None
 
-
-    def hosts(self):
-        self.load_hosts_on_demand()
-        return self._hosts
-
-
-    def host_names(self):
-        return self.hosts().keys()
-
-
-    def host(self, host_name):
-        self.load_hosts_on_demand()
-        return self._hosts.get(host_name)
-
-
-    def num_hosts(self):
-        # Do *not* load hosts here! This method must kept cheap
-        return self._num_hosts
-
-
-    def num_hosts_recursive(self):
-        num = self.num_hosts()
-        for subfolder in self.subfolders().values():
-            num += subfolder.num_hosts_recursive()
-        return num
+    def __repr__(self):
+        return "Folder(%r, %r)" % (self._folder_path, self._title)
 
 
     def load_hosts_on_demand(self):
@@ -20294,11 +20245,18 @@ class Folder(WithPermissions):
 
     def load(self):
         wato_info               = self.load_wato_info()
-        self._title             = wato_info["title"]
+        self._title             = wato_info.get("title", self.fallback_title())
         self._attributes        = wato_info.get("attributes", {})
         self._num_hosts         = wato_info.get("num_hosts", None)
         self._locked            = wato_info.get("lock", False)
         self._locked_subfolders = wato_info.get("lock_subfolders", False)
+
+
+    def fallback_title(self):
+        if self.is_root():
+            return _("Main directory")
+        else:
+            return self.name()
 
 
     def load_subfolders(self):
@@ -20311,98 +20269,6 @@ class Folder(WithPermissions):
                 else:
                     subfolder_path = entry
                 self._subfolders[entry] = Folder(entry, subfolder_path, self)
-
-
-    def name(self):
-        return self._name
-
-
-    def path(self):
-        return self._folder_path
-
-
-    def filesystem_path(self):
-        return root_dir + self._folder_path
-
-
-    def title(self):
-        return self._title
-
-
-    def attributes(self):
-        return self._attributes
-
-
-    def parent(self):
-        return self._parent_folder
-
-
-    def has_parent(self):
-        return self._parent_folder != None
-
-
-    def is_root(self):
-        return not self.has_parent()
-
-
-    def subfolders(self):
-        return self._subfolders
-
-
-    def has_subfolders(self):
-        return len(self._subfolders) > 0
-
-
-    def has_hosts(self):
-        return len(self.hosts()) != 0
-
-
-    def subfolder_choices(self):
-        return [ (subfolder.path(), subfolder.title())
-                 for subfolder in self.subfolders().values() ]
-
-
-    def subfolders_sorted_by_title(self):
-        return sorted(self.subfolders().values(), cmp=lambda a,b: cmp(a.title(), b.title()))
-
-
-    def parent_folder_chain(self):
-        folders = []
-        folder = self.parent()
-        while folder:
-            folders.append(folder)
-            folder = folder.parent()
-        return folders[::-1]
-
-
-    def directory_path(self):
-        return (root_dir + self._folder_path).rstrip("/")
-
-
-    def is_current_folder(self):
-        return self == Folder.current()
-
-
-    def is_parent_of(self, maybe_child):
-        return maybe_child.parent() == self
-
-
-    def is_transitive_parent_of(self, maybe_child):
-        if self == maybe_child:
-            return True
-        elif maybe_child.has_parent():
-            return self.is_transitive_parent_of(maybe_child.parent())
-        else:
-            return False
-
-
-    def site_id(self):
-        if "site" in self._attributes:
-            return self._attributes["site"]
-        elif self._parent_folder:
-            return self._parent_folder.site_id()
-        else:
-            return config.default_site()
 
 
     def wato_info_path(self):
@@ -20424,6 +20290,132 @@ class Folder(WithPermissions):
         dictionary[self._folder_path] = self
         for subfolder in self._subfolders.values():
             subfolder.add_to_dictionary(dictionary)
+
+
+
+    # .-----------------------------------------------------------------------.
+    # | ELEMENT ACCESS                                                        |
+    # '-----------------------------------------------------------------------'
+
+    def name(self):
+        return self._name
+
+
+    def title(self):
+        return self._title
+
+
+    def directory_path(self):
+        return (root_dir + self._folder_path).rstrip("/")
+
+
+    def path(self):
+        return self._folder_path
+
+
+    def filesystem_path(self):
+        return root_dir + self._folder_path
+
+
+    def attributes(self):
+        return self._attributes
+
+
+    def hosts(self):
+        self.load_hosts_on_demand()
+        return self._hosts
+
+
+    def host_names(self):
+        return self.hosts().keys()
+
+
+    def host(self, host_name):
+        self.load_hosts_on_demand()
+        return self._hosts.get(host_name)
+
+
+    def num_hosts(self):
+        # Do *not* load hosts here! This method must kept cheap
+        return self._num_hosts
+
+
+    def has_hosts(self):
+        return len(self.hosts()) != 0
+
+
+    def num_hosts_recursive(self):
+        num = self.num_hosts()
+        for subfolder in self.subfolders().values():
+            num += subfolder.num_hosts_recursive()
+        return num
+
+
+    def parent(self):
+        return self._parent_folder
+
+
+    def has_parent(self):
+        return self._parent_folder != None
+
+
+    def is_current_folder(self):
+        return self == Folder.current()
+
+
+    def is_parent_of(self, maybe_child):
+        return maybe_child.parent() == self
+
+
+    def is_transitive_parent_of(self, maybe_child):
+        if self == maybe_child:
+            return True
+        elif maybe_child.has_parent():
+            return self.is_transitive_parent_of(maybe_child.parent())
+        else:
+            return False
+
+
+    def is_root(self):
+        return not self.has_parent()
+
+
+    def subfolders(self):
+        return self._subfolders
+
+
+    def subfolder(self, name):
+        return self._subfolders[name]
+
+
+    def has_subfolders(self):
+        return len(self._subfolders) > 0
+
+
+    def subfolder_choices(self):
+        return [ (subfolder.path(), subfolder.title())
+                 for subfolder in self.subfolders().values() ]
+
+
+    def subfolders_sorted_by_title(self):
+        return sorted(self.subfolders().values(), cmp=lambda a,b: cmp(a.title(), b.title()))
+
+    def parent_folder_chain(self):
+        folders = []
+        folder = self.parent()
+        while folder:
+            folders.append(folder)
+            folder = folder.parent()
+        return folders[::-1]
+
+
+    def site_id(self):
+        if "site" in self._attributes:
+            return self._attributes["site"]
+        elif self._parent_folder:
+            return self._parent_folder.site_id()
+        else:
+            return config.default_site()
 
 
     def title_path(self, withlinks = False):
@@ -20556,6 +20548,51 @@ class Folder(WithPermissions):
         return self._locked_hosts
 
 
+    # .-----------------------------------------------------------------------.
+    # | ACTIONS & MODIFICATIONS                                               |
+    # '-----------------------------------------------------------------------'
+
+    def add_host_sites_to_set(self, site_ids):
+        for host in self.hosts().values():
+            site_ids.add(host.site_id())
+        for subfolder in self.subfolders().values():
+            subfolder.add_host_sites_to_set(site_ids)
+
+
+    def find_host_sites(self):
+        site_ids = set()
+        self.add_host_sites_to_set(site_ids)
+        return site_ids
+
+
+    # CLEANUP: Brauchen wir die Argumente sync und restart wirklich
+    def mark_hosts_dirty(self, sync=True, restart=True):
+        for site_id in self.find_host_sites():
+            changes = {}
+            if sync and not site_is_local(site_id):
+                changes["need_sync"] = True
+            if restart:
+                changes["need_restart"] = True
+            update_replication_status(site_id, changes)
+
+
+    def delete(self):
+        self.mark_hosts_dirty()
+        shutil.rmtree(self.filesystem_path())
+        log_pending(AFFECTED, self.path(), "delete-folder", 
+                    _("Deleted folder %s") % self.title_path())
+        self.parent().remove_subfolder(self.name())
+        call_hook_folder_deleted(self)
+
+
+    def remove_subfolder(self, name):
+        del self._subfolders[name]
+
+
+    # .-----------------------------------------------------------------------.
+    # | HTML Generation                                                       |
+    # '-----------------------------------------------------------------------'
+
     def show_locking_information(self):
         self.load_hosts_on_demand()
         lock_messages = []
@@ -20646,29 +20683,6 @@ class Folder(WithPermissions):
         html.write("</ul></div>\n")
 
 
-    # Actions on the persisted folder data
-    def mark_affected_sites_dirty(self, sync=True, restart=True):
-        for site_id in self.affected_site_ids():
-            changes = {}
-            if sync and not site_is_local(site_id):
-                changes["need_sync"] = True
-            if restart:
-                changes["need_restart"] = True
-            update_replication_status(site_id, changes)
-
-
-    def delete(self):
-        parent_folder = folder[".parent"]
-
-        self.mark_affected_sites_dirty()
-        self.parent().remove_subfolder(self.name())
-        shutil.rmtree(self.filesystem_path())
-        
-        log_pending(AFFECTED, self.path(), "delete-folder", _("Deleted folder %s") % self.path())
-        call_hook_folder_deleted(folder)
-
-
-
 class Host(WithPermissions):
     def __init__(self, folder, host_name, host_tags, cluster_nodes, attributes, alias):
         WithPermissions.__init__(self)
@@ -20714,13 +20728,6 @@ class Host(WithPermissions):
 
     def site_id(self):
         return self._attributes.get("site") or self.folder().site_id()
-
-
-    # Find sites of hosts contained in this folder and subfolders
-    def host_site_ids(self):
-
-        
-
 
 
     def attributes(self):
@@ -21426,4 +21433,36 @@ def find_folder_sites(site_ids, folder, include_folder = False):
         find_host_sites(site_ids, folder, hostname)
     for subfolder in folder[".folders"].values():
         find_folder_sites(site_ids, subfolder, include_folder)
+
+# This method is called when:
+# a) moving a host from one folder to another (2 times)
+# b) deleting a host
+# c) deleting a folder
+# d) changing a folder's attributes (2 times)
+# e) changing the attributes of a host (2 times)
+# f) saving check configuration of a single host
+# g) doing bulk inventory for a host
+# h) doing bulk edit on a host (2 times)
+# i) doing bulk cleanup on a host (2 time)
+# It scans for the sites affected by the hosts in a folder and its subfolders.
+# Please note: The "site" attribute of the folder itself is not relevant
+# at all. It's just there to be inherited to the hosts. What counts is
+# only the attributes of the hosts.
+def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True):
+    # CLEANUP: This is replaced by
+    # Folder::mark_affected_sites_dirty()
+    # Host::mark_affected_sites_dirty()
+    if is_distributed():
+        site_ids = set([])
+        if hostname:
+            find_host_sites(site_ids, folder, hostname)
+        else:
+            find_folder_sites(site_ids, folder)
+        for site_id in site_ids:
+            changes = {}
+            if sync and not site_is_local(site_id):
+                changes["need_sync"] = True
+            if restart:
+                changes["need_restart"] = True
+            update_replication_status(site_id, changes)
 

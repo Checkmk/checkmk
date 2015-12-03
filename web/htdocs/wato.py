@@ -1337,45 +1337,33 @@ def mode_editfolder(phase, new):
             Folder.current().create_subfolder(name, title, attributes)
 
         else:
+            # For changing attributes of a folder user needs write permission
+            if attributes != Folder.current().attributes():
+                Folder.current().need_permission("write")
+
+            # For changing contact groups user needs write permission on parent folder
             cgs_changed = get_folder_cgconf_from_attributes(attributes) != \
-                          get_folder_cgconf_from_attributes(g_folder["attributes"])
-            other_changed = attributes != g_folder["attributes"] and not cgs_changed
-            if other_changed:
-                check_folder_permissions(g_folder, "write")
-            if g_folder.get(".parent") \
-                 and cgs_changed \
-                 and True != check_folder_permissions(g_folder.get(".parent"), "write", False):
-                 raise MKAuthException(_("Sorry. In order to change the permissions of a folder you need write "
-                                         "access to the parent folder."))
+                          get_folder_cgconf_from_attributes(Folder.current().attributes())
 
             if cgs_changed:
                 check_user_contactgroups(attributes.get("contactgroups"))
-            log_pending(AFFECTED, g_folder, "edit-folder", _("Edited properties of folder %s") % title)
 
-            g_folder["title"]      = title
+                if Folder.current().has_parent():
+                     if not Folder.current().parent().may("write"):
+                         raise MKAuthException(_("Sorry. In order to change the permissions of a folder you need write "
+                                                 "access to the parent folder."))
 
-            if attributes_changed or title_changed:
-                mark_affected_sites_dirty(g_folder)
-                g_folder["attributes"] = attributes
+                else:
+                    # root folder has no parent -> need pemissions on root folder
+                    Folder.current().need_permission("write")
 
-                # Due to changes in folder/file attributes, host files
-                # might need to be rewritten in order to reflect Changes
-                # in Nagios-relevant attributes.
-                rewrite_config_files_below(g_folder) # due to inherited attributes
-                save_folder(g_folder)
-                # This updates g_folder and g_folders[...]
-                g_folder = reload_folder(g_folder)
-
-                mark_affected_sites_dirty(g_folder)
-
-                log_pending(AFFECTED, g_folder, "edit-folder",
-                       _("Changed attributes of folder %s") % title)
-                call_hook_hosts_changed(g_folder)
+            Folder.current().edit(title, attributes)
 
         need_sidebar_reload()
 
+        # Edit icon on subfolder preview should bring user back to parent folder
         if html.has_var("backfolder"):
-            set_current_folder(g_folders[html.var("backfolder")])
+            Folder.set_current(Folder.folder(html.var("backfolder")))
         return "folder"
 
 
@@ -6109,7 +6097,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             has_inherited = False
 
             if for_what == "host":
-                url = make_link_to([("mode", "editfolder")], g_folder)
+                url = Folder.current().edit_url()
 
             container = parent # container is of type Folder
             while container:
@@ -19155,10 +19143,13 @@ def collect_hosts(folder):
 
     return hosts
 
+
 def call_hook_snapshot_pushed():
     hooks.call("snapshot-pushed")
 
+
 def call_hook_hosts_changed(folder):
+    # TODO: folder is now an object of type Folder
     if hooks.registered("hosts-changed"):
         hosts = collect_hosts(folder)
         hooks.call("hosts-changed", hosts)
@@ -19167,6 +19158,7 @@ def call_hook_hosts_changed(folder):
     if hooks.registered("all-hosts-changed"):
         hosts = collect_hosts(g_root_folder)
         hooks.call("all-hosts-changed", hosts)
+
 
 def call_hook_folder_created(folder):
     # CLEANUP: Gucken, welche Hooks es gibt und anpassen auf das neue Objekt
@@ -20077,6 +20069,11 @@ class Folder(WithPermissions):
             return html.get_cached("wato_current_folder")
 
 
+    @staticmethod
+    def set_current(folder):
+        html.set_cache("wato_current_folder", folder)
+
+
     # .-----------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                        |
     # '-----------------------------------------------------------------------'
@@ -20527,7 +20524,12 @@ class Folder(WithPermissions):
         return html.makeuri_contextless([("mode", "folder"), ("folder", self.path())] + add_vars)
 
 
-    def edit_url(self, backfolder):
+    def edit_url(self, backfolder=None):
+        if backfolder == None:
+            if self.has_parent():
+                backfolder = self.parent()
+            else:
+                backfolder = self
         return html.makeuri_contextless([
             ("mode", "editfolder"),
             ("folder", self.path()),
@@ -20556,8 +20558,8 @@ class Folder(WithPermissions):
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
         new_subfolder.save()
         self._subfolders[name] = new_subfolder
+        log_pending(AFFECTED, new_subfolder.path(), "new-folder", _("Created new folder %s") % new_subfolder.title())
         call_hook_folder_created(new_subfolder)
-        log_pending(AFFECTED, new_subfolder.path(), "new-folder", _("Created new folder %s") % title)
 
 
     def delete(self):
@@ -20567,6 +20569,30 @@ class Folder(WithPermissions):
                     _("Deleted folder %s") % self.title_path())
         self.parent().remove_subfolder(self.name())
         call_hook_folder_deleted(self)
+
+
+    def edit(self, new_title, new_attributes):
+        # Due to a change in the attribute "site" a host can move from
+        # one site to another. In that case both sites need to be marked
+        # dirty. Therefore we first mark dirty according to the current
+        # host->site mapping and after the change we mark again according
+        # to the new mapping.
+        self.mark_hosts_dirty()
+
+        self._title      = new_title
+        self._attributes = new_attributes
+
+        # Due to changes in folder/file attributes, host files
+        # might need to be rewritten in order to reflect Changes
+        # in Nagios-relevant attributes.
+        ## rewrite_hosts_filesconfig_files_below(self) # due to inherited attributes
+        self.save()
+        # This updates self and selfs[...]
+        ## self = reload_folder(self) # BRAUCH ICH DAS WIRKLICH?
+
+        self.mark_hosts_dirty()
+        log_pending(AFFECTED, self.path(), "edit-folder", _("Edited properties of folder %s") % self.title())
+        call_hook_hosts_changed(self)
 
 
     def remove_subfolder(self, name):

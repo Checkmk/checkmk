@@ -4622,7 +4622,8 @@ def do_check_keepalive():
         sys.stderr.flush()
 
         cleanup_globals() # Prepare for next check
-        restore_use_cachefile()
+        global opt_use_cachefile
+        opt_use_cachefile = True
         restore_original_agent_caching_usage()
 
         # Check if all global variables are clean, but only in verbose logging mode

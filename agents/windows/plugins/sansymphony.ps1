@@ -38,7 +38,7 @@ Import-Module "C:\Program Files\DataCore\SANsymphony\DataCore.Executive.Cmdlets.
 
 #set up PowerShell connection to local server
 
-Connect-DcsServer -Server $ssvhostname -UserName $ssvusername -Password $ssvpassword -Connection check_mk
+Connect-DcsServer -Server $ssvhostname -UserName $ssvusername -Password $ssvpassword -Connection check_mk | Out-Null
 
 # if the connection was succesfull, we´ll go on
 

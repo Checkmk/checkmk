@@ -27,7 +27,13 @@
 
 if [ "$1" = "" ]
 then
-    su - mqm -c "/usr/lib/check_mk_agent/plugins/websphere_mq run"
+# wwi --------------------------------------
+# deletion of "-"
+# preventing a faulty "TCP Connection" section of the main agent
+# by using the "-" option, the AIX environment show's the message "[YOU HAVE NEW MAIL]" before the section start: <<<websphere_mq_channels>>>
+# so the next section will be useless for the OMD server check.
+#    su - mqm -c "/usr/lib/check_mk_agent/plugins/websphere_mq run"
+     su mqm -c "/usr/lib/check_mk_agent/plugins/websphere_mq run"
 else
     # Loop over all local mq instances
     for QM in $( ps -ef  | grep -i '[/]usr/mqm/bin/runmqchl -c' | awk '{ print $NF }' | uniq)
@@ -49,13 +55,20 @@ else
            echo "$a  $i $c $s"
          done
          echo '<<<websphere_mq_queues>>>'
-         for t in `echo " display queue (*) where (USAGE EQ NORMAL) " | /usr/bin/runmqsc $QM | grep QLOCAL | grep -v SYSTEM | grep -v _T0 |  grep -v _T1 |  grep -v _T2 | grep -v _T3 | grep -v mqtest | grep QUEUE | awk '{ print $1 }' | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }'`
+         for t in `echo " display queue (*) where (USAGE EQ NORMAL) " | /usr/bin/runmqsc $QM | grep -v SYSTEM | grep -v MQMON | grep -v MONITOR | grep -v _T0 |  grep -v _T1 |  grep -v _T2 | grep -v _T3 | grep -v mqtest | grep QUEUE | awk '{ print $1 }' | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }'`
          do
-           a=`echo " display queue ($t) CURDEPTH " | /usr/bin/runmqsc $QM | grep CURDEPTH | tail -1 | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }'`
+		   # wwi MQ admin change, to get more queues which are needed
+		   #a=`echo " display queue ($t) CURDEPTH " | /usr/bin/runmqsc $QM | grep CURDEPTH | tail -1 | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }'`
+           a=`echo " display qlocal ($t) CURDEPTH  " | /usr/bin/runmqsc $QM | grep CURDEPTH  | tr " " "\n" | grep CURDEPTH  | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }' | tr "\n" " "`
            b=`echo " display qlocal ($t) MAXDEPTH  " | /usr/bin/runmqsc $QM | grep MAXDEPTH | tr " " "\n" | grep MAXDEPTH | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }' | tr "\n" " "`
 
-          # Muster: Anzahl eingehender Messages $a auf $t Max-Queues $b
-
+           # Muster: Anzahl eingehender Messages $a auf $t Max-Queues $b
+           # wwi -------------------------
+	       # preventing a CRASH of the check at the server side
+           if [ "$a" == "" ] && [ "$b" == "" ]; then
+              a=0
+              b=0
+           fi
            echo "$a $t $b"
          done
      done

@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-blade_bx_fan_default_error_levels = (50, 40)    # percentages or errors!
+blade_bx_fan_default_error_levels = (20, 10)    # percentages or errors!
 
 blade_bx_status = { "1" : "unknow",
                     "2" : "disabled",

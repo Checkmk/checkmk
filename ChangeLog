@@ -139,6 +139,7 @@
             NOTE: Please refer to the migration notes!
     * 1310 FIX: blade_bx_powerfan: Check now uses better default leves...
     * 2807 FIX: check_mail_loop: POP3 protocol wasn't working at all
+    * 2808 FIX: db2_connections: added missing connections performance data
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

@@ -505,8 +505,6 @@ def mode_folder(phase):
         # Deletion of single hosts
         delname = html.var("_delete_host")
         if delname and delname in g_folder[".hosts"]:
-            config.need_permission("wato.manage_hosts")
-            check_folder_permissions(g_folder, "write")
             return delete_host_after_confirm(delname)
 
         # Move single hosts to other folders
@@ -1165,6 +1163,7 @@ def move_host_to(hostname, target_filename):
 
 
 def delete_host_files(site_id, hostname):
+    # TODO: See bug #2414
     check_mk_automation(site_id, "delete-host", [hostname])
     if not site_is_local(site_id):
         # Delete inventory data from remote sites (not the archive)
@@ -1519,8 +1518,6 @@ def mode_edithost(phase, new, is_cluster):
 
 
         if not new and html.var("delete"): # Delete this host
-            config.need_permission("wato.manage_hosts")
-            check_folder_permissions(g_folder, "write")
             if not html.transaction_valid():
                 return "folder"
             else:
@@ -1673,21 +1670,13 @@ def delete_host_after_confirm(delname):
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
-        if g_folder.get(".lock_hosts"):
-            raise MKUserError(None, _("Cannot delete host. Hosts in this folder are locked"))
-
-        mark_affected_sites_dirty(g_folder, delname)
-        host = g_folder[".hosts"][delname]
-        del g_folder[".hosts"][delname]
-        g_folder["num_hosts"] -= 1
-        save_folder_and_hosts(g_folder)
-        delete_host_files(host[".siteid"], delname)
-        call_hook_hosts_changed(g_folder)
+        Folder.current().delete_host(delname)
         return "folder"
     elif c == False: # not yet confirmed
         return ""
     else:
         return None # browser reload
+
 
 def check_new_hostname(varname, hostname):
     if not hostname:
@@ -1695,6 +1684,7 @@ def check_new_hostname(varname, hostname):
     elif hostname in g_folder[".hosts"]:
         raise MKUserError(varname, _("A host with this name already exists in this folder."))
     Hostname().validate_value(hostname, varname)
+
 
 def check_edit_host_permissions(folder, host, hostname):
     config.need_permission("wato.edit_hosts")
@@ -20814,6 +20804,19 @@ class Folder(WithPermissions):
         log_pending(AFFECTED, host_name, "create-host", _("Created new host %s.") % host_name)
         
 
+    def delete_host(self, host_name):
+        config.need_permission("wato.manage_hosts")
+        self.need_unlocked_hosts()
+        self.need_permission("write")
+        host = self.hosts()[host_name]
+        host.mark_dirty()
+        del self._hosts[host_name]
+        self._num_hosts -= 1
+        self.save_hosts()
+        log_pending(AFFECTED, host_name, "delete-host", _("Deleted host %s") % host_name)
+        call_hook_hosts_changed(self)
+
+
     def add_host_sites_to_set(self, site_ids):
         for host in self.hosts().values():
             site_ids.add(host.site_id())
@@ -21110,6 +21113,9 @@ class Host(WithPermissions):
     # '-----------------------------------------------------------------------'
 
     def edit(self, attributes, cluster_nodes):
+        # ??? config.need_permission("wato.manage_hosts")
+        config.need_permission("wato.edit_hosts")
+        self.folder().need_unlocked_hosts()
         self.mark_dirty()
         self._attributes = attributes
         self._cluster_nodes = cluster_nodes

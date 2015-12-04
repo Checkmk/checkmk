@@ -386,7 +386,6 @@ def automation_delete_host(args):
         if os.path.exists("%s/%s" % (folder, hostname)):
             os.unlink("%s/%s" % (folder, hostname))
 
-
     # logwatch folders
     if os.path.exists("%s/%s" % (logwatch_dir, hostname)):
         import shutil

@@ -1,0 +1,9 @@
+Title: check_mail_loop: POP3 protocol wasn't working at all
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6p16
+Date: 1449228796
+

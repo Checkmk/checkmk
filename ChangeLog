@@ -1,4 +1,7 @@
 1.2.6p16:
+    Checks & Agents:
+    * 2807 FIX: check_mail_loop: POP3 protocol wasn't working at all
+
 
 1.2.6p15:
     Core & Setup:

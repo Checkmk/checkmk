@@ -1,0 +1,10 @@
+Title: db2_connections: added missing connections performance data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p6
+Date: 1449229404
+
+

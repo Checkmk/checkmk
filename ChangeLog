@@ -1,6 +1,7 @@
 1.2.7i3p6:
     Checks & Agents:
     * 2807 FIX: check_mail_loop: POP3 protocol wasn't working at all
+    * 2808 FIX: db2_connections: added missing connections performance data
 
 
 1.2.7i3p5:

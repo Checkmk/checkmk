@@ -1614,6 +1614,10 @@ class html:
     def get_cached(self, name):
         return self.caches.get(name)
 
+    def del_cache(self, name):
+        if name in self.caches:
+            del self.caches[name]
+
     def measure_time(self, name):
         self.times.setdefault(name, 0.0)
         now = time.time()

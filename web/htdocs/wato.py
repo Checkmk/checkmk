@@ -487,7 +487,7 @@ def mode_folder(phase):
 
         # Deletion of single hosts
         delname = html.var("_delete_host")
-        if delname and delname in g_folder[".hosts"]:
+        if delname and Folder.current().has_host(delname):
             return delete_host_after_confirm(delname)
 
         # Move single hosts to other folders
@@ -497,7 +497,8 @@ def mode_folder(phase):
             hostname = html.var("host")
             check_folder_permissions(g_folder, "write")
             if hostname:
-                move_host_to(hostname, html.var("_move_host_to"))
+                target_folder = Folder.folder(html.var("_move_host_to"))
+                Folder.current().move_hosts([hostname], target_folder)
                 return
 
         # bulk operation on hosts
@@ -527,14 +528,12 @@ def mode_folder(phase):
 
         # Move
         elif html.var("_bulk_move"):
-            config.need_permission("wato.edit_hosts")
-            config.need_permission("wato.move_hosts")
-            target_folder_name = html.var("bulk_moveto", html.var("_top_bulk_moveto"))
-            if target_folder_name == "@":
+            target_folder_path = html.var("bulk_moveto", html.var("_top_bulk_moveto"))
+            if target_folder_path == "@":
                 raise MKUserError("bulk_moveto", _("Please select the destination folder"))
-            target_folder = g_folders[target_folder_name]
-            num_moved = move_hosts_to(selected_hosts, target_folder_name)
-            return None, _("Successfully moved %d hosts to %s") % (num_moved, target_folder["title"])
+            target_folder = Folder(target_folder_path)
+            Folder.current().move_hosts(selected_hosts, target_folder)
+            return None, _("Moved hosts to %s") % target_folder.title()
 
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):
@@ -904,7 +903,7 @@ def show_hosts(folder):
                        " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'), sortable=False)
             # Use CSS class "failed" in order to provide information about
             # selective toggling inventory-failed hosts for Javascript
-            if host.get("inventory_failed"):
+            if host.inventory_failed():
                 css_class = "class=failed"
             else:
                 css_class = ""
@@ -1082,64 +1081,6 @@ def move_to_folder_combo(what, thing = None, top = False, multiple = False):
         html.write(_("No valid target folder."))
 
 
-
-
-def move_hosts_to(hostnames, path):
-    if path not in g_folders: # non-existing folder
-        return
-
-    target_folder = g_folders[path]
-    check_folder_permissions(g_folder, "write")
-    check_folder_permissions(target_folder, "write")
-
-    if target_folder == g_folder:
-        return 0 # target and source are the same
-
-    # read hosts currently in target file
-    load_hosts(target_folder)
-    target_hosts = target_folder[".hosts"]
-
-    if g_folder.get(".lock_hosts"):
-        raise MKUserError(None, _("Cannot move selected hosts: Hosts in this folder are locked."))
-    if target_folder.get(".lock_hosts"):
-        raise MKUserError(None, _("Cannot move selected hosts: Hosts in target folder are locked."))
-
-    num_moved = 0
-    for hostname in hostnames:
-        if hostname not in g_folder[".hosts"]: # non-existant host
-            continue
-
-        mark_affected_sites_dirty(g_folder, hostname)
-
-        # Add to new folder
-        target_hosts[hostname] = g_folder[".hosts"][hostname]
-        target_hosts[hostname]['.folder'] = target_folder
-        target_folder["num_hosts"] += 1
-
-        # Remove from old folder
-        g_folder["num_hosts"] -= 1
-        del g_folder[".hosts"][hostname]
-
-        mark_affected_sites_dirty(target_folder, hostname)
-
-        if len(hostnames) == 1:
-            log_pending(AFFECTED, hostname, "move-host", _("Moved host from %s to %s") %
-                (g_folder[".path"], target_folder[".path"]))
-        num_moved += 1
-
-    save_folder_and_hosts(target_folder)
-    save_folder_and_hosts(g_folder)
-    call_hook_hosts_changed(g_root_folder)
-    if len(hostnames) > 1:
-        log_pending(AFFECTED, target_folder, "move-host", _("Moved %d hosts from %s to %s") %
-            (num_moved, g_folder[".path"], target_folder[".path"]))
-    return num_moved
-
-
-def move_host_to(hostname, target_filename):
-    return move_hosts_to([hostname], target_filename)
-
-
 def delete_host_files(site_id, hostname):
     # TODO: See bug #2414
     check_mk_automation(site_id, "delete-host", [hostname])
@@ -1150,6 +1091,7 @@ def delete_host_files(site_id, hostname):
             if os.path.exists(filename):
                 os.unlink(filename)
     log_pending(AFFECTED, hostname, "delete-host", _("Deleted host %s") % hostname)
+
 
 def delete_hosts_after_confirm(hosts):
     c = wato_confirm(_("Confirm deletion of %d hosts") % len(hosts),
@@ -2712,7 +2654,8 @@ def mode_diag_host(phase):
     if not hostname:
         raise MKGeneralException(_('The hostname is missing.'))
 
-    check_host_permissions(hostname)
+    host = Folder.current().host(hostname)
+    host.need_permission("read")
 
     if phase == 'title':
         return _('Diagnostic of host') + " " + hostname
@@ -2720,13 +2663,10 @@ def mode_diag_host(phase):
     elif phase == 'buttons':
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         host_status_button(hostname, "hoststatus")
-        html.context_button(_("Properties"),
-                            make_link([("mode", "edithost"), ("host", hostname)]), "edit")
+        html.context_button(_("Properties"), host.edit_url(), "edit")
         if config.may('wato.rulesets'):
-            html.context_button(_("Parameters"),
-                            make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
-        html.context_button(_("Services"),
-                            make_link([("mode", "inventory"), ("host", hostname)]), "services")
+            html.context_button(_("Parameters"), host.params_url(), "rulesets")
+        html.context_button(_("Services"), host.services_url(), "services")
         return
 
     vs_host = Dictionary(
@@ -2789,12 +2729,8 @@ def mode_diag_host(phase):
         ]
     )
 
-    host = g_folder[".hosts"].get(hostname)
-
-    if not host:
-        raise MKGeneralException(_('The given host does not exist.'))
-    if ".nodes" in host:
-        raise MKGeneralException(_('This view does not support cluster hosts.'))
+    if host.is_cluster():
+        raise MKGeneralException(_('This page does not support cluster hosts.'))
 
     if phase == 'action':
         if not html.check_transaction():
@@ -2802,23 +2738,12 @@ def mode_diag_host(phase):
 
         if html.var('_save'):
             # Save the ipaddress and/or community
-            mark_affected_sites_dirty(g_folder, hostname)
-
             new = vs_host.from_html_vars('vs_host')
             vs_host.validate_value(new, 'vs_host')
-            if 'ipaddress' in new:
-                host['ipaddress'] = new['ipaddress']
-            if 'snmp_community' in new:
-                host['snmp_community'] = new['snmp_community']
-            log_pending(AFFECTED, hostname, "edit-host", _("Edited properties of host via diagnose [%s]") % hostname)
-            save_folder_and_hosts(g_folder)
-            reload_hosts(g_folder)
-            call_hook_hosts_changed(g_folder)
-
+            host.update_attributes(new)
             html.del_all_vars()
             html.set_var("host", hostname)
-            html.set_var("folder", g_folder[".path"])
-
+            html.set_var("folder", Folder.current().path())
             return "edithost"
         return
 
@@ -2828,7 +2753,7 @@ def mode_diag_host(phase):
     forms.header(_('Host Properties'))
 
     forms.section(legend = False)
-    vs_host.render_input("vs_host", host)
+    vs_host.render_input("vs_host", host.attributes())
     html.help(vs_host.help())
 
     forms.end()
@@ -3395,17 +3320,14 @@ def move_to_imported_folders(hosts):
         del host['imported_folder']
 
     # Now handle each target folder
-    num_moved = 0
-    for imported_folder, hosts in targets.items():
+    for imported_folder, hostnames in targets.items():
         # Next problem: The folder path in imported_folder refers
         # to the Alias of the folders, not to the internal file
         # name. And we need to create folders not yet existing.
         target_folder = create_target_folder_from_aliaspath(imported_folder)
-        num_moved += move_hosts_to(hosts, target_folder[".path"])
-        save_folder(target_folder)
-    save_folder(g_folder)
-    log_pending(AFFECTED, g_folder, "move-hosts", _("Moved %d imported hosts to their original destination.") % num_moved)
-    return None, _("Successfully moved %d hosts to their original folder destinations.") % num_moved
+        Folder.current().move_hosts(hostnames, target_folder)
+
+    return None, _("Successfully moved hosts to their original folder destinations.")
 
 
 def create_target_folder_from_aliaspath(aliaspath):

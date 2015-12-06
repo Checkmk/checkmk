@@ -7406,7 +7406,7 @@ def simple_host_rule_match_conditions():
 
 
 def generic_rule_match_conditions():
-    simple_host_rule_match_conditions() + [
+    return simple_host_rule_match_conditions() + [
         ( "match_servicegroups",
           GroupChoice("service",
               title = _("Match Service Groups"),

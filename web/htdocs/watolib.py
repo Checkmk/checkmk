@@ -1115,14 +1115,19 @@ class Folder(WithPermissions):
 
 
     def create_host(self, host_name, attributes, cluster_nodes):
+        self.create_hosts(self, [(host_name, attributes, cluster_nodes)])
+
+
+    def create_hosts(self, entries):
         self.load_hosts_on_demand()
-        host = Host(self, host_name, attributes, cluster_nodes)
-        self._hosts[host_name] = host
-        self._num_hosts = len(self._hosts)
-        host.mark_dirty()
+        for host_name, attributes, cluster_nodes in entries:
+            host = Host(self, host_name, attributes, cluster_nodes)
+            self._hosts[host_name] = host
+            self._num_hosts = len(self._hosts)
+            host.mark_dirty()
+            log_pending(AFFECTED, host_name, "create-host", _("Created new host %s.") % host_name)
         self.save() # Update num_hosts
         self.save_hosts()
-        log_pending(AFFECTED, host_name, "create-host", _("Created new host %s.") % host_name)
 
 
     def delete_hosts(self, host_names):

@@ -3305,7 +3305,7 @@ def mode_bulk_import(phase):
         attributes = collect_attributes()
 
         config.need_permission("wato.manage_hosts")
-        check_folder_permissions(g_folder, "write")
+        Folder.current().need_permission("write")
         check_user_contactgroups(attributes.get("contactgroups", (False, [])))
 
         hosts = html.var('_hosts')
@@ -3314,42 +3314,33 @@ def mode_bulk_import(phase):
 
         created  = 0
         skipped  = 0
+        entries = []
         selected = []
 
         # Split by all possible separators
         hosts = hosts.replace(' ', ';').replace(',', ';').replace('\n', ';').replace('\r', '')
         for hostname in hosts.split(';'):
-            if hostname in g_folder['.hosts']:
+            if Folder.current().has_host(hostname):
                 skipped += 1
                 continue
             elif not re.match('^[a-zA-Z0-9-_.]+$', hostname):
                 skipped += 1
                 continue
 
-            new_host = {
-                '.name'   : hostname,
-                '.folder' : g_folder,
-            }
-            g_folder[".hosts"][hostname] = new_host
-            mark_affected_sites_dirty(g_folder, hostname)
-
-            message = _("Created new host %s.") % hostname
-            log_pending(AFFECTED, hostname, "create-host", message)
-            g_folder["num_hosts"] += 1
+            entries.append((hostname, {}, None))
             created += 1
             selected.append('_c_%s' % hostname)
+
 
         if not created:
             return 'folder', _('No host has been imported.')
 
         else:
-            save_folder_and_hosts(g_folder)
-            reload_hosts(g_folder)
-            call_hook_hosts_changed(g_folder)
+            Folder.current().create_hosts(entries)
 
             if html.get_checkbox('_do_service_detection'):
                 # Create a new selection
-                weblib.set_rowselection('wato-folder-/'+g_folder['.path'], selected, 'set')
+                weblib.set_rowselection('wato-folder-/' + Folder.current().path(), selected, 'set')
                 html.set_var('mode', 'bulkinventory')
                 html.set_var('show_checkboxes', '1')
                 return 'bulkinventory'

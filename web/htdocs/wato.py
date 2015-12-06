@@ -867,7 +867,7 @@ def show_hosts(folder):
                        " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'), sortable=False)
             # Use CSS class "failed" in order to provide information about
             # selective toggling inventory-failed hosts for Javascript
-            if host.inventory_failed():
+            if host.discovery_failed():
                 css_class = "class=failed"
             else:
                 css_class = ""
@@ -971,7 +971,7 @@ def show_host_actions(host):
             image = "inventory_failed"
             msg += ". " + _("The service discovery of this host failed during a previous bulk service discovery.")
         html.icon_button(host.services_url(), msg, image)
-    if not host.is_locked() and config.may("wato.manage_hosts"):
+    if not host.locked() and config.may("wato.manage_hosts"):
         if config.may("wato.clone_hosts"):
             html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
         delete_url  = make_action_link([("mode", "folder"), ("_delete_host", host.name())])
@@ -1444,12 +1444,7 @@ def mode_edit_host(phase, new, is_cluster):
         html.help(_('Enter the host names of the cluster nodes. These '
                    'hosts must be present in WATO. '))
 
-    if host:
-        attributes = host.attributes()
-    else:
-        attributes = {}
-
-    configure_attributes(new, {hostname: attributes}, "host", parent = Folder.current())
+    configure_attributes(new, {hostname: host}, "host", parent = Folder.current())
 
     forms.end()
     if not Folder.current().locked_hosts():
@@ -3368,6 +3363,7 @@ def mode_bulk_import(phase):
         forms.header(_('Bulk Host Import'))
         forms.section(_('Hosts'))
         html.text_area('_hosts', cols = 70, rows = 10)
+        html.set_focus('_hosts')
 
         forms.section(_('Options'))
         html.checkbox('_do_service_detection', False, label = _('Perform automatic service discovery'))
@@ -3415,8 +3411,7 @@ def mode_bulk_inventory(phase):
                 num_hosts = len(hostnames)
                 num_skipped_hosts = 0
                 num_failed_hosts = 0
-                folder = g_folders[folderpath]
-                load_hosts(folder)
+                folder = Folder.folder(folderpath)
                 arguments = [how,] + hostnames
                 if html.var("use_cache"):
                     arguments = [ "@cache" ] + arguments
@@ -3428,7 +3423,8 @@ def mode_bulk_inventory(phase):
                 unlock_exclusive() # Avoid freezing WATO when hosts do not respond timely
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
                 lock_exclusive()
-                load_hosts(folder)
+                Folder.invalidate_caches()
+                folder = Folder.folder(folderpath)
 
                 # sum up host individual counts to have a total count
                 sum_counts = [ 0, 0, 0, 0 ] # added, removed, kept, new
@@ -3438,7 +3434,7 @@ def mode_bulk_inventory(phase):
                     sum_counts[1] += counts[hostname][1]
                     sum_counts[2] += counts[hostname][2]
                     sum_counts[3] += counts[hostname][3]
-                    host = folder[".hosts"][hostname]
+                    host = folder.host(hostname)
                     if hostname in failed_hosts:
                         reason = failed_hosts[hostname]
                         if reason == None:
@@ -3447,19 +3443,16 @@ def mode_bulk_inventory(phase):
                         else:
                             num_failed_hosts += 1
                             result_txt += _("%s: discovery failed: %s<br>") % (hostname, failed_hosts[hostname])
-                            if not host.get("inventory_failed") and not host.get(".folder", {}).get("_lock_hosts"):
-                                host["inventory_failed"] = True
-                                save_hosts(folder)
+                            if not host.locked():
+                                host.set_discovery_failed()
                     else:
                         result_txt += _("%s: discovery successful<br>\n") % hostname
-                        mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
+                        folder.mark_hosts_dirty(need_sync=False)
                         log_pending(AFFECTED, hostname, "bulk-inventory",
                             _("Did service discovery on host: %d added, %d removed, %d kept, %d total services") %
                                                                                 tuple(counts[hostname]))
-
-                        if "inventory_failed" in host and not host.get(".folder", {}).get("_lock_hosts"):
-                            del host["inventory_failed"]
-                            save_hosts(folder) # Could be optimized, but difficult here
+                        if not host.locked():
+                            host.clear_discovery_failed()
 
                 result = repr([ 'continue', num_hosts, num_failed_hosts, num_skipped_hosts ] + sum_counts) + "\n" + result_txt
 
@@ -3483,13 +3476,12 @@ def mode_bulk_inventory(phase):
 
     def recurse_hosts(folder, recurse, only_failed):
         entries = []
-        hosts = load_hosts(folder)
-        for hostname, host in hosts.items():
-            if not only_failed or host.get("inventory_failed"):
-                entries.append((hostname, folder))
+        for host_name, host in folder.hosts().items():
+            if not only_failed or host.discovery_failed():
+                entries.append((host_name, folder))
         if recurse:
-            for f in folder[".folders"].values():
-                entries += recurse_hosts(f, recurse, only_failed)
+            for subfolder in folder.subfolders():
+                entries += recurse_hosts(subfolder, recurse, only_failed)
         return entries
 
     config.need_permission("wato.services")
@@ -3514,38 +3506,33 @@ def mode_bulk_inventory(phase):
         else:
             filterfunc = None
 
-        hostnames = get_hostnames_from_checkboxes(filterfunc)
-        for hostname in hostnames:
-            if restrict_to_hosts and hostname not in restrict_to_hosts:
+        for host_name in get_hostnames_from_checkboxes(filterfunc):
+            if restrict_to_hosts and host_name not in restrict_to_hosts:
                 continue
-            if hostname in skip_hosts:
+            if host_name in skip_hosts:
                 continue
-            check_host_permissions(hostname)
-            host = g_folder[".hosts"][hostname]
-            eff = effective_attributes(host, g_folder)
-            site_id = eff.get("site")
-            hosts_to_inventorize.append( (site_id, g_folder[".path"], hostname) )
+            host = Folder.current().host(host_name)
+            host.need_permission("write")
+            hosts_to_inventorize.append( (host.site_id(), Folder.current(), host_name) )
 
     # all host in this folder, maybe recursively. New: we always group
     # a bunch of subsequent hosts of the same folder into one item.
     # That saves automation calls and speeds up mass inventories.
     else:
         complete_folder = True
-        entries = recurse_hosts(g_folder, html.get_checkbox("recurse"), html.get_checkbox("only_failed"))
+        entries = recurse_hosts(Folder.current(), html.get_checkbox("recurse"), html.get_checkbox("only_failed"))
         items = []
         hostnames = []
         current_folder = None
         num_hosts_in_current_chunk = 0
-        for hostname, folder in entries:
-            if restrict_to_hosts != None and hostname not in restrict_to_hosts:
+        for host_name, folder in entries:
+            if restrict_to_hosts != None and host_name not in restrict_to_hosts:
                 continue
-            if hostname in skip_hosts:
+            if host_name in skip_hosts:
                 continue
-            check_host_permissions(hostname, folder=folder)
-            host = folder[".hosts"][hostname]
-            eff = effective_attributes(host, folder)
-            site_id = eff.get("site")
-            hosts_to_inventorize.append( (site_id, folder[".path"], hostname) )
+            host = folder.host(host_name)
+            host.need_permission("write")
+            hosts_to_inventorize.append( (host.site_id(), folder, host_name) )
 
     # Create a list of items for the progress bar, where we group
     # subsequent hosts that are in the same folder and site
@@ -3556,14 +3543,14 @@ def mode_bulk_inventory(phase):
     hosts_in_this_item = 0
     bulk_size = int(html.var("bulk_size", 10))
 
-    for site_id, folder_path, hostname in hosts_to_inventorize:
-        if not items or (site_id, folder_path) != current_site_and_folder or hosts_in_this_item >= bulk_size:
-            items.append("%s|%s|%s" % (site_id, folder_path, hostname))
+    for site_id, folder, host_name in hosts_to_inventorize:
+        if not items or (site_id, folder) != current_site_and_folder or hosts_in_this_item >= bulk_size:
+            items.append("%s|%s|%s" % (site_id, folder.path(), host_name))
             hosts_in_this_item = 1
         else:
-            items[-1] += ";" + hostname
+            items[-1] += ";" + host_name
             hosts_in_this_item += 1
-        current_site_and_folder = site_id, folder_path
+        current_site_and_folder = site_id, folder
 
 
     if html.var("_start"):
@@ -3590,7 +3577,7 @@ def mode_bulk_inventory(phase):
         # Mode of action
         html.write("<p>")
         if not complete_folder:
-            html.write(_("You have selected <b>%d</b> hosts for bulk discovery. ") % len(hostnames))
+            html.write(_("You have selected <b>%d</b> hosts for bulk discovery. ") % len(hosts_to_inventorize))
         html.write(_("Check_MK service discovery will automatically find and configure "
                      "services to be checked on your hosts."))
         forms.header(_("Bulk Discovery"))
@@ -3668,40 +3655,34 @@ def mode_bulk_edit(phase):
         if html.check_transaction():
             config.need_permission("wato.edit_hosts")
 
+            # TODO: Move permission checking to Host class
             changed_attributes = collect_attributes()
             if "contactgroups" in changed_attributes:
-                 if True != check_folder_permissions(g_folder, "write", False):
-                     raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
-                                             "access to the folder it is contained in."))
+                if not Folder.current().have_permission("write"):
+                    raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                            "access to the folder it is contained in."))
 
-            hostnames = get_hostnames_from_checkboxes()
-            # Check all permissions for doing any edit
-            for hostname in hostnames:
-                check_host_permissions(hostname)
+            for host_name in get_hostnames_from_checkboxes():
+                host = Folder.current().host(host_name)
+                host.update_attributes(changed_attributes)
+                # TODO: call_hook_hosts_changed() is called too often.
+                # Either offer API in class Host for bulk change or
+                # delay saving until end somehow
 
-            for hostname in hostnames:
-                host = g_folder[".hosts"][hostname]
-                mark_affected_sites_dirty(g_folder, hostname)
-                host.update(changed_attributes)
-                mark_affected_sites_dirty(g_folder, hostname)
-                log_pending(AFFECTED, hostname, "bulk-edit", _("Changed attributes of host %s in bulk mode") % hostname)
-            save_folder_and_hosts(g_folder)
-            reload_hosts() # indirect host tag changes
-            call_hook_hosts_changed(g_folder)
             return "folder"
         return
 
-    hostnames = get_hostnames_from_checkboxes()
-    hosts = dict([(hn, g_folder[".hosts"][hn]) for hn in hostnames])
+    host_names = get_hostnames_from_checkboxes()
+    hosts = dict([(host_name, Folder.current().host(host_name)) for host_name in host_names])
 
     html.write("<p>" + _("You have selected <b>%d</b> hosts for bulk edit. You can now change "
-               "host attributes for all selected hosts at once. ") % len(hostnames))
+               "host attributes for all selected hosts at once. ") % len(hosts))
     html.write(_("If a select is set to <i>don't change</i> then currenty not all selected "
     "hosts share the same setting for this attribute. If you leave that selection, all hosts "
     "will keep their individual settings.") + "</p>")
 
     html.begin_form("edit_host", method = "POST")
-    configure_attributes(False, hosts, "bulk", parent = g_folder)
+    configure_attributes(False, hosts, "bulk", parent = Folder.current())
     forms.end()
     html.button("_save", _("Save &amp; Finish"))
     html.hidden_fields()
@@ -17399,11 +17380,11 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []
             num_haveit = 0
-            for hostname, attributes in hosts.items():
-                if attrname in attributes:
+            for host_name, host in hosts.items():
+                if host and host.has_explicit_attribute(attrname):
                     num_haveit += 1
-                    if host[attrname] not in values:
-                        values.append(attributes[attrname])
+                    if host.attribute(attrname) not in values:
+                        values.append(host.attribute(attrname))
 
             # The value of this attribute is unique amongst all hosts if
             # either no host has a value for this attribute, or all have
@@ -17482,9 +17463,11 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             elif for_what == "bulk":
                 active = unique and len(values) > 0
             elif for_what == "folder":
-                active = attrname in attributes
-            else: # "host"
-                active = attrname in attributes
+                active = myself.has_explicit_attribute()
+            elif host: # "host"
+                active = host.has_explicit_attribute()
+            else:
+                active = False
 
             if not new and not attr.editable():
                 if active:
@@ -18400,7 +18383,7 @@ def load_all_hosts(base_folder = None):
     hosts.update(load_hosts(base_folder))
     return hosts
 
-def save_hosts(folder = None):
+def XXX_save_hosts(folder = None):
     # CLEANUP: Replace by Folder class
     if folder == None:
         folder = g_folder
@@ -18439,7 +18422,7 @@ def save_hosts(folder = None):
         cleaned_hosts[hostname] = dict([(k, v) for (k, v) in hosts[hostname].iteritems() if not k.startswith('.') ])
 
         host = cleaned_hosts[hostname]
-        effective = effective_attributes(host, folder)
+        effective = host.effective_attributes()
         ipv4_address   = effective.get("ipaddress")
         ipv6_address   = effective.get("ipv6address")
         snmp_community = effective.get("snmp_community")

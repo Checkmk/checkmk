@@ -243,7 +243,7 @@ def log_commit_pending():
 
 # Base class containing a couple of generic permission checking functions, used
 # for Host and Folder
-class WithPermissions(object):
+class WithPermissionsAndAttributes(object):
     def __init__(self):
         object.__init__(self)
 
@@ -276,6 +276,33 @@ class WithPermissions(object):
             return "%s" % e
 
 
+    # .--------------------------------------------------------------------.
+    # | ATTRIBUTES                                                         |
+    # '--------------------------------------------------------------------'
+
+    def attributes(self):
+        return self._attributes
+
+
+    def attribute(self, attrname, default_value=None):
+        return self.attributes().get(attrname, default_value)
+
+
+    def has_explicit_attribute(self, attrname):
+        return attrname in self._attributes
+
+
+    def effective_attribute(self, attrname, default_value=None):
+        return self.effective_attributes().get(attrname, default_value)
+
+
+    def remove_attribute(self, attrname):
+        del self._attributes[attrname]
+
+
+
+
+
 #.
 #   .--Folder--------------------------------------------------------------.
 #   |                     _____     _     _                                |
@@ -290,7 +317,7 @@ class WithPermissions(object):
 #   '----------------------------------------------------------------------'
 
 
-class Folder(WithPermissions):
+class Folder(WithPermissionsAndAttributes):
     # TODO: Private Methoden von öffentlichen trennen
 
     # .--------------------------------------------------------------------.
@@ -325,7 +352,7 @@ class Folder(WithPermissions):
 
 
     @staticmethod
-    def invalidate_folder_caches():
+    def invalidate_caches():
         html.del_cache("wato_folders")
         html.del_cache("wato_moveto_folder_combo")
 
@@ -361,7 +388,7 @@ class Folder(WithPermissions):
 
 
     def __init__(self, name, folder_path=None, parent_folder=None, title=None, attributes=None):
-        WithPermissions.__init__(self)
+        WithPermissionsAndAttributes.__init__(self)
         self._name = name
         self._parent = parent_folder
         self._subfolders = {}
@@ -670,7 +697,7 @@ class Folder(WithPermissions):
             "lock"            : self._locked,
             "lock_subfolders" : self._locked_subfolders,
         })
-        Folder.invalidate_folder_caches()
+        Folder.invalidate_caches()
 
 
     def ensure_folder_directory(self):
@@ -743,10 +770,6 @@ class Folder(WithPermissions):
             return self.name()
         else:
             return self.parent().path() + "/" + self.name()
-
-
-    def attributes(self):
-        return self._attributes
 
 
     def hosts(self):
@@ -1067,7 +1090,7 @@ class Folder(WithPermissions):
     def delete(self):
         self.mark_hosts_dirty()
         shutil.rmtree(self.filesystem_path())
-        Folder.invalidate_folder_caches()
+        Folder.invalidate_caches()
         log_pending(AFFECTED, self.path(), "delete-folder",
                     _("Deleted folder %s") % self.title_path())
         self.parent().remove_subfolder(self.name())
@@ -1109,13 +1132,13 @@ class Folder(WithPermissions):
         shutil.move(old_filesystem_path, folder.filesystem_path())
         folder.rewrite_hosts_files() # fixes changed inheritance
         folder.mark_hosts_dirty()
-        Folder.invalidate_folder_caches()
+        Folder.invalidate_caches()
         log_pending(AFFECTED, folder.path(), "move-folder",
             _("Moved folder %s to %s") % (folder.title(), target_folder.path()))
 
 
     def create_host(self, host_name, attributes, cluster_nodes):
-        self.create_hosts(self, [(host_name, attributes, cluster_nodes)])
+        self.create_hosts([(host_name, attributes, cluster_nodes)])
 
 
     def create_hosts(self, entries):
@@ -1216,12 +1239,12 @@ class Folder(WithPermissions):
 
     # CLEANUP: sync=False is just needed for discovery. Do we
     # really need this?
-    def mark_hosts_dirty(self, sync=True, restart=True):
+    def mark_hosts_dirty(self, need_sync=True, need_restart=True):
         for site_id in self._find_host_sites():
             changes = {}
-            if sync and not config.site_is_local(site_id):
+            if need_sync and not config.site_is_local(site_id):
                 changes["need_sync"] = True
-            if restart:
+            if need_restart: # Is this parameter used at all?
                 changes["need_restart"] = True
             update_replication_status(site_id, changes)
 
@@ -1347,7 +1370,7 @@ class Folder(WithPermissions):
 #   |  contained in Folders.                                               |
 #   '----------------------------------------------------------------------'
 
-class Host(WithPermissions):
+class Host(WithPermissionsAndAttributes):
     # .--------------------------------------------------------------------.
     # | STATIC METHODS                                                     |
     # '--------------------------------------------------------------------'
@@ -1362,7 +1385,7 @@ class Host(WithPermissions):
     # '--------------------------------------------------------------------'
 
     def __init__(self, folder, host_name, attributes, cluster_nodes):
-        WithPermissions.__init__(self)
+        WithPermissionsAndAttributes.__init__(self)
         self._folder = folder
         self._name = host_name
         self._attributes = attributes
@@ -1377,10 +1400,6 @@ class Host(WithPermissions):
     # | ELEMENT ACCESS                                                     |
     # '--------------------------------------------------------------------'
 
-    def discovery_failed(self):
-        return self.attributes().get("inventory_failed")
-
-
     def name(self):
         return self._name
 
@@ -1394,8 +1413,12 @@ class Host(WithPermissions):
         return self._folder
 
 
-    def is_locked(self):
+    def locked(self):
         return self.folder().locked_hosts()
+
+
+    def need_unlocked(self):
+        return self.folder().need_unlocked_hosts()
 
 
     def is_cluster(self):
@@ -1408,32 +1431,6 @@ class Host(WithPermissions):
 
     def site_id(self):
         return self._attributes.get("site") or self.folder().site_id()
-
-
-    def attributes(self):
-        return self._attributes
-
-
-    def attribute(self, attrname, default_value=None):
-        return self.attributes().get(attrname, default_value)
-
-
-    def has_explicit_attribute(self, attrname):
-        return attrname in self._attributes
-
-
-    def effective_attributes(self):
-        effective = self.folder().effective_attributes()
-        effective.update(self.attributes())
-        return effective
-
-
-    def effective_attribute(self, attrname, default_value=None):
-        return self.effective_attributes().get(attrname, default_value)
-
-
-    def remove_attribute(self, attrname):
-        del self._attributes[attrname]
 
 
     def tags(self):
@@ -1454,8 +1451,8 @@ class Host(WithPermissions):
         return effective.get(attribute_name)
 
 
-    def inventory_failed(self):
-        return self._attributes.get("inventory_failed", False)
+    def discovery_failed(self):
+        return self.attributes().get("inventory_failed", False)
 
 
     def validation_errors(self):
@@ -1470,6 +1467,12 @@ class Host(WithPermissions):
             return errors
         else:
             return []
+
+
+    def effective_attributes(self):
+        effective = self.folder().effective_attributes()
+        effective.update(self.attributes())
+        return effective
 
 
     def groups(self):
@@ -1559,9 +1562,19 @@ class Host(WithPermissions):
 
 
     def clear_discovery_failed(self):
-        if "inventory_failed" in self.attributes():
-            del self._attributes["inventory_failed"]
-            self.folder().save_hosts()
+        self.set_discovery_failed(False)
+
+
+    def set_discovery_failed(self, how=True):
+        self.need_unlocked()
+        if how:
+            if not self._attributes.get("inventory_failed"):
+                self._attributes["inventory_failed"] = True
+                self.folder().save_hosts()
+        else:
+            if self._attributes.get("inventory_failed"):
+                del self._attributes["inventory_failed"]
+                self.folder().save_hosts()
 
 
     def mark_dirty(self, need_sync=True):
@@ -2055,30 +2068,30 @@ def some_host_hasnt_set(folder, attrname):
 
     return False
 
-# Compute effective (explicit and inherited) attributes
-# for a host. This returns a dictionary with a value for
-# each host attribute
-def effective_attributes(host, folder):
-    if host:
-        chain = [ host ]
-    else:
-        chain = [ ]
-
-    while folder:
-        chain.append(folder.get("attributes", {}))
-        folder = folder.get(".parent")
-
-    eff = {}
-    for a in chain[::-1]:
-        eff.update(a)
-
-    # now add default values of attributes for all missing values
-    for attr, topic in all_host_attributes():
-        attrname = attr.name()
-        if attrname not in eff:
-            eff.setdefault(attrname, attr.default_value())
-
-    return eff
+#### # Compute effective (explicit and inherited) attributes
+#### # for a host. This returns a dictionary with a value for
+#### # each host attribute
+#### def effective_attributes(host, folder):
+####     if host:
+####         chain = [ host ]
+####     else:
+####         chain = [ ]
+#### 
+####     while folder:
+####         chain.append(folder.get("attributes", {}))
+####         folder = folder.get(".parent")
+#### 
+####     eff = {}
+####     for a in chain[::-1]:
+####         eff.update(a)
+#### 
+####     # now add default values of attributes for all missing values
+####     for attr, topic in all_host_attributes():
+####         attrname = attr.name()
+####         if attrname not in eff:
+####             eff.setdefault(attrname, attr.default_value())
+#### 
+####     return eff
 
 # Global datastructure holding all attributes (in a defined order)
 # as pairs of (attr, topic). Topic is the title under which the

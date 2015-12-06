@@ -608,8 +608,6 @@ class Folder(WithPermissions):
         out.write("host_attributes.update(\n%s)\n" % pprint.pformat(cleaned_hosts))
 
 
-
-
     # Remove dynamic tags like "wato" and the folder path.
     def cleanup_host_tags(self, tags):
         return [ tag for tag in tags if
@@ -703,11 +701,15 @@ class Folder(WithPermissions):
 
 
     def wato_info_path(self):
-        return self.directory_path() + "/.wato"
+        return self.filesystem_path() + "/.wato"
 
 
     def hosts_file_path(self):
-        return self.directory_path() + "/hosts.mk"
+        return self.filesystem_path() + "/hosts.mk"
+
+
+    def rules_file_path(self):
+        return self.filesystem_path() + "/rules.mk"
 
 
     def add_to_dictionary(self, dictionary):
@@ -729,7 +731,7 @@ class Folder(WithPermissions):
         return self._title
 
 
-    def directory_path(self):
+    def filesystem_path(self):
         return (wato_root_dir + self.path()).rstrip("/")
 
 
@@ -740,10 +742,6 @@ class Folder(WithPermissions):
             return self.name()
         else:
             return self.parent().path() + "/" + self.name()
-
-
-    def filesystem_path(self):
-        return wato_root_dir + self.path()
 
 
     def attributes(self):
@@ -831,6 +829,18 @@ class Folder(WithPermissions):
     def subfolder_choices(self):
         return [ (subfolder.path(), subfolder.title())
                  for subfolder in self.subfolders().values() ]
+
+
+    def recursive_subfolder_choices(self, current_depth=0):
+        if current_depth:
+            title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 "
+        else:
+            title_prefix = ""
+        sel = [ (self.path(), HTML(title_prefix + html.attrencode(self.title()))) ]
+
+        for subfolder in self.subfolders_sorted_by_title():
+            sel += subfolder.recursive_subfolder_choices(current_depth + 1)
+        return sel
 
 
     def subfolders_sorted_by_title(self):
@@ -1083,23 +1093,15 @@ class Folder(WithPermissions):
 
     def move_subfolder_to(self, folder, target_folder):
         folder.need_recursive_write_permission() # Avoid auth problems after having made changes
-
         folder.mark_hosts_dirty()
         old_filesystem_path = folder.filesystem_path()
-
-        # First change data structures
         del self._subfolders[folder.name()]
         folder._parent = target_folder
         target_folder._subfolders[folder.name()] = folder
-
-        # Now make disk situation reflect the change
         shutil.move(old_filesystem_path, folder.filesystem_path())
-
-        # Hosts now inherit attributes via a different path
-        folder.rewrite_hosts_files()
-
-        # site attribute of hosts might have changed
+        folder.rewrite_hosts_files() # fixes changed inheritance
         folder.mark_hosts_dirty()
+        Folder.invalidate_folder_caches()
         log_pending(AFFECTED, folder.path(), "move-folder",
             _("Moved folder %s to %s") % (folder.title(), target_folder.path()))
 
@@ -1261,8 +1263,10 @@ class Folder(WithPermissions):
             html.show_info(lock_message)
 
 
-    def show_breadcrump(self, link_to_last=False, keepvarnames=["mode"]):
+    def show_breadcrump(self, link_to_folder=False, keepvarnames=["mode"]):
         keepvars = [ (name, html.var(name)) for name in keepvarnames ]
+        if link_to_folder:
+            keepvars.append(("mode", "folder"))
 
         def render_component(folder):
             return '<a href="%s">%s</a>' % (html.makeuri_contextless([("folder", folder.path())] + keepvars), folder.title())
@@ -1279,7 +1283,7 @@ class Folder(WithPermissions):
             parts.append(render_component(folder))
 
         # The current folder (with link or without link)
-        if link_to_last:
+        if link_to_folder:
             parts.append(render_component(self))
         else:
             parts.append(self.title())
@@ -1296,12 +1300,12 @@ class Folder(WithPermissions):
             html.write('<div class=content>%s</div>\n' % part)
 
             breadcrump_element_end(num == len(parts)-1
-                      and not (self.has_subfolders() and not link_to_last)
+                      and not (self.has_subfolders() and not link_to_folder)
                       and "end" or "")
             num += 1
 
         # Render the current folder when having subfolders
-        if self.has_subfolders() and not link_to_last:
+        if self.has_subfolders() and not link_to_folder:
             breadcrump_element_start(z_index = 100 + num)
             html.write("<div class=content><form method=GET name=folderpath>")
             html.sorted_select(
@@ -1395,6 +1399,14 @@ class Host(WithPermissions):
 
     def attributes(self):
         return self._attributes
+
+    
+    def attribute(self, attrname):
+        return self.attributes()[attrname]
+
+
+    def has_explicit_attribute(self, attrname):
+        return attrname in self._attributes
 
 
     def effective_attributes(self):

@@ -2217,8 +2217,7 @@ def render_renaming_actions(action_counts):
 
 def mode_object_parameters(phase):
     hostname = html.var("host") # may be empty in new/clone mode
-    host = g_folder[".hosts"][hostname]
-    is_cluster = ".nodes" in host
+    host = Folder.current().host(hostname)
     service = html.var("service")
 
     if hostname:
@@ -2242,7 +2241,7 @@ def mode_object_parameters(phase):
             host_status_button(hostname, "hoststatus")
         html.context_button(prefix + _("Properties"), folder_link([("mode", "edit_host"), ("host", hostname)]), "edit")
         html.context_button(_("Services"), folder_link([("mode", "inventory"), ("host", hostname)]), "services")
-        if not is_cluster:
+        if not host.is_cluster():
             html.context_button(prefix + _("Diagnostic"),
               folder_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
         return
@@ -2406,8 +2405,8 @@ def mode_object_parameters(phase):
 
             output_analysed_ruleset(all_rulesets, rulespec, hostname, service)
 
-
     forms.end()
+
 
 PARAMETERS_UNKNOWN = []
 PARAMETERS_OMIT = []
@@ -2417,7 +2416,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         return folder_link([
             ('mode', 'edit_rule'),
             ('varname', varname),
-            ('rule_folder', rule_folder[".path"]),
+            ('rule_folder', rule_folder.path()),
             ('rulenr', rule_nr),
             ('host', hostname),
             ('item', service and mk_repr(service) or '')])
@@ -2435,7 +2434,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
     if len(rules) == 1:
         rule_folder, rule_nr = rules[0]
         url = rule_url(rules[0])
-        html.write('<a href="%s">%s</a>' % (rule_url(rules[0]), _("Rule %d in %s") % (rule_nr + 1, rule_folder["title"])))
+        html.write('<a href="%s">%s</a>' % (rule_url(rules[0]), _("Rule %d in %s") % (rule_nr + 1, rule_folder.title())))
     elif len(rules) > 1:
         html.write('<a href="%s">%d %s</a>' % (url, len(rules), _("Rules")))
     else:
@@ -2526,7 +2525,7 @@ def analyse_ruleset(rulespec, ruleset, hostname, service):
         if rule_options.get("disabled"):
             continue
 
-        if True != rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, service):
+        if True != rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, folder, Folder.current(), hostname, service):
             continue
 
         if rulespec["match"] == "all":
@@ -2732,6 +2731,7 @@ def mode_diag_host(phase):
     html.write('</td></tr></table>')
     html.write('</div>')
 
+
 def ajax_diag_host():
     try:
         prepare_folder_info()
@@ -2743,11 +2743,11 @@ def ajax_diag_host():
         if not hostname:
             raise MKGeneralException(_('The hostname is missing.'))
 
-        host = g_folder[".hosts"].get(hostname)
+        host = Host.host(hostname)
 
         if not host:
             raise MKGeneralException(_('The given host does not exist.'))
-        if ".nodes" in host:
+        if host.is_cluster():
             raise MKGeneralException(_('This view does not support cluster hosts.'))
 
         _test = html.var('_test')
@@ -2765,7 +2765,7 @@ def ajax_diag_host():
             html.var('snmp_retries'),
             html.var('datasource_program'),
         ]
-        result = check_mk_automation(host[".siteid"], "diag-host", [hostname, _test] + args)
+        result = check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
         # API is defined as follows: Two data fields, separated by space.
         # First is the state: 0 or 1, 0 means success, 1 means failed.
         # Second is treated as text output
@@ -3104,7 +3104,7 @@ def mode_search(phase):
     elif phase == "action":
         return "search_results"
 
-    Folder.current().render_breadcrump()
+    Folder.current().show_breadcrump()
 
     ## # Show search form
     html.begin_form("edit_host", method = "POST")
@@ -3119,7 +3119,7 @@ def mode_search(phase):
     # Button
     forms.end()
     html.button("_global", _("Search globally"), "submit")
-    html.button("_local", _("Search in %s") % g_folder["title"], "submit")
+    html.button("_local", _("Search in %s") % Folder.current().title(), "submit")
     html.hidden_fields()
     html.end_form()
 
@@ -3140,22 +3140,20 @@ def mode_search_results(phase):
     crit.update(collect_attributes(do_validate = False))
 
     if html.has_var("_local"):
-        folder = g_folder
+        folder = Folder.current()
     else:
-        folder = g_root_folder
+        folder = Folder.root_folder()
 
     if not search_hosts_in_folders(folder, crit):
         html.message(_("No matching hosts found."))
-
-
 
 
 def search_hosts_in_folders(folder, crit):
     num_found = 0
 
     num_found = search_hosts_in_folder(folder, crit)
-    for f in folder[".folders"].values():
-        num_found += search_hosts_in_folders(f, crit)
+    for subfolder in folder.subfolders().values():
+        num_found += search_hosts_in_folders(subfolder, crit)
 
     return num_found
 
@@ -3163,16 +3161,15 @@ def search_hosts_in_folders(folder, crit):
 def search_hosts_in_folder(folder, crit):
     found = []
 
-    if check_folder_permissions(folder, "read", exception=False) != True:
+    if not folder.may("read"):
         return 0
 
-    hosts = load_hosts(folder)
-    for hostname, host in hosts.items():
+    for hostname, host in folder.hosts().items():
         if crit[".name"] and crit[".name"].lower() not in hostname.lower():
             continue
 
         # Compute inheritance
-        effective = effective_attributes(host, folder)
+        effective = host.effective_attributes()
 
         # Check attributes
         dont_match = False
@@ -3188,7 +3185,7 @@ def search_hosts_in_folder(folder, crit):
         found.append((hostname, host, effective))
 
     if found:
-        render_folder_path(folder, True)
+        folder.show_breadcrump(link_to_folder=True)
         found.sort(cmp = lambda a,b: cmp(num_split(a[0]), num_split(b[0])))
 
         table.begin("search_hosts", "");
@@ -3199,8 +3196,8 @@ def search_hosts_in_folder(folder, crit):
             for attr, topic in all_host_attributes():
                 attrname = attr.name()
                 if attr.show_in_table():
-                    if attrname in host:
-                        tdclass, content = attr.paint(host[attrname], hostname)
+                    if host.has_explicit_attribute(attrname):
+                        tdclass, content = attr.paint(host.attribute(attrname), hostname)
                     else:
                         tdclass, content = attr.paint(effective[attrname], hostname)
                         tdclass += " inherited"
@@ -7174,7 +7171,7 @@ def save_notification_rules(rules):
 
 
 def FolderChoice(**kwargs):
-    kwargs["choices"] = folder_selection(g_root_folder)
+    kwargs["choices"] = Folder.root_folder().recursive_subfolder_choices()
     kwargs.setdefault("title", _("Folder"))
     return DropdownChoice(**kwargs)
 
@@ -12220,15 +12217,18 @@ def search_form(title, mode=None):
     html.end_form()
     html.write('<br>')
 
+
 def rule_is_ineffective(rule, rule_folder, rulespec, hosts):
     value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
     found_match = False
     for (hostname, hostvalues) in hosts.items():
+        # TODO: hostvalue.folder -> Folder() object
         reason = rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, rule_folder, hostvalues[".folder"], hostname, NO_ITEM)
         if reason == True:
             found_match = True
             break
     return not found_match
+
 
 def mode_ineffective_rules(phase):
     if phase == "title":
@@ -12383,7 +12383,7 @@ def mode_rulesets(phase, group=None):
         return
 
     if not only_host:
-        render_folder_path(keepvarnames = ["mode", "local", "group"])
+        Folder.current().show_breadcrump(keepvarnames = ["mode", "local", "group"])
 
     if search != None or group == 'static':
         search_form(_("Search for rules: "), group != "static" and "rulesets")
@@ -12533,7 +12533,7 @@ def create_new_rule_form(rulespec, hostname = None, item = None, varname = None)
     html.button("_new_rule", _("Create rule in folder: "))
     html.write('</td><td>')
 
-    html.select("rule_folder", folder_selection(g_root_folder), html.var('folder'))
+    html.select("rule_folder", Folder.root_folder().recursive_subfolder_choices(), html.var('folder'))
     html.write('</td></tr></table>\n')
     html.hidden_field("varname", varname)
     html.hidden_field("mode", "new_rule")
@@ -12739,7 +12739,7 @@ def mode_edit_ruleset(phase):
                     reason = _("This rule is disabled")
                 else:
                     reason = rule_matches_host_and_item(
-                        rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
+                        rulespec, tag_specs, host_list, item_list, folder, Folder.current(), hostname, item)
 
                 # Handle case where dict is constructed from rules
                 if reason == True and rulespec["match"] == "dict":
@@ -12857,19 +12857,6 @@ def show_rule_in_table(rulespec, tag_specs, host_list, item_list, varname, value
     html.write(html.attrencode(desc))
 
 
-def folder_selection(folder, depth=0):
-    if depth:
-        title_prefix = (u"\u00a0" * 6 * depth) + u"\u2514\u2500 "
-    else:
-        title_prefix = ""
-    sel = [ (folder[".path"], HTML(title_prefix + html.attrencode(folder["title"]))) ]
-
-    subfolders = sorted(folder[".folders"].values(), cmp = lambda x,y : cmp(x.get("title").lower(), y.get("title").lower()))
-    for subfolder in subfolders:
-        sel += folder_selection(subfolder, depth + 1)
-    return sel
-
-
 def create_rule(rulespec, hostname=None, item=NO_ITEM):
     new_rule = []
     valuespec = rulespec["valuespec"]
@@ -12953,7 +12940,7 @@ def parse_rule(ruleset, orig_rule):
 def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
                                rule_folder, host_folder, hostname, item):
     reasons = []
-    host = host_folder[".hosts"][hostname]
+    host = host_folder.host(hostname)
     hostname_match = False
     negate = False
     regex_match = False
@@ -12995,7 +12982,7 @@ def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
         elif tag[0] == '!' and tag[1:] in host[".tags"]:
             reasons.append(_("The host has the tag %s" % tag))
 
-    if not is_indirect_parent_of(host_folder, rule_folder):
+    if not host_folder.is_transitive_parent_of(rule_folder):
         reasons.append(_("The rule does not apply to the folder of the host."))
 
     # Check items
@@ -13013,11 +13000,6 @@ def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
         return True
     else:
         return " ".join(reasons)
-
-def is_indirect_parent_of(pfolder, sfolder):
-    return pfolder == sfolder or \
-      ('.parent' in pfolder and
-      is_indirect_parent_of(pfolder[".parent"], sfolder))
 
 
 def construct_rule(ruleset, value, tag_specs, host_list, item_list, rule_options):
@@ -13219,7 +13201,7 @@ def mode_edit_rule(phase, new = False):
         html.context_button(_("Abort"), backurl, "abort")
         return
 
-    folder   = html.has_var("_new_host_rule") and g_folder or g_folders[html.var("rule_folder")]
+    folder   = html.has_var("_new_host_rule") and Folder.current() or Folder.folder(html.var("rule_folder"))
     rulesets = load_rulesets(folder)
     rules    = rulesets[varname]
 
@@ -13342,7 +13324,7 @@ def mode_edit_rule(phase, new = False):
 
     # Rule folder
     forms.section(_("Folder"))
-    html.select("new_rule_folder", folder_selection(g_root_folder), folder[".path"])
+    html.select("new_rule_folder", Folder.root_folder().recursive_subfolder_choices(), folder.path())
     html.help(_("The rule is only applied to hosts directly in or below this folder."))
 
     # Host tags
@@ -13630,18 +13612,14 @@ def save_rule(out, folder, rulespec, rule):
 
 
 def load_rulesets(folder):
-    # TODO: folder berücksichtigen
-    if folder[".path"]:
-        path = wato_root_dir + folder[".path"] + "/" + "rules.mk"
-    else:
-        path = wato_root_dir + "rules.mk"
+    path = folder.rules_file_path()
 
     vars = {
         "ALL_HOSTS"      : ALL_HOSTS,
         "ALL_SERVICES"   : [ "" ],
         "NEGATE"         : NEGATE,
-        "FOLDER_PATH"    : folder[".path"],
-        "FILE_PATH"      : folder[".path"] + "/hosts.mk",
+        "FOLDER_PATH"    : folder.path(),
+        "FILE_PATH"      : folder.path() + "/hosts.mk",
     }
     # Prepare empty rulesets so that rules.mk has something to
     # append to
@@ -13689,7 +13667,7 @@ def load_rulesets(folder):
 # has the rules' varnames as keys and a list of (folder, rule)
 # as values.
 def load_rulesets_recursively(folder, all_rulesets, only_varname=None):
-    for subfolder in folder[".folders"].values():
+    for subfolder in folder.subfolders().values():
         load_rulesets_recursively(subfolder, all_rulesets, only_varname)
 
     rs = load_rulesets(folder)
@@ -13700,7 +13678,7 @@ def load_rulesets_recursively(folder, all_rulesets, only_varname=None):
 
 def load_all_rulesets(only_varname=None):
     all_rulesets = {}
-    load_rulesets_recursively(g_root_folder, all_rulesets, only_varname)
+    load_rulesets_recursively(Folder.root_folder(), all_rulesets, only_varname)
     return all_rulesets
 
 
@@ -14734,7 +14712,7 @@ def mode_pattern_editor(phase):
         if hostname:
             # If hostname (and maybe filename) try match it
             reason = rule_matches_host_and_item(
-                          rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
+                          rulespec, tag_specs, host_list, item_list, folder, Folder.current(), hostname, item)
         elif item:
             # If only a filename is given
             reason = False
@@ -14821,7 +14799,7 @@ def mode_pattern_editor(phase):
             ("rulenr", rel_rulenr),
             ("host", hostname),
             ("item", mk_repr(item)),
-            ("rule_folder", folder[".path"])])
+            ("rule_folder", folder.path())])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
         html.write('</td></tr>\n')
 
@@ -18265,15 +18243,6 @@ def get_folder_permissions_of_users(users):
         if perms:
             permissions[username] = perms
     return permissions
-
-
-def folder_is_transitive_parent_of(folder, child):
-    if folder == child:
-        return True
-    elif ".parent" in child:
-        return folder_is_transitive_parent_of(folder, child[".parent"])
-    else:
-        return False
 
 
 def check_host_permissions(hostname, exception=True, folder=None):

@@ -1258,7 +1258,7 @@ def check_wato_foldername(htmlvarname, name, just_name = False):
 
     if not name:
         raise MKUserError(htmlvarname, _("Please specify a name."))
-        
+
     if not re.match("^[-a-z0-9A-Z_]*$", name):
         raise MKUserError(htmlvarname, _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
@@ -3220,7 +3220,7 @@ def search_hosts_in_folder(folder, crit):
 #   | is not yet coded, but functions for dealing with the imported hosts. |
 #   '----------------------------------------------------------------------'
 
-def move_to_imported_folders(hosts):
+def move_to_imported_folders(host_names_to_move):
     c = wato_confirm(
               _("Confirm moving hosts"),
               _('You are going to move the selected hosts to folders '
@@ -3233,26 +3233,25 @@ def move_to_imported_folders(hosts):
         return None # browser reload
 
     # Create groups of hosts with the same target folder
-    targets = {}
-    for hostname in hosts:
-        host = g_folder[".hosts"][hostname]
-        effective = effective_attributes(host, g_folder)
-        imported_folder = effective.get('imported_folder')
-        if imported_folder == None:
+    target_folder_names = {}
+    for host_name in host_names_to_move:
+        host = Folder.current().host(host_name)
+        imported_folder_name = host.attribute('imported_folder')
+        if imported_folder_name == None:
             continue
-        targets.setdefault(imported_folder, []).append(hostname)
+        target_folder_names.setdefault(imported_folder_name, []).append(host_name)
 
         # Remove target folder information, now that the hosts are
         # at their target position.
-        del host['imported_folder']
+        host.remove_attribute('imported_folder')
 
     # Now handle each target folder
-    for imported_folder, hostnames in targets.items():
+    for imported_folder, host_names in target_folder_names.items():
         # Next problem: The folder path in imported_folder refers
         # to the Alias of the folders, not to the internal file
         # name. And we need to create folders not yet existing.
         target_folder = create_target_folder_from_aliaspath(imported_folder)
-        Folder.current().move_hosts(hostnames, target_folder)
+        Folder.current().move_hosts(host_names, target_folder)
 
     return None, _("Successfully moved hosts to their original folder destinations.")
 
@@ -3262,43 +3261,19 @@ def create_target_folder_from_aliaspath(aliaspath):
     # An empty path is interpreted as root path. The actual file
     # name is the host list with the name "Hosts".
     if aliaspath == "" or aliaspath == "/":
-        folder = g_root_folder
+        folder = Folder.root_folder()
     else:
         parts = aliaspath.strip("/").split("/")
-        folder = g_root_folder
+        folder = Folder.root_folder()
         while len(parts) > 0:
             # Look in current folder for subfolder with the target name
-            for name, f in folder.get(".folders", {}).items():
-                if f["title"] == parts[0]:
-                    folder = f
-                    parts = parts[1:]
-                    break
-            else: # not found. Create this folder
+            subfolder = folder.subfolder_by_title(parts[0])
+            if subfolder:
+                folder = subfolder
+            else:
                 name = create_wato_foldername(parts[0], folder)
-                new_path = folder[".path"]
-                if new_path:
-                    new_path += "/"
-                new_path += name
-
-                new_folder = {
-                    ".name"      : name,
-                    ".path"      : new_path,
-                    "title"      : parts[0],
-                    "attributes" : {},
-                    ".folders"   : {},
-                    ".files"     : {},
-                    ".parent"    : folder,
-                }
-
-                if '.siteid' in folder:
-                    new_folder['.siteid'] = folder[".siteid"]
-
-                folder[".folders"][name] = new_folder
-                g_folders[new_path] = new_folder
-                folder = new_folder
-                parts = parts[1:]
-                save_folder(folder) # make sure, directory is created
-                reload_folder(folder)
+                folder = folder.create_subfolder(name, parts[0], {})
+            parts = parts[1:]
 
     return folder
 

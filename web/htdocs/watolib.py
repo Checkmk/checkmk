@@ -383,6 +383,7 @@ class Folder(WithPermissions):
         self._title = title
         self._attributes = attributes
         self._locked = False
+        self._locked_hosts = False
         self._locked_subfolders = False
 
 
@@ -818,6 +819,12 @@ class Folder(WithPermissions):
         return self._subfolders[name]
 
 
+    def subfolder_by_title(self, title):
+        for subfolder in self.subfolders().values():
+            if subfolder.title() == title:
+                return subfolder
+
+
     def has_subfolder(self, name):
         return name in self._subfolders
 
@@ -1054,6 +1061,7 @@ class Folder(WithPermissions):
         self._subfolders[name] = new_subfolder
         log_pending(AFFECTED, new_subfolder.path(), "new-folder", _("Created new folder %s") % new_subfolder.title())
         call_hook_folder_created(new_subfolder)
+        return new_subfolder
 
 
     def delete(self):
@@ -1178,14 +1186,14 @@ class Folder(WithPermissions):
         self.load_hosts_on_demand()
         self._hosts[host.name()] = host
         host._folder = self
-        self._num_hosts += 1
+        self._num_hosts = len(self._hosts)
 
 
     def _remove_host(self, host):
         self.load_hosts_on_demand()
         del self._hosts[host.name()]
         host._folder = None
-        self._num_hosts -= 1
+        self._num_hosts = len(self._hosts)
 
 
     def _add_host_sites_to_set(self, site_ids):
@@ -1400,9 +1408,9 @@ class Host(WithPermissions):
     def attributes(self):
         return self._attributes
 
-    
-    def attribute(self, attrname):
-        return self.attributes()[attrname]
+
+    def attribute(self, attrname, default_value=None):
+        return self.attributes().get(attrname, default_value)
 
 
     def has_explicit_attribute(self, attrname):
@@ -1413,6 +1421,14 @@ class Host(WithPermissions):
         effective = self.folder().effective_attributes()
         effective.update(self.attributes())
         return effective
+
+
+    def effective_attribute(self, attrname, default_value=None):
+        return self.effective_attributes().get(attrname, default_value)
+
+
+    def remove_attribute(self, attrname):
+        del self._attributes[attrname]
 
 
     def tags(self):

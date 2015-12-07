@@ -81,12 +81,14 @@ def foreign_changes():
     return changes
 
 
+# linkinfo identifies the object operated on. It can be a Host or a Folder
+# or a text.
 def log_entry(linkinfo, action, message, logfilename, user_id = None):
     message = make_utf8(message).strip()
 
     # linkinfo is either a Folder, or a Host or a hostname or None
     if isinstance(linkinfo, Folder):
-        link = linkinfo.path()
+        link = linkinfo.path() + ":"
     elif isinstance(linkinfo, Host):
         link = linkinfo.folder().path() + ":" + linkinfo.name()
     elif linkinfo == None:
@@ -121,6 +123,7 @@ def log_audit(linkinfo, what, message, user_id = None):
 #                sites have already been marked for restart. Do nothing here.
 #                In non-distributed mode mark for restart
 def log_pending(status, linkinfo, what, message, user_id = None):
+
     log_audit(linkinfo, what, message, user_id)
     need_sidebar_reload()
 
@@ -344,6 +347,11 @@ class Folder(WithPermissionsAndAttributes):
             return Folder.all_folders()[folder_path]
         else:
             raise MKGeneralException("No WATO folder %s." % folder_path)
+
+
+    @staticmethod
+    def folder_exists(folder_path):
+        return os.path.exists(wato_root_dir + folder_path)
 
 
     @staticmethod
@@ -1084,7 +1092,7 @@ class Folder(WithPermissionsAndAttributes):
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
         new_subfolder.save()
         self._subfolders[name] = new_subfolder
-        log_pending(AFFECTED, new_subfolder.path(), "new-folder", _("Created new folder %s") % new_subfolder.title())
+        log_pending(AFFECTED, new_subfolder, "new-folder", _("Created new folder %s") % new_subfolder.title())
         call_hook_folder_created(new_subfolder)
         return new_subfolder
 
@@ -1093,8 +1101,7 @@ class Folder(WithPermissionsAndAttributes):
         self.mark_hosts_dirty()
         shutil.rmtree(self.filesystem_path())
         Folder.invalidate_caches()
-        log_pending(AFFECTED, self.path(), "delete-folder",
-                    _("Deleted folder %s") % self.title_path())
+        log_pending(AFFECTED, self, "delete-folder", _("Deleted folder %s") % self.title_path())
         self.parent().remove_subfolder(self.name())
         call_hook_folder_deleted(self)
 
@@ -1117,7 +1124,7 @@ class Folder(WithPermissionsAndAttributes):
         self.rewrite_hosts_files()
 
         self.mark_hosts_dirty()
-        log_pending(AFFECTED, self.path(), "edit-folder", _("Edited properties of folder %s") % self.title())
+        log_pending(AFFECTED, self, "edit-folder", _("Edited properties of folder %s") % self.title())
 
 
     def remove_subfolder(self, name):
@@ -1135,7 +1142,7 @@ class Folder(WithPermissionsAndAttributes):
         folder.rewrite_hosts_files() # fixes changed inheritance
         folder.mark_hosts_dirty()
         Folder.invalidate_caches()
-        log_pending(AFFECTED, folder.path(), "move-folder",
+        log_pending(AFFECTED, folder, "move-folder",
             _("Moved folder %s to %s") % (folder.title(), target_folder.path()))
 
 
@@ -1152,7 +1159,7 @@ class Folder(WithPermissionsAndAttributes):
             self._hosts[host_name] = host
             self._num_hosts = len(self._hosts)
             host.mark_dirty()
-            log_pending(AFFECTED, host_name, "create-host", _("Created new host %s.") % host_name)
+            log_pending(AFFECTED, host, "create-host", _("Created new host %s.") % host_name)
         self.save() # Update num_hosts
         self.save_hosts()
 
@@ -1166,7 +1173,7 @@ class Folder(WithPermissionsAndAttributes):
             host.mark_dirty()
             del self._hosts[host_name]
             self._num_hosts = len(self._hosts)
-            log_pending(AFFECTED, host_name, "delete-host", _("Deleted host %s") % host_name)
+            log_pending(AFFECTED, host, "delete-host", _("Deleted host %s") % host_name)
 
         self.save() # Update num_hosts
         self.save_hosts()
@@ -1191,7 +1198,7 @@ class Folder(WithPermissionsAndAttributes):
             self._remove_host(host)
             target_folder._add_host(host)
             host.mark_dirty()
-            log_pending(AFFECTED, host_name, "move-host", _("Moved host from %s to %s") %
+            log_pending(AFFECTED, host, "move-host", _("Moved host from %s to %s") %
                 (self.path(), target_folder.path()))
 
         self.save() # num_hosts has changed
@@ -1558,7 +1565,7 @@ class Host(WithPermissionsAndAttributes):
         self._cluster_nodes = cluster_nodes
         self.mark_dirty()
         self.folder().save_hosts()
-        log_pending(AFFECTED, self.name(), "edit-host", _("Modified host %s.") % self.name())
+        log_pending(AFFECTED, self, "edit-host", _("Modified host %s.") % self.name())
 
 
     def update_attributes(self, changed_attributes):
@@ -1575,7 +1582,7 @@ class Host(WithPermissionsAndAttributes):
                 del self._attributes[attrname]
         self.mark_dirty()
         self.folder().save_hosts()
-        log_pending(AFFECTED, self.name(), "edit-host", _("Removed explicit attributes of host %s.") % self.name())
+        log_pending(AFFECTED, self, "edit-host", _("Removed explicit attributes of host %s.") % self.name())
 
 
     def rename(self, new_name):

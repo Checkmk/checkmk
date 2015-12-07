@@ -4650,28 +4650,29 @@ def clear_audit_log_after_confirm():
     else:
         return None # browser reload
 
-def render_linkinfo(linkinfo):
+
+def render_logfile_linkinfo(linkinfo):
     if ':' in linkinfo: # folder:host
-        path, hostname = linkinfo.split(':', 1)
-        if path in g_folders:
-            folder = g_folders[path]
-            if hostname:
-                hosts = load_hosts(folder)
-                if hostname in hosts:
-                    url = html.makeuri_contextless([("mode", "edit_host"),
-                              ("folder", path), ("host", hostname)])
-                    title = hostname
+        path, host_name = linkinfo.split(':', 1)
+        if Folder.folder_exists(path):
+            folder = Folder.folder(path)
+            if host_name:
+                if folder.has_host(host_name):
+                    host = folder.host(host_name)
+                    url = host.edit_url()
+                    title = host_name
                 else:
-                    return hostname
+                    return host_name
             else: # only folder
-                url = html.makeuri_contextless([("mode", "folder"), ("folder", path)])
-                title = g_folders[path]["title"]
+                url = folder.url()
+                title = folder.title()
         else:
             return linkinfo
     else:
         return ""
 
     return '<a href="%s">%s</a>' % (url, title)
+
 
 def get_timerange(t):
     st    = time.localtime(int(t))
@@ -4789,7 +4790,7 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
         even = even == "even" and "odd" or "even"
         hilite = hilite_others and user != '-' and config.user_id != user
         htmlcode += '<tr class="data %s%d">' % (even, hilite and 2 or 0)
-        htmlcode += '<td class=nobreak>%s</td>' % render_linkinfo(linkinfo)
+        htmlcode += '<td class=nobreak>%s</td>' % render_logfile_linkinfo(linkinfo)
         htmlcode += '<td class=nobreak>%s</td>' % fmt_date(float(t))
         htmlcode += '<td class=nobreak>%s</td>' % fmt_time(float(t))
         htmlcode += '<td class=nobreak>'

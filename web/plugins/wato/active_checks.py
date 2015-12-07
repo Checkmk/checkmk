@@ -973,6 +973,21 @@ register_rule(group,
                                              "to the checked URL and this clickable."),
                                 )
                             ),
+                            ( "client_certificate",
+                                Filename(
+                                    title = _("Client Certificate File"),
+                                    help = _("Set the certificate the client uses to identify itself to the https server. "
+                                             "Needs to be in PEM format. "
+                                             "Please be very careful to enter a valid filename."),
+                                )
+                            ),
+                            ( "private_key",
+                                Filename(
+                                    title = _("Private Key File"),
+                                    help = _("Set the private key file (PEM format) matching the client certificate. "
+                                             "Please be very careful to enter a valid filename."),
+                                )
+                            ),
                         ]
                     ),
 

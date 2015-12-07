@@ -574,7 +574,7 @@ def save_users(profiles):
 
 
 def contactgroups_of_user(user_id):
-    users = userdb.load_users()
+    users = load_users()
     if user_id not in users:
         return []
     else:

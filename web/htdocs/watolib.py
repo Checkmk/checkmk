@@ -327,10 +327,10 @@ class Folder(WithPermissionsAndAttributes):
     # | STATIC METHODS                                                     |
     # '--------------------------------------------------------------------'
 
-    @staticmethod
-    def load_all_folders():
-        wato_folders = html.set_cache("wato_folders", {})
-        Folder("", "").add_to_dictionary(wato_folders)
+    ### @staticmethod
+    ### def load_all_folders():
+    ###     wato_folders = html.set_cache("wato_folders", {})
+    ###     Folder("", "").add_to_dictionary(wato_folders)
 
 
     @staticmethod
@@ -376,7 +376,9 @@ class Folder(WithPermissionsAndAttributes):
             else:
                 host_name = html.var("host")
                 if host_name: # find host with full scan. Expensive operation
-                    folder = Folder.find_folder_containing_host(host_name)
+                    host = Host.host(host_name)
+                    if host:
+                        folder = host.folder()
                 else:
                     folder = Folder.root_folder()
             html.set_cache("wato_current_folder", folder)
@@ -920,8 +922,11 @@ class Folder(WithPermissionsAndAttributes):
             return self.title_path()[1:]
 
 
-    def alias_path(self):
-        return " / ".join(self.title_path())
+    def alias_path(self, show_main=True):
+        if show_main:
+            return " / ".join(self.title_path())
+        else:
+            return " / ".join(self.title_path_without_root())
 
 
     def groups(self):

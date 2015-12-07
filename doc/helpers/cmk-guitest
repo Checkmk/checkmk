@@ -1,0 +1,272 @@
+#!/usr/bin/python
+
+import os, sys, getopt, pprint, time, requests
+
+
+#   .--GUI Test------------------------------------------------------------.
+#   |                  ____ _   _ ___   _____         _                    |
+#   |                 / ___| | | |_ _| |_   _|__  ___| |_                  |
+#   |                | |  _| | | || |    | |/ _ \/ __| __|                 |
+#   |                | |_| | |_| || |    | |  __/\__ \ |_                  |
+#   |                 \____|\___/|___|   |_|\___||___/\__|                 |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Actual code for running the tests                                    |
+#   '----------------------------------------------------------------------'
+
+def tests_dir():
+    path = omd_root() + "/var/check_mk/guitests/"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
+
+
+def run_guitests(args):
+    if not args:
+        bail_out("Please specify tests to run. Available are: %s" % " ".join(names_of_all_tests()))
+
+    sys.stdout.write("Going to run %d tests...\n" % len(args))
+
+    num_failed = 0
+    num_successfull = 0
+    for test_name in args:
+        if run_guitest(test_name):
+            num_successfull += 1
+        else:
+            num_failed += 1
+
+    sys.stdout.write("%d tests succeeded, %d failed.\n" % (num_successfull, num_failed))
+    if num_failed == 0:
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+
+def run_guitest(test_name):
+    try:
+        sys.stdout.write("    %s%s%s...\n" % (tty_bold, test_name, tty_normal))
+        sys.stdout.flush()
+        guitest = load_guitest(test_name)
+        one_failed = False
+        for step_nr, step in enumerate(guitest):
+            sys.stdout.write("       #%d - %s.py..." % (step_nr, step["filename"]))
+            if run_test_step(test_name, step_nr, step):
+                sys.stdout.write(tty_green + "OK\n" + tty_normal)
+            else:
+                sys.stdout.write(tty_red + "FAILED\n" + tty_normal)
+                one_failed = True
+        return not one_failed
+
+    except Exception, e:
+        sys.stdout.write("        %sfailed%s (%s)\n" % (tty_red, tty_normal, e))
+        return False
+
+
+def load_guitest(test_name):
+    path = tests_dir() + test_name + ".mk"
+    if not os.path.exists(path):
+        raise Exception("Test not found (missing file %s)" % path)
+    return eval(file(path).read())
+
+
+def names_of_all_tests():
+    return sorted([
+        f[:-3] for f in os.listdir(tests_dir()) if f.endswith(".mk")
+    ])
+
+
+def run_test_step(test_name, step_nr, step):
+    url = "http://localhost/%s/check_mk/guitest.py" % omd_site()
+    response = requests.post(url, data = { "test" : test_name, "step" : str(step_nr) })
+    return response.status_code == requests.codes.ok
+
+
+#.
+#   .-Helpers--------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Various helper functions                                             |
+#   '----------------------------------------------------------------------'
+
+if sys.stdout.isatty() and not os.name == "nt":
+    tty_bold      = '\033[1m'
+    tty_normal    = '\033[0m'
+    tty_red       = tty_bold + '\033[31m'
+    tty_green     = tty_bold + '\033[32m'
+else:
+    tty_bold = ""
+    tty_normal = ""
+    tty_red = ""
+
+def omd_root():
+    return os.getenv("OMD_ROOT")
+
+def omd_site():
+    return os.getenv("OMD_SITE")
+
+def verbose(x):
+    if opt_verbose:
+        sys.stderr.write("%s\n" % x)
+
+def bail_out(x):
+    sys.stderr.write("%s\n" % x)
+    sys.exit(1)
+
+def usage():
+    sys.stderr.write("""
+Usage: %s [OPTION] TEST1 TEST2 ...
+
+  -h, --help                 Show this help
+  -v, --verbose              Output debug information on stderr
+      --debug                Do not catch Python exceptions
+
+""" % os.path.split(sys.argv[0])[1])
+
+def print_version():
+    sys.stdout.write("This is cmcdump version %s\n" % check_mk_version)
+
+#.
+#   .-main-----------------------------------------------------------------.
+#   |                                       _                              |
+#   |                       _ __ ___   __ _(_)_ __                         |
+#   |                      | '_ ` _ \ / _` | | '_ \                        |
+#   |                      | | | | | | (_| | | | | |                       |
+#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Main entry point, getopt, etc.                                       |
+#   '----------------------------------------------------------------------'
+
+short_options = 'hv'
+long_options = [ "help", "debug", "verbose" ]
+
+opt_verbose = False
+opt_debug = False
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n\n" % err)
+    usage()
+    sys.exit(1)
+
+for o,a in opts:
+    # modes
+    if o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+
+    # Modifiers
+    elif o in [ '-v', '--verbose' ]:
+        opt_verbose = True
+    elif o == '--debug':
+        opt_debug = True
+
+# Main modes
+try:
+    run_guitests(args)
+
+except Exception, e:
+    if opt_debug:
+        raise
+    bail_out(e)
+
+
+#   .-Helpers--------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Various helper functions                                             |
+#   '----------------------------------------------------------------------'
+
+def omd_root():
+    return os.getenv("OMD_ROOT")
+
+def omd_site():
+    return os.getenv("OMD_SITE")
+
+def verbose(x):
+    if opt_verbose:
+        sys.stderr.write("%s\n" % x)
+
+def bail_out(x):
+    sys.stderr.write("%s\n" % x)
+    sys.exit(1)
+
+def usage():
+    sys.stderr.write("""
+Usage: %s [OPTION] TEST
+
+  -h, --help                 Show this help
+  -v, --verbose              Output debug information on stderr
+      --debug                Do not catch Python exceptions
+
+""" % os.path.split(sys.argv[0])[1])
+
+def print_version():
+    sys.stdout.write("This is cmcdump version %s\n" % check_mk_version)
+
+#.
+#   .-main-----------------------------------------------------------------.
+#   |                                       _                              |
+#   |                       _ __ ___   __ _(_)_ __                         |
+#   |                      | '_ ` _ \ / _` | | '_ \                        |
+#   |                      | | | | | | (_| | | | | |                       |
+#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Main entry point, getopt, etc.                                       |
+#   '----------------------------------------------------------------------'
+
+short_options = 'hv'
+long_options = [ "help", "debug", "verbose" ]
+
+opt_verbose = False
+opt_debug = False
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n\n" % err)
+    usage()
+    sys.exit(1)
+
+for o,a in opts:
+    # modes
+    if o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+
+    # Modifiers
+    elif o in [ '-v', '--verbose' ]:
+        opt_verbose = True
+    elif o == '--debug':
+        opt_debug = True
+
+# Main modes
+try:
+    run_guitest(args)
+
+except Exception, e:
+    if opt_debug:
+        raise
+    bail_out(e)
+
+
+# ZUTUN:
+# - Option zum Aufzeichnen
+# --record, -r hirni
+# --record-stop, -R
+# Bei Record müssen html-Ausgaben wie table.cell() in eine Datenstruktur schreiben.
+# Diese wird dann im dict gespeichert und später verglichen.
+
+

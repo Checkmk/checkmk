@@ -58,12 +58,23 @@ class html_mod_python(htmllib.html):
         self.read_get_vars()
         self.read_cookies()
 
+        if self.myfile == "guitest":
+            self.replay_guitest()
+        elif self.guitest_recording_active():
+            self.begin_guitest_recording()
+
+
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh
         self.set_http_header("Cache-Control", "no-cache")
 
         self.init_mobile()
         self.set_output_format(self.var("output_format", "html"))
+
+
+    def guitest_fake_login(self, user_id):
+        config.login(user_id)
+        self.user = user_id
 
 
     def verify_not_using_threaded_mpm(self):
@@ -147,6 +158,8 @@ class html_mod_python(htmllib.html):
     # Finish the HTTP request short before handing over to mod_python
     def finalize(self, is_error=False):
         self.live = None # disconnects from livestatus
+        self.end_guitest_recording()
+
 
     def get_request_header(self, key, deflt=None):
         return self.req.headers_in.get(key, deflt)

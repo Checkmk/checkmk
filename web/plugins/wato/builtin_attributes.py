@@ -116,20 +116,17 @@ declare_host_attribute(ParentsAttribute(),
                        show_in_table = True,
                        show_in_folder = True)
 
-def validate_host_parents(effective_host):
-    for parentname in effective_host["parents"]:
-        parent_folder = find_host(parentname)
-        if not parent_folder:
-            raise MKUserError(None, _("You defined the non-existing host '%s' as a parent.") % parentname)
-        # In case of distributed wato check also if site of host and parent
-        # are the same.
-        if is_distributed():
-            parent = effective_attributes(parent_folder[".hosts"][parentname], parent_folder)
-            if effective_host["site"] !=  parent["site"]:
-                raise MKUserError(None, _("The parent '%s' is monitored on site '%s' while the host itself "
-                  "is monitored on site '%s'. Both must be monitored on the same site. Remember: The parent/child "
-                  "relation is used to describe the reachability of hosts by one monitoring daemon.") %
-                    (parentname, parent["site"], effective_host["site"]))
+def validate_host_parents(host):
+    for parent_name in host.parents():
+        parent = Host.host(parent_name)
+        if not parent:
+            raise MKUserError(None, _("You defined the non-existing host '%s' as a parent.") % parent_name)
+
+        if host.site_id() != parent.site_id():
+            raise MKUserError(None, _("The parent '%s' is monitored on site '%s' while the host itself "
+              "is monitored on site '%s'. Both must be monitored on the same site. Remember: The parent/child "
+              "relation is used to describe the reachability of hosts by one monitoring daemon.") %
+                (parent_name, parent.site_id(), host.site_id()))
 
 register_hook('validate-host', validate_host_parents)
 

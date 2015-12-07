@@ -1079,6 +1079,8 @@ class Folder(WithPermissionsAndAttributes):
     # TODO: PRIVATE FUNCTIONS WITH _
 
     def create_subfolder(self, name, title, attributes):
+        config.need_permission("wato.manage_folders")
+        self.need_permission("write")
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
         new_subfolder.save()
         self._subfolders[name] = new_subfolder
@@ -1142,6 +1144,8 @@ class Folder(WithPermissionsAndAttributes):
 
 
     def create_hosts(self, entries):
+        config.need_permission("wato.manage_hosts")
+        self.need_permission("write")
         self.load_hosts_on_demand()
         for host_name, attributes, cluster_nodes in entries:
             host = Host(self, host_name, attributes, cluster_nodes)
@@ -1433,6 +1437,10 @@ class Host(WithPermissionsAndAttributes):
         return self._attributes.get("site") or self.folder().site_id()
 
 
+    def parents(self):
+        return self.effective_attribute("parents", [])
+
+
     def tags(self):
         # Compute tags from settings of each individual tag. We've got
         # the current value for each individual tag. Also other attributes
@@ -1458,10 +1466,9 @@ class Host(WithPermissionsAndAttributes):
     def validation_errors(self):
         if hooks.registered('validate-host'):
             errors = []
-            eff = self.effective_attributes()
-            for hk in hooks.get('validate-host'):
+            for hook_function in hooks.get('validate-host'):
                 try:
-                    hk(eff)
+                    hook_function(self)
                 except MKUserError, e:
                     errors.append("%s" % e)
             return errors

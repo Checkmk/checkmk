@@ -1555,6 +1555,17 @@ class Host(WithPermissionsAndAttributes):
         self.edit(new_attributes, self._cluster_nodes)
 
 
+    def clean_attributes(self, attrnames_to_clean):
+        self.need_permission("write")
+        self.mark_dirty()
+        for attrname in attrnames_to_clean:
+            if attrname in self._attributes:
+                del self._attributes[attrname]
+        self.mark_dirty()
+        self.folder().save_hosts()
+        log_pending(AFFECTED, self.name(), "edit-host", _("Removed explicit attributes of host %s.") % self.name())
+
+
     def rename(self, new_name):
         log_pending(AFFECTED, self, "rename-host", _("Renamed host from %s into %s.") % (self.name(), new_name))
         self._name = new_name

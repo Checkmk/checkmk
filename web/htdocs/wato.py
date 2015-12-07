@@ -101,6 +101,8 @@ from watolib import *
 
 g_html_head_open = False
 
+wato_styles = [ "pages", "wato", "status" ]
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -125,8 +127,6 @@ g_html_head_open = False
 #   | ausgeführt, welche aber keinen HTML-Code ausgeben darf.              |
 #   `----------------------------------------------------------------------'
 
-wato_styles = [ "pages", "wato", "status" ]
-
 def page_handler():
     global g_html_head_open
     g_html_head_open = False
@@ -150,7 +150,7 @@ def page_handler():
         # Make information about current folder and hosts available To be able
         # to restore a snapshot even with a broken config ignore exceptions
         # in this function when running in "snapshot" mode
-        prepare_folder_info()
+        init_wato_datastructures()
         # TODO: Das hier geschieht dann on-demand
     except:
         if current_mode == 'snapshot':
@@ -1103,6 +1103,11 @@ def get_hostnames_from_checkboxes(filterfunc = None):
                    filterfunc(host):
                     selected_host_names.append(host_name)
     return selected_host_names
+
+
+def get_hosts_from_checkboxes(filterfunc = None):
+    folder = Folder.current()
+    return [ folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc) ]
 
 #.
 #   .--Edit Folder---------------------------------------------------------.
@@ -2729,7 +2734,7 @@ def mode_diag_host(phase):
 
 def ajax_diag_host():
     try:
-        prepare_folder_info()
+        init_wato_datastructures()
 
         if not config.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
@@ -3702,11 +3707,13 @@ def mode_bulk_edit(phase):
 #   '----------------------------------------------------------------------'
 
 def mode_bulk_cleanup(phase):
+    folder = Folder.current()
+
     if phase == "title":
         return _("Bulk removal of explicit attributes")
 
     elif phase == "buttons":
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), folder.url(), "back")
         return
 
     elif phase == "action":
@@ -3714,44 +3721,31 @@ def mode_bulk_cleanup(phase):
             config.need_permission("wato.edit_hosts")
             to_clean = bulk_collect_cleaned_attributes()
             if "contactgroups" in to_clean:
-                 if True != check_folder_permissions(g_folder, "write", False):
-                     raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
-                                             "access to the folder it is contained in."))
-            hostnames = get_hostnames_from_checkboxes()
+                folder.need_permission("write")
 
-            # Check all permissions for doing any edit
-            for hostname in hostnames:
-                check_host_permissions(hostname)
+            hosts = get_hosts_from_checkboxes()
 
-            for hostname in hostnames:
-                mark_affected_sites_dirty(g_folder, hostname)
-                host = g_folder[".hosts"][hostname]
-                num_cleaned = 0
-                for attrname in to_clean:
-                    num_cleaned += 1
-                    if attrname in host:
-                        del host[attrname]
-                if num_cleaned > 0:
-                    log_pending(AFFECTED, hostname, "bulk-cleanup", _("Cleaned %d attributes of host %s in bulk mode") % (
-                    num_cleaned, hostname))
-                    mark_affected_sites_dirty(g_folder, hostname)
-            save_hosts(g_folder)
-            reload_hosts() # indirect host tag changes
+            # Check all permissions before doing any edit
+            for host in hosts:
+                host.need_permission("write")
+
+            for host in hosts:
+                host.clean_attributes(to_clean)
+
             return "folder"
         return
 
-    hostnames = get_hostnames_from_checkboxes()
-    hosts = dict([(hn, g_folder[".hosts"][hn]) for hn in hostnames])
+    hosts = get_hosts_from_checkboxes()
 
     html.write("<p>" + _("You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
     "explicit attribute values from hosts. The hosts will then inherit attributes "
     "configured at the host list or folders or simply fall back to the builtin "
-    "default values.") % len(hostnames))
+    "default values.") % len(hosts))
     html.write("</p>")
 
     html.begin_form("bulkcleanup", method = "POST")
     forms.header(_("Attributes to remove from hosts"))
-    if not bulk_cleanup_attributes(g_folder, hosts):
+    if not select_attributes_for_bulk_cleanup(folder, hosts):
         forms.end()
         html.write(_("The selected hosts have no explicit attributes"))
     else:
@@ -3770,15 +3764,15 @@ def bulk_collect_cleaned_attributes():
     return to_clean
 
 
-def bulk_cleanup_attributes(the_file, hosts):
+def select_attributes_for_bulk_cleanup(folder, hosts):
     num_shown = 0
     for attr, topic in all_host_attributes():
         attrname = attr.name()
 
         # only show attributes that at least on host have set
         num_haveit = 0
-        for hostname, host in hosts.items():
-            if attrname in host:
+        for host in hosts:
+            if host.has_explicit_attribute(attrname):
                 num_haveit += 1
 
         if num_haveit == 0:
@@ -3786,15 +3780,14 @@ def bulk_cleanup_attributes(the_file, hosts):
 
         # If the attribute is mandatory and no value is inherited
         # by file or folder, the attribute cannot be cleaned.
-        container = the_file
+        container = folder
         is_inherited = False
         while container:
-            if "attributes" in container and attrname in container["attributes"]:
+            if container.has_explicit_attribute(attrname):
                 is_inherited = True
-                inherited_value = container["attributes"][attrname]
+                inherited_value = container.attribute(attrname)
                 break
-            container = container.get(".parent")
-
+            container = container.parent()
 
         num_shown += 1
 
@@ -4643,7 +4636,7 @@ def ajax_replication():
     need_restart = srs.get("need_restart", False)
 
     # Initialise g_root_folder, load all folder information
-    prepare_folder_info()
+    init_wato_datastructures()
 
     site = config.site(site_id)
     try:
@@ -4697,7 +4690,7 @@ def ajax_activation():
         config.need_permission("wato.activate")
 
         # Initialise g_root_folder, load all folder information
-        prepare_folder_info()
+        init_wato_datastructures()
 
         # Activate changes for single site
         activate_changes()
@@ -9803,7 +9796,7 @@ def page_automation():
     lock_exclusive()
 
     # Initialise g_root_folder, load all folder information
-    prepare_folder_info()
+    init_wato_datastructures()
 
     command = html.var("command")
     if command == "checkmk-automation":
@@ -12121,7 +12114,7 @@ def mode_ruleeditor(phase):
         return
 
     if not only_host:
-        render_folder_path(keepvarnames = ["mode", "local"])
+        Folder.current().show_breadcrump(keepvarnames = ["mode", "local"])
     else:
         html.write("<h3>%s: %s</h3>" % (_("Host"), only_host))
 
@@ -12625,7 +12618,7 @@ def mode_edit_ruleset(phase):
         return
 
     if not hostname:
-        render_folder_path(keepvarnames = ["mode", "varname"])
+        Folder.current().show_breadcrump(keepvarnames = ["mode", "varname"])
 
     # Titel ist schon Seitentitel
     # html.write("<h3>" + rulespec["title"] + "</h3>")
@@ -13182,7 +13175,7 @@ def mode_edit_rule(phase, new = False):
 
             # CONDITION
             tag_specs, host_list, item_list = get_rule_conditions(rulespec)
-            new_rule_folder = g_folders[html.var("new_rule_folder")]
+            new_rule_folder = Folder.folder(html.var("new_rule_folder"))
 
             # Check permissions on folders
             if not new:
@@ -13201,7 +13194,7 @@ def mode_edit_rule(phase, new = False):
                 else:
                     rules[rulenr] = rule
                 save_rulesets(folder, rulesets)
-                mark_affected_sites_dirty(folder)
+                folder.mark_hosts_dirty()
 
                 if new:
                     log_pending(AFFECTED, None, "edit-rule", _("Created new rule in ruleset %s in folder %s") %
@@ -13497,7 +13490,7 @@ def get_tag_conditions(varprefix=""):
 
 def save_rulesets(folder, rulesets):
     make_nagios_directory(wato_root_dir)
-    path = wato_root_dir + '/' + folder['.path'] + '/' + "rules.mk"
+    path = folder.rules_file_path()
     out = create_user_file(path, "w")
     out.write(wato_fileheader())
 
@@ -13518,6 +13511,7 @@ def save_rulesets(folder, rulesets):
         for rule in ruleset:
             save_rule(out, folder, rulespec, rule)
         out.write("] + %s\n\n" % varname)
+
 
 def save_rule(out, folder, rulespec, rule):
     out.write("  ( ")
@@ -14372,7 +14366,7 @@ def page_download_agent_output():
     if ty not in [ "walk", "agent" ]:
         raise MKGeneralException(_("Invalid type specified."))
 
-    prepare_folder_info()
+    init_wato_datastructures()
 
     # TODO: Use method in host object
     check_host_permissions(host_name)
@@ -16704,9 +16698,9 @@ class API:
     __all_hosts            = None
     __prepared_folder_info = False
 
-    def __prepare_folder_info(self, force = False):
+    def __init_wato_datastructures(self, force = False):
         if not self.__prepared_folder_info or force:
-            prepare_folder_info()
+            init_wato_datastructures()
             self.__prepared_folder_info = True
 
     def __get_all_hosts(self, force = False):
@@ -16798,7 +16792,7 @@ class API:
         lock_exclusive()
 
     def validate_host_parameters(self, host_foldername, hostname, host_attr, validate = [], create_folders = True):
-        self.__prepare_folder_info()
+        self.__init_wato_datastructures()
         all_hosts = self.__get_all_hosts()
 
         if host_foldername:
@@ -16811,7 +16805,7 @@ class API:
 
     # hosts: [ { "attributes": {attr}, "hostname": "hostA", "folder": "folder1" }, .. ]
     def add_hosts(self, hosts, create_folders = True, validate_hosts = True):
-        self.__prepare_folder_info()
+        self.__init_wato_datastructures()
         all_hosts = self.__get_all_hosts()
 
         # Sort hosts into folders
@@ -16838,7 +16832,7 @@ class API:
 
         # As long as some hooks are able to invalidate the
         # entire g_folders variable we need to enforce a reload
-        self.__prepare_folder_info(force = True)
+        self.__init_wato_datastructures(force = True)
         self.__get_all_hosts(force = True)
 #
 #        for host_foldername, new_hosts in target_folders.items():
@@ -16848,7 +16842,7 @@ class API:
 
     # hosts: [ { "attributes": {attr}, "unset_attributes": {attr}, "hostname": "hostA"}, .. ]
     def edit_hosts(self, hosts, validate_hosts = True):
-        self.__prepare_folder_info()
+        self.__init_wato_datastructures()
         all_hosts = self.__get_all_hosts()
 
         target_folders = {}
@@ -16874,7 +16868,7 @@ class API:
 
         # As long as some hooks are able to invalidate the
         # entire g_folders variable we need to enforce a reload
-        self.__prepare_folder_info(force = True)
+        self.__init_wato_datastructures(force = True)
         self.__get_all_hosts(force = True)
 #
 #        for host_foldername, update_hosts in target_folders.items():
@@ -16883,7 +16877,7 @@ class API:
 
 
     def get_host(self, hostname, effective_attr = False):
-        self.__prepare_folder_info()
+        self.__init_wato_datastructures()
         all_hosts = self.__get_all_hosts()
 
         self.__validate_host_parameters(None, hostname, {}, all_hosts, True, ["host_missing", "permissions_read"])
@@ -16898,7 +16892,7 @@ class API:
 
     # hosts: [ "hostA", "hostB", "hostC" ]
     def delete_hosts(self, hosts, validate_hosts = True):
-        self.__prepare_folder_info()
+        self.__init_wato_datastructures()
         all_hosts = self.__get_all_hosts()
 
         target_folders = {}
@@ -16916,11 +16910,11 @@ class API:
 
         # As long as some hooks are able to invalidate the
         # entire g_folders variable we need to enforce a reload
-        self.__prepare_folder_info(force = True)
+        self.__init_wato_datastructures(force = True)
         self.__get_all_hosts(force = True)
 
     def discover_services(self, hostname, mode = "new"):
-        self.__prepare_folder_info()
+        self.__init_wato_datastructures()
         all_hosts = self.__get_all_hosts()
 
         host   = all_hosts[hostname]
@@ -16951,7 +16945,7 @@ class API:
         return msg
 
     def activate_changes(self, sites, mode = "dirty", allow_foreign_changes = False):
-        self.__prepare_folder_info()
+        self.__init_wato_datastructures()
 
         config.need_permission("wato.activate")
 
@@ -16996,7 +16990,7 @@ class API:
             raise MKUserError(None, ", ".join(errors))
 
     def get_all_hosts(self, effective_attr = False):
-        self.__prepare_folder_info()
+        self.__init_wato_datastructures()
         all_hosts = self.__get_all_hosts()
         return_hosts = {}
 
@@ -17070,7 +17064,7 @@ def host_status_button(hostname, viewname):
     html.context_button(_("Status"),
        "view.py?" + html.urlencode_vars([
            ("view_name", viewname),
-           ("filename", g_folder[".path"] + "/hosts.mk"),
+           ("filename", Folder.current().path() + "/hosts.mk"),
            ("host",     hostname),
            ("site",     "")]),
            "status")  # TODO: support for distributed WATO
@@ -17088,7 +17082,7 @@ def folder_status_button(viewname = "allhosts"):
     html.context_button(_("Status"),
        "view.py?" + html.urlencode_vars([
            ("view_name", viewname),
-           ("wato_folder", g_folder[".path"])]),
+           ("wato_folder", Folder.current().path())]),
            "status")  # TODO: support for distributed WATO
 
 def global_buttons():
@@ -17463,9 +17457,9 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             elif for_what == "bulk":
                 active = unique and len(values) > 0
             elif for_what == "folder":
-                active = myself.has_explicit_attribute()
+                active = myself.has_explicit_attribute(attrname)
             elif host: # "host"
-                active = host.has_explicit_attribute()
+                active = host.has_explicit_attribute(attrname)
             else:
                 active = False
 
@@ -17990,7 +17984,7 @@ def get_folder_title(path):
 # Find a folder by its path. Raise an exception if it does
 # not exist.
 def get_folder(path):
-    prepare_folder_info()
+    init_wato_datastructures()
 
     folder = g_folders.get(path)
     if folder:
@@ -18195,7 +18189,7 @@ def get_folder_permissions_of_users(users):
 
 
 def check_host_permissions(hostname, exception=True, folder=None):
-    # CLEANUP: Get rid of this. This is no coded in Host::user_needs_permission()
+    # CLEANUP: Get rid of this. This is now coded in Host::user_needs_permission()
     if folder == None:
         folder = g_folder
 
@@ -18649,14 +18643,10 @@ def get_folder_aliaspath(folder, show_main = True):
     return ' / '.join(aliaspath)
 
 
-def prepare_folder_info():
-    # CLEANUP: Remove this asap, but create_sample_config() and stuff
-    # is still neccessary!
-    load_all_folders()            # load information about all folders
+def init_wato_datastructures():
     create_sample_config()        # if called for the very first time!
     declare_host_tag_attributes() # create attributes out of tag definitions
     declare_site_attribute()      # create attribute for distributed WATO
-    set_current_folder()          # set g_folder from HTML variable
 
 
 

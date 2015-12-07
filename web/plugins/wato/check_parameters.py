@@ -5342,6 +5342,22 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "mssql_blocked_sessions",
+    _("MSSQL Blocked Sessions"),
+    Dictionary(
+        elements = [
+            ( "state",
+                MonitoringState(
+                    title = _("State of MSSQL Blocked Sessions is treated as"),
+                    default_value = 2,
+            )),
+        ],
+    ),
+    None,
+    "dict",
+)
 
 register_check_parameters(
     subgroup_applications,

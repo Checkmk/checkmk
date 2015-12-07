@@ -4,6 +4,9 @@
     * 2808 FIX: db2_connections: added missing connections performance data
     * 2861 FIX: hivemanager_devices: Fixed configuration of states to treat as WARN
 
+    Event Console:
+    * 2862 FIX: Fixed handling of umlauts in mails send by the EC
+
 
 1.2.7i3p5:
     Core & Setup:

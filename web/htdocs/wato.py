@@ -4150,7 +4150,7 @@ def mode_random_hosts(phase):
         return _("Random Hosts")
 
     elif phase == "buttons":
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), Folder.current().url(), "back")
         return
 
     elif phase == "action":
@@ -4158,9 +4158,7 @@ def mode_random_hosts(phase):
             count = int(html.var("count"))
             folders = int(html.var("folders"))
             levels = int(html.var("levels"))
-            created = create_random_hosts(g_folder, count, folders, levels)
-            log_pending(AFFECTED, g_folder, "create-random-hosts",
-                _("Created %d random hosts in %d folders") % (created, folders))
+            created = create_random_hosts(Folder.current(), count, folders, levels)
             return "folder", _("Created %d random hosts.") % created
         else:
             return "folder"
@@ -4181,52 +4179,30 @@ def mode_random_hosts(phase):
     html.hidden_fields()
     html.end_form()
 
+
 def create_random_hosts(folder, count, folders, levels):
     if levels == 0:
-        created = 0
-        while created < count:
-            name = "random_%010d" % int(random.random() * 10000000000)
-            host = {"ipaddress" : "127.0.0.1"}
-            folder[".hosts"][name] = host
-            created += 1
-        folder["num_hosts"] += count
-        save_folder_and_hosts(folder)
-        mark_affected_sites_dirty(folder)
-        reload_hosts()
+        hosts_to_create = []
+        while len(hosts_to_create) < count:
+            host_name = "random_%010d" % int(random.random() * 10000000000)
+            hosts_to_create.append((host_name, {"ipaddress" : "127.0.0.1"}, None))
+        folder.create_hosts(hosts_to_create)
         return count
+
     else:
         total_created = 0
-        if folder[".path"]:
-            prefixpath = folder[".path"] + "/"
-        else:
-            prefixpath = ""
         created = 0
         while created < folders:
             created += 1
             i = 1
             while True:
-                name = "folder_%02d" % i
-                if name not in folder[".folders"]:
+                folder_name = "folder_%02d" % i
+                if not folder.has_subfolder(folder_name):
                     break
                 i += 1
-            title = "Subfolder %02d" % i
-            path = prefixpath + name
-            subfolder = {
-                ".parent" : folder,
-                ".name" : name,
-                ".folders" : {},
-                ".hosts" : {},
-                ".path" : path,
-                ".siteid" : None,
-                "attributes" : {},
-                "num_hosts" : 0,
-                "title" : title,
-            }
-            g_folders[path] = subfolder
-            folder[".folders"][name] = subfolder
-            save_folder(subfolder)
+
+            subfolder = folder.create_subfolder(folder_name, "Subfolder %02d" % i, {})
             total_created += create_random_hosts(subfolder, count, folders, levels - 1)
-        save_folder(folder)
         return total_created
 
 #.

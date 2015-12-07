@@ -27,6 +27,16 @@
 # This code wraps some of WATO's internal APIs into a class. This class
 # is only being used by the WATO webservice (htdocs/webapi.py).
 
+
+#   |                       _____ ___  ____   ___                          |
+#   |                      |_   _/ _ \|  _ \ / _ \                         |
+#   |                        | || | | | | | | | | |                        |
+#   |                        | || |_| | |_| | |_| |                        |
+#   |                        |_| \___/|____/ \___/                         |
+#   |                                                                      |
+#
+# THIS IS CURRENTLY ALL BROKEN. NEED TO CONVERT IT TO new Folder()/Host() API
+
 class API:
     __all_hosts            = None
     __prepared_folder_info = False
@@ -349,5 +359,141 @@ class API:
 
         return return_hosts
 
-#.
+
+# TODO: These functions do not work anymore. use new Folder() class API
+
+# new_hosts: {"hostA": {attr}, "hostB": {attr}}
+def add_hosts_to_folder(folder, new_hosts):
+    load_hosts(folder)
+    folder[".hosts"].update(new_hosts)
+    folder["num_hosts"] = len(folder[".hosts"])
+
+    for hostname in new_hosts.keys():
+        log_pending(AFFECTED, hostname, "create-host",_("Created new host %s.") % hostname)
+
+    save_folder_and_hosts(folder)
+
+    reload_hosts(folder)
+    mark_affected_sites_dirty(folder, hostname)
+    call_hook_hosts_changed(folder)
+
+
+# hosts: {"hostname": {"set": {attr}, "unset": [attr]}}
+def update_hosts_in_folder(folder, hosts):
+    updated_hosts = {}
+
+    for hostname, attributes in hosts.items():
+        cleaned_attr = dict([
+            (k, v) for
+            (k, v) in
+            attributes.get("set", {}).iteritems()
+            if (not k.startswith('.') or k == ".nodes") ])
+        # unset keys
+        for key in attributes.get("unset", []):
+            if key in cleaned_attr:
+                del cleaned_attr[key]
+
+        updated_hosts[hostname] = cleaned_attr
+
+        # The site attribute might change. In that case also
+        # the old site of the host must be marked dirty.
+        mark_affected_sites_dirty(folder, hostname)
+
+    load_hosts(folder)
+    folder[".hosts"].update(updated_hosts)
+
+    for hostname in updated_hosts.keys():
+        mark_affected_sites_dirty(folder, hostname)
+        log_pending(AFFECTED, hostname, "edit-host", _("edited properties of host [%s]") % hostname)
+
+    save_folder_and_hosts(folder)
+    reload_hosts(folder)
+    call_hook_hosts_changed(folder)
+
+
+# hosts: ["hostA", "hostB", "hostC"]
+def delete_hosts_in_folder(folder, hosts):
+    if folder.get(".lock_hosts"):
+        raise MKUserError(None, _("Cannot delete host. Hosts in this folder are locked"))
+
+    for hostname in hosts:
+        del folder[".hosts"][hostname]
+        folder["num_hosts"] -= 1
+        mark_affected_sites_dirty(folder, hostname)
+        log_pending(AFFECTED, hostname, "delete-host", _("Deleted host %s") % hostname)
+
+    save_folder_and_hosts(folder)
+    call_hook_hosts_changed(folder)
+
+
+# Checks if the given host_tags are all in known host tag groups and have a valid value
+def check_host_tags(host_tags):
+    for key, value in host_tags.items():
+        for group_entry in configured_host_tags():
+            if group_entry[0] == key:
+                for value_entry in group_entry[2]:
+                    if value_entry[0] == value:
+                        break
+                else:
+                    raise MKUserError(None, _("Unknown host tag %s") % html.attrencode(value))
+                break
+        else:
+            raise MKUserError(None, _("Unknown host tag group %s") % html.attrencode(key))
+
+
+def check_edit_host_permissions(folder, host, hostname):
+    config.need_permission("wato.edit_hosts")
+
+    # Check which attributes have changed. For a change in the contact groups
+    # we need permissions on the folder. For a change in the rest we need
+    # permissions on the host
+    old_host = dict(folder[".hosts"][hostname].items())
+    del old_host[".tags"] # not contained in new host
+    cgs_changed = get_folder_cgconf_from_attributes(host) != \
+                  get_folder_cgconf_from_attributes(old_host)
+    other_changed = old_host != host and not cgs_changed
+    if other_changed:
+        check_host_permissions(hostname, folder = folder)
+    if cgs_changed \
+         and True != check_folder_permissions(folder, "write", False):
+         raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                 "access to the folder it is contained in."))
+    if cgs_changed:
+        check_user_contactgroups(host.get("contactgroups", (False, [])))
+
+
+# Creates and returns an empty wato folder with the given title
+# Write permissions are NOT checked!
+# TODO: This is totally broken and needs to be removed by Folder()...create_subfolder()
+def create_wato_folder(parent, name, title, attributes={}):
+    # CLEANUP: Replaced by Folder.create_subfolder()
+    if parent and parent[".path"]:
+        newpath = parent[".path"] + "/" + name
+    else:
+        newpath = name
+
+    new_folder = {
+        ".name"      : name,
+        ".path"      : newpath,
+        "title"      : title or name,
+        "attributes" : attributes,
+        ".folders"   : {},
+        ".hosts"     : {},
+        "num_hosts"  : 0,
+        ".lock"      : False,
+        ".parent"    : parent,
+    }
+
+    save_folder(new_folder)
+    new_folder = reload_folder(new_folder)
+
+    call_hook_folder_created(new_folder)
+
+    # Note: sites are not marked as dirty.
+    # The creation of a folder without hosts has not effect on the
+    # monitoring.
+    log_pending(AFFECTED, new_folder, "new-folder", _("Created new folder %s") % title)
+
+    return new_folder
+
 

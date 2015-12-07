@@ -59,17 +59,34 @@ repstatus_file = var_dir + "replication_status.mk"
 php_api_dir    = var_dir + "php-api/"
 
 
-#   .--Pending-------------------------------------------------------------.
-#   |                 ____                _ _                              |
-#   |                |  _ \ ___ _ __   __| (_)_ __   __ _                  |
-#   |                | |_) / _ \ '_ \ / _` | | '_ \ / _` |                 |
-#   |                |  __/  __/ | | | (_| | | | | | (_| |                 |
-#   |                |_|   \___|_| |_|\__,_|_|_| |_|\__, |                 |
-#   |                                               |___/                  |
+#.
+#   .--Changes-------------------------------------------------------------.
+#   |                ____ _                                                |
+#   |               / ___| |__   __ _ _ __   __ _  ___  ___                |
+#   |              | |   | '_ \ / _` | '_ \ / _` |/ _ \/ __|               |
+#   |              | |___| | | | (_| | | | | (_| |  __/\__ \               |
+#   |               \____|_| |_|\__,_|_| |_|\__, |\___||___/               |
+#   |                                       |___/                          |
 #   +----------------------------------------------------------------------+
 #   | Functions for logging changes and keeping the "Activate Changes"     |
-#   | state.                                                               |
+#   | state and finally activating changes.                                |
 #   '----------------------------------------------------------------------'
+
+# This is the single site activation mode
+def activate_changes():
+    try:
+        start = time.time()
+        check_mk_local_automation(config.wato_activation_method)
+        duration = time.time() - start
+        update_replication_status(None, {}, { 'act': duration })
+    except Exception:
+        if config.debug:
+            import traceback
+            raise MKUserError(None, "Error executing hooks: %s" %
+                              traceback.format_exc().replace('\n', '<br />'))
+        else:
+            raise
+
 
 # Determine if other users have made pending changes
 def foreign_changes():

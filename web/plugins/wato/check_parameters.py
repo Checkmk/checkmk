@@ -2414,7 +2414,7 @@ register_check_parameters(
                   totext = "",
                   title = _("Do not alert on connection loss"),
                 )),
-                ( "war_states",
+                ( "warn_states",
                     ListChoice(
                         title = _("States treated as warning"),
                         choices = hivemanger_states,

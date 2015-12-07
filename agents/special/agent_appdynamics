@@ -159,7 +159,10 @@ else:
 grouped_data = {}
 for metric in data:
     path_parts = metric['metricPath'].split('|')
-    base, application, section, node, provider, typename, item, unit = metric['metricPath'].split('|')
+    if len(path_parts) == 7: # Unit missing
+        path_parts.append('')
+
+    base, application, section, node, provider, typename, item, unit = path_parts
 
     try:
         value = metric['metricValues'][0]['current']

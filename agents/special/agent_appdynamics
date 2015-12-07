@@ -169,7 +169,7 @@ for metric in data:
     except IndexError:
         continue # Skip empty values
 
-    if provider not in ('JMX', 'JVM'):
+    if provider not in ('Agent', 'JMX', 'JVM'):
         continue # Skip unwanted values
 
     grouped_data.setdefault(node, {})\
@@ -182,11 +182,14 @@ for node, applications in grouped_data.iteritems():
     for application, types in applications.iteritems():
         for typename, items in types.iteritems():
             typename = typename.lower().replace(' ', '_')
-            if typename in ['memory', 'sessions', 'web_container_runtime']:
+            if typename in ['app', 'memory', 'sessions', 'web_container_runtime']:
                 sys.stdout.write('<<<appdynamics_%s:sep(124)>>>\n' % (typename.replace("_runtime", "")))
                 for item, values in items.iteritems():
                     if values:
                         output_items = [application, item]
                         for name, value in values.iteritems():
-                            output_items.append('%s:%s' % (name, value))
+                            if not name:
+                                output_items.append('%s' % value)
+                            else:
+                                output_items.append('%s:%s' % (name, value))
                         sys.stdout.write('|'.join(output_items) + '\n')

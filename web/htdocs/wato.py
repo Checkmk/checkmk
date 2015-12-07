@@ -58,20 +58,20 @@
 # by WATO but not by Check_MK itself.
 
 # [2] Global variables
-# At the beginning of each page, those three global variables are
-# set. All folders are loaded, but only their meta-data, not the
-# actual Check_MK files (hosts.mk). WATO is designed for managing
-# 100.000 hosts. So operations on all hosts might last a while...
+# At the beginning of each page some global variables are set:
 #
 # g_configvars -> dictionary of variables in main.mk that can be configured
 #           via WATO.
 #
 # g_html_head_open -> True, if the HTML head has already been rendered.
 
-# Convention for variable names:
-# site_id --> The id of a site, None for the local site in non-distributed setup
-# site    --> The dictionary datastructure of a site
-
+# [3] Convention for variable names:
+# site_id     --> The id of a site, None for the local site in non-distributed setup
+# site        --> The dictionary datastructure of a site
+# host_name   --> A string containing a host name
+# host        --> An instance of the class Host
+# folder_path --> A relative specification of a folder (e.g. "linux/prod")
+# folder      --> An instance of the class Folder
 
 #.
 #   .--Init----------------------------------------------------------------.
@@ -88,7 +88,6 @@
 import sys, pprint, socket, re, time, datetime,  \
        shutil, tarfile, cStringIO, math, fcntl, pickle, random, glob, \
        base64
-
 import i18n
 import config, table, multitar, userdb, weblib, login
 from hashlib import sha256
@@ -288,6 +287,7 @@ def ensure_mode_permissions(modeperms):
 def lock_exclusive():
     aquire_lock(defaults.default_config_dir + "/multisite.mk")
 
+
 def unlock_exclusive():
     release_lock(defaults.default_config_dir + "/multisite.mk")
 
@@ -302,8 +302,10 @@ def git_command(args):
         raise MKGeneralException(_("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
                 (command.decode('utf-8'), output.replace("\n", "<br>\n")))
 
+
 def shell_quote(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
+
 
 def do_git_commit():
     author = shell_quote("%s <%s>" % (config.user_id, config.user_alias))
@@ -645,50 +647,6 @@ def check_user_contactgroups(cgspec):
                  ( c, ", ".join(user_cgs)))
 
 
-# Get all contact groups of a folder, while honoring recursive
-# groups and permissions. Returns a pair of
-# 1. The folders permitted groups (for WATO permissions)
-# 2. The folders contact groups (for hosts)
-def collect_folder_groups(folder, host=None):
-    # CLEANUP: replace this by Folder::groups
-    perm_groups = set([])
-    host_groups = set([])
-    effective_folder_attributes = effective_attributes(host, folder)
-    cgconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
-
-    # First set explicit groups
-    perm_groups.update(cgconf["groups"])
-    if cgconf["use"]:
-        host_groups.update(cgconf["groups"])
-
-    # Now consider recursion
-    if host:
-        parent = folder
-    elif ".parent" in folder:
-        parent = folder['.parent']
-    else:
-        parent = None
-
-    while parent:
-        effective_folder_attributes = effective_attributes(None, parent)
-        parconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
-        parent_perm_groups, parent_host_groups = collect_folder_groups(parent)
-
-        if parconf["recurse_perms"]: # Parent gives us its permissions
-            perm_groups.update(parent_perm_groups)
-
-        if parconf["recurse_use"]:   # Parent give us its contact groups
-            host_groups.update(parent_host_groups)
-
-        parent = parent.get(".parent")
-
-    return perm_groups, host_groups
-
-
-def collect_host_groups(host, folder):
-    return collect_folder_groups(folder, host)
-
-
 def show_hosts(folder):
     if not folder.has_hosts():
         return
@@ -916,6 +874,7 @@ def show_host_actions(host):
             html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
         delete_url  = make_action_link([("mode", "folder"), ("_delete_host", host.name())])
         html.icon_button(delete_url, _("Delete this host"), "delete")
+
 
 # In case of what == "host", thing is either None or the name of the host
 # In case of what == "folder", thing is the folder dict
@@ -1239,6 +1198,7 @@ def convert_title_to_filename(title):
         else:
             converted += "_"
     return str(converted)
+
 
 def ajax_set_foldertree():
     config.save_user_file("foldertree", (html.var('topic'), html.var('target')))

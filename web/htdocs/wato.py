@@ -1445,7 +1445,7 @@ def mode_edit_host(phase, new, is_cluster):
     if is_cluster:
         vs = ListOfStrings(valuespec = TextAscii(size = 19), orientation="horizontal")
         forms.section(_("Nodes"))
-        vs.render_input("nodes", host[".nodes"])
+        vs.render_input("nodes", host and host.cluster_nodes() or [])
         html.help(_('Enter the host names of the cluster nodes. These '
                    'hosts must be present in WATO. '))
 

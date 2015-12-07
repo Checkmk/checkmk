@@ -1384,6 +1384,11 @@ class Host(WithPermissionsAndAttributes):
         return Folder.root_folder().find_host_recursively(host_name)
 
 
+    @staticmethod
+    def host_exists(host_name):
+        return Host.host(host_name) != None
+
+
     # .--------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                     |
     # '--------------------------------------------------------------------'

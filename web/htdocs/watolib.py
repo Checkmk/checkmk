@@ -1240,23 +1240,24 @@ class Folder(WithPermissionsAndAttributes):
         self._num_hosts = len(self._hosts)
 
 
-    def _add_host_sites_to_set(self, site_ids):
+    def _add_all_sites_to_set(self, site_ids):
+        site_ids.add(self.site_id())
         for host in self.hosts().values():
             site_ids.add(host.site_id())
         for subfolder in self.subfolders().values():
-            subfolder._add_host_sites_to_set(site_ids)
+            subfolder._add_all_sites_to_set(site_ids)
 
 
-    def _find_host_sites(self):
+    def all_site_ids(self):
         site_ids = set()
-        self._add_host_sites_to_set(site_ids)
+        self._add_all_sites_to_set(site_ids)
         return site_ids
 
 
     # CLEANUP: sync=False is just needed for discovery. Do we
     # really need this?
     def mark_hosts_dirty(self, need_sync=True, need_restart=True):
-        for site_id in self._find_host_sites():
+        for site_id in self.all_site_ids():
             changes = {}
             if need_sync and not config.site_is_local(site_id):
                 changes["need_sync"] = True

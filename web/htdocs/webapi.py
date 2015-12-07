@@ -25,8 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from lib import *
-from wato import API
-import config
+import config, wato
 
 try:
     import simplejson as json
@@ -71,7 +70,7 @@ def page_api():
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
 
         # Create API instance
-        g_api = API()
+        g_api = wato.API()
 
         # Prepare request_object
         # Most of the time the request is given as json

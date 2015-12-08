@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ServiceSpecialDoubleColumn_h
-#define ServiceSpecialDoubleColumn_h
+#ifndef HostSpecialDoubleColumn_h
+#define HostSpecialDoubleColumn_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
@@ -42,4 +42,4 @@ public:
     double getValue(void *data);
 };
 
-#endif // ServiceSpecialDoubleColumn_h
+#endif // HostSpecialDoubleColumn_h

@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef store_h
-#define store_h
+#ifndef store_c_h
+#define store_c_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
@@ -57,5 +57,4 @@ extern "C"
 }
 #endif
 
-#endif /* store_h */
-
+#endif /* store_c_h */

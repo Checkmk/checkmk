@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef _TimeperiodsCache_h
-#define _TimeperiodsCache_h
+#ifndef TimeperiodsCache_h
+#define TimeperiodsCache_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
@@ -50,4 +50,4 @@ private:
     void logTransition(char *name, int from, int to);
 };
 
-#endif // _TimeperiodsCache_h
+#endif // TimeperiodsCache_h

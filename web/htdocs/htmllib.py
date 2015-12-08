@@ -136,6 +136,7 @@ class html:
         self.guitest = {
             "variables" : self.vars.copy(),
             "filename" : self.myfile,
+            "output" : {},
         }
         # Fix transaction ID: We are just interested in whether it is valid or not
         if "_transid" in self.vars:
@@ -203,7 +204,12 @@ class html:
 
 
     def guitest_ignored_pages(self):
-        return [ "run_cron", "index", "side", "sidebar_snapin" ]
+        return [ "run_cron", "index", "side", "sidebar_snapin", "dashboard", "dashboard_dashlet", "login" ]
+
+
+    def guitest_record_output(self, key, value):
+        if self.guitest:
+            self.guitest["output"].setdefault(key, []).append(value)
 
 
     def is_mobile(self):
@@ -880,6 +886,7 @@ class html:
             self.default_html_headers()
             self.write('<title>')
             self.write(self.attrencode(title))
+            self.add_guitest_record("page_title", title)
             self.write('</title>\n')
 
             # If the variable _link_target is set, then all links in this page

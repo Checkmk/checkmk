@@ -1,7 +1,7 @@
 #!/usr/bin/python
+# encoding: utf-8
 
 import os, sys, getopt, pprint, time, requests
-
 
 #   .--GUI Test------------------------------------------------------------.
 #   |                  ____ _   _ ___   _____         _                    |
@@ -21,9 +21,13 @@ def tests_dir():
     return path
 
 
+def recording_symlink():
+    return tests_dir() + "RECORD"
+
+
 def run_guitests(args):
     if not args:
-        bail_out("Please specify tests to run. Available are: %s" % " ".join(names_of_all_tests()))
+        args = names_of_all_tests()
 
     sys.stdout.write("Going to run %d tests...\n" % len(args))
 
@@ -81,6 +85,30 @@ def run_test_step(test_name, step_nr, step):
     return response.status_code == requests.codes.ok
 
 
+def list_guitests(test_names):
+    if not test_names:
+        test_names = names_of_all_tests()
+    for test_name in test_names:
+        sys.stdout.write("%s\n" % test_name)
+        test = load_guitest(test_name)
+        for nr, step in enumerate(test):
+            sys.stdout.write("    #%d - %s\n" % (nr, step["output"]["page_title"]))
+
+
+def start_recording(test_name):
+    if os.path.lexists(recording_symlink()):
+        bail_out("Currently recording. Stop with cmk-guitest -s.\n")
+    os.symlink(test_name + ".mk", recording_symlink())
+    sys.stdout.write("Started recording into test %s.\n" % test_name)
+
+
+def stop_recording(args):
+    if not os.path.lexists(recording_symlink()):
+        bail_out("Currently not recording.")
+    os.remove(recording_symlink())
+    sys.stdout.write("Stopped recording.\n")
+
+
 #.
 #   .-Helpers--------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -119,16 +147,27 @@ def bail_out(x):
 
 def usage():
     sys.stderr.write("""
-Usage: %s [OPTION] TEST1 TEST2 ...
+Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-R|-l}
 
   -h, --help                 Show this help
   -v, --verbose              Output debug information on stderr
       --debug                Do not catch Python exceptions
 
-""" % os.path.split(sys.argv[0])[1])
+  -r, --record TEST          Start recording new test
+  -s, --stop-recording       Stop recording test
+  -l, --list-tests           List all tests
 
-def print_version():
-    sys.stdout.write("This is cmcdump version %s\n" % check_mk_version)
+
+  Running tests:
+
+  cmk-guitest [OPTIONS] [TEST1 TEST2...]
+
+  Recording tests:
+
+  cmk-guitest [OPTIONS] -r TEST
+  cmk-guitest [OPTIONS] -s
+
+""")
 
 #.
 #   .-main-----------------------------------------------------------------.
@@ -142,8 +181,8 @@ def print_version():
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hv'
-long_options = [ "help", "debug", "verbose" ]
+short_options = 'hvr:sl'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record=", "stop-recording" ]
 
 opt_verbose = False
 opt_debug = False
@@ -155,11 +194,19 @@ except getopt.GetoptError, err:
     usage()
     sys.exit(1)
 
+mode_function = run_guitests
+
 for o,a in opts:
     # modes
     if o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
+    elif o in [ '-l', '--list-tests' ]:
+        mode_function = list_guitests
+    elif o in [ '-r', '--record' ]:
+        mode_function = (lambda a: (lambda args: start_recording(a)))(a)
+    elif o in [ '-s', '--stop-recording' ]:
+        mode_function = stop_recording
 
     # Modifiers
     elif o in [ '-v', '--verbose' ]:
@@ -169,92 +216,7 @@ for o,a in opts:
 
 # Main modes
 try:
-    run_guitests(args)
-
-except Exception, e:
-    if opt_debug:
-        raise
-    bail_out(e)
-
-
-#   .-Helpers--------------------------------------------------------------.
-#   |                  _   _      _                                        |
-#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
-#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   +----------------------------------------------------------------------+
-#   | Various helper functions                                             |
-#   '----------------------------------------------------------------------'
-
-def omd_root():
-    return os.getenv("OMD_ROOT")
-
-def omd_site():
-    return os.getenv("OMD_SITE")
-
-def verbose(x):
-    if opt_verbose:
-        sys.stderr.write("%s\n" % x)
-
-def bail_out(x):
-    sys.stderr.write("%s\n" % x)
-    sys.exit(1)
-
-def usage():
-    sys.stderr.write("""
-Usage: %s [OPTION] TEST
-
-  -h, --help                 Show this help
-  -v, --verbose              Output debug information on stderr
-      --debug                Do not catch Python exceptions
-
-""" % os.path.split(sys.argv[0])[1])
-
-def print_version():
-    sys.stdout.write("This is cmcdump version %s\n" % check_mk_version)
-
-#.
-#   .-main-----------------------------------------------------------------.
-#   |                                       _                              |
-#   |                       _ __ ___   __ _(_)_ __                         |
-#   |                      | '_ ` _ \ / _` | | '_ \                        |
-#   |                      | | | | | | (_| | | | | |                       |
-#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Main entry point, getopt, etc.                                       |
-#   '----------------------------------------------------------------------'
-
-short_options = 'hv'
-long_options = [ "help", "debug", "verbose" ]
-
-opt_verbose = False
-opt_debug = False
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
-    sys.stderr.write("%s\n\n" % err)
-    usage()
-    sys.exit(1)
-
-for o,a in opts:
-    # modes
-    if o in [ '-h', '--help' ]:
-        usage()
-        sys.exit(0)
-
-    # Modifiers
-    elif o in [ '-v', '--verbose' ]:
-        opt_verbose = True
-    elif o == '--debug':
-        opt_debug = True
-
-# Main modes
-try:
-    run_guitest(args)
+    mode_function(args)
 
 except Exception, e:
     if opt_debug:

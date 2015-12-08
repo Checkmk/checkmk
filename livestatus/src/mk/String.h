@@ -22,32 +22,73 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TimeperiodsCache_h
-#define TimeperiodsCache_h
+#ifndef mk_String_h
+#define mk_String_h
 
-#include "config.h"  // IWYU pragma: keep
-#include <time.h>
-#include <map>
-#include "mk/Mutex.h"
-#include "nagios.h"
+#include "config.h" // IWYU pragma: keep
+#include <stdio.h>
+#include <limits>
+#include <string>
 
+// Some missing functions from  C++11's <string>
 
-class TimeperiodsCache
+namespace mk {
+
+template <typename T>
+std::string to_string_helper(const char *format, T value)
 {
-    time_t _cache_time;
-    typedef std::map<timeperiod *, bool> _cache_t;
-    _cache_t _cache;
-    mk::mutex _cache_lock;
+    char buf[std::numeric_limits<T>::max_exponent10 == 0
+                 ? sizeof(T) * 4 + 1 // 4 = ceil(log2(10))
+                 : std::numeric_limits<T>::max_exponent10 + 20];
+    const int len = snprintf(buf, sizeof(buf), format, value);
+    return std::string(buf, buf + len);
+}
 
-public:
-    TimeperiodsCache();
-    ~TimeperiodsCache();
-    void update(time_t now);
-    bool inTimeperiod(timeperiod *tp);
-    bool inTimeperiod(const char *tpname);
-    void logCurrentTimeperiods();
-private:
-    void logTransition(char *name, int from, int to);
-};
+inline std::string to_string(int x)
+{
+    return to_string_helper("%d", x);
+}
 
-#endif // TimeperiodsCache_h
+inline std::string to_string(unsigned x)
+{
+    return to_string_helper("%u", x);
+}
+
+inline std::string to_string(long x)
+{
+    return to_string_helper("%ld", x);
+}
+
+inline std::string to_string(unsigned long x)
+{
+    return to_string_helper("%lu", x);
+}
+
+inline std::string to_string(long long x)
+{
+    return to_string_helper("%lld", x);
+}
+
+inline std::string to_string(unsigned long long x)
+{
+    return to_string_helper("%llu", x);
+}
+
+inline std::string to_string(float x)
+{
+    return to_string_helper("%f", x);
+}
+
+inline std::string to_string(double x)
+{
+    return to_string_helper("%f", x);
+}
+
+inline std::string to_string(long double x)
+{
+    return to_string_helper("%Lf", x);
+}
+
+} // namespace mk
+
+#endif // mk_String_h

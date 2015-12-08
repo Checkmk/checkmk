@@ -1,0 +1,11 @@
+Title: check_mk_agent.linux: The ps section of the agent now supports long usernames
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449579105
+Class: feature
+
+The ps command now return usernames up to 32 digits instead falling back to the user_id.
+Thanks for this Patch to Vinny Wadding
+

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import re
 import defaults
 from lib import *
 
@@ -112,26 +113,6 @@ class GUITester:
             self.store_new_transids()
 
 
-    def end_guitest_replay(self):
-        if self.replayed_guitest_step:
-            errors = []
-            for varname in self.replayed_guitest_step["output"].keys():
-                errors += self.guitest_check_output(
-                    varname,
-                    self.replayed_guitest_step["output"][varname],
-                    self.replayed_guitest_step["replay"].get(varname, []))
-            if errors:
-                raise MKGuitestFailed(errors)
-
-
-    def guitest_check_output(self, varname, reference, reality):
-        errors = []
-        for entry in reference:
-            if entry not in reality:
-                errors.append("%s: missing entry %r" % (varname, entry))
-        return errors
-
-
     def guitest_recording_active(self):
         # Activated by symoblic link pointing to recording file
         return os.path.lexists(defaults.var_dir + "/guitests/RECORD") and not \
@@ -158,3 +139,71 @@ class GUITester:
                 self.end_guitest_replay()
             except MKGuitestFailed, e:
                 self.write("\n[[[GUITEST FAILED]]]\n%s" % ("\n".join(e.errors)))
+
+
+    def end_guitest_replay(self):
+        if self.replayed_guitest_step:
+            errors = []
+            for varname in self.replayed_guitest_step["output"].keys():
+                method = self.guitest_test_method(varname)
+                errors += [ "%s: %s" % (varname, error)
+                            for error in method(
+                                self.replayed_guitest_step["output"][varname],
+                                self.replayed_guitest_step["replay"].get(varname, [])) ]
+            if errors:
+                raise MKGuitestFailed(errors)
+
+
+    def guitest_test_method(self, varname):
+        if varname == "data_tables":
+            return guitest_check_datatables
+        else:
+            return guitest_check_element_list
+
+
+def guitest_check_element_list(reference, reality):
+    errors = []
+    for entry in reference:
+        if entry not in reality:
+            errors.append("missing entry %r" % (entry,))
+    return errors
+
+
+def guitest_check_datatables(reference, reality):
+    if len(reference) != len(reality):
+        return [ _("Expected %d data tables, but got %d") % (len(reference), len(reality)) ]
+
+    errors = []
+    for ref_table, real_table in zip(reference, reality):
+        errors += guitest_check_datatable(ref_table, real_table)
+    return errors
+
+
+def guitest_check_datatable(ref_table, real_table):
+    if ref_table["id"] != real_table["id"]:
+        return [ "Table id %s expected, but got %s" % (ref_table["id"], real_table["id"]) ]
+
+    if len(ref_table["rows"]) != len(real_table["rows"]):
+        return [ "Table %s: expected %d rows, but got %d" % (
+                  ref_table["id"], len(ref_table["rows"]), len(real_table["rows"])) ]
+
+    for row_nr, (ref_row, real_row) in enumerate(zip(ref_table["rows"], real_table["rows"])):
+        if len(ref_row) != len(real_row):
+            return [ "Table %s, row %d: expected %d columns, but got %d" % (
+                ref_table["id"], row_nr+1, len(ref_row), len(real_row)) ]
+
+        # Note: Rows are tuples. The first component is the list of cells
+        for cell_nr, (ref_cell, real_cell) in enumerate(zip(ref_row[0], real_row[0])):
+            # Note: cell is a triple. The first component contains the text
+            if not guitest_check_text(ref_cell[0], real_cell[0]):
+                return [ "Row %d, Column %d: expected %r, got %r" % (row_nr+1, cell_nr+1, ref_cell[0], real_cell[0]) ]
+
+    return []
+
+
+def guitest_check_text(ref, real):
+    return guitest_drop_transid(ref) == guitest_drop_transid(real)
+
+
+def guitest_drop_transid(text):
+    return re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text)

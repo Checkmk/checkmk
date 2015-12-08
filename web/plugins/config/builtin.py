@@ -213,6 +213,8 @@ virtual_host_trees = []
 # Target email address for "Crashed Check" page
 crash_report_target = "feedback@check-mk.org"
 
+# GUI Tests (see cmk-guitest)
+guitests_enabled = False
 
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )

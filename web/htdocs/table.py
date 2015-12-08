@@ -149,6 +149,8 @@ def end():
         table = None
         return
 
+    html.guitest_record_output("data_tables", table)
+
     if table["title"] and not do_csv:
         html.write("<h3>%s</h3>" % table["title"])
 

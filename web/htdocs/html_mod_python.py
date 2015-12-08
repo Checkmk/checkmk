@@ -159,6 +159,7 @@ class html_mod_python(htmllib.html):
     def finalize(self, is_error=False):
         self.live = None # disconnects from livestatus
         self.end_guitest_recording()
+        self.end_guitest_replay()
 
 
     def get_request_header(self, key, deflt=None):

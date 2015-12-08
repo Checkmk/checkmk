@@ -118,6 +118,7 @@ class html:
         self._default_javascripts = [ "checkmk", "graphs" ]
         self._default_stylesheets = [ "check_mk", "graphs" ]
         self.guitest = None
+        self.replayed_guitest_step = None
 
         # Time measurement
         self.times            = {}
@@ -176,25 +177,47 @@ class html:
     def replay_guitest(self):
         test_name = self.var("test")
         if not test_name:
-            raise MKGeneralException(_("Missing the name of the GUI test to run (URL variable 'test')"))
+            raise MKGuitestFailed([_("Missing the name of the GUI test to run (URL variable 'test')")])
         guitest = self.load_guitest(test_name)
 
         step_nr_text = self.var("step")
         try:
             step_nr = int(step_nr_text)
         except:
-            raise MKGeneralException(_("Invalid or missing test step number (URL variable 'step')"))
+            raise MKGuitestFailed([_("Invalid or missing test step number (URL variable 'step')")])
         if step_nr >= len(guitest) or step_nr < 0:
-            raise MKGeneralException(_("Invalid test step number %d (only 0...%d)") % (step_nr, len(guitest)-1))
+            raise MKGuitestFailed([_("Invalid test step number %d (only 0...%d)") % (step_nr, len(guitest)-1)])
 
-        test_step = guitest[step_nr]
+        self.replayed_guitest_step = guitest[step_nr]
+        self.replayed_guitest_step["replay"] = {}
 
-        self.myfile = test_step["filename"]
-        self.guitest_fake_login(test_step["user"])
-        self.vars = test_step["variables"]
+
+        self.myfile = self.replayed_guitest_step["filename"]
+        self.guitest_fake_login(self.replayed_guitest_step["user"])
+        self.vars = self.replayed_guitest_step["variables"]
         if "_transid" in self.vars and self.vars["_transid"] == "valid":
             self.vars["_transid"] = self.get_transid()
             self.store_new_transids()
+
+
+    def end_guitest_replay(self):
+        if self.replayed_guitest_step:
+            errors = []
+            for varname in self.replayed_guitest_step["output"].keys():
+                errors += self.guitest_check_output(
+                    varname,
+                    self.replayed_guitest_step["output"][varname],
+                    self.replayed_guitest_step["replay"].get(varname, []))
+            if errors:
+                raise MKGuitestFailed(errors)
+
+
+    def guitest_check_output(self, varname, reference, reality):
+        errors = []
+        for entry in reference:
+            if entry not in reality:
+                errors.append("%s: missing entry %r" % (varname, entry))
+        return errors
 
 
     def guitest_recording_active(self):
@@ -210,6 +233,8 @@ class html:
     def guitest_record_output(self, key, value):
         if self.guitest:
             self.guitest["output"].setdefault(key, []).append(value)
+        elif self.replayed_guitest_step:
+            self.replayed_guitest_step["replay"].setdefault(key, []).append(value)
 
 
     def is_mobile(self):
@@ -550,6 +575,7 @@ class html:
         self.context_buttons_open = False
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title='', fkey=None):
+        self.guitest_record_output("context_button", (title, url, icon))
         title = self.attrencode(title)
         display = "block"
         if bestof:
@@ -886,7 +912,7 @@ class html:
             self.default_html_headers()
             self.write('<title>')
             self.write(self.attrencode(title))
-            self.add_guitest_record("page_title", title)
+            self.guitest_record_output("page_title", title)
             self.write('</title>\n')
 
             # If the variable _link_target is set, then all links in this page

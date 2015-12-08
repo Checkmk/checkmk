@@ -91,6 +91,11 @@ class MKUserError(MKException):
 class MKInternalError(MKException):
     pass
 
+class MKGuitestFailed(MKException):
+    def __init__(self, errors):
+        self.errors = errors
+        MKException.__init__(self, _("GUI Test failed"))
+
 # Create directory owned by common group of Nagios and webserver,
 # and make it writable for the group
 def make_nagios_directory(path):

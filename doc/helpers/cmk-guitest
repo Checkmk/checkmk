@@ -54,10 +54,13 @@ def run_guitest(test_name):
         one_failed = False
         for step_nr, step in enumerate(guitest):
             sys.stdout.write("       #%d - %s.py..." % (step_nr, step["filename"]))
-            if run_test_step(test_name, step_nr, step):
+            errors = run_test_step(test_name, step_nr, step)
+            if not errors:
                 sys.stdout.write(tty_green + "OK\n" + tty_normal)
             else:
                 sys.stdout.write(tty_red + "FAILED\n" + tty_normal)
+                for error in errors:
+                    sys.stdout.write("           %s\n" % error)
                 one_failed = True
         return not one_failed
 
@@ -82,7 +85,16 @@ def names_of_all_tests():
 def run_test_step(test_name, step_nr, step):
     url = "http://localhost/%s/check_mk/guitest.py" % omd_site()
     response = requests.post(url, data = { "test" : test_name, "step" : str(step_nr) })
-    return response.status_code == requests.codes.ok
+    if response.status_code != requests.codes.ok:
+        errors = [ "HTTP Response is not %s but %s" % (requests.codes.ok, response.status_code) ]
+        errors += response.text.splitlines()
+        return errors
+
+    error_offset = response.text.find('[[[GUITEST FAILED]]]')
+    if error_offset != -1:
+        error_info = response.text[error_offset + 21:]
+        errors = error_info.splitlines()
+        return errors
 
 
 def list_guitests(test_names):
@@ -92,21 +104,43 @@ def list_guitests(test_names):
         sys.stdout.write("%s\n" % test_name)
         test = load_guitest(test_name)
         for nr, step in enumerate(test):
-            sys.stdout.write("    #%d - %s\n" % (nr, step["output"]["page_title"]))
+            sys.stdout.write("    #%d - %s\n" % (nr, step_title(step)))
+
+
+def step_title(step):
+    if "page_title" in step["output"]:
+        page_title = step["output"]["page_title"][0]
+    else:
+        page_title = "(no page title)"
+    return "%s.py - %s" % (step["filename"], page_title)
+
+
+def start_stop_recording(args):
+    if args:
+        start_recording(args[0])
+    else:
+        stop_recording()
 
 
 def start_recording(test_name):
     if os.path.lexists(recording_symlink()):
-        bail_out("Currently recording. Stop with cmk-guitest -s.\n")
+        bail_out("Currently recording. Stop with cmk-guitest -r.")
     os.symlink(test_name + ".mk", recording_symlink())
     sys.stdout.write("Started recording into test %s.\n" % test_name)
 
 
-def stop_recording(args):
+def stop_recording():
     if not os.path.lexists(recording_symlink()):
         bail_out("Currently not recording.")
+    test_name = os.readlink(recording_symlink())[:-3]
+    if not os.path.exists(recording_symlink()):
+        sys.stdout.write("Aborted recording. Test %s not created.\n" % test_name)
+        os.remove(recording_symlink())
+        return
+
     os.remove(recording_symlink())
-    sys.stdout.write("Stopped recording.\n")
+    test = load_guitest(test_name)
+    sys.stdout.write("Stopped recording test %s (%d steps).\n" % (test_name, len(test)))
 
 
 #.
@@ -130,6 +164,7 @@ else:
     tty_bold = ""
     tty_normal = ""
     tty_red = ""
+    tty_green = ""
 
 def omd_root():
     return os.getenv("OMD_ROOT")
@@ -154,7 +189,7 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-R|-l}
       --debug                Do not catch Python exceptions
 
   -r, --record TEST          Start recording new test
-  -s, --stop-recording       Stop recording test
+  -r, --record               Stop recording test
   -l, --list-tests           List all tests
 
 
@@ -165,7 +200,7 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-R|-l}
   Recording tests:
 
   cmk-guitest [OPTIONS] -r TEST
-  cmk-guitest [OPTIONS] -s
+  cmk-guitest [OPTIONS] -r
 
 """)
 
@@ -181,8 +216,8 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-R|-l}
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvr:sl'
-long_options = [ "help", "debug", "verbose", "list-tests=", "record=", "stop-recording" ]
+short_options = 'hvrsl'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record" ]
 
 opt_verbose = False
 opt_debug = False
@@ -204,9 +239,7 @@ for o,a in opts:
     elif o in [ '-l', '--list-tests' ]:
         mode_function = list_guitests
     elif o in [ '-r', '--record' ]:
-        mode_function = (lambda a: (lambda args: start_recording(a)))(a)
-    elif o in [ '-s', '--stop-recording' ]:
-        mode_function = stop_recording
+        mode_function = start_stop_recording
 
     # Modifiers
     elif o in [ '-v', '--verbose' ]:

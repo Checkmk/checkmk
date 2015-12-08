@@ -1,0 +1,17 @@
+Title: Check_MK Discovery/Inventory and HW/SW Inventory services are now always using caches (if available)
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1449135634
+
+The Check_MK services "Check_MK Discovery", "Check_MK Inventory" and "Check_MK HW/SW Inventory" need
+data from the Check_MK agent on agent based hosts. These check were contacting the agent on their own
+on every execution which could lead to logwatch messages not being processed by the agent because they
+were already processed by the discovery/inventory checks.
+
+We now set these checks to use the agent cache (if available and if recent enough). This makes the
+checks only contact the agent when neccessary. This should never happen when the host is being monitored
+regularly because the regular monitoring ensures that the cache is available and up-to-date.

@@ -165,6 +165,12 @@ def next_line(file_handle):
     else:
         try:
             line = file_handle.next()
+            # Avoid parsing of (yet) incomplete lines (when acutal application
+            # is just in the process of writing)
+            if not line.endswith(os.linesep):
+                begin_of_line_offset = file_handle.tell() - len(line)
+                os.lseek(file_handle.fileno(), begin_of_line_offset, 0)
+                return None
             return line
         except:
             return None

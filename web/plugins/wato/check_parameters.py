@@ -118,6 +118,25 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'first'
 )
 
+
+register_rule(group + '/' + subgroup_inventory,
+    varname = "ewon_discovery_rules",
+    title = _("EWON Discovery"),
+    help = _("The ewon vpn routers can rely data from a secondary device via snmp. "
+            "It doesn't however allow discovery of the device type relayed this way. "
+            "To allow interpretation of the data you need to pick the device manually."),
+    valuespec = DropdownChoice(
+        title = _("Device Type"),
+        label = _("Select device type"),
+        choices = [
+            (None, _("None selected")),
+            ("oxyreduct", _("Wagner OxyReduct")),
+        ],
+        default_value = None,
+    ),
+)
+
+
 #.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |
@@ -2414,7 +2433,7 @@ register_check_parameters(
                   totext = "",
                   title = _("Do not alert on connection loss"),
                 )),
-                ( "war_states",
+                ( "warn_states",
                     ListChoice(
                         title = _("States treated as warning"),
                         choices = hivemanger_states,
@@ -4881,6 +4900,30 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "oracle_rman",
+    _("Oracle RMAN Backups"),
+    Dictionary(
+         elements = [
+             ("levels",
+                 Tuple(
+                     title = _("Maximum Age for RMAN backups"),
+                     elements = [
+                          Age(title = _("warning if older than"),  default_value = 1800),
+                          Age(title = _("critical if older than"), default_value = 3600),
+                     ]
+                 )
+             )
+         ]
+    ),
+    TextAscii(
+        title = _("Database SID"),
+        size = 12,
+        allow_empty = False),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "oracle_recovery_status",
     _("Oracle Recovery Status"),
     Dictionary(
@@ -5299,6 +5342,22 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "mssql_blocked_sessions",
+    _("MSSQL Blocked Sessions"),
+    Dictionary(
+        elements = [
+            ( "state",
+                MonitoringState(
+                    title = _("State of MSSQL Blocked Sessions is treated as"),
+                    default_value = 2,
+            )),
+        ],
+    ),
+    None,
+    "dict",
+)
 
 register_check_parameters(
     subgroup_applications,
@@ -6804,6 +6863,38 @@ register_check_parameters(
                   elements = [
                       Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True, default_value=50),
                       Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True, default_value=60)])),
+            ( "inodes_levels",
+                Alternative(
+                    title = _("Levels for Inodes"),
+                    help  = _("The number of remaining inodes on the filesystem. "
+                              "Please note that this setting has no effect on some filesystem checks."),
+                    elements = [
+                            Tuple(title = _("Percentage free"),
+                                  elements = [
+                                       Percentage(title = _("Warning if less than")),
+                                       Percentage(title = _("Critical if less than")),
+                                  ]
+                            ),
+                            Tuple(title = _("Absolute free"),
+                                  elements = [
+                                       Integer(title = _("Warning if less than"),  size = 10, unit = _("inodes"), minvalue = 0, default_value = 10000),
+                                       Integer(title = _("Critical if less than"), size = 10, unit = _("inodes"), minvalue = 0, default_value = 5000),
+                                  ]
+                            )
+                    ],
+                    default_value = (10.0, 5.0),
+                )
+            ),
+            ( "show_inodes",
+              DropdownChoice(
+                  title = _("Display inode usage in check output..."),
+                  choices = [
+                    ( "onproblem", _("Only in case of a problem")),
+                    ( "onlow",     _("Only in case of a problem or if inodes are below 50%")),
+                    ( "always",    _("Always")),
+                  ],
+                  default_value = "onlow",
+            )),
             (  "trend_range",
                Optional(
                    Integer(

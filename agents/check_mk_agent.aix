@@ -96,7 +96,7 @@ function run_cached {
     CMDLINE=$*
     MAXAGE=$MAXAGE*60
 
-    if [ ! -e $MK_VARDIR/cache ] ; then mkdir $MK_VARDIR/cache ; fi
+    if [ ! -e $MK_VARDIR/cache ] ; then mkdir -p $MK_VARDIR/cache ; fi
     CACHE_FILE=$MK_VARDIR/cache/$NAME.cache
 
     USE_CACHE_FILE=""

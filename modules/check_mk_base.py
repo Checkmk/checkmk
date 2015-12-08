@@ -341,8 +341,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
         info = []
         at_least_one_without_exception = False
         exception_texts = []
-        global opt_use_cachefile
-        opt_use_cachefile = True
+        set_use_cachefile()
         is_snmp_error = False
         for node in nodes:
             # If an error with the agent occurs, we still can (and must)
@@ -1199,7 +1198,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     expected_version = agent_target_version(hostname)
 
-    # Exit state in various situations is confiugrable since 1.2.3i1
+    # Exit state in various situations is configurable since 1.2.3i1
     exit_spec = exit_code_spec(hostname)
 
     try:

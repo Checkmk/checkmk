@@ -139,19 +139,22 @@ raritan_map_state = {
 # "X.Y.Z",  # UpperCriticalThreshold
 # "X.Y.Z",  # UpperWarningThreshold
 
-def parse_raritan_sensors(info): # , raritan_device_type, raritan_device_item_name):
+def parse_raritan_sensors(info):
     parsed = {}
-    for line in info:
+    for availability, sensor_id, sensor_name, sensor_type, sensor_state, sensor_unit, \
+        sensor_exponent, sensor_value_str, sensor_lower_crit_str, sensor_lower_warn_str, \
+        sensor_upper_crit_str, sensor_upper_warn_str in info:
+
         sensor_type, sensor_type_readable = \
-            raritan_map_type.get(line[3], ('', "Other"))
+            raritan_map_type.get(sensor_type, ('', "Other"))
 
         extra_name = ""
         if sensor_type_readable != '':
             extra_name += " " + sensor_type_readable
 
-        sensor_name = ("Sensor %s%s %s" % (line[1], extra_name, line[2])).strip()
+        sensor_name = ("Sensor %s%s %s" % (sensor_id, extra_name, sensor_name)).strip()
 
-        sensor_unit = raritan_map_unit.get(line[5], " Other")
+        sensor_unit = raritan_map_unit.get(sensor_unit, " Other")
 
         # binary sensors don't have any values or levels
         if sensor_type in [ 'binary', '' ]:
@@ -165,11 +168,13 @@ def parse_raritan_sensors(info): # , raritan_device_type, raritan_device_item_na
                 factor = 1
             # if the value is 5 and unitSensorDecimalDigits is 2
             # then actual value is 0.05
-            sensor_data = map(lambda x: factor * float(x) / pow(10, int(line[6])), line[7:])
+            sensor_data = map(lambda x: factor * float(x) / pow(10, int(sensor_exponent)), \
+                              [sensor_value_str, sensor_lower_crit_str, sensor_lower_warn_str, \
+                               sensor_upper_crit_str, sensor_upper_warn_str])
 
         parsed[sensor_name] = {
-            'is_available' : line[0],
-            'state'        : raritan_map_state.get(line[4], (3, "unhandled state")),
+            'availability' : availability,
+            'state'        : raritan_map_state.get(sensor_state, (3, "unhandled state")),
             'sensor_type'  : sensor_type,
             'sensor_data'  : sensor_data,
             'sensor_unit'  : sensor_unit,
@@ -181,7 +186,7 @@ def parse_raritan_sensors(info): # , raritan_device_type, raritan_device_item_na
 def inventory_raritan_sensors(parsed, sensor_type):
     inventory = []
     for key, values in parsed.items():
-        if values['is_available'] == '1' and values['sensor_type'] == sensor_type:
+        if values['availability'] == '1' and values['sensor_type'] == sensor_type:
             inventory.append( (key, None) )
 
     return inventory
@@ -190,7 +195,7 @@ def inventory_raritan_sensors(parsed, sensor_type):
 def inventory_raritan_sensors_temp(parsed, sensor_type):
     inventory = []
     for key, values in parsed.items():
-        if values['is_available'] == '1' and values['sensor_type'] == sensor_type:
+        if values['availability'] == '1' and values['sensor_type'] == sensor_type:
             inventory.append( (key, {}) )
 
     return inventory

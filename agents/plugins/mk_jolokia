@@ -24,9 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import urllib2, sys, os, socket, pprint
+import urllib2, sys, os, socket, pprint, base64
 
 opt_debug = '--debug' in sys.argv
+
+
+class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
+    """
+    sends basic authentication with the first request,
+    before the server even asks for it
+    """
+
+    def http_request(self, req):
+        url = req.get_full_url()
+        realm = None
+        user, pw = self.passwd.find_user_password(realm, url)
+        if pw:
+            raw = "%s:%s" % (user, pw)
+            auth = 'Basic %s' % base64.b64encode(raw).strip()
+            req.add_unredirected_header(self.auth_header, auth)
+        return req
+
+    https_request = http_request
+
 
 def fetch_var(server, port, path, suburi, itemspec):
     url = "http://%s:%d/%s/%s" % (server, port, suburi, path)
@@ -124,6 +144,8 @@ def query_instance(inst):
                 (inst["server"], inst["port"]), inst["user"], inst["password"])
         if inst["mode"] == 'digest':
             authhandler = urllib2.HTTPDigestAuthHandler(passwdmngr)
+        elif inst["mode"] == "basic_preemptive":
+            authhandler = PreemptiveBasicAuthHandler(passwdmngr)
         else:
             authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)
         opener = urllib2.build_opener(authhandler)

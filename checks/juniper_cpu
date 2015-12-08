@@ -31,39 +31,42 @@ def inventory_juniper_cpu(info):
 
 def check_juniper_cpu(item, params, info):
     for line in info:
-       if line[0] == item:
-           util1, util5, util15 = map(int,line[1:])
-           warn, crit = params
-           label1, label5, label15 = "", "", ""
-           state = 0
-           if util1 >= crit:
-               state = 2
-               label1 = "(!!)"
-           elif util1 >= warn:
-               state = 1
-               label1 = "(!)"
-           if util5 >= crit:
-               state = 2
-               label5 = "(!!)"
-           elif util5 >= warn:
-               state = max(state,1)
-               label5 = "(!)"
-           if util15 >= crit:
-               state = 2
-               label15 = "(!!)"
-           elif util15 >= warn:
-               state = max(state,1)
-               label15 = "(!)"
+        if line[0] == item:
+            try:
+                util1, util5, util15 = map(int, line[1:])
+            except ValueError:
+                return 3, "CPU information not provided by device"
 
-           perf = [( "util1", util1, warn, crit ),
-                   ( "util5", util5, warn, crit ),
-                   ( "util15", util15, warn, crit )]
+            warn, crit = params
+            label1, label5, label15 = "", "", ""
+            state = 0
+            if util1 >= crit:
+                state = 2
+                label1 = "(!!)"
+            elif util1 >= warn:
+                state = 1
+                label1 = "(!)"
+            if util5 >= crit:
+                state = 2
+                label5 = "(!!)"
+            elif util5 >= warn:
+                state = max(state,1)
+                label5 = "(!)"
+            if util15 >= crit:
+                state = 2
+                label15 = "(!!)"
+            elif util15 >= warn:
+                state = max(state,1)
+                label15 = "(!)"
+
+            perf = [( "util1", util1, warn, crit ),
+                    ( "util5", util5, warn, crit ),
+                    ( "util15", util15, warn, crit )]
 
 
-           message = "%d%% 1 min%s, %d%% 5 min%s, %d%% 15 min%s" % \
-                     ( util1, label1, util5, label5, util15, label15 )
-           return state, message, perf
-    return 3, "Information not found in output"
+            message = "%d%% 1 min%s, %d%% 5 min%s, %d%% 15 min%s" % \
+                      ( util1, label1, util5, label5, util15, label15 )
+            return state, message, perf
 
 check_info["juniper_cpu"] = {
     "check_function"        : check_juniper_cpu,

@@ -46,6 +46,7 @@
 #    directly when reading from file or URL.
 
 import time, os, pwd, urllib, random, re, __builtin__
+from guitester import GUITester
 
 try:
     import simplejson as json
@@ -77,8 +78,9 @@ class HTML:
 
 __builtin__.HTML = HTML
 
-class html:
+class html(GUITester):
     def __init__(self):
+        GUITester.__init__(self)
         self.user = None
         self.user_errors = {}
         self.focus_object = None
@@ -468,6 +470,7 @@ class html:
         self.context_buttons_open = False
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title='', fkey=None):
+        self.guitest_record_output("context_button", (title, url, icon))
         title = self.attrencode(title)
         display = "block"
         if bestof:
@@ -804,6 +807,7 @@ class html:
             self.default_html_headers()
             self.write('<title>')
             self.write(self.attrencode(title))
+            self.guitest_record_output("page_title", title)
             self.write('</title>\n')
 
             # If the variable _link_target is set, then all links in this page
@@ -1308,6 +1312,7 @@ class html:
             if self.mobile:
                 self.write('<center>')
             self.write("<div class=really>%s" % self.permissive_attrencode(msg))
+            # FIXME: When this confirms another form, use the form name from self.vars()
             self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
@@ -1400,7 +1405,7 @@ class html:
     # on more complex pages!
     def urlencode_vars(self, vars):
         output = []
-        for varname, value in vars:
+        for varname, value in sorted(vars):
             if type(value) == int:
                 value = str(value)
             elif type(value) == unicode:

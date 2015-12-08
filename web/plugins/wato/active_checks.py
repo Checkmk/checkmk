@@ -763,13 +763,19 @@ register_rule(group,
                                 )
                             ),
                             ip_address_family_element,
-                            ( "ssl",
-                                FixedValue(
-                                    value = True,
-                                    totext = _("use SSL/HTTPS"),
-                                    title = _("Use SSL/HTTPS for the connection.")
-                                )
-                            ),
+                            ("ssl", Transform(
+                                DropdownChoice(
+                                    title = _("Use SSL/HTTPS for the connection"),
+                                    choices = [
+                                        ("auto",  _("Use SSL with auto negotiation")),
+                                        ("1",     _("Use SSL, enforce TLSv1")),
+                                        ("2",     _("Use SSL, enforce SSLv2")),
+                                        ("3",     _("Use SSL, enforce SSLv3")),
+                                    ],
+                                    default_value = "auto",
+                                ),
+                                forth = lambda x: x == True and "auto" or x,
+                            )),
                             ( "sni",
                                 FixedValue(
                                     value = True,
@@ -990,8 +996,8 @@ register_rule(group,
                             ),
                             ( "cert_host",
                                 TextAscii(
-                                    title = _("Check Cerficate of different IP / DNS Name"),
-                                    help = _("For each SSL cerficate on a host, a different IP address is needed. "
+                                    title = _("Check Certificate of different IP / DNS Name"),
+                                    help = _("For each SSL certificate on a host, a different IP address is needed. "
                                              "Here, you can specify the address if it differs from the  "
                                              "address from the host primary address."),
                                 ),

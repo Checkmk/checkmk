@@ -1284,7 +1284,7 @@ class EventServer:
             text = text.decode("latin-1")
         event = {
             'time'        : time.time(),
-            'host'        : host.replace('\n', ''),
+            'host'        : host,
             'ipaddress'   : ipaddress,
             'priority'    : 5,  # notice
             'facility'    : 31, # not used by syslog -> we use this for all traps
@@ -3244,14 +3244,15 @@ def do_event_actions(actions, event, is_cancelling):
 # not hang for more than a couple of ms.
 def do_event_action(action, event, user=""):
     if action["disabled"]:
+        log("Skipping disabled action %s." % action["id"])
         return
 
     try:
         action_type, settings = action["action"]
         if action_type == 'email':
-            to = substitute_event_tags(settings["to"], event)
+            to      = substitute_event_tags(settings["to"], event)
             subject = substitute_event_tags(settings["subject"], event)
-            body = to_utf8(substitute_event_tags(settings["body"], event))
+            body    = substitute_event_tags(settings["body"], event)
             send_email(to, subject, body)
             log_event_history(event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
@@ -3363,11 +3364,40 @@ def substitute_event_tags(text, event):
         text = text.replace('$%s$' % key.upper(), value)
     return text
 
+
 def quote_shell_string(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
+
 def send_email(to, subject, body):
-    os.popen("mail -s %s %s" % (quote_shell_string(subject), quote_shell_string(to)), "w").write(body)
+    # -S sendcharsets=utf-8 is "nail" specific. Nail is delivered with OMD. Hope
+    # it does not cause problems with other mail commands. Otherwise we need
+    # to find another solution for sending mails containing special chars.
+    # At least nail fails without this header when the mail contains such chars.
+    command_utf8 = "mail -S sendcharsets=utf-8 " \
+                   "-s %s %s" % (quote_shell_string(subject.encode("utf-8")),
+                                      quote_shell_string(to.encode("utf-8")))
+
+    if g_config["debug_rules"]:
+        log("  Executing: %s" % command_utf8)
+
+    p = subprocess.Popen(command_utf8, shell=True, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    # FIXME: This may lock on too large buffer. We should move all "mail sending" code
+    # to a general place and fix this for all our components (notification plugins,
+    # notify.py, this one, ...)
+    stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
+    exitcode = p.returncode
+
+    log('  Exitcode: %d' % exitcode)
+    if exitcode != 0:
+        log("  Error: Failed to send the mail.")
+        for line in (stdout_txt + stderr_txt).splitlines():
+            log("  Output: %s" % line.rstrip())
+        return False
+
+    return True
+
 
 def execute_script(body):
     p = subprocess.Popen(
@@ -3379,10 +3409,9 @@ def execute_script(body):
     output = p.stdout.read()
     exitcode = p.wait()
 
-    if g_config["debug_rules"]:
-        if output:
-            log('  Output: %s' % output)
-        log('  Exitcode: %d' % exitcode)
+    log('  Exitcode: %d' % exitcode)
+    if output:
+        log('  Output: %s' % output)
 
 
 #.

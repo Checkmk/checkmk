@@ -1,0 +1,10 @@
+Title: hivemanager_devices: Fixed configuration of states to treat as WARN
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1449479346
+
+

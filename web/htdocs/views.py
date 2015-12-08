@@ -1204,7 +1204,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     html.show_user_errors()
 
     # Filter form
-    filter_isopen = html.var("filled_in") != "filter" and view.get("mustsearch")
+    filter_isopen = view.get("mustsearch") and not html.var("filled_in")
     if 'F' in display_options and len(show_filters) > 0:
         show_filter_form(filter_isopen, show_filters)
 

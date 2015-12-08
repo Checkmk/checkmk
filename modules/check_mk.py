@@ -1345,9 +1345,25 @@ def agent_target_version(hostname):
             return spec # return the whole spec in case of an "at least version" config
 
 
+# FIXME TODO: Cleanup the whole caching crap
+orig_opt_use_cachefile           = None
 orig_check_max_cachefile_age     = None
 orig_cluster_max_cachefile_age   = None
 orig_inventory_max_cachefile_age = None
+
+
+def set_use_cachefile(state=True):
+    global opt_use_cachefile, orig_opt_use_cachefile
+    orig_opt_use_cachefile = opt_use_cachefile
+    opt_use_cachefile = state
+
+
+def restore_use_cachefile():
+    global opt_use_cachefile, orig_opt_use_cachefile
+    if orig_opt_use_cachefile != None:
+        opt_use_cachefile = orig_opt_use_cachefile
+        orig_opt_use_cachefile = None
+
 
 # TODO: Why 1000000000? Can't we really clean this up to a global variable which can
 # be toggled to enforce the cache usage (if available). This way we would not need
@@ -1369,11 +1385,17 @@ def enforce_using_agent_cache():
 
 def restore_original_agent_caching_usage():
     global check_max_cachefile_age, cluster_max_cachefile_age, inventory_max_cachefile_age
+    global orig_check_max_cachefile_age, orig_cluster_max_cachefile_age, \
+           orig_inventory_max_cachefile_age
+
     if orig_check_max_cachefile_age != None:
         check_max_cachefile_age     = orig_check_max_cachefile_age
         cluster_max_cachefile_age   = orig_cluster_max_cachefile_age
         inventory_max_cachefile_age = orig_inventory_max_cachefile_age
 
+        orig_check_max_cachefile_age     = None
+        orig_cluster_max_cachefile_age   = None
+        orig_inventory_max_cachefile_age = None
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -4536,6 +4558,7 @@ def do_check_keepalive():
                 args = cmdline.split()
                 if '--cache' in args:
                     args.remove('--cache')
+                    set_use_cachefile()
                     enforce_using_agent_cache()
 
                 # FIXME: remove obsolete check-inventory
@@ -4599,6 +4622,8 @@ def do_check_keepalive():
         sys.stderr.flush()
 
         cleanup_globals() # Prepare for next check
+        global opt_use_cachefile
+        opt_use_cachefile = True
         restore_original_agent_caching_usage()
 
         # Check if all global variables are clean, but only in verbose logging mode
@@ -5017,7 +5042,7 @@ for o,a in opts:
             sys.stderr.write("Please use the option -c separated by the other options.\n")
             sys.exit(1)
     elif o == '--cache':
-        opt_use_cachefile = True
+        set_use_cachefile()
         enforce_using_agent_cache()
     elif o == '--no-tcp':
         opt_no_tcp = True

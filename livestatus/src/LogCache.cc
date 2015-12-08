@@ -183,17 +183,6 @@ void LogCache::scanLogfile(char *path, bool watch)
         delete logfile;
 }
 
-void LogCache::dumpLogfiles()
-{
-    for (_logfiles_t::iterator it = _logfiles.begin();
-            it != _logfiles.end();
-            ++it)
-    {
-        Logfile *log = it->second;
-        debug("LOG %s from %d, %u messages, classes: 0x%04x", log->path(), log->since(), log->numEntries(), log->classesRead());
-    }
-}
-
 /* This method is called each time a log message is loaded
    into memory. If the number of messages loaded in memory
    is to large, memory will be freed by flushing logfiles

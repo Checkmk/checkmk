@@ -284,14 +284,16 @@ double current_time()
     return file_time(&filetime);
 }
 
-#define WINDOWS_TICK 10000000
-#define SEC_TO_UNIX_EPOCH 11644473600LL
 double file_time(const FILETIME *filetime)
 {
+    static const double SEC_TO_UNIX_EPOCH = 11644473600.0;
+    static const double WINDOWS_TICK      = 10000000.0;
+
     _ULARGE_INTEGER uli;
     uli.LowPart = filetime->dwLowDateTime;
     uli.HighPart = filetime->dwHighDateTime;
-    return double(uli.QuadPart / (double)WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
+
+    return (double(uli.QuadPart) / WINDOWS_TICK) - SEC_TO_UNIX_EPOCH;
 }
 
 void char_replace(char what, char into, char *in)
@@ -1898,7 +1900,7 @@ bool output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data)
 
     if (0 == (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
         output(out, "%s\\%s|%" PRIu64 "|%.0f\n", basename,
-                data->cFileName, size, file_time(&data->ftLastWriteTime));
+               data->cFileName, size, file_time(&data->ftLastWriteTime));
         return true;
     }
     return false;

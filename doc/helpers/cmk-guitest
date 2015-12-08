@@ -1,0 +1,302 @@
+#!/usr/bin/python
+# encoding: utf-8
+
+import os, sys, getopt, pprint, time, requests, re
+
+#   .--GUI Test------------------------------------------------------------.
+#   |                  ____ _   _ ___   _____         _                    |
+#   |                 / ___| | | |_ _| |_   _|__  ___| |_                  |
+#   |                | |  _| | | || |    | |/ _ \/ __| __|                 |
+#   |                | |_| | |_| || |    | |  __/\__ \ |_                  |
+#   |                 \____|\___/|___|   |_|\___||___/\__|                 |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Actual code for running the tests                                    |
+#   '----------------------------------------------------------------------'
+
+def tests_dir():
+    path = omd_root() + "/var/check_mk/guitests/"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
+
+
+def recording_symlink():
+    return tests_dir() + "RECORD"
+
+
+def run_guitests(args):
+    if not args:
+        args = names_of_all_tests()
+
+    sys.stdout.write("Going to run %d tests%s...\n" % (
+       len(args), opt_repair and " in repair mode" or ""))
+
+    num_failed = 0
+    num_successfull = 0
+    for test_name in args:
+        if opt_repair:
+            set_recording_symlink(test_name)
+        if run_guitest(test_name):
+            num_successfull += 1
+        else:
+            num_failed += 1
+        if opt_repair:
+            stop_recording()
+
+    sys.stdout.write("%d tests succeeded, %d failed.\n" % (num_successfull, num_failed))
+    if num_failed == 0:
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+
+def run_guitest(test_name):
+    try:
+        sys.stdout.write("    %s%s%s...\n" % (tty_bold, test_name, tty_normal))
+        sys.stdout.flush()
+        guitest = load_guitest(test_name)
+        for step_nr, step in enumerate(guitest):
+            sys.stdout.write("       #%d - %s.py..." % (step_nr, step["filename"]))
+            errors = run_test_step(test_name, step_nr, step)
+            if not errors:
+                sys.stdout.write(tty_green + "OK\n" + tty_normal)
+            else:
+                sys.stdout.write(tty_red + "FAILED\n" + tty_normal)
+                for error in errors:
+                    sys.stdout.write("           %s\n" % error)
+                return False
+        return True
+
+    except Exception, e:
+        if opt_debug:
+            raise
+        sys.stdout.write("        %sfailed%s (%s)\n" % (tty_red, tty_normal, e))
+        return False
+
+
+def load_guitest(test_name):
+    path = tests_dir() + test_name + ".mk"
+    if not os.path.exists(path):
+        raise Exception("Test not found (missing file %s)" % path)
+    return eval(file(path).read())
+
+
+def names_of_all_tests():
+    return sorted([
+        f[:-3] for f in os.listdir(tests_dir()) if f.endswith(".mk")
+    ])
+
+
+def run_test_step(test_name, step_nr, step):
+    url = "http://localhost/%s/check_mk/guitest.py" % omd_site()
+    response = requests.post(url, data = {
+        "test" : test_name,
+        "step" : str(step_nr),
+        "repair" : opt_repair and "1" or "0"})
+    try:
+        response_text = response.text.decode(response.encoding)
+    except:
+        response_text = response.text
+
+    if "<pre>\nMOD_PYTHON ERROR\n\n" in response_text:
+        end_offset = response_text.find("MODULE CACHE DETAILS")
+        if end_offset != -1:
+            response_text = response_text[:end_offset]
+        return [ "MOD PYTHON ERROR: %s" % response_text ]
+
+    if response.status_code != requests.codes.ok:
+        errors = [ "HTTP Response is not %s but %s" % (requests.codes.ok, response.status_code) ]
+        errors += response_text.splitlines()
+        return errors
+
+    error_offset = response_text.find('[[[GUITEST FAILED]]]')
+    if error_offset != -1:
+        error_info = response_text[error_offset + 21:]
+        errors = hilite_keywords(error_info).splitlines()
+        return errors
+
+
+def hilite_keywords(text):
+    text = text.replace(" expected ", tty_green + " expected " + tty_normal) \
+               .replace(" got ", tty_red + " got " + tty_normal)
+    text = re.sub(r" expected (.*?)\[\[\[([^]]*?)\]\]\]", r" expected \1" + tty_green + r"\2" + tty_normal, text)
+    text = re.sub(r" got (.*?)\[\[\[([^]]*?)\]\]\]", r" got \1" + tty_red + r"\2" + tty_normal, text)
+    return text
+
+
+def list_guitests(test_names):
+    if not test_names:
+        test_names = names_of_all_tests()
+    for test_name in test_names:
+        sys.stdout.write("%s\n" % test_name)
+        test = load_guitest(test_name)
+        for nr, step in enumerate(test):
+            sys.stdout.write("    #%d - %s\n" % (nr, step_title(step)))
+
+
+def step_title(step):
+    if "page_title" in step["output"]:
+        page_title = step["output"]["page_title"][0]
+    else:
+        page_title = "(no page title)"
+    return "%s.py - %s" % (step["filename"], page_title)
+
+
+def start_stop_recording(args):
+    if args:
+        start_recording(args[0])
+    else:
+        stop_recording()
+
+
+def start_recording(test_name):
+    if recording_symlink_exists():
+        bail_out("Currently recording. Stop with cmk-guitest -r.")
+    set_recording_symlink(test_name)
+    sys.stdout.write("Started recording into test %s.\n" % test_name)
+
+
+def set_recording_symlink(test_name):
+    if recording_symlink_exists():
+        os.remove(recording_symlink())
+    os.symlink(test_name + ".mk", recording_symlink())
+
+
+def recording_symlink_exists():
+    return os.path.lexists(recording_symlink())
+
+
+def stop_recording():
+    if not recording_symlink_exists():
+        bail_out("Currently not recording.")
+    test_name = os.readlink(recording_symlink())[:-3]
+    if not os.path.exists(recording_symlink()):
+        sys.stdout.write("Aborted recording. Test %s not created.\n" % test_name)
+        os.remove(recording_symlink())
+        return
+
+    os.remove(recording_symlink())
+    test = load_guitest(test_name)
+    sys.stdout.write("Stopped recording test %s (%d steps).\n" % (test_name, len(test)))
+
+
+#.
+#   .-Helpers--------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Various helper functions                                             |
+#   '----------------------------------------------------------------------'
+
+if sys.stdout.isatty() and not os.name == "nt":
+    tty_bold      = '\033[1m'
+    tty_normal    = '\033[0m'
+    tty_red       = tty_bold + '\033[31m'
+    tty_green     = tty_bold + '\033[32m'
+else:
+    tty_bold = ""
+    tty_normal = ""
+    tty_red = ""
+    tty_green = ""
+
+def omd_root():
+    return os.getenv("OMD_ROOT")
+
+def omd_site():
+    return os.getenv("OMD_SITE")
+
+def verbose(x):
+    if opt_verbose:
+        sys.stderr.write("%s\n" % x)
+
+def bail_out(x):
+    sys.stderr.write("%s\n" % x)
+    sys.exit(1)
+
+def usage():
+    sys.stderr.write("""
+Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
+
+  -h, --help                 Show this help
+  -v, --verbose              Output debug information on stderr
+      --debug                Do not catch Python exceptions
+
+  -r, --record TEST          Start recording new test
+  -r, --record               Stop recording test
+  -l, --list-tests           List all tests
+
+
+
+  Running tests:
+
+  cmk-guitest [-R] [OPTIONS] [TEST1 TEST2...]
+
+  -R, --repair               Replay a test and at the same
+                             time rerecord it
+
+  Recording tests:
+
+  cmk-guitest [OPTIONS] -r TEST
+  cmk-guitest [OPTIONS] -r
+
+""")
+
+#.
+#   .-main-----------------------------------------------------------------.
+#   |                                       _                              |
+#   |                       _ __ ___   __ _(_)_ __                         |
+#   |                      | '_ ` _ \ / _` | | '_ \                        |
+#   |                      | | | | | | (_| | | | | |                       |
+#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Main entry point, getopt, etc.                                       |
+#   '----------------------------------------------------------------------'
+
+short_options = 'hvrslR'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair" ]
+
+opt_verbose = False
+opt_debug = False
+opt_repair = False
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n\n" % err)
+    usage()
+    sys.exit(1)
+
+mode_function = run_guitests
+
+for o,a in opts:
+    # modes
+    if o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+    elif o in [ '-l', '--list-tests' ]:
+        mode_function = list_guitests
+    elif o in [ '-r', '--record' ]:
+        mode_function = start_stop_recording
+
+    # Modifiers
+    elif o in [ '-v', '--verbose' ]:
+        opt_verbose = True
+    elif o == '--debug':
+        opt_debug = True
+    elif o in [ '-R', '--repair' ]:
+        opt_repair = True
+
+# Main modes
+try:
+    mode_function(args)
+
+except Exception, e:
+    if opt_debug:
+        raise
+    bail_out(e)

@@ -1,0 +1,9 @@
+Title: apc_sts_source: New Check to monitor if the input source changes on APC STS devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449571130
+Class: feature
+
+

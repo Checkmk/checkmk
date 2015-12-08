@@ -1,0 +1,10 @@
+Title: blade_bx_powerfan: Check now uses better default leves
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449225921
+Class: fix
+
+We got feedback that the default levels for this check are to high so we changed the levels to 20%/ 10% instead 50%/ 40%
+

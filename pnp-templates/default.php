@@ -2,12 +2,15 @@
 
 # Fetch dynamic PNP template from Check_MK's new metrics system
 
-function get_apache_port() {
-    $path = getenv("OMD_ROOT") . "/etc/omd/site.conf";
-    foreach (file($path) as $line) {
-        if (strpos($line, "CONFIG_APACHE_TCP_PORT") === 0) {
-            list($key, $val) = explode("=", $line);
-            return trim($val, "'\n\r");
+# avoid redeclaration errors if this file is include multiple times (e.g. by basket)
+if (!function_exists('get_apache_port')) {
+    function get_apache_port() {
+        $path = getenv("OMD_ROOT") . "/etc/omd/site.conf";
+        foreach (file($path) as $line) {
+            if (strpos($line, "CONFIG_APACHE_TCP_PORT") === 0) {
+                list($key, $val) = explode("=", $line);
+                return trim($val, "'\n\r");
+            }
         }
     }
 }
@@ -32,7 +35,16 @@ foreach ($NAME as $i => $n) {
     $perf_vars[] = $n;
 }
 sort($perf_vars);
-$id_string = $NAGIOS_CHECK_COMMAND . ":" . implode(",", $perf_vars);
+# We have to separate the check command name from the rest on
+# the right place, i.d. the first "!", to prevent errors while
+# creating the default template, e.g. for the custom check
+#
+# check-mk-custom!$USER2$/check_mssql_health_new --server $HOSTNAME$ --username=$USER6$
+# --password=$USER5$ --mode database-free --name filr --warning 20: --critical 10: --commit
+#
+# If no "!" exists then $CHECK_COMMAND = $NAGIOS_CHECK_COMMAND
+$CHECK_COMMAND = explode("!", $NAGIOS_CHECK_COMMAND)[0];
+$id_string = $CHECK_COMMAND . ":" . implode(",", $perf_vars);
 
 # Get current state of previously cached template data for this ID
 $template_cache_path = $template_cache_dir . "/" . md5($id_string);

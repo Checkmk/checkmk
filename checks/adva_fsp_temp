@@ -46,10 +46,10 @@ def check_adva_fsp_temp(item, params, info):
             high = float(high)/10
             low = float(low)/10
             if low > -273:
-                infotext = "Temperature is %.1f °C (limits %.1f/%.1f °C) at %s" % (temp, low, high, descr)
+                infotext = u"Temperature is %.1f °C (limits %.1f/%.1f °C) at %s" % (temp, low, high, descr.decode("utf-8"))
                 perfdata = [ ("temp", temp, "", str(low)+":"+str(high),  ) ]
             else:
-                infotext = "Temperature is %.1f °C (crit at %.1f °C) at %s" % (temp, high, descr)
+                infotext = u"Temperature is %.1f °C (crit at %.1f °C) at %s" % (temp, high, descr.decode("utf-8"))
                 perfdata = [ ("temp", temp, "", high,  ) ]
 
             if temp <= -2730:

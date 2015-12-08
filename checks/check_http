@@ -145,12 +145,6 @@ def check_http_arguments(params):
     if settings.get("urlize"):
         args += ' -L'
 
-    if "client_certificate" in settings:
-        args += ' -J %s' % settings["client_certificate"]
-
-    if "private_key" in settings:
-        args += ' -K %s' % settings["private_key"]
-
     if not omit_ip:
         args = " -I " + address + args
     return args

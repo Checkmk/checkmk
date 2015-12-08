@@ -54,7 +54,6 @@
     * 2780 cisco_vss: detect this check on newer (15.1) devices
     * 2874 netstat_an.bat: Restrict output of connections to TCP, safes performance
     * 2866 ewon: Added support for monitoring Wagner OxyReduct devices with their data exposed through an ewon router...
-    * 2867 check_http: client certificate and private key file parameters can now be set in wato...
     * 2884 mssql_blocked_sessions: the state of the blocked sessions is now configurable
     * 1313 apc_sts_inputs: New Check for APC Static Transfer Swichtes: Input Phases
     * 1314 apc_sts_source: New Check to monitor if the input source changes on APC STS devices

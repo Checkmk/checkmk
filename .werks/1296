@@ -2,7 +2,7 @@ Title: aix_memory: Check can now handle systems without swap partition
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.6p13
 Date: 1445431924
 Class: fix
 

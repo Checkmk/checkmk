@@ -193,10 +193,7 @@ def handler(req, fields = None, is_profiling = False):
         response_code = apache.OK
 
     release_all_locks()
-    try:
-        html.finalize()
-    except MKGuitestFailed, e:
-        html.write("\n[[[GUITEST FAILED]]]\n%s" % ("\n".join(e.errors)))
+    html.finalize()
     return response_code
 
 

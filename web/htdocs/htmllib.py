@@ -46,6 +46,7 @@
 #    directly when reading from file or URL.
 
 import time, os, pwd, urllib, random, re, __builtin__
+from guitester import GUITester
 
 try:
     import simplejson as json
@@ -77,8 +78,9 @@ class HTML:
 
 __builtin__.HTML = HTML
 
-class html:
+class html(GUITester):
     def __init__(self):
+        GUITester.__init__(self)
         self.user = None
         self.user_errors = {}
         self.focus_object = None
@@ -117,8 +119,6 @@ class html:
         self.body_classes = ['main']
         self._default_javascripts = [ "checkmk", "graphs" ]
         self._default_stylesheets = [ "check_mk", "graphs" ]
-        self.guitest = None
-        self.replayed_guitest_step = None
 
         # Time measurement
         self.times            = {}
@@ -131,111 +131,6 @@ class html:
     ALT = 18
     BACKSPACE = 8
     F1 = 112
-
-
-    def begin_guitest_recording(self):
-        self.guitest = {
-            "variables" : self.vars.copy(),
-            "filename" : self.myfile,
-            "output" : {},
-        }
-        # Fix transaction ID: We are just interested in whether it is valid or not
-        if "_transid" in self.vars:
-            if self.transaction_valid():
-                self.guitest["variables"]["_transid"] = "valid"
-            else:
-                self.guitest["variables"]["_transid"] = "invalid"
-
-        self.add_status_icon("guitest", _("GUI test recording is active"))
-
-
-    def end_guitest_recording(self):
-        if self.guitest != None:
-            self.guitest["user"] = self.user
-            self.guitest["elapsed_time"] = time.time() - self.start_time
-            self.save_guitest_step(self.guitest)
-
-
-    def save_guitest_step(self, step):
-        path = defaults.var_dir + "/guitests/RECORD"
-        if not os.path.exists(path):
-            test_steps = []
-        else:
-            test_steps = eval(file(path).read())
-        test_steps.append(step)
-        file(path, "w").write("%s\n" % pprint.pformat(test_steps))
-
-
-    def load_guitest(self, name):
-        path = defaults.var_dir + "/guitests/" + name + ".mk"
-        try:
-            return eval(file(path).read())
-        except IOError, e:
-            raise MKGeneralException(_("Cannot load GUI test file %s: %s") % (self.attrencode(path), e))
-
-
-    def replay_guitest(self):
-        test_name = self.var("test")
-        if not test_name:
-            raise MKGuitestFailed([_("Missing the name of the GUI test to run (URL variable 'test')")])
-        guitest = self.load_guitest(test_name)
-
-        step_nr_text = self.var("step")
-        try:
-            step_nr = int(step_nr_text)
-        except:
-            raise MKGuitestFailed([_("Invalid or missing test step number (URL variable 'step')")])
-        if step_nr >= len(guitest) or step_nr < 0:
-            raise MKGuitestFailed([_("Invalid test step number %d (only 0...%d)") % (step_nr, len(guitest)-1)])
-
-        self.replayed_guitest_step = guitest[step_nr]
-        self.replayed_guitest_step["replay"] = {}
-
-
-        self.myfile = self.replayed_guitest_step["filename"]
-        self.guitest_fake_login(self.replayed_guitest_step["user"])
-        self.vars = self.replayed_guitest_step["variables"]
-        if "_transid" in self.vars and self.vars["_transid"] == "valid":
-            self.vars["_transid"] = self.get_transid()
-            self.store_new_transids()
-
-
-    def end_guitest_replay(self):
-        if self.replayed_guitest_step:
-            errors = []
-            for varname in self.replayed_guitest_step["output"].keys():
-                errors += self.guitest_check_output(
-                    varname,
-                    self.replayed_guitest_step["output"][varname],
-                    self.replayed_guitest_step["replay"].get(varname, []))
-            if errors:
-                raise MKGuitestFailed(errors)
-
-
-    def guitest_check_output(self, varname, reference, reality):
-        errors = []
-        for entry in reference:
-            if entry not in reality:
-                errors.append("%s: missing entry %r" % (varname, entry))
-        return errors
-
-
-    def guitest_recording_active(self):
-        # Activated by symoblic link pointing to recording file
-        return os.path.lexists(defaults.var_dir + "/guitests/RECORD") and not \
-           self.myfile in self.guitest_ignored_pages()
-
-
-    def guitest_ignored_pages(self):
-        return [ "run_cron", "index", "side", "sidebar_snapin", "dashboard", "dashboard_dashlet", "login" ]
-
-
-    def guitest_record_output(self, key, value):
-        if self.guitest:
-            self.guitest["output"].setdefault(key, []).append(value)
-        elif self.replayed_guitest_step:
-            self.replayed_guitest_step["replay"].setdefault(key, []).append(value)
-
 
     def is_mobile(self):
         return self.mobile

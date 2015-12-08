@@ -58,12 +58,6 @@ class html_mod_python(htmllib.html):
         self.read_get_vars()
         self.read_cookies()
 
-        if self.myfile == "guitest":
-            self.replay_guitest()
-        elif self.guitest_recording_active():
-            self.begin_guitest_recording()
-
-
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh
         self.set_http_header("Cache-Control", "no-cache")
@@ -91,6 +85,8 @@ class html_mod_python(htmllib.html):
     def init_modes(self):
         self.verify_not_using_threaded_mpm()
 
+        if config.guitests_enabled:
+            self.init_guitests()
         self.init_screenshot_mode()
         self.init_debug_mode()
         self.set_buffering(config.buffered_http_stream)
@@ -158,8 +154,7 @@ class html_mod_python(htmllib.html):
     # Finish the HTTP request short before handing over to mod_python
     def finalize(self, is_error=False):
         self.live = None # disconnects from livestatus
-        self.end_guitest_recording()
-        self.end_guitest_replay()
+        self.finalize_guitests()
 
 
     def get_request_header(self, key, deflt=None):

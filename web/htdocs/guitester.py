@@ -190,10 +190,32 @@ def guitest_check_single_value(reference, reality):
 
 def guitest_check_element_list(reference, reality):
     errors = []
+    one_missing = False
     for entry in reference:
-        if entry not in reality:
+        if not guitest_entry_in_reference_list(entry, reality):
             errors.append("missing entry %r" % (entry,))
+            one_missing = True
+    if one_missing:
+        for entry in reality:
+            if not guitest_entry_in_reference_list(entry, reference):
+                errors.append("exceeding entry %r" % (entry,))
     return errors
+
+
+def guitest_entry_in_reference_list(entry, ref_list):
+    for ref_entry in ref_list:
+        if guitest_entries_match(ref_entry, entry):
+            return True
+    return False
+
+
+def guitest_entries_match(ref, real):
+    if type(ref) in (list, tuple):
+        return len(ref) == len(real) and \
+          map(guitest_drop_dynamic_ids, ref) == map(guitest_drop_dynamic_ids, real)
+    else:
+        return guitest_drop_dynamic_ids(ref) == guitest_drop_dynamic_ids(real)
+
 
 
 def guitest_check_datatables(reference, reality):
@@ -254,5 +276,5 @@ def find_common_prefix(a, b):
 
 
 def guitest_drop_dynamic_ids(text):
-    return re.sub("selection=[a-f0-9---]{36}", "selection=*",
+    return re.sub("selection(%3d|=)[a-f0-9---]{36}", "selection=*",
                    re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text))

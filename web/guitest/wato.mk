@@ -253,7 +253,7 @@
   'variables': {'_change_alias': 'on',
                 '_change_ipaddress': 'on',
                 '_change_parents': 'on',
-                '_transid': 'invalid',
+                '_transid': 'valid',
                 'attr_alias': 'Der L\xc3\xb6k\xc3\xa4le R\xc3\xb6chner',
                 'attr_display_ipaddress': '1',
                 'attr_display_ipv6address': '0',

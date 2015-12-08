@@ -32,7 +32,12 @@
 megaraid_info()
 {
 
-    PDINFO=$(MegaCli -PDlist -a0)
+    #PDINFO=$(MegaCli -PDlist -a0)
+    if [ -z "$1" ]; then
+		PDINFO=$(megacli -PDlist -a0)
+    else
+		PDINFO=$($1 -PDlist -a0)
+    fi
 
     echo "$PDINFO" | \
     while read line ; do
@@ -154,8 +159,19 @@ if which smartctl > /dev/null 2>&1 ; then
 
 
     # Call MegaRaid submodule if conditions are met
-    if which MegaCli > /dev/null && [ -c /dev/sg0 ] ; then
-        megaraid_info
+    if type MegaCli >/dev/null ; then
+        MegaCli_bin="MegaCli"
+    elif type MegaCli64 >/dev/null ; then
+        MegaCli_bin="MegaCli64"
+    elif type megacli >/dev/null ; then
+        MegaCli_bin="megacli"
+    else
+        MegaCli_bin="unknown"
     fi
+
+    if [ "$MegaCli_bin" != "unknown" ]; then
+        megaraid_info "$MegaCli_bin"
+    fi
+
 fi
 

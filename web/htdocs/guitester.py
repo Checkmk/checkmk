@@ -39,6 +39,7 @@ class GUITester:
     def __init__(self):
         self.guitest = None
         self.replayed_guitest_step = None
+        self.guitest_repair_step = None
 
 
     def init_guitests(self):
@@ -77,7 +78,14 @@ class GUITester:
             test_steps = []
         else:
             test_steps = eval(file(path).read())
-        test_steps.append(step)
+
+        if self.guitest_repair_step != None:
+            mod_step = test_steps[self.guitest_repair_step]
+            mod_step["output"] = step["output"]
+            mod_step["user"] = step["user"]
+            mod_step["elapsed_time"] = step["elapsed_time"]
+        else:
+            test_steps.append(step)
         file(path, "w").write("%s\n" % pprint.pformat(test_steps))
 
 
@@ -102,6 +110,11 @@ class GUITester:
             raise MKGuitestFailed([_("Invalid or missing test step number (URL variable 'step')")])
         if step_nr >= len(guitest) or step_nr < 0:
             raise MKGuitestFailed([_("Invalid test step number %d (only 0...%d)") % (step_nr, len(guitest)-1)])
+
+        repair = self.var("repair") == "1"
+        if repair:
+            self.guitest_repair_step = step_nr
+            self.begin_guitest_recording()
 
         self.replayed_guitest_step = guitest[step_nr]
         self.replayed_guitest_step["replay"] = {}
@@ -142,7 +155,7 @@ class GUITester:
 
 
     def end_guitest_replay(self):
-        if self.replayed_guitest_step:
+        if self.replayed_guitest_step and self.guitest_repair_step == None:
             errors = []
             for varname in self.replayed_guitest_step["output"].keys():
                 method = self.guitest_test_method(varname)
@@ -157,8 +170,22 @@ class GUITester:
     def guitest_test_method(self, varname):
         if varname == "data_tables":
             return guitest_check_datatables
+        elif varname == "page_title":
+            return guitest_check_single_value
         else:
             return guitest_check_element_list
+
+
+def guitest_check_single_value(reference, reality):
+    if len(reference) > 1:
+        errors.append("More than one reference value: %s" % ", ".join(reference))
+    if len(reality) > 1:
+        errors.append("More than one value: %s" % ", ".join(reality))
+    diff_text = guitest_check_text(reference[0], reality[0])
+    if diff_text:
+        return [ diff_text ]
+    else:
+        return []
 
 
 def guitest_check_element_list(reference, reality):
@@ -195,15 +222,37 @@ def guitest_check_datatable(ref_table, real_table):
         # Note: Rows are tuples. The first component is the list of cells
         for cell_nr, (ref_cell, real_cell) in enumerate(zip(ref_row[0], real_row[0])):
             # Note: cell is a triple. The first component contains the text
-            if not guitest_check_text(ref_cell[0], real_cell[0]):
-                return [ "Row %d, Column %d: expected %r, got %r" % (row_nr+1, cell_nr+1, ref_cell[0], real_cell[0]) ]
+            diff_text = guitest_check_text(ref_cell[0], real_cell[0])
+            if diff_text:
+                return [ "Row %d, Column %d: %s" % (row_nr, cell_nr, diff_text) ]
 
     return []
 
 
 def guitest_check_text(ref, real):
-    return guitest_drop_transid(ref) == guitest_drop_transid(real)
+    ref_clean = guitest_drop_dynamic_ids(ref)
+    real_clean = guitest_drop_dynamic_ids(real)
+    if ref_clean == real_clean:
+        return ""
+
+    prefix, ref_rest, real_rest = find_common_prefix(ref_clean, real_clean)
+    return "expected %s[[[%s]]], got %s[[[%s]]]" % (prefix, ref_rest, prefix, real_rest)
 
 
-def guitest_drop_transid(text):
-    return re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text)
+def find_common_prefix(a, b):
+    if len(a) > len(b) and a.startswith(b):
+        return b, a[:len(b)], ""
+
+    if len(b) > len(a) and b.startswith(a):
+        return a, "", b[:len(a)]
+
+    for i in range(min(len(a), len(b))):
+        if a[i] != b[i]:
+            return a[:i], a[i:], b[i:]
+
+    return a, "", ""
+
+
+def guitest_drop_dynamic_ids(text):
+    return re.sub("selection=[a-f0-9---]{36}", "selection=*",
+                   re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text))

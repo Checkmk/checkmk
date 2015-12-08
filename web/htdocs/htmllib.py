@@ -1402,7 +1402,7 @@ class html(GUITester):
     # on more complex pages!
     def urlencode_vars(self, vars):
         output = []
-        for varname, value in vars:
+        for varname, value in sorted(vars):
             if type(value) == int:
                 value = str(value)
             elif type(value) == unicode:

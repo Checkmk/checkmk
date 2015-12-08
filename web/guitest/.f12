@@ -2,4 +2,4 @@
 SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 sudo mkdir -p /omd/sites/$SITE/var/check_mk/guitests
-sudo install -v -m 644 *.mk /omd/sites/$SITE/var/check_mk/guitests
+sudo install -o $SITE -g $SITE -v -m 644 *.mk /omd/sites/$SITE/var/check_mk/guitests

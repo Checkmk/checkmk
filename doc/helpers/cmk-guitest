@@ -29,15 +29,20 @@ def run_guitests(args):
     if not args:
         args = names_of_all_tests()
 
-    sys.stdout.write("Going to run %d tests...\n" % len(args))
+    sys.stdout.write("Going to run %d tests%s...\n" % (
+       len(args), opt_repair and " in repair mode" or ""))
 
     num_failed = 0
     num_successfull = 0
     for test_name in args:
+        if opt_repair:
+            set_recording_symlink(test_name)
         if run_guitest(test_name):
             num_successfull += 1
         else:
             num_failed += 1
+        if opt_repair:
+            stop_recording()
 
     sys.stdout.write("%d tests succeeded, %d failed.\n" % (num_successfull, num_failed))
     if num_failed == 0:
@@ -85,7 +90,10 @@ def names_of_all_tests():
 
 def run_test_step(test_name, step_nr, step):
     url = "http://localhost/%s/check_mk/guitest.py" % omd_site()
-    response = requests.post(url, data = { "test" : test_name, "step" : str(step_nr) })
+    response = requests.post(url, data = {
+        "test" : test_name,
+        "step" : str(step_nr),
+        "repair" : opt_repair and "1" or "0"})
     try:
         response_text = response.text.decode(response.encoding)
     except:
@@ -105,8 +113,16 @@ def run_test_step(test_name, step_nr, step):
     error_offset = response_text.find('[[[GUITEST FAILED]]]')
     if error_offset != -1:
         error_info = response_text[error_offset + 21:]
-        errors = error_info.splitlines()
+        errors = hilite_keywords(error_info).splitlines()
         return errors
+
+
+def hilite_keywords(text):
+    text = text.replace(" expected ", tty_green + " expected " + tty_normal) \
+               .replace(" got ", tty_red + " got " + tty_normal)
+    text = re.sub(r" expected (.*?)\[\[\[([^]]*?)\]\]\]", r" expected \1" + tty_green + r"\2" + tty_normal, text)
+    text = re.sub(r" got (.*?)\[\[\[([^]]*?)\]\]\]", r" got \1" + tty_red + r"\2" + tty_normal, text)
+    return text
 
 
 def list_guitests(test_names):
@@ -135,14 +151,24 @@ def start_stop_recording(args):
 
 
 def start_recording(test_name):
-    if os.path.lexists(recording_symlink()):
+    if recording_symlink_exists():
         bail_out("Currently recording. Stop with cmk-guitest -r.")
-    os.symlink(test_name + ".mk", recording_symlink())
+    set_recording_symlink(test_name)
     sys.stdout.write("Started recording into test %s.\n" % test_name)
 
 
+def set_recording_symlink(test_name):
+    if recording_symlink_exists():
+        os.remove(recording_symlink())
+    os.symlink(test_name + ".mk", recording_symlink())
+
+
+def recording_symlink_exists():
+    return os.path.lexists(recording_symlink())
+
+
 def stop_recording():
-    if not os.path.lexists(recording_symlink()):
+    if not recording_symlink_exists():
         bail_out("Currently not recording.")
     test_name = os.readlink(recording_symlink())[:-3]
     if not os.path.exists(recording_symlink()):
@@ -194,7 +220,7 @@ def bail_out(x):
 
 def usage():
     sys.stderr.write("""
-Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-R|-l}
+Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
 
   -h, --help                 Show this help
   -v, --verbose              Output debug information on stderr
@@ -205,9 +231,13 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-R|-l}
   -l, --list-tests           List all tests
 
 
+
   Running tests:
 
-  cmk-guitest [OPTIONS] [TEST1 TEST2...]
+  cmk-guitest [-R] [OPTIONS] [TEST1 TEST2...]
+
+  -R, --repair               Replay a test and at the same
+                             time rerecord it
 
   Recording tests:
 
@@ -228,11 +258,12 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-R|-l}
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvrsl'
-long_options = [ "help", "debug", "verbose", "list-tests=", "record" ]
+short_options = 'hvrslR'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair" ]
 
 opt_verbose = False
 opt_debug = False
+opt_repair = False
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -258,6 +289,8 @@ for o,a in opts:
         opt_verbose = True
     elif o == '--debug':
         opt_debug = True
+    elif o in [ '-R', '--repair' ]:
+        opt_repair = True
 
 # Main modes
 try:
@@ -267,13 +300,3 @@ except Exception, e:
     if opt_debug:
         raise
     bail_out(e)
-
-
-# ZUTUN:
-# - Option zum Aufzeichnen
-# --record, -r hirni
-# --record-stop, -R
-# Bei Record müssen html-Ausgaben wie table.cell() in eine Datenstruktur schreiben.
-# Diese wird dann im dict gespeichert und später verglichen.
-
-

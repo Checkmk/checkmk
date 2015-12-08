@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-import os, sys, getopt, pprint, time, requests
+import os, sys, getopt, pprint, time, requests, re
 
 #   .--GUI Test------------------------------------------------------------.
 #   |                  ____ _   _ ___   _____         _                    |
@@ -51,7 +51,6 @@ def run_guitest(test_name):
         sys.stdout.write("    %s%s%s...\n" % (tty_bold, test_name, tty_normal))
         sys.stdout.flush()
         guitest = load_guitest(test_name)
-        one_failed = False
         for step_nr, step in enumerate(guitest):
             sys.stdout.write("       #%d - %s.py..." % (step_nr, step["filename"]))
             errors = run_test_step(test_name, step_nr, step)
@@ -61,10 +60,12 @@ def run_guitest(test_name):
                 sys.stdout.write(tty_red + "FAILED\n" + tty_normal)
                 for error in errors:
                     sys.stdout.write("           %s\n" % error)
-                one_failed = True
-        return not one_failed
+                return False
+        return True
 
     except Exception, e:
+        if opt_debug:
+            raise
         sys.stdout.write("        %sfailed%s (%s)\n" % (tty_red, tty_normal, e))
         return False
 
@@ -85,14 +86,25 @@ def names_of_all_tests():
 def run_test_step(test_name, step_nr, step):
     url = "http://localhost/%s/check_mk/guitest.py" % omd_site()
     response = requests.post(url, data = { "test" : test_name, "step" : str(step_nr) })
+    try:
+        response_text = response.text.decode(response.encoding)
+    except:
+        response_text = response.text
+
+    if "<pre>\nMOD_PYTHON ERROR\n\n" in response_text:
+        end_offset = response_text.find("MODULE CACHE DETAILS")
+        if end_offset != -1:
+            response_text = response_text[:end_offset]
+        return [ "MOD PYTHON ERROR: %s" % response_text ]
+
     if response.status_code != requests.codes.ok:
         errors = [ "HTTP Response is not %s but %s" % (requests.codes.ok, response.status_code) ]
-        errors += response.text.splitlines()
+        errors += response_text.splitlines()
         return errors
 
-    error_offset = response.text.find('[[[GUITEST FAILED]]]')
+    error_offset = response_text.find('[[[GUITEST FAILED]]]')
     if error_offset != -1:
-        error_info = response.text[error_offset + 21:]
+        error_info = response_text[error_offset + 21:]
         errors = error_info.splitlines()
         return errors
 

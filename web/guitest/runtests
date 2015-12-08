@@ -1,0 +1,3 @@
+#!/bin/bash
+. .f12
+sudo su - $SITE -c "cmk-guitest $*"

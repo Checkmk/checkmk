@@ -20697,4 +20697,3 @@ def register_builtin_host_tags():
         ('ip-v4', u'IPv4'),
         ('ip-v6', u'IPv6')
     ]
-

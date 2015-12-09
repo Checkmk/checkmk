@@ -102,6 +102,13 @@ g_html_head_open = False
 
 wato_styles = [ "pages", "wato", "status" ]
 
+
+def init_wato_datastructures():
+    create_sample_config()        # if called for the very first time!
+    declare_host_tag_attributes() # create attributes out of tag definitions
+    declare_site_attribute()      # create attribute for distributed WATO
+
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -146,12 +153,9 @@ def page_handler():
         lock_exclusive()
 
     try:
-        # Make information about current folder and hosts available To be able
-        # to restore a snapshot even with a broken config ignore exceptions
-        # in this function when running in "snapshot" mode
         init_wato_datastructures()
-        # TODO: Das hier geschieht dann on-demand
     except:
+        # Snapshot must work in any case
         if current_mode == 'snapshot':
             pass
         else:
@@ -284,59 +288,6 @@ def ensure_mode_permissions(modeperms):
         config.need_permission(pname)
 
 
-def lock_exclusive():
-    aquire_lock(defaults.default_config_dir + "/multisite.mk")
-
-
-def unlock_exclusive():
-    release_lock(defaults.default_config_dir + "/multisite.mk")
-
-
-def git_command(args):
-    encoded_args = " ".join([ a.encode("utf-8") for a in args ])
-    command = "cd '%s' && git %s 2>&1" % (defaults.default_config_dir, encoded_args)
-    p = os.popen(command)
-    output = p.read()
-    status = p.close()
-    if status != None:
-        raise MKGeneralException(_("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
-                (command.decode('utf-8'), output.replace("\n", "<br>\n")))
-
-
-def shell_quote(s):
-    return "'" + s.replace("'", "'\"'\"'") + "'"
-
-
-def do_git_commit():
-    author = shell_quote("%s <%s>" % (config.user_id, config.user_alias))
-    git_dir = defaults.default_config_dir + "/.git"
-    if not os.path.exists(git_dir):
-        git_command(["init"])
-
-        # Set git repo global user/mail. seems to be needed to prevent warning message
-        # on at least ubuntu 15.04: "Please tell me who you are. Run git config ..."
-        # The individual commits by users override the author on their own
-        git_command(["config", "user.email", "check_mk"])
-        git_command(["config", "user.name", "check_mk"])
-
-        # Make sure that .gitignore-files are present and uptodate
-        file(defaults.default_config_dir + "/.gitignore", "w").write("*\n!*.d\n!.gitignore\n*swp\n*.mk.new\n")
-        for subdir in os.listdir(defaults.default_config_dir):
-            if subdir.endswith(".d"):
-                file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write("*\n!wato\n!wato/*\n")
-
-        git_command(["add", ".gitignore", "*.d/wato"])
-        git_command(["commit", "--untracked-files=no", "--author", author, "-m", shell_quote(_("Initialized GIT for Check_MK"))])
-
-    # Only commit, if something is changed
-    if os.popen("cd '%s' && git status --untracked-files=no --porcelain" % defaults.default_config_dir).read().strip():
-        git_command(["add", "*.d/wato"])
-        message = ", ".join(g_git_messages)
-        if not message:
-            message = _("Unknown configuration change")
-        git_command(["commit", "--author", author, "-m", shell_quote(message)])
-
-
 
 #.
 #   .--Folders-------------------------------------------------------------.
@@ -362,7 +313,7 @@ def mode_folder(phase):
             html.context_button(_("Rulesets"),        folder_link([("mode", "ruleeditor")]), "rulesets")
             html.context_button(_("Manual Checks"),   folder_link([("mode", "static_checks")]), "static_checks")
         if folder.may("read"):
-            html.context_button(_("Folder Properties"), folder.url([("mode", "editfolder")]), "edit")
+            html.context_button(_("Folder Properties"), folder.edit_url(), "edit")
         if not folder.locked_subfolders() and config.may("wato.manage_folders") and folder.may("write"):
             html.context_button(_("New folder"),        folder_link([("mode", "newfolder")]), "newfolder")
         if not folder.locked_hosts() and config.may("wato.manage_hosts") and folder.may("write"):
@@ -390,27 +341,13 @@ def mode_folder(phase):
 
         if html.var("_delete_folder"):
             if html.transaction_valid():
-                config.need_permission("wato.manage_folders")
-                if not folder.may("write"):
-                    raise MKAuthException(_("Sorry. In order to delete a folder you need write "
-                                            "permissions to its parent folder."))
-                delname = html.var("_delete_folder")
-                del_folder = folder.subfolder(delname)
-                return delete_folder_after_confirm(del_folder)
+                return delete_subfolder_after_confirm(folder, html.var("_delete_folder"))
             return
 
         elif html.has_var("_move_folder_to"):
             if html.check_transaction():
-                config.need_permission("wato.manage_folders")
-                Folder.current().need_permission("write")
                 what_folder = Folder.folder(html.var("what_folder"))
                 target_folder = Folder.folder(html.var("_move_folder_to"))
-                if what_folder.locked() or Folder.current().locked_subfolders():
-                    raise MKUserError(None, _("Cannot move folder: This folder is locked."))
-                if target_folder.locked_subfolders():
-                    raise MKUserError(None, _("Cannot move folder: Target folder is locked."))
-                if os.path.exists(target_folder.filesystem_path() + "/" + what_folder.name()):
-                    raise MKUserError(None, _("Cannot move folder: A folder with this name already exists in the target folder."))
                 Folder.current().move_subfolder_to(what_folder, target_folder)
             return
 
@@ -464,8 +401,6 @@ def mode_folder(phase):
 
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):
-            config.need_permission("wato.edit_hosts")
-            config.need_permission("wato.move_hosts")
             return move_to_imported_folders(selected_host_names)
 
         elif html.var("_bulk_edit"):
@@ -487,6 +422,25 @@ def mode_folder(phase):
 
         if not folder.has_hosts() and not folder.has_subfolders() and folder.may("write"):
             show_empty_folder_menu(folder)
+
+
+def delete_subfolder_after_confirm(folder, subfolder_name):
+    subfolder = folder.folder(subfolder_name)
+    msg = _("Do you really want to delete the folder %s?") % subfolder.title()
+    if not config.wato_hide_filenames:
+        msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
+    num_hosts = subfolder.num_hosts_recursively()
+    if num_hosts:
+        msg += _(" The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
+    c = wato_confirm(_("Confirm folder deletion"), msg)
+
+    if c:
+        folder.delete_subfolder(subfolder_name)
+        return "folder"
+    elif c == False: # not yet confirmed
+        return ""
+    else:
+        return None # browser reload
 
 
 def show_empty_folder_menu(folder):
@@ -616,7 +570,7 @@ def show_subfolder_infos(subfolder):
             html.write(_('<i>%d more contact groups</i><br>') % (len(perm_groups) - num - 1))
             break
 
-    num_hosts = subfolder.num_hosts_recursive()
+    num_hosts = subfolder.num_hosts_recursively()
     if num_hosts == 1:
         html.write(_("1 Host"))
     elif num_hosts > 0:
@@ -968,24 +922,6 @@ def delete_hosts_after_confirm(host_names):
         return None # browser reload
 
 
-def delete_folder_after_confirm(folder):
-    msg = _("Do you really want to delete the folder %s?") % folder.title()
-    if not config.wato_hide_filenames:
-        msg += _(" Its directory is <tt>%s</tt>.") % folder.filesystem_path()
-    num_hosts = folder.num_hosts_recursive()
-    if num_hosts:
-        msg += _(" The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
-    c = wato_confirm(_("Confirm folder deletion"), msg)
-
-    if c:
-        folder.delete()
-        return "folder"
-    elif c == False: # not yet confirmed
-        return ""
-    else:
-        return None # browser reload
-
-
 # Create list of all hosts that are select with checkboxes in the current file.
 # This is needed for bulk operations.
 def get_hostnames_from_checkboxes(filterfunc = None):
@@ -1044,16 +980,6 @@ def mode_editfolder(phase, new):
 
 
     elif phase == "action":
-        if new:
-            if Folder.current().locked_subfolders():
-                raise MKUserError("title", _("This folder has locked subfolders. You cannot create or remove a folder "
-                                             "in this folder."))
-            config.need_permission("wato.manage_folders")
-        else:
-            if Folder.current().locked():
-                raise MKUserError("title", _("This folder is locked. You cannot change the attributes of this folder."))
-            config.need_permission("wato.edit_folders")
-
         if not html.check_transaction():
             return "folder"
 
@@ -1071,39 +997,11 @@ def mode_editfolder(phase, new):
             else:
                 name = create_wato_foldername(title)
 
-        # Attributes
         attributes = collect_attributes()
-        attributes_changed = not new and attributes != Folder.current().attributes()
-
         if new:
-            Folder.current().need_permission("write")
-            check_user_contactgroups(attributes.get("contactgroups", (False, [])))
             Folder.current().create_subfolder(name, title, attributes)
-
         else:
-            # For changing attributes of a folder user needs write permission
-            if attributes != Folder.current().attributes():
-                Folder.current().need_permission("write")
-
-            # For changing contact groups user needs write permission on parent folder
-            cgs_changed = get_folder_cgconf_from_attributes(attributes) != \
-                          get_folder_cgconf_from_attributes(Folder.current().attributes())
-
-            if cgs_changed:
-                check_user_contactgroups(attributes.get("contactgroups"))
-
-                if Folder.current().has_parent():
-                     if not Folder.current().parent().may("write"):
-                         raise MKAuthException(_("Sorry. In order to change the permissions of a folder you need write "
-                                                 "access to the parent folder."))
-
-                else:
-                    # root folder has no parent -> need pemissions on root folder
-                    Folder.current().need_permission("write")
-
             Folder.current().edit(title, attributes)
-
-        need_sidebar_reload()
 
         # Edit icon on subfolder preview should bring user back to parent folder
         if html.has_var("backfolder"):
@@ -1393,8 +1291,7 @@ def action_edit_host(mode, hostname, is_cluster):
         if mode == "edit":
             Host.host(hostname).edit(attributes, cluster_nodes)
         else:
-            validate_host_uniqueness(hostname)
-            Folder.current().create_host(hostname, attributes, cluster_nodes)
+            Folder.current().create_hosts([(hostname, attributes, cluster_nodes)])
 
     host = Folder.current().host(hostname)
     errors = validate_all_hosts([hostname]).get(hostname, []) + host.validation_errors()
@@ -1439,7 +1336,7 @@ def delete_host_after_confirm(delname):
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
-        Folder.current().delete_host(delname)
+        Folder.current().delete_hosts([delname])
         return "folder"
     elif c == False: # not yet confirmed
         return ""
@@ -1500,11 +1397,15 @@ def mode_bulk_rename_host(phase):
 
         c = wato_confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
         if c:
-            actions = rename_hosts(renamings) # Already activates the changes!
+            actions, auth_problems = rename_hosts(renamings) # Already activates the changes!
             log_commit_pending() # All activated by the underlying rename automation
             action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
-            return "edit_host", HTML(_("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (
-                                 len(renamings), action_txt))
+            message = _("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (len(renamings), action_txt)
+            if auth_problems:
+                message += _("The following hosts could not be renamed because of missing permissions: %s") % ", ".join([
+                    "%s (%s)" % (host_name, reason) for (host_name, reason) in auth_problems
+                ])
+            return "edit_host", HTML(message)
         elif c == False: # not yet confirmed
             return ""
         else:
@@ -1521,7 +1422,7 @@ def mode_bulk_rename_host(phase):
 def renaming_collision_error(renamings):
     name_collisions = set()
     new_names = [ new_name for (folder, old_name, new_name) in renamings ]
-    all_host_names = load_all_hosts().keys()
+    all_host_names = Host.all().keys()
     for name in new_names:
         if name in all_host_names:
             name_collisions.add(name)
@@ -1765,8 +1666,8 @@ def rename_host_in_list(thelist, oldname, newname):
         if element == oldname:
             thelist[nr] = newname
             did_rename = True
-        elif element == '!'+oldname:
-            thelist[nr] = '!'+newname
+        elif element == '!' + oldname:
+            thelist[nr] = '!' + newname
             did_rename = True
     return did_rename
 
@@ -1776,44 +1677,42 @@ def rename_host_in_folder(folder, oldname, newname):
     return [ "folder" ]
 
 
-# TODO: REWORK!
 def rename_host_as_cluster_node(all_hosts, oldname, newname):
-    raise "BUG"
     clusters = []
     for somehost in all_hosts.values():
-        if ".nodes" in somehost:
-            nodes = somehost[".nodes"]
-            if rename_host_in_list(somehost[".nodes"], oldname, newname):
-                clusters.append(somehost[".name"])
-                folder = somehost['.folder']
-                save_folder_and_hosts(folder)
-                mark_affected_sites_dirty(folder)
+        if somehost.is_cluster():
+            nodes = somehost.cluster_nodes()
+            if somehost.rename_cluster_node(oldname, newname):
+                clusters.append(somehost.name())
     if clusters:
         return [ "cluster_nodes" ] * len(clusters)
     else:
         return []
 
 
-# TODO: REWORK!
-def rename_host_as_parent(all_hosts, oldname, newname):
-    raise "BUG"
-    parents = []
-    for somehost in all_hosts.values():
-        if somehost.get("parents"):
-            if rename_host_in_list(somehost["parents"], oldname, newname):
-                parents.append(somehost[".name"])
-                folder = somehost['.folder']
-                save_folder_and_hosts(folder)
-                mark_affected_sites_dirty(folder)
+def rename_host_as_parent(oldname, newname, in_folder=None):
+    if in_folder == None:
+        in_folder = Folder.root_folder()
 
+    parents = []
+    for somehost in in_folder.hosts():
+        if somehost.has_explicit_attribute("parents"):
+            if somehost.rename_parent(oldname, newname):
+                parents.append(somehost.name())
+
+    if in_folder.has_explicit_attribute("parents"):
+        if in_folder.rename_parent(oldname, newname):
+            parents.append(somehost.name())
 
     if parents:
-        return [ "parents" ] * len(parents)
-    else:
-        return []
+        parents = [ "parents" ] * len(parents)
+
+    for subfolder in in_folder.subfolders().values():
+        parents += rename_host_as_parent(oldname, newname, subfolder)
+
+    return parents
 
 
-# TODO: REWORK!
 def rename_host_in_rulesets(folder, oldname, newname):
     # Rules that explicitely name that host (no regexes)
     changed_rulesets = []
@@ -2011,22 +1910,30 @@ def group_renamings_by_site(renamings):
 def rename_hosts(renamings):
 
     actions = []
-    all_hosts = load_all_hosts()
+    all_hosts = Host.all()
 
     # 1. Fix WATO configuration itself ----------------
+    auth_problems = []
+    successful_renamings = []
     for folder, oldname, newname in renamings:
-        actions += rename_host_in_folder(folder, oldname, newname)
-        actions += rename_host_as_cluster_node(all_hosts, oldname, newname)
-        actions += rename_host_as_parent(all_hosts, oldname, newname)
-        actions += rename_host_in_rulesets(folder, oldname, newname)
-        actions += rename_host_in_bi(oldname, newname)
+        try:
+            this_host_actions = []
+            this_host_actions += rename_host_in_folder(folder, oldname, newname)
+            this_host_actions += rename_host_as_cluster_node(all_hosts, oldname, newname)
+            this_host_actions += rename_host_as_parent(oldname, newname)
+            this_host_actions += rename_host_in_rulesets(folder, oldname, newname)
+            this_host_actions += rename_host_in_bi(oldname, newname)
+            actions += this_host_actions
+            successful_renamings.append((folder, oldname, newname))
+        except MKAuthException, e:
+            auth_problems.append((oldname, e))
 
     # 2. Check_MK stuff ------------------------------------------------
-    action_counts = rename_hosts_in_check_mk(renamings)
+    action_counts = rename_hosts_in_check_mk(successful_renamings)
 
     # 3. Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
-    for folder, oldname, newname in renamings:
+    for folder, oldname, newname in successful_renamings:
         actions += rename_host_in_event_rules(oldname, newname)
         actions += rename_host_in_multisite(oldname, newname)
 
@@ -2037,7 +1944,7 @@ def rename_hosts(renamings):
     call_hook_hosts_changed(Folder.root_folder())
 
     action_texts = render_renaming_actions(action_counts)
-    return action_texts
+    return action_texts, auth_problems
 
 
 def render_renaming_actions(action_counts):
@@ -2390,6 +2297,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
     html.write("</td></tr></table>")
 
+
 # Returns the outcoming value or None and
 # a list of matching rules. These are pairs
 # of rule_folder and rule_number
@@ -2439,9 +2347,6 @@ def analyse_ruleset(rulespec, ruleset, hostname, service):
         return None, [] # No match
 
 
-
-
-
 #.
 #   .--Host Diag-----------------------------------------------------------.
 #   |              _   _           _     ____  _                           |
@@ -2463,6 +2368,7 @@ def diag_host_tests():
         ('snmpv2_nobulk', _('SNMPv2c (without Bulkwalk)')),
         ('traceroute',    _('Traceroute')),
     ]
+
 
 def mode_diag_host(phase):
     hostname = html.var("host")
@@ -2633,6 +2539,8 @@ def ajax_diag_host():
             raise MKGeneralException(_('The given host does not exist.'))
         if host.is_cluster():
             raise MKGeneralException(_('This view does not support cluster hosts.'))
+
+        host.need_permission("read")
 
         _test = html.var('_test')
         if not _test:
@@ -3074,9 +2982,8 @@ def search_hosts_in_folder(folder, crit):
 
         table.begin("search_hosts", "");
         for hostname, host, effective in found:
-            host_url =  folder_link_to([("mode", "edit_host"), ("host", hostname)], folder)
             table.row()
-            table.cell(_("Hostname"), '<a href="%s">%s</a>' % (host_url, hostname))
+            table.cell(_("Hostname"), '<a href="%s">%s</a>' % (host.edit_url(), hostname))
             for attr, topic in all_host_attributes():
                 attrname = attr.name()
                 if attr.show_in_table():
@@ -3726,9 +3633,6 @@ def mode_parentscan(phase):
     if phase == "action":
         if html.var("_item"):
             try:
-                # TODO: We could improve the performance by scanning
-                # in parallel. The automation already can do this.
-                # We would need to cluster hosts into bulks here.
                 folderpath, host_name = html.var("_item").split("|")
                 folder = Folder.folder(folderpath)
                 host = folder.host(host_name)
@@ -3989,7 +3893,7 @@ def configure_gateway(state, site_id, folder, host, gateway):
             if gw_folder.site_id() != site_id:
                 new_host_attributes["site"] = site_id
 
-            new_host = folder.create_host(gw_host_name, new_host_attributes, None)
+            folder.create_hosts([(gw_host_name, new_host_attributes, None)])
             gwcreat = True
 
         parents = [ gw_host_name ]
@@ -6807,6 +6711,7 @@ def mode_edit_group(phase, what):
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
+
 
 def save_group_information(all_groups):
     # Split groups data into Check_MK/Multisite parts
@@ -11658,9 +11563,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         message += _("Affected folders with an explicit reference to this tag "
                      "group and that are affected by the change") + ":<ul>"
         for folder in affected_folders:
-            message += '<li><a href="%s">%s</a></li>' % (
-                folder_link_to([("mode", "editfolder")], folder),
-                folder["title"])
+            message += '<li><a href="%s">%s</a></li>' % (folder.edit_url(), folder.alias_path())
         message += "</ul>"
 
     if affected_hosts:
@@ -11673,9 +11576,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
             elif nr > 0:
                 message += ", "
 
-            message += '<a href="%s">%s</a>' % (
-                folder_link([("mode", "edit_host"), ("host", host[".name"])]),
-                host[".name"])
+            message += '<a href="%s">%s</a>' % (host.edit_url(), host.name())
         message += "</li></ul>"
 
     if affected_rulespecs:
@@ -12007,7 +11908,7 @@ def mode_ineffective_rules(phase):
 
     html.write('<div class=rulesets>')
 
-    all_hosts = load_all_hosts()
+    all_hosts = Host.all()
     html.write("<div class=info>" + _("The following rules do not match to any of the existing hosts.") + "</div>")
     have_ineffective = False
 
@@ -17282,53 +17183,6 @@ def load_plugins():
 
 
 #.
-#   .--CRAP--Remove this ASAP----------------------------------------------.
-#   |                      ____ ____      _    ____                        |
-#   |                     / ___|  _ \    / \  |  _ \                       |
-#   |                    | |   | |_) |  / _ \ | |_) |                      |
-#   |                    | |___|  _ <  / ___ \|  __/                       |
-#   |                     \____|_| \_\/_/   \_\_|                          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | CRAP SECTION                                                         |
-#   |                                                                      |
-#   | THIS CRAP CAN BE REMOVED AS SOON AS THE NEW CLASSES Folder AND Host  |
-#   | ARE OPERATIVE                                                        |
-#   |                                                                      |
-#   | FUNCTIONS that are not used in the file but maybe by plugins         |
-#   | check those out and replace with new class stuff                     |
-#   '----------------------------------------------------------------------'
-
-# This is a dummy implementation which works without tags
-# and implements only a special case of Check_MK's real logic.
-def host_extra_conf(hostname, conflist):
-    for value, hostlist in conflist:
-        if hostname in hostlist:
-            return [value]
-    return []
-
-# Small helper for creating a link with a context to a given folder
-def folder_link_to(vars, folder):
-    vars = vars + [ ("folder", folder.path()) ]
-    return html.makeuri_contextless(vars)
-
-
-def check_new_host_permissions(folder, host, hostname):
-    config.need_permission("wato.manage_hosts")
-    folder.need_permission("write")
-    check_user_contactgroups(host.get("contactgroups", (False, [])))
-    if hostname != None: # otherwise: name not known yet
-        check_new_hostname("host", hostname)
-
-
-def init_wato_datastructures():
-    create_sample_config()        # if called for the very first time!
-    declare_host_tag_attributes() # create attributes out of tag definitions
-    declare_site_attribute()      # create attribute for distributed WATO
-
-
-
-#.
 #   .--External API--------------------------------------------------------.
 #   |      _____      _                        _      _    ____ ___        |
 #   |     | ____|_  _| |_ ___ _ __ _ __   __ _| |    / \  |  _ \_ _|       |
@@ -17361,13 +17215,3 @@ def have_folders():
 # Returns true if at least one host or folder exists in the wato root
 def using_wato_hosts():
     return have_folders() or Folder.root_folder().has_hosts()
-
-
-# TODO:
-# Am Ende dürfen folgende (und andere Funktionen) nicht mehr vorkommen
-# (bitte erweitern)
-# - mark_affected_sites_dirty()
-# - Umbenennen von host tags
-# - Umbenennen von Hosts
-
-

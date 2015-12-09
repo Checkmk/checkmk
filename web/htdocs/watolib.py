@@ -31,6 +31,11 @@
 # WATO modes. Nor complex HTML creation. This is all contained
 # in wato.py
 
+# TODO: Wenn man mehrere Hosts auf einmal umbenennt und in der Mitte
+# ein Berechtigungsproblem auftritt, dann sind die bis dahin umbenannten
+# Hosts im WATO schon gespeichert, aber die automation wird nicht
+# mehr ausgeführt.
+
 import os, shutil, subprocess
 import defaults, config, hooks, userdb
 from lib import *
@@ -344,18 +349,13 @@ class Folder(WithPermissionsAndAttributes):
     # | STATIC METHODS                                                     |
     # '--------------------------------------------------------------------'
 
-    ### @staticmethod
-    ### def load_all_folders():
-    ###     wato_folders = html.set_cache("wato_folders", {})
-    ###     Folder("", "").add_to_dictionary(wato_folders)
-
-
     @staticmethod
     def all_folders():
         if not html.is_cached("wato_folders"):
             wato_folders = html.set_cache("wato_folders", {})
             Folder("", "").add_to_dictionary(wato_folders)
         return html.get_cached("wato_folders")
+
 
 
     @staticmethod
@@ -825,11 +825,19 @@ class Folder(WithPermissionsAndAttributes):
         return len(self.hosts()) != 0
 
 
-    def num_hosts_recursive(self):
+    def num_hosts_recursively(self):
         num = self.num_hosts()
         for subfolder in self.subfolders().values():
-            num += subfolder.num_hosts_recursive()
+            num += subfolder.num_hosts_recursively()
         return num
+
+
+    def all_hosts_recursively(self):
+        hosts = []
+        hosts += self.hosts().values()
+        for subfolder in self.subfolders():
+            hosts += subfolder.all_hosts_recursively()
+        return hosts
 
 
     def parent(self):
@@ -920,6 +928,12 @@ class Folder(WithPermissionsAndAttributes):
             return self.parent().site_id()
         else:
             return config.default_site()
+
+
+    def all_site_ids(self):
+        site_ids = set()
+        self._add_all_sites_to_set(site_ids)
+        return site_ids
 
 
     def title_path(self, withlinks = False):
@@ -1044,13 +1058,14 @@ class Folder(WithPermissionsAndAttributes):
         raise MKAuthException(reason)
 
 
-    def need_recursive_write_permission(self):
-        self.need_permission("write")
-        self.need_unlocked()
-        self.need_unlocked_subfolders()
-        self.need_unlocked_hosts()
+    def need_recursive_permission(self, how):
+        self.need_permission(how)
+        if how == "write":
+            self.need_unlocked()
+            self.need_unlocked_subfolders()
+            self.need_unlocked_hosts()
         for subfolder in self.subfolders().values():
-            subfolder.need_recursive_write_permission()
+            subfolder.need_recursive_write_permission(how)
 
 
     def need_unlocked(self):
@@ -1099,36 +1114,103 @@ class Folder(WithPermissionsAndAttributes):
 
 
     # .-----------------------------------------------------------------------.
-    # | ACTIONS & MODIFICATIONS                                               |
+    # | MODIFICATIONS                                                         |
     # |                                                                       |
-    # | All modifying operations must check permissions and locking. The GUI  |
-    # | modes must not check permissions again but must rely on that.         |
+    # | These methods are for being called by actual WATO modules when they   |
+    # | want to modify folders and hosts. They all check permissions and      |
+    # | locking. They may raise MKAuthException or MKUserError.               |
+    # |                                                                       |
+    # | Folder permissions: Creation and deletion of subfolders needs write   |
+    # | permissions in the parent folder (like in Linux).                     |
+    # |                                                                       |
+    # | Locking: these methods also check locking. Locking is for preventing  |
+    # | changes in files that are created by third party applications.        |
+    # | A folder has three lock attributes:                                   |
+    # |                                                                       |
+    # | - locked_hosts() -> hosts.mk file in the folder must not be modified  |
+    # | - locked()       -> .wato file in the folder must not be modified     |
+    # | - locked_subfolders() -> No subfolders may be created/deleted         |
+    # |                                                                       |
+    # | Sidebar: some sidebar snapins show the WATO folder tree. Everytime    |
+    # | the tree changes the sidebar needs to be reloaded. This is done here. |
     # '-----------------------------------------------------------------------'
 
-    # TODO: LOCKING UND PERMISSIONS HIER RUNTER ZIEHEN
-    # TODO: PRIVATE FUNCTIONS WITH _
-
     def create_subfolder(self, name, title, attributes):
+        # 1. Check preconditions
         config.need_permission("wato.manage_folders")
         self.need_permission("write")
+        self.need_unlocked_subfolders()
+        check_user_contactgroups(attributes.get("contactgroups", (False, [])))
+
+        # 2. Actual modification
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
-        new_subfolder.save()
         self._subfolders[name] = new_subfolder
+        new_subfolder.save()
         log_pending(AFFECTED, new_subfolder, "new-folder", _("Created new folder %s") % new_subfolder.title())
         call_hook_folder_created(new_subfolder)
+        need_sidebar_reload()
         return new_subfolder
 
 
-    def delete(self):
-        self.mark_hosts_dirty()
-        shutil.rmtree(self.filesystem_path())
-        Folder.invalidate_caches()
+    def delete_subfolder(self, name):
+        # 1. Check preconditions
+        config.need_permission("wato.manage_folders")
+        self.need_permission("write")
+        self.need_unlocked_subfolders()
+
+        # 2. Actual modification
+        subfolder = self.folder(name)
+        subfolder.mark_hosts_dirty()
+        call_hook_folder_deleted(subfolder)
         log_pending(AFFECTED, self, "delete-folder", _("Deleted folder %s") % self.title_path())
-        self.parent().remove_subfolder(self.name())
-        call_hook_folder_deleted(self)
+        self._remove_subfolder(name)
+        shutil.rmtree(subfolder.filesystem_path())
+        Folder.invalidate_caches()
+        need_sidebar_reload()
+
+
+    def move_subfolder_to(self, subfolder, target_folder):
+        # 1. Check preconditions
+        config.need_permission("wato.manage_folders")
+        self.need_permission("write")
+        self.need_unlocked_subfolders()
+        target_folder.need_permission("write")
+        target_folder.need_unlocked_subfolders()
+        subfolder.need_recursive_permission("write") # Inheritance is changed
+        if os.path.exists(target_folder.filesystem_path() + "/" + what_folder.name()):
+            raise MKUserError(None, _("Cannot move folder: A folder with this name already exists in the target folder."))
+
+        # 2. Actual modification
+        subfolder.mark_hosts_dirty()
+        old_filesystem_path = subfolder.filesystem_path()
+        del self._subfolders[subfolder.name()]
+        subfolder._parent = target_folder
+        target_folder._subfolders[subfolder.name()] = subfolder
+        shutil.move(old_filesystem_path, subfolder.filesystem_path())
+        subfolder.rewrite_hosts_files() # fixes changed inheritance
+        subfolder.mark_hosts_dirty()
+        Folder.invalidate_caches()
+        log_pending(AFFECTED, subfolder, "move-folder",
+            _("Moved folder %s to %s") % (subfolder.alias_path(), target_folder.alias_path()))
+        need_sidebar_reload()
 
 
     def edit(self, new_title, new_attributes):
+        # 1. Check preconditions
+        self.need_permission("write")
+        self.need_unlocked()
+
+        # For changing contact groups user needs write permission on parent folder
+        if get_folder_cgconf_from_attributes(new_attributes) != \
+           get_folder_cgconf_from_attributes(self.attributes()):
+            check_user_contactgroups(attributes.get("contactgroups"))
+            if self.has_parent():
+                if not self.parent().may("write"):
+                    raise MKAuthException(_("Sorry. In order to change the permissions of a folder you need write "
+                                            "access to the parent folder."))
+
+        # 2. Actual modification
+
         # Due to a change in the attribute "site" a host can move from
         # one site to another. In that case both sites need to be marked
         # dirty. Therefore we first mark dirty according to the current
@@ -1149,32 +1231,20 @@ class Folder(WithPermissionsAndAttributes):
         log_pending(AFFECTED, self, "edit-folder", _("Edited properties of folder %s") % self.title())
 
 
-    def remove_subfolder(self, name):
-        del self._subfolders[name]
-
-
-    def move_subfolder_to(self, folder, target_folder):
-        folder.need_recursive_write_permission() # Avoid auth problems after having made changes
-        folder.mark_hosts_dirty()
-        old_filesystem_path = folder.filesystem_path()
-        del self._subfolders[folder.name()]
-        folder._parent = target_folder
-        target_folder._subfolders[folder.name()] = folder
-        shutil.move(old_filesystem_path, folder.filesystem_path())
-        folder.rewrite_hosts_files() # fixes changed inheritance
-        folder.mark_hosts_dirty()
-        Folder.invalidate_caches()
-        log_pending(AFFECTED, folder, "move-folder",
-            _("Moved folder %s to %s") % (folder.title(), target_folder.path()))
-
-
-    def create_host(self, host_name, attributes, cluster_nodes):
-        self.create_hosts([(host_name, attributes, cluster_nodes)])
-
-
     def create_hosts(self, entries):
+        # 1. Check preconditions
         config.need_permission("wato.manage_hosts")
+        self.need_unlocked_hosts()
         self.need_permission("write")
+
+        for host_name, attributes, cluster_nodes in entries:
+            existing_host = Host.host(host_name)
+            if existing_host:
+                raise MKUserError("host", _('A host with the name <b><tt>%s</tt></b> already '
+                       'exists in the folder <a href="%s">%s</a>.') %
+                         (host_name, existing_host.folder().url(), existing_host.folder().alias_path()))
+
+        # 2. Actual modification
         self.load_hosts_on_demand()
         for host_name, attributes, cluster_nodes in entries:
             host = Host(self, host_name, attributes, cluster_nodes)
@@ -1187,25 +1257,24 @@ class Folder(WithPermissionsAndAttributes):
 
 
     def delete_hosts(self, host_names):
+        # 1. Check preconditions
         config.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.need_permission("write")
+
+        # 2. Actual modification
         for host_name in host_names:
             host = self.hosts()[host_name]
             host.mark_dirty()
             del self._hosts[host_name]
             self._num_hosts = len(self._hosts)
             log_pending(AFFECTED, host, "delete-host", _("Deleted host %s") % host_name)
-
         self.save() # Update num_hosts
         self.save_hosts()
 
 
-    def delete_host(self, host_name):
-        self.delete_hosts(self, [host_name])
-
-
     def move_hosts(self, host_names, target_folder):
+        # 1. Check preconditions
         config.need_permission("wato.manage_hosts")
         config.need_permission("wato.edit_hosts")
         config.need_permission("wato.move_hosts")
@@ -1214,6 +1283,7 @@ class Folder(WithPermissionsAndAttributes):
         target_folder.need_permission("write")
         target_folder.need_unlocked_hosts()
 
+        # 2. Actual modification
         for host_name in host_names:
             host = self.host(host_name)
             host.mark_dirty()
@@ -1230,18 +1300,49 @@ class Folder(WithPermissionsAndAttributes):
 
 
     def rename_host(self, oldname, newname):
+        # 1. Check preconditions
         config.need_permission("wato.manage_hosts")
         config.need_permission("wato.edit_hosts")
         self.need_unlocked_hosts()
-
         host = self.hosts()[oldname]
         host.need_permission("write")
+
+        # 2. Actual modification
         host.rename(newname)
         del self._hosts[oldname]
         self._hosts[newname] = host
         host.mark_dirty()
         self.save_hosts()
 
+
+    def rename_parent(self, oldname, newname):
+        # Must not fail because of auth problems. Auth is check at the
+        # actually renamed host.
+        changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
+        self.mark_dirty()
+        self.folder().save_hosts()
+        return changed
+
+
+    def mark_hosts_dirty(self, need_sync=True, need_restart=True):
+        for site_id in self.all_site_ids():
+            changes = {}
+            if need_sync and not config.site_is_local(site_id):
+                changes["need_sync"] = True
+            if need_restart: # Is this parameter used at all?
+                changes["need_restart"] = True
+            update_replication_status(site_id, changes)
+
+
+    def rewrite_hosts_files(self):
+        self._rewrite_hosts_file()
+        for subfolder in self.subfolders().values():
+            subfolder.rewrite_hosts_files()
+
+
+    # .-----------------------------------------------------------------------.
+    # | PRIVATE HELPERS FOR MODIFICATIONS                                     |
+    # '-----------------------------------------------------------------------'
 
     def _add_host(self, host):
         self.load_hosts_on_demand()
@@ -1257,6 +1358,10 @@ class Folder(WithPermissionsAndAttributes):
         self._num_hosts = len(self._hosts)
 
 
+    def _remove_subfolder(self, name):
+        del self._subfolders[name]
+
+
     def _add_all_sites_to_set(self, site_ids):
         site_ids.add(self.site_id())
         for host in self.hosts().values():
@@ -1265,31 +1370,7 @@ class Folder(WithPermissionsAndAttributes):
             subfolder._add_all_sites_to_set(site_ids)
 
 
-    def all_site_ids(self):
-        site_ids = set()
-        self._add_all_sites_to_set(site_ids)
-        return site_ids
-
-
-    # CLEANUP: sync=False is just needed for discovery. Do we
-    # really need this?
-    def mark_hosts_dirty(self, need_sync=True, need_restart=True):
-        for site_id in self.all_site_ids():
-            changes = {}
-            if need_sync and not config.site_is_local(site_id):
-                changes["need_sync"] = True
-            if need_restart: # Is this parameter used at all?
-                changes["need_restart"] = True
-            update_replication_status(site_id, changes)
-
-
-    def rewrite_hosts_files(self):
-        self.rewrite_hosts_file()
-        for subfolder in self.subfolders().values():
-            subfolder.rewrite_hosts_files()
-
-
-    def rewrite_hosts_file(self):
+    def _rewrite_hosts_file(self):
         self.load_hosts_on_demand()
         self.save_hosts()
 
@@ -1415,8 +1496,14 @@ class Host(WithPermissionsAndAttributes):
 
 
     @staticmethod
+    def all():
+        return Folder().root_folder().all_hosts_recursively()
+
+
+    @staticmethod
     def host_exists(host_name):
         return Host.host(host_name) != None
+
 
 
     # .--------------------------------------------------------------------.
@@ -1575,14 +1662,18 @@ class Host(WithPermissionsAndAttributes):
 
 
     # .--------------------------------------------------------------------.
-    # | ACTIONS & MODIFICATIONS                                            |
+    # | MODIFICATIONS                                                      |
     # |                                                                    |
-    # | All modifying operations must check permissions and locking. The   |
-    # | GUI-modes must not check permissions again but must rely on that.  |
+    # | These methods are for being called by actual WATO modules when they|
+    # | want to modify hosts. See details at the comment header in Folder. |
     # '--------------------------------------------------------------------'
 
     def edit(self, attributes, cluster_nodes):
+        # 1. Check preconditions
         self.need_permission("write")
+        self.need_unlocked()
+
+        # 2. Actual modification
         self.mark_dirty()
         self._attributes = attributes
         self._cluster_nodes = cluster_nodes
@@ -1598,7 +1689,11 @@ class Host(WithPermissionsAndAttributes):
 
 
     def clean_attributes(self, attrnames_to_clean):
+        # 1. Check preconditions
         self.need_permission("write")
+        self.need_unlocked()
+
+        # 2. Actual modification
         self.mark_dirty()
         for attrname in attrnames_to_clean:
             if attrname in self._attributes:
@@ -1608,18 +1703,21 @@ class Host(WithPermissionsAndAttributes):
         log_pending(AFFECTED, self, "edit-host", _("Removed explicit attributes of host %s.") % self.name())
 
 
-    def rename(self, new_name):
-        log_pending(AFFECTED, self, "rename-host", _("Renamed host from %s into %s.") % (self.name(), new_name))
-        self._name = new_name
-        self.mark_dirty()
-
-
     def clear_discovery_failed(self):
+        # 1. Check preconditions
+        # We do not check permissions. They are checked during the discovery.
+        self.need_unlocked()
+
+        # 2. Actual modification
         self.set_discovery_failed(False)
 
 
     def set_discovery_failed(self, how=True):
+        # 1. Check preconditions
+        # We do not check permissions. They are checked during the discovery.
         self.need_unlocked()
+
+        # 2. Actual modification
         if how:
             if not self._attributes.get("inventory_failed"):
                 self._attributes["inventory_failed"] = True
@@ -1637,6 +1735,35 @@ class Host(WithPermissionsAndAttributes):
             changes["need_sync"] = need_sync
         changes["need_restart"] = True
         update_replication_status(site_id, changes)
+
+
+    def rename_cluster_node(self, oldname, newname):
+        # We must not check permissions here. Permissions
+        # on the renamed host must be sufficient. If we would
+        # fail here we would leave an inconsistent state
+        changed = rename_host_in_list(self._cluster_nodes, oldname, newname)
+        self.mark_dirty()
+        self.folder().save_hosts()
+        return changed
+
+
+    def rename_parent(self, oldname, newname):
+        # Same is with rename_cluster_node()
+        changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
+        self.mark_dirty()
+        self.folder().save_hosts()
+        return changed
+
+    # .-----------------------------------------------------------------------.
+    # | PRIVATE HELPERS FOR MODIFICATIONS                                     |
+    # '-----------------------------------------------------------------------'
+
+    def rename(self, new_name):
+        log_pending(AFFECTED, self, "rename-host", _("Renamed host from %s into %s.") % (self.name(), new_name))
+        self._name = new_name
+        self.mark_dirty()
+
+
 
 
 #.
@@ -3066,19 +3193,11 @@ def call_hook_contactsgroups_saved(all_groups):
 
 # internal helper functions for API
 def collect_hosts(folder):
-    # TODO: Convert this to Folder::collect_hosts()
-    hosts = {}
-
-    # Collect hosts in this folder
-    for hostname, host in folder.hosts().items():
-        hosts[hostname] = host.effective_attributes()
-        hosts[hostname]["path"] = folder.path()
-
-    # Collect hosts from subfolders
-    for subfolder in folder.subfolders().values():
-        hosts.update(collect_hosts(subfolder))
-
-    return hosts
+    hosts_attributes = {}
+    for host in Folder.all_hosts():
+        hosts_attributes[hostname] = host.effective_attributes()
+        hosts_attributes[hostname]["path"] = host.folder().path()
+    return hosts_attributes
 
 
 
@@ -3212,6 +3331,7 @@ def get_folder_cgconf_from_attributes(attributes):
     cgconf = convert_cgroups_from_tuple(v)
     return cgconf
 
+
 # This hook is called in order to determine the errors of the given
 # hostnames. These informations are used for displaying warning
 # symbols in the host list and the host detail view
@@ -3256,3 +3376,54 @@ def folder_link(vars):
 def make_action_link(vars):
     return folder_link(vars + [("_transid", html.get_transid())])
 
+def lock_exclusive():
+    aquire_lock(defaults.default_config_dir + "/multisite.mk")
+
+
+def unlock_exclusive():
+    release_lock(defaults.default_config_dir + "/multisite.mk")
+
+
+def git_command(args):
+    encoded_args = " ".join([ a.encode("utf-8") for a in args ])
+    command = "cd '%s' && git %s 2>&1" % (defaults.default_config_dir, encoded_args)
+    p = os.popen(command)
+    output = p.read()
+    status = p.close()
+    if status != None:
+        raise MKGeneralException(_("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
+                (command.decode('utf-8'), output.replace("\n", "<br>\n")))
+
+
+def shell_quote(s):
+    return "'" + s.replace("'", "'\"'\"'") + "'"
+
+
+def do_git_commit():
+    author = shell_quote("%s <%s>" % (config.user_id, config.user_alias))
+    git_dir = defaults.default_config_dir + "/.git"
+    if not os.path.exists(git_dir):
+        git_command(["init"])
+
+        # Set git repo global user/mail. seems to be needed to prevent warning message
+        # on at least ubuntu 15.04: "Please tell me who you are. Run git config ..."
+        # The individual commits by users override the author on their own
+        git_command(["config", "user.email", "check_mk"])
+        git_command(["config", "user.name", "check_mk"])
+
+        # Make sure that .gitignore-files are present and uptodate
+        file(defaults.default_config_dir + "/.gitignore", "w").write("*\n!*.d\n!.gitignore\n*swp\n*.mk.new\n")
+        for subdir in os.listdir(defaults.default_config_dir):
+            if subdir.endswith(".d"):
+                file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write("*\n!wato\n!wato/*\n")
+
+        git_command(["add", ".gitignore", "*.d/wato"])
+        git_command(["commit", "--untracked-files=no", "--author", author, "-m", shell_quote(_("Initialized GIT for Check_MK"))])
+
+    # Only commit, if something is changed
+    if os.popen("cd '%s' && git status --untracked-files=no --porcelain" % defaults.default_config_dir).read().strip():
+        git_command(["add", "*.d/wato"])
+        message = ", ".join(g_git_messages)
+        if not message:
+            message = _("Unknown configuration change")
+        git_command(["commit", "--author", author, "-m", shell_quote(message)])

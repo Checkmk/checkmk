@@ -3194,7 +3194,7 @@ def call_hook_contactsgroups_saved(all_groups):
 # internal helper functions for API
 def collect_hosts(folder):
     hosts_attributes = {}
-    for host in Folder.all_hosts():
+    for host in Folder.all_hosts_recursively():
         hosts_attributes[hostname] = host.effective_attributes()
         hosts_attributes[hostname]["path"] = host.folder().path()
     return hosts_attributes

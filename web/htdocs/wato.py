@@ -14190,7 +14190,7 @@ def create_sample_config():
         ],
     }
 
-    save_rulesets(Folder.root(), rulesets)
+    save_rulesets(Folder.root_folder(), rulesets)
 
     notification_rules = [{
         'allow_disable'          : True,

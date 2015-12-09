@@ -580,27 +580,6 @@ def show_subfolder_infos(subfolder):
     html.write('</div>') # class=infos
 
 
-# Make sure that the user is in all of cgs contact groups.
-# This is needed when the user assigns contact groups to
-# objects. He may only assign such groups he is member himself.
-def check_user_contactgroups(cgspec):
-    if config.may("wato.all_folders"):
-        return
-
-    cgconf = convert_cgroups_from_tuple(cgspec)
-    cgs = cgconf["groups"]
-    users = userdb.load_users()
-    if config.user_id not in users:
-        user_cgs = []
-    else:
-        user_cgs = users[config.user_id]["contactgroups"]
-    for c in cgs:
-        if c not in user_cgs:
-            raise MKAuthException(_("Sorry, you cannot assign the contact group '<b>%s</b>' "
-              "because you are not member in that group. Your groups are: <b>%s</b>") %
-                 ( c, ", ".join(user_cgs)))
-
-
 def show_hosts(folder):
     if not folder.has_hosts():
         return
@@ -984,9 +963,8 @@ def mode_editfolder(phase, new):
             return "folder"
 
         # Title
-        title = html.var_utf8("title")
-        if not title:
-            raise MKUserError("title", _("Please supply a title."))
+        title = TextUnicode().from_html_vars("title")
+        TextUnicode(allow_empty = False).validate_value(title, "title")
         title_changed = not new and title != Folder.current().title()
 
         # OS filename
@@ -1021,7 +999,7 @@ def mode_editfolder(phase, new):
         # title
         forms.header(_("Title"))
         forms.section()
-        html.text_input("title", title)
+        TextUnicode().render_input("title", title)
         html.set_focus("title")
 
         # folder name (omit this for root folder)

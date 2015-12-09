@@ -3427,3 +3427,24 @@ def do_git_commit():
         if not message:
             message = _("Unknown configuration change")
         git_command(["commit", "--author", author, "-m", shell_quote(message)])
+
+
+# Make sure that the user is in all of cgs contact groups.
+# This is needed when the user assigns contact groups to
+# objects. He may only assign such groups he is member himself.
+def check_user_contactgroups(cgspec):
+    if config.may("wato.all_folders"):
+        return
+
+    cgconf = convert_cgroups_from_tuple(cgspec)
+    cgs = cgconf["groups"]
+    users = userdb.load_users()
+    if config.user_id not in users:
+        user_cgs = []
+    else:
+        user_cgs = users[config.user_id]["contactgroups"]
+    for c in cgs:
+        if c not in user_cgs:
+            raise MKAuthException(_("Sorry, you cannot assign the contact group '<b>%s</b>' "
+              "because you are not member in that group. Your groups are: <b>%s</b>") %
+                 ( c, ", ".join(user_cgs)))

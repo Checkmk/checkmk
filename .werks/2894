@@ -1,0 +1,13 @@
+Title: Fixed broken cluster checks when using Nagios core
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1449646012
+
+When monitoring clustered hosts using Nagios as core, the Check_MK service always
+resulted in an UNKNOWN state and this exception:
+
+NameError: global name 'set_use_cachefile' is not defined

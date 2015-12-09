@@ -1352,12 +1352,6 @@ orig_cluster_max_cachefile_age   = None
 orig_inventory_max_cachefile_age = None
 
 
-def set_use_cachefile(state=True):
-    global opt_use_cachefile, orig_opt_use_cachefile
-    orig_opt_use_cachefile = opt_use_cachefile
-    opt_use_cachefile = state
-
-
 def restore_use_cachefile():
     global opt_use_cachefile, orig_opt_use_cachefile
     if orig_opt_use_cachefile != None:
@@ -4622,8 +4616,7 @@ def do_check_keepalive():
         sys.stderr.flush()
 
         cleanup_globals() # Prepare for next check
-        global opt_use_cachefile
-        opt_use_cachefile = True
+        restore_use_cachefile()
         restore_original_agent_caching_usage()
 
         # Check if all global variables are clean, but only in verbose logging mode

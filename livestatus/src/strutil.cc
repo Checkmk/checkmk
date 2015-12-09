@@ -104,7 +104,9 @@ char *save_next_token(char **c, char delim)
 
 int ends_with(const char *a, const char *b)
 {
-    return !strcmp(a + strlen(a) - strlen(b), b);
+    size_t len_a = strlen(a);
+    size_t len_b = strlen(b);
+    return len_a >= len_b && strcmp(a + len_a - len_b, b) == 0;
 }
 
 

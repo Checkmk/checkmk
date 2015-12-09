@@ -6,6 +6,7 @@
     * 2807 FIX: check_mail_loop: POP3 protocol wasn't working at all
     * 2808 FIX: db2_connections: added missing connections performance data
     * 2861 FIX: hivemanager_devices: Fixed configuration of states to treat as WARN
+    * 2868 FIX: cpu_util.include: fixed crash on some systems if per-core statistics were enabled...
 
     Event Console:
     * 2862 FIX: Fixed handling of umlauts in mails send by the EC

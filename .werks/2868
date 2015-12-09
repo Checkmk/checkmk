@@ -1,0 +1,9 @@
+Title: cpu_util.include: fixed crash on some systems if per-core statistics were enabled
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p6
+Date: 1449651270
+Class: fix
+
+The per-core statistics previously depended on a specific number of performance measures per core.

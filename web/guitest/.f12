@@ -1,5 +1,0 @@
-#!/bin/bash
-SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
-SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo install -m 755 -o $SITE -g $SITE -d /omd/sites/$SITE/var/check_mk/guitests
-sudo install -o $SITE -g $SITE -v -m 644 *.mk /omd/sites/$SITE/var/check_mk/guitests

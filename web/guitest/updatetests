@@ -1,4 +1,0 @@
-#!/bin/bash
-SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
-SITE=${SITE:-$(omd sites --bare | head -n 1)}
-cp /omd/sites/$SITE/var/check_mk/guitests/*.mk .

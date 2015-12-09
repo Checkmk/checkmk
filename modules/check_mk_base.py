@@ -1983,6 +1983,11 @@ def worst_monitoring_state(status_a, status_b):
         return max(status_a, status_b)
 
 
+def set_use_cachefile(state=True):
+    global opt_use_cachefile, orig_opt_use_cachefile
+    orig_opt_use_cachefile = opt_use_cachefile
+    opt_use_cachefile = state
+
 
 #.
 #   .--Check helpers-------------------------------------------------------.

@@ -53,10 +53,24 @@ def run_guitests(args):
 
 def run_guitest(test_name):
     try:
-        sys.stdout.write("    %s%s%s...\n" % (tty_bold, test_name, tty_normal))
-        sys.stdout.flush()
+        sys.stdout.write("    %s%s%s" % (tty_bold, test_name, tty_normal))
         guitest = load_guitest(test_name)
+
+        if opt_steps_range:
+            first_step, last_step = opt_steps_range
+            if last_step == None:
+                last_step = len(guitest) - 1
+            sys.stdout.write(" from #%d to #%d" % (first_step, last_step))
+        else:
+            first_step = 0
+            last_step = len(guitest) - 1
+        sys.stdout.write("...\n")
+
         for step_nr, step in enumerate(guitest):
+            if step_nr < first_step:
+                continue
+            elif step_nr > last_step:
+                break
             sys.stdout.write("       #%d - %s.py..." % (step_nr, step_title(step)))
             errors = run_test_step(test_name, step_nr, step)
             if not errors:
@@ -152,7 +166,12 @@ def start_stop_recording(args):
 
 def start_recording(test_name):
     set_recording_symlink(test_name)
-    sys.stdout.write("Started recording into test %s.\n" % test_name)
+    if os.path.exists(recording_symlink()):
+        sys.stdout.write("Started recording, appending to existing test %s (%d steps exist).\n" %
+          (test_name, len(load_guitest(test_name))))
+    else:
+        sys.stdout.write("Started recording into new test %s.\n" % test_name)
+
 
 
 def set_recording_symlink(test_name):
@@ -234,6 +253,7 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
 
   -R, --repair               Replay a test and at the same
                              time rerecord it
+  -S, --steps START{:END}    Just run steps START...END (1st step is 0)
 
   Recording tests:
 
@@ -254,12 +274,13 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvrslR'
-long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair" ]
+short_options = 'hvrslRS:'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair", "steps=" ]
 
 opt_verbose = False
 opt_debug = False
 opt_repair = False
+opt_steps_range = None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -279,6 +300,22 @@ for o,a in opts:
         mode_function = list_guitests
     elif o in [ '-r', '--record' ]:
         mode_function = start_stop_recording
+    elif o in [ '-S', '--steps' ]:
+        if ":" in a:
+            first_text, last_text = a.split(":")
+            if first_text:
+                first_step = int(first_text)
+            else:
+                first_step = 1
+            if last_text:
+                last_step = int(last_text)
+            else:
+                last_step = None
+        else:
+            first_step = int(a)
+            last_step = first_step
+        opt_steps_range = first_step, last_step
+
 
     # Modifiers
     elif o in [ '-v', '--verbose' ]:

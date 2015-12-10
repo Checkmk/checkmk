@@ -79,6 +79,8 @@ def run_guitest(test_name):
                 sys.stdout.write(tty_red + "FAILED\n" + tty_normal)
                 for error in errors:
                     sys.stdout.write("           %s\n" % error)
+
+                sys.stdout.write("        Replay this step with: %s%s%s\n" % (tty_blue, rule_step_url(test_name, step_nr), tty_normal))
                 return False
         return True
 
@@ -159,6 +161,11 @@ def step_title(step):
     else:
         page_title = "(no page title)"
     return "%s.py - %s" % (step["filename"], page_title)
+
+
+def rule_step_url(test_name, step_nr):
+    return "http://localhost/%s/check_mk/guitest.py?test=%s&step=%d" % (
+        omd_site(), test_name, step_nr)
 
 
 def start_stop_recording(args):
@@ -242,11 +249,13 @@ if sys.stdout.isatty() and not os.name == "nt":
     tty_normal    = '\033[0m'
     tty_red       = tty_bold + '\033[31m'
     tty_green     = tty_bold + '\033[32m'
+    tty_blue      = tty_bold + '\033[34m'
 else:
-    tty_bold = ""
+    tty_bold   = ""
     tty_normal = ""
-    tty_red = ""
-    tty_green = ""
+    tty_red    = ""
+    tty_green  = ""
+    tty_blue   = ""
 
 def omd_root():
     return os.getenv("OMD_ROOT")

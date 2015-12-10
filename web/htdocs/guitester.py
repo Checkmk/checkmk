@@ -276,5 +276,7 @@ def find_common_prefix(a, b):
 
 
 def guitest_drop_dynamic_ids(text):
-    return re.sub("selection(%3d|=)[a-f0-9---]{36}", "selection=*",
-                   re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text))
+    text = re.sub("selection(%3d|=)[a-f0-9---]{36}", "selection=*", text)
+    text = re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text)
+    text = re.sub("<script.*?</script>", "", text, flags=re.DOTALL)
+    return text

@@ -99,7 +99,7 @@ def check_netscaler_vserver(item, _no_params, info):
                     health_state = 2
                 elif health_perc < 100:
                     health_state = 1
-                yield health_state, "Health at: %s%%" % health_perc
+                yield health_state, "Health at: %s%%" % health_perc, [("health_perc", health_perc, None, None, 0, 100)]
 
             yield 0, "Type: %s" % netscaler_vserver_entitytypes.get(svr_entitytype , "unknown")
             yield 0, "Protocol: %s" % netscaler_vserver_types.get(svr_type, "serviceUnknown")
@@ -118,5 +118,6 @@ check_info["netscaler_vserver"] = {
                                            62, # vsvrHealth
                                            64, # vsvrEntityType
                                         ]),
+    "has_perfdata"            : True,
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
 }

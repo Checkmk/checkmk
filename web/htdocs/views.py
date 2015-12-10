@@ -2071,6 +2071,7 @@ def paint(p, row, tdattrs="", is_last_painter=False):
         html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
     else:
         html.write("<td %s>%s</td>" % (tdattrs, content))
+    html.guitest_record_output("view", ("cell", content))
     return content != ""
 
 def paint_painter(painter, row):
@@ -2337,6 +2338,8 @@ def paint_header(view, p, is_last_column_header=False):
     thclass = classes and (" class=\"%s\"" % " ".join(classes)) or ""
 
     html.write("<th%s%s%s>%s</th>" % (thclass, onclick, title, t))
+    html.guitest_record_output("view", ("header", title))
+
 
 def register_events(row):
     if config.sounds != []:

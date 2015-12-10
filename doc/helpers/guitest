@@ -57,7 +57,7 @@ def run_guitest(test_name):
         sys.stdout.flush()
         guitest = load_guitest(test_name)
         for step_nr, step in enumerate(guitest):
-            sys.stdout.write("       #%d - %s.py..." % (step_nr, step["filename"]))
+            sys.stdout.write("       #%d - %s.py..." % (step_nr, step_title(step)))
             errors = run_test_step(test_name, step_nr, step)
             if not errors:
                 sys.stdout.write(tty_green + "OK\n" + tty_normal)
@@ -144,15 +144,13 @@ def step_title(step):
 
 
 def start_stop_recording(args):
-    if args:
-        start_recording(args[0])
-    else:
+    if recording_symlink_exists():
         stop_recording()
+    else:
+        start_recording(args[0])
 
 
 def start_recording(test_name):
-    if recording_symlink_exists():
-        bail_out("Currently recording. Stop with cmk-guitest -r.")
     set_recording_symlink(test_name)
     sys.stdout.write("Started recording into test %s.\n" % test_name)
 
@@ -168,8 +166,6 @@ def recording_symlink_exists():
 
 
 def stop_recording():
-    if not recording_symlink_exists():
-        bail_out("Currently not recording.")
     test_name = os.readlink(recording_symlink())[:-3]
     if not os.path.exists(recording_symlink()):
         sys.stdout.write("Aborted recording. Test %s not created.\n" % test_name)

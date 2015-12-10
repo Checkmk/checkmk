@@ -55,12 +55,6 @@ class GUITester:
             "filename" : self.myfile,
             "output" : {},
         }
-        # Fix transaction ID: We are just interested in whether it is valid or not
-        if "_transid" in self.vars:
-            if self.transaction_valid():
-                self.guitest["variables"]["_transid"] = "valid"
-            else:
-                self.guitest["variables"]["_transid"] = "invalid"
 
         self.add_status_icon("guitest", _("GUI test recording is active"))
 
@@ -70,6 +64,13 @@ class GUITester:
             self.guitest["user"] = self.user
             self.guitest["elapsed_time"] = time.time() - self.start_time
             self.save_guitest_step(self.guitest)
+
+            # Fix transaction IDs: We are just interested in whether it is valid or not
+            if "_transid" in self.guitest["variables"]:
+                if self.transaction_valid():
+                    self.guitest["variables"]["_transid"] = "valid"
+                else:
+                    self.guitest["variables"]["_transid"] = "invalid"
 
 
     def save_guitest_step(self, step):

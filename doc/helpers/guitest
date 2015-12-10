@@ -71,7 +71,7 @@ def run_guitest(test_name):
                 continue
             elif step_nr > last_step:
                 break
-            sys.stdout.write("       #%d - %s.py..." % (step_nr, step_title(step)))
+            sys.stdout.write("       #%d - %s..." % (step_nr, step_title(step)))
             errors = run_test_step(test_name, step_nr, step)
             if not errors:
                 sys.stdout.write(tty_green + "OK\n" + tty_normal)
@@ -134,8 +134,8 @@ def run_test_step(test_name, step_nr, step):
 def hilite_keywords(text):
     text = text.replace(" expected ", tty_green + " expected " + tty_normal) \
                .replace(" got ", tty_red + " got " + tty_normal)
-    text = re.sub(r" expected (.*?)\[\[\[([^]]*?)\]\]\]", r" expected \1" + tty_green + r"\2" + tty_normal, text)
-    text = re.sub(r" got (.*?)\[\[\[([^]]*?)\]\]\]", r" got \1" + tty_red + r"\2" + tty_normal, text)
+    text = re.sub(r" expected (.*?)\[\[\[([^]]*?)\]\]\]", r" expected \1" + tty_green + r"\2" + tty_normal, text, flags=re.DOTALL)
+    text = re.sub(r" got (.*?)\[\[\[(.*?)\]\]\]", r" got \1" + tty_red + r"\2" + tty_normal, text, flags=re.DOTALL)
     return text
 
 
@@ -327,7 +327,14 @@ for o,a in opts:
 
 # Main modes
 try:
-    mode_function(args)
+    test_names = []
+    for a in args:
+        if a.endswith(".mk"):
+            test_name = a[:-3] # Makes guitest wato.* easier
+        else:
+            test_name = a
+        test_names.append(test_name)
+    mode_function(test_names)
 
 except Exception, e:
     if opt_debug:

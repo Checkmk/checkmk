@@ -280,9 +280,11 @@ def find_common_prefix(a, b):
 
     return a, "", ""
 
+check_mk_version_regex = "(1\.2\.[68]?([bp][0-9]+)|1\.2\.[79]i[0-9](p[0-9]+)?|201[5-9]\.[01][0-9]\.[0123][0-9])"
 
 def guitest_drop_dynamic_ids(text):
     text = re.sub("selection(%3d|=)[a-f0-9---]{36}", "selection=*", text)
     text = re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text)
     text = re.sub("<script.*?</script>", "", text, flags=re.DOTALL)
+    text = re.sub(check_mk_version_regex, "CMK_VERSION", text)
     return text

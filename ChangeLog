@@ -8,6 +8,9 @@
     * 2861 FIX: hivemanager_devices: Fixed configuration of states to treat as WARN
     * 2868 FIX: cpu_util.include: fixed crash on some systems if per-core statistics were enabled...
 
+    Multisite:
+    * 2810 FIX: esx_vsphere_counters, winperf_phydisk: fixed exception on pnpgraph overview page...
+
     Event Console:
     * 2862 FIX: Fixed handling of umlauts in mails send by the EC
     * 2893 FIX: Improved error handling of sending mails via Event Console

@@ -95,7 +95,13 @@ def load_guitest(test_name):
     path = tests_dir() + test_name + ".mk"
     if not os.path.exists(path):
         raise Exception("Test not found (missing file %s)" % path)
-    return eval(file(path).read())
+    guitest = eval(file(path).read())
+
+    global opt_steps_range
+    if opt_steps_range[1] == None:
+        opt_steps_range = opt_steps_range[0], len(guitest) - 1
+
+    return guitest
 
 
 def save_guitest(test_name, guitest):
@@ -221,14 +227,23 @@ def extract_from_test(args):
 
     guitest = load_guitest(from_test_name)
     from_step, to_step = opt_steps_range
-    if to_step == None:
-        to_step = len(guitest) - 1
 
     extracted_steps = guitest[from_step:to_step+1]
     if to_test_name:
         save_guitest(to_test_name, extracted_steps)
     else:
         sys.stdout.write("%s\n" % pprint.pformat(extracted_steps))
+
+
+def delete_steps_from_test(args):
+    if len(args) != 1:
+        bail_out("Please specify exactly one test to delete steps from.")
+
+    test_name = args[0]
+    guitest = load_guitest(test_name)
+    from_step, to_step = opt_steps_range
+    del guitest[from_step:to_step+1]
+    save_guitest(test_name, guitest)
 
 
 
@@ -292,34 +307,31 @@ def parse_range_argument(a):
 
 def usage():
     sys.stderr.write("""
-Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
+Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
 
-  -h, --help                 Show this help
-  -v, --verbose              Output debug information on stderr
-      --debug                Do not catch Python exceptions
+  OPERATION MODES
 
-  -r, --record TEST          Start recording new test
-  -r, --record               Stop recording test
-  -l, --list-tests           List all tests
+     (no option) [TESTS...]             Run some or all tests
+     -R, --repair                       Run a test and at the same time rerecord it
+     -r, --record                       Start/stop recording test TEST
+     -l, --list-tests [TEST]            List one or all tests
+     -x, --extract RANGE TEST [OUTPUT]  Extract a range of steps from a test to stdout
+     -D, --delete RANGE TEST            Remove a range of steps from a test
+     -h, --help                         Show this crufty help
+
+  OPTIONS
+
+     -v, --verbose                      Output debug information on stderr
+         --debug                        Do not catch Python exceptions
+     -S, --steps RANGE                  Just run steps START...END (1st step is 0)
 
 
+  RANGES
 
-  Running tests:
-
-  cmk-guitest [-R] [OPTIONS] [TEST1 TEST2...]
-
-  -R, --repair               Replay a test and at the same
-                             time rerecord it
-  -S, --steps START{:END}    Just run steps START...END (1st step is 0)
-
-  Recording tests:
-
-  cmk-guitest [OPTIONS] -r TEST
-  cmk-guitest [OPTIONS] -r
-
-  Other modes:
-
-  -x, --extract {START}:END T Extract a range of steps from a test to stdout
+     0    Just the step 0
+     2:5  Steps 2, 3, 4 and 5
+     :5   All steps from 0 through 5
+     2:   All steps from 2 until end of the test
 
 """)
 
@@ -335,13 +347,13 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvrslRS:x:'
-long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair", "steps=", "extract=" ]
+short_options = 'hvrslRS:x:D:'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair", "steps=", "extract=", "delete=" ]
 
 opt_verbose = False
 opt_debug = False
 opt_repair = False
-opt_steps_range = None
+opt_steps_range = 0, None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -364,6 +376,9 @@ for o,a in opts:
     elif o in [ '-x', '--extract' ]:
         opt_steps_range = parse_range_argument(a)
         mode_function = extract_from_test
+    elif o in [ '-D', '--delete' ]:
+        opt_steps_range = parse_range_argument(a)
+        mode_function = delete_steps_from_test
 
     # Modifiers
     elif o in [ '-S', '--steps' ]:

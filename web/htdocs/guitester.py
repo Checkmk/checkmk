@@ -159,10 +159,10 @@ class GUITester:
             errors = []
             for varname in self.replayed_guitest_step["output"].keys():
                 method = self.guitest_test_method(varname)
-                errors += [ "%s: %s" % (varname, error)
-                            for error in method(
+                errors_for_this_varname = method(
                                 self.replayed_guitest_step["output"][varname],
-                                self.replayed_guitest_step["replay"].get(varname, [])) ]
+                                self.replayed_guitest_step["replay"].get(varname, []))
+                errors += [ "%s: %s" % (varname, error) for error in errors_for_this_varname ]
             if errors:
                 raise MKGuitestFailed(errors)
 
@@ -172,6 +172,8 @@ class GUITester:
             return guitest_check_datatables
         elif varname == "page_title":
             return guitest_check_single_value
+        elif varname == "message":
+            return guitest_check_element_list_with_exceeding
         else:
             return guitest_check_element_list
 
@@ -188,14 +190,18 @@ def guitest_check_single_value(reference, reality):
         return []
 
 
-def guitest_check_element_list(reference, reality):
+def guitest_check_element_list_with_exceeding(reference, reality):
+    return guitest_check_element_list(reference, reality, check_exceeding=True)
+
+
+def guitest_check_element_list(reference, reality, check_exceeding=False):
     errors = []
     one_missing = False
     for entry in reference:
         if not guitest_entry_in_reference_list(entry, reality):
             errors.append("missing entry %r" % (entry,))
             one_missing = True
-    if one_missing:
+    if one_missing or check_exceeding:
         for entry in reality:
             if not guitest_entry_in_reference_list(entry, reference):
                 errors.append("exceeding entry %r" % (entry,))

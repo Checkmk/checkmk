@@ -835,7 +835,7 @@ class Folder(WithPermissionsAndAttributes):
     def all_hosts_recursively(self):
         hosts = []
         hosts += self.hosts().values()
-        for subfolder in self.subfolders():
+        for subfolder in self.subfolders().values():
             hosts += subfolder.all_hosts_recursively()
         return hosts
 
@@ -1497,7 +1497,7 @@ class Host(WithPermissionsAndAttributes):
 
     @staticmethod
     def all():
-        return Folder().root_folder().all_hosts_recursively()
+        return Folder.root_folder().all_hosts_recursively()
 
 
     @staticmethod
@@ -3194,9 +3194,9 @@ def call_hook_contactsgroups_saved(all_groups):
 # internal helper functions for API
 def collect_hosts(folder):
     hosts_attributes = {}
-    for host in Folder().all_hosts_recursively():
-        hosts_attributes[hostname] = host.effective_attributes()
-        hosts_attributes[hostname]["path"] = host.folder().path()
+    for host in Host.all():
+        hosts_attributes[host.name()] = host.effective_attributes()
+        hosts_attributes[host.name()]["path"] = host.folder().path()
     return hosts_attributes
 
 

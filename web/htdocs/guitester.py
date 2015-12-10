@@ -63,7 +63,6 @@ class GUITester:
         if self.guitest != None:
             self.guitest["user"] = self.user
             self.guitest["elapsed_time"] = time.time() - self.start_time
-            self.save_guitest_step(self.guitest)
 
             # Fix transaction IDs: We are just interested in whether it is valid or not
             if "_transid" in self.guitest["variables"]:
@@ -71,6 +70,8 @@ class GUITester:
                     self.guitest["variables"]["_transid"] = "valid"
                 else:
                     self.guitest["variables"]["_transid"] = "invalid"
+
+            self.save_guitest_step(self.guitest)
 
 
     def save_guitest_step(self, step):
@@ -134,7 +135,7 @@ class GUITester:
 
 
     def guitest_ignored_pages(self):
-        return [ "run_cron", "index", "side", "sidebar_snapin", "dashboard", "dashboard_dashlet", "login" ]
+        return [ "run_cron", "index", "side", "sidebar_snapin", "dashboard", "dashboard_dashlet", "login", "tree_openclose" ]
 
 
     def guitest_record_output(self, key, value):

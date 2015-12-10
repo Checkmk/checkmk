@@ -413,7 +413,7 @@ def mode_folder(phase):
         folder.show_breadcrump()
 
         if not folder.may("read"):
-            html.message(HTML('<img class=authicon src="images/icon_autherr.png"> %s' % html.attrencode(folder.reason_why_user_may_not("read"))))
+            html.message(HTML('<img class=authicon src="images/icon_autherr.png"> %s' % html.attrencode(folder.reason_why_may_not("read"))))
 
         folder.show_locking_information()
         show_subfolders_of(folder)
@@ -492,7 +492,7 @@ def show_subfolder_hoverarea(subfolder):
 
     else:
         html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \
-                   (html.strip_tags(subfolder.reason_why_user_may_not("read"))))
+                   (html.strip_tags(subfolder.reason_why_may_not("read"))))
         html.write('<div class=hoverarea></div>')
 
 
@@ -1214,7 +1214,7 @@ def mode_edit_host(phase, new, is_cluster):
         html.write(hostname)
     else:
         forms.section(_("Hostname"))
-        html.text_input("host")
+        Hostname().render_input("host", "")
         html.set_focus("host")
 
     # Cluster: nodes
@@ -1255,16 +1255,12 @@ def action_edit_host(mode, hostname, is_cluster):
     else:
         cluster_nodes = None
 
-    # ???
     if mode != "edit" and not html.transaction_valid():
         return "folder"
 
-    # ??? Wie kann hostname leer sein?
-    if not hostname:
-        raise MKInternalError(_("hostname should not be empty here."))
+    if mode == "new":
+        Hostname().validate_value(hostname, "host")
 
-    go_to_services = html.var("services")
-    go_to_diag     = html.var("diag_host")
     if html.check_transaction():
         if mode == "edit":
             Host.host(hostname).edit(attributes, cluster_nodes)
@@ -1273,6 +1269,9 @@ def action_edit_host(mode, hostname, is_cluster):
 
     host = Folder.current().host(hostname)
     errors = validate_all_hosts([hostname]).get(hostname, []) + host.validation_errors()
+
+    go_to_services = html.var("services")
+    go_to_diag     = html.var("diag_host")
 
     if errors: # keep on this page if host does not validate
         return
@@ -3075,7 +3074,7 @@ def mode_bulk_import(phase):
 
         config.need_permission("wato.manage_hosts")
         Folder.current().need_permission("write")
-        check_user_contactgroups(attributes.get("contactgroups", (False, [])))
+        must_be_in_contactgroups(attributes.get("contactgroups", (False, [])))
 
         hosts = html.var('_hosts')
         if not hosts:

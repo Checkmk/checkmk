@@ -459,12 +459,12 @@ def check_edit_host_permissions(folder, host, hostname):
          raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
                                  "access to the folder it is contained in."))
     if cgs_changed:
-        check_user_contactgroups(host.get("contactgroups", (False, [])))
+        must_be_in_contactgroups(host.get("contactgroups", (False, [])))
 
 
 # Creates and returns an empty wato folder with the given title
 # Write permissions are NOT checked!
-# TODO: This is totally broken and needs to be removed by Folder()...create_subfolder()
+# TODO: This is totally broken and needs to be removed by Folder()...create_subfolder)
 def create_wato_folder(parent, name, title, attributes={}):
     # CLEANUP: Replaced by Folder.create_subfolder()
     if parent and parent[".path"]:

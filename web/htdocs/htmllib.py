@@ -1085,6 +1085,8 @@ class html(GUITester):
         else:
             self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
 
+        self.guitest_record_output("message", (what, msg))
+
     def show_localization_hint(self):
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
         self.message(HTML("<sup>*</sup>" +

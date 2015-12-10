@@ -1145,7 +1145,7 @@ class Folder(WithPermissionsAndAttributes):
         config.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
-        check_user_contactgroups(attributes.get("contactgroups", (False, [])))
+        must_be_in_contactgroups(attributes.get("contactgroups"))
 
         # 2. Actual modification
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
@@ -1208,7 +1208,7 @@ class Folder(WithPermissionsAndAttributes):
         # For changing contact groups user needs write permission on parent folder
         if get_folder_cgconf_from_attributes(new_attributes) != \
            get_folder_cgconf_from_attributes(self.attributes()):
-            check_user_contactgroups(attributes.get("contactgroups"))
+            must_be_in_contactgroups(self.attributes().get("contactgroups"))
             if self.has_parent():
                 if not self.parent().may("write"):
                     raise MKAuthException(_("Sorry. In order to change the permissions of a folder you need write "
@@ -1243,6 +1243,7 @@ class Folder(WithPermissionsAndAttributes):
         self.need_permission("write")
 
         for host_name, attributes, cluster_nodes in entries:
+            must_be_in_contactgroups(attributes.get("contactgroups"))
             existing_host = Host.host(host_name)
             if existing_host:
                 raise MKUserError("host", _('A host with the name <b><tt>%s</tt></b> already '
@@ -1629,7 +1630,7 @@ class Host(WithPermissionsAndAttributes):
 
         reason = _("Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
                    "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
-                   (hostname, ", ".join(permitted_groups), ", ".join(user_contactgroups))
+                   (self.name(), ", ".join(permitted_groups), ", ".join(user_contactgroups))
         raise MKAuthException(reason)
 
 
@@ -1677,6 +1678,7 @@ class Host(WithPermissionsAndAttributes):
         # 1. Check preconditions
         self.need_permission("write")
         self.need_unlocked()
+        must_be_in_contactgroups(attributes.get("contactgroups"))
 
         # 2. Actual modification
         self.mark_dirty()
@@ -3392,8 +3394,12 @@ def do_git_commit():
 # Make sure that the user is in all of cgs contact groups.
 # This is needed when the user assigns contact groups to
 # objects. He may only assign such groups he is member himself.
-def check_user_contactgroups(cgspec):
+def must_be_in_contactgroups(cgspec):
     if config.may("wato.all_folders"):
+        return
+
+    # No contact groups specified
+    if cgspec == None:
         return
 
     cgconf = convert_cgroups_from_tuple(cgspec)

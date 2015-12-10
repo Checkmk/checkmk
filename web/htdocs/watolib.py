@@ -357,7 +357,6 @@ class Folder(WithPermissionsAndAttributes):
         return html.get_cached("wato_folders")
 
 
-
     @staticmethod
     def folder(folder_path):
         if folder_path in Folder.all_folders():

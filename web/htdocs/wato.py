@@ -6809,7 +6809,7 @@ def save_notification_rules(rules):
 
 
 def FolderChoice(**kwargs):
-    kwargs["choices"] = Folder.root_folder().recursive_subfolder_choices()
+    kwargs["choices"] = lambda: Folder.root_folder().recursive_subfolder_choices()
     kwargs.setdefault("title", _("Folder"))
     return DropdownChoice(**kwargs)
 

@@ -32,44 +32,35 @@ def run_guitests(args):
     sys.stdout.write("Going to run %d tests%s...\n" % (
        len(args), opt_repair and " in repair mode" or ""))
 
-    num_failed = 0
     num_successfull = 0
     for test_name in args:
         if opt_repair:
             set_recording_symlink(test_name)
-        if run_guitest(test_name):
-            num_successfull += 1
-        else:
-            num_failed += 1
+        succeeded = run_guitest(test_name)
         if opt_repair:
             stop_recording()
+        if succeeded:
+            num_successfull += 1
+        else:
+            break
 
-    sys.stdout.write("%d tests succeeded, %d failed.\n" % (num_successfull, num_failed))
-    if num_failed == 0:
+    if succeeded:
+        sys.stdout.write("%sAll %d tests succeeded.%s\n" % (tty_green, num_successfull, tty_normal))
         sys.exit(0)
     else:
+        sys.stdout.write("%d tests succeeded, but last one %sfailed.%s\n" % (num_successfull, tty_red, tty_normal))
         sys.exit(1)
 
 
 def run_guitest(test_name):
     try:
-        sys.stdout.write("    %s%s%s" % (tty_bold, test_name, tty_normal))
+        sys.stdout.write("    %s%s%s...\n" % (tty_bold, test_name, tty_normal))
         guitest = load_guitest(test_name)
 
-        if opt_steps_range:
-            first_step, last_step = opt_steps_range
-            if last_step == None:
-                last_step = len(guitest) - 1
-            sys.stdout.write(" from #%d to #%d" % (first_step, last_step))
-        else:
-            first_step = 0
-            last_step = len(guitest) - 1
-        sys.stdout.write("...\n")
-
         for step_nr, step in enumerate(guitest):
-            if step_nr < first_step:
+            if step_nr < range_from:
                 continue
-            elif step_nr > last_step:
+            elif step_nr > range_to:
                 break
             sys.stdout.write("       #%d - %s..." % (step_nr, step_title(step)))
             errors = run_test_step(test_name, step_nr, step)
@@ -92,14 +83,18 @@ def run_guitest(test_name):
 
 
 def load_guitest(test_name):
+
     path = tests_dir() + test_name + ".mk"
     if not os.path.exists(path):
         raise Exception("Test not found (missing file %s)" % path)
     guitest = eval(file(path).read())
 
-    global opt_steps_range
+    global range_from, range_to
+    range_from = opt_steps_range[0]
     if opt_steps_range[1] == None:
-        opt_steps_range = opt_steps_range[0], len(guitest) - 1
+        range_to = len(guitest) - 1
+    else:
+        range_to = opt_steps_range[1]
 
     return guitest
 
@@ -166,7 +161,8 @@ def step_title(step):
         page_title = step["output"]["page_title"][0]
     else:
         page_title = "(no page title)"
-    return "%s.py - %s" % (step["filename"], page_title)
+
+    return "[%s] %s.py - %s" % (step["user"], step["filename"], tty_bold + page_title + tty_normal)
 
 
 def rule_step_url(test_name, step_nr):
@@ -226,9 +222,8 @@ def extract_from_test(args):
         to_test_name = None
 
     guitest = load_guitest(from_test_name)
-    from_step, to_step = opt_steps_range
 
-    extracted_steps = guitest[from_step:to_step+1]
+    extracted_steps = guitest[range_from : range_to]
     if to_test_name:
         save_guitest(to_test_name, extracted_steps)
     else:
@@ -241,8 +236,7 @@ def delete_steps_from_test(args):
 
     test_name = args[0]
     guitest = load_guitest(test_name)
-    from_step, to_step = opt_steps_range
-    del guitest[from_step:to_step+1]
+    del guitest[range_from:range_to+1]
     save_guitest(test_name, guitest)
 
 

@@ -4338,6 +4338,8 @@ def ajax_replication():
             result = restart_site(site)
 
     except Exception, e:
+        if config.debug:
+            raise
         result = str(e)
 
     # Pre 1.2.7i3 sites return True on success and a string on error.

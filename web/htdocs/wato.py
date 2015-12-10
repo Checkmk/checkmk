@@ -12618,9 +12618,9 @@ def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
         reasons.append(_("The host name does not match."))
 
     for tag in tag_specs:
-        if tag[0] != '/' and tag[0] != '!' and tag not in host[".tags"]:
+        if tag[0] != '/' and tag[0] != '!' and tag not in host.tags():
             reasons.append(_("The host is missing the tag %s" % tag))
-        elif tag[0] == '!' and tag[1:] in host[".tags"]:
+        elif tag[0] == '!' and tag[1:] in host.tags():
             reasons.append(_("The host has the tag %s" % tag))
 
     if not rule_folder.is_transitive_parent_of(host_folder):

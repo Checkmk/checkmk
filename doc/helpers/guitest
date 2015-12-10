@@ -96,6 +96,10 @@ def load_guitest(test_name):
     return eval(file(path).read())
 
 
+def save_guitest(test_name, guitest):
+    file(tests_dir() + test_name + ".mk", "w").write("%s\n" % pprint.pformat(guitest))
+
+
 def names_of_all_tests():
     return sorted([
         f[:-3] for f in os.listdir(tests_dir()) if f.endswith(".mk")
@@ -196,6 +200,31 @@ def stop_recording():
     sys.stdout.write("Stopped recording test %s (%d steps).\n" % (test_name, len(test)))
 
 
+def extract_from_test(args):
+    if len(args) < 1:
+        bail_out("Missing name of test to extract from.")
+    elif len(args) > 2:
+        bail_out("You can specify at most one test to extract from.")
+
+    from_test_name = args[0]
+    if len(args) > 1:
+        to_test_name = args[1]
+    else:
+        to_test_name = None
+
+    guitest = load_guitest(from_test_name)
+    from_step, to_step = opt_steps_range
+    if to_step == None:
+        to_step = len(guitest) - 1
+
+    extracted_steps = guitest[from_step:to_step+1]
+    if to_test_name:
+        save_guitest(to_test_name, extracted_steps)
+    else:
+        sys.stdout.write("%s\n" % pprint.pprint(extracted_steps))
+
+
+
 #.
 #   .-Helpers--------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -233,6 +262,25 @@ def bail_out(x):
     sys.stderr.write("%s\n" % x)
     sys.exit(1)
 
+
+def parse_range_argument(a):
+    if ":" in a:
+        first_text, last_text = a.split(":")
+        if first_text:
+            first_step = int(first_text)
+        else:
+            first_step = 0
+        if last_text:
+            last_step = int(last_text)
+        else:
+            last_step = None
+    else:
+        first_step = int(a)
+        last_step = first_step
+
+    return first_step, last_step
+
+
 def usage():
     sys.stderr.write("""
 Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
@@ -260,6 +308,10 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
   cmk-guitest [OPTIONS] -r TEST
   cmk-guitest [OPTIONS] -r
 
+  Other modes:
+
+  -x, --extract {START}:END T Extract a range of steps from a test to stdout
+
 """)
 
 #.
@@ -274,8 +326,8 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvrslRS:'
-long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair", "steps=" ]
+short_options = 'hvrslRS:x:'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair", "steps=", "extract=" ]
 
 opt_verbose = False
 opt_debug = False
@@ -300,24 +352,13 @@ for o,a in opts:
         mode_function = list_guitests
     elif o in [ '-r', '--record' ]:
         mode_function = start_stop_recording
-    elif o in [ '-S', '--steps' ]:
-        if ":" in a:
-            first_text, last_text = a.split(":")
-            if first_text:
-                first_step = int(first_text)
-            else:
-                first_step = 1
-            if last_text:
-                last_step = int(last_text)
-            else:
-                last_step = None
-        else:
-            first_step = int(a)
-            last_step = first_step
-        opt_steps_range = first_step, last_step
-
+    elif o in [ '-x', '--extract' ]:
+        opt_steps_range = parse_range_argument(a)
+        mode_function = extract_from_test
 
     # Modifiers
+    elif o in [ '-S', '--steps' ]:
+        opt_steps_range = parse_range_argument(a)
     elif o in [ '-v', '--verbose' ]:
         opt_verbose = True
     elif o == '--debug':

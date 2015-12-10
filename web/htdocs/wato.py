@@ -4163,7 +4163,7 @@ def mode_changelog(phase):
 
         elif transaction_already_checked or html.check_transaction():
             config.need_permission("wato.activate")
-            create_snapshot({"comment": "Activated changes by %s" % config.user_id})
+            create_snapshot({"comment": "Activated changes by %s" % config.user_id}, sync_mode=True)
 
             # Do nothing here, but let site status table be shown in a mode
             # were in each site that is not up-to-date an asynchronus AJAX
@@ -5237,7 +5237,7 @@ def do_snapshot_maintenance():
         os.remove(snapshot_dir + snapshots.pop())
 
 
-def create_snapshot(data = {}):
+def create_snapshot(data = {}, sync_mode=False):
     import copy
     def remove_functions(snapshot_data):
         snapshot_data_copy = copy.deepcopy(snapshot_data)
@@ -5258,7 +5258,11 @@ def create_snapshot(data = {}):
     snapshot_data["snapshot_name"] = snapshot_name
     snapshot_data["domains"]       = remove_functions(data.get("domains", get_backup_domains(["default"])))
 
-    check_mk_local_automation("create-snapshot", [], snapshot_data)
+    if sync_mode:
+        args = [ "sync" ]
+    else:
+        args = []
+    check_mk_local_automation("create-snapshot", args, snapshot_data)
 
     log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
     do_snapshot_maintenance()

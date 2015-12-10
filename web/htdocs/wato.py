@@ -1268,9 +1268,6 @@ def action_edit_host(mode, hostname, is_cluster):
             Folder.current().create_hosts([(hostname, attributes, cluster_nodes)])
 
     host = Folder.current().host(hostname)
-    errors = validate_all_hosts([hostname]).get(hostname, []) + host.validation_errors()
-    if errors: # keep on this page if host does not validate
-        raise MKUserError(None, ", ".join(errors))
 
     go_to_services = html.var("services")
     go_to_diag     = html.var("diag_host")

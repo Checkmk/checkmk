@@ -2233,51 +2233,6 @@ class ContactGroupsAttribute(Attribute):
         return False
 
 
-# Check if at least one host in a folder (or its subfolders)
-# has not set a certain attribute. This is needed for the validation
-# of mandatory attributes.
-def some_host_hasnt_set(folder, attrname):
-    # Check subfolders
-    for subfolder in folder[".folders"].values():
-        # If the attribute is not set in the subfolder, we need
-        # to check all hosts and that folder.
-        if attrname not in subfolder["attributes"] \
-            and some_host_hasnt_set(subfolder, attrname):
-            return True
-
-    # Check hosts in this folder
-    load_hosts(folder) # make sure hosts are loaded
-    for host in folder[".hosts"].values():
-        if attrname not in host:
-            return True
-
-    return False
-
-#### # Compute effective (explicit and inherited) attributes
-#### # for a host. This returns a dictionary with a value for
-#### # each host attribute
-#### def effective_attributes(host, folder):
-####     if host:
-####         chain = [ host ]
-####     else:
-####         chain = [ ]
-#### 
-####     while folder:
-####         chain.append(folder.get("attributes", {}))
-####         folder = folder.get(".parent")
-#### 
-####     eff = {}
-####     for a in chain[::-1]:
-####         eff.update(a)
-#### 
-####     # now add default values of attributes for all missing values
-####     for attr, topic in all_host_attributes():
-####         attrname = attr.name()
-####         if attrname not in eff:
-####             eff.setdefault(attrname, attr.default_value())
-#### 
-####     return eff
-
 # Global datastructure holding all attributes (in a defined order)
 # as pairs of (attr, topic). Topic is the title under which the
 # attribute is being displayed. All builtin attributes use the

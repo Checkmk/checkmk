@@ -16780,6 +16780,26 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                        dump_json(hide_attributes)))
 
 
+# Check if at least one host in a folder (or its subfolders)
+# has not set a certain attribute. This is needed for the validation
+# of mandatory attributes.
+def some_host_hasnt_set(folder, attrname):
+    # Check subfolders
+    for subfolder in folder.subfolders().values():
+        # If the attribute is not set in the subfolder, we need
+        # to check all hosts and that folder.
+        if attrname not in subfolder.attributes() \
+            and some_host_hasnt_set(subfolder, attrname):
+            return True
+
+    # Check hosts in this folder
+    for host in folder.hosts().values():
+        if not host.has_explicit_attribute(attrname):
+            return True
+
+    return False
+
+
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

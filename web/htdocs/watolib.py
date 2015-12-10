@@ -426,9 +426,9 @@ class Folder(WithPermissionsAndAttributes):
 
 
     def init_by_loading_existing_directory(self, folder_path):
+        self._hosts = None
         self.load()
         self.load_subfolders()
-        self._hosts = None
 
 
     def init_by_creating_new(self, title, attributes):

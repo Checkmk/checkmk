@@ -46,10 +46,7 @@ char *strip(char *s);
 std::vector<const char*> split_line(char *pos, int (*split_pred)(int));
 char *next_word(char **line);
 
-char *llu_to_string(unsigned long long value);
 unsigned long long string_to_llu(const char *s);
-
-char *ipv4_to_text(uint32_t ip);
 
 void lowercase(char *s);
 

@@ -66,7 +66,8 @@ public:
 
     Configuration(const Environment &env);
 
-    bool sectionEnabled(unsigned int section);
+    unsigned long enabledSections();
+    unsigned long realtimeSections();
 
     int port() const { return _port; }
 
@@ -74,6 +75,11 @@ public:
     bool logwatchSendInitialEntries() const { return _logwatch_send_initial_entries; }
 
     bool supportIPV6() const { return _support_ipv6; }
+
+    int realtimeTimeout() const { return _realtime_timeout; }
+    std::string passphrase() const { return _passphrase; }
+
+    bool useRealtimeMonitoring() const { return !_passphrase.empty() && (_realtime_sections != 0); }
 
     // return true if any section requires wmi functionality
     bool useWMI() const { return _ps_use_wmi; }
@@ -160,11 +166,15 @@ private:
 private:
 
     unsigned long _enabled_sections;
+    unsigned long _realtime_sections;
 
     int _port;
 
     script_execution_mode  _default_script_execution_mode;
     script_async_execution _default_script_async_execution;
+
+    std::string _passphrase;
+    int _realtime_timeout;
 
     bool _crash_debug;
     bool _logwatch_send_initial_entries;

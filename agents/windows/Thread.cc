@@ -23,46 +23,58 @@
 // Boston, MA 02110-1301 USA.
 
 
-#ifndef ListenSocket_h
-#define ListenSocket_h
+#include "Thread.h"
+#include "stringutil.h"
+#include <windows.h>
+#include <stdexcept>
 
 
-#include <winsock2.h>
-#include <ws2ipdef.h>
-#include "types.h"
-#include <string>
+extern void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
 
 
-class ListenSocket {
-
-    SOCKET _socket;
-    only_from_t _source_whitelist;
-    bool _supports_ipv4;
-    bool _use_ipv6;
-
-public:
-
-    ListenSocket(int port, const only_from_t &source_whitelist, bool supportIPV6);
-    ~ListenSocket();
-
-    bool supportsIPV4() const;
-    bool supportsIPV6() const;
-
-    SOCKET acceptConnection();
-
-    sockaddr_storage address(SOCKET connection) const;
-
-    static std::string readableIP(SOCKET connection);
-    static std::string readableIP(const sockaddr_storage *address);
-
-private:
-
-    SOCKET init_listen_socket(int port);
-    bool check_only_from(sockaddr *ip);
-    sockaddr *create_sockaddr(int *addr_len);
-
-};
+Thread::~Thread()
+{
+    if (_thread_handle != INVALID_HANDLE_VALUE) {
+        DWORD exitCode;
+        ::GetExitCodeThread(_thread_handle, &exitCode);
+        if (exitCode == STILL_ACTIVE) {
+            // baaad
+            crash_log("thread didn't finish, have to kill it");
+            TerminateThread(_thread_handle, 3);
+        }
+    }
+}
 
 
-#endif // ListenSocket_h
+int Thread::join() const
+{
+    if (_thread_handle == INVALID_HANDLE_VALUE) {
+        throw std::runtime_error("thread not started");
+    }
+    DWORD res = ::WaitForSingleObject(_thread_handle, INFINITE);
+    if (res != WAIT_OBJECT_0) {
+        throw std::runtime_error(get_win_error_as_string());
+    }
 
+    DWORD exitCode;
+    ::GetExitCodeThread(_thread_handle, &exitCode);
+    return static_cast<int>(exitCode);
+}
+
+
+void Thread::start()
+{
+    if (wasStarted()) {
+        throw std::runtime_error("thread already started");
+    }
+    _thread_handle = ::CreateThread(NULL, 0, _func, _data, 0, NULL);
+    if (_thread_handle == NULL) {
+        throw std::runtime_error(get_win_error_as_string());
+    }
+}
+
+
+bool Thread::wasStarted() const
+{
+    return _thread_handle != INVALID_HANDLE_VALUE;
+}

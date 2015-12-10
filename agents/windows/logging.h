@@ -23,46 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 
-#ifndef ListenSocket_h
-#define ListenSocket_h
-
-
-#include <winsock2.h>
-#include <ws2ipdef.h>
-#include "types.h"
 #include <string>
 
+// log messages to stdout if verbose mode is active
+void verbose(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
 
-class ListenSocket {
+// log messages to the crash log file if crash_log is active
+void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
 
-    SOCKET _socket;
-    only_from_t _source_whitelist;
-    bool _supports_ipv4;
-    bool _use_ipv6;
+void open_crash_log(const std::string &log_directory);
+void close_crash_log();
 
-public:
-
-    ListenSocket(int port, const only_from_t &source_whitelist, bool supportIPV6);
-    ~ListenSocket();
-
-    bool supportsIPV4() const;
-    bool supportsIPV6() const;
-
-    SOCKET acceptConnection();
-
-    sockaddr_storage address(SOCKET connection) const;
-
-    static std::string readableIP(SOCKET connection);
-    static std::string readableIP(const sockaddr_storage *address);
-
-private:
-
-    SOCKET init_listen_socket(int port);
-    bool check_only_from(sockaddr *ip);
-    sockaddr *create_sockaddr(int *addr_len);
-
-};
-
-
-#endif // ListenSocket_h
 

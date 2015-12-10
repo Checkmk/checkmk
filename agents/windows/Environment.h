@@ -50,6 +50,14 @@ public:
     const std::string &logwatchStatefile() const { return _logwatch_statefile; }
     const std::string &eventlogStatefile() const { return _eventlog_statefile; }
 
+public:
+
+    static bool isWinNt();
+
+    // return windows version as a combined value, with major version in the upper 8 bits
+    // and minor in the lower bits, i.e. 0x0501 for windows xp (32-bit)
+    static uint16_t winVersion();
+
 private:
 
     void getAgentDirectory(char *buffer, int size, bool use_cwd);

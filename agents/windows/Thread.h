@@ -23,46 +23,57 @@
 // Boston, MA 02110-1301 USA.
 
 
-#ifndef ListenSocket_h
-#define ListenSocket_h
+#ifndef Thread_h
+#define Thread_h
 
 
-#include <winsock2.h>
-#include <ws2ipdef.h>
-#include "types.h"
-#include <string>
+#include "logging.h"
+#include <windows.h>
+#include <functional>
+#include <memory>
 
 
-class ListenSocket {
-
-    SOCKET _socket;
-    only_from_t _source_whitelist;
-    bool _supports_ipv4;
-    bool _use_ipv6;
+class Thread {
 
 public:
 
-    ListenSocket(int port, const only_from_t &source_whitelist, bool supportIPV6);
-    ~ListenSocket();
-
-    bool supportsIPV4() const;
-    bool supportsIPV6() const;
-
-    SOCKET acceptConnection();
-
-    sockaddr_storage address(SOCKET connection) const;
-
-    static std::string readableIP(SOCKET connection);
-    static std::string readableIP(const sockaddr_storage *address);
+    typedef DWORD WINAPI (*ThreadFunc)(void*);
 
 private:
 
-    SOCKET init_listen_socket(int port);
-    bool check_only_from(sockaddr *ip);
-    sockaddr *create_sockaddr(int *addr_len);
+    ThreadFunc _func;
+    HANDLE _thread_handle { INVALID_HANDLE_VALUE };
+    void *_data;
+
+private:
+
+    Thread(const Thread&) = delete;
+    static void nop(void*) {}
+
+public:
+
+    // the caller keeps ownership
+    template <typename T>
+    Thread(ThreadFunc func, T &data)
+    : _func(func)
+    , _data(static_cast<void*>(&data))
+    {
+    }
+
+    ~Thread();
+
+    // wait for the thread to finish and return its exit code.
+    // this will block if the thread hasn't finished already
+    int join() const;
+
+    void start();
+
+    // return true if the thread was stated. If this is false,
+    // a call to join would throw an exception
+    bool wasStarted() const;
 
 };
 
 
-#endif // ListenSocket_h
+#endif // Thread_h
 

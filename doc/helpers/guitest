@@ -162,7 +162,7 @@ def step_title(step):
     else:
         page_title = "(no page title)"
 
-    return "[%s] %s.py - %s" % (step["user"], step["filename"], tty_bold + page_title + tty_normal)
+    return "[%s] %s.py - %s" % (tty_cyan + step["user"] + tty_normal, step["filename"], tty_bold + page_title + tty_normal)
 
 
 def rule_step_url(test_name, step_nr):
@@ -258,12 +258,14 @@ if sys.stdout.isatty() and not os.name == "nt":
     tty_normal    = '\033[0m'
     tty_red       = tty_bold + '\033[31m'
     tty_green     = tty_bold + '\033[32m'
+    tty_cyan      = tty_bold + '\033[36m'
     tty_blue      = tty_bold + '\033[34m'
 else:
     tty_bold   = ""
     tty_normal = ""
     tty_red    = ""
     tty_green  = ""
+    tty_cyan   = ""
     tty_blue   = ""
 
 def omd_root():

@@ -1269,13 +1269,14 @@ def action_edit_host(mode, hostname, is_cluster):
 
     host = Folder.current().host(hostname)
     errors = validate_all_hosts([hostname]).get(hostname, []) + host.validation_errors()
+    if errors: # keep on this page if host does not validate
+        raise MKUserError(None, ", ".join(errors))
 
     go_to_services = html.var("services")
     go_to_diag     = html.var("diag_host")
 
-    if errors: # keep on this page if host does not validate
-        return
-    elif mode != "edit":
+
+    if mode != "edit": # new/clone
         if host.tag('agent') != 'ping':
             create_msg = _('Successfully created the host. Now you should do a '
                            '<a href="%s">service discovery</a> in order to auto-configure '
@@ -1284,6 +1285,7 @@ def action_edit_host(mode, hostname, is_cluster):
         else:
             create_msg = None
 
+
         if go_to_services:
             return "firstinventory"
         elif go_to_diag:
@@ -1291,6 +1293,7 @@ def action_edit_host(mode, hostname, is_cluster):
             return "diag_host", create_msg
         else:
             return "folder", create_msg
+
     else:
         if go_to_services:
             return "inventory"

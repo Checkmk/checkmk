@@ -709,7 +709,7 @@ class Folder(WithPermissionsAndAttributes):
             self._num_hosts         = wato_info.get("num_hosts", None)
         else:
             self._num_hosts = len(self.hosts())
-            self.save()
+            self._save_wato_info()
 
 
     def load_wato_info(self):
@@ -720,24 +720,25 @@ class Folder(WithPermissionsAndAttributes):
 
 
     def save(self):
+        self._save_wato_info()
+        Folder.invalidate_caches()
+
+
+    def _save_wato_info(self):
         self.ensure_folder_directory()
-        self.save_wato_info({
+        wato_info = {
             "title"           : self._title,
             "attributes"      : self._attributes,
             "num_hosts"       : self._num_hosts,
             "lock"            : self._locked,
             "lock_subfolders" : self._locked_subfolders,
-        })
-        Folder.invalidate_caches()
+        }
+        file(self.wato_info_path(), "w").write("%r\n" % wato_info)
 
 
     def ensure_folder_directory(self):
         if not os.path.exists(self.filesystem_path()):
             make_nagios_directories(self.filesystem_path())
-
-
-    def save_wato_info(self, wato_info):
-        file(self.wato_info_path(), "w").write("%r\n" % wato_info)
 
 
     def fallback_title(self):

@@ -228,7 +228,7 @@ def extract_from_test(args):
     if to_test_name:
         save_guitest(to_test_name, extracted_steps)
     else:
-        sys.stdout.write("%s\n" % pprint.pprint(extracted_steps))
+        sys.stdout.write("%s\n" % pprint.pformat(extracted_steps))
 
 
 

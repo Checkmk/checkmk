@@ -703,9 +703,14 @@ class Folder(WithPermissionsAndAttributes):
         wato_info               = self.load_wato_info()
         self._title             = wato_info.get("title", self.fallback_title())
         self._attributes        = wato_info.get("attributes", {})
-        self._num_hosts         = wato_info.get("num_hosts", None)
         self._locked            = wato_info.get("lock", False)
         self._locked_subfolders = wato_info.get("lock_subfolders", False)
+
+        if "num_hosts" in wato_info:
+            self._num_hosts         = wato_info.get("num_hosts", None)
+        else:
+            self._num_hosts = len(self.hosts())
+            self.save()
 
 
     def load_wato_info(self):

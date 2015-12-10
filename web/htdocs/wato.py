@@ -13216,7 +13216,7 @@ def save_rule(out, folder, rulespec, rule):
     for tag in tag_specs:
         out.write(repr(tag))
         out.write(", ")
-    if folder.is_root():
+    if not folder.is_root():
         out.write("'/' + FOLDER_PATH + '/+'")
     out.write("], ")
     if len(host_list) > 0 and host_list[-1] == ALL_HOSTS[0]:

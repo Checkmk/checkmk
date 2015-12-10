@@ -63,15 +63,13 @@ class GUITester:
         if self.guitest != None:
             self.guitest["user"] = self.user
             self.guitest["elapsed_time"] = time.time() - self.start_time
-
-            # Fix transaction IDs: We are just interested in whether it is valid or not
-            if "_transid" in self.guitest["variables"]:
-                if self.transaction_valid():
-                    self.guitest["variables"]["_transid"] = "valid"
-                else:
-                    self.guitest["variables"]["_transid"] = "invalid"
-
             self.save_guitest_step(self.guitest)
+
+
+    # Is called whenever a valid transaction ID has been found
+    def guitest_set_transid_valid(self):
+        if self.guitest != None:
+            self.guitest["variables"]["_transid"] = "valid"
 
 
     def save_guitest_step(self, step):

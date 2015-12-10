@@ -1275,7 +1275,11 @@ class html(GUITester):
             return False
 
         # Now check, if this id is a valid one
-        return id in self.load_transids()
+        if id in self.load_transids():
+            self.guitest_set_transid_valid()
+            return True
+        else:
+            return False
 
     # Checks, if the current page is a transation, i.e. something
     # that is secured by a transid (such as a submitted form)

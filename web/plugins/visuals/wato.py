@@ -38,7 +38,6 @@ class FilterWatoFile(Filter):
         # file and the absence of any site configuration
         return (config.wato_enabled or\
                (not wato.is_distributed() and os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk")))\
-                and wato.have_folders()
 
 
     def load_wato_data(self):

@@ -17209,12 +17209,3 @@ def get_folder_title(path):
 def num_pending_changes():
     return len(parse_audit_log("pending"))
 
-
-# Returns true when at least one folder is defined in WATO
-def have_folders():
-    return Folder.root_folder().has_subfolders()
-
-
-# Returns true if at least one host or folder exists in the wato root
-def using_wato_hosts():
-    return have_folders() or Folder.root_folder().has_hosts()

@@ -56,7 +56,7 @@
     * 2874 netstat_an.bat: Restrict output of connections to TCP, safes performance
     * 2866 ewon: Added support for monitoring Wagner OxyReduct devices with their data exposed through an ewon router...
     * 2884 mssql_blocked_sessions: the state of the blocked sessions is now configurable
-    * 1313 apc_sts_inputs: New Check for APC Static Transfer Swichtes: Input Phases
+    * 1313 apc_sts_inputs: New Check for APC Static Transfer Switches: Input Phases
     * 1314 apc_sts_source: New Check to monitor if the input source changes on APC STS devices
     * 1315 check_mk_agent.linux: The ps section of the agent now supports long usernames...
     * 2869 ibm_storage_ts, ibm_storage_ts.drive, ibm_storage_ts_library, ibm_storage_ts.status: new checks for IBM TS3100 Tape Library

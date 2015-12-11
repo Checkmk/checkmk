@@ -61,7 +61,7 @@ def inventory_fileinfo(info, case):
     return inventory
 
 def fileinfo_process_date(pattern,reftime):
-    disect = re.match('(/.*/)\$DATE:((?:%\w.?){1,})\$(.*)',pattern)
+    disect = re.match('(/.*)\$DATE:((?:%\w.?){1,})\$(.*)',pattern)
     if disect:
         prefix = disect.group(1)
         datepattern =  time.strftime(disect.group(2),time.localtime(reftime))

@@ -315,23 +315,23 @@ def mode_folder(phase):
         if folder.may("read"):
             html.context_button(_("Folder Properties"), folder.edit_url(), "edit")
         if not folder.locked_subfolders() and config.may("wato.manage_folders") and folder.may("write"):
-            html.context_button(_("New folder"),        folder_link([("mode", "newfolder")]), "newfolder")
+            html.context_button(_("New folder"),        folder.url([("mode", "newfolder")]), "newfolder")
         if not folder.locked_hosts() and config.may("wato.manage_hosts") and folder.may("write"):
-            html.context_button(_("New host"),    folder_link([("mode", "newhost")]), "new")
-            html.context_button(_("New cluster"), folder_link([("mode", "newcluster")]), "new_cluster")
+            html.context_button(_("New host"),    folder.url([("mode", "newhost")]), "new")
+            html.context_button(_("New cluster"), folder.url([("mode", "newcluster")]), "new_cluster")
             html.context_button(_("Bulk Import"), folder.url([("mode", "bulk_import")]), "bulk_import")
         if config.may("wato.services"):
-            html.context_button(_("Bulk Discovery"), folder_link([("mode", "bulkinventory"), ("all", "1")]),
+            html.context_button(_("Bulk Discovery"), folder.url([("mode", "bulkinventory"), ("all", "1")]),
                         "inventory")
         if config.may("wato.rename_hosts"):
-            html.context_button(_("Bulk Renaming"), folder_link([("mode", "bulk_rename_host")]), "rename_host")
+            html.context_button(_("Bulk Renaming"), folder.url([("mode", "bulk_rename_host")]), "rename_host")
         if not folder.locked_hosts() and config.may("wato.parentscan") and folder.may("write"):
-            html.context_button(_("Parent scan"), folder_link([("mode", "parentscan"), ("all", "1")]),
+            html.context_button(_("Parent scan"), folder.url([("mode", "parentscan"), ("all", "1")]),
                         "parentscan")
         search_button()
         folder_status_button()
         if config.may("wato.random_hosts"):
-            html.context_button(_("Random Hosts"), folder_link([("mode", "random_hosts")]), "random")
+            html.context_button(_("Random Hosts"), folder.url([("mode", "random_hosts")]), "random")
 
     elif phase == "action":
         if html.var("_search"): # just commit to search form

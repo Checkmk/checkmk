@@ -1131,7 +1131,16 @@ class Folder(WithPermissionsAndAttributes):
 
 
     def url(self, add_vars = []):
-        return html.makeuri_contextless([("mode", "folder"), ("folder", self.path())] + add_vars)
+        url_vars = [ ("folder", self.path()) ]
+        have_mode = False
+        for varname, value in add_vars:
+            if varname == "mode":
+                have_mode = True
+                break
+        if not have_mode:
+            url_vars.append(("mode", "folder"))
+        url_vars += add_vars
+        return html.makeuri_contextless(url_vars)
 
 
     def edit_url(self, backfolder=None):

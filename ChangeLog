@@ -2,6 +2,7 @@
     Checks & Agents:
     * 2807 FIX: check_mail_loop: POP3 protocol wasn't working at all
     * 2861 FIX: hivemanager_devices: Fixed configuration of states to treat as WARN
+    * 1317 FIX: fileinfo.groups: Fixed handling of $DATE pattern...
 
 
 1.2.6p15:

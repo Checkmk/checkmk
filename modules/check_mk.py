@@ -290,6 +290,7 @@ old_service_descriptions = {
     "ups_bat_temp"                     : "Temperature Battery %s",
     "innovaphone_temp"                 : lambda item: (False, "Temperature"),
     "enterasys_temp"                   : lambda item: (False, "Temperature"),
+    "raritan_emx"                      : "Rack %s"
 }
 
 #.
@@ -2161,7 +2162,7 @@ def service_description(hostname, check_type, item):
 
             # Can be a fucntion to generate the old description more flexible.
             old_descr = old_service_descriptions[check_type]
-            if type(old_descr) == type(lambda: None):
+            if callable(old_descr):
                 add_item, descr_format = old_descr(item)
             else:
                 descr_format = old_descr

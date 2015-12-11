@@ -137,7 +137,7 @@ class GUITester:
 
     def guitest_ignored_pages(self):
         return [ "run_cron", "index", "side", "sidebar_snapin", "sidebar_fold", "dashboard",
-                 "dashboard_dashlet", "login", "logout", "tree_openclose" ]
+                 "dashboard_dashlet", "login", "logout", "tree_openclose", "ajax_switch_help" ]
 
 
     def guitest_record_output(self, key, value):

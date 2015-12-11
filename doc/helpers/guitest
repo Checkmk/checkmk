@@ -32,32 +32,37 @@ def run_guitests(args):
     sys.stdout.write("Going to run %d tests%s...\n" % (
        len(args), opt_repair and " in repair mode" or ""))
 
-    num_failed = 0
     num_successfull = 0
     for test_name in args:
         if opt_repair:
             set_recording_symlink(test_name)
-        if run_guitest(test_name):
-            num_successfull += 1
-        else:
-            num_failed += 1
+        succeeded = run_guitest(test_name)
         if opt_repair:
             stop_recording()
+        if succeeded:
+            num_successfull += 1
+        else:
+            break
 
-    sys.stdout.write("%d tests succeeded, %d failed.\n" % (num_successfull, num_failed))
-    if num_failed == 0:
+    if succeeded:
+        sys.stdout.write("%sAll %d tests succeeded.%s\n" % (tty_green, num_successfull, tty_normal))
         sys.exit(0)
     else:
+        sys.stdout.write("%d tests succeeded, but last one %sfailed.%s\n" % (num_successfull, tty_red, tty_normal))
         sys.exit(1)
 
 
 def run_guitest(test_name):
     try:
         sys.stdout.write("    %s%s%s...\n" % (tty_bold, test_name, tty_normal))
-        sys.stdout.flush()
         guitest = load_guitest(test_name)
+
         for step_nr, step in enumerate(guitest):
-            sys.stdout.write("       #%d - %s.py..." % (step_nr, step["filename"]))
+            if step_nr < range_from:
+                continue
+            elif step_nr > range_to:
+                break
+            sys.stdout.write("       #%d - %s..." % (step_nr, step_title(step)))
             errors = run_test_step(test_name, step_nr, step)
             if not errors:
                 sys.stdout.write(tty_green + "OK\n" + tty_normal)
@@ -65,6 +70,8 @@ def run_guitest(test_name):
                 sys.stdout.write(tty_red + "FAILED\n" + tty_normal)
                 for error in errors:
                     sys.stdout.write("           %s\n" % error)
+
+                sys.stdout.write("        Replay this step with: %s%s%s\n" % (tty_blue, rule_step_url(test_name, step_nr), tty_normal))
                 return False
         return True
 
@@ -76,10 +83,24 @@ def run_guitest(test_name):
 
 
 def load_guitest(test_name):
+
     path = tests_dir() + test_name + ".mk"
     if not os.path.exists(path):
         raise Exception("Test not found (missing file %s)" % path)
-    return eval(file(path).read())
+    guitest = eval(file(path).read())
+
+    global range_from, range_to
+    range_from = opt_steps_range[0]
+    if opt_steps_range[1] == None:
+        range_to = len(guitest) - 1
+    else:
+        range_to = opt_steps_range[1]
+
+    return guitest
+
+
+def save_guitest(test_name, guitest):
+    file(tests_dir() + test_name + ".mk", "w").write("%s\n" % pprint.pformat(guitest))
 
 
 def names_of_all_tests():
@@ -120,8 +141,8 @@ def run_test_step(test_name, step_nr, step):
 def hilite_keywords(text):
     text = text.replace(" expected ", tty_green + " expected " + tty_normal) \
                .replace(" got ", tty_red + " got " + tty_normal)
-    text = re.sub(r" expected (.*?)\[\[\[([^]]*?)\]\]\]", r" expected \1" + tty_green + r"\2" + tty_normal, text)
-    text = re.sub(r" got (.*?)\[\[\[([^]]*?)\]\]\]", r" got \1" + tty_red + r"\2" + tty_normal, text)
+    text = re.sub(r" expected (.*?)\[\[\[([^]]*?)\]\]\]", r" expected \1" + tty_green + r"\2" + tty_normal, text, flags=re.DOTALL)
+    text = re.sub(r" got (.*?)\[\[\[(.*?)\]\]\]", r" got \1" + tty_red + r"\2" + tty_normal, text, flags=re.DOTALL)
     return text
 
 
@@ -140,21 +161,30 @@ def step_title(step):
         page_title = step["output"]["page_title"][0]
     else:
         page_title = "(no page title)"
-    return "%s.py - %s" % (step["filename"], page_title)
+
+    return "[%s] %s.py - %s" % (tty_cyan + step["user"] + tty_normal, step["filename"], tty_bold + page_title + tty_normal)
+
+
+def rule_step_url(test_name, step_nr):
+    return "http://localhost/%s/check_mk/guitest.py?test=%s&step=%d" % (
+        omd_site(), test_name, step_nr)
 
 
 def start_stop_recording(args):
-    if args:
-        start_recording(args[0])
-    else:
+    if recording_symlink_exists():
         stop_recording()
+    else:
+        start_recording(args[0])
 
 
 def start_recording(test_name):
-    if recording_symlink_exists():
-        bail_out("Currently recording. Stop with cmk-guitest -r.")
     set_recording_symlink(test_name)
-    sys.stdout.write("Started recording into test %s.\n" % test_name)
+    if os.path.exists(recording_symlink()):
+        sys.stdout.write("Started recording, appending to existing test %s (%d steps exist).\n" %
+          (test_name, len(load_guitest(test_name))))
+    else:
+        sys.stdout.write("Started recording into new test %s.\n" % test_name)
+
 
 
 def set_recording_symlink(test_name):
@@ -168,8 +198,6 @@ def recording_symlink_exists():
 
 
 def stop_recording():
-    if not recording_symlink_exists():
-        bail_out("Currently not recording.")
     test_name = os.readlink(recording_symlink())[:-3]
     if not os.path.exists(recording_symlink()):
         sys.stdout.write("Aborted recording. Test %s not created.\n" % test_name)
@@ -179,6 +207,38 @@ def stop_recording():
     os.remove(recording_symlink())
     test = load_guitest(test_name)
     sys.stdout.write("Stopped recording test %s (%d steps).\n" % (test_name, len(test)))
+
+
+def extract_from_test(args):
+    if len(args) < 1:
+        bail_out("Missing name of test to extract from.")
+    elif len(args) > 2:
+        bail_out("You can specify at most one test to extract from.")
+
+    from_test_name = args[0]
+    if len(args) > 1:
+        to_test_name = args[1]
+    else:
+        to_test_name = None
+
+    guitest = load_guitest(from_test_name)
+
+    extracted_steps = guitest[range_from : range_to]
+    if to_test_name:
+        save_guitest(to_test_name, extracted_steps)
+    else:
+        sys.stdout.write("%s\n" % pprint.pformat(extracted_steps))
+
+
+def delete_steps_from_test(args):
+    if len(args) != 1:
+        bail_out("Please specify exactly one test to delete steps from.")
+
+    test_name = args[0]
+    guitest = load_guitest(test_name)
+    del guitest[range_from:range_to+1]
+    save_guitest(test_name, guitest)
+
 
 
 #.
@@ -198,11 +258,15 @@ if sys.stdout.isatty() and not os.name == "nt":
     tty_normal    = '\033[0m'
     tty_red       = tty_bold + '\033[31m'
     tty_green     = tty_bold + '\033[32m'
+    tty_cyan      = tty_bold + '\033[36m'
+    tty_blue      = tty_bold + '\033[34m'
 else:
-    tty_bold = ""
+    tty_bold   = ""
     tty_normal = ""
-    tty_red = ""
-    tty_green = ""
+    tty_red    = ""
+    tty_green  = ""
+    tty_cyan   = ""
+    tty_blue   = ""
 
 def omd_root():
     return os.getenv("OMD_ROOT")
@@ -218,31 +282,52 @@ def bail_out(x):
     sys.stderr.write("%s\n" % x)
     sys.exit(1)
 
+
+def parse_range_argument(a):
+    if ":" in a:
+        first_text, last_text = a.split(":")
+        if first_text:
+            first_step = int(first_text)
+        else:
+            first_step = 0
+        if last_text:
+            last_step = int(last_text)
+        else:
+            last_step = None
+    else:
+        first_step = int(a)
+        last_step = first_step
+
+    return first_step, last_step
+
+
 def usage():
     sys.stderr.write("""
-Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
+Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
 
-  -h, --help                 Show this help
-  -v, --verbose              Output debug information on stderr
-      --debug                Do not catch Python exceptions
+  OPERATION MODES
 
-  -r, --record TEST          Start recording new test
-  -r, --record               Stop recording test
-  -l, --list-tests           List all tests
+     (no option) [TESTS...]             Run some or all tests
+     -R, --repair                       Run a test and at the same time rerecord it
+     -r, --record                       Start/stop recording test TEST
+     -l, --list-tests [TEST]            List one or all tests
+     -x, --extract RANGE TEST [OUTPUT]  Extract a range of steps from a test to stdout
+     -D, --delete RANGE TEST            Remove a range of steps from a test
+     -h, --help                         Show this crufty help
+
+  OPTIONS
+
+     -v, --verbose                      Output debug information on stderr
+         --debug                        Do not catch Python exceptions
+     -S, --steps RANGE                  Just run steps START...END (1st step is 0)
 
 
+  RANGES
 
-  Running tests:
-
-  cmk-guitest [-R] [OPTIONS] [TEST1 TEST2...]
-
-  -R, --repair               Replay a test and at the same
-                             time rerecord it
-
-  Recording tests:
-
-  cmk-guitest [OPTIONS] -r TEST
-  cmk-guitest [OPTIONS] -r
+     0    Just the step 0
+     2:5  Steps 2, 3, 4 and 5
+     :5   All steps from 0 through 5
+     2:   All steps from 2 until end of the test
 
 """)
 
@@ -258,12 +343,13 @@ Usage: cmk-guitest [OPTIONS] {TEST|-r TEST|-l}
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvrslR'
-long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair" ]
+short_options = 'hvrslRS:x:D:'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair", "steps=", "extract=", "delete=" ]
 
 opt_verbose = False
 opt_debug = False
 opt_repair = False
+opt_steps_range = 0, None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -283,8 +369,16 @@ for o,a in opts:
         mode_function = list_guitests
     elif o in [ '-r', '--record' ]:
         mode_function = start_stop_recording
+    elif o in [ '-x', '--extract' ]:
+        opt_steps_range = parse_range_argument(a)
+        mode_function = extract_from_test
+    elif o in [ '-D', '--delete' ]:
+        opt_steps_range = parse_range_argument(a)
+        mode_function = delete_steps_from_test
 
     # Modifiers
+    elif o in [ '-S', '--steps' ]:
+        opt_steps_range = parse_range_argument(a)
     elif o in [ '-v', '--verbose' ]:
         opt_verbose = True
     elif o == '--debug':
@@ -294,7 +388,14 @@ for o,a in opts:
 
 # Main modes
 try:
-    mode_function(args)
+    test_names = []
+    for a in args:
+        if a.endswith(".mk"):
+            test_name = a[:-3] # Makes guitest wato.* easier
+        else:
+            test_name = a
+        test_names.append(test_name)
+    mode_function(test_names)
 
 except Exception, e:
     if opt_debug:

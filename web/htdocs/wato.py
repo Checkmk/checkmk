@@ -425,7 +425,7 @@ def mode_folder(phase):
 
 
 def delete_subfolder_after_confirm(folder, subfolder_name):
-    subfolder = folder.folder(subfolder_name)
+    subfolder = folder.subfolder(subfolder_name)
     msg = _("Do you really want to delete the folder %s?") % subfolder.title()
     if not config.wato_hide_filenames:
         msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()

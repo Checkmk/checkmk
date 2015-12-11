@@ -1206,7 +1206,7 @@ class Folder(WithPermissionsAndAttributes):
         self.need_unlocked_subfolders()
 
         # 2. Actual modification
-        subfolder = self.folder(name)
+        subfolder = self.subfolder(name)
         subfolder.mark_hosts_dirty()
         call_hook_folder_deleted(subfolder)
         log_pending(AFFECTED, self, "delete-folder", _("Deleted folder %s") % self.title_path())

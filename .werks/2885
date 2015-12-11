@@ -1,0 +1,10 @@
+Title: cisco_hsrp: now reports the HSRP state
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449827357
+Class: feature
+
+This check now reports the HSRP state in every case. The states can be
+'initial', 'learn', 'listen', 'speak', 'standby' and 'active'.

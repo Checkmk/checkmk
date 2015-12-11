@@ -121,11 +121,11 @@ def check_cisco_hsrp(item, params, info):
             # anything else must be a non-operative state already
             else:
                 state = 2
-                msgtxt = "Redundancy Group %s has status %s" % ( hsrp_grp, hsrp_states[hsrp_state])
+                msgtxt = "Redundancy Group %s" % hsrp_grp
 
-            return (state, msgtxt)
+            return state, "%s, Status: %s" % (msgtxt, hsrp_states.get(hsrp_state, "unknown"))
 
-    return (3, "HSRP Group not found in Agent output" )
+    return 3, "HSRP Group not found in Agent output"
 
 
 

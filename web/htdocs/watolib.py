@@ -325,9 +325,6 @@ class WithPermissionsAndAttributes(object):
         del self._attributes[attrname]
 
 
-
-
-
 #.
 #   .--Folder--------------------------------------------------------------.
 #   |                     _____     _     _                                |
@@ -378,7 +375,7 @@ class Folder(WithPermissionsAndAttributes):
     @staticmethod
     def invalidate_caches():
         html.del_cache("wato_folders")
-        html.del_cache("wato_moveto_folder_combo")
+        Folder.root_folder().drop_caches()
 
 
     # Find folder that is specified by the current URL. This is either by a folder
@@ -406,6 +403,7 @@ class Folder(WithPermissionsAndAttributes):
     @staticmethod
     def set_current(folder):
         html.set_cache("wato_current_folder", folder)
+
 
 
     # .-----------------------------------------------------------------------.
@@ -700,7 +698,7 @@ class Folder(WithPermissionsAndAttributes):
 
     def load(self):
         wato_info               = self.load_wato_info()
-        self._title             = wato_info.get("title", self.fallback_title())
+        self._title             = wato_info.get("title", self._fallback_title())
         self._attributes        = wato_info.get("attributes", {})
         self._locked            = wato_info.get("lock", False)
         self._locked_subfolders = wato_info.get("lock_subfolders", False)
@@ -741,7 +739,7 @@ class Folder(WithPermissionsAndAttributes):
             make_nagios_directories(self.filesystem_path())
 
 
-    def fallback_title(self):
+    def _fallback_title(self):
         if self.is_root():
             return _("Main directory")
         else:
@@ -778,6 +776,10 @@ class Folder(WithPermissionsAndAttributes):
             subfolder.add_to_dictionary(dictionary)
 
 
+    def drop_caches(self):
+        self._choices_for_moving_host = None
+        for subfolder in self._subfolders.values():
+            subfolder.drop_caches()
 
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |
@@ -911,6 +913,42 @@ class Folder(WithPermissionsAndAttributes):
         for subfolder in self.subfolders_sorted_by_title():
             sel += subfolder.recursive_subfolder_choices(current_depth + 1)
         return sel
+
+
+    def choices_for_moving_folder(self):
+        return self._choices_for_moving("folder")
+
+
+    def choices_for_moving_host(self):
+        # Cached?
+        try:
+            return self._choices_for_moving_host
+        except:
+            self._choices_for_moving_host = self._choices_for_moving("host")
+            return self._choices_for_moving_host
+
+
+    def _choices_for_moving(self, what):
+        choices = []
+        for folder_path, folder in Folder.all_folders().items():
+            if not folder.may("write"):
+                continue
+            if folder == self:
+                continue # do not move into itself
+
+            if what == "folder":
+                if folder == self.parent():
+                    continue # We are already in that folder
+                if folder.name() in folder.subfolders():
+                    continue # naming conflict
+                if self.is_transitive_parent_of(folder):
+                    continue # we cannot be moved in our child folder
+
+            msg = "/".join(folder.title_path_without_root())
+            choices.append((folder_path, msg))
+
+        choices.sort(cmp=lambda a,b: cmp(a[1].lower(), b[1].lower()))
+        return choices
 
 
     def subfolders_sorted_by_title(self):

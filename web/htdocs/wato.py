@@ -543,8 +543,19 @@ def show_subfolder_move_button(subfolder):
     )
     html.write('<div id="move_dialog_%s" class="popup move_dialog" style="display:none">' % subfolder.name())
     html.write('<span>%s</span>' % _('Move this folder to:'))
-    move_to_folder_combo("folder", subfolder, False, multiple = True)
+    folder_move_to_folder_combo(subfolder)
     html.write('</div>')
+
+
+def folder_move_to_folder_combo(folder):
+    choices = folder.choices_for_moving_folder()
+    if len(choices):
+        choices = [("@", _("(select target folder)"))] + choices
+        uri = html.makeactionuri([("what_folder", folder.path())])
+        html.select("_folder_move_%s" % thing.path(), choices, "@",
+            "location.href='%s' + '&_move_folder_to=' + this.value;" % uri, attrs = {'multiple': '10'})
+    else:
+        html.write(_("No valid target folder."))
 
 
 def show_subfolder_delete_button(subfolder):
@@ -628,7 +639,7 @@ def show_hosts(folder):
             if config.may("wato.parentscan"):
                 html.button("_parentscan", _("Parentscan"))
             if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-                move_to_folder_combo("host", None, top)
+                host_bulk_move_to_folder_combo(folder, top)
                 if at_least_one_imported:
                     html.button("_bulk_movetotarget", _("Move to Target Folders"))
 
@@ -763,7 +774,7 @@ def show_hosts(folder):
         # Move to
         if not folder.locked_hosts() and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
             table.cell(_("Move To"), css="right", sortable=False)
-            move_to_folder_combo("host", host)
+            host_move_to_folder_combo(host)
 
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
@@ -811,68 +822,31 @@ def show_host_actions(host):
 
 # In case of what == "host", thing is either None or the name of the host
 # In case of what == "folder", thing is the folder dict
-def move_to_folder_combo(what, thing = None, top = False, multiple = False):
-    # CLEANUP: Move this to new class Folder. Split function into smaller pieces
-    folder_combo_cache = html.set_cache_default("wato_moveto_folder_combo", {})
-
-    # In case of a folder move combo, thing is the folder object
-    # we want to move
-    if what == "folder" or id(Folder.current()) not in folder_combo_cache:
-        selections = [("@", _("(select folder)"))]
-        for folder_path, folder in Folder.all_folders().items():
-            # TODO: Check permissions
-
-            if what == "folder":
-                if folder == thing:
-                    continue # do not move into itself
-                if folder == thing.parent():
-                    continue # Is already in that folder
-                if thing.name() in folder.subfolders():
-                    continue # naming conflict
-                if thing.is_transitive_parent_of(folder):
-                    continue # cannot my a folder into its own child
-
-            elif thing:
-                if thing.folder() == folder:
-                    continue # Host is contained in that folder
-
-
-            msg = "/".join(folder.title_path_without_root())
-            if folder_path and not config.wato_hide_filenames:
-                msg += " (%s)" % folder_path
-            selections.append((folder_path, msg))
-
-        selections.sort(cmp=lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        folder_combo_cache[Folder.current().path()] = selections
+def host_move_to_folder_combo(host):
+    choices = host.folder().choices_for_moving_host()
+    if len(choices):
+        choices = [("@", _("(select target folder)"))] + choices
+        html.hidden_field("host", host.name())
+        uri = html.makeactionuri([("host", host.name())])
+        html.select("_host_move_%s" % host.name(), choices, "@",
+            "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
     else:
-        selections = folder_combo_cache[Folder.current().path()]
+        html.write(_("No valid target folder."))
 
-    if len(selections) > 1:
-        select_attrs = {}
-        # CLEANUP: What the hack is this?
-        if multiple:
-            select_attrs = {'multiple': '10'}
 
-        if thing == None:
-            html.button("_bulk_move", _("Move:"))
-            field_name = 'bulk_moveto'
-            if top:
-                field_name = '_top_bulk_moveto'
-                if html.has_var('bulk_moveto'):
-                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
-            html.select(field_name, selections, "@",
-                        onchange = "update_bulk_moveto(this.value)",
-                        attrs = {'class': 'bulk_moveto'})
-        elif what == "host":
-            html.hidden_field("host", thing.name())
-            uri = html.makeactionuri([("host", thing.name())])
-            html.select("_host_move_%s" % thing, selections, "@",
-                "location.href='%s' + '&_move_host_to=' + this.value;" % uri, attrs = select_attrs);
-        else: # what == "folder"
-            uri = html.makeactionuri([("what_folder", thing.path())])
-            html.select("_folder_move_%s" % thing.path(), selections, "@",
-                "location.href='%s' + '&_move_folder_to=' + this.value;" % uri, attrs = select_attrs);
-
+def host_bulk_move_to_folder_combo(folder, top):
+    choices = folder.choices_for_moving_host()
+    if len(choices):
+        choices = [("@", _("(select target folder)"))] + choices
+        html.button("_bulk_move", _("Move:"))
+        field_name = 'bulk_moveto'
+        if top:
+            field_name = '_top_bulk_moveto'
+            if html.has_var('bulk_moveto'):
+                html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+        html.select(field_name, choices, "@",
+                     onchange = "update_bulk_moveto(this.value)",
+                     attrs = {'class': 'bulk_moveto'})
     else:
         html.write(_("No valid target folder."))
 

@@ -3465,3 +3465,15 @@ def must_be_in_contactgroups(cgspec):
             raise MKAuthException(_("Sorry, you cannot assign the contact group '<b>%s</b>' "
               "because you are not member in that group. Your groups are: <b>%s</b>") %
                  ( c, ", ".join(user_cgs)))
+
+
+def rename_host_in_list(thelist, oldname, newname):
+    did_rename = False
+    for nr, element in enumerate(thelist):
+        if element == oldname:
+            thelist[nr] = newname
+            did_rename = True
+        elif element == '!' + oldname:
+            thelist[nr] = '!' + newname
+            did_rename = True
+    return did_rename

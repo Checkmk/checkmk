@@ -1611,18 +1611,6 @@ def mode_rename_host(phase):
     html.end_form()
 
 
-def rename_host_in_list(thelist, oldname, newname):
-    did_rename = False
-    for nr, element in enumerate(thelist):
-        if element == oldname:
-            thelist[nr] = newname
-            did_rename = True
-        elif element == '!' + oldname:
-            thelist[nr] = '!' + newname
-            did_rename = True
-    return did_rename
-
-
 def rename_host_in_folder(folder, oldname, newname):
     folder.rename_host(oldname, newname)
     return [ "folder" ]

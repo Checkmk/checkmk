@@ -24,6 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# Note: Sometimes the esx_vsphere_sensors check reports incorrect sensor data.
+# The reason is that the data is cached on the esx system. In the worst case some sensors
+# might get stuck in an unhealthy state. You can find more information under the following link:
+# http://kb.vmware.com/selfservice/microsites/search.do?cmd=displayKC&externalId=1037330
+
 # <<<esx_vsphere_sensors:sep(59)>>>
 # VMware Rollup Health State;;0;system;0;;red;Red;Sensor is operating under critical conditions
 # Power Domain 1 Power Unit 0 - Redundancy lost;;0;power;0;;yellow;Yellow;Sensor is operating under conditions that are non-critical

@@ -28,8 +28,8 @@
 #include "config.h"  // IWYU pragma: keep
 #include <map>
 #include <string>
+#include "mk/Mutex.h"
 #include "LogCache.h"
-#include "Mutex.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
 #include "TableContactgroups.h"

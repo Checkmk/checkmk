@@ -1352,12 +1352,6 @@ orig_cluster_max_cachefile_age   = None
 orig_inventory_max_cachefile_age = None
 
 
-def set_use_cachefile(state=True):
-    global opt_use_cachefile, orig_opt_use_cachefile
-    orig_opt_use_cachefile = opt_use_cachefile
-    opt_use_cachefile = state
-
-
 def restore_use_cachefile():
     global opt_use_cachefile, orig_opt_use_cachefile
     if orig_opt_use_cachefile != None:
@@ -4421,253 +4415,6 @@ def cleanup_globals():
         cleanup_inline_snmp_globals()
 
 
-# Diagnostic function for detecting global variables that have
-# changed during checking. This is slow and canno be used
-# in production mode.
-def copy_globals():
-    import copy
-    global_saved = {}
-    for varname, value in globals().items():
-        # Some global caches are allowed to change.
-        if varname not in [ "g_service_description", "g_checked_item", "g_check_type",
-                            "g_multihost_checks", "g_singlehost_checks",
-                            "g_nodesof_cache", "g_compiled_regexes", "vars_before_config",
-                            "g_initial_times", "g_keepalive_initial_memusage",
-                            "g_global_caches" ] + g_global_caches \
-            and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
-            global_saved[varname] = copy.copy(value)
-    return global_saved
-
-
-# Determine currently (VmSize, VmRSS) in Bytes
-def current_memory_usage():
-    parts = file('/proc/self/stat').read().split()
-    vsize = int(parts[22])        # in Bytes
-    rss   = int(parts[23]) * 4096 # in Pages
-    return (vsize, rss)
-
-keepalive_memcheck_cycle = 20
-g_keepalive_initial_memusage = None
-def keepalive_check_memory(num_checks, keepalive_fd):
-    if num_checks % keepalive_memcheck_cycle != 0: # Only do this after every 10 checks
-        return
-
-    global g_keepalive_initial_memusage
-    if not g_keepalive_initial_memusage:
-        g_keepalive_initial_memusage = current_memory_usage()
-    else:
-        usage = current_memory_usage()
-        # Allow VM size to grow by at most 50%
-        if usage[0] > 1.5 * g_keepalive_initial_memusage[0]:
-            sys.stderr.write("memory usage increased from %s to %s after %d check cycles. Restarting.\n" % (
-                    get_bytes_human_readable(g_keepalive_initial_memusage[0]),
-                    get_bytes_human_readable(usage[0]), num_checks))
-            restart_myself(keepalive_fd)
-
-
-def restart_myself(keepalive_fd):
-    sys.argv = [ x for x in sys.argv if not x.startswith('--keepalive-fd=') ]
-    os.execvp("cmk", sys.argv + [ "--keepalive-fd=%d" % keepalive_fd ])
-
-
-def add_keepalive_result_line(result):
-    global g_total_check_output
-    g_total_check_output += result
-
-
-def add_keepalive_check_result(service, state, output, cached_at=None, cache_interval=None):
-
-    # Replace \n to enable multiline ouput
-    # remove binary 0, CMC does not like it
-    output = output.replace("\n", "\x01", 1).replace("\n","\\n").replace("\0", "")
-    result = "\t%d\t%s\t%s\n" % (state, service, output)
-    if cached_at:
-        result = "\tcached_at=%d\tcache_interval=%d%s" % (cached_at, cache_interval, result)
-    add_keepalive_result_line(result)
-
-
-def do_check_keepalive():
-    global g_initial_times, g_timeout, g_total_check_output
-
-    def check_timeout(signum, frame):
-        raise MKCheckTimeout()
-
-    signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
-
-    # Prevent against plugins that output debug information (but shouldn't).
-    # Their stdout will interfer with communication with the Micro Core.
-    # So we simply redirect stdout to stderr, which will appear in the cmc.log,
-    # with the following trick:
-    # 1. move the filedescriptor 1 to a parking position
-    # 2. dup the stderr channel to stdout (2 to 1)
-    # 3. Send our answers to the Micro Core with the parked FD.
-    # BEWARE: this must not happen after we have execve'd ourselves!
-    if opt_keepalive_fd:
-        keepalive_fd = opt_keepalive_fd
-    else:
-        keepalive_fd = os.dup(1)
-        os.dup2(2, 1)  # Send stuff that is written to stdout instead to stderr
-
-    num_checks = 0 # count total number of check cycles
-
-    read_packed_config()
-
-    # TODO: This is not used at all in keepalive mode except that compute_check_parameters()
-    # adds variables to this set. But it is not checked in this mode. Should be removed.
-    global vars_before_config
-    vars_before_config = set([])
-
-    g_total_check_output = ""
-
-    if opt_verbose:
-        original_global_vars = copy_globals()
-
-    ipaddress_cache = {}
-
-    while True:
-        cleanup_globals()
-        cmdline = keepalive_read_line()
-        g_initial_times = os.times()
-
-        cmdline = cmdline.strip()
-        if cmdline == "*":
-            read_packed_config()
-            cleanup_globals()
-            reset_global_caches()
-            original_global_vars = copy_globals()
-            continue
-
-        elif not cmdline:
-            break
-
-        # Always cleanup the total check output var before handling a new task
-        g_total_check_output = ""
-
-        num_checks += 1
-
-        g_timeout = int(keepalive_read_line())
-        try: # catch non-timeout exceptions
-            try: # catch timeouts
-                signal.signal(signal.SIGALRM, check_timeout)
-                signal.alarm(g_timeout)
-
-                # The CMC always provides arguments. This is the only used case for CMC. The last
-                # two arguments are the hostname and the ipaddress of the host to be asked for.
-                # The other arguments might be different parameters to configure the actions to
-                # be done
-                args = cmdline.split()
-                if '--cache' in args:
-                    args.remove('--cache')
-                    set_use_cachefile()
-                    enforce_using_agent_cache()
-
-                # FIXME: remove obsolete check-inventory
-                if '--check-inventory' in args:
-                    args.remove('--check-inventory')
-                    mode_function = check_discovery
-                elif '--check-discovery' in args:
-                    args.remove('--check-discovery')
-                    mode_function = check_discovery
-                else:
-                    mode_function = do_check
-
-                if len(args) >= 2:
-                    hostname, ipaddress = args[:2]
-                else:
-                    hostname = args[0]
-                    ipaddress = None
-
-                if ipaddress == None:
-                    if hostname in ipaddress_cache:
-                        ipaddress = ipaddress_cache[hostname]
-                    else:
-                        if is_cluster(hostname):
-                            ipaddress = None
-                        else:
-                            try:
-                                ipaddress = lookup_address(hostname)
-                            except:
-                                raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
-                        ipaddress_cache[hostname] = ipaddress
-
-                status = mode_function(hostname, ipaddress)
-                signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
-                signal.alarm(0)
-
-            except MKCheckTimeout:
-                signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
-                spec = exit_code_spec(hostname)
-                status = spec.get("timeout", 2)
-                g_total_check_output = "%s - Check_MK timed out after %d seconds\n" % (
-                    core_state_names[status], g_timeout)
-
-            check_output_utf8 = make_utf8(g_total_check_output)
-            os.write(keepalive_fd, "%03d\n%08d\n%s" % (status, len(check_output_utf8), check_output_utf8))
-            g_total_check_output = ""
-
-        except Exception, e:
-            signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
-            signal.alarm(0)
-            if opt_debug:
-                raise
-            else:
-                import traceback # Always log details to the cmc.log
-                traceback.print_exc()
-            output = "UNKNOWN - %s\n" % e
-            os.write(keepalive_fd, "%03d\n%08d\n%s" % (3, len(output), output))
-
-        # Flush file descriptors of stdout and stderr, so that diagnostic
-        # messages arrive in time in cmc.log
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        cleanup_globals() # Prepare for next check
-        global opt_use_cachefile
-        opt_use_cachefile = True
-        restore_original_agent_caching_usage()
-
-        # Check if all global variables are clean, but only in verbose logging mode
-        if opt_verbose:
-            new_global_vars = copy_globals()
-            for varname, value in original_global_vars.items():
-                if varname not in ignore_changed_global_variables and value != new_global_vars[varname]:
-                    if opt_verbose > 1:
-                        sys.stderr.write("WARNING: global variable %s has changed: %r ==> %r\n"
-                                % (varname, value, new_global_vars[varname]))
-                    else:
-                        sys.stderr.write("WARNING: global variable %s has changed: %s ==> %s\n"
-                                % (varname, repr(value)[:50], repr(new_global_vars[varname])[:50]))
-            new_vars = set(new_global_vars.keys()).difference(set(original_global_vars.keys()))
-            if new_vars:
-                sys.stderr.write("WARNING: new variable appeared: %s\n" % ", ".join(new_vars))
-            sys.stderr.flush()
-
-        keepalive_check_memory(num_checks, keepalive_fd)
-        # In case of profiling do just this one cycle and end afterwards
-        if g_profile:
-            output_profile()
-            sys.exit(0)
-
-        # end of while True:...
-
-
-# Just one lines from stdin. But: make sure that
-# nothing more is read - not even into some internal
-# buffer of sys.stdin! We do this by reading every
-# single byte. I know that this is not performant,
-# but we just read hostnames - not much data.
-
-def keepalive_read_line():
-    line = ""
-    while True:
-        byte = os.read(0, 1)
-        if byte == '\n':
-            return line
-        elif not byte: # EOF
-            return ''
-        else:
-            line += byte
-
 
 #.
 #   .--Read Config---------------------------------------------------------.
@@ -4688,6 +4435,8 @@ ignore_changed_global_variables = [
     'all_hosts_untagged',
     'all_clusters_untagged',
 ]
+
+vars_before_config = set([])
 
 # Now - at last - we can read in the user's configuration files
 def all_nonfunction_vars():
@@ -5274,6 +5023,7 @@ try:
 
         # handle --keepalive
         elif opt_keepalive:
+            load_module("keepalive")
             do_check_keepalive()
 
         # handle adhoc-check

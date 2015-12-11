@@ -26,12 +26,13 @@
 #include "Configuration.h"
 #include "stringutil.h"
 #include "PerfCounter.h"
+#include "logging.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
-
-extern void verbose(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
 
 
 static const int CHECK_MK_AGENT_PORT = 6556;
@@ -39,9 +40,12 @@ static const int CHECK_MK_AGENT_PORT = 6556;
 
 Configuration::Configuration(const Environment &env)
     : _enabled_sections(0xffffffff)
+    , _realtime_sections(0x0)
     , _port(CHECK_MK_AGENT_PORT)
     , _default_script_execution_mode(SYNC)
     , _default_script_async_execution(SEQUENTIAL)
+    , _passphrase()
+    , _realtime_timeout(90)
     , _crash_debug(false)
     , _logwatch_send_initial_entries(false)
     , _support_ipv6(true)
@@ -57,13 +61,27 @@ Configuration::Configuration(const Environment &env)
     CollectorRegistry::instance().startFile();
     readConfigFile(configFileName(true));
 
+    // ensure only supported sections are enabled for realtime updates
+    _realtime_sections &= VALID_REALTIME_SECTIONS;
+
+    if ((_realtime_sections == 0) != (_passphrase.empty())) {
+        fprintf(stderr, "for realtime monitoring, both realtime sections and passphrase "
+                "have to be set and valid.");
+    }
+
     postProcessOnlyFrom();
 }
 
 
-bool Configuration::sectionEnabled(unsigned int section)
+unsigned long Configuration::enabledSections()
 {
-    return _enabled_sections & section;
+    return _enabled_sections;
+}
+
+
+unsigned long Configuration::realtimeSections()
+{
+    return _realtime_sections;
 }
 
 
@@ -135,45 +153,72 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
     else if (!strcmp(var, "crash_debug")) {
         return parseCrashDebug(value);
     }
-    else if (!strcmp(var, "sections")) {
-        _enabled_sections = 0;
+    else if (!strcmp(var, "sections")
+            || !strcmp(var, "realtime_sections")) {
+        bool read_rt_sections = strcmp(var, "realtime_sections") == 0;
+        unsigned long &mask = read_rt_sections ? _realtime_sections
+                                               : _enabled_sections;
+        // crashlog output always enabled for regular output, never for live output
+        mask = read_rt_sections ? 0 : SECTION_CRASHLOG;
         char *word;
         while ((word = next_word(&value))) {
             if (!strcmp(word, "check_mk"))
-                _enabled_sections |= SECTION_CHECK_MK;
+                mask |= SECTION_CHECK_MK;
             else if (!strcmp(word, "uptime"))
-                _enabled_sections |= SECTION_UPTIME;
+                mask |= SECTION_UPTIME;
             else if (!strcmp(word, "df"))
-                _enabled_sections |= SECTION_DF;
+                mask |= SECTION_DF;
             else if (!strcmp(word, "ps"))
-                _enabled_sections |= SECTION_PS;
+                mask |= SECTION_PS;
             else if (!strcmp(word, "mem"))
-                _enabled_sections |= SECTION_MEM;
+                mask |= SECTION_MEM;
             else if (!strcmp(word, "services"))
-                _enabled_sections |= SECTION_SERVICES;
+                mask |= SECTION_SERVICES;
             else if (!strcmp(word, "winperf"))
-                _enabled_sections |= SECTION_WINPERF;
+                mask |= SECTION_WINPERF;
             else if (!strcmp(word, "logwatch"))
-                _enabled_sections |= SECTION_LOGWATCH;
+                mask |= SECTION_LOGWATCH;
             else if (!strcmp(word, "logfiles"))
-                _enabled_sections |= SECTION_LOGFILES;
+                mask |= SECTION_LOGFILES;
             else if (!strcmp(word, "systemtime"))
-                _enabled_sections |= SECTION_SYSTEMTIME;
-            else if (!strcmp(word, "plugins"))
-                _enabled_sections |= SECTION_PLUGINS;
-            else if (!strcmp(word, "local"))
-                _enabled_sections |= SECTION_LOCAL;
+                mask |= SECTION_SYSTEMTIME;
+            else if (!strcmp(word, "plugins")) {
+                if (read_rt_sections) {
+                    verbose("ignored plugin section for realtime checks");
+                    // ... because of performance and because that code
+                    // is almost certainly not thread-safe currently
+                }
+                else {
+                    mask |= SECTION_PLUGINS;
+                }
+            }
+            else if (!strcmp(word, "local")) {
+                if (read_rt_sections) {
+                    verbose("ignored local section for realtime checks");
+                    // ... because of performance and because that code
+                    // is almost certainly not thread-safe currently
+                }
+                else {
+                    mask |= SECTION_LOCAL;
+                }
+            }
             else if (!strcmp(word, "spool"))
-                _enabled_sections |= SECTION_SPOOL;
+                mask |= SECTION_SPOOL;
             else if (!strcmp(word, "mrpe"))
-                _enabled_sections |= SECTION_MRPE;
+                mask |= SECTION_MRPE;
             else if (!strcmp(word, "fileinfo"))
-                _enabled_sections |= SECTION_FILEINFO;
+                mask |= SECTION_FILEINFO;
             else {
                 fprintf(stderr, "Invalid section '%s'.\r\n", word);
                 return false;
             }
         }
+        return true;
+    } else if (strcmp(var, "realtime_timeout") == 0) {
+        _realtime_timeout = strtol(value, 0, 10);
+        return true;
+    } else if (strcmp(var, "passphrase") == 0) {
+        _passphrase = value;
         return true;
     }
 
@@ -397,9 +442,9 @@ void Configuration::updateOrCreateLogwatchTextfile(const char *full_filename, gl
                     (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
 
                 if (file_id != textfile->file_id) {                // file has been changed
-                    verbose("File %s: id has changed from %s",
-                            full_filename, llu_to_string(textfile->file_id));
-                    verbose(" to %s\n", llu_to_string(file_id));
+                    verbose("File %s: id has changed from %" PRIu64,
+                            full_filename, textfile->file_id);
+                    verbose(" to %" PRIu64 "\n", file_id);
                     textfile->offset = 0;
                     textfile->file_id = file_id;
                 }

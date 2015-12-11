@@ -958,7 +958,7 @@ void Query::finish()
                 delete aggr[i]; // not needed any more
             }
             outputDatasetEnd();
-            delete aggr;
+            delete[] aggr;
         }
     }
 

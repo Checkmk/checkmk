@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ConditionVariable_h
-#define ConditionVariable_h
+#ifndef mk_ConditionVariable_h
+#define mk_ConditionVariable_h
 
 #include "config.h" // IWYU pragma: keep
 #include <pthread.h>
@@ -97,4 +97,4 @@ private:
 
 } // namespace mk
 
-#endif // ConditionVariable_h
+#endif // mk_ConditionVariable_h

@@ -42,12 +42,13 @@ IWYU               := include-what-you-use
 LIVESTATUS_SOURCES := configure aclocal.m4 config.guess config.h.in config.sub \
                       configure.ac ltmain.sh Makefile.am Makefile.in missing \
                       nagios/README nagios/*.h nagios4/README nagios4/*.h \
-                      src/*.{h,c,cc} src/Makefile.{in,am} \
+                      src/*.{h,c,cc} src/mk/*.h src/Makefile.{in,am} \
                       depcomp install-sh api/python/{*.py,README} api/perl/*
 
 # Files that are checked for trailing spaces
 HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* \
-                      $$(find -name Makefile) livestatus/src/*{cc,c,h} agents/windows/*.cc \
+                      $$(find -name Makefile) livestatus/src/*.{cc,c,h} \
+                      livestatus/src/mk/*.h agents/windows/*.cc \
                       web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
                       doc/helpers/* scripts/setup.sh scripts/autodetect.py \
                       $$(find pnp-templates -type f -name "*.php") \
@@ -62,6 +63,7 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix agents/windows/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.c *.h)) \
+                      $(wildcard $(addprefix livestatus/src/mk,*.cc *.c *.h)) \
                       $(wildcard $(addprefix mkeventd/src/,*.cc *.c *.h))
 
 .PHONY: all check-binaries check check-permissions check-spaces check-version \

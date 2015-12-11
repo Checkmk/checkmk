@@ -98,15 +98,15 @@ obj64/%.o: %.cc
 	$(CXX_64) -c $(COPTIONS) -o $@  $<
 
 
-check_mk_agent.unversioned.exe: obj/check_mk_agent.o obj/SettingsCollector.o obj/Configuration.o obj/Environment.o obj/stringutil.o obj/wmiHelper.o obj/ListenSocket.o obj/PerfCounter.o
+check_mk_agent.unversioned.exe: obj/check_mk_agent.o obj/SettingsCollector.o obj/Configuration.o obj/Environment.o obj/stringutil.o obj/wmiHelper.o obj/ListenSocket.o obj/PerfCounter.o obj/Thread.o obj/OutputProxy.o obj/logging.o obj/Crypto.o
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent.res
-	$(CXX) $(COPTIONS) -o $@ $^ check_mk_agent.res -lwsock32 -lole32 -loleaut32 -lwbemuuid -lpsapi
+	$(CXX) $(COPTIONS) -o $@ $^ check_mk_agent.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi
 
-check_mk_agent-64.unversioned.exe: obj64/check_mk_agent.o obj64/SettingsCollector.o obj64/Configuration.o obj64/Environment.o obj64/stringutil.o obj64/wmiHelper.o obj64/ListenSocket.o obj64/PerfCounter.o
+check_mk_agent-64.unversioned.exe: obj64/check_mk_agent.o obj64/SettingsCollector.o obj64/Configuration.o obj64/Environment.o obj64/stringutil.o obj64/wmiHelper.o obj64/ListenSocket.o obj64/PerfCounter.o obj64/Thread.o obj64/OutputProxy.o obj64/logging.o obj64/Crypto.o
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent-64.res
-	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lole32 -loleaut32 -lwbemuuid -lpsapi
+	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi
 
 
 # -----------------------------------------------------------------------------

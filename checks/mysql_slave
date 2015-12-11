@@ -119,5 +119,6 @@ check_info['mysql_slave'] = {
     "check_function"          : check_mysql_slave,
     "service_description"     : "MySQL DB Slave %s",
     "has_perfdata"            : True,
+    "group"                   : "mysql_slave",
 }
 

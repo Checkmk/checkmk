@@ -1263,9 +1263,11 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     run_time = time.time() - start_time
     if check_mk_perfdata_with_times:
-        times = os.times()
         if opt_keepalive:
-            times = map(lambda a: a[0]-a[1], zip(times, g_initial_times))
+            times = get_keepalive_times()
+        else:
+            times = os.times()
+
         output += "execution time %.1f sec|execution_time=%.3f user_time=%.3f "\
                   "system_time=%.3f children_user_time=%.3f children_system_time=%.3f\n" %\
                 (run_time, run_time, times[0], times[1], times[2], times[3])
@@ -1642,6 +1644,7 @@ def convert_check_info():
                     snmp_scan_functions.get(check_type,
                         snmp_scan_functions.get(basename)),
                 "handle_empty_info"       : False,
+                "handle_real_time_checks" : False,
                 "default_levels_variable" : check_default_levels.get(check_type),
                 "node_info"               : False,
                 "parse_function"          : None,
@@ -1656,6 +1659,7 @@ def convert_check_info():
             info.setdefault("snmp_info", None)
             info.setdefault("snmp_scan_function", None)
             info.setdefault("handle_empty_info", False)
+            info.setdefault("handle_real_time_checks", False)
             info.setdefault("default_levels_variable", None)
             info.setdefault("node_info", False)
             info.setdefault("extra_sections", [])
@@ -1998,6 +2002,11 @@ def worst_monitoring_state(status_a, status_b):
     else:
         return max(status_a, status_b)
 
+
+def set_use_cachefile(state=True):
+    global opt_use_cachefile, orig_opt_use_cachefile
+    orig_opt_use_cachefile = opt_use_cachefile
+    opt_use_cachefile = state
 
 
 #.

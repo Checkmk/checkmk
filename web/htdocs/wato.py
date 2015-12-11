@@ -1232,7 +1232,7 @@ def action_edit_host(mode, hostname, is_cluster):
     if mode != "edit" and not html.transaction_valid():
         return "folder"
 
-    if mode == "new":
+    if mode != "edit":
         Hostname().validate_value(hostname, "host")
 
     if html.check_transaction():

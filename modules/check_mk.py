@@ -4436,6 +4436,8 @@ ignore_changed_global_variables = [
     'all_clusters_untagged',
 ]
 
+vars_before_config = set([])
+
 # Now - at last - we can read in the user's configuration files
 def all_nonfunction_vars():
     return set([ name for name,value in globals().items()

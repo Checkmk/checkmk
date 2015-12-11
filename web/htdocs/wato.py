@@ -1584,7 +1584,7 @@ def mode_rename_host(phase):
         if c:
             # Creating pending entry. That makes the site dirty and that will force a sync of
             # the config to that site before the automation is being done.
-            actions = rename_hosts([(Folder.current(), host.name(), newname)])
+            actions, auth_problems = rename_hosts([(Folder.current(), host.name(), newname)])
             log_commit_pending() # All activated by the underlying rename automation
             html.set_var("host", newname)
             action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
@@ -1646,7 +1646,7 @@ def rename_host_as_parent(oldname, newname, in_folder=None):
         in_folder = Folder.root_folder()
 
     parents = []
-    for somehost in in_folder.hosts():
+    for somehost in in_folder.hosts().values():
         if somehost.has_explicit_attribute("parents"):
             if somehost.rename_parent(oldname, newname):
                 parents.append(somehost.name())

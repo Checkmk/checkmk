@@ -1158,7 +1158,7 @@ def mode_edit_host(phase, new, is_cluster):
         if html.var("_update_dns_cache"):
             if html.check_transaction():
                 config.need_permission("wato.update_dns_cache")
-                num_updated, failed_hosts = check_mk_automation(host[".siteid"], "update-dns-cache", [])
+                num_updated, failed_hosts = check_mk_automation(host.site_id(), "update-dns-cache", [])
                 infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
                 if failed_hosts:
                     infotext += "<br><br><b>Hostnames failed to lookup:</b> " + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
@@ -2044,7 +2044,7 @@ def mode_object_parameters(phase):
     # For services we make a special handling the for origin and parameters
     # of that service!
     if service:
-        serviceinfo = check_mk_automation(host[".siteid"], "analyse-service", [hostname, service])
+        serviceinfo = check_mk_automation(host.site_id(), "analyse-service", [hostname, service])
         if serviceinfo:
             forms.header(_("Check Origin and Parameters"), isopen = True, narrow=True, css="rulesettings")
             origin = serviceinfo["origin"]
@@ -2606,7 +2606,7 @@ def mode_inventory(phase, firsttime):
             new_target = "folder"
 
             if html.var("_refresh"):
-                counts, failed_hosts = check_mk_automation(host[".siteid"], "inventory", [ "@scan", "refresh", hostname ])
+                counts, failed_hosts = check_mk_automation(host.site_id(), "inventory", [ "@scan", "refresh", hostname ])
                 count_added, count_removed, count_kept, count_new = counts[hostname]
                 message = _("Refreshed check configuration of host [%s] with %d services") % \
                             (hostname, count_added)
@@ -2756,7 +2756,7 @@ def show_service_table(host, firsttime):
                 divid += 1
                 html.write("<div id='activecheck%d'><img class=icon title='%s' src='images/icon_reloading.gif'></div>" % (divid, hostname))
                 html.final_javascript("execute_active_check('%s', '%s', '%s', '%s', 'activecheck%d');" % (
-                     host[".siteid"] or '', hostname, ct, item.replace("'", "\'"), divid))
+                     host.site_id() or '', hostname, ct, item.replace("'", "\'"), divid))
             else:
                 html.write(html.attrencode(output))
 

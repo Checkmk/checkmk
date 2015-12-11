@@ -1203,7 +1203,9 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     try:
         load_item_state(hostname)
-        agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress, only_check_types)
+        agent_version, num_success, error_sections, problems = \
+            do_all_checks_on_host(hostname, ipaddress, only_check_types)
+
         num_errors = len(error_sections)
         save_item_state(hostname)
         if problems:
@@ -1361,14 +1363,15 @@ def parse_check_mk_version(v):
 
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
+def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_agent_version = True):
     global g_aggregated_service_results
     g_aggregated_service_results = {}
     global g_hostname
     g_hostname = hostname
     num_success = 0
     error_sections = set([])
-    check_table = get_precompiled_check_table(hostname, remove_duplicates=True, world=opt_keepalive and "active" or "config")
+    check_table = get_precompiled_check_table(hostname, remove_duplicates=True,
+                                    world=opt_keepalive and "active" or "config")
     problems = []
 
     parsed_infos = {} # temporary cache for section infos, maybe parsed
@@ -1483,19 +1486,24 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
     submit_aggregated_results(hostname)
 
-    try:
-        if is_tcp_host(hostname):
-            version_info = get_info_for_check(hostname, ipaddress, 'check_mk')
-            agent_version = version_info[0][1]
-        else:
-            agent_version = None
-    except MKAgentError, e:
-        g_broken_agent_hosts.add(hostname)
-        agent_version = "(unknown)"
-    except:
-        agent_version = "(unknown)"
+    if fetch_agent_version:
+        try:
+            if is_tcp_host(hostname):
+                version_info = get_info_for_check(hostname, ipaddress, 'check_mk')
+                agent_version = version_info[0][1]
+            else:
+                agent_version = None
+        except MKAgentError, e:
+            g_broken_agent_hosts.add(hostname)
+            agent_version = "(unknown)"
+        except:
+            agent_version = "(unknown)"
+    else:
+        agent_version = None
+
     error_sections = list(error_sections)
     error_sections.sort()
+
     return agent_version, num_success, error_sections, ", ".join(problems)
 
 

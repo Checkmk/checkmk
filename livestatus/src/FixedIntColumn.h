@@ -22,18 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef FixedIntColumn_h
 #define FixedIntColumn_h
 
+#include "config.h" // IWYU pragma: keep
 #include "IntColumn.h"
 
-class FixedIntColumn : public IntColumn
-{
+class FixedIntColumn : public IntColumn {
     int32_t _value;
+
 public:
-    FixedIntColumn(std::string name, std::string description, int value) :
-        IntColumn(name, description, -1), _value(value) {}
+    FixedIntColumn(std::string name, std::string description, int value)
+        : IntColumn(name, description, -1), _value(value)
+    {
+    }
     int32_t getValue(void *, Query *) { return _value; }
 };
 

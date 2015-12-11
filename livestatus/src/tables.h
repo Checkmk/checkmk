@@ -25,40 +25,41 @@
 #ifndef tables_h
 #define tables_h
 
+#include "config.h" // IWYU pragma: keep
+
 #ifndef EXTERN
 #define EXTERN extern
 #endif
 
 class TableContacts;
-EXTERN TableContacts      *g_table_contacts;
+EXTERN TableContacts *g_table_contacts;
 class TableCommands;
-EXTERN TableCommands      *g_table_commands;
+EXTERN TableCommands *g_table_commands;
 class TableHosts;
-EXTERN TableHosts         *g_table_hosts;
-EXTERN TableHosts         *g_table_hostsbygroup;
+EXTERN TableHosts *g_table_hosts;
+EXTERN TableHosts *g_table_hostsbygroup;
 class TableServices;
-EXTERN TableServices      *g_table_services;
-EXTERN TableServices      *g_table_servicesbygroup;
-EXTERN TableServices      *g_table_servicesbyhostgroup;
+EXTERN TableServices *g_table_services;
+EXTERN TableServices *g_table_servicesbygroup;
+EXTERN TableServices *g_table_servicesbyhostgroup;
 class TableHostgroups;
-EXTERN TableHostgroups    *g_table_hostgroups;
+EXTERN TableHostgroups *g_table_hostgroups;
 class TableServicegroups;
 EXTERN TableServicegroups *g_table_servicegroups;
 class TableDownComm;
-EXTERN TableDownComm      *g_table_downtimes;
-EXTERN TableDownComm      *g_table_comments;
+EXTERN TableDownComm *g_table_downtimes;
+EXTERN TableDownComm *g_table_comments;
 class TableTimeperiods;
-EXTERN TableTimeperiods   *g_table_timeperiods;
+EXTERN TableTimeperiods *g_table_timeperiods;
 class TableContactgroups;
 EXTERN TableContactgroups *g_table_contactgroups;
 class TableStatus;
-EXTERN TableStatus        *g_table_status;
+EXTERN TableStatus *g_table_status;
 class TableLog;
-EXTERN TableLog           *g_table_log;
+EXTERN TableLog *g_table_log;
 class TableStateHistory;
-EXTERN TableStateHistory  *g_table_statehistory;
+EXTERN TableStateHistory *g_table_statehistory;
 class TableColumns;
-EXTERN TableColumns       *g_table_columns;
+EXTERN TableColumns *g_table_columns;
 
 #endif // tables_h
-

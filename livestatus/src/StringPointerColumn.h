@@ -25,16 +25,18 @@
 #ifndef StringPointerColumn_h
 #define StringPointerColumn_h
 
+#include "config.h" // IWYU pragma: keep
 #include "StringColumn.h"
 
-class StringPointerColumn : public StringColumn
-{
+class StringPointerColumn : public StringColumn {
     char *_string;
+
 public:
     StringPointerColumn(std::string name, std::string description, char *string)
-        : StringColumn(name, description, -1), _string(string) {}
-    char* getValue(void* ) { return _string; }
+        : StringColumn(name, description, -1), _string(string)
+    {
+    }
+    char *getValue(void *) { return _string; }
 };
-
 
 #endif // StringPointerColumn_h

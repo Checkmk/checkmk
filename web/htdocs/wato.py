@@ -1356,7 +1356,7 @@ def mode_bulk_rename_host(phase):
                 message += _("The following hosts could not be renamed because of missing permissions: %s") % ", ".join([
                     "%s (%s)" % (host_name, reason) for (host_name, reason) in auth_problems
                 ])
-            return "edit_host", HTML(message)
+            return "folder", HTML(message)
         elif c == False: # not yet confirmed
             return ""
         else:

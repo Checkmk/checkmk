@@ -280,8 +280,6 @@ def find_common_prefix(a, b):
 
     return a, "", ""
 
-check_mk_version_regex = "(1\.2\.[68]?([bp][0-9]+)|1\.2\.[79]i[0-9](p[0-9]+)?|201[5-9]\.[01][0-9]\.[0123][0-9])"
-
 def guitest_drop_dynamic_ids(thing):
     if type(thing) == tuple:
         return tuple(map(guitest_drop_dynamic_ids, list(thing)))
@@ -292,10 +290,16 @@ def guitest_drop_dynamic_ids(thing):
     else:
         return thing
 
+check_mk_version_regex = "(1\.2\.[68]?([bp][0-9]+)|1\.2\.[79]i[0-9](p[0-9]+)?|201[5-9]\.[01][0-9]\.[0123][0-9])"
+timeofday_regex = "[012][0-9]:[0-5][0-9]:[0-5][0-9]"
+year_regex = "201[56789]"
+
 
 def guitest_drop_dynamic_ids_in_text(text):
     text = re.sub("selection(%3d|=)[a-f0-9---]{36}", "selection=*", text)
     text = re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text)
     text = re.sub("<script.*?</script>", "", text, flags=re.DOTALL)
     text = re.sub(check_mk_version_regex, "CMK_VERSION", text)
+    text = re.sub(timeofday_regex, "TIMEOFDAY", text)
+    text = re.sub(year_regex, "YEAR", text)
     return text

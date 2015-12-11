@@ -216,11 +216,7 @@ def guitest_entry_in_reference_list(entry, ref_list):
 
 
 def guitest_entries_match(ref, real):
-    if type(ref) in (list, tuple):
-        return len(ref) == len(real) and \
-          map(guitest_drop_dynamic_ids, ref) == map(guitest_drop_dynamic_ids, real)
-    else:
-        return guitest_drop_dynamic_ids(ref) == guitest_drop_dynamic_ids(real)
+    return guitest_drop_dynamic_ids(ref) == guitest_drop_dynamic_ids(real)
 
 
 
@@ -282,7 +278,18 @@ def find_common_prefix(a, b):
 
 check_mk_version_regex = "(1\.2\.[68]?([bp][0-9]+)|1\.2\.[79]i[0-9](p[0-9]+)?|201[5-9]\.[01][0-9]\.[0123][0-9])"
 
-def guitest_drop_dynamic_ids(text):
+def guitest_drop_dynamic_ids(thing):
+    if type(thing) == tuple:
+        return tuple(map(guitest_drop_dynamic_ids, list(thing)))
+    elif type(thing) == list:
+        return map(guitest_drop_dynamic_ids, thing)
+    elif type(thing) in (str, unicode):
+        return guitest_drop_dynamic_ids_in_text(thing)
+    else:
+        return thing
+
+
+def guitest_drop_dynamic_ids_in_text(text):
     text = re.sub("selection(%3d|=)[a-f0-9---]{36}", "selection=*", text)
     text = re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text)
     text = re.sub("<script.*?</script>", "", text, flags=re.DOTALL)

@@ -2916,7 +2916,7 @@ def search_hosts_in_folder(folder, crit):
         found.append((hostname, host, effective))
 
     if found:
-        folder.show_breadcrump(link_to_folder=True)
+        folder.show_breadcrump(link_to_folder=True, keepvarnames=[])
         found.sort(cmp = lambda a,b: cmp(num_split(a[0]), num_split(b[0])))
 
         table.begin("search_hosts", "");

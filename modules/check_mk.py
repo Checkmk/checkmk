@@ -3729,12 +3729,12 @@ def usage():
  cmk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
  cmk -P, --package COMMAND            do package operations
  cmk --localize COMMAND               do localization operations
- cmk --handle-alerts                  used to handle alerts from core
  cmk --notify                         used to send notifications from core
  cmk --create-rrd [--keepalive|SPEC]  create round robin database (only CEE)
  cmk --convert-rrds [--split] [H...]  convert exiting RRD to new format (only CEE)
  cmk --compress-history FILES...      optimize monitoring history files for CMC
  cmk --handle-alerts                  alert handling, always in keepalive mode (only CEE)
+ cmk --real-time-checks               process real time check results (only CEE)
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
@@ -4753,10 +4753,10 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "man", "nowiki", "config-check", "backup=", "restore=",
                  "check-inventory=", "check-discovery=", "discover-marked-hosts", "paths",
                  "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=",
-                 "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap" ]
+                 "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap", "real-time-checks" ]
 
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
-                      '--handle-alerts', '--notify',
+                      '--handle-alerts', '--notify', '--real-time-checks',
                       '--man', '-V', '--version' ,'-h', '--help', '--automation',
                       '--create-rrd', '--convert-rrds', '--compress-history', '--keepalive', '--cap' ]
 
@@ -4967,12 +4967,21 @@ try:
             load_module("inventory")
             do_inv_check(a)
             done = True
+
         elif o == '--handle-alerts':
             read_config_files(with_conf_d=True, validate_hosts=False)
             sys.exit(do_handle_alerts(args))
+
         elif o == '--notify':
             read_config_files(with_conf_d=True, validate_hosts=False)
             sys.exit(do_notify(args))
+
+        elif o == '--real-time-checks':
+            load_module("keepalive")
+            load_module("real_time_checks")
+            do_real_time_checks(args)
+            sys.exit(0)
+
         elif o == '--create-rrd':
             read_config_files(with_conf_d=True, validate_hosts=False)
             load_module("rrd")

@@ -697,7 +697,7 @@ class Folder(WithPermissionsAndAttributes):
 
 
     def load(self):
-        wato_info               = self.load_wato_info()
+        wato_info               = self._load_wato_info()
         self._title             = wato_info.get("title", self._fallback_title())
         self._attributes        = wato_info.get("attributes", {})
         self._locked            = wato_info.get("lock", False)
@@ -710,7 +710,7 @@ class Folder(WithPermissionsAndAttributes):
             self._save_wato_info()
 
 
-    def load_wato_info(self):
+    def _load_wato_info(self):
         if os.path.exists(self.wato_info_path()):
             return eval(file(self.wato_info_path()).read())
         else:
@@ -855,8 +855,12 @@ class Folder(WithPermissionsAndAttributes):
         return self._parent != None
 
 
+    def is_same_as(self, folder):
+        return self == folder or self.path() == folder.path()
+
+
     def is_current_folder(self):
-        return self == Folder.current()
+        return self.is_same_as(Folder.current())
 
 
     def is_parent_of(self, maybe_child):
@@ -864,7 +868,7 @@ class Folder(WithPermissionsAndAttributes):
 
 
     def is_transitive_parent_of(self, maybe_child):
-        if self == maybe_child:
+        if self.is_same_as(maybe_child):
             return True
         elif maybe_child.has_parent():
             return self.is_transitive_parent_of(maybe_child.parent())
@@ -933,11 +937,11 @@ class Folder(WithPermissionsAndAttributes):
         for folder_path, folder in Folder.all_folders().items():
             if not folder.may("write"):
                 continue
-            if folder == self:
+            if folder.is_same_as(self):
                 continue # do not move into itself
 
             if what == "folder":
-                if folder == self.parent():
+                if folder.is_same_as(self.parent()):
                     continue # We are already in that folder
                 if folder.name() in folder.subfolders():
                     continue # naming conflict
@@ -1220,7 +1224,7 @@ class Folder(WithPermissionsAndAttributes):
         target_folder.need_permission("write")
         target_folder.need_unlocked_subfolders()
         subfolder.need_recursive_permission("write") # Inheritance is changed
-        if os.path.exists(target_folder.filesystem_path() + "/" + what_folder.name()):
+        if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
             raise MKUserError(None, _("Cannot move folder: A folder with this name already exists in the target folder."))
 
         # 2. Actual modification
@@ -1296,7 +1300,7 @@ class Folder(WithPermissionsAndAttributes):
             self._num_hosts = len(self._hosts)
             host.mark_dirty()
             log_pending(AFFECTED, host, "create-host", _("Created new host %s.") % host_name)
-        self.save() # Update num_hosts
+        self._save_wato_info() # num_hosts has changed
         self.save_hosts()
 
 
@@ -1313,7 +1317,7 @@ class Folder(WithPermissionsAndAttributes):
             del self._hosts[host_name]
             self._num_hosts = len(self._hosts)
             log_pending(AFFECTED, host, "delete-host", _("Deleted host %s") % host_name)
-        self.save() # Update num_hosts
+        self._save_wato_info() # num_hosts has changed
         self.save_hosts()
 
 
@@ -1337,9 +1341,9 @@ class Folder(WithPermissionsAndAttributes):
             log_pending(AFFECTED, host, "move-host", _("Moved host from %s to %s") %
                 (self.path(), target_folder.path()))
 
-        self.save() # num_hosts has changed
+        self._save_wato_info() # num_hosts has changed
         self.save_hosts()
-        target_folder.save()
+        target_folder._save_wato_info()
         target_folder.save_hosts()
 
 

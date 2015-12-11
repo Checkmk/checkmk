@@ -395,7 +395,7 @@ def mode_folder(phase):
             target_folder_path = html.var("bulk_moveto", html.var("_top_bulk_moveto"))
             if target_folder_path == "@":
                 raise MKUserError("bulk_moveto", _("Please select the destination folder"))
-            target_folder = Folder(target_folder_path)
+            target_folder = Folder.folder(target_folder_path)
             Folder.current().move_hosts(selected_host_names, target_folder)
             return None, _("Moved hosts to %s") % target_folder.title()
 
@@ -552,7 +552,7 @@ def folder_move_to_folder_combo(folder):
     if len(choices):
         choices = [("@", _("(select target folder)"))] + choices
         uri = html.makeactionuri([("what_folder", folder.path())])
-        html.select("_folder_move_%s" % thing.path(), choices, "@",
+        html.select("_folder_move_%s" % folder.path(), choices, "@",
             "location.href='%s' + '&_move_folder_to=' + this.value;" % uri, attrs = {'multiple': '10'})
     else:
         html.write(_("No valid target folder."))
@@ -15800,7 +15800,6 @@ def render_manpage_list(manpage_list, titles, path_comp, heading):
     table.begin(searchable=False, sortable=False, css="check_catalog")
     for entry in sorted(manpage_list, cmp=lambda a,b: cmp(a["title"], b["title"])):
         if type(entry) != dict:
-            html.write("MIST: %s ist kaputt: %r" % (path_comp, entry))
             continue
         table.row()
         url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]), ("back", html.makeuri([]))])

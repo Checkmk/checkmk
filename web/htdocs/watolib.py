@@ -1202,7 +1202,7 @@ class Folder(WithPermissionsAndAttributes):
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
-        log_pending(AFFECTED, new_subfolder, "new-folder", _("Created new folder %s") % new_subfolder.title())
+        log_pending(AFFECTED, new_subfolder, "new-folder", _("Created new folder %s") % new_subfolder.alias_path())
         call_hook_folder_created(new_subfolder)
         need_sidebar_reload()
         return new_subfolder
@@ -1218,7 +1218,7 @@ class Folder(WithPermissionsAndAttributes):
         subfolder = self.subfolder(name)
         subfolder.mark_hosts_dirty()
         call_hook_folder_deleted(subfolder)
-        log_pending(AFFECTED, self, "delete-folder", _("Deleted folder %s") % self.title_path())
+        log_pending(AFFECTED, self, "delete-folder", _("Deleted folder %s") % self.alias_path())
         self._remove_subfolder(name)
         shutil.rmtree(subfolder.filesystem_path())
         Folder.invalidate_caches()

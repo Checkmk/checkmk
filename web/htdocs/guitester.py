@@ -80,6 +80,9 @@ class GUITester:
             test_steps = eval(file(path).read())
 
         if self.guitest_repair_step != None:
+            if self.guitest_repair_step > len(test_steps):
+                raise MKGeneralException("Test step for repairing is %s, but test only has %d steps." %
+                                          (self.guitest_repair_step, len(test_steps)))
             mod_step = test_steps[self.guitest_repair_step]
             mod_step["output"] = step["output"]
             mod_step["user"] = step["user"]
@@ -133,7 +136,8 @@ class GUITester:
 
 
     def guitest_ignored_pages(self):
-        return [ "run_cron", "index", "side", "sidebar_snapin", "dashboard", "dashboard_dashlet", "login", "logout", "tree_openclose" ]
+        return [ "run_cron", "index", "side", "sidebar_snapin", "sidebar_fold", "dashboard",
+                 "dashboard_dashlet", "login", "logout", "tree_openclose" ]
 
 
     def guitest_record_output(self, key, value):

@@ -63,7 +63,7 @@ def run_guitest(test_name):
             elif step_nr > range_to:
                 break
             sys.stdout.write("       #%d - %s..." % (step_nr, step_title(step)))
-            errors = run_test_step(test_name, step_nr, step)
+            errors = run_test_step(test_name, step_nr, step, opt_repair)
             if not errors:
                 sys.stdout.write(tty_green + "OK\n" + tty_normal)
             else:
@@ -72,6 +72,9 @@ def run_guitest(test_name):
                     sys.stdout.write("           %s\n" % error)
 
                 sys.stdout.write("        Replay this step with: %s%s%s\n" % (tty_blue, rule_step_url(test_name, step_nr), tty_normal))
+                if opt_interactive:
+                    if interactive_repair(test_name, step_nr, step):
+                        continue
                 return False
         return True
 
@@ -80,6 +83,40 @@ def run_guitest(test_name):
             raise
         sys.stdout.write("        %sfailed%s (%s)\n" % (tty_red, tty_normal, e))
         return False
+
+
+def interactive_repair(test_name, step_nr, step):
+    answer = None
+    while answer not in [ "y", "n" ]:
+        answer = read_line("Repair this test step (y/n)?").strip()
+    if answer == "y":
+        sys.stdout.write("Rerunning this step #%d in repair mode...\n" % step_nr)
+        set_recording_symlink(test_name)
+        errors = run_test_step(test_name, step_nr, step, True)
+        remove_recording_symlink()
+        if errors:
+            for error in errors:
+                sys.stdout.write("           %s\n" % error)
+
+        return not errors
+    else:
+        return False
+
+
+def read_line(prompt, echo=True):
+    sys.stderr.write(prompt + " " + tty_bold)
+    sys.stderr.flush()
+    try:
+        if echo:
+            answer = sys.stdin.readline().rstrip()
+        else:
+            answer = getpass.getpass(prompt="")
+    except:
+        sys.stderr.write("\n")
+        answer = None
+
+    sys.stderr.write(tty_normal)
+    return answer
 
 
 def load_guitest(test_name):
@@ -109,12 +146,13 @@ def names_of_all_tests():
     ])
 
 
-def run_test_step(test_name, step_nr, step):
+def run_test_step(test_name, step_nr, step, repair):
     url = "http://localhost/%s/check_mk/guitest.py" % omd_site()
     response = requests.post(url, data = {
         "test" : test_name,
         "step" : str(step_nr),
-        "repair" : opt_repair and "1" or "0"})
+        "repair" : repair and "1" or "0"
+    })
     try:
         response_text = response.text.decode(response.encoding)
     except:
@@ -197,14 +235,18 @@ def recording_symlink_exists():
     return os.path.lexists(recording_symlink())
 
 
+def remove_recording_symlink():
+    os.remove(recording_symlink())
+
+
 def stop_recording():
     test_name = os.readlink(recording_symlink())[:-3]
     if not os.path.exists(recording_symlink()):
         sys.stdout.write("Aborted recording. Test %s not created.\n" % test_name)
-        os.remove(recording_symlink())
+        remove_recording_symlink()
         return
 
-    os.remove(recording_symlink())
+    remove_recording_symlink()
     test = load_guitest(test_name)
     sys.stdout.write("Stopped recording test %s (%d steps).\n" % (test_name, len(test)))
 
@@ -320,6 +362,7 @@ Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
      -v, --verbose                      Output debug information on stderr
          --debug                        Do not catch Python exceptions
      -S, --steps RANGE                  Just run steps START...END (1st step is 0)
+     -i, --interactive                  When tests fail ask for automatic repair
 
 
   RANGES
@@ -343,13 +386,15 @@ Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvrslRS:x:D:'
-long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair", "steps=", "extract=", "delete=" ]
+short_options = 'hvrslRS:x:D:i'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair",
+                 "steps=", "extract=", "delete=", "interactive" ]
 
 opt_verbose = False
 opt_debug = False
 opt_repair = False
 opt_steps_range = 0, None
+opt_interactive = False
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -385,6 +430,8 @@ for o,a in opts:
         opt_debug = True
     elif o in [ '-R', '--repair' ]:
         opt_repair = True
+    elif o in [ '-i', '--interactive' ]:
+        opt_interactive = True
 
 # Main modes
 try:

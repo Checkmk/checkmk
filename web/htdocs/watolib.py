@@ -32,8 +32,16 @@
 # in wato.py
 
 # TODO Search hosts
-# - Fund-Ordner in der Tabelle mit anzeigen
 # - Alles Permissionprüfen nach watolib.py in die Klassen umziehen
+# - Test mit verteiltem Monitoring
+# - Tests erstellen für die Bulk-Operationen auf der Suche
+# - Host-Suche als Werk rausbringen
+# - # if "contactgroups" in host: --> Erzeugung der hosts.mk-Dateien mit Kontaktgruppen!
+# - Webapi
+# - Welche Hooks gibt es noch, die angepasst werden müssen?
+# - Restliche TODOs
+# - Ineffective rules gehen nicht. Reparieren und Test schreiben
+# - TODO: This seems to be all crap: Verwendung der Funktionen finden/eleminieren
 
 import os, shutil, subprocess
 import defaults, config, hooks, userdb

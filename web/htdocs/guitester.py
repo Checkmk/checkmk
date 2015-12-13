@@ -226,7 +226,12 @@ def guitest_entries_match(ref, real):
 
 def guitest_check_datatables(reference, reality):
     if len(reference) != len(reality):
-        return [ _("Expected %d data tables, but got %d") % (len(reference), len(reality)) ]
+        errors = [ _("Expected %d data tables, but got %d") % (len(reference), len(reality)) ]
+        if len(reference) > len(reality):
+            first_table = reference[len(reality)]
+            errors.append( _("First missing table has title '%s', %d rows") % (
+                first_table.get("title", "(no title)"), len(first_table["rows"])))
+        return errors
 
     errors = []
     for ref_table, real_table in zip(reference, reality):

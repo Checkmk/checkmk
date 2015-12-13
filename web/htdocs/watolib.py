@@ -33,13 +33,20 @@
 
 # TODO Search hosts
 # - Fund-Ordner in der Tabelle mit anzeigen
-# - Umbau der Attribute auch in den treasures
-# - Attribute kompatibel machen? Aber wie?
 # - Alles Permissionprüfen nach watolib.py in die Klassen umziehen
 
 import os, shutil, subprocess
 import defaults, config, hooks, userdb
 from lib import *
+
+#   .--Constants-----------------------------------------------------------.
+#   |              ____                _              _                    |
+#   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
+#   |            | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|             |
+#   |            | |__| (_) | | | \__ \ || (_| | | | | |_\__ \             |
+#   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 # Constants used in configuration files
 ALL_HOSTS    = [ '@all' ]
@@ -1588,6 +1595,10 @@ class SearchFolder(FolderLike):
         return crit
 
 
+    # .--------------------------------------------------------------------.
+    # | CONSTRUCTION                                                       |
+    # '--------------------------------------------------------------------'
+
     def __init__(self, base_folder, criteria):
         self._criteria = criteria
         self._base_folder = base_folder
@@ -1598,6 +1609,10 @@ class SearchFolder(FolderLike):
     def __repr__(self):
         return "SearchFolder(%r, %s)" % (self._base_folder.path(), self._name)
 
+
+    # .--------------------------------------------------------------------.
+    # | ACCESS                                                             |
+    # '--------------------------------------------------------------------'
 
     def attributes(self):
         return {}
@@ -1647,6 +1662,9 @@ class SearchFolder(FolderLike):
     def show_locking_information(self):
         pass
 
+    # .--------------------------------------------------------------------.
+    # | ACTIONS                                                            |
+    # '--------------------------------------------------------------------'
 
     def delete_hosts(self, host_names):
         auth_errors = []
@@ -1659,6 +1677,22 @@ class SearchFolder(FolderLike):
         if auth_errors:
             raise MKAuthException(HTML(_("Some hosts could not be deleted:<ul>%s</ul>") % "".join(auth_errors)))
 
+
+    def move_hosts(self, host_names, target_folder):
+        auth_errors = []
+        for folder, host_names in self._group_hostnames_by_folder(host_names):
+            try:
+                folder.move_hosts(host_names, target_folder)
+            except MKAuthException, e:
+                auth_errors.append(_("<li>Cannot move hosts from folder %s: %s</li>") % (folder.alias_path(), e))
+        self._invalidate_search()
+        if auth_errors:
+            raise MKAuthException(HTML(_("Some hosts could not be moved:<ul>%s</ul>") % "".join(auth_errors)))
+
+
+    # .--------------------------------------------------------------------.
+    # | PRIVATE METHODS                                                    |
+    # '--------------------------------------------------------------------'
 
     def _group_hostnames_by_folder(self, host_names):
         by_folder = {}
@@ -1706,7 +1740,6 @@ class SearchFolder(FolderLike):
 
     def _invalidate_search(self):
         self._found_hosts = None
-
 
 
 #.

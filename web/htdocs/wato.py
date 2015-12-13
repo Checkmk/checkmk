@@ -400,7 +400,7 @@ def mode_folder(phase):
                 raise MKUserError("bulk_moveto", _("Please select the destination folder"))
             target_folder = Folder.folder(target_folder_path)
             Folder.current().move_hosts(selected_host_names, target_folder)
-            return None, _("Moved hosts to %s") % target_folder.title()
+            return None, _("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title())
 
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):

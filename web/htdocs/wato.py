@@ -164,7 +164,7 @@ def page_handler():
     if modefunc == None:
         html.header(_("Sorry"), stylesheets=wato_styles)
         html.begin_context_buttons()
-        html.context_button(_("Main Menu"), folder_link([("mode", "main")]), "home")
+        home_button()
         html.end_context_buttons()
         html.message(_("This module has not yet been implemented."))
         html.footer()
@@ -244,7 +244,7 @@ def page_handler():
                 if '/' == target[0] or target.startswith('../') or '://' in target:
                     html.context_button(buttontext, target)
                 else:
-                    html.context_button(buttontext, folder_link([("mode", target)]))
+                    html.context_button(buttontext, folder_preserving_link([("mode", target)]))
         html.end_context_buttons()
 
         # Show outcome of action
@@ -311,8 +311,8 @@ def mode_folder(phase):
         global_buttons()
         if folder.is_disk_folder():
             if config.may("wato.rulesets") or config.may("wato.seeall"):
-                html.context_button(_("Rulesets"),        folder_link([("mode", "ruleeditor")]), "rulesets")
-                html.context_button(_("Manual Checks"),   folder_link([("mode", "static_checks")]), "static_checks")
+                html.context_button(_("Rulesets"),        folder_preserving_link([("mode", "ruleeditor")]), "rulesets")
+                html.context_button(_("Manual Checks"),   folder_preserving_link([("mode", "static_checks")]), "static_checks")
             if folder.may("read"):
                 html.context_button(_("Folder Properties"), folder.edit_url(), "edit")
             if not folder.locked_subfolders() and config.may("wato.manage_folders") and folder.may("write"):
@@ -332,7 +332,7 @@ def mode_folder(phase):
             folder_status_button()
             if config.may("wato.random_hosts"):
                 html.context_button(_("Random Hosts"), folder.url([("mode", "random_hosts")]), "random")
-            html.context_button(_("Search"), folder_link([("mode", "search")]), "search")
+            html.context_button(_("Search"), folder_preserving_link([("mode", "search")]), "search")
         else:
             html.context_button(_("Back"), folder.parent().url(), "back")
             html.context_button(_("Refine Search"), folder.url([("mode", "search")]), "search")
@@ -1117,24 +1117,24 @@ def mode_edit_host(phase, new, is_cluster):
 
 
     elif phase == "buttons":
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "back")
         if mode == "edit":
             host_status_button(hostname, "hoststatus")
 
             html.context_button(_("Services"),
-                  folder_link([("mode", "inventory"), ("host", hostname)]), "services")
+                  folder_preserving_link([("mode", "inventory"), ("host", hostname)]), "services")
             if config.may('wato.agents'):
                 html.context_button(_("Monitoring Agent"),
-                  folder_link([("mode", "agent_of_host"), ("host", hostname)]), "agents")
+                  folder_preserving_link([("mode", "agent_of_host"), ("host", hostname)]), "agents")
             if config.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
-                  folder_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
+                  folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
             if config.may("wato.rename_hosts") and not Folder.current().locked_hosts():
                 html.context_button(_("Rename %s") % (is_cluster and _("Cluster") or _("Host")),
-                  folder_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
+                  folder_preserving_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
             if not is_cluster:
                 html.context_button(_("Diagnostic"),
-                      folder_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
+                      folder_preserving_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
             html.context_button(_("Update DNS Cache"),
                       html.makeactionuri([("_update_dns_cache", "1")]), "update")
         return
@@ -1264,7 +1264,7 @@ def action_edit_host(mode, hostname, is_cluster):
             create_msg = _('Successfully created the host. Now you should do a '
                            '<a href="%s">service discovery</a> in order to auto-configure '
                            'all services to be checked on this host.') % \
-                            folder_link([("mode", "inventory"), ("host", hostname)])
+                            folder_preserving_link([("mode", "inventory"), ("host", hostname)])
         else:
             create_msg = None
 
@@ -1336,7 +1336,7 @@ def mode_bulk_rename_host(phase):
         return _("Bulk renaming of hosts")
 
     elif phase == "buttons":
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "back")
         return
 
     elif phase == "action":
@@ -1976,16 +1976,16 @@ def mode_object_parameters(phase):
             prefix = _("Host-")
         else:
             prefix = ""
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "back")
         if service:
             service_status_button(hostname, service)
         else:
             host_status_button(hostname, "hoststatus")
-        html.context_button(prefix + _("Properties"), folder_link([("mode", "edit_host"), ("host", hostname)]), "edit")
-        html.context_button(_("Services"), folder_link([("mode", "inventory"), ("host", hostname)]), "services")
+        html.context_button(prefix + _("Properties"), folder_preserving_link([("mode", "edit_host"), ("host", hostname)]), "edit")
+        html.context_button(_("Services"), folder_preserving_link([("mode", "inventory"), ("host", hostname)]), "services")
         if not host.is_cluster():
             html.context_button(prefix + _("Diagnostic"),
-              folder_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
+              folder_preserving_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
         return
 
     elif phase == "action":
@@ -2056,7 +2056,7 @@ def mode_object_parameters(phase):
                     if grouprule not in g_rulespecs:
                         rulespec = g_rulespecs.get("static_checks:" + checkgroup)
                         if rulespec:
-                            url = folder_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
+                            url = folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
                             render_rule_reason(_("Parameters"), url, _("Determined by discovery"), None, False,
                                        rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
                         else:
@@ -2108,9 +2108,9 @@ def mode_object_parameters(phase):
                     if nr == rule_nr:
                         break
 
-                url = folder_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', hostname)])
+                url = folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', hostname)])
                 forms.section('<a href="%s">%s</a>' % (url, _("Command Line")))
-                url = folder_link([
+                url = folder_preserving_link([
                     ('mode', 'edit_rule'),
                     ('varname', "custom_checks"),
                     ('rule_folder', rule[0][".path"]),
@@ -2155,7 +2155,7 @@ PARAMETERS_OMIT = []
 def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_settings=PARAMETERS_UNKNOWN):
     def rule_url(rule):
         rule_folder, rule_nr = rule
-        return folder_link([
+        return folder_preserving_link([
             ('mode', 'edit_rule'),
             ('varname', varname),
             ('rule_folder', rule_folder.path()),
@@ -2166,7 +2166,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
     varname = rulespec["varname"]
     valuespec = rulespec["valuespec"]
-    url = folder_link([('mode', 'edit_ruleset'), ('varname', varname), ('host', hostname), ('item', mk_repr(service))])
+    url = folder_preserving_link([('mode', 'edit_ruleset'), ('varname', varname), ('host', hostname), ('item', mk_repr(service))])
     forms.section('<a href="%s">%s</a>' % (url, rulespec["title"]))
     setting, rules = analyse_ruleset(rulespec, all_rulesets[varname], hostname, service)
     html.write("<table class='setting'><tr>")
@@ -2333,7 +2333,7 @@ def mode_diag_host(phase):
         return _('Diagnostic of host') + " " + hostname
 
     elif phase == 'buttons':
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "back")
         host_status_button(hostname, "hoststatus")
         html.context_button(_("Properties"), host.edit_url(), "edit")
         if config.may('wato.rulesets'):
@@ -2367,13 +2367,13 @@ def mode_diag_host(phase):
                 maxvalue = 65535,
                 default_value = 6556,
                 title = _("Check_MK Agent Port (<a href=\"%s\">Rules</a>)") % \
-                    folder_link([('mode', 'edit_ruleset'), ('varname', 'agent_ports')]),
+                    folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'agent_ports')]),
                 help = _("This variable allows to specify the TCP port to "
                          "be used to connect to the agent on a per-host-basis.")
             )),
             ('snmp_timeout', Integer(
                 title = _("SNMP-Timeout (<a href=\"%s\">Rules</a>)") % \
-                    folder_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
+                    folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
                 help = _("After a request is sent to the remote SNMP agent we will wait up to this "
                          "number of seconds until assuming the answer get lost and retrying."),
                 default_value = 1,
@@ -2383,14 +2383,14 @@ def mode_diag_host(phase):
             )),
             ('snmp_retries', Integer(
                 title = _("SNMP-Retries (<a href=\"%s\">Rules</a>)") % \
-                    folder_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
+                    folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
                 default_value = 5,
                 minvalue = 0,
                 maxvalue = 50,
             )),
             ('datasource_program', TextAscii(
                 title = _("Datasource Program (<a href=\"%s\">Rules</a>)") % \
-                    folder_link([('mode', 'edit_ruleset'), ('varname', 'datasource_programs')]),
+                    folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'datasource_programs')]),
                 help = _("For agent based checks Check_MK allows you to specify an alternative "
                          "program that should be called by Check_MK instead of connecting the agent "
                          "via TCP. That program must output the agent's data on standard output in "
@@ -2548,16 +2548,16 @@ def mode_inventory(phase, firsttime):
 
     elif phase == "buttons":
         html.context_button(_("Folder"),
-                            folder_link([("mode", "folder")]), "back")
+                            folder_preserving_link([("mode", "folder")]), "back")
         host_status_button(hostname, "host")
-        html.context_button(_("Properties"), folder_link([("mode", "edit_host"), ("host", hostname)]), "edit")
+        html.context_button(_("Properties"), folder_preserving_link([("mode", "edit_host"), ("host", hostname)]), "edit")
         if config.may('wato.rulesets'):
             html.context_button(_("Parameters"),
-                                folder_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
+                                folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
         if not host.is_cluster():
             # only display for non cluster hosts
             html.context_button(_("Diagnostic"),
-                  folder_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
+                  folder_preserving_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
         if config.may("wato.services"):
             html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
@@ -2719,7 +2719,7 @@ def show_service_table(host, firsttime):
                 ctype = "check_" + ct
             else:
                 ctype = ct
-            manpage_url = folder_link([("mode", "check_manpage"), ("check_type", ctype)])
+            manpage_url = folder_preserving_link([("mode", "check_manpage"), ("check_type", ctype)])
             table.cell(_("Status"),              statename, css=stateclass)
             table.cell(_("Checkplugin"),         '<a href="%s">%s</a>' % (manpage_url, ctype))
             table.cell(_("Item"),                item)
@@ -2765,19 +2765,19 @@ def show_service_table(host, firsttime):
             table.cell(css='buttons')
             if check_source not in [ "new", "ignored" ] and config.may('wato.rulesets'):
                 # Link to list of all rulesets affecting this service
-                params_url = folder_link([("mode", "object_parameters"),
+                params_url = folder_preserving_link([("mode", "object_parameters"),
                                         ("host", hostname),
                                         ("service", descr)])
                 html.icon_button(params_url, _("View and edit the parameters for this service"), "rulesets")
 
-                url = folder_link([("mode", "edit_ruleset"),
+                url = folder_preserving_link([("mode", "edit_ruleset"),
                                  ("varname", varname),
                                  ("host", hostname),
                                  ("item", mk_repr(item))])
                 html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
 
             if check_source == "ignored" and may_edit_ruleset("ignored_services"):
-                url = folder_link([("mode", "edit_ruleset"),
+                url = folder_preserving_link([("mode", "edit_ruleset"),
                                  ("varname", "ignored_services"),
                                  ("host", hostname),
                                  ("item", mk_repr(descr))])
@@ -2785,7 +2785,7 @@ def show_service_table(host, firsttime):
 
             # Permanently disable icon
             if check_source in ['new', 'old'] and may_edit_ruleset("ignored_services"):
-                url = folder_link([
+                url = folder_preserving_link([
                     ('mode', 'edit_ruleset'),
                     ('varname', 'ignored_services'),
                     ('host', hostname),
@@ -2957,7 +2957,7 @@ def mode_bulk_import(phase):
         return _('Bulk Host Import')
 
     elif phase == "buttons":
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "back")
 
     elif phase == "action":
         if not html.check_transaction():
@@ -3040,26 +3040,27 @@ def mode_bulk_import(phase):
         html.hidden_fields()
         html.end_form()
 
+
 #.
-#   .--Bulk-Inventory------------------------------------------------------.
-#   |  ____        _ _      ___                      _                     |
-#   | | __ ) _   _| | | __ |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _   |
-#   | |  _ \| | | | | |/ /  | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |  |
-#   | | |_) | |_| | |   <   | || | | \ V /  __/ | | | || (_) | |  | |_| |  |
-#   | |____/ \__,_|_|_|\_\ |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |  |
-#   |                                                              |___/   |
+#   .--Bulk Discovery------------------------------------------------------.
+#   |   ____        _ _      ____  _                                       |
+#   |  | __ ) _   _| | | __ |  _ \(_)___  ___ _____   _____ _ __ _   _     |
+#   |  |  _ \| | | | | |/ / | | | | / __|/ __/ _ \ \ / / _ \ '__| | | |    |
+#   |  | |_) | |_| | |   <  | |_| | \__ \ (_| (_) \ V /  __/ |  | |_| |    |
+#   |  |____/ \__,_|_|_|\_\ |____/|_|___/\___\___/ \_/ \___|_|   \__, |    |
+#   |                                                            |___/     |
 #   +----------------------------------------------------------------------+
 #   | When the user wants to scan the services of multiple hosts at once   |
 #   | this function is used. There is no fine-tuning possibility. We       |
 #   | simply do something like -I or -II on the list of hosts.             |
 #   '----------------------------------------------------------------------'
 
-def mode_bulk_inventory(phase):
+def mode_bulk_discovery(phase):
     if phase == "title":
         return _("Bulk Service Discovery")
 
     elif phase == "buttons":
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), Folder.current().url(), "back")
         return
 
     elif phase == "action":
@@ -3163,7 +3164,7 @@ def mode_bulk_inventory(phase):
         skip_hosts = []
 
     # 'all' not set -> only inventorize checked hosts
-    hosts_to_inventorize = []
+    hosts_to_discover = []
 
     if not html.var("all"):
         complete_folder = False
@@ -3179,7 +3180,7 @@ def mode_bulk_inventory(phase):
                 continue
             host = Folder.current().host(host_name)
             host.need_permission("write")
-            hosts_to_inventorize.append( (host.site_id(), Folder.current(), host_name) )
+            hosts_to_discover.append( (host.site_id(), host.folder(), host_name) )
 
     # all host in this folder, maybe recursively. New: we always group
     # a bunch of subsequent hosts of the same folder into one item.
@@ -3198,18 +3199,18 @@ def mode_bulk_inventory(phase):
                 continue
             host = folder.host(host_name)
             host.need_permission("write")
-            hosts_to_inventorize.append( (host.site_id(), folder, host_name) )
+            hosts_to_discover.append( (host.site_id(), host.folder(), host_name) )
 
     # Create a list of items for the progress bar, where we group
     # subsequent hosts that are in the same folder and site
-    hosts_to_inventorize.sort()
+    hosts_to_discover.sort()
 
     current_site_and_folder = None
     items = []
     hosts_in_this_item = 0
     bulk_size = int(html.var("bulk_size", 10))
 
-    for site_id, folder, host_name in hosts_to_inventorize:
+    for site_id, folder, host_name in hosts_to_discover:
         if not items or (site_id, folder) != current_site_and_folder or hosts_in_this_item >= bulk_size:
             items.append("%s|%s|%s" % (site_id, folder.path(), host_name))
             hosts_in_this_item = 1
@@ -3243,7 +3244,7 @@ def mode_bulk_inventory(phase):
         # Mode of action
         html.write("<p>")
         if not complete_folder:
-            html.write(_("You have selected <b>%d</b> hosts for bulk discovery. ") % len(hosts_to_inventorize))
+            html.write(_("You have selected <b>%d</b> hosts for bulk discovery. ") % len(hosts_to_discover))
         html.write(_("Check_MK service discovery will automatically find and configure "
                      "services to be checked on your hosts."))
         forms.header(_("Bulk Discovery"))
@@ -3314,7 +3315,7 @@ def mode_bulk_edit(phase):
         return _("Bulk edit hosts")
 
     elif phase == "buttons":
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "back")
         return
 
     elif phase == "action":
@@ -3942,10 +3943,10 @@ def mode_changelog(phase):
                                  "discard", id="discard_changes_button")
 
         if is_distributed():
-            html.context_button(_("Site Configuration"), folder_link([("mode", "sites")]), "sites")
+            html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
 
         if config.may("wato.auditlog"):
-            html.context_button(_("Audit Log"), folder_link([("mode", "auditlog")]), "auditlog")
+            html.context_button(_("Audit Log"), folder_preserving_link([("mode", "auditlog")]), "auditlog")
 
     elif phase == "action":
         action = html.var("_action", html.var("_siteaction"))
@@ -3955,7 +3956,7 @@ def mode_changelog(phase):
             if defective_hosts:
                 raise MKUserError(None, _("You cannot activate changes while some hosts have "
                   "an invalid configuration: ") + ", ".join(
-                    [ '<a href="%s">%s</a>' % (folder_link([("mode", "edit_host"), ("host", hn)]), hn)
+                    [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_host"), ("host", hn)]), hn)
                       for hn in defective_hosts.keys() ]))
 
         # If there are changes by other users, we need a confirmation
@@ -4089,7 +4090,7 @@ def mode_changelog(phase):
 
                 # Iconbuttons
                 table.cell(_("Actions"), css="buttons")
-                edit_url = folder_link([("mode", "edit_site"), ("edit", site_id)])
+                edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
                 html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
                 site_url = site.get("multisiteurl")
                 if site_url:
@@ -4534,8 +4535,8 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     # They are just needed for the Abort/Finish links. Those must be converted
     # to POST.
     base_url = html.makeuri([], remove_prefix = "sel")
-    finish_url = folder_link([("mode", "folder")] + finishvars)
-    term_url = folder_link([("mode", "folder")] + termvars)
+    finish_url = folder_preserving_link([("mode", "folder")] + finishvars)
+    term_url = folder_preserving_link([("mode", "folder")] + termvars)
 
     # Reserve a certain amount of transids for the progress scheduler
     # Each json item requires one transid. Additionally, each "Retry failed hosts" eats
@@ -4759,7 +4760,7 @@ def mode_snapshot_detail(phase):
         return _("Snapshot details of %s") % html.attrencode(status["name"])
     elif phase == "buttons":
         home_button()
-        html.context_button(_("Back"), folder_link([("mode", "snapshot")]), "back")
+        html.context_button(_("Back"), folder_preserving_link([("mode", "snapshot")]), "back")
         return
     elif phase == "action":
         return
@@ -5084,7 +5085,7 @@ def mode_snapshot(phase):
             table.row()
             # Snapshot name
             table.cell(_("From"), '<a href="%s">%s</a>' %
-                       (folder_link([("mode","snapshot_detail"),("_snapshot_name", name)]), status["name"]))
+                       (folder_preserving_link([("mode","snapshot_detail"),("_snapshot_name", name)]), status["name"]))
 
             # Comment
             table.cell(_("Comment"), status.get("comment",""))
@@ -5241,7 +5242,7 @@ def render_main_menu(some_modules, columns = 2):
         if '?' in mode_or_url or '/' in mode_or_url:
             url = mode_or_url
         else:
-            url = folder_link([("mode", mode_or_url)])
+            url = folder_preserving_link([("mode", mode_or_url)])
 
         html.write('<a href="%s" onfocus="if (this.blur) this.blur();"' % url)
         html.write(">")
@@ -5272,8 +5273,8 @@ def mode_ldap_config(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("Users"), folder_link([("mode", "users")]), "users")
-        html.context_button(_("New Connection"), folder_link([("mode", "edit_ldap_connection")]), "new")
+        html.context_button(_("Users"), folder_preserving_link([("mode", "users")]), "users")
+        html.context_button(_("New Connection"), folder_preserving_link([("mode", "edit_ldap_connection")]), "new")
         return
 
     connections = userdb.load_connection_config()
@@ -5312,7 +5313,7 @@ def mode_ldap_config(phase):
         table.row()
 
         table.cell(_("Actions"), css="buttons")
-        edit_url   = folder_link([("mode", "edit_ldap_connection"), ("id", connection["id"])])
+        edit_url   = folder_preserving_link([("mode", "edit_ldap_connection"), ("id", connection["id"])])
         delete_url = make_action_link([("mode", "ldap_config"), ("_delete", nr)])
         top_url    = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", 0)])
         bottom_url = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", len(connections)-1)])
@@ -5696,7 +5697,7 @@ def mode_edit_ldap_connection(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("Back"), folder_link([("mode", "ldap_config")]), "back")
+        html.context_button(_("Back"), folder_preserving_link([("mode", "ldap_config")]), "back")
         return
 
     vs = vs_ldap_connection(new)
@@ -6009,7 +6010,7 @@ def render_global_configuration_variables(default_values, current_settings, show
 
             defaultvalue = default_values.get(varname, valuespec.default_value())
 
-            edit_url = folder_link([("mode", "edit_configvar"), ("varname", varname), ("site", html.var("site", ""))])
+            edit_url = folder_preserving_link([("mode", "edit_configvar"), ("varname", varname), ("site", html.var("site", ""))])
             title = '<a href="%s" class=%s title="%s">%s</a>' % \
                     (edit_url, varname in current_settings and '"modified"' or '""',
                      html.strip_tags(help_text), title_text)
@@ -6064,11 +6065,11 @@ def mode_edit_configvar(phase, what = 'globalvars'):
 
     elif phase == "buttons":
         if what == 'mkeventd':
-            html.context_button(_("Abort"), folder_link([("mode", "mkeventd_config")]), "abort")
+            html.context_button(_("Abort"), folder_preserving_link([("mode", "mkeventd_config")]), "abort")
         elif siteid:
-            html.context_button(_("Abort"), folder_link([("mode", "edit_site_globals"), ("site", siteid)]), "abort")
+            html.context_button(_("Abort"), folder_preserving_link([("mode", "edit_site_globals"), ("site", siteid)]), "abort")
         else:
-            html.context_button(_("Abort"), folder_link([("mode", "globalvars")]), "abort")
+            html.context_button(_("Abort"), folder_preserving_link([("mode", "globalvars")]), "abort")
         return
 
     varname = html.var("varname")
@@ -6290,7 +6291,7 @@ def find_usages_of_group_in_rules(name, varnames):
             value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
             if value == name:
                 used_in.append(("%s: %s" % (_("Ruleset"), g_rulespecs[varname]["title"]),
-                               folder_link([("mode", "edit_ruleset"), ("varname", varname)])))
+                               folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
     return used_in
 
 # Check if a group is currently in use and cannot be deleted
@@ -6310,7 +6311,7 @@ def find_usages_of_contact_group(name):
         cgs = user.get("contactgroups", [])
         if name in cgs:
             used_in.append(('%s: %s' % (_('User'), user.get('alias')),
-                folder_link([('mode', 'edit_user'), ('edit', userid)])))
+                folder_preserving_link([('mode', 'edit_user'), ('edit', userid)])))
 
     global_config = load_configuration_settings()
 
@@ -6321,7 +6322,7 @@ def find_usages_of_contact_group(name):
     if (configured and name in configured['contactgroups']) \
        or name in  default_value['contactgroups']:
         used_in.append(('%s' % (_('Default User Profile')),
-            folder_link([('mode', 'edit_configvar'), ('varname', 'default_user_profile')])))
+            folder_preserving_link([('mode', 'edit_configvar'), ('varname', 'default_user_profile')])))
 
     # Is the contactgroup used in mkeventd notify (if available)?
     if 'mkeventd_notify_contactgroup' in g_configvars:
@@ -6331,7 +6332,7 @@ def find_usages_of_contact_group(name):
         if (configured and name == configured) \
            or name == default_value:
             used_in.append(('%s' % (valuespec.title()),
-                folder_link([('mode', 'edit_configvar'), ('varname', 'mkeventd_notify_contactgroup')])))
+                folder_preserving_link([('mode', 'edit_configvar'), ('varname', 'mkeventd_notify_contactgroup')])))
 
     return used_in
 
@@ -6367,19 +6368,19 @@ def mode_groups(phase, what):
     elif phase == "buttons":
         global_buttons()
         if what == "host":
-            html.context_button(_("Service groups"), folder_link([("mode", "service_groups")]), "hostgroups")
-            html.context_button(_("New host group"), folder_link([("mode", "edit_host_group")]), "new")
+            html.context_button(_("Service groups"), folder_preserving_link([("mode", "service_groups")]), "hostgroups")
+            html.context_button(_("New host group"), folder_preserving_link([("mode", "edit_host_group")]), "new")
         elif what == "service":
-            html.context_button(_("Host groups"), folder_link([("mode", "host_groups")]), "servicegroups")
-            html.context_button(_("New service group"), folder_link([("mode", "edit_service_group")]), "new")
+            html.context_button(_("Host groups"), folder_preserving_link([("mode", "host_groups")]), "servicegroups")
+            html.context_button(_("New service group"), folder_preserving_link([("mode", "edit_service_group")]), "new")
         else:
-            html.context_button(_("New contact group"), folder_link([("mode", "edit_contact_group")]), "new")
+            html.context_button(_("New contact group"), folder_preserving_link([("mode", "edit_contact_group")]), "new")
         if what == "contact":
-            html.context_button(_("Rules"), folder_link([("mode", "rulesets"),
+            html.context_button(_("Rules"), folder_preserving_link([("mode", "rulesets"),
                 ("filled_in", "search"), ("search", _("contact group"))]), "rulesets")
         else:
             varname = what + "_groups"
-            html.context_button(_("Rules"), folder_link([("mode", "edit_ruleset"), ("varname", varname)]), "rulesets")
+            html.context_button(_("Rules"), folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)]), "rulesets")
         return
 
     all_groups = userdb.load_group_information()
@@ -6445,9 +6446,9 @@ def mode_groups(phase, what):
         table.row()
 
         table.cell(_("Actions"), css="buttons")
-        edit_url = folder_link([("mode", "edit_%s_group" % what), ("edit", name)])
+        edit_url = folder_preserving_link([("mode", "edit_%s_group" % what), ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
-        clone_url    =  folder_link([("mode", "edit_%s_group" % what), ("clone", name)])
+        clone_url    =  folder_preserving_link([("mode", "edit_%s_group" % what), ("clone", name)])
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
@@ -6458,7 +6459,7 @@ def mode_groups(phase, what):
         if what == "contact":
             table.cell(_("Members"))
             html.write(", ".join(
-               [ '<a href="%s">%s</a>' % (folder_link([("mode", "edit_user"), ("edit", userid)]), alias)
+               [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_user"), ("edit", userid)]), alias)
                  for userid, alias in members.get(name, [])]))
 
     table.end()
@@ -6485,7 +6486,7 @@ def mode_edit_group(phase, what):
                 return _("Edit contact group")
 
     elif phase == "buttons":
-        html.context_button(_("All groups"), folder_link([("mode", "%s_groups" % what)]), "back")
+        html.context_button(_("All groups"), folder_preserving_link([("mode", "%s_groups" % what)]), "back")
         return
 
     all_groups = userdb.load_group_information()
@@ -7308,8 +7309,8 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 up_url     = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", nr-1)])
                 down_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", nr+1)])
                 suffix = profilemode and "_p" or ""
-                edit_url   = folder_link([("mode", "notification_rule" + suffix), ("edit", nr), ("user", userid)])
-                clone_url  = folder_link([("mode", "notification_rule" + suffix), ("clone", nr), ("user", userid)])
+                edit_url   = folder_preserving_link([("mode", "notification_rule" + suffix), ("edit", nr), ("user", userid)])
+                clone_url  = folder_preserving_link([("mode", "notification_rule" + suffix), ("clone", nr), ("user", userid)])
 
                 table.cell(_("Actions"), css="buttons")
                 html.icon_button(edit_url, _("Edit this notification rule"), "edit")
@@ -7446,7 +7447,7 @@ def mode_notifications(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New Rule"), folder_link([("mode", "notification_rule")]), "new")
+        html.context_button(_("New Rule"), folder_preserving_link([("mode", "notification_rule")]), "new")
         if show_user_rules:
             html.context_button(_("Hide user rules"), html.makeactionuri([("_show_user", "")]), "users")
         else:
@@ -7681,11 +7682,11 @@ def mode_user_notifications(phase, profilemode):
     if phase == "buttons":
         if profilemode:
             html.context_button(_("Profile"), "user_profile.py", "back")
-            html.context_button(_("New Rule"), folder_link([("mode", "notification_rule_p")]), "new")
+            html.context_button(_("New Rule"), folder_preserving_link([("mode", "notification_rule_p")]), "new")
         else:
-            html.context_button(_("All Users"), folder_link([("mode", "users")]), "back")
-            html.context_button(_("User Properties"), folder_link([("mode", "edit_user"), ("edit", userid)]), "edit")
-            html.context_button(_("New Rule"), folder_link([("mode", "notification_rule"), ("user", userid)]), "new")
+            html.context_button(_("All Users"), folder_preserving_link([("mode", "users")]), "back")
+            html.context_button(_("User Properties"), folder_preserving_link([("mode", "edit_user"), ("edit", userid)]), "edit")
+            html.context_button(_("New Rule"), folder_preserving_link([("mode", "notification_rule"), ("user", userid)]), "new")
         return
 
     elif phase == "action":
@@ -7769,9 +7770,9 @@ def mode_notification_rule(phase, profilemode):
 
     elif phase == "buttons":
         if profilemode:
-            html.context_button(_("All Rules"), folder_link([("mode", "user_notifications_p")]), "back")
+            html.context_button(_("All Rules"), folder_preserving_link([("mode", "user_notifications_p")]), "back")
         else:
-            html.context_button(_("All Rules"), folder_link([("mode", "notifications"), ("userid", userid)]), "back")
+            html.context_button(_("All Rules"), folder_preserving_link([("mode", "notifications"), ("userid", userid)]), "back")
         return
 
     if userid:
@@ -7871,8 +7872,8 @@ def mode_timeperiods(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New Timeperiod"), folder_link([("mode", "edit_timeperiod")]), "new")
-        html.context_button(_("Import iCalendar"), folder_link([("mode", "import_ical")]), "ical")
+        html.context_button(_("New Timeperiod"), folder_preserving_link([("mode", "edit_timeperiod")]), "new")
+        html.context_button(_("Import iCalendar"), folder_preserving_link([("mode", "import_ical")]), "ical")
         return
 
     timeperiods = load_timeperiods()
@@ -7909,7 +7910,7 @@ def mode_timeperiods(phase):
         table.row()
 
         timeperiod = timeperiods[name]
-        edit_url     = folder_link([("mode", "edit_timeperiod"), ("edit", name)])
+        edit_url     = folder_preserving_link([("mode", "edit_timeperiod"), ("edit", name)])
         delete_url   = make_action_link([("mode", "timeperiods"), ("_delete", name)])
 
         table.cell(_("Actions"), css="buttons")
@@ -8149,7 +8150,7 @@ def mode_timeperiod_import_ical(phase):
         return _("Import iCalendar File to create a Timeperiod")
 
     elif phase == "buttons":
-        html.context_button(_("All Timeperiods"), folder_link([("mode", "timeperiods")]), "back")
+        html.context_button(_("All Timeperiods"), folder_preserving_link([("mode", "timeperiods")]), "back")
         return
 
     vs_ical = Dictionary(
@@ -8302,7 +8303,7 @@ def mode_edit_timeperiod(phase):
             return _("Edit time period")
 
     elif phase == "buttons":
-        html.context_button(_("All Timeperiods"), folder_link([("mode", "timeperiods")]), "back")
+        html.context_button(_("All Timeperiods"), folder_preserving_link([("mode", "timeperiods")]), "back")
         return
 
     if new:
@@ -8466,7 +8467,7 @@ def find_usages_of_timeperiod(tpname):
                 value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
                 if value == tpname:
                     used_in.append(("%s: %s" % (_("Ruleset"), g_rulespecs[varname]["title"]),
-                                   folder_link([("mode", "edit_ruleset"), ("varname", varname)])))
+                                   folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
                     break
 
     # Part 2: Users
@@ -8474,14 +8475,14 @@ def find_usages_of_timeperiod(tpname):
         tp = user.get("notification_period")
         if tp == tpname:
             used_in.append(("%s: %s" % (_("User"), userid),
-                folder_link([("mode", "edit_user"), ("edit", userid)])))
+                folder_preserving_link([("mode", "edit_user"), ("edit", userid)])))
 
     # Part 3: Other Timeperiods
     for tpn, tp in load_timeperiods().items():
         if tpname in tp.get("exclude", []):
             used_in.append(("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn),
                     _("excluded")),
-                    folder_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
+                    folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
 
     return used_in
 
@@ -8512,7 +8513,7 @@ def mode_sites(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New connection"), folder_link([("mode", "edit_site")]), "new")
+        html.context_button(_("New connection"), folder_preserving_link([("mode", "edit_site")]), "new")
         return
 
     sites = load_sites()
@@ -8634,15 +8635,15 @@ def mode_sites(phase):
     for id, site in entries:
         table.row()
         # Buttons
-        edit_url = folder_link([("mode", "edit_site"), ("edit", id)])
-        clone_url = folder_link([("mode", "edit_site"), ("clone", id)])
+        edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", id)])
+        clone_url = folder_preserving_link([("mode", "edit_site"), ("clone", id)])
         delete_url = html.makeactionuri([("_delete", id)])
         table.cell(_("Actions"), css="buttons")
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Clone this connection in order to create a new one"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
         if site.get("replication"):
-            globals_url = folder_link([("mode", "edit_site_globals"), ("site", id)])
+            globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", id)])
             html.icon_button(globals_url, _("Site-specific global configuration"), "configuration")
 
         # Site-ID
@@ -8716,8 +8717,8 @@ def mode_edit_site_globals(phase):
         return _("Edit site-specific global settings of %s" % siteid)
 
     elif phase == "buttons":
-        html.context_button(_("All Sites"), folder_link([("mode", "sites")]), "back")
-        html.context_button(_("Connection"), folder_link([("mode", "edit_site"), ("edit", siteid)]), "sites")
+        html.context_button(_("All Sites"), folder_preserving_link([("mode", "sites")]), "back")
+        html.context_button(_("Connection"), folder_preserving_link([("mode", "edit_site"), ("edit", siteid)]), "sites")
         return
 
     # The site's default values are the current global settings
@@ -8817,9 +8818,9 @@ def mode_edit_site(phase):
             return _("Edit site connection %s" % siteid)
 
     elif phase == "buttons":
-        html.context_button(_("All Sites"), folder_link([("mode", "sites")]), "back")
+        html.context_button(_("All Sites"), folder_preserving_link([("mode", "sites")]), "back")
         if not new and site.get("replication"):
-            html.context_button(_("Site-Globals"), folder_link([("mode", "edit_site_globals"), ("site", siteid)]), "configuration")
+            html.context_button(_("Site-Globals"), folder_preserving_link([("mode", "edit_site_globals"), ("site", siteid)]), "configuration")
         return
 
     vs_tcp_port = Tuple(
@@ -9801,13 +9802,13 @@ def mode_users(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New User"), folder_link([("mode", "edit_user")]), "new")
-        html.context_button(_("Custom Attributes"), folder_link([("mode", "user_attrs")]), "custom_attr")
+        html.context_button(_("New User"), folder_preserving_link([("mode", "edit_user")]), "new")
+        html.context_button(_("Custom Attributes"), folder_preserving_link([("mode", "user_attrs")]), "custom_attr")
         if 'wato_users' not in config.userdb_automatic_sync:
             html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
         if config.may("general.notify"):
             html.context_button(_("Notify Users"), 'notify.py', "notification")
-        html.context_button(_("LDAP Connections"), folder_link([("mode", "ldap_config")]), "ldap")
+        html.context_button(_("LDAP Connections"), folder_preserving_link([("mode", "ldap_config")]), "ldap")
         return
 
     # Execute all connectors synchronisations of users. This must be done before
@@ -9872,16 +9873,16 @@ def mode_users(phase):
         # Buttons
         table.cell(_("Actions"), css="buttons")
         if connection: # only show edit buttons when the connector is available and enabled
-            edit_url = folder_link([("mode", "edit_user"), ("edit", id)])
+            edit_url = folder_preserving_link([("mode", "edit_user"), ("edit", id)])
             html.icon_button(edit_url, _("Properties"), "edit")
 
-            clone_url = folder_link([("mode", "edit_user"), ("clone", id)])
+            clone_url = folder_preserving_link([("mode", "edit_user"), ("clone", id)])
             html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
         delete_url = make_action_link([("mode", "users"), ("_delete", id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        notifications_url = folder_link([("mode", "user_notifications"), ("user", id)])
+        notifications_url = folder_preserving_link([("mode", "user_notifications"), ("user", id)])
         if load_configuration_settings().get("enable_rulebased_notifications"):
             html.icon_button(notifications_url, _("Custom notification table of this user"), "notifications")
 
@@ -9935,14 +9936,14 @@ def mode_users(phase):
         table.cell(_("Roles"))
         if user.get("roles", []):
             html.write(", ".join(
-               [ '<a href="%s">%s</a>' % (folder_link([("mode", "edit_role"), ("edit", r)]), roles[r].get('alias')) for r in user["roles"]]))
+               [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_role"), ("edit", r)]), roles[r].get('alias')) for r in user["roles"]]))
 
         # contact groups
         table.cell(_("Contact groups"))
         cgs = user.get("contactgroups", [])
         if cgs:
             html.write(", ".join(
-               [ '<a href="%s">%s</a>' % (folder_link([("mode", "edit_contact_group"), ("edit", c)]),
+               [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)]),
                                           c in contact_groups and contact_groups[c]['alias'] or c) for c in cgs]))
         else:
             html.write("<i>" + _("none") + "</i>")
@@ -9962,7 +9963,7 @@ def mode_users(phase):
                 if tp != "24X7" and tp not in timeperiods:
                     tp = tp + _(" (invalid)")
                 elif tp != "24X7":
-                    url = folder_link([("mode", "edit_timeperiod"), ("edit", tp)])
+                    url = folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tp)])
                     tp = '<a href="%s">%s</a>' % (url, timeperiods[tp].get("alias", tp))
                 else:
                     tp = _("Always")
@@ -10001,9 +10002,9 @@ def mode_edit_user(phase):
             return _("Edit user %s" % userid)
 
     elif phase == "buttons":
-        html.context_button(_("All Users"), folder_link([("mode", "users")]), "back")
+        html.context_button(_("All Users"), folder_preserving_link([("mode", "users")]), "back")
         if rulebased_notifications and not new:
-            html.context_button(_("Notifications"), folder_link([("mode", "user_notifications"),
+            html.context_button(_("Notifications"), folder_preserving_link([("mode", "user_notifications"),
                     ("user", userid)]), "notifications")
         return
 
@@ -10313,14 +10314,14 @@ def mode_edit_user(phase):
     for role_id, role in entries:
         if not is_locked('roles'):
             html.checkbox("role_" + role_id, role_id in user.get("roles", []))
-            url = folder_link([("mode", "edit_role"), ("edit", role_id)])
+            url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
             html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
         else:
             is_member = role_id in user.get("roles", [])
             if is_member:
                 is_member_of_at_least_one = True
 
-                url = folder_link([("mode", "edit_role"), ("edit", role_id)])
+                url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
                 html.write("<a href='%s'>%s</a><br>" % (url, role["alias"]))
 
             html.hidden_field("role_" + role_id, is_member and '1' or '')
@@ -10331,8 +10332,8 @@ def mode_edit_user(phase):
     # Contact groups
     forms.header(_("Contact Groups"), isopen=False)
     forms.section()
-    url1 = folder_link([("mode", "contact_groups")])
-    url2 = folder_link([("mode", "rulesets"), ("group", "grouping")])
+    url1 = folder_preserving_link([("mode", "contact_groups")])
+    url2 = folder_preserving_link([("mode", "rulesets"), ("group", "grouping")])
     if len(contact_groups) == 0:
         html.write(_("Please first create some <a href='%s'>contact groups</a>") %
                 url1)
@@ -10345,14 +10346,14 @@ def mode_edit_user(phase):
                 alias = gid
             if not is_locked('contactgroups'):
                 html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
-                url = folder_link([("mode", "edit_contact_group"), ("edit", gid)])
+                url = folder_preserving_link([("mode", "edit_contact_group"), ("edit", gid)])
                 html.write(" <a href=\"%s\">%s</a><br>" % (url, alias))
             else:
                 is_member = gid in user.get("contactgroups", [])
                 if is_member:
                     is_member_of_at_least_one = True
 
-                    url = folder_link([("mode", "edit_contact_group"), ("edit", gid)])
+                    url = folder_preserving_link([("mode", "edit_contact_group"), ("edit", gid)])
                     html.write("<a href='%s'>%s</a><br>" % (url, alias))
 
                 html.hidden_field("cg_" + gid, is_member and '1' or '')
@@ -10513,7 +10514,7 @@ def mode_roles(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("Matrix"), folder_link([("mode", "role_matrix")]), "matrix")
+        html.context_button(_("Matrix"), folder_preserving_link([("mode", "role_matrix")]), "matrix")
         return
 
     roles = userdb.load_roles()
@@ -10564,7 +10565,7 @@ def mode_roles(phase):
 
         # Actions
         table.cell(_("Actions"), css="buttons")
-        edit_url = folder_link([("mode", "edit_role"), ("edit", id)])
+        edit_url = folder_preserving_link([("mode", "edit_role"), ("edit", id)])
         clone_url = html.makeactionuri([("_clone", id)])
         delete_url = html.makeactionuri([("_delete", id)])
         html.icon_button(edit_url, _("Properties"), "edit")
@@ -10587,7 +10588,7 @@ def mode_roles(phase):
 
         # Users
         table.cell(_("Users"),
-          ", ".join([ '<a href="%s">%s</a>' % (folder_link([("mode", "edit_user"), ("edit", user_id)]),
+          ", ".join([ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]),
              user.get("alias", user_id))
             for (user_id, user) in users.items() if (id in user["roles"])]))
 
@@ -10608,7 +10609,7 @@ def mode_edit_role(phase):
         return _("Edit user role %s") % id
 
     elif phase == "buttons":
-        html.context_button(_("All Roles"), folder_link([("mode", "roles")]), "back")
+        html.context_button(_("All Roles"), folder_preserving_link([("mode", "roles")]), "back")
         return
 
     # Make sure that all dynamic permissions are available (e.g. those for custom
@@ -10776,7 +10777,7 @@ def mode_role_matrix(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("Back"), folder_link([("mode", "roles")]), "back")
+        html.context_button(_("Back"), folder_preserving_link([("mode", "roles")]), "back")
         return
 
     elif phase == "action":
@@ -10851,8 +10852,8 @@ def mode_hosttags(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New Tag group"), folder_link([("mode", "edit_hosttag")]), "new")
-        html.context_button(_("New Aux tag"), folder_link([("mode", "edit_auxtag")]), "new")
+        html.context_button(_("New Tag group"), folder_preserving_link([("mode", "edit_hosttag")]), "new")
+        html.context_button(_("New Aux tag"), folder_preserving_link([("mode", "edit_auxtag")]), "new")
         return
 
     hosttags, auxtags = load_hosttags()
@@ -10987,7 +10988,7 @@ def render_host_tag_list(hosttags, builtin_hosttags):
             if tag_type == "builtin":
                 html.write("<i>(builtin)</i>")
             else:
-                edit_url     = folder_link([("mode", "edit_hosttag"), ("edit", tag_id)])
+                edit_url     = folder_preserving_link([("mode", "edit_hosttag"), ("edit", tag_id)])
                 delete_url   = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
                 if nr == 0:
                     html.empty_icon_button()
@@ -11037,7 +11038,7 @@ def render_aux_tag_list(auxtags, builtin_auxtags):
             if tag_type == "builtin":
                 html.write("<i>(builtin)</i>")
             else:
-                edit_url     = folder_link([("mode", "edit_auxtag"), ("edit", nr)])
+                edit_url     = folder_preserving_link([("mode", "edit_auxtag"), ("edit", nr)])
                 delete_url   = make_action_link([("mode", "hosttags"), ("_delaux", nr)])
                 html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
                 html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
@@ -11061,7 +11062,7 @@ def mode_edit_auxtag(phase):
             return _("Edit auxiliary tag")
 
     elif phase == "buttons":
-        html.context_button(_("All Hosttags"), folder_link([("mode", "hosttags")]), "back")
+        html.context_button(_("All Hosttags"), folder_preserving_link([("mode", "hosttags")]), "back")
         return
 
     hosttags, auxtags = load_hosttags()
@@ -11178,7 +11179,7 @@ def mode_edit_hosttag(phase):
             return _("Edit tag group")
 
     elif phase == "buttons":
-        html.context_button(_("All Hosttags"), folder_link([("mode", "hosttags")]), "back")
+        html.context_button(_("All Hosttags"), folder_preserving_link([("mode", "hosttags")]), "back")
         return
 
     hosttags, auxtags = load_hosttags()
@@ -11454,7 +11455,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         message += _("Rulesets that contain rules with references to the changed tags") + ":<ul>"
         for rulespec in affected_rulespecs:
             message += '<li><a href="%s">%s</a></li>' % (
-                folder_link([("mode", "edit_ruleset"), ("varname", rulespec["varname"])]),
+                folder_preserving_link([("mode", "edit_ruleset"), ("varname", rulespec["varname"])]),
                 rulespec["title"])
         message += "</ul>"
 
@@ -11694,9 +11695,9 @@ def mode_ruleeditor(phase):
         global_buttons()
         if only_host:
             html.context_button(only_host,
-                folder_link([("mode", "edit_host"), ("host", only_host)]), "host")
+                folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
 
-        html.context_button(_("Ineffective rules"), folder_link([("mode", "ineffective_rules")]), "usedrulesets")
+        html.context_button(_("Ineffective rules"), folder_preserving_link([("mode", "ineffective_rules")]), "usedrulesets")
         return
 
     elif phase == "action":
@@ -11718,7 +11719,7 @@ def mode_ruleeditor(phase):
             groupnames.append(main_group)
     menu = []
     for groupname in groupnames + ["used"]:
-        url = folder_link([("mode", "rulesets"), ("group", groupname),
+        url = folder_preserving_link([("mode", "rulesets"), ("group", groupname),
                          ("host", only_host), ("local", only_local)])
         if groupname == "used":
             title = _("Used Rulesets")
@@ -11765,9 +11766,9 @@ def mode_ineffective_rules(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("All Rulesets"), folder_link([("mode", "ruleeditor")]), "back")
+        html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
         if config.may("wato.hosts") or config.may("wato.seeall"):
-            html.context_button(_("Folder"), folder_link([("mode", "folder")]), "folder")
+            html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
         return
 
     elif phase == "action":
@@ -11813,7 +11814,7 @@ def mode_ineffective_rules(phase):
             titlename = g_rulegroups[groupname.split("/")[0]][0]
             rulegroup, test = g_rulegroups.get(groupname, (groupname, ""))
             html.write("<div>")
-            ruleset_url = folder_link([("mode", "edit_ruleset"), ("varname", varname)])
+            ruleset_url = folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])
             table.begin("ineffective_rules", title = _("<a href='%s'>%s</a> (%s)") % (ruleset_url, rulespec["title"], titlename), css="ruleset")
             for rel_rulenr, (f, rule) in ineffective_rules:
                 value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
@@ -11821,7 +11822,7 @@ def mode_ineffective_rules(phase):
 
                 # Actions
                 table.cell("Actions", css="buttons")
-                edit_url = folder_link([
+                edit_url = folder_preserving_link([
                     ("mode", "edit_rule"),
                     ("varname", varname),
                     ("rulenr", rel_rulenr),
@@ -11895,17 +11896,17 @@ def mode_rulesets(phase, group=None):
         if only_host:
             home_button()
             if group != "static":
-                html.context_button(_("All Rulesets"), folder_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
+                html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             html.context_button(only_host,
-                 folder_link([("mode", "edit_host"), ("host", only_host)]), "host")
+                 folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
         else:
             global_buttons()
             if group != "static":
-                html.context_button(_("All Rulesets"), folder_link([("mode", "ruleeditor")]), "back")
+                html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
             if config.may("wato.hosts") or config.may("wato.seeall"):
-                html.context_button(_("Folder"), folder_link([("mode", "folder")]), "folder")
+                html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
             if group == "agents":
-                html.context_button(_("Agent Bakery"), folder_link([("mode", "agents")]), "agents")
+                html.context_button(_("Agent Bakery"), folder_preserving_link([("mode", "agents")]), "agents")
         return
 
     elif phase == "action":
@@ -12017,7 +12018,7 @@ def mode_rulesets(phase, group=None):
             url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
             if only_host:
                 url_vars.append(("host", only_host))
-            view_url = folder_link(url_vars)
+            view_url = folder_preserving_link(url_vars)
             html.write('<div class="ruleset%s" title="%s"><div class=text>' %
                                 (float_cls, html.strip_tags(rulespec["help"] or '')))
             html.write('<a class="%s" href="%s">%s</a>' %
@@ -12126,21 +12127,21 @@ def mode_edit_ruleset(phase):
 
         if config.may('wato.rulesets'):
             if not rulespec:
-                html.context_button(_("All Rulesets"), folder_link([("mode", "ruleeditor")]), "back")
+                html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
             else:
                 group = rulespec["group"].split("/")[0]
                 groupname = g_rulegroups[group][0]
                 html.context_button(groupname,
-                      folder_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
+                      folder_preserving_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
             html.context_button(_("Used Rulesets"),
-                 folder_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
+                 folder_preserving_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
 
         if hostname:
             html.context_button(_("Services"),
-                 folder_link([("mode", "inventory"), ("host", hostname)]), "services")
+                 folder_preserving_link([("mode", "inventory"), ("host", hostname)]), "services")
             if config.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
-                      folder_link([("mode", "object_parameters"), ("host", hostname), ("service", item)]), "rulesets")
+                      folder_preserving_link([("mode", "object_parameters"), ("host", hostname), ("service", item)]), "rulesets")
         return
 
     elif phase == "action":
@@ -12327,7 +12328,7 @@ def mode_edit_ruleset(phase):
                 rule_button(None)
 
             table.cell(_("Actions"), css="buttons rulebuttons")
-            edit_url = folder_link([
+            edit_url = folder_preserving_link([
                 ("mode", "edit_rule"),
                 ("varname", varname),
                 ("rulenr", rel_rulenr),
@@ -12713,9 +12714,9 @@ def mode_edit_rule(phase, new = False):
             var_list = [("mode", "edit_ruleset"), ("varname", varname), ("host", html.var("host",""))]
             if html.var("item"):
                 var_list.append( ("item", html.var("item")) )
-            backurl = folder_link(var_list)
+            backurl = folder_preserving_link(var_list)
         else:
-            backurl = folder_link([('mode', back_mode), ("host", html.var("host",""))])
+            backurl = folder_preserving_link([('mode', back_mode), ("host", html.var("host",""))])
         html.context_button(_("Abort"), backurl, "abort")
         return
 
@@ -14142,7 +14143,7 @@ def mode_pattern_editor(phase):
             return _("Logfile Patterns of Logfile %s on Host %s") % (item, hostname)
 
     elif phase == "buttons":
-        html.context_button(_("Main Menu"), folder_link([("mode", "main")]), "home")
+        home_button()
         if host:
             if item:
                 title = _("Show Logfile")
@@ -14153,7 +14154,7 @@ def mode_pattern_editor(phase):
             html.context_button(title, "logwatch.py?host=%s&amp;file=%s%s" %
                 (html.urlencode(hostname), html.urlencode(item), master_url), 'logwatch')
 
-        html.context_button(_('Edit Logfile Rules'), folder_link([
+        html.context_button(_('Edit Logfile Rules'), folder_preserving_link([
                 ('mode', 'edit_ruleset'),
                 ('varname', 'logwatch_rules')
             ]),
@@ -14204,7 +14205,7 @@ def mode_pattern_editor(phase):
         html.write(
             "<div class=info>"
             + _('There are no logfile patterns defined. You may create '
-                'logfile patterns using the <a href="%s">Rule Editor</a>.') % folder_link([
+                'logfile patterns using the <a href="%s">Rule Editor</a>.') % folder_preserving_link([
                     ('mode', 'edit_ruleset'),
                     ('varname', 'logwatch_rules')
                 ])
@@ -14309,7 +14310,7 @@ def mode_pattern_editor(phase):
             odd = odd == "odd" and "even" or "odd"
 
         html.write('<tr class="data %s0"><td colspan=5>' % odd)
-        edit_url = folder_link([
+        edit_url = folder_preserving_link([
             ("mode", "edit_rule"),
             ("varname", varname),
             ("rulenr", rel_rulenr),
@@ -14342,7 +14343,7 @@ def mode_bi_aggregations(phase):
     aggregations, aggregation_rules = load_bi_rules()
 
     if phase == "buttons":
-        html.context_button(_("Main Menu"), folder_link([("mode", "main")]), "home")
+        home_button()
         html.context_button(_("Rules"), html.makeuri([("mode", "bi_rules")]), "aggr")
         if aggregation_rules:
             html.context_button(_("New Aggregation"),
@@ -14393,7 +14394,7 @@ def mode_bi_rules(phase):
     view_type = html.var("view", "list")
 
     if phase == "buttons":
-        html.context_button(_("Main Menu"), folder_link([("mode", "main")]), "home")
+        home_button()
 
         if view_type == "list":
             html.context_button(_("Aggregations"), html.makeuri_contextless([("mode", "bi_aggregations")]), "aggr")
@@ -14523,7 +14524,7 @@ def mode_bi_rule_tree(phase):
     aggregations, aggregation_rules = load_bi_rules()
 
     if phase == "buttons":
-        html.context_button(_("Main Menu"), folder_link([("mode", "main")]), "home")
+        home_button()
         html.context_button(_("Back"), html.makeuri([("mode", "bi_rules")]), "back")
         return
 
@@ -15152,7 +15153,7 @@ def mode_bi_edit_aggregation(phase):
             return _("BI - Edit Aggregation")
 
     elif phase == "buttons":
-        html.context_button(_("Abort"), folder_link([("mode", "bi_rules")]), "abort")
+        html.context_button(_("Abort"), folder_preserving_link([("mode", "bi_rules")]), "abort")
         return
 
     aggregations, aggregation_rules = load_bi_rules()
@@ -15372,7 +15373,7 @@ def mode_edit_custom_attr(phase, what):
                 return _("Edit User Attribute")
 
     elif phase == "buttons":
-        html.context_button(_("User Attributes"), folder_link([("mode", "%s_attrs" % what)]), "back")
+        html.context_button(_("User Attributes"), folder_preserving_link([("mode", "%s_attrs" % what)]), "back")
         return
 
     all_attrs = userdb.load_custom_attrs()
@@ -15507,8 +15508,8 @@ def mode_custom_attrs(phase, what):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("Users"), folder_link([("mode", "users")]), "back")
-        html.context_button(_("New Attribute"), folder_link([("mode", "edit_%s_attr" % what)]), "new")
+        html.context_button(_("Users"), folder_preserving_link([("mode", "users")]), "back")
+        html.context_button(_("New Attribute"), folder_preserving_link([("mode", "edit_%s_attr" % what)]), "new")
         return
 
     all_attrs = userdb.load_custom_attrs()
@@ -15551,7 +15552,7 @@ def mode_custom_attrs(phase, what):
         table.row()
 
         table.cell(_("Actions"), css="buttons")
-        edit_url = folder_link([("mode", "edit_%s_attr" % what), ("edit", attr['name'])])
+        edit_url = folder_preserving_link([("mode", "edit_%s_attr" % what), ("edit", attr['name'])])
         delete_url = html.makeactionuri([("_delete", attr['name'])])
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(delete_url, _("Delete"), "delete")
@@ -15980,7 +15981,7 @@ def mode_download_agents(phase):
     elif phase == "buttons":
         global_buttons()
         if 'agents' in modes:
-            html.context_button(_("Baked Agents"), folder_link([("mode", "agents")]), "download_agents")
+            html.context_button(_("Baked Agents"), folder_preserving_link([("mode", "agents")]), "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
         return
 
@@ -16205,7 +16206,7 @@ def global_buttons():
 
 
 def home_button():
-    html.context_button(_("Main Menu"), folder_link([("mode", "main")]), "home")
+    html.context_button(_("Main Menu"), folder_preserving_link([("mode", "main")]), "home")
 
 
 def changelog_button():
@@ -16218,7 +16219,7 @@ def changelog_button():
         buttontext = _("No Changes")
         hot = False
         icon = "wato_nochanges"
-    html.context_button(buttontext, folder_link([("mode", "changelog")]), icon, hot)
+    html.context_button(buttontext, folder_preserving_link([("mode", "changelog")]), icon, hot)
 
 
 # Show confirmation dialog, send HTML-header if dialog is shown.
@@ -16716,7 +16717,7 @@ modes = {
    "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
    "object_parameters"  : (["hosts", "rulesets"], mode_object_parameters),
    "search"             : (["hosts"], mode_search),
-   "bulkinventory"      : (["hosts", "services"], mode_bulk_inventory),
+   "bulkinventory"      : (["hosts", "services"], mode_bulk_discovery),
    "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
    "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),
    "random_hosts"       : (["hosts", "random_hosts"], mode_random_hosts),

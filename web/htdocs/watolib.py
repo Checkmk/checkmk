@@ -1247,6 +1247,8 @@ class Folder(FolderLike):
                 break
         if not have_mode:
             url_vars.append(("mode", "folder"))
+        if html.var("debug") == "1":
+            add_vars.append(("debug", "1"))
         url_vars += add_vars
         return html.makeuri_contextless(url_vars)
 
@@ -2490,7 +2492,7 @@ class ContactGroupsAttribute(Attribute):
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, group in items:
             html.checkbox(varprefix + self._name + "_n_" + name, name in value["groups"])
-            html.write(' <a href="%s">%s</a><br>' % (folder_link([("mode", "edit_contact_group"), ("edit", name)]), group['alias'] and group['alias'] or name))
+            html.write(' <a href="%s">%s</a><br>' % (folder_preserving_link([("mode", "edit_contact_group"), ("edit", name)]), group['alias'] and group['alias'] or name))
         html.write("<hr>")
         if is_host:
             html.checkbox(varprefix + self._name + "_use", value["use"], label = _("Add these contact groups to host"))
@@ -3625,14 +3627,12 @@ def need_sidebar_reload():
     g_need_sidebar_reload = id(html)
 
 
-def folder_link(vars):
-    vars = vars + [ ("folder", Folder.current().path()) ]
-    if html.var("debug") == "1":
-        vars.append(("debug", "1"))
-    return html.makeuri_contextless(vars)
+def folder_preserving_link(add_vars):
+    return Folder.current().url(add_vars)
+
 
 def make_action_link(vars):
-    return folder_link(vars + [("_transid", html.get_transid())])
+    return folder_preserving_link(vars + [("_transid", html.get_transid())])
 
 def lock_exclusive():
     aquire_lock(defaults.default_config_dir + "/multisite.mk")

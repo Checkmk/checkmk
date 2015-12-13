@@ -1149,6 +1149,10 @@ class html(GUITester):
         else:
             return val
 
+
+    def all_vars(self):
+        return self.vars
+
     # Return all values of a variable that possible occurs more
     # than once in the URL. note: self.listvars does contain those
     # variable only, if the really occur more than once.

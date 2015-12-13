@@ -384,6 +384,10 @@ class FolderLike(WithPermissionsAndAttributes):
         return False
 
 
+    def is_search_folder(self):
+        return False
+
+
     def has_parent(self):
         return self.parent() != None
 
@@ -1590,7 +1594,7 @@ class Folder(FolderLike):
 class SearchFolder(FolderLike):
     @staticmethod
     def criteria_from_html_vars():
-        crit = { ".name" : html.var("host") }
+        crit = { ".name" : html.var("host_search_host") }
         crit.update(collect_attributes("host_search", do_validate = False))
         return crit
 
@@ -1622,6 +1626,10 @@ class SearchFolder(FolderLike):
         return self._base_folder
 
 
+    def is_search_folder(self):
+        return True
+
+
     def user_needs_permission(self, user_id, how):
         pass
 
@@ -1644,6 +1652,14 @@ class SearchFolder(FolderLike):
         return False
 
 
+    def show_locking_information(self):
+        pass
+
+
+    def has_subfolders(self):
+        return False
+
+
     def choices_for_moving_host(self):
         return Folder.folder_choices()
 
@@ -1655,12 +1671,16 @@ class SearchFolder(FolderLike):
             return self._base_folder.path() + "//search"
 
 
-    def has_subfolders(self):
-        return False
+    def url(self, add_vars = []):
+        url_vars = [("host_search", "1")] + add_vars
+
+        for varname, value in html.all_vars().items():
+            if varname.startswith("host_search_") \
+                or varname.startswith("_change"):
+                url_vars.append((varname, value))
+        return self.parent().url(url_vars)
 
 
-    def show_locking_information(self):
-        pass
 
     # .--------------------------------------------------------------------.
     # | ACTIONS                                                            |

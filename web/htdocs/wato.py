@@ -332,9 +332,11 @@ def mode_folder(phase):
             folder_status_button()
             if config.may("wato.random_hosts"):
                 html.context_button(_("Random Hosts"), folder.url([("mode", "random_hosts")]), "random")
+            html.context_button(_("Search"), folder_link([("mode", "search")]), "search")
         else:
             html.context_button(_("Back"), folder.parent().url(), "back")
-        search_button()
+            html.context_button(_("Refine Search"), folder.url([("mode", "search")]), "search")
+
 
     elif phase == "action":
         if html.var("_search"): # just commit to search form
@@ -678,6 +680,8 @@ def show_hosts(folder):
         colspan += 1
     if show_checkboxes:
         colspan += 1
+    if folder.is_search_folder():
+        colspan += 1
 
     # Add the bulk action buttons also to the top of the table when this
     # list shows more than 10 rows
@@ -773,6 +777,11 @@ def show_hosts(folder):
             tag_title = "|".join([ '%s' % t for t in host.tags() ])
             table.cell(_("Tags"), help=tag_title, css="tag-ellipsis")
             html.write("<b style='color: #888;'>|</b>&#8203;".join([ '<nobr>%s</nobr>' % t for t in host.tags() ]))
+
+        # Located in folder
+        if folder.is_search_folder():
+            table.cell(_("Folder"))
+            html.write('<a href="%s">%s</a>' % (host.folder().url(), host.folder().alias_path()))
 
         # Move to
         if not folder.locked_hosts() and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
@@ -2823,12 +2832,12 @@ def ajax_execute_check():
 #   |                  |____/ \___|\__,_|_|  \___|_| |_|                   |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Dialog for searching for hosts - globally in all files               |
+#   | Dialog for searching for hosts                                       |
 #   '----------------------------------------------------------------------'
 
 def mode_search(phase):
     if phase == "title":
-        return _("Search for hosts")
+        return _("Search for hosts below %s") % Folder.current().title()
 
     elif phase == "buttons":
         global_buttons()
@@ -2841,18 +2850,17 @@ def mode_search(phase):
     Folder.current().show_breadcrump()
 
     ## # Show search form
-    html.begin_form("edit_host", method = "POST")
+    html.begin_form("edit_host", method="GET")
     forms.header(_("General Properties"))
     forms.section(_("Hostname"))
-    html.text_input("host")
-    html.set_focus("host")
+    html.text_input("host_search_host")
+    html.set_focus("host_search_host")
 
     # Attributes
     configure_attributes(False, {}, "host_search", parent = None)
 
     # Button
     forms.end()
-    html.button("_global", _("Search globally"), "submit")
     html.button("_local", _("Search in %s") % Folder.current().title(), "submit")
     html.hidden_field("host_search", "1")
     html.hidden_fields()
@@ -3361,7 +3369,7 @@ def mode_bulk_cleanup(phase):
         return _("Bulk removal of explicit attributes")
 
     elif phase == "buttons":
-        html.context_button(_("Folder"), folder.url(), "back")
+        html.context_button(_("Back"), folder.url(), "back")
         return
 
     elif phase == "action":
@@ -16198,10 +16206,6 @@ def global_buttons():
 
 def home_button():
     html.context_button(_("Main Menu"), folder_link([("mode", "main")]), "home")
-
-
-def search_button():
-    html.context_button(_("Search"), folder_link([("mode", "search")]), "search")
 
 
 def changelog_button():

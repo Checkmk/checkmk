@@ -31,10 +31,11 @@
 # WATO modes. Nor complex HTML creation. This is all contained
 # in wato.py
 
-# TODO: Wenn man mehrere Hosts auf einmal umbenennt und in der Mitte
-# ein Berechtigungsproblem auftritt, dann sind die bis dahin umbenannten
-# Hosts im WATO schon gespeichert, aber die automation wird nicht
-# mehr ausgeführt.
+# TODO Search hosts
+# - Fund-Ordner in der Tabelle mit anzeigen
+# - Umbau der Attribute auch in den treasures
+# - Attribute kompatibel machen? Aber wie?
+# - Alles Permissionprüfen nach watolib.py in die Klassen umziehen
 
 import os, shutil, subprocess
 import defaults, config, hooks, userdb
@@ -265,13 +266,9 @@ def log_commit_pending():
 # create, delete   mean actual filesystem operations
 # add, remove      mean just modifications in the data structures
 
-
-# Base class containing a couple of generic permission checking functions, used
-# for Host and Folder
-class WithPermissionsAndAttributes(object):
+class WithPermissions(object):
     def __init__(self):
         object.__init__(self)
-
 
     def may(self, how): # how is "read" or "write"
         return self.user_may(config.user_id, how)
@@ -301,6 +298,13 @@ class WithPermissionsAndAttributes(object):
             return "%s" % e
 
 
+
+# Base class containing a couple of generic permission checking functions, used
+# for Host and Folder
+class WithPermissionsAndAttributes(WithPermissions):
+    def __init__(self):
+        WithPermissions.__init__(self)
+
     # .--------------------------------------------------------------------.
     # | ATTRIBUTES                                                         |
     # '--------------------------------------------------------------------'
@@ -314,7 +318,7 @@ class WithPermissionsAndAttributes(object):
 
 
     def has_explicit_attribute(self, attrname):
-        return attrname in self._attributes
+        return attrname in self.attributes()
 
 
     def effective_attribute(self, attrname, default_value=None):
@@ -322,7 +326,152 @@ class WithPermissionsAndAttributes(object):
 
 
     def remove_attribute(self, attrname):
-        del self._attributes[attrname]
+        del self.attributes()[attrname]
+
+
+#.
+#   .--FolderLike----------------------------------------------------------.
+#   |            _____     _     _           _     _ _                     |
+#   |           |  ___|__ | | __| | ___ _ __| |   (_) | _____              |
+#   |           | |_ / _ \| |/ _` |/ _ \ '__| |   | | |/ / _ \             |
+#   |           |  _| (_) | | (_| |  __/ |  | |___| |   <  __/             |
+#   |           |_|  \___/|_|\__,_|\___|_|  |_____|_|_|\_\___|             |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Base class of SearchFolder and Folder. Implements common methods.   |
+#   '----------------------------------------------------------------------'
+
+class FolderLike(WithPermissionsAndAttributes):
+    def __init__(self):
+        WithPermissions.__init__(self)
+
+
+    def host_names(self):
+        return self.hosts().keys()
+
+
+    def host(self, host_name):
+        return self.hosts().get(host_name)
+
+
+    def has_host(self, host_name):
+        return host_name in self.hosts()
+
+
+    def has_hosts(self):
+        return len(self.hosts()) != 0
+
+
+    def num_hosts_recursively(self):
+        num = self.num_hosts()
+        for subfolder in self.subfolders().values():
+            num += subfolder.num_hosts_recursively()
+        return num
+
+
+    def host_validation_errors(self):
+        return validate_all_hosts(self.host_names())
+
+
+    def is_disk_folder(self):
+        return False
+
+
+    def has_parent(self):
+        return self.parent() != None
+
+
+    def is_same_as(self, folder):
+        return self == folder or self.path() == folder.path()
+
+
+    def is_current_folder(self):
+        return self.is_same_as(Folder.current())
+
+
+    def is_parent_of(self, maybe_child):
+        return maybe_child.parent() == self
+
+
+    def is_transitive_parent_of(self, maybe_child):
+        if self.is_same_as(maybe_child):
+            return True
+        elif maybe_child.has_parent():
+            return self.is_transitive_parent_of(maybe_child.parent())
+        else:
+            return False
+
+
+    def is_root(self):
+        return not self.has_parent()
+
+
+    def parent_folder_chain(self):
+        folders = []
+        folder = self.parent()
+        while folder:
+            folders.append(folder)
+            folder = folder.parent()
+        return folders[::-1]
+
+
+    def show_breadcrump(self, link_to_folder=False, keepvarnames=["mode"]):
+        keepvars = [ (name, html.var(name)) for name in keepvarnames ]
+        if link_to_folder:
+            keepvars.append(("mode", "folder"))
+
+        def render_component(folder):
+            return '<a href="%s">%s</a>' % (html.makeuri_contextless([("folder", folder.path())] + keepvars), folder.title())
+
+        def breadcrump_element_start(end = '', z_index = 0):
+            html.write('<li style="z-index:%d;"><div class="left %s"></div>' % (z_index, end))
+
+        def breadcrump_element_end(end = ''):
+            html.write('<div class="right %s"></div></li>' % end)
+
+
+        parts = []
+        for folder in self.parent_folder_chain():
+            parts.append(render_component(folder))
+
+        # The current folder (with link or without link)
+        if link_to_folder:
+            parts.append(render_component(self))
+        else:
+            parts.append(self.title())
+
+
+        # Render the folder path
+        html.write("<div class=folderpath><ul>\n")
+        num = 0
+        for part in parts:
+            if num == 0:
+                breadcrump_element_start('end', z_index = 100 + num)
+            else:
+                breadcrump_element_start(z_index = 100 + num)
+            html.write('<div class=content>%s</div>\n' % part)
+
+            breadcrump_element_end(num == len(parts)-1
+                      and not (self.has_subfolders() and not link_to_folder)
+                      and "end" or "")
+            num += 1
+
+        # Render the current folder when having subfolders
+        if self.has_subfolders() and not link_to_folder:
+            breadcrump_element_start(z_index = 100 + num)
+            html.write("<div class=content><form method=GET name=folderpath>")
+            html.sorted_select(
+                "folder", [ ("", "") ] + self.subfolder_choices(),
+                onchange = "folderpath.submit();",
+                attrs = { "class": "folderpath", }
+            )
+            for var in keepvarnames:
+                html.hidden_field(var, html.var(var))
+            html.write("</form></div>")
+            breadcrump_element_end('end')
+
+        html.write("</ul></div>\n")
+
 
 
 #.
@@ -339,7 +488,7 @@ class WithPermissionsAndAttributes(object):
 #   '----------------------------------------------------------------------'
 
 
-class Folder(WithPermissionsAndAttributes):
+class Folder(FolderLike):
     # TODO: Private Methoden von öffentlichen trennen
 
     # .--------------------------------------------------------------------.
@@ -352,6 +501,11 @@ class Folder(WithPermissionsAndAttributes):
             wato_folders = html.set_cache("wato_folders", {})
             Folder("", "").add_to_dictionary(wato_folders)
         return html.get_cached("wato_folders")
+
+
+    @staticmethod
+    def folder_choices():
+        return Folder.root_folder().recursive_subfolder_choices()
 
 
     @staticmethod
@@ -384,7 +538,11 @@ class Folder(WithPermissionsAndAttributes):
     @staticmethod
     def current():
         if not html.is_cached("wato_current_folder"):
-            if html.has_var("folder"):
+            if html.has_var("host_search"):
+                base_folder = Folder.folder(html.var("folder", ""))
+                search_criteria = SearchFolder.criteria_from_html_vars()
+                folder = SearchFolder(base_folder, search_criteria)
+            elif html.has_var("folder"):
                 folder = Folder.folder(html.var("folder"))
             else:
                 host_name = html.var("host")
@@ -440,6 +598,14 @@ class Folder(WithPermissionsAndAttributes):
 
     def __repr__(self):
         return "Folder(%r, %r)" % (self.path(), self._title)
+
+
+    def parent(self):
+        return self._parent
+
+
+    def is_disk_folder(self):
+        return True
 
 
     def load_hosts_on_demand(self):
@@ -811,32 +977,9 @@ class Folder(WithPermissionsAndAttributes):
         return self._hosts
 
 
-    def host_names(self):
-        return self.hosts().keys()
-
-
-    def host(self, host_name):
-        return self.hosts().get(host_name)
-
-
-    def has_host(self, host_name):
-        return host_name in self.hosts()
-
-
     def num_hosts(self):
         # Do *not* load hosts here! This method must kept cheap
         return self._num_hosts
-
-
-    def has_hosts(self):
-        return len(self.hosts()) != 0
-
-
-    def num_hosts_recursively(self):
-        num = self.num_hosts()
-        for subfolder in self.subfolders().values():
-            num += subfolder.num_hosts_recursively()
-        return num
 
 
     def all_hosts_recursively(self):
@@ -845,39 +988,6 @@ class Folder(WithPermissionsAndAttributes):
         for subfolder in self.subfolders().values():
             hosts.update(subfolder.all_hosts_recursively())
         return hosts
-
-
-    def parent(self):
-        return self._parent
-
-
-    def has_parent(self):
-        return self._parent != None
-
-
-    def is_same_as(self, folder):
-        return self == folder or self.path() == folder.path()
-
-
-    def is_current_folder(self):
-        return self.is_same_as(Folder.current())
-
-
-    def is_parent_of(self, maybe_child):
-        return maybe_child.parent() == self
-
-
-    def is_transitive_parent_of(self, maybe_child):
-        if self.is_same_as(maybe_child):
-            return True
-        elif maybe_child.has_parent():
-            return self.is_transitive_parent_of(maybe_child.parent())
-        else:
-            return False
-
-
-    def is_root(self):
-        return not self.has_parent()
 
 
     def subfolders(self):
@@ -957,15 +1067,6 @@ class Folder(WithPermissionsAndAttributes):
 
     def subfolders_sorted_by_title(self):
         return sorted(self.subfolders().values(), cmp=lambda a,b: cmp(a.title(), b.title()))
-
-
-    def parent_folder_chain(self):
-        folders = []
-        folder = self.parent()
-        while folder:
-            folders.append(folder)
-            folder = folder.parent()
-        return folders[::-1]
 
 
     def site_id(self):
@@ -1075,10 +1176,6 @@ class Folder(WithPermissionsAndAttributes):
                 return host
 
 
-    def host_validation_errors(self):
-        return validate_all_hosts(self.host_names())
-
-
     def user_needs_permission(self, user_id, how):
         if config.user_may(user_id, "wato.all_folders"):
             return
@@ -1092,7 +1189,7 @@ class Folder(WithPermissionsAndAttributes):
             if c in permitted_groups:
                 return
 
-        reason = _("Sorry, you have no permissions to the folder <b>%s</b>. ") % self.title()
+        reason = _("Sorry, you have no permissions to the folder <b>%s</b>. ") % self.alias_path()
         if not permitted_groups:
             reason += _("The folder is not permitted for any contact group.")
         else:
@@ -1471,62 +1568,145 @@ class Folder(WithPermissionsAndAttributes):
             html.show_info(lock_message)
 
 
-    def show_breadcrump(self, link_to_folder=False, keepvarnames=["mode"]):
-        keepvars = [ (name, html.var(name)) for name in keepvarnames ]
-        if link_to_folder:
-            keepvars.append(("mode", "folder"))
 
-        def render_component(folder):
-            return '<a href="%s">%s</a>' % (html.makeuri_contextless([("folder", folder.path())] + keepvars), folder.title())
+#.
+#   .--Search Folder-------------------------------------------------------.
+#   |    ____                      _       _____     _     _               |
+#   |   / ___|  ___  __ _ _ __ ___| |__   |  ___|__ | | __| | ___ _ __     |
+#   |   \___ \ / _ \/ _` | '__/ __| '_ \  | |_ / _ \| |/ _` |/ _ \ '__|    |
+#   |    ___) |  __/ (_| | | | (__| | | | |  _| (_) | | (_| |  __/ |       |
+#   |   |____/ \___|\__,_|_|  \___|_| |_| |_|  \___/|_|\__,_|\___|_|       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  A virtual folder representing the result of a search.               |
+#   '----------------------------------------------------------------------'
+class SearchFolder(FolderLike):
+    @staticmethod
+    def criteria_from_html_vars():
+        crit = { ".name" : html.var("host") }
+        crit.update(collect_attributes("host_search", do_validate = False))
+        return crit
 
-        def breadcrump_element_start(end = '', z_index = 0):
-            html.write('<li style="z-index:%d;"><div class="left %s"></div>' % (z_index, end))
 
-        def breadcrump_element_end(end = ''):
-            html.write('<div class="right %s"></div></li>' % end)
+    def __init__(self, base_folder, criteria):
+        self._criteria = criteria
+        self._base_folder = base_folder
+        self._found_hosts = None
+        self._name = None
 
 
-        parts = []
-        for folder in self.parent_folder_chain():
-            parts.append(render_component(folder))
+    def __repr__(self):
+        return "SearchFolder(%r, %s)" % (self._base_folder.path(), self._name)
 
-        # The current folder (with link or without link)
-        if link_to_folder:
-            parts.append(render_component(self))
+
+    def attributes(self):
+        return {}
+
+
+    def parent(self):
+        return self._base_folder
+
+
+    def user_needs_permission(self, user_id, how):
+        pass
+
+
+    def title(self):
+        return _("Search results for folder %s") % self._base_folder.title()
+
+
+    def hosts(self):
+        if self._found_hosts == None:
+            self._found_hosts = self._search_hosts_recursively(self._base_folder)
+        return self._found_hosts
+
+
+    def locked_hosts(self):
+        return False
+
+
+    def locked_subfolders(self):
+        return False
+
+
+    def choices_for_moving_host(self):
+        return Folder.folder_choices()
+
+
+    def path(self):
+        if self._name:
+            return self._base_folder.path() + "//search:" + self_name
         else:
-            parts.append(self.title())
+            return self._base_folder.path() + "//search"
 
 
-        # Render the folder path
-        html.write("<div class=folderpath><ul>\n")
-        num = 0
-        for part in parts:
-            if num == 0:
-                breadcrump_element_start('end', z_index = 100 + num)
-            else:
-                breadcrump_element_start(z_index = 100 + num)
-            html.write('<div class=content>%s</div>\n' % part)
+    def has_subfolders(self):
+        return False
 
-            breadcrump_element_end(num == len(parts)-1
-                      and not (self.has_subfolders() and not link_to_folder)
-                      and "end" or "")
-            num += 1
 
-        # Render the current folder when having subfolders
-        if self.has_subfolders() and not link_to_folder:
-            breadcrump_element_start(z_index = 100 + num)
-            html.write("<div class=content><form method=GET name=folderpath>")
-            html.sorted_select(
-                "folder", [ ("", "") ] + self.subfolder_choices(),
-                onchange = "folderpath.submit();",
-                attrs = { "class": "folderpath", }
-            )
-            for var in keepvarnames:
-                html.hidden_field(var, html.var(var))
-            html.write("</form></div>")
-            breadcrump_element_end('end')
+    def show_locking_information(self):
+        pass
 
-        html.write("</ul></div>\n")
+
+    def delete_hosts(self, host_names):
+        auth_errors = []
+        for folder, host_names in self._group_hostnames_by_folder(host_names):
+            try:
+                folder.delete_hosts(host_names)
+            except MKAuthException, e:
+                auth_errors.append(_("<li>Cannot delete hosts in folder %s: %s</li>") % (folder.alias_path(), e))
+        self._invalidate_search()
+        if auth_errors:
+            raise MKAuthException(HTML(_("Some hosts could not be deleted:<ul>%s</ul>") % "".join(auth_errors)))
+
+
+    def _group_hostnames_by_folder(self, host_names):
+        by_folder = {}
+        for host_name in host_names:
+            host = self.host(host_name)
+            by_folder.setdefault(host.folder().path(), []).append(host)
+
+        return [ (hosts[0].folder(), [ host.name() for host in hosts ])
+                 for hosts in by_folder.values() ]
+
+
+    def _search_hosts_recursively(self, in_folder):
+        hosts = self._search_hosts(in_folder)
+        for subfolder in in_folder.subfolders().values():
+            hosts.update(self._search_hosts_recursively(subfolder))
+        return hosts
+
+
+    def _search_hosts(self, in_folder):
+        if not in_folder.may("read"):
+            return {}
+
+        found = {}
+        for host_name, host in in_folder.hosts().items():
+            if self._criteria[".name"] and self._criteria[".name"].lower() not in host_name.lower():
+                continue
+
+            # Compute inheritance
+            effective = host.effective_attributes()
+
+            # Check attributes
+            dont_match = False
+            for attr, topic in all_host_attributes():
+                attrname = attr.name()
+                if attrname in self._criteria and  \
+                    not attr.filter_matches(self._criteria[attrname], effective.get(attrname), host_name):
+                    dont_match = True
+                    break
+
+            if not dont_match:
+                found[host_name] = host
+
+        return found
+
+
+    def _invalidate_search(self):
+        self._found_hosts = None
+
 
 
 #.
@@ -1727,6 +1907,8 @@ class Host(WithPermissionsAndAttributes):
 
     def edit(self, attributes, cluster_nodes):
         # 1. Check preconditions
+        if attributes.get("contactgroups") != self._attributes.get("contactgroups"):
+            self._need_folder_write_permissions()
         self.need_permission("write")
         self.need_unlocked()
         must_be_in_contactgroups(attributes.get("contactgroups"))
@@ -1748,7 +1930,8 @@ class Host(WithPermissionsAndAttributes):
 
     def clean_attributes(self, attrnames_to_clean):
         # 1. Check preconditions
-        self.need_permission("write")
+        if "contactgroups" in attrnames_to_clean:
+            self._need_folder_write_permissions()
         self.need_unlocked()
 
         # 2. Actual modification
@@ -1759,6 +1942,12 @@ class Host(WithPermissionsAndAttributes):
         self.mark_dirty()
         self.folder().save_hosts()
         log_pending(AFFECTED, self, "edit-host", _("Removed explicit attributes of host %s.") % self.name())
+
+
+    def _need_folder_write_permissions(self):
+        if not self.folder().may("write"):
+            raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                    "access to the folder it is contained in."))
 
 
     def clear_discovery_failed(self):
@@ -1920,11 +2109,11 @@ class Attribute:
     # make it editable. If filter == True, then the field
     # is to be displayed in filter mode (as part of the
     # search filter)
-    def render_input(self, value):
+    def render_input(self, varprefix, value):
         pass
 
     # Create value from HTML variables.
-    def from_html_vars(self):
+    def from_html_vars(self, varprefix):
         return None
 
 
@@ -1938,7 +2127,7 @@ class Attribute:
 
     # Check if the value entered by the user is valid.
     # This method may raise MKUserError in case of invalid user input.
-    def validate_input(self):
+    def validate_input(self, varprefix):
         pass
 
     # If this attribute should be present in Nagios as
@@ -1976,24 +2165,24 @@ class TextAttribute(Attribute):
     def is_mandatory(self):
         return self._mandatory
 
-    def render_input(self, value):
+    def render_input(self, varprefix, value):
         if value == None:
             value = ""
-        html.text_input("attr_" + self.name(), value, size = self._size)
+        html.text_input(varprefix + "attr_" + self.name(), value, size = self._size)
 
-    def from_html_vars(self):
-        value = html.var_utf8("attr_" + self.name())
+    def from_html_vars(self, varprefix):
+        value = html.var_utf8(varprefix + "attr_" + self.name())
         if value == None:
             value = ""
         return value.strip()
 
-    def validate_input(self):
-        value = self.from_html_vars()
+    def validate_input(self, varprefix):
+        value = self.from_html_vars(varprefix)
         if self._mandatory and not value:
-            raise MKUserError("attr_" + self.name(),
+            raise MKUserError(varprefix + "attr_" + self.name(),
                   _("Please specify a value for %s") % self.title())
         if not self._allow_empty and value.strip() == "":
-            raise MKUserError("attr_" + self.name(),
+            raise MKUserError(varprefix + "attr_" + self.name(),
                   _("%s may be missing, if must not be empty if it is set.") % self.title())
 
 
@@ -2011,13 +2200,13 @@ class FixedTextAttribute(TextAttribute):
         TextAttribute.__init__(self, name, title, help, None)
         self._mandatory = False
 
-    def render_input(self, value):
+    def render_input(self, varprefix, value):
         if value != None:
-            html.hidden_field("attr_" + self.name(), value)
+            html.hidden_field(varprefix + "attr_" + self.name(), value)
             html.write(value)
 
-    def from_html_vars(self):
-        return html.var("attr_" + self.name())
+    def from_html_vars(self, varprefix):
+        return html.var(varprefix + "attr_" + self.name())
 
 
 # A text attribute that is stored in a Nagios custom macro
@@ -2051,11 +2240,11 @@ class EnumAttribute(Attribute):
     def paint(self, value, hostname):
         return "", self._enumdict.get(value, self.default_value())
 
-    def render_input(self, value):
-        html.select("attr_" + self.name(), self._enumlist, value)
+    def render_input(self, varprefix, value):
+        html.select(varprefix + "attr_" + self.name(), self._enumlist, value)
 
-    def from_html_vars(self):
-        return html.var("attr_" + self.name(), self.default_value())
+    def from_html_vars(self, varprefix):
+        return html.var(varprefix + "attr_" + self.name(), self.default_value())
 
 
 # A selection dropdown for a host tag
@@ -2090,8 +2279,8 @@ class HostTagAttribute(Attribute):
         return "", "" # Should never happen, at least one entry should match
                       # But case could occur if tags definitions have been changed.
 
-    def render_input(self, value):
-        varname = "attr_" + self.name()
+    def render_input(self, varprefix, value):
+        varname = varprefix + "attr_" + self.name()
         if value == None:
             value = html.var(varname,"") # "" is important for tag groups with an empty tag entry
 
@@ -2116,8 +2305,9 @@ class HostTagAttribute(Attribute):
         else:
             html.select(varname, choices, value, onchange='wato_fix_visibility();')
 
-    def from_html_vars(self):
-        varname = "attr_" + self.name()
+    def from_html_vars(self, varprefix):
+        varname = varprefix + "attr_" + self.name()
+        html.debug(varname)
         if len(self._taglist) == 1:
             if html.get_checkbox(varname):
                 return self._taglist[0][0]
@@ -2172,15 +2362,15 @@ class ValueSpecAttribute(Attribute):
         return "", \
             self._valuespec.value_to_text(value)
 
-    def render_input(self, value):
-        self._valuespec.render_input(self._name, value)
+    def render_input(self, varprefix, value):
+        self._valuespec.render_input(varprefix + self._name, value)
 
-    def from_html_vars(self):
-        return self._valuespec.from_html_vars(self._name)
+    def from_html_vars(self, varprefix):
+        return self._valuespec.from_html_vars(varprefix + self._name)
 
-    def validate_input(self):
-        value = self.from_html_vars()
-        self._valuespec.validate_value(value, self._name)
+    def validate_input(self, varprefix):
+        value = self.from_html_vars(varprefix + self._name)
+        self._valuespec.validate_value(value, varprefix + self._name)
 
 
 # Convert old tuple representation to new dict representation of
@@ -2231,13 +2421,14 @@ class ContactGroupsAttribute(Attribute):
                   _("These contact groups are also used in the monitoring configuration.")
         return "", result
 
-    def render_input(self, value):
+    def render_input(self, varprefix, value):
         value = convert_cgroups_from_tuple(value)
 
         # If we're just editing a host, then some of the checkboxes will be missing.
         # This condition is not very clean, but there is no other way to savely determine
         # the context.
         is_host = not not html.var("host")
+        is_search = varprefix == "host_search"
 
         # Only show contact groups I'm currently in and contact
         # groups already listed here.
@@ -2245,17 +2436,17 @@ class ContactGroupsAttribute(Attribute):
         items = self._contactgroups.items()
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, group in items:
-            html.checkbox(self._name + "_n_" + name, name in value["groups"])
+            html.checkbox(varprefix + self._name + "_n_" + name, name in value["groups"])
             html.write(' <a href="%s">%s</a><br>' % (folder_link([("mode", "edit_contact_group"), ("edit", name)]), group['alias'] and group['alias'] or name))
         html.write("<hr>")
         if is_host:
-            html.checkbox(self._name + "_use", value["use"], label = _("Add these contact groups to host"))
-        else:
-            html.checkbox(self._name + "_recurse_perms", value["recurse_perms"], label = _("Give these groups also <b>permission on all subfolders</b>"))
+            html.checkbox(varprefix + self._name + "_use", value["use"], label = _("Add these contact groups to host"))
+        elif not is_search:
+            html.checkbox(varprefix + self._name + "_recurse_perms", value["recurse_perms"], label = _("Give these groups also <b>permission on all subfolders</b>"))
             html.write("<hr>")
-            html.checkbox(self._name + "_use", value["use"], label = _("Add these groups as <b>contacts</b> to all hosts in this folder"))
+            html.checkbox(varprefix + self._name + "_use", value["use"], label = _("Add these groups as <b>contacts</b> to all hosts in this folder"))
             html.write("<br>")
-            html.checkbox(self._name + "_recurse_use", value["recurse_use"], label = _("Add these groups as <b>contacts in all subfolders</b>"))
+            html.checkbox(varprefix + self._name + "_recurse_use", value["recurse_use"], label = _("Add these groups as <b>contacts in all subfolders</b>"))
 
     def load_data(self):
         # Make cache valid only during this HTTP request
@@ -2265,25 +2456,26 @@ class ContactGroupsAttribute(Attribute):
 
         self._contactgroups = userdb.load_group_information().get("contact", {})
 
-    def from_html_vars(self):
+    def from_html_vars(self, varprefix):
         cgs = []
         self.load_data()
         for name in self._contactgroups:
-            if html.get_checkbox(self._name + "_n_" + name):
+            if html.get_checkbox(varprefix + self._name + "_n_" + name):
                 cgs.append(name)
         return {
             "groups"        : cgs,
-            "recurse_perms" : html.get_checkbox(self._name + "_recurse_perms"),
-            "use"           : html.get_checkbox(self._name + "_use"),
-            "recurse_use"   : html.get_checkbox(self._name + "_recurse_use"),
+            "recurse_perms" : html.get_checkbox(varprefix + self._name + "_recurse_perms"),
+            "use"           : html.get_checkbox(varprefix + self._name + "_use"),
+            "recurse_use"   : html.get_checkbox(varprefix + self._name + "_recurse_use"),
         }
 
     def filter_matches(self, crit, value, hostname):
         value = convert_cgroups_from_tuple(value)
-        for c in crit[1]:
-            if c in value["groups"]:
-                return True
-        return False
+        # Just use the contact groups for searching
+        for contact_group in crit["groups"]:
+            if contact_group not in value["groups"]:
+                return False
+        return True
 
 
 # Global datastructure holding all attributes (in a defined order)
@@ -2387,7 +2579,7 @@ def undeclare_host_tag_attribute(tag_id):
 
 
 # Read attributes from HTML variables
-def collect_attributes(do_validate = True):
+def collect_attributes(for_what, do_validate = True):
     host = {}
     for attr, topic in all_host_attributes():
         attrname = attr.name()
@@ -2395,9 +2587,9 @@ def collect_attributes(do_validate = True):
             continue
 
         if do_validate and attr.needs_validation():
-            attr.validate_input()
+            attr.validate_input(for_what + "_")
 
-        host[attrname] = attr.from_html_vars()
+        host[attrname] = attr.from_html_vars(for_what + "_")
     return host
 
 #.
@@ -2589,11 +2781,11 @@ class SiteAttribute(Attribute):
     def paint(self, value, hostname):
         return "", self._choices_dict.get(value, value)
 
-    def render_input(self, value):
-        html.select("site", self._choices, value)
+    def render_input(self, varprefix, value):
+        html.select(varprefix + "site", self._choices, value)
 
-    def from_html_vars(self):
-        return html.var("site")
+    def from_html_vars(self, varprefix):
+        return html.var(varprefix + "site")
 
     def get_tag_list(self, value):
         return [ "site:" + value ]

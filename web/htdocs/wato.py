@@ -309,29 +309,32 @@ def mode_folder(phase):
 
     elif phase == "buttons":
         global_buttons()
-        if config.may("wato.rulesets") or config.may("wato.seeall"):
-            html.context_button(_("Rulesets"),        folder_link([("mode", "ruleeditor")]), "rulesets")
-            html.context_button(_("Manual Checks"),   folder_link([("mode", "static_checks")]), "static_checks")
-        if folder.may("read"):
-            html.context_button(_("Folder Properties"), folder.edit_url(), "edit")
-        if not folder.locked_subfolders() and config.may("wato.manage_folders") and folder.may("write"):
-            html.context_button(_("New folder"),        folder.url([("mode", "newfolder")]), "newfolder")
-        if not folder.locked_hosts() and config.may("wato.manage_hosts") and folder.may("write"):
-            html.context_button(_("New host"),    folder.url([("mode", "newhost")]), "new")
-            html.context_button(_("New cluster"), folder.url([("mode", "newcluster")]), "new_cluster")
-            html.context_button(_("Bulk Import"), folder.url([("mode", "bulk_import")]), "bulk_import")
-        if config.may("wato.services"):
-            html.context_button(_("Bulk Discovery"), folder.url([("mode", "bulkinventory"), ("all", "1")]),
-                        "inventory")
-        if config.may("wato.rename_hosts"):
-            html.context_button(_("Bulk Renaming"), folder.url([("mode", "bulk_rename_host")]), "rename_host")
-        if not folder.locked_hosts() and config.may("wato.parentscan") and folder.may("write"):
-            html.context_button(_("Parent scan"), folder.url([("mode", "parentscan"), ("all", "1")]),
-                        "parentscan")
+        if folder.is_disk_folder():
+            if config.may("wato.rulesets") or config.may("wato.seeall"):
+                html.context_button(_("Rulesets"),        folder_link([("mode", "ruleeditor")]), "rulesets")
+                html.context_button(_("Manual Checks"),   folder_link([("mode", "static_checks")]), "static_checks")
+            if folder.may("read"):
+                html.context_button(_("Folder Properties"), folder.edit_url(), "edit")
+            if not folder.locked_subfolders() and config.may("wato.manage_folders") and folder.may("write"):
+                html.context_button(_("New folder"),        folder.url([("mode", "newfolder")]), "newfolder")
+            if not folder.locked_hosts() and config.may("wato.manage_hosts") and folder.may("write"):
+                html.context_button(_("New host"),    folder.url([("mode", "newhost")]), "new")
+                html.context_button(_("New cluster"), folder.url([("mode", "newcluster")]), "new_cluster")
+                html.context_button(_("Bulk Import"), folder.url([("mode", "bulk_import")]), "bulk_import")
+            if config.may("wato.services"):
+                html.context_button(_("Bulk Discovery"), folder.url([("mode", "bulkinventory"), ("all", "1")]),
+                            "inventory")
+            if config.may("wato.rename_hosts"):
+                html.context_button(_("Bulk Renaming"), folder.url([("mode", "bulk_rename_host")]), "rename_host")
+            if not folder.locked_hosts() and config.may("wato.parentscan") and folder.may("write"):
+                html.context_button(_("Parent scan"), folder.url([("mode", "parentscan"), ("all", "1")]),
+                            "parentscan")
+            folder_status_button()
+            if config.may("wato.random_hosts"):
+                html.context_button(_("Random Hosts"), folder.url([("mode", "random_hosts")]), "random")
+        else:
+            html.context_button(_("Back"), folder.parent().url(), "back")
         search_button()
-        folder_status_button()
-        if config.may("wato.random_hosts"):
-            html.context_button(_("Random Hosts"), folder.url([("mode", "random_hosts")]), "random")
 
     elif phase == "action":
         if html.var("_search"): # just commit to search form
@@ -949,7 +952,7 @@ def mode_editfolder(phase, new):
             else:
                 name = create_wato_foldername(title)
 
-        attributes = collect_attributes()
+        attributes = collect_attributes("folder")
         if new:
             Folder.current().create_subfolder(name, title, attributes)
         else:
@@ -1216,7 +1219,7 @@ def mode_edit_host(phase, new, is_cluster):
 
 # Called by mode_edit_host() for new/clone/edit
 def action_edit_host(mode, hostname, is_cluster):
-    attributes = collect_attributes()
+    attributes = collect_attributes("host")
 
     if is_cluster:
         cluster_nodes = ListOfStrings().from_html_vars("nodes")
@@ -2829,11 +2832,11 @@ def mode_search(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("Folder"), folder_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), Folder.current().url(), "back")
         return
 
     elif phase == "action":
-        return "search_results"
+        return "folder"
 
     Folder.current().show_breadcrump()
 
@@ -2845,96 +2848,16 @@ def mode_search(phase):
     html.set_focus("host")
 
     # Attributes
-    configure_attributes(False, {}, "search", parent = None)
+    configure_attributes(False, {}, "host_search", parent = None)
 
     # Button
     forms.end()
     html.button("_global", _("Search globally"), "submit")
     html.button("_local", _("Search in %s") % Folder.current().title(), "submit")
+    html.hidden_field("host_search", "1")
     html.hidden_fields()
     html.end_form()
 
-
-def mode_search_results(phase):
-    if phase == "title":
-        return _("Search results")
-
-    elif phase == "buttons":
-        global_buttons()
-        html.context_button(_("New Search"), html.makeuri([("mode", "search")]), "back")
-        return
-
-    elif phase == "action":
-        return
-
-    crit = { ".name" : html.var("host") }
-    crit.update(collect_attributes(do_validate = False))
-
-    if html.has_var("_local"):
-        folder = Folder.current()
-    else:
-        folder = Folder.root_folder()
-
-    if not search_hosts_in_folders(folder, crit):
-        html.message(_("No matching hosts found."))
-
-
-def search_hosts_in_folders(folder, crit):
-    num_found = 0
-
-    num_found = search_hosts_in_folder(folder, crit)
-    for subfolder in folder.subfolders().values():
-        num_found += search_hosts_in_folders(subfolder, crit)
-
-    return num_found
-
-
-def search_hosts_in_folder(folder, crit):
-    found = []
-
-    if not folder.may("read"):
-        return 0
-
-    for hostname, host in folder.hosts().items():
-        if crit[".name"] and crit[".name"].lower() not in hostname.lower():
-            continue
-
-        # Compute inheritance
-        effective = host.effective_attributes()
-
-        # Check attributes
-        dont_match = False
-        for attr, topic in all_host_attributes():
-            attrname = attr.name()
-            if attrname in crit and  \
-                not attr.filter_matches(crit[attrname], effective.get(attrname), hostname):
-                dont_match = True
-                break
-        if dont_match:
-           continue
-
-        found.append((hostname, host, effective))
-
-    if found:
-        folder.show_breadcrump(link_to_folder=True, keepvarnames=[])
-        found.sort(cmp = lambda a,b: cmp(num_split(a[0]), num_split(b[0])))
-
-        table.begin("search_hosts", "");
-        for hostname, host, effective in found:
-            table.row()
-            table.cell(_("Hostname"), '<a href="%s">%s</a>' % (host.edit_url(), hostname))
-            for attr, topic in all_host_attributes():
-                attrname = attr.name()
-                if attr.show_in_table():
-                    if host.has_explicit_attribute(attrname):
-                        tdclass, content = attr.paint(host.attribute(attrname), hostname)
-                    else:
-                        tdclass, content = attr.paint(effective[attrname], hostname)
-                        tdclass += " inherited"
-                    table.cell(attr.title(), content, css=tdclass)
-        table.end()
-
-    return len(found)
 
 #.
 #   .--CSV-Import----------------------------------------------------------.
@@ -3032,7 +2955,7 @@ def mode_bulk_import(phase):
         if not html.check_transaction():
             return "folder"
 
-        attributes = collect_attributes()
+        attributes = collect_attributes("host")
 
         config.need_permission("wato.manage_hosts")
         Folder.current().need_permission("write")
@@ -3390,21 +3313,16 @@ def mode_bulk_edit(phase):
         if html.check_transaction():
             config.need_permission("wato.edit_hosts")
 
-            # TODO: Move permission checking to Host class
-            changed_attributes = collect_attributes()
-            if "contactgroups" in changed_attributes:
-                if not Folder.current().have_permission("write"):
-                    raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
-                                            "access to the folder it is contained in."))
-
-            for host_name in get_hostnames_from_checkboxes():
+            changed_attributes = collect_attributes("bulk")
+            host_names = get_hostnames_from_checkboxes()
+            for host_name in host_names:
                 host = Folder.current().host(host_name)
                 host.update_attributes(changed_attributes)
                 # TODO: call_hook_hosts_changed() is called too often.
                 # Either offer API in class Host for bulk change or
                 # delay saving until end somehow
 
-            return "folder"
+            return "folder", _("Edited %d hosts") % len(host_names)
         return
 
     host_names = get_hostnames_from_checkboxes()
@@ -6771,7 +6689,7 @@ def save_notification_rules(rules):
 
 
 def FolderChoice(**kwargs):
-    kwargs["choices"] = lambda: Folder.root_folder().recursive_subfolder_choices()
+    kwargs["choices"] = lambda: Folder.folder_choices()
     kwargs.setdefault("title", _("Folder"))
     return DropdownChoice(**kwargs)
 
@@ -12136,7 +12054,7 @@ def create_new_rule_form(rulespec, hostname = None, item = None, varname = None)
     html.button("_new_rule", _("Create rule in folder: "))
     html.write('</td><td>')
 
-    html.select("rule_folder", Folder.root_folder().recursive_subfolder_choices(), html.var('folder'))
+    html.select("rule_folder", Folder.folder_choices(), html.var('folder'))
     html.write('</td></tr></table>\n')
     html.hidden_field("varname", varname)
     html.hidden_field("mode", "new_rule")
@@ -12916,7 +12834,7 @@ def mode_edit_rule(phase, new = False):
 
     # Rule folder
     forms.section(_("Folder"))
-    html.select("new_rule_folder", Folder.root_folder().recursive_subfolder_choices(), folder.path())
+    html.select("new_rule_folder", Folder.folder_choices(), folder.path())
     html.help(_("The rule is only applied to hosts directly in or below this folder."))
 
     # Host tags
@@ -16468,7 +16386,7 @@ class UserIconOrAction(DropdownChoice):
 # for_what can be:
 #   "host"   -> normal host edit dialog
 #   "folder" -> properties of folder or file
-#   "search" -> search dialog
+#   "host_search" -> host search dialog
 #   "bulk"   -> bulk change
 # parent: The parent folder of the objects to configure
 # myself: For mode "folder" the folder itself or None, if we edit a new folder
@@ -16561,7 +16479,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
 
             # Collect information about attribute values inherited from folder.
             # This information is just needed for informational display to the user.
-            # This does not apply in "search" mode.
+            # This does not apply in "host_search" mode.
             inherited_from = None
             inherited_value = None
             has_inherited = False
@@ -16623,7 +16541,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 active = True
             elif cb != None:
                 active = cb # get previous state of checkbox
-            elif for_what == "search":
+            elif for_what == "host_search":
                 active = attr.default_value() == "" # show empty text search fields always
             elif for_what == "bulk":
                 active = unique and len(values) > 0
@@ -16662,7 +16580,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 # In edit mode only display non editable values, don't show the
                 # input fields
                 html.write('<div id="attr_hidden_%s" style="display:none">' % attrname)
-                attr.render_input(defvalue)
+                attr.render_input(for_what + "_", defvalue)
                 html.write('</div>')
 
                 html.write('<div class="inherited" id="attr_visible_%s">' % (attrname))
@@ -16675,7 +16593,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 html.write('<div id="attr_entry_%s" style="%s">'
                   % (attrname, (not active) and "display: none" or ""))
 
-                attr.render_input(defvalue)
+                attr.render_input(for_what + "_", defvalue)
                 html.write("</div>")
 
                 html.write('<div class="inherited" id="attr_default_%s" style="%s">'
@@ -16703,7 +16621,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                     explanation = " (" + inherited_from + ")"
                     value = inherited_value
 
-            if for_what != "search" and not (for_what == "bulk" and not unique):
+            if for_what != "host_search" and not (for_what == "bulk" and not unique):
                 tdclass, content = attr.paint(value, "")
                 if not content:
                     content = _("empty")
@@ -16794,7 +16712,6 @@ modes = {
    "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
    "object_parameters"  : (["hosts", "rulesets"], mode_object_parameters),
    "search"             : (["hosts"], mode_search),
-   "search_results"     : (["hosts"], mode_search_results),
    "bulkinventory"      : (["hosts", "services"], mode_bulk_inventory),
    "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
    "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),

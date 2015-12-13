@@ -1605,7 +1605,7 @@ class SearchFolder(FolderLike):
     @staticmethod
     def criteria_from_html_vars():
         crit = { ".name" : html.var("host_search_host") }
-        crit.update(collect_attributes("host_search", do_validate = False))
+        crit.update(collect_attributes("host_search", do_validate = False, varprefix="host_search_"))
         return crit
 
 
@@ -2370,7 +2370,6 @@ class HostTagAttribute(Attribute):
 
     def from_html_vars(self, varprefix):
         varname = varprefix + "attr_" + self.name()
-        html.debug(varname)
         if len(self._taglist) == 1:
             if html.get_checkbox(varname):
                 return self._taglist[0][0]
@@ -2642,7 +2641,7 @@ def undeclare_host_tag_attribute(tag_id):
 
 
 # Read attributes from HTML variables
-def collect_attributes(for_what, do_validate = True):
+def collect_attributes(for_what, do_validate = True, varprefix=""):
     host = {}
     for attr, topic in all_host_attributes():
         attrname = attr.name()
@@ -2650,9 +2649,9 @@ def collect_attributes(for_what, do_validate = True):
             continue
 
         if do_validate and attr.needs_validation():
-            attr.validate_input(for_what + "_")
+            attr.validate_input(varprefix)
 
-        host[attrname] = attr.from_html_vars(for_what + "_")
+        host[attrname] = attr.from_html_vars(varprefix)
     return host
 
 #.

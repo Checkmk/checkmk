@@ -2857,7 +2857,7 @@ def mode_search(phase):
     html.set_focus("host_search_host")
 
     # Attributes
-    configure_attributes(False, {}, "host_search", parent = None)
+    configure_attributes(False, {}, "host_search", parent = None, varprefix="host_search_")
 
     # Button
     forms.end()
@@ -16398,7 +16398,7 @@ class UserIconOrAction(DropdownChoice):
 # parent: The parent folder of the objects to configure
 # myself: For mode "folder" the folder itself or None, if we edit a new folder
 #         This is needed for handling mandatory attributes.
-def configure_attributes(new, hosts, for_what, parent, myself=None, without_attributes = []):
+def configure_attributes(new, hosts, for_what, parent, myself=None, without_attributes = [], varprefix=""):
     # show attributes grouped by topics, in order of their
     # appearance. If only one topic exists, do not show topics
     # Make sure, that the topics "Basic settings" and host tags
@@ -16587,7 +16587,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 # In edit mode only display non editable values, don't show the
                 # input fields
                 html.write('<div id="attr_hidden_%s" style="display:none">' % attrname)
-                attr.render_input(for_what + "_", defvalue)
+                attr.render_input(varprefix, defvalue)
                 html.write('</div>')
 
                 html.write('<div class="inherited" id="attr_visible_%s">' % (attrname))
@@ -16600,7 +16600,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 html.write('<div id="attr_entry_%s" style="%s">'
                   % (attrname, (not active) and "display: none" or ""))
 
-                attr.render_input(for_what + "_", defvalue)
+                attr.render_input(varprefix, defvalue)
                 html.write("</div>")
 
                 html.write('<div class="inherited" id="attr_default_%s" style="%s">'

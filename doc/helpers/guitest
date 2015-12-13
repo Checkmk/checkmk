@@ -62,7 +62,7 @@ def run_guitest(test_name):
                 continue
             elif step_nr > range_to:
                 break
-            sys.stdout.write("       #%d - %s..." % (step_nr, step_title(step)))
+            sys.stdout.write("       #%02d - %s..." % (step_nr, step_title(step)))
             errors = run_test_step(test_name, step_nr, step, opt_repair)
             if not errors:
                 sys.stdout.write(tty_green + "OK\n" + tty_normal)
@@ -75,7 +75,9 @@ def run_guitest(test_name):
                 if opt_interactive:
                     if interactive_repair(test_name, step_nr, step):
                         continue
-                return False
+
+                if not opt_continue:
+                    return False
         return True
 
     except Exception, e:
@@ -90,7 +92,7 @@ def interactive_repair(test_name, step_nr, step):
     while answer not in [ "y", "n" ]:
         answer = read_line("Repair this test step (y/n)?").strip()
     if answer == "y":
-        sys.stdout.write("Rerunning this step #%d in repair mode...\n" % step_nr)
+        sys.stdout.write("Rerunning this step #%02d in repair mode...\n" % step_nr)
         set_recording_symlink(test_name)
         errors = run_test_step(test_name, step_nr, step, True)
         remove_recording_symlink()
@@ -191,7 +193,7 @@ def list_guitests(test_names):
         sys.stdout.write("%s\n" % test_name)
         test = load_guitest(test_name)
         for nr, step in enumerate(test):
-            sys.stdout.write("    #%d - %s\n" % (nr, step_title(step)))
+            sys.stdout.write("    #%02d - %s\n" % (nr, step_title(step)))
 
 
 def step_title(step):
@@ -200,7 +202,15 @@ def step_title(step):
     else:
         page_title = "(no page title)"
 
-    return "[%s] %s.py - %s" % (tty_cyan + step["user"] + tty_normal, step["filename"], tty_bold + page_title + tty_normal)
+    transid = step["variables"].get("_transid")
+    if transid == "valid":
+        action_marker = "[%sA%s] " % (tty_red, tty_normal)
+    elif transid == "invalid":
+        action_marker = "[X] "
+    else:
+        action_marker = "    "
+    return "[%s] %s.py %s%s" % (tty_cyan + step["user"] + tty_normal,
+               step["filename"], action_marker, tty_bold + page_title + tty_normal)
 
 
 def rule_step_url(test_name, step_nr):
@@ -363,6 +373,7 @@ Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
          --debug                        Do not catch Python exceptions
      -S, --steps RANGE                  Just run steps START...END (1st step is 0)
      -i, --interactive                  When tests fail ask for automatic repair
+     -c, --continue                     Continue after errors
 
 
   RANGES
@@ -386,15 +397,16 @@ Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvrslRS:x:D:i'
+short_options = 'hvrslRS:x:D:ic'
 long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair",
-                 "steps=", "extract=", "delete=", "interactive" ]
+                 "steps=", "extract=", "delete=", "interactive", "continue" ]
 
 opt_verbose = False
 opt_debug = False
 opt_repair = False
 opt_steps_range = 0, None
 opt_interactive = False
+opt_continue = False
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -432,6 +444,8 @@ for o,a in opts:
         opt_repair = True
     elif o in [ '-i', '--interactive' ]:
         opt_interactive = True
+    elif o in [ '-c', '--continue' ]:
+        opt_continue = True
 
 # Main modes
 try:

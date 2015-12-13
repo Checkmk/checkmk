@@ -570,6 +570,14 @@ class Folder(FolderLike):
 
 
     @staticmethod
+    def current_disk_folder():
+        folder = Folder.current()
+        while not folder.is_disk_folder():
+            folder = folder.parent()
+        return folder
+
+
+    @staticmethod
     def set_current(folder):
         html.set_cache("wato_current_folder", folder)
 

@@ -3509,7 +3509,7 @@ def mode_parentscan(phase):
 
                 if state in [ "direct", "root", "gateway" ]:
                     message, pconf, gwcreat = \
-                        configure_gateway(state, site_id, folder, host, gateway)
+                        configure_gateway(state, site_id, host, gateway)
                 else:
                     message = error
                     pconf = False
@@ -3690,10 +3690,11 @@ def mode_parentscan(phase):
         forms.section(_("Creation of gateway hosts"))
         html.write(_("Create gateway hosts in<ul>"))
         html.radiobutton("where", "subfolder", settings["where"] == "subfolder",
-                _("in the subfolder <b>%s/Parents</b>") % Folder.current().title())
+                _("in the subfolder <b>%s/Parents</b>") % Folder.current_disk_folder().title())
+
         html.write("<br>")
         html.radiobutton("where", "here", settings["where"] == "here",
-                _("directly in the folder <b>%s</b>") % Folder.current().title())
+                _("directly in the folder <b>%s</b>") % Folder.current_disk_folder().title())
         html.write("<br>")
         html.radiobutton("where", "there", settings["where"] == "there",
                 _("in the same folder as the host"))
@@ -3709,7 +3710,7 @@ def mode_parentscan(phase):
         html.button("_start", _("Start"))
 
 
-def configure_gateway(state, site_id, folder, host, gateway):
+def configure_gateway(state, site_id, host, gateway):
     # Settings for configuration and gateway creation
     force_explicit = html.get_checkbox("force_explicit")
     where          = html.var("where")
@@ -3731,19 +3732,20 @@ def configure_gateway(state, site_id, folder, host, gateway):
 
             # Determine folder where to create the host.
             elif where == "here": # directly in current folder
-                gw_folder = Folder.current()
+                gw_folder = Folder.current_disk_folder()
 
             elif where == "subfolder":
+                current = Folder.current_disk_folder()
                 # Put new gateways in subfolder "Parents" of current
                 # folder. Does this folder already exist?
-                if Folder.current().has_subfolder("parents"):
-                    gw_folder = Folder.current().subfolder("parents")
+                if current.has_subfolder("parents"):
+                    gw_folder = current.subfolder("parents")
                 else:
                     # Create new gateway folder
-                    gw_folder = Folder.current().create_subfolder("parents", _("Parents"), {})
+                    gw_folder = current.create_subfolder("parents", _("Parents"), {})
 
             elif where == "there": # In same folder as host
-                gw_folder = folder
+                gw_folder = host.folder()
 
             # Create gateway host
             if dns_name:
@@ -3759,7 +3761,7 @@ def configure_gateway(state, site_id, folder, host, gateway):
             if gw_folder.site_id() != site_id:
                 new_host_attributes["site"] = site_id
 
-            folder.create_hosts([(gw_host_name, new_host_attributes, None)])
+            gw_folder.create_hosts([(gw_host_name, new_host_attributes, None)])
             gwcreat = True
 
         parents = [ gw_host_name ]
@@ -3772,7 +3774,7 @@ def configure_gateway(state, site_id, folder, host, gateway):
                 (parents and ",".join(parents) or _("none")), False, gwcreat
 
 
-    if force_explicit or folder.effective_attribute("parents") != parents:
+    if force_explicit or host.folder().effective_attribute("parents") != parents:
         host.update_attributes({"parents": parents})
     else:
         # Check which parents the host would have inherited

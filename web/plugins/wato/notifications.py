@@ -72,6 +72,7 @@ register_notification_parameters(
                       ( "ack_comment",  _("Acknowledgement Comment") ),
                       ( "perfdata",     _("Performance Data") ),
                       ( "graph",        _("Performance Graphs") ),
+                      ( "notesurl",     _("Custom Host/Service Notes URL") ),
                       ( "context",      _("Complete variable list (for testing)" ) ),
                     ],
                     default_value = [ "perfdata", "graph", "abstime", "address", "longoutput" ],

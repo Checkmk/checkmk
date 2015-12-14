@@ -36,7 +36,7 @@
 # - Restliche TODOs
 # - Webapi
 
-import os, shutil, subprocess
+import os, shutil, subprocess, base64
 import defaults, config, hooks, userdb
 from lib import *
 

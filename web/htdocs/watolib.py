@@ -32,9 +32,7 @@
 # in wato.py
 
 # TODO Search hosts
-# - Alles Permissionprüfen nach watolib.py in die Klassen umziehen
 # - Test mit verteiltem Monitoring
-# - Host-Suche als Werk rausbringen
 # - # if "contactgroups" in host: --> Erzeugung der hosts.mk-Dateien mit Kontaktgruppen!
 # - Restliche TODOs
 # - TODO: This seems to be all crap: Verwendung der Funktionen finden/eleminieren

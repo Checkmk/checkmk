@@ -1,0 +1,9 @@
+Title: mysql_slave: Levels can now be configured with WATO
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449655241
+Class: feature
+
+

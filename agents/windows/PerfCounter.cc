@@ -1,14 +1,11 @@
 #include "PerfCounter.h"
 #include "stringutil.h"
+#include "logging.h"
 #include <windows.h>
 #include <tchar.h>
 #include <vector>
 #include <cstdio>
 #include <stdexcept>
-
-
-extern void verbose(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
-extern void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
 
 
 // Helper functions to navigate the performance counter data

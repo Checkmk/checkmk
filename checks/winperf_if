@@ -101,9 +101,18 @@ def convert_winperf_if(info, nic_names, nic_index):
     teaming_headers = []
     teaming_info = {}
 
+    dhcp_lines = []
+
     try:
         while True:
             line = lines.next()
+
+            if line[0] == "[dhcp_start]":
+                line = lines.next()  # skip start line
+                while line[0] != "[dhcp_end]":
+                    dhcp_lines.append(line)
+                    line = lines.next()
+                line = lines.next()  # skip end line
 
             # Process teaming information
             if line[0].startswith("[teaming_start]"):
@@ -275,14 +284,14 @@ def convert_winperf_if(info, nic_names, nic_index):
            mac,
         ))
 
-    return converted
+    return converted, dhcp_lines
 
 
 def winperf_if_get_nic_index_map(nic_names):
     return dict(map(lambda x: (x[1], x[0] + 1), enumerate(nic_names)))
 
 
-def check_if_dhcp(item, params, info, nic_names, nic_index):
+def check_if_dhcp(item, _no_params, info, nic_names, nic_index):
     lines = iter(info)
     header = lines.next()
 
@@ -310,23 +319,23 @@ def check_if_dhcp(item, params, info, nic_names, nic_index):
 
 
 def inventory_winperf_if(info):
-    perf, dhcp = info
-    nic_names = map(winperf_if_canonize_nic_name, perf[1][2:])
+    nic_names = map(winperf_if_canonize_nic_name, info[1][2:])
     nic_index = winperf_if_get_nic_index_map(nic_names)
 
-    return inventory_if_common(convert_winperf_if(perf, nic_names, nic_index))
+    perf, dhcp = convert_winperf_if(info, nic_names, nic_index)
+
+    return inventory_if_common(perf)
     # dhcp info irrelevant to inventory
 
 
 def check_winperf_if(item, params, info):
-    perf, dhcp = info
-    nic_names = map(winperf_if_canonize_nic_name, perf[1][2:])
+    nic_names = map(winperf_if_canonize_nic_name, info[1][2:])
     nic_index = winperf_if_get_nic_index_map(nic_names)
 
-    yield check_if_common(item, params, convert_winperf_if(perf, nic_names, nic_index),
-                           group_name = "Teaming")
-    if dhcp is not None:
-        yield check_if_dhcp(item, params, dhcp, nic_names, nic_index)
+    perf, dhcp = convert_winperf_if(info, nic_names, nic_index)
+
+    yield check_if_common(item, params, perf, group_name = "Teaming")
+    yield check_if_dhcp(item, params, dhcp, nic_names, nic_index)
 
 
 check_info["winperf_if"] = {
@@ -336,6 +345,5 @@ check_info["winperf_if"] = {
     'has_perfdata':            True,
     'includes':                [ 'if.include' ],
     'group':                   'if',
-    'default_levels_variable': 'if_default_levels',
-    "extra_sections"          : [ 'dhcp' ],
+    'default_levels_variable': 'if_default_levels'
 }

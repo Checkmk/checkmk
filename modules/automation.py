@@ -38,6 +38,8 @@ def do_automation(cmd, args):
             result = automation_get_configuration()
         elif cmd == "get-check-information":
             result = automation_get_check_information()
+        elif cmd == "get-real-time-checks":
+            result = automation_get_real_time_checks()
         elif cmd == "get-check-manpage":
             result = automation_get_check_manpage(args)
         elif cmd == "get-check-catalog":
@@ -539,6 +541,26 @@ def automation_get_check_information():
             if opt_debug:
                 raise
             raise MKAutomationError("Failed to parse man page '%s': %s" % (check_type, e))
+    return checks
+
+
+def automation_get_real_time_checks():
+    manuals = all_manuals()
+
+    checks = []
+    for check_type, check in check_info.items():
+        if check["handle_real_time_checks"]:
+            title = check_type
+            try:
+                manfile = manuals.get(check_type)
+                if manfile:
+                    title = file(manfile).readline().strip().split(":", 1)[1].strip()
+            except Exception, e:
+                if opt_debug:
+                    raise
+
+            checks.append((check_type, "%s - %s" % (check_type, title)))
+
     return checks
 
 

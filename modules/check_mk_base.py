@@ -1203,7 +1203,9 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     try:
         load_item_state(hostname)
-        agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress, only_check_types)
+        agent_version, num_success, error_sections, problems = \
+            do_all_checks_on_host(hostname, ipaddress, only_check_types)
+
         num_errors = len(error_sections)
         save_item_state(hostname)
         if problems:
@@ -1263,9 +1265,11 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     run_time = time.time() - start_time
     if check_mk_perfdata_with_times:
-        times = os.times()
         if opt_keepalive:
-            times = map(lambda a: a[0]-a[1], zip(times, g_initial_times))
+            times = get_keepalive_times()
+        else:
+            times = os.times()
+
         output += "execution time %.1f sec|execution_time=%.3f user_time=%.3f "\
                   "system_time=%.3f children_user_time=%.3f children_system_time=%.3f\n" %\
                 (run_time, run_time, times[0], times[1], times[2], times[3])
@@ -1359,14 +1363,15 @@ def parse_check_mk_version(v):
 
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
+def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_agent_version = True):
     global g_aggregated_service_results
     g_aggregated_service_results = {}
     global g_hostname
     g_hostname = hostname
     num_success = 0
     error_sections = set([])
-    check_table = get_precompiled_check_table(hostname, remove_duplicates=True, world=opt_keepalive and "active" or "config")
+    check_table = get_precompiled_check_table(hostname, remove_duplicates=True,
+                                    world=opt_keepalive and "active" or "config")
     problems = []
 
     parsed_infos = {} # temporary cache for section infos, maybe parsed
@@ -1481,19 +1486,24 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
     submit_aggregated_results(hostname)
 
-    try:
-        if is_tcp_host(hostname):
-            version_info = get_info_for_check(hostname, ipaddress, 'check_mk')
-            agent_version = version_info[0][1]
-        else:
-            agent_version = None
-    except MKAgentError, e:
-        g_broken_agent_hosts.add(hostname)
-        agent_version = "(unknown)"
-    except:
-        agent_version = "(unknown)"
+    if fetch_agent_version:
+        try:
+            if is_tcp_host(hostname):
+                version_info = get_info_for_check(hostname, ipaddress, 'check_mk')
+                agent_version = version_info[0][1]
+            else:
+                agent_version = None
+        except MKAgentError, e:
+            g_broken_agent_hosts.add(hostname)
+            agent_version = "(unknown)"
+        except:
+            agent_version = "(unknown)"
+    else:
+        agent_version = None
+
     error_sections = list(error_sections)
     error_sections.sort()
+
     return agent_version, num_success, error_sections, ", ".join(problems)
 
 
@@ -1642,6 +1652,7 @@ def convert_check_info():
                     snmp_scan_functions.get(check_type,
                         snmp_scan_functions.get(basename)),
                 "handle_empty_info"       : False,
+                "handle_real_time_checks" : False,
                 "default_levels_variable" : check_default_levels.get(check_type),
                 "node_info"               : False,
                 "parse_function"          : None,
@@ -1656,6 +1667,7 @@ def convert_check_info():
             info.setdefault("snmp_info", None)
             info.setdefault("snmp_scan_function", None)
             info.setdefault("handle_empty_info", False)
+            info.setdefault("handle_real_time_checks", False)
             info.setdefault("default_levels_variable", None)
             info.setdefault("node_info", False)
             info.setdefault("extra_sections", [])
@@ -1998,6 +2010,11 @@ def worst_monitoring_state(status_a, status_b):
     else:
         return max(status_a, status_b)
 
+
+def set_use_cachefile(state=True):
+    global opt_use_cachefile, orig_opt_use_cachefile
+    orig_opt_use_cachefile = opt_use_cachefile
+    opt_use_cachefile = state
 
 
 #.

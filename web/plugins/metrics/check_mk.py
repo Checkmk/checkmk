@@ -932,6 +932,12 @@ metric_info["deviation_airflow"] = {
     "color" : "#60f020",
 }
 
+metric_info["health_perc"] = {
+    "title" : _("Health"),
+    "unit"  : "%",
+    "color" : "#ff6234",
+}
+
 # TODO: user -> cpu_util_user
 metric_info["user"] = {
     "title" : _("User"),
@@ -4219,6 +4225,12 @@ perfometer_info.append({
 perfometer_info.append({
     "type"      : "linear",
     "segments"  : [ "smoke_perc" ],
+    "total"     : 100,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "health_perc" ],
     "total"     : 100,
 })
 

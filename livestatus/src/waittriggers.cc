@@ -24,8 +24,8 @@
 
 #include "waittriggers.h"
 #include <string.h>
-#include "ConditionVariable.h"
-#include "Mutex.h"
+#include "mk/ConditionVariable.h"
+#include "mk/Mutex.h"
 
 using mk::condition_variable;
 using mk::mutex;

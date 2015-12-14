@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
 #include <map>
-#include "Mutex.h"
+#include "mk/Mutex.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class Logfile;

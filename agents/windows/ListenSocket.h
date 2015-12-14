@@ -50,7 +50,10 @@ public:
 
     SOCKET acceptConnection();
 
-    std::string readableIP(SOCKET connection);
+    sockaddr_storage address(SOCKET connection) const;
+
+    static std::string readableIP(SOCKET connection);
+    static std::string readableIP(const sockaddr_storage *address);
 
 private:
 

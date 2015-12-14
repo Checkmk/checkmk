@@ -83,32 +83,6 @@ char *next_word(char **line)
     return 0;
 }
 
-
-char *llu_to_string(unsigned long long value)
-{
-    static char buffer[64];
-
-    if (value == 0) {
-        strcpy(buffer, "0");
-        return buffer;
-    }
-
-    buffer[63] = 0;
-
-    char *write = buffer + 63;
-    while (value > 0) {
-        if (write <= buffer) {
-            strcpy(buffer, "(invalid)");
-            return buffer;
-        }
-        char digit = (value % 10) + '0';
-        *--write = digit;
-        value = value / 10;
-    }
-    return write;
-}
-
-
 unsigned long long string_to_llu(const char *s)
 {
     unsigned long long value = 0;
@@ -122,17 +96,6 @@ unsigned long long string_to_llu(const char *s)
     return value;
 }
 
-
-char *ipv4_to_text(uint32_t ip)
-{
-    static char text[32];
-    snprintf(text, 32, "%u.%u.%u.%u",
-            ip & 255,
-            ip >> 8 & 255,
-            ip >> 16 & 255,
-            ip >> 24);
-    return text;
-}
 
 void lowercase(char *s)
 {
@@ -283,7 +246,7 @@ std::string get_win_error_as_string(DWORD error_id)
     //Free the buffer.
     LocalFree(messageBuffer);
 
-    return message;
+    return message + " (" + std::to_string(error_id) + ")";
 }
 #endif // WIN32
 

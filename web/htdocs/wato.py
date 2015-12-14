@@ -425,8 +425,11 @@ def mode_folder(phase):
         if folder.may("read"):
             show_hosts(folder)
 
-        if not folder.has_hosts() and not folder.has_subfolders() and folder.may("write"):
-            show_empty_folder_menu(folder)
+        if not folder.has_hosts():
+            if folder.is_search_folder():
+                html.message(_("No matching hosts found."))
+            elif not folder.has_subfolders() and folder.may("write"):
+                show_empty_folder_menu(folder)
 
 
 def delete_subfolder_after_confirm(folder, subfolder_name):

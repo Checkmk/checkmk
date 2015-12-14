@@ -82,7 +82,7 @@ public:
 
 protected:
 
-    void flushInt();
+    bool flushInt();
 
 private:
 

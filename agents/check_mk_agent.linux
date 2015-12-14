@@ -166,7 +166,7 @@ function run_real_time_checks()
             # Be aware of maximum packet size. Maybe we need to check the size of the section
             # output and do some kind of nicer error handling.
             # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
-            (echo -e 00 ; date +%s ;
+            (echo -ne 00 ; date +%s | tr -d '\n' ;
              export RTC_SECRET=$RTC_SECRET ;
              section_$SECTION | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt) >/dev/udp/$REMOTE/$RTC_PORT
         done

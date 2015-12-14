@@ -25,20 +25,22 @@
 #ifndef StatusSpecialIntColumn_h
 #define StatusSpecialIntColumn_h
 
-#include "IntColumn.h"
+#include "config.h" // IWYU pragma: keep
 #include <stdint.h>
 #include <string>
+#include "IntColumn.h"
 class Query;
-
 
 #define SPIC_MK_INVENTORY_LAST 0
 
-class StatusSpecialIntColumn : public IntColumn
-{
+class StatusSpecialIntColumn : public IntColumn {
     int _type;
+
 public:
     StatusSpecialIntColumn(std::string name, std::string description, int type)
-      : IntColumn(name, description, -1), _type(type) {}
+        : IntColumn(name, description, -1), _type(type)
+    {
+    }
     int32_t getValue(void *, Query *);
 };
 

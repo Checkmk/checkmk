@@ -73,7 +73,20 @@ void BufferedSocketProxy::output(const char *format, ...)
     va_list ap;
     va_start(ap, format);
 
-    int written_len = vsnprintf(&_buffer[0] + _length, _buffer.size() - _length, format, ap);
+    size_t buffer_left = _buffer.size() - _length;
+
+    int written_len = vsnprintf(&_buffer[0] + _length, buffer_left, format, ap);
+
+    if (written_len >= (int)buffer_left) {
+        size_t target_size = _length + written_len + 1;
+        size_t new_size = _buffer.size() * 2;
+        while (new_size < target_size) {
+            new_size *= 2;
+        }
+        _buffer.resize(new_size);
+        vsnprintf(&_buffer[0] + _length, _buffer.size() - _length, format, ap);
+    }
+
     va_end(ap);
     _length += written_len;
 
@@ -103,7 +116,9 @@ void BufferedSocketProxy::flush()
     int tries = 10;
     while ((_length > 0) && (tries > 0)) {
         --tries;
-        flushInt();
+        if (!flushInt()) {
+            return;
+        }
         if (_length > 0) {
             ::Sleep(100);
         }
@@ -114,8 +129,9 @@ void BufferedSocketProxy::flush()
 }
 
 
-void BufferedSocketProxy::flushInt()
+bool BufferedSocketProxy::flushInt()
 {
+    bool error = false;
     size_t offset = 0;
     while (!g_should_terminate) {
         ssize_t result = send(_socket, &_buffer[0] + offset, _length - offset, 0);
@@ -129,11 +145,13 @@ void BufferedSocketProxy::flushInt()
             }
             else if (error == WSAEWOULDBLOCK) {
                 verbose("send to socket would block");
+                error = true;
                 break;
             }
             else {
                 verbose("send to socket failed with error code %d",
                         error);
+                error = true;
                 break;
             }
         }
@@ -148,10 +166,11 @@ void BufferedSocketProxy::flushInt()
         break;
     }
     _length -= offset;
-    if (_length != 0) {
+    if ((_length != 0) && (offset != 0)) {
         // not the whole buffer has been sent, shift up the remaining data
         memmove(&_buffer[0], &_buffer[0] + offset, _length);
     }
+    return !error;
 }
 
 

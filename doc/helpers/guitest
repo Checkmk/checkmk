@@ -54,7 +54,7 @@ def run_guitests(args):
 
 def run_guitest(test_name):
     try:
-        sys.stdout.write("    %s%s%s...\n" % (tty_bold, test_name, tty_normal))
+        sys.stdout.write("    %s%s%s...\n" % (tty_yellow, test_name, tty_normal))
         guitest = load_guitest(test_name)
 
         for step_nr, step in enumerate(guitest):
@@ -78,6 +78,7 @@ def run_guitest(test_name):
 
                 if not opt_continue:
                     return False
+        sys.stdout.write("\n")
         return True
 
     except Exception, e:
@@ -85,6 +86,7 @@ def run_guitest(test_name):
             raise
         sys.stdout.write("        %sfailed%s (%s)\n" % (tty_red, tty_normal, e))
         return False
+
 
 
 def interactive_repair(test_name, step_nr, step):
@@ -190,10 +192,11 @@ def list_guitests(test_names):
     if not test_names:
         test_names = names_of_all_tests()
     for test_name in test_names:
-        sys.stdout.write("%s\n" % test_name)
+        sys.stdout.write("%s\n" % (tty_yellow + test_name + tty_normal))
         test = load_guitest(test_name)
         for nr, step in enumerate(test):
             sys.stdout.write("    #%02d - %s\n" % (nr, step_title(step)))
+        sys.stdout.write("\n")
 
 
 def step_title(step):
@@ -209,8 +212,8 @@ def step_title(step):
         action_marker = "[X] "
     else:
         action_marker = "    "
-    return "[%s] %s.py %s%s" % (tty_cyan + step["user"] + tty_normal,
-               step["filename"], action_marker, tty_bold + page_title + tty_normal)
+    return "%-9s %-26s %s%s" % (tty_cyan + step["user"] + tty_normal,
+               step["filename"] + ".py", action_marker, tty_bold + page_title + tty_normal)
 
 
 def rule_step_url(test_name, step_nr):
@@ -310,6 +313,7 @@ if sys.stdout.isatty() and not os.name == "nt":
     tty_normal    = '\033[0m'
     tty_red       = tty_bold + '\033[31m'
     tty_green     = tty_bold + '\033[32m'
+    tty_yellow    = tty_bold + '\033[33m'
     tty_cyan      = tty_bold + '\033[36m'
     tty_blue      = tty_bold + '\033[34m'
 else:
@@ -317,6 +321,7 @@ else:
     tty_normal = ""
     tty_red    = ""
     tty_green  = ""
+    tty_yellow = ""
     tty_cyan   = ""
     tty_blue   = ""
 

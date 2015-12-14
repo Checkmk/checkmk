@@ -185,7 +185,9 @@ def compute_foldertree():
 
 
 def render_tree_folder(f, js_func):
-    subfolders = f.get(".folders", {})
+    subfolders = f.get(".folders", {}).values()
+    subfolders.sort(cmp = lambda f1, f2: cmp(f1["title"].lower(), f2["title"].lower()))
+
     is_leaf = len(subfolders) == 0
 
     # Suppress indentation for non-emtpy root folder
@@ -199,13 +201,21 @@ def render_tree_folder(f, js_func):
 
     if not is_leaf:
         html.begin_foldable_container('wato-hosts', "/" + f[".path"], False, title)
-        for sf in wato.sort_by_title(subfolders.values()):
-            render_tree_folder(sf, js_func)
+        for subfolder in subfolders:
+            render_tree_folder(subfolder, js_func)
         html.end_foldable_container()
     else:
         html.write("<li>" + title + "</li>")
 
     html.write("</ul>")
+
+
+def sort_by_title(folders):
+    def folder_cmp(f1, f2):
+        return cmp(f1["title"].lower(), f2["title"].lower())
+    folders.sort(cmp = folder_cmp)
+    return folders
+
 
 
 def render_wato_foldertree():

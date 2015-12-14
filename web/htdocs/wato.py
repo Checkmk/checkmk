@@ -16085,62 +16085,6 @@ def read_agent_contents_file(root):
 
 
 #.
-#   .--Hooks-&-API---------------------------------------------------------.
-#   |       _   _             _           ___        _    ____ ___         |
-#   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |
-#   |      | |_| |/ _ \ / _ \| |/ / __|  / _ \/\   / _ \ | |_) | |         |
-#   |      |  _  | (_) | (_) |   <\__ \ | (_>  <  / ___ \|  __/| |         |
-#   |      |_| |_|\___/ \___/|_|\_\___/  \___/\/ /_/   \_\_|  |___|        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | The API allows addons to query information about configured hosts.   |
-#   |                                                                      |
-#   | Hooks are a way how addons can add own activities at certain points  |
-#   | of time, e.g. when a host as been edited of the changes have been    |
-#   | activated.                                                           |
-#   '----------------------------------------------------------------------'
-
-# TODO: This seems to be all crap
-
-# Return a list with all the titles of the paths'
-# components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
-def get_folder_title_path(path, with_links=False):
-    # In order to speed this up, we work with a per HTML-request cache
-    cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
-    cache = html.get_cached(cache_name)
-    if cache == None:
-        load_all_folders()
-        cache = {}
-        html.set_cache(cache_name, cache)
-    if path not in cache:
-        cache[path] = Folder.folder(path).title_path(with_links)
-    return cache[path]
-
-def sort_by_title(folders):
-    def folder_cmp(f1, f2):
-        return cmp(f1["title"].lower(), f2["title"].lower())
-    folders.sort(cmp = folder_cmp)
-    return folders
-
-def get_host(folder, hostname):
-    host = folder[".hosts"][hostname]
-    eff = effective_attributes(host, folder)
-    eff["name"] = hostname
-    return eff
-
-# Create an URL to a certain WATO folder.
-def link_to_path(path):
-    return "wato.py?mode=folder&folder=" + html.urlencode(path)
-
-# Create an URL to the edit-properties of a host.
-def link_to_host(hostname):
-    return "wato.py?" + html.urlencode_vars(
-    [("mode", "edit_host"), ("host", hostname)])
-
-
-
-
-#.
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -17085,6 +17029,17 @@ def load_plugins():
 #   |  Functions called by others that import wato (such as views)         |
 #   '----------------------------------------------------------------------'
 
+# Return a list with all the titles of the paths'
+# components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
+def get_folder_title_path(path, with_links=False):
+    # In order to speed this up, we work with a per HTML-request cache
+    cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
+    cache = html.set_cache_default(cache_name, {})
+    if path not in cache:
+        cache[path] = Folder.folder(path).title_path(with_links)
+    return cache[path]
+
+
 # Return the title of a folder - which is given as a string path
 def get_folder_title(path):
     folder = Folder.folder(path)
@@ -17096,4 +17051,15 @@ def get_folder_title(path):
 
 def num_pending_changes():
     return len(parse_audit_log("pending"))
+
+
+# Create an URL to a certain WATO folder when we just know its path
+def link_to_folder_by_path(path):
+    return "wato.py?mode=folder&folder=" + html.urlencode(path)
+
+
+# Create an URL to the edit-properties of a host when we just know its name
+def link_to_host_by_name(host_name):
+    return "wato.py?" + html.urlencode_vars(
+    [("mode", "edit_host"), ("host", host_name)])
 

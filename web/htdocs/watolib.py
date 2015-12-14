@@ -31,11 +31,8 @@
 # WATO modes. Nor complex HTML creation. This is all contained
 # in wato.py
 
-# TODO Search hosts
 # - Test mit verteiltem Monitoring
-# - # if "contactgroups" in host: --> Erzeugung der hosts.mk-Dateien mit Kontaktgruppen!
 # - Restliche TODOs
-# - TODO: This seems to be all crap: Verwendung der Funktionen finden/eleminieren
 # - Webapi
 
 import os, shutil, subprocess
@@ -770,16 +767,15 @@ class Folder(FolderLike):
             # entries coming after this one will be ignored. That way the host-entries have
             # precedence over the folder entries.
 
-            # TODO:
-            # if "contactgroups" in host:
-            #     cgconfig = convert_cgroups_from_tuple(host["contactgroups"])
-            #     cgs = cgconfig["groups"]
-            #     use = cgconfig["use"]
-            #     if use and cgs:
-            #         out.write("\nhost_contactgroups += [\n")
-            #         for cg in cgs:
-            #             out.write('    ( %r, [%r] ),\n' % (cg, hostname))
-            #         out.write(']\n\n')
+            if host.has_explicit_attribute("contactgroups"):
+                 cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
+                 cgs = cgconfig["groups"]
+                 use = cgconfig["use"]
+                 if use and cgs:
+                     out.write("\nhost_contactgroups += [\n")
+                     for cg in cgs:
+                         out.write('    ( %r, [%r] ),\n' % (cg, hostname))
+                     out.write(']\n\n')
 
             for attr, topic in all_host_attributes():
                 attrname = attr.name()

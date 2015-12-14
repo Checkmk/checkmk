@@ -1551,9 +1551,9 @@ def show_context_links(thisview, show_filters, display_options,
            and (config.may("wato.hosts") or config.may("wato.seeall")):
             host = html.var("host")
             if host:
-                url = wato.link_to_host(host)
+                url = wato.link_to_host_by_name(host)
             else:
-                url = wato.link_to_path(html.var("wato_folder", ""))
+                url = wato.link_to_folder_by_path(html.var("wato_folder", ""))
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 

@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -175,3 +173,4 @@ foreach ($Controller in $Controllers) {
 		"CitrixPoolName $HypervisorConnectionName"
 		}
 	}
+"<<<<>>>>"

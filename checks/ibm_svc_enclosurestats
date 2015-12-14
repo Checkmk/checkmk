@@ -49,7 +49,7 @@
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ibm_svc_enclosurestats_temperature"] = {
+factory_settings["ibm_svc_enclosurestats_temperature_default_levels"] = {
     "levels": (35, 40)
 }
 
@@ -71,7 +71,7 @@ check_info["ibm_svc_enclosurestats.temp"] = {
     "has_perfdata"            : True,
     "group"                   : "temperature",
     "includes"                : [ "temperature.include" ],
-    'default_levels_variable' : "ibm_svc_enclosurestats_temperature"
+    'default_levels_variable' : "ibm_svc_enclosurestats_temperature_default_levels"
 }
 
 #.

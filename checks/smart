@@ -158,7 +158,7 @@ def check_smart_temp(item, params, info):
     except KeyError:
         return
 
-    return check_temperature(temperature, params)
+    return check_temperature(temperature, params, "smart_%s" % item)
 
 
 check_info["smart.temp"] = {

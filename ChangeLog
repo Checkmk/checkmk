@@ -7,6 +7,9 @@
     * 2808 FIX: db2_connections: added missing connections performance data
     * 2861 FIX: hivemanager_devices: Fixed configuration of states to treat as WARN
 
+    Multisite:
+    * 2895 FIX: Fixed broken "back to view" links after checkbox actions in views...
+
     Event Console:
     * 2862 FIX: Fixed handling of umlauts in mails send by the EC
     * 2893 FIX: Improved error handling of sending mails via Event Console

@@ -212,7 +212,7 @@ def step_title(step):
         action_marker = "[X] "
     else:
         action_marker = "    "
-    return "%-9s %-26s %s%s" % (tty_cyan + step["user"] + tty_normal,
+    return "%s%-9s%s %-26s %s%s" % (tty_cyan, step["user"], tty_normal,
                step["filename"] + ".py", action_marker, tty_bold + page_title + tty_normal)
 
 

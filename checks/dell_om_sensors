@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 factory_settings["dell_om_sensors_default_levels"] = {
     "levels" : (50, 60)
 }
@@ -89,6 +90,6 @@ check_info["dell_om_sensors"] = {
                                         #'16.1', # ProbeDiscreteReading',
                               ]),
     "includes"                : [ "dell_om.include", "temperature.include" ],
-    "default_levels_variable" : "dell_om_sensors"
+    "default_levels_variable" : "dell_om_sensors_default_levels"
 }
 

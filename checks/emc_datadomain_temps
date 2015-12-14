@@ -24,10 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+def format_emc_datadomain_temp(descr, encid, index, new_format):
+    if new_format:
+        return descr + " Enclosure " + encid
+    else:
+        return encid + "-" + index
+
 def inventory_emc_datadomain_temps(info):
-    for encid, descr, reading, status in info:
-        item = descr + " Enclosure " + encid
-        yield item, {}
+    for encid, index, descr, reading, status in info:
+        yield format_emc_datadomain_temp(descr, encid, index, True), {}
 
 def check_emc_datadomain_temps(item, params, info):
     state_table = {
@@ -37,8 +43,9 @@ def check_emc_datadomain_temps(item, params, info):
         "3": (1, "Overheat Warning"),
         "4": (2, "Overheat Critical"),
     }
-    for encid, descr, reading, status in info:
-        if item == descr + " Enclosure " + encid:
+    for encid, index, descr, reading, status in info:
+        name = format_emc_datadomain_temp(descr, encid, index, "Enclosure" in item)
+        if item == name:
             dev_status, state_name = state_table[status]
             return check_temperature(float(reading), params, "emc_datadomain_temps_%s" % item,
                                      dev_status = int(dev_status),
@@ -54,6 +61,7 @@ check_info["emc_datadomain_temps"] = {
     "snmp_info"             : (".1.3.6.1.4.1.19746.1.1.2.1.1.1",
                                        [
                                             1, # tempEnclosureID
+                                            2, # tempSensorIndex
                                             4, # tempSensorDescription
                                             5, # tempSensorCurrentValue
                                             6, # tempSensorStatus

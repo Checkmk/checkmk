@@ -31,13 +31,58 @@
 # WATO modes. Nor complex HTML creation. This is all contained
 # in wato.py
 
-# - Umbenennen von Host tags geht noch nicht. Reparieren. Testen.
 # - Test mit verteiltem Monitoring
 # - Webapi
 
+
+#.
+#   .--Initialization------------------------------------------------------.
+#   |                           ___       _ _                              |
+#   |                          |_ _|_ __ (_) |_                            |
+#   |                           | || '_ \| | __|                           |
+#   |                           | || | | | | |_                            |
+#   |                          |___|_| |_|_|\__|                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Doing this that must be done when the module WATO is loaded.        |
+#   '----------------------------------------------------------------------'
+
 import os, shutil, subprocess, base64
-import defaults, config, hooks, userdb
+import defaults, config, hooks, userdb, multitar
 from lib import *
+
+replication_paths = []
+backup_paths = []
+backup_domains = {}
+
+def initialize_before_loading_plugins():
+    # Directories and files to synchronize during replication
+    global replication_paths
+    replication_paths = [
+        ( "dir",  "check_mk",   wato_root_dir ),
+        ( "dir",  "multisite",  multisite_dir ),
+        ( "file", "htpasswd",   defaults.htpasswd_file ),
+        ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
+        ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file) ),
+        # Also replicate the user-settings of Multisite? While the replication
+        # as such works pretty well, the count of pending changes will not
+        # know.
+        ( "dir", "usersettings", defaults.var_dir + "/web" ),
+    ]
+
+    # Directories and files for backup & restore
+    global backup_paths
+    backup_paths = replication_paths + [
+        ( "file", "sites",      sites_mk)
+        # autochecks are a site-local ressource. This does only make
+        # sense for single-site installations. How should we handle
+        # this?
+        # ( "dir", "autochecks", defaults.autochecksdir ),
+    ]
+
+    global backup_domains
+    backup_domains = {}
+
 
 #   .--Constants-----------------------------------------------------------.
 #   |              ____                _              _                    |
@@ -2637,17 +2682,211 @@ def collect_attributes(for_what, do_validate = True, varprefix=""):
     return host
 
 #.
-#   .--Replication---------------------------------------------------------.
-#   |           ____            _ _           _   _                        |
-#   |          |  _ \ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __             |
-#   |          | |_) / _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \            |
-#   |          |  _ <  __/ |_) | | | (_| (_| | |_| | (_) | | | |           |
-#   |          |_| \_\___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_|           |
-#   |                    |_|                                               |
+#   .--Distributed WATO----------------------------------------------------.
+#   |                 ____     __        ___  _____ ___                    |
+#   |                |  _ \    \ \      / / \|_   _/ _ \                   |
+#   |                | | | |____\ \ /\ / / _ \ | || | | |                  |
+#   |                | |_| |_____\ V  V / ___ \| || |_| |                  |
+#   |                |____/       \_/\_/_/   \_\_| \___/                   |
+#   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Functions dealing with the WATO replication feature.                 |
-#   | Let's call this "Distributed WATO". More buzz-word like :-)          |
+#   |  Code for distributed WATO. Site configuration. Pushing snapshots.   |
 #   '----------------------------------------------------------------------'
+
+def get_login_secret(create_on_demand = False):
+    path = var_dir + "automation_secret.mk"
+    try:
+        return eval(file(path).read())
+    except:
+        if not create_on_demand:
+            return None
+        secret = get_random_string(32)
+        write_settings_file(path, secret)
+        return secret
+
+
+# Returns the ID of our site. This function only works in replication
+# mode and looks for an entry connecting to the local socket.
+def our_site_id():
+    if not is_distributed():
+        return None
+    for site_id in config.allsites():
+        if config.site_is_local(site_id):
+            return site_id
+    return None
+
+
+def load_sites():
+    try:
+        if not os.path.exists(sites_mk):
+            return config.default_single_site_configuration()
+
+        vars = { "sites" : {} }
+        execfile(sites_mk, vars, vars)
+
+        # Be compatible to old "disabled" value in socket attribute.
+        # Can be removed one day.
+        for site in vars['sites'].values():
+            if site.get('socket') == 'disabled':
+                site['disabled'] = True
+                del site['socket']
+
+        if not vars["sites"]:
+            # There seem to be installations out there which have a sites.mk
+            # which has an empty sites dictionary. Apply the default configuration
+            # for these sites too.
+            return config.default_single_site_configuration()
+        else:
+            return vars["sites"]
+
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (sites_mk, e)))
+        return {}
+
+
+
+def save_sites(sites, activate=True):
+    make_nagios_directory(multisite_dir)
+
+    # Important: even write out sites if it's empty. The global 'sites'
+    # variable will otherwise survive in the Python interpreter of the
+    # Apache processes.
+    out = create_user_file(sites_mk, "w")
+    out.write(wato_fileheader())
+    out.write("sites = \\\n%s\n" % pprint.pformat(sites))
+
+    # Do not activate when just the site's global settings have
+    # been edited
+    if activate:
+        config.load_config() # make new site configuration active
+        update_distributed_wato_file(sites)
+        declare_site_attribute()
+        Folder.invalidate_caches()
+        need_sidebar_reload()
+
+        if config.liveproxyd_enabled:
+            save_liveproxyd_config(sites)
+
+        create_nagvis_backends(sites)
+
+        # Call the sites saved hook
+        call_hook_sites_saved(sites)
+
+
+def save_liveproxyd_config(sites):
+    path = defaults.default_config_dir + "/liveproxyd.mk"
+    out = create_user_file(path, "w")
+    out.write(wato_fileheader())
+
+    conf = {}
+    for siteid, siteconf in sites.items():
+        s = siteconf.get("socket")
+        if type(s) == tuple and s[0] == "proxy":
+            conf[siteid] = s[1]
+
+    out.write("sites = \\\n%s\n" % pprint.pformat(conf))
+    try:
+        pidfile = defaults.livestatus_unix_socket + "proxyd.pid"
+        pid = int(file(pidfile).read().strip())
+        os.kill(pid, 10)
+    except Exception, e:
+        html.show_error(_("Warning: cannot reload Livestatus Proxy-Daemon: %s" % e))
+
+
+def create_nagvis_backends(sites):
+    if not defaults.omd_root:
+        return # skip when not in OMD environment
+    cfg = [
+        '; MANAGED BY CHECK_MK WATO - Last Update: %s' % time.strftime('%Y-%m-%d %H:%M:%S'),
+    ]
+    for site_id, site in sites.items():
+        if site == defaults.omd_site:
+            continue # skip local site, backend already added by omd
+        if 'socket' not in site:
+            continue # skip sites without configured sockets
+
+        # Handle special data format of livestatus proxy config
+        if type(site['socket']) == tuple:
+            socket = 'tcp:%s:%d' % site['socket'][1]['socket']
+        else:
+            socket = site['socket']
+
+        cfg += [
+            '',
+            '[backend_%s]' % site_id,
+            'backendtype="mklivestatus"',
+            'socket="%s"' % socket,
+        ]
+
+        if site.get("status_host"):
+            cfg.append('statushost="%s"' % ':'.join(site['status_host']))
+
+    file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % defaults.omd_root, 'w').write('\n'.join(cfg))
+
+
+def create_site_globals_file(siteid, tmp_dir):
+    if not os.path.exists(tmp_dir):
+        make_nagios_directory(tmp_dir)
+    sites = load_sites()
+    site = sites[siteid]
+    config = site.get("globals", {})
+
+    # Add global setting for disabling WATO right here. It is not
+    # available as a normal global option. That would be too dangerous.
+    # You could disable WATO on the master very easily that way...
+    # The default value is True - even for sites configured with an
+    # older version of Check_MK.
+    config["wato_enabled"] = not site.get("disable_wato", True)
+    file(tmp_dir + "/sitespecific.mk", "w").write("%r\n" % config)
+
+
+def create_distributed_wato_file(siteid, mode):
+    out = create_user_file(defaults.check_mk_configdir + "/distributed_wato.mk", "w")
+    out.write(wato_fileheader())
+    out.write("# This file has been created by the master site\n"
+              "# push the configuration to us. It makes sure that\n"
+              "# we only monitor hosts that are assigned to our site.\n\n")
+    out.write("distributed_wato_site = '%s'\n" % siteid)
+
+
+def delete_distributed_wato_file():
+    p = defaults.check_mk_configdir + "/distributed_wato.mk"
+    # We do not delete the file but empty it. That way
+    # we do not need write permissions to the conf.d
+    # directory!
+    if os.path.exists(p):
+        create_user_file(p, "w").write("")
+
+
+def has_distributed_wato_file():
+    return os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk")
+
+
+# Makes sure, that in distributed mode we monitor only
+# the hosts that are directly assigned to our (the local)
+# site.
+def update_distributed_wato_file(sites):
+    # Note: we cannot access config.sites here, since we
+    # are currently in the process of saving the new
+    # site configuration.
+    distributed = False
+    found_local = False
+    for siteid, site in sites.items():
+        if site.get("replication"):
+            distributed = True
+        if config.site_is_local(siteid):
+            found_local = True
+            create_distributed_wato_file(siteid, site.get("replication"))
+
+    # Remove the distributed wato file
+    # a) If there is no distributed WATO setup
+    # b) If the local site could not be gathered
+    if not distributed: # or not found_local:
+        delete_distributed_wato_file()
+
 
 def do_site_login(site_id, name, password):
     sites = load_sites()
@@ -2977,6 +3216,81 @@ def synchronize_site(site, restart):
     except Exception, e:
         update_replication_status(site["id"], { "result" : str(e) })
         raise
+
+
+def automation_push_snapshot():
+    try:
+        site_id = html.var("siteid")
+        if not site_id:
+            raise MKGeneralException(_("Missing variable siteid"))
+        mode = html.var("mode", "slave")
+
+        our_id = our_site_id()
+
+        if mode == "slave" and not config.is_single_local_site():
+            raise MKGeneralException(_("Configuration error. You treat us as "
+               "a <b>slave</b>, but we have an own distributed WATO configuration!"))
+
+        if our_id != None and our_id != site_id:
+            raise MKGeneralException(
+              _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+                (our_id, site_id))
+
+        # Make sure there are no local changes we would lose! But only if we are
+        # distributed ourselves (meaning we are a peer).
+        if is_distributed():
+            pending = parse_audit_log("pending")
+            if len(pending) > 0:
+                message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
+                message += ", ".join([e[-1] for e in pending[:10]])
+                raise MKGeneralException(message)
+
+        tarcontent = html.uploaded_file("snapshot")
+        if not tarcontent:
+            raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
+        tarcontent = tarcontent[2]
+
+        multitar.extract_from_buffer(tarcontent, replication_paths)
+
+        # We expect one file containing sitespecific global settings.
+        # That is contained in the sub-tarball "sitespecific.tar" and
+        # just contains one file: "sitespecific.mk". The contains a repr()
+        # of all global settings, that should override the ones in global.mk
+        # in various directories.
+        try:
+            tmp_dir = defaults.tmp_dir + "/sitespecific-%s" % id(html)
+            if not os.path.exists(tmp_dir):
+                make_nagios_directory(tmp_dir)
+            multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
+            site_globals = eval(file(tmp_dir + "/sitespecific.mk").read())
+            current_settings = load_configuration_settings()
+            current_settings.update(site_globals)
+            save_configuration_settings(current_settings)
+            shutil.rmtree(tmp_dir)
+        except Exception, e:
+            logger(LOG_WARNING, "Warning: cannot extract site-specific global settings: %s" % e)
+
+        log_commit_pending() # pending changes are lost
+
+        call_hook_snapshot_pushed()
+
+        # Create rule making this site only monitor our hosts
+        create_distributed_wato_file(site_id, mode)
+        log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
+
+        # Restart/reload monitoring core, if neccessary
+        if html.var("restart", "no") == "yes":
+            configuration_warnings = check_mk_local_automation(config.wato_activation_method)
+        else:
+            configuration_warnings = []
+
+        return configuration_warnings
+    except Exception, e:
+        if config.debug:
+            return _("Internal automation error: %s\n%s") % (str(e), format_exception())
+        else:
+            return _("Internal automation error: %s") % e
+
 
 # Isolated restart without prior synchronization. Currently this
 # is only being called for the local site.

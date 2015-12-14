@@ -17166,6 +17166,7 @@ def create_sample_config():
             "ibm_svc_systemstats.cache",
             "casa_cpu_temp",
             "cmciii.temp",
+            "cmciii.psm_current",
             "cmciii_lcp_airin",
             "cmciii_lcp_airout",
             "cmciii_lcp_water",

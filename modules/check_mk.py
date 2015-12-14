@@ -279,6 +279,7 @@ old_service_descriptions = {
 
     "casa_cpu_temp"                    : "Temperature %s",
     "cmciii.temp"                      : get_old_cmciii_temp_description,
+    "cmciii.psm_current"               : "%s",
     "cmciii_lcp_airin"                 : "LCP Fanunit Air IN",
     "cmciii_lcp_airout"                : "LCP Fanunit Air OUT",
     "cmciii_lcp_water"                 : "LCP Fanunit Water %s",

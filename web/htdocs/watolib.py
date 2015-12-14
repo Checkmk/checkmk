@@ -31,10 +31,6 @@
 # WATO modes. Nor complex HTML creation. This is all contained
 # in wato.py
 
-# - Test mit verteiltem Monitoring
-# - Webapi
-
-
 #   .--Initialization------------------------------------------------------.
 #   |                           ___       _ _                              |
 #   |                          |_ _|_ __ (_) |_                            |

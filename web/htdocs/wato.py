@@ -30,7 +30,7 @@
 # and implement AJAX handlers. It uses classes, functions and globals
 # from watolib.py.
 
-# TODO: is_distributed() now always returns True. Remove all occurrances
+# CLEANUP: is_distributed() now always returns True. Remove all occurrances
 # of this function as soon as we know that everything still works without
 # the old "single" mode.
 
@@ -3330,7 +3330,7 @@ def mode_bulk_edit(phase):
             for host_name in host_names:
                 host = Folder.current().host(host_name)
                 host.update_attributes(changed_attributes)
-                # TODO: call_hook_hosts_changed() is called too often.
+                # call_hook_hosts_changed() is called too often.
                 # Either offer API in class Host for bulk change or
                 # delay saving until end somehow
 
@@ -7346,8 +7346,8 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 html.empty_icon_button()
 
             notify_method = rule["notify_plugin"]
-            # catch rules with empty notify_plugin key
-            # TODO Mayby this should be avoided somewhere else ( e.g. rule editor)
+            # Catch rules with empty notify_plugin key
+            # Maybe this should be avoided somewhere else (e.g. rule editor)
             if not notify_method:
                 notify_method = ( None, [] )
             notify_plugin = notify_method[0]
@@ -10432,11 +10432,10 @@ def mode_edit_user(phase):
     select_language(user)
     custom_user_attributes('personal')
 
-    # TODO: Later we could add custom macros here, which
-    # then could be used for notifications. On the other hand,
-    # if we implement some check_mk --notify, we could directly
-    # access the data in the account with the need to store
-    # values in the monitoring core. We'll see what future brings.
+    # Later we could add custom macros here, which then could be used
+    # for notifications. On the other hand, if we implement some check_mk
+    # --notify, we could directly access the data in the account with the need
+    # to store values in the monitoring core. We'll see what future brings.
     forms.end()
     html.button("save", _("Save"))
     if new:
@@ -11015,7 +11014,7 @@ def render_host_tag_list(hosttags, builtin_hosttags):
             table.cell(_("Choices"), str(len(choices)))
             table.cell(_("Demonstration"), sortable=False)
             html.begin_form("tag_%s" % tag_id)
-            host_attribute("tag_%s" % tag_id).render_input(None)
+            host_attribute("tag_%s" % tag_id).render_input("", None)
             html.end_form()
     table.end()
 
@@ -11335,7 +11334,7 @@ def mode_edit_hosttag(phase):
                 operations = {}
 
                 # Detect renaming
-                new_by_title = dict([e[:2] for e in new_choices])
+                new_by_title = dict([(e[1], e[0]) for e in new_choices])
                 for entry in choices:
                     tag, tit = entry[:2] # optional third element: aux tags
                     if tit in new_by_title:
@@ -11428,13 +11427,13 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         if tag_id and type(operations) == list: # make attribute unknown to system, important for save() operations
             undeclare_host_tag_attribute(tag_id)
         affected_folders, affected_hosts, affected_rulespecs = \
-        change_host_tags_in_folders(tag_id, operations, mode, Folder().root_folder())
+        change_host_tags_in_folders(tag_id, operations, mode, Folder.root_folder())
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d" %
             (len(affected_folders), len(affected_hosts), len(affected_rulespecs)))
 
     message = ""
     affected_folders, affected_hosts, affected_rulespecs = \
-        change_host_tags_in_folders(tag_id, operations, "check", Folder().root_folder())
+        change_host_tags_in_folders(tag_id, operations, "check", Folder.root_folder())
 
     if affected_folders:
         message += _("Affected folders with an explicit reference to this tag "
@@ -11530,7 +11529,7 @@ def change_host_tags_in_folders(tag_id, operations, mode, folder):
     affected_rulespecs = []
     if tag_id:
         attrname = "tag_" + tag_id
-        attributes = folder["attributes"]
+        attributes = folder.attributes()
         if attrname in attributes: # this folder has set the tag group in question
             if type(operations) == list: # deletion of tag group
                 if attrname in attributes:
@@ -11556,42 +11555,43 @@ def change_host_tags_in_folders(tag_id, operations, mode, folder):
                 # Ignore MKAuthExceptions of locked host.mk files
                 pass
 
-        for subfolder in folder[".folders"].values():
+        for subfolder in folder.subfolders().values():
             aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(tag_id, operations, mode, subfolder)
             affected_folders += aff_folders
             affected_hosts += aff_hosts
             affected_rulespecs += aff_rulespecs
 
-        load_hosts(folder)
-        affected_hosts += change_host_tags_in_hosts(folder, tag_id, operations, mode, folder[".hosts"])
+        affected_hosts += change_host_tags_in_hosts(folder, tag_id, operations, mode, folder.hosts())
 
     affected_rulespecs += change_host_tags_in_rules(folder, operations, mode)
     return affected_folders, affected_hosts, affected_rulespecs
+
 
 def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
     need_save = False
     affected_hosts = []
     for hostname, host in hostlist.items():
+        attributes = host.attributes()
         attrname = "tag_" + tag_id
-        if attrname in host:
+        if attrname in attributes:
             if type(operations) == list: # delete complete tag group
                 affected_hosts.append(host)
                 if mode != "check":
-                    del host[attrname]
+                    del attributes[attrname]
                     need_save = True
             else:
-                if host[attrname] in operations:
+                if attributes[attrname] in operations:
                     affected_hosts.append(host)
                     if mode != "check":
-                        new_tag = operations[host[attrname]]
+                        new_tag = operations[attributes[attrname]]
                         if new_tag == False: # tag choice has been removed -> fall back to default
-                            del host[attrname]
+                            del attributes[attrname]
                         else:
-                            host[attrname] = new_tag
+                            attributes[attrname] = new_tag
                         need_save = True
     if need_save:
         try:
-            save_hosts(folder)
+            folder.save_hosts()
         except MKAuthException, e:
             # Ignore MKAuthExceptions of locked host.mk files
             pass
@@ -11687,7 +11687,7 @@ def change_host_tags_in_rules(folder, operations, mode):
 
 def mode_ruleeditor(phase):
     only_host = html.var("host", "")
-    # TODO: remove only_local and its control paths
+    # CLEANUP: remove only_local and its control paths
     only_local = "" # html.var("local")
 
     if phase == "title":
@@ -16109,7 +16109,7 @@ def host_status_button(hostname, viewname):
            ("filename", Folder.current().path() + "/hosts.mk"),
            ("host",     hostname),
            ("site",     "")]),
-           "status")  # TODO: support for distributed WATO
+           "status")
 
 
 def service_status_button(hostname, servicedesc):
@@ -16119,7 +16119,7 @@ def service_status_button(hostname, servicedesc):
            ("host",     hostname),
            ("service",  servicedesc),
            ]),
-           "status")  # TODO: support for distributed WATO
+           "status")
 
 
 def folder_status_button(viewname = "allhosts"):
@@ -16127,7 +16127,7 @@ def folder_status_button(viewname = "allhosts"):
        "view.py?" + html.urlencode_vars([
            ("view_name", viewname),
            ("wato_folder", Folder.current().path())]),
-           "status")  # TODO: support for distributed WATO
+           "status")
 
 
 def global_buttons():

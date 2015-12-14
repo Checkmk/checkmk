@@ -33,7 +33,6 @@
 
 # - Umbenennen von Host tags geht noch nicht. Reparieren. Testen.
 # - Test mit verteiltem Monitoring
-# - Restliche TODOs
 # - Webapi
 
 import os, shutil, subprocess, base64

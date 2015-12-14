@@ -303,6 +303,7 @@ year_regex = "201[56789]"
 def guitest_drop_dynamic_ids_in_text(text):
     text = re.sub("selection(%3d|=)[a-f0-9---]{36}", "selection=*", text)
     text = re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text)
+    text = re.sub('name="_transid" value="1[0-9/]+"', 'name="_transid", value="***"', text)
     text = re.sub("<script.*?</script>", "", text, flags=re.DOTALL)
     text = re.sub(check_mk_version_regex, "CMK_VERSION", text)
     text = re.sub(timeofday_regex, "TIMEOFDAY", text)

@@ -52,6 +52,7 @@ manpage_catalog_titles = {
             "adva"        : "ADVA Optical Networking",
             "alcatel"     : "Alcatel",
             "arris"       : "ARRIS",
+            "avaya"       : "Avaya",
             "avm"         : "AVM",
             "bintec"      : "Bintec",
             "bluecat"     : "BlueCat Networks",

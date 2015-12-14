@@ -70,7 +70,9 @@ def inventory_cisco_power(info):
 
 def check_cisco_power(item, no_params, info):
     for sid, textinfo, state, source in info:
-        if cisco_sensor_item(textinfo, sid) == item or cisco_sensor_item(textinfo, sid)+" "+sid == item:
+        if cisco_sensor_item(textinfo, sid) == item or\
+                cisco_sensor_item(textinfo, sid)+" "+sid == item or\
+                cisco_sensor_item(textinfo, sid)+"/"+sid == item:
             state = int(state)
             source = int(source)
             output = 'state: %s, source: %s' % \

@@ -279,6 +279,10 @@ def inventory_cmciii_psm_current(parsed):
 
 def check_cmciii_psm_current(item, params, parsed):
     unit_name, item_name = item.split(" ", 1)
+    if item_name.endswith(".Current"):
+        #support for items dicovered in older check_mk versions
+        item_name = item_name[:-8]
+
     item_name += ".Unit"
     unit_items, units = parsed
     unit = cmciii_get_unit_number(units, unit_name)

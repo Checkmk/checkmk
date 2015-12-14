@@ -24,10 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# CLEANUP: Replace MKUserError by MKAPIError or something like that
+# TODO: .nodes suchen und anders behandeln
+
 def validate_api_request(request, valid_keys):
     for key in request.keys():
         if key not in valid_keys:
             raise MKUserError(None, _("Invalid key: %s") % key)
+
 
 def action_add_host(request):
     validate_api_request(request, ["hostname", "folder", "attributes"])
@@ -38,18 +42,24 @@ def action_add_host(request):
         create_folders = True
 
     hostname   = request.get("hostname")
-    folder     = request.get("folder")
+    Hostname().validate_value(hostname, "hostname")
+    folder_path = request.get("folder")
     attributes = request.get("attributes", {})
 
     if not hostname:
         raise MKUserError(None, _("Hostname is missing"))
-    if not folder:
+    if folder_path == None:
         raise MKUserError(None, _("Foldername is missing"))
 
-    return g_api.add_hosts([{"hostname":   hostname,
-                             "folder":     folder,
-                             "attributes": attributes}],
-                             create_folders = create_folders)
+    if not Folder.folder_exists(folder_path):
+        if not create_folders:
+            raise MKUserError(None, _("Folder not existing"))
+        Folder.create_missing_folders(folder_path)
+
+    # TODO: Validation of arguments (hostname, foldername, attributes)
+
+    Folder.folder(folder_path).create_hosts([(hostname, attributes, None)])
+
 
 api_actions["add_host"] = {
     "handler"         : action_add_host,
@@ -61,16 +71,24 @@ api_actions["add_host"] = {
 def action_edit_host(request):
     validate_api_request(request, ["hostname", "unset_attributes", "attributes"])
 
-    hostname         = request.get("hostname")
-    attributes       = request.get("attributes", {})
-    unset_attributes = request.get("unset_attributes", [])
+    hostname              = request.get("hostname")
+    attributes            = request.get("attributes", {})
+    unset_attribute_names = request.get("unset_attributes", [])
 
     if not hostname:
         raise MKUserError(None, _("Hostname is missing"))
 
-    return g_api.edit_hosts([{"hostname":         hostname,
-                              "attributes":       attributes,
-                              "unset_attributes": unset_attributes}])
+    host = Host.host(hostname)
+    if not host:
+        raise MKUserError(None, _("No such host"))
+
+    current_attributes = host.attributes().copy()
+    for attrname in unset_attribute_names:
+        if attrname in current_attributes:
+            del current_attributes[attrname]
+    current_attributes.update(attributes)
+    host.edit(attributes, host.cluster_nodes())
+
 
 api_actions["edit_host"] = {
     "handler"     : action_edit_host,
@@ -82,17 +100,21 @@ api_actions["edit_host"] = {
 def action_get_host(request):
     validate_api_request(request, ["hostname"])
 
-    if html.var("effective_attributes"):
-        effective_attributes = bool(int(html.var("effective_attributes")))
-    else:
-        effective_attributes = True
-
     hostname = request.get("hostname")
-
     if not hostname:
         raise MKUserError(None, _("Hostname is missing"))
+    host = Host.host(hostname)
+    if not host:
+        raise MKUserError(None, _("No such host"))
+    host.need_permission("read")
 
-    return g_api.get_host(hostname, effective_attr = effective_attributes)
+    if html.var("effective_attributes") == "1":
+        attributes = host.effective_attributes()
+    else:
+        attributes = host.attributes()
+
+    return { "attributes": attributes, "path": host.folder().path(), "hostname": host.name() }
+
 
 api_actions["get_host"] = {
     "handler"         : action_get_host,

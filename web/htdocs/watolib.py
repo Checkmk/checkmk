@@ -35,7 +35,6 @@
 # - Webapi
 
 
-#.
 #   .--Initialization------------------------------------------------------.
 #   |                           ___       _ _                              |
 #   |                          |_ _|_ __ (_) |_                            |
@@ -83,7 +82,7 @@ def initialize_before_loading_plugins():
     global backup_domains
     backup_domains = {}
 
-
+#.
 #   .--Constants-----------------------------------------------------------.
 #   |              ____                _              _                    |
 #   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
@@ -566,6 +565,24 @@ class Folder(BaseFolder):
             return Folder.all_folders()[folder_path]
         else:
             raise MKGeneralException("No WATO folder %s." % folder_path)
+
+
+    @staticmethod
+    def create_missing_folders(folder_path):
+        folder = Folder.folder("")
+        for subfolder_name in Folder._split_folder_path(folder_path):
+            if folder.has_subfolder(subfolder_name):
+                folder = folder.subfolder(subfolder_name)
+            else:
+                folder = folder.create_subfolder(subfolder_name, subfolder_name, {})
+
+
+    @staticmethod
+    def _split_folder_path(folder_path):
+        if not folder_path:
+            return []
+        else:
+            return folder_path.split("/")
 
 
     @staticmethod
@@ -1343,6 +1360,9 @@ class Folder(BaseFolder):
     # |                                                                       |
     # | Sidebar: some sidebar snapins show the WATO folder tree. Everytime    |
     # | the tree changes the sidebar needs to be reloaded. This is done here. |
+    # |                                                                       |
+    # | Validation: these methods do *not* validate the parameters for syntax.|
+    # | This is the task of the actual WATO modes or the API.                 |
     # '-----------------------------------------------------------------------'
 
     def create_subfolder(self, name, title, attributes):

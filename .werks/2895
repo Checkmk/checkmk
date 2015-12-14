@@ -1,0 +1,11 @@
+Title: Fixed broken "back to view" links after checkbox actions in views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450098481
+Class: fix
+
+There should be two links: "Back to view" and "Back to view with checkbox reset".
+There was only one the last one visible but it had mixed up URLs with the first one
+which resulted in strange behaviours on the target pages.

@@ -1,0 +1,10 @@
+Title: Improved error handling of sending mails via Event Console
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p6
+Date: 1449484212
+
+

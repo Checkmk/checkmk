@@ -193,8 +193,9 @@ def check_cpu_util_unix(values, params, cores = None):
             ("core_util_graph" in params or \
              "core_util_time" in params):
         ctr = 0
+        cores_padded = [line + [0] * (11 - len(line)) for line in cores]
         for core, user, nice, system, idle, iowait,\
-            irq, softirq, steal, guest, guest_nice  in cores:
+            irq, softirq, steal, guest, guest_nice in cores_padded:
 
             total = user + nice + system + iowait + irq + softirq + steal + guest + guest_nice
 

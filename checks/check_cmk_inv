@@ -31,7 +31,7 @@ def check_cmk_inv(params):
     return "--hw-changes=%d --sw-changes=%d" % (params.get("hw_changes", 0), params.get("sw_changes", 0))
 
 active_check_info['cmk_inv'] = {
-    "command_line"        : 'cmk $ARG1$ --inventory-as-check $HOSTNAME$',
+    "command_line"        : 'cmk $ARG1$ --cache --inventory-as-check $HOSTNAME$',
     "argument_function"   : check_cmk_inv,
     "service_description" : lambda x: "Check_MK HW/SW Inventory",
     "has_perfdata"        : False,

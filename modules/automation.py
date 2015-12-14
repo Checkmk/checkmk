@@ -178,8 +178,8 @@ def automation_try_discovery(args):
     # TODO: Remove this unlucky option opt_use_cachefile. At least do not
     # handle this option so deep in the code. It should only be handled
     # by top-level functions.
-    global opt_use_cachefile, check_max_cachefile_age
-    opt_use_cachefile = use_caches
+    set_use_cachefile(use_caches)
+    global check_max_cachefile_age
     if use_caches:
         check_max_cachefile_age = inventory_max_cachefile_age
     hostname = args[0]

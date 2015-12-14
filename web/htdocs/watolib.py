@@ -31,6 +31,7 @@
 # WATO modes. Nor complex HTML creation. This is all contained
 # in wato.py
 
+# - Umbenennen von Host tags geht noch nicht. Reparieren. Testen.
 # - Test mit verteiltem Monitoring
 # - Restliche TODOs
 # - Webapi
@@ -145,7 +146,7 @@ def log_audit(linkinfo, what, message, user_id = None):
 
 # status is one of:
 # SYNC        -> Only sync neccessary
-# RESTART     -> Restart and sync neccessary (TODO: where is this used??)
+# RESTART     -> Restart and sync neccessary (where is this used??)
 # SYNCRESTART -> Do sync and restart
 # AFFECTED    -> affected sites are already marked for sync+restart
 #                by mark_affected_sites_dirty().
@@ -337,18 +338,17 @@ class WithPermissionsAndAttributes(WithPermissions):
 
 
 #.
-#   .--FolderLike----------------------------------------------------------.
-#   |            _____     _     _           _     _ _                     |
-#   |           |  ___|__ | | __| | ___ _ __| |   (_) | _____              |
-#   |           | |_ / _ \| |/ _` |/ _ \ '__| |   | | |/ / _ \             |
-#   |           |  _| (_) | | (_| |  __/ |  | |___| |   <  __/             |
-#   |           |_|  \___/|_|\__,_|\___|_|  |_____|_|_|\_\___|             |
+#   .--BaseFolder----------------------------------------------------------.
+#   |          ____                 _____     _     _                      |
+#   |         | __ )  __ _ ___  ___|  ___|__ | | __| | ___ _ __            |
+#   |         |  _ \ / _` / __|/ _ \ |_ / _ \| |/ _` |/ _ \ '__|           |
+#   |         | |_) | (_| \__ \  __/  _| (_) | | (_| |  __/ |              |
+#   |         |____/ \__,_|___/\___|_|  \___/|_|\__,_|\___|_|              |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   |  Base class of SearchFolder and Folder. Implements common methods.   |
 #   '----------------------------------------------------------------------'
-
-class FolderLike(WithPermissionsAndAttributes):
+class BaseFolder(WithPermissionsAndAttributes):
     def __init__(self):
         WithPermissions.__init__(self)
 
@@ -484,7 +484,6 @@ class FolderLike(WithPermissionsAndAttributes):
         html.write("</ul></div>\n")
 
 
-
 #.
 #   .--Folder--------------------------------------------------------------.
 #   |                     _____     _     _                                |
@@ -499,9 +498,7 @@ class FolderLike(WithPermissionsAndAttributes):
 #   '----------------------------------------------------------------------'
 
 
-class Folder(FolderLike):
-    # TODO: Private Methoden von öffentlichen trennen
-
+class Folder(BaseFolder):
     # .--------------------------------------------------------------------.
     # | STATIC METHODS                                                     |
     # '--------------------------------------------------------------------'
@@ -594,18 +591,18 @@ class Folder(FolderLike):
         self._parent = parent_folder
         self._subfolders = {}
         if folder_path != None:
-            self.init_by_loading_existing_directory(folder_path)
+            self._init_by_loading_existing_directory(folder_path)
         else:
-            self.init_by_creating_new(title, attributes)
+            self._init_by_creating_new(title, attributes)
 
 
-    def init_by_loading_existing_directory(self, folder_path):
+    def _init_by_loading_existing_directory(self, folder_path):
         self._hosts = None
-        self.load()
+        self._load()
         self.load_subfolders()
 
 
-    def init_by_creating_new(self, title, attributes):
+    def _init_by_creating_new(self, title, attributes):
         self._hosts = {}
         self._num_hosts = 0
         self._title = title
@@ -627,19 +624,19 @@ class Folder(FolderLike):
         return True
 
 
-    def load_hosts_on_demand(self):
+    def _load_hosts_on_demand(self):
         if self._hosts == None:
-            self.load_hosts()
+            self._load_hosts()
 
 
-    def load_hosts(self):
+    def _load_hosts(self):
         self._locked_hosts = False
 
         self._hosts = {}
         if not os.path.exists(self.hosts_file_path()):
             return
 
-        variables = self.load_hosts_file()
+        variables = self._load_hosts_file()
         self._locked_hosts = variables["_lock"]
 
         # Add entries in clusters{} to all_hosts, prepare cluster to node mapping
@@ -652,12 +649,12 @@ class Folder(FolderLike):
         for host_name_with_tags in variables["all_hosts"]:
             parts = host_name_with_tags.split('|')
             host_name = parts[0]
-            host_tags = self.cleanup_host_tags(parts[1:])
-            host = self.create_host_from_variables(host_name, host_tags, nodes_of, variables)
+            host_tags = self._cleanup_host_tags(parts[1:])
+            host = self._create_host_from_variables(host_name, host_tags, nodes_of, variables)
             self._hosts[host_name] = host
 
 
-    def create_host_from_variables(self, host_name, host_tags, nodes_of, variables):
+    def _create_host_from_variables(self, host_name, host_tags, nodes_of, variables):
         cluster_nodes = nodes_of.get(host_name)
 
         # If we have a valid entry in host_attributes then the hosts.mk file contained
@@ -670,10 +667,10 @@ class Folder(FolderLike):
         # information is not available and all tags are set explicitely
         else:
             attributes = {}
-            alias = self.get_alias_from_extra_conf(host_name, variables)
+            alias = self._get_alias_from_extra_conf(host_name, variables)
             if alias != None:
                 attributes["alias"] = alias
-            attributes.update(self.get_attributes_from_tags(host_tags))
+            attributes.update(self._get_attributes_from_tags(host_tags))
             for attribute_key, config_dict in [
                 ( "ipaddress",      "ipaddresses" ),
                 ( "ipv6address",    "ipv6addresses" ),
@@ -685,12 +682,7 @@ class Folder(FolderLike):
         return Host(self, host_name, attributes, cluster_nodes)
 
 
-    def reload_hosts(self):
-        self._hosts = None
-        return self.load_hosts()
-
-
-    def load_hosts_file(self):
+    def _load_hosts_file(self):
         variables = {
             "FOLDER_PATH"               : "",
             "ALL_HOSTS"                 : ALL_HOSTS,
@@ -713,12 +705,12 @@ class Folder(FolderLike):
         self.need_unlocked_hosts()
         self.need_permission("write")
         if self._hosts != None:
-            self.save_hosts_file()
+            self._save_hosts_file()
         call_hook_hosts_changed(self)
 
 
-    def save_hosts_file(self):
-        self.ensure_folder_directory()
+    def _save_hosts_file(self):
+        self._ensure_folder_directory()
         if not self.has_hosts():
             if os.path.exists(self.hosts_file_path()):
                 os.remove(self.hosts_file_path())
@@ -845,13 +837,13 @@ class Folder(FolderLike):
 
 
     # Remove dynamic tags like "wato" and the folder path.
-    def cleanup_host_tags(self, tags):
+    def _cleanup_host_tags(self, tags):
         return [ tag for tag in tags if
                  tag not in [ "wato", "//" ]
                      and not tag.startswith("/wato/") ]
 
 
-    def get_attributes_from_tags(self, host_tags):
+    def _get_attributes_from_tags(self, host_tags):
         # Retrieve setting for each individual host tag. This is needed for
         # reading in hosts.mk files where host_attributes is missing. Can
         # we drop this one day?
@@ -863,8 +855,8 @@ class Folder(FolderLike):
         return attributes
 
 
-    def get_alias_from_extra_conf(self, host_name, variables):
-        aliases = self.host_extra_conf(host_name, variables["extra_host_conf"]["alias"])
+    def _get_alias_from_extra_conf(self, host_name, variables):
+        aliases = self._host_extra_conf(host_name, variables["extra_host_conf"]["alias"])
         if len(aliases) > 0:
             return aliases[0]
         else:
@@ -873,14 +865,14 @@ class Folder(FolderLike):
 
     # This is a dummy implementation which works without tags
     # and implements only a special case of Check_MK's real logic.
-    def host_extra_conf(self, host_name, conflist):
+    def _host_extra_conf(self, host_name, conflist):
         for value, hostlist in conflist:
             if host_name in hostlist:
                 return [value]
         return []
 
 
-    def load(self):
+    def _load(self):
         wato_info               = self._load_wato_info()
         self._title             = wato_info.get("title", self._fallback_title())
         self._attributes        = wato_info.get("attributes", {})
@@ -907,7 +899,7 @@ class Folder(FolderLike):
 
 
     def _save_wato_info(self):
-        self.ensure_folder_directory()
+        self._ensure_folder_directory()
         wato_info = {
             "title"           : self._title,
             "attributes"      : self._attributes,
@@ -918,7 +910,7 @@ class Folder(FolderLike):
         file(self.wato_info_path(), "w").write("%r\n" % wato_info)
 
 
-    def ensure_folder_directory(self):
+    def _ensure_folder_directory(self):
         if not os.path.exists(self.filesystem_path()):
             make_nagios_directories(self.filesystem_path())
 
@@ -965,6 +957,7 @@ class Folder(FolderLike):
         for subfolder in self._subfolders.values():
             subfolder.drop_caches()
 
+
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |
     # '-----------------------------------------------------------------------'
@@ -991,7 +984,7 @@ class Folder(FolderLike):
 
 
     def hosts(self):
-        self.load_hosts_on_demand()
+        self._load_hosts_on_demand()
         return self._hosts
 
 
@@ -1282,7 +1275,7 @@ class Folder(FolderLike):
 
 
     def locked_hosts(self):
-        self.load_hosts_on_demand()
+        self._load_hosts_on_demand()
         return self._locked_hosts
 
 
@@ -1419,7 +1412,7 @@ class Folder(FolderLike):
                          (host_name, existing_host.folder().url(), existing_host.folder().alias_path()))
 
         # 2. Actual modification
-        self.load_hosts_on_demand()
+        self._load_hosts_on_demand()
         for host_name, attributes, cluster_nodes in entries:
             host = Host(self, host_name, attributes, cluster_nodes)
             self._hosts[host_name] = host
@@ -1514,19 +1507,15 @@ class Folder(FolderLike):
             subfolder.rewrite_hosts_files()
 
 
-    # .-----------------------------------------------------------------------.
-    # | PRIVATE HELPERS FOR MODIFICATIONS                                     |
-    # '-----------------------------------------------------------------------'
-
     def _add_host(self, host):
-        self.load_hosts_on_demand()
+        self._load_hosts_on_demand()
         self._hosts[host.name()] = host
         host._folder = self
         self._num_hosts = len(self._hosts)
 
 
     def _remove_host(self, host):
-        self.load_hosts_on_demand()
+        self._load_hosts_on_demand()
         del self._hosts[host.name()]
         host._folder = None
         self._num_hosts = len(self._hosts)
@@ -1545,7 +1534,7 @@ class Folder(FolderLike):
 
 
     def _rewrite_hosts_file(self):
-        self.load_hosts_on_demand()
+        self._load_hosts_on_demand()
         self.save_hosts()
 
 
@@ -1555,7 +1544,7 @@ class Folder(FolderLike):
     # '-----------------------------------------------------------------------'
 
     def show_locking_information(self):
-        self.load_hosts_on_demand()
+        self._load_hosts_on_demand()
         lock_messages = []
 
         # Locked hosts
@@ -1600,7 +1589,7 @@ class Folder(FolderLike):
 #   +----------------------------------------------------------------------+
 #   |  A virtual folder representing the result of a search.               |
 #   '----------------------------------------------------------------------'
-class SearchFolder(FolderLike):
+class SearchFolder(BaseFolder):
     @staticmethod
     def criteria_from_html_vars():
         crit = { ".name" : html.var("host_search_host") }
@@ -2063,16 +2052,11 @@ class Host(WithPermissionsAndAttributes):
         self.folder().save_hosts()
         return changed
 
-    # .-----------------------------------------------------------------------.
-    # | PRIVATE HELPERS FOR MODIFICATIONS                                     |
-    # '-----------------------------------------------------------------------'
 
     def rename(self, new_name):
         log_pending(AFFECTED, self, "rename-host", _("Renamed host from %s into %s.") % (self.name(), new_name))
         self._name = new_name
         self.mark_dirty()
-
-
 
 
 #.
@@ -3386,7 +3370,6 @@ def call_hook_snapshot_pushed():
 
 
 def call_hook_hosts_changed(folder):
-    # TODO: folder is now an object of type Folder
     if hooks.registered("hosts-changed"):
         hosts = collect_hosts(folder)
         hooks.call("hosts-changed", hosts)
@@ -3728,3 +3711,20 @@ def rename_host_in_list(thelist, oldname, newname):
             thelist[nr] = '!' + newname
             did_rename = True
     return did_rename
+
+
+def mk_eval(s):
+    try:
+        if literal_eval and not config.wato_legacy_eval:
+            return literal_eval(base64.b64decode(s))
+        else:
+            return pickle.loads(base64.b64decode(s))
+    except:
+        raise MKGeneralException(_('Unable to parse provided data: %s') % html.attrencode(repr(s)))
+
+
+def mk_repr(s):
+    if literal_eval and not config.wato_legacy_eval:
+        return base64.b64encode(repr(s))
+    else:
+        return base64.b64encode(pickle.dumps(s))

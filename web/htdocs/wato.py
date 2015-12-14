@@ -15760,11 +15760,10 @@ def mode_check_manpage(phase):
     manpage = html.get_cached("manpage")
 
 
-    # TODO: We could simply detect on how many hosts and services
-    # this plugin is currently in use (Livestatus query) and display this
-    # information together with a link for searching. Then we can remove
-    # the dump context button, that will always be shown - even if the
-    # plugin is not in use.
+    # We could simply detect on how many hosts and services this plugin
+    # is currently in use (Livestatus query) and display this information
+    # together with a link for searching. Then we can remove the dump context
+    # button, that will always be shown - even if the plugin is not in use.
 
     html.write('<table class="data headerleft">')
 
@@ -16096,29 +16095,11 @@ def read_agent_contents_file(root):
 #   | Functions needed at various places                                   |
 #   '----------------------------------------------------------------------'
 
-# TODO: Move these to watolib.py
-
 def may_edit_ruleset(varname):
     if varname == "ignored_services":
         return config.may("wato.services") or config.may("wato.rulesets")
     else:
         return config.may("wato.rulesets")
-
-
-def mk_eval(s):
-    try:
-        if literal_eval and not config.wato_legacy_eval:
-            return literal_eval(base64.b64decode(s))
-        else:
-            return pickle.loads(base64.b64decode(s))
-    except:
-        raise MKGeneralException(_('Unable to parse provided data: %s') % html.attrencode(repr(s)))
-
-def mk_repr(s):
-    if literal_eval and not config.wato_legacy_eval:
-        return base64.b64encode(repr(s))
-    else:
-        return base64.b64encode(pickle.dumps(s))
 
 
 def host_status_button(hostname, viewname):
@@ -16306,6 +16287,7 @@ def rule_option_elements(disabling=True):
             ),
         ]
     return elements
+
 
 class UserIconOrAction(DropdownChoice):
     def __init__(self, **kwargs):

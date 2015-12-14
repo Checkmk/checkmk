@@ -11753,9 +11753,8 @@ def search_form(title, mode=None):
 def rule_is_ineffective(rule, rule_folder, rulespec, hosts):
     value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
     found_match = False
-    for (hostname, hostvalues) in hosts.items():
-        # TODO: hostvalue.folder -> Folder() object
-        reason = rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, rule_folder, hostvalues[".folder"], hostname, NO_ITEM)
+    for host_name, host in hosts.items():
+        reason = rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, rule_folder, host.folder(), host_name, NO_ITEM)
         if reason == True:
             found_match = True
             break
@@ -11802,23 +11801,24 @@ def mode_ineffective_rules(phase):
 
             ineffective_rules = []
             current_rule_folder = None
-            for f, rule in rules:
-                if current_rule_folder == None or current_rule_folder != f:
-                    current_rule_folder = f
+            for folder, rule in rules:
+                if current_rule_folder == None or not current_rule_folder.is_same_as(folder):
+                    current_rule_folder = folder
                     rulenr = 0
                 else:
                     rulenr = rulenr + 1
-                if rule_is_ineffective(rule, f, rulespec, all_hosts):
-                    ineffective_rules.append( (rulenr, (f,rule)) )
+                if rule_is_ineffective(rule, folder, rulespec, all_hosts):
+                    ineffective_rules.append( (rulenr, (folder, rule)) )
             if len(ineffective_rules) == 0:
                 continue
+
             have_ineffective = True
             titlename = g_rulegroups[groupname.split("/")[0]][0]
             rulegroup, test = g_rulegroups.get(groupname, (groupname, ""))
             html.write("<div>")
             ruleset_url = folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])
             table.begin("ineffective_rules", title = _("<a href='%s'>%s</a> (%s)") % (ruleset_url, rulespec["title"], titlename), css="ruleset")
-            for rel_rulenr, (f, rule) in ineffective_rules:
+            for rel_rulenr, (folder, rule) in ineffective_rules:
                 value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
                 table.row()
 
@@ -11828,7 +11828,7 @@ def mode_ineffective_rules(phase):
                     ("mode", "edit_rule"),
                     ("varname", varname),
                     ("rulenr", rel_rulenr),
-                    ("rule_folder", f[".path"])
+                    ("rule_folder", folder.path())
                 ])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
 
@@ -11836,18 +11836,18 @@ def mode_ineffective_rules(phase):
                     ("mode", "edit_ruleset"),
                     ("varname", varname),
                     ("_action", "delete"),
-                    ("_folder", f[".path"]),
+                    ("_folder", folder.path()),
                     ("_rulenr", rel_rulenr),
-                    ("rule_folder", f[".path"])
+                    ("rule_folder", folder.path())
                 ])
                 html.icon_button(delete_url, _("Delete this rule"), "delete")
 
                 # Rule folder
                 table.cell(_("Rule folder"))
-                html.write(get_folder_aliaspath(f, show_main = False))
+                html.write(folder.alias_path(show_main = False))
 
                 # Conditions
-                show_rule_in_table(rulespec, tag_specs, host_list, item_list, varname, value, f, rule_options)
+                show_rule_in_table(rulespec, tag_specs, host_list, item_list, varname, value, folder, rule_options)
 
             table.end()
             html.write("</div>")

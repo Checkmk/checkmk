@@ -713,7 +713,7 @@ if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
     elif ! type openssl >/dev/null; then
         echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
     else
-        run_real_time_checks &
+        run_real_time_checks >/dev/null &
     fi
 fi
 

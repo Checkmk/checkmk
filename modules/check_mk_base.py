@@ -1612,9 +1612,12 @@ def write_crash_dump_snmp_info(crash_dir, hostname, check_type):
 
 
 def write_crash_dump_agent_output(crash_dir, hostname):
-    cachefile = tcp_cache_dir + "/" + hostname
-    if os.path.exists(cachefile):
-        file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
+    if "get_rtc_package" in globals():
+        file(crash_dir + "/agent_output", "w").write(get_rtc_package())
+    else:
+        cachefile = tcp_cache_dir + "/" + hostname
+        if os.path.exists(cachefile):
+            file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
 
 
 def pack_crash_dump(crash_dir):

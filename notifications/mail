@@ -254,6 +254,10 @@ body_elements = [
     "$LONGDATETIME$",
     "$LONGDATETIME$", ),
 
+  ( "notesurl", "both", False, "Custom Host Notes Url",
+    "$HOSTNOTESURL$",
+    "$HOSTNOTESURL$",),
+
   # Elements only for host notifications
   ( "reltime", "host", False, "Relative Time",
     "$LASTHOSTSTATECHANGE_REL$",
@@ -274,7 +278,6 @@ body_elements = [
   ( "perfdata", "host", False, "Performance Data",
     "$HOSTPERFDATA$",
     "$HOSTPERFDATA$",),
-
 
   # Elements only for service notifications
   ( "reltime", "service", False, "Relative Time",
@@ -304,6 +307,10 @@ body_elements = [
   ( "perfdata", "service", False, "Performance Data",
     "$SERVICEPERFDATA$",
     "$SERVICEPERFDATA$",),
+
+  ( "notesurl", "service", False, "Custom Service Notes Url",
+    "$SERVICENOTESURL$",
+    "$SERVICENOTESURL$",),
 
   # Debugging
   ( "context", "both", False, "Complete variable list",

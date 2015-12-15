@@ -1,0 +1,12 @@
+Title: Avaya Series 88xx / 45xx: New temperature, fan and CPU utilization checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450097264
+Class: feature
+
+Added the new checks avaya_45xx_cpu, avaya_45xx_fan, avaya_45xx_temp, avaya_88xx_ers
+and avaya_88xx_ers.fans. These new checks work with any devices using the
+RAPID-CITY (88xx series) or S5-CHASSIS MIBs (45xx series).
+

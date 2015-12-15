@@ -25,8 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 from lib import *
-from wato import API
-import config
+import config, wato
+# TODO: Remove import wato
+from watolib import *
+from valuespec import *
 
 try:
     import simplejson as json
@@ -71,7 +73,7 @@ def page_api():
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
 
         # Create API instance
-        g_api = API()
+        g_api = wato.API()
 
         # Prepare request_object
         # Most of the time the request is given as json
@@ -92,7 +94,13 @@ def page_api():
 
         action_response = api_actions[action]["handler"](request_object)
         response = { "result_code": 0, "result": action_response }
+
+    except MKException, e:
+        response = { "result_code": 1, "result": str(e) }
+
     except Exception, e:
+        if config.debug:
+            raise
         response = { "result_code": 1, "result": str(e) }
 
     output_format = html.var("output_format", "json")

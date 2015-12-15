@@ -1,0 +1,13 @@
+Title: Rework of host search in WATO - allow all bulk operations on search results
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450086757
+Class: feature
+
+The <i>Search</i> functionality in WATO has been completely reworked. The search
+results are now displayed just like a folder. All single-host and bulk operations
+are now possible on the search result. You can edit, delete and move the found
+hosts (or some hereof), can cleanup attributes, do discovery and even can do
+parent scan.

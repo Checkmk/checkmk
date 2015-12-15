@@ -26,8 +26,8 @@
 #define OutputBuffer_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <stddef.h>
 #include <string>
-
 
 #define INITIAL_OUTPUT_BUFFER_SIZE 1
 
@@ -76,7 +76,7 @@ public:
 
 private:
     void needSpace(unsigned);
-    void writeData(int fd, int *, const char *, int);
+    void writeData(int fd, int *, const char *, size_t);
 };
 
 #endif // OutputBuffer_h

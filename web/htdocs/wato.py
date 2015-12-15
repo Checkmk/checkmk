@@ -1021,50 +1021,6 @@ def mode_editfolder(phase, new):
         html.end_form()
 
 
-def check_wato_foldername(htmlvarname, name, just_name = False):
-    if not just_name and name in Folder.current().has_subfolder(name):
-        raise MKUserError(htmlvarname, _("A folder with that name already exists."))
-
-    if not name:
-        raise MKUserError(htmlvarname, _("Please specify a name."))
-
-    if not re.match("^[-a-z0-9A-Z_]*$", name):
-        raise MKUserError(htmlvarname, _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-
-
-def create_wato_foldername(title, in_folder = None):
-    if in_folder == None:
-        in_folder = Folder.current()
-
-    basename = convert_title_to_filename(title)
-    c = 1
-    name = basename
-    while True:
-        if not in_folder.has_subfolder(name):
-            break
-        c += 1
-        name = "%s-%d" % (basename, c)
-    return name
-
-
-def convert_title_to_filename(title):
-    converted = ""
-    for c in title.lower():
-        if c == u'ä':
-            converted += 'ae'
-        elif c == u'ö':
-            converted += 'oe'
-        elif c == u'ü':
-            converted += 'ue'
-        elif c == u'ß':
-            converted += 'ss'
-        elif c in "abcdefghijklmnopqrstuvwxyz0123456789-_":
-            converted += c
-        else:
-            converted += "_"
-    return str(converted)
-
-
 def ajax_set_foldertree():
     config.save_user_file("foldertree", (html.var('topic'), html.var('target')))
 

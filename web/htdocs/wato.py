@@ -1685,7 +1685,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
                     changed = True
         if changed:
             save_rulesets(folder, rulesets)
-            mark_affected_sites_dirty(folder)
+            folder.mark_hosts_dirty()
 
         for subfolder in folder.subfolders().values():
             rename_host_in_folder_rules(subfolder)

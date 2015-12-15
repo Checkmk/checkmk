@@ -4977,6 +4977,7 @@ try:
             sys.exit(do_notify(args))
 
         elif o == '--real-time-checks':
+            read_config_files(with_conf_d=True, validate_hosts=False)
             load_module("keepalive")
             load_module("real_time_checks")
             do_real_time_checks(args)

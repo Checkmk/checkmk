@@ -55,12 +55,6 @@ class GUITester:
             "filename" : self.myfile,
             "output" : {},
         }
-        # Fix transaction ID: We are just interested in whether it is valid or not
-        if "_transid" in self.vars:
-            if self.transaction_valid():
-                self.guitest["variables"]["_transid"] = "valid"
-            else:
-                self.guitest["variables"]["_transid"] = "invalid"
 
         self.add_status_icon("guitest", _("GUI test recording is active"))
 
@@ -72,6 +66,12 @@ class GUITester:
             self.save_guitest_step(self.guitest)
 
 
+    # Is called whenever a valid transaction ID has been found
+    def guitest_set_transid_valid(self):
+        if self.guitest != None:
+            self.guitest["variables"]["_transid"] = "valid"
+
+
     def save_guitest_step(self, step):
         path = defaults.var_dir + "/guitests/RECORD"
         if not os.path.exists(path):
@@ -80,6 +80,9 @@ class GUITester:
             test_steps = eval(file(path).read())
 
         if self.guitest_repair_step != None:
+            if self.guitest_repair_step > len(test_steps):
+                raise MKGeneralException("Test step for repairing is %s, but test only has %d steps." %
+                                          (self.guitest_repair_step, len(test_steps)))
             mod_step = test_steps[self.guitest_repair_step]
             mod_step["output"] = step["output"]
             mod_step["user"] = step["user"]
@@ -133,7 +136,8 @@ class GUITester:
 
 
     def guitest_ignored_pages(self):
-        return [ "run_cron", "index", "side", "sidebar_snapin", "dashboard", "dashboard_dashlet", "login" ]
+        return [ "run_cron", "index", "side", "sidebar_snapin", "sidebar_fold", "dashboard",
+                 "dashboard_dashlet", "login", "logout", "tree_openclose", "ajax_switch_help" ]
 
 
     def guitest_record_output(self, key, value):
@@ -159,10 +163,10 @@ class GUITester:
             errors = []
             for varname in self.replayed_guitest_step["output"].keys():
                 method = self.guitest_test_method(varname)
-                errors += [ "%s: %s" % (varname, error)
-                            for error in method(
+                errors_for_this_varname = method(
                                 self.replayed_guitest_step["output"][varname],
-                                self.replayed_guitest_step["replay"].get(varname, [])) ]
+                                self.replayed_guitest_step["replay"].get(varname, []))
+                errors += [ "%s: %s" % (varname, error) for error in errors_for_this_varname ]
             if errors:
                 raise MKGuitestFailed(errors)
 
@@ -172,6 +176,8 @@ class GUITester:
             return guitest_check_datatables
         elif varname == "page_title":
             return guitest_check_single_value
+        elif varname == "message":
+            return guitest_check_element_list_with_exceeding
         else:
             return guitest_check_element_list
 
@@ -188,14 +194,18 @@ def guitest_check_single_value(reference, reality):
         return []
 
 
-def guitest_check_element_list(reference, reality):
+def guitest_check_element_list_with_exceeding(reference, reality):
+    return guitest_check_element_list(reference, reality, check_exceeding=True)
+
+
+def guitest_check_element_list(reference, reality, check_exceeding=False):
     errors = []
     one_missing = False
     for entry in reference:
         if not guitest_entry_in_reference_list(entry, reality):
             errors.append("missing entry %r" % (entry,))
             one_missing = True
-    if one_missing:
+    if one_missing or check_exceeding:
         for entry in reality:
             if not guitest_entry_in_reference_list(entry, reference):
                 errors.append("exceeding entry %r" % (entry,))
@@ -210,17 +220,18 @@ def guitest_entry_in_reference_list(entry, ref_list):
 
 
 def guitest_entries_match(ref, real):
-    if type(ref) in (list, tuple):
-        return len(ref) == len(real) and \
-          map(guitest_drop_dynamic_ids, ref) == map(guitest_drop_dynamic_ids, real)
-    else:
-        return guitest_drop_dynamic_ids(ref) == guitest_drop_dynamic_ids(real)
+    return guitest_drop_dynamic_ids(ref) == guitest_drop_dynamic_ids(real)
 
 
 
 def guitest_check_datatables(reference, reality):
     if len(reference) != len(reality):
-        return [ _("Expected %d data tables, but got %d") % (len(reference), len(reality)) ]
+        errors = [ _("Expected %d data tables, but got %d") % (len(reference), len(reality)) ]
+        if len(reference) > len(reality):
+            first_table = reference[len(reality)]
+            errors.append( _("First missing table has title '%s', %d rows") % (
+                first_table.get("title", "(no title)"), len(first_table["rows"])))
+        return errors
 
     errors = []
     for ref_table, real_table in zip(reference, reality):
@@ -274,7 +285,27 @@ def find_common_prefix(a, b):
 
     return a, "", ""
 
+def guitest_drop_dynamic_ids(thing):
+    if type(thing) == tuple:
+        return tuple(map(guitest_drop_dynamic_ids, list(thing)))
+    elif type(thing) == list:
+        return map(guitest_drop_dynamic_ids, thing)
+    elif type(thing) in (str, unicode):
+        return guitest_drop_dynamic_ids_in_text(thing)
+    else:
+        return thing
 
-def guitest_drop_dynamic_ids(text):
-    return re.sub("selection(%3d|=)[a-f0-9---]{36}", "selection=*",
-                   re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text))
+check_mk_version_regex = "(1\.2\.[68]?([bp][0-9]+)|1\.2\.[79]i[0-9](p[0-9]+)?|201[5-9]\.[01][0-9]\.[0123][0-9])"
+timeofday_regex = "[012][0-9]:[0-5][0-9]:[0-5][0-9]"
+year_regex = "201[56789]"
+
+
+def guitest_drop_dynamic_ids_in_text(text):
+    text = re.sub("selection(%3d|=)[a-f0-9---]{36}", "selection=*", text)
+    text = re.sub("_transid=1[4-6][0-9]{8}/[0-9]+", "_transid=TRANSID", text)
+    text = re.sub('name="_transid" value="1[0-9/]+"', 'name="_transid", value="***"', text)
+    text = re.sub("<script.*?</script>", "", text, flags=re.DOTALL)
+    text = re.sub(check_mk_version_regex, "CMK_VERSION", text)
+    text = re.sub(timeofday_regex, "TIMEOFDAY", text)
+    text = re.sub(year_regex, "YEAR", text)
+    return text

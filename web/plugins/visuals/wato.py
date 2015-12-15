@@ -31,23 +31,26 @@ class FilterWatoFile(Filter):
         Filter.__init__(self, "wato_folder", _("WATO Folder"), "host", ["filename"], [])
         self.last_wato_data_update = None
 
+
     def available(self):
         # This filter is also available on slave sites with disabled WATO
         # To determine if this site is a slave we check the existance of the distributed_wato.mk
         # file and the absence of any site configuration
         return (config.wato_enabled or\
                (not wato.is_distributed() and os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk")))\
-                and wato.have_folders()
+
 
     def load_wato_data(self):
-        self.tree = wato.get_folder_tree()
+        self.tree = wato.Folder.root_folder()
         self.path_to_tree = {} # will be filled by self.folder_selection
         self.selection = self.folder_selection(self.tree, "", 0)
         self.last_wato_data_update = time.time()
 
+
     def check_wato_data_update(self):
         if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 5:
             self.load_wato_data()
+
 
     def display(self):
         self.check_wato_data_update()
@@ -90,23 +93,25 @@ class FilterWatoFile(Filter):
     # by the HTML selection box. This also updates self._tree,
     # a dictionary from the path to the title.
     def folder_selection(self, folder, prefix, depth):
-        my_path = folder[".path"]
+        my_path = folder.path()
         if depth:
             title_prefix = (u"\u00a0" * 6 * depth) + u"\u2514\u2500 "
         else:
             title_prefix = ""
-        self.path_to_tree[my_path] = folder["title"]
-        sel = [ (my_path , title_prefix + folder["title"]) ]
-        sel += self.sublist(folder.get(".folders", {}), my_path, depth)
+        self.path_to_tree[my_path] = folder.title()
+        sel = [ (my_path , title_prefix + folder.title()) ]
+        sel += self.sublist(folder.subfolders(), my_path, depth)
         return sel
+
 
     def sublist(self, elements, my_path, depth):
         vs = elements.values()
-        vs.sort(lambda a, b: cmp(a["title"].lower(), b["title"].lower()))
+        vs.sort(lambda a, b: cmp(a.title().lower(), b.title().lower()))
         sel = []
         for e in vs:
             sel += self.folder_selection(e, my_path, depth + 1)
         return sel
+
 
     def heading_info(self):
         # FIXME: There is a problem with caching data and changing titles of WATO files
@@ -120,6 +125,7 @@ class FilterWatoFile(Filter):
         current = html.var(self.name)
         if current and current != "/":
             return self.path_to_tree.get(current)
+
 
 declare_filter(10, FilterWatoFile())
 

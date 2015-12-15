@@ -1053,6 +1053,9 @@ class html(GUITester):
                 self.write("<div>%s: %.1fms</div>" % (name, duration * 1000))
             self.write('</div>')
 
+    def show_info(self, msg):
+        self.message(msg, 'message')
+
     def show_error(self, msg):
         self.message(msg, 'error')
 
@@ -1081,6 +1084,8 @@ class html(GUITester):
                 self.write('</center>')
         else:
             self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
+
+        self.guitest_record_output("message", (what, msg))
 
     def show_localization_hint(self):
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
@@ -1143,6 +1148,10 @@ class html(GUITester):
             return val.decode("utf-8")
         else:
             return val
+
+
+    def all_vars(self):
+        return self.vars
 
     # Return all values of a variable that possible occurs more
     # than once in the URL. note: self.listvars does contain those
@@ -1272,7 +1281,11 @@ class html(GUITester):
             return False
 
         # Now check, if this id is a valid one
-        return id in self.load_transids()
+        if id in self.load_transids():
+            self.guitest_set_transid_valid()
+            return True
+        else:
+            return False
 
     # Checks, if the current page is a transation, i.e. something
     # that is secured by a transid (such as a submitted form)
@@ -1602,12 +1615,23 @@ class html(GUITester):
     #
     def set_cache(self, name, value):
         self.caches[name] = value
+        return value
+
+    def set_cache_default(self, name, value):
+        if self.is_cached(name):
+            return self.get_cached(name)
+        else:
+            return self.set_cache(name, value)
 
     def is_cached(self, name):
         return name in self.caches
 
     def get_cached(self, name):
         return self.caches.get(name)
+
+    def del_cache(self, name):
+        if name in self.caches:
+            del self.caches[name]
 
     def measure_time(self, name):
         self.times.setdefault(name, 0.0)

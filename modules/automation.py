@@ -388,7 +388,6 @@ def automation_delete_host(args):
         if os.path.exists("%s/%s" % (folder, hostname)):
             os.unlink("%s/%s" % (folder, hostname))
 
-
     # logwatch folders
     if os.path.exists("%s/%s" % (logwatch_dir, hostname)):
         import shutil
@@ -925,6 +924,11 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
 
 
 def automation_create_snapshot(args):
+    if args and args[0] == "sync":
+        sync_mode = True
+    else:
+        sync_mode = False
+
     try:
         import tarfile, time, cStringIO, shutil, subprocess, thread, traceback, threading
         from hashlib import sha256
@@ -981,8 +985,11 @@ def automation_create_snapshot(args):
         try:
             pid = os.fork()
             if pid > 0:
+                if sync_mode:
+                    os.waitpid(pid, 0)
                 # Exit parent process
                 return
+
             # Decouple from parent environment
             os.chdir("/")
             os.umask(0)

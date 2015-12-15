@@ -121,11 +121,9 @@ def compute_foldertree():
     hosts.sort()
 
     def get_folder(path, num = 0):
-        wato_folder = {}
-        if wato.folder_config_exists(wato.root_dir + path):
-            wato_folder = wato.load_folder(wato.root_dir + path, childs = False)
+        folder = wato.Folder.folder(path)
         return {
-            'title':      wato_folder.get('title', path.split('/')[-1]),
+            'title':      folder.title() or path.split('/')[-1],
             '.path':      path,
             '.num_hosts': num,
             '.folders':   {},
@@ -138,20 +136,20 @@ def compute_foldertree():
     # Now get number of hosts by folder
     # Count all childs for each folder
     user_folders = {}
-    for site, wato_folder, num in hosts:
+    for site, filename, num in hosts:
         # Remove leading /wato/
-        wato_folder = wato_folder[6:]
+        wato_folder_path = filename[6:]
 
         # Loop through all levels of this folder to add the
         # host count to all parent levels
-        folder_parts = wato_folder.split('/')
-        for num_parts in range(0, len(folder_parts)):
-            this_folder = '/'.join(folder_parts[:num_parts])
+        path_parts = wato_folder_path.split('/')
+        for num_parts in range(0, len(path_parts)):
+            this_folder_path = '/'.join(path_parts[:num_parts])
 
-            if this_folder not in user_folders:
-                user_folders[this_folder] = get_folder(this_folder, num)
+            if this_folder_path not in user_folders:
+                user_folders[this_folder_path] = get_folder(this_folder_path, num)
             else:
-                user_folders[this_folder]['.num_hosts'] += num
+                user_folders[this_folder_path]['.num_hosts'] += num
 
     #
     # Now build the folder tree
@@ -187,7 +185,9 @@ def compute_foldertree():
 
 
 def render_tree_folder(f, js_func):
-    subfolders = f.get(".folders", {})
+    subfolders = f.get(".folders", {}).values()
+    subfolders.sort(cmp = lambda f1, f2: cmp(f1["title"].lower(), f2["title"].lower()))
+
     is_leaf = len(subfolders) == 0
 
     # Suppress indentation for non-emtpy root folder
@@ -201,13 +201,21 @@ def render_tree_folder(f, js_func):
 
     if not is_leaf:
         html.begin_foldable_container('wato-hosts', "/" + f[".path"], False, title)
-        for sf in wato.sort_by_title(subfolders.values()):
-            render_tree_folder(sf, js_func)
+        for subfolder in subfolders:
+            render_tree_folder(subfolder, js_func)
         html.end_foldable_container()
     else:
         html.write("<li>" + title + "</li>")
 
     html.write("</ul>")
+
+
+def sort_by_title(folders):
+    def folder_cmp(f1, f2):
+        return cmp(f1["title"].lower(), f2["title"].lower())
+    folders.sort(cmp = folder_cmp)
+    return folders
+
 
 
 def render_wato_foldertree():

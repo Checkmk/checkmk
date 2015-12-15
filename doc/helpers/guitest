@@ -54,7 +54,7 @@ def run_guitests(args):
 
 def run_guitest(test_name):
     try:
-        sys.stdout.write("    %s%s%s...\n" % (tty_bold, test_name, tty_normal))
+        sys.stdout.write("    %s%s%s:\n" % (tty_yellow, test_name, tty_normal))
         guitest = load_guitest(test_name)
 
         for step_nr, step in enumerate(guitest):
@@ -62,8 +62,8 @@ def run_guitest(test_name):
                 continue
             elif step_nr > range_to:
                 break
-            sys.stdout.write("       #%d - %s..." % (step_nr, step_title(step)))
-            errors = run_test_step(test_name, step_nr, step)
+            sys.stdout.write("       #%02d - %s..." % (step_nr, step_title(step)))
+            errors = run_test_step(test_name, step_nr, step, opt_repair)
             if not errors:
                 sys.stdout.write(tty_green + "OK\n" + tty_normal)
             else:
@@ -72,7 +72,13 @@ def run_guitest(test_name):
                     sys.stdout.write("           %s\n" % error)
 
                 sys.stdout.write("        Replay this step with: %s%s%s\n" % (tty_blue, rule_step_url(test_name, step_nr), tty_normal))
-                return False
+                if opt_interactive:
+                    if interactive_repair(test_name, step_nr, step):
+                        continue
+
+                if not opt_continue:
+                    return False
+        sys.stdout.write("\n")
         return True
 
     except Exception, e:
@@ -80,6 +86,41 @@ def run_guitest(test_name):
             raise
         sys.stdout.write("        %sfailed%s (%s)\n" % (tty_red, tty_normal, e))
         return False
+
+
+
+def interactive_repair(test_name, step_nr, step):
+    answer = None
+    while answer not in [ "y", "n" ]:
+        answer = read_line("Repair this test step (y/n)?").strip()
+    if answer == "y":
+        sys.stdout.write("Rerunning this step #%02d in repair mode...\n" % step_nr)
+        set_recording_symlink(test_name)
+        errors = run_test_step(test_name, step_nr, step, True)
+        remove_recording_symlink()
+        if errors:
+            for error in errors:
+                sys.stdout.write("           %s\n" % error)
+
+        return not errors
+    else:
+        return False
+
+
+def read_line(prompt, echo=True):
+    sys.stderr.write(prompt + " " + tty_bold)
+    sys.stderr.flush()
+    try:
+        if echo:
+            answer = sys.stdin.readline().rstrip()
+        else:
+            answer = getpass.getpass(prompt="")
+    except:
+        sys.stderr.write("\n")
+        answer = None
+
+    sys.stderr.write(tty_normal)
+    return answer
 
 
 def load_guitest(test_name):
@@ -109,12 +150,17 @@ def names_of_all_tests():
     ])
 
 
-def run_test_step(test_name, step_nr, step):
+def run_test_step(test_name, step_nr, step, repair):
+    if "wait" in step:
+        do_wait(step["wait"])
+        return []
+
     url = "http://localhost/%s/check_mk/guitest.py" % omd_site()
     response = requests.post(url, data = {
         "test" : test_name,
         "step" : str(step_nr),
-        "repair" : opt_repair and "1" or "0"})
+        "repair" : repair and "1" or "0"
+    })
     try:
         response_text = response.text.decode(response.encoding)
     except:
@@ -137,6 +183,15 @@ def run_test_step(test_name, step_nr, step):
         errors = hilite_keywords(error_info).splitlines()
         return errors
 
+def do_wait(seconds):
+    sys.stdout.write(tty_blue)
+    while seconds > 0:
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(min(seconds, 0.2))
+        seconds -= 0.2
+    return
+
 
 def hilite_keywords(text):
     text = text.replace(" expected ", tty_green + " expected " + tty_normal) \
@@ -150,19 +205,31 @@ def list_guitests(test_names):
     if not test_names:
         test_names = names_of_all_tests()
     for test_name in test_names:
-        sys.stdout.write("%s\n" % test_name)
+        sys.stdout.write("%s\n" % (tty_yellow + test_name + tty_normal))
         test = load_guitest(test_name)
         for nr, step in enumerate(test):
-            sys.stdout.write("    #%d - %s\n" % (nr, step_title(step)))
+            sys.stdout.write("    #%02d - %s\n" % (nr, step_title(step)))
+        sys.stdout.write("\n")
 
 
 def step_title(step):
+    if "wait" in step:
+        return (" " * 41) + "%sWaiting for %d ms%s" % (tty_blue, step["wait"] * 1000.0, tty_normal)
+
     if "page_title" in step["output"]:
         page_title = step["output"]["page_title"][0]
     else:
         page_title = "(no page title)"
 
-    return "[%s] %s.py - %s" % (tty_cyan + step["user"] + tty_normal, step["filename"], tty_bold + page_title + tty_normal)
+    transid = step["variables"].get("_transid")
+    if transid == "valid":
+        action_marker = "[%sA%s] " % (tty_red, tty_normal)
+    elif transid == "invalid":
+        action_marker = "[X] "
+    else:
+        action_marker = "    "
+    return "%s%-9s%s %-26s %s%s" % (tty_cyan, step["user"], tty_normal,
+               step["filename"] + ".py", action_marker, tty_bold + page_title + tty_normal)
 
 
 def rule_step_url(test_name, step_nr):
@@ -197,14 +264,18 @@ def recording_symlink_exists():
     return os.path.lexists(recording_symlink())
 
 
+def remove_recording_symlink():
+    os.remove(recording_symlink())
+
+
 def stop_recording():
     test_name = os.readlink(recording_symlink())[:-3]
     if not os.path.exists(recording_symlink()):
         sys.stdout.write("Aborted recording. Test %s not created.\n" % test_name)
-        os.remove(recording_symlink())
+        remove_recording_symlink()
         return
 
-    os.remove(recording_symlink())
+    remove_recording_symlink()
     test = load_guitest(test_name)
     sys.stdout.write("Stopped recording test %s (%d steps).\n" % (test_name, len(test)))
 
@@ -240,6 +311,16 @@ def delete_steps_from_test(args):
     save_guitest(test_name, guitest)
 
 
+def add_wait_step(args):
+    if len(args) != 3:
+        bail_out("Please specify the test, the step number to add the wait after and the duration in ms")
+    test_name = args[2]
+    guitest = load_guitest(test_name)
+    step_number = int(args[0])
+    wait_seconds = int(args[1]) / 1000.0
+    guitest[step_number+1:step_number+1] = [ { "wait" : wait_seconds } ]
+    save_guitest(test_name, guitest)
+
 
 #.
 #   .-Helpers--------------------------------------------------------------.
@@ -258,6 +339,7 @@ if sys.stdout.isatty() and not os.name == "nt":
     tty_normal    = '\033[0m'
     tty_red       = tty_bold + '\033[31m'
     tty_green     = tty_bold + '\033[32m'
+    tty_yellow    = tty_bold + '\033[33m'
     tty_cyan      = tty_bold + '\033[36m'
     tty_blue      = tty_bold + '\033[34m'
 else:
@@ -265,6 +347,7 @@ else:
     tty_normal = ""
     tty_red    = ""
     tty_green  = ""
+    tty_yellow = ""
     tty_cyan   = ""
     tty_blue   = ""
 
@@ -313,13 +396,17 @@ Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
      -l, --list-tests [TEST]            List one or all tests
      -x, --extract RANGE TEST [OUTPUT]  Extract a range of steps from a test to stdout
      -D, --delete RANGE TEST            Remove a range of steps from a test
+     -W, --add-wait-step STEP MS TEST   Insert and artificial wait phase into the test
      -h, --help                         Show this crufty help
+
 
   OPTIONS
 
      -v, --verbose                      Output debug information on stderr
          --debug                        Do not catch Python exceptions
      -S, --steps RANGE                  Just run steps START...END (1st step is 0)
+     -i, --interactive                  When tests fail ask for automatic repair
+     -c, --continue                     Continue after errors
 
 
   RANGES
@@ -343,13 +430,16 @@ Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvrslRS:x:D:'
-long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair", "steps=", "extract=", "delete=" ]
+short_options = 'hvrslRS:x:D:icW'
+long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair",
+                 "steps=", "extract=", "delete=", "interactive", "continue", "add-wait-step" ]
 
 opt_verbose = False
 opt_debug = False
 opt_repair = False
 opt_steps_range = 0, None
+opt_interactive = False
+opt_continue = False
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -375,6 +465,8 @@ for o,a in opts:
     elif o in [ '-D', '--delete' ]:
         opt_steps_range = parse_range_argument(a)
         mode_function = delete_steps_from_test
+    elif o in [ '-W', '--add-wait-step' ]:
+        mode_function = add_wait_step
 
     # Modifiers
     elif o in [ '-S', '--steps' ]:
@@ -385,6 +477,10 @@ for o,a in opts:
         opt_debug = True
     elif o in [ '-R', '--repair' ]:
         opt_repair = True
+    elif o in [ '-i', '--interactive' ]:
+        opt_interactive = True
+    elif o in [ '-c', '--continue' ]:
+        opt_continue = True
 
 # Main modes
 try:

@@ -342,17 +342,28 @@ def lqencode(s):
     # of the next query.
     return s.replace('\n', '')
 
+
 def saveint(x):
     try:
         return int(x)
     except:
         return 0
 
+
 def tryint(x):
     try:
         return int(x)
     except:
         return x
+
+
+def isint(i):
+    try:
+        int(i)
+        return True
+    except:
+        return False
+
 
 def set_is_disjoint(a, b):
     for elem in a:

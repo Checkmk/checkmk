@@ -235,12 +235,13 @@ function permitted_maps($username) {
 
     release_lock(lockfile)
 
+
 def create_auth_file(callee, users):
     make_nagios_directory(g_auth_base_dir)
 
     if config.export_folder_permissions:
         import wato # HACK: cleanup!
-        folder_permissions = wato.get_folder_permissions_of_users(users)
+        folder_permissions = get_folder_permissions_of_users(users)
     else:
         folder_permissions = {}
 
@@ -252,6 +253,32 @@ def create_auth_file(callee, users):
 
     create_php_file(callee, users, config.get_role_permissions(), groups, folder_permissions)
 
+
+def get_folder_permissions_of_users(users):
+    users = load_users()
+    import wato
+
+    permissions = {}
+    for username in users.iterkeys():
+        perms = {}
+        for folder_path, folder in wato.Folder.all_folders().iteritems():
+            readable = folder.user_may(username, "read")
+            writable = folder.user_may(username, "write")
+
+            if readable or writable:
+                perms[folder_path] = {}
+                if readable:
+                    perms[folder_path]['read'] = True
+                if writable:
+                    perms[folder_path]['write'] = True
+
+        if perms:
+            permissions[username] = perms
+    return permissions
+
+
+
+# TODO: Should we not execute this hook also when folders are modified?
 hooks.register('users-saved',         lambda users: create_auth_file("users-saved", users))
 hooks.register('roles-saved',         lambda x: create_auth_file("roles-saved", load_users()))
 hooks.register('contactgroups-saved', lambda x: create_auth_file("contactgroups-saved", load_users()))

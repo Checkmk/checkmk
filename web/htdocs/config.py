@@ -448,7 +448,10 @@ def load_user_file(name, deflt, lock = False):
     # happen that a user file is requested byt the user_confdir is not yet
     # set. We have all information to set it, then do it.
     if user_confdir == None:
-        set_user_confdir(name)
+        if user_id:
+            set_user_confdir(user_id)
+        else:
+            return deflt # No user known at this point of time
 
     path = user_confdir + "/" + name + ".mk"
     try:
@@ -466,8 +469,8 @@ def save_user_file(name, content, unlock=False, user=None):
     make_nagios_directory(dirname)
     path = dirname + "/" + name + ".mk"
     try:
-        write_settings_file(path+".new", content)
-        os.rename(path+".new", path)
+        write_settings_file(path + ".new", content)
+        os.rename(path + ".new", path)
 
         if unlock:
             release_lock(path)

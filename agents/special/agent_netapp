@@ -238,7 +238,7 @@ def format_dict(the_dict, prefix = "", report = "all", delimeter = "\t", as_line
 #   +----------------------------------------------------------------------+
 
 nodes = []
-def query_nodes(what, only_first = False, node_attribute = "node-name"):
+def query_nodes(what, node_attribute = "node-name"):
     global nodes, section_errors
     if not nodes:
         node_query = NaElement("system-get-node-info-iter")
@@ -257,8 +257,6 @@ def query_nodes(what, only_first = False, node_attribute = "node-name"):
             continue
 
         results["%s.%s" % (what, node)] = response
-        if only_first:
-            break
 
     return results
 
@@ -462,12 +460,16 @@ if netapp_mode == "clustermode":
     # Cluster info
     # TODO: check is missing
     cluster_status = query_nodes("cf-status", node_attribute = "node")
+    ha_partners = {} # Used later on by environmental sensors
     if cluster_status:
         print "<<<netapp_api_cm_cluster:sep(9)>>>"
         for node, entry in cluster_status.items():
             # Small trick improve formatting
             container = NaElement("container")
             container.child_add(entry)
+            partner_name = entry.child_get_string("partner-name")
+            if partner_name:
+                ha_partners[node] = partner_name
             print format_config(container, "cluster", node.split(".",1)[1])
 
     # Disk
@@ -569,20 +571,29 @@ if netapp_mode == "clustermode":
         )
 
     # Environmental sensors
-    environment_info = query_nodes("storage-shelf-environment-list-info", only_first = True)
+    environment_info = query_nodes("storage-shelf-environment-list-info")
+    processed_nodes = []
     if environment_info:
-        channel_list = environment_info.values()[0].child_get("shelf-environ-channel-list")
-        for channel in channel_list.children_get():                                    # cycle channel list
-            shelf_list = channel.child_get("shelf-environ-shelf-list")
-            for shelf in channel.child_get("shelf-environ-shelf-list").children_get(): # cylcle shelf list
-                shelf_id = shelf.child_get_string("shelf-id")
-                for what, section in [ ("power-supply-list",    "netapp_api_psu"),
-                                       ("cooling-element-list", "netapp_api_fan"),
-                                       ("temp-sensor-list",     "netapp_api_temp") ]:
-                    print "<<<%s:sep(9)>>>" % section
-                    node = shelf.child_get(what)
-                    print format_config(node, what, shelf_id)
-
+        for node, values in environment_info.items():
+            if node in processed_nodes:
+                continue
+            channel_list = values.child_get("shelf-environ-channel-list")
+            for channel in channel_list.children_get():                                    # cycle channel list
+                shelf_list = channel.child_get("shelf-environ-shelf-list")
+                for shelf in channel.child_get("shelf-environ-shelf-list").children_get(): # cycle shelf list
+                    shelf_id = shelf.child_get_string("shelf-id")
+                    for what, section in [ ("power-supply-list",    "netapp_api_psu"),
+                                           ("cooling-element-list", "netapp_api_fan"),
+                                           ("temp-sensor-list",     "netapp_api_temp") ]:
+                        print "<<<%s:sep(9)>>>" % section
+                        node = shelf.child_get(what)
+                        print format_config(node, what, shelf_id)
+            # HA partners always report redundant environmental data.
+            # (Node1/Node2) <--Cluster--> (Node3/Node4)
+            # We skip data from Node2 and Node4.
+            processed_nodes.append(node)
+            if node in ha_partners:
+                processed_nodes.append(ha_partners[node])
 
 
 #.
@@ -643,6 +654,27 @@ else:
         print "<<<netapp_api_aggr:sep(9)>>>"
         print format_config(aggregations, "aggregation", "name",
                             config_report = ["name", "size-total", "size-available"])
+
+
+# This check is not available in 1.2.7i3
+#    # Snapshot info
+#    print "<<<netapp_api_snapshots:sep(9)>>>"
+#    for volume in volumes.children_get():
+#        name = volume.child_get_string("name")
+#
+#        volume_snapshots_reserved = server.invoke("snapshot-get-reserve", "volume", name)
+#
+#        dict_reserved = {}
+#        dict_reserved["size-total"]       = volume.child_get_string("size-total")
+#        dict_reserved["percent-reserved"] = volume_snapshots_reserved.child_get_string("percent-reserved")
+#        dict_reserved["blocks-reserved"]  = volume_snapshots_reserved.child_get_string("blocks-reserved")
+#        snapshots_elements = volume_snapshots.child_get("snapshots")
+#
+#        if snapshots_elements:
+#            volume_snapshots = server.invoke("snapshot-list-info", "target-name", name, "target-type", "volume")
+#            print format_dict(dict_reserved, prefix = "volume_snapshot %s" % name, as_line  = True)
+#            print format_config(volume_snapshots.child_get("snapshots"), "volume_snapshot", name,
+#                                config_report = ["volume_snapshot", "percentage-of-total-blocks", "cumulative-total"])
 
 
     # Protocols

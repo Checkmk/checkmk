@@ -1,0 +1,13 @@
+Title: agent_netapp: fixed missing environmental sensor information and exception with snapshot volumes
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p6
+Date: 1450192404
+
+The agent now queries all nodes for environment sensors information.
+Previously only the first node was queried.
+
+The agent no longer crashes when it hits a volume void of any snapshots.

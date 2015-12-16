@@ -4,6 +4,9 @@
     * 2861 FIX: hivemanager_devices: Fixed configuration of states to treat as WARN
     * 1317 FIX: fileinfo.groups: Fixed handling of $DATE pattern...
 
+    Notifications:
+    * 2814 FIX: Fix garbled notification context when \n appears in service description...
+
 
 1.2.6p15:
     Core & Setup:

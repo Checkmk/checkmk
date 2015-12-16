@@ -1,0 +1,10 @@
+Title: Fix garbled notification context when \n appears in service description
+Level: 2
+Component: notifications
+Compatible: compat
+Version: 1.2.6p16
+Date: 1450259131
+Class: fix
+
+When your service has the name C:\tmp\network.log, then the \n would be interpreted as newline and everything after the \ was lost. This has been fixed.
+

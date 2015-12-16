@@ -141,15 +141,7 @@ def page_handler():
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
                                    " in your <tt>multisite.mk</tt> if you want to use WATO."))
     current_mode = html.var("mode") or "main"
-    modeperms, modefunc = modes.get(current_mode, ([], None))
-    if type(modefunc) != type(lambda: None):
-        mode_class = modefunc
-        modefunc = mode_class.create_mode_function()
-
-
-    if modeperms != None and not config.may("wato.use"):
-        raise MKAuthException(_("You are not allowed to use WATO."))
-
+    modeperms, modefunc = get_mode_function(current_mode)
 
     # If we do an action, we aquire an exclusive lock on the complete
     # WATO.
@@ -212,7 +204,7 @@ def page_handler():
                         html.write("</div>")
                         html.footer()
                     return
-                modeperms, modefunc = modes.get(newmode)
+                modeperms, modefunc = get_mode_function(newmode)
                 current_mode = newmode
                 html.set_var("mode", newmode) # will be used by makeuri
 
@@ -283,6 +275,21 @@ def page_handler():
         do_git_commit()
 
     html.footer()
+
+
+def get_mode_function(mode):
+    modeperms, modefunc = modes.get(mode, ([], None))
+    if modefunc == None:
+        raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % html.attrencode(mode))
+
+    if type(modefunc) != type(lambda: None):
+        mode_class = modefunc
+        modefunc = mode_class.create_mode_function()
+
+    if modeperms != None and not config.may("wato.use"):
+        raise MKAuthException(_("You are not allowed to use WATO."))
+
+    return modeperms, modefunc
 
 
 def ensure_mode_permissions(modeperms):

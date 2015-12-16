@@ -622,18 +622,20 @@ class AbsoluteDirname(TextAscii):
         self._regex_error = _("Please enter a valid absolut pathname with / as a path separator.")
 
 
-# Valuespec for a HTTP Url (not HTTPS), that
-# automatically adds http:// to the value
+# Valuespec for a HTTP or HTTPS Url, that
+# automatically adds http:// to the value if no protocol has
+# been specified
 class HTTPUrl(TextAscii):
     def __init__(self, **kwargs):
+        kwargs.setdefault("size", 64)
         TextAscii.__init__(self, **kwargs)
         self._target = kwargs.get("target")
 
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
         if value:
-            if not value.startswith("http://"):
-                raise MKUserError(varprefix, _("The URL must begin with http://"))
+            if not value.startswith("http://") and not value.startswith("https://"):
+                raise MKUserError(varprefix, _("The URL must begin with http:// or https://"))
         ValueSpec.custom_validate(self, value, varprefix)
 
     def from_html_vars(self, varprefix):
@@ -644,7 +646,7 @@ class HTTPUrl(TextAscii):
         return value
 
     def value_to_text(self, url):
-        if not url.startswith("http://"):
+        if not url.startswith("http://") and not value.startswith("https://"):
             url = "http://" + url
         try:
             parts = urlparse.urlparse(url)
@@ -660,6 +662,15 @@ class HTTPUrl(TextAscii):
         return '<a %shref="%s">%s</a>' % (
             (self._target and 'target="%s" ' % self._target or ""),
             html.attrencode(url), html.attrencode(text))
+
+def CheckMKVersion(**args):
+    args = args.copy()
+    regex_unstable = "(1\.[1234]\.(1|3|5|7|9|11|13|15)i[1-9](p[0-9]+)?)"
+    regex_stable = "(1\.[1234]\.(0|2|4|6|8|10|12|14)([bp][1-9]?[0-9]+)?)"
+    args["regex"] =  "(" + regex_unstable + "|" + regex_stable + ")"
+    args["regex_error"] = _("This is not a valid Check_MK version number")
+    return TextAscii(**args)
+
 
 class TextAreaUnicode(TextUnicode):
     def __init__(self, **kwargs):

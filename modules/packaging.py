@@ -314,6 +314,11 @@ def package_remove(args):
         raise PackageException("No such package %s." % pacname)
 
     verbose("Removing package %s...\n" % pacname)
+    remove_package(package)
+    verbose("Successfully removed package %s.\n" % pacname)
+
+
+def remove_package(package):
     for part, title, perm, dir in package_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
@@ -325,9 +330,11 @@ def package_remove(args):
                     os.remove(path)
                     verbose("\n")
                 except Exception, e:
-                    sys.stderr.write("cannot remove %s: %s\n" % (path, e))
-    os.remove(pac_dir + pacname)
-    verbose("Successfully removed package %s.\n" % pacname)
+                    if opt_debug:
+                        raise
+                    raise Exception("Cannot remove %s: %s\n" % (path, e))
+
+    os.remove(pac_dir + package["name"])
 
 
 def package_install(args):
@@ -473,6 +480,7 @@ def packaged_files_in_dir(part):
 def read_package_info(pacname):
     try:
         package = eval(file(pac_dir + pacname).read())
+        package["name"] = pacname # do not trust package content
         num_files = sum([len(fl) for fl in package["files"].values() ])
         package["num_files"] = num_files
         return package

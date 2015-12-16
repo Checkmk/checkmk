@@ -48,6 +48,8 @@ def do_automation(cmd, args):
             result = automation_get_package_info(args)
         elif cmd == "get-package":
             result = automation_get_package(args)
+        elif cmd == "remove-package":
+            result = automation_remove_package(args)
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
@@ -1312,3 +1314,12 @@ def automation_get_package(args):
     output_file = fake_file()
     create_mkp_file(package, file_object=output_file)
     return package, output_file.content()
+
+
+def automation_remove_package(args):
+    load_module("packaging")
+    package_name = args[0]
+    package = read_package_info(package_name)
+    if not package:
+        raise MKAutomationError("Package not installed or corrupt")
+    remove_package(package)

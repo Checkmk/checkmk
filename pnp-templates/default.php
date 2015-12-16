@@ -43,8 +43,8 @@ sort($perf_vars);
 # --password=$USER5$ --mode database-free --name filr --warning 20: --critical 10: --commit
 #
 # If no "!" exists then $CHECK_COMMAND = $NAGIOS_CHECK_COMMAND
-$CHECK_COMMAND = explode("!", $NAGIOS_CHECK_COMMAND)[0];
-$id_string = $CHECK_COMMAND . ":" . implode(",", $perf_vars);
+$check_command_parts = explode("!", $NAGIOS_CHECK_COMMAND);
+$id_string = $check_command_parts[0] . ":" . implode(",", $perf_vars);
 
 # Get current state of previously cached template data for this ID
 $template_cache_path = $template_cache_dir . "/" . md5($id_string);

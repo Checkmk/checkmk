@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 from lib import *
-import config, wato
-# TODO: Remove import wato
+import config
+
 from watolib import *
 from valuespec import *
 
@@ -56,11 +56,8 @@ def load_plugins():
                                                     "for automation users."),
                               config.builtin_role_ids)
 
-g_api = None
 
 def page_api():
-    global g_api
-
     try:
         if not config.user.get("automation_secret"):
             raise MKAuthException("The WATO API is only available for automation users")
@@ -71,9 +68,6 @@ def page_api():
         action = html.var('action')
         if action not in api_actions:
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
-
-        # Create API instance
-        g_api = wato.API()
 
         # Prepare request_object
         # Most of the time the request is given as json
@@ -89,8 +83,7 @@ def page_api():
             request_object = {}
 
         if api_actions[action].get("locking", True):
-            g_api.lock_wato()
-
+            lock_exclusive() # unlock is done automatically
 
         action_response = api_actions[action]["handler"](request_object)
         response = { "result_code": 0, "result": action_response }
@@ -108,4 +101,5 @@ def page_api():
         html.write(json.dumps(response))
     else:
         html.write(repr(response))
+
 

@@ -27,6 +27,7 @@
 #include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +36,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/types.h>  // IWYU pragma: keep
+#include <sys/types.h> // IWYU pragma: keep
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -89,17 +90,16 @@ void *copy_thread(void *info)
     int from = ti->from;
     int to = ti->to;
 
-    char buffer[65536];
-    while (1)
-    {
-        ssize_t r = read_with_timeout(from, buffer, sizeof(buffer), 1000000);
+    char read_buffer[65536];
+    while (1) {
+        ssize_t r = read_with_timeout(from, read_buffer, sizeof(read_buffer), 1000000);
         if (r == -1) {
-            fprintf(stderr, "Error reading from %d: %s\n", from, strerror(errno));
+            fprintf(stderr, "Error reading from %d: %s\n", from,
+                    strerror(errno));
             break;
         }
         else if (r == 0) {
-            if (ti->should_shutdown)
-                shutdown(to, SHUT_WR);
+            if (ti->should_shutdown) shutdown(to, SHUT_WR);
             if (ti->terminate_on_read_eof) {
                 exit(0);
                 return voidp;
@@ -109,16 +109,19 @@ void *copy_thread(void *info)
         else if (r == -2) {
             r = 0;
         }
-        char *write_pos = buffer;
-        while (r) {
-            ssize_t w = write(to, write_pos, r);
-            if (w > 0)
-                r -= w;
-            else if (w == 0 && r > 0) {
-                fprintf(stderr, "Error: Cannot write %" PRIdMAX " bytes to %d: %s\n",
-                        (intmax_t)w, to, strerror(errno));
+
+        const char *buffer = read_buffer;
+        size_t bytes_to_write = r;
+        while (bytes_to_write > 0) {
+            ssize_t bytes_written = write(to, buffer, bytes_to_write);
+            if (bytes_written == -1) {
+                fprintf(stderr,
+                        "Error: Cannot write %" PRIdMAX " bytes to %d: %s\n",
+                        (intmax_t)bytes_written, to, strerror(errno));
                 break;
             }
+            buffer += bytes_written;
+            bytes_to_write -= bytes_written;
         }
     }
     return voidp;

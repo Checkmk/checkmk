@@ -64,12 +64,15 @@ static const unsigned int SECTION_MRPE         = 0x00001000;
 static const unsigned int SECTION_FILEINFO     = 0x00002000;
 static const unsigned int SECTION_LOGFILES     = 0x00004000;
 static const unsigned int SECTION_CRASHLOG     = 0x00008000;
+static const unsigned int SECTION_CPU          = 0x00010000;
+static const unsigned int SECTION_EXCHANGE     = 0x00020000;
+static const unsigned int SECTION_WEBSERVICES  = 0x00040000;
+static const unsigned int SECTION_DOTNET       = 0x00080000;
 
 
 static const unsigned int VALID_REALTIME_SECTIONS = SECTION_MEM
                                                   | SECTION_DF
                                                   | SECTION_WINPERF;
-
 
 // Needed for only_from
 struct ipspec {

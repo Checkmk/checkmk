@@ -1689,6 +1689,88 @@ void section_logfiles(OutputProxy &out, const Environment &env)
 }
 
 
+void dump_wmi_table(OutputProxy &out, wmi::Result &result)
+{
+    out.output("%ls\n", join(result.names(), L",").c_str());
+    bool more = result.valid();
+    while (more) {
+        std::vector<std::wstring> values = result.names();
+        // resolve all table keys to their value on this row.
+        std::transform(values.begin(), values.end(), values.begin(),
+                [&result] (const std::wstring &name) {
+                return result.get<std::wstring>(name.c_str());
+                });
+        out.output("%ls\n", join(values, L",").c_str());
+
+        more = result.next();
+    }
+}
+
+
+void output_wmi_table(OutputProxy &out, const wchar_t *table_name, const char *section_name,
+        bool as_subtable = false)
+{
+    wmi::Result result = g_wmi_helper->getClass(table_name);
+
+    if (!result.valid()) {
+        crash_log("table %ls is empty or doesn't exist", table_name);
+        return;
+    }
+
+    if (as_subtable) {
+        out.output("[%s]\n", section_name);
+    }
+    else {
+        out.output("<<<%s:sep(44)>>>\n", section_name);
+    }
+    dump_wmi_table(out, result);
+}
+
+
+void section_dotnet(OutputProxy &out)
+{
+    crash_log("<<<dotnet_clrmemory>>>");
+
+    output_wmi_table(out, L"Win32_PerfRawData_NETFramework_NETCLRMemory", "dotnet_clrmemory");
+}
+
+
+void section_cpu(OutputProxy &out)
+{
+    crash_log("<<<wmi_cpuload>>>");
+
+    out.output("<<<wmi_cpuload:sep(44)>>>\n");
+    output_wmi_table(out, L"Win32_PerfRawData_PerfOS_System", "system_perf",     true);
+    output_wmi_table(out, L"Win32_ComputerSystem",            "computer_system", true);
+}
+
+void section_exchange(OutputProxy &out)
+{
+    for (auto &data_source : {
+            std::make_pair(L"MSExchangeActiveSync",          "msexch_activesync"),
+            std::make_pair(L"MSExchangeAvailabilityService", "msexch_availability"),
+            std::make_pair(L"MSExchangeOWA",                 "msexch_owa"),
+            std::make_pair(L"MSExchangeAutodiscover",        "msexch_autodiscovery"),
+            std::make_pair(L"MSExchangeISClientType",        "msexch_isclienttype"),
+            std::make_pair(L"MSExchangeISStore",             "msexch_isstore"),
+            std::make_pair(L"MSExchangeRpcClientAccess",     "msexch_rpcclientaccess"),
+            }) {
+        std::wostringstream table_name;
+        table_name << L"Win32_PerfRawData_" << data_source.first << L"_" << data_source.first;
+        crash_log("<<<%s>>>", data_source.second);
+        output_wmi_table(out, table_name.str().c_str(), data_source.second);
+    }
+}
+
+
+void section_webservices(OutputProxy &out)
+{
+    crash_log("<<<wmi_webservices>>>");
+
+    output_wmi_table(out, L"Win32_PerfRawData_W3SVC_WebService", "wmi_webservices");
+}
+
+
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
 void section_eventlog(OutputProxy &out, const Environment &env)
@@ -3292,6 +3374,15 @@ void output_data(OutputProxy &out, const Environment &env, unsigned long section
         section_eventlog(out, env);
     if ((section_mask & SECTION_LOGFILES) != 0)
         section_logfiles(out, env);
+    if ((section_mask & SECTION_DOTNET) != 0)
+        section_dotnet(out);
+    if ((section_mask & SECTION_CPU) != 0)
+        section_cpu(out);
+    if ((section_mask & SECTION_EXCHANGE) != 0)
+        section_exchange(out);
+    if ((section_mask & SECTION_WEBSERVICES) != 0)
+        section_webservices(out);
+
 
     // Start data collection of SYNC scripts
     if (((section_mask & SECTION_PLUGINS) != 0)
@@ -3623,13 +3714,11 @@ void RunImmediate(const char *mode, int argc, char **argv)
 
     g_config = new Configuration(env);
 
-    if (g_config->useWMI()) {
-        try {
-            g_wmi_helper = new wmi::Helper();
-        } catch (const std::runtime_error &ex) {
-            fprintf(stderr, "Failed to initialize wmi: %s", ex.what());
-            exit(1);
-        }
+    try {
+        g_wmi_helper = new wmi::Helper();
+    } catch (const std::runtime_error &ex) {
+        fprintf(stderr, "Failed to initialize wmi: %s", ex.what());
+        exit(1);
     }
 
     load_state(env);

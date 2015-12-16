@@ -1,0 +1,14 @@
+title: MS Exchange Availability Performance
+agents: windows
+catalog: app/exchange
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the performance/load of the Availability service (management
+ of users free/busy information).
+ Currently it measures the number of requests the service handles per second.
+
+ The check is always in state {OK}.
+
+inventory:
+ Exactly one item will be discovered.

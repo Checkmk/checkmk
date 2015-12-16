@@ -2661,6 +2661,23 @@ metric_info["o2_percentage"] = {
     "color" : "42/a"
 }
 
+metric_info["current_users"] = {
+    "title" : _("Current Users"),
+    "unit"  : "count",
+    "color" : "23/a"
+}
+
+metric_info["average_latency"] = {
+    "title" : _("Average Latency"),
+    "unit"  : "s",
+    "color" : "35/a"
+}
+
+metric_info["time_in_GC"] = {
+    "title" : _("Time spent in GC"),
+    "unit"  : "%",
+    "color" : "16/a"
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.

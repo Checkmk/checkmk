@@ -1,0 +1,14 @@
+title: MS Exchange RPC Client Access Performance
+agents: windows
+catalog: app/exchange
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the performance/load of the RPC Client Access Service.
+ It measures the average latency of requests, number of requests per second,
+ current user count and number of active users.
+
+ The check is always in state {OK}.
+
+inventory:
+ Exactly one item will be discovered.

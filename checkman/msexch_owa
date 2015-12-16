@@ -1,0 +1,14 @@
+title: MS Exchange OWA Performance
+agents: windows
+catalog: app/exchange
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the performance/load of the Outlook Web Access.
+ Currently it measures the number of requests the service handles per second
+ and the current number of unique users.
+
+ The check is always in state {OK}.
+
+inventory:
+ Exactly one item will be discovered.

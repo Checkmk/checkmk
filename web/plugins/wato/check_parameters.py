@@ -2713,6 +2713,82 @@ register_check_parameters(
     has_inventory = False,
 )
 
+
+register_check_parameters(
+    subgroup_applications,
+    'msx_info_store',
+    _("MS Exchange Information Store"),
+    Dictionary(
+        title = _("Set Levels"),
+        elements = [
+            ('store_latency',
+             Tuple(
+                 title = _("Average latency for store requests"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 40.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 50.0)
+                 ]
+             )
+            ),
+            ('clienttype_latency',
+             Tuple(
+                 title = _("Average latency for client type requests"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 40.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 50.0)
+                 ]
+             )
+            ),
+            ('clienttype_requests',
+             Tuple(
+                 title = _("Maximum number of client type requests per second"),
+                 elements = [
+                     Integer(title = _("Warning at"),  unit = _('requests'), default_value = 60),
+                     Integer(title = _("Critical at"), unit = _('requests'), default_value = 70)
+                 ]
+             )
+             )
+        ],
+        optional_keys=[]
+    ),
+    TextAscii(title = _("Store"), help = _("Specify the name of a store (This is either a mailbox or public folder)")),
+    match_type = 'dict'
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    'msx_rpcclientaccess',
+    _("MS Exchange RPC Client Access"),
+    Dictionary(
+        title = _("Set Levels"),
+        elements = [
+            ('latency',
+             Tuple(
+                 title = _("Average latency for RPC requests"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 200.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 250.0)
+                 ]
+             )
+            ),
+            ('requests',
+             Tuple(
+                 title = _("Maximum number of RPC requests per second"),
+                 elements = [
+                     Integer(title = _("Warning at"),  unit = _('requests'), default_value = 30),
+                     Integer(title = _("Critical at"), unit = _('requests'), default_value = 40)
+                 ]
+             )
+             )
+        ],
+        optional_keys=[]
+    ),
+    None,
+    match_type = 'dict'
+)
+
+
 def transform_msx_queues(params):
     if type(params) == tuple:
         return { "levels" : ( params[0], params[1] ) }

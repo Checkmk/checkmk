@@ -1,0 +1,10 @@
+Title: Notification scripts: Fixed missing environment variables
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450262382
+Class: fix
+
+The notification scripts did not get any non-notification related environment variables.
+For example everything specified in ~/.profile was missing.

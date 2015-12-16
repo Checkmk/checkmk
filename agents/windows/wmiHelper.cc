@@ -161,7 +161,6 @@ Result::Result(const Result &reference)
     : ObjectWrapper(NULL)
     , _enumerator(reference._enumerator)
 {
-    next();
 }
 
 
@@ -169,7 +168,13 @@ Result::Result(IEnumWbemClassObject *enumerator)
     : ObjectWrapper(NULL)
     , _enumerator(enumerator, releaseInterface)
 {
-    next();
+    if (!next()) {
+        // if the first enumeration fails the result is empty
+        // we abstract away two possible reasons:
+        //   a) The class doesn't exist at all
+        //   b) The result is indeed empty
+        _enumerator = NULL;
+    }
 }
 
 
@@ -241,7 +246,8 @@ bool Result::next()
     if (FAILED(res)) {
         // in this case the "current" object isn't changed to guarantee that the
         // Result remains valid
-        throw ComException("Failed to retrieve element", res);
+        //throw ComException("Failed to retrieve element", res);
+        return false;
     }
 
     if (numReturned == 0) {
@@ -255,7 +261,7 @@ bool Result::next()
 }
 
 
-template <> int Variant::get()
+template <> int Variant::get() const
 {
     switch (_value.vt) {
         case VT_I1: return _value.bVal;
@@ -269,7 +275,7 @@ template <> int Variant::get()
 }
 
 
-template <> bool Variant::get()
+template <> bool Variant::get() const
 {
     switch (_value.vt) {
         case VT_BOOL: return _value.boolVal;
@@ -278,7 +284,7 @@ template <> bool Variant::get()
 }
 
 
-template <> ULONG Variant::get()
+template <> ULONG Variant::get() const
 {
     switch (_value.vt) {
         case VT_UI1: return _value.cVal;
@@ -289,7 +295,7 @@ template <> ULONG Variant::get()
 }
 
 
-template <> ULONGLONG Variant::get()
+template <> ULONGLONG Variant::get() const
 {
     switch (_value.vt) {
         case VT_UI8: return _value.ullVal;
@@ -298,7 +304,7 @@ template <> ULONGLONG Variant::get()
 }
 
 
-template <> string Variant::get()
+template <> string Variant::get() const
 {
     switch (_value.vt) {
         case VT_BSTR: return to_utf8(_value.bstrVal);
@@ -307,7 +313,13 @@ template <> string Variant::get()
 }
 
 
-template <> wstring Variant::get()
+VARTYPE Variant::type() const
+{
+    return _value.vt;
+}
+
+
+template <> wstring Variant::get() const
 {
     if (_value.vt & VT_ARRAY) {
         return L"<array>";
@@ -322,10 +334,11 @@ template <> wstring Variant::get()
         case VT_I1:
         case VT_I2:
         case VT_I4:
+            return std::to_wstring(get<int>());
         case VT_UI1:
         case VT_UI2:
         case VT_UI4:
-            return std::to_wstring(get<int>());
+            return std::to_wstring(get<ULONG>());
         case VT_UI8:
             return std::to_wstring(get<ULONGLONG>());
         case VT_BOOL:
@@ -468,6 +481,20 @@ Result Helper::query(LPCWSTR query)
 
     if (FAILED(res)) {
         throw ComException(string("Failed to execute query \"") + to_utf8(query) + "\"", res);
+    }
+    return Result(enumerator);
+}
+
+extern void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
+
+Result Helper::getClass(LPCWSTR className)
+{
+    IEnumWbemClassObject *enumerator = NULL;
+    HRESULT res = _services->CreateInstanceEnum(_bstr_t(className),
+                                       WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+                                       NULL, &enumerator);
+    if (FAILED(res)) {
+        throw ComException(string("Failed to enum class \"") + to_utf8(className) + "\"", res);
     }
     return Result(enumerator);
 }

@@ -2843,18 +2843,25 @@ def show_check_manual(checkname):
 #   '----------------------------------------------------------------------'
 
 class fake_file:
-    def __init__(self, content):
-        self.content = content
-        self.pointer = 0
+    def __init__(self, content=""):
+        self._content = content
+        self._pointer = 0
 
     def size(self):
-        return len(self.content)
+        return len(self._content)
 
     def read(self, size):
-        new_end = self.pointer + size
-        data = self.content[self.pointer:new_end]
-        self.pointer = new_end
+        new_end = self._pointer + size
+        data = self._content[self._pointer:new_end]
+        self._pointer = new_end
         return data
+
+    def write(self, data):
+        self._content += data
+
+    def content(self):
+        return self._content
+
 
 def do_backup(tarname):
     import tarfile

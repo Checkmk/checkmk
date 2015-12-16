@@ -25,18 +25,18 @@
 #include "OutputBuffer.h"
 #include <errno.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <cinttypes>
 #include "Query.h"
 #include "logger.h"
 
-
 #define WRITE_TIMEOUT_USEC 100000
-
 
 OutputBuffer::OutputBuffer()
   : _max_size(INITIAL_OUTPUT_BUFFER_SIZE)
@@ -127,12 +127,12 @@ void OutputBuffer::flush(int fd, int *termination_flag)
 }
 
 
-void OutputBuffer::writeData(int fd, int *termination_flag, const char *write_from, int to_write)
+void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
+                             size_t bytes_to_write)
 {
-    struct timeval tv;
-    while (!*termination_flag && to_write > 0)
-    {
-        tv.tv_sec  = WRITE_TIMEOUT_USEC / 1000000;
+    while (!*termination_flag && bytes_to_write > 0) {
+        struct timeval tv;
+        tv.tv_sec = WRITE_TIMEOUT_USEC / 1000000;
         tv.tv_usec = WRITE_TIMEOUT_USEC % 1000000;
 
         fd_set fds;
@@ -141,16 +141,15 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *write_fr
 
         int retval = select(fd + 1, NULL, &fds, NULL, &tv);
         if (retval > 0 && FD_ISSET(fd, &fds)) {
-            ssize_t w = write(fd, write_from, to_write);
-            if (w < 0) {
-                logger(LG_INFO, "Couldn't write %d bytes to client socket: %s", to_write, strerror(errno));
+            ssize_t bytes_written = write(fd, buffer, bytes_to_write);
+            if (bytes_written == -1) {
+                logger(LG_INFO,
+                       "Couldn't write %" PRIdMAX " bytes to client socket: %s",
+                       static_cast<intmax_t>(bytes_to_write), strerror(errno));
                 break;
             }
-            else if (w == 0)
-                logger(LG_INFO, "Strange: wrote 0 bytes inspite of positive select()");
-            else {
-                to_write -= w;
-            }
+            buffer += bytes_written;
+            bytes_to_write -= bytes_written;
         }
     }
 }

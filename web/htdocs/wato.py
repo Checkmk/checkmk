@@ -142,6 +142,10 @@ def page_handler():
                                    " in your <tt>multisite.mk</tt> if you want to use WATO."))
     current_mode = html.var("mode") or "main"
     modeperms, modefunc = modes.get(current_mode, ([], None))
+    if type(modefunc) != type(lambda: None):
+        mode_class = modefunc
+        modefunc = mode_class.create_mode_function()
+
 
     if modeperms != None and not config.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
@@ -287,6 +291,41 @@ def ensure_mode_permissions(modeperms):
             pname = "wato." + pname
         config.need_permission(pname)
 
+
+class WatoMode(object):
+    def __init__(self):
+        object.__init__(self)
+
+
+    @classmethod
+    def create_mode_function(self):
+        mode_object = self()
+        def mode_function(phase):
+            if phase == "title":
+                return mode_object.title()
+            elif phase == "buttons":
+                return mode_object.buttons()
+            elif phase == "action":
+                return mode_object.action()
+            else:
+                return mode_object.page()
+        return mode_function
+
+
+    def title(self):
+        return _("(Untitled module)")
+
+
+    def buttons(self):
+        global_buttons()
+
+
+    def actions(self):
+        pass
+
+
+    def page(self):
+        return _("(This module is not yet implemented)")
 
 
 #.

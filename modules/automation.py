@@ -44,6 +44,10 @@ def do_automation(cmd, args):
             result = automation_get_check_manpage(args)
         elif cmd == "get-check-catalog":
             result = automation_get_check_catalog(args)
+        elif cmd == "get-package-info":
+            result = automation_get_package_info(args)
+        elif cmd == "get-package":
+            result = automation_get_package(args)
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
@@ -1283,3 +1287,28 @@ def automation_get_agent_output(args):
             raise
 
     return success, output, agent_data
+
+
+def automation_get_package_info(args):
+    load_module("packaging")
+    packages = {}
+    for package_name in all_package_names():
+        packages[package_name] = read_package_info(package_name)
+
+    return {
+        "installed" : packages,
+        "unpackaged" : unpackaged_files(),
+        "parts" : package_part_info(),
+    }
+
+
+def automation_get_package(args):
+    load_module("packaging")
+    package_name = args[0]
+    package = read_package_info(package_name)
+    if not package:
+        raise MKAutomationError("Package not installed or corrupt")
+
+    output_file = fake_file()
+    create_mkp_file(package, file_object=output_file)
+    return package, output_file.content()

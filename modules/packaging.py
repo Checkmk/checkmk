@@ -115,12 +115,12 @@ def package_list(args):
     else:
         if opt_verbose:
             table = []
-            for pacname in all_packages():
-                package = read_package(pacname)
+            for pacname in all_package_names():
+                package = read_package_info(pacname)
                 table.append((pacname, package["title"], package["num_files"]))
             print_table(["Name", "Title", "Files"], [ tty_bold, "", "" ], table)
         else:
-            for pacname in all_packages():
+            for pacname in all_package_names():
                 sys.stdout.write("%s\n" % pacname)
 
 def package_info(args):
@@ -142,7 +142,7 @@ def show_package(name, show_info = False):
             info = tar.extractfile("info")
             package = eval(info.read())
         else:
-            package = read_package(name)
+            package = read_package_info(name)
             if not package:
                 raise PackageException("No such package %s." % name)
             if show_info:
@@ -183,7 +183,7 @@ def package_create(args):
         raise PackageException("Usage: check_mk -P create NAME")
 
     pacname = args[0]
-    if read_package(pacname):
+    if read_package_info(pacname):
         raise PackageException("Package %s already existing." % pacname)
 
     verbose("Creating new package %s...\n" % pacname)
@@ -210,7 +210,7 @@ def package_create(args):
                 verbose("    %s\n" % f)
 
 
-    write_package(pacname, package)
+    write_package_info(pacname, package)
     verbose("New package %s created with %d files.\n" % (pacname, num_files))
     verbose("Please edit package details in %s%s%s\n" % (tty_bold, pac_dir + pacname, tty_normal))
 
@@ -239,7 +239,7 @@ def package_release(args):
     pacpath = pac_dir + pacname
     if not os.path.exists(pacpath):
         raise PackageException("No such package %s." % pacname)
-    package = read_package(pacname)
+    package = read_package_info(pacname)
     os.unlink(pacpath)
     verbose("Releasing files of package %s into freedom...\n" % pacname)
     if opt_verbose:
@@ -263,12 +263,17 @@ def package_pack(args):
                                "a packet file. Foreign files lying around here will mix up things." % p)
 
     pacname = args[0]
-    package = read_package(pacname)
+    package = read_package_info(pacname)
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
-    package["version.packaged"] = check_mk_version
     tarfilename = "%s-%s%s" % (pacname, package["version"], pac_ext)
     verbose("Packing %s into %s...\n" % (pacname, tarfilename))
+    create_mkp_file(package, file_name=tarfilename)
+    verbose("Successfully created %s\n" % tarfilename)
+
+
+def create_mkp_file(package, file_name=None, file_object=None):
+    package["version.packaged"] = check_mk_version
 
     def create_info(filename, size):
         info = tarfile.TarInfo("info")
@@ -281,7 +286,7 @@ def package_pack(args):
         info.name = filename
         return info
 
-    tar = tarfile.open(tarfilename, "w:gz")
+    tar = tarfile.open(name=file_name, fileobj=file_object, mode="w:gz")
     info_file = fake_file(pprint.pformat(package))
     info = create_info("info", info_file.size())
     tar.addfile(info, info_file)
@@ -297,15 +302,14 @@ def package_pack(args):
             subdata = os.popen("tar cf - --dereference --force-local -C '%s' %s" % (dir, " ".join(filenames))).read()
             info = create_info(subtarname, len(subdata))
             tar.addfile(info, fake_file(subdata))
-
     tar.close()
-    verbose("Successfully created %s\n" % tarfilename)
+
 
 def package_remove(args):
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P remove NAME")
     pacname = args[0]
-    package = read_package(pacname)
+    package = read_package_info(pacname)
     if not package:
         raise PackageException("No such package %s." % pacname)
 
@@ -325,6 +329,7 @@ def package_remove(args):
     os.remove(pac_dir + pacname)
     verbose("Successfully removed package %s.\n" % pacname)
 
+
 def package_install(args):
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P remove NAME")
@@ -335,7 +340,7 @@ def package_install(args):
     tar = tarfile.open(path, "r:gz")
     package = eval(tar.extractfile("info").read())
     pacname = package["name"]
-    old_package = read_package(pacname)
+    old_package = read_package_info(pacname)
     if old_package:
         verbose("Updating %s from version %s to %s.\n" % (pacname, old_package["version"], package["version"]))
         update = True
@@ -430,20 +435,42 @@ def files_in_dir(part, dir, prefix = ""):
     result.sort()
     return result
 
+
+def unpackaged_files():
+    unpackaged = {}
+    for part, title, perm, dir in package_parts:
+        unpackaged[part] = unpackaged_files_in_dir(part, dir)
+    return unpackaged
+
+
+def package_part_info():
+    part_info = {}
+    for part, title, perm, dir in package_parts:
+        part_info[part] = {
+            "title" : title,
+            "permission" : perm,
+            "path" : dir,
+            "files" : os.listdir(dir),
+        }
+    return part_info
+
+
 def unpackaged_files_in_dir(part, dir):
     all    = files_in_dir(part, dir)
     packed = packaged_files_in_dir(part)
     return [ f for f in all if f not in packed ]
 
+
 def packaged_files_in_dir(part):
     result = []
-    for pacname in all_packages():
-        package = read_package(pacname)
+    for pacname in all_package_names():
+        package = read_package_info(pacname)
         if package:
             result += package["files"].get(part, [])
     return result
 
-def read_package(pacname):
+
+def read_package_info(pacname):
     try:
         package = eval(file(pac_dir + pacname).read())
         num_files = sum([len(fl) for fl in package["files"].values() ])
@@ -452,13 +479,15 @@ def read_package(pacname):
     except IOError:
         return None
     except Exception:
-        sys.stderr.write("Ignoring invalid package file '%s%s'. Please remove it from %s!\n" % (pac_dir, pacname, pac_dir))
+        verbose("Ignoring invalid package file '%s%s'. Please remove it from %s!\n" % (pac_dir, pacname, pac_dir))
         return None
 
-def write_package(pacname, package):
+
+def write_package_info(pacname, package):
     file(pac_dir + pacname, "w").write(pprint.pformat(package) + "\n")
 
-def all_packages():
+
+def all_package_names():
     all = [ p for p in os.listdir(pac_dir) if p not in [ '.', '..' ] ]
     all.sort()
     return all

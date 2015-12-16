@@ -51,6 +51,7 @@ OPTIONS:
                           (leave empty for anonymous SMTP)
   --smtp-password PW      Password to authenticate SMTP
   --smtp-tls              Use TLS over SMTP (disabled by default)
+  --imap-tls             Use TLS for IMAP authentification (disabled by default)
 
   --fetch-protocol PROTO  Set to "IMAP" or "POP3", depending on your mailserver
                           (defaults to IMAP)
@@ -92,7 +93,7 @@ OPTIONS:
 
 short_options = 'dh'
 long_options  = ['smtp-server=', 'smtp-port=', 'smtp-username=', 'smtp-password=',
-    'smtp-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
+    'smtp-tls', 'fetch-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
     'fetch-password=', 'fetch-ssl', 'mail-from=', 'mail-to=', 'warning=', 'critical=',
     'connect-timeout=', 'delete-messages', 'help', 'status-dir=', 'status-suffix=', "debug", ]
 
@@ -119,6 +120,7 @@ fetch_port      = None
 fetch_user      = None
 fetch_pass      = None
 fetch_ssl       = False
+imap_tls        = False
 mail_from       = None
 mail_to         = None
 warning         = None
@@ -153,6 +155,8 @@ for o,a in opts:
         fetch_user = a
     elif o == '--fetch-password':
         fetch_pass = a
+    elif o == '--imap-tls':
+        imap_tls = True
     elif o == '--fetch-ssl':
         fetch_ssl = True
     elif o == '--mail-from':
@@ -220,6 +224,22 @@ def save_expected_mails():
         lines.append('%d %s' % (ts, key))
     file(status_path, 'w').write('\n'.join(lines) + '\n')
 
+def add_starttls_support(self, keyfile = None, certfile = None):
+    import ssl
+    name = "STARTTLS"
+    typ, dat = self._simple_command(name)
+    if typ != 'OK':
+        raise self.error(dat[-1])
+
+    self.sock = ssl.wrap_socket(self.sock)
+    self.file = self.sock.makefile()
+
+    cap = 'CAPABILITY'
+    self._simple_command(cap)
+    if not cap in self.untagged_responses:
+        raise self.error('no CAPABILITY response from server')
+    self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
+
 def fetch_mails():
     global g_M
     if not g_expected:
@@ -244,7 +264,16 @@ def fetch_mails():
         else:
             # Get mails from IMAP mailbox
             fetch_class = fetch_ssl and imaplib.IMAP4_SSL or imaplib.IMAP4
-            g_M = fetch_class(fetch_server, fetch_port)
+
+            if imap_tls:
+                # starttls in imaplib is only available with python >= 3.2
+                # we are going to implement our own version
+                imaplib.Commands.update({"STARTTLS": ("NONAUTH")})
+                g_M = imaplib.IMAP4(fetch_server, fetch_port)
+                add_starttls_support(g_M)
+            else:
+                g_M = fetch_class(fetch_server, fetch_port)
+
             g_M.login(fetch_user, fetch_pass)
             g_M.select('INBOX', readonly=False) # select INBOX
             retcode, messages = g_M.search(None, 'NOT', 'DELETED')

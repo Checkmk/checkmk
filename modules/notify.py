@@ -1156,8 +1156,7 @@ def call_notification_script(plugin, plugin_context):
 
 # Construct the environment for the notification script
 def notification_script_env(plugin_context):
-    return dict([ ("NOTIFY_" + k, v.encode("utf-8"))
-                  for k, v in plugin_context.items() ])
+    return dict(os.environ.items() + [("NOTIFY_" + k, v.encode("utf-8")) for k, v in plugin_context.items()])
 
 
 class NotificationTimeout(Exception):

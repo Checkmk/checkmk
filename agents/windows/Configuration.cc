@@ -182,11 +182,11 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
                 mask |= SECTION_SERVICES;
             else if (!strcmp(word, "winperf"))
                 mask |= SECTION_WINPERF;
-            else if (!strcmp(word, "cpu"))
+            else if (!strcmp(word, "winperf_processor"))
                 mask |= SECTION_WINPERF_CPU;
-            else if (!strcmp(word, "if"))
+            else if (!strcmp(word, "winperf_if"))
                 mask |= SECTION_WINPERF_IF;
-            else if (!strcmp(word, "phydisk"))
+            else if (!strcmp(word, "winperf_phydisk"))
                 mask |= SECTION_WINPERF_PHYDISK;
             else if (!strcmp(word, "perfcounter"))
                 mask |= SECTION_WINPERF_CONFIG;
@@ -222,11 +222,11 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
                 mask |= SECTION_MRPE;
             else if (!strcmp(word, "fileinfo"))
                 mask |= SECTION_FILEINFO;
-            else if (!strcmp(word, "cpuload"))
+            else if (!strcmp(word, "wmi_cpuload"))
                 mask |= SECTION_CPU;
-            else if (!strcmp(word, "exchange"))
+            else if (!strcmp(word, "msexch"))
                 mask |= SECTION_EXCHANGE;
-            else if (!strcmp(word, "dotnet"))
+            else if (!strcmp(word, "dotnet_clrmemory"))
                 mask |= SECTION_DOTNET;
             else if (!strcmp(word, "webservices"))
                 mask |= SECTION_WEBSERVICES;

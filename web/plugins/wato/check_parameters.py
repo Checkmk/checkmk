@@ -5858,6 +5858,21 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "asa_svc_sessions",
+    _("Cisco SSl VPN Client Sessions"),
+    Tuple(
+         title = _("Number of active sessions"),
+         help = _("This check monitors the current number of active sessions"),
+         elements = [
+             Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
+             Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
+          ],
+     ),
+    None,
+    match_type = "first",
+)
 
 register_check_parameters(
     subgroup_applications,

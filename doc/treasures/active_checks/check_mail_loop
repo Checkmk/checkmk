@@ -51,7 +51,7 @@ OPTIONS:
                           (leave empty for anonymous SMTP)
   --smtp-password PW      Password to authenticate SMTP
   --smtp-tls              Use TLS over SMTP (disabled by default)
-  --imap-tls             Use TLS for IMAP authentification (disabled by default)
+  --imap-tls              Use TLS for IMAP authentification (disabled by default)
 
   --fetch-protocol PROTO  Set to "IMAP" or "POP3", depending on your mailserver
                           (defaults to IMAP)

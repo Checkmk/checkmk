@@ -55,7 +55,9 @@ def do_automation(cmd, args):
         elif cmd == "install-package":
             result = automation_install_package(args)
         elif cmd == "remove-package":
-            result = automation_remove_package(args)
+            result = automation_remove_or_release_package(args, "remove")
+        elif cmd == "release-package":
+            result = automation_remove_or_release_package(args, "release")
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
@@ -1349,10 +1351,13 @@ def automation_install_package(args):
         raise MKAutomationError("Cannot install package: %s" % e)
 
 
-def automation_remove_package(args):
+def automation_remove_or_release_package(args, mode):
     load_module("packaging")
     package_name = args[0]
     package = read_package_info(package_name)
     if not package:
         raise MKAutomationError("Package not installed or corrupt")
-    remove_package(package)
+    if mode == "remove":
+        remove_package(package)
+    else:
+        remove_package_info(package_name)

@@ -3249,6 +3249,9 @@ class FileUpload(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._allow_empty = kwargs.get('allow_empty', True)
+        self._allowed_extensions = kwargs.get('allowed_extensions')
+        self._allow_empty_content= kwargs.get('allow_empty_content', True)
+
 
     def canonical_value(self):
         if self._allow_empty:
@@ -3256,17 +3259,37 @@ class FileUpload(ValueSpec):
         else:
             return ''
 
+
     def validate_value(self, value, varprefix):
-        if not self._allow_empty and (value == None or value[0] == ''):
+        file_name, mime_type, content = value
+
+        if not self._allow_empty and (value == None or file_name == ''):
             raise MKUserError(varprefix, _('Please select a file.'))
+
+        if not self._allow_empty_content and len(content) == 0:
+            raise MKUserError(varprefix, _('The selected file is empty. Please select a non-empty file.')
+)
+        if self._allowed_extensions != None:
+            matched = False
+            for extension in self._allowed_extensions:
+                if file_name.endswith(extension):
+                    matched = True
+                    break
+            if not matched:
+                raise MKUserError(varprefix, _("Invalid file name extension. Allowed are: %s")
+                                  % ", ".join(self._allowed_extensions))
+
         self.custom_validate(value, varprefix)
+
 
     def render_input(self, varprefix, value):
         html.upload_file(varprefix)
 
+
     def from_html_vars(self, varprefix):
         # returns a triple of (filename, mime-type, content)
         return html.uploaded_file(varprefix)
+
 
 class IconSelector(ValueSpec):
     _categories = [

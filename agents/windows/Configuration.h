@@ -70,6 +70,7 @@ public:
     unsigned long realtimeSections();
 
     int port() const { return _port; }
+    int realtimePort() const { return _realtime_port; }
 
     bool crashDebug() const { return _crash_debug; }
     bool logwatchSendInitialEntries() const { return _logwatch_send_initial_entries; }
@@ -169,6 +170,7 @@ private:
     unsigned long _realtime_sections;
 
     int _port;
+    int _realtime_port;
 
     script_execution_mode  _default_script_execution_mode;
     script_async_execution _default_script_async_execution;

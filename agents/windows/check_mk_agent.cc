@@ -3143,6 +3143,7 @@ struct ThreadData {
     Mutex mutex;
 };
 
+
 DWORD WINAPI realtime_check_func(void *data_in)
 {
     ThreadData *data = (ThreadData*)data_in;
@@ -3175,14 +3176,14 @@ DWORD WINAPI realtime_check_func(void *data_in)
                     if (current_address.ss_family != 0) {
                         current_socket = socket(current_address.ss_family, SOCK_DGRAM, IPPROTO_UDP);
                         if (current_socket == INVALID_SOCKET) {
-                            printf("failed to establish socket: %d\n", (int)::WSAGetLastError());
+                            crash_log("failed to establish socket: %d", (int)::WSAGetLastError());
                             return 1;
                         }
 
                         int sockaddr_size = 0;
                         if (current_address.ss_family == AF_INET) {
                             sockaddr_in *addrv4 = (sockaddr_in*)&current_address;
-                            addrv4->sin_port = htons(6558);
+                            addrv4->sin_port = htons(g_config->realtimePort());
                             sockaddr_size = sizeof(sockaddr_in);
                         } else {
                             sockaddr_in6 *addrv6 = (sockaddr_in6*)&current_address;
@@ -3195,14 +3196,14 @@ DWORD WINAPI realtime_check_func(void *data_in)
                                 addrv6->sin6_addr.u.Byte[i + 1] = temp;
                             }
 
-                            addrv6->sin6_port = htons(6558);
+                            addrv6->sin6_port = htons(g_config->realtimePort());
                             sockaddr_size = sizeof(sockaddr_in6);
                         }
                         current_ip = ListenSocket::readableIP(&current_address);
 
                         if (connect(current_socket, (const sockaddr*)&current_address,
                                     sockaddr_size) == SOCKET_ERROR) {
-                            crash_log("failed to connect: %d\n", (int)::WSAGetLastError());
+                            crash_log("failed to connect: %d", (int)::WSAGetLastError());
                             closesocket(current_socket);
                             current_socket = INVALID_SOCKET;
                         }

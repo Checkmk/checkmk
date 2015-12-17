@@ -36,12 +36,14 @@
 
 
 static const int CHECK_MK_AGENT_PORT = 6556;
+static const int REALTIME_DEFAULT_PORT = 6559;
 
 
 Configuration::Configuration(const Environment &env)
     : _enabled_sections(0xffffffff)
     , _realtime_sections(0x0)
     , _port(CHECK_MK_AGENT_PORT)
+    , _realtime_port(REALTIME_DEFAULT_PORT)
     , _default_script_execution_mode(SYNC)
     , _default_script_async_execution(SEQUENTIAL)
     , _passphrase()
@@ -116,6 +118,10 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
     }
     else if (!strcmp(var, "port")) {
         _port = atoi(value);
+        return true;
+    }
+    else if (!strcmp(var, "realtime_port")) {
+        _realtime_port = atoi(value);
         return true;
     }
     else if (!strcmp(var, "ipv6")) {

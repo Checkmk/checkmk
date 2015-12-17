@@ -2984,7 +2984,7 @@ void do_debug(const Environment &env)
     FileOutputProxy dummy(do_file ? fileout : stdout);
 
     update_script_statistics();
-    output_data(dummy, env, g_config->enabledSections(), false);
+    output_data(dummy, env, g_config->enabledSections(), g_config->sectionFlush());
 }
 
 
@@ -2997,7 +2997,7 @@ void do_test(bool output_stderr, const Environment &env)
     }
     crash_log("Started in test mode.");
     update_script_statistics();
-    output_data(dummy, env, g_config->enabledSections(), false);
+    output_data(dummy, env, g_config->enabledSections(), g_config->sectionFlush());
     if (g_config->crashDebug()) {
         close_crash_log();
     }
@@ -3137,13 +3137,8 @@ DWORD WINAPI realtime_check_func(void *data_in)
         std::string current_ip;
         SOCKET current_socket = INVALID_SOCKET;
 
-        // maximum udp datagram size - 1000
-        // this has no effect, my datagrams still get split at 1500bytes by
-        // windows. :(
-        static const size_t TARGET_DATAGRAM_SIZE = 65507L - 1000L;
         EncryptingBufferedSocketProxy out(INVALID_SOCKET, g_config->passphrase(),
-                BufferedSocketProxy::DEFAULT_BUFFER_SIZE,
-                TARGET_DATAGRAM_SIZE);
+                BufferedSocketProxy::DEFAULT_BUFFER_SIZE);
         timeval before;
         gettimeofday(&before, 0);
         while (!data->terminate) {
@@ -3303,7 +3298,7 @@ void do_adhoc(const Environment &env)
 
             SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
             update_script_statistics();
-            output_data(out, env, g_config->enabledSections(), false);
+            output_data(out, env, g_config->enabledSections(), g_config->sectionFlush());
             closesocket(connection);
         }
     }

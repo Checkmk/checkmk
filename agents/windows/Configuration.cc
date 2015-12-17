@@ -49,6 +49,7 @@ Configuration::Configuration(const Environment &env)
     , _passphrase()
     , _realtime_timeout(90)
     , _crash_debug(false)
+    , _section_flush(true)
     , _logwatch_send_initial_entries(false)
     , _support_ipv6(true)
     , _environment(env)
@@ -96,12 +97,12 @@ std::string Configuration::configFileName(bool local) const
 }
 
 
-bool Configuration::parseCrashDebug(char *value)
+bool Configuration::parseBoolean(char *value, bool &parameter)
 {
     int s = parse_boolean(value);
     if (s == -1)
         return false;
-    _crash_debug = s;
+    parameter = s != 0;
     return true;
 }
 
@@ -125,9 +126,7 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
         return true;
     }
     else if (!strcmp(var, "ipv6")) {
-        int s = parse_boolean(value);
-        _support_ipv6 = s != 0;
-        return s != -1;
+        return parseBoolean(value, _support_ipv6);
     }
     else if (!strcmp(var, "execute")) {
         parseExecute(value);
@@ -157,7 +156,10 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
         return true;
     }
     else if (!strcmp(var, "crash_debug")) {
-        return parseCrashDebug(value);
+        return parseBoolean(value, _crash_debug);
+    }
+    else if (!strcmp(var, "section_flush")) {
+        return parseBoolean(value, _section_flush);
     }
     else if (!strcmp(var, "sections")
             || !strcmp(var, "realtime_sections")) {

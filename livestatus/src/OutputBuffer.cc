@@ -41,7 +41,7 @@
 OutputBuffer::OutputBuffer()
   : _max_size(INITIAL_OUTPUT_BUFFER_SIZE)
 {
-    _buffer = (char *)malloc(_max_size);
+    _buffer = static_cast<char *>(malloc(_max_size));
     _end = _buffer + _max_size;
     reset();
 }

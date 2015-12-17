@@ -303,7 +303,7 @@ bool LogEntry::handleNotificationEntry()
         if ((svc && _state == 4) ||
             (!svc && _state == 3))
         {
-            char *swap = _state_type;
+            const char *swap = _state_type;
             _state_type = _command_name;
             _command_name = swap;
             if (svc)
@@ -401,12 +401,12 @@ bool LogEntry::handleProgrammEntry()
 }
 
 
-int LogEntry::serviceStateToInt(char *s)
+int LogEntry::serviceStateToInt(const char *s)
 {
     if (!s)
         return 3; // can happen at garbled log line
 
-    char *last = s + strlen(s) - 1;
+    const char *last = s + strlen(s) - 1;
     if (*last == ')')
         last--;
 
@@ -422,12 +422,12 @@ int LogEntry::serviceStateToInt(char *s)
 }
 
 
-int LogEntry::hostStateToInt(char *s)
+int LogEntry::hostStateToInt(const char *s)
 {
     if (!s)
         return 2; // can happen at garbled log line
 
-    char *last = s + strlen(s) - 1;
+    const char *last = s + strlen(s) - 1;
     if (*last == ')') // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN)
         last--;
 
@@ -458,7 +458,8 @@ unsigned LogEntry::updateReferences()
         updated++;
     }
     if (_command_name) {
-        _command = find_command(_command_name);
+        // Older Nagios headers are not const-correct... :-P
+        _command = find_command(const_cast<char *>(_command_name));
         updated++;
     }
     return updated;

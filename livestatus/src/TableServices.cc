@@ -131,9 +131,10 @@ void TableServices::answerQuery(Query *query)
 
 
     // do we know the host?
-    char *host_name = (char *)query->findIndexFilter("host_name");
+    const char *host_name = static_cast<const char*>(query->findIndexFilter("host_name"));
     if (host_name) {
-        host *host = find_host(host_name);
+        // Older Nagios headers are not const-correct... :-P
+        host *host = find_host(const_cast<char*>(host_name));
         if (host) {
             servicesmember *mem = host->services;
             while (mem) {

@@ -1669,7 +1669,12 @@ class DualListChoice(ListChoice):
         self._custom_order = kwargs.get("custom_order", False)
         self._instant_add = kwargs.get("instant_add", False)
         self._enlarge_active = kwargs.get("enlarge_active", False)
-        self._rows = kwargs.get("rows", 5)
+        if "rows" in kwargs:
+            self._rows = kwargs.get("rows", 5)
+            self._autoheight = False
+        else:
+            self._rows = 5
+        self._size = kwargs.get("size") # Total with in ex
 
     def render_input(self, varprefix, value):
         self.load_elements()
@@ -1699,7 +1704,11 @@ class DualListChoice(ListChoice):
         select_func   = 'vs_duallist_switch(\'unselected\', \'%s\', %d);' % (varprefix, self._custom_order and 1 or 0)
         unselect_func = 'vs_duallist_switch(\'selected\', \'%s\', 1);' % varprefix
 
-        html.write('<table class="vs_duallist"><tr><td class="head">')
+        if self._size:
+            style = ' style="width: %dpx"' % (self._size * 6.4)
+        else:
+            style = ''
+        html.write('<table class="vs_duallist"%s><tr><td class="head">' % style)
         html.write(_('Available'))
         if not self._instant_add:
             html.write('<a href="javascript:%s" class="control add">&gt;</a>' % select_func)
@@ -1721,23 +1730,15 @@ class DualListChoice(ListChoice):
             onchange_unselected += ';vs_duallist_enlarge(\'unselected\', \'%s\')' % varprefix
 
         func = self._custom_order and html.select or html.sorted_select
-        func(varprefix + '_unselected', unselected,
-                           attrs = {
-                               'size'       : self._rows,
-                               'multiple'   : 'multiple',
-                               'style'      : self._autoheight and 'height:auto' or '',
-                               'ondblclick' : not self._instant_add and select_func or '',
-                           },
-                           onchange = onchange_unselected)
+        attrs = {
+            'foo'        : "bar",
+            'multiple'   : 'multiple',
+            'style'      : self._autoheight and 'height:auto' or "height: %dpx" % (self._rows * 16),
+            'ondblclick' : not self._instant_add and select_func or '',
+        }
+        func(varprefix + '_unselected', unselected, attrs = attrs, onchange = onchange_unselected)
         html.write('</td><td>')
-        func(varprefix + '_selected', selected,
-                           attrs = {
-                               'size'       : self._rows,
-                               'multiple'   : 'multiple',
-                               'style'      : self._autoheight and 'height:auto' or '',
-                               'ondblclick' : not self._instant_add and unselect_func or '',
-                           },
-                           onchange = onchange_selected)
+        func(varprefix + '_selected', selected, attrs = attrs, onchange = onchange_selected)
         html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)
 

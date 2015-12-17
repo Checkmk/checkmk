@@ -133,6 +133,7 @@ check_info["winperf_processor.util"] = {
     'inventory_function':      inventory_winperf_util,
     'service_description':     'CPU utilization',
     'has_perfdata':            True,
+    'handle_real_time_checks': True,
     'group':                   'cpu_utilization_os',
     'includes':                [ "cpu_util.include" ],
 }

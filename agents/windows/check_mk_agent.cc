@@ -100,9 +100,6 @@ static const char RT_PROTOCOL_VERSION[2] = { '0', '0' };
 // Limits for static global arrays
 #define MAX_EVENTLOGS                 128
 
-// Default buffer size for reading performance counters
-#define DEFAULT_BUFFER_SIZE         40960L
-
 // Maximum heap buffer for a single local/plugin script
 // This buffer contains the check output
 #define HEAP_BUFFER_DEFAULT         16384L
@@ -3145,6 +3142,7 @@ DWORD WINAPI realtime_check_func(void *data_in)
         // windows. :(
         static const size_t TARGET_DATAGRAM_SIZE = 65507L - 1000L;
         EncryptingBufferedSocketProxy out(INVALID_SOCKET, g_config->passphrase(),
+                BufferedSocketProxy::DEFAULT_BUFFER_SIZE,
                 TARGET_DATAGRAM_SIZE);
         timeval before;
         gettimeofday(&before, 0);
@@ -3219,8 +3217,7 @@ DWORD WINAPI realtime_check_func(void *data_in)
                     // these writes are unencrypted!
                     out.writeBinary(RT_PROTOCOL_VERSION, 2);
                     out.writeBinary(timestamp, 10);
-                    output_data(out, data->env, g_config->realtimeSections(), true);
-                    data->new_request = true;
+                    output_data(out, data->env, g_config->realtimeSections(), false);
                 }
             }
         }

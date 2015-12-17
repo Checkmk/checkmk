@@ -177,9 +177,10 @@ bool BufferedSocketProxy::flushInt()
 
 EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(SOCKET socket,
         const std::string &passphrase, size_t buffer_size, size_t collect_size)
-    : BufferedSocketProxy(socket, buffer_size)
+    : BufferedSocketProxy(socket, buffer_size, collect_size)
     , _crypto(passphrase)
 {
+
     _blockSize = _crypto.blockSize();
 
     _plain.resize(_blockSize * 8);

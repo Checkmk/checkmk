@@ -66,7 +66,7 @@ protected:
     std::vector<char> &buffer() { return _buffer; }
     size_t length() const { return _length; }
 
-private:
+public:
 
     static const size_t DEFAULT_BUFFER_SIZE  = 16384L;
     static const size_t DEFAULT_COLLECT_SIZE = 1300L;
@@ -98,11 +98,6 @@ private:
 class EncryptingBufferedSocketProxy : public BufferedSocketProxy {
 
     Crypto _crypto;
-
-private:
-
-    static const size_t DEFAULT_BUFFER_SIZE = 16384L;
-    static const size_t DEFAULT_COLLECT_SIZE = 1300L;
 
     std::vector<char> _plain;
     size_t _blockSize;

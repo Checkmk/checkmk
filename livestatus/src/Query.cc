@@ -79,8 +79,9 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
     while (input->moreLines())
     {
         string line = input->nextLine();
-        vector<char> hurz(line.begin(), line.end());
-        char *buffer = &hurz[0];
+        vector<char> line_copy(line.begin(), line.end());
+        line_copy.push_back(0);
+        char *buffer = &line_copy[0];
         rstrip(buffer);
         if (g_debug_level > 0)
             logger(LG_INFO, "Query: %s", buffer);

@@ -40,7 +40,7 @@ extern bool g_found_crash;
 extern HANDLE g_crashlogMutex;
 
 // Pointer to open crash log file, if crash_debug = on
-HANDLE g_connectionlog_file;
+HANDLE g_connectionlog_file = INVALID_HANDLE_VALUE;
 struct timeval g_crashlog_start;
 
 
@@ -118,13 +118,15 @@ void open_crash_log(const std::string &log_directory)
 
 void close_crash_log()
 {
-    WaitForSingleObject(g_crashlogMutex, INFINITE);
-    crash_log("Closing crash log (no crash this time)");
+    if (g_connectionlog_file) {
+        WaitForSingleObject(g_crashlogMutex, INFINITE);
+        crash_log("Closing crash log (no crash this time)");
 
-    CloseHandle(g_connectionlog_file);
-    DeleteFile(g_success_log);
-    MoveFile(g_connection_log, g_success_log);
-    ReleaseMutex(g_crashlogMutex);
+        CloseHandle(g_connectionlog_file);
+        DeleteFile(g_success_log);
+        MoveFile(g_connection_log, g_success_log);
+        ReleaseMutex(g_crashlogMutex);
+    }
 }
 
 void crash_log(const char *format, ...)

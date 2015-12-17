@@ -182,6 +182,14 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
                 mask |= SECTION_SERVICES;
             else if (!strcmp(word, "winperf"))
                 mask |= SECTION_WINPERF;
+            else if (!strcmp(word, "cpu"))
+                mask |= SECTION_WINPERF_CPU;
+            else if (!strcmp(word, "if"))
+                mask |= SECTION_WINPERF_IF;
+            else if (!strcmp(word, "phydisk"))
+                mask |= SECTION_WINPERF_PHYDISK;
+            else if (!strcmp(word, "perfcounter"))
+                mask |= SECTION_WINPERF_CONFIG;
             else if (!strcmp(word, "logwatch"))
                 mask |= SECTION_LOGWATCH;
             else if (!strcmp(word, "logfiles"))
@@ -214,6 +222,14 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
                 mask |= SECTION_MRPE;
             else if (!strcmp(word, "fileinfo"))
                 mask |= SECTION_FILEINFO;
+            else if (!strcmp(word, "cpuload"))
+                mask |= SECTION_CPU;
+            else if (!strcmp(word, "exchange"))
+                mask |= SECTION_EXCHANGE;
+            else if (!strcmp(word, "dotnet"))
+                mask |= SECTION_DOTNET;
+            else if (!strcmp(word, "webservices"))
+                mask |= SECTION_WEBSERVICES;
             else {
                 fprintf(stderr, "Invalid section '%s'.\r\n", word);
                 return false;

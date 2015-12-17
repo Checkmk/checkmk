@@ -138,7 +138,7 @@ typedef map<unsigned long long, process_entry> process_entry_t;
 
 // Forward declarations of functions
 void listen_tcp_loop(const Environment &env);
-void output_data(OutputProxy &out, const Environment &env, unsigned long sectionMask);
+void output_data(OutputProxy &out, const Environment &env, unsigned long sectionMask, bool section_flush);
 double file_time(const FILETIME *filetime);
 void lowercase(char* value);
 void collect_script_data(script_execution_mode mode);
@@ -573,20 +573,6 @@ void dump_performance_counters(OutputProxy &out, unsigned counter_base_number, c
             }
             out.output(" %s\n", counter.typeName().c_str());
         }
-    }
-}
-
-
-void section_winperf(OutputProxy &out)
-{
-    dump_performance_counters(out, 234, "phydisk");
-    dump_performance_counters(out, 238, "processor");
-    dump_performance_counters(out, 510, "if");
-
-    // also output additionally configured counters
-    for (winperf_counters_t::const_iterator it_wp = g_config->winperfCounters().begin();
-            it_wp != g_config->winperfCounters().end(); ++it_wp) {
-        dump_performance_counters(out, (*it_wp)->id, (*it_wp)->name);
     }
 }
 
@@ -3000,7 +2986,7 @@ void do_debug(const Environment &env)
     FileOutputProxy dummy(do_file ? fileout : stdout);
 
     update_script_statistics();
-    output_data(dummy, env, g_config->enabledSections());
+    output_data(dummy, env, g_config->enabledSections(), false);
 }
 
 
@@ -3013,7 +2999,7 @@ void do_test(bool output_stderr, const Environment &env)
     }
     crash_log("Started in test mode.");
     update_script_statistics();
-    output_data(dummy, env, g_config->enabledSections());
+    output_data(dummy, env, g_config->enabledSections(), false);
     if (g_config->crashDebug()) {
         close_crash_log();
     }
@@ -3221,8 +3207,8 @@ DWORD WINAPI realtime_check_func(void *data_in)
                     // these writes are unencrypted!
                     out.writeBinary(RT_PROTOCOL_VERSION, 2);
                     out.writeBinary(timestamp, 10);
-                    output_data(out, data->env, g_config->realtimeSections());
-                    break;
+                    output_data(out, data->env, g_config->realtimeSections(), true);
+                    data->new_request = true;
                 }
             }
         }
@@ -3291,10 +3277,11 @@ void do_adhoc(const Environment &env)
         SOCKET connection = sock.acceptConnection();
         BufferedSocketProxy out(connection);
         if ((void*)connection != NULL) {
-            out.setSocket(connection);
             if (g_config->crashDebug()) {
+                close_crash_log();
                 open_crash_log(env.logDirectory());
             }
+            out.setSocket(connection);
             std::string ip_hr = sock.readableIP(connection);
             crash_log("Accepted client connection from %s.", ip_hr.c_str());
             { // limit lifetime of mutex lock
@@ -3306,10 +3293,7 @@ void do_adhoc(const Environment &env)
 
             SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
             update_script_statistics();
-            output_data(out, env, g_config->enabledSections());
-            if (g_config->crashDebug()) {
-                close_crash_log();
-            }
+            output_data(out, env, g_config->enabledSections(), false);
             closesocket(connection);
         }
     }
@@ -3323,6 +3307,7 @@ void do_adhoc(const Environment &env)
 
     stop_threads();
     WSACleanup();
+    close_crash_log();
 }
 
 void find_scripts(const Environment &env)
@@ -3338,7 +3323,8 @@ void find_scripts(const Environment &env)
 }
 
 
-void output_data(OutputProxy &out, const Environment &env, unsigned long section_mask)
+void output_data(OutputProxy &out, const Environment &env, unsigned long section_mask,
+        bool section_flush)
 {
     // make sure, output of numbers is not localized
     setlocale(LC_ALL, "C");
@@ -3350,60 +3336,113 @@ void output_data(OutputProxy &out, const Environment &env, unsigned long section
 
     find_scripts(env);
 
-    if ((section_mask & SECTION_CHECK_MK) != 0)
+    if ((section_mask & SECTION_CHECK_MK) != 0) {
         section_check_mk(out, env);
-    if ((section_mask & SECTION_UPTIME) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_UPTIME) != 0) {
         section_uptime(out);
-    if ((section_mask & SECTION_DF) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_DF) != 0) {
         section_df(out);
+        if (section_flush) out.flush();
+    }
     if ((section_mask & SECTION_PS) != 0) {
         if (g_config->psUseWMI()) {
             section_ps_wmi(out);
         } else {
             section_ps(out);
         }
+        if (section_flush) out.flush();
     }
-    if ((section_mask & SECTION_MEM) != 0)
+    if ((section_mask & SECTION_MEM) != 0) {
         section_mem(out);
-    if ((section_mask & SECTION_FILEINFO) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_FILEINFO) != 0) {
         section_fileinfo(out);
-    if ((section_mask & SECTION_SERVICES) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_SERVICES) != 0) {
         section_services(out);
-    if ((section_mask & SECTION_WINPERF) != 0)
-        section_winperf(out);
-    if ((section_mask & SECTION_LOGWATCH) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_IF) != 0) {
+        dump_performance_counters(out, 510, "if");
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_PHYDISK) != 0) {
+        dump_performance_counters(out, 234, "phydisk");
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_CPU) != 0) {
+        dump_performance_counters(out, 238, "processor");
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_CONFIG) != 0) {
+        for (winperf_counters_t::const_iterator it_wp = g_config->winperfCounters().begin();
+                it_wp != g_config->winperfCounters().end(); ++it_wp) {
+            dump_performance_counters(out, (*it_wp)->id, (*it_wp)->name);
+            if (section_flush) out.flush();
+        }
+    }
+    if ((section_mask & SECTION_LOGWATCH) != 0) {
         section_eventlog(out, env);
-    if ((section_mask & SECTION_LOGFILES) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_LOGFILES) != 0) {
         section_logfiles(out, env);
-    if ((section_mask & SECTION_DOTNET) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_DOTNET) != 0) {
         section_dotnet(out);
-    if ((section_mask & SECTION_CPU) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_CPU) != 0) {
         section_cpu(out);
-    if ((section_mask & SECTION_EXCHANGE) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_EXCHANGE) != 0) {
         section_exchange(out);
-    if ((section_mask & SECTION_WEBSERVICES) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WEBSERVICES) != 0) {
         section_webservices(out);
-
+        if (section_flush) out.flush();
+    }
 
     // Start data collection of SYNC scripts
     if (((section_mask & SECTION_PLUGINS) != 0)
-        || ((section_mask & SECTION_LOCAL) != 0)) {
+            || ((section_mask & SECTION_LOCAL) != 0)) {
         collect_script_data(SYNC);
     }
 
-    if ((section_mask & SECTION_PLUGINS) != 0)
+    if ((section_mask & SECTION_PLUGINS) != 0) {
         section_plugins(out);
-    if ((section_mask & SECTION_LOCAL) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_LOCAL) != 0) {
         section_local(out);
-    if ((section_mask & SECTION_SPOOL) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_SPOOL) != 0) {
         section_spool(out, env);
-    if ((section_mask & SECTION_MRPE) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_MRPE) != 0) {
         section_mrpe(out);
-    if ((section_mask & SECTION_SYSTEMTIME) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_SYSTEMTIME) != 0) {
         section_systemtime(out);
+        if (section_flush) out.flush();
+    }
 
-    // Send remaining data in out buffer
-    out.flush();
+    if (!section_flush) {
+        // Send remaining data in out buffer
+        out.flush();
+    }
 
     // Start data collection of ASYNC scripts
     if (((section_mask & SECTION_PLUGINS) != 0)

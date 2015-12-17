@@ -248,7 +248,6 @@ def package_release(args):
     if package_exists(pacname):
         raise PackageException("No such package %s." % pacname)
     package = read_package_info(pacname)
-    os.unlink(pacpath)
     verbose("Releasing files of package %s into freedom...\n" % pacname)
     if opt_verbose:
         for part, title, perm, dir in package_parts:
@@ -257,6 +256,7 @@ def package_release(args):
                 verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
                 for f in filenames:
                     verbose("    %s\n" % f)
+    remove_package_info(pacname)
 
 
 def package_exists(pacname):

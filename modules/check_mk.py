@@ -2851,6 +2851,7 @@ class fake_file:
         return len(self._content)
 
     def read(self, size):
+        size = min(size, len(self._content) - self._pointer)
         new_end = self._pointer + size
         data = self._content[self._pointer:new_end]
         self._pointer = new_end
@@ -2861,6 +2862,24 @@ class fake_file:
 
     def content(self):
         return self._content
+
+    def tell(self):
+        return self._pointer
+
+    def seek(self, offset, whence=0):
+        if whence == 0:
+            new_pointer = offset
+        elif whence == 1:
+            new_pointer = self._pointer + offset
+        elif whence == 2:
+            new_pointer = self.size() - offset
+        else:
+            raise IOError("Invalid value for whence")
+
+        if new_pointer < 0:
+            raise IOError("Invalid seek")
+
+        self._pointer = new_pointer
 
 
 def do_backup(tarname):

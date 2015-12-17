@@ -48,6 +48,8 @@ def do_automation(cmd, args):
             result = automation_get_package_info(args)
         elif cmd == "get-package":
             result = automation_get_package(args)
+        elif cmd == "install-package":
+            result = automation_install_package(args)
         elif cmd == "remove-package":
             result = automation_remove_package(args)
         elif cmd == "notification-get-bulks":
@@ -1173,13 +1175,16 @@ def automation_notification_replay(args):
     nr = args[0]
     return notification_replay_backlog(int(nr))
 
+
 def automation_notification_analyse(args):
     nr = args[0]
     return notification_analyse_backlog(int(nr))
 
+
 def automation_get_bulks(args):
     only_ripe = args[0] == "1"
     return find_bulks(only_ripe)
+
 
 def automation_active_check(args):
     hostname, plugin, item = args
@@ -1263,6 +1268,7 @@ def execute_check_plugin(commandline):
 def automation_update_dns_cache():
     return do_update_dns_cache()
 
+
 def automation_bake_agents():
     if "do_bake_agents" in globals():
         return do_bake_agents()
@@ -1314,6 +1320,18 @@ def automation_get_package(args):
     output_file = fake_file()
     create_mkp_file(package, file_object=output_file)
     return package, output_file.content()
+
+
+def automation_install_package(args):
+    load_module("packaging")
+    file_content = sys.stdin.read()
+    input_file = fake_file(file_content)
+    try:
+        return install_package(file_object=input_file)
+    except Exception, e:
+        if opt_debug:
+            raise
+        raise MKAutomationError("Cannot install package: %s" % e)
 
 
 def automation_remove_package(args):

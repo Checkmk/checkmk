@@ -76,6 +76,7 @@ Available commands are:
 Package files are located in %s.
 """ % pac_dir)
 
+
 def do_packaging(args):
     if len(args) == 0:
         packaging_usage()
@@ -108,6 +109,7 @@ def do_packaging(args):
                 (", ".join(allc[:-1]), allc[-1]))
         sys.exit(1)
 
+
 def package_list(args):
     if len(args) > 0:
         for name in args:
@@ -123,24 +125,28 @@ def package_list(args):
             for pacname in all_package_names():
                 sys.stdout.write("%s\n" % pacname)
 
+
 def package_info(args):
     if len(args) == 0:
         raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
     for name in args:
         show_package_info(name)
 
+
 def show_package_contents(name):
     show_package(name, False)
 
+
 def show_package_info(name):
     show_package(name, True)
+
 
 def show_package(name, show_info = False):
     try:
         if name.endswith(pac_ext):
             tar = tarfile.open(name, "r:gz")
             info = tar.extractfile("info")
-            package = eval(info.read())
+            package = parse_package_info(info.read())
         else:
             package = read_package_info(name)
             if not package:
@@ -214,6 +220,7 @@ def package_create(args):
     verbose("New package %s created with %d files.\n" % (pacname, num_files))
     verbose("Please edit package details in %s%s%s\n" % (tty_bold, pac_dir + pacname, tty_normal))
 
+
 def package_find(_no_args):
     first = True
     for part, title, perm, dir in package_parts:
@@ -230,6 +237,7 @@ def package_find(_no_args):
                     sys.stdout.write("%s/%s\n" % (dir, f))
     if first:
         verbose("No unpackaged files found.\n")
+
 
 def package_release(args):
     if len(args) != 1:
@@ -249,6 +257,7 @@ def package_release(args):
                 verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
                 for f in filenames:
                     verbose("    %s\n" % f)
+
 
 def package_pack(args):
     if len(args) != 1:
@@ -344,8 +353,12 @@ def package_install(args):
     if not os.path.exists(path):
         raise PackageException("No such file %s." % path)
 
-    tar = tarfile.open(path, "r:gz")
-    package = eval(tar.extractfile("info").read())
+    return install_package(file_name = path)
+
+
+def install_package(file_name=None, file_object=None):
+    tar = tarfile.open(name=file_name, fileobj=file_object, mode="r:gz")
+    package = parse_package_info(tar.extractfile("info").read())
     pacname = package["name"]
     old_package = read_package_info(pacname)
     if old_package:
@@ -371,6 +384,7 @@ def package_install(args):
                 raise PackageException("File conflict: %s is part of another package." % path)
             elif os.path.exists(path):
                 raise PackageException("File conflict: %s already existing." % path)
+
 
     # Now install files, but only unpack files explicitely listed
     for part, title, perm, dir in package_parts:
@@ -419,6 +433,8 @@ def package_install(args):
     # Last but not least install package file
     file(pac_dir + pacname, "w").write(pprint.pformat(package))
 
+    return package
+
 
 def files_in_dir(part, dir, prefix = ""):
     if not os.path.exists(dir):
@@ -463,7 +479,7 @@ def package_part_info():
 
 
 def unpackaged_files_in_dir(part, dir):
-    all    = files_in_dir(part, dir)
+    all = files_in_dir(part, dir)
     packed = packaged_files_in_dir(part)
     return [ f for f in all if f not in packed ]
 
@@ -479,7 +495,7 @@ def packaged_files_in_dir(part):
 
 def read_package_info(pacname):
     try:
-        package = eval(file(pac_dir + pacname).read())
+        package = parse_package_info(file(pac_dir + pacname).read())
         package["name"] = pacname # do not trust package content
         num_files = sum([len(fl) for fl in package["files"].values() ])
         package["num_files"] = num_files
@@ -499,3 +515,15 @@ def all_package_names():
     all = [ p for p in os.listdir(pac_dir) if p not in [ '.', '..' ] ]
     all.sort()
     return all
+
+
+def parse_package_info(python_string):
+    try:
+        # ast.literal_eval does not execute any code, just reads in passive
+        # data structures, so it is safe. But: not available on all supported
+        # Python versions
+        import ast
+    except:
+        return eval(python_string)
+
+    return ast.literal_eval(python_string)

@@ -608,6 +608,9 @@ class html(GUITester):
         attrs.setdefault('size', 1)
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
 
+        error = self.user_errors.get(varname)
+        if error:
+            self.write("<x class=\"inputerror\">")
         self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" %
                              (onchange_code, varname, varname, attributes))
         for value, text in choices:
@@ -617,6 +620,8 @@ class html(GUITester):
             self.write("<option value=\"%s\"%s>%s</option>\n" %
                 (self.attrencode(value), sel, self.attrencode(text)))
         self.write("</select>\n")
+        if error:
+            self.write("<x class=\"inputerror\">")
         if varname:
             self.form_vars.append(varname)
 

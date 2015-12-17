@@ -1676,6 +1676,7 @@ class DualListChoice(ListChoice):
             self._rows = 5
         self._size = kwargs.get("size") # Total with in ex
 
+
     def render_input(self, varprefix, value):
         self.load_elements()
         if not self._elements:
@@ -1742,6 +1743,14 @@ class DualListChoice(ListChoice):
         html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)
 
+
+    def validate_value(self, value, varprefix):
+        try:
+            ListChoice.validate_value(self, value, varprefix)
+        except MKUserError, e:
+            raise MKUserError(e.varname + "_selected", e.message)
+
+
     def from_html_vars(self, varprefix):
         self.load_elements()
         selected = html.var(varprefix, '').split('|')
@@ -1757,6 +1766,7 @@ class DualListChoice(ListChoice):
                 if key in selected:
                     value.append(key)
         return value
+
 
 # A type-save dropdown choice with one extra field that
 # opens a further value spec for entering an alternative

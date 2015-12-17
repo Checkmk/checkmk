@@ -654,7 +654,7 @@ input.date, input.time {
     font-family: monospace;
 }
 
-.inputerror input, .inputerror textarea, .inputerror span.checkbox {
+.inputerror input, .inputerror textarea, .inputerror span.checkbox, .inputerror > select {
     background-color: #f84;
 }
 

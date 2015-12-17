@@ -216,7 +216,7 @@ def package_create(args):
                 verbose("    %s\n" % f)
 
 
-    write_package_info(pacname, package)
+    write_package_info(package)
     verbose("New package %s created with %d files.\n" % (pacname, num_files))
     verbose("Please edit package details in %s%s%s\n" % (tty_bold, pac_dir + pacname, tty_normal))
 
@@ -245,7 +245,7 @@ def package_release(args):
 
     pacname = args[0]
     pacpath = pac_dir + pacname
-    if not os.path.exists(pacpath):
+    if package_exists(pacname):
         raise PackageException("No such package %s." % pacname)
     package = read_package_info(pacname)
     os.unlink(pacpath)
@@ -257,6 +257,11 @@ def package_release(args):
                 verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
                 for f in filenames:
                     verbose("    %s\n" % f)
+
+
+def package_exists(pacname):
+    pacpath = pac_dir + pacname
+    return os.path.exists(pacpath)
 
 
 def package_pack(args):
@@ -346,6 +351,55 @@ def remove_package(package):
     os.remove(pac_dir + package["name"])
 
 
+def create_package(package_info):
+    pacname = package_info["name"]
+    if package_exists(pacname):
+        raise PackageException("Packet already exists.")
+
+    validate_package_files(pacname, package_info["files"])
+    write_package_info(package_info)
+
+
+def edit_package(pacname, new_package_info):
+    if not package_exists(pacname):
+        raise PackageException("No such package")
+
+    # Renaming: check for collision
+    if pacname != new_package_info["name"]:
+        if package_exists(new_package_info["name"]):
+            raise PackageException("Cannot rename package: a package with that name already exists.")
+
+    validate_package_files(pacname, new_package_info["files"])
+
+    remove_package_info(pacname)
+    write_package_info(new_package_info)
+
+
+
+# Packaged files must either be unpackaged or already
+# belong to that package
+def validate_package_files(pacname, files):
+    packages = {}
+    for package_name in all_package_names():
+        packages[package_name] = read_package_info(package_name)
+
+    for part, title, perm, dir in package_parts:
+        validate_package_files_part(packages, pacname, part, dir, files.get(part, []))
+
+
+def validate_package_files_part(packages, pacname, part, dir, rel_paths):
+    for rel_path in rel_paths:
+        path = dir + "/" + rel_path
+        if not os.path.exists(path):
+            raise PackageException("File %s does not exist." % path)
+
+        for other_pacname, other_package_info in packages.items():
+            for other_rel_path in other_package_info["files"].get(part, []):
+                if other_rel_path == rel_path and other_pacname != pacname:
+                    raise PackageException("File %s does already belong to package %s" % (path, other_pacname))
+
+
+
 def package_install(args):
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P remove NAME")
@@ -431,8 +485,7 @@ def install_package(file_name=None, file_object=None):
                         sys.stderr.write("Error removing %s: %s\n" % (path, e))
 
     # Last but not least install package file
-    file(pac_dir + pacname, "w").write(pprint.pformat(package))
-
+    write_package_info(package)
     return package
 
 
@@ -507,8 +560,12 @@ def read_package_info(pacname):
         return None
 
 
-def write_package_info(pacname, package):
-    file(pac_dir + pacname, "w").write(pprint.pformat(package) + "\n")
+def write_package_info(package):
+    file(pac_dir + package["name"], "w").write(pprint.pformat(package) + "\n")
+
+
+def remove_package_info(pacname):
+     os.remove(pac_dir + pacname)
 
 
 def all_package_names():

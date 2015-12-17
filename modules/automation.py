@@ -48,6 +48,10 @@ def do_automation(cmd, args):
             result = automation_get_package_info(args)
         elif cmd == "get-package":
             result = automation_get_package(args)
+        elif cmd == "create-package":
+            result = automation_create_or_edit_package(args, "create")
+        elif cmd == "edit-package":
+            result = automation_create_or_edit_package(args, "edit")
         elif cmd == "install-package":
             result = automation_install_package(args)
         elif cmd == "remove-package":
@@ -117,6 +121,7 @@ def do_automation(cmd, args):
         sys.stdout.write("%r\n" % (result,))
     output_profile()
     sys.exit(0)
+
 
 # Does discovery for a list of hosts. Possible values for how:
 # "new" - find only new services (like -I)
@@ -1320,6 +1325,16 @@ def automation_get_package(args):
     output_file = fake_file()
     create_mkp_file(package, file_object=output_file)
     return package, output_file.content()
+
+
+def automation_create_or_edit_package(args, mode):
+    load_module("packaging")
+    package_name = args[0]
+    new_package_info = eval(sys.stdin.read())
+    if mode == "create":
+        create_package(new_package_info)
+    else:
+        edit_package(package_name, new_package_info)
 
 
 def automation_install_package(args):

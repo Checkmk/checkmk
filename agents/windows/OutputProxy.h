@@ -59,6 +59,7 @@ class BufferedSocketProxy : public OutputProxy {
     SOCKET _socket;
     std::vector<char> _buffer;
     size_t _length { 0 };
+    size_t _collect_size;
 
 protected:
 
@@ -67,12 +68,13 @@ protected:
 
 private:
 
-    static const size_t DEFAULT_BUFFER_SIZE = 16384L;
-    static const size_t MIN_OUTPUT_SIZE     = 1300L;  // MTU for Ethernet is 1500 bytes
+    static const size_t DEFAULT_BUFFER_SIZE  = 16384L;
+    static const size_t DEFAULT_COLLECT_SIZE = 1300L;
 
 public:
 
-    BufferedSocketProxy(SOCKET socket, size_t buffer_size = DEFAULT_BUFFER_SIZE);
+    BufferedSocketProxy(SOCKET socket, size_t buffer_size = DEFAULT_BUFFER_SIZE,
+            size_t collect_size = DEFAULT_COLLECT_SIZE);
 
     void setSocket(SOCKET socket);
 
@@ -100,6 +102,8 @@ class EncryptingBufferedSocketProxy : public BufferedSocketProxy {
 private:
 
     static const size_t DEFAULT_BUFFER_SIZE = 16384L;
+    static const size_t DEFAULT_COLLECT_SIZE = 1300L;
+
     std::vector<char> _plain;
     size_t _blockSize;
     size_t _written;
@@ -107,7 +111,8 @@ private:
 public:
 
     EncryptingBufferedSocketProxy(SOCKET socket, const std::string &passphrase,
-            size_t buffer_size = DEFAULT_BUFFER_SIZE);
+            size_t buffer_size = DEFAULT_BUFFER_SIZE,
+            size_t collect_size = DEFAULT_COLLECT_SIZE);
 
     virtual void output(const char *format, ...) override;
     // writeBinary is NOT overridden so calls to it are not encrypted!

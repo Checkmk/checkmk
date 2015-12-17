@@ -3139,7 +3139,12 @@ DWORD WINAPI realtime_check_func(void *data_in)
         std::string current_ip;
         SOCKET current_socket = INVALID_SOCKET;
 
-        EncryptingBufferedSocketProxy out(INVALID_SOCKET, g_config->passphrase());
+        // maximum udp datagram size - 1000
+        // this has no effect, my datagrams still get split at 1500bytes by
+        // windows. :(
+        static const size_t TARGET_DATAGRAM_SIZE = 65507L - 1000L;
+        EncryptingBufferedSocketProxy out(INVALID_SOCKET, g_config->passphrase(),
+                TARGET_DATAGRAM_SIZE);
         time_t before = time(NULL);
         while (!data->terminate) {
             // wait for 1 second minus the time the last iteration took

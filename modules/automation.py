@@ -58,6 +58,8 @@ def do_automation(cmd, args):
             result = automation_remove_or_release_package(args, "remove")
         elif cmd == "release-package":
             result = automation_remove_or_release_package(args, "release")
+        elif cmd == "remove-unpackaged-file":
+            result = automation_remove_unpackaged_file(args)
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
@@ -1361,3 +1363,21 @@ def automation_remove_or_release_package(args, mode):
         remove_package(package)
     else:
         remove_package_info(package_name)
+
+
+def automation_remove_unpackaged_file(args):
+    load_module("packaging")
+    part_name = args[0]
+    if part_name not in [ p[0] for p in package_parts ]:
+        raise MKAutomationError("Invalid package part")
+
+    rel_path = args[1]
+    if "../" in rel_path or rel_path.startswith("/"):
+        raise MKAutomationError("Invalid file name")
+
+    for part, title, perm, dir in package_parts:
+        if part == part_name:
+            abspath = dir + "/" + rel_path
+            if not os.path.isfile(abspath):
+                raise MKAutomationError("No such file")
+            os.remove(abspath)

@@ -293,6 +293,9 @@ def fetch_mails():
                 ts  = matches.group(1).strip()
                 key = matches.group(2).strip()
 
+                if "%s-%s" % (ts, key) not in g_expected:
+                    continue
+
                 # extract received time
                 rx = msg.get('Received')
                 if rx:

@@ -101,9 +101,6 @@ def parse_wmi_table(info, key="Name"):
                 current.add_row(line)
                 line = info_iter.next()
 
-            if line[0].startswith("["):
-                line = info_iter.next()
-
     except StopIteration:
         # regular end of block
         pass

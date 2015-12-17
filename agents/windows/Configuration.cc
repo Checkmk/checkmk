@@ -49,6 +49,7 @@ Configuration::Configuration(const Environment &env)
     , _passphrase()
     , _realtime_timeout(90)
     , _crash_debug(false)
+    , _section_flush(true)
     , _logwatch_send_initial_entries(false)
     , _support_ipv6(true)
     , _environment(env)
@@ -96,12 +97,12 @@ std::string Configuration::configFileName(bool local) const
 }
 
 
-bool Configuration::parseCrashDebug(char *value)
+bool Configuration::parseBoolean(char *value, bool &parameter)
 {
     int s = parse_boolean(value);
     if (s == -1)
         return false;
-    _crash_debug = s;
+    parameter = s != 0;
     return true;
 }
 
@@ -125,9 +126,7 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
         return true;
     }
     else if (!strcmp(var, "ipv6")) {
-        int s = parse_boolean(value);
-        _support_ipv6 = s != 0;
-        return s != -1;
+        return parseBoolean(value, _support_ipv6);
     }
     else if (!strcmp(var, "execute")) {
         parseExecute(value);
@@ -157,7 +156,10 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
         return true;
     }
     else if (!strcmp(var, "crash_debug")) {
-        return parseCrashDebug(value);
+        return parseBoolean(value, _crash_debug);
+    }
+    else if (!strcmp(var, "section_flush")) {
+        return parseBoolean(value, _section_flush);
     }
     else if (!strcmp(var, "sections")
             || !strcmp(var, "realtime_sections")) {
@@ -182,11 +184,11 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
                 mask |= SECTION_SERVICES;
             else if (!strcmp(word, "winperf"))
                 mask |= SECTION_WINPERF;
-            else if (!strcmp(word, "cpu"))
+            else if (!strcmp(word, "winperf_processor"))
                 mask |= SECTION_WINPERF_CPU;
-            else if (!strcmp(word, "if"))
+            else if (!strcmp(word, "winperf_if"))
                 mask |= SECTION_WINPERF_IF;
-            else if (!strcmp(word, "phydisk"))
+            else if (!strcmp(word, "winperf_phydisk"))
                 mask |= SECTION_WINPERF_PHYDISK;
             else if (!strcmp(word, "perfcounter"))
                 mask |= SECTION_WINPERF_CONFIG;
@@ -222,11 +224,11 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
                 mask |= SECTION_MRPE;
             else if (!strcmp(word, "fileinfo"))
                 mask |= SECTION_FILEINFO;
-            else if (!strcmp(word, "cpuload"))
+            else if (!strcmp(word, "wmi_cpuload"))
                 mask |= SECTION_CPU;
-            else if (!strcmp(word, "exchange"))
+            else if (!strcmp(word, "msexch"))
                 mask |= SECTION_EXCHANGE;
-            else if (!strcmp(word, "dotnet"))
+            else if (!strcmp(word, "dotnet_clrmemory"))
                 mask |= SECTION_DOTNET;
             else if (!strcmp(word, "webservices"))
                 mask |= SECTION_WEBSERVICES;

@@ -1,0 +1,9 @@
+Title: check_mail_loop: now supports STARTTLS for IMAP authentification
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450275857
+Class: feature
+
+

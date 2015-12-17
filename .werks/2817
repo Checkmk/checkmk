@@ -1,0 +1,9 @@
+Title: cmc_temp: New temperature check for Rittal devices using the CMC MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450278026
+Class: feature
+
+

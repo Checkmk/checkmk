@@ -1744,7 +1744,7 @@ register_rule(group,
                  'the SMTP protocol and then tries to receive these mails back by querying the '
                  'inbox of a IMAP or POP3 mailbox. With this check you can verify that your whole '
                  'mail delivery progress is working.'),
-        optional_keys = ['smtp_server', 'smtp_tls', 'smtp_port', 'smtp_auth', 'connect_timeout', 'delete_messages', 'duration'],
+        optional_keys = ['smtp_server', 'smtp_tls', 'smtp_port', 'smtp_auth', 'imap_tls', 'connect_timeout', 'delete_messages', 'duration'],
         elements = [
             ('item', TextUnicode(
                 title = _('Name'),
@@ -1760,6 +1760,10 @@ register_rule(group,
             ('smtp_tls', FixedValue(True,
                 title = _('Use TLS over SMTP'),
                 totext = _('Encrypt SMTP communication using TLS'),
+            )),
+            ('imap_tls', FixedValue(True,
+                title = _('Use TLS for IMAP authentification'),
+                totext = _('IMAP authentification uses TLS'),
             )),
             ('smtp_port', Integer(
                 title = _('SMTP TCP Port to connect to'),

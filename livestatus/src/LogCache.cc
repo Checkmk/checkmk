@@ -147,7 +147,7 @@ void LogCache::updateLogfileIndex()
         struct dirent *ent, *result;
         int len = offsetof(struct dirent, d_name)
             + pathconf(log_archive_path, _PC_NAME_MAX) + 1;
-        ent = (struct dirent *)malloc(len);
+        ent = static_cast<struct dirent *>(malloc(len));
 
         while (0 == readdir_r(dir, ent, &result) && result != 0)
         {

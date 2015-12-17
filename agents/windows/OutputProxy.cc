@@ -55,8 +55,9 @@ void FileOutputProxy::flush() {
 }
 
 
-BufferedSocketProxy::BufferedSocketProxy(SOCKET socket, size_t buffer_size)
+BufferedSocketProxy::BufferedSocketProxy(SOCKET socket, size_t buffer_size, size_t collect_size)
     : _socket(socket)
+    , _collect_size(collect_size)
 {
     _buffer.resize(buffer_size);
 }
@@ -92,7 +93,7 @@ void BufferedSocketProxy::output(const char *format, ...)
 
     // We do not send out the data immediately
     // This would lead to many small tcp packages
-    if (_length > MIN_OUTPUT_SIZE) {
+    if (_length > _collect_size) {
         flushInt();
     }
 }
@@ -104,7 +105,7 @@ void BufferedSocketProxy::writeBinary(const char *buffer, size_t size)
         memcpy(&_buffer[0] + _length, buffer, size);
         _length += size;
 
-        if (_length > MIN_OUTPUT_SIZE) {
+        if (_length > _collect_size) {
             flushInt();
         }
     }
@@ -175,7 +176,7 @@ bool BufferedSocketProxy::flushInt()
 
 
 EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(SOCKET socket,
-        const std::string &passphrase, size_t buffer_size)
+        const std::string &passphrase, size_t buffer_size, size_t collect_size)
     : BufferedSocketProxy(socket, buffer_size)
     , _crypto(passphrase)
 {
@@ -187,6 +188,7 @@ EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(SOCKET socket,
 
 void EncryptingBufferedSocketProxy::output(const char *format, ...)
 {
+
     va_list ap;
     va_start(ap, format);
 

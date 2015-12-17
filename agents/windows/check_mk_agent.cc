@@ -65,6 +65,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <sys/time.h>
 #include "stringutil.h"
 #include "Environment.h"
 #include "Configuration.h"
@@ -91,7 +92,7 @@
 
 const char *check_mk_version = CHECK_MK_VERSION;
 
-static const char RT_PROTOCOL_VERSION[2] = { 0x00, 0x00 };
+static const char RT_PROTOCOL_VERSION[2] = { '0', '0' };
 
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -138,7 +139,7 @@ typedef map<unsigned long long, process_entry> process_entry_t;
 
 // Forward declarations of functions
 void listen_tcp_loop(const Environment &env);
-void output_data(OutputProxy &out, const Environment &env, unsigned long sectionMask);
+void output_data(OutputProxy &out, const Environment &env, unsigned long sectionMask, bool section_flush);
 double file_time(const FILETIME *filetime);
 void lowercase(char* value);
 void collect_script_data(script_execution_mode mode);
@@ -573,20 +574,6 @@ void dump_performance_counters(OutputProxy &out, unsigned counter_base_number, c
             }
             out.output(" %s\n", counter.typeName().c_str());
         }
-    }
-}
-
-
-void section_winperf(OutputProxy &out)
-{
-    dump_performance_counters(out, 234, "phydisk");
-    dump_performance_counters(out, 238, "processor");
-    dump_performance_counters(out, 510, "if");
-
-    // also output additionally configured counters
-    for (winperf_counters_t::const_iterator it_wp = g_config->winperfCounters().begin();
-            it_wp != g_config->winperfCounters().end(); ++it_wp) {
-        dump_performance_counters(out, (*it_wp)->id, (*it_wp)->name);
     }
 }
 
@@ -3000,7 +2987,7 @@ void do_debug(const Environment &env)
     FileOutputProxy dummy(do_file ? fileout : stdout);
 
     update_script_statistics();
-    output_data(dummy, env, g_config->enabledSections());
+    output_data(dummy, env, g_config->enabledSections(), false);
 }
 
 
@@ -3013,7 +3000,7 @@ void do_test(bool output_stderr, const Environment &env)
     }
     crash_log("Started in test mode.");
     update_script_statistics();
-    output_data(dummy, env, g_config->enabledSections());
+    output_data(dummy, env, g_config->enabledSections(), false);
     if (g_config->crashDebug()) {
         close_crash_log();
     }
@@ -3143,6 +3130,7 @@ struct ThreadData {
     Mutex mutex;
 };
 
+
 DWORD WINAPI realtime_check_func(void *data_in)
 {
     ThreadData *data = (ThreadData*)data_in;
@@ -3152,16 +3140,27 @@ DWORD WINAPI realtime_check_func(void *data_in)
         std::string current_ip;
         SOCKET current_socket = INVALID_SOCKET;
 
-        EncryptingBufferedSocketProxy out(INVALID_SOCKET, g_config->passphrase());
-        time_t before = time(NULL);
+        // maximum udp datagram size - 1000
+        // this has no effect, my datagrams still get split at 1500bytes by
+        // windows. :(
+        static const size_t TARGET_DATAGRAM_SIZE = 65507L - 1000L;
+        EncryptingBufferedSocketProxy out(INVALID_SOCKET, g_config->passphrase(),
+                TARGET_DATAGRAM_SIZE);
+        timeval before;
+        gettimeofday(&before, 0);
         while (!data->terminate) {
-            // wait for 1 second minus the time the last iteration took
-            // do we need a more precise time here?
-            ::Sleep(1000 - (time(NULL) - before));
-            before = time(NULL);
+            timeval now;
+            gettimeofday(&now, 0);
+            long duration = (now.tv_sec - before.tv_sec) * 1000
+                          + (now.tv_usec - before.tv_usec) / 1000;
+            if (duration < 1000) {
+                ::Sleep(1000 - duration);
+            }
+            gettimeofday(&before, 0);
+
             MutexLock guard(data->mutex);
             // adhere to the configured timeout
-            if (before < data->push_until) {
+            if (time(NULL) < data->push_until) {
                 // if a new request was made, reestablish the connection
                 if (data->new_request) {
                     data->new_request = false;
@@ -3175,14 +3174,14 @@ DWORD WINAPI realtime_check_func(void *data_in)
                     if (current_address.ss_family != 0) {
                         current_socket = socket(current_address.ss_family, SOCK_DGRAM, IPPROTO_UDP);
                         if (current_socket == INVALID_SOCKET) {
-                            printf("failed to establish socket: %d\n", (int)::WSAGetLastError());
+                            crash_log("failed to establish socket: %d", (int)::WSAGetLastError());
                             return 1;
                         }
 
                         int sockaddr_size = 0;
                         if (current_address.ss_family == AF_INET) {
                             sockaddr_in *addrv4 = (sockaddr_in*)&current_address;
-                            addrv4->sin_port = htons(6558);
+                            addrv4->sin_port = htons(g_config->realtimePort());
                             sockaddr_size = sizeof(sockaddr_in);
                         } else {
                             sockaddr_in6 *addrv6 = (sockaddr_in6*)&current_address;
@@ -3195,14 +3194,14 @@ DWORD WINAPI realtime_check_func(void *data_in)
                                 addrv6->sin6_addr.u.Byte[i + 1] = temp;
                             }
 
-                            addrv6->sin6_port = htons(6558);
+                            addrv6->sin6_port = htons(g_config->realtimePort());
                             sockaddr_size = sizeof(sockaddr_in6);
                         }
                         current_ip = ListenSocket::readableIP(&current_address);
 
                         if (connect(current_socket, (const sockaddr*)&current_address,
                                     sockaddr_size) == SOCKET_ERROR) {
-                            crash_log("failed to connect: %d\n", (int)::WSAGetLastError());
+                            crash_log("failed to connect: %d", (int)::WSAGetLastError());
                             closesocket(current_socket);
                             current_socket = INVALID_SOCKET;
                         }
@@ -3220,8 +3219,8 @@ DWORD WINAPI realtime_check_func(void *data_in)
                     // these writes are unencrypted!
                     out.writeBinary(RT_PROTOCOL_VERSION, 2);
                     out.writeBinary(timestamp, 10);
-                    output_data(out, data->env, g_config->realtimeSections());
-                    break;
+                    output_data(out, data->env, g_config->realtimeSections(), true);
+                    data->new_request = true;
                 }
             }
         }
@@ -3278,6 +3277,7 @@ void do_adhoc(const Environment &env)
                                                                           : "inactive");
 
     if (g_config->useRealtimeMonitoring() != 0) {
+        thread_data.terminate = false;
         realtime_checker.start();
     }
 
@@ -3290,10 +3290,11 @@ void do_adhoc(const Environment &env)
         SOCKET connection = sock.acceptConnection();
         BufferedSocketProxy out(connection);
         if ((void*)connection != NULL) {
-            out.setSocket(connection);
             if (g_config->crashDebug()) {
+                close_crash_log();
                 open_crash_log(env.logDirectory());
             }
+            out.setSocket(connection);
             std::string ip_hr = sock.readableIP(connection);
             crash_log("Accepted client connection from %s.", ip_hr.c_str());
             { // limit lifetime of mutex lock
@@ -3305,10 +3306,7 @@ void do_adhoc(const Environment &env)
 
             SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
             update_script_statistics();
-            output_data(out, env, g_config->enabledSections());
-            if (g_config->crashDebug()) {
-                close_crash_log();
-            }
+            output_data(out, env, g_config->enabledSections(), false);
             closesocket(connection);
         }
     }
@@ -3322,6 +3320,7 @@ void do_adhoc(const Environment &env)
 
     stop_threads();
     WSACleanup();
+    close_crash_log();
 }
 
 void find_scripts(const Environment &env)
@@ -3337,7 +3336,8 @@ void find_scripts(const Environment &env)
 }
 
 
-void output_data(OutputProxy &out, const Environment &env, unsigned long section_mask)
+void output_data(OutputProxy &out, const Environment &env, unsigned long section_mask,
+        bool section_flush)
 {
     // make sure, output of numbers is not localized
     setlocale(LC_ALL, "C");
@@ -3349,60 +3349,113 @@ void output_data(OutputProxy &out, const Environment &env, unsigned long section
 
     find_scripts(env);
 
-    if ((section_mask & SECTION_CHECK_MK) != 0)
+    if ((section_mask & SECTION_CHECK_MK) != 0) {
         section_check_mk(out, env);
-    if ((section_mask & SECTION_UPTIME) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_UPTIME) != 0) {
         section_uptime(out);
-    if ((section_mask & SECTION_DF) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_DF) != 0) {
         section_df(out);
+        if (section_flush) out.flush();
+    }
     if ((section_mask & SECTION_PS) != 0) {
         if (g_config->psUseWMI()) {
             section_ps_wmi(out);
         } else {
             section_ps(out);
         }
+        if (section_flush) out.flush();
     }
-    if ((section_mask & SECTION_MEM) != 0)
+    if ((section_mask & SECTION_MEM) != 0) {
         section_mem(out);
-    if ((section_mask & SECTION_FILEINFO) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_FILEINFO) != 0) {
         section_fileinfo(out);
-    if ((section_mask & SECTION_SERVICES) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_SERVICES) != 0) {
         section_services(out);
-    if ((section_mask & SECTION_WINPERF) != 0)
-        section_winperf(out);
-    if ((section_mask & SECTION_LOGWATCH) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_IF) != 0) {
+        dump_performance_counters(out, 510, "if");
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_PHYDISK) != 0) {
+        dump_performance_counters(out, 234, "phydisk");
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_CPU) != 0) {
+        dump_performance_counters(out, 238, "processor");
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_CONFIG) != 0) {
+        for (winperf_counters_t::const_iterator it_wp = g_config->winperfCounters().begin();
+                it_wp != g_config->winperfCounters().end(); ++it_wp) {
+            dump_performance_counters(out, (*it_wp)->id, (*it_wp)->name);
+            if (section_flush) out.flush();
+        }
+    }
+    if ((section_mask & SECTION_LOGWATCH) != 0) {
         section_eventlog(out, env);
-    if ((section_mask & SECTION_LOGFILES) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_LOGFILES) != 0) {
         section_logfiles(out, env);
-    if ((section_mask & SECTION_DOTNET) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_DOTNET) != 0) {
         section_dotnet(out);
-    if ((section_mask & SECTION_CPU) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_CPU) != 0) {
         section_cpu(out);
-    if ((section_mask & SECTION_EXCHANGE) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_EXCHANGE) != 0) {
         section_exchange(out);
-    if ((section_mask & SECTION_WEBSERVICES) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WEBSERVICES) != 0) {
         section_webservices(out);
-
+        if (section_flush) out.flush();
+    }
 
     // Start data collection of SYNC scripts
     if (((section_mask & SECTION_PLUGINS) != 0)
-        || ((section_mask & SECTION_LOCAL) != 0)) {
+            || ((section_mask & SECTION_LOCAL) != 0)) {
         collect_script_data(SYNC);
     }
 
-    if ((section_mask & SECTION_PLUGINS) != 0)
+    if ((section_mask & SECTION_PLUGINS) != 0) {
         section_plugins(out);
-    if ((section_mask & SECTION_LOCAL) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_LOCAL) != 0) {
         section_local(out);
-    if ((section_mask & SECTION_SPOOL) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_SPOOL) != 0) {
         section_spool(out, env);
-    if ((section_mask & SECTION_MRPE) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_MRPE) != 0) {
         section_mrpe(out);
-    if ((section_mask & SECTION_SYSTEMTIME) != 0)
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_SYSTEMTIME) != 0) {
         section_systemtime(out);
+        if (section_flush) out.flush();
+    }
 
-    // Send remaining data in out buffer
-    out.flush();
+    if (!section_flush) {
+        // Send remaining data in out buffer
+        out.flush();
+    }
 
     // Start data collection of ASYNC scripts
     if (((section_mask & SECTION_PLUGINS) != 0)

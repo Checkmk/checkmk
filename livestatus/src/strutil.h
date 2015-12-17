@@ -25,25 +25,21 @@
 #ifndef strutil_h
 #define strutil_h
 
-#include "config.h"  // IWYU pragma: keep
+#include "config.h" // IWYU pragma: keep
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-    char *rstrip(char *);
-    char *lstrip(char *);
-    int ends_with(const char *a, const char *b);
-#ifdef __cplusplus
-    char *next_token(char **c, char delim = ',');
-    char *save_next_token(char **c, char delim = ',');
-#else
-    char *next_token(char **c, char delim);
-    char *save_next_token(char **c, char delim);
-#endif
-    char *next_field(char **line);
+
+char *rstrip(char *);
+char *lstrip(char *);
+int ends_with(const char *a, const char *b);
+char *next_token(char **c, char delim);
+const char *save_next_token(char **c, char delim);
+char *next_field(char **line);
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif // strutil_h
-

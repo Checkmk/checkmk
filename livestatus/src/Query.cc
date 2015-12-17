@@ -31,6 +31,7 @@
 #include <sys/time.h>
 #include <syslog.h>
 #include <utility>
+#include <vector>
 #include "Aggregator.h"
 #include "Column.h"
 #include "Filter.h"
@@ -53,6 +54,7 @@ extern unsigned long g_max_response_size;
 extern int g_data_encoding;
 
 using std::string;
+using std::vector;
 
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
     _output(output),
@@ -77,7 +79,8 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
     while (input->moreLines())
     {
         string line = input->nextLine();
-        char *buffer = (char *)line.c_str();
+        vector<char> hurz(line.begin(), line.end());
+        char *buffer = &hurz[0];
         rstrip(buffer);
         if (g_debug_level > 0)
             logger(LG_INFO, "Query: %s", buffer);

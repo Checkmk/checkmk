@@ -48,31 +48,39 @@
 #endif
 
 
-static const unsigned int SECTION_CHECK_MK     = 0x00000001;
-static const unsigned int SECTION_UPTIME       = 0x00000002;
-static const unsigned int SECTION_DF           = 0x00000004;
-static const unsigned int SECTION_PS           = 0x00000008;
-static const unsigned int SECTION_MEM          = 0x00000010;
-static const unsigned int SECTION_SERVICES     = 0x00000020;
-static const unsigned int SECTION_WINPERF      = 0x00000040;
-static const unsigned int SECTION_LOGWATCH     = 0x00000080;
-static const unsigned int SECTION_SYSTEMTIME   = 0x00000100;
-static const unsigned int SECTION_PLUGINS      = 0x00000200;
-static const unsigned int SECTION_LOCAL        = 0x00000400;
-static const unsigned int SECTION_SPOOL        = 0x00000800;
-static const unsigned int SECTION_MRPE         = 0x00001000;
-static const unsigned int SECTION_FILEINFO     = 0x00002000;
-static const unsigned int SECTION_LOGFILES     = 0x00004000;
-static const unsigned int SECTION_CRASHLOG     = 0x00008000;
-static const unsigned int SECTION_CPU          = 0x00010000;
-static const unsigned int SECTION_EXCHANGE     = 0x00020000;
-static const unsigned int SECTION_WEBSERVICES  = 0x00040000;
-static const unsigned int SECTION_DOTNET       = 0x00080000;
+static const unsigned int SECTION_CHECK_MK        = 0x00000001;
+static const unsigned int SECTION_UPTIME          = 0x00000002;
+static const unsigned int SECTION_DF              = 0x00000004;
+static const unsigned int SECTION_PS              = 0x00000008;
+static const unsigned int SECTION_MEM             = 0x00000010;
+static const unsigned int SECTION_SERVICES        = 0x00000020;
+// 0x40 up for grabs
+static const unsigned int SECTION_LOGWATCH        = 0x00000080;
+static const unsigned int SECTION_SYSTEMTIME      = 0x00000100;
+static const unsigned int SECTION_PLUGINS         = 0x00000200;
+static const unsigned int SECTION_LOCAL           = 0x00000400;
+static const unsigned int SECTION_SPOOL           = 0x00000800;
+static const unsigned int SECTION_MRPE            = 0x00001000;
+static const unsigned int SECTION_FILEINFO        = 0x00002000;
+static const unsigned int SECTION_LOGFILES        = 0x00004000;
+static const unsigned int SECTION_CRASHLOG        = 0x00008000;
+static const unsigned int SECTION_CPU             = 0x00010000;
+static const unsigned int SECTION_EXCHANGE        = 0x00020000;
+static const unsigned int SECTION_WEBSERVICES     = 0x00040000;
+static const unsigned int SECTION_DOTNET          = 0x00080000;
+static const unsigned int SECTION_WINPERF_IF      = 0x00100000;
+static const unsigned int SECTION_WINPERF_CPU     = 0x00200000;
+static const unsigned int SECTION_WINPERF_PHYDISK = 0x00400000;
+static const unsigned int SECTION_WINPERF_CONFIG  = 0x00800000;
+static const unsigned int SECTION_WINPERF         = SECTION_WINPERF_IF
+                                                  | SECTION_WINPERF_CPU
+                                                  | SECTION_WINPERF_PHYDISK
+                                                  | SECTION_WINPERF_CONFIG;
 
 
 static const unsigned int VALID_REALTIME_SECTIONS = SECTION_MEM
                                                   | SECTION_DF
-                                                  | SECTION_WINPERF;
+                                                  | SECTION_WINPERF_CPU;
 
 // Needed for only_from
 struct ipspec {

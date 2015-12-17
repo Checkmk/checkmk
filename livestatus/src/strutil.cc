@@ -86,15 +86,11 @@ char *next_token(char **c, char delim)
 
 /* same as next_token() but returns "" instead of 0 if
    no tokens has been found */
-char *save_next_token(char **c, char delim)
+const char *save_next_token(char **c, char delim)
 {
-    if (!*c) return (char *)"";
-
+    if (!*c) return "";
     char *result = next_token(c, delim);
-    if (result == 0)
-        return (char *)"";
-    else
-        return result;
+    return result ? result : "";
 }
 
 

@@ -79,7 +79,7 @@ char *HostFileColumn::getBlob(void *data, int *size)
     }
 
     lseek(fd, 0, SEEK_SET);
-    char *buffer = (char *)malloc(*size);
+    char *buffer = static_cast<char *>(malloc(*size));
     if (!buffer) {
         close(fd);
         return 0;

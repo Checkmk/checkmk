@@ -36,12 +36,14 @@
 
 
 static const int CHECK_MK_AGENT_PORT = 6556;
+static const int REALTIME_DEFAULT_PORT = 6559;
 
 
 Configuration::Configuration(const Environment &env)
     : _enabled_sections(0xffffffff)
     , _realtime_sections(0x0)
     , _port(CHECK_MK_AGENT_PORT)
+    , _realtime_port(REALTIME_DEFAULT_PORT)
     , _default_script_execution_mode(SYNC)
     , _default_script_async_execution(SEQUENTIAL)
     , _passphrase()
@@ -118,6 +120,10 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
         _port = atoi(value);
         return true;
     }
+    else if (!strcmp(var, "realtime_port")) {
+        _realtime_port = atoi(value);
+        return true;
+    }
     else if (!strcmp(var, "ipv6")) {
         int s = parse_boolean(value);
         _support_ipv6 = s != 0;
@@ -176,6 +182,14 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
                 mask |= SECTION_SERVICES;
             else if (!strcmp(word, "winperf"))
                 mask |= SECTION_WINPERF;
+            else if (!strcmp(word, "cpu"))
+                mask |= SECTION_WINPERF_CPU;
+            else if (!strcmp(word, "if"))
+                mask |= SECTION_WINPERF_IF;
+            else if (!strcmp(word, "phydisk"))
+                mask |= SECTION_WINPERF_PHYDISK;
+            else if (!strcmp(word, "perfcounter"))
+                mask |= SECTION_WINPERF_CONFIG;
             else if (!strcmp(word, "logwatch"))
                 mask |= SECTION_LOGWATCH;
             else if (!strcmp(word, "logfiles"))
@@ -208,6 +222,14 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
                 mask |= SECTION_MRPE;
             else if (!strcmp(word, "fileinfo"))
                 mask |= SECTION_FILEINFO;
+            else if (!strcmp(word, "cpuload"))
+                mask |= SECTION_CPU;
+            else if (!strcmp(word, "exchange"))
+                mask |= SECTION_EXCHANGE;
+            else if (!strcmp(word, "dotnet"))
+                mask |= SECTION_DOTNET;
+            else if (!strcmp(word, "webservices"))
+                mask |= SECTION_WEBSERVICES;
             else {
                 fprintf(stderr, "Invalid section '%s'.\r\n", word);
                 return false;

@@ -65,6 +65,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <sys/time.h>
 #include "stringutil.h"
 #include "Environment.h"
 #include "Configuration.h"
@@ -91,7 +92,7 @@
 
 const char *check_mk_version = CHECK_MK_VERSION;
 
-static const char RT_PROTOCOL_VERSION[2] = { 0x00, 0x00 };
+static const char RT_PROTOCOL_VERSION[2] = { '0', '0' };
 
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -3145,15 +3146,21 @@ DWORD WINAPI realtime_check_func(void *data_in)
         static const size_t TARGET_DATAGRAM_SIZE = 65507L - 1000L;
         EncryptingBufferedSocketProxy out(INVALID_SOCKET, g_config->passphrase(),
                 TARGET_DATAGRAM_SIZE);
-        time_t before = time(NULL);
+        timeval before;
+        gettimeofday(&before, 0);
         while (!data->terminate) {
-            // wait for 1 second minus the time the last iteration took
-            // do we need a more precise time here?
-            ::Sleep(1000 - (time(NULL) - before));
-            before = time(NULL);
+            timeval now;
+            gettimeofday(&now, 0);
+            long duration = (now.tv_sec - before.tv_sec) * 1000
+                          + (now.tv_usec - before.tv_usec) / 1000;
+            if (duration < 1000) {
+                ::Sleep(1000 - duration);
+            }
+            gettimeofday(&before, 0);
+
             MutexLock guard(data->mutex);
             // adhere to the configured timeout
-            if (before < data->push_until) {
+            if (time(NULL) < data->push_until) {
                 // if a new request was made, reestablish the connection
                 if (data->new_request) {
                     data->new_request = false;
@@ -3270,6 +3277,7 @@ void do_adhoc(const Environment &env)
                                                                           : "inactive");
 
     if (g_config->useRealtimeMonitoring() != 0) {
+        thread_data.terminate = false;
         realtime_checker.start();
     }
 

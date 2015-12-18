@@ -451,7 +451,7 @@ class TextUnicode(TextAscii):
         TextAscii.__init__(self, **kwargs)
 
     def from_html_vars(self, varprefix):
-        return html.var_utf8(varprefix, "").strip()
+        return html.get_unicode_input(varprefix, "").strip()
 
     def validate_datatype(self, value, varprefix):
         if type(value) not in [ str, unicode ]:
@@ -714,7 +714,7 @@ class TextAreaUnicode(TextUnicode):
 
     # Overridded because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix):
-        text = html.var_utf8(varprefix, "").replace('\r', '')
+        text = html.get_unicode_input(varprefix, "").replace('\r', '')
         if text and not text.endswith("\n"):
             text += "\n" # force newline at end
         return text

@@ -441,7 +441,7 @@ class FilterInvHasSoftwarePackage(Filter):
         html.checkbox(self._varprefix + "negate", False, label=_("Negate: find hosts <b>not</b> having this package"))
 
     def filter_table(self, rows):
-        name = html.var_utf8(self._varprefix + "name")
+        name = html.get_unicode_input(self._varprefix + "name")
         if not name:
             return rows
 

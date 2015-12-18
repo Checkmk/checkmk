@@ -2282,7 +2282,7 @@ class TextAttribute(Attribute):
         html.text_input(varprefix + "attr_" + self.name(), value, size = self._size)
 
     def from_html_vars(self, varprefix):
-        value = html.var_utf8(varprefix + "attr_" + self.name())
+        value = html.get_unicode_input(varprefix + "attr_" + self.name())
         if value == None:
             value = ""
         return value.strip()

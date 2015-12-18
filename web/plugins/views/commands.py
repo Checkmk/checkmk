@@ -172,7 +172,7 @@ def command_fake_checks(cmdtag, spec, row):
     for s in [0, 1, 2, 3]:
         statename = html.var("_fake_%d" % s)
         if statename:
-            pluginoutput = html.var_utf8("_fake_output").strip()
+            pluginoutput = html.get_unicode_input("_fake_output").strip()
             if not pluginoutput:
                 pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename), config.user_id)
             perfdata = html.var("_fake_perfdata")
@@ -235,7 +235,7 @@ config.declare_permission("action.customnotification",
 
 def command_custom_notification(cmdtag, spec, row):
     if html.var("_customnotification"):
-        comment = html.var_utf8("_cusnot_comment")
+        comment = html.get_unicode_input("_cusnot_comment")
         broadcast = html.get_checkbox("_cusnot_broadcast") and 1 or 0
         forced = html.get_checkbox("_cusnot_forced") and 2 or 0
         command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \
@@ -278,7 +278,7 @@ def command_acknowledgement(cmdtag, spec, row):
             specs.append((site, spec, cmdtag))
 
     if html.var("_acknowledge"):
-        comment = html.var_utf8("_ack_comment")
+        comment = html.get_unicode_input("_ack_comment")
         if not comment:
             raise MKUserError("_ack_comment", _("You need to supply a comment."))
         if ";" in comment:
@@ -350,7 +350,7 @@ config.declare_permission("action.addcomment",
 
 def command_comment(cmdtag, spec, row):
     if html.var("_add_comment"):
-        comment = html.var_utf8("_comment")
+        comment = html.get_unicode_input("_comment")
         if not comment:
             raise MKUserError("_comment", _("You need to supply a comment."))
         command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
@@ -479,7 +479,7 @@ def command_downtime(cmdtag, spec, row):
         if html.var("_down_adhoc"):
             comment = config.adhoc_downtime.get("comment","")
         else:
-            comment = html.var_utf8("_down_comment")
+            comment = html.get_unicode_input("_down_comment")
         if not comment:
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         if html.var("_down_flexible"):

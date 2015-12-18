@@ -1261,7 +1261,7 @@ def get_singlecontext_vars(visual):
 def get_singlecontext_html_vars(visual):
     vars = get_singlecontext_vars(visual)
     for key in get_single_info_keys(visual):
-        val = html.var_utf8(key)
+        val = html.get_unicode_input(key)
         if val != None:
             vars[key] = val
     return vars

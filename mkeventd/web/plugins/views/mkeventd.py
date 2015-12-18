@@ -625,11 +625,11 @@ if mkeventd_enabled:
     def command_mkeventd_update(cmdtag, spec, row):
         if html.var('_mkeventd_update'):
             if config.may("mkeventd.update_comment"):
-                comment = html.var_utf8("_mkeventd_comment").strip().replace(";",",")
+                comment = html.get_unicode_input("_mkeventd_comment").strip().replace(";",",")
             else:
                 comment = ""
             if config.may("mkeventd.update_contact"):
-                contact = html.var_utf8("_mkeventd_contact").strip().replace(":",",")
+                contact = html.get_unicode_input("_mkeventd_contact").strip().replace(":",",")
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")

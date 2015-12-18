@@ -1,0 +1,13 @@
+Title: WATO rule based notifications: Validate regular expression for service conditions
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450446173
+Class: fix
+
+The rule based notification conditions <i>Match only the following services</i> and
+<i>Exclude the following services<i> were unabled to detect invalid regular expression.
+
+An invalid regular expression causes an exception during the notification processing,
+which ultimately leads to the loss of any notification running through this broken rule.

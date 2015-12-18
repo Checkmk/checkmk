@@ -291,7 +291,8 @@ old_service_descriptions = {
     "ups_bat_temp"                     : "Temperature Battery %s",
     "innovaphone_temp"                 : lambda item: (False, "Temperature"),
     "enterasys_temp"                   : lambda item: (False, "Temperature"),
-    "raritan_emx"                      : "Rack %s"
+    "raritan_emx"                      : "Rack %s",
+    "raritan_pdu_inlet"                : "Input Phase %s",
 }
 
 #.

@@ -192,6 +192,7 @@ else:
           "paths"        : [
                              ("dir",  "var/pnp4nagios/perfdata"),
                              ("dir",  "var/rrdcached"),
+                             ("dir",  "var/check_mk/rrd"),
                            ],
           "pre_restore"  : lambda: performancedata_restore(pre_restore = True),
           "post_restore" : lambda: performancedata_restore(pre_restore = False),

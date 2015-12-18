@@ -26,6 +26,12 @@
 
 fortigate_cpu_default_levels = (80.0, 90.0)
 
+
+def inventory_fortigate_cpu(info):
+    if info:
+        return [(None, "fortigate_cpu_default_levels")]
+
+
 def check_fortigate_cpu(item, params, info):
     num_cpus = 0
     util = 0
@@ -50,7 +56,7 @@ def check_fortigate_cpu(item, params, info):
 
 check_info["fortigate_cpu"] = {
     "check_function"        : check_fortigate_cpu,
-    "inventory_function"    : lambda info: [(None, "fortigate_cpu_default_levels")],
+    "inventory_function"    : inventory_fortigate_cpu,
     "service_description"   : "CPU utilization",
     "has_perfdata"          : True,
     "group"                 : "cpu_utilization",

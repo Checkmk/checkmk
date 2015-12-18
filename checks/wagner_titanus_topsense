@@ -315,6 +315,8 @@ def inventory_wagner_titanus_topsense_temp(info):
              ("Ambient 2", {}) ]
 
 def check_wagner_titanus_topsense_temp(item, params, info):
+    if not item.startswith("Ambient"):
+        item = "Ambient %s" % item
     if item == "Ambient 1":
         temp = float(info[2][0][7])
     elif item == "Ambient 2":

@@ -66,9 +66,9 @@ def save_gui_messages(messages, user_id = None):
     file(path, 'w').write(repr(messages) + "\n")
 
 loaded_with_language = False
-def load_plugins():
+def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language:
+    if loaded_with_language == current_language and not force:
         return
 
     global notify_methods

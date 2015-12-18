@@ -136,7 +136,7 @@ def load_config():
     modification_timestamps = []
 
     # Set default values for all user-changable configuration settings
-    load_plugins()
+    load_plugins(True)
 
     # First load main file
     include("multisite.mk")
@@ -601,7 +601,7 @@ def save_site_config():
 #   |  declare defaults for configuration variables.                       |
 #   '----------------------------------------------------------------------'
 
-def load_plugins():
+def load_plugins(force):
     load_web_plugins("config", globals())
 
-load_plugins()
+load_plugins(True)

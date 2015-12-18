@@ -1,0 +1,10 @@
+Title: winperf_phydisk: fixed invalid performance data for read/write ios
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p6
+Date: 1450432589
+
+

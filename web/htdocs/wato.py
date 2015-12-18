@@ -12373,14 +12373,12 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
             condition = _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
         elif host_list[-1] != ALL_HOSTS[0]:
             tt_list = []
-            for h in host_list:
-                f = find_host(h)
-                if f:
-                    uri = html.makeuri([("mode", "edit_host"), ("folder", f[".path"]), ("host", h)])
-                    host_spec = '<a href="%s">%s</a>' % (uri, h)
-                else:
-                    host_spec = h
+            for host_spec in host_list:
+                host = Host.host(host_spec)
+                if host:
+                    host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
                 tt_list.append("<tt><b>%s</b></tt>" % host_spec)
+
             if len(host_list) == 1:
                 condition = _("Host name is %s") % tt_list[0]
             else:

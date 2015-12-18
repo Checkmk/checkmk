@@ -218,7 +218,15 @@ else:
                           ],
           "default"     : True
         },
-
+        "extensions" : {
+            "title"    : _("Extensions in <tt>~/local/</tt> and MKPs"),
+            "prefix"   : defaults.omd_root,
+            "paths"    : [
+                            ("dir", "var/check_mk/packages" ),
+                            ("dir", "local" ),
+                         ],
+            "default"  : True,
+        },
         "dokuwiki": {
           "title"       : _("Doku Wiki Pages and Settings"),
           "prefix"      : defaults.omd_root,

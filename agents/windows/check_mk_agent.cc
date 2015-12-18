@@ -3163,34 +3163,54 @@ DWORD WINAPI realtime_check_func(void *data_in)
                         out.setSocket(INVALID_SOCKET);
                     }
                     current_address = data->last_address;
-                    current_ip = ListenSocket::readableIP(&current_address);
                     if (current_address.ss_family != 0) {
-                        current_socket = socket(current_address.ss_family, SOCK_DGRAM, IPPROTO_UDP);
-                        if (current_socket == INVALID_SOCKET) {
-                            crash_log("failed to establish socket: %d", (int)::WSAGetLastError());
-                            return 1;
-                        }
-
                         int sockaddr_size = 0;
                         if (current_address.ss_family == AF_INET) {
                             sockaddr_in *addrv4 = (sockaddr_in*)&current_address;
                             addrv4->sin_port = htons(g_config->realtimePort());
                             sockaddr_size = sizeof(sockaddr_in);
-                        } else {
+                        }
+                        else {
                             sockaddr_in6 *addrv6 = (sockaddr_in6*)&current_address;
-                            // FIXME: for reasons I don't understand, the v6-address we get
-                            // from getpeername has all words flipped. why? is this safe or
-                            // will it break on some systems?
-                            for (int i = 0; i < 16; i += 2) {
-                                BYTE temp = addrv6->sin6_addr.u.Byte[i];
-                                addrv6->sin6_addr.u.Byte[i] = addrv6->sin6_addr.u.Byte[i + 1];
-                                addrv6->sin6_addr.u.Byte[i + 1] = temp;
-                            }
 
-                            addrv6->sin6_port = htons(g_config->realtimePort());
-                            sockaddr_size = sizeof(sockaddr_in6);
+                            if ((addrv6->sin6_addr.u.Word[0] == 0)
+                                && (addrv6->sin6_addr.u.Word[1] == 0)
+                                && (addrv6->sin6_addr.u.Word[2] == 0)
+                                && (addrv6->sin6_addr.u.Word[3] == 0)
+                                && (addrv6->sin6_addr.u.Word[4] == 0)) {
+                                // this is a ipv4 address mapped to ipv6
+                                // revert that mapping, otherwise we may not be able
+                                // to connect.
+                                sockaddr_in temp {0};
+                                temp.sin_port = htons(g_config->realtimePort());
+                                temp.sin_family = AF_INET;
+                                memcpy(&temp.sin_addr.s_addr, addrv6->sin6_addr.u.Byte + 12, 4);
+
+                                current_address.ss_family = AF_INET;
+                                sockaddr_size = sizeof(sockaddr_in);
+                                memcpy(&current_address, &temp, sockaddr_size);
+                            }
+                            else {
+                                // FIXME: for reasons I don't understand, the v6-address we get
+                                // from getpeername has all words flipped. why? is this safe or
+                                // will it break on some systems?
+                                for (int i = 0; i < 16; i += 2) {
+                                    BYTE temp = addrv6->sin6_addr.u.Byte[i];
+                                    addrv6->sin6_addr.u.Byte[i] = addrv6->sin6_addr.u.Byte[i + 1];
+                                    addrv6->sin6_addr.u.Byte[i + 1] = temp;
+                                }
+
+                                addrv6->sin6_port = htons(g_config->realtimePort());
+                                sockaddr_size = sizeof(sockaddr_in6);
+                            }
                         }
                         current_ip = ListenSocket::readableIP(&current_address);
+
+                        current_socket = socket(current_address.ss_family, SOCK_DGRAM, IPPROTO_UDP);
+                        if (current_socket == INVALID_SOCKET) {
+                            crash_log("failed to establish socket: %d", (int)::WSAGetLastError());
+                            return 1;
+                        }
 
                         if (connect(current_socket, (const sockaddr*)&current_address,
                                     sockaddr_size) == SOCKET_ERROR) {

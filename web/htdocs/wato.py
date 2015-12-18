@@ -8428,7 +8428,7 @@ def vs_notification_rule(userid = None):
                   help = _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
                            "service name in order for the rule to match. Note: Host notifications never match this "
                            "rule if this option is being used."),
-                  valuespec = TextUnicode(size = 32),
+                  valuespec = RegExpUnicode(size = 32),
                   orientation = "horizontal",
                   allow_empty = False,
                   empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
@@ -8452,7 +8452,7 @@ def vs_notification_rule(userid = None):
             ( "match_exclude_services",
               ListOfStrings(
                   title = _("Do <b>not</b> match the following services"),
-                  valuespec = TextUnicode(size = 32),
+                  valuespec = RegExpUnicode(size = 32),
                   orientation = "horizontal",
               )
             ),

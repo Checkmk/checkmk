@@ -6,6 +6,7 @@
 
     Notifications:
     * 2814 FIX: Fix garbled notification context when \n appears in service description...
+    * 2821 FIX: WATO rule based notifications: Validate regular expression for service conditions...
 
 
 1.2.6p15:

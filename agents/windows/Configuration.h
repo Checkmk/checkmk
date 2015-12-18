@@ -73,6 +73,7 @@ public:
     int realtimePort() const { return _realtime_port; }
 
     bool crashDebug() const { return _crash_debug; }
+    bool sectionFlush() const { return _section_flush; }
     bool logwatchSendInitialEntries() const { return _logwatch_send_initial_entries; }
 
     bool supportIPV6() const { return _support_ipv6; }
@@ -137,7 +138,7 @@ private:
     bool handleLocalConfigVariable(char *var, char *value);
     bool handleScriptConfigVariable(char *var, char *value, script_type type);
 
-    bool parseCrashDebug(char *value);
+    bool parseBoolean(char *value, bool &parameter);
     void parseLogwatchStateLine(char *line);
     void parseExecute(char *value);
     void parseEventlogStateLine(char *line);
@@ -179,6 +180,7 @@ private:
     int _realtime_timeout;
 
     bool _crash_debug;
+    bool _section_flush;
     bool _logwatch_send_initial_entries;
 
     bool _support_ipv6;

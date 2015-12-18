@@ -64,6 +64,11 @@ def initialize_before_loading_plugins():
         # know.
         ( "dir", "usersettings", defaults.var_dir + "/web" ),
     ]
+    if defaults.omd_root:
+        replication_paths += [
+          ( "dir", "mkps",  defaults.var_dir + "/packages" ),
+          ( "dir", "local", defaults.omd_root + "/local" ),
+        ]
 
     # Directories and files for backup & restore
     global backup_paths
@@ -3186,6 +3191,10 @@ def create_sync_snapshot(site_id):
         if not config.sites[site_id].get("replicate_ec"):
             paths = [ e for e in paths if e[1] != "mkeventd" ]
 
+        # Remove extensions if site does not want them
+        if not config.sites[site_id].get("replicate_mkps"):
+            paths = [ e for e in paths if e[1] not in [ "local", "mkps" ] ]
+
         multitar.create(tmp_path, paths)
         shutil.rmtree(site_tmp_dir)
         os.rename(tmp_path, path)
@@ -3805,7 +3814,7 @@ def check_mk_automation(siteid, command, args=[], indata=""):
         return check_mk_remote_automation(siteid, command, args, indata)
 
 
-def check_mk_local_automation(command, args=[], indata=""):
+def check_mk_local_automation(command, args=[], indata="", stdin_data=None):
     # Gather the command to use for executing --automation calls to check_mk
     # - First try to use the check_mk_automation option from the defaults
     # - When not set try to detect the command for OMD or non OMD installations
@@ -3866,7 +3875,10 @@ def check_mk_local_automation(command, args=[], indata=""):
             raise MKGeneralException("Cannot execute <tt>%s</tt>: %s<br><br>%s" % (commandargs[0], e, sudo_msg))
         else:
             raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
-    p.stdin.write(repr(indata))
+    if stdin_data != None:
+        p.stdin.write(stdin_data)
+    else:
+        p.stdin.write(repr(indata))
     p.stdin.close()
     outdata = p.stdout.read()
     exitcode = p.wait()

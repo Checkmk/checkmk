@@ -8699,6 +8699,8 @@ def mode_sites(phase):
             repl = _("Slave")
             if site.get("replicate_ec"):
                 repl += ", " + _("EC")
+            if site.get("replicate_mkps") and defaults.omd_root:
+                repl += ", " + _("MKPs")
         else:
             repl = ""
         table.cell(_("Replication"), repl)
@@ -8798,7 +8800,10 @@ def mode_edit_site(phase):
     if cloneid:
         site = sites[cloneid]
     elif new:
-        site = {}
+        if defaults.omd_root:
+            site = { "replicate_mkps" : True }
+        else:
+            site = { }
     else:
         site = sites.get(siteid, {})
 
@@ -9006,6 +9011,10 @@ def mode_edit_site(phase):
         # Event Console Replication
         new_site["replicate_ec"] = html.get_checkbox("replicate_ec")
 
+        # MKPs and ~/local/
+        if defaults.omd_root:
+            new_site["replicate_mkps"] = html.get_checkbox("replicate_mkps")
+
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
             new_site["secret"] = old_site["secret"]
@@ -9175,6 +9184,13 @@ def mode_edit_site(phase):
                     "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
                     "the remote site."))
 
+    if defaults.omd_root:
+        forms.section(_("Extensions"), simple=True)
+        html.checkbox("replicate_mkps", site.get("replicate_mkps", False), label = _("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"))
+        html.help(_("If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                    "that are installed on your master site and all other files below the <tt>~/local/</tt> "
+                    "directory will be also transferred to the "
+                    "slave site. Note: <b>all other MKPs and files below <tt>~/local/</tt> on the slave will be removed</b>."))
 
     forms.end()
     html.button("save", _("Save"))

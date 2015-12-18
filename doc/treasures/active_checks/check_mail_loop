@@ -51,7 +51,7 @@ OPTIONS:
                           (leave empty for anonymous SMTP)
   --smtp-password PW      Password to authenticate SMTP
   --smtp-tls              Use TLS over SMTP (disabled by default)
-  --imap-tls             Use TLS for IMAP authentification (disabled by default)
+  --imap-tls              Use TLS for IMAP authentification (disabled by default)
 
   --fetch-protocol PROTO  Set to "IMAP" or "POP3", depending on your mailserver
                           (defaults to IMAP)
@@ -292,6 +292,9 @@ def fetch_mails():
             if matches:
                 ts  = matches.group(1).strip()
                 key = matches.group(2).strip()
+
+                if "%s-%s" % (ts, key) not in g_expected:
+                    continue
 
                 # extract received time
                 rx = msg.get('Received')

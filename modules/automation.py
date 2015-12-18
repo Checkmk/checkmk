@@ -48,8 +48,18 @@ def do_automation(cmd, args):
             result = automation_get_package_info(args)
         elif cmd == "get-package":
             result = automation_get_package(args)
+        elif cmd == "create-package":
+            result = automation_create_or_edit_package(args, "create")
+        elif cmd == "edit-package":
+            result = automation_create_or_edit_package(args, "edit")
+        elif cmd == "install-package":
+            result = automation_install_package(args)
         elif cmd == "remove-package":
-            result = automation_remove_package(args)
+            result = automation_remove_or_release_package(args, "remove")
+        elif cmd == "release-package":
+            result = automation_remove_or_release_package(args, "release")
+        elif cmd == "remove-unpackaged-file":
+            result = automation_remove_unpackaged_file(args)
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
@@ -115,6 +125,7 @@ def do_automation(cmd, args):
         sys.stdout.write("%r\n" % (result,))
     output_profile()
     sys.exit(0)
+
 
 # Does discovery for a list of hosts. Possible values for how:
 # "new" - find only new services (like -I)
@@ -1173,13 +1184,16 @@ def automation_notification_replay(args):
     nr = args[0]
     return notification_replay_backlog(int(nr))
 
+
 def automation_notification_analyse(args):
     nr = args[0]
     return notification_analyse_backlog(int(nr))
 
+
 def automation_get_bulks(args):
     only_ripe = args[0] == "1"
     return find_bulks(only_ripe)
+
 
 def automation_active_check(args):
     hostname, plugin, item = args
@@ -1263,6 +1277,7 @@ def execute_check_plugin(commandline):
 def automation_update_dns_cache():
     return do_update_dns_cache()
 
+
 def automation_bake_agents():
     if "do_bake_agents" in globals():
         return do_bake_agents()
@@ -1316,10 +1331,53 @@ def automation_get_package(args):
     return package, output_file.content()
 
 
-def automation_remove_package(args):
+def automation_create_or_edit_package(args, mode):
+    load_module("packaging")
+    package_name = args[0]
+    new_package_info = eval(sys.stdin.read())
+    if mode == "create":
+        create_package(new_package_info)
+    else:
+        edit_package(package_name, new_package_info)
+
+
+def automation_install_package(args):
+    load_module("packaging")
+    file_content = sys.stdin.read()
+    input_file = fake_file(file_content)
+    try:
+        return install_package(file_object=input_file)
+    except Exception, e:
+        if opt_debug:
+            raise
+        raise MKAutomationError("Cannot install package: %s" % e)
+
+
+def automation_remove_or_release_package(args, mode):
     load_module("packaging")
     package_name = args[0]
     package = read_package_info(package_name)
     if not package:
         raise MKAutomationError("Package not installed or corrupt")
-    remove_package(package)
+    if mode == "remove":
+        remove_package(package)
+    else:
+        remove_package_info(package_name)
+
+
+def automation_remove_unpackaged_file(args):
+    load_module("packaging")
+    part_name = args[0]
+    if part_name not in [ p[0] for p in package_parts ]:
+        raise MKAutomationError("Invalid package part")
+
+    rel_path = args[1]
+    if "../" in rel_path or rel_path.startswith("/"):
+        raise MKAutomationError("Invalid file name")
+
+    for part, title, perm, dir in package_parts:
+        if part == part_name:
+            abspath = dir + "/" + rel_path
+            if not os.path.isfile(abspath):
+                raise MKAutomationError("No such file")
+            os.remove(abspath)

@@ -1669,7 +1669,13 @@ class DualListChoice(ListChoice):
         self._custom_order = kwargs.get("custom_order", False)
         self._instant_add = kwargs.get("instant_add", False)
         self._enlarge_active = kwargs.get("enlarge_active", False)
-        self._rows = kwargs.get("rows", 5)
+        if "rows" in kwargs:
+            self._rows = kwargs.get("rows", 5)
+            self._autoheight = False
+        else:
+            self._rows = 5
+        self._size = kwargs.get("size") # Total with in ex
+
 
     def render_input(self, varprefix, value):
         self.load_elements()
@@ -1699,7 +1705,11 @@ class DualListChoice(ListChoice):
         select_func   = 'vs_duallist_switch(\'unselected\', \'%s\', %d);' % (varprefix, self._custom_order and 1 or 0)
         unselect_func = 'vs_duallist_switch(\'selected\', \'%s\', 1);' % varprefix
 
-        html.write('<table class="vs_duallist"><tr><td class="head">')
+        if self._size:
+            style = ' style="width: %dpx"' % (self._size * 6.4)
+        else:
+            style = ''
+        html.write('<table class="vs_duallist"%s><tr><td class="head">' % style)
         html.write(_('Available'))
         if not self._instant_add:
             html.write('<a href="javascript:%s" class="control add">&gt;</a>' % select_func)
@@ -1721,25 +1731,25 @@ class DualListChoice(ListChoice):
             onchange_unselected += ';vs_duallist_enlarge(\'unselected\', \'%s\')' % varprefix
 
         func = self._custom_order and html.select or html.sorted_select
-        func(varprefix + '_unselected', unselected,
-                           attrs = {
-                               'size'       : self._rows,
-                               'multiple'   : 'multiple',
-                               'style'      : self._autoheight and 'height:auto' or '',
-                               'ondblclick' : not self._instant_add and select_func or '',
-                           },
-                           onchange = onchange_unselected)
+        attrs = {
+            'foo'        : "bar",
+            'multiple'   : 'multiple',
+            'style'      : self._autoheight and 'height:auto' or "height: %dpx" % (self._rows * 16),
+            'ondblclick' : not self._instant_add and select_func or '',
+        }
+        func(varprefix + '_unselected', unselected, attrs = attrs, onchange = onchange_unselected)
         html.write('</td><td>')
-        func(varprefix + '_selected', selected,
-                           attrs = {
-                               'size'       : self._rows,
-                               'multiple'   : 'multiple',
-                               'style'      : self._autoheight and 'height:auto' or '',
-                               'ondblclick' : not self._instant_add and unselect_func or '',
-                           },
-                           onchange = onchange_selected)
+        func(varprefix + '_selected', selected, attrs = attrs, onchange = onchange_selected)
         html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)
+
+
+    def validate_value(self, value, varprefix):
+        try:
+            ListChoice.validate_value(self, value, varprefix)
+        except MKUserError, e:
+            raise MKUserError(e.varname + "_selected", e.message)
+
 
     def from_html_vars(self, varprefix):
         self.load_elements()
@@ -1756,6 +1766,7 @@ class DualListChoice(ListChoice):
                 if key in selected:
                     value.append(key)
         return value
+
 
 # A type-save dropdown choice with one extra field that
 # opens a further value spec for entering an alternative
@@ -3249,6 +3260,9 @@ class FileUpload(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._allow_empty = kwargs.get('allow_empty', True)
+        self._allowed_extensions = kwargs.get('allowed_extensions')
+        self._allow_empty_content= kwargs.get('allow_empty_content', True)
+
 
     def canonical_value(self):
         if self._allow_empty:
@@ -3256,17 +3270,37 @@ class FileUpload(ValueSpec):
         else:
             return ''
 
+
     def validate_value(self, value, varprefix):
-        if not self._allow_empty and (value == None or value[0] == ''):
+        file_name, mime_type, content = value
+
+        if not self._allow_empty and (value == None or file_name == ''):
             raise MKUserError(varprefix, _('Please select a file.'))
+
+        if not self._allow_empty_content and len(content) == 0:
+            raise MKUserError(varprefix, _('The selected file is empty. Please select a non-empty file.')
+)
+        if self._allowed_extensions != None:
+            matched = False
+            for extension in self._allowed_extensions:
+                if file_name.endswith(extension):
+                    matched = True
+                    break
+            if not matched:
+                raise MKUserError(varprefix, _("Invalid file name extension. Allowed are: %s")
+                                  % ", ".join(self._allowed_extensions))
+
         self.custom_validate(value, varprefix)
+
 
     def render_input(self, varprefix, value):
         html.upload_file(varprefix)
 
+
     def from_html_vars(self, varprefix):
         # returns a triple of (filename, mime-type, content)
         return html.uploaded_file(varprefix)
+
 
 class IconSelector(ValueSpec):
     _categories = [

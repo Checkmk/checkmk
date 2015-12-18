@@ -1,0 +1,20 @@
+Title: WATO-Replication of MKPs and files in the local/ hierarchy
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450427671
+Class: feature
+
+Distributed WATO now offers a new checkbox <i>Replicate extensions (MKPs and
+files in ~/local/)</i> in the settings of a site. When you check this then
+all MKP extension packages and files below the <tt>~/local/</tt> filesystem
+on the site will be replicated to the slaves. Note: existing files and MKPs
+on the slave will be removed, so you have an exact replication.
+
+Extension replication is activated per default now if you create a new
+site connection. Your existing connections are not touched so this is a
+compatible change.
+
+Extension replication only works with CEE and CRE. Manual setups
+(<tt>./setup.sh</tt>) are not supported.

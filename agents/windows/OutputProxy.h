@@ -66,21 +66,19 @@ protected:
     std::vector<char> &buffer() { return _buffer; }
     size_t length() const { return _length; }
 
-private:
+public:
 
     static const size_t DEFAULT_BUFFER_SIZE  = 16384L;
-    static const size_t DEFAULT_COLLECT_SIZE = 1300L;
 
 public:
 
-    BufferedSocketProxy(SOCKET socket, size_t buffer_size = DEFAULT_BUFFER_SIZE,
-            size_t collect_size = DEFAULT_COLLECT_SIZE);
+    BufferedSocketProxy(SOCKET socket, size_t buffer_size = DEFAULT_BUFFER_SIZE);
 
     void setSocket(SOCKET socket);
 
     virtual void output(const char *format, ...) override;
     virtual void writeBinary(const char *buffer, size_t size) override;
-    virtual void flush();
+    virtual void flush() override;
 
 protected:
 
@@ -99,11 +97,6 @@ class EncryptingBufferedSocketProxy : public BufferedSocketProxy {
 
     Crypto _crypto;
 
-private:
-
-    static const size_t DEFAULT_BUFFER_SIZE = 16384L;
-    static const size_t DEFAULT_COLLECT_SIZE = 1300L;
-
     std::vector<char> _plain;
     size_t _blockSize;
     size_t _written;
@@ -111,8 +104,7 @@ private:
 public:
 
     EncryptingBufferedSocketProxy(SOCKET socket, const std::string &passphrase,
-            size_t buffer_size = DEFAULT_BUFFER_SIZE,
-            size_t collect_size = DEFAULT_COLLECT_SIZE);
+            size_t buffer_size = DEFAULT_BUFFER_SIZE);
 
     virtual void output(const char *format, ...) override;
     // writeBinary is NOT overridden so calls to it are not encrypted!

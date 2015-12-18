@@ -203,7 +203,6 @@ function wato_fix_visibility() {
     for (var try_form = 0; try_form < available_forms.length; try_form++) {
         var my_form = document.getElementById(available_forms[try_form]);
         if (my_form != null) {
-            console.log("xx" + available_forms[try_form]);
             for (var child in my_form.childNodes){
                 oTr = my_form.childNodes[child];
                 if (oTr.className == "nform"){

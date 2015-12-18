@@ -38,7 +38,7 @@ def wato_link(folder, site, hostname, where):
             help = _("Edit services")
             icon = "services"
         else:
-            url += "&mode=edithost"
+            url += "&mode=edit_host"
             help = _("Edit this host")
             icon = "wato"
         return icon, help, url

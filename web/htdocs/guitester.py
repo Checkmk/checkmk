@@ -298,6 +298,7 @@ def guitest_drop_dynamic_ids(thing):
 check_mk_version_regex = "(1\.2\.[68]?([bp][0-9]+)|1\.2\.[79]i[0-9](p[0-9]+)?|201[5-9]\.[01][0-9]\.[0123][0-9])"
 timeofday_regex = "[012][0-9]:[0-5][0-9]:[0-5][0-9]"
 year_regex = "201[56789]"
+english_date_regex = "(Mon|Tue|Wed|Thu|Fri|Sat|Sun) +(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) +[1-9][0-9]?"
 
 
 def guitest_drop_dynamic_ids_in_text(text):
@@ -308,4 +309,5 @@ def guitest_drop_dynamic_ids_in_text(text):
     text = re.sub(check_mk_version_regex, "CMK_VERSION", text)
     text = re.sub(timeofday_regex, "TIMEOFDAY", text)
     text = re.sub(year_regex, "YEAR", text)
+    text = re.sub(english_date_regex, "DATE", text)
     return text

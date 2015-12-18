@@ -75,10 +75,10 @@ class BITextFilter(Filter):
         html.text_input(self.htmlvars[0])
 
     def heading_info(self):
-        return html.var_utf8(self.htmlvars[0])
+        return html.get_unicode_input(self.htmlvars[0])
 
     def filter_table(self, rows):
-        val = html.var_utf8(self.htmlvars[0])
+        val = html.get_unicode_input(self.htmlvars[0])
         if not val:
             return rows
         if self.how == "regex":
@@ -135,11 +135,11 @@ class BIServiceFilter(Filter):
         html.text_input(self.htmlvars[2])
 
     def heading_info(self):
-        return html.var_utf8(self.htmlvars[1]) + " / " + html.var_utf8(self.htmlvars[2])
+        return html.get_unicode_input(self.htmlvars[1]) + " / " + html.get_unicode_input(self.htmlvars[2])
 
     def service_spec(self):
         if html.has_var(self.htmlvars[2]):
-            return html.var_utf8(self.htmlvars[0]), html.var_utf8(self.htmlvars[1]), html.var_utf8(self.htmlvars[2])
+            return html.get_unicode_input(self.htmlvars[0]), html.get_unicode_input(self.htmlvars[1]), html.get_unicode_input(self.htmlvars[2])
 
     # Used for linking
     def variable_settings(self, row):

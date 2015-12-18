@@ -3491,7 +3491,7 @@ def mode_parentscan(phase):
     # Ignored during initial form display
     settings = {
         "where"          : html.var("where"),
-        "alias"          : html.var_utf8("alias", "").strip() or None,
+        "alias"          : html.get_unicode_input("alias", "").strip() or None,
         "recurse"        : html.get_checkbox("recurse"),
         "select"         : html.var("select"),
         "timeout"        : saveint(html.var("timeout")) or 8,
@@ -5913,7 +5913,7 @@ def mode_edit_ldap_connection(phase):
 #   '----------------------------------------------------------------------'
 
 def mode_globalvars(phase):
-    search = html.var_utf8("search")
+    search = html.get_unicode_input("search")
     if search != None:
         search = search.strip().lower()
 
@@ -6514,7 +6514,7 @@ def mode_edit_group(phase, what):
 
     if phase == "action":
         if html.check_transaction():
-            alias = html.var_utf8("alias").strip()
+            alias = html.get_unicode_input("alias").strip()
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name."))
 
@@ -7676,7 +7676,7 @@ def mode_user_notifications(phase, profilemode):
         title = _("Your personal notification rules")
         config.need_permission("general.edit_notifications")
     else:
-        userid = html.var_utf8("user")
+        userid = html.get_unicode_input("user")
         title = _("Custom notification table for user ") + userid
 
     if phase == "title":
@@ -7760,7 +7760,7 @@ def mode_notification_rule(phase, profilemode):
         userid = config.user_id
         config.need_permission("general.edit_notifications")
     else:
-        userid = html.var_utf8("user", "")
+        userid = html.get_unicode_input("user", "")
 
     if userid and not profilemode:
         suffix = _(" for user ") + html.attrencode(userid)
@@ -8330,7 +8330,7 @@ def mode_edit_timeperiod(phase):
 
     if phase == "action":
         if html.check_transaction():
-            alias = html.var_utf8("alias").strip()
+            alias = html.get_unicode_input("alias").strip()
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name for your timeperiod."))
 
@@ -8915,7 +8915,7 @@ def mode_edit_site(phase):
 
         new_site = {}
         sites[id] = new_site
-        alias = html.var_utf8("alias", "").strip()
+        alias = html.get_unicode_input("alias", "").strip()
         if not alias:
             raise MKUserError("alias", _("Please enter an alias name or description of this site."))
 
@@ -9572,7 +9572,7 @@ def mode_users(phase):
 
     if phase == "action":
         if html.var('_delete'):
-            delid = html.var_utf8("_delete")
+            delid = html.get_unicode_input("_delete")
             if delid == config.user_id:
                 raise MKUserError(None, _("You cannot delete your own account!"))
 
@@ -9740,8 +9740,8 @@ def mode_edit_user(phase):
     rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
 
     users = userdb.load_users(lock = phase == 'action')
-    userid = html.var_utf8("edit") # missing -> new user
-    cloneid = html.var_utf8("clone") # Only needed in 'new' mode
+    userid = html.get_unicode_input("edit") # missing -> new user
+    cloneid = html.get_unicode_input("clone") # Only needed in 'new' mode
     new = userid == None
     if phase == "title":
         if new:
@@ -9816,11 +9816,11 @@ def mode_edit_user(phase):
             new_user = {}
             users[id] = new_user
         else:
-            id = html.var_utf8("edit").strip()
+            id = html.get_unicode_input("edit").strip()
             new_user = users[id]
 
         # Full name
-        alias = html.var_utf8("alias").strip()
+        alias = html.get_unicode_input("alias").strip()
         if not alias:
             raise MKUserError("alias",
             _("Please specify a full name or descriptive alias for the user."))
@@ -10367,7 +10367,7 @@ def mode_edit_role(phase):
     role = roles[id]
 
     if phase == "action":
-        alias = html.var_utf8("alias")
+        alias = html.get_unicode_input("alias")
 
         unique, info = is_alias_used("roles", id, alias)
         if not unique:
@@ -10834,7 +10834,7 @@ def mode_edit_auxtag(phase):
             else:
                 tag_id = auxtags[tag_nr][0]
 
-            title = html.var_utf8("title").strip()
+            title = html.get_unicode_input("title").strip()
             if not title:
                 raise MKUserError("title", _("Please supply a title "
                 "for you auxiliary tag."))
@@ -10996,7 +10996,7 @@ def mode_edit_hosttag(phase):
                     if tgid == tag_id:
                         raise MKUserError("tag_id", _("The tag group ID %s is already used by the tag group '%s'.") % (tag_id, tit))
 
-            title = html.var_utf8("title").strip()
+            title = html.get_unicode_input("title").strip()
             if not title:
                 raise MKUserError("title", _("Please specify a title for your host tag group."))
 
@@ -11611,7 +11611,7 @@ def mode_rulesets(phase, group=None):
     if not group:
         group = html.var("group") # obligatory
 
-    search = html.var_utf8("search")
+    search = html.get_unicode_input("search")
     if search != None:
         search = search.strip().lower()
 
@@ -15138,7 +15138,7 @@ def mode_edit_custom_attr(phase, what):
 
     if phase == "action":
         if html.check_transaction():
-            title = html.var_utf8("title").strip()
+            title = html.get_unicode_input("title").strip()
             if not title:
                 raise MKUserError("title", _("Please specify a title."))
             for this_attr in attrs:
@@ -15146,7 +15146,7 @@ def mode_edit_custom_attr(phase, what):
                     raise MKUserError("alias", _("This alias is already used by the attribute %s.") % this_attr['name'])
 
             topic = html.var('topic', '').strip()
-            help  = html.var_utf8('help').strip()
+            help  = html.get_unicode_input('help').strip()
             user_editable = html.get_checkbox('user_editable')
             show_in_table = html.get_checkbox('show_in_table')
             add_custom_macro = html.get_checkbox('add_custom_macro')

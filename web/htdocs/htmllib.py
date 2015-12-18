@@ -603,7 +603,7 @@ class html(GUITester):
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
     def select(self, varname, choices, deflt="", onchange=None, attrs = {}):
-        current = self.var_utf8(varname, deflt)
+        current = self.get_unicode_input(varname, deflt)
         onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
         attrs.setdefault('size', 1)
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
@@ -728,6 +728,15 @@ class html(GUITester):
         else:
             # Form filled in but variable missing -> Checkbox not checked
             return False
+
+
+    def get_unicode_input(self, varname, deflt = None):
+        try:
+            return self.var_utf8(varname, deflt)
+        except UnicodeDecodeError:
+            raise MKUserError(varname, _("The given text is wrong encoded. "
+                                         "You need to provide a UTF-8 encoded text."))
+
 
     def datetime_input(self, varname, default_value, submit=None):
         try:

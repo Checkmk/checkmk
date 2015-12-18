@@ -38,7 +38,7 @@ builtin_user_attribute_names = []
 connection_dict = {}
 
 # Load all userdb plugins
-def load_plugins():
+def load_plugins(force):
     global user_attributes
     global multisite_user_connectors
     global builtin_user_attribute_names
@@ -57,7 +57,7 @@ def load_plugins():
         connection_dict[connection['id']] = connection
 
     global loaded_with_language
-    if loaded_with_language == current_language:
+    if loaded_with_language == current_language and not force:
         return
 
     # declare & initialize global vars

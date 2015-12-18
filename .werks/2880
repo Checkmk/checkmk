@@ -1,0 +1,11 @@
+Title: Automatically detect changes in local web/plugins, no Apache restart needed anymore
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450433521
+Class: feature
+
+If you add, remove or modify any extensions in <tt>local/share/check_mk/web/plugins</tt> then
+a restart of your local Apache is not neccessary anymore. Check_MK will detect such changes
+by looking at the time stamps of the contained files and subdirectories of <tt>plugins</tt>.

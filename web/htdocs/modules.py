@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from types import ModuleType
-from lib import load_web_plugins
+from lib import load_web_plugins, local_web_plugins_have_changed
 from mod_python.apache import import_module
 import pagetypes
 
@@ -80,13 +80,15 @@ def init_modules():
 
 # Call the load_plugins() function in all modules
 def load_all_plugins():
+    need_plugins_reload = local_web_plugins_have_changed()
+
     for module in modules:
         try:
             module.load_plugins # just check if this function exists
         except AttributeError:
             pass
         else:
-            module.load_plugins()
+            module.load_plugins(force = need_plugins_reload)
 
     # Install page handlers created by the pagetypes.py modules. It is allowed for all
     # kind of plugins to register own page types, so we need to wait after all plugins

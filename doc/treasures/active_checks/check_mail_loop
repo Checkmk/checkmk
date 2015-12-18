@@ -93,7 +93,7 @@ OPTIONS:
 
 short_options = 'dh'
 long_options  = ['smtp-server=', 'smtp-port=', 'smtp-username=', 'smtp-password=',
-    'smtp-tls', 'fetch-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
+    'smtp-tls', 'imap-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
     'fetch-password=', 'fetch-ssl', 'mail-from=', 'mail-to=', 'warning=', 'critical=',
     'connect-timeout=', 'delete-messages', 'help', 'status-dir=', 'status-suffix=', "debug", ]
 

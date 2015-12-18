@@ -412,8 +412,12 @@ def automation_delete_host(args):
 
 
 def automation_restart(job = "restart", use_rushd = True):
-    if job == "reload" and check_plugins_have_changed():
+    if check_plugins_have_changed():
+        forced = True
         job = "restart"
+    else:
+        forced = False
+
 
     # make sure, Nagios does not inherit any open
     # filedescriptors. This really happens, e.g. if
@@ -429,7 +433,7 @@ def automation_restart(job = "restart", use_rushd = True):
                 pass
     else:
         objects_file = var_dir + "/core/config"
-        if job == "restart":
+        if job == "restart" and not forced:
             job = "reload" # force reload for CMC
 
     # os.closerange(3, 256) --> not available in older Python versions
@@ -500,7 +504,7 @@ def check_plugins_have_changed():
         return False # not supported for manual setup
 
     this_time = last_modification_in_dir(local_checks_dir)
-    last_time = time_of_last_config_creation()
+    last_time = time_of_last_core_restart()
     return this_time > last_time
 
 
@@ -511,13 +515,13 @@ def last_modification_in_dir(dir_path):
     return max_time
 
 
-def time_of_last_config_creation():
+def time_of_last_core_restart():
     if monitoring_core == "cmc":
-        config_path = omd_root + "/var/check_mk/core/config"
+        pidfile_path = omd_root + "/tmp/run/cmc.pid"
     else:
-        config_path = omd_root + "/etc/nagios/conf.d/check_mk_objects.cfg"
-    if os.path.exists(config_path):
-        return os.stat(config_path).st_mtime
+        pidfile_path = omd_root + "/tmp/lock/nagios.lock"
+    if os.path.exists(pidfile_path):
+        return os.stat(pidfile_path).st_mtime
     else:
         return 0
 

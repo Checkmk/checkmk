@@ -288,6 +288,9 @@ def check_multipath(item, target_numpaths, parsed):
     # looking for a UUID. Then fall back to aliases
     if item in parsed:
         mmap = parsed[item]
+    elif item.strip() in parsed:
+        # support items discovered before 1.2.7
+        mmap = parsed[item.strip()]
     else:
         for mmap in parsed.values():
             if mmap.get("alias") == item:

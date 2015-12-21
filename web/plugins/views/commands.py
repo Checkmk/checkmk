@@ -495,26 +495,24 @@ multisite_commands.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-recurring_types = {
-    1: _("hour"),
-    2: _("day"),
-    3: _("week"),
-    4: _("second week"),
-    5: _("fourth week"),
-}
-
 config.declare_permission("action.downtimes",
         _("Set/Remove Downtimes"),
         _("Schedule and remove downtimes on hosts and services"),
         [ "user", "admin" ])
 
 def command_downtime(cmdtag, spec, row):
+    try:
+        wato.recurring_downtimes_types
+        have_recurring_downtimes = True
+    except:
+        have_recurring_downtimes = False
+
     down_from = int(time.time())
     down_to = None
 
-    if html.get_checkbox("_down_do_recur"):
+    if have_recurring_downtimes and html.get_checkbox("_down_do_recur"):
         recurring_type = int(html.var("_down_recurring"))
-        title_start = _("schedule a periodic downtime every %s") % recurring_types[recurring_type]
+        title_start = _("schedule a periodic downtime every %s") % wato.recurring_downtimes_types[recurring_type]
     else:
         title_start = _("schedule an immediate downtime")
 
@@ -711,17 +709,18 @@ def paint_downtime_buttons(what):
         html.write("<hr>")
         html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected <b>hosts</b> instead of on the individual services'))
 
-    html.write("<hr>")
-    html.checkbox("_down_do_recur", False, label=_("Repeat this downtime on a regular base every"))
-    html.write(" ")
-    html.select("_down_recurring", [
-       ( "1", _("hour") ),
-       ( "2", _("day") ),
-       ( "3", _("week") ),
-       ( "4", _("second week") ),
-       ( "5", _("fourth week") ),
-    ], "3")
-    html.write(_("(This only works when using CMC)"))
+    try:
+        wato.recurring_downtimes_types # Check if this exists
+        have_recurring_downtimes = True
+    except:
+        have_recurring_downtimes = False
+
+    if have_recurring_downtimes:
+        html.write("<hr>")
+        html.checkbox("_down_do_recur", False, label=_("Repeat this downtime on a regular base every"))
+        html.write(" ")
+        html.select("_down_recurring", [ (str(k), v) for (k,v) in sorted(wato.recurring_downtimes_types.items())], "3")
+        html.write(_("(This only works when using CMC)"))
 
 
 

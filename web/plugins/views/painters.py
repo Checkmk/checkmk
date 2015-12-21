@@ -1927,17 +1927,16 @@ multisite_painters["downtime_origin"] = {
 }
 
 def paint_downtime_recurring(row):
+    try:
+        wato.recurring_downtimes_types
+    except:
+        return "", _("(not supported)")
+
     r = row["downtime_recurring"]
-    return "", {
-        0: _("no"),
-        None: _("no"),
-        1: _("hourly"),
-        2: _("daily"),
-        3: _("weekly"),
-        4: _("two-weekly"),
-        5: _("four-weekly"),
-        999: _("every 5 minutes"),
-    }.get(r, _("(unknown)"))
+    if not r:
+        return "", _("no")
+    else:
+        return "", wato.recurring_downtimes_types.get(r, _("(unknown: %d)") % r)
 
 multisite_painters["downtime_recurring"] = {
     "title"   : _("Downtime recurring interval"),

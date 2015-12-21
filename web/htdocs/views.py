@@ -1103,6 +1103,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     else:
         rows = []
 
+
     # Apply non-Livestatus filters
     for filter in all_active_filters:
         rows = filter.filter_table(rows)

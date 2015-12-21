@@ -1,0 +1,8 @@
+Title: solaris_fmadm: new check monitors the severity and name of the fault class on Solaris systems using the 'fmadm faulty' command
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450693400
+Class: feature
+

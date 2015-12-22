@@ -320,7 +320,25 @@ def add_wait_step(args):
     wait_seconds = int(args[1]) / 1000.0
     guitest[step_number+1:step_number+1] = [ { "wait" : wait_seconds } ]
     save_guitest(test_name, guitest)
+    add_special_step("wait", args)
 
+
+def add_reschedule_step(args):
+    if len(args) != 2:
+        bail_out("Please specify the test and the step number to add the reschdule after")
+    test_name = args[1]
+    guitest = load_guitest(test_name)
+    step_number = int(args[0])
+    guitest[step_number+1:step_number+1] = [{
+        'elapsed_time': 0.01,
+        'filename': 'guitest_reschedule_all',
+        'output': {'message': [('message', 'All hosts are checked.\n'),
+                               ('message', 'All services are checked.\n')],
+                   'page_title': ['Rescheduling and waiting for check results']},
+        'user': u'omdadmin',
+        'variables': {},
+    }]
+    save_guitest(test_name, guitest)
 
 #.
 #   .-Helpers--------------------------------------------------------------.
@@ -390,23 +408,24 @@ Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
 
   OPERATION MODES
 
-     (no option) [TESTS...]             Run some or all tests
-     -R, --repair                       Run a test and at the same time rerecord it
-     -r, --record                       Start/stop recording test TEST
-     -l, --list-tests [TEST]            List one or all tests
-     -x, --extract RANGE TEST [OUTPUT]  Extract a range of steps from a test to stdout
-     -D, --delete RANGE TEST            Remove a range of steps from a test
-     -W, --add-wait-step STEP MS TEST   Insert and artificial wait phase into the test
-     -h, --help                         Show this crufty help
+     (no option) [TESTS...]              Run some or all tests
+     -R, --repair                        Run a test and at the same time rerecord it
+     -r, --record                        Start/stop recording test TEST
+     -l, --list-tests [TEST]             List one or all tests
+     -x, --extract RANGE TEST [OUTPUT]   Extract a range of steps from a test to stdout
+     -D, --delete RANGE TEST             Remove a range of steps from a test
+     -W, --add-wait-step STEP MS TEST    Insert and artificial wait phase into the test
+     -E, --add-reschedule-step STEP TEST Insert and artificial "reschedule all checks"
+     -h, --help                          Show this crufty help
 
 
   OPTIONS
 
-     -v, --verbose                      Output debug information on stderr
-         --debug                        Do not catch Python exceptions
-     -S, --steps RANGE                  Just run steps START...END (1st step is 0)
-     -i, --interactive                  When tests fail ask for automatic repair
-     -c, --continue                     Continue after errors
+     -v, --verbose                       Output debug information on stderr
+         --debug                         Do not catch Python exceptions
+     -S, --steps RANGE                   Just run steps START...END (1st step is 0)
+     -i, --interactive                   When tests fail ask for automatic repair
+     -c, --continue                      Continue after errors
 
 
   RANGES
@@ -430,9 +449,10 @@ Usage: cmk-guitest [OPTIONS] MODE [ARGS...]
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hvrslRS:x:D:icW'
+short_options = 'hvrslRS:x:D:icWE'
 long_options = [ "help", "debug", "verbose", "list-tests=", "record", "repair",
-                 "steps=", "extract=", "delete=", "interactive", "continue", "add-wait-step" ]
+                 "steps=", "extract=", "delete=", "interactive", "continue",
+                 "add-wait-step", "add-reschedule-step" ]
 
 opt_verbose = False
 opt_debug = False
@@ -467,6 +487,8 @@ for o,a in opts:
         mode_function = delete_steps_from_test
     elif o in [ '-W', '--add-wait-step' ]:
         mode_function = add_wait_step
+    elif o in [ '-E', '--add-reschedule-step' ]:
+        mode_function = add_reschedule_step
 
     # Modifiers
     elif o in [ '-S', '--steps' ]:

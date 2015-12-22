@@ -320,7 +320,6 @@ def add_wait_step(args):
     wait_seconds = int(args[1]) / 1000.0
     guitest[step_number+1:step_number+1] = [ { "wait" : wait_seconds } ]
     save_guitest(test_name, guitest)
-    add_special_step("wait", args)
 
 
 def add_reschedule_step(args):

@@ -3955,6 +3955,9 @@ def mode_changelog(phase):
         if config.may("wato.auditlog"):
             html.context_button(_("Audit Log"), folder_preserving_link([("mode", "auditlog")]), "auditlog")
 
+        if config.guitests_enabled:
+            html.context_button(_("Reschedule All"), "guitest_reschedule_all.py", "guitest")
+
     elif phase == "action":
         action = html.var("_action", html.var("_siteaction"))
         if action == "activate":

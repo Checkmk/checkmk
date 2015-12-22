@@ -1758,7 +1758,7 @@ def synchronize_profile_to_sites(connection, user_id, profile):
     import wato # FIXME: Cleanup!
     sites = [(site_id, config.site(site_id))
               for site_id in config.sitenames()
-              if not wato.site_is_local(site_id) ]
+              if not config.site_is_local(site_id) ]
 
     connection.log('Credentials changed: %s. Trying to sync to %d sites' % (user_id, len(sites)))
 

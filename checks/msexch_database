@@ -50,11 +50,15 @@ def inventory_msexch_database(parsed):
 
 
 def check_msexch_database(item, params, parsed):
+    var_table = [
+        ("I/O Database Reads (Attached) Average Latency",  "read_attached_latency", "DB read (attached) latency",  "db_read_latency"),
+        ("I/O Database Reads (Recovery) Average Latency",  "read_recovery_latency", "DB read (recovery) latency",  "db_read_recovery_latency"),
+        ("I/O Database Writes (Attached) Average Latency", "write_latency",         "DB write (attached) latency", "db_write_latency"),
+        ("I/O Log Writes Average Latency",                 "log_latency",           "Log latency",                 "db_log_latency")
+    ]
+
     if item in parsed:
-        for counter, setting, name in [("I/O Database Reads (Attached) Average Latency",  "read_attached_latency", "DB read (attached) latency"),
-                                       ("I/O Database Reads (Recovery) Average Latency",  "read_recovery_latency", "DB read (recovery) latency"),
-                                       ("I/O Database Writes (Attached) Average Latency", "write_latency",         "DB write (attached) latency"),
-                                       ("I/O Log Writes Average Latency",                 "log_latency",           "Log latency")]:
+        for counter, setting, name, perfvar in var_table:
             value = parsed[item][counter.lower()]
             warn, crit = params[setting]
             status = 0
@@ -62,7 +66,7 @@ def check_msexch_database(item, params, parsed):
                 status = 2
             elif value >= warn:
                 status = 1
-            yield status, "%.1fms %s" % (value, name), [(setting, value, warn, crit)]
+            yield status, "%.1fms %s" % (value, name), [(perfvar, value, warn, crit)]
 
 
 check_info['msexch_database'] = {

@@ -2691,6 +2691,32 @@ metric_info["time_in_GC"] = {
     "color" : "16/a"
 }
 
+metric_info["db_read_latency"] = {
+    "title" : _("Read latency"),
+    "unit"  : "s",
+    "color" : "35/a",
+}
+
+metric_info["db_read_recovery_latency"] = {
+    "title" : _("Read recovery latency"),
+    "unit"  : "s",
+    "color" : "31/a",
+}
+
+metric_info["db_write_latency"] = {
+    "title" : _("Write latency"),
+    "unit"  : "s",
+    "color" : "45/a",
+}
+
+
+metric_info["db_log_latency"] = {
+    "title" : _("Log latency"),
+    "unit"  : "s",
+    "color" : "25/a",
+}
+
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

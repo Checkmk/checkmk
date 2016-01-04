@@ -158,9 +158,15 @@ unit_info["wh"] = {
 }
 
 unit_info["dbm"] = {
-    "title" : _("Decibel-milliwatts"),
+    "title"  : _("Decibel-milliwatts"),
     "symbol" : _("dBm"),
     "render" : lambda v: "%s %s" % (drop_dotzero(v), _("dBm")),
+}
+
+unit_info["dbmv"] = {
+    "title"  : _("Decibel-millivolt"),
+    "symbol" : _("dBmV"),
+    "render" : lambda v: "%s %s" % (drop_dotzero(v), _("dBmV")),
 }
 
 unit_info["db"] = {
@@ -1126,6 +1132,12 @@ metric_info["output_signal_power_dbm"] = {
     "title" : _("Output power"),
     "unit"  : "dbm",
     "color" : "#2080c0",
+}
+
+metric_info["downstream_power"] = {
+    "title" : _("Downstream power"),
+    "unit"  : "dbmv",
+    "color" : "14/a",
 }
 
 metric_info["current"] = {
@@ -3309,6 +3321,10 @@ check_metrics["check_mk-docsis_channels_upstream"] = {
     "registered" : { "name" : "registered_modems" },
     "util"       : { "name" : "channel_utilization" },
     "frequency"  : { "scale" : 1000000.0 },
+}
+
+check_metrics["check_mk-docsis_channels_downstream"] = {
+    "power" : { "name" : "downstream_power" },
 }
 
 check_metrics["check_mk-zfs_arc_cache"]  = {

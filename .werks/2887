@@ -1,0 +1,9 @@
+Title: docsis_channels_downstream: now handles correct the downstream power in dBmV
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p6
+Date: 1451902474
+Class: fix
+
+

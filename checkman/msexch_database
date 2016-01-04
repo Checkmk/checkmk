@@ -10,5 +10,7 @@ description:
  {WARN} and {CRIT} thresholds for each latency measure can be configured,
  defaults are based of suggestions published on microsofts technet.
 
+ This check requires the msexch_database.ps1 agent plugin to work.
+
 inventory:
  One item per database instance.

@@ -1,0 +1,76 @@
+# -*- encoding: utf-8; py-indent-offset: 4 vim: set ft=python:-*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+factory_settings['msexch_database_defaultlevels'] = {
+    "read_attached_latency" : (200, 250),
+    "read_recovery_latency" : (150, 200),
+    "write_latency"         : (40, 50),
+    "log_latency"           : (5, 10),
+}
+
+
+def parse_msexch_database(info):
+    instances = {}
+    for key, value in info[1:]:
+        # values are always quoted and may have localized thousands-separators.
+        # in that case however the check will probably fail anyway
+        value = float(value[1:-1].replace(",", "."))
+        fields = key[1:-1].split("\\")
+        obj, counter = fields[-2:]
+        instance = obj.split("(")[-1].split(")")[0]
+        instances.setdefault(instance, {})[counter] = value
+    return instances
+
+
+def inventory_msexch_database(parsed):
+    return [(instance, None) for instance in parsed.keys()]
+
+
+def check_msexch_database(item, params, parsed):
+    if item in parsed:
+        for counter, setting, name in [("I/O Database Reads (Attached) Average Latency",  "read_attached_latency", "DB read (attached) latency"),
+                                       ("I/O Database Reads (Recovery) Average Latency",  "read_recovery_latency", "DB read (recovery) latency"),
+                                       ("I/O Database Writes (Attached) Average Latency", "write_latency",         "DB write (attached) latency"),
+                                       ("I/O Log Writes Average Latency",                 "log_latency",           "Log latency")]:
+            value = parsed[item][counter.lower()]
+            warn, crit = params[setting]
+            status = 0
+            if value >= crit:
+                status = 2
+            elif value >= warn:
+                status = 1
+            yield status, "%.1fms %s" % (value, name), [(setting, value, warn, crit)]
+
+
+check_info['msexch_database'] = {
+    'inventory_function'      : inventory_msexch_database,
+    'check_function'          : check_msexch_database,
+    'parse_function'          : parse_msexch_database,
+    'has_perfdata'            : True,
+    'service_description'     : "Exchange Database %s",
+    'group'                   : 'msx_database',
+    'default_levels_variable' : 'msexch_database_defaultlevels'
+}

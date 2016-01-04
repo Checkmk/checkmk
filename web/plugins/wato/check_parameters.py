@@ -2789,6 +2789,60 @@ register_check_parameters(
 )
 
 
+register_check_parameters(
+    subgroup_applications,
+    'msx_database',
+    _("MS Exchange Database"),
+    Dictionary(
+        title = _("Set Levels"),
+        elements = [
+            ('read_attached_latency',
+             Tuple(
+                 title = _("I/O Database Reads (Attached) Average Latency"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 200.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 250.0)
+                 ]
+             )
+             ),
+            ('read_recovery_latency',
+             Tuple(
+                 title = _("I/O Database Reads (Recovery) Average Latency"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 150.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 200.0)
+                 ]
+             )
+             ),
+            ('write_latency',
+             Tuple(
+                 title = _("I/O Database Writes (Attached) Average Latency"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 40.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 50.0)
+                 ]
+             )
+             ),
+            ('log_latency',
+             Tuple(
+                 title = _("I/O Log Writes Average Latency"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 5.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 10.0)
+                 ]
+             )
+             ),
+        ],
+        optional_keys=[]
+    ),
+    TextAscii(
+        title = _("Database Names"),
+        help = _("Specify database names that the rule should apply to"),
+    ),
+    match_type = 'dict'
+)
+
+
 def transform_msx_queues(params):
     if type(params) == tuple:
         return { "levels" : ( params[0], params[1] ) }

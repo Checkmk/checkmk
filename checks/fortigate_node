@@ -1,0 +1,204 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#
+# monitoring of cluster members (nodes) in fortigate high availability tree
+#
+
+#   .--Info----------------------------------------------------------------.
+#   |                         ___        __                                |
+#   |                        |_ _|_ __  / _| ___                           |
+#   |                         | || '_ \| |_ / _ \                          |
+#   |                         | || | | |  _| (_) |                         |
+#   |                        |___|_| |_|_|  \___/                          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+def inventory_fortigate_cluster(info):
+    return [(None, None)]
+
+
+def check_fortigate_cluster(_no_item, _no_params, info):
+    mode_name = {
+        "1": "Standalone",
+        "2": "Active/Active",
+        "3": "Active/Passive"
+    }
+    return 0, "%s, mode %s" % (info[0][0][1], mode_name[info[0][0][0]])
+
+
+check_info["fortigate_node"] = {
+    "inventory_function"  : inventory_fortigate_cluster,
+    "check_function"      : check_fortigate_cluster,
+    "service_description" : "Cluster Info",
+    "snmp_scan_function"  : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info"           : [
+        (".1.3.6.1.4.1.12356.101.13.1", [1,  # fgHaSystemMode
+                                         7,  # fgHaGroupName
+                                         ]),
+        (".1.3.6.1.4.1.12356.101.13.2.1.1", [11, # fgHaStatsSerial
+                                             3,  # fgHaStatsCpuUsage
+                                             4,  # fgHaStatsMemUsage
+                                             5,  # fgHaStatsNetUsage
+                                             6,  # fgHaStatsSesCount
+                                             ])
+    ],
+}
+
+
+#.
+#   .--CPU-----------------------------------------------------------------.
+#   |                           ____ ____  _   _                           |
+#   |                          / ___|  _ \| | | |                          |
+#   |                         | |   | |_) | | | |                          |
+#   |                         | |___|  __/| |_| |                          |
+#   |                          \____|_|    \___/                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+fortigate_node_cpu_default_levels = (80.0, 90.0)
+
+
+def inventory_fortigate_node_cpu(info):
+    for serial, cpu, mem, net, ses in info[1]:
+        yield serial, "fortigate_node_cpu_default_levels"
+
+
+def check_fortigate_node_cpu(item, params, info):
+    for serial, cpu, mem, net, ses in info[1]:
+        if serial == item:
+            return check_cpu_util(float(cpu), params).next()
+
+
+check_info["fortigate_node.cpu"] = {
+    "inventory_function"  : inventory_fortigate_node_cpu,
+    "check_function"      : check_fortigate_node_cpu,
+    "service_description" : "CPU utilization %s",
+    "has_perfdata"        : True,
+    "includes"            : [ "cpu_util.include" ],
+}
+
+
+#.
+#   .--Memory--------------------------------------------------------------.
+#   |               __  __                                                 |
+#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
+#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
+#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
+#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
+#   |                                                |___/                 |
+#   '----------------------------------------------------------------------'
+fortigate_node_memory_default_levels = (70, 80)
+
+def inventory_fortigate_node_mem(info):
+    for serial, cpu, mem, net, ses in info[1]:
+        yield serial, "fortigate_node_memory_default_levels"
+
+
+def check_fortigate_node_mem(item, params, info):
+    for serial, cpu, mem, net, ses in info[1]:
+        if serial == item:
+            if type(params) == dict:
+                params = params["levels"]
+
+            # This check is only able to check the used space
+            # The checkgroup "memory" might set negative values which act as levels for free space
+            # These levels are converted to used space, too..
+            warn, crit = map(abs, params)
+
+            current = int(mem)
+
+            status = 0
+            if current >= crit:
+                status = 2
+            elif current >= warn:
+                status = 1
+
+            if status > 0:
+                wcsuffix = ", (warn/crit at %d/%d)" % (warn, crit)
+            else:
+                wcsuffix = ""
+
+            return status, "%s%% used%s" % (mem, wcsuffix),\
+                [("mem_usage", current, warn, crit)]
+
+
+check_info["fortigate_node.memory"] = {
+    "inventory_function"  : inventory_fortigate_node_mem,
+    "check_function"      : check_fortigate_node_mem,
+    "service_description" : "Memory usage %s",
+    "has_perfdata"        : True,
+}
+
+
+#.
+#   .--Sessions------------------------------------------------------------.
+#   |                ____                _                                 |
+#   |               / ___|  ___  ___ ___(_) ___  _ __  ___                 |
+#   |               \___ \ / _ \/ __/ __| |/ _ \| '_ \/ __|                |
+#   |                ___) |  __/\__ \__ \ | (_) | | | \__ \                |
+#   |               |____/ \___||___/___/_|\___/|_| |_|___/                |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+fortigate_node_sessions_default_levels = (100000, 150000)
+
+def inventory_fortigate_node_ses(info):
+    for serial, cpu, mem, net, ses in info[1]:
+        yield serial, "fortigate_node_sessions_default_levels"
+
+
+def check_fortigate_node_ses(item, params, info):
+    for serial, cpu, mem, net, ses in info[1]:
+        if serial == item:
+            if type(params) == dict:
+                params = params["levels"]
+
+            warn, crit = map(int, params)
+
+            current = int(ses)
+
+            status = 0
+            if current >= crit:
+                status = 2
+            elif current >= warn:
+                status = 1
+
+            if status > 0:
+                wcsuffix = ", (warn/crit at %d/%d)" % (warn, crit)
+            else:
+                wcsuffix = ""
+
+            return status, "%s Sessions%s" % (ses, wcsuffix),\
+                [("session", current, warn, crit)]
+
+
+check_info["fortigate_node.sessions"] = {
+    "inventory_function"  : inventory_fortigate_node_ses,
+    "check_function"      : check_fortigate_node_ses,
+    "service_description" : "Sessions %s",
+    "has_perfdata"        : True,
+}
+
+#.

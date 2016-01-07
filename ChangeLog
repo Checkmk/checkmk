@@ -70,11 +70,11 @@
     * 2817 cmc_temp: New temperature check for Rittal devices using the CMC MIB
     * 1600 check_mk_agent.linux: Diskstat Sektion now supports s390 DASDs (zLinux on IBM Mainframes)
     * 1318 cisco_asa_svcsessions: New Check to monitor VPN Connections on Cisco ASA devices
-    * 1319 blade_bx_powerfan: Check can now be configured using Wato
     * 2886 solaris_fmadm: new check monitors the severity and name of the fault class on Solaris systems using the 'fmadm faulty' command
     * 2871 msexch_database: New check to monitor access latencies to MS Exchange Databases
     * 2872 supermicro, supermicro.sensors: New check to monitor health on snmp-enabled devices by supermicro
     * 2913 fortigate_node, fortigate_node.cpu, fortigate_node.memory, fortigate_node.sessions: New checks to monitor HA nodes of fortigate firewalls
+    * 1319 blade_bx_powerfan: Check can now be configured using Wato
     * 2660 FIX: fixed windows agent using the wrong working directory...
     * 2664 FIX: ps: Speedup in situation with many matching processes...
     * 2661 FIX: windows agent: fixed incomplete process list...
@@ -171,6 +171,7 @@
     * 2820 FIX: winperf_phydisk: fixed invalid performance data for read/write ios
     * 2887 FIX: docsis_channels_downstream: now handles correct the downstream power in dBmV
     * 2914 FIX: hr_cpu: fixed check not being applied on some systems...
+    * 1320 FIX: fjdarye60_sum: Fixed bug in discovery function
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

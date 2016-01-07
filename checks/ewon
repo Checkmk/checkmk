@@ -42,7 +42,6 @@ ewon_discovery_rules = []
 #    "?" - we don't care about this flag
 #    "*" - add the flag to the infotext but don't derive a state from it
 #    "+" - add the flag to the infotext if it is set but don't derive a state from it
-#    letters define groups among which exactly one should be active
 # Also, we provide the names of flags for proper info texts.
 oxyreduct_tag_map = {
     1: {"name": "alarms",            "levels": (1, 2, -1, -1)},

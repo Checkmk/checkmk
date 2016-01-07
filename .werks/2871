@@ -1,0 +1,9 @@
+Title: msexch_database: New check to monitor access latencies to MS Exchange Databases
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1451904040
+Class: feature
+
+

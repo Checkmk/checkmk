@@ -1,0 +1,18 @@
+title: FortiGate firewall cluster monitoring: Memory
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check monitors memory usage of individual nodes in a FortiGate High-Availability cluster.
+
+ It is preferable to monitor the nodes directly as separate hosts in check_mk as this check only
+ provides rudimentary information but if the nodes are not reachable from the monitoring system,
+ this is better than nothing.
+
+ Please note: The data reported here does not match exactly the global data reported by the
+ fortigate_memory(_base) check.
+
+inventory:
+ One service per node will be created
+

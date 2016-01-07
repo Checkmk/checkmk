@@ -25,6 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import re
+import time
+
+import config
 import defaults
 from lib import *
 
@@ -298,6 +301,7 @@ def guitest_drop_dynamic_ids(thing):
 check_mk_version_regex = "(1\.2\.[68]?([bp][0-9]+)|1\.2\.[79]i[0-9](p[0-9]+)?|201[5-9]\.[01][0-9]\.[0123][0-9])"
 timeofday_regex = "[012][0-9]:[0-5][0-9]:[0-5][0-9]"
 year_regex = "201[56789]"
+english_date_regex = "(Mon|Tue|Wed|Thu|Fri|Sat|Sun) +(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) +[1-9][0-9]?"
 
 
 def guitest_drop_dynamic_ids_in_text(text):
@@ -308,4 +312,47 @@ def guitest_drop_dynamic_ids_in_text(text):
     text = re.sub(check_mk_version_regex, "CMK_VERSION", text)
     text = re.sub(timeofday_regex, "TIMEOFDAY", text)
     text = re.sub(year_regex, "YEAR", text)
+    text = re.sub(english_date_regex, "DATE", text)
     return text
+
+
+def pending_hosts():
+    html.live.set_prepend_site(True)
+    hosts = html.live.query("GET hosts\nFilter: has_been_checked = 0\nColumns: name")
+    html.live.set_prepend_site(False)
+    return hosts
+
+
+def pending_active_services():
+    html.live.set_prepend_site(True)
+    services = html.live.query("GET services\nFilter: has_been_checked = 0\nFilter: check_type = 0\nColumns: host_name description")
+    html.live.set_prepend_site(False)
+    entries = [ (site, "%s;%s" % (host_name, service_description))
+                for (site, host_name, service_description) in services ]
+    return entries
+
+
+def page_reschedule_all():
+    if not config.guitests_enabled:
+        raise MKAuthException(_("GUI Tests are disabled."))
+
+    html.header(_("Rescheduling and waiting for check results"), stylesheets=["status", "pages"])
+    wait_for_pending("host", pending_hosts, 20)
+    wait_for_pending("service", pending_active_services, 100)
+    html.footer()
+
+
+def wait_for_pending(what, generator_function, tries):
+    entries = generator_function()
+    for try_number in range(tries):
+        for site, entry in entries:
+            html.live.command("[1231231233] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (what.upper(), entry, time.time()), sitename = site)
+        time.sleep(0.3)
+        entries = generator_function()
+        if not entries:
+            html.message("All %ss are checked.\n" % what)
+            break
+
+    else:
+        html.message("Reschedule failed after %d tries. Still pending %ss: %s\n" % (tries, what, ", ".join([e[1] for e in entries])))
+

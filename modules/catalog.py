@@ -31,6 +31,7 @@ manpage_catalog_titles = {
             "allnet"       : "ALLNET",
             "bachmann"     : "Bachmann",
             "betternet"    : "better networks",
+            "bosch"        : "Bosch",
             "carel"        : "CAREL",
             "climaveneta"  : "Climaveneta",
             "eaton"        : "Eaton",

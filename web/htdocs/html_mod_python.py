@@ -350,6 +350,7 @@ def connect_to_livestatus():
         enabled_sites = {}
         disabled_sites = {}
 
+
         for sitename, site in config.allsites().items():
             siteconf = config.user_siteconf.get(sitename, {})
             # Convert livestatus-proxy links into UNIX socket

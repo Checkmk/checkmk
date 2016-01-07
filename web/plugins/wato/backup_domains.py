@@ -192,6 +192,7 @@ else:
           "paths"        : [
                              ("dir",  "var/pnp4nagios/perfdata"),
                              ("dir",  "var/rrdcached"),
+                             ("dir",  "var/check_mk/rrd"),
                            ],
           "pre_restore"  : lambda: performancedata_restore(pre_restore = True),
           "post_restore" : lambda: performancedata_restore(pre_restore = False),
@@ -217,7 +218,15 @@ else:
                           ],
           "default"     : True
         },
-
+        "extensions" : {
+            "title"    : _("Extensions in <tt>~/local/</tt> and MKPs"),
+            "prefix"   : defaults.omd_root,
+            "paths"    : [
+                            ("dir", "var/check_mk/packages" ),
+                            ("dir", "local" ),
+                         ],
+            "default"  : True,
+        },
         "dokuwiki": {
           "title"       : _("Doku Wiki Pages and Settings"),
           "prefix"      : defaults.omd_root,

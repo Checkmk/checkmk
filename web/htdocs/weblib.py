@@ -32,7 +32,7 @@ def ajax_tree_openclose():
     html.load_tree_states()
 
     tree = html.var("tree")
-    name = html.var_utf8("name")
+    name = html.get_unicode_input("name")
 
     if not tree or not name:
         MKUserError('tree or name parameter missing')

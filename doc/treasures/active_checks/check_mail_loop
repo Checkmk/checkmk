@@ -51,7 +51,7 @@ OPTIONS:
                           (leave empty for anonymous SMTP)
   --smtp-password PW      Password to authenticate SMTP
   --smtp-tls              Use TLS over SMTP (disabled by default)
-  --imap-tls             Use TLS for IMAP authentification (disabled by default)
+  --imap-tls              Use TLS for IMAP authentification (disabled by default)
 
   --fetch-protocol PROTO  Set to "IMAP" or "POP3", depending on your mailserver
                           (defaults to IMAP)
@@ -93,7 +93,7 @@ OPTIONS:
 
 short_options = 'dh'
 long_options  = ['smtp-server=', 'smtp-port=', 'smtp-username=', 'smtp-password=',
-    'smtp-tls', 'fetch-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
+    'smtp-tls', 'imap-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
     'fetch-password=', 'fetch-ssl', 'mail-from=', 'mail-to=', 'warning=', 'critical=',
     'connect-timeout=', 'delete-messages', 'help', 'status-dir=', 'status-suffix=', "debug", ]
 
@@ -205,6 +205,7 @@ socket.setdefaulttimeout(conn_timeout)
 
 g_expected = {}
 g_mails    = {}
+g_obsolete = {}
 g_M        = None
 
 def load_expected_mails():
@@ -241,7 +242,7 @@ def add_starttls_support(self, keyfile = None, certfile = None):
     self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
 
 def fetch_mails():
-    global g_M
+    global g_M, g_obsolete
     if not g_expected:
         return # not expecting any mail, do not check for mails
 
@@ -293,8 +294,6 @@ def fetch_mails():
                 ts  = matches.group(1).strip()
                 key = matches.group(2).strip()
 
-                if "%s-%s" % (ts, key) not in g_expected:
-                    continue
 
                 # extract received time
                 rx = msg.get('Received')
@@ -303,6 +302,12 @@ def fetch_mails():
                 else:
                     # use current time as fallback where no Received header could be found
                     rx_ts = int(time.time())
+
+                if "%s-%s" % (ts, key) not in g_expected:
+                    # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if they are not in our list
+                    if delete_messages and int(time.time()) - rx_ts > 24 * 3600:
+                        g_obsolete[ts+'-'+key] = (index, rx_ts)
+                    continue
 
                 g_mails[ts+'-'+key] = (index, rx_ts)
 
@@ -402,7 +407,7 @@ def cleanup_mailbox():
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
-        for ident, (mail_index, recv_ts) in g_mails.items():
+        for ident, (mail_index, recv_ts) in g_mails.items() + g_obsolete.items():
             if fetch_proto == 'POP3':
                 response = g_M.dele(mail_index + 1)
                 if not response.startswith("+OK"):

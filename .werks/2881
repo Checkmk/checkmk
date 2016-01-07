@@ -1,0 +1,14 @@
+Title: Automatically restart core instead of reload after changes in local check plugins
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450434659
+Class: feature
+
+If you create, remove or modify you own check plugins in
+<tt>~/local/share/check_mk/checks</tt> then usually had to do a real core
+restart with <tt>cmk -R</tt> in order to activate these changes. This is now
+done automatically. Whenever you do <i>Activate Changes</i> then Check_MK
+does a real restart on demand if it sees any modification in the check plugins.
+This also helps the handling of installing and removing Check_MK packages (MKPs).

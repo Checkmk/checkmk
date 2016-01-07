@@ -36,8 +36,6 @@ def inventory_netapp_api_fan(parsed):
             yield item_name, None
 
 def check_netapp_api_fan(item, _no_params, parsed):
-    tokens = item.split("/")
-
     fan = parsed.get("%s.%s" % tuple(item.split("/")))
     if not fan:
         return

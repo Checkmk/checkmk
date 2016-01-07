@@ -199,7 +199,7 @@ function wato_fix_visibility() {
     }
 
     // FIXME: use generic identifier for each form
-    var available_forms = [ "form_edithost", "form_editfolder", "form_bulkedit" ];
+    var available_forms = [ "form_edit_host", "form_editfolder" ];
     for (var try_form = 0; try_form < available_forms.length; try_form++) {
         var my_form = document.getElementById(available_forms[try_form]);
         if (my_form != null) {

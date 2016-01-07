@@ -32,10 +32,10 @@ from lib import *
 loaded_with_language = False
 
 # Load all view plugins
-def load_plugins():
+def load_plugins(force):
     global loaded_with_language
 
-    if loaded_with_language == current_language:
+    if loaded_with_language == current_language and not force:
         # always reload the hosttag painters, because new hosttags might have been
         # added during runtime
         load_host_tag_painters()
@@ -1102,6 +1102,7 @@ def show_view(view, show_heading = False, show_buttons = True,
         sort_data(rows, sorters)
     else:
         rows = []
+
 
     # Apply non-Livestatus filters
     for filter in all_active_filters:

@@ -50,9 +50,9 @@ dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raste
 # note: these operations produce language-specific results and
 # thus must be reinitialized everytime a language-change has
 # been detected.
-def load_plugins():
+def load_plugins(force):
     global loaded_with_language, dashboards, builtin_dashboards_transformed
-    if loaded_with_language == current_language:
+    if loaded_with_language == current_language and not force:
         return
 
     # Load plugins for dashboards. Currently these files

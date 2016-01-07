@@ -55,7 +55,11 @@ def do_automation(cmd, args):
         elif cmd == "install-package":
             result = automation_install_package(args)
         elif cmd == "remove-package":
-            result = automation_remove_package(args)
+            result = automation_remove_or_release_package(args, "remove")
+        elif cmd == "release-package":
+            result = automation_remove_or_release_package(args, "release")
+        elif cmd == "remove-unpackaged-file":
+            result = automation_remove_unpackaged_file(args)
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
@@ -408,6 +412,12 @@ def automation_delete_host(args):
 
 
 def automation_restart(job = "restart", use_rushd = True):
+    if check_plugins_have_changed():
+        forced = True
+        job = "restart"
+    else:
+        forced = False
+
 
     # make sure, Nagios does not inherit any open
     # filedescriptors. This really happens, e.g. if
@@ -423,7 +433,7 @@ def automation_restart(job = "restart", use_rushd = True):
                 pass
     else:
         objects_file = var_dir + "/core/config"
-        if job == "restart":
+        if job == "restart" and not forced:
             job = "reload" # force reload for CMC
 
     # os.closerange(3, 256) --> not available in older Python versions
@@ -487,6 +497,34 @@ def automation_restart(job = "restart", use_rushd = True):
 
     sys.stdout = old_stdout
     return configuration_warnings
+
+
+def check_plugins_have_changed():
+    if not omd_root:
+        return False # not supported for manual setup
+
+    this_time = last_modification_in_dir(local_checks_dir)
+    last_time = time_of_last_core_restart()
+    return this_time > last_time
+
+
+def last_modification_in_dir(dir_path):
+    max_time = os.stat(dir_path).st_mtime
+    for file_name in os.listdir(dir_path):
+        max_time = max(max_time, os.stat(dir_path + "/" + file_name).st_mtime)
+    return max_time
+
+
+def time_of_last_core_restart():
+    if monitoring_core == "cmc":
+        pidfile_path = omd_root + "/tmp/run/cmc.pid"
+    else:
+        pidfile_path = omd_root + "/tmp/lock/nagios.lock"
+    if os.path.exists(pidfile_path):
+        return os.stat(pidfile_path).st_mtime
+    else:
+        return 0
+
 
 def automation_get_configuration():
     # We read the list of variable names from stdin since
@@ -1349,10 +1387,31 @@ def automation_install_package(args):
         raise MKAutomationError("Cannot install package: %s" % e)
 
 
-def automation_remove_package(args):
+def automation_remove_or_release_package(args, mode):
     load_module("packaging")
     package_name = args[0]
     package = read_package_info(package_name)
     if not package:
         raise MKAutomationError("Package not installed or corrupt")
-    remove_package(package)
+    if mode == "remove":
+        remove_package(package)
+    else:
+        remove_package_info(package_name)
+
+
+def automation_remove_unpackaged_file(args):
+    load_module("packaging")
+    part_name = args[0]
+    if part_name not in [ p[0] for p in package_parts ]:
+        raise MKAutomationError("Invalid package part")
+
+    rel_path = args[1]
+    if "../" in rel_path or rel_path.startswith("/"):
+        raise MKAutomationError("Invalid file name")
+
+    for part, title, perm, dir in package_parts:
+        if part == part_name:
+            abspath = dir + "/" + rel_path
+            if not os.path.isfile(abspath):
+                raise MKAutomationError("No such file")
+            os.remove(abspath)

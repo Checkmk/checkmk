@@ -132,7 +132,7 @@ def check_auth_cookie(cookie_name):
 
 def check_auth_automation():
     secret = html.var("_secret").strip()
-    user_id = html.var_utf8("_username").strip()
+    user_id = html.get_unicode_input("_username").strip()
     html.del_var('_username')
     html.del_var('_secret')
     if secret and user_id and "/" not in user_id:
@@ -187,7 +187,7 @@ def do_login():
     err = None
     if html.var('_login'):
         try:
-            username = html.var_utf8('_username', '').rstrip()
+            username = html.get_unicode_input('_username', '').rstrip()
             if username == '':
                 raise MKUserError('_username', _('No username given.'))
 

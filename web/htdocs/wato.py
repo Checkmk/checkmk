@@ -3491,7 +3491,7 @@ def mode_parentscan(phase):
     # Ignored during initial form display
     settings = {
         "where"          : html.var("where"),
-        "alias"          : html.var_utf8("alias", "").strip() or None,
+        "alias"          : html.get_unicode_input("alias", "").strip() or None,
         "recurse"        : html.get_checkbox("recurse"),
         "select"         : html.var("select"),
         "timeout"        : saveint(html.var("timeout")) or 8,
@@ -3954,6 +3954,9 @@ def mode_changelog(phase):
 
         if config.may("wato.auditlog"):
             html.context_button(_("Audit Log"), folder_preserving_link([("mode", "auditlog")]), "auditlog")
+
+        if config.guitests_enabled:
+            html.context_button(_("Reschedule All"), "guitest_reschedule_all.py", "guitest")
 
     elif phase == "action":
         action = html.var("_action", html.var("_siteaction"))
@@ -5913,7 +5916,7 @@ def mode_edit_ldap_connection(phase):
 #   '----------------------------------------------------------------------'
 
 def mode_globalvars(phase):
-    search = html.var_utf8("search")
+    search = html.get_unicode_input("search")
     if search != None:
         search = search.strip().lower()
 
@@ -6514,7 +6517,7 @@ def mode_edit_group(phase, what):
 
     if phase == "action":
         if html.check_transaction():
-            alias = html.var_utf8("alias").strip()
+            alias = html.get_unicode_input("alias").strip()
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name."))
 
@@ -7007,7 +7010,7 @@ def generic_rule_match_conditions():
               help = _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
                        "service name in order for the rule to match. Note: Host notifications never match this "
                        "rule if this option is being used."),
-              valuespec = TextUnicode(size = 32),
+              valuespec = RegExpUnicode(size = 32),
               orientation = "horizontal",
               allow_empty = False,
               empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
@@ -7016,7 +7019,7 @@ def generic_rule_match_conditions():
         ( "match_exclude_services",
           ListOfStrings(
               title = _("Exclude the following services"),
-              valuespec = TextUnicode(size = 32),
+              valuespec = RegExpUnicode(size = 32),
               orientation = "horizontal",
           )
         ),
@@ -7676,7 +7679,7 @@ def mode_user_notifications(phase, profilemode):
         title = _("Your personal notification rules")
         config.need_permission("general.edit_notifications")
     else:
-        userid = html.var_utf8("user")
+        userid = html.get_unicode_input("user")
         title = _("Custom notification table for user ") + userid
 
     if phase == "title":
@@ -7760,7 +7763,7 @@ def mode_notification_rule(phase, profilemode):
         userid = config.user_id
         config.need_permission("general.edit_notifications")
     else:
-        userid = html.var_utf8("user", "")
+        userid = html.get_unicode_input("user", "")
 
     if userid and not profilemode:
         suffix = _(" for user ") + html.attrencode(userid)
@@ -8330,7 +8333,7 @@ def mode_edit_timeperiod(phase):
 
     if phase == "action":
         if html.check_transaction():
-            alias = html.var_utf8("alias").strip()
+            alias = html.get_unicode_input("alias").strip()
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name for your timeperiod."))
 
@@ -8699,6 +8702,8 @@ def mode_sites(phase):
             repl = _("Slave")
             if site.get("replicate_ec"):
                 repl += ", " + _("EC")
+            if site.get("replicate_mkps") and defaults.omd_root:
+                repl += ", " + _("MKPs")
         else:
             repl = ""
         table.cell(_("Replication"), repl)
@@ -8798,7 +8803,10 @@ def mode_edit_site(phase):
     if cloneid:
         site = sites[cloneid]
     elif new:
-        site = {}
+        if defaults.omd_root:
+            site = { "replicate_mkps" : True }
+        else:
+            site = { }
     else:
         site = sites.get(siteid, {})
 
@@ -8915,7 +8923,7 @@ def mode_edit_site(phase):
 
         new_site = {}
         sites[id] = new_site
-        alias = html.var_utf8("alias", "").strip()
+        alias = html.get_unicode_input("alias", "").strip()
         if not alias:
             raise MKUserError("alias", _("Please enter an alias name or description of this site."))
 
@@ -9005,6 +9013,10 @@ def mode_edit_site(phase):
 
         # Event Console Replication
         new_site["replicate_ec"] = html.get_checkbox("replicate_ec")
+
+        # MKPs and ~/local/
+        if defaults.omd_root:
+            new_site["replicate_mkps"] = html.get_checkbox("replicate_mkps")
 
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
@@ -9175,6 +9187,13 @@ def mode_edit_site(phase):
                     "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
                     "the remote site."))
 
+    if defaults.omd_root:
+        forms.section(_("Extensions"), simple=True)
+        html.checkbox("replicate_mkps", site.get("replicate_mkps", False), label = _("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"))
+        html.help(_("If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                    "that are installed on your master site and all other files below the <tt>~/local/</tt> "
+                    "directory will be also transferred to the "
+                    "slave site. Note: <b>all other MKPs and files below <tt>~/local/</tt> on the slave will be removed</b>."))
 
     forms.end()
     html.button("save", _("Save"))
@@ -9572,7 +9591,7 @@ def mode_users(phase):
 
     if phase == "action":
         if html.var('_delete'):
-            delid = html.var_utf8("_delete")
+            delid = html.get_unicode_input("_delete")
             if delid == config.user_id:
                 raise MKUserError(None, _("You cannot delete your own account!"))
 
@@ -9740,8 +9759,8 @@ def mode_edit_user(phase):
     rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
 
     users = userdb.load_users(lock = phase == 'action')
-    userid = html.var_utf8("edit") # missing -> new user
-    cloneid = html.var_utf8("clone") # Only needed in 'new' mode
+    userid = html.get_unicode_input("edit") # missing -> new user
+    cloneid = html.get_unicode_input("clone") # Only needed in 'new' mode
     new = userid == None
     if phase == "title":
         if new:
@@ -9816,11 +9835,11 @@ def mode_edit_user(phase):
             new_user = {}
             users[id] = new_user
         else:
-            id = html.var_utf8("edit").strip()
+            id = html.get_unicode_input("edit").strip()
             new_user = users[id]
 
         # Full name
-        alias = html.var_utf8("alias").strip()
+        alias = html.get_unicode_input("alias").strip()
         if not alias:
             raise MKUserError("alias",
             _("Please specify a full name or descriptive alias for the user."))
@@ -10367,7 +10386,7 @@ def mode_edit_role(phase):
     role = roles[id]
 
     if phase == "action":
-        alias = html.var_utf8("alias")
+        alias = html.get_unicode_input("alias")
 
         unique, info = is_alias_used("roles", id, alias)
         if not unique:
@@ -10834,7 +10853,7 @@ def mode_edit_auxtag(phase):
             else:
                 tag_id = auxtags[tag_nr][0]
 
-            title = html.var_utf8("title").strip()
+            title = html.get_unicode_input("title").strip()
             if not title:
                 raise MKUserError("title", _("Please supply a title "
                 "for you auxiliary tag."))
@@ -10996,7 +11015,7 @@ def mode_edit_hosttag(phase):
                     if tgid == tag_id:
                         raise MKUserError("tag_id", _("The tag group ID %s is already used by the tag group '%s'.") % (tag_id, tit))
 
-            title = html.var_utf8("title").strip()
+            title = html.get_unicode_input("title").strip()
             if not title:
                 raise MKUserError("title", _("Please specify a title for your host tag group."))
 
@@ -11611,7 +11630,7 @@ def mode_rulesets(phase, group=None):
     if not group:
         group = html.var("group") # obligatory
 
-    search = html.var_utf8("search")
+    search = html.get_unicode_input("search")
     if search != None:
         search = search.strip().lower()
 
@@ -12357,14 +12376,12 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
             condition = _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
         elif host_list[-1] != ALL_HOSTS[0]:
             tt_list = []
-            for h in host_list:
-                f = find_host(h)
-                if f:
-                    uri = html.makeuri([("mode", "edit_host"), ("folder", f[".path"]), ("host", h)])
-                    host_spec = '<a href="%s">%s</a>' % (uri, h)
-                else:
-                    host_spec = h
+            for host_spec in host_list:
+                host = Host.host(host_spec)
+                if host:
+                    host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
                 tt_list.append("<tt><b>%s</b></tt>" % host_spec)
+
             if len(host_list) == 1:
                 condition = _("Host name is %s") % tt_list[0]
             else:
@@ -15138,7 +15155,7 @@ def mode_edit_custom_attr(phase, what):
 
     if phase == "action":
         if html.check_transaction():
-            title = html.var_utf8("title").strip()
+            title = html.get_unicode_input("title").strip()
             if not title:
                 raise MKUserError("title", _("Please specify a title."))
             for this_attr in attrs:
@@ -15146,7 +15163,7 @@ def mode_edit_custom_attr(phase, what):
                     raise MKUserError("alias", _("This alias is already used by the attribute %s.") % this_attr['name'])
 
             topic = html.var('topic', '').strip()
-            help  = html.var_utf8('help').strip()
+            help  = html.get_unicode_input('help').strip()
             user_editable = html.get_checkbox('user_editable')
             show_in_table = html.get_checkbox('show_in_table')
             add_custom_macro = html.get_checkbox('add_custom_macro')
@@ -16450,12 +16467,12 @@ modes = {
 }
 
 loaded_with_language = False
-def load_plugins():
+def load_plugins(force):
     global g_git_messages
     g_git_messages = []
 
     global loaded_with_language
-    if loaded_with_language == current_language:
+    if loaded_with_language == current_language and not force:
         return
 
     # Reset global vars

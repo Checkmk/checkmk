@@ -1,0 +1,19 @@
+title: Supermicro Health Sensors
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+  This check tests individual sensors (Fan speeds, voltages,
+  temperatures) reported by snmp-enabled devices from supermicro.
+  Currently this has only been tested with data from a mainboard on
+  windows. In this case an agent has to be enabled through the
+  SuperDoctor III software.
+
+  Status {OK}, {WARN} and {CRIT} are determined based on upper and
+  lower levels reported by the device. On top of that, the device
+  itself reports a status which is applied if it's worse than the
+  calculated one.
+
+inventory:
+  One item is reported per sensor.

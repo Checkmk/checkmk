@@ -64,6 +64,11 @@ def initialize_before_loading_plugins():
         # know.
         ( "dir", "usersettings", defaults.var_dir + "/web" ),
     ]
+    if defaults.omd_root:
+        replication_paths += [
+          ( "dir", "mkps",  defaults.var_dir + "/packages" ),
+          ( "dir", "local", defaults.omd_root + "/local" ),
+        ]
 
     # Directories and files for backup & restore
     global backup_paths
@@ -2277,7 +2282,7 @@ class TextAttribute(Attribute):
         html.text_input(varprefix + "attr_" + self.name(), value, size = self._size)
 
     def from_html_vars(self, varprefix):
-        value = html.var_utf8(varprefix + "attr_" + self.name())
+        value = html.get_unicode_input(varprefix + "attr_" + self.name())
         if value == None:
             value = ""
         return value.strip()
@@ -3185,6 +3190,10 @@ def create_sync_snapshot(site_id):
         # be removed in some future day)
         if not config.sites[site_id].get("replicate_ec"):
             paths = [ e for e in paths if e[1] != "mkeventd" ]
+
+        # Remove extensions if site does not want them
+        if not config.sites[site_id].get("replicate_mkps"):
+            paths = [ e for e in paths if e[1] not in [ "local", "mkps" ] ]
 
         multitar.create(tmp_path, paths)
         shutil.rmtree(site_tmp_dir)

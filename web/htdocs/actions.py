@@ -47,8 +47,8 @@ def action_reschedule():
     if not host:
         raise MKGeneralException("Action reschedule: missing host name")
 
-    service  = html.var_utf8("service",  "")
-    wait_svc = html.var_utf8("wait_svc", "")
+    service  = html.get_unicode_input("service",  "")
+    wait_svc = html.get_unicode_input("wait_svc", "")
 
     if service:
         cmd = "SVC"

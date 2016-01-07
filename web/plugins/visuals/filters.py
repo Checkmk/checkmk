@@ -77,7 +77,7 @@ class FilterUnicode(FilterText):
 
     def _current_value(self):
         htmlvar = self.htmlvars[0]
-        return html.var_utf8(htmlvar, "")
+        return html.get_unicode_input(htmlvar, "")
 
 #                               filter          title              info       column           htmlvar
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host_regex",    "~~" , True),
@@ -247,7 +247,7 @@ class FilterMultigroup(Filter):
         return True
 
     def valuespec(self):
-        return DualListChoice(choices = all_groups(self.what), autoheight=False, enlarge_active=True)
+        return DualListChoice(choices = all_groups(self.what), rows=4, autoheight=False, enlarge_active=True)
 
     def selection(self):
         current = html.var(self.htmlvar, "").strip().split("|")

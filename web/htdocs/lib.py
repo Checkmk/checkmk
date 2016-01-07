@@ -240,6 +240,40 @@ def load_web_plugins(forwhat, globalvars):
                         code = marshal.loads(code_bytes)
                         exec code in globalvars
 
+
+def find_local_web_plugins():
+    if not defaults.omd_root:
+        return
+
+    basedir = defaults.omd_root + "/local/share/check_mk/web/plugins/"
+    for plugins_dir in os.listdir(basedir):
+        dir_path = basedir + plugins_dir
+        yield dir_path # Changes in the directory like deletion of files!
+        if os.path.isdir(dir_path):
+            for file_name in os.listdir(dir_path):
+                if file_name.endswith(".py") or file_name.endswith(".pyc"):
+                    yield dir_path + "/" + file_name
+
+
+last_web_plugins_update = 0
+def local_web_plugins_have_changed():
+    global last_web_plugins_update
+
+    if html.is_cached("local_web_plugins_have_changed"):
+        return html.get_cached("local_web_plugins_have_changed")
+
+    this_time = 0.0
+    for path in find_local_web_plugins():
+        this_time = max(os.stat(path).st_mtime, this_time)
+    last_time = last_web_plugins_update
+    last_time = last_web_plugins_update
+    last_web_plugins_update = this_time
+
+    have_changed = this_time > last_time
+    html.set_cache("local_web_plugins_have_changed", have_changed)
+    return have_changed
+
+
 def pnp_cleanup(s):
     return s \
         .replace(' ', '_') \

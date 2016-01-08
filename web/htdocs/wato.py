@@ -397,7 +397,7 @@ def mode_folder(phase):
 
         elif html.has_var("_move_folder_to"):
             if html.check_transaction():
-                what_folder = Folder.folder(html.var("what_folder"))
+                what_folder = Folder.folder(html.var("_ident"))
                 target_folder = Folder.folder(html.var("_move_folder_to"))
                 Folder.current().move_subfolder_to(what_folder, target_folder)
             return
@@ -412,7 +412,7 @@ def mode_folder(phase):
 
         # Move single hosts to other folders
         if html.has_var("_move_host_to"):
-            hostname = html.var("host")
+            hostname = html.var("_ident")
             if hostname:
                 target_folder = Folder.folder(html.var("_move_host_to"))
                 Folder.current().move_hosts([hostname], target_folder)
@@ -570,7 +570,7 @@ def show_subfolder_buttons(subfolder):
 
     if not subfolder.locked_subfolders() and not subfolder.locked():
         if subfolder.may("write") and config.may("wato.manage_folders"):
-            show_subfolder_move_button(subfolder)
+            show_move_to_folder_action(subfolder)
             show_subfolder_delete_button(subfolder)
 
 
@@ -583,33 +583,6 @@ def show_subfolder_edit_button(subfolder):
         cssclass = 'edit',
         style = 'display:none',
     )
-
-
-def show_subfolder_move_button(subfolder):
-    html.icon_button(
-        '', # url is replaced by onclick code
-        _("Move this subfolder to another place"),
-        "move",
-        id = 'move_' + subfolder.name(),
-        cssclass = 'move',
-        style = 'display:none',
-        onclick = 'wato_toggle_move_folder(event, this);'
-    )
-    html.write('<div id="move_dialog_%s" class="popup move_dialog" style="display:none">' % subfolder.name())
-    html.write('<span>%s</span>' % _('Move this folder to:'))
-    folder_move_to_folder_combo(subfolder)
-    html.write('</div>')
-
-
-def folder_move_to_folder_combo(folder):
-    choices = folder.choices_for_moving_folder()
-    if len(choices):
-        choices = [("@", _("(select target folder)"))] + choices
-        uri = html.makeactionuri([("what_folder", folder.path())])
-        html.select("_folder_move_%s" % folder.path(), choices, "@",
-            "location.href='%s' + '&_move_folder_to=' + this.value;" % uri, attrs = {'multiple': '10'})
-    else:
-        html.write(_("No valid target folder."))
 
 
 def show_subfolder_delete_button(subfolder):
@@ -832,11 +805,6 @@ def show_hosts(folder):
             table.cell(_("Folder"))
             html.write('<a href="%s">%s</a>' % (host.folder().url(), host.folder().alias_path()))
 
-        # Move to
-        if not folder.locked_hosts() and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-            table.cell(_("Move To"), css="right", sortable=False)
-            host_move_to_folder_combo(host)
-
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
         bulk_actions(at_least_one_imported, False, not search_shown, colspan, show_checkboxes)
@@ -864,6 +832,7 @@ def show_host_actions(host):
     html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
     if config.may("wato.rulesets"):
         html.icon_button(host.params_url(), _("View the rule based parameters of this host"), "rulesets")
+
     if host.may('read'):
         if config.may("wato.services"):
             msg = _("Edit the services of this host, do a service discovery")
@@ -874,42 +843,16 @@ def show_host_actions(host):
             image = "inventory_failed"
             msg += ". " + _("The service discovery of this host failed during a previous bulk service discovery.")
         html.icon_button(host.services_url(), msg, image)
-    if not host.locked() and config.may("wato.manage_hosts"):
-        if config.may("wato.clone_hosts"):
-            html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
-        delete_url  = make_action_link([("mode", "folder"), ("_delete_host", host.name())])
-        html.icon_button(delete_url, _("Delete this host"), "delete")
 
+    if not host.locked():
+        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+            show_move_to_folder_action(host)
 
-# In case of what == "host", thing is either None or the name of the host
-# In case of what == "folder", thing is the folder dict
-def host_move_to_folder_combo(host):
-    choices = host.folder().choices_for_moving_host()
-    if len(choices):
-        choices = [("@", _("(select target folder)"))] + choices
-        html.hidden_field("host", host.name())
-        uri = html.makeactionuri([("host", host.name())])
-        html.select("_host_move_%s" % host.name(), choices, "@",
-            "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
-    else:
-        html.write(_("No valid target folder."))
-
-
-def host_bulk_move_to_folder_combo(folder, top):
-    choices = folder.choices_for_moving_host()
-    if len(choices):
-        choices = [("@", _("(select target folder)"))] + choices
-        html.button("_bulk_move", _("Move:"))
-        field_name = 'bulk_moveto'
-        if top:
-            field_name = '_top_bulk_moveto'
-            if html.has_var('bulk_moveto'):
-                html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
-        html.select(field_name, choices, "@",
-                     onchange = "update_bulk_moveto(this.value)",
-                     attrs = {'class': 'bulk_moveto'})
-    else:
-        html.write(_("No valid target folder."))
+        if config.may("wato.manage_hosts"):
+            if config.may("wato.clone_hosts"):
+                html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
+            delete_url  = make_action_link([("mode", "folder"), ("_delete_host", host.name())])
+            html.icon_button(delete_url, _("Delete this host"), "delete")
 
 
 def delete_host_files(site_id, hostname):
@@ -957,6 +900,83 @@ def get_hostnames_from_checkboxes(filterfunc = None):
 def get_hosts_from_checkboxes(filterfunc = None):
     folder = Folder.current()
     return [ folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc) ]
+
+
+def show_move_to_folder_action(obj):
+    if isinstance(obj, Host):
+        what = "host"
+        what_title = _("host")
+        ident = obj.name()
+        style = None
+    else:
+        what = "folder"
+        what_title = _("folder")
+        ident = obj.path()
+        style = "display:none"
+
+    html.popup_trigger(
+        html.render_icon("move", help=_("Move this %s to another folder") % what_title,
+                         cssclass="iconbutton"),
+        ident="move_"+obj.name(),
+        what="move_to_folder",
+        url_vars=[
+            ("what", what),
+            ("ident", ident),
+            ("back_url", html.makeactionuri([])),
+        ],
+        style=style,
+    )
+
+
+# Renders the popup menu contents for either moving a host or a folder to another folder
+def ajax_popup_move_to_folder():
+    what     = html.var("what")
+    ident    = html.var("ident")
+    back_url = html.var("back_url")
+
+    if what == "host":
+        what_title = _("host")
+        obj = Host.host(ident)
+        choices = obj.folder().choices_for_moving_host()
+
+    elif what == "folder":
+        what_title = _("folder")
+        obj = Folder.folder(ident)
+        choices = obj.choices_for_moving_folder()
+
+    else:
+        return
+
+    if not back_url or not back_url.startswith("wato.py"):
+        raise MKUserError(_("Invalid back URL provided."))
+
+    html.write('<span>%s</span>' % _('Move this %s to:') % what_title)
+
+    if choices:
+        choices = [("@", _("(select target folder)"))] + choices
+        html.select("_host_move_%s" % ident, choices, "@",
+            "location.href='%s&_ident=%s&_move_%s_to=' + this.value;" % (back_url, ident, what),
+            attrs={'size': '10'})
+    else:
+        html.write(_("No valid target folder."))
+
+
+# FIXME: Cleanup
+def host_bulk_move_to_folder_combo(folder, top):
+    choices = folder.choices_for_moving_host()
+    if len(choices):
+        choices = [("@", _("(select target folder)"))] + choices
+        html.button("_bulk_move", _("Move:"))
+        field_name = 'bulk_moveto'
+        if top:
+            field_name = '_top_bulk_moveto'
+            if html.has_var('bulk_moveto'):
+                html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+        html.select(field_name, choices, "@",
+                     onchange = "update_bulk_moveto(this.value)",
+                     attrs = {'class': 'bulk_moveto'})
+    else:
+        html.write(_("No valid target folder."))
 
 #.
 #   .--Edit Folder---------------------------------------------------------.

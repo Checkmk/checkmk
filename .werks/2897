@@ -1,0 +1,14 @@
+Title: Changed move host action to be an action icon using a popup menu
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452253183
+Class: feature
+
+The "move host" action in the host configuration lists has been changed to be
+an action icon just like the other host actions.
+
+When you have a confiuration with a large folder hierarchy like hundrets of
+folders, this change will increase the rendering time of the hosts lists a
+lot.

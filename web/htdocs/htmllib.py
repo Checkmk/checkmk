@@ -1008,20 +1008,21 @@ class html(GUITester):
         else:
             self.status_icons[img] = tooltip
 
-    def render_popup_trigger(self, content, ident, what, data=None, url_vars=None):
-        src = '<div class="popup_trigger">\n'
+    def render_popup_trigger(self, content, ident, what, data=None, url_vars=None, style=None):
+        style = style and (' style="%s"' % style) or ""
+        src = '<div class="popup_trigger" id="popup_trigger_%s"%s>\n' % (ident, style)
         onclick = 'toggle_popup(event, this, \'%s\', \'%s\', %s, %s)' % \
                     (ident, what,
                      data and self.attrencode(json.dumps(data)) or 'null',
                      url_vars and "'"+self.urlencode_vars(url_vars)+"'" or 'null')
         src += '<a class="popup_trigger" href="javascript:void(0)" onclick="%s">\n' % onclick
         src += content
-        src += '</a>\n'
+        src += '</a>'
         src += '</div>\n'
         return src
 
-    def popup_trigger(self, content, ident, what, data=None, url_vars=None):
-        self.write(self.render_popup_trigger(content, ident, what, data, url_vars))
+    def popup_trigger(self, *args, **kwargs):
+        self.write(self.render_popup_trigger(*args, **kwargs))
 
     def write_status_icons(self):
         self.icon_button(self.makeuri([]), _("URL to this frame"),

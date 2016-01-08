@@ -2150,7 +2150,7 @@ class EventServer:
             timestamp_str, host, rest = line[1:].split(None, 2)
 
         event["time"] = float(int(timestamp_str))
-        service, message = rest.split(":", 1)
+        service, message = rest.split(": ", 1)
         event["application"] = service
         event["text"] = message.strip()
         event["host"] = host

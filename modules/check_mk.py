@@ -1914,7 +1914,10 @@ def host_extra_conf(hostname, ruleset):
 
     entries = []
     for item, hostname_list in ruleset:
-        if hostname in hostname_list:
+        # Hack for the agent bakery: The hostname may be "True" which is used
+        # for the generic agent. When the hostname is True it should match
+        # without conditions.
+        if hostname == True or hostname in hostname_list:
             entries.append(item)
     return entries
 

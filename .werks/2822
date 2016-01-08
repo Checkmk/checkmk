@@ -1,0 +1,12 @@
+Title: Availabiltiy: Fixed exception while rendering the timeline
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p6
+Date: 1452261103
+
+The error message <i>'valuespec' is not defined</i> will no longer
+show up with certain filter settings.
+

@@ -1247,7 +1247,7 @@ def find_next_choord(broken, scale):
             broken[1] = 1
             broken[0] += 1
         epoch = time.mktime(broken)
-        title = "%s %d" % (valuespec.month_names[broken[1]-1], broken[0])
+        title = "%s %d" % (month_names[broken[1]-1], broken[0])
 
     dst = broken[8]
     if old_dst == 1 and dst == 0:

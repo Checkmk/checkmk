@@ -1,0 +1,19 @@
+title: Supermicro Health Smart
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+  This check tests S.M.A.R.T. health reported by snmp-enabled devices
+  from supermicro.
+  Currently this has only been tested with data from a mainboard on
+  windows. In this case an agent has to be enabled through the
+  SuperDoctor III software.
+
+  Status {OK} and {CRIT} are relayed directly from the device,
+  a {WARN} may work but is not documented.
+  Status may also become {UNKNOWN} if the necessary driver is
+  uninstalled.
+
+inventory:
+  One item is reported per SMART-enabled harddisk.

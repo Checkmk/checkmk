@@ -1,0 +1,9 @@
+Title: supermicro.smart: new check to monitor harddisk health on snmp-enabled supermicro devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452239072
+Class: feature
+
+

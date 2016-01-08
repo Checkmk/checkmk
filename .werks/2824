@@ -1,0 +1,10 @@
+Title: juniper_alarm: fixed crash during service discovery
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i3p6
+Date: 1452264794
+Class: fix
+
+Some juniper devices did not provide the OID required by the check.
+The check will no longer crash when this happens.

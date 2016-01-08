@@ -2167,6 +2167,48 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "sap_dialog",
+    ("SAP Dialog"),
+    Dictionary(
+        elements = [
+            ( "UsersLoggedIn",
+              Tuple(
+                  title = _("Number of Loggedin Users"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("Users")),
+                      Integer(title = _("Critical at"), label = _("Users"))
+                  ]
+              )
+            ),
+            ( "FrontEndNetTime",
+              Tuple(
+                  title = _("Frontend net time"),
+                  elements = [
+                     Float(title = _("Warning at"),  unit = _('ms') ),
+                     Float(title = _("Critical at"), unit = _('ms') )
+                  ]
+              )
+            ),
+            ( "ResponseTime",
+              Tuple(
+                  title = _("Response Time"),
+                  elements = [
+                     Float(title = _("Warning at"),  unit = _('ms') ),
+                     Float(title = _("Critical at"), unit = _('ms') )
+                  ]
+              )
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("System ID"),
+        help  = _("The SAP system ID."),
+    ),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "nginx_status",
     ("Nginx Status"),
     Dictionary(

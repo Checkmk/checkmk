@@ -185,30 +185,33 @@ def check_citrix_controller_licensing(_no_item, _no_params, info):
         "licensingserverstate"    : (
             "Licensing Server State",
             {
-                "ServerNotSpecified"        : 2,
-                "NotConnected"              : 1,
-                "OK"                        : 0,
-                "LicenseNotInstalled"       : 2,
-                "LicenseExpired"            : 2,
-                "Incompatible"              : 2,
-                "Failed"                    : 2,
+                "ServerNotSpecified"        : (2, "server not specified"),
+                "NotConnected"              : (1, "not connected"),
+                "OK"                        : (0, "OK"),
+                "LicenseNotInstalled"       : (2, "license not installed"),
+                "LicenseExpired"            : (2, "licenese expired"),
+                "Incompatible"              : (2, "incompatible"),
+                "Failed"                    : (2, "failed"),
             }),
         "licensinggracestate"     : (
-            "Licensing Grace State: ",
+            "Licensing Grace State",
             {
-                "NotActive"                 : 0,
-                "Active"                    : 2,
-                "InOutOfBoxGracePeriod"     : 1,
-                "InSupplementalGracePeriod" : 1,
-                "InEmergencyGracePeriod"    : 2,
-                "GracePeriodExpired"        : 2,
+                "NotActive"                 : (0, "not active"),
+                "Active"                    : (2, "active"),
+                "InOutOfBoxGracePeriod"     : (1, "in-out-of-box grace period"),
+                "InSupplementalGracePeriod" : (1, "in-supplemental grace period"),
+                "InEmergencyGracePeriod"    : (2, "in-emergency grace period"),
+                "GracePeriodExpired"        : (2, "grace period expired"),
             }),
     }
-
-    for what, (title, states) in statedict.items():
-        for line in info:
-            if line[0].lower() == what:
-                yield states[line[1]], title + ": " + line[1]
+    # piggy back data might deliver double data
+    detected_states = []
+    for line in info:
+        if line[0].lower() in statedict and line[0] not in detected_states:
+            detected_states.append(line[0])
+            title, states         = statedict[line[0].lower()]
+            state, state_readable = states[line[1]]
+            yield state, "%s: %s" % (title, state_readable)
 
 
 check_info["citrix_controller.licensing"] = {

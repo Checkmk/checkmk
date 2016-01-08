@@ -240,6 +240,9 @@
     * 2815 FIX: Notification scripts: Fixed missing environment variables...
     * 2821 FIX: WATO rule based notifications: Validate regular expression for service conditions...
 
+    Reporting & Availability:
+    * 2823 FIX: Availability: Fixed division by zero error on rendering the availability table
+
     Event Console:
     * 2733 Visibility of Event Console events more flexible now...
     * 1306 mkeventd: The Recent event history can you be filtered by extended regexes

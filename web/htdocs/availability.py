@@ -732,6 +732,9 @@ def compute_availability(what, av_rawdata, avoptions):
 
 
 def pass_availability_filter(row, avoptions):
+    if row["considered_duration"] == 0:
+        return True
+
     for key, level in avoptions["av_filter_outages"].items():
         if level == 0.0:
             continue

@@ -201,9 +201,7 @@ def format_item_supermicro_smart(name):
 
 def inventory_supermicro_smart(info):
     for serial, name, status in info[2]:
-        # status 3 indicates unknown, which may indicate missing driver support
-        if status != "3":
-            yield format_item_supermicro_smart(name), None
+        yield format_item_supermicro_smart(name), None
 
 
 def check_supermicro_smart(item, _no_params, info):

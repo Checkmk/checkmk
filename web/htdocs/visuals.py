@@ -297,7 +297,7 @@ def page_list(what, title, visuals, custom_columns = [],
 
         try:
             if check_deletable_handler:
-                check_deletable_handler(visuals, delname)
+                check_deletable_handler(visuals, user_id, delname)
 
             c = html.confirm(_("Please confirm the deletion of \"%s\".") % deltitle)
             if c:

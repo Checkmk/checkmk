@@ -81,16 +81,16 @@ def ps_get_inventory_specs(invdata, invrules):
     return inventory_specs
 
 
-def inventory_ps_common(invdata, invrules, parsed):
+def inventory_ps_common(invdata, invrules, info):
     inventory_specs = ps_get_inventory_specs(invdata, invrules)
 
     inventory = []
     for servicedesc, pattern, userspec, icon, default_params in inventory_specs:
         num_perc_s = servicedesc.count("%s")
-        for line in parsed:
+        for line in info:
             # First entry in line is the node name or None for non-clusters
-            process_line = line[1:]
-            matches, grabbed_user = process_matches_for_discovery(process_line, pattern, userspec)
+            ps = line[1:]
+            matches, grabbed_user = process_matches_for_discovery(ps, pattern, userspec)
             if matches == False:
                 continue # skip not matched lines
 

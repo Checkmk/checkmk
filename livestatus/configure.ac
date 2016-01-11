@@ -34,8 +34,8 @@ AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 
 # Checks for programs.
-AC_PROG_CXX
-AC_PROG_CC
+AC_PROG_CC([gcc44 gcc clang])
+AC_PROG_CXX([g++44 g++ clang++])
 AC_PROG_RANLIB
 AM_CONDITIONAL([HAVE_DIET], [which diet >/dev/null 2>&1])
 # automake 1.12 seems to require this, but automake 1.11 doesn't recognize it. :-P

@@ -1,0 +1,17 @@
+Title: ps: Finally improved performance impact of perfdata when having a lot of processes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452500538
+Class: fix
+
+When having a lot of processes, like several thousands, on a system and monitoring them,
+this lead to a lot of performance counters being created in Check_MK. The management of
+these counters was not very optimal, because not updated counters were only deleted based
+on time. So systems with a lot of process creations were handling many non needed counters
+during every check interval. This affected CPU and memory usage during checking such systems.
+
+As we get the full process table, we have now changed the logic to automatically delete the
+counters of all processes that are not existant anymore. This reduces the number of counters
+significantly.

@@ -455,7 +455,7 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
         # correct number of DSes. To just look at the first process
         # in the agent output to make sure. We assume that at least
         # one process is always present.
-        extended_perfdata = ps_has_extended_perfdata(parsed[0])
+        extended_perfdata = ps_has_extended_perfdata(parsed[0][1])
 
     if extended_perfdata:
         perfdata += [ ("vsz", virtual_size),

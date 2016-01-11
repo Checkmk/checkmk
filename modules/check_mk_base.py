@@ -987,14 +987,7 @@ def load_item_state(hostname):
     try:
         g_item_state = eval(file(filename).read())
     except:
-        # Try old syntax
-        try:
-            lines = file(filename).readlines()
-            for line in lines:
-                line = line.split()
-                g_item_state[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
-        except:
-            g_item_state = {}
+        g_item_state = {}
 
 
 def save_item_state(hostname):
@@ -1094,41 +1087,6 @@ def reset_wrapped_counters():
 
 def last_counter_wrap():
     return g_last_counter_wrap
-
-
-
-# Makes sure, that no counter with a give prefix is kept longer
-# than min_keep_seconds * 2. Counter is kept at least min_keep_seconds.
-def clear_counters(counter_name_prefix, min_keep_seconds):
-    global g_item_state
-
-    cleared_key = "last.cleared." + counter_name_prefix
-    if cleared_key in g_item_state:
-        last_cleared, none = g_item_state[cleared_key]
-        if last_cleared + min_keep_seconds > time.time():
-            return # recent enough
-    g_item_state[cleared_key] = (time.time(), None)
-
-    counters_to_delete = []
-    remove_if_min_keep_seconds = time.time() - min_keep_seconds
-
-    for name, state in g_item_state.iteritems():
-        if type(name) == tuple:
-            counter_name = name[0] # never needed, since only called by ps currently
-        else:
-            counter_name = name
-
-        if type(state) == tuple:
-            timestamp, value = state
-        else:
-            continue # unable to cleanup values without timestamp info, skip
-
-        if counter_name.startswith(counter_name_prefix):
-            if timestamp < remove_if_min_keep_seconds:
-                counters_to_delete.append(name)
-
-    for name in counters_to_delete:
-        del g_item_state[name]
 
 
 # Compute average by gliding exponential algorithm

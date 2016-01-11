@@ -154,7 +154,7 @@ mk-eventd:
 
 mk-livestatus:
 	if [ ! -e livestatus/configure ] ; then \
-		cd livestatus && aclocal && autoheader && automake -a && autoconf ; \
+		cd livestatus && autoreconf --install ; \
 	fi
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)

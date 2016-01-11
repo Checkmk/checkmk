@@ -25,38 +25,46 @@
 # Boston, MA 02110-1301 USA.
 
 
+# .1.3.6.1.4.1.2620.1.5.2.0 1
+# .1.3.6.1.4.1.2620.1.5.3.0 6
+# .1.3.6.1.4.1.2620.1.5.4.0 0
+# .1.3.6.1.4.1.2620.1.5.5.0 yes
+# .1.3.6.1.4.1.2620.1.5.6.0 active
+# .1.3.6.1.4.1.2620.1.5.7.0 OK
+# .1.3.6.1.4.1.2620.1.5.101.0 0
+# .1.3.6.1.4.1.2620.1.5.103.0
+
+
 def inventory_checkpoint_ha_status(info):
-    if info:
+    installed, major, minor, started, state, block_state, stat_code, stat_long = info[0]
+    if installed != "0":
         return [(None, None)]
 
 
-def check_checkpoint_ha_status(item, params, info):
-    if info:
-        installed, major, minor, started, state, block_state, stat_code, stat_long = info[0]
+def check_checkpoint_ha_status(_no_item, _no_params, info):
+    installed, major, minor, started, state, block_state, stat_code, stat_long = info[0]
 
-        status = 0
-        messages = []
-        if installed != "1":
-            messages.append("not installed")
-        else:
-            messages.append("installed (v%s.%s)" % (major, minor))
+    if installed == "0":
+        yield 2, "Not installed"
+    else:
+        yield 0, "Installed: v%s.%s" % (major, minor)
 
-            messages.append(state)
-
-            if started == "yes":
-                messages.append("started")
+        for val, infotext, ok_vals, warn_vals in [
+            (started,     "Started",   ["yes"],               None),
+            (state,       "Status",    ["active", "standby"], None),
+            (block_state, "Blocking",  ["ok"],                ["initializing"])
+        ]:
+            if ok_vals is None or val.lower() in ok_vals:
+                status = 0
+            elif warn_vals is not None and val.lower() in warn_vals:
+                status = 1
             else:
-                messages.append("stopped")
-
-            if block_state != "OK":
-                messages.append("blocking state: %s" % block_state)
                 status = 2
 
-            if stat_code != "0":
-                messages.append("status: %s" % stat_long)
-                status = 2
+            yield status, "%s: %s" % (infotext, val)
 
-        return status, ", ".join(messages)
+        if stat_code != "0":
+            yield 2, "Problem: %s" % stat_long
 
 
 check_info['checkpoint_ha_status'] = {

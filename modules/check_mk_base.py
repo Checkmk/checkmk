@@ -948,14 +948,7 @@ def load_counters(hostname):
     try:
         g_counters = eval(file(filename).read())
     except:
-        # Try old syntax
-        try:
-            lines = file(filename).readlines()
-            for line in lines:
-                line = line.split()
-                g_counters[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
-        except:
-            g_counters = {}
+        g_counters = {}
 
 def save_counters(hostname):
     if not opt_dont_submit and not i_am_root(): # never writer counters as root

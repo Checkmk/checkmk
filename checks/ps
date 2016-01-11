@@ -106,7 +106,7 @@ def ps_get_counters_to_delete(pids):
         if ident_type == tuple and ident[0] == "ps":
             check_ident = ident[2]
         elif ident_type != tuple and (ident.startswith("ps_stat") or ident.startswith("ps_wmic")):
-            check_ident = name
+            check_ident = ident
         else:
             continue
 

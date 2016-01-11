@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,21 +25,31 @@
 # Boston, MA 02110-1301 USA.
 
 
-def scan_checkpoint(oid):
-    sys_descr = oid(".1.3.6.1.2.1.1.1.0", "")
-    return (
-        # Entry in sysDescr, varies a bit
-        (len(sys_descr.split(" ")) >= 3 and sys_descr.split(" ")[2].endswith("cp")) or
-        sys_descr.startswith("IPSO ") or
-        (sys_descr.startswith("Linux") and "cpx" in
-         sys_descr)) \
-      and \
-         oid(".1.3.6.1.4.1.2620.1.1.21.0", "").lower().startswith('firewall')
+def inventory_checkpoint_svn_status(info):
+    if info:
+        return [(None, None)]
 
 
-checkpoint_sensorstatus_to_nagios = {
-    "0": 0,  # sensor in range
-    "1": 2,  # sensor out of range
-    "2": 3   # reading error
+def check_checkpoint_svn_status(item, params, info):
+    if info:
+        major, minor, code, description = info[0]
+        ver = "v%s.%s" % (major, minor)
+        if int(code) != 0:
+            return 2, descriptiona
+        else:
+            return 0, "OK (%s)" % ver
+
+
+check_info['checkpoint_svn_status'] = {
+    'check_function'      : check_checkpoint_svn_status,
+    'inventory_function'  : inventory_checkpoint_svn_status,
+    'service_description' : "SVN Status",
+    'snmp_scan_function'  : scan_checkpoint,
+    'snmp_info'           : ( '.1.3.6.1.4.1.2620.1.6', [2,    # svnProdVerMajor
+                                                        3,    # svnProdVerMinor
+                                                        101,  # svnStatCode
+                                                        103,  # svnStatLongDescr
+                                                        ]),
+    'includes'            : [ 'checkpoint.include' ],
 }
 

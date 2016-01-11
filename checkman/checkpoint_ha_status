@@ -1,0 +1,20 @@
+title: Checkpoint Firewalls: High Availability Status
+agents: snmp
+catalog: hw/network/checkpoint
+license: GPL
+distribution: check_mk
+description:
+ This check monitors status and displays a few details of the High
+ Availability Modul in checkpoint firewalls.
+
+ This module reports three fields called something along the lines
+ of "status" and it's not entirely certain what each of them means.
+ One seems to only indicate whether the device is "active" or "standby",
+ the other two seem to indicate problems.
+ Therefore this check will be in status {CRIT} if either "status code"
+ or "blocking state" signals a problem (or any not-yet-observed state),
+ {OK} otherwise.
+
+inventory:
+ Exactly one item will be discovered.
+

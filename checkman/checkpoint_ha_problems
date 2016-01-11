@@ -1,0 +1,16 @@
+title: Checkpoint Firewalls: High Availability Problems
+agents: snmp
+catalog: hw/network/checkpoint
+license: GPL
+distribution: check_mk
+description:
+ This check monitors problems in the High Availability Module.
+ The status is {CRIT} if a problem has been signaled, {OK} otherwise.
+ The device reports a list of possible problems and a signaled state for
+ each.
+ In the devices observed so far the problem categories were called
+ "Filter", "Synchronization", "cphad" and "fwd".
+
+inventory:
+ One service per problem category will be discovered.
+

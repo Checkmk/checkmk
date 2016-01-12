@@ -1,0 +1,11 @@
+Title: cisco_asa_failover: Will no longer discover on devices where failover is disabled
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452591537
+Class: fix
+
+If failover is disabled on a device, both primary and secondary units are reported as "down".
+check_mk reported a warning for that even though there was no problem.
+This change requires re-inventory of the affected devices.

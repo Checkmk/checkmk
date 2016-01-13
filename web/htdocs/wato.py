@@ -3001,10 +3001,11 @@ class ModeBulkImport(WatoMode):
     # Upload the CSV file into a temporary directoy to make it available not only
     # for this request. It needs to be available during several potential "confirm"
     # steps and then through the upload step.
-    # FIXME: How and when to cleanup files which were not completely uploaded?
     def _upload_csv_file(self):
         if not os.path.exists(self._upload_tmp_path):
             make_nagios_directories(self._upload_tmp_path)
+
+        self._cleanup_old_files()
 
         upload_info = self._vs_upload().from_html_vars("_upload")
         self._vs_upload().validate_value(upload_info, "_upload")
@@ -3020,6 +3021,14 @@ class ModeBulkImport(WatoMode):
 
         if upload_info["do_service_detection"]:
             html.set_var("do_service_detection", "1")
+
+
+    def _cleanup_old_files(self):
+        for f in os.listdir(self._upload_tmp_path):
+            path = self._upload_tmp_path + "/" + f
+            mtime = os.stat(path).st_mtime
+            if mtime < time.time() - 3600:
+                os.unlink(path)
 
 
     def _read_csv_file(self):

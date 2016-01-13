@@ -3302,6 +3302,36 @@ class FileUpload(ValueSpec):
         return html.uploaded_file(varprefix)
 
 
+
+class UploadOrPasteTextFile(Alternative):
+    def __init__(self, **kwargs):
+        file_title = kwargs.get("file_title", _("File"))
+        kwargs["elements"] = [
+            FileUpload(title = _("Upload %s") % file_title),
+            TextAreaUnicode(
+                title = _("Content of %s") % file_title,
+                cols=80,
+                rows="auto"),
+        ]
+
+        if kwargs.get("default_mode", "text") == "upload":
+            kwargs["match"] = lambda *args: 0
+        else:
+            kwargs["match"] = lambda *args: 1
+
+        kwargs.setdefault("style", "dropdown")
+        Alternative.__init__(self, **kwargs)
+
+
+    def from_html_vars(self, varprefix):
+        value = Alternative.from_html_vars(self, varprefix)
+        # Convert textarea value to format of upload field
+        if type(value) != tuple:
+            value = (None, None, value)
+        return value
+
+
+
 class IconSelector(ValueSpec):
     _categories = [
         ('logos',   _('Logos')),

@@ -42,6 +42,7 @@ TableContacts::TableContacts()
     addColumns(this, "", -1);
 }
 
+// static
 void TableContacts::addColumns(Table *table, string prefix, int indirect_offset)
 {
     contact ctc;

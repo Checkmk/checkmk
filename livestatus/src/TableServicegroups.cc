@@ -43,6 +43,7 @@ TableServicegroups::TableServicegroups()
     addColumns(this, "", -1);
 }
 
+// static
 void TableServicegroups::addColumns(Table *table, string prefix, int indirect_offset)
 {
     servicegroup sgr;

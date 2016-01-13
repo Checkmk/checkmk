@@ -74,11 +74,11 @@ TableHosts::TableHosts(bool by_group)
     struct hostbygroup ref;
     addColumns(this, "", -1);
     if (by_group) {
-        g_table_hostgroups->addColumns(this, "hostgroup_", (char *)&(ref._hostgroup) - (char *)&ref);
+        TableHostgroups::addColumns(this, "hostgroup_", (char *)&(ref._hostgroup) - (char *)&ref);
     }
 }
 
-
+// static
 void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 {
 

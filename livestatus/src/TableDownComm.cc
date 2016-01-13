@@ -92,7 +92,7 @@ TableDownComm::TableDownComm(bool is_downtime)
                     "The time of expiry of this comment as a UNIX timestamp", (char *)&(ref->_expire_time) - (char *)ref));
     }
 
-    g_table_hosts->addColumns(this, "host_",    (char *)&(ref->_host)    - (char *)ref);
+    TableHosts::addColumns(this, "host_",    (char *)&(ref->_host)    - (char *)ref);
     g_table_services->addColumns(this, "service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
 }
 

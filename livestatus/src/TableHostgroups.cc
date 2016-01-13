@@ -44,6 +44,7 @@ TableHostgroups::TableHostgroups()
     addColumns(this, "", -1);
 }
 
+// static
 void TableHostgroups::addColumns(Table *table, string prefix, int indirect_offset)
 {
     hostgroup hgr;

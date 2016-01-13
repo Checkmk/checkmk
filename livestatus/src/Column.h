@@ -45,7 +45,6 @@ class Column
 {
     std::string _name;
     std::string _description;
-public:
     int _indirect_offset;
     int _extra_offset;
 

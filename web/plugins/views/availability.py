@@ -715,6 +715,7 @@ def edit_annotation():
     annotation["service"] = service
     annotation["site"] = site_id
 
+    # FIXME: Why use plugging here? Can we clean this up?
     html.plug()
 
     title = _("Edit annotation of ") + hostname

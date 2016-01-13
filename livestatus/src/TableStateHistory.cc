@@ -828,7 +828,7 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state)
     _abort_query = !query->processDataset(hs_state);
 
     hs_state->_from = hs_state->_until;
-};
+}
 
 bool TableStateHistory::isAuthorized(contact *ctc, void *data)
 {

@@ -2196,12 +2196,12 @@ def mode_object_parameters(phase):
                 url = folder_preserving_link([
                     ('mode', 'edit_rule'),
                     ('varname', "custom_checks"),
-                    ('rule_folder', rule[0][".path"]),
+                    ('rule_folder', rule[0].path()),
                     ('rulenr', rel_nr),
                     ('host', hostname)])
 
                 html.write('<table class=setting><tr><td class=reason><a href="%s">%s %d %s %s</a></td>' % (
-                    url, _("Rule"), rel_nr + 1, _("in"), rule[0]["title"]))
+                    url, _("Rule"), rel_nr + 1, _("in"), rule[0].title()))
                 html.write("<td class=settingvalue used>")
                 if "command_line" in serviceinfo:
                     html.write("<tt>%s</tt>" % serviceinfo["command_line"])

@@ -181,7 +181,15 @@ class html(GUITester):
 
     def flush(self):
         if self.plugged:
-            self.lowlevel_write(self.plugged_text)
+            text = self.plugged_text
+
+            # encode when really writing out the data. Not when writing plugged,
+            # because the plugged code will be handled somehow by our code. We
+            # only encode when leaving the pythonic world.
+            if type(text) == unicode:
+	        text = text.encode("utf-8")
+
+            self.lowlevel_write(text)
             self.plugged_text = ''
 
     def drain(self):

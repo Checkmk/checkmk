@@ -1,0 +1,10 @@
+Title: Fixed issue editing availability annotations
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452679030
+Class: fix
+
+Fixed a possible "Internal Server Error" when trying to edit annotations of
+the Check_MK Availability which contains special characters in the text.

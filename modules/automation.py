@@ -288,39 +288,46 @@ def automation_analyse_service(args):
     # our service there
     try:
         path = "%s/%s.mk" % (autochecksdir, hostname)
-        for entry in eval(file(path).read()):
-            if len(entry) == 4: # old format
-                hn, ct, item, params = entry
-            else:
-                ct, item, params = entry # new format without host name
-                hn = hostname
-
-            if (ct, item) not in check_table:
-                continue # this is a removed duplicate or clustered service
-            descr = service_description(ct, item)
-            if hn == hostname and descr == servicedesc:
-                dlv = check_info[ct].get("default_levels_variable")
-                if dlv:
-                    fs = factory_settings.get(dlv, None)
+        if os.path.exists(path):
+            for entry in eval(file(path).read()):
+                if len(entry) == 4: # old format
+                    hn, ct, item, params = entry
                 else:
-                    fs = None
+                    ct, item, params = entry # new format without host name
+                    hn = hostname
 
-                return {
-                    "origin"           : "auto",
-                    "checktype"        : ct,
-                    "checkgroup"       : check_info[ct].get("group"),
-                    "item"             : item,
-                    "inv_parameters"   : params,
-                    "factory_settings" : fs,
-                    "parameters"       : compute_check_parameters(hostname, ct, item, params),
-                }
+                if (ct, item) not in check_table:
+                    continue # this is a removed duplicate or clustered service
+                descr = service_description(ct, item)
+                if hn == hostname and descr == servicedesc:
+                    dlv = check_info[ct].get("default_levels_variable")
+                    if dlv:
+                        fs = factory_settings.get(dlv, None)
+                    else:
+                        fs = None
+
+                    return {
+                        "origin"           : "auto",
+                        "checktype"        : ct,
+                        "checkgroup"       : check_info[ct].get("group"),
+                        "item"             : item,
+                        "inv_parameters"   : params,
+                        "factory_settings" : fs,
+                        "parameters"       : compute_check_parameters(hostname, ct, item, params),
+                    }
     except:
         if opt_debug:
             raise
 
     # 3. Classical checks
     for nr, entry in enumerate(custom_checks):
-        rule, tags, hosts = entry
+        if len(entry) == 4:
+            rule, tags, hosts, options = entry
+            if options.get("disabled"):
+                continue
+        else:
+            rule, tags, hosts = entry
+
         matching_hosts = all_matching_hosts(tags, hosts, with_foreign_hosts = True)
         if hostname in matching_hosts:
             desc = rule["service_description"]

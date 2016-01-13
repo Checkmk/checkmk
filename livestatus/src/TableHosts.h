@@ -41,7 +41,7 @@ public:
     const char *prefixname() { return "hosts"; }
     bool isAuthorized(contact *ctc, void *data);
     void *findObject(char *objectspec);
-    void addColumns(Table *, std::string prefix, int indirect_offset);
+    static void addColumns(Table *, std::string prefix, int indirect_offset);
     void answerQuery(Query *query);
 };
 

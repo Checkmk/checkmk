@@ -87,7 +87,7 @@
 
 import sys, pprint, socket, re, time, datetime,  \
        shutil, tarfile, cStringIO, math, fcntl, pickle, random, glob, \
-       base64
+       base64, csv
 import i18n
 import config, table, multitar, userdb, weblib, login
 from hashlib import sha256
@@ -977,6 +977,64 @@ def host_bulk_move_to_folder_combo(folder, top):
                      attrs = {'class': 'bulk_moveto'})
     else:
         html.write(_("No valid target folder."))
+
+
+def move_to_imported_folders(host_names_to_move):
+    c = wato_confirm(
+              _("Confirm moving hosts"),
+              _('You are going to move the selected hosts to folders '
+                'representing their original folder location in the system '
+                'you did the import from. Please make sure that you have '
+                'done an <b>inventory</b> before moving the hosts.'))
+    if c == False: # not yet confirmed
+        return ""
+    elif not c:
+        return None # browser reload
+
+    # Create groups of hosts with the same target folder
+    target_folder_names = {}
+    for host_name in host_names_to_move:
+        host = Folder.current().host(host_name)
+        imported_folder_name = host.attribute('imported_folder')
+        if imported_folder_name == None:
+            continue
+        target_folder_names.setdefault(imported_folder_name, []).append(host_name)
+
+        # Remove target folder information, now that the hosts are
+        # at their target position.
+        host.remove_attribute('imported_folder')
+
+    # Now handle each target folder
+    for imported_folder, host_names in target_folder_names.items():
+        # Next problem: The folder path in imported_folder refers
+        # to the Alias of the folders, not to the internal file
+        # name. And we need to create folders not yet existing.
+        target_folder = create_target_folder_from_aliaspath(imported_folder)
+        Folder.current().move_hosts(host_names, target_folder)
+
+    return None, _("Successfully moved hosts to their original folder destinations.")
+
+
+def create_target_folder_from_aliaspath(aliaspath):
+    # The alias path is a '/' separated path of folder titles.
+    # An empty path is interpreted as root path. The actual file
+    # name is the host list with the name "Hosts".
+    if aliaspath == "" or aliaspath == "/":
+        folder = Folder.root_folder()
+    else:
+        parts = aliaspath.strip("/").split("/")
+        folder = Folder.root_folder()
+        while len(parts) > 0:
+            # Look in current folder for subfolder with the target name
+            subfolder = folder.subfolder_by_title(parts[0])
+            if subfolder:
+                folder = subfolder
+            else:
+                name = create_wato_foldername(parts[0], folder)
+                folder = folder.create_subfolder(name, parts[0], {})
+            parts = parts[1:]
+
+    return folder
 
 #.
 #   .--Edit Folder---------------------------------------------------------.
@@ -2138,12 +2196,12 @@ def mode_object_parameters(phase):
                 url = folder_preserving_link([
                     ('mode', 'edit_rule'),
                     ('varname', "custom_checks"),
-                    ('rule_folder', rule[0][".path"]),
+                    ('rule_folder', rule[0].path()),
                     ('rulenr', rel_nr),
                     ('host', hostname)])
 
                 html.write('<table class=setting><tr><td class=reason><a href="%s">%s %d %s %s</a></td>' % (
-                    url, _("Rule"), rel_nr + 1, _("in"), rule[0]["title"]))
+                    url, _("Rule"), rel_nr + 1, _("in"), rule[0].title()))
                 html.write("<td class=settingvalue used>")
                 if "command_line" in serviceinfo:
                     html.write("<tt>%s</tt>" % serviceinfo["command_line"])
@@ -2893,77 +2951,6 @@ def mode_search(phase):
 
 
 #.
-#   .--CSV-Import----------------------------------------------------------.
-#   |       ____ ______     __   ___                            _          |
-#   |      / ___/ ___\ \   / /  |_ _|_ __ ___  _ __   ___  _ __| |_        |
-#   |     | |   \___ \\ \ / /____| || '_ ` _ \| '_ \ / _ \| '__| __|       |
-#   |     | |___ ___) |\ V /_____| || | | | | | |_) | (_) | |  | |_        |
-#   |      \____|____/  \_/     |___|_| |_| |_| .__/ \___/|_|   \__|       |
-#   |                                         |_|                          |
-#   +----------------------------------------------------------------------+
-#   | The following functions help implementing an import of hosts from    |
-#   | third party applications, such as from CVS files. The import itsself |
-#   | is not yet coded, but functions for dealing with the imported hosts. |
-#   '----------------------------------------------------------------------'
-
-def move_to_imported_folders(host_names_to_move):
-    c = wato_confirm(
-              _("Confirm moving hosts"),
-              _('You are going to move the selected hosts to folders '
-                'representing their original folder location in the system '
-                'you did the import from. Please make sure that you have '
-                'done an <b>inventory</b> before moving the hosts.'))
-    if c == False: # not yet confirmed
-        return ""
-    elif not c:
-        return None # browser reload
-
-    # Create groups of hosts with the same target folder
-    target_folder_names = {}
-    for host_name in host_names_to_move:
-        host = Folder.current().host(host_name)
-        imported_folder_name = host.attribute('imported_folder')
-        if imported_folder_name == None:
-            continue
-        target_folder_names.setdefault(imported_folder_name, []).append(host_name)
-
-        # Remove target folder information, now that the hosts are
-        # at their target position.
-        host.remove_attribute('imported_folder')
-
-    # Now handle each target folder
-    for imported_folder, host_names in target_folder_names.items():
-        # Next problem: The folder path in imported_folder refers
-        # to the Alias of the folders, not to the internal file
-        # name. And we need to create folders not yet existing.
-        target_folder = create_target_folder_from_aliaspath(imported_folder)
-        Folder.current().move_hosts(host_names, target_folder)
-
-    return None, _("Successfully moved hosts to their original folder destinations.")
-
-
-def create_target_folder_from_aliaspath(aliaspath):
-    # The alias path is a '/' separated path of folder titles.
-    # An empty path is interpreted as root path. The actual file
-    # name is the host list with the name "Hosts".
-    if aliaspath == "" or aliaspath == "/":
-        folder = Folder.root_folder()
-    else:
-        parts = aliaspath.strip("/").split("/")
-        folder = Folder.root_folder()
-        while len(parts) > 0:
-            # Look in current folder for subfolder with the target name
-            subfolder = folder.subfolder_by_title(parts[0])
-            if subfolder:
-                folder = subfolder
-            else:
-                name = create_wato_foldername(parts[0], folder)
-                folder = folder.create_subfolder(name, parts[0], {})
-            parts = parts[1:]
-
-    return folder
-
-#.
 #   .--Bulk Import---------------------------------------------------------.
 #   |       ____        _ _      ___                            _          |
 #   |      | __ ) _   _| | | __ |_ _|_ __ ___  _ __   ___  _ __| |_        |
@@ -2972,98 +2959,348 @@ def create_target_folder_from_aliaspath(aliaspath):
 #   |      |____/ \__,_|_|_|\_\ |___|_| |_| |_| .__/ \___/|_|   \__|       |
 #   |                                         |_|                          |
 #   +----------------------------------------------------------------------+
-#   | Realizes a simple page with a single textbox which one can insert    |
-#   | several hostnames, separated by different chars and submit it to     |
-#   | create these hosts in the current folder.                            |
+#   | The bulk import for hosts can be used to import multiple new hosts   |
+#   | into a single WATO folder. The hosts can either be provided by       |
+#   | uploading a CSV file or by pasting the contents of a CSV file into   |
+#   | a textbox.                                                           |
 #   '----------------------------------------------------------------------'
 
-def mode_bulk_import(phase):
-    if phase == "title":
-        return _('Bulk Host Import')
+class ModeBulkImport(WatoMode):
+    _upload_tmp_path = defaults.tmp_dir + "/host-import"
 
-    elif phase == "buttons":
-        html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "back")
+    def __init__(self):
+        super(ModeBulkImport, self).__init__()
+        self._csv_reader = None
+        self._params = {}
 
-    elif phase == "action":
-        if not html.check_transaction():
-            return "folder"
 
-        attributes = collect_attributes("host")
+    def title(self):
+        return _("Bulk Host Import")
 
-        config.need_permission("wato.manage_hosts")
-        Folder.current().need_permission("write")
-        must_be_in_contactgroups(attributes.get("contactgroups", (False, [])))
 
-        hosts = html.var('_hosts')
-        if not hosts:
-            raise MKUserError('_hosts', _('Please specify at least one hostname.'))
+    def buttons(self):
+        html.context_button(_("Back"), folder_preserving_link([("mode", "folder")]), "back")
 
-        created  = 0
-        skipped  = 0
-        entries = []
+
+    def action(self):
+        if html.transaction_valid():
+            if html.has_var("_do_upload"):
+                self._upload_csv_file()
+
+            self._read_csv_file()
+
+            if html.var("_do_import"):
+                return self._import()
+
+
+    def _file_path(self):
+        file_id = html.var("file_id", "%s-%d" % (config.user_id, int(time.time())))
+        return self._upload_tmp_path + "/%s.csv" % file_id
+
+
+    # Upload the CSV file into a temporary directoy to make it available not only
+    # for this request. It needs to be available during several potential "confirm"
+    # steps and then through the upload step.
+    def _upload_csv_file(self):
+        if not os.path.exists(self._upload_tmp_path):
+            make_nagios_directories(self._upload_tmp_path)
+
+        self._cleanup_old_files()
+
+        upload_info = self._vs_upload().from_html_vars("_upload")
+        self._vs_upload().validate_value(upload_info, "_upload")
+        file_name, mime_type, content = upload_info["file"]
+
+        file_id = "%s-%d" % (config.user_id, int(time.time()))
+        f = create_user_file(self._file_path(), "w")
+        f.write(content)
+        f.close()
+
+        # make selections available to next page
+        html.set_var("file_id", file_id)
+
+        if upload_info["do_service_detection"]:
+            html.set_var("do_service_detection", "1")
+
+
+    def _cleanup_old_files(self):
+        for f in os.listdir(self._upload_tmp_path):
+            path = self._upload_tmp_path + "/" + f
+            mtime = os.stat(path).st_mtime
+            if mtime < time.time() - 3600:
+                os.unlink(path)
+
+
+    def _read_csv_file(self):
+        try:
+            csv_file = file(self._file_path())
+        except IOError:
+            raise MKUserError(None, _("Failed to read the previously uploaded CSV file. Please upload it again."))
+
+        params = self._vs_parse_params().from_html_vars("_preview")
+        self._vs_parse_params().validate_value(params, "_preview")
+        self._params = params or self._vs_parse_params().default_value()
+
+        # try to detect the CSV format to be parsed
+        if "field_delimiter" in params:
+            class CustomCSVDialect(csv.excel):
+                delimiter = params["field_delimiter"]
+
+            csv_dialect = CustomCSVDialect()
+        else:
+            try:
+                csv_dialect = csv.Sniffer().sniff(csv_file.read(2048), delimiters=",;\t:")
+                csv_file.seek(0)
+            except csv.Error, e:
+                if "Could not determine delimiter" in str(e):
+                    raise MKUserError(None, _("Failed to detect the CSV files field delimiter character. Please "
+                                              "specify it manually."))
+
+
+        # Save for preview in self.page()
+        self._csv_reader = csv.reader(csv_file, csv_dialect)
+
+
+    def _import(self):
+        if self._params.get("has_title_line"):
+            self._csv_reader.next() # skip header
+
+        num_succeeded, num_failed = 0, 0
+        fail_messages = []
         selected = []
 
-        # Split by all possible separators
-        hosts = hosts.replace(' ', ';').replace(',', ';').replace('\n', ';').replace('\r', '')
-        for hostname in hosts.split(';'):
-            if Folder.current().has_host(hostname):
-                skipped += 1
-                continue
-            elif not re.match('^[a-zA-Z0-9-_.]+$', hostname):
-                skipped += 1
-                continue
+        for row in self._csv_reader:
+            if not row:
+                continue # skip empty lines
 
-            entries.append((hostname, {}, None))
-            created += 1
-            selected.append('_c_%s' % hostname)
+            host_name, attributes = self._get_host_info_from_row(row)
+            try:
+                Folder.current().create_hosts([(host_name, attributes, None)])
+                selected.append('_c_%s' % host_name)
+                num_succeeded += 1
+            except Exception, e:
+                fail_messages.append(_("Failed to create a host from line %d: %s" % (self._csv_reader.line_num, e)))
+                num_failed += 1
+
+        self._delete_csv_file()
+
+        msg = _("Imported %d hosts into the current folder.") % num_succeeded
+        if num_failed:
+            msg += "<br><br>" + (_("%d errors occured:") % num_failed)
+            msg += "<ul>"
+            for fail_msg in fail_messages:
+                msg += "<li>%s</li>" % fail_msg
+            msg += "</ul>"
 
 
-        if not created:
-            return 'folder', _('No host has been imported.')
-
+        if num_succeeded > 0 and html.var("do_service_detection") == "1":
+            # Create a new selection for performing the bulk discovery
+            weblib.set_rowselection('wato-folder-/' + Folder.current().path(), selected, 'set')
+            html.set_var('mode', 'bulkinventory')
+            html.set_var('show_checkboxes', '1')
+            return "bulkinventory"
         else:
-            Folder.current().create_hosts(entries)
+            return "folder", msg
 
-            if html.get_checkbox('_do_service_detection'):
-                # Create a new selection
-                weblib.set_rowselection('wato-folder-/' + Folder.current().path(), selected, 'set')
-                html.set_var('mode', 'bulkinventory')
-                html.set_var('show_checkboxes', '1')
-                return 'bulkinventory'
 
-            result_txt = ''
-            if skipped > 0:
-                result_txt = _('Imported %d hosts, but skipped %d hosts. Hosts might '
-                    'be skipped when they already exist or contain illegal chars.') % (created, skipped)
-            else:
-                result_txt = _('Imported %d hosts.') % created
+    def _delete_csv_file(self):
+        os.unlink(self._file_path())
 
-            return 'folder', result_txt
 
-    else:
-        html.begin_form("bulkimport", method = "POST")
+    def _get_host_info_from_row(self, row):
+        host_name = None
+        attributes = {}
+        for col_num, value in enumerate(row):
+            attribute = html.var("attribute_%d" % col_num)
+            if attribute == "host_name":
+                if not re.match('^[a-zA-Z0-9-_.]+$', value):
+                    raise MKUserError(None, _("Invalid host name: %r. Only the characters a-z, A-Z, "
+                                              "0-9, _, . and - are allowed.") % value)
+                host_name = value
+            elif attribute:
+                if attribute in attributes:
+                    raise MKUserError(None, _("The attribute \"%s\" is assigned to multiple columns. "
+                                              "You can not populate one attribute from multiple columns. "
+                                              "The column to attribute associations need to be unique.") % attribute)
+                # FIXME: Couldn't we decode all attributes?
+                if attribute == "alias":
+                    attributes[attribute] = value.decode("utf-8")
+                else:
+                    attributes[attribute] = value
 
-        html.write('<p>')
-        html.write(_('Using this page you can import several hosts at once into '
-            'the choosen folder. You can paste a list of hostnames, separated '
-            'by comma, semicolon, space or newlines. These hosts will then be '
-            'added to the folder using the default attributes. If some of the '
-            'host names cannot be resolved via DNS, you must manually edit '
-            'those hosts later and add explicit IP addresses.'))
-        html.write('</p>')
-        forms.header(_('Bulk Host Import'))
-        forms.section(_('Hosts'))
-        html.text_area('_hosts', cols = 70, rows = 10)
-        html.set_focus('_hosts')
+        if host_name == None:
+            raise MKUserError(None, _("The host name attribute needs to be assigned to a column."))
 
-        forms.section(_('Options'))
-        html.checkbox('_do_service_detection', False, label = _('Perform automatic service discovery'))
-        forms.end()
+        return host_name, attributes
 
-        html.button('_import', _('Import'))
 
+    def page(self):
+        if not html.has_var("file_id"):
+            self._upload_form()
+        else:
+            self._preview()
+
+
+    def _upload_form(self):
+        html.begin_form("upload", method="POST")
+        html.write("<p>%s</p>" %
+            _("Using this page you can import several hosts at once into the choosen folder. You can "
+              "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
+              "into the textarea or simply enter a list of hostnames (one per line) to the textarea."))
+
+        self._vs_upload().render_input("_upload", None)
         html.hidden_fields()
+        html.button("_do_upload", _("Upload"))
         html.end_form()
+
+
+
+    def _vs_upload(self):
+        return Dictionary(
+            elements = [
+                ("file", UploadOrPasteTextFile(
+                    title = _("Import Hosts"),
+                    file_title = _("CSV File"),
+                    allow_empty = False,
+                    default_mode = "upload",
+                )),
+                ("do_service_detection", Checkbox(
+                    title = _("Perform automatic service discovery"),
+                )),
+            ],
+            render = "form",
+            title = _("Import Hosts"),
+            optional_keys = [],
+        )
+
+
+    def _preview(self):
+        html.begin_form("preview", method="POST")
+        self._preview_form()
+
+        attributes = self._attribute_choices()
+
+        if not self._csv_reader:
+            return # don't try to show preview when CSV could not be read
+
+        html.write("<h2>%s</h2>" % _("Preview"))
+        attribute_list = "<ul>%s</ul>" % "".join([ "<li>%s (%s)</li>" % a for a in attributes if a[0] != None ])
+        html.help(
+            _("This list shows you the first 10 rows from your CSV file in the way the import is "
+              "currently parsing it. If the lines are not splitted correctly or the title line is "
+              "not shown as title of the table, you may change the import settings above and try "
+              "again.") + "<br><br>" +
+             _("The first row below the titles contains fields to specify which column of the "
+               "CSV file should be imported to which attribute of the created hosts. The import "
+               "progress is trying to match the columns to attributes automatically by using the "
+               "titles found in the title row (if you have some). "
+               "If you use the correct titles, the attributes can be mapped automatically. The "
+               "currently available attributes are:") + attribute_list +
+             _("You can change these assignments according to your needs and then start the "
+               "import by clicking on the <i>Import</i> button above."))
+
+        # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
+        # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
+        # erneut importieren kann.
+        if self._params.get("has_title_line"):
+            headers = list(self._csv_reader.next())
+        else:
+            headers = []
+
+        rows = list(self._csv_reader)
+
+        # Determine how many columns should be rendered by using the longest column
+        num_columns = max([ len(r) for r in [headers] + rows ])
+
+        table.begin(sortable=False, searchable=False)
+
+        # Render attribute selection fields
+        table.row()
+        for col_num in range(num_columns):
+            header = len(headers) > col_num and headers[col_num] or None
+            table.cell(html.attrencode(header))
+            html.select("attribute_%d" % col_num, attributes, self._try_detect_default_attribute(attributes, header),
+                        attrs={"autocomplete": "off"})
+
+        # Render sample rows
+        for row in rows:
+            table.row()
+            for cell in row:
+                table.cell(None, html.attrencode(cell))
+
+        table.end()
+        html.end_form()
+
+
+    def _preview_form(self):
+        self._vs_parse_params().render_input("_preview", self._params or self._vs_parse_params().default_value())
+        html.hidden_fields()
+        html.button("_do_preview", _("Update preview"))
+        html.button("_do_import", _("Import"))
+
+
+    def _vs_parse_params(self):
+        return Dictionary(
+            elements = [
+                ("field_delimiter", TextAscii(
+                    title = _("Set field delimiter"),
+                    default_value = ";",
+                    size = 1,
+                    allow_empty = False,
+                )),
+                ("has_title_line", FixedValue(True,
+                    title = _("Has title line"),
+                    totext = _("The first line in the file contains titles."),
+                )),
+            ],
+            render = "form",
+            title = _("File Parsing Settings"),
+            default_keys = ["has_title_line"],
+        )
+
+
+    def _attribute_choices(self):
+        attributes = [
+            (None,              _("Don't import")),
+            ("host_name",       _("Hostname")),
+            ("alias",           _("Alias")),
+            ("ipaddress",       _("IPv4 Address")),
+            ("ipv6address",     _("IPv6 Address")),
+            ("snmp_community",  _("SNMP Community")),
+        ]
+
+        # Add tag groups
+        for entry in configured_host_tags():
+            attributes.append((entry[0], _("Tag: %s") % entry[1]))
+
+        return attributes
+
+
+    # Try to detect the host attribute to choose for this column based on the header
+    # of this column (if there is some).
+    def _try_detect_default_attribute(self, attributes, header):
+        if header == None:
+            return ""
+
+        from difflib import SequenceMatcher
+        def similarity(a, b):
+            return SequenceMatcher(None, a, b).ratio()
+
+        highscore = 0.0
+        best_key = ""
+        for key, title in attributes:
+            #if key != None:
+            #    html.debug((key, header, similarity(key, header), similarity(key, header) >= 0.6))
+            if key != None:
+                key_match_score = similarity(key, header)
+                title_match_score = similarity(title, header)
+                score = key_match_score > title_match_score and key_match_score or title_match_score
+
+                if score > 0.6 and score > highscore:
+                    best_key = key
+                    highscore = score
+
+        return best_key
 
 
 #.
@@ -15283,8 +15520,8 @@ modes = {
    "newcluster"         : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=True)),
    "rename_host"        : (["hosts", "manage_hosts"], mode_rename_host),
    "bulk_rename_host"   : (["hosts", "manage_hosts"], mode_bulk_rename_host),
-   "bulk_import"        : (["hosts", "manage_hosts"], lambda phase: mode_bulk_import(phase)),
-   "edit_host"           : (["hosts"], lambda phase: mode_edit_host(phase, new=False, is_cluster=None)),
+   "bulk_import"        : (["hosts", "manage_hosts"], ModeBulkImport),
+   "edit_host"          : (["hosts"], lambda phase: mode_edit_host(phase, new=False, is_cluster=None)),
    "parentscan"         : (["hosts"], mode_parentscan),
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
    "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),

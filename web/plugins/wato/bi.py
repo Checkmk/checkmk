@@ -651,7 +651,7 @@ class ModeBI(WatoMode):
 
     def render_rule_tree(self, ruleid, tree_path):
         rule = self._aggregation_rules[ruleid]
-        edit_url = html.makeuri([("mode", "bi_edit_rule"), ("id", ruleid)])
+        edit_url = html.makeuri_contextless([("mode", "bi_edit_rule"), ("id", ruleid)])
         title = "%s (%s)" % (rule["title"], ruleid)
 
         sub_rule_ids = self.aggregation_sub_rule_ids(rule)

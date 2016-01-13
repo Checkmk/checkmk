@@ -53,7 +53,7 @@ condition_variable cond_downtime;
 condition_variable cond_comment;
 condition_variable cond_command;
 condition_variable cond_program;
-};
+}
 
 struct trigger *trigger_all()
 {

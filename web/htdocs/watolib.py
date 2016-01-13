@@ -45,6 +45,7 @@
 import os, shutil, subprocess, base64
 import defaults, config, hooks, userdb, multitar
 from lib import *
+from valuespec import *
 
 replication_paths = []
 backup_paths = []
@@ -3906,6 +3907,182 @@ def hilite_errors(outdata):
 
 
 #.
+#   .--Host Tag Conditions-------------------------------------------------.
+#   |                _   _           _     _____                           |
+#   |               | | | | ___  ___| |_  |_   _|_ _  __ _                 |
+#   |               | |_| |/ _ \/ __| __|   | |/ _` |/ _` |                |
+#   |               |  _  | (_) \__ \ |_    | | (_| | (_| |                |
+#   |               |_| |_|\___/|___/\__|   |_|\__,_|\__, |                |
+#   |                                                |___/                 |
+#   |            ____                _ _ _   _                             |
+#   |           / ___|___  _ __   __| (_) |_(_) ___  _ __  ___             |
+#   |          | |   / _ \| '_ \ / _` | | __| |/ _ \| '_ \/ __|            |
+#   |          | |__| (_) | | | | (_| | | |_| | (_) | | | \__ \            |
+#   |           \____\___/|_| |_|\__,_|_|\__|_|\___/|_| |_|___/            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# ValueSpec for editing a tag-condition
+class HostTagCondition(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+
+    def render_input(self, varprefix, value):
+        render_condition_editor(value, varprefix)
+
+    def from_html_vars(self, varprefix):
+        return get_tag_conditions(varprefix=varprefix)
+
+    def canonical_value(self):
+        return []
+
+    def value_to_text(self, value):
+        return "|".join(value)
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != list:
+            raise MKUserError(varprefix, _("The list of host tags must be a list, but "
+                                           "is %r") % type(value))
+        for x in value:
+            if type(x) != str:
+                raise MKUserError(varprefix, _("The list of host tags must only contain strings "
+                                           "but also contains %r") % x)
+
+    def validate_value(self, value, varprefix):
+        pass
+
+
+# Render HTML input fields for editing a tag based condition
+def render_condition_editor(tag_specs, varprefix=""):
+    if varprefix:
+        varprefix += "_"
+
+    if not configured_aux_tags() + configured_host_tags():
+        html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
+        return
+
+    # Determine current (default) setting of tag by looking
+    # into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )
+    def current_tag_setting(choices):
+        default_tag = None
+        ignore = True
+        for t in tag_specs:
+            if t[0] == '!':
+                n = True
+                t = t[1:]
+            else:
+                n = False
+            if t in [ x[0] for x in choices ]:
+                default_tag = t
+                ignore = False
+                negate = n
+        if ignore:
+            deflt = "ignore"
+        elif negate:
+            deflt = "isnot"
+        else:
+            deflt = "is"
+        return default_tag, deflt
+
+    # Show dropdown with "is/isnot/ignore" and beginning
+    # of div that is switched visible by is/isnot
+    def tag_condition_dropdown(tagtype, deflt, id):
+        html.write("<td>")
+        html.select(varprefix + tagtype + "_" + id, [
+            ("ignore", _("ignore")),
+            ("is",     _("is")),
+            ("isnot",  _("isnot"))], deflt,
+            onchange="valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % \
+                    (varprefix, id)
+        )
+        html.write("</td><td class=\"tag_sel\">")
+        if html.form_submitted():
+            div_is_open = html.var(tagtype + "_" + id, "ignore") != "ignore"
+        else:
+            div_is_open = deflt != "ignore"
+        html.write('<div id="%stag_sel_%s" style="%s">' % (
+            varprefix, id, not div_is_open and "display: none;" or ""))
+
+
+    auxtags = group_hosttags_by_topic(configured_aux_tags())
+    hosttags = group_hosttags_by_topic(configured_host_tags())
+    all_topics = set([])
+    for topic, taggroups in auxtags + hosttags:
+        all_topics.add(topic)
+    all_topics = list(all_topics)
+    all_topics.sort()
+    make_foldable = len(all_topics) > 1
+    for topic in all_topics:
+        if make_foldable:
+            html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (_u(topic)))
+        html.write("<table class=\"hosttags\">")
+
+        # Show main tags
+        for t, grouped_tags in hosttags:
+            if t == topic:
+                for entry in grouped_tags:
+                    id, title, choices = entry[:3]
+                    html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
+                    default_tag, deflt = current_tag_setting(choices)
+                    tag_condition_dropdown("tag", deflt, id)
+                    if len(choices) == 1:
+                        html.write(" " + _("set"))
+                    else:
+                        html.select(varprefix + "tagvalue_" + id,
+                            [(t[0], _u(t[1])) for t in choices if t[0] != None], deflt=default_tag)
+                    html.write("</div>")
+                    html.write("</td></tr>")
+
+        # And auxiliary tags
+        for t, grouped_tags in auxtags:
+            if t == topic:
+                for id, title in grouped_tags:
+                    html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
+                    default_tag, deflt = current_tag_setting([(id, _u(title))])
+                    tag_condition_dropdown("auxtag", deflt, id)
+                    html.write(" " + _("set"))
+                    html.write("</div>")
+                    html.write("</td></tr>")
+
+        html.write("</table>")
+        if make_foldable:
+            html.end_foldable_container()
+
+
+# Retrieve current tag condition settings from HTML variables
+def get_tag_conditions(varprefix=""):
+    if varprefix:
+        varprefix += "_"
+    # Main tags
+    tag_list = []
+    for entry in configured_host_tags():
+        id, title, tags = entry[:3]
+        mode = html.var(varprefix + "tag_" + id)
+        if len(tags) == 1:
+            tagvalue = tags[0][0]
+        else:
+            tagvalue = html.var(varprefix + "tagvalue_" + id)
+
+        if mode == "is":
+            tag_list.append(tagvalue)
+        elif mode == "isnot":
+            tag_list.append("!" + tagvalue)
+
+    # Auxiliary tags
+    for id, title in configured_aux_tags():
+        mode = html.var(varprefix + "auxtag_" + id)
+        if mode == "is":
+            tag_list.append(id)
+        elif mode == "isnot":
+            tag_list.append("!" + id)
+
+    return tag_list
+
+
+
+#.
 #   .--MIXED STUFF---------------------------------------------------------.
 #   |     __  __ _____  _______ ____    ____ _____ _   _ _____ _____       |
 #   |    |  \/  |_ _\ \/ / ____|  _ \  / ___|_   _| | | |  ___|  ___|      |
@@ -4114,3 +4291,5 @@ def mk_repr(s):
         return base64.b64encode(repr(s))
     else:
         return base64.b64encode(pickle.dumps(s))
+
+

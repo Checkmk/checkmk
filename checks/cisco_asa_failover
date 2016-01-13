@@ -37,6 +37,11 @@
 # [['Failover LAN Interface', '2', 'LAN_FO GigabitEthernet0/0.777'], ['Primary unit', '9', 'Active unit'], ['Secondary unit (this device)', '10', 'Standby unit']]
 
 def inventory_cisco_asa_failover(info):
+    for name, state, state_txt in info:
+        if name.lower() == "failover lan interface" and state == "3":
+            # clustering is disabled
+            return None
+
     for deviceentry in info[-2:]:
         if "this device" in deviceentry[0]:
             return [ (None, None) ]

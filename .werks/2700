@@ -1,0 +1,10 @@
+Title: ibm_svc_node: fixed handling with agent output after firmware update
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p6
+Date: 1447152046
+
+

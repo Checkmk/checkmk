@@ -1,0 +1,10 @@
+Title: Availability: Fixed division by zero error on rendering the availability table
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p6
+Date: 1452262229
+
+

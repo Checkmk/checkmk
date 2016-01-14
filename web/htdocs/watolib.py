@@ -2480,7 +2480,7 @@ class ValueSpecAttribute(Attribute):
         return self._valuespec.from_html_vars(varprefix + self._name)
 
     def validate_input(self, varprefix):
-        value = self.from_html_vars(varprefix + self._name)
+        value = self.from_html_vars(varprefix)
         self._valuespec.validate_value(value, varprefix + self._name)
 
 

@@ -207,6 +207,7 @@ TableServices::TableServices(bool by_group, bool by_hostgroup)
 }
 
 
+// static
 void TableServices::addColumns(Table *table, string prefix, int indirect_offset, bool add_hosts)
 {
     /* es fehlt noch: double-Spalten, unsigned long spalten, etliche weniger wichtige
@@ -399,7 +400,7 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
                 "A list of all comments of the service with id, author, comment, entry type and entry time", indirect_offset, false, true, true, true));
 
     if (add_hosts)
-        TableHosts::addColumns(this, "host_", (char *)(&svc.host_ptr) - ref);
+        TableHosts::addColumns(table, "host_", (char *)(&svc.host_ptr) - ref);
 
     table->addColumn(new CustomVarsColumn(prefix + "custom_variable_names",
                 "A list of the names of all custom variables of the service", (char *)(&svc.custom_variables) - ref, indirect_offset, CVT_VARNAMES));

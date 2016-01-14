@@ -46,7 +46,7 @@ public:
     void *findObject(char *objectspec);
     void add(service *svc);
     void answerQuery(Query *);
-    void addColumns(Table *, std::string prefix, int indirect_offset, bool add_hosts);
+    static void addColumns(Table *, std::string prefix, int indirect_offset, bool add_hosts);
 };
 
 #endif // TableServices_h

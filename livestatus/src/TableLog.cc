@@ -105,7 +105,7 @@ void TableLog::addColumns(Table *table, string prefix, int indirect_offset, bool
     if (add_host)
         TableHosts::addColumns(table, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
     if (add_services)
-        g_table_services->addColumns(table, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+        TableServices::addColumns(table, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
     TableContacts::addColumns(table, "current_contact_", (char *)&(ref->_contact) - (char *)ref);
     TableCommands::addColumns(table, "current_command_", (char *)&(ref->_command) - (char *)ref);
 }

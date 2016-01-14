@@ -248,6 +248,9 @@
     * 2815 FIX: Notification scripts: Fixed missing environment variables...
     * 2821 FIX: WATO rule based notifications: Validate regular expression for service conditions...
 
+    BI:
+    * 2882 Reorganize BI configuration into packs, add contacts and permissions...
+
     Reporting & Availability:
     * 2823 FIX: Availability: Fixed division by zero error on rendering the availability table
 

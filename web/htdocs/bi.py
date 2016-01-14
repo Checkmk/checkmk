@@ -175,6 +175,7 @@ def reused_compilation():
 # Returns a sorted list of aggregation group names
 def aggregation_groups():
     if config.bi_precompile_on_demand:
+        migrate_bi_configuration() # convert bi_packs into legacy variables
         # on demand: show all configured groups
         group_names = set([])
         for a in config.aggregations + config.host_aggregations:
@@ -201,6 +202,8 @@ def log(s):
 # aggregation functions are still left as names. That way the forest
 # printable (and storable in Python syntax to a file).
 def compile_forest(user, only_hosts = None, only_groups = None):
+    migrate_bi_configuration()
+
     global g_cache, g_user_cache
     global used_cache, did_compilation
 
@@ -1988,3 +1991,12 @@ def get_state_name(node):
             return host_state_names[node[0]['state']]
     else:
         return service_state_names[node[0]['state']]
+
+
+def migrate_bi_configuration():
+    if config.bi_packs:
+        for pack in config.bi_packs.values():
+            config.aggregations += pack["aggregations"]
+            config.host_aggregations += pack["host_aggregations"]
+            config.aggregation_rules.update(pack["rules"])
+        config.bi_packs = {}

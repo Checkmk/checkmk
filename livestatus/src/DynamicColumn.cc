@@ -30,5 +30,5 @@ DynamicColumn::~DynamicColumn()
 
 Column *DynamicColumn::createColumn(const char *arguments)
 {
-    return createColumn(_indirect_offset, arguments);
+    return createColumn(_indirect_offset, _extra_offset, arguments);
 }

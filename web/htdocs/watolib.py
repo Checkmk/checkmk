@@ -750,6 +750,7 @@ class Folder(BaseFolder):
         variables = {
             "FOLDER_PATH"               : "",
             "ALL_HOSTS"                 : ALL_HOSTS,
+            "ALL_SERVICES"              : ALL_SERVICES,
             "all_hosts"                 : [],
             "clusters"                  : {},
             "ipaddresses"               : {},
@@ -759,6 +760,7 @@ class Folder(BaseFolder):
             "extra_service_conf"        : { "_WATO" : [] },
             "host_attributes"           : {},
             "host_contactgroups"        : [],
+            "service_contactgroups"     : [],
             "_lock"                     : False,
         }
         execfile(self.hosts_file_path(), variables, variables)
@@ -826,12 +828,18 @@ class Folder(BaseFolder):
             if host.has_explicit_attribute("contactgroups"):
                  cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
                  cgs = cgconfig["groups"]
-                 use = cgconfig["use"]
-                 if use and cgs:
+                 if cgs and cgconfig["use"]:
                      out.write("\nhost_contactgroups += [\n")
                      for cg in cgs:
                          out.write('    ( %r, [%r] ),\n' % (cg, hostname))
                      out.write(']\n\n')
+
+                     if cgconfig.get("use_for_services"):
+                         out.write("\nservice_contactgroups += [\n")
+                         for cg in cgs:
+                             out.write('    ( %r, [%r], ALL_SERVICES ),\n' % (cg, hostname))
+                         out.write(']\n\n')
+
 
             for attr, topic in all_host_attributes():
                 attrname = attr.name()
@@ -888,10 +896,15 @@ class Folder(BaseFolder):
         # If the contact groups of the host are set to be used for the monitoring,
         # we create an according rule for the folder and an according rule for
         # each host that has an explicit setting for that attribute.
-        permitted_groups, contact_groups = self.groups()
+        permitted_groups, contact_groups, use_for_services = self.groups()
         if contact_groups:
             out.write("\nhost_contactgroups.append(\n"
                       "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % list(contact_groups))
+            if use_for_services:
+                # Currently service_contactgroups requires single values. Lists are not supported
+                for cg in contact_groups:
+                    out.write("\nservice_contactgroups.append(\n"
+                              "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS, ALL_SERVICES ))\n" % cg)
 
 
         # Write information about all host attributes into special variable - even
@@ -1182,10 +1195,6 @@ class Folder(BaseFolder):
             return " / ".join(self.title_path_without_root())
 
 
-    def groups(self):
-        return self.groups_for_host(None)
-
-
     def effective_attributes(self):
         effective = {}
         for folder in self.parent_folder_chain():
@@ -1226,7 +1235,7 @@ class Folder(BaseFolder):
         while parent:
             effective_folder_attributes = parent.effective_attributes()
             parconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
-            parent_permitted_groups, parent_host_contact_groups = parent.groups()
+            parent_permitted_groups, parent_host_contact_groups, parent_use_for_services = parent.groups()
 
             if parconf["recurse_perms"]: # Parent gives us its permissions
                 permitted_groups.update(parent_permitted_groups)
@@ -1236,7 +1245,7 @@ class Folder(BaseFolder):
 
             parent = parent.parent()
 
-        return permitted_groups, host_contact_groups
+        return permitted_groups, host_contact_groups, cgconf.get("use_for_services", False)
 
 
     def find_host_recursively(self, host_name):
@@ -1256,7 +1265,7 @@ class Folder(BaseFolder):
         if how == "read" and config.user_may(user_id, "wato.see_all_folders"):
             return
 
-        permitted_groups, folder_contactgroups = self.groups()
+        permitted_groups, folder_contactgroups, use_for_services = self.groups()
         user_contactgroups = userdb.contactgroups_of_user(user_id)
 
         for c in user_contactgroups:
@@ -1969,7 +1978,7 @@ class Host(WithPermissionsAndAttributes):
         if how == "write":
             config.need_permission("wato.edit_hosts")
 
-        permitted_groups, host_contact_groups = self.groups()
+        permitted_groups, host_contact_groups, use_for_services = self.groups()
         user_contactgroups = userdb.contactgroups_of_user(user_id)
 
         for c in user_contactgroups:
@@ -2488,13 +2497,22 @@ class ValueSpecAttribute(Attribute):
 # folder's group settings
 def convert_cgroups_from_tuple(value):
     if type(value) == dict:
-        return value
+        if "use_for_services" in value:
+            return value
+        else:
+            new_value = {
+                "use_for_services" : False,
+            }
+            new_value.update(value)
+            return value
+
     else:
         return {
-            "groups"        : value[1],
-            "recurse_perms" : False,
-            "use"           : value[0],
-            "recurse_use"   : False,
+            "groups"           : value[1],
+            "recurse_perms"    : False,
+            "use"              : value[0],
+            "use_for_services" : False,
+            "recurse_use"      : False,
         }
 
 # Attribute needed for folder permissions
@@ -2550,14 +2568,30 @@ class ContactGroupsAttribute(Attribute):
             html.checkbox(varprefix + self._name + "_n_" + name, name in value["groups"])
             html.write(' <a href="%s">%s</a><br>' % (folder_preserving_link([("mode", "edit_contact_group"), ("edit", name)]), group['alias'] and group['alias'] or name))
         html.write("<hr>")
+
         if is_host:
-            html.checkbox(varprefix + self._name + "_use", value["use"], label = _("Add these contact groups to host"))
+            html.checkbox(varprefix + self._name + "_use", value["use"],
+                label = _("Add these contact groups to the host"))
+
         elif not is_search:
-            html.checkbox(varprefix + self._name + "_recurse_perms", value["recurse_perms"], label = _("Give these groups also <b>permission on all subfolders</b>"))
+            html.checkbox(varprefix + self._name + "_recurse_perms", value["recurse_perms"],
+                label = _("Give these groups also <b>permission on all subfolders</b>"))
             html.write("<hr>")
-            html.checkbox(varprefix + self._name + "_use", value["use"], label = _("Add these groups as <b>contacts</b> to all hosts in this folder"))
+            html.checkbox(varprefix + self._name + "_use", value["use"],
+                label = _("Add these groups as <b>contacts</b> to all hosts in this folder"))
             html.write("<br>")
-            html.checkbox(varprefix + self._name + "_recurse_use", value["recurse_use"], label = _("Add these groups as <b>contacts in all subfolders</b>"))
+            html.checkbox(varprefix + self._name + "_recurse_use", value["recurse_use"],
+                label = _("Add these groups as <b>contacts in all subfolders</b>"))
+
+        html.write("<hr>")
+        html.help(_("With this option contact groups that are added to hosts are always "
+               "being added to services, as well. This only makes a difference if you have "
+               "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
+               "As long as you do not have any such rule a service always inherits all contact groups "
+               "from its host."))
+        html.checkbox(varprefix + self._name + "_use_for_services", value.get("use_for_services", False),
+            label = _("Always add host contact groups also to its services"))
+
 
     def load_data(self):
         # Make cache valid only during this HTTP request
@@ -2574,10 +2608,11 @@ class ContactGroupsAttribute(Attribute):
             if html.get_checkbox(varprefix + self._name + "_n_" + name):
                 cgs.append(name)
         return {
-            "groups"        : cgs,
-            "recurse_perms" : html.get_checkbox(varprefix + self._name + "_recurse_perms"),
-            "use"           : html.get_checkbox(varprefix + self._name + "_use"),
-            "recurse_use"   : html.get_checkbox(varprefix + self._name + "_recurse_use"),
+            "groups"           : cgs,
+            "recurse_perms"    : html.get_checkbox(varprefix + self._name + "_recurse_perms"),
+            "use"              : html.get_checkbox(varprefix + self._name + "_use"),
+            "use_for_services" : html.get_checkbox(varprefix + self._name + "_use_for_services"),
+            "recurse_use"      : html.get_checkbox(varprefix + self._name + "_recurse_use"),
         }
 
     def filter_matches(self, crit, value, hostname):

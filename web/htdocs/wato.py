@@ -599,7 +599,7 @@ def show_subfolder_delete_button(subfolder):
 def show_subfolder_infos(subfolder):
     html.write('<div class=infos>')
     groups = userdb.load_group_information().get("contact", {})
-    permitted_groups, folder_contact_groups = subfolder.groups()
+    permitted_groups, folder_contact_groups, use_for_services = subfolder.groups()
     for num, pg in enumerate(permitted_groups):
         cgalias = groups.get(pg, {'alias': pg})['alias']
         html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
@@ -786,7 +786,7 @@ def show_hosts(folder):
 
 
         # Permissions and Contact groups - through complete recursion and inhertance
-        permitted_groups, host_contact_groups = host.groups()
+        permitted_groups, host_contact_groups, use_for_services = host.groups()
         table.cell(_("Permissions"), ", ".join(map(render_contact_group, permitted_groups)))
         table.cell(_("Contact Groups"), ", ".join(map(render_contact_group, host_contact_groups)))
 
@@ -3289,8 +3289,6 @@ class ModeBulkImport(WatoMode):
         highscore = 0.0
         best_key = ""
         for key, title in attributes:
-            #if key != None:
-            #    html.debug((key, header, similarity(key, header), similarity(key, header) >= 0.6))
             if key != None:
                 key_match_score = similarity(key, header)
                 title_match_score = similarity(title, header)

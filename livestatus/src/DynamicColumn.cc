@@ -24,6 +24,9 @@
 
 #include "DynamicColumn.h"
 
+DynamicColumn::~DynamicColumn()
+{
+}
 
 Column *DynamicColumn::createColumn(const char *arguments)
 {

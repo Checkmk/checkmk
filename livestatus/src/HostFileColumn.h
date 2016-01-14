@@ -39,7 +39,7 @@ public:
                    const char *suffice, int indirect_offset);
 
     // returns a buffer to be freed afterwards!!
-    char *getBlob(void *data, int *size);
+    char *getBlob(void *data, int *size) override;
 };
 
 #endif // HostFileColumn_h

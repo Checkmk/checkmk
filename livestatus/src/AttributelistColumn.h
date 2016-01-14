@@ -54,7 +54,7 @@ public:
     Filter *createFilter(int opid, char *value) override;
 
     /* API of IntColumn */
-    virtual int32_t getValue(void *data, Query *) { return getValue(data); }
+    int32_t getValue(void *data, Query *) override { return getValue(data); }
 
     unsigned long getValue(void *data);
 };

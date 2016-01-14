@@ -36,8 +36,8 @@ class OffsetStringHostMacroColumn : public OffsetStringMacroColumn
 public:
     OffsetStringHostMacroColumn(std::string name, std::string description, int offset, int indirect_offset = -1) :
         OffsetStringMacroColumn(name, description, offset, indirect_offset) {}
-    host *getHost(void *data);
-    service *getService(void *data);
+    host *getHost(void *data) override;
+    service *getService(void *data) override;
 };
 
 #endif // OffsetStringHostMacroColumn_h

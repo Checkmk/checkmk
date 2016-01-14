@@ -34,8 +34,8 @@
 class OffsetStringServiceMacroColumn : public OffsetStringMacroColumn
 {
 public:
-    OffsetStringServiceMacroColumn(std::string name, std::string description, int offset, int indirect_offset = -1) :
-        OffsetStringMacroColumn(name, description, offset, indirect_offset) {}
+ OffsetStringServiceMacroColumn(std::string name, std::string description, int offset, int indirect_offset, int extra_offset = -1) :
+        OffsetStringMacroColumn(name, description, offset, indirect_offset, extra_offset) {}
     host *getHost(void *data) override;
     service *getService(void *data) override;
 };

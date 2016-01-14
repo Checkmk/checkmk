@@ -39,8 +39,8 @@ class CustomTimeperiodColumn : public IntColumn
     std::string _varname;
 
 public:
-    CustomTimeperiodColumn(std::string name, std::string description, int offset, int indirect_offset, const char *varname)
-        : IntColumn(name, description, indirect_offset),  _offset(offset), _varname(varname) {}
+    CustomTimeperiodColumn(std::string name, std::string description, int offset, int indirect_offset, const char *varname, int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset),  _offset(offset), _varname(varname) {}
     int32_t getValue(void *data, Query *);
 private:
     customvariablesmember *getCVM(void *data);

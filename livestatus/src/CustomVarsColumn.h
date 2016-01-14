@@ -44,8 +44,8 @@ class CustomVarsColumn : public Column
     int _what;
 
 public:
-    CustomVarsColumn(std::string name, std::string description, int offset, int indirect_offset, int what)
-        : Column(name, description, indirect_offset),  _offset(offset), _what(what) {}
+    CustomVarsColumn(std::string name, std::string description, int offset, int indirect_offset, int what, int extra_offset = -1)
+        : Column(name, description, indirect_offset, extra_offset),  _offset(offset), _what(what) {}
     int type() override { return _what == CVT_DICT ? COLTYPE_DICT : COLTYPE_LIST; }
     void output(void *, Query *) override;
     Filter *createFilter(int opid, char *value) override;

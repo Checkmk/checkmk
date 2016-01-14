@@ -50,7 +50,7 @@ class Column
 
 public:
     Column(std::string name, std::string description, int indirect_offset,
-           int extra_offset = -1);
+           int extra_offset);
     virtual ~Column() {}
 
     const char *name() const { return _name.c_str(); }

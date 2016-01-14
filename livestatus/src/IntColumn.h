@@ -36,7 +36,7 @@ class Query;
 class IntColumn : public Column {
 public:
     IntColumn(std::string name, std::string description, int indirect_offset,
-              int extra_offset = -1)
+              int extra_offset)
         : Column(name, description, indirect_offset, extra_offset)
     {
     }

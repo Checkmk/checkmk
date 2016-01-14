@@ -2435,7 +2435,7 @@ def mode_diag_host(phase):
                 title = _('IP address'),
                 allow_empty = False
             )),
-            ('snmp_community', TextAscii(
+            ('snmp_community', Password(
                 title = _("SNMP Community"),
                 allow_empty = False
             )),

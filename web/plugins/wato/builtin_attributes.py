@@ -72,16 +72,22 @@ declare_host_attribute(TextAttribute("ipv6address", _("IPv6 Address"),
                          show_in_folder = False,
                          depends_on_tags = ["ip-v6"])
 
-declare_host_attribute(TextAttribute("snmp_community", _("SNMP Community"),
-                       _("Using this option you can configure the community which should be used when "
-                         "contacting this host via SNMP v1 or v2. It is possible to configure the SNMP community by "
-                         "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
-                         "a community here, this will override the community defined by the rules.") % \
-                             html.makeuri([('mode', 'edit_ruleset'), ('varname', 'snmp_communities')]),
-                         allow_empty = False),
-                         show_in_table = False,
-                         show_in_folder = True,
-                         depends_on_tags = ['snmp'])
+declare_host_attribute(
+    ValueSpecAttribute(
+        "snmp_community",
+        Password(
+            title = _("SNMP Community"),
+            help =  _("Using this option you can configure the community which should be used when "
+                      "contacting this host via SNMP v1 or v2. It is possible to configure the SNMP community by "
+                      "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
+                      "a community here, this will override the community defined by the rules.") % \
+                      html.makeuri([('mode', 'edit_ruleset'), ('varname', 'snmp_communities')]),
+            allow_empty = False,
+        )),
+    show_in_table = False,
+    show_in_folder = True,
+    depends_on_tags = ['snmp'],
+)
 
 # Attribute for configuring parents
 class ParentsAttribute(ValueSpecAttribute):

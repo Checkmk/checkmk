@@ -1913,10 +1913,9 @@ register_rule(group,
     "snmp_communities",
     Alternative(
         elements = [
-            TextAscii(
+            Password(
                 title = _("SNMP community (SNMP Versions 1 and 2c)"),
                 allow_empty = False,
-                attrencode = True,
             ),
             Tuple(
                 title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),

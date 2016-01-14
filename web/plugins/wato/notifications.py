@@ -250,7 +250,7 @@ register_notification_parameters(
                 ),
             ),
             ( "community",
-                TextAscii(
+                Password(
                     title = _("SNMP Community"),
                     help = _("SNMP Community for the SNMP trap")
                 )

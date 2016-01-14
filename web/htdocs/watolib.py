@@ -653,6 +653,7 @@ class Folder(BaseFolder):
         self._name = name
         self._parent = parent_folder
         self._subfolders = {}
+        self._choices_for_moving_host = None
         if folder_path != None:
             self._init_by_loading_existing_directory(folder_path)
         else:
@@ -1108,10 +1109,9 @@ class Folder(BaseFolder):
 
 
     def choices_for_moving_host(self):
-        # Cached?
-        try:
-            return self._choices_for_moving_host
-        except:
+        if self._choices_for_moving_host != None:
+            return self._choices_for_moving_host # Cached
+        else:
             self._choices_for_moving_host = self._choices_for_moving("host")
             return self._choices_for_moving_host
 

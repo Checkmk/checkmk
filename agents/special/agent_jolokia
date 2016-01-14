@@ -1,0 +1,365 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import urllib2, sys, os, socket, getopt
+
+
+opt_debug = False  # assigned in parse_arguments
+
+class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
+    """
+    sends basic authentication with the first request,
+    before the server even asks for it
+    """
+
+    def http_request(self, req):
+        url = req.get_full_url()
+        realm = None
+        user, pw = self.passwd.find_user_password(realm, url)
+        if pw:
+            raw = "%s:%s" % (user, pw)
+            auth = 'Basic %s' % base64.b64encode(raw).strip()
+            req.add_unredirected_header(self.auth_header, auth)
+        return req
+
+    https_request = http_request
+
+
+global_vars = [
+    ( "java.lang:type=Memory/NonHeapMemoryUsage/used",                "NonHeapMemoryUsage",       [] ),
+    ( "java.lang:type=Memory/NonHeapMemoryUsage/max",                 "NonHeapMemoryMax",         [] ),
+    ( "java.lang:type=Memory/HeapMemoryUsage/used",                   "HeapMemoryUsage",          [] ),
+    ( "java.lang:type=Memory/HeapMemoryUsage/max",                    "HeapMemoryMax",            [] ),
+    ( "java.lang:type=Threading/ThreadCount",                         "ThreadCount",              [] ),
+    ( "java.lang:type=Threading/DaemonThreadCount",                   "DeamonThreadCount",        [] ),
+    ( "java.lang:type=Threading/PeakThreadCount",                     "PeakThreadCount",          [] ),
+    ( "java.lang:type=Threading/TotalStartedThreadCount",             "TotalStartedThreadCount",  [] ),
+    ( "java.lang:type=Runtime/Uptime",                                "Uptime",                   [] ),
+    ( "java.lang:type=GarbageCollector,name=*/CollectionCount",       "",                         [] ),
+    ( "java.lang:type=GarbageCollector,name=*/CollectionTime",        "",                         [] ),
+    ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/used",   "PermGenUsage",             [] ),
+    ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/max",    "PermGenMax",               [] ),
+]
+
+
+specific_vars = {
+    "weblogic" : [
+        ( "*:*/CompletedRequestCount",                          None,                      [ "ServerRuntime" ] ),
+        ( "*:*/QueueLength",                                    None,                      [ "ServerRuntime" ] ),
+        ( "*:*/StandbyThreadCount",                             None,                      [ "ServerRuntime" ] ),
+        ( "*:*/PendingUserRequestCount",                        None,                      [ "ServerRuntime" ] ),
+        ( "*:Name=ThreadPoolRuntime,*/ExecuteThreadTotalCount", None,                      [ "ServerRuntime" ] ),
+        ( "*:*/ExecuteThreadIdleCount",                         None,                      [ "ServerRuntime" ] ),
+        ( "*:*/HoggingThreadCount",                             None,                      [ "ServerRuntime" ] ),
+        ( "*:Type=WebAppComponentRuntime,*/OpenSessionsCurrentCount", None,                [ "ServerRuntime", "ApplicationRuntime" ] ),
+    ],
+    "tomcat" : [
+        ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
+        ( "*:j2eeType=Servlet,name=default,*/stateName", None, [ "WebModule" ] ),
+        # Check not yet working
+        ( "*:j2eeType=Servlet,name=default,*/requestCount", None, [ "WebModule" ]),
+        ( "*:name=*,type=ThreadPool/maxThreads", None, []),
+        ( "*:name=*,type=ThreadPool/currentThreadCount", None, []),
+        ( "*:name=*,type=ThreadPool/currentThreadsBusy", None, []),
+        # too wide location for addressing the right info
+        # ( "*:j2eeType=Servlet,*/requestCount", None, [ "WebModule" ] ),
+
+    ],
+    "jboss" : [
+        ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
+    ],
+}
+
+
+
+def fetch_var(server, port, path, suburi, itemspec):
+    url = "http://%s:%d/%s/%s" % (server, port, suburi, path)
+    if opt_debug:
+        sys.stderr.write("DEBUG: Fetching: %s\n" % url)
+    try:
+        json = urllib2.urlopen(url).read()
+        if opt_debug:
+            sys.stderr.write("DEBUG: Result: %s\n\n" % json)
+    except Exception, e:
+        sys.stderr.write("ERROR: %s\n" % e)
+        return []
+
+
+    try:
+        true = True
+        false = False
+        null = None
+        obj = eval(json)
+    except Exception, e:
+        sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
+        sys.stderr.write('       Response %s\n' % json)
+        return []
+
+    if obj.get('status', 200) != 200:
+        sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
+        sys.stderr.write('       Response: %s\n' % json)
+        return []
+
+    # Only take the value of the object. If the value is an object
+    # take the first items first value.
+    # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
+    if 'value' not in obj:
+        if opt_debug:
+            sys.stderr.write("ERROR: not found: %s\n" % path)
+        return []
+    val = obj.get('value', None)
+    return make_item_list((), val, itemspec)
+
+# convert single values into lists of items in
+# case value is a 1-levelled or 2-levelled dict
+def make_item_list(path, value, itemspec):
+    if type(value) != dict:
+        if type(value) == str:
+            value = value.replace(r'\/', '/')
+        return [(path, value)]
+    else:
+        result = []
+        for key, subvalue in value.items():
+            # Handle filtering via itemspec
+            miss = False
+            while itemspec and '=' in itemspec[0]:
+                if itemspec[0] not in key:
+                    miss = True
+                    break
+                itemspec = itemspec[1:]
+            if miss:
+                continue
+            item = extract_item(key, itemspec)
+            if not item:
+                item = (key,)
+            result += make_item_list(path + item, subvalue, [])
+        return result
+
+# Example:
+# key = 'Catalina:host=localhost,path=\\/,type=Manager'
+# itemsepc = [ "path" ]
+# --> "/"
+
+def extract_item(key, itemspec):
+    path = key.split(":", 1)[-1]
+    components = path.split(",")
+    item = ()
+    comp_dict = {}
+    for comp in components:
+        parts = comp.split("=")
+        if len(parts) == 2:
+            left, right = parts
+            comp_dict[left] = right
+    for pathkey in itemspec:
+        if pathkey in comp_dict:
+            right = comp_dict[pathkey]
+            right = right.replace(r'\/', '/')
+            if '/' in right:
+                right = '/' + right.split('/')[-1]
+            item = item + (right,)
+    return item
+
+
+def query_instance(inst):
+    # Prepare user/password authentication via HTTP Auth
+    if inst.get("password"):
+        passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        passwdmngr.add_password(None, "http://%s:%d/" %
+                (inst["server"], inst["port"]), inst["user"], inst["password"])
+        if inst["mode"] == 'digest':
+            authhandler = urllib2.HTTPDigestAuthHandler(passwdmngr)
+        elif inst["mode"] == "basic_preemptive":
+            authhandler = PreemptiveBasicAuthHandler(passwdmngr)
+        else:
+            authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)
+        opener = urllib2.build_opener(authhandler)
+        urllib2.install_opener(opener)
+
+    # Determine type of server
+    server_info = fetch_var(inst["server"], inst["port"], "", inst["suburi"], "")
+
+    sys.stdout.write('<<<jolokia_info>>>\n')
+    if server_info:
+        d = dict(server_info)
+        version = d.get(('info', 'version'), "unknown")
+        product = d.get(('info', 'product'), "unknown")
+        if inst.has_key("product"):
+            product = inst["product"]
+        agentversion = d.get(('agent',), "unknown")
+        sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
+    else:
+        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
+        sys.stdout.write('<<<jolokia_metrics>>>\n')
+        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
+        return
+
+    sys.stdout.write('<<<jolokia_metrics>>>\n')
+    # Fetch the general information first
+    for path, title, itemspec in global_vars + specific_vars.get(product, []):
+        try:
+            values = fetch_var(inst["server"], inst["port"], "read/" + path, inst["suburi"], itemspec)
+
+        # In case of network errors skip this server
+        except IOError:
+            return
+        except socket.timeout:
+            return
+        except:
+            if opt_debug:
+                raise
+            # Simply ignore exceptions. Need to be removed for debugging
+            continue
+
+        for subinstance, value in values:
+            if not subinstance and not title:
+                print "INTERNAL ERROR: %s" % value
+                continue
+
+            if "threadStatus" in subinstance or "threadParam" in subinstance:
+                continue
+
+            if len(subinstance) > 1:
+                item = ",".join((inst["instance"],) + subinstance[:-1])
+            else:
+                item = inst["instance"]
+            if title:
+                if subinstance:
+                    tit = title + "." + subinstance[-1]
+                else:
+                    tit = title
+            else:
+                tit = subinstance[-1]
+
+            sys.stdout.write("%s %s %s\n" % (item.replace(" ", "_"), tit, value))
+
+
+def usage():
+    sys.stderr.write(
+"""Check_MK Jolokia Agent
+USAGE: mk_jolokia [OPTIONS]
+       mk_jolokia --help
+
+OPTIONS:
+  --help                        Show this help message and exit
+  --server                      Host name or IP address of the Jolokia server. Default: localhost
+  --port                        TCP Port of the Jolokia server. Default: 8080
+  --user                        Username to use for the connection. Default: monitoring
+  --password                    Password to use for connecting. Default: none
+  --mode                        Authentication mode. Can be "basic" or "digest". Default: digest
+  --suburi                      Path-component of the uri to query. Default: jolokia
+  --instance                    Name of the instance in the monitoring
+  --debug                       Debug mode: let Python exceptions come through
+""")
+
+
+
+"""
+    for param in ['server', 'port', 'suburi', 'instance']:
+        if param in params:
+            arglist.append('--%s %s' % (param, params[param]))
+
+    if 'login' in params:
+        arglist.append('--user %s' % params['login'][0])
+        arglist.append('--password %s' % params['login'][1])
+"""
+
+
+def parse_arguments():
+    short_options = ''
+    long_options  = [
+        'help', 'server=', 'port=', 'user=', 'password=', 'mode=', 'suburi=', 'instance='
+    ]
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+    except getopt.GetoptError, err:
+        sys.stderr.write("%s\n" % err)
+        sys.exit(1)
+
+    opts = dict([(o.replace("--", ""), a) for o, a in opts])
+
+    if 'help' in opts:
+        return None
+
+    global opt_debug
+    opt_debug = 'debug' in opts
+
+    for optional, default in [('server',   "localhost"),
+                              ('user',     "monitoring"),
+                              ('password', None),
+                              ('mode',     "digest"),
+                              ('suburi',   "jolokia"),
+                              ('port',     8080),
+                              ('instance', lambda: str(opts['port']))]:
+        if optional not in opts:
+            if callable(default):
+                opts[optional] = default()
+            else:
+                opts[optional] = default
+
+    return opts
+
+
+def main():
+    opts = parse_arguments()
+    if not opts:
+        usage()
+        return 0
+
+    # List of instances to monitor. Each instance is a dict where
+    # the global configuration values can be overridden.
+    instances = [{}]
+
+# We have to deal with socket timeouts. Python > 2.6
+# supports timeout parameter for the urllib2.urlopen method
+# but we are on a python 2.5 system here which seem to use the
+# default socket timeout. We are local here so  set it to 1 second.
+    socket.setdefaulttimeout(1.0)
+
+    print("<<<jolokia>>>")
+# Compute list of instances to monitor. If the user has defined
+# instances in his configuration, we will use this (a list
+# of dicts).
+    for inst in instances:
+        for varname, value in [("server",   opts['server']),
+                               ("port",     int(opts['port'])),
+                               ("user",     opts['user']),
+                               ("password", opts['password']),
+                               ("mode",     opts['mode']),
+                               ("suburi",   opts['suburi']),
+                               ("instance", opts['instance'])]:
+            if varname not in inst:
+                inst[varname] = value
+        if not inst["instance"]:
+            inst["instance"] = str(inst["port"])
+        inst["instance"] = inst["instance"].replace(" ", "_")
+
+        query_instance(inst)
+    return 0
+
+if __name__ == "__main__":
+    main()
+

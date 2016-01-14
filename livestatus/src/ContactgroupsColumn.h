@@ -38,9 +38,9 @@ public:
     ContactgroupsColumn(std::string name, std::string description, int offset, int indirect_offset)
         : ListColumn(name, description, indirect_offset), _offset(offset) {}
     void output(void *, Query *) override;
-    void *getNagiosObject(char *name); // return pointer to contact group
-    bool isNagiosMember(void *data, void *nagobject);
-    bool isEmpty(void *data);
+    void *getNagiosObject(char *name) override; // return pointer to contact group
+    bool isNagiosMember(void *data, void *nagobject) override;
+    bool isEmpty(void *data) override;
 };
 
 #endif // ContactgroupsColumn_h

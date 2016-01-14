@@ -43,9 +43,9 @@ public:
         : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _with_info(with_info), _is_service(is_service), _with_extra_info(with_extra_info) {}
     int type() override { return COLTYPE_LIST; }
     void output(void *, Query *) override;
-    void *getNagiosObject(char *name);
-    bool isEmpty(void *data);
-    bool isNagiosMember(void *data, void *member);
+    void *getNagiosObject(char *name) override;
+    bool isEmpty(void *data) override;
+    bool isNagiosMember(void *data, void *member) override;
 };
 
 #endif // DownCommColumn_h

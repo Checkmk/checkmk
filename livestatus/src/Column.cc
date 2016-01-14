@@ -27,11 +27,12 @@
 using std::string;
 
 
-Column::Column(string name, string description, int indirect_offset)
-  : _name(name)
-  , _description(description)
-  , _indirect_offset(indirect_offset)
-  , _extra_offset(-1)
+Column::Column(string name, string description, int indirect_offset,
+               int extra_offset)
+    : _name(name)
+    , _description(description)
+    , _indirect_offset(indirect_offset)
+    , _extra_offset(extra_offset)
 {
 }
 

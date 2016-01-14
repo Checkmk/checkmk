@@ -25,7 +25,7 @@
 #ifndef AttributelistColumn_h
 #define AttributelistColumn_h
 
-#include "config.h"  // IWYU pragma: keep
+#include "config.h" // IWYU pragma: keep
 #include <stdint.h>
 #include <string>
 #include "Column.h"
@@ -39,23 +39,28 @@ class Query;
    Columns of the type COLTYPE_INT to be of that type.
  */
 
-class AttributelistColumn : public IntColumn
-{
+class AttributelistColumn : public IntColumn {
     int _offset;
     bool _show_list;
-public:
-    AttributelistColumn(std::string name, std::string description, int offset, int indirect_offset, bool show_list)
-        : IntColumn(name, description, indirect_offset), _offset(offset), _show_list(show_list) {}
 
-    /* API of Column */
+public:
+    AttributelistColumn(std::string name, std::string description, int offset,
+                        int indirect_offset, bool show_list,
+                        int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset)
+        , _show_list(show_list)
+    {
+    }
+
+    // API of Column
     int type() override { return _show_list ? COLTYPE_LIST : COLTYPE_INT; }
     std::string valueAsString(void *data, Query *) override;
     void output(void *, Query *) override;
     Filter *createFilter(int opid, char *value) override;
 
-    /* API of IntColumn */
-    virtual int32_t getValue(void *data, Query *) { return getValue(data); }
-
+    // API of IntColumn
+    int32_t getValue(void *data, Query *) override { return getValue(data); }
     unsigned long getValue(void *data);
 };
 

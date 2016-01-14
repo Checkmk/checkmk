@@ -41,9 +41,9 @@ public:
         : ListColumn(name, description, indirect_offset), _offset(offset) {}
     int type() override { return COLTYPE_LIST; }
     void output(void *, Query *) override;
-    void *getNagiosObject(char *name); // return pointer to host group
-    bool isNagiosMember(void *data, void *nagobject);
-    bool isEmpty(void *data);
+    void *getNagiosObject(char *name) override; // return pointer to host group
+    bool isNagiosMember(void *data, void *nagobject) override;
+    bool isEmpty(void *data) override;
 private:
     objectlist *getData(void *);
 };

@@ -36,7 +36,7 @@ class Query;
 class OffsetTimeperiodColumn : public OffsetIntColumn
 {
 public:
-    OffsetTimeperiodColumn(std::string, std::string, int, int indirect_offset = -1);
+    OffsetTimeperiodColumn(std::string, std::string, int, int indirect_offset = -1, int extra_offset = -1);
     int32_t getValue(void *data, Query *);
 };
 

@@ -33,8 +33,8 @@ class DoublePointerColumn : public DoubleColumn {
 
 public:
     DoublePointerColumn(std::string name, std::string description,
-                        double *number)
-        : DoubleColumn(name, description, -1), _number(number)
+                        double *number, int indirect_offset = -1, int extra_offset = -1)
+        : DoubleColumn(name, description, indirect_offset, extra_offset), _number(number)
     {
     }
     double getValue(void *) { return *_number; }

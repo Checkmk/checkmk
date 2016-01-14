@@ -35,8 +35,8 @@ class Query;
 class StringColumn : public Column
 {
 public:
-    StringColumn(std::string name, std::string description, int indirect_offset) :
-        Column(name, description, indirect_offset) {}
+    StringColumn(std::string name, std::string description, int indirect_offset, int extra_offset) :
+        Column(name, description, indirect_offset, extra_offset) {}
     virtual char *getValue(void *data) = 0;
     std::string valueAsString(void *data, Query *) override { return getValue(data); }
     void output(void *, Query *) override;

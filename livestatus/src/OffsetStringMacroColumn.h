@@ -36,8 +36,8 @@ class Query;
 class OffsetStringMacroColumn : public OffsetStringColumn
 {
 public:
-    OffsetStringMacroColumn(std::string name, std::string description, int offset, int indirect_offset = -1) :
-        OffsetStringColumn(name, description, offset, indirect_offset) {}
+    OffsetStringMacroColumn(std::string name, std::string description, int offset, int indirect_offset, int extra_offset) :
+        OffsetStringColumn(name, description, offset, indirect_offset, extra_offset) {}
     // reimplement several functions from StringColumn
 
     std::string valueAsString(void *data, Query *) override;

@@ -28,31 +28,29 @@ using std::string;
 
 
 Column::Column(string name, string description, int indirect_offset,
-               int extra_offset)
+               int extra_offset, int extra_extra_offset)
     : _name(name)
     , _description(description)
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset)
+    , _extra_extra_offset(extra_extra_offset)
 {
 }
 
 void *Column::shiftPointer(void *data)
 {
-    if (!data)
-        return 0;
-
+    if (!data) return 0;
     if (_indirect_offset >= 0) {
-        // add one indirection level
-        // indirect_offset is place in structure, where
-        // pointer to real object is
         data = *((void **)((char *)data + _indirect_offset));
-        if (!data)
-            return 0;
     }
 
-    // one optional extra level of indirection
+    if (!data) return 0;
     if (_extra_offset >= 0)
         data = *((void **)((char *)data + _extra_offset));
+
+    if (!data) return 0;
+    if (_extra_extra_offset >= 0)
+        data = *((void **)((char *)data + _extra_extra_offset));
 
     return data;
 }

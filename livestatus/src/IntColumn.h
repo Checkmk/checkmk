@@ -36,8 +36,8 @@ class Query;
 class IntColumn : public Column {
 public:
     IntColumn(std::string name, std::string description, int indirect_offset,
-              int extra_offset)
-        : Column(name, description, indirect_offset, extra_offset)
+              int extra_offset, int extra_extra_offset = -1)
+        : Column(name, description, indirect_offset, extra_offset, extra_extra_offset)
     {
     }
     virtual int32_t getValue(void *data, Query *) = 0;

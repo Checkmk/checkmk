@@ -47,10 +47,11 @@ class Column
     std::string _description;
     int _indirect_offset;
     int _extra_offset;
+    int _extra_extra_offset;
 
 public:
     Column(std::string name, std::string description, int indirect_offset,
-           int extra_offset);
+           int extra_offset, int extra_extra_offset = -1);
     virtual ~Column() {}
 
     const char *name() const { return _name.c_str(); }

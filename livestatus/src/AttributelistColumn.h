@@ -46,8 +46,8 @@ class AttributelistColumn : public IntColumn {
 public:
     AttributelistColumn(std::string name, std::string description, int offset,
                         int indirect_offset, bool show_list,
-                        int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset)
+                        int extra_offset = -1, int extra_extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset, extra_extra_offset)
         , _offset(offset)
         , _show_list(show_list)
     {
